@@ -58,10 +58,10 @@ class Ip6;
  */
 struct Route
 {
-    Address       mPrefix;        ///< The IPv6 prefix.
-    uint8_t       mPrefixLength;  ///< The IPv6 prefix length.
-    int8_t        mInterfaceId;   ///< The interface identifier.
-    struct Route *mNext;          ///< A pointer to the next IPv6 route.
+    Address       mPrefix;       ///< The IPv6 prefix.
+    uint8_t       mPrefixLength; ///< The IPv6 prefix length.
+    int8_t        mInterfaceId;  ///< The interface identifier.
+    struct Route *mNext;         ///< A pointer to the next IPv6 route.
 };
 
 /**
@@ -114,7 +114,7 @@ public:
 
 private:
     Route *mRoutes;
-    Ip6 &mIp6;
+    Ip6   &mIp6;
 };
 
 /**
@@ -122,7 +122,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
 #endif  // NET_IP6_ROUTES_HPP_

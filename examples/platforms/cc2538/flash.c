@@ -85,8 +85,8 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    otError error = OT_ERROR_NONE;
-    int32_t status;
+    otError  error = OT_ERROR_NONE;
+    int32_t  status;
     uint32_t address;
 
     otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = OT_ERROR_INVALID_ARGS);
@@ -101,7 +101,7 @@ exit:
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint32_t start = otPlatAlarmGetNow();
     uint32_t busy = 1;
 
@@ -118,10 +118,10 @@ exit:
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    int32_t status;
-    uint32_t busy = 1;
+    int32_t   status;
+    uint32_t  busy = 1;
     uint32_t *data;
-    uint32_t size = 0;
+    uint32_t  size = 0;
 
     otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) &&
                     (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
@@ -157,7 +157,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     {
         uint32_t reg = HWREG(aAddress + FLASH_BASE);
         uint8_t *byte = (uint8_t *)&reg;
-        uint8_t maxIndex = 4;
+        uint8_t  maxIndex = 4;
 
         if (size == (aSize - aSize % 4))
         {

@@ -47,7 +47,7 @@ void UartBuffClear(void);
 
 otError otPlatUartEnable(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     uart_config uart_init =
     {
         .baud_rate = HW_UART_BAUDRATE_115200,
@@ -116,11 +116,9 @@ void UartBuffClear(void)
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
+
     hw_uart_write_buffer(HW_UART1, aBuf, aBufLength);
 
     otPlatUartSendDone();
     return error;
 }
-
-
-

@@ -88,17 +88,17 @@ private:
     void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerPanIdConflictCallback mCallback;
-    void *mContext;
+    void                               *mContext;
 
-    Coap::Resource mPanIdQuery;
+    Coap::Resource                      mPanIdQuery;
 
-    ThreadNetif &mNetif;
+    ThreadNetif                        &mNetif;
 };
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // PANID_QUERY_CLIENT_HPP_

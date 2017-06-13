@@ -45,10 +45,10 @@ void PlatformInit(int argc, char *argv[])
     while (dummy_ccfg_ref == NULL)
     {
         /*
-          * This provides a code reference to the customer configuration
-          * area of the flash, otherwise the data is skipped by the
-          * linker and not put into the final flash image.
-          */
+         * This provides a code reference to the customer configuration
+         * area of the flash, otherwise the data is skipped by the
+         * linker and not put into the final flash image.
+         */
     }
 
     cc2650AlarmInit();

@@ -48,7 +48,7 @@
 
 namespace ot {
 
-TmfProxy::TmfProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap):
+TmfProxy::TmfProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap) :
     mRelayReceive(OT_URI_PATH_RELAY_RX, &TmfProxy::HandleRelayReceive, this),
     mStreamHandler(NULL),
     mContext(NULL),
@@ -113,7 +113,7 @@ exit:
 void TmfProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t rloc;
     uint16_t port;
     Message *message = NULL;
@@ -129,7 +129,7 @@ void TmfProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -138,6 +138,7 @@ exit:
 otError TmfProxy::Send(Message &aMessage, uint16_t aLocator, uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
+
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit(mStreamHandler != NULL, error = OT_ERROR_INVALID_STATE);
@@ -167,6 +168,6 @@ exit:
     return error;
 }
 
-}  // namespace ot
+} // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
+#endif  // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY

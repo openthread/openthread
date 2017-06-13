@@ -98,7 +98,7 @@ public:
      * Default constructor for the object.
      *
      */
-    CoapMetadata(void):
+    CoapMetadata(void) :
         mDestinationPort(0),
         mResponseHandler(NULL),
         mResponseContext(NULL),
@@ -106,7 +106,8 @@ public:
         mRetransmissionTimeout(0),
         mRetransmissionCount(0),
         mAcknowledged(false),
-        mConfirmable(false) {};
+        mConfirmable(false) {
+    }
 
     /**
      * This constructor initializes the object with specific values.
@@ -131,7 +132,7 @@ public:
      */
     otError AppendTo(Message &aMessage) const {
         return aMessage.Append(this, sizeof(*this));
-    };
+    }
 
     /**
      * This method reads request data from the message.
@@ -143,7 +144,7 @@ public:
      */
     uint16_t ReadFrom(const Message &aMessage) {
         return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+    }
 
     /**
      * This method updates request data in the message.
@@ -165,7 +166,9 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) > 0); };
+    bool IsEarlier(uint32_t aTime) const {
+        return (static_cast<int32_t>(aTime - mNextTimerShot) > 0);
+    }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -175,19 +178,21 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); };
+    bool IsLater(uint32_t aTime) const {
+        return (static_cast<int32_t>(aTime - mNextTimerShot) < 0);
+    }
 
 private:
     Ip6::Address          mSourceAddress;         ///< IPv6 address of the message source.
     Ip6::Address          mDestinationAddress;    ///< IPv6 address of the message destination.
     uint16_t              mDestinationPort;       ///< UDP port of the message destination.
     otCoapResponseHandler mResponseHandler;       ///< A function pointer that is called on response reception.
-    void                  *mResponseContext;      ///< A pointer to arbitrary context information.
+    void                 *mResponseContext;       ///< A pointer to arbitrary context information.
     uint32_t              mNextTimerShot;         ///< Time when the timer should shoot for this message.
     uint32_t              mRetransmissionTimeout; ///< Delay that is applied to next retransmission.
     uint8_t               mRetransmissionCount;   ///< Number of retransmissions.
-    bool                  mAcknowledged: 1;       ///< Information that request was acknowledged.
-    bool                  mConfirmable: 1;        ///< Information that message is confirmable.
+    bool                  mAcknowledged : 1;      ///< Information that request was acknowledged.
+    bool                  mConfirmable : 1;       ///< Information that message is confirmable.
 } OT_TOOL_PACKED_END;
 
 /**
@@ -201,7 +206,7 @@ class Resource : public otCoapResource
 public:
     enum
     {
-        kMaxReceivedUriPath = 32,   ///< Maximum supported URI path on received messages.
+        kMaxReceivedUriPath = 32, ///< Maximum supported URI path on received messages.
     };
 
     /**
@@ -224,7 +229,9 @@ public:
      * @returns A Pointer to the next resource.
      *
      */
-    Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
+    Resource *GetNext(void) const {
+        return static_cast<Resource *>(mNext);
+    }
 
 private:
     void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const {
@@ -243,7 +250,8 @@ public:
      * Default constructor creating empty object.
      *
      */
-    EnqueuedResponseHeader(void): mDequeueTime(0), mMessageInfo() {}
+    EnqueuedResponseHeader(void) : mDequeueTime(0), mMessageInfo() {
+    }
 
     /**
      * Constructor creating object with valid dequeue time and message info.
@@ -251,9 +259,10 @@ public:
      * @param[in]  aMessageInfo  The message info containing source endpoint identification.
      *
      */
-    EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo):
+    EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo) :
         mDequeueTime(Timer::GetNow() + Timer::SecToMsec(kExchangeLifetime)),
-        mMessageInfo(aMessageInfo) {}
+        mMessageInfo(aMessageInfo) {
+    }
 
     /**
      * This method append metadata to the message.
@@ -263,7 +272,9 @@ public:
      * @retval OT_ERROR_NONE     Successfully appended the bytes.
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+    otError AppendTo(Message &aMessage) const {
+        return aMessage.Append(this, sizeof(*this));
+    }
 
     /**
      * This method reads request data from the message.
@@ -296,7 +307,9 @@ public:
      * @retval FALSE  Otherwise.
      *
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mDequeueTime) > 0); }
+    bool IsEarlier(uint32_t aTime) const {
+        return (static_cast<int32_t>(aTime - mDequeueTime) > 0);
+    }
 
     /**
      * This method returns number of milliseconds in which the message should be sent.
@@ -312,10 +325,12 @@ public:
      * @returns  The message info of the cached CoAP response.
      *
      */
-    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+    const Ip6::MessageInfo &GetMessageInfo(void) const {
+        return mMessageInfo;
+    }
 
 private:
-    uint32_t mDequeueTime;
+    uint32_t               mDequeueTime;
     const Ip6::MessageInfo mMessageInfo;
 };
 
@@ -398,7 +413,9 @@ public:
      * @returns  A reference to the cached CoAP responses queue.
      *
      */
-    const MessageQueue &GetResponses(void) const { return mQueue; }
+    const MessageQueue &GetResponses(void) const {
+        return mQueue;
+    }
 
 private:
     enum
@@ -406,7 +423,9 @@ private:
         kMaxCachedResponses = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES,
     };
 
-    void DequeueResponse(Message &aMessage) { mQueue.Dequeue(aMessage); aMessage.Free(); }
+    void DequeueResponse(Message &aMessage) {
+        mQueue.Dequeue(aMessage); aMessage.Free();
+    }
 
     MessageQueue mQueue;
     Timer        mTimer;
@@ -426,7 +445,7 @@ public:
      * This function pointer is called before CoAP server processing a CoAP packets.
      *
      * @param[in]   aMessage        A reference to the message.
-     @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
+       @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
      * @param[in]   aContext        A pointer to arbitrary context information.
      *
      * @retval  OT_ERROR_NONE       Server should continue processing this message, other
@@ -435,7 +454,7 @@ public:
      * @retval  OT_ERROR_NOT_TMF    The message is not a TMF message.
      *
      */
-    typedef otError(* Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    typedef otError (*Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     /**
      * This constructor initializes the object.
@@ -469,7 +488,9 @@ public:
      * @returns A port number.
      *
      */
-    uint16_t GetPort(void) { return mSocket.GetSockName().mPort; };
+    uint16_t GetPort(void) {
+        return mSocket.GetSockName().mPort;
+    }
 
     /**
      * This method adds a resource to the CoAP server.
@@ -540,7 +561,7 @@ public:
      */
     otError SendReset(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
         return SendEmptyMessage(OT_COAP_TYPE_RESET, aRequestHeader, aMessageInfo);
-    };
+    }
 
     /**
      * This method sends header-only CoAP response message.
@@ -569,7 +590,7 @@ public:
      */
     otError SendAck(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
         return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequestHeader, aMessageInfo);
-    };
+    }
 
     /**
      * This method sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
@@ -632,7 +653,9 @@ public:
      * @returns A reference to the request message list.
      *
      */
-    const MessageQueue &GetRequestMessages(void) const { return mPendingRequests; }
+    const MessageQueue &GetRequestMessages(void) const {
+        return mPendingRequests;
+    }
 
     /**
      * This method returns a reference to the cached response list.
@@ -640,7 +663,9 @@ public:
      * @returns A reference to the cached response list.
      *
      */
-    const MessageQueue &GetCachedResponses(void) const { return mResponsesQueue.GetResponses(); }
+    const MessageQueue &GetCachedResponses(void) const {
+        return mResponsesQueue.GetResponses();
+    }
 
 protected:
     /**
@@ -661,7 +686,7 @@ protected:
      */
     virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadNetif &mNetif;
+    ThreadNetif   &mNetif;
     Ip6::UdpSocket mSocket;
 
 private:
@@ -689,21 +714,21 @@ private:
     static void HandleRetransmissionTimer(void *aContext);
     void HandleRetransmissionTimer(void);
 
-    MessageQueue mPendingRequests;
-    uint16_t mMessageId;
-    Timer mRetransmissionTimer;
+    MessageQueue         mPendingRequests;
+    uint16_t             mMessageId;
+    Timer                mRetransmissionTimer;
 
-    Resource *mResources;
+    Resource            *mResources;
 
-    void           *mContext;
-    Interceptor    mInterceptor;
-    ResponsesQueue mResponsesQueue;
+    void                *mContext;
+    Interceptor          mInterceptor;
+    ResponsesQueue       mResponsesQueue;
 
     otCoapRequestHandler mDefaultHandler;
-    void *mDefaultHandlerContext;
+    void                *mDefaultHandlerContext;
 };
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot
 
 #endif  // COAP_HPP_

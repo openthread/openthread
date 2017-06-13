@@ -125,7 +125,9 @@ public:
      * @returns  The current supervision interval (seconds), or zero if supervision is disabled.
      *
      */
-    uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
+    uint16_t GetSupervisionInterval(void) const {
+        return mSupervisionInterval;
+    }
 
     /**
      * This method returns the destination for a supervision message.
@@ -149,8 +151,8 @@ public:
 private:
     enum
     {
-        kDefaultSupervisionInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL,  // (seconds)
-        kOneSecond = 1000,                                                           // One second interval (in ms).
+        kDefaultSupervisionInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL, // (seconds)
+        kOneSecond = 1000,                                                          // One second interval (in ms).
     };
 
     void SendMessage(Child &aChild);
@@ -162,18 +164,27 @@ private:
     uint16_t     mSupervisionInterval;
 };
 
-#else  // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
 
 class ChildSupervisor
 {
 public:
-    explicit ChildSupervisor(ThreadNetif &) { }
-    void Start(void) { }
-    void Stop(void) { }
-    void SetSupervisionInterval(uint16_t) { }
-    uint16_t GetSupervisionInterval(void) const { return 0; }
-    Child *GetDestination(const Message &) const { return NULL; }
-    void UpdateOnSend(Child &) { }
+    explicit ChildSupervisor(ThreadNetif &) {
+    }
+    void Start(void) {
+    }
+    void Stop(void) {
+    }
+    void SetSupervisionInterval(uint16_t) {
+    }
+    uint16_t GetSupervisionInterval(void) const {
+        return 0;
+    }
+    Child *GetDestination(const Message &) const {
+        return NULL;
+    }
+    void UpdateOnSend(Child &) {
+    }
 };
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
@@ -228,7 +239,9 @@ public:
      * @returns   The check timeout interval (in seconds) or zero if the supervision check on the child is disabled.
      *
      */
-    uint16_t GetTimeout(void) const  { return mTimeout; }
+    uint16_t GetTimeout(void) const  {
+        return mTimeout;
+    }
 
     /**
      * This method updates the supervision listener state. It informs the listener of a received frame.
@@ -242,7 +255,7 @@ public:
 private:
     enum
     {
-        kDefaultTimeout = OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT,   // (seconds)
+        kDefaultTimeout = OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT, // (seconds)
     };
 
     void RestartTimer(void);
@@ -250,8 +263,8 @@ private:
     void HandleTimer(void);
 
     ThreadNetif &mNetif;
-    Timer mTimer;
-    uint16_t mTimeout;
+    Timer        mTimer;
+    uint16_t     mTimeout;
 };
 
 #else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
@@ -259,12 +272,19 @@ private:
 class SupervisionListener
 {
 public:
-    SupervisionListener(ThreadNetif &) { }
-    void Start(void) { }
-    void Stop(void) { }
-    void SetTimeout(uint16_t) { }
-    uint16_t GetTimeout(void) const  { return 0; }
-    void UpdateOnReceive(const Mac::Address &, bool) { }
+    SupervisionListener(ThreadNetif &) {
+    }
+    void Start(void) {
+    }
+    void Stop(void) {
+    }
+    void SetTimeout(uint16_t) {
+    }
+    uint16_t GetTimeout(void) const  {
+        return 0;
+    }
+    void UpdateOnReceive(const Mac::Address &, bool) {
+    }
 };
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION

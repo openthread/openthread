@@ -89,7 +89,7 @@ otError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_
                                  otCommissionerPanIdConflictCallback aCallback, void *aContext)
 {
     return aInstance->mThreadNetif.GetCommissioner().mPanIdQuery.SendQuery(
-               aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
+        aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
 }
 
 otError otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aLength)
@@ -119,4 +119,4 @@ otError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhras
     return aInstance->mThreadNetif.GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
 }
 
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

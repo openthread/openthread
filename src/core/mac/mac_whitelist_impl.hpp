@@ -77,7 +77,9 @@ public:
      * @retval FALSE  If the whitelist filter is disabled.
      *
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const {
+        return mEnabled;
+    }
 
     /**
      * This method enables the whitelist filter.
@@ -85,7 +87,9 @@ public:
      * @param[in]  aEnabled  TRUE to enable the whitelist filter, FALSE otherwise.
      *
      */
-    void SetEnabled(bool aEnabled) { mEnabled = aEnabled; }
+    void SetEnabled(bool aEnabled) {
+        mEnabled = aEnabled;
+    }
 
     /**
      * This method returns the maximum number of whitelist entries.
@@ -93,7 +97,9 @@ public:
      * @returns The maximum number of whitelist entries.
      *
      */
-    int GetMaxEntries(void) const { return kMaxEntries; }
+    int GetMaxEntries(void) const {
+        return kMaxEntries;
+    }
 
     /**
      * This method gets a whitelist entry.
@@ -173,7 +179,7 @@ public:
 private:
     Entry mWhitelist[kMaxEntries];
 
-    bool mEnabled;
+    bool  mEnabled;
 };
 
 /**
@@ -181,7 +187,7 @@ private:
  *
  */
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
 #endif  // MAC_WHITELIST_HPP_

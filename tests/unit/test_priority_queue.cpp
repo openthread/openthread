@@ -43,10 +43,11 @@
 void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
 {
     va_list args;
+
     ot::Message *message;
     ot::Message *msgArg;
-    uint8_t curPriority = 0xff;
-    uint16_t msgCount, bufCount;
+    uint8_t      curPriority = 0xff;
+    uint16_t     msgCount, bufCount;
 
     // Check the `GetInfo`
     aPriorityQueue.GetInfo(msgCount, bufCount);
@@ -116,8 +117,9 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
 void VerifyAllMessagesContent(ot::MessagePool &aMessagePool, int aExpectedLength, ...)
 {
     va_list args;
+
     ot::MessagePool::Iterator it;
-    ot::Message *msgArg;
+    ot::Message              *msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -128,7 +130,7 @@ void VerifyAllMessagesContent(ot::MessagePool &aMessagePool, int aExpectedLength
     }
     else
     {
-        for (it = aMessagePool.GetAllMessagesHead(); !it.HasEnded() ; it.GoToNext())
+        for (it = aMessagePool.GetAllMessagesHead(); !it.HasEnded(); it.GoToNext())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
             msgArg = va_arg(args, ot::Message *);
@@ -147,8 +149,9 @@ void VerifyAllMessagesContent(ot::MessagePool &aMessagePool, int aExpectedLength
 void VerifyAllMessagesContentInReverse(ot::MessagePool &aMessagePool, int aExpectedLength, ...)
 {
     va_list args;
+
     ot::MessagePool::Iterator it;
-    ot::Message *msgArg;
+    ot::Message              *msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -159,7 +162,7 @@ void VerifyAllMessagesContentInReverse(ot::MessagePool &aMessagePool, int aExpec
     }
     else
     {
-        for (it = aMessagePool.GetAllMessagesTail(); !it.HasEnded() ; it.GoToPrev())
+        for (it = aMessagePool.GetAllMessagesTail(); !it.HasEnded(); it.GoToPrev())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
             msgArg = va_arg(args, ot::Message *);
@@ -177,6 +180,7 @@ void VerifyAllMessagesContentInReverse(ot::MessagePool &aMessagePool, int aExpec
 void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
     va_list args;
+
     ot::Message *message;
     ot::Message *msgArg;
 
@@ -208,13 +212,14 @@ void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength,
 void TestPriorityQueue(void)
 {
     otInstance instance;
-    ot::MessagePool messagePool(&instance);
-    ot::PriorityQueue queue;
-    ot::MessageQueue messageQueue;
-    ot::Message *msgHigh    [kNumTestMessages];
-    ot::Message *msgMed     [kNumTestMessages];
-    ot::Message *msgLow     [kNumTestMessages];
-    ot::Message *msgVeryLow [kNumTestMessages];
+
+    ot::MessagePool           messagePool(&instance);
+    ot::PriorityQueue         queue;
+    ot::MessageQueue          messageQueue;
+    ot::Message              *msgHigh    [kNumTestMessages];
+    ot::Message              *msgMed     [kNumTestMessages];
+    ot::Message              *msgLow     [kNumTestMessages];
+    ot::Message              *msgVeryLow [kNumTestMessages];
     ot::MessagePool::Iterator it;
 
     // Allocate messages with different priorities.

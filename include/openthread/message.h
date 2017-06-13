@@ -228,7 +228,7 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
  */
 typedef struct
 {
-    void *mData;            ///< Opaque data used by the implementation.
+    void *mData; ///< Opaque data used by the implementation.
 } otMessageQueue;
 
 /**
@@ -305,7 +305,7 @@ OTAPI void OTCALL otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aB
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_MESSAGE_H_
+#endif // OPENTHREAD_MESSAGE_H_

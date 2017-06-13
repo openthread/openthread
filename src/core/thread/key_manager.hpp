@@ -123,7 +123,9 @@ public:
      * @returns The current key sequence value.
      *
      */
-    uint32_t GetCurrentKeySequence(void) const { return mKeySequence; }
+    uint32_t GetCurrentKeySequence(void) const {
+        return mKeySequence;
+    }
 
     /**
      * This method sets the current key sequence value.
@@ -139,7 +141,9 @@ public:
      * @returns A pointer to the current MAC key.
      *
      */
-    const uint8_t *GetCurrentMacKey(void) const { return mKey + kMacKeyOffset; }
+    const uint8_t *GetCurrentMacKey(void) const {
+        return mKey + kMacKeyOffset;
+    }
 
     /**
      * This method returns a pointer to the current MLE key.
@@ -147,7 +151,9 @@ public:
      * @returns A pointer to the current MLE key.
      *
      */
-    const uint8_t *GetCurrentMleKey(void) const { return mKey; }
+    const uint8_t *GetCurrentMleKey(void) const {
+        return mKey;
+    }
 
     /**
      * This method returns a pointer to a temporary MAC key computed from the given key sequence.
@@ -175,7 +181,9 @@ public:
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void) const { return mMacFrameCounter; }
+    uint32_t GetMacFrameCounter(void) const {
+        return mMacFrameCounter;
+    }
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -183,7 +191,9 @@ public:
      * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetMacFrameCounter(uint32_t aMacFrameCounter) { mMacFrameCounter = aMacFrameCounter; }
+    void SetMacFrameCounter(uint32_t aMacFrameCounter) {
+        mMacFrameCounter = aMacFrameCounter;
+    }
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
@@ -191,7 +201,9 @@ public:
      * @param[in]  aStoredMacFrameCounter  The stored MAC Frame Counter value.
      *
      */
-    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter) { mStoredMacFrameCounter = aStoredMacFrameCounter; }
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter) {
+        mStoredMacFrameCounter = aStoredMacFrameCounter;
+    }
 
     /**
      * This method increments the current MAC Frame Counter value.
@@ -205,7 +217,9 @@ public:
      * @returns The current MLE Frame Counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const { return mMleFrameCounter; }
+    uint32_t GetMleFrameCounter(void) const {
+        return mMleFrameCounter;
+    }
 
     /**
      * This method sets the current MLE Frame Counter value.
@@ -213,7 +227,9 @@ public:
      * @param[in]  aMleFrameCounter  The MLE Frame Counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aMleFrameCounter) { mMleFrameCounter = aMleFrameCounter; }
+    void SetMleFrameCounter(uint32_t aMleFrameCounter) {
+        mMleFrameCounter = aMleFrameCounter;
+    }
 
     /**
      * This method sets the MLE Frame Counter value which is stored in non-volatile memory.
@@ -221,7 +237,9 @@ public:
      * @param[in]  aStoredMleFrameCounter  The stored MLE Frame Counter value.
      *
      */
-    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter) { mStoredMleFrameCounter = aStoredMleFrameCounter; }
+    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter) {
+        mStoredMleFrameCounter = aStoredMleFrameCounter;
+    }
 
     /**
      * This method increments the current MLE Frame Counter value.
@@ -235,7 +253,9 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    const uint8_t *GetKek(void) const { return mKek; }
+    const uint8_t *GetKek(void) const {
+        return mKek;
+    }
 
     /**
      * This method sets the KEK.
@@ -251,13 +271,17 @@ public:
      * @returns The current KEK Frame Counter value.
      *
      */
-    uint32_t GetKekFrameCounter(void) const { return mKekFrameCounter; }
+    uint32_t GetKekFrameCounter(void) const {
+        return mKekFrameCounter;
+    }
 
     /**
      * This method increments the current KEK Frame Counter value.
      *
      */
-    void IncrementKekFrameCounter(void) { mKekFrameCounter++; }
+    void IncrementKekFrameCounter(void) {
+        mKekFrameCounter++;
+    }
 
     /**
      * This method returns the KeyRotation time.
@@ -266,7 +290,9 @@ public:
      *
      * @returns The KeyRotation value in hours.
      */
-    uint32_t GetKeyRotation(void) const { return mKeyRotationTime; }
+    uint32_t GetKeyRotation(void) const {
+        return mKeyRotationTime;
+    }
 
     /**
      * This method sets the KeyRotation time.
@@ -290,7 +316,9 @@ public:
      * @returns The KeySwitchGuardTime value in hours.
      *
      */
-    uint32_t GetKeySwitchGuardTime(void) const { return mKeySwitchGuardTime; }
+    uint32_t GetKeySwitchGuardTime(void) const {
+        return mKeySwitchGuardTime;
+    }
 
     /**
      * This method sets the KeySwitchGuardTime.
@@ -300,7 +328,9 @@ public:
      * @param[in]  aKeySwitchGuardTime  The KeySwitchGuardTime value in hours.
      *
      */
-    void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime) { mKeySwitchGuardTime = aKeySwitchGuardTime; }
+    void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime) {
+        mKeySwitchGuardTime = aKeySwitchGuardTime;
+    }
 
     /**
      * This method returns the Security Policy Flags.
@@ -311,7 +341,9 @@ public:
      * @returns The SecurityPolicy Flags.
      *
      */
-    uint8_t GetSecurityPolicyFlags(void) const { return mSecurityPolicyFlags; }
+    uint8_t GetSecurityPolicyFlags(void) const {
+        return mSecurityPolicyFlags;
+    }
 
     /**
      * This method sets the Security Policy Flags.
@@ -322,7 +354,9 @@ public:
      * @param[in]  aSecurityPolicyFlags  The Security Policy Flags.
      *
      */
-    void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags) { mSecurityPolicyFlags = aSecurityPolicyFlags; }
+    void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags) {
+        mSecurityPolicyFlags = aSecurityPolicyFlags;
+    }
 
 private:
     enum
@@ -341,36 +375,36 @@ private:
 
     ThreadNetif &mNetif;
 
-    otMasterKey mMasterKey;
+    otMasterKey  mMasterKey;
 
-    uint32_t mKeySequence;
-    uint8_t mKey[Crypto::HmacSha256::kHashSize];
+    uint32_t     mKeySequence;
+    uint8_t      mKey[Crypto::HmacSha256::kHashSize];
 
-    uint8_t mTemporaryKey[Crypto::HmacSha256::kHashSize];
+    uint8_t      mTemporaryKey[Crypto::HmacSha256::kHashSize];
 
-    uint32_t mMacFrameCounter;
-    uint32_t mMleFrameCounter;
-    uint32_t mStoredMacFrameCounter;
-    uint32_t mStoredMleFrameCounter;
+    uint32_t     mMacFrameCounter;
+    uint32_t     mMleFrameCounter;
+    uint32_t     mStoredMacFrameCounter;
+    uint32_t     mStoredMleFrameCounter;
 
-    uint32_t mKeyRotationTime;
-    uint32_t mKeySwitchGuardTime;
-    bool     mKeySwitchGuardEnabled;
-    Timer    mKeyRotationTimer;
+    uint32_t     mKeyRotationTime;
+    uint32_t     mKeySwitchGuardTime;
+    bool         mKeySwitchGuardEnabled;
+    Timer        mKeyRotationTimer;
 
 #if OPENTHREAD_FTD
-    uint8_t mPSKc[kMaxKeyLength];
+    uint8_t  mPSKc[kMaxKeyLength];
 #endif
-    uint8_t mKek[kMaxKeyLength];
+    uint8_t  mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
 
-    uint8_t mSecurityPolicyFlags;
+    uint8_t  mSecurityPolicyFlags;
 };
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // KEY_MANAGER_HPP_

@@ -48,7 +48,7 @@ static uint32_t          sAlarmTime = 0;
 void kw41zAlarmInit(void)
 {
     pit_config_t config;
-    uint32_t count = (CLOCK_GetBusClkFreq() / 1000) - 1;
+    uint32_t     count = (CLOCK_GetBusClkFreq() / 1000) - 1;
 
     PIT_GetDefaultConfig(&config);
     PIT_Init(PIT, &config);

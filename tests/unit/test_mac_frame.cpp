@@ -42,8 +42,8 @@ void TestMacHeader(void)
     static const struct
     {
         uint16_t fcf;
-        uint8_t secCtl;
-        uint8_t headerLength;
+        uint8_t  secCtl;
+        uint8_t  headerLength;
     } tests[] =
     {
         { Mac::Frame::kFcfDstAddrNone | Mac::Frame::kFcfSrcAddrNone, 0, 3 },
@@ -73,7 +73,7 @@ void TestMacHeader(void)
 
     for (unsigned i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
     {
-        uint8_t psdu[Mac::Frame::kMTU];
+        uint8_t    psdu[Mac::Frame::kMTU];
         Mac::Frame frame;
 
         frame.mPsdu = psdu;
@@ -85,7 +85,7 @@ void TestMacHeader(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

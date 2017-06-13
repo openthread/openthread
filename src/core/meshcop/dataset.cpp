@@ -135,7 +135,7 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kChannelMask:
         {
-            uint8_t length = cur->GetLength();
+            uint8_t        length = cur->GetLength();
             const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
             const uint8_t *entryEnd =  entry + length;
 
@@ -258,6 +258,7 @@ otError Dataset::Set(const Dataset &aDataset)
 otError Dataset::Set(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;
+
     MeshCoP::ActiveTimestampTlv activeTimestampTlv;
 
     VerifyOrExit(aDataset.mIsActiveTimestampSet, error = OT_ERROR_INVALID_ARGS);
@@ -364,7 +365,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
 exit:
     return error;
 }
-#endif  // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD
 
 const Timestamp *Dataset::GetTimestamp(void) const
 {
@@ -409,17 +410,17 @@ int Dataset::Compare(const Dataset &aCompare) const
 {
     const Timestamp *thisTimestamp = GetTimestamp();
     const Timestamp *compareTimestamp = aCompare.GetTimestamp();
-    int rval;
+    int              rval;
 
-    if (compareTimestamp == NULL && thisTimestamp == NULL)
+    if ((compareTimestamp == NULL) && (thisTimestamp == NULL))
     {
         rval = 0;
     }
-    else if (compareTimestamp == NULL && thisTimestamp != NULL)
+    else if ((compareTimestamp == NULL) && (thisTimestamp != NULL))
     {
         rval = -1;
     }
-    else if (compareTimestamp != NULL && thisTimestamp == NULL)
+    else if ((compareTimestamp != NULL) && (thisTimestamp == NULL))
     {
         rval = 1;
     }
@@ -433,7 +434,7 @@ int Dataset::Compare(const Dataset &aCompare) const
 
 otError Dataset::Restore(void)
 {
-    otError error;
+    otError  error;
     uint16_t length = sizeof(mTlvs);
 
     error = otPlatSettingsGet(mInstance, GetSettingsKey(), 0, mTlvs, &length);
@@ -444,7 +445,7 @@ otError Dataset::Restore(void)
 
 otError Dataset::Store(void)
 {
-    otError error;
+    otError  error;
     uint16_t key = GetSettingsKey();
 
     if (mLength == 0)
@@ -461,9 +462,9 @@ otError Dataset::Store(void)
 
 otError Dataset::Set(const Tlv &aTlv)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
-    Tlv *old = Get(aTlv.GetType());
+    Tlv     *old = Get(aTlv.GetType());
 
     if (old != NULL)
     {
@@ -507,10 +508,11 @@ exit:
 otError Dataset::AppendMleDatasetTlv(Message &aMessage)
 {
     otError error = OT_ERROR_NONE;
-    Mle::Tlv tlv;
+
+    Mle::Tlv       tlv;
     Mle::Tlv::Type type;
-    Tlv *cur = reinterpret_cast<Tlv *>(mTlvs);
-    Tlv *end = reinterpret_cast<Tlv *>(mTlvs + mLength);
+    Tlv           *cur = reinterpret_cast<Tlv *>(mTlvs);
+    Tlv           *end = reinterpret_cast<Tlv *>(mTlvs + mLength);
 
     type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
 
@@ -554,5 +556,5 @@ void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
     mLength -= aLength;
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot

@@ -52,9 +52,9 @@ enum
 static uint8_t const *sSendBuffer = NULL;
 static uint16_t       sSendLen    = 0;
 
-static uint8_t        sReceiveBuffer[CC2650_RECV_CIRC_BUFF_SIZE];
-static uint16_t       sReceiveHeadIdx = 0;
-static uint16_t       sReceiveTailIdx = 0;
+static uint8_t  sReceiveBuffer[CC2650_RECV_CIRC_BUFF_SIZE];
+static uint16_t sReceiveHeadIdx = 0;
+static uint16_t sReceiveTailIdx = 0;
 
 void UART0_intHandler(void);
 
@@ -65,14 +65,14 @@ otError otPlatUartEnable(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
 
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON);
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON) {}
 
     PRCMPeripheralRunEnable(PRCM_PERIPH_UART0);
     PRCMPeripheralSleepEnable(PRCM_PERIPH_UART0);
     PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_UART0);
     PRCMLoadSet();
 
-    while (!PRCMLoadGet());
+    while (!PRCMLoadGet()) {}
 
     IOCPinTypeUart(UART0_BASE, IOID_2, IOID_3, IOID_UNUSED, IOID_UNUSED);
 
@@ -113,6 +113,7 @@ otError otPlatUartDisable(void)
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
+
     otEXPECT_ACTION(sSendBuffer == NULL, error = OT_ERROR_BUSY);
 
     sSendBuffer = aBuf;
@@ -153,7 +154,7 @@ static void processTransmit(void)
 {
     otEXPECT(sSendBuffer != NULL);
 
-    for (; sSendLen > 0; sSendLen--)
+    for ( ; sSendLen > 0; sSendLen--)
     {
         UARTCharPut(UART0_BASE, *sSendBuffer);
         sSendBuffer++;
@@ -194,4 +195,3 @@ void UART0_intHandler(void)
         }
     }
 }
-

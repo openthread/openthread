@@ -60,9 +60,9 @@ public:
     enum
     {
 #if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE,          ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE,         ///< Size of memory buffer (bytes).
 #else
-        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS,  ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).
 #endif
     };
 
@@ -81,7 +81,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
 #endif  // OT_MBEDTLS_HPP_

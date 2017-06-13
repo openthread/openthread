@@ -63,7 +63,7 @@
 
 enum
 {
-    NRF52840_RECEIVE_SENSITIVITY = -100,  // dBm
+    NRF52840_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
 static bool sDisabled;
@@ -74,9 +74,9 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1]
 __attribute__((section("nrf_radio_buffer.sTransmiPsdu")));
 static otRadioFrame sAckFrame;
 
-static uint32_t     sEnergyDetectionTime;
-static uint8_t      sEnergyDetectionChannel;
-static int8_t       sEnergyDetected;
+static uint32_t sEnergyDetectionTime;
+static uint8_t  sEnergyDetectionChannel;
+static int8_t   sEnergyDetected;
 
 typedef enum
 {

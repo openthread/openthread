@@ -58,13 +58,13 @@ public:
      */
     enum State
     {
-        kStateInvalid,                   ///< Neighbor link is invalid
-        kStateRestored,                  ///< Neighbor is restored from non-volatile memory
-        kStateParentRequest,             ///< Received an MLE Parent Request message
-        kStateChildIdRequest,            ///< Received an MLE Child ID Request message
-        kStateLinkRequest,               ///< Sent an MLE Link Request message
-        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message (trying to restore the child)
-        kStateValid,                     ///< Link is valid
+        kStateInvalid,            ///< Neighbor link is invalid
+        kStateRestored,           ///< Neighbor is restored from non-volatile memory
+        kStateParentRequest,      ///< Received an MLE Parent Request message
+        kStateChildIdRequest,     ///< Received an MLE Child ID Request message
+        kStateLinkRequest,        ///< Sent an MLE Link Request message
+        kStateChildUpdateRequest, ///< Sent an MLE Child Update Request message (trying to restore the child)
+        kStateValid,              ///< Link is valid
     };
 
     /**
@@ -73,7 +73,9 @@ public:
      * @returns The current state.
      *
      */
-    State GetState(void) const { return static_cast<State>(mState); }
+    State GetState(void) const {
+        return static_cast<State>(mState);
+    }
 
     /**
      * This method sets the current state.
@@ -81,7 +83,9 @@ public:
      * @param[in]  aState  The state value.
      *
      */
-    void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
+    void SetState(State aState) {
+        mState = static_cast<uint8_t>(aState);
+    }
 
     /**
      * Check if the neighbor/child is being restored.
@@ -89,7 +93,9 @@ public:
      * @returns TRUE if the neighbor is being restored, FALSE otherwise.
      *
      */
-    bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
+    bool IsStateRestoring(void) const {
+        return (mState == kStateRestored) || (mState == kStateChildUpdateRequest);
+    }
 
     /**
      * Check if the neighbor/child is in valid state or if it is being restored.
@@ -98,7 +104,9 @@ public:
      * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
      *
      */
-    bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || IsStateRestoring(); }
+    bool IsStateValidOrRestoring(void) const {
+        return (mState == kStateValid) || IsStateRestoring();
+    }
 
     /**
      * This method gets the device mode flags.
@@ -106,7 +114,9 @@ public:
      * @returns The device mode flags.
      *
      */
-    uint8_t GetDeviceMode(void) const { return mMode; }
+    uint8_t GetDeviceMode(void) const {
+        return mMode;
+    }
 
     /**
      * This method sets the device mode flags.
@@ -114,7 +124,9 @@ public:
      * @param[in]  aMode  The device mode flags.
      *
      */
-    void SetDeviceMode(uint8_t aMode) { mMode = aMode; }
+    void SetDeviceMode(uint8_t aMode) {
+        mMode = aMode;
+    }
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -122,7 +134,9 @@ public:
      * @returns TRUE if rx-on-when-idle, FALSE otherwise.
      *
      */
-    bool IsRxOnWhenIdle(void) const { return (mMode & Mle::ModeTlv::kModeRxOnWhenIdle) != 0; }
+    bool IsRxOnWhenIdle(void) const {
+        return (mMode & Mle::ModeTlv::kModeRxOnWhenIdle) != 0;
+    }
 
     /**
      * This method indicates whether or not the device is a Full Thread Device.
@@ -130,7 +144,9 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return (mMode & Mle::ModeTlv::kModeFFD) != 0; }
+    bool IsFullThreadDevice(void) const {
+        return (mMode & Mle::ModeTlv::kModeFFD) != 0;
+    }
 
     /**
      * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
@@ -138,7 +154,9 @@ public:
      * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
      *
      */
-    bool IsSecureDataRequest(void) const { return (mMode & Mle::ModeTlv::kModeSecureDataRequest) != 0; }
+    bool IsSecureDataRequest(void) const {
+        return (mMode & Mle::ModeTlv::kModeSecureDataRequest) != 0;
+    }
 
     /**
      * This method indicates whether or not the device requests Full Network Data.
@@ -146,13 +164,17 @@ public:
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
      *
      */
-    bool IsFullNetworkData(void) const { return (mMode & Mle::ModeTlv::kModeFullNetworkData) != 0; }
+    bool IsFullNetworkData(void) const {
+        return (mMode & Mle::ModeTlv::kModeFullNetworkData) != 0;
+    }
 
     /**
      * This method sets all bytes of the Extended Address to zero.
      *
      */
-    void ClearExtAddress(void) { memset(&mMacAddr, 0, sizeof(mMacAddr)); }
+    void ClearExtAddress(void) {
+        memset(&mMacAddr, 0, sizeof(mMacAddr));
+    }
 
     /**
      * This method returns the Extended Address.
@@ -160,7 +182,9 @@ public:
      * @returns A reference to the Extended Address.
      *
      */
-    Mac::ExtAddress &GetExtAddress(void) { return mMacAddr; }
+    Mac::ExtAddress &GetExtAddress(void) {
+        return mMacAddr;
+    }
 
     /**
      * This method returns the Extended Address.
@@ -168,7 +192,9 @@ public:
      * @returns A reference to the Extended Address.
      *
      */
-    const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
+    const Mac::ExtAddress &GetExtAddress(void) const {
+        return mMacAddr;
+    }
 
     /**
      * This method sets the Extended Address.
@@ -176,7 +202,9 @@ public:
      * @param[in]  aAddress  The Extended Address value to set.
      *
      */
-    void SetExtAddress(const Mac::ExtAddress &aAddress) { mMacAddr = aAddress; }
+    void SetExtAddress(const Mac::ExtAddress &aAddress) {
+        mMacAddr = aAddress;
+    }
 
     /**
      * This method gets the key sequence value.
@@ -184,7 +212,9 @@ public:
      * @returns The key sequence value.
      *
      */
-    uint32_t GetKeySequence(void) const { return mKeySequence; }
+    uint32_t GetKeySequence(void) const {
+        return mKeySequence;
+    }
 
     /**
      * This method sets the key sequence value.
@@ -192,7 +222,9 @@ public:
      * @parma[in]  aKeySequence  The key sequence value.
      *
      */
-    void SetKeySequence(uint32_t aKeySequence) { mKeySequence = aKeySequence; }
+    void SetKeySequence(uint32_t aKeySequence) {
+        mKeySequence = aKeySequence;
+    }
 
     /**
      * This method returns the last heard time.
@@ -200,7 +232,9 @@ public:
      * @returns The last heard time.
      *
      */
-    uint32_t GetLastHeard(void) const { return mLastHeard; }
+    uint32_t GetLastHeard(void) const {
+        return mLastHeard;
+    }
 
     /**
      * This method sets the last heard time.
@@ -208,7 +242,9 @@ public:
      * @param[in]  aLastHeard  The last heard time.
      *
      */
-    void SetLastHeard(uint32_t aLastHeard) { mLastHeard = aLastHeard; }
+    void SetLastHeard(uint32_t aLastHeard) {
+        mLastHeard = aLastHeard;
+    }
 
     /**
      * This method gets the link frame counter value.
@@ -216,7 +252,9 @@ public:
      * @returns The link frame counter value.
      *
      */
-    uint32_t GetLinkFrameCounter(void) const { return mValidPending.mValid.mLinkFrameCounter; }
+    uint32_t GetLinkFrameCounter(void) const {
+        return mValidPending.mValid.mLinkFrameCounter;
+    }
 
     /**
      * This method sets the link frame counter value.
@@ -224,7 +262,9 @@ public:
      * @param[in]  aFrameCounter  The link frame counter value.
      *
      */
-    void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
+    void SetLinkFrameCounter(uint32_t aFrameCounter) {
+        mValidPending.mValid.mLinkFrameCounter = aFrameCounter;
+    }
 
     /**
      * This method gets the MLE frame counter value.
@@ -232,7 +272,9 @@ public:
      * @returns The MLE frame counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const { return mValidPending.mValid.mMleFrameCounter; }
+    uint32_t GetMleFrameCounter(void) const {
+        return mValidPending.mValid.mMleFrameCounter;
+    }
 
     /**
      * This method sets the MLE frame counter value.
@@ -240,7 +282,9 @@ public:
      * @param[in]  aFrameCounter  The MLE frame counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mMleFrameCounter = aFrameCounter; }
+    void SetMleFrameCounter(uint32_t aFrameCounter) {
+        mValidPending.mValid.mMleFrameCounter = aFrameCounter;
+    }
 
     /**
      * This method gets the RLOC16 value.
@@ -248,7 +292,9 @@ public:
      * @returns The RLOC16 value.
      *
      */
-    uint16_t GetRloc16(void) const { return mValidPending.mValid.mRloc16; }
+    uint16_t GetRloc16(void) const {
+        return mValidPending.mValid.mRloc16;
+    }
 
     /**
      * This method sets the RLOC16 value.
@@ -256,7 +302,9 @@ public:
      * @param[in]  aRloc16  The RLOC16 value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mValidPending.mValid.mRloc16 = aRloc16; }
+    void SetRloc16(uint16_t aRloc16) {
+        mValidPending.mValid.mRloc16 = aRloc16;
+    }
 
     /**
      * This method indicates whether an IEEE 802.15.4 Data Request message was received.
@@ -264,7 +312,9 @@ public:
      * @returns TRUE if an IEEE 802.15.4 Data Request message was received, FALSE otherwise.
      *
      */
-    bool IsDataRequestPending(void) const { return mDataRequest; }
+    bool IsDataRequestPending(void) const {
+        return mDataRequest;
+    }
 
     /**
      * This method sets the indicator for whether an IEEE 802.15.4 Data Request message was received.
@@ -272,7 +322,9 @@ public:
      * @param[in]  aPending  TRUE if an IEEE 802.15.4 Data Request message was received, FALSE otherwise.
      *
      */
-    void SetDataRequestPending(bool aPending) { mDataRequest = aPending; }
+    void SetDataRequestPending(bool aPending) {
+        mDataRequest = aPending;
+    }
 
     /**
      * This method gets the number of consecutive link failures.
@@ -280,19 +332,25 @@ public:
      * @returns The number of consecutive link failures.
      *
      */
-    uint8_t GetLinkFailures(void) const { return mLinkFailures; }
+    uint8_t GetLinkFailures(void) const {
+        return mLinkFailures;
+    }
 
     /**
      * This method increments the number of consecutive link failures.
      *
      */
-    void IncrementLinkFailures(void) { mLinkFailures++; }
+    void IncrementLinkFailures(void) {
+        mLinkFailures++;
+    }
 
     /**
      * This method resets the number of consecutive link failures to zero.
      *
      */
-    void ResetLinkFailures(void) { mLinkFailures = 0; }
+    void ResetLinkFailures(void) {
+        mLinkFailures = 0;
+    }
 
     /**
      * This method returns the LinkQualityInfo object.
@@ -300,7 +358,9 @@ public:
      * @returns The LinkQualityInfo object.
      *
      */
-    LinkQualityInfo &GetLinkInfo(void) { return mLinkInfo; }
+    LinkQualityInfo &GetLinkInfo(void) {
+        return mLinkInfo;
+    }
 
     /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
@@ -314,7 +374,9 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
+    const uint8_t *GetChallenge(void) const {
+        return mValidPending.mPending.mChallenge;
+    }
 
     /**
      * This method returns the size (byets) of the challenge value for MLE Link Request/Response exchanges.
@@ -322,32 +384,34 @@ public:
      * @returns The size (byets) of the challenge value for MLE Link Request/Response exchanges.
      *
      */
-    uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
+    uint8_t GetChallengeSize(void) const {
+        return sizeof(mValidPending.mPending.mChallenge);
+    }
 
 private:
-    Mac::ExtAddress mMacAddr;            ///< The IEEE 802.15.4 Extended Address
-    uint32_t        mLastHeard;          ///< Time when last heard.
+    Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
+    uint32_t        mLastHeard; ///< Time when last heard.
     union
     {
         struct
         {
-            uint32_t mLinkFrameCounter;  ///< The Link Frame Counter
-            uint32_t mMleFrameCounter;   ///< The MLE Frame Counter
-            uint16_t mRloc16;            ///< The RLOC16
+            uint32_t mLinkFrameCounter; ///< The Link Frame Counter
+            uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
+            uint16_t mRloc16;           ///< The RLOC16
         } mValid;
         struct
         {
-            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize];  ///< The challenge value
-            uint8_t mChallengeLength;    ///< The challenge length
+            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
+            uint8_t mChallengeLength;                        ///< The challenge length
         } mPending;
     } mValidPending;
 
-    uint32_t        mKeySequence;        ///< Current key sequence
-    uint8_t         mState : 3;          ///< The link state
-    uint8_t         mMode : 4;           ///< The MLE device mode
-    bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
-    uint8_t         mLinkFailures;       ///< Consecutive link failure count
-    LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
+    uint32_t        mKeySequence;     ///< Current key sequence
+    uint8_t         mState : 3;       ///< The link state
+    uint8_t         mMode : 4;        ///< The MLE device mode
+    bool            mDataRequest : 1; ///< Indicates whether or not a Data Poll was received
+    uint8_t         mLinkFailures;    ///< Consecutive link failure count
+    LinkQualityInfo mLinkInfo;        ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
 /**
@@ -367,7 +431,9 @@ public:
      * This method clears the IPv6 addresses for the child.
      *
      */
-    void ClearIp6Addresses(void) { memset(mIp6Address, 0, sizeof(mIp6Address)); }
+    void ClearIp6Addresses(void) {
+        memset(mIp6Address, 0, sizeof(mIp6Address));
+    }
 
     /**
      * This method gets the IPv6 address at index @p aIndex.
@@ -377,7 +443,9 @@ public:
      * @returns A reference to the IPv6 address entry at index @p aIndex.
      *
      */
-    Ip6::Address &GetIp6Address(uint8_t aIndex) { return mIp6Address[aIndex]; }
+    Ip6::Address &GetIp6Address(uint8_t aIndex) {
+        return mIp6Address[aIndex];
+    }
 
     /**
      * This method searches for a given IPv6 address in the child's IPv6 address list and provides the index of the
@@ -407,7 +475,9 @@ public:
      * @returns The child timeout.
      *
      */
-    uint32_t GetTimeout(void) const { return mTimeout; }
+    uint32_t GetTimeout(void) const {
+        return mTimeout;
+    }
 
     /**
      * This method sets the child timeout.
@@ -415,7 +485,9 @@ public:
      * @param[in]  aTimeout  The child timeout.
      *
      */
-    void SetTimeout(uint32_t aTimeout) { mTimeout = aTimeout; }
+    void SetTimeout(uint32_t aTimeout) {
+        mTimeout = aTimeout;
+    }
 
     /**
      * This method gets the network data version.
@@ -423,7 +495,9 @@ public:
      * @returns The network data version.
      *
      */
-    uint8_t GetNetworkDataVersion(void) const { return mNetworkDataVersion; }
+    uint8_t GetNetworkDataVersion(void) const {
+        return mNetworkDataVersion;
+    }
 
     /**
      * This method sets the network data version.
@@ -431,7 +505,9 @@ public:
      * @param[in]  aVersion  The network data version.
      *
      */
-    void SetNetworkDataVersion(uint8_t aVersion) { mNetworkDataVersion = aVersion; }
+    void SetNetworkDataVersion(uint8_t aVersion) {
+        mNetworkDataVersion = aVersion;
+    }
 
     /**
      * This method generates a new challenge value to use during a child attach.
@@ -445,7 +521,9 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mAttachChallenge; }
+    const uint8_t *GetChallenge(void) const {
+        return mAttachChallenge;
+    }
 
     /**
      * This method gets the challenge size (bytes) used during attach.
@@ -453,7 +531,9 @@ public:
      * @returns The challenge size (bytes).
      *
      */
-    uint8_t GetChallengeSize(void) const { return sizeof(mAttachChallenge); }
+    uint8_t GetChallengeSize(void) const {
+        return sizeof(mAttachChallenge);
+    }
 
     /**
      * This method gets the IEEE 802.15.4 Frame Counter used during indirect retransmissions.
@@ -461,7 +541,9 @@ public:
      * @returns The IEEE 802.15.4 Frame Counter value.
      *
      */
-    uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
+    uint32_t GetIndirectFrameCounter(void) const {
+        return mIndirectFrameCounter;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Frame Counter to use during indirect retransmissions.
@@ -469,7 +551,9 @@ public:
      * @param[in]  aFrameCounter  The IEEE 802.15.4 Frame Counter value.
      *
      */
-    void SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
+    void SetIndirectFrameCounter(uint32_t aFrameCounter) {
+        mIndirectFrameCounter = aFrameCounter;
+    }
 
     /**
      * This method gets the message buffer to use for indirect transmissions.
@@ -477,7 +561,9 @@ public:
      * @returns The message buffer.
      *
      */
-    Message *GetIndirectMessage(void) { return mIndirectMessage; }
+    Message *GetIndirectMessage(void) {
+        return mIndirectMessage;
+    }
 
     /**
      * This method sets the message buffer to use for indirect transmissions.
@@ -485,7 +571,9 @@ public:
      * @param[in]  aMessage  The message buffer.
      *
      */
-    void SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
+    void SetIndirectMessage(Message *aMessage) {
+        mIndirectMessage = aMessage;
+    }
 
     /**
      * This method gets the 6LoWPAN Fragment Offset to use for indirect transmissions.
@@ -493,7 +581,9 @@ public:
      * @returns The 6LoWPAN Fragment Offset value.
      *
      */
-    uint16_t GetIndirectFragmentOffset(void) const { return mIndirectFragmentOffset; }
+    uint16_t GetIndirectFragmentOffset(void) const {
+        return mIndirectFragmentOffset;
+    }
 
     /**
      * This method sets the 6LoWPAN Fragment Offset to use for indirect transmissions.
@@ -501,7 +591,9 @@ public:
      * @param[in]  aFragmentOffset  The 6LoWPAN Fragment Offset value to use.
      *
      */
-    void SetIndirectFragmentOffset(uint16_t aFragmentOffset) { mIndirectFragmentOffset = aFragmentOffset; }
+    void SetIndirectFragmentOffset(uint16_t aFragmentOffset) {
+        mIndirectFragmentOffset = aFragmentOffset;
+    }
 
     /**
      * This method gets the IEEE 802.15.4 Key ID to use for indirect retransmissions.
@@ -509,7 +601,9 @@ public:
      * @returns The IEEE 802.15.4 Key ID value.
      *
      */
-    uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
+    uint8_t GetIndirectKeyId(void) const {
+        return mIndirectKeyId;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Key ID value to use for indirect retransmissions.
@@ -517,7 +611,9 @@ public:
      * @param[in]  aKeyId  The IEEE 802.15.4 Key ID value.
      *
      */
-    void SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
+    void SetIndirectKeyId(uint8_t aKeyId) {
+        mIndirectKeyId = aKeyId;
+    }
 
     /**
      * This method gets the number of indirect transmission attempts for the current message.
@@ -525,19 +621,25 @@ public:
      * @returns The number of indirect transmission attempts.
      *
      */
-    uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
+    uint8_t GetIndirectTxAttempts(void) const {
+        return mIndirectTxAttempts;
+    }
 
     /**
      * This method resets the number of indirect transmission attempts to zero.
      *
      */
-    void ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
+    void ResetIndirectTxAttempts(void) {
+        mIndirectTxAttempts = 0;
+    }
 
     /**
      * This method increments the number of indirect transmission attempts.
      *
      */
-    void IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
+    void IncrementIndirectTxAttempts(void) {
+        mIndirectTxAttempts++;
+    }
 
     /**
      * This method gets the IEEE 802.15.4 Data Sequence Number to use during indirect retransmissions.
@@ -545,7 +647,9 @@ public:
      * @returns The IEEE 802.15.4 Data Sequence Number value.
      *
      */
-    uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
+    uint8_t GetIndirectDataSequenceNumber(void) const {
+        return mIndirectDsn;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Data Sequence Number to use during indirect retransmissions.
@@ -553,7 +657,9 @@ public:
      * @param[in]  aDsn  The IEEE 802.15.4 Data Sequence Number value.
      *
      */
-    void SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
+    void SetIndirectDataSequenceNumber(uint8_t aDsn) {
+        mIndirectDsn = aDsn;
+    }
 
     /**
      * This method indicates whether or not to source match on the short address.
@@ -561,7 +667,9 @@ public:
      * @returns TRUE if using the short address, FALSE if using the extended address.
      *
      */
-    bool IsIndirectSourceMatchShort(void) const { return mUseShortAddress; }
+    bool IsIndirectSourceMatchShort(void) const {
+        return mUseShortAddress;
+    }
 
     /**
      * This method sets whether or not to source match on the short address.
@@ -569,7 +677,9 @@ public:
      * @param[in]  aShort  TRUE if using the short address, FALSE if using the extended address.
      *
      */
-    void SetIndirectSourceMatchShort(bool aShort) { mUseShortAddress = aShort; }
+    void SetIndirectSourceMatchShort(bool aShort) {
+        mUseShortAddress = aShort;
+    }
 
     /**
      * This method indicates whether or not the child needs to be added to the source match table.
@@ -577,7 +687,9 @@ public:
      * @returns TRUE if the child needs to be added to the source match table, FALSE otherwise.
      *
      */
-    bool IsIndirectSourceMatchPending(void) const { return mSourceMatchPending; }
+    bool IsIndirectSourceMatchPending(void) const {
+        return mSourceMatchPending;
+    }
 
     /**
      * This method sets whether or not the child needs to be added to the source match table.
@@ -585,7 +697,9 @@ public:
      * @param[in]  aPending  TRUE if the child needs to be added to the source match table, FALSE otherwise.
      *
      */
-    void SetIndirectSourceMatchPending(bool aPending) { mSourceMatchPending = aPending; }
+    void SetIndirectSourceMatchPending(bool aPending) {
+        mSourceMatchPending = aPending;
+    }
 
     /**
      * This method returns the number of queued message(s) for the child
@@ -593,31 +707,41 @@ public:
      * @returns Number of queues message(s).
      *
      */
-    uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
+    uint16_t GetIndirectMessageCount(void) const {
+        return mQueuedMessageCount;
+    }
 
     /**
      * This method increments the indirect message count.
      *
      */
-    void IncrementIndirectMessageCount(void) { mQueuedMessageCount++; }
+    void IncrementIndirectMessageCount(void) {
+        mQueuedMessageCount++;
+    }
 
     /**
      * This method decrements the indirect message count.
      *
      */
-    void DecrementIndirectMessageCount(void) { mQueuedMessageCount--; }
+    void DecrementIndirectMessageCount(void) {
+        mQueuedMessageCount--;
+    }
 
     /**
      * This method resets the indirect message count to zero.
      *
      */
-    void ResetIndirectMessageCount(void) { mQueuedMessageCount = 0; }
+    void ResetIndirectMessageCount(void) {
+        mQueuedMessageCount = 0;
+    }
 
     /**
      * This method clears the requested TLV list.
      *
      */
-    void ClearRequestTlvs(void) { memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs)); }
+    void ClearRequestTlvs(void) {
+        memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs));
+    }
 
     /**
      * This method returns the requested TLV at index @p aIndex.
@@ -627,7 +751,9 @@ public:
      * @returns The requested TLV at index @p aIndex.
      *
      */
-    uint8_t GetRequestTlv(uint8_t aIndex) const { return mRequestTlvs[aIndex]; }
+    uint8_t GetRequestTlv(uint8_t aIndex) const {
+        return mRequestTlvs[aIndex];
+    }
 
     /**
      * This method sets the requested TLV at index @p aIndex.
@@ -636,7 +762,9 @@ public:
      * @param[in]  aType   The TLV type.
      *
      */
-    void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
+    void SetRequestTlv(uint8_t aIndex, uint8_t aType) {
+        mRequestTlvs[aIndex] = aType;
+    }
 
     /**
      * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress` flag).
@@ -654,7 +782,9 @@ public:
      * This method increments the number of seconds since last supervision of the child.
      *
      */
-    void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
+    void IncrementSecondsSinceLastSupervision(void) {
+        mSecondsSinceSupervision++;
+    }
 
     /**
      * This method returns the number of seconds since last supervision of the child (last message to the child)
@@ -662,19 +792,23 @@ public:
      * @returns Number of seconds since last supervision of the child.
      *
      */
-    uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
+    uint16_t GetSecondsSinceLastSupervision(void) const {
+        return mSecondsSinceSupervision;
+    }
 
     /**
      * This method resets the number of seconds since last supervision of the child to zero.
      *
      */
-    void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
+    void ResetSecondsSinceLastSupervision(void) {
+        mSecondsSinceSupervision = 0;
+    }
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 private:
-    Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
-    uint32_t     mTimeout;                             ///< Child timeout
+    Ip6::Address mIp6Address[kMaxIp6AddressPerChild]; ///< Registered IPv6 addresses
+    uint32_t     mTimeout;                            ///< Child timeout
 
     union
     {
@@ -682,20 +816,20 @@ private:
         uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
     };
 
-    uint32_t     mIndirectFrameCounter;                ///< Frame counter for current indirect message (used fore retx).
-    Message     *mIndirectMessage;                     ///< Current indirect message.
-    uint16_t     mIndirectFragmentOffset;              ///< 6LoWPAN fragment offset for the indirect message.
-    uint8_t      mIndirectKeyId;                       ///< Key Id for current indirect message (used for retx).
-    uint8_t      mIndirectTxAttempts;                  ///< Number of data poll triggered tx attempts.
-    uint8_t      mIndirectDsn;                         ///< MAC level Data Sequence Number (DSN) for retx attempts.
-    uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
-    uint16_t     mQueuedMessageCount : 13;             ///< Number of queued indirect messages for the child.
-    bool         mUseShortAddress : 1;                 ///< Indicates whether to use short or extended address.
-    bool         mSourceMatchPending : 1;              ///< Indicates whether or not pending to add to src match table.
+    uint32_t mIndirectFrameCounter;    ///< Frame counter for current indirect message (used fore retx).
+    Message *mIndirectMessage;         ///< Current indirect message.
+    uint16_t mIndirectFragmentOffset;  ///< 6LoWPAN fragment offset for the indirect message.
+    uint8_t  mIndirectKeyId;           ///< Key Id for current indirect message (used for retx).
+    uint8_t  mIndirectTxAttempts;      ///< Number of data poll triggered tx attempts.
+    uint8_t  mIndirectDsn;             ///< MAC level Data Sequence Number (DSN) for retx attempts.
+    uint8_t  mNetworkDataVersion;      ///< Current Network Data version
+    uint16_t mQueuedMessageCount : 13; ///< Number of queued indirect messages for the child.
+    bool     mUseShortAddress : 1;     ///< Indicates whether to use short or extended address.
+    bool     mSourceMatchPending : 1;  ///< Indicates whether or not pending to add to src match table.
 
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
-    uint16_t     mSecondsSinceSupervision;             ///< Number of seconds since last supervision of the child.
-#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
+#endif  // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 };
 
@@ -712,7 +846,9 @@ public:
      * @returns The router ID of the next hop to this router.
      *
      */
-    uint8_t GetNextHop(void) const { return mNextHop; }
+    uint8_t GetNextHop(void) const {
+        return mNextHop;
+    }
 
     /**
      * This method sets the router ID of the next hop to this router.
@@ -720,7 +856,9 @@ public:
      * @param[in]  aRouterId  The router ID of the next hop to this router.
      *
      */
-    void SetNextHop(uint8_t aRouterId) { mNextHop = aRouterId; }
+    void SetNextHop(uint8_t aRouterId) {
+        mNextHop = aRouterId;
+    }
 
     /**
      * This method gets the link quality out value for this router.
@@ -728,7 +866,9 @@ public:
      * @returns The link quality out value for this router.
      *
      */
-    uint8_t GetLinkQualityOut(void) const { return mLinkQualityOut; }
+    uint8_t GetLinkQualityOut(void) const {
+        return mLinkQualityOut;
+    }
 
     /**
      * This method sets the link quality out value for this router.
@@ -736,7 +876,9 @@ public:
      * @param[in]  aLinkQuality  The link quality out value for this router.
      *
      */
-    void SetLinkQualityOut(uint8_t aLinkQuality) { mLinkQualityOut = aLinkQuality; }
+    void SetLinkQualityOut(uint8_t aLinkQuality) {
+        mLinkQualityOut = aLinkQuality;
+    }
 
     /**
      * This method get the route cost to this router.
@@ -744,7 +886,9 @@ public:
      * @returns The route cost to this router.
      *
      */
-    uint8_t GetCost(void) const { return mCost; }
+    uint8_t GetCost(void) const {
+        return mCost;
+    }
 
     /**
      * This method sets the router cost to this router.
@@ -752,7 +896,9 @@ public:
      * @param[in]  aCost  The router cost to this router.
      *
      */
-    void SetCost(uint8_t aCost) { mCost = aCost; }
+    void SetCost(uint8_t aCost) {
+        mCost = aCost;
+    }
 
     /**
      * This method indicates whether or not this router ID has been allocated.
@@ -760,7 +906,9 @@ public:
      * @returns TRUE if this router ID has been allocated, FALSE otherwise.
      *
      */
-    bool IsAllocated(void) const { return mAllocated; }
+    bool IsAllocated(void) const {
+        return mAllocated;
+    }
 
     /**
      * This method sets whether or not this router ID has been allocated.
@@ -768,7 +916,9 @@ public:
      * @param[in]  aAllocated  TRUE if this router ID has been allocated, FALSE otherwise.
      *
      */
-    void SetAllocated(bool aAllocated) { mAllocated = aAllocated; }
+    void SetAllocated(bool aAllocated) {
+        mAllocated = aAllocated;
+    }
 
     /**
      * This method indicates whether the reclaim delay is in effect for this router ID.
@@ -776,7 +926,9 @@ public:
      * @returns TRUE if the reclaim delay is in effect, FALSE otherwise.
      *
      */
-    bool IsReclaimDelay(void) const { return mReclaimDelay; }
+    bool IsReclaimDelay(void) const {
+        return mReclaimDelay;
+    }
 
     /**
      * This method sets whether the reclaim delay is in effect for this router ID.
@@ -784,16 +936,18 @@ public:
      * @param[in]  aReclaimDelay  TRUE if the reclaim delay is in effect, FALSE otherwise.
      *
      */
-    void SetReclaimDelay(bool aReclaimDelay) { mReclaimDelay = aReclaimDelay; }
+    void SetReclaimDelay(bool aReclaimDelay) {
+        mReclaimDelay = aReclaimDelay;
+    }
 
 private:
-    uint8_t mNextHop;             ///< The next hop towards this router
-    uint8_t mLinkQualityOut : 2;  ///< The link quality out for this router
-    uint8_t mCost : 4;            ///< The cost to this router via neighbor router
-    bool    mAllocated : 1;       ///< Indicates whether or not this entry is allocated
-    bool    mReclaimDelay : 1;    ///< Indicates whether or not this entry is waiting to be reclaimed
+    uint8_t mNextHop;            ///< The next hop towards this router
+    uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
+    uint8_t mCost : 4;           ///< The cost to this router via neighbor router
+    bool    mAllocated : 1;      ///< Indicates whether or not this entry is allocated
+    bool    mReclaimDelay : 1;   ///< Indicates whether or not this entry is waiting to be reclaimed
 };
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // TOPOLOGY_HPP_

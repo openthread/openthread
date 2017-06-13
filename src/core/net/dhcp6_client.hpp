@@ -99,7 +99,9 @@ public:
      * @returns Status.
      *
      */
-    Status GetStatus(void) const { return static_cast<Status>(mStatus); }
+    Status GetStatus(void) const {
+        return static_cast<Status>(mStatus);
+    }
 
     /**
      * This method sets the status of the object.
@@ -107,7 +109,9 @@ public:
      * @param[in]  aStatus  The Status to set.
      *
      */
-    void SetStatus(Status aStatus) { mStatus = static_cast<uint8_t>(aStatus); }
+    void SetStatus(Status aStatus) {
+        mStatus = static_cast<uint8_t>(aStatus);
+    }
 
     /**
      * This method returns the rloc of the DHCP Agent.
@@ -115,7 +119,9 @@ public:
      * @returns Status.
      *
      */
-    uint16_t GetPrefixAgentRloc(void) const { return mPrefixAgentRloc; }
+    uint16_t GetPrefixAgentRloc(void) const {
+        return mPrefixAgentRloc;
+    }
 
     /**
      * This method sets the rloc of the DHCP Agent.
@@ -123,7 +129,9 @@ public:
      * @param[in]  aRloc  The rloc of the DHCP Agent.
      *
      */
-    void SetPrefixAgentRloc(uint16_t aRloc16) { mPrefixAgentRloc = aRloc16; }
+    void SetPrefixAgentRloc(uint16_t aRloc16) {
+        mPrefixAgentRloc = aRloc16;
+    }
 
     /**
      * This method returns the pointer to the IPv6 prefix.
@@ -131,7 +139,9 @@ public:
      * @returns A pointer to the IPv6 prefix.
      *
      */
-    otIp6Prefix *GetPrefix(void) { return &mIp6Prefix; }
+    otIp6Prefix *GetPrefix(void) {
+        return &mIp6Prefix;
+    }
 
     /**
      * This method sets the IPv6 prefix to specified location.
@@ -139,7 +149,9 @@ public:
      * @param[in]  aIp6Prefix The reference to the IPv6 prefix to set.
      *
      */
-    void SetPrefix(otIp6Prefix &aIp6Prefix) { memcpy(&mIp6Prefix, &aIp6Prefix, sizeof(otIp6Prefix)); }
+    void SetPrefix(otIp6Prefix &aIp6Prefix) {
+        memcpy(&mIp6Prefix, &aIp6Prefix, sizeof(otIp6Prefix));
+    }
 
     /**
      * This method returns the pointer to the next IdentityAssociation.
@@ -147,19 +159,23 @@ public:
      * @returns A pointer to the next IdentityAssociation.
      *
      */
-    IdentityAssociation *GetNext(void) { return mNext; }
+    IdentityAssociation *GetNext(void) {
+        return mNext;
+    }
 
     /**
      * This method sets the pointer to the next IdentityAssociation.
      *
      */
-    void SetNext(IdentityAssociation *aNext) { mNext = aNext; }
+    void SetNext(IdentityAssociation *aNext) {
+        mNext = aNext;
+    }
 
 private:
-    uint8_t       mStatus;                         ///< Status of IdentityAssocation
-    uint16_t      mPrefixAgentRloc;                ///< Rloc of Prefix Agent
-    otIp6Prefix   mIp6Prefix;                      ///< Prefix
-    IdentityAssociation *mNext;                    ///< Pointer to next IdentityAssocation
+    uint8_t              mStatus;          ///< Status of IdentityAssocation
+    uint16_t             mPrefixAgentRloc; ///< Rloc of Prefix Agent
+    otIp6Prefix          mIp6Prefix;       ///< Prefix
+    IdentityAssociation *mNext;            ///< Pointer to next IdentityAssocation
 } OT_TOOL_PACKED_END;
 
 
@@ -229,22 +245,22 @@ private:
     static bool HandleTrickleTimer(void *aContext);
     bool HandleTrickleTimer(void);
 
-    TrickleTimer mTrickleTimer;
+    TrickleTimer         mTrickleTimer;
 
-    Ip6::UdpSocket mSocket;
-    ThreadNetif &mNetif;
+    Ip6::UdpSocket       mSocket;
+    ThreadNetif         &mNetif;
 
-    uint8_t mTransactionId[kTransactionIdSize];
-    uint32_t mStartTime;
-    otDhcpAddress *mAddresses;
-    uint32_t mNumAddresses;
+    uint8_t              mTransactionId[kTransactionIdSize];
+    uint32_t             mStartTime;
+    otDhcpAddress       *mAddresses;
+    uint32_t             mNumAddresses;
 
-    IdentityAssociation mIdentityAssociations[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
     IdentityAssociation *mIdentityAssociationHead;
     IdentityAssociation *mIdentityAssociationAvail;
 };
 
-}  // namespace Dhcp6
-}  // namespace ot
+} // namespace Dhcp6
+} // namespace ot
 
 # endif  // DHCP6_CLIENT_HPP_

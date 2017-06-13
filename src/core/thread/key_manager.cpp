@@ -49,7 +49,7 @@ static const uint8_t kThreadString[] =
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-KeyManager::KeyManager(ThreadNetif &aThreadNetif):
+KeyManager::KeyManager(ThreadNetif &aThreadNetif) :
     mNetif(aThreadNetif),
     mKeySequence(0),
     mMacFrameCounter(0),
@@ -97,7 +97,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
     otError error = OT_ERROR_NONE;
     Router *routers;
-    Child *children;
+    Child  *children;
     uint8_t num;
 
     VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0);
@@ -141,7 +141,7 @@ exit:
 otError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     Crypto::HmacSha256 hmac;
-    uint8_t keySequenceBytes[4];
+    uint8_t            keySequenceBytes[4];
 
     hmac.Start(mMasterKey.m8, sizeof(mMasterKey.m8));
 
@@ -270,4 +270,4 @@ void KeyManager::HandleKeyRotationTimer(void)
     SetCurrentKeySequence(mKeySequence + 1);
 }
 
-}  // namespace ot
+} // namespace ot

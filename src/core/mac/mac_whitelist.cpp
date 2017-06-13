@@ -154,7 +154,7 @@ void Whitelist::SetFixedRssi(Entry &aEntry, int8_t aRssi)
     aEntry.mRssi = aRssi;
 }
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_MAC_WHITELIST
+#endif  // OPENTHREAD_ENABLE_MAC_WHITELIST

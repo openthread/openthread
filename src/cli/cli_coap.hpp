@@ -56,7 +56,8 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    Coap(Interpreter &aInterpreter): mInterpreter(aInterpreter) { }
+    Coap(Interpreter &aInterpreter) : mInterpreter(aInterpreter) {
+    }
 
     /**
      * This method interprets a list of CLI arguments.
@@ -88,12 +89,12 @@ private:
                               otError aError);
 
     otCoapResource mResource;
-    char mUriPath[kMaxUriLength];
+    char           mUriPath[kMaxUriLength];
 
-    Interpreter &mInterpreter;
+    Interpreter   &mInterpreter;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
 #endif  // CLI_COAP_HPP_

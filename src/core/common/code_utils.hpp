@@ -38,11 +38,11 @@
 
 // Calculates the aligned variable size.
 #define otALIGNED_VAR_SIZE(size, align_type)            \
-    (((size) + (sizeof (align_type) - 1)) / sizeof (align_type))
+    (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
 
 // Allocate the structure using "raw" storage.
 #define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
-    align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
+    align_type name[(((size) + (sizeof(align_type) - 1)) / sizeof(align_type))]
 
 /**
  *  This checks for the specified status, which is expected to
@@ -115,4 +115,4 @@
         if (aStatement) {}                     \
     } while (false)
 
-#endif  // CODE_UTILS_HPP_
+#endif // CODE_UTILS_HPP_

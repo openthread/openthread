@@ -91,10 +91,11 @@ void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCa
 otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
                                              uint8_t aCount)
 {
-    otError error;
+    otError  error;
     Message *message;
-    Coap::Header header;
-    Ip6::MessageInfo messageInfo;
+
+    Coap::Header          header;
+    Ip6::MessageInfo      messageInfo;
     otCoapResponseHandler handler = NULL;
 
     if (aDestination.IsMulticast())
@@ -131,7 +132,7 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, c
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -197,9 +198,9 @@ exit:
 
 otError NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
 {
-    otError error = OT_ERROR_NONE;
+    otError           error = OT_ERROR_NONE;
     Ip6AddressListTlv tlv;
-    uint8_t count = 0;
+    uint8_t           count = 0;
 
     tlv.Init();
 
@@ -223,12 +224,12 @@ exit:
 
 otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t count = 0;
-    uint8_t timeout = 0;
-    uint8_t numChildren;
-    const Child *children = mNetif.GetMle().GetChildren(&numChildren);
-    ChildTableTlv tlv;
+    otError         error = OT_ERROR_NONE;
+    uint8_t         count = 0;
+    uint8_t         timeout = 0;
+    uint8_t         numChildren;
+    const Child    *children = mNetif.GetMle().GetChildren(&numChildren);
+    ChildTableTlv   tlv;
     ChildTableEntry entry;
 
     tlv.Init();
@@ -270,9 +271,9 @@ exit:
 otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aResponse,
                                              NetworkDiagnosticTlv &aNetworkDiagnosticTlv)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t offset = 0;
-    uint8_t type;
+    uint8_t  type;
 
     offset = aRequest.GetOffset() + sizeof(NetworkDiagnosticTlv);
 
@@ -434,10 +435,11 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *a
 void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage,
                                                  const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    Message *message = NULL;
+    otError              error = OT_ERROR_NONE;
+    Message             *message = NULL;
     NetworkDiagnosticTlv networkDiagnosticTlv;
-    Coap::Header header;
+
+    Coap::Header     header;
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
@@ -484,7 +486,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -501,10 +503,11 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader 
 void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage,
                                                    const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    Message *message = NULL;
+    otError              error = OT_ERROR_NONE;
+    Message             *message = NULL;
     NetworkDiagnosticTlv networkDiagnosticTlv;
-    Coap::Header header;
+
+    Coap::Header     header;
     Ip6::MessageInfo messageInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
@@ -538,7 +541,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -547,9 +550,10 @@ exit:
 otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
                                                uint8_t aCount)
 {
-    otError error;
+    otError  error;
     Message *message;
-    Coap::Header header;
+
+    Coap::Header     header;
     Ip6::MessageInfo messageInfo;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
@@ -576,7 +580,7 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -595,8 +599,8 @@ void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHea
 void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,
                                               const Ip6::MessageInfo &aMessageInfo)
 {
-    uint16_t offset = 0;
-    uint8_t type;
+    uint16_t             offset = 0;
+    uint8_t              type;
     NetworkDiagnosticTlv networkDiagnosticTlv;
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic reset request");
@@ -638,8 +642,8 @@ exit:
     return;
 }
 
-}  // namespace NetworkDiagnostic
+} // namespace NetworkDiagnostic
 
-}  // namespace ot
+} // namespace ot
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#endif  // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC

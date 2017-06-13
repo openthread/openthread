@@ -79,9 +79,9 @@ void TestMacBeaconFrame(void)
     };
 
     ot::Crypto::AesCcm aesCcm;
-    uint32_t headerLength = sizeof(test) - 8;
-    uint32_t payloadLength = 0;
-    uint8_t tagLength = 8;
+    uint32_t           headerLength = sizeof(test) - 8;
+    uint32_t           payloadLength = 0;
+    uint8_t            tagLength = 8;
 
     uint8_t nonce[] =
     {
@@ -141,9 +141,9 @@ void TestMacDataFrame()
     };
 
     ot::Crypto::AesCcm aesCcm;
-    uint32_t headerLength = sizeof(test) - 4;
-    uint32_t payloadLength = 4;
-    uint8_t tagLength = 0;
+    uint32_t           headerLength = sizeof(test) - 4;
+    uint32_t           payloadLength = 4;
+    uint8_t            tagLength = 0;
 
     uint8_t nonce[] =
     {
@@ -190,7 +190,7 @@ void TestMacCommandFrame()
     };
 
     uint32_t headerLength = 29, payloadLength = 1;
-    uint8_t tagLength = 8;
+    uint8_t  tagLength = 8;
 
     uint8_t encrypted[] =
     {

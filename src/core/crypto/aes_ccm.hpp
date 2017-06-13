@@ -109,18 +109,18 @@ public:
     void Finalize(void *aTag, uint8_t *aTagLength);
 
 private:
-    AesEcb mEcb;
-    uint8_t mBlock[AesEcb::kBlockSize];
-    uint8_t mCtr[AesEcb::kBlockSize];
-    uint8_t mCtrPad[AesEcb::kBlockSize];
-    uint8_t mNonceLength;
+    AesEcb   mEcb;
+    uint8_t  mBlock[AesEcb::kBlockSize];
+    uint8_t  mCtr[AesEcb::kBlockSize];
+    uint8_t  mCtrPad[AesEcb::kBlockSize];
+    uint8_t  mNonceLength;
     uint32_t mHeaderLength;
     uint32_t mHeaderCur;
     uint32_t mPlainTextLength;
     uint32_t mPlainTextCur;
     uint16_t mBlockLength;
     uint16_t mCtrLength;
-    uint8_t mTagLength;
+    uint8_t  mTagLength;
 };
 
 /**
@@ -128,7 +128,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
 #endif  // AES_CCM_HPP_

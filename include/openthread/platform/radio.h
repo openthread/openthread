@@ -66,18 +66,18 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_FRAME_MAX_SIZE      = 127,                             ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
-    OT_RADIO_CHANNEL_MIN         = 11,                              ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_CHANNEL_MAX         = 26,                              ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_SUPPORTED_CHANNELS  = 0xffff << OT_RADIO_CHANNEL_MIN,  ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_SYMBOLS_PER_OCTET   = 2,                               ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_BIT_RATE            = 250000,                          ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
+    OT_RADIO_FRAME_MAX_SIZE      = 127,                            ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    OT_RADIO_CHANNEL_MIN         = 11,                             ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_MAX         = 26,                             ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_SUPPORTED_CHANNELS  = 0xffff << OT_RADIO_CHANNEL_MIN, ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_SYMBOLS_PER_OCTET   = 2,                              ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_BIT_RATE            = 250000,                         ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
 
-    OT_RADIO_BITS_PER_OCTET  = 8,      ///< Number of bits per octet
+    OT_RADIO_BITS_PER_OCTET  = 8,                                  ///< Number of bits per octet
     OT_RADIO_SYMBOL_TIME     = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
 
-    OT_RADIO_LQI_NONE        = 0,      ///< LQI measurement not supported
-    OT_RADIO_RSSI_INVALID    = 127,    ///< Invalid or unknown RSSI value
+    OT_RADIO_LQI_NONE        = 0,   ///< LQI measurement not supported
+    OT_RADIO_RSSI_INVALID    = 127, ///< Invalid or unknown RSSI value
 };
 
 /**
@@ -86,11 +86,11 @@ enum
  */
 typedef enum otRadioCaps
 {
-    OT_RADIO_CAPS_NONE              = 0,  ///< None
-    OT_RADIO_CAPS_ACK_TIMEOUT       = 1,  ///< Radio supports AckTime event
-    OT_RADIO_CAPS_ENERGY_SCAN       = 2,  ///< Radio supports Energy Scans
-    OT_RADIO_CAPS_TRANSMIT_RETRIES  = 4,  ///< Radio supports transmission retry logic with collision avoidance (CSMA).
-    OT_RADIO_CAPS_CSMA_BACKOFF      = 8,  ///< Radio supports CSMA backoff for frame transmission (but no retry).
+    OT_RADIO_CAPS_NONE              = 0, ///< None
+    OT_RADIO_CAPS_ACK_TIMEOUT       = 1, ///< Radio supports AckTime event
+    OT_RADIO_CAPS_ENERGY_SCAN       = 2, ///< Radio supports Energy Scans
+    OT_RADIO_CAPS_TRANSMIT_RETRIES  = 4, ///< Radio supports transmission retry logic with collision avoidance (CSMA).
+    OT_RADIO_CAPS_CSMA_BACKOFF      = 8, ///< Radio supports CSMA backoff for frame transmission (but no retry).
 } otRadioCaps;
 
 /**
@@ -98,15 +98,15 @@ typedef enum otRadioCaps
  */
 typedef struct otRadioFrame
 {
-    uint8_t  *mPsdu;            ///< The PSDU.
-    uint8_t  mLength;           ///< Length of the PSDU.
-    uint8_t  mChannel;          ///< Channel used to transmit/receive the frame.
-    int8_t   mPower;            ///< Transmit/receive power in dBm.
-    uint8_t  mLqi;              ///< Link Quality Indicator for received frames.
-    uint8_t  mMaxTxAttempts;    ///< Max number of transmit attempts for an outbound frame.
-    bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
-    bool     mDidTX: 1;         ///< Set to true if this frame sent from the radio. Ignored by radio driver.
-    bool     mIsARetx: 1;       ///< Set to true if this frame is a retransmission. Should be ignored by radio driver.
+    uint8_t *mPsdu;              ///< The PSDU.
+    uint8_t  mLength;            ///< Length of the PSDU.
+    uint8_t  mChannel;           ///< Channel used to transmit/receive the frame.
+    int8_t   mPower;             ///< Transmit/receive power in dBm.
+    uint8_t  mLqi;               ///< Link Quality Indicator for received frames.
+    uint8_t  mMaxTxAttempts;     ///< Max number of transmit attempts for an outbound frame.
+    bool     mSecurityValid : 1; ///< Security Enabled flag is set and frame passes security checks.
+    bool     mDidTX : 1;         ///< Set to true if this frame sent from the radio. Ignored by radio driver.
+    bool     mIsARetx : 1;       ///< Set to true if this frame is a retransmission. Should be ignored by radio driver.
 } otRadioFrame;
 
 /**
@@ -530,7 +530,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
-#endif  // RADIO_H_
+#endif // RADIO_H_

@@ -62,7 +62,7 @@ extern "C" {
  * @sa otApiFinalize
  *
  */
-OTAPI otApiInstance *OTCALL otApiInit(void);
+OTAPI otApiInstance * OTCALL otApiInit(void);
 
 /**
  * This function uninitializes the OpenThread library.
@@ -90,7 +90,7 @@ OTAPI void OTCALL otFreeMemory(const void *aMem);
  * @param[in]  aContext     A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
+typedef void (OTCALL * otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
 
 /**
  * This function registers a callback to indicate OpenThread devices come and go.
@@ -206,7 +206,7 @@ void otInstanceFinalize(otInstance *aInstance);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
+typedef void (OTCALL * otStateChangedCallback)(uint32_t aFlags, void *aContext);
 
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
@@ -291,7 +291,7 @@ otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_INSTANCE_H_
+#endif // OPENTHREAD_INSTANCE_H_

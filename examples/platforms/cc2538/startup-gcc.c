@@ -45,10 +45,20 @@ extern uint8_t _init_array;
 extern uint8_t _einit_array;
 
 __extension__ typedef int __guard __attribute__((mode(__DI__)));
-int __cxa_guard_acquire(__guard *g) { return !*(char *)(g); }
-void __cxa_guard_release(__guard *g) { *(char *)g = 1; }
-void __cxa_guard_abort(__guard *g) { (void)g; }
-void __cxa_pure_virtual(void) { while (1); }
+int __cxa_guard_acquire(__guard *g) {
+    return !*(char *)(g);
+}
+void __cxa_guard_release(__guard *g) {
+    *(char *)g = 1;
+}
+void __cxa_guard_abort(__guard *g) {
+    (void)g;
+}
+void __cxa_pure_virtual(void) {
+    while (1)
+    {
+    }
+}
 
 void IntDefaultHandler(void);
 void ResetHandler(void);
@@ -62,77 +72,77 @@ extern void main(void);
 static uint64_t stack[512] __attribute__((section(".stack")));
 
 __attribute__((section(".vectors"), used))
-void (*const vectors[])(void) =
+void(*const vectors[])(void) =
 {
-    (void (*)(void))((unsigned long)stack + sizeof(stack)),   // Initial Stack Pointer
-    ResetHandler,                           // 1 The reset handler
-    ResetHandler,                       // 2 The NMI handler
-    IntDefaultHandler,                     // 3 The hard fault handler
-    IntDefaultHandler,                      // 4 The MPU fault handler
-    IntDefaultHandler,                      // 5 The bus fault handler
-    IntDefaultHandler,                      // 6 The usage fault handler
-    0,                                      // 7 Reserved
-    0,                                      // 8 Reserved
-    0,                                      // 9 Reserved
-    0,                                      // 10 Reserved
-    IntDefaultHandler,                      // 11 SVCall handler
-    IntDefaultHandler,                      // 12 Debug monitor handler
-    0,                                      // 13 Reserved
-    IntDefaultHandler,                      // 14 The PendSV handler
-    SysTick_Handler,                        // 15 The SysTick handler
-    IntDefaultHandler,                      // 16 GPIO Port A
-    IntDefaultHandler,                      // 17 GPIO Port B
-    IntDefaultHandler,                      // 18 GPIO Port C
-    IntDefaultHandler,                      // 19 GPIO Port D
-    0,                                      // 20 none
-    UART0IntHandler,                        // 21 UART0 Rx and Tx
-    IntDefaultHandler,                      // 22 UART1 Rx and Tx
-    IntDefaultHandler,                      // 23 SSI0 Rx and Tx
-    IntDefaultHandler,                      // 24 I2C Master and Slave
-    0,                                      // 25 Reserved
-    0,                                      // 26 Reserved
-    0,                                      // 27 Reserved
-    0,                                      // 28 Reserved
-    0,                                      // 29 Reserved
-    IntDefaultHandler,                      // 30 ADC Sequence 0
-    0,                                      // 31 Reserved
-    0,                                      // 32 Reserved
-    0,                                      // 33 Reserved
-    IntDefaultHandler,                      // 34 Watchdog timer, timer 0
-    IntDefaultHandler,                      // 35 Timer 0 subtimer A
-    IntDefaultHandler,                      // 36 Timer 0 subtimer B
-    IntDefaultHandler,                      // 37 Timer 1 subtimer A
-    IntDefaultHandler,                      // 38 Timer 1 subtimer B
-    IntDefaultHandler,                      // 39 Timer 2 subtimer A
-    IntDefaultHandler,                      // 40 Timer 2 subtimer B
-    IntDefaultHandler,                      // 41 Analog Comparator 0
-    RFCoreRxTxIntHandler,                   // 42 RFCore Rx/Tx
-    RFCoreErrIntHandler,                    // 43 RFCore Error
-    IntDefaultHandler,                      // 44 IcePick
-    IntDefaultHandler,                      // 45 FLASH Control
-    IntDefaultHandler,                      // 46 AES
-    IntDefaultHandler,                      // 47 PKA
-    IntDefaultHandler,                      // 48 Sleep Timer
-    IntDefaultHandler,                      // 49 MacTimer
-    IntDefaultHandler,                      // 50 SSI1 Rx and Tx
-    IntDefaultHandler,                      // 51 Timer 3 subtimer A
-    IntDefaultHandler,                      // 52 Timer 3 subtimer B
-    0,                                      // 53 Reserved
-    0,                                      // 54 Reserved
-    0,                                      // 55 Reserved
-    0,                                      // 56 Reserved
-    0,                                      // 57 Reserved
-    0,                                      // 58 Reserved
-    0,                                      // 59 Reserved
-    IntDefaultHandler,                      // 60 USB 2538
-    0,                                      // 61 Reserved
-    IntDefaultHandler,                      // 62 uDMA
-    IntDefaultHandler,                      // 63 uDMA Error
+    (void (*)(void))((unsigned long)stack + sizeof(stack)), // Initial Stack Pointer
+    ResetHandler,                                           // 1 The reset handler
+    ResetHandler,                                           // 2 The NMI handler
+    IntDefaultHandler,                                      // 3 The hard fault handler
+    IntDefaultHandler,                                      // 4 The MPU fault handler
+    IntDefaultHandler,                                      // 5 The bus fault handler
+    IntDefaultHandler,                                      // 6 The usage fault handler
+    0,                                                      // 7 Reserved
+    0,                                                      // 8 Reserved
+    0,                                                      // 9 Reserved
+    0,                                                      // 10 Reserved
+    IntDefaultHandler,                                      // 11 SVCall handler
+    IntDefaultHandler,                                      // 12 Debug monitor handler
+    0,                                                      // 13 Reserved
+    IntDefaultHandler,                                      // 14 The PendSV handler
+    SysTick_Handler,                                        // 15 The SysTick handler
+    IntDefaultHandler,                                      // 16 GPIO Port A
+    IntDefaultHandler,                                      // 17 GPIO Port B
+    IntDefaultHandler,                                      // 18 GPIO Port C
+    IntDefaultHandler,                                      // 19 GPIO Port D
+    0,                                                      // 20 none
+    UART0IntHandler,                                        // 21 UART0 Rx and Tx
+    IntDefaultHandler,                                      // 22 UART1 Rx and Tx
+    IntDefaultHandler,                                      // 23 SSI0 Rx and Tx
+    IntDefaultHandler,                                      // 24 I2C Master and Slave
+    0,                                                      // 25 Reserved
+    0,                                                      // 26 Reserved
+    0,                                                      // 27 Reserved
+    0,                                                      // 28 Reserved
+    0,                                                      // 29 Reserved
+    IntDefaultHandler,                                      // 30 ADC Sequence 0
+    0,                                                      // 31 Reserved
+    0,                                                      // 32 Reserved
+    0,                                                      // 33 Reserved
+    IntDefaultHandler,                                      // 34 Watchdog timer, timer 0
+    IntDefaultHandler,                                      // 35 Timer 0 subtimer A
+    IntDefaultHandler,                                      // 36 Timer 0 subtimer B
+    IntDefaultHandler,                                      // 37 Timer 1 subtimer A
+    IntDefaultHandler,                                      // 38 Timer 1 subtimer B
+    IntDefaultHandler,                                      // 39 Timer 2 subtimer A
+    IntDefaultHandler,                                      // 40 Timer 2 subtimer B
+    IntDefaultHandler,                                      // 41 Analog Comparator 0
+    RFCoreRxTxIntHandler,                                   // 42 RFCore Rx/Tx
+    RFCoreErrIntHandler,                                    // 43 RFCore Error
+    IntDefaultHandler,                                      // 44 IcePick
+    IntDefaultHandler,                                      // 45 FLASH Control
+    IntDefaultHandler,                                      // 46 AES
+    IntDefaultHandler,                                      // 47 PKA
+    IntDefaultHandler,                                      // 48 Sleep Timer
+    IntDefaultHandler,                                      // 49 MacTimer
+    IntDefaultHandler,                                      // 50 SSI1 Rx and Tx
+    IntDefaultHandler,                                      // 51 Timer 3 subtimer A
+    IntDefaultHandler,                                      // 52 Timer 3 subtimer B
+    0,                                                      // 53 Reserved
+    0,                                                      // 54 Reserved
+    0,                                                      // 55 Reserved
+    0,                                                      // 56 Reserved
+    0,                                                      // 57 Reserved
+    0,                                                      // 58 Reserved
+    0,                                                      // 59 Reserved
+    IntDefaultHandler,                                      // 60 USB 2538
+    0,                                                      // 61 Reserved
+    IntDefaultHandler,                                      // 62 uDMA
+    IntDefaultHandler,                                      // 63 uDMA Error
 };
 
 void IntDefaultHandler(void)
 {
-    while (1);
+    while (1) {}
 }
 
 #define FLASH_CCA_BOOTLDR_CFG_DISABLE           0xEFFFFFFF ///< Disable backdoor function
@@ -197,5 +207,5 @@ void ResetHandler(void)
     main();
 
     // end here if main() returns
-    while (1);
+    while (1) {}
 }

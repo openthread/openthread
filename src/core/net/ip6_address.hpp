@@ -55,7 +55,7 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address: public otIp6Address
+class Address : public otIp6Address
 {
 public:
     /**
@@ -356,7 +356,7 @@ public:
 private:
     enum
     {
-        kInterfaceIdentifierOffset = 8,  ///< Interface Identifier offset in bytes.
+        kInterfaceIdentifierOffset = 8, ///< Interface Identifier offset in bytes.
     };
 } OT_TOOL_PACKED_END;
 
@@ -365,7 +365,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
 #endif  // NET_IP6_ADDRESS_HPP_

@@ -48,7 +48,7 @@ int Timestamp::Compare(const Timestamp &aCompare) const
     uint64_t compareSeconds = aCompare.GetSeconds();
     uint16_t thisTicks = GetTicks();
     uint16_t compareTicks = aCompare.GetTicks();
-    int rval;
+    int      rval;
 
     if (compareSeconds > thisSeconds)
     {
@@ -74,5 +74,5 @@ int Timestamp::Compare(const Timestamp &aCompare) const
     return rval;
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot

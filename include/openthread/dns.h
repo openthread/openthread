@@ -54,7 +54,7 @@ extern "C" {
  *
  */
 
-#define OT_DNS_MAX_HOSTNAME_LENGTH 62  ///< Maximum allowed hostname length (maximum label size - 1 for compression).
+#define OT_DNS_MAX_HOSTNAME_LENGTH 62                        ///< Maximum allowed hostname length (maximum label size - 1 for compression).
 
 #define OT_DNS_DEFAULT_DNS_SERVER_IP  "2001:4860:4860::8888" ///< Defines default DNS Server address - Google DNS.
 #define OT_DNS_DEFAULT_DNS_SERVER_PORT 53                    ///< Defines default DNS Server port.
@@ -65,9 +65,9 @@ extern "C" {
  */
 typedef struct otDnsQuery
 {
-    const char          *mHostname;     ///< Identifies hostname to be found. It shall not change during resolving.
-    const otMessageInfo *mMessageInfo;  ///< A reference to the message info related with DNS Server.
-    bool                 mNoRecursion;  ///< If cleared, it directs name server to pursue the query recursively.
+    const char          *mHostname;    ///< Identifies hostname to be found. It shall not change during resolving.
+    const otMessageInfo *mMessageInfo; ///< A reference to the message info related with DNS Server.
+    bool                 mNoRecursion; ///< If cleared, it directs name server to pursue the query recursively.
 } otDnsQuery;
 
 /**
@@ -110,7 +110,7 @@ otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsR
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_DNS_H_
+#endif // OPENTHREAD_DNS_H_

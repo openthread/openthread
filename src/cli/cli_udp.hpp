@@ -46,7 +46,7 @@ namespace Cli {
  * This class implements the CLI server on top of a UDP socket.
  *
  */
-class Udp: public Server
+class Udp : public Server
 {
 public:
     /**
@@ -97,13 +97,13 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    otUdpSocket mSocket;
+    otUdpSocket   mSocket;
     otMessageInfo mPeer;
-    otInstance *mInstance;
-    Interpreter *mInterpreter;
+    otInstance   *mInstance;
+    Interpreter  *mInterpreter;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
 #endif  // CLI_UDP_HPP_

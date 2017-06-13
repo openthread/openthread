@@ -45,4 +45,4 @@ otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsR
 {
     return aInstance->mThreadNetif.GetDnsClient().Query(aQuery, aHandler, aContext);
 }
-#endif  // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif // OPENTHREAD_ENABLE_DNS_CLIENT

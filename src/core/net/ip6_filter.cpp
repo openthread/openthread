@@ -53,11 +53,11 @@ Filter::Filter(void)
 
 bool Filter::Accept(Message &aMessage) const
 {
-    bool rval = false;
-    Header ip6;
+    bool      rval = false;
+    Header    ip6;
     UdpHeader udp;
     TcpHeader tcp;
-    uint16_t dstport;
+    uint16_t  dstport;
 
     // Allow all received IPv6 datagrams with link security enabled
     if (aMessage.IsLinkSecurityEnabled())
@@ -103,7 +103,7 @@ bool Filter::Accept(Message &aMessage) const
     // Check against allowed unsecure port list
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
-        if (mUnsecurePorts[i] != 0 && mUnsecurePorts[i] == dstport)
+        if ((mUnsecurePorts[i] != 0) && (mUnsecurePorts[i] == dstport))
         {
             ExitNow(rval = true);
         }
@@ -150,7 +150,7 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
         {
             // Shift all of the ports higher than this
             // port down.
-            for (; i < kMaxUnsecurePorts - 1; i++)
+            for ( ; i < kMaxUnsecurePorts - 1; i++)
             {
                 mUnsecurePorts[i] = mUnsecurePorts[i + 1];
             }
@@ -181,5 +181,5 @@ const uint16_t *Filter::GetUnsecurePorts(uint8_t &aNumEntries) const
     return mUnsecurePorts;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

@@ -169,7 +169,7 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBu
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // SPI_SLAVE_H_
+#endif // SPI_SLAVE_H_

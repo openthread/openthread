@@ -430,7 +430,7 @@ OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_THREAD_FTD_H_
+#endif // OPENTHREAD_THREAD_FTD_H_

@@ -60,7 +60,7 @@ extern "C" {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
+typedef void (OTCALL * otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Active Scan
@@ -95,7 +95,7 @@ OTAPI bool OTCALL otLinkIsActiveScanInProgress(otInstance *aInstance);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
+typedef void (OTCALL * otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Energy Scan
@@ -593,7 +593,7 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_LINK_H_
+#endif // OPENTHREAD_LINK_H_

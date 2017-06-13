@@ -61,7 +61,7 @@ extern "C" {
 static void DumpLine(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion, const void *aBuf,
                      const size_t aLength)
 {
-    char buf[80];
+    char  buf[80];
     char *cur = buf;
 
     snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "|");
@@ -94,7 +94,7 @@ static void DumpLine(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aL
     {
         char c = 0x7f & ((char *)(aBuf))[i];
 
-        if (i < aLength && isprint(c))
+        if ((i < aLength) && isprint(c))
         {
             snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "%c", c);
             cur += strlen(cur);
@@ -114,10 +114,10 @@ static void DumpLine(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aL
 void otDump(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf,
             const size_t aLength)
 {
-    size_t idlen = strlen(aId);
+    size_t       idlen = strlen(aId);
     const size_t width = 72;
-    char buf[80];
-    char *cur = buf;
+    char         buf[80];
+    char        *cur = buf;
 
     for (size_t i = 0; i < (width - idlen) / 2 - 5; i++)
     {
@@ -152,7 +152,8 @@ void otDump(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion,
     otLogDump("%s", buf);
 }
 #else // OPENTHREAD_CONFIG_LOG_PKT_DUMP
-void otDump(otInstance *, otLogLevel, otLogRegion, const char *, const void *, const size_t) {}
+void otDump(otInstance *, otLogLevel, otLogRegion, const char *, const void *, const size_t) {
+}
 #endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
 #ifdef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL

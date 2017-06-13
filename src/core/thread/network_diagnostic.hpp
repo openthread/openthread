@@ -138,15 +138,15 @@ private:
                                       const otMessageInfo *aMessageInfo);
     void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    Coap::Resource mDiagnosticGetRequest;
-    Coap::Resource mDiagnosticGetQuery;
-    Coap::Resource mDiagnosticGetAnswer;
-    Coap::Resource mDiagnosticReset;
+    Coap::Resource                 mDiagnosticGetRequest;
+    Coap::Resource                 mDiagnosticGetQuery;
+    Coap::Resource                 mDiagnosticGetAnswer;
+    Coap::Resource                 mDiagnosticReset;
 
-    ThreadNetif &mNetif;
+    ThreadNetif                   &mNetif;
 
     otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
-    void *mReceiveDiagnosticGetCallbackContext;
+    void                          *mReceiveDiagnosticGetCallbackContext;
 };
 
 /**
@@ -154,6 +154,6 @@ private:
  */
 } // namespace NetworkDiagnostic
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // NETWORK_DIAGNOSTIC_HPP_

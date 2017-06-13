@@ -106,14 +106,14 @@ private:
     void DeliverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 
-    Coap::Resource mRelayReceive;
+    Coap::Resource          mRelayReceive;
     otTmfProxyStreamHandler mStreamHandler;
-    void *mContext;
+    void                   *mContext;
 
-    const Ip6::Address &mMeshLocal16;
-    Coap::Coap &mCoap;
+    const Ip6::Address     &mMeshLocal16;
+    Coap::Coap             &mCoap;
 };
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // TMF_PROXY_HPP_

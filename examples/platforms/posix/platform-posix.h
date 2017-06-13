@@ -165,4 +165,4 @@ void platformUartProcess(void);
  */
 void platformUartRestore(void);
 
-#endif  // PLATFORM_POSIX_H_
+#endif // PLATFORM_POSIX_H_

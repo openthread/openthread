@@ -76,7 +76,7 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
 otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 {
     uint8_t *bytes = GetPsdu();
-    uint8_t length = 0;
+    uint8_t  length = 0;
 
     // Frame Control Field
     bytes[0] = aFcf & 0xff;
@@ -175,10 +175,10 @@ otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 
 otError Frame::ValidatePsdu(void)
 {
-    otError error = OT_ERROR_PARSE;
-    uint8_t offset = 0;
+    otError  error = OT_ERROR_PARSE;
+    uint8_t  offset = 0;
     uint16_t fcf;
-    uint8_t footerLength = kFcsSize;
+    uint8_t  footerLength = kFcsSize;
 
     VerifyOrExit((offset += kFcfSize + kDsnSize) <= GetPsduLength());
     fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -350,12 +350,14 @@ uint8_t *Frame::FindSequence(void)
 uint8_t Frame::GetSequence(void)
 {
     uint8_t *buf = FindSequence();
+
     return buf[0];
 }
 
 void Frame::SetSequence(uint8_t aSequence)
 {
     uint8_t *buf = FindSequence();
+
     buf[0] = aSequence;
 }
 
@@ -377,7 +379,7 @@ exit:
 
 otError Frame::GetDstPanId(PanId &aPanId)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindDstPanId()) != NULL, error = OT_ERROR_PARSE);
@@ -417,7 +419,7 @@ uint8_t *Frame::FindDstAddr(void)
 
 otError Frame::GetDstAddr(Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
@@ -517,7 +519,7 @@ exit:
 
 otError Frame::GetSrcPanId(PanId &aPanId)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindSrcPanId()) != NULL, error = OT_ERROR_PARSE);
@@ -530,7 +532,7 @@ exit:
 
 otError Frame::SetSrcPanId(PanId aPanId)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindSrcPanId()) != NULL, error = OT_ERROR_PARSE);
@@ -575,7 +577,7 @@ uint8_t *Frame::FindSrcAddr(void)
 
 otError Frame::GetSrcAddr(Address &address)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
@@ -693,7 +695,7 @@ exit:
 
 otError Frame::GetSecurityLevel(uint8_t &aSecurityLevel)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
@@ -706,7 +708,7 @@ exit:
 
 otError Frame::GetKeyIdMode(uint8_t &aKeyIdMode)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
@@ -719,7 +721,7 @@ exit:
 
 otError Frame::GetFrameCounter(uint32_t &aFrameCounter)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
@@ -795,7 +797,7 @@ uint8_t Frame::GetKeySourceLength(uint8_t aKeyIdMode)
 
 void Frame::SetKeySource(const uint8_t *aKeySource)
 {
-    uint8_t keySourceLength;
+    uint8_t  keySourceLength;
     uint8_t *buf;
 
     buf = FindSecurityHeader();
@@ -810,8 +812,8 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
 
 otError Frame::GetKeyId(uint8_t &aKeyId)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t keySourceLength;
+    otError  error = OT_ERROR_NONE;
+    uint8_t  keySourceLength;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
@@ -828,7 +830,7 @@ exit:
 
 otError Frame::SetKeyId(uint8_t aKeyId)
 {
-    uint8_t keySourceLength;
+    uint8_t  keySourceLength;
     uint8_t *buf;
 
     buf = FindSecurityHeader();
@@ -845,7 +847,7 @@ otError Frame::SetKeyId(uint8_t aKeyId)
 
 otError Frame::GetCommandId(uint8_t &aCommandId)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = GetPayload()) != NULL, error = OT_ERROR_PARSE);
@@ -857,7 +859,7 @@ exit:
 
 otError Frame::SetCommandId(uint8_t aCommandId)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf;
 
     VerifyOrExit((buf = GetPayload()) != NULL, error = OT_ERROR_PARSE);
@@ -874,7 +876,7 @@ uint8_t Frame::GetHeaderLength(void)
 
 uint8_t Frame::GetFooterLength(void)
 {
-    uint8_t footerLength = 0;
+    uint8_t  footerLength = 0;
     uint8_t *cur;
 
     VerifyOrExit((cur = FindSecurityHeader()) != NULL);
@@ -934,7 +936,7 @@ uint8_t *Frame::GetPayload(void)
 {
     uint8_t *cur = GetPsdu();
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
-    uint8_t securityControl;
+    uint8_t  securityControl;
 
     // Frame Control
     cur += kFcfSize;
@@ -1031,12 +1033,12 @@ uint8_t *Frame::GetFooter(void)
 
 const char *Frame::ToInfoString(char *aBuf, uint16_t aSize)
 {
-    uint8_t type, commandId;
-    Address src, dst;
+    uint8_t     type, commandId;
+    Address     src, dst;
     const char *typeStr;
-    char stringBuffer[10];
-    char srcStringBuffer[Address::kAddressStringSize];
-    char dstStringBuffer[Address::kAddressStringSize];
+    char        stringBuffer[10];
+    char        srcStringBuffer[Address::kAddressStringSize];
+    char        dstStringBuffer[Address::kAddressStringSize];
 
     type = GetType();
 
@@ -1113,6 +1115,5 @@ const char *BeaconPayload::ToInfoString(char *aBuf, uint16_t aSize)
     return aBuf;
 }
 
-}  // namespace Mac
-}  // namespace ot
-
+} // namespace Mac
+} // namespace ot

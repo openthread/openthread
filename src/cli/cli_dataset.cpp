@@ -77,7 +77,7 @@ const DatasetCommand Dataset::sCommands[] =
 #endif
 };
 
-Server *Dataset::sServer;
+Server              *Dataset::sServer;
 otOperationalDataset Dataset::sDataset;
 
 void Dataset::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
@@ -232,6 +232,7 @@ otError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
+
     otDatasetGetActive(aInstance, &dataset);
 
     (void)argc;
@@ -242,6 +243,7 @@ otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
 otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
+
     otDatasetGetPending(aInstance, &dataset);
 
     (void)argc;
@@ -253,7 +255,7 @@ otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
 otError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
@@ -269,7 +271,7 @@ exit:
 otError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
@@ -285,7 +287,7 @@ exit:
 otError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
@@ -334,7 +336,7 @@ exit:
 otError Dataset::ProcessDelay(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
@@ -367,7 +369,7 @@ exit:
 otError Dataset::ProcessMasterKey(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    int keyLength;
+    int     keyLength;
     uint8_t key[OT_MASTER_KEY_SIZE];
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
@@ -385,7 +387,7 @@ exit:
 
 otError Dataset::ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     otIp6Address prefix;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
@@ -403,7 +405,7 @@ exit:
 otError Dataset::ProcessNetworkName(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    size_t length;
+    size_t  length;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
     VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_PARSE);
@@ -421,7 +423,7 @@ exit:
 otError Dataset::ProcessPanId(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
@@ -437,7 +439,7 @@ exit:
 otError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
@@ -452,12 +454,12 @@ exit:
 
 otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
-    uint8_t tlvs[128];
-    long value;
-    int length = 0;
-    otIp6Address prefix;
+    uint8_t              tlvs[128];
+    long                 value;
+    int                  length = 0;
+    otIp6Address         prefix;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
@@ -574,13 +576,13 @@ exit:
 
 otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
-    uint8_t tlvs[32];
-    long value;
-    int length = 0;
-    bool destAddrSpecified = false;
-    otIp6Address address;
+    uint8_t              tlvs[32];
+    long                 value;
+    int                  length = 0;
+    bool                 destAddrSpecified = false;
+    otIp6Address         address;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
@@ -670,7 +672,7 @@ exit:
 
 otError Dataset::ProcessPSKc(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t length;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
@@ -689,7 +691,7 @@ exit:
 otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
@@ -735,7 +737,7 @@ otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *ar
 exit:
     return error;
 }
-#endif  // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD
 
 }  // namespace Cli
-}  // namespace ot
+} // namespace ot

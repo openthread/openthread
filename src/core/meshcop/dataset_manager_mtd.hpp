@@ -43,21 +43,25 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class ActiveDataset: public ActiveDatasetBase
+class ActiveDataset : public ActiveDatasetBase
 {
 public:
-    ActiveDataset(ThreadNetif &aThreadNetif) : ActiveDatasetBase(aThreadNetif) { }
+    ActiveDataset(ThreadNetif &aThreadNetif) : ActiveDatasetBase(aThreadNetif) {
+    }
 
-    otError GenerateLocal(void) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError GenerateLocal(void) {
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
 };
 
-class PendingDataset: public PendingDatasetBase
+class PendingDataset : public PendingDatasetBase
 {
 public:
-    PendingDataset(ThreadNetif &aThreadNetif) : PendingDatasetBase(aThreadNetif) { }
+    PendingDataset(ThreadNetif &aThreadNetif) : PendingDatasetBase(aThreadNetif) {
+    }
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

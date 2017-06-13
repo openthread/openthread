@@ -111,4 +111,4 @@ const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
     return aMacAddress;
 }
 
-}  // namespace ot
+} // namespace ot

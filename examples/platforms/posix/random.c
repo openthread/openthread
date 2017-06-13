@@ -53,12 +53,12 @@ void platformRandomInit(void)
     error = otPlatRandomGetTrue((uint8_t *)&sState, sizeof(sState));
     assert(error == OT_ERROR_NONE);
 
-#else  // __SANITIZE_ADDRESS__
+#else // __SANITIZE_ADDRESS__
 
     // Multiplying NODE_ID assures that no two nodes gets the same seed within an hour.
     sState = (uint32_t)time(NULL) + (3600 * NODE_ID);
 
-#endif  // __SANITIZE_ADDRESS__
+#endif // __SANITIZE_ADDRESS__
 }
 
 uint32_t otPlatRandomGet(void)
@@ -89,7 +89,7 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 
 #if __SANITIZE_ADDRESS__ == 0
 
-    FILE *file = NULL;
+    FILE  *file = NULL;
     size_t readLength;
 
     otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
@@ -107,7 +107,7 @@ exit:
         fclose(file);
     }
 
-#else  // __SANITIZE_ADDRESS__
+#else // __SANITIZE_ADDRESS__
 
     /*
      * THE IMPLEMENTATION BELOW IS NOT COMPLIANT WITH THE THREAD SPECIFICATION.
@@ -126,7 +126,7 @@ exit:
 
 exit:
 
-#endif  // __SANITIZE_ADDRESS__
+#endif // __SANITIZE_ADDRESS__
 
     return error;
 }

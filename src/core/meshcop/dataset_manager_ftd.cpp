@@ -61,7 +61,7 @@
 namespace ot {
 namespace MeshCoP {
 
-ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
+ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif) :
     ActiveDatasetBase(aThreadNetif),
     mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 {
@@ -74,7 +74,7 @@ bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
 
 otError ActiveDataset::GenerateLocal(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
 
     VerifyOrExit(mNetif.GetMle().IsAttached(), error = OT_ERROR_INVALID_STATE);
@@ -209,7 +209,7 @@ exit:
     return;
 }
 
-PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
+PendingDataset::PendingDataset(ThreadNetif &aThreadNetif) :
     PendingDatasetBase(aThreadNetif),
     mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
 {
@@ -249,9 +249,9 @@ exit:
 
 void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage)
 {
-    uint16_t offset = aMessage.GetOffset();
+    uint16_t      offset = aMessage.GetOffset();
     DelayTimerTlv delayTimer;
-    uint8_t flags;
+    uint8_t       flags;
 
     VerifyOrExit(mNetif.GetMle().IsAttached());
 
@@ -260,7 +260,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aM
         OT_TOOL_PACKED_BEGIN
         struct
         {
-            Tlv tlv;
+            Tlv     tlv;
             uint8_t value[Dataset::kMaxValueSize];
         } OT_TOOL_PACKED_END data;
 
@@ -286,7 +286,7 @@ exit:
     return;
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif // OPENTHREAD_FTD
+#endif  // OPENTHREAD_FTD

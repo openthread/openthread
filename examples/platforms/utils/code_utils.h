@@ -71,4 +71,4 @@
         }                                       \
     } while (0)
 
-#endif  // CODE_UTILS_H
+#endif // CODE_UTILS_H

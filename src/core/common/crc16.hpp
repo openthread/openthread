@@ -47,8 +47,8 @@ class Crc16
 public:
     enum Polynomial
     {
-        kCcitt = 0x1021,  ///< CRC16_CCITT
-        kAnsi  = 0x8005,  ///< CRC16-ANSI
+        kCcitt = 0x1021, ///< CRC16_CCITT
+        kAnsi  = 0x8005, ///< CRC16-ANSI
     };
 
     /**
@@ -63,7 +63,9 @@ public:
      * This method initializes the CRC16 computation.
      *
      */
-    void Init(void) { mCrc = 0; }
+    void Init(void) {
+        mCrc = 0;
+    }
 
     /*c*
      * This method feeds a byte value into the CRC16 computation.
@@ -79,13 +81,15 @@ public:
      * @returns The current CRC16 value.
      *
      */
-    uint16_t Get(void) const { return mCrc; }
+    uint16_t Get(void) const {
+        return mCrc;
+    }
 
 private:
     uint16_t mPolynomial;
     uint16_t mCrc;
 };
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // CRC16_HPP_

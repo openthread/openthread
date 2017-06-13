@@ -94,7 +94,7 @@ void otPlatMessagePoolFree(otInstance *aInstance, otMessage *aBuffer);
 uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 /**
@@ -103,4 +103,4 @@ uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
  */
 
 
-#endif  // MESSAGEPOOL_H_
+#endif // MESSAGEPOOL_H_

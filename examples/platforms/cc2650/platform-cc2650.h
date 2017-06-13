@@ -76,7 +76,7 @@ void cc2650RandomInit(void);
 void cc2650UartProcess(void);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // PLATFORM_H_
+#endif // PLATFORM_H_

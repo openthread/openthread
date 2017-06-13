@@ -50,7 +50,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Ip6 {
 
-Icmp::Icmp(Ip6 &aIp6):
+Icmp::Icmp(Ip6 &aIp6) :
     mHandlers(NULL),
     mEchoSequence(1),
     mIsEchoEnabled(true),
@@ -90,9 +90,9 @@ exit:
 otError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo,
                               uint16_t aIdentifier)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
-    IcmpHeader icmpHeader;
+    IcmpHeader  icmpHeader;
 
     messageInfoLocal = aMessageInfo;
 
@@ -114,10 +114,10 @@ exit:
 otError Icmp::SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
                         const Header &aHeader)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
-    Message *message = NULL;
-    IcmpHeader icmp6Header;
+    Message    *message = NULL;
+    IcmpHeader  icmp6Header;
 
     messageInfoLocal = aMessageInfo;
 
@@ -137,7 +137,7 @@ otError Icmp::SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const Me
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -147,10 +147,10 @@ exit:
 
 otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    uint16_t payloadLength;
+    otError    error = OT_ERROR_NONE;
+    uint16_t   payloadLength;
     IcmpHeader icmp6Header;
-    uint16_t checksum;
+    uint16_t   checksum;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header),
                  error = OT_ERROR_PARSE);
@@ -180,11 +180,11 @@ exit:
 
 otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    IcmpHeader icmp6Header;
-    Message *replyMessage = NULL;
+    otError     error = OT_ERROR_NONE;
+    IcmpHeader  icmp6Header;
+    Message    *replyMessage = NULL;
     MessageInfo replyMessageInfo;
-    uint16_t payloadLength;
+    uint16_t    payloadLength;
 
     otLogInfoIcmp(GetInstance(), "Received Echo Request");
 
@@ -220,7 +220,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
 
 exit:
 
-    if (error != OT_ERROR_NONE && replyMessage != NULL)
+    if ((error != OT_ERROR_NONE) && (replyMessage != NULL))
     {
         replyMessage->Free();
     }
@@ -243,5 +243,5 @@ otError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
     return OT_ERROR_NONE;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

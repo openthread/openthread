@@ -104,9 +104,9 @@ void AnnounceBeginServer::HandleRequest(void *aContext, otCoapHeader *aHeader, o
 void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
+    MeshCoP::CountTlv        count;
+    MeshCoP::PeriodTlv       period;
+    Ip6::MessageInfo         responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
@@ -158,4 +158,4 @@ void AnnounceBeginServer::HandleTimer(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot

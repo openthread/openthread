@@ -43,7 +43,7 @@
 namespace ot {
 namespace Ip6 {
 
-Routes::Routes(Ip6 &aIp6):
+Routes::Routes(Ip6 &aIp6) :
     mRoutes(NULL),
     mIp6(aIp6)
 {
@@ -90,9 +90,9 @@ otError Routes::Remove(Route &aRoute)
 
 int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
 {
-    int8_t maxPrefixMatch = -1;
+    int8_t  maxPrefixMatch = -1;
     uint8_t prefixMatch;
-    int8_t rval = -1;
+    int8_t  rval = -1;
 
     for (Route *cur = mRoutes; cur; cur = cur->mNext)
     {
@@ -119,8 +119,8 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
 
     for (Netif *netif = mIp6.GetNetifList(); netif; netif = netif->GetNext())
     {
-        if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == OT_ERROR_NONE &&
-            static_cast<int8_t>(prefixMatch) > maxPrefixMatch)
+        if ((netif->RouteLookup(aSource, aDestination, &prefixMatch) == OT_ERROR_NONE) &&
+            (static_cast<int8_t>(prefixMatch) > maxPrefixMatch))
         {
             maxPrefixMatch = static_cast<int8_t>(prefixMatch);
             rval = netif->GetInterfaceId();
@@ -130,5 +130,5 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
     return rval;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

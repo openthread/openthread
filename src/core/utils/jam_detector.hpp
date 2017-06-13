@@ -92,14 +92,18 @@ public:
      *
      * @returns The Jam Detection status (true if enabled, false otherwise).
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const {
+        return mEnabled;
+    }
 
     /**
      * Get the current jam state.
      *
      * @returns The jamming state (`true` if jam is detected, `false` otherwise).
      */
-    bool GetState(void) const { return mJamState; }
+    bool GetState(void) const {
+        return mJamState;
+    }
 
     /**
      * Set the Jam Detection RSSI Threshold (in dBm).
@@ -116,7 +120,9 @@ public:
      *
      * @returns The Jam Detection RSSI Threshold.
      */
-    int8_t GetRssiThreshold(void) const { return mRssiThreshold; }
+    int8_t GetRssiThreshold(void) const {
+        return mRssiThreshold;
+    }
 
     /**
      * Set the Jam Detection Detection Window (in seconds).
@@ -134,7 +140,9 @@ public:
      *
      * @returns The Jam Detection Window.
      */
-    uint8_t GetWindow(void) const { return mWindow; }
+    uint8_t GetWindow(void) const {
+        return mWindow;
+    }
 
     /**
      * Set the Jam Detection Busy Period (in seconds).
@@ -156,7 +164,9 @@ public:
      *
      * @returns The Jam Detection Busy Period
      */
-    uint8_t GetBusyPeriod(void) const { return mBusyPeriod; }
+    uint8_t GetBusyPeriod(void) const {
+        return mBusyPeriod;
+    }
 
     /**
      * Get the current history bitmap.
@@ -170,7 +180,9 @@ public:
      *
      * @returns The current history bitmap.
      */
-    uint64_t GetHistoryBitmap(void) const { return mHistoryBitmap; }
+    uint64_t GetHistoryBitmap(void) const {
+        return mHistoryBitmap;
+    }
 
 private:
     static void HandleTimer(void *aContext);
@@ -181,13 +193,13 @@ private:
 private:
     enum
     {
-        kMaxWindow              = 63,   // Max window size
+        kMaxWindow              = 63, // Max window size
         kDefaultRssiThreshold   = 0,
 
-        kMaxSampleInterval      = 256,  // in ms
-        kMinSampleInterval      = 2,    // in ms
-        kMaxRandomDelay         = 4,    // in ms
-        kOneSecondInterval      = 1000  // in ms
+        kMaxSampleInterval      = 256, // in ms
+        kMinSampleInterval      = 2,   // in ms
+        kMaxRandomDelay         = 4,   // in ms
+        kOneSecondInterval      = 1000 // in ms
 
     };
 
@@ -211,7 +223,7 @@ private:
  *
  */
 
-}  // namespace Utils
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
 #endif  // JAM_DETECTOR_HPP_

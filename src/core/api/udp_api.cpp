@@ -53,6 +53,7 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
     otError error = OT_ERROR_INVALID_ARGS;
+
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
 
     if (socket->mTransport == NULL)
@@ -67,6 +68,7 @@ otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCal
 otError otUdpClose(otUdpSocket *aSocket)
 {
     otError error = OT_ERROR_INVALID_STATE;
+
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
 
     if (socket->mTransport != NULL)

@@ -66,6 +66,7 @@ uint32_t otPlatAlarmGetNow(void)
      * lower 32 bytes <32.32>.
      */
     uint64_t rtcVal = AONRTCCurrent64BitValueGet();
+
     return ((rtcVal * 1000) >> 32);
 }
 
@@ -118,4 +119,3 @@ void cc2650AlarmProcess(otInstance *aInstance)
         }
     }
 }
-

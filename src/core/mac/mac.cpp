@@ -70,11 +70,11 @@ static const otExtAddress sMode2ExtAddress =
 };
 
 static const uint8_t sExtendedPanidInit[] = {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe};
-static const char sNetworkNameInit[] = "OpenThread";
+static const char    sNetworkNameInit[] = "OpenThread";
 
 #ifdef _WIN32
-const uint32_t kMinBackoffSum = kMinBackoff + (kUnitBackoffPeriod *OT_RADIO_SYMBOL_TIME * (1 << kMinBE)) / 1000;
-const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod *OT_RADIO_SYMBOL_TIME * (1 << kMaxBE)) / 1000;
+const uint32_t kMinBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME * (1 << kMinBE)) / 1000;
+const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME * (1 << kMaxBE)) / 1000;
 static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
 #endif
 
@@ -109,11 +109,11 @@ void Mac::StartCsmaBackoff(void)
         otPlatUsecAlarmStartAt(GetInstance(), &now, &delay, &Mac::HandleBeginTransmit, this);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
         mBackoffTimer.Start(backoff / 1000UL);
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+#endif  // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     }
 }
 
-Mac::Mac(ThreadNetif &aThreadNetif):
+Mac::Mac(ThreadNetif &aThreadNetif) :
     mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
@@ -249,12 +249,12 @@ bool Mac::IsInTransmitState(void)
 
 otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult)
 {
-    otError error = OT_ERROR_NONE;
-    Address address;
-    Beacon *beacon = NULL;
+    otError        error = OT_ERROR_NONE;
+    Address        address;
+    Beacon        *beacon = NULL;
     BeaconPayload *beaconPayload = NULL;
-    uint8_t payloadLength;
-    char stringBuffer[BeaconPayload::kInfoStringSize];
+    uint8_t        payloadLength;
+    char           stringBuffer[BeaconPayload::kInfoStringSize];
 
     memset(&aResult, 0, sizeof(otActiveScanResult));
 
@@ -351,7 +351,7 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
 
         // If we have scanned all the channels, then fire the final callback
         // and start the next transmission task
-        if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
+        if ((mScanChannels == 0) || (mScanChannel > OT_RADIO_CHANNEL_MAX))
         {
             otPlatRadioReceive(GetInstance(), mChannel);
             mEnergyScanHandler(mScanContext, NULL);
@@ -454,7 +454,7 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
 void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
 {
     Crypto::Sha256 sha256;
-    uint8_t buf[Crypto::Sha256::kHashSize];
+    uint8_t        buf[Crypto::Sha256::kHashSize];
 
     otLogFuncEntry();
 
@@ -629,6 +629,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
 {
     // initialize MAC header
     uint16_t fcf = Frame::kFcfFrameMacCmd | Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrNone;
+
     aFrame.InitMacHeader(fcf, Frame::kSecNone);
     aFrame.SetDstPanId(kShortAddrBroadcast);
     aFrame.SetDstAddr(kShortAddrBroadcast);
@@ -639,12 +640,12 @@ void Mac::SendBeaconRequest(Frame &aFrame)
 
 void Mac::SendBeacon(Frame &aFrame)
 {
-    uint8_t numUnsecurePorts;
-    uint8_t beaconLength;
-    uint16_t fcf;
-    Beacon *beacon = NULL;
+    uint8_t        numUnsecurePorts;
+    uint8_t        beaconLength;
+    uint16_t       fcf;
+    Beacon        *beacon = NULL;
     BeaconPayload *beaconPayload = NULL;
-    char stringBuffer[BeaconPayload::kInfoStringSize];
+    char           stringBuffer[BeaconPayload::kInfoStringSize];
 
     // initialize MAC header
     fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
@@ -691,12 +692,13 @@ void Mac::SendBeacon(Frame &aFrame)
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
     uint32_t frameCounter = 0;
-    uint8_t securityLevel;
-    uint8_t keyIdMode;
-    uint8_t nonce[kNonceSize];
-    uint8_t tagLength;
-    Crypto::AesCcm aesCcm;
-    const uint8_t *key = NULL;
+    uint8_t  securityLevel;
+    uint8_t  keyIdMode;
+    uint8_t  nonce[kNonceSize];
+    uint8_t  tagLength;
+
+    Crypto::AesCcm    aesCcm;
+    const uint8_t    *key = NULL;
     const ExtAddress *extAddress = NULL;
 
     if (aFrame.GetSecurityEnabled() == false)
@@ -781,10 +783,10 @@ void Mac::HandleBeginTransmit(void *aContext)
 
 void Mac::HandleBeginTransmit(void)
 {
-    Frame &sendFrame(*mTxFrame);
+    Frame  &sendFrame(*mTxFrame);
     otError error = OT_ERROR_NONE;
 
-    if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
+    if ((mCsmaAttempts == 0) && (mTransmitAttempts == 0))
     {
         sendFrame.SetPower(mMaxTransmitPower);
 
@@ -887,7 +889,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError
 
     mCounters.mTxTotal++;
 
-    Frame *frame = static_cast<Frame *>(aFrame);
+    Frame  *frame = static_cast<Frame *>(aFrame);
     Address addr;
     frame->GetDstAddr(addr);
 
@@ -913,8 +915,8 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError
     }
 
     if (!RadioSupportsCsmaBackoff() &&
-        aError == OT_ERROR_CHANNEL_ACCESS_FAILURE &&
-        mCsmaAttempts < kMaxCSMABackoffs)
+        (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE) &&
+        (mCsmaAttempts < kMaxCSMABackoffs))
     {
         mCsmaAttempts++;
         StartCsmaBackoff();
@@ -971,9 +973,9 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 
 void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    Frame *txFrame = static_cast<Frame *>(aFrame);
+    Frame  *txFrame = static_cast<Frame *>(aFrame);
     Address addr;
-    bool framePending = false;
+    bool    framePending = false;
 
     mMacTimer.Stop();
 
@@ -981,9 +983,9 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
 
     txFrame->GetDstAddr(addr);
 
-    if (aError == OT_ERROR_NONE && txFrame->GetAckRequest() && aAckFrame != NULL)
+    if ((aError == OT_ERROR_NONE) && txFrame->GetAckRequest() && (aAckFrame != NULL))
     {
-        Frame *ackFrame = static_cast<Frame *>(aAckFrame);
+        Frame    *ackFrame = static_cast<Frame *>(aAckFrame);
         Neighbor *neighbor;
 
         framePending = ackFrame->GetFramePending();
@@ -1017,8 +1019,8 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
     }
 
     if (!RadioSupportsCsmaBackoff() &&
-        aError == OT_ERROR_CHANNEL_ACCESS_FAILURE &&
-        mCsmaAttempts < kMaxCSMABackoffs)
+        (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE) &&
+        (mCsmaAttempts < kMaxCSMABackoffs))
     {
         mCsmaAttempts++;
         StartCsmaBackoff();
@@ -1071,7 +1073,7 @@ void Mac::HandleMacTimer(void)
             mScanChannels >>= 1;
             mScanChannel++;
 
-            if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
+            if ((mScanChannels == 0) || (mScanChannel > OT_RADIO_CHANNEL_MAX))
             {
                 otPlatRadioReceive(GetInstance(), mChannel);
                 otPlatRadioSetPanId(GetInstance(), mPanId);
@@ -1141,7 +1143,7 @@ void Mac::HandleReceiveTimer(void)
 
 void Mac::SentFrame(otError aError)
 {
-    Frame &sendFrame(*mTxFrame);
+    Frame  &sendFrame(*mTxFrame);
     Sender *sender;
 
     mTransmitAttempts++;
@@ -1163,7 +1165,7 @@ void Mac::SentFrame(otError aError)
         otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() &&
-            mTransmitAttempts < sendFrame.GetMaxTxAttempts())
+            (mTransmitAttempts < sendFrame.GetMaxTxAttempts()))
         {
             StartCsmaBackoff();
             mCounters.mTxRetry++;
@@ -1250,17 +1252,18 @@ exit:
 
 otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t securityLevel;
-    uint8_t keyIdMode;
-    uint32_t frameCounter;
-    uint8_t nonce[kNonceSize];
-    uint8_t tag[Frame::kMaxMicSize];
-    uint8_t tagLength;
-    uint8_t keyid;
-    uint32_t keySequence = 0;
-    const uint8_t *macKey;
+    otError           error = OT_ERROR_NONE;
+    uint8_t           securityLevel;
+    uint8_t           keyIdMode;
+    uint32_t          frameCounter;
+    uint8_t           nonce[kNonceSize];
+    uint8_t           tag[Frame::kMaxMicSize];
+    uint8_t           tagLength;
+    uint8_t           keyid;
+    uint32_t          keySequence = 0;
+    const uint8_t    *macKey;
     const ExtAddress *extAddress;
+
     Crypto::AesCcm aesCcm;
 
     aFrame.SetSecurityValid(false);
@@ -1405,16 +1408,16 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
 
 void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 {
-    Address srcaddr;
-    Address dstaddr;
-    PanId panid;
-    Neighbor *neighbor;
+    Address              srcaddr;
+    Address              dstaddr;
+    PanId                panid;
+    Neighbor            *neighbor;
     otMacWhitelistEntry *whitelistEntry;
     otMacBlacklistEntry *blacklistEntry;
-    int8_t rssi;
-    bool receive = false;
-    uint8_t commandId;
-    otError error = aError;
+    int8_t               rssi;
+    bool                 receive = false;
+    uint8_t              commandId;
+    otError              error = aError;
 
     mCounters.mRxTotal++;
 
@@ -1467,7 +1470,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     }
 
     // Source Whitelist Processing
-    if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())
+    if ((srcaddr.mLength != 0) && mWhitelist.IsEnabled())
     {
         VerifyOrExit((whitelistEntry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = OT_ERROR_WHITELIST_FILTERED);
 
@@ -1478,7 +1481,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     }
 
     // Source Blacklist Processing
-    if (srcaddr.mLength != 0 && mBlacklist.IsEnabled())
+    if ((srcaddr.mLength != 0) && mBlacklist.IsEnabled())
     {
         VerifyOrExit((blacklistEntry = mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
     }
@@ -1564,7 +1567,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         break;
 
     default:
-        if (!mRxOnWhenIdle && dstaddr.mLength != 0)
+        if (!mRxOnWhenIdle && (dstaddr.mLength != 0))
         {
             mReceiveTimer.Stop();
             otPlatRadioSleep(GetInstance());
@@ -1762,5 +1765,5 @@ void Mac::ResetCounters(void)
     memset(&mCounters, 0, sizeof(mCounters));
 }
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot

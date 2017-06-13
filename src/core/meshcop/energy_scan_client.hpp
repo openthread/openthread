@@ -90,17 +90,17 @@ private:
     void HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerEnergyReportCallback mCallback;
-    void *mContext;
+    void                              *mContext;
 
-    Coap::Resource mEnergyScan;
+    Coap::Resource                     mEnergyScan;
 
-    ThreadNetif &mNetif;
+    ThreadNetif                       &mNetif;
 };
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // ENERGY_SCAN_CLIENT_HPP_

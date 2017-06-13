@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-#define OT_PBKDF2_SALT_MAX_LEN 30  // salt prefix (6) + extended panid (8) + network name (16)
+#define OT_PBKDF2_SALT_MAX_LEN 30 // salt prefix (6) + extended panid (8) + network name (16)
 
 /**
  * This method perform PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).
@@ -63,7 +63,7 @@ void otPbkdf2Cmac(
     uint8_t *aKey);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // PBKDF2_CMAC_H_
+#endif // PBKDF2_CMAC_H_

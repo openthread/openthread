@@ -48,6 +48,7 @@ uint32_t otNetifAddress_offset_mNext_c()
 otNetifAddress CreateNetif_c()
 {
     otNetifAddress addr;
+
     memset(&addr, 0, sizeof(addr));
     addr.mScopeOverrideValid = true;
     return addr;

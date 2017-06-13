@@ -97,7 +97,7 @@ exit:
 otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance)
 {
     otLinkModeConfig config;
-    uint8_t mode = aInstance->mThreadNetif.GetMle().GetDeviceMode();
+    uint8_t          mode = aInstance->mThreadNetif.GetMle().GetDeviceMode();
 
     memset(&config, 0, sizeof(otLinkModeConfig));
 
@@ -391,7 +391,7 @@ const char *otGetVersionString(void)
 #ifdef PLATFORM_VERSION_ATTR_SUFFIX
         PLATFORM_VERSION_ATTR_SUFFIX
 #endif
-        ; // Trailing semicolon to end statement.
+    ; // Trailing semicolon to end statement.
 
     return sVersion;
 }
@@ -447,7 +447,7 @@ exit:
 bool otThreadGetAutoStart(otInstance *aInstance)
 {
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-    uint8_t autoStart = 0;
+    uint8_t  autoStart = 0;
     uint16_t autoStartLength = sizeof(autoStart);
 
     if (otPlatSettingsGet(aInstance, Settings::kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) !=

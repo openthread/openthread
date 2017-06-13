@@ -45,8 +45,8 @@ namespace Mle {
 enum
 {
     kMaxChildren                = OPENTHREAD_CONFIG_MAX_CHILDREN,
-    kMaxChildKeepAliveAttempts  = 4,    ///< Maximum keep alive attempts before attempting to reattach to a new Parent
-    kFailedChildTransmissions   = 4,    ///< FAILED_CHILD_TRANSMISSIONS
+    kMaxChildKeepAliveAttempts  = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
+    kFailedChildTransmissions   = 4, ///< FAILED_CHILD_TRANSMISSIONS
 };
 
 /**
@@ -55,25 +55,25 @@ enum
  */
 enum
 {
-    kVersion                       = 2,     ///< MLE Version
-    kUdpPort                       = 19788, ///< MLE UDP Port
-    kParentRequestRouterTimeout    = 750,   ///< Router Request timeout
-    kParentRequestChildTimeout     = 1250,  ///< End Device Request timeout
-    kParentResponseMaxDelayRouters = 500,   ///< Maximum delay for response for Parent Request sent to routers only
-    kParentResponseMaxDelayAll     = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
-    kUnicastRetransmissionDelay    = 1000,  ///< Base delay before retransmitting an MLE unicast.
-    kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request
-    kMaxChildIdRequestTimeout      = 5000,  ///< Maximum delay for receiving a Child ID Request
-    kMaxChildUpdateResponseTimeout = 2000,  ///< Maximum delay for receiving a Child Update Response
-    kMinTimeout                    = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000),  ///< Minimum timeout(s)
+    kVersion                       = 2,                                                                         ///< MLE Version
+    kUdpPort                       = 19788,                                                                     ///< MLE UDP Port
+    kParentRequestRouterTimeout    = 750,                                                                       ///< Router Request timeout
+    kParentRequestChildTimeout     = 1250,                                                                      ///< End Device Request timeout
+    kParentResponseMaxDelayRouters = 500,                                                                       ///< Maximum delay for response for Parent Request sent to routers only
+    kParentResponseMaxDelayAll     = 1000,                                                                      ///< Maximum delay for response for Parent Request sent to all devices
+    kUnicastRetransmissionDelay    = 1000,                                                                      ///< Base delay before retransmitting an MLE unicast.
+    kMaxResponseDelay              = 1000,                                                                      ///< Maximum delay before responding to a multicast request
+    kMaxChildIdRequestTimeout      = 5000,                                                                      ///< Maximum delay for receiving a Child ID Request
+    kMaxChildUpdateResponseTimeout = 2000,                                                                      ///< Maximum delay for receiving a Child Update Response
+    kMinTimeout                    = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000), ///< Minimum timeout(s)
 };
 
 enum
 {
-    kMinChildId                 = 1,     ///< Minimum Child ID
-    kMaxChildId                 = 511,   ///< Maximum Child ID
-    kRouterIdOffset             = 10,    ///< Bit offset of Router ID in RLOC16
-    kRlocPrefixLength           = 14,    ///< Prefix length of RLOC in bytes
+    kMinChildId                 = 1,   ///< Minimum Child ID
+    kMaxChildId                 = 511, ///< Maximum Child ID
+    kRouterIdOffset             = 10,  ///< Bit offset of Router ID in RLOC16
+    kRlocPrefixLength           = 14,  ///< Prefix length of RLOC in bytes
 };
 
 /**
@@ -82,35 +82,35 @@ enum
  */
 enum
 {
-    kAdvertiseIntervalMin       = 1,                ///< ADVERTISEMENT_I_MIN (seconds)
-    kAdvertiseIntervalMax       = 32,               ///< ADVERTISEMENT_I_MAX (seconds)
-    kFailedRouterTransmissions  = 4,                ///< FAILED_ROUTER_TRANSMISSIONS
-    kRouterIdReuseDelay         = 100,              ///< ID_REUSE_DELAY (seconds)
-    kRouterIdSequencePeriod     = 10,               ///< ID_SEQUENCE_PERIOD (seconds)
-    kMaxNeighborAge             = 100,              ///< MAX_NEIGHBOR_AGE (seconds)
-    kMaxRouteCost               = 16,               ///< MAX_ROUTE_COST
-    kMaxRouterId                = 62,               ///< MAX_ROUTER_ID
-    kInvalidRouterId            = kMaxRouterId + 1, ///< Value indicating incorrect Router Id
-    kMaxRouters                 = 32,               ///< MAX_ROUTERS
-    kMinDowngradeNeighbors      = 7,                ///< MIN_DOWNGRADE_NEIGHBORS
-    kNetworkIdTimeout           = 120,              ///< NETWORK_ID_TIMEOUT (seconds)
-    kParentRouteToLeaderTimeout = 20,               ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (seconds)
-    kRouterSelectionJitter      = 120,              ///< ROUTER_SELECTION_JITTER (seconds)
-    kRouterDowngradeThreshold   = 23,               ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreshold     = 16,               ///< ROUTER_UPGRADE_THRESHOLD (routers)
-    kMaxLeaderToRouterTimeout   = 90,               ///< INFINITE_COST_TIMEOUT (seconds)
-    kReedAdvertiseInterval      = 570,              ///< REED_ADVERTISEMENT_INTERVAL (seconds)
-    kReedAdvertiseJitter        = 60,               ///< REED_ADVERTISEMENT_JITTER (seconds)
-    kLeaderWeight               = 64,               ///< Default leader weight for the Thread Network Partition
-    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT,  ///< MLE_END_DEVICE_TIMEOUT (seconds)
+    kAdvertiseIntervalMin       = 1,                                       ///< ADVERTISEMENT_I_MIN (seconds)
+    kAdvertiseIntervalMax       = 32,                                      ///< ADVERTISEMENT_I_MAX (seconds)
+    kFailedRouterTransmissions  = 4,                                       ///< FAILED_ROUTER_TRANSMISSIONS
+    kRouterIdReuseDelay         = 100,                                     ///< ID_REUSE_DELAY (seconds)
+    kRouterIdSequencePeriod     = 10,                                      ///< ID_SEQUENCE_PERIOD (seconds)
+    kMaxNeighborAge             = 100,                                     ///< MAX_NEIGHBOR_AGE (seconds)
+    kMaxRouteCost               = 16,                                      ///< MAX_ROUTE_COST
+    kMaxRouterId                = 62,                                      ///< MAX_ROUTER_ID
+    kInvalidRouterId            = kMaxRouterId + 1,                        ///< Value indicating incorrect Router Id
+    kMaxRouters                 = 32,                                      ///< MAX_ROUTERS
+    kMinDowngradeNeighbors      = 7,                                       ///< MIN_DOWNGRADE_NEIGHBORS
+    kNetworkIdTimeout           = 120,                                     ///< NETWORK_ID_TIMEOUT (seconds)
+    kParentRouteToLeaderTimeout = 20,                                      ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (seconds)
+    kRouterSelectionJitter      = 120,                                     ///< ROUTER_SELECTION_JITTER (seconds)
+    kRouterDowngradeThreshold   = 23,                                      ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
+    kRouterUpgradeThreshold     = 16,                                      ///< ROUTER_UPGRADE_THRESHOLD (routers)
+    kMaxLeaderToRouterTimeout   = 90,                                      ///< INFINITE_COST_TIMEOUT (seconds)
+    kReedAdvertiseInterval      = 570,                                     ///< REED_ADVERTISEMENT_INTERVAL (seconds)
+    kReedAdvertiseJitter        = 60,                                      ///< REED_ADVERTISEMENT_JITTER (seconds)
+    kLeaderWeight               = 64,                                      ///< Default leader weight for the Thread Network Partition
+    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (seconds)
 };
 
 enum
 {
-    kLinkQuality3LinkCost       = 1,    ///< Link Cost for Link Quality 3
-    kLinkQuality2LinkCost       = 2,    ///< Link Cost for Link Quality 2
-    kLinkQuality1LinkCost       = 4,    ///< Link Cost for Link Quality 1
-    kLinkQuality0LinkCost       = 16,   ///< Link Cost for Link Quality 0
+    kLinkQuality3LinkCost       = 1,  ///< Link Cost for Link Quality 3
+    kLinkQuality2LinkCost       = 2,  ///< Link Cost for Link Quality 2
+    kLinkQuality1LinkCost       = 4,  ///< Link Cost for Link Quality 1
+    kLinkQuality0LinkCost       = 16, ///< Link Cost for Link Quality 0
 };
 
 // add for certification testing
@@ -132,13 +132,13 @@ enum
     kMplRouterDataMessageTimerExpirations = 2, ///< Number of MPL retransmissions for Routers.
 };
 
-}  // namespace Mle
+} // namespace Mle
 
 /**
  * @}
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // MLE_CONSTANTS_HPP_

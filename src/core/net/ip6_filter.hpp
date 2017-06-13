@@ -117,7 +117,7 @@ private:
     uint16_t mUnsecurePorts[kMaxUnsecurePorts];
 };
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
 #endif  // IP6_FILTER_HPP_

@@ -63,16 +63,16 @@ typedef struct otInstance
     // Callbacks
     //
 
-    ot::Ip6::NetifCallback mNetifCallback[OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS];
+    ot::Ip6::NetifCallback   mNetifCallback[OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS];
 
-    otIp6ReceiveCallback mReceiveIp6DatagramCallback;
-    void *mReceiveIp6DatagramCallbackContext;
+    otIp6ReceiveCallback     mReceiveIp6DatagramCallback;
+    void                    *mReceiveIp6DatagramCallbackContext;
 
     otHandleActiveScanResult mActiveScanCallback;
-    void *mActiveScanCallbackContext;
+    void                    *mActiveScanCallbackContext;
 
     otHandleEnergyScanResult mEnergyScanCallback;
-    void *mEnergyScanCallbackContext;
+    void                    *mEnergyScanCallbackContext;
 
     //
     // State
@@ -81,8 +81,8 @@ typedef struct otInstance
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     ot::Crypto::MbedTls mMbedTls;
 #endif
-    ot::Ip6::Ip6 mIp6;
-    ot::ThreadNetif mThreadNetif;
+    ot::Ip6::Ip6        mIp6;
+    ot::ThreadNetif     mThreadNetif;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     ot::LinkRaw mLinkRaw;
@@ -111,4 +111,4 @@ static inline otInstance *otInstanceFromThreadNetif(ot::ThreadNetif *aThreadNeti
     return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
 }
 
-#endif  // OPENTHREADINSTANCE_H_
+#endif // OPENTHREADINSTANCE_H_

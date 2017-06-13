@@ -53,12 +53,12 @@ static void processReceive(void);
 static void processTransmit(void);
 
 static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t sTransmitLength = 0;
+static uint16_t       sTransmitLength = 0;
 
 typedef struct RecvBuffer
 {
     // The data buffer
-    uint8_t mBuffer[kReceiveBufferSize];
+    uint8_t  mBuffer[kReceiveBufferSize];
     // The offset of the first item written to the list.
     uint16_t mHead;
     // The offset of the next item to be written to the list.
@@ -157,9 +157,9 @@ void processTransmit(void)
 {
     otEXPECT(sTransmitBuffer != NULL);
 
-    for (; sTransmitLength > 0; sTransmitLength--)
+    for ( ; sTransmitLength > 0; sTransmitLength--)
     {
-        while (HWREG(UART0_BASE + UART_O_FR) & UART_FR_TXFF);
+        while (HWREG(UART0_BASE + UART_O_FR) & UART_FR_TXFF) {}
 
         HWREG(UART0_BASE + UART_O_DR) = *sTransmitBuffer++;
     }
@@ -180,7 +180,7 @@ void cc2538UartProcess(void)
 void UART0IntHandler(void)
 {
     uint32_t mis;
-    uint8_t byte;
+    uint8_t  byte;
 
     mis = HWREG(UART0_BASE + UART_O_MIS);
     HWREG(UART0_BASE + UART_O_ICR) = mis;

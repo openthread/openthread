@@ -123,7 +123,7 @@ private:
     enum
     {
         kCacheEntries = OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES,
-        kStateUpdatePeriod = 1000u,           ///< State update period in milliseconds.
+        kStateUpdatePeriod = 1000u, ///< State update period in milliseconds.
     };
 
     /**
@@ -132,9 +132,9 @@ private:
      */
     enum
     {
-        kAddressQueryTimeout = 3,             ///< ADDRESS_QUERY_TIMEOUT (seconds)
-        kAddressQueryInitialRetryDelay = 15,  ///< ADDRESS_QUERY_INITIAL_RETRY_DELAY (seconds)
-        kAddressQueryMaxRetryDelay = 28800,   ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
+        kAddressQueryTimeout = 3,            ///< ADDRESS_QUERY_TIMEOUT (seconds)
+        kAddressQueryInitialRetryDelay = 15, ///< ADDRESS_QUERY_INITIAL_RETRY_DELAY (seconds)
+        kAddressQueryMaxRetryDelay = 28800,  ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
     };
 
     struct Cache
@@ -154,7 +154,7 @@ private:
             kStateQuery,
             kStateCached,
         };
-        State             mState;
+        State mState;
     };
 
     Cache *NewCacheEntry(void);
@@ -189,20 +189,20 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    Coap::Resource mAddressError;
-    Coap::Resource mAddressQuery;
-    Coap::Resource mAddressNotification;
-    Cache mCache[kCacheEntries];
+    Coap::Resource   mAddressError;
+    Coap::Resource   mAddressQuery;
+    Coap::Resource   mAddressNotification;
+    Cache            mCache[kCacheEntries];
     Ip6::IcmpHandler mIcmpHandler;
-    Timer mTimer;
+    Timer            mTimer;
 
-    ThreadNetif &mNetif;
+    ThreadNetif     &mNetif;
 };
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // ADDRESS_RESOLVER_HPP_

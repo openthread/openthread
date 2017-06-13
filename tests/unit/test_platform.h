@@ -56,11 +56,11 @@ typedef void (*testPlatAlarmStop)(otInstance *);
 typedef void (*testPlatAlarmStartAt)(otInstance *, uint32_t, uint32_t);
 typedef uint32_t (*testPlatAlarmGetNow)(void);
 
-extern bool                             g_testPlatAlarmSet;
-extern uint32_t                         g_testPlatAlarmNext;
-extern testPlatAlarmStop                g_testPlatAlarmStop;
-extern testPlatAlarmStartAt             g_testPlatAlarmStartAt;
-extern testPlatAlarmGetNow              g_testPlatAlarmGetNow;
+extern bool                 g_testPlatAlarmSet;
+extern uint32_t             g_testPlatAlarmNext;
+extern testPlatAlarmStop    g_testPlatAlarmStop;
+extern testPlatAlarmStartAt g_testPlatAlarmStartAt;
+extern testPlatAlarmGetNow  g_testPlatAlarmGetNow;
 
 //
 // Radio Platform
@@ -70,23 +70,23 @@ typedef void (*testPlatRadioSetPanId)(otInstance *, uint16_t);
 typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t *);
 typedef void (*testPlatRadioSetShortAddress)(otInstance *, uint16_t);
 
-typedef bool(*testPlatRadioIsEnabled)(otInstance *);
-typedef otError(*testPlatRadioEnable)(otInstance *);
-typedef otError(*testPlatRadioDisable)(otInstance *);
-typedef otError(*testPlatRadioReceive)(otInstance *, uint8_t);
-typedef otError(*testPlatRadioTransmit)(otInstance *);
+typedef bool (*testPlatRadioIsEnabled)(otInstance *);
+typedef otError (*testPlatRadioEnable)(otInstance *);
+typedef otError (*testPlatRadioDisable)(otInstance *);
+typedef otError (*testPlatRadioReceive)(otInstance *, uint8_t);
+typedef otError (*testPlatRadioTransmit)(otInstance *);
 typedef otRadioFrame *(*testPlatRadioGetTransmitBuffer)(otInstance *);
 
-extern otRadioCaps                      g_testPlatRadioCaps;
-extern testPlatRadioSetPanId            g_testPlatRadioSetPanId;
-extern testPlatRadioSetExtendedAddress  g_testPlatRadioSetExtendedAddress;
-extern testPlatRadioSetShortAddress     g_testPlatRadioSetShortAddress;
-extern testPlatRadioIsEnabled           g_testPlatRadioIsEnabled;
-extern testPlatRadioEnable              g_testPlatRadioEnable;
-extern testPlatRadioDisable             g_testPlatRadioDisable;
-extern testPlatRadioReceive             g_testPlatRadioReceive;
-extern testPlatRadioTransmit            g_testPlatRadioTransmit;
-extern testPlatRadioGetTransmitBuffer   g_testPlatRadioGetTransmitBuffer;
+extern otRadioCaps                     g_testPlatRadioCaps;
+extern testPlatRadioSetPanId           g_testPlatRadioSetPanId;
+extern testPlatRadioSetExtendedAddress g_testPlatRadioSetExtendedAddress;
+extern testPlatRadioSetShortAddress    g_testPlatRadioSetShortAddress;
+extern testPlatRadioIsEnabled          g_testPlatRadioIsEnabled;
+extern testPlatRadioEnable             g_testPlatRadioEnable;
+extern testPlatRadioDisable            g_testPlatRadioDisable;
+extern testPlatRadioReceive            g_testPlatRadioReceive;
+extern testPlatRadioTransmit           g_testPlatRadioTransmit;
+extern testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer;
 
 // Resets platform functions to defaults
 void testPlatResetToDefaults(void);

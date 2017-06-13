@@ -53,9 +53,9 @@ public:
                sizeof(Tlv) + mSteeringData.GetLength();
     }
 
-    BorderAgentLocatorTlv mBorderAgentLocator;
+    BorderAgentLocatorTlv    mBorderAgentLocator;
     CommissionerSessionIdTlv mCommissionerSessionId;
-    SteeringDataTlv mSteeringData;
+    SteeringDataTlv          mSteeringData;
 } OT_TOOL_PACKED_END;
 
 class Leader
@@ -138,18 +138,18 @@ private:
 
     void ResignCommissioner(void);
 
-    Coap::Resource mPetition;
-    Coap::Resource mKeepAlive;
-    Timer mTimer;
+    Coap::Resource    mPetition;
+    Coap::Resource    mKeepAlive;
+    Timer             mTimer;
 
-    uint32_t mDelayTimerMinimal;
+    uint32_t          mDelayTimerMinimal;
 
     CommissionerIdTlv mCommissionerId;
-    uint16_t mSessionId;
-    ThreadNetif &mNetif;
+    uint16_t          mSessionId;
+    ThreadNetif      &mNetif;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // MESHCOP_LEADER_HPP_

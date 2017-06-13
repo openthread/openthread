@@ -77,7 +77,7 @@ enum
 
 enum
 {
-    POSIX_RECEIVE_SENSITIVITY = -100,  // dBm
+    POSIX_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -92,20 +92,20 @@ static void radioSendMessage(otInstance *aInstance);
 static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
 
-static otRadioState sState = OT_RADIO_STATE_DISABLED;
+static otRadioState        sState = OT_RADIO_STATE_DISABLED;
 static struct RadioMessage sReceiveMessage;
 static struct RadioMessage sTransmitMessage;
 static struct RadioMessage sAckMessage;
-static otRadioFrame sReceiveFrame;
-static otRadioFrame sTransmitFrame;
-static otRadioFrame sAckFrame;
+static otRadioFrame        sReceiveFrame;
+static otRadioFrame        sTransmitFrame;
+static otRadioFrame        sAckFrame;
 
-static uint8_t sExtendedAddress[OT_EXT_ADDRESS_SIZE];
+static uint8_t  sExtendedAddress[OT_EXT_ADDRESS_SIZE];
 static uint16_t sShortAddress;
 static uint16_t sPanid;
-static int sSockFd;
-static bool sPromiscuous = false;
-static bool sAckWait = false;
+static int      sSockFd;
+static bool     sPromiscuous = false;
+static bool     sAckWait = false;
 static uint16_t sPortOffset = 0;
 
 static inline bool isFrameTypeAck(const uint8_t *frame)
@@ -136,8 +136,8 @@ static inline bool isPanIdCompressed(const uint8_t *frame)
 static inline bool isDataRequest(const uint8_t *frame)
 {
     const uint8_t *cur = frame;
-    uint8_t securityControl;
-    bool rval;
+    uint8_t        securityControl;
+    bool           rval;
 
     // FCF + DSN
     cur += 2 + 1;
@@ -288,6 +288,7 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
         0xf78f, 0xe606, 0xd49d, 0xc514, 0xb1ab, 0xa022, 0x92b9, 0x8330,
         0x7bc7, 0x6a4e, 0x58d5, 0x495c, 0x3de3, 0x2c6a, 0x1ef1, 0x0f78
     };
+
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
@@ -335,7 +336,8 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 void platformRadioInit(void)
 {
     struct sockaddr_in sockaddr;
-    char *offset;
+    char              *offset;
+
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
@@ -404,9 +406,10 @@ otError otPlatRadioDisable(otInstance *aInstance)
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_INVALID_STATE;
+
     (void)aInstance;
 
-    if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
+    if ((sState == OT_RADIO_STATE_SLEEP) || (sState == OT_RADIO_STATE_RECEIVE))
     {
         error = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
@@ -418,6 +421,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError error = OT_ERROR_INVALID_STATE;
+
     (void)aInstance;
 
     if (sState != OT_RADIO_STATE_DISABLED)
@@ -434,6 +438,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 {
     otError error = OT_ERROR_INVALID_STATE;
+
     (void)aInstance;
     (void)aRadio;
 
@@ -483,16 +488,16 @@ void radioReceive(otInstance *aInstance)
     sReceiveFrame.mLength = (uint8_t)(rval - 1);
 
     if (sAckWait &&
-        sTransmitFrame.mChannel == sReceiveMessage.mChannel &&
+        (sTransmitFrame.mChannel == sReceiveMessage.mChannel) &&
         isFrameTypeAck(sReceiveFrame.mPsdu) &&
-        getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu))
+        (getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu)))
     {
         sState = OT_RADIO_STATE_RECEIVE;
         sAckWait = false;
 
         otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
     }
-    else if ((sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT) &&
+    else if (((sState == OT_RADIO_STATE_RECEIVE) || (sState == OT_RADIO_STATE_TRANSMIT)) &&
              (sReceiveFrame.mChannel == sReceiveMessage.mChannel))
     {
         radioProcessFrame(aInstance);
@@ -527,21 +532,21 @@ void radioSendMessage(otInstance *aInstance)
 
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
-    if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sAckWait))
+    if ((aReadFdSet != NULL) && ((sState != OT_RADIO_STATE_TRANSMIT) || sAckWait))
     {
         FD_SET(sSockFd, aReadFdSet);
 
-        if (aMaxFd != NULL && *aMaxFd < sSockFd)
+        if ((aMaxFd != NULL) && (*aMaxFd < sSockFd))
         {
             *aMaxFd = sSockFd;
         }
     }
 
-    if (aWriteFdSet != NULL && sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
+    if ((aWriteFdSet != NULL) && (sState == OT_RADIO_STATE_TRANSMIT) && !sAckWait)
     {
         FD_SET(sSockFd, aWriteFdSet);
 
-        if (aMaxFd != NULL && *aMaxFd < sSockFd)
+        if ((aMaxFd != NULL) && (*aMaxFd < sSockFd))
         {
             *aMaxFd = sSockFd;
         }
@@ -550,15 +555,15 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 
 void platformRadioProcess(otInstance *aInstance)
 {
-    const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    const int     flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { sSockFd, flags, 0 };
 
-    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    if ((POLL(&pollfd, 1, 0) > 0) && ((pollfd.revents & flags) != 0))
     {
         radioReceive(aInstance);
     }
 
-    if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
+    if ((sState == OT_RADIO_STATE_TRANSMIT) && !sAckWait)
     {
         radioSendMessage(aInstance);
     }
@@ -566,7 +571,7 @@ void platformRadioProcess(otInstance *aInstance)
 
 void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt)
 {
-    uint32_t i;
+    uint32_t           i;
     struct sockaddr_in sockaddr;
 
     uint16_t crc = 0;
@@ -625,10 +630,10 @@ void radioSendAck(void)
 
 void radioProcessFrame(otInstance *aInstance)
 {
-    otError error = OT_ERROR_NONE;
-    otPanId dstpan;
+    otError        error = OT_ERROR_NONE;
+    otPanId        dstpan;
     otShortAddress short_address;
-    otExtAddress ext_address;
+    otExtAddress   ext_address;
 
     otEXPECT_ACTION(sPromiscuous == false, error = OT_ERROR_NONE);
 

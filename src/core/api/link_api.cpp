@@ -158,7 +158,7 @@ otError otLinkAddWhitelist(otInstance *aInstance, const uint8_t *aExtAddr)
 
 otError otLinkAddWhitelistRssi(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     otMacWhitelistEntry *entry;
 
     entry = aInstance->mThreadNetif.GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
@@ -306,7 +306,7 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
 
 void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
-    otInstance *aInstance = static_cast<otInstance *>(aContext);
+    otInstance        *aInstance = static_cast<otInstance *>(aContext);
     otActiveScanResult result;
 
     VerifyOrExit(aFrame != NULL, aInstance->mActiveScanCallback(NULL, aInstance->mActiveScanCallbackContext));

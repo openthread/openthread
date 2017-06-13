@@ -98,9 +98,9 @@ exit:
 
 otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
-    UdpHeader udpHeader;
+    UdpHeader   udpHeader;
 
     messageInfoLocal = aMessageInfo;
 
@@ -127,7 +127,7 @@ exit:
     return error;
 }
 
-Udp::Udp(Ip6 &aIp6):
+Udp::Udp(Ip6 &aIp6) :
     mEphemeralPort(kDynamicPortMin),
     mSockets(NULL),
     mIp6(aIp6)
@@ -202,10 +202,10 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
 otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error = OT_ERROR_NONE;
     UdpHeader udpHeader;
-    uint16_t payloadLength;
-    uint16_t checksum;
+    uint16_t  payloadLength;
+    uint16_t  checksum;
 
     payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
@@ -232,15 +232,15 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
             continue;
         }
 
-        if (socket->GetSockName().mScopeId != 0 &&
-            socket->GetSockName().mScopeId != aMessageInfo.mInterfaceId)
+        if ((socket->GetSockName().mScopeId != 0) &&
+            (socket->GetSockName().mScopeId != aMessageInfo.mInterfaceId))
         {
             continue;
         }
 
         if (!aMessageInfo.GetSockAddr().IsMulticast() &&
             !socket->GetSockName().GetAddress().IsUnspecified() &&
-            socket->GetSockName().GetAddress() != aMessageInfo.GetSockAddr())
+            (socket->GetSockName().GetAddress() != aMessageInfo.GetSockAddr()))
         {
             continue;
         }
@@ -254,7 +254,7 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
             }
 
             if (!socket->GetPeerName().GetAddress().IsUnspecified() &&
-                socket->GetPeerName().GetAddress() != aMessageInfo.GetPeerAddr())
+                (socket->GetPeerName().GetAddress() != aMessageInfo.GetPeerAddr()))
             {
                 continue;
             }
@@ -281,5 +281,5 @@ otError Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
     return OT_ERROR_NONE;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

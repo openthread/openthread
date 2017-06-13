@@ -111,7 +111,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     VerifyOrExit(aInstanceBuffer != NULL);
 
     // Construct the context
-    aInstance = new(aInstanceBuffer)otInstance();
+    aInstance = new (aInstanceBuffer)otInstance();
 
     // Execute post constructor operations
     otInstancePostConstructor(aInstance);
@@ -133,7 +133,7 @@ otInstance *otInstanceInit()
     VerifyOrExit(sInstance == NULL);
 
     // Construct the context
-    sInstance = new(&sInstanceRaw)otInstance();
+    sInstance = new (&sInstanceRaw)otInstance();
 
     // Execute post constructor operations
     otInstancePostConstructor(sInstance);

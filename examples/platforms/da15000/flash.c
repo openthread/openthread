@@ -50,7 +50,7 @@ QSPI_SECTION static  uint8_t qspi_get_erase_status(void)
     return HW_QSPIC_REG_GETF(ERASECTRL, ERS_STATE);
 }
 
-volatile bool  DisableErase = false;
+volatile bool DisableErase = false;
 
 // Erase QSPI memory section as non-blocking function. Remember to check utilsFlashStatusWait before write or read!!
 otError utilsFlashErasePage(uint32_t aAddress)
@@ -83,7 +83,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
 
     sWaitStatusTimeout = otPlatAlarmGetNow();
 
-    while (qspi_get_erase_status()  && ((otPlatAlarmGetNow() - sWaitStatusTimeout) < aTimeout));
+    while (qspi_get_erase_status()  && ((otPlatAlarmGetNow() - sWaitStatusTimeout) < aTimeout)) {}
 
     if (qspi_get_erase_status())
     {

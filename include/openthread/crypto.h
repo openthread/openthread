@@ -52,7 +52,7 @@ extern "C" {
  *
  */
 
-#define OT_CRYPTO_HMAC_SHA_HASH_SIZE   32   ///< Length of HMAC SHA (in bytes).
+#define OT_CRYPTO_HMAC_SHA_HASH_SIZE   32 ///< Length of HMAC SHA (in bytes).
 
 /**
  * This function performs HMAC computation.
@@ -103,7 +103,7 @@ void otCryptoAesCcm(
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_CRYPTO_H_
+#endif // OPENTHREAD_CRYPTO_H_

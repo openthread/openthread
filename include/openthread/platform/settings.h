@@ -276,7 +276,7 @@ void otPlatSettingsWipe(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OT_PLATFORM_SETTINGS_H
+#endif // OT_PLATFORM_SETTINGS_H

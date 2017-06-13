@@ -96,10 +96,11 @@ void PlatformProcessDrivers(otInstance *aInstance)
 void halInitChipSpecific(void)
 {
     CMU_HFXOInit_TypeDef hfxoInit = CMU_HFXOINIT_WSTK_DEFAULT;
-    RADIO_PTIInit_t ptiInit = RADIO_PTI_INIT;
-    RADIO_PAInit_t paInit;
+    RADIO_PTIInit_t      ptiInit = RADIO_PTI_INIT;
+    RADIO_PAInit_t       paInit;
 
     SYSTEM_ChipRevision_TypeDef chipRev;
+
     SYSTEM_ChipRevisionGet(&chipRev);
 
     // Init DCDC regulator and HFXO with WSTK radio board specific parameters
@@ -132,7 +133,7 @@ void halInitChipSpecific(void)
     {
         // Error: The PA could not be initialized due to an improper configuration.
         // Please ensure your configuration is valid for the selected part.
-        while (1);
+        while (1) {}
     }
 
     // Initialize other chip clocks

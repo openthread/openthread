@@ -95,7 +95,8 @@ int TestOneTimer(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
-    otInstance aInstance;
+    otInstance     aInstance;
+
     ot::Timer timer(aInstance.mIp6.mTimerScheduler, TestTimerHandler, NULL);
 
     // Test one Timer basic operation.
@@ -275,13 +276,13 @@ int TestTenTimers(void)
     //    6             6
     const bool kTimerStateAfterTrigger [kNumTriggers][kNumTimers] =
     {
-        {  true,  true,  true,  true,  true, false, true,   true,  true,  true},  // 5
-        { false,  true,  true,  true,  true, false, true,   true,  true,  true},  // 0
-        { false, false,  true,  true,  true, false, true,   true,  true,  true},  // 1
-        { false, false,  true,  true,  true, false, true,  false, false,  true},  // 7, 8
-        { false, false,  true, false,  true, false, true,  false, false, false},  // 9, 3
-        { false, false, false, false, false, false, true,  false, false, false},  // 4, 2
-        { false, false, false, false, false, false, false, false, false, false}   // 6
+        {  true,  true,  true,  true,  true, false, true,   true,  true,  true}, // 5
+        { false,  true,  true,  true,  true, false, true,   true,  true,  true}, // 0
+        { false, false,  true,  true,  true, false, true,   true,  true,  true}, // 1
+        { false, false,  true,  true,  true, false, true,  false, false,  true}, // 7, 8
+        { false, false,  true, false,  true, false, true,  false, false, false}, // 9, 3
+        { false, false, false, false, false, false, true,  false, false, false}, // 4, 2
+        { false, false, false, false, false, false, false, false, false, false}  // 6
     };
 
     const bool kSchedulerStateAfterTrigger[kNumTriggers] =
@@ -331,25 +332,26 @@ int TestTenTimers(void)
     otInstance aInstance;
 
     uint32_t timerContextHandleCounter[kNumTimers] = {0};
-    ot::Timer timer0(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[0]);
-    ot::Timer timer1(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[1]);
-    ot::Timer timer2(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[2]);
-    ot::Timer timer3(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[3]);
-    ot::Timer timer4(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[4]);
-    ot::Timer timer5(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[5]);
-    ot::Timer timer6(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[6]);
-    ot::Timer timer7(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[7]);
-    ot::Timer timer8(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[8]);
-    ot::Timer timer9(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[9]);
+
+    ot::Timer  timer0(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[0]);
+    ot::Timer  timer1(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[1]);
+    ot::Timer  timer2(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[2]);
+    ot::Timer  timer3(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[3]);
+    ot::Timer  timer4(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[4]);
+    ot::Timer  timer5(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[5]);
+    ot::Timer  timer6(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[6]);
+    ot::Timer  timer7(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[7]);
+    ot::Timer  timer8(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[8]);
+    ot::Timer  timer9(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[9]);
     ot::Timer *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4, &timer5, &timer6, &timer7, &timer8, &timer9};
-    size_t i;
+    size_t     i;
 
     // Start the Ten timers.
 
     InitTestTimer();
     InitCounters();
 
-    for (i = 0; i < kNumTimers ; i++)
+    for (i = 0; i < kNumTimers; i++)
     {
         sNow = kTimeT0[i];
         timers[i]->Start(kTimerInterval[i]);
@@ -363,14 +365,14 @@ int TestTenTimers(void)
     VerifyOrQuit(sPlatT0 == kTimeT0[5] && sPlatDt == kTimerInterval[5], "TestTenTimer: Start params Failed.\n");
     VerifyOrQuit(sTimerOn,                                              "TestTenTimer: Platform Timer State Failed.\n");
 
-    for (i = 0 ; i < kNumTimers ; i++)
+    for (i = 0; i < kNumTimers; i++)
     {
         VerifyOrQuit(timers[i]->IsRunning(), "TestTenTimer: Timer running Failed.\n");
     }
 
     // Issue the triggers and test the State after each trigger.
 
-    for (size_t trigger = 0 ; trigger < kNumTriggers ; trigger++)
+    for (size_t trigger = 0; trigger < kNumTriggers; trigger++)
     {
         sNow = kTriggerTimes[trigger];
 
@@ -395,13 +397,13 @@ int TestTenTimers(void)
         VerifyOrQuit(sTimerOn                                 == kSchedulerStateAfterTrigger[trigger],
                      "TestTenTimer: Platform Timer State Failed.\n");
 
-        for (i = 0 ; i < kNumTimers ; i++)
+        for (i = 0; i < kNumTimers; i++)
         {
             VerifyOrQuit(timers[i]->IsRunning() == kTimerStateAfterTrigger[trigger][i], "TestTenTimer: Timer running Failed.\n");
         }
     }
 
-    for (i = 0 ; i < kNumTimers ; i++)
+    for (i = 0; i < kNumTimers; i++)
     {
         VerifyOrQuit(timerContextHandleCounter[i] == 1, "TestTenTimer: Timer context counter Failed.\n");
     }

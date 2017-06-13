@@ -230,7 +230,9 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    bool IsReceiveIp6FilterEnabled(void) { return mIsReceiveIp6FilterEnabled; }
+    bool IsReceiveIp6FilterEnabled(void) {
+        return mIsReceiveIp6FilterEnabled;
+    }
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -242,7 +244,9 @@ public:
      * @sa IsReceiveIp6FilterEnabled
      *
      */
-    void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
+    void SetReceiveIp6FilterEnabled(bool aEnabled) {
+        mIsReceiveIp6FilterEnabled = aEnabled;
+    }
 
     /**
      * This method indicates whether or not IPv6 forwarding is enabled.
@@ -250,7 +254,9 @@ public:
      * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
      *
      */
-    bool IsForwardingEnabled(void) { return mForwardingEnabled; }
+    bool IsForwardingEnabled(void) {
+        return mForwardingEnabled;
+    }
 
     /**
      * This method enables/disables IPv6 forwarding.
@@ -258,7 +264,9 @@ public:
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
      *
      */
-    void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
+    void SetForwardingEnabled(bool aEnable) {
+        mForwardingEnabled = aEnable;
+    }
 
     /**
      * This method enables the network interface.
@@ -288,7 +296,9 @@ public:
      * @returns A pointer to the network interface list.
      *
      */
-    Netif *GetNetifList(void) { return mNetifListHead; }
+    Netif *GetNetifList(void) {
+        return mNetifListHead;
+    }
 
     /**
      * This method returns the network interface identified by @p aInterfaceId.
@@ -345,7 +355,9 @@ public:
      * @returns A reference to the send queue.
      *
      */
-    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
+    const PriorityQueue &GetSendQueue(void) const {
+        return mSendQueue;
+    }
 
     /**
      * This static method converts an `IpProto` enumeration to a string.
@@ -355,14 +367,14 @@ public:
      */
     static const char *IpProtoToString(IpProto aIpProto);
 
-    Routes mRoutes;
-    Icmp mIcmp;
-    Udp mUdp;
-    Mpl mMpl;
+    Routes           mRoutes;
+    Icmp             mIcmp;
+    Udp              mUdp;
+    Mpl              mMpl;
 
-    MessagePool mMessagePool;
+    MessagePool      mMessagePool;
     TaskletScheduler mTaskletScheduler;
-    TimerScheduler mTimerScheduler;
+    TimerScheduler   mTimerScheduler;
 
 private:
     static void HandleSendQueue(void *aContext);
@@ -381,16 +393,16 @@ private:
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
     int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
 
-    bool mForwardingEnabled;
+    bool                 mForwardingEnabled;
 
-    PriorityQueue mSendQueue;
-    Tasklet mSendQueueTask;
+    PriorityQueue        mSendQueue;
+    Tasklet              mSendQueueTask;
 
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
-    void *mReceiveIp6DatagramCallbackContext;
-    bool mIsReceiveIp6FilterEnabled;
+    void                *mReceiveIp6DatagramCallbackContext;
+    bool                 mIsReceiveIp6FilterEnabled;
 
-    Netif *mNetifListHead;
+    Netif               *mNetifListHead;
 };
 
 static inline Ip6 *Ip6FromTaskletScheduler(TaskletScheduler *aTaskletScheduler)
@@ -408,7 +420,7 @@ static inline Ip6 *Ip6FromTimerScheduler(TimerScheduler *aTimerScheduler)
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
 #endif  // NET_IP6_HPP_

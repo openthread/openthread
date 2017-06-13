@@ -75,9 +75,9 @@ void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMess
 
 void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::PanIdTlv panId;
+    MeshCoP::PanIdTlv        panId;
     MeshCoP::ChannelMask0Tlv channelMask;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
+    Ip6::MessageInfo         responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
@@ -129,11 +129,12 @@ void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
 otError PanIdQueryServer::SendConflict(void)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
+
+    Coap::Header             header;
     MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::PanIdTlv panId;
-    Ip6::MessageInfo messageInfo;
-    Message *message;
+    MeshCoP::PanIdTlv        panId;
+    Ip6::MessageInfo         messageInfo;
+    Message                 *message;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -159,7 +160,7 @@ otError PanIdQueryServer::SendConflict(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -178,4 +179,4 @@ void PanIdQueryServer::HandleTimer(void)
     mChannelMask = 0;
 }
 
-}  // namespace ot
+} // namespace ot

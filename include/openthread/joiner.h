@@ -62,7 +62,7 @@ extern "C" {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otJoinerCallback)(otError aError, void *aContext);
+typedef void (OTCALL * otJoinerCallback)(otError aError, void *aContext);
 
 /**
  * This function enables the Thread Joiner role.
@@ -100,7 +100,7 @@ OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
-#endif  // OPENTHREAD_JOINER_H_
+#endif // OPENTHREAD_JOINER_H_

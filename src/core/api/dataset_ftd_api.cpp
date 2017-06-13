@@ -99,4 +99,4 @@ otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTime
     return aInstance->mThreadNetif.GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
 }
 
-#endif  // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD

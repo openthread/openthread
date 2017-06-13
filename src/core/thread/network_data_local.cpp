@@ -46,7 +46,7 @@
 namespace ot {
 namespace NetworkData {
 
-Local::Local(ThreadNetif &aThreadNetif):
+Local::Local(ThreadNetif &aThreadNetif) :
     NetworkData(aThreadNetif, true),
     mOldRloc(Mac::kShortAddrInvalid)
 {
@@ -55,8 +55,8 @@ Local::Local(ThreadNetif &aThreadNetif):
 otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf,
                                uint8_t aFlags, bool aStable)
 {
-    otError error = OT_ERROR_NONE;
-    PrefixTlv *prefixTlv;
+    otError          error = OT_ERROR_NONE;
+    PrefixTlv       *prefixTlv;
     BorderRouterTlv *brTlv;
 
     VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, mNetif.GetMle().GetMeshLocalPrefix(),
@@ -94,7 +94,7 @@ exit:
 
 otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
     PrefixTlv *tlv;
 
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
@@ -109,7 +109,7 @@ exit:
 
 otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable)
 {
-    PrefixTlv *prefixTlv;
+    PrefixTlv   *prefixTlv;
     HasRouteTlv *hasRouteTlv;
 
     RemoveHasRoutePrefix(aPrefix, aPrefixLength);
@@ -140,7 +140,7 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
 
 otError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
     PrefixTlv *tlv;
 
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
@@ -202,6 +202,7 @@ otError Local::UpdateRloc(PrefixTlv &aPrefix)
 otError Local::UpdateRloc(HasRouteTlv &aHasRoute)
 {
     HasRouteEntry *entry = aHasRoute.GetEntry(0);
+
     entry->SetRloc(mNetif.GetMle().GetRloc16());
     return OT_ERROR_NONE;
 }
@@ -209,6 +210,7 @@ otError Local::UpdateRloc(HasRouteTlv &aHasRoute)
 otError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
 {
     BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
+
     entry->SetRloc(mNetif.GetMle().GetRloc16());
     return OT_ERROR_NONE;
 }
@@ -227,13 +229,13 @@ bool Local::IsExternalRouteConsistent(void)
 
 otError Local::SendServerDataNotification(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t rloc = mNetif.GetMle().GetRloc16();
 
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
+    if (((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0) &&
         (mNetif.GetMle().IsRouterRoleEnabled()) &&
         (mNetif.GetMle().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
         (mNetif.GetMle().GetActiveRouterCount() < mNetif.GetMle().GetRouterUpgradeThreshold()))
@@ -259,7 +261,7 @@ exit:
     return error;
 }
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER

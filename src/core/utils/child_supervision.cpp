@@ -78,7 +78,7 @@ void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child *child = NULL;
+    Child  *child = NULL;
     uint8_t childIndex;
     uint8_t numChildren;
 
@@ -96,8 +96,8 @@ exit:
 void ChildSupervisor::SendMessage(Child &aChild)
 {
     Message *message = NULL;
-    otError error = OT_ERROR_NONE;
-    uint8_t childIndex;
+    otError  error = OT_ERROR_NONE;
+    uint8_t  childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
@@ -135,7 +135,7 @@ void ChildSupervisor::HandleTimer(void *aContext)
 
 void ChildSupervisor::HandleTimer(void)
 {
-    Child *child;
+    Child  *child;
     uint8_t numChildren;
 
     VerifyOrExit(mSupervisionInterval != 0);
@@ -240,5 +240,5 @@ exit:
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
-} // namespace Utils
+}  // namespace Utils
 } // namespace ot

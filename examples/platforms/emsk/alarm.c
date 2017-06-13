@@ -39,7 +39,7 @@
 
 static uint32_t sCounter = 0;
 static uint32_t expires;
-static bool sIsRunning = false;
+static bool     sIsRunning = false;
 
 void emskAlarmInit(void)
 {

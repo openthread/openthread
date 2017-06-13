@@ -225,7 +225,7 @@ otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
     uint8_t numChildren;
-    Child *child;
+    Child  *child;
 
     child = mMeshForwarder.GetNetif().GetMle().GetChildren(&numChildren);
 
@@ -242,4 +242,4 @@ exit:
     return error;
 }
 
-}  // namespace ot
+} // namespace ot

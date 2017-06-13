@@ -80,7 +80,7 @@ typedef otShortAddress ShortAddress;
  * This structure represents an IEEE 802.15.4 Extended Address.
  *
  */
-class ExtAddress: public otExtAddress
+class ExtAddress : public otExtAddress
 {
 public:
     /**
@@ -90,7 +90,9 @@ public:
      * @retval FALSE  If the group bit is not set.
      *
      */
-    bool IsGroup(void) const { return (m8[0] & kGroupFlag) != 0; }
+    bool IsGroup(void) const {
+        return (m8[0] & kGroupFlag) != 0;
+    }
 
     /**
      * This method sets the Group bit.
@@ -99,10 +101,12 @@ public:
      *
      */
     void SetGroup(bool aGroup) {
-        if (aGroup) {
+        if (aGroup)
+        {
             m8[0] |= kGroupFlag;
         }
-        else {
+        else
+        {
             m8[0] &= ~kGroupFlag;
         }
     }
@@ -114,7 +118,9 @@ public:
      * @retval FALSE  If the local bit is not set.
      *
      */
-    bool IsLocal(void) const { return (m8[0] & kLocalFlag) != 0; }
+    bool IsLocal(void) const {
+        return (m8[0] & kLocalFlag) != 0;
+    }
 
     /**
      * This method sets the Local bit.
@@ -123,10 +129,12 @@ public:
      *
      */
     void SetLocal(bool aLocal) {
-        if (aLocal) {
+        if (aLocal)
+        {
             m8[0] |= kLocalFlag;
         }
-        else {
+        else
+        {
             m8[0] &= ~kLocalFlag;
         }
     }
@@ -155,14 +163,14 @@ struct Address
 {
     enum
     {
-        kAddressStringSize = 18,     ///< Max chars needed for a string representation of address (@sa ToString()).
+        kAddressStringSize = 18, ///< Max chars needed for a string representation of address (@sa ToString()).
     };
 
-    uint8_t mLength;                 ///< Length of address in bytes.
+    uint8_t mLength; ///< Length of address in bytes.
     union
     {
-        ShortAddress mShortAddress;  ///< The IEEE 802.15.4 Short Address.
-        ExtAddress mExtAddress;      ///< The IEEE 802.15.4 Extended Address.
+        ShortAddress mShortAddress; ///< The IEEE 802.15.4 Short Address.
+        ExtAddress   mExtAddress;   ///< The IEEE 802.15.4 Extended Address.
     };
 
     /**
@@ -182,7 +190,7 @@ struct Address
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Frame: public otRadioFrame
+class Frame : public otRadioFrame
 {
 public:
     enum
@@ -254,7 +262,7 @@ public:
         kMacCmdCoordinatorRealignment      = 8,
         kMacCmdGtsRequest                  = 9,
 
-        kInfoStringSize =  110,   ///< Max chars needed for the info string representation (@sa ToInfoString()).
+        kInfoStringSize =  110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
     };
 
     /**
@@ -547,7 +555,9 @@ public:
      * @returns The MAC Frame Length.
      *
      */
-    uint8_t GetLength(void) const { return GetPsduLength(); }
+    uint8_t GetLength(void) const {
+        return GetPsduLength();
+    }
 
     /**
      * This method sets the MAC Frame Length.
@@ -558,7 +568,9 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The @p aLength value was invalid.
      *
      */
-    otError SetLength(uint8_t aLength) { SetPsduLength(aLength); return OT_ERROR_NONE; }
+    otError SetLength(uint8_t aLength) {
+        SetPsduLength(aLength); return OT_ERROR_NONE;
+    }
 
     /**
      * This method returns the MAC header size.
@@ -607,7 +619,9 @@ public:
      * @returns The IEEE 802.15.4 channel used for transmission or reception.
      *
      */
-    uint8_t GetChannel(void) const { return mChannel; }
+    uint8_t GetChannel(void) const {
+        return mChannel;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 channel used for transmission or reception.
@@ -615,7 +629,9 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 channel used for transmission or reception.
      *
      */
-    void SetChannel(uint8_t aChannel) { mChannel = aChannel; }
+    void SetChannel(uint8_t aChannel) {
+        mChannel = aChannel;
+    }
 
     /**
      * This method returns the transmit/receive power in dBm used for transmission or reception.
@@ -623,7 +639,9 @@ public:
      * @returns The transmit/receive power in dBm used for transmission or reception.
      *
      */
-    int8_t GetPower(void) const { return mPower; }
+    int8_t GetPower(void) const {
+        return mPower;
+    }
 
     /**
      * This method sets the transmit/receive power in dBm used for transmission or reception.
@@ -631,7 +649,9 @@ public:
      * @param[in]  aPower  The transmit/receive power in dBm used for transmission or reception.
      *
      */
-    void SetPower(int8_t aPower) { mPower = aPower; }
+    void SetPower(int8_t aPower) {
+        mPower = aPower;
+    }
 
     /**
      * This method returns the receive Link Quality Indicator.
@@ -639,7 +659,9 @@ public:
      * @returns The receive Link Quality Indicator.
      *
      */
-    uint8_t GetLqi(void) const { return mLqi; }
+    uint8_t GetLqi(void) const {
+        return mLqi;
+    }
 
     /**
      * This method sets the receive Link Quality Indicator.
@@ -647,7 +669,9 @@ public:
      * @param[in]  aLqi  The receive Link Quality Indicator.
      *
      */
-    void SetLqi(uint8_t aLqi) { mLqi = aLqi; }
+    void SetLqi(uint8_t aLqi) {
+        mLqi = aLqi;
+    }
 
     /**
      * This method returns the maximum number of transmit attempts for the frame.
@@ -655,7 +679,9 @@ public:
      * @returns The maximum number of transmit attempts.
      *
      */
-    uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
+    uint8_t GetMaxTxAttempts(void) const {
+        return mMaxTxAttempts;
+    }
 
 
     /**
@@ -664,7 +690,9 @@ public:
      * @returns The maximum number of transmit attempts.
      *
      */
-    void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
+    void SetMaxTxAttempts(uint8_t aMaxTxAttempts) {
+        mMaxTxAttempts = aMaxTxAttempts;
+    }
 
     /**
      * This method indicates whether or not frame security was enabled and passed security validation.
@@ -673,7 +701,9 @@ public:
      * @retval FALSE  Frame security was not enabled or did not pass security validation.
      *
      */
-    bool GetSecurityValid(void) const { return mSecurityValid; }
+    bool GetSecurityValid(void) const {
+        return mSecurityValid;
+    }
 
     /**
      * This method sets the security valid attribute.
@@ -681,7 +711,9 @@ public:
      * @param[in]  aSecurityValid  TRUE if frame security was enabled and passed security validation, FALSE otherwise.
      *
      */
-    void SetSecurityValid(bool aSecurityValid) { mSecurityValid = aSecurityValid; }
+    void SetSecurityValid(bool aSecurityValid) {
+        mSecurityValid = aSecurityValid;
+    }
 
     /**
      * This method indicates whether or not the frame is a retransmission.
@@ -690,7 +722,9 @@ public:
      * @retval FALSE  This is a new frame and not a retransmission of an earlier frame.
      *
      */
-    bool IsARetransmission(void) const { return mIsARetx; }
+    bool IsARetransmission(void) const {
+        return mIsARetx;
+    }
 
     /**
      * This method sets the retransmission flag attribute.
@@ -698,7 +732,9 @@ public:
      * @param[in]  aIsARetx  TRUE if frame is a retransmission of an earlier frame, FALSE otherwise.
      *
      */
-    void SetIsARetransmission(bool aIsARetx) { mIsARetx = aIsARetx; }
+    void SetIsARetransmission(bool aIsARetx) {
+        mIsARetx = aIsARetx;
+    }
 
     /**
      * This method returns the IEEE 802.15.4 PSDU length.
@@ -706,7 +742,9 @@ public:
      * @returns The IEEE 802.15.4 PSDU length.
      *
      */
-    uint8_t GetPsduLength(void) const { return mLength; }
+    uint8_t GetPsduLength(void) const {
+        return mLength;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 PSDU length.
@@ -714,7 +752,9 @@ public:
      * @param[in]  aLength  The IEEE 802.15.4 PSDU length.
      *
      */
-    void SetPsduLength(uint8_t aLength) { mLength = aLength; }
+    void SetPsduLength(uint8_t aLength) {
+        mLength = aLength;
+    }
 
     /**
      * This method returns a pointer to the PSDU.
@@ -722,7 +762,9 @@ public:
      * @returns A pointer to the PSDU.
      *
      */
-    uint8_t *GetPsdu(void) { return mPsdu; }
+    uint8_t *GetPsdu(void) {
+        return mPsdu;
+    }
 
     /**
      * This method returns a pointer to the MAC Header.
@@ -775,7 +817,7 @@ class Beacon
 public:
     enum
     {
-        kSuperFrameSpec   = 0x0fff,                 ///< Superframe Specification value.
+        kSuperFrameSpec   = 0x0fff, ///< Superframe Specification value.
     };
 
     /**
@@ -806,7 +848,9 @@ public:
      * @retval A pointer to the beacon payload address.
      *
      */
-    uint8_t *GetPayload() { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+    uint8_t *GetPayload() {
+        return reinterpret_cast<uint8_t *>(this) + sizeof(*this);
+    }
 
 private:
     uint16_t mSuperframeSpec;
@@ -824,19 +868,19 @@ class BeaconPayload
 public:
     enum
     {
-        kProtocolId       = 3,                      ///< Thread Protocol ID.
-        kNetworkNameSize  = 16,                     ///< Size of Thread Network Name (bytes).
-        kExtPanIdSize     = 8,                      ///< Size of Thread Extended PAN ID.
-        kInfoStringSize   = 92,                     ///< Max chars for the info string (@sa ToInfoString()).
+        kProtocolId       = 3,  ///< Thread Protocol ID.
+        kNetworkNameSize  = 16, ///< Size of Thread Network Name (bytes).
+        kExtPanIdSize     = 8,  ///< Size of Thread Extended PAN ID.
+        kInfoStringSize   = 92, ///< Max chars for the info string (@sa ToInfoString()).
     };
 
     enum
     {
-        kProtocolVersion  = 2,                      ///< Thread Protocol version.
-        kVersionOffset    = 4,                      ///< Version field bit offset.
-        kVersionMask      = 0xf << kVersionOffset,  ///< Version field mask.
-        kNativeFlag       = 1 << 3,                 ///< Native Commissioner flag.
-        kJoiningFlag      = 1 << 0,                 ///< Joining Permitted flag.
+        kProtocolVersion  = 2,                     ///< Thread Protocol version.
+        kVersionOffset    = 4,                     ///< Version field bit offset.
+        kVersionMask      = 0xf << kVersionOffset, ///< Version field mask.
+        kNativeFlag       = 1 << 3,                ///< Native Commissioner flag.
+        kJoiningFlag      = 1 << 0,                ///< Joining Permitted flag.
     };
 
     /**
@@ -865,7 +909,9 @@ public:
      * @returns the Protocol ID value.
      *
      */
-    uint8_t GetProtocolId(void) const { return mProtocolId; }
+    uint8_t GetProtocolId(void) const {
+        return mProtocolId;
+    }
 
     /**
      * This method returns the Protocol Version value.
@@ -873,7 +919,9 @@ public:
      * @returns The Protocol Version value.
      *
      */
-    uint8_t GetProtocolVersion(void) const { return mFlags >> kVersionOffset; }
+    uint8_t GetProtocolVersion(void) const {
+        return mFlags >> kVersionOffset;
+    }
 
     /**
      * This method indicates whether or not the Native Commissioner flag is set.
@@ -882,19 +930,25 @@ public:
      * @retval FALSE  if the Native Commissioner flag is not set.
      *
      */
-    bool IsNative(void) const { return (mFlags & kNativeFlag) != 0; }
+    bool IsNative(void) const {
+        return (mFlags & kNativeFlag) != 0;
+    }
 
     /**
      * This method clears the Native Commissioner flag.
      *
      */
-    void ClearNative(void) { mFlags &= ~kNativeFlag; }
+    void ClearNative(void) {
+        mFlags &= ~kNativeFlag;
+    }
 
     /**
      * This method sets the Native Commissioner flag.
      *
      */
-    void SetNative(void) { mFlags |= kNativeFlag; }
+    void SetNative(void) {
+        mFlags |= kNativeFlag;
+    }
 
     /**
      * This method indicates whether or not the Joining Permitted flag is set.
@@ -903,13 +957,17 @@ public:
      * @retval FALSE  if the Joining Permitted flag is not set.
      *
      */
-    bool IsJoiningPermitted(void) const { return (mFlags & kJoiningFlag) != 0; }
+    bool IsJoiningPermitted(void) const {
+        return (mFlags & kJoiningFlag) != 0;
+    }
 
     /**
      * This method clears the Joining Permitted flag.
      *
      */
-    void ClearJoiningPermitted(void) { mFlags &= ~kJoiningFlag; }
+    void ClearJoiningPermitted(void) {
+        mFlags &= ~kJoiningFlag;
+    }
 
     /**
      * This method sets the Joining Permitted flag.
@@ -930,7 +988,9 @@ public:
      * @returns A pointer to the network name field.
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName; }
+    const char *GetNetworkName(void) const {
+        return mNetworkName;
+    }
 
     /**
      * This method sets the Network Name field.
@@ -940,6 +1000,7 @@ public:
      */
     void SetNetworkName(const char *aNetworkName) {
         size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
+
         memset(mNetworkName, 0, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
     }
@@ -950,7 +1011,9 @@ public:
      * @returns A pointer to the Extended PAN ID field.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId; }
+    const uint8_t *GetExtendedPanId(void) const {
+        return mExtendedPanId;
+    }
 
     /**
      * This method sets the Extended PAN ID field.
@@ -958,7 +1021,9 @@ public:
      * @param[in]  aExtPanId  A pointer to the Extended PAN ID.
      *
      */
-    void SetExtendedPanId(const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
+    void SetExtendedPanId(const uint8_t *aExtPanId) {
+        memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId));
+    }
 
     /**
      * This method returns information about the Beacon as a NULL-terminated string.
@@ -972,10 +1037,10 @@ public:
     const char *ToInfoString(char *aBuf, uint16_t aSize);
 
 private:
-    uint8_t  mProtocolId;
-    uint8_t  mFlags;
-    char     mNetworkName[kNetworkNameSize];
-    uint8_t  mExtendedPanId[kExtPanIdSize];
+    uint8_t mProtocolId;
+    uint8_t mFlags;
+    char    mNetworkName[kNetworkNameSize];
+    uint8_t mExtendedPanId[kExtPanIdSize];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -983,7 +1048,7 @@ private:
  *
  */
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
 #endif  // MAC_FRAME_HPP_

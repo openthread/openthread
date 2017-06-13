@@ -69,10 +69,10 @@ namespace Lowpan {
  */
 struct Context
 {
-    const uint8_t *mPrefix;        ///< A pointer to the prefix.
-    uint8_t        mPrefixLength;  ///< The prefix length.
-    uint8_t        mContextId;     ///< The Context ID.
-    bool           mCompressFlag;  ///< The Context compression flag.
+    const uint8_t *mPrefix;       ///< A pointer to the prefix.
+    uint8_t        mPrefixLength; ///< The prefix length.
+    uint8_t        mContextId;    ///< The Context ID.
+    bool           mCompressFlag; ///< The Context compression flag.
 };
 
 /**
@@ -223,20 +223,24 @@ class MeshHeader
 public:
     enum
     {
-        kAdditionalHopsLeft = 1    ///< The additional value that is added to predicted value of the route cost.
+        kAdditionalHopsLeft = 1 ///< The additional value that is added to predicted value of the route cost.
     };
 
     /**
      * Default constructor for the object.
      *
      */
-    MeshHeader(void) { memset(this, 0, sizeof(*this)); }
+    MeshHeader(void) {
+        memset(this, 0, sizeof(*this));
+    }
 
     /**
      * This method initializes the header.
      *
      */
-    void Init(void) { mDispatchHopsLeft = kDispatch | kSourceShort | kDestinationShort; }
+    void Init(void) {
+        mDispatchHopsLeft = kDispatch | kSourceShort | kDestinationShort;
+    }
 
     /**
      * This method initializes the mesh header from a frame @p aFrame.
@@ -268,7 +272,9 @@ public:
      * @retval FALSE  If the header does not match the Mesh Header dispatch value.
      *
      */
-    bool IsMeshHeader(void) { return (mDispatchHopsLeft & kDispatchMask) == kDispatch; }
+    bool IsMeshHeader(void) {
+        return (mDispatchHopsLeft & kDispatchMask) == kDispatch;
+    }
 
     /**
      * This method indicates whether or not the Mesh Header appears to be well-formed.
@@ -277,7 +283,9 @@ public:
      * @retval FALSE  If the header does not appear to be well-formed.
      *
      */
-    bool IsValid(void) { return (mDispatchHopsLeft & kSourceShort) && (mDispatchHopsLeft & kDestinationShort); }
+    bool IsValid(void) {
+        return (mDispatchHopsLeft & kSourceShort) && (mDispatchHopsLeft & kDestinationShort);
+    }
 
     /**
      * This method indicates whether or not the header contains Deep Hops Left field.
@@ -286,7 +294,9 @@ public:
      * @retval FALSE  If the header does not contain Deep Hops Left field.
      *
      */
-    bool IsDeepHopsLeftField(void) { return (mDispatchHopsLeft & kHopsLeftMask) == kDeepHopsLeft; }
+    bool IsDeepHopsLeftField(void) {
+        return (mDispatchHopsLeft & kHopsLeftMask) == kDeepHopsLeft;
+    }
 
     /**
      * This static method returns the size of the Mesh Header in bytes.
@@ -294,7 +304,9 @@ public:
      * @returns The size of the Mesh Header in bytes.
      *
      */
-    uint8_t GetHeaderLength(void) { return sizeof(*this) - (IsDeepHopsLeftField() ? 0 : sizeof(mDeepHopsLeft)) ; }
+    uint8_t GetHeaderLength(void) {
+        return sizeof(*this) - (IsDeepHopsLeftField() ? 0 : sizeof(mDeepHopsLeft));
+    }
 
     /**
      * This method returns the Hops Left value.
@@ -302,7 +314,9 @@ public:
      * @returns The Hops Left value.
      *
      */
-    uint8_t GetHopsLeft(void) { return IsDeepHopsLeftField() ? mDeepHopsLeft : mDispatchHopsLeft & kHopsLeftMask; }
+    uint8_t GetHopsLeft(void) {
+        return IsDeepHopsLeftField() ? mDeepHopsLeft : mDispatchHopsLeft & kHopsLeftMask;
+    }
 
     /**
      * This method sets the Hops Left value.
@@ -311,10 +325,12 @@ public:
      *
      */
     void SetHopsLeft(uint8_t aHops) {
-        if (aHops < kDeepHopsLeft && !IsDeepHopsLeftField()) {
+        if ((aHops < kDeepHopsLeft) && !IsDeepHopsLeftField())
+        {
             mDispatchHopsLeft = (mDispatchHopsLeft & ~kHopsLeftMask) | aHops;
         }
-        else {
+        else
+        {
             mDispatchHopsLeft = (mDispatchHopsLeft & ~kHopsLeftMask) | kDeepHopsLeft;
             mDeepHopsLeft = aHops;
         }
@@ -326,7 +342,9 @@ public:
      * @returns The Mesh Source address.
      *
      */
-    uint16_t GetSource(void) { return HostSwap16(mAddress.mSource); }
+    uint16_t GetSource(void) {
+        return HostSwap16(mAddress.mSource);
+    }
 
     /**
      * This method sets the Mesh Source address.
@@ -334,7 +352,9 @@ public:
      * @param[in]  aSource  The Mesh Source address.
      *
      */
-    void SetSource(uint16_t aSource) { mAddress.mSource = HostSwap16(aSource); }
+    void SetSource(uint16_t aSource) {
+        mAddress.mSource = HostSwap16(aSource);
+    }
 
     /**
      * This method returns the Mesh Destination address.
@@ -342,7 +362,9 @@ public:
      * @returns The Mesh Destination address.
      *
      */
-    uint16_t GetDestination(void) { return HostSwap16(mAddress.mDestination); }
+    uint16_t GetDestination(void) {
+        return HostSwap16(mAddress.mDestination);
+    }
 
     /**
      * This method sets the Mesh Destination address.
@@ -350,7 +372,9 @@ public:
      * @param[in]  aDestination  The Mesh Destination address.
      *
      */
-    void SetDestination(uint16_t aDestination) { mAddress.mDestination = HostSwap16(aDestination); }
+    void SetDestination(uint16_t aDestination) {
+        mAddress.mDestination = HostSwap16(aDestination);
+    }
 
     /**
      * This method appends Mesh Header to the @p aFrame frame.
@@ -361,7 +385,8 @@ public:
     void AppendTo(uint8_t *aFrame) {
         *aFrame++ = mDispatchHopsLeft;
 
-        if (IsDeepHopsLeftField()) {
+        if (IsDeepHopsLeftField())
+        {
             *aFrame++ = mDeepHopsLeft;
         }
 
@@ -379,8 +404,8 @@ private:
         kDeepHopsLeft     = 0x0f
     };
 
-    uint8_t  mDispatchHopsLeft;
-    uint8_t  mDeepHopsLeft;
+    uint8_t mDispatchHopsLeft;
+    uint8_t mDeepHopsLeft;
     struct
     {
         uint16_t mSource;
@@ -400,7 +425,9 @@ public:
      * This method initializes the Fragment Header.
      *
      */
-    void Init(void) { mDispatchSize = HostSwap16(kDispatch); }
+    void Init(void) {
+        mDispatchSize = HostSwap16(kDispatch);
+    }
 
     /**
      * This method indicates whether or not the header is a Fragment Header.
@@ -409,7 +436,9 @@ public:
      * @retval FALSE  If the header does not match the Fragment Header dispatch value.
      *
      */
-    bool IsFragmentHeader(void) { return (HostSwap16(mDispatchSize) & kDispatchMask) == kDispatch; }
+    bool IsFragmentHeader(void) {
+        return (HostSwap16(mDispatchSize) & kDispatchMask) == kDispatch;
+    }
 
     /**
      * This method returns the Fragment Header length.
@@ -427,7 +456,9 @@ public:
      * @returns The Datagram Size value.
      *
      */
-    uint16_t GetDatagramSize(void) { return HostSwap16(mDispatchSize) & kSizeMask; }
+    uint16_t GetDatagramSize(void) {
+        return HostSwap16(mDispatchSize) & kSizeMask;
+    }
 
     /**
      * This method sets the Datagram Size value.
@@ -445,7 +476,9 @@ public:
      * @returns The Datagram Tag value.
      *
      */
-    uint16_t GetDatagramTag(void) { return HostSwap16(mTag); }
+    uint16_t GetDatagramTag(void) {
+        return HostSwap16(mTag);
+    }
 
     /**
      * This method sets the Datagram Tag value.
@@ -453,7 +486,9 @@ public:
      * @param[in]  aTag  The Datagram Tag value.
      *
      */
-    void SetDatagramTag(uint16_t aTag) { mTag = HostSwap16(aTag); }
+    void SetDatagramTag(uint16_t aTag) {
+        mTag = HostSwap16(aTag);
+    }
 
     /**
      * This method returns the Datagram Offset value.
@@ -461,7 +496,9 @@ public:
      * @returns The Datagram Offset value.
      *
      */
-    uint16_t GetDatagramOffset(void) { return (HostSwap16(mDispatchSize) & kOffset) ? static_cast<uint16_t>(mOffset) * 8 : 0; }
+    uint16_t GetDatagramOffset(void) {
+        return (HostSwap16(mDispatchSize) & kOffset) ? static_cast<uint16_t>(mOffset) * 8 : 0;
+    }
 
     /**
      * This method sets the Datagram Offset value.
@@ -470,10 +507,12 @@ public:
      *
      */
     void SetDatagramOffset(uint16_t aOffset) {
-        if (aOffset == 0) {
+        if (aOffset == 0)
+        {
             mDispatchSize = HostSwap16(HostSwap16(mDispatchSize) & ~kOffset);
         }
-        else {
+        else
+        {
             mDispatchSize = HostSwap16(HostSwap16(mDispatchSize) | kOffset);
             mOffset = (aOffset >> 3) & kOffsetMask;
         }
@@ -484,7 +523,7 @@ private:
     {
         kDispatch     = 3 << 14,
         kOffset       = 1 << 13,
-        kDispatchMask = 0xd800,  ///< Accept FRAG1 and FRAGN only.
+        kDispatchMask = 0xd800, ///< Accept FRAG1 and FRAGN only.
         kSizeMask     = 0x7ff,
         kOffsetMask   = 0xff,
     };
@@ -498,7 +537,7 @@ private:
  * @}
  */
 
-}  // namespace Lowpan
-}  // namespace ot
+} // namespace Lowpan
+} // namespace ot
 
 #endif  // LOWPAN_HPP_

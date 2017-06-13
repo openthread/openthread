@@ -136,6 +136,7 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     Message *message;
+
     VerifyOrExit(aHeader != NULL, message = NULL);
     message = aInstance->mApplicationCoap.NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
 exit:
@@ -146,9 +147,9 @@ otError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMe
                           otCoapResponseHandler aHandler, void *aContext)
 {
     return aInstance->mApplicationCoap.SendMessage(
-               *static_cast<Message *>(aMessage),
-               *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-               aHandler, aContext);
+        *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+        aHandler, aContext);
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)
@@ -179,7 +180,7 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
 otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     return aInstance->mApplicationCoap.SendMessage(
-               *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+        *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP

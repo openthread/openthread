@@ -45,11 +45,11 @@ void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint3
 {
     aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
 }
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
 void otDhcp6ServerUpdate(otInstance *aInstance)
 {
     aInstance->mThreadNetif.GetDhcp6Server().UpdateService();
 }
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER

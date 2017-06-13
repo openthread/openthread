@@ -47,8 +47,8 @@ namespace Cli {
  */
 struct DatasetCommand
 {
-    const char *mName;                                                  ///< A pointer to the command string.
-    otError(*mCommand)(otInstance *aInstance, int argc, char *argv[]);  ///< A function pointer to process the command.
+    const char *mName;                                                      ///< A pointer to the command string.
+    otError     (*mCommand)(otInstance *aInstance, int argc, char *argv[]); ///< A function pointer to process the command.
 };
 
 /**
@@ -93,10 +93,10 @@ private:
 
     static const DatasetCommand sCommands[];
     static otOperationalDataset sDataset;
-    static Server *sServer;
+    static Server              *sServer;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
 #endif  // CLI_DATASET_HPP_

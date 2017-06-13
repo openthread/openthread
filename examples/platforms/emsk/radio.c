@@ -42,7 +42,7 @@
 #include <string.h>
 
 #include <stdio.h>
-#define DBG(fmt, ...)   printf(fmt, ##__VA_ARGS__)
+#define DBG(fmt, ...)   printf(fmt, ## __VA_ARGS__)
 
 enum
 {
@@ -88,7 +88,7 @@ enum
 
 enum
 {
-    EMSK_RECEIVE_SENSITIVITY = -100,  // dBm
+    EMSK_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
 enum
@@ -111,13 +111,13 @@ static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sAckPsdu[IEEE802154_MAX_LENGTH];
 
 static otRadioState sState = OT_RADIO_STATE_DISABLED;
-static bool sIsReceiverEnabled = false;
+static bool         sIsReceiverEnabled = false;
 
 static volatile uint8_t Mrf24StatusTx = 0;
 static volatile uint8_t Mrf24StatusRx = 0;
 static volatile uint8_t Mrf24StatusSec = 0;
 
-static DEV_SPI_PTR pmrf_spi_ptr;
+static DEV_SPI_PTR  pmrf_spi_ptr;
 static DEV_GPIO_PTR pmrf_gpio_ptr;
 static void RadioIsr(void *ptr);
 
@@ -144,6 +144,7 @@ static inline bool isPanIdCompressed(const uint8_t *frame)
 static inline uint8_t getHeadLength(const uint8_t *frame)
 {
     uint8_t length = 0;
+
     /* Frame Control-2 + Sequence Number-1 */
     length += 2 + 1;
 
@@ -263,7 +264,7 @@ void emskRadioInit(void)
     DEV_GPIO_BIT_ISR isr;
     DEV_GPIO_INT_CFG int_cfg;
 
-    int32_t ercd;
+    int32_t  ercd;
     uint32_t temp;
 
     sTransmitFrame.mLength = 0;
@@ -349,9 +350,10 @@ otError otPlatRadioDisable(otInstance *aInstance)
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_INVALID_STATE;
+
     (void)aInstance;
 
-    if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
+    if ((sState == OT_RADIO_STATE_SLEEP) || (sState == OT_RADIO_STATE_RECEIVE))
     {
         error = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
@@ -364,6 +366,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError error = OT_ERROR_INVALID_STATE;
+
     (void)aInstance;
 
     if (sState != OT_RADIO_STATE_DISABLED)
@@ -381,6 +384,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_INVALID_STATE;
+
     (void)aInstance;
     (void)aFrame;
 
@@ -437,12 +441,12 @@ void readFrame(void)
     uint8_t readRssi = 0;
 
     uint16_t length;
-    int16_t i;
+    int16_t  i;
 
     memset(readBuffer, 0, MRF24J40_RXFIFO_SIZE);
 
-    otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT, ;);
-    otEXPECT_ACTION(Mrf24StatusRx, ;);
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT,; );
+    otEXPECT_ACTION(Mrf24StatusRx,; );
 
     if (Mrf24StatusRx == 1)
     {
@@ -457,7 +461,7 @@ void readFrame(void)
     /* Read length */
     length = (uint16_t)mrf24j40_rxpkt_intcb(readBuffer, &readPlqi, &readRssi);
 
-    otEXPECT_ACTION(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH, ;);
+    otEXPECT_ACTION(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH,; );
 
     /* Read PSDU */
     memcpy(sReceiveFrame.mPsdu, readBuffer, length - 2);
@@ -547,7 +551,7 @@ void emskRadioProcess(otInstance *aInstance)
     {
         radioTransmitMessage(aInstance);
 
-        if (sTransmitError != OT_ERROR_NONE || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
+        if ((sTransmitError != OT_ERROR_NONE) || ((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0))
         {
             sState = OT_RADIO_STATE_RECEIVE;
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);

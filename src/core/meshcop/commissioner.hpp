@@ -145,7 +145,9 @@ public:
      * @returns TRUE if the Commissioner role is active, FALSE otherwise.
      *
      */
-    bool IsActive(void) const { return mState == OT_COMMISSIONER_STATE_ACTIVE; }
+    bool IsActive(void) const {
+        return mState == OT_COMMISSIONER_STATE_ACTIVE;
+    }
 
     /**
      * This function returns the Commissioner State.
@@ -173,7 +175,7 @@ public:
 
     /**
      * This method sends MGMT_COMMISSIONER_SET.
-      *
+     *
      * @param[in]  aDataset     A reference to Commissioning Data.
      * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
      * @param[in]  aLength      The length of user specific TLVs in bytes.
@@ -203,17 +205,17 @@ public:
                                 uint8_t *aPSKc);
 
     AnnounceBeginClient mAnnounceBegin;
-    EnergyScanClient mEnergyScan;
-    PanIdQueryClient mPanIdQuery;
+    EnergyScanClient    mEnergyScan;
+    PanIdQueryClient    mPanIdQuery;
 
 private:
     enum
     {
-        kPetitionAttemptDelay = 5,      ///< COMM_PET_ATTEMPT_DELAY (seconds)
-        kPetitionRetryCount   = 2,      ///< COMM_PET_RETRY_COUNT
-        kPetitionRetryDelay   = 1,      ///< COMM_PET_RETRY_DELAY (seconds)
-        kKeepAliveTimeout     = 50,     ///< TIMEOUT_COMM_PET (seconds)
-        kRemoveJoinerDelay    = 20,     ///< Delay to remove successfully joined joiner
+        kPetitionAttemptDelay = 5,  ///< COMM_PET_ATTEMPT_DELAY (seconds)
+        kPetitionRetryCount   = 2,  ///< COMM_PET_RETRY_COUNT
+        kPetitionRetryDelay   = 1,  ///< COMM_PET_RETRY_DELAY (seconds)
+        kKeepAliveTimeout     = 50, ///< TIMEOUT_COMM_PET (seconds)
+        kRemoveJoinerDelay    = 20, ///< Delay to remove successfully joined joiner
     };
 
     void AddCoapResources(void);
@@ -270,34 +272,34 @@ private:
     struct Joiner
     {
         Mac::ExtAddress mExtAddress;
-        uint32_t mExpirationTime;
-        char mPsk[Dtls::kPskMaxLength + 1];
-        bool mValid : 1;
-        bool mAny : 1;
+        uint32_t        mExpirationTime;
+        char            mPsk[Dtls::kPskMaxLength + 1];
+        bool            mValid : 1;
+        bool            mAny : 1;
     };
     Joiner mJoiners[OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES];
 
     union
     {
-        uint8_t mJoinerIid[8];
+        uint8_t  mJoinerIid[8];
         uint64_t mJoinerIid64;
     };
-    uint16_t mJoinerPort;
-    uint16_t mJoinerRloc;
-    Timer mJoinerExpirationTimer;
+    uint16_t       mJoinerPort;
+    uint16_t       mJoinerRloc;
+    Timer          mJoinerExpirationTimer;
 
-    Timer mTimer;
-    uint16_t mSessionId;
-    uint8_t mTransmitAttempts;
+    Timer          mTimer;
+    uint16_t       mSessionId;
+    uint8_t        mTransmitAttempts;
 
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
     Coap::Resource mJoinerFinalize;
 
-    ThreadNetif &mNetif;
+    ThreadNetif   &mNetif;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // COMMISSIONER_HPP_

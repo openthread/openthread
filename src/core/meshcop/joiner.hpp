@@ -137,30 +137,30 @@ private:
         kStateEntrust   = 4,
         kStateJoined    = 5,
     };
-    State mState;
+    State            mState;
 
     otJoinerCallback mCallback;
-    void *mContext;
+    void            *mContext;
 
-    uint16_t mCcitt;
-    uint16_t mAnsi;
+    uint16_t         mCcitt;
+    uint16_t         mAnsi;
 
-    uint8_t mJoinerRouterChannel;
-    uint16_t mJoinerRouterPanId;
-    uint16_t mJoinerUdpPort;
-    Mac::ExtAddress mJoinerRouter;
+    uint8_t          mJoinerRouterChannel;
+    uint16_t         mJoinerRouterPanId;
+    uint16_t         mJoinerUdpPort;
+    Mac::ExtAddress  mJoinerRouter;
 
-    const char *mVendorName;
-    const char *mVendorModel;
-    const char *mVendorSwVersion;
-    const char *mVendorData;
+    const char      *mVendorName;
+    const char      *mVendorModel;
+    const char      *mVendorSwVersion;
+    const char      *mVendorData;
 
-    Timer mTimer;
-    Coap::Resource mJoinerEntrust;
-    ThreadNetif &mNetif;
+    Timer            mTimer;
+    Coap::Resource   mJoinerEntrust;
+    ThreadNetif     &mNetif;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // JOINER_HPP_

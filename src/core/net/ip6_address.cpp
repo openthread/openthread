@@ -227,30 +227,30 @@ bool Address::operator!=(const Address &aOther) const
 
 otError Address::FromString(const char *aBuf)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *dst = reinterpret_cast<uint8_t *>(mFields.m8);
     uint8_t *endp = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
     uint8_t *colonp = NULL;
     uint16_t val = 0;
-    uint8_t count = 0;
-    bool first = true;
-    char ch;
-    uint8_t d;
+    uint8_t  count = 0;
+    bool     first = true;
+    char     ch;
+    uint8_t  d;
 
     memset(mFields.m8, 0, 16);
 
     dst--;
 
-    for (;;)
+    for ( ; ; )
     {
         ch = *aBuf++;
         d = ch & 0xf;
 
-        if (('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F'))
+        if ((('a' <= ch) && (ch <= 'f')) || (('A' <= ch) && (ch <= 'F')))
         {
             d += 9;
         }
-        else if (ch == ':' || ch == '\0' || ch == ' ')
+        else if ((ch == ':') || (ch == '\0') || (ch == ' '))
         {
             if (count)
             {
@@ -267,7 +267,7 @@ otError Address::FromString(const char *aBuf)
                 colonp = dst;
             }
 
-            if (ch == '\0' || ch == ' ')
+            if ((ch == '\0') || (ch == ' '))
             {
                 break;
             }
@@ -309,5 +309,5 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
     return aBuf;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

@@ -27,9 +27,9 @@
  */
 
 /**
-* @file alarm.c
-* Platform abstraction for the alarm
-*/
+ * @file alarm.c
+ * Platform abstraction for the alarm
+ */
 
 #include <openthread/config.h>
 
@@ -42,10 +42,10 @@
 #include "hw_gpio.h"
 #include "platform-da15000.h"
 
-static bool sIsRunning = false;
+static bool     sIsRunning = false;
 static uint32_t sAlarm = 0;
 static uint32_t sCounter;
-volatile bool sAlarmFired = false;
+volatile bool   sAlarmFired = false;
 
 static void timer0_interrupt_cb(void)
 {
@@ -103,6 +103,3 @@ void otPlatAlarmStop(otInstance *aInstance)
     sIsRunning = false;
     hw_timer0_freeze();
 }
-
-
-

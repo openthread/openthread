@@ -68,19 +68,19 @@ namespace Mac {
  */
 enum
 {
-    kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE                = 5,                     ///< macMaxBE (IEEE 802.15.4-2006)
-    kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
+    kMinBE                = 3,              ///< macMinBE (IEEE 802.15.4-2006)
+    kMaxBE                = 5,              ///< macMaxBE (IEEE 802.15.4-2006)
+    kMaxCSMABackoffs      = 4,              ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
+    kUnitBackoffPeriod    = 20,             ///< Number of symbols (IEEE 802.15.4-2006)
 
-    kMinBackoff           = 1,                     ///< Minimum backoff (milliseconds).
+    kMinBackoff           = 1,              ///< Minimum backoff (milliseconds).
 
-    kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).
-    kDataPollTimeout      = 100,                   ///< Timeout for receiving Data Frame (milliseconds).
-    kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
+    kAckTimeout           = 16,             ///< Timeout for waiting on an ACK (milliseconds).
+    kDataPollTimeout      = 100,            ///< Timeout for receiving Data Frame (milliseconds).
+    kNonceSize            = 13,             ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelsAll      = OT_CHANNEL_ALL,        ///< All channels.
-    kScanDurationDefault  = 300,                   ///< Default interval between channels (milliseconds).
+    kScanChannelsAll      = OT_CHANNEL_ALL, ///< All channels.
+    kScanDurationDefault  = 300,            ///< Default interval between channels (milliseconds).
 
     /**
      * Maximum number of MAC layer tx attempts for an outbound direct frame.
@@ -139,17 +139,20 @@ public:
     }
 
 private:
-    void HandleReceivedFrame(Frame &frame) { mReceiveFrameHandler(mContext, frame); }
+    void HandleReceivedFrame(Frame &frame) {
+        mReceiveFrameHandler(mContext, frame);
+    }
     void HandleDataPollTimeout(void) {
-        if (mPollTimeoutHandler != NULL) {
+        if (mPollTimeoutHandler != NULL)
+        {
             mPollTimeoutHandler(mContext);
         }
     }
 
-    ReceiveFrameHandler mReceiveFrameHandler;
+    ReceiveFrameHandler    mReceiveFrameHandler;
     DataPollTimeoutHandler mPollTimeoutHandler;
-    void *mContext;
-    Receiver *mNext;
+    void                  *mContext;
+    Receiver              *mNext;
 };
 
 /**
@@ -168,7 +171,7 @@ public:
      * @param[in]  aFrame    A reference to the MAC frame buffer.
      *
      */
-    typedef otError(*FrameRequestHandler)(void *aContext, Frame &aFrame);
+    typedef otError (*FrameRequestHandler)(void *aContext, Frame &aFrame);
 
     /**
      * This function pointer is called when the MAC is done sending the frame.
@@ -196,13 +199,17 @@ public:
     }
 
 private:
-    otError HandleFrameRequest(Frame &frame) { return mFrameRequestHandler(mContext, frame); }
-    void HandleSentFrame(Frame &frame, otError error) { mSentFrameHandler(mContext, frame, error); }
+    otError HandleFrameRequest(Frame &frame) {
+        return mFrameRequestHandler(mContext, frame);
+    }
+    void HandleSentFrame(Frame &frame, otError error) {
+        mSentFrameHandler(mContext, frame, error);
+    }
 
     FrameRequestHandler mFrameRequestHandler;
-    SentFrameHandler mSentFrameHandler;
-    void *mContext;
-    Sender *mNext;
+    SentFrameHandler    mSentFrameHandler;
+    void               *mContext;
+    Sender             *mNext;
 };
 
 /**
@@ -299,7 +306,9 @@ public:
      * @retval TRUE if IEEE 802.15.4 Beacon transmissions are enabled, FALSE otherwise.
      *
      */
-    bool IsBeaconEnabled(void) const { return mBeaconsEnabled; }
+    bool IsBeaconEnabled(void) const {
+        return mBeaconsEnabled;
+    }
 
     /**
      * This method enables/disables IEEE 802.15.4 Beacon transmissions.
@@ -307,7 +316,9 @@ public:
      * @param[in]  aEnabled  TRUE to enable IEEE 802.15.4 Beacon transmissions, FALSE otherwise.
      *
      */
-    void SetBeaconEnabled(bool aEnabled) { mBeaconsEnabled = aEnabled; }
+    void SetBeaconEnabled(bool aEnabled) {
+        mBeaconsEnabled = aEnabled;
+    }
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -315,7 +326,9 @@ public:
      * @retval TRUE   If rx-on-when-idle is enabled.
      * @retval FALSE  If rx-on-when-idle is not enabled.
      */
-    bool GetRxOnWhenIdle(void) const { return mRxOnWhenIdle; }
+    bool GetRxOnWhenIdle(void) const {
+        return mRxOnWhenIdle;
+    }
 
     /**
      * This method sets the rx-on-when-idle mode.
@@ -361,7 +374,9 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
      *
      */
-    const ExtAddress *GetExtAddress(void) const { return &mExtAddress; }
+    const ExtAddress *GetExtAddress(void) const {
+        return &mExtAddress;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Extended Address
@@ -388,7 +403,9 @@ public:
      * @returns The IEEE 802.15.4 Short Address.
      *
      */
-    ShortAddress GetShortAddress(void) const { return mShortAddress; }
+    ShortAddress GetShortAddress(void) const {
+        return mShortAddress;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Short Address.
@@ -406,7 +423,9 @@ public:
      * @returns The IEEE 802.15.4 Channel.
      *
      */
-    uint8_t GetChannel(void) const { return mChannel; }
+    uint8_t GetChannel(void) const {
+        return mChannel;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Channel.
@@ -424,7 +443,9 @@ public:
      * @returns  The maximum transmit power in dBm.
      *
      */
-    int8_t GetMaxTransmitPower(void) const { return mMaxTransmitPower; }
+    int8_t GetMaxTransmitPower(void) const {
+        return mMaxTransmitPower;
+    }
 
     /**
      * This method sets the maximum transmit power in dBm.
@@ -432,7 +453,9 @@ public:
      * @param[in]  aPower  The maximum transmit power in dBm.
      *
      */
-    void SetMaxTransmitPower(int8_t aPower) { mMaxTransmitPower = aPower; }
+    void SetMaxTransmitPower(int8_t aPower) {
+        mMaxTransmitPower = aPower;
+    }
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -440,7 +463,9 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Network Name.
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName.m8; }
+    const char *GetNetworkName(void) const {
+        return mNetworkName.m8;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
@@ -458,7 +483,9 @@ public:
      * @returns The IEEE 802.15.4 PAN ID.
      *
      */
-    uint16_t GetPanId(void) const { return mPanId; }
+    uint16_t GetPanId(void) const {
+        return mPanId;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 PAN ID.
@@ -476,7 +503,9 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId.m8; }
+    const uint8_t *GetExtendedPanId(void) const {
+        return mExtendedPanId.m8;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Extended PAN ID.
@@ -494,7 +523,9 @@ public:
      * @returns A reference to the MAC whitelist filter.
      *
      */
-    Whitelist &GetWhitelist(void) { return mWhitelist; }
+    Whitelist &GetWhitelist(void) {
+        return mWhitelist;
+    }
 
     /**
      * This method returns the MAC blacklist filter.
@@ -502,7 +533,9 @@ public:
      * @returns A reference to the MAC blacklist filter.
      *
      */
-    Blacklist &GetBlacklist(void) { return mBlacklist; }
+    Blacklist &GetBlacklist(void) {
+        return mBlacklist;
+    }
 
     /**
      * This method is called to handle receive events.
@@ -614,7 +647,9 @@ public:
      * @returns A reference to the MAC counter.
      *
      */
-    otMacCounters &GetCounters(void) { return mCounters; }
+    otMacCounters &GetCounters(void) {
+        return mCounters;
+    }
 
     /**
      * This method returns the noise floor value (currently use the radio receive sensitivity value).
@@ -622,7 +657,9 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) { return otPlatRadioGetReceiveSensitivity(GetInstance()); }
+    int8_t GetNoiseFloor(void) {
+        return otPlatRadioGetReceiveSensitivity(GetInstance());
+    }
 
     /**
      * This method indicates whether or not CSMA backoff is supported by the radio layer.
@@ -679,25 +716,25 @@ private:
     void StartCsmaBackoff(void);
     otError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
 
-    Timer mMacTimer;
+    Timer           mMacTimer;
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    Timer mBackoffTimer;
+    Timer           mBackoffTimer;
 #endif
-    Timer mReceiveTimer;
+    Timer           mReceiveTimer;
 
-    ThreadNetif &mNetif;
+    ThreadNetif    &mNetif;
 
-    ExtAddress mExtAddress;
-    ShortAddress mShortAddress;
-    PanId mPanId;
-    uint8_t mChannel;
-    int8_t mMaxTransmitPower;
+    ExtAddress      mExtAddress;
+    ShortAddress    mShortAddress;
+    PanId           mPanId;
+    uint8_t         mChannel;
+    int8_t          mMaxTransmitPower;
 
-    otNetworkName mNetworkName;
+    otNetworkName   mNetworkName;
     otExtendedPanId mExtendedPanId;
 
-    Sender *mSendHead, *mSendTail;
-    Receiver *mReceiveHead, *mReceiveTail;
+    Sender         *mSendHead, *mSendTail;
+    Receiver       *mReceiveHead, *mReceiveTail;
 
     enum
     {
@@ -707,39 +744,39 @@ private:
         kStateTransmitBeacon,
         kStateTransmitData,
     };
-    uint8_t mState;
+    uint8_t  mState;
 
-    uint8_t mBeaconSequence;
-    uint8_t mDataSequence;
-    bool mRxOnWhenIdle;
-    uint8_t mCsmaAttempts;
-    uint8_t mTransmitAttempts;
-    bool mTransmitBeacon;
-    bool mBeaconsEnabled;
+    uint8_t  mBeaconSequence;
+    uint8_t  mDataSequence;
+    bool     mRxOnWhenIdle;
+    uint8_t  mCsmaAttempts;
+    uint8_t  mTransmitAttempts;
+    bool     mTransmitBeacon;
+    bool     mBeaconsEnabled;
 
     ScanType mPendingScanRequest;
-    uint8_t mScanChannel;
+    uint8_t  mScanChannel;
     uint32_t mScanChannels;
     uint16_t mScanDuration;
-    void *mScanContext;
+    void    *mScanContext;
     union
     {
         ActiveScanHandler mActiveScanHandler;
         EnergyScanHandler mEnergyScanHandler;
     };
-    int8_t mEnergyScanCurrentMaxRssi;
-    Tasklet mEnergyScanSampleRssiTask;
+    int8_t             mEnergyScanCurrentMaxRssi;
+    Tasklet            mEnergyScanSampleRssiTask;
 
     otLinkPcapCallback mPcapCallback;
-    void *mPcapCallbackContext;
+    void              *mPcapCallbackContext;
 
-    Whitelist mWhitelist;
-    Blacklist mBlacklist;
+    Whitelist          mWhitelist;
+    Blacklist          mBlacklist;
 
-    Frame *mTxFrame;
+    Frame             *mTxFrame;
 
-    otMacCounters mCounters;
-    uint32_t mKeyIdMode2FrameCounter;
+    otMacCounters      mCounters;
+    uint32_t           mKeyIdMode2FrameCounter;
 };
 
 /**
@@ -747,7 +784,7 @@ private:
  *
  */
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
 #endif  // MAC_HPP_

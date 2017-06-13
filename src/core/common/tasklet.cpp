@@ -43,7 +43,7 @@
 
 namespace ot {
 
-Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext):
+Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext) :
     mScheduler(aScheduler),
     mHandler(aHandler),
     mContext(aContext),
@@ -56,7 +56,7 @@ otError Tasklet::Post(void)
     return mScheduler.Post(*this);
 }
 
-TaskletScheduler::TaskletScheduler(void):
+TaskletScheduler::TaskletScheduler(void) :
     mHead(NULL),
     mTail(NULL)
 {
@@ -130,4 +130,4 @@ Ip6::Ip6 *TaskletScheduler::GetIp6(void)
     return Ip6::Ip6FromTaskletScheduler(this);
 }
 
-}  // namespace ot
+} // namespace ot

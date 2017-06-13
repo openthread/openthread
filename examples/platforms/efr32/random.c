@@ -49,7 +49,7 @@ void efr32RandomInit(void)
 {
     /* Enable ADC Clock */
     CMU_ClockEnable(cmuClock_ADC0, true);
-    ADC_Init_TypeDef init = ADC_INIT_DEFAULT;
+    ADC_Init_TypeDef       init = ADC_INIT_DEFAULT;
     ADC_InitSingle_TypeDef singleInit = ADC_INITSINGLE_DEFAULT;
 
     /* Initialize the ADC with the required values */
@@ -71,7 +71,7 @@ void efr32RandomInit(void)
 
 uint32_t otPlatRandomGet(void)
 {
-    uint8_t tmp = 0;
+    uint8_t  tmp = 0;
     uint32_t random = 0;
 
     for (int i = 0; i < 4; i++)
@@ -80,7 +80,7 @@ uint32_t otPlatRandomGet(void)
         {
             ADC_Start(ADC0, adcStartSingle);
 
-            while ((ADC0->IF & ADC_IF_SINGLE) == 0);
+            while ((ADC0->IF & ADC_IF_SINGLE) == 0) {}
 
             tmp |= ((ADC_DataSingleGet(ADC0) & 0x07) << (j * 3));
         }

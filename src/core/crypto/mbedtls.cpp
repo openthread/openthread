@@ -43,5 +43,5 @@ MbedTls::MbedTls(void)
     mbedtls_memory_buffer_alloc_init(mMemory, sizeof(mMemory));
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot

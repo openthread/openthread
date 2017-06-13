@@ -31,11 +31,11 @@
  */
 
 // enable bootloader backdoor
-#define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE            0xC5       // Enable ROM boot loader
+#define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE            0xC5 // Enable ROM boot loader
 
-#define SET_CCFG_BL_CONFIG_BL_LEVEL                     0x0        // Active low to open boot loader backdoor
+#define SET_CCFG_BL_CONFIG_BL_LEVEL                     0x0  // Active low to open boot loader backdoor
 
-#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER                0x0D       // DIO13 (BTN-1 button) on CC2650 LaunchPad Board for boot loader backdoor
+#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER                0x0D // DIO13 (BTN-1 button) on CC2650 LaunchPad Board for boot loader backdoor
 // #define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER             0x0B       // DIO11 (SELECT button) on CC2650DK (QFN48/7*7) for boot loader backdoor
 
 #define SET_CCFG_BL_CONFIG_BL_ENABLE                    0xC5       // Enabled boot loader backdoor

@@ -147,7 +147,7 @@ public:
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Timer(TimerScheduler &aScheduler, Handler aHandler, void *aContext):
+    Timer(TimerScheduler &aScheduler, Handler aHandler, void *aContext) :
         mScheduler(aScheduler),
         mHandler(aHandler),
         mContext(aContext),
@@ -162,7 +162,9 @@ public:
      * @returns The start time in milliseconds.
      *
      */
-    uint32_t Gett0(void) const { return mT0; }
+    uint32_t Gett0(void) const {
+        return mT0;
+    }
 
     /**
      * This method returns the delta time in milliseconds for the timer.
@@ -170,7 +172,9 @@ public:
      * @returns The delta time.
      *
      */
-    uint32_t Getdt(void) const { return mDt; }
+    uint32_t Getdt(void) const {
+        return mDt;
+    }
 
     /**
      * This method indicates whether or not the timer instance is running.
@@ -178,14 +182,18 @@ public:
      * @retval TRUE   If the timer is running.
      * @retval FALSE  If the timer is not running.
      */
-    bool IsRunning(void) const { return (mNext != this); }
+    bool IsRunning(void) const {
+        return (mNext != this);
+    }
 
     /**
      * This method schedules the timer to fire a @p dt milliseconds from now.
      *
      * @param[in]  aDt  The expire time in milliseconds from now.
      */
-    void Start(uint32_t aDt) { StartAt(GetNow(), aDt); }
+    void Start(uint32_t aDt) {
+        StartAt(GetNow(), aDt);
+    }
 
     /**
      * This method schedules the timer to fire at @p dt milliseconds from @p t0.
@@ -193,13 +201,17 @@ public:
      * @param[in]  aT0  The start time in milliseconds.
      * @param[in]  aDt  The expire time in milliseconds from @p t0.
      */
-    void StartAt(uint32_t aT0, uint32_t aDt) { mT0 = aT0; mDt = aDt; mScheduler.Add(*this); }
+    void StartAt(uint32_t aT0, uint32_t aDt) {
+        mT0 = aT0; mDt = aDt; mScheduler.Add(*this);
+    }
 
     /**
      * This method stops the timer.
      *
      */
-    void Stop(void) { mScheduler.Remove(*this); }
+    void Stop(void) {
+        mScheduler.Remove(*this);
+    }
 
     /**
      * This static method returns the current time in milliseconds.
@@ -207,7 +219,9 @@ public:
      * @returns The current time in milliseconds.
      *
      */
-    static uint32_t GetNow(void) { return otPlatAlarmGetNow(); }
+    static uint32_t GetNow(void) {
+        return otPlatAlarmGetNow();
+    }
 
     /**
      * This static method returns the number of milliseconds given seconds.
@@ -215,7 +229,9 @@ public:
      * @returns The number of milliseconds.
      *
      */
-    static uint32_t SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
+    static uint32_t SecToMsec(uint32_t aSeconds) {
+        return aSeconds * 1000u;
+    }
 
     /**
      * This static method returns the number of seconds given milliseconds.
@@ -223,7 +239,9 @@ public:
      * @returns The number of seconds.
      *
      */
-    static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
+    static uint32_t MsecToSec(uint32_t aMilliseconds) {
+        return aMilliseconds / 1000u;
+    }
 
     /**
      * This static method returns the number of milliseconds given hours.
@@ -231,7 +249,9 @@ public:
      * @returns The number of milliseconds.
      *
      */
-    static uint32_t HoursToMsec(uint32_t aHours) { return SecToMsec(aHours * 3600u); }
+    static uint32_t HoursToMsec(uint32_t aHours) {
+        return SecToMsec(aHours * 3600u);
+    }
 
     /**
      * This static method returns the number of hours given milliseconds.
@@ -239,10 +259,14 @@ public:
      * @returns The number of hours.
      *
      */
-    static uint32_t MsecToHours(uint32_t aMilliseconds) { return MsecToSec(aMilliseconds / 3600u); }
+    static uint32_t MsecToHours(uint32_t aMilliseconds) {
+        return MsecToSec(aMilliseconds / 3600u);
+    }
 
 private:
-    void Fired(void) { mHandler(mContext); }
+    void Fired(void) {
+        mHandler(mContext);
+    }
 
     TimerScheduler &mScheduler;
     Handler         mHandler;
@@ -257,6 +281,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // TIMER_HPP_

@@ -58,9 +58,10 @@ public:
      * Default constructor.
      *
      */
-    Tlv(void):
+    Tlv(void) :
         mType(0),
-        mLength(0) {}
+        mLength(0) {
+    }
 
     /**
      * This method returns the Type value.
@@ -68,7 +69,9 @@ public:
      * @returns The Type value.
      *
      */
-    uint8_t GetType(void) const { return mType; }
+    uint8_t GetType(void) const {
+        return mType;
+    }
 
     /**
      * This method sets the Type value.
@@ -76,7 +79,9 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(uint8_t aType) { mType = aType; }
+    void SetType(uint8_t aType) {
+        mType = aType;
+    }
 
     /**
      * This method returns the Length value.
@@ -84,7 +89,9 @@ public:
      * @returns The Length value.
      *
      */
-    uint8_t GetLength(void) const { return mLength; }
+    uint8_t GetLength(void) const {
+        return mLength;
+    }
 
     /**
      * This method sets the Length value.
@@ -92,7 +99,9 @@ public:
      * @param[in]  aLength  The Length value.
      *
      */
-    void SetLength(uint8_t aLength) { mLength = aLength; }
+    void SetLength(uint8_t aLength) {
+        mLength = aLength;
+    }
 
     /**
      * This method returns the total size including Type, Length, and Value fields.
@@ -100,7 +109,9 @@ public:
      * @returns The total size include Type, Length, and Value fields.
      *
      */
-    uint8_t GetSize(void) const { return sizeof(Tlv) + mLength; }
+    uint8_t GetSize(void) const {
+        return sizeof(Tlv) + mLength;
+    }
 
     /**
      * This method returns a pointer to the Value.
@@ -108,7 +119,9 @@ public:
      * @returns A pointer to the value.
      *
      */
-    uint8_t *GetValue(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(Tlv); }
+    uint8_t *GetValue(void) {
+        return reinterpret_cast<uint8_t *>(this) + sizeof(Tlv);
+    }
 
     /**
      * This method returns a pointer to the Value.
@@ -116,7 +129,9 @@ public:
      * @returns A pointer to the value.
      *
      */
-    const uint8_t *GetValue(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(Tlv); }
+    const uint8_t *GetValue(void) const {
+        return reinterpret_cast<const uint8_t *>(this) + sizeof(Tlv);
+    }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -195,14 +210,16 @@ private:
 } OT_TOOL_PACKED_END;
 
 OT_TOOL_PACKED_BEGIN
-class ExtendedTlv: public Tlv
+class ExtendedTlv : public Tlv
 {
 public:
     /**
      * This method returns the Length value.
      *
      */
-    uint16_t GetLength(void) const { return HostSwap16(mLength); }
+    uint16_t GetLength(void) const {
+        return HostSwap16(mLength);
+    }
 
     /**
      * This method sets the Length value.
@@ -210,12 +227,14 @@ public:
      * @param[in]  aLength  The Length value.
      *
      */
-    void SetLength(uint16_t aLength) { Tlv::SetLength(kExtendedLength); mLength = HostSwap16(aLength); }
+    void SetLength(uint16_t aLength) {
+        Tlv::SetLength(kExtendedLength); mLength = HostSwap16(aLength);
+    }
 
 private:
     uint16_t mLength;
 } OT_TOOL_PACKED_END;
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // TLVS_HPP_

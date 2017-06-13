@@ -159,8 +159,8 @@ OTAPI otError OTCALL otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t
  * @param[in]  aContext           A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otCommissionerEnergyReportCallback)(uint32_t aChannelMask, const uint8_t *aEnergyList,
-                                                          uint8_t aEnergyListLength, void *aContext);
+typedef void (OTCALL * otCommissionerEnergyReportCallback)(uint32_t aChannelMask, const uint8_t *aEnergyList,
+                                                           uint8_t aEnergyListLength, void *aContext);
 
 /**
  * This function sends an Energy Scan Query message.
@@ -193,7 +193,7 @@ OTAPI otError OTCALL otCommissionerEnergyScan(otInstance *aInstance, uint32_t aC
  * @param[in]  aContext           A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+typedef void (OTCALL * otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 
 /**
  * This function sends a PAN ID Query message.
@@ -291,7 +291,7 @@ OTAPI otError OTCALL otCommissionerGeneratePSKc(otInstance *aInstance, const cha
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
-#endif  // OPENTHREAD_COMMISSIONER_H_
+#endif // OPENTHREAD_COMMISSIONER_H_

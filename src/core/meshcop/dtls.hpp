@@ -107,7 +107,7 @@ public:
      * @param[in]  aMessageSubtype  A message sub type information for the sender.
      *
      */
-    typedef otError(*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    typedef otError (*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     /**
      * This method starts the DTLS service.
@@ -230,36 +230,36 @@ private:
     void Close(void);
     void Process(void);
 
-    uint8_t mPsk[kPskMaxLength];
-    uint8_t mPskLength;
+    uint8_t                  mPsk[kPskMaxLength];
+    uint8_t                  mPskLength;
 
-    mbedtls_entropy_context mEntropy;
+    mbedtls_entropy_context  mEntropy;
     mbedtls_ctr_drbg_context mCtrDrbg;
-    mbedtls_ssl_context mSsl;
-    mbedtls_ssl_config mConf;
-    mbedtls_ssl_cookie_ctx mCookieCtx;
-    bool mStarted;
+    mbedtls_ssl_context      mSsl;
+    mbedtls_ssl_config       mConf;
+    mbedtls_ssl_cookie_ctx   mCookieCtx;
+    bool                     mStarted;
 
-    Timer mTimer;
-    uint32_t mTimerIntermediate;
-    bool mTimerSet;
+    Timer                    mTimer;
+    uint32_t                 mTimerIntermediate;
+    bool                     mTimerSet;
 
-    Message *mReceiveMessage;
-    uint16_t mReceiveOffset;
-    uint16_t mReceiveLength;
+    Message                 *mReceiveMessage;
+    uint16_t                 mReceiveOffset;
+    uint16_t                 mReceiveLength;
 
-    ConnectedHandler mConnectedHandler;
-    ReceiveHandler mReceiveHandler;
-    SendHandler mSendHandler;
-    void *mContext;
-    bool mClient;
+    ConnectedHandler         mConnectedHandler;
+    ReceiveHandler           mReceiveHandler;
+    SendHandler              mSendHandler;
+    void                    *mContext;
+    bool                     mClient;
 
-    uint8_t mMessageSubType;
+    uint8_t                  mMessageSubType;
 
-    ThreadNetif &mNetif;
+    ThreadNetif             &mNetif;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // DTLS_HPP_

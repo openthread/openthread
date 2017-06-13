@@ -48,13 +48,13 @@
  *  UART TX buffer variables.
  */
 static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t sTransmitLength = 0;
-static bool sTransmitDone = 0;
+static uint16_t       sTransmitLength = 0;
+static bool           sTransmitDone = 0;
 
 /**
  *  UART RX ring buffer variables.
  */
-static uint8_t sReceiveBuffer[UART_RX_BUFFER_SIZE];
+static uint8_t  sReceiveBuffer[UART_RX_BUFFER_SIZE];
 static uint16_t sReceiveHead = 0;
 static uint16_t sReceiveTail = 0;
 
@@ -67,6 +67,7 @@ static uint16_t sReceiveTail = 0;
 static __INLINE bool isRxBufferFull()
 {
     uint16_t next = (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
+
     return (next == sReceiveTail);
 }
 

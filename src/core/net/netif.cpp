@@ -42,7 +42,7 @@
 namespace ot {
 namespace Ip6 {
 
-Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
+Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId) :
     mIp6(aIp6),
     mCallbacks(NULL),
     mUnicastAddresses(NULL),
@@ -88,7 +88,7 @@ exit:
 
 otError Netif::RemoveCallback(NetifCallback &aCallback)
 {
-    otError error = OT_ERROR_ALREADY;
+    otError        error = OT_ERROR_ALREADY;
     NetifCallback *prev = NULL;
 
     for (NetifCallback *cur = mCallbacks; cur; cur = cur->mNext)
@@ -189,9 +189,9 @@ exit:
 
 otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
-    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t                 num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
 
     if (IsMulticastSubscribed(aAddress))
     {
@@ -221,10 +221,10 @@ exit:
 
 otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
     NetifMulticastAddress *last = NULL;
-    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t                 num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
 
     for (entry = mMulticastAddresses; entry; entry = entry->GetNext())
     {
@@ -327,9 +327,9 @@ exit:
 
 otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+    size_t               num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
@@ -370,10 +370,10 @@ exit:
 
 otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
     NetifUnicastAddress *last = NULL;
-    size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+    size_t               num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
@@ -461,5 +461,5 @@ void Netif::HandleStateChangedTask(void)
     }
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

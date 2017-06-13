@@ -58,12 +58,12 @@ enum
 // This struct contains RSS values and test data for checking link quality info calss.
 struct RssTestData
 {
-    const int8_t *mRssList;                 // Array of RSS values.
-    size_t        mRssListSize;             // Size of RSS list.
-    uint8_t       mExpectedLinkQuality;     // Expected final link quality value.
+    const int8_t *mRssList;             // Array of RSS values.
+    size_t        mRssListSize;         // Size of RSS list.
+    uint8_t       mExpectedLinkQuality; // Expected final link quality value.
 };
 
-int8_t sNoiseFloor = -100;  // dBm
+int8_t sNoiseFloor = -100; // dBm
 
 // Checks the encoded average RSS value to match the value from GetAverageRss().
 void VerifyEncodedRssValue(LinkQualityInfo &aLinkInfo)
@@ -86,7 +86,7 @@ void VerifyEncodedRssValue(LinkQualityInfo &aLinkInfo)
 // This function prints the values in the passed in link info instance. It is invoked as the final step in test-case.
 void PrintOutcome(LinkQualityInfo &aLinkInfo)
 {
-    char     stringBuf[kStringBuffferSize];
+    char stringBuf[kStringBuffferSize];
 
     SuccessOrQuit(aLinkInfo.GetAverageRssAsString(stringBuf, sizeof(stringBuf)),
                   "TestLinkQualityInfo failed - GetAverageRssAsString() failed.");
@@ -102,8 +102,8 @@ void PrintOutcome(LinkQualityInfo &aLinkInfo)
 void TestLinkQualityData(RssTestData anRssData)
 {
     LinkQualityInfo linkInfo;
-    int8_t rss, ave, min, max;
-    size_t i;
+    int8_t          rss, ave, min, max;
+    size_t          i;
 
     printf("- - - - - - - - - - - - - - - - - -\n");
     min = kMinRssValue;
@@ -300,36 +300,36 @@ void TestRssAveraging(void)
 
 void TestLinkQualityCalculations(void)
 {
-    const int8_t  rssList1[] = { -81, -80, -79, -78, -76, -80, -77, -75, -77, -76, -77, -74};
+    const int8_t      rssList1[] = { -81, -80, -79, -78, -76, -80, -77, -75, -77, -76, -77, -74};
     const RssTestData rssData1 =
     {
-        rssList1,           // mRssList
-        sizeof(rssList1),   // mRssListSize
-        3                   // mExpectedLinkQuality
+        rssList1,         // mRssList
+        sizeof(rssList1), // mRssListSize
+        3                 // mExpectedLinkQuality
     };
 
-    const int8_t  rssList2[] = { -90, -80, -85 };
+    const int8_t      rssList2[] = { -90, -80, -85 };
     const RssTestData rssData2 =
     {
-        rssList2,           // mRssList
-        sizeof(rssList2),   // mRssListSize
-        2                   // mExpectedLinkQuality
+        rssList2,         // mRssList
+        sizeof(rssList2), // mRssListSize
+        2                 // mExpectedLinkQuality
     };
 
-    const int8_t  rssList3[] = { -95, -96, -98, -99, -100, -100, -98, -99, -100, -100, -100, -100, -100 };
+    const int8_t      rssList3[] = { -95, -96, -98, -99, -100, -100, -98, -99, -100, -100, -100, -100, -100 };
     const RssTestData rssData3 =
     {
-        rssList3,           // mRssList
-        sizeof(rssList3),   // mRssListSize
-        0                   // mExpectedLinkQuality
+        rssList3,         // mRssList
+        sizeof(rssList3), // mRssListSize
+        0                 // mExpectedLinkQuality
     };
 
-    const int8_t  rssList4[] = { -75, -100, -100, -100, -100, -100, -95, -92, -93, -94, -93, -93 };
+    const int8_t      rssList4[] = { -75, -100, -100, -100, -100, -100, -95, -92, -93, -94, -93, -93 };
     const RssTestData rssData4 =
     {
-        rssList4,           // mRssList
-        sizeof(rssList4),   // mRssListSize
-        1                   // mExpectedLinkQuality
+        rssList4,         // mRssList
+        sizeof(rssList4), // mRssListSize
+        1                 // mExpectedLinkQuality
     };
 
     TestLinkQualityData(rssData1);
@@ -338,7 +338,7 @@ void TestLinkQualityCalculations(void)
     TestLinkQualityData(rssData4);
 }
 
-}  // namespace ot
+} // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

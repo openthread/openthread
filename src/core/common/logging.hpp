@@ -676,44 +676,44 @@ extern "C" {
 #endif
 
 /**
-* @def otLogCritPlat
-*
-* This method generates a log with level critical for the Platform region.
-*
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
-*
-*/
+ * @def otLogCritPlat
+ *
+ * This method generates a log with level critical for the Platform region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
 
 /**
-* @def otLogWarnPlat
-*
-* This method generates a log with level warning for the Platform region.
-*
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
-*
-*/
+ * @def otLogWarnPlat
+ *
+ * This method generates a log with level warning for the Platform region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
 
 /**
-* @def otLogInfoPlat
-*
-* This method generates a log with level info for the Platform region.
-*
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
-*
-*/
+ * @def otLogInfoPlat
+ *
+ * This method generates a log with level info for the Platform region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
 
 /**
-* @def otLogDebgPlat
-*
-* This method generates a log with level debug for the Platform region.
-*
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
-*
-*/
+ * @def otLogDebgPlat
+ *
+ * This method generates a log with level debug for the Platform region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
 #if OPENTHREAD_CONFIG_LOG_PLATFORM == 1
 #define otLogCritPlat(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_PLATFORM, aFormat, ## __VA_ARGS__)
 #define otLogWarnPlat(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_PLATFORM, aFormat, ## __VA_ARGS__)
@@ -1271,13 +1271,13 @@ void otDump(otInstance *aIntsance, otLogLevel aLevel, otLogRegion aRegion, const
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL == 1
 /**
-* This method converts the log level value into a string
-*
-* @param[in]  aLevel  The log level.
-*
-* @returns A const char pointer to the C string corresponding to the log level.
-*
-*/
+ * This method converts the log level value into a string
+ *
+ * @param[in]  aLevel  The log level.
+ *
+ * @returns A const char pointer to the C string corresponding to the log level.
+ *
+ */
 const char *otLogLevelToString(otLogLevel aLevel);
 #endif
 
@@ -1311,11 +1311,11 @@ const char *otLogRegionToString(otLogRegion aRegion);
         ## __VA_ARGS__                                                      \
     )
 
-#else  // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+#else // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
 
 /**
-* Local/private macro to format the log message
-*/
+ * Local/private macro to format the log message
+ */
 #define _otLogFormatter(aInstanc, aLogLevel, aRegion, aFormat, ...)         \
     _otDynamicLog(                                                          \
         aInstance,                                                          \
@@ -1328,13 +1328,13 @@ const char *otLogRegionToString(otLogRegion aRegion);
 
 #endif
 
-#else  // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
+#else // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_REGION == 1
 
 /**
-* Local/private macro to format the log message
-*/
+ * Local/private macro to format the log message
+ */
 #define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)        \
     _otDynamicLog(                                                          \
         aInstance,                                                          \
@@ -1345,11 +1345,11 @@ const char *otLogRegionToString(otLogRegion aRegion);
         ## __VA_ARGS__                                                      \
     )
 
-#else  // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+#else // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
 
 /**
-* Local/private macro to format the log message
-*/
+ * Local/private macro to format the log message
+ */
 #define _otLogFormatter(aInstace, aLogLevel, aRegion, aFormat, ...)         \
     _otDynamicLog(                                                          \
         aInstance,                                                          \
@@ -1366,12 +1366,12 @@ const char *otLogRegionToString(otLogRegion aRegion);
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL == 1
 
 /**
-* Local/private macro to dynamically filter log level.
-*/
+ * Local/private macro to dynamically filter log level.
+ */
 #define _otDynamicLog(aInstance, aLogLevel, aRegion, aFormat, ...)          \
     do {                                                                    \
-        if (otGetDynamicLogLevel(aInstance) >= aLogLevel)                   \
-            _otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__);        \
+        if (otGetDynamicLogLevel(aInstance) >= aLogLevel) {                   \
+            _otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__);}        \
     } while (false)
 
 #else // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
@@ -1392,4 +1392,4 @@ const char *otLogRegionToString(otLogRegion aRegion);
 };
 #endif
 
-#endif  // LOGGING_HPP_
+#endif // LOGGING_HPP_

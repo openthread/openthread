@@ -65,11 +65,11 @@ void Header::Init(Type aType, Code aCode)
 
 otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 {
-    otError error = OT_ERROR_PARSE;
+    otError  error = OT_ERROR_PARSE;
     uint16_t offset = aMessage.GetOffset();
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
-    uint8_t tokenLength;
-    bool firstOption = true;
+    uint8_t  tokenLength;
+    bool     firstOption = true;
     uint16_t optionDelta;
     uint16_t optionLength;
 
@@ -200,7 +200,7 @@ exit:
 
 otError Header::AppendOption(const Option &aOption)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *buf = mHeader.mBytes + mHeaderLength;
     uint8_t *cur = buf + 1;
     uint16_t optionDelta = aOption.mNumber - mOptionLast;
@@ -290,9 +290,10 @@ otError Header::AppendObserveOption(uint32_t aObserve)
 
 otError Header::AppendUriPathOptions(const char *aUriPath)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     const char *cur = aUriPath;
     const char *end;
+
     Header::Option coapOption;
 
     coapOption.mNumber = OT_COAP_OPTION_URI_PATH;
@@ -351,7 +352,7 @@ exit:
 
 const Header::Option *Header::GetNextOption(void)
 {
-    Option *rval = NULL;
+    Option  *rval = NULL;
     uint16_t optionDelta;
     uint16_t optionLength;
 
@@ -443,5 +444,5 @@ void Header::SetDefaultResponseHeader(const Header &aRequestHeader)
     SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
 }
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot

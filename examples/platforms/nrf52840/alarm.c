@@ -51,14 +51,14 @@
 
 #define RTC_FREQUENCY       32768ULL
 
-#define CEIL_DIV(A, B)      (((A) + (B) - 1ULL) / (B))
+#define CEIL_DIV(A, B)      (((A) + (B) -1ULL) / (B))
 
 #define US_PER_MS           1000ULL
 #define US_PER_S            1000000ULL
 #define US_PER_TICK         CEIL_DIV(US_PER_S, RTC_FREQUENCY)
 
 #define MS_PER_S            1000UL
-#define MS_PER_OVERFLOW     (512UL * MS_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
+#define MS_PER_OVERFLOW     (512UL * MS_PER_S) ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
 
 typedef enum
 {
@@ -69,9 +69,9 @@ typedef enum
 
 typedef struct
 {
-    volatile bool       mFireAlarm;   ///< Information for processing function, that alarm should fire.
-    otPlatUsecAlarmTime mT0;          ///< Alarm start time, for tracking overflows.
-    otPlatUsecAlarmTime mTargetTime;  ///< Alarm fire time.
+    volatile bool       mFireAlarm;  ///< Information for processing function, that alarm should fire.
+    otPlatUsecAlarmTime mT0;         ///< Alarm start time, for tracking overflows.
+    otPlatUsecAlarmTime mTargetTime; ///< Alarm fire time.
 } AlarmData;
 
 typedef struct
@@ -82,9 +82,9 @@ typedef struct
     nrf_rtc_int_t   mCompareInt;
 } AlarmChannelData;
 
-static volatile otPlatUsecAlarmTime sTimeOffset = { 0 };  ///< Time offset to keep track of current time.
-static AlarmData sTimerData[kNumTimers];                  ///< Data of the timers.
-static const AlarmChannelData sChannelData[kNumTimers] =
+static volatile otPlatUsecAlarmTime sTimeOffset = { 0 };    ///< Time offset to keep track of current time.
+static AlarmData                    sTimerData[kNumTimers]; ///< Data of the timers.
+static const AlarmChannelData       sChannelData[kNumTimers] =
 {
     [kMsTimer] = {
         .mChannelNumber    = 0,
@@ -100,20 +100,22 @@ static const AlarmChannelData sChannelData[kNumTimers] =
     }
 };
 
-static otPlatUsecAlarmHandler sUsecHandler = NULL;  ///< Handler called when usec alarm fires.
-static void *sUsecContext = NULL;                   ///< The context information passed to the usec handler callback.
+static otPlatUsecAlarmHandler sUsecHandler = NULL; ///< Handler called when usec alarm fires.
+static void                  *sUsecContext = NULL; ///< The context information passed to the usec handler callback.
 
 static void HandleOverflow(void);
 
 static inline uint32_t TimeToTicks(otPlatUsecAlarmTime aTime)
 {
     uint64_t microseconds = US_PER_MS * (uint64_t)aTime.mMs + (uint64_t)aTime.mUs;
+
     return (uint32_t)CEIL_DIV((microseconds * RTC_FREQUENCY), US_PER_S) & RTC_CC_COMPARE_Msk;
 }
 
 static inline otPlatUsecAlarmTime TicksToTime(uint32_t aTicks)
 {
     uint64_t microseconds = CEIL_DIV((US_PER_S * (uint64_t)aTicks), RTC_FREQUENCY);
+
     return (otPlatUsecAlarmTime) {microseconds / US_PER_MS, microseconds % US_PER_MS};
 }
 
@@ -134,8 +136,8 @@ static inline otPlatUsecAlarmTime TimeAdd(otPlatUsecAlarmTime aTime1, otPlatUsec
 
 static inline otPlatUsecAlarmTime AlarmGetCurrentTime(void)
 {
-    uint32_t rtcValue1;
-    uint32_t rtcValue2;
+    uint32_t            rtcValue1;
+    uint32_t            rtcValue2;
     otPlatUsecAlarmTime offset;
 
     rtcValue1 = nrf_rtc_counter_get(RTC_INSTANCE);
@@ -233,7 +235,7 @@ static void HandleOverflow(void)
 
 static void AlarmStartAt(const otPlatUsecAlarmTime *aT0, const otPlatUsecAlarmTime *aTargetTime, AlarmIndex aIndex)
 {
-    uint32_t targetCounter;
+    uint32_t            targetCounter;
     otPlatUsecAlarmTime now;
 
     nrf_rtc_int_disable(RTC_INSTANCE, sChannelData[aIndex].mCompareInt);

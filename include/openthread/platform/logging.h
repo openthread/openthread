@@ -54,11 +54,11 @@ extern "C" {
 /**
  * Log levels.
  */
-#define OT_LOG_LEVEL_NONE  0  ///< None
-#define OT_LOG_LEVEL_CRIT  1  ///< Critical
-#define OT_LOG_LEVEL_WARN  2  ///< Warning
-#define OT_LOG_LEVEL_INFO  3  ///< Info
-#define OT_LOG_LEVEL_DEBG  4  ///< Debug
+#define OT_LOG_LEVEL_NONE  0 ///< None
+#define OT_LOG_LEVEL_CRIT  1 ///< Critical
+#define OT_LOG_LEVEL_WARN  2 ///< Warning
+#define OT_LOG_LEVEL_INFO  3 ///< Info
+#define OT_LOG_LEVEL_DEBG  4 ///< Debug
 
 typedef uint8_t otLogLevel;
 
@@ -100,7 +100,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // DEBUG_H_
+#endif // DEBUG_H_

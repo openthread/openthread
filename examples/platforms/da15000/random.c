@@ -49,19 +49,19 @@ static uint32_t sSeed;
 
 int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
 {
-    uint32_t            randword;
+    uint32_t             randword;
     unsigned char       *pbuf           = outEntropy;
-    const size_t        req_words       = inSize >> 2;
+    const size_t         req_words       = inSize >> 2;
     const unsigned char *pbuf_end       = outEntropy + inSize;
     const unsigned char *preq_words_end = (unsigned char *)(((uint32_t *)outEntropy) + req_words);
-    ptrdiff_t           remainder_bytes = pbuf_end - preq_words_end;
+    ptrdiff_t            remainder_bytes = pbuf_end - preq_words_end;
 
     hw_trng_enable(NULL);
 
     for (pbuf = outEntropy; pbuf < preq_words_end; pbuf += 4)
     {
         /* Wait for a random word to become available in the TRNG FIFO. */
-        while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0);
+        while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0) {}
 
         randword = *((volatile uint32_t *)HW_TRNG_RAM);
         memcpy(pbuf, &randword, 4);
@@ -69,7 +69,7 @@ int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
 
     if (remainder_bytes)
     {
-        while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0);
+        while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0) {}
 
         randword = *((volatile uint32_t *)HW_TRNG_RAM);
         memcpy(pbuf, &randword, remainder_bytes);
@@ -89,6 +89,7 @@ void da15000RandomInit(void)
 uint32_t otPlatRandomGet(void)
 {
     uint32_t mlcg;
+
     zhal_get_entropy((uint8_t *)&mlcg, sizeof(mlcg));
     return mlcg;
 }

@@ -62,7 +62,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data maintained by the Leader.
  *
  */
-class Leader: public LeaderBase
+class Leader : public LeaderBase
 {
 public:
     /**
@@ -191,17 +191,17 @@ private:
      */
     enum
     {
-        kMinContextId        = 1,             ///< Minimum Context ID (0 is used for Mesh Local)
-        kNumContextIds       = 15,            ///< Maximum Context ID
-        kContextIdReuseDelay = 48 * 60 * 60,  ///< CONTEXT_ID_REUSE_DELAY (seconds)
-        kStateUpdatePeriod   = 1000,          ///< State update period in milliseconds
+        kMinContextId        = 1,            ///< Minimum Context ID (0 is used for Mesh Local)
+        kNumContextIds       = 15,           ///< Maximum Context ID
+        kContextIdReuseDelay = 48 * 60 * 60, ///< CONTEXT_ID_REUSE_DELAY (seconds)
+        kStateUpdatePeriod   = 1000,         ///< State update period in milliseconds
     };
-    uint16_t mContextUsed;
-    uint32_t mContextLastUsed[kNumContextIds];
-    uint32_t mContextIdReuseDelay;
-    Timer mTimer;
+    uint16_t       mContextUsed;
+    uint32_t       mContextLastUsed[kNumContextIds];
+    uint32_t       mContextIdReuseDelay;
+    Timer          mTimer;
 
-    Coap::Resource  mServerData;
+    Coap::Resource mServerData;
 
     Coap::Resource mCommissioningDataGet;
     Coap::Resource mCommissioningDataSet;
@@ -211,7 +211,7 @@ private:
  * @}
  */
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
 #endif  // NETWORK_DATA_LEADER_FTD_HPP_

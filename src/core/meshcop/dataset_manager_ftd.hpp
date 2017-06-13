@@ -45,7 +45,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class ActiveDataset: public ActiveDatasetBase
+class ActiveDataset : public ActiveDatasetBase
 {
 public:
     ActiveDataset(ThreadNetif &aThreadNetif);
@@ -66,7 +66,7 @@ private:
     Coap::Resource mResourceSet;
 };
 
-class PendingDataset: public PendingDatasetBase
+class PendingDataset : public PendingDatasetBase
 {
 public:
     PendingDataset(ThreadNetif &aThreadNetif);
@@ -85,7 +85,7 @@ private:
     Coap::Resource mResourceSet;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

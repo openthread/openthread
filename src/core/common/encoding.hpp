@@ -81,23 +81,35 @@ inline uint32_t Reverse32(uint32_t v)
 }
 
 #define BitVectorBytes(x)           \
-    (((x) + (CHAR_BIT-1)) / CHAR_BIT)
+    (((x) + (CHAR_BIT - 1)) / CHAR_BIT)
 
 namespace BigEndian {
 
 #if BYTE_ORDER_BIG_ENDIAN
 
-inline uint16_t HostSwap16(uint16_t v) { return v; }
-inline uint32_t HostSwap32(uint32_t v) { return v; }
-inline uint64_t HostSwap64(uint64_t v) { return v; }
+inline uint16_t HostSwap16(uint16_t v) {
+    return v;
+}
+inline uint32_t HostSwap32(uint32_t v) {
+    return v;
+}
+inline uint64_t HostSwap64(uint64_t v) {
+    return v;
+}
 
 #else /* BYTE_ORDER_LITTLE_ENDIAN */
 
-inline uint16_t HostSwap16(uint16_t v) { return Swap16(v); }
-inline uint32_t HostSwap32(uint32_t v) { return Swap32(v); }
-inline uint64_t HostSwap64(uint64_t v) { return Swap64(v); }
+inline uint16_t HostSwap16(uint16_t v) {
+    return Swap16(v);
+}
+inline uint32_t HostSwap32(uint32_t v) {
+    return Swap32(v);
+}
+inline uint64_t HostSwap64(uint64_t v) {
+    return Swap64(v);
+}
 
-#endif  // LITTLE_ENDIAN
+#endif // LITTLE_ENDIAN
 
 }  // namespace BigEndian
 
@@ -105,20 +117,32 @@ namespace LittleEndian {
 
 #if BYTE_ORDER_BIG_ENDIAN
 
-inline uint16_t HostSwap16(uint16_t v) { return Swap16(v); }
-inline uint32_t HostSwap32(uint32_t v) { return Swap32(v); }
-inline uint64_t HostSwap64(uint64_t v) { return Swap64(v); }
+inline uint16_t HostSwap16(uint16_t v) {
+    return Swap16(v);
+}
+inline uint32_t HostSwap32(uint32_t v) {
+    return Swap32(v);
+}
+inline uint64_t HostSwap64(uint64_t v) {
+    return Swap64(v);
+}
 
 #else /* BYTE_ORDER_LITTLE_ENDIAN */
 
-inline uint16_t HostSwap16(uint16_t v) { return v; }
-inline uint32_t HostSwap32(uint32_t v) { return v; }
-inline uint64_t HostSwap64(uint64_t v) { return v; }
+inline uint16_t HostSwap16(uint16_t v) {
+    return v;
+}
+inline uint32_t HostSwap32(uint32_t v) {
+    return v;
+}
+inline uint64_t HostSwap64(uint64_t v) {
+    return v;
+}
 
 #endif
 
-}  // namespace LittleEndian
-}  // namespace Encoding
-}  // namespace ot
+} // namespace LittleEndian
+} // namespace Encoding
+} // namespace ot
 
 #endif  // ENCODING_HPP_

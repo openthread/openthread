@@ -64,7 +64,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data maintained by the Leader.
  *
  */
-class LeaderBase: public NetworkData
+class LeaderBase : public NetworkData
 {
 public:
     /**
@@ -87,7 +87,9 @@ public:
      * @returns The Thread Network Data version.
      *
      */
-    uint8_t GetVersion(void) const { return mVersion; }
+    uint8_t GetVersion(void) const {
+        return mVersion;
+    }
 
     /**
      * This method returns the Thread Network Data stable version.
@@ -95,7 +97,9 @@ public:
      * @returns The Thread Network Data stable version.
      *
      */
-    uint8_t GetStableVersion(void) const { return mStableVersion; }
+    uint8_t GetStableVersion(void) const {
+        return mStableVersion;
+    }
 
     /**
      * This method retrieves the 6LoWPAN Context information based on a given IPv6 address.
@@ -223,11 +227,11 @@ public:
      *
      */
     otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 protected:
-    uint8_t         mStableVersion;
-    uint8_t         mVersion;
+    uint8_t mStableVersion;
+    uint8_t mVersion;
 
 private:
     otError RemoveCommissioningData(void);
@@ -241,8 +245,8 @@ private:
  * @}
  */
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
 #if OPENTHREAD_MTD
 #include "network_data_leader_mtd.hpp"
@@ -252,4 +256,4 @@ private:
 #error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
 
-#endif  // NETWORK_DATA_LEADER_HPP_
+#endif // NETWORK_DATA_LEADER_HPP_

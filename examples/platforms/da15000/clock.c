@@ -48,15 +48,13 @@ extern void XTAL16RDY_Handler(void);
 
 void switch_to_rc16(void)
 {
-    if (!hw_cpm_check_rc16_status())            // RC16 is disabled
+    if (!hw_cpm_check_rc16_status()) // RC16 is disabled
     {
-        hw_cpm_enable_rc16();                   // Enable RC16
-        hw_cpm_short_delay();                   // Wait until it is stable
+        hw_cpm_enable_rc16();        // Enable RC16
+        hw_cpm_short_delay();        // Wait until it is stable
     }
 
     // fast --> slow clock switch
-    hw_cpm_set_sysclk(SYS_CLK_IS_RC16);         // Set RC16 as sys_clk
+    hw_cpm_set_sysclk(SYS_CLK_IS_RC16); // Set RC16 as sys_clk
     //cm_adjust_otp_access_timings();           // Adjust OTP timings
 }
-
-

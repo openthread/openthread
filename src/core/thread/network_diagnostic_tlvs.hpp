@@ -82,21 +82,21 @@ public:
      */
     enum Type
     {
-        kExtMacAddress       = 0,    ///< Source Address TLV
-        kAddress16           = 1,    ///< Address16 TLV
-        kMode                = 2,    ///< Mode TLV
-        kTimeout             = 3,    ///< Timeout TLV
-        kConnectivity        = 4,    ///< Connectivity TLV
-        kRoute               = 5,    ///< Routing-Table TLV
-        kLeaderData          = 6,    ///< Leader Data TLV
-        kNetworkData         = 7,    ///< Network Data TLV
-        kIp6AddressList      = 8,    ///< Ip6 Address List TLV
-        kMacCounters         = 9,    ///< Mac Counters TLV
-        kBatteryLevel        = 14,   ///< Battery Level TLV
-        kSupplyVoltage       = 15,   ///< Supply Voltage TLV
-        kChildTable          = 16,   ///< Child Table TLV
-        kChannelPages        = 17,   ///< Channel Pages TLV
-        kTypeList            = 18,   ///< Type List TLV
+        kExtMacAddress       = 0,  ///< Source Address TLV
+        kAddress16           = 1,  ///< Address16 TLV
+        kMode                = 2,  ///< Mode TLV
+        kTimeout             = 3,  ///< Timeout TLV
+        kConnectivity        = 4,  ///< Connectivity TLV
+        kRoute               = 5,  ///< Routing-Table TLV
+        kLeaderData          = 6,  ///< Leader Data TLV
+        kNetworkData         = 7,  ///< Network Data TLV
+        kIp6AddressList      = 8,  ///< Ip6 Address List TLV
+        kMacCounters         = 9,  ///< Mac Counters TLV
+        kBatteryLevel        = 14, ///< Battery Level TLV
+        kSupplyVoltage       = 15, ///< Supply Voltage TLV
+        kChildTable          = 16, ///< Child Table TLV
+        kChannelPages        = 17, ///< Channel Pages TLV
+        kTypeList            = 18, ///< Type List TLV
         kInvalid             = 255,
     };
 
@@ -106,7 +106,9 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
+    Type GetType(void) const {
+        return static_cast<Type>(ot::Tlv::GetType());
+    }
 
     /**
      * This method sets the Type value.
@@ -114,7 +116,9 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
+    void SetType(Type aType) {
+        ot::Tlv::SetType(static_cast<uint8_t>(aType));
+    }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -153,14 +157,16 @@ public:
  * This class implements Extended Address TLV generation and parsing.
  *
  */
-class ExtMacAddressTlv: public NetworkDiagnosticTlv
+class ExtMacAddressTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kExtMacAddress); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kExtMacAddress); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -169,7 +175,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns a pointer to the Extended MAC Address.
@@ -177,7 +185,9 @@ public:
      * @returns A pointer to the Extended MAC Address.
      *
      */
-    const Mac::ExtAddress *GetMacAddr(void) const { return &mMacAddr; }
+    const Mac::ExtAddress *GetMacAddr(void) const {
+        return &mMacAddr;
+    }
 
     /**
      * This method sets the Extended MAC Address.
@@ -185,7 +195,9 @@ public:
      * @param[in]  aAddress  A reference to the Extended MAC Address.
      *
      */
-    void SetMacAddr(const Mac::ExtAddress &aAddress) { mMacAddr = aAddress; }
+    void SetMacAddr(const Mac::ExtAddress &aAddress) {
+        mMacAddr = aAddress;
+    }
 
 private:
     Mac::ExtAddress mMacAddr;
@@ -196,14 +208,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address16Tlv: public NetworkDiagnosticTlv
+class Address16Tlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kAddress16); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kAddress16); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -212,7 +226,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns the RLOC16 value.
@@ -220,7 +236,9 @@ public:
      * @returns The RLOC16 value.
      *
      */
-    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
+    uint16_t GetRloc16(void) const {
+        return HostSwap16(mRloc16);
+    }
 
     /**
      * This method sets the RLOC16 value.
@@ -228,7 +246,9 @@ public:
      * @param[in]  aRloc16  The RLOC16 value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
+    void SetRloc16(uint16_t aRloc16) {
+        mRloc16 = HostSwap16(aRloc16);
+    }
 
 private:
     uint16_t mRloc16;
@@ -239,14 +259,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ModeTlv: public NetworkDiagnosticTlv
+class ModeTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kMode); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kMode); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -255,7 +277,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     enum
     {
@@ -271,7 +295,9 @@ public:
      * @returns The Mode value.
      *
      */
-    uint8_t GetMode(void) const { return mMode; }
+    uint8_t GetMode(void) const {
+        return mMode;
+    }
 
     /**
      * This method sets the Mode value.
@@ -279,7 +305,9 @@ public:
      * @param[in]  aMode  The Mode value.
      *
      */
-    void SetMode(uint8_t aMode) { mMode = aMode; }
+    void SetMode(uint8_t aMode) {
+        mMode = aMode;
+    }
 
 private:
     uint8_t mMode;
@@ -290,14 +318,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class TimeoutTlv: public NetworkDiagnosticTlv
+class TimeoutTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kTimeout); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kTimeout); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -306,7 +336,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns the Timeout value.
@@ -314,7 +346,9 @@ public:
      * @returns The Timeout value.
      *
      */
-    uint32_t GetTimeout(void) const { return HostSwap32(mTimeout); }
+    uint32_t GetTimeout(void) const {
+        return HostSwap32(mTimeout);
+    }
 
     /**
      * This method sets the Timeout value.
@@ -322,7 +356,9 @@ public:
      * @param[in]  aTimeout  The Timeout value.
      *
      */
-    void SetTimeout(uint32_t aTimeout) { mTimeout = HostSwap32(aTimeout); }
+    void SetTimeout(uint32_t aTimeout) {
+        mTimeout = HostSwap32(aTimeout);
+    }
 
 private:
     uint32_t mTimeout;
@@ -333,14 +369,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ConnectivityTlv: public NetworkDiagnosticTlv
+class ConnectivityTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kConnectivity); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kConnectivity); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -360,7 +398,9 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const { return (mParentPriority & kParentPriorityOffset) >> kParentPriorityOffset; }
+    int8_t GetParentPriority(void) const {
+        return (mParentPriority & kParentPriorityOffset) >> kParentPriorityOffset;
+    }
 
     /**
      * This method sets the Parent Priority value.
@@ -378,7 +418,9 @@ public:
      * @returns The Link Quality 3 value.
      *
      */
-    uint8_t GetLinkQuality3(void) const { return mLinkQuality3; }
+    uint8_t GetLinkQuality3(void) const {
+        return mLinkQuality3;
+    }
 
     /**
      * This method sets the Link Quality 3 value.
@@ -386,7 +428,9 @@ public:
      * @param[in]  aLinkQuality  The Link Quality 3 value.
      *
      */
-    void SetLinkQuality3(uint8_t aLinkQuality) { mLinkQuality3 = aLinkQuality; }
+    void SetLinkQuality3(uint8_t aLinkQuality) {
+        mLinkQuality3 = aLinkQuality;
+    }
 
     /**
      * This method returns the Link Quality 2 value.
@@ -394,7 +438,9 @@ public:
      * @returns The Link Quality 2 value.
      *
      */
-    uint8_t GetLinkQuality2(void) const { return mLinkQuality2; }
+    uint8_t GetLinkQuality2(void) const {
+        return mLinkQuality2;
+    }
 
     /**
      * This method sets the Link Quality 2 value.
@@ -402,7 +448,9 @@ public:
      * @param[in]  aLinkQuality  The Link Quality 2 value.
      *
      */
-    void SetLinkQuality2(uint8_t aLinkQuality) { mLinkQuality2 = aLinkQuality; }
+    void SetLinkQuality2(uint8_t aLinkQuality) {
+        mLinkQuality2 = aLinkQuality;
+    }
 
     /**
      * This method sets the Link Quality 1 value.
@@ -410,7 +458,9 @@ public:
      * @returns The Link Quality 1 value.
      *
      */
-    uint8_t GetLinkQuality1(void) const { return mLinkQuality1; }
+    uint8_t GetLinkQuality1(void) const {
+        return mLinkQuality1;
+    }
 
     /**
      * This method sets the Link Quality 1 value.
@@ -418,7 +468,9 @@ public:
      * @param[in]  aLinkQuality  The Link Quality 1 value.
      *
      */
-    void SetLinkQuality1(uint8_t aLinkQuality) { mLinkQuality1 = aLinkQuality; }
+    void SetLinkQuality1(uint8_t aLinkQuality) {
+        mLinkQuality1 = aLinkQuality;
+    }
 
     /**
      * This method sets the Active Routers value.
@@ -426,7 +478,9 @@ public:
      * @returns The Active Routers value.
      *
      */
-    uint8_t GetActiveRouters(void) const { return mActiveRouters; }
+    uint8_t GetActiveRouters(void) const {
+        return mActiveRouters;
+    }
 
     /**
      * This method sets the Active Routers value.
@@ -434,7 +488,9 @@ public:
      * @param[in]  aActiveRouters  The Active Routers value.
      *
      */
-    void SetActiveRouters(uint8_t aActiveRouters) { mActiveRouters = aActiveRouters; }
+    void SetActiveRouters(uint8_t aActiveRouters) {
+        mActiveRouters = aActiveRouters;
+    }
 
     /**
      * This method returns the Leader Cost value.
@@ -442,7 +498,9 @@ public:
      * @returns The Leader Cost value.
      *
      */
-    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
+    uint8_t GetLeaderCost(void) const {
+        return mLeaderCost;
+    }
 
     /**
      * This method sets the Leader Cost value.
@@ -450,7 +508,9 @@ public:
      * @param[in]  aCost  The Leader Cost value.
      *
      */
-    void SetLeaderCost(uint8_t aCost) { mLeaderCost = aCost; }
+    void SetLeaderCost(uint8_t aCost) {
+        mLeaderCost = aCost;
+    }
 
     /**
      * This method returns the ID Sequence value.
@@ -458,7 +518,9 @@ public:
      * @returns The ID Sequence value.
      *
      */
-    uint8_t GetIdSequence(void) const { return mIdSequence; }
+    uint8_t GetIdSequence(void) const {
+        return mIdSequence;
+    }
 
     /**
      * This method sets the ID Sequence value.
@@ -466,7 +528,9 @@ public:
      * @param[in]  aSequence  The ID Sequence value.
      *
      */
-    void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
+    void SetIdSequence(uint8_t aSequence) {
+        mIdSequence = aSequence;
+    }
 
     /**
      * This method returns the SED Buffer Size value.
@@ -474,7 +538,9 @@ public:
      * @returns The SED Buffer Size value.
      *
      */
-    uint16_t GetSedBufferSize(void) const { return HostSwap16(mSedBufferSize); }
+    uint16_t GetSedBufferSize(void) const {
+        return HostSwap16(mSedBufferSize);
+    }
 
     /**
      * This method sets the SED Buffer Size value.
@@ -482,7 +548,9 @@ public:
      * @param[in]  aSedBufferSize  The SED Buffer Size value.
      *
      */
-    void SetSedBufferSize(uint16_t aSedBufferSize) { mSedBufferSize = HostSwap16(aSedBufferSize); }
+    void SetSedBufferSize(uint16_t aSedBufferSize) {
+        mSedBufferSize = HostSwap16(aSedBufferSize);
+    }
 
     /**
      * This method returns the SED Datagram Count value.
@@ -490,7 +558,9 @@ public:
      * @returns The SED Datagram Count value.
      *
      */
-    uint8_t GetSedDatagramCount(void) const { return mSedDatagramCount; }
+    uint8_t GetSedDatagramCount(void) const {
+        return mSedDatagramCount;
+    }
 
     /**
      * This method sets the SED Datagram Count value.
@@ -498,7 +568,9 @@ public:
      * @param[in]  aSedDatagramCount  The SED Datagram Count value.
      *
      */
-    void SetSedDatagramCount(uint8_t aSedDatagramCount) { mSedDatagramCount = aSedDatagramCount; }
+    void SetSedDatagramCount(uint8_t aSedDatagramCount) {
+        mSedDatagramCount = aSedDatagramCount;
+    }
 
 private:
     enum
@@ -523,14 +595,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class RouteTlv: public NetworkDiagnosticTlv
+class RouteTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kRoute); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kRoute); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -550,7 +624,9 @@ public:
      * @returns The Router ID Sequence value.
      *
      */
-    uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
+    uint8_t GetRouterIdSequence(void) const {
+        return mRouterIdSequence;
+    }
 
     /**
      * This method sets the Router ID Sequence value.
@@ -558,13 +634,17 @@ public:
      * @param[in]  aSequence  The Router ID Sequence value.
      *
      */
-    void SetRouterIdSequence(uint8_t aSequence) { mRouterIdSequence = aSequence; }
+    void SetRouterIdSequence(uint8_t aSequence) {
+        mRouterIdSequence = aSequence;
+    }
 
     /**
      * This method clears the Router ID Mask.
      *
      */
-    void ClearRouterIdMask(void) { memset(mRouterIdMask, 0, sizeof(mRouterIdMask)); }
+    void ClearRouterIdMask(void) {
+        memset(mRouterIdMask, 0, sizeof(mRouterIdMask));
+    }
 
     /**
      * This method indicates whether or not a Router ID bit is set.
@@ -585,7 +665,9 @@ public:
      * @param[in]  aRouterId  The Router ID bit to set.
      *
      */
-    void SetRouterId(uint8_t aRouterId) { mRouterIdMask[aRouterId / 8] |= 0x80 >> (aRouterId % 8); }
+    void SetRouterId(uint8_t aRouterId) {
+        mRouterIdMask[aRouterId / 8] |= 0x80 >> (aRouterId % 8);
+    }
 
     /**
      * This method returns the Route Data Length value.
@@ -593,7 +675,9 @@ public:
      * @returns The Route Data Length value.
      *
      */
-    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask); }
+    uint8_t GetRouteDataLength(void) const {
+        return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask);
+    }
 
     /**
      * This method sets the Route Data Length value.
@@ -692,14 +776,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv: public NetworkDiagnosticTlv
+class LeaderDataTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kLeaderData); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kLeaderData); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -708,7 +794,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns the Partition ID value.
@@ -716,7 +804,9 @@ public:
      * @returns The Partition ID value.
      *
      */
-    uint32_t GetPartitionId(void) const { return HostSwap32(mPartitionId); }
+    uint32_t GetPartitionId(void) const {
+        return HostSwap32(mPartitionId);
+    }
 
     /**
      * This method sets the Partition ID value.
@@ -724,7 +814,9 @@ public:
      * @param[in]  aPartitionId  The Partition ID value.
      *
      */
-    void SetPartitionId(uint32_t aPartitionId) { mPartitionId = HostSwap32(aPartitionId); }
+    void SetPartitionId(uint32_t aPartitionId) {
+        mPartitionId = HostSwap32(aPartitionId);
+    }
 
     /**
      * This method returns the Weighting value.
@@ -732,7 +824,9 @@ public:
      * @returns The Weighting value.
      *
      */
-    uint8_t GetWeighting(void) const { return mWeighting; }
+    uint8_t GetWeighting(void) const {
+        return mWeighting;
+    }
 
     /**
      * This method sets the Weighting value.
@@ -740,7 +834,9 @@ public:
      * @param[in]  aWeighting  The Weighting value.
      *
      */
-    void SetWeighting(uint8_t aWeighting) { mWeighting = aWeighting; }
+    void SetWeighting(uint8_t aWeighting) {
+        mWeighting = aWeighting;
+    }
 
     /**
      * This method returns the Data Version value.
@@ -748,7 +844,9 @@ public:
      * @returns The Data Version value.
      *
      */
-    uint8_t GetDataVersion(void) const { return mDataVersion; }
+    uint8_t GetDataVersion(void) const {
+        return mDataVersion;
+    }
 
     /**
      * This method sets the Data Version value.
@@ -756,7 +854,9 @@ public:
      * @param[in]  aVersion  The Data Version value.
      *
      */
-    void SetDataVersion(uint8_t aVersion)  { mDataVersion = aVersion; }
+    void SetDataVersion(uint8_t aVersion) {
+        mDataVersion = aVersion;
+    }
 
     /**
      * This method returns the Stable Data Version value.
@@ -764,7 +864,9 @@ public:
      * @returns The Stable Data Version value.
      *
      */
-    uint8_t GetStableDataVersion(void) const { return mStableDataVersion; }
+    uint8_t GetStableDataVersion(void) const {
+        return mStableDataVersion;
+    }
 
     /**
      * This method sets the Stable Data Version value.
@@ -772,7 +874,9 @@ public:
      * @param[in]  aVersion  The Stable Data Version value.
      *
      */
-    void SetStableDataVersion(uint8_t aVersion) { mStableDataVersion = aVersion; }
+    void SetStableDataVersion(uint8_t aVersion) {
+        mStableDataVersion = aVersion;
+    }
 
     /**
      * This method returns the Leader Router ID value.
@@ -780,7 +884,9 @@ public:
      * @returns The Leader Router ID value.
      *
      */
-    uint8_t GetLeaderRouterId(void) const { return mLeaderRouterId; }
+    uint8_t GetLeaderRouterId(void) const {
+        return mLeaderRouterId;
+    }
 
     /**
      * This method sets the Leader Router ID value.
@@ -788,14 +894,16 @@ public:
      * @param[in]  aRouterId  The Leader Router ID value.
      *
      */
-    void SetLeaderRouterId(uint8_t aRouterId) { mLeaderRouterId = aRouterId; }
+    void SetLeaderRouterId(uint8_t aRouterId) {
+        mLeaderRouterId = aRouterId;
+    }
 
 private:
     uint32_t mPartitionId;
-    uint8_t mWeighting;
-    uint8_t mDataVersion;
-    uint8_t mStableDataVersion;
-    uint8_t mLeaderRouterId;
+    uint8_t  mWeighting;
+    uint8_t  mDataVersion;
+    uint8_t  mStableDataVersion;
+    uint8_t  mLeaderRouterId;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -803,14 +911,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkDataTlv: public NetworkDiagnosticTlv
+class NetworkDataTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kNetworkData); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kNetworkData); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -819,7 +929,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() < sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() < sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns a pointer to the Network Data.
@@ -827,7 +939,9 @@ public:
      * @returns A pointer to the Network Data.
      *
      */
-    uint8_t *GetNetworkData(void) { return mNetworkData; }
+    uint8_t *GetNetworkData(void) {
+        return mNetworkData;
+    }
 
     /**
      * This method sets the Network Data.
@@ -835,7 +949,9 @@ public:
      * @param[in]  aNetworkData  A pointer to the Network Data.
      *
      */
-    void SetNetworkData(const uint8_t *aNetworkData) { memcpy(mNetworkData, aNetworkData, GetLength()); }
+    void SetNetworkData(const uint8_t *aNetworkData) {
+        memcpy(mNetworkData, aNetworkData, GetLength());
+    }
 
 private:
     uint8_t mNetworkData[255];
@@ -846,19 +962,21 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Ip6AddressListTlv: public NetworkDiagnosticTlv
+class Ip6AddressListTlv : public NetworkDiagnosticTlv
 {
 public:
     enum
     {
-        kMaxSize = 8,  ///< Maximum size in bytes (Thread Specification).
+        kMaxSize = 8, ///< Maximum size in bytes (Thread Specification).
     };
 
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kIp6AddressList); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kIp6AddressList); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -867,7 +985,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(Ip6::Address) * kMaxSize; }
+    bool IsValid(void) const {
+        return GetLength() <= sizeof(Ip6::Address) * kMaxSize;
+    }
 
     /**
      * This method returns a pointer to the IPv6 address entry.
@@ -888,14 +1008,16 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MacCountersTlv: public NetworkDiagnosticTlv
+class MacCountersTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kMacCounters); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kMacCounters); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -904,7 +1026,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns the IfInUnknownProtos counter.
@@ -912,7 +1036,9 @@ public:
      * @returns The IfInUnknownProtos counter
      *
      */
-    uint32_t GetIfInUnknownProtos(void) const { return HostSwap32(mIfInUnknownProtos); }
+    uint32_t GetIfInUnknownProtos(void) const {
+        return HostSwap32(mIfInUnknownProtos);
+    }
 
     /**
      * This method sets the IfInUnknownProtos counter.
@@ -920,7 +1046,9 @@ public:
      * @param[in]  aIfInUnknownProtos The IfInUnknownProtos counter
      *
      */
-    void SetIfInUnknownProtos(const uint32_t aIfInUnknownProtos) { mIfInUnknownProtos = HostSwap32(aIfInUnknownProtos); }
+    void SetIfInUnknownProtos(const uint32_t aIfInUnknownProtos) {
+        mIfInUnknownProtos = HostSwap32(aIfInUnknownProtos);
+    }
 
     /**
      * This method returns the IfInErrors counter.
@@ -928,7 +1056,9 @@ public:
      * @returns The IfInErrors counter
      *
      */
-    uint32_t GetIfInErrors(void) const { return HostSwap32(mIfInErrors); }
+    uint32_t GetIfInErrors(void) const {
+        return HostSwap32(mIfInErrors);
+    }
 
     /**
      * This method sets the IfInErrors counter.
@@ -936,7 +1066,9 @@ public:
      * @param[in]  aIfInErrors The IfInErrors counter
      *
      */
-    void SetIfInErrors(const uint32_t aIfInErrors) { mIfInErrors = HostSwap32(aIfInErrors); }
+    void SetIfInErrors(const uint32_t aIfInErrors) {
+        mIfInErrors = HostSwap32(aIfInErrors);
+    }
 
     /**
      * This method returns the IfOutErrors counter.
@@ -944,7 +1076,9 @@ public:
      * @returns The IfOutErrors counter
      *
      */
-    uint32_t GetIfOutErrors(void) const { return HostSwap32(mIfOutErrors); }
+    uint32_t GetIfOutErrors(void) const {
+        return HostSwap32(mIfOutErrors);
+    }
 
     /**
      * This method sets the IfOutErrors counter.
@@ -952,7 +1086,9 @@ public:
      * @param[in]  aIfOutErrors The IfOutErrors counter.
      *
      */
-    void SetIfOutErrors(const uint32_t aIfOutErrors) { mIfOutErrors = HostSwap32(aIfOutErrors); }
+    void SetIfOutErrors(const uint32_t aIfOutErrors) {
+        mIfOutErrors = HostSwap32(aIfOutErrors);
+    }
 
     /**
      * This method returns the IfInUcastPkts counter.
@@ -960,7 +1096,9 @@ public:
      * @returns The IfInUcastPkts counter
      *
      */
-    uint32_t GetIfInUcastPkts(void) const { return HostSwap32(mIfInUcastPkts); }
+    uint32_t GetIfInUcastPkts(void) const {
+        return HostSwap32(mIfInUcastPkts);
+    }
 
     /**
      * This method sets the IfInUcastPkts counter.
@@ -968,14 +1106,18 @@ public:
      * @param[in]  aIfInUcastPkts The IfInUcastPkts counter.
      *
      */
-    void SetIfInUcastPkts(const uint32_t aIfInUcastPkts) { mIfInUcastPkts = HostSwap32(aIfInUcastPkts); }
+    void SetIfInUcastPkts(const uint32_t aIfInUcastPkts) {
+        mIfInUcastPkts = HostSwap32(aIfInUcastPkts);
+    }
     /**
      * This method returns the IfInBroadcastPkts counter.
      *
      * @returns The IfInBroadcastPkts counter
      *
      */
-    uint32_t GetIfInBroadcastPkts(void) const { return HostSwap32(mIfInBroadcastPkts); }
+    uint32_t GetIfInBroadcastPkts(void) const {
+        return HostSwap32(mIfInBroadcastPkts);
+    }
 
     /**
      * This method sets the IfInBroadcastPkts counter.
@@ -983,7 +1125,9 @@ public:
      * @param[in]  aIfInBroadcastPkts The IfInBroadcastPkts counter.
      *
      */
-    void SetIfInBroadcastPkts(const uint32_t aIfInBroadcastPkts) { mIfInBroadcastPkts = HostSwap32(aIfInBroadcastPkts); }
+    void SetIfInBroadcastPkts(const uint32_t aIfInBroadcastPkts) {
+        mIfInBroadcastPkts = HostSwap32(aIfInBroadcastPkts);
+    }
 
     /**
      * This method returns the IfInDiscards counter.
@@ -991,7 +1135,9 @@ public:
      * @returns The IfInDiscards counter
      *
      */
-    uint32_t GetIfInDiscards(void) const { return HostSwap32(mIfInDiscards); }
+    uint32_t GetIfInDiscards(void) const {
+        return HostSwap32(mIfInDiscards);
+    }
 
     /**
      * This method sets the IfInDiscards counter.
@@ -999,7 +1145,9 @@ public:
      * @param[in]  aIfInDiscards The IfInDiscards counter.
      *
      */
-    void SetIfInDiscards(const uint32_t aIfInDiscards) { mIfInDiscards = HostSwap32(aIfInDiscards); }
+    void SetIfInDiscards(const uint32_t aIfInDiscards) {
+        mIfInDiscards = HostSwap32(aIfInDiscards);
+    }
 
     /**
      * This method returns the IfOutUcastPkts counter.
@@ -1007,7 +1155,9 @@ public:
      * @returns The IfOutUcastPkts counter
      *
      */
-    uint32_t GetIfOutUcastPkts(void) const { return HostSwap32(mIfOutUcastPkts); }
+    uint32_t GetIfOutUcastPkts(void) const {
+        return HostSwap32(mIfOutUcastPkts);
+    }
 
     /**
      * This method sets the IfOutUcastPkts counter.
@@ -1015,7 +1165,9 @@ public:
      * @param[in]  aIfOutUcastPkts The IfOutUcastPkts counter.
      *
      */
-    void SetIfOutUcastPkts(const uint32_t aIfOutUcastPkts) { mIfOutUcastPkts = HostSwap32(aIfOutUcastPkts); }
+    void SetIfOutUcastPkts(const uint32_t aIfOutUcastPkts) {
+        mIfOutUcastPkts = HostSwap32(aIfOutUcastPkts);
+    }
 
     /**
      * This method returns the IfOutBroadcastPkts counter.
@@ -1023,7 +1175,9 @@ public:
      * @returns The IfOutBroadcastPkts counter
      *
      */
-    uint32_t GetIfOutBroadcastPkts(void) const { return HostSwap32(mIfOutBroadcastPkts); }
+    uint32_t GetIfOutBroadcastPkts(void) const {
+        return HostSwap32(mIfOutBroadcastPkts);
+    }
 
     /**
      * This method sets the IfOutBroadcastPkts counter.
@@ -1031,7 +1185,9 @@ public:
      * @param[in]  aIfOutBroadcastPkts The IfOutBroadcastPkts counter.
      *
      */
-    void SetIfOutBroadcastPkts(const uint32_t aIfOutBroadcastPkts) { mIfOutBroadcastPkts = HostSwap32(aIfOutBroadcastPkts); }
+    void SetIfOutBroadcastPkts(const uint32_t aIfOutBroadcastPkts) {
+        mIfOutBroadcastPkts = HostSwap32(aIfOutBroadcastPkts);
+    }
 
     /**
      * This method returns the IfOutDiscards counter.
@@ -1039,7 +1195,9 @@ public:
      * @returns The IfOutDiscards counter
      *
      */
-    uint32_t GetIfOutDiscards(void) const { return HostSwap32(mIfOutDiscards); }
+    uint32_t GetIfOutDiscards(void) const {
+        return HostSwap32(mIfOutDiscards);
+    }
 
     /**
      * This method sets the IfOutDiscards counter.
@@ -1047,7 +1205,9 @@ public:
      * @param[in]  aIfOutDiscards The IfOutDiscards counter.
      *
      */
-    void SetIfOutDiscards(const uint32_t aIfOutDiscards) { mIfOutDiscards = HostSwap32(aIfOutDiscards); }
+    void SetIfOutDiscards(const uint32_t aIfOutDiscards) {
+        mIfOutDiscards = HostSwap32(aIfOutDiscards);
+    }
 
 private:
     uint32_t mIfInUnknownProtos;
@@ -1066,14 +1226,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class BatteryLevelTlv: public NetworkDiagnosticTlv
+class BatteryLevelTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kBatteryLevel); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kBatteryLevel); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1082,7 +1244,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns the Status value.
@@ -1090,7 +1254,9 @@ public:
      * @returns The Status value.
      *
      */
-    uint8_t GetBatteryLevel(void) const { return mBatteryLevel; }
+    uint8_t GetBatteryLevel(void) const {
+        return mBatteryLevel;
+    }
 
     /**
      * This method sets the Status value.
@@ -1098,7 +1264,9 @@ public:
      * @param[in]  aStatus  The Status value.
      *
      */
-    void SetBatteryLevel(uint8_t aBatteryLevel) { mBatteryLevel = aBatteryLevel; }
+    void SetBatteryLevel(uint8_t aBatteryLevel) {
+        mBatteryLevel = aBatteryLevel;
+    }
 
 private:
     uint8_t mBatteryLevel;
@@ -1110,14 +1278,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class SupplyVoltageTlv: public NetworkDiagnosticTlv
+class SupplyVoltageTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kSupplyVoltage); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kSupplyVoltage); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1126,7 +1296,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns the Status value.
@@ -1134,7 +1306,9 @@ public:
      * @returns The Status value.
      *
      */
-    uint16_t GetSupplyVoltage(void) const { return mSupplyVoltage; }
+    uint16_t GetSupplyVoltage(void) const {
+        return mSupplyVoltage;
+    }
 
     /**
      * This method sets the SupplyVoltage value.
@@ -1142,7 +1316,9 @@ public:
      * @param[in]  aSupplyVoltage  The SupplyVoltage value.
      *
      */
-    void SetSupplyVoltage(uint16_t aSupplyVoltage) { mSupplyVoltage = aSupplyVoltage; }
+    void SetSupplyVoltage(uint16_t aSupplyVoltage) {
+        mSupplyVoltage = aSupplyVoltage;
+    }
 
 private:
     uint16_t mSupplyVoltage;
@@ -1160,9 +1336,10 @@ public:
      * Default constructor.
      *
      */
-    ChildTableEntry(void):
+    ChildTableEntry(void) :
         mTimeoutRsvChildId(0),
-        mMode(0) {}
+        mMode(0) {
+    }
 
     /**
      * This method returns the Timeout value.
@@ -1170,7 +1347,9 @@ public:
      * @returns The Timeout value.
      *
      */
-    uint8_t GetTimeout(void) const { return (HostSwap16(mTimeoutRsvChildId) & kTimeoutMask) >> kTimeoutOffset; }
+    uint8_t GetTimeout(void) const {
+        return (HostSwap16(mTimeoutRsvChildId) & kTimeoutMask) >> kTimeoutOffset;
+    }
 
     /**
      * This method sets the Timeout value.
@@ -1189,7 +1368,9 @@ public:
      * @returns The Child ID value.
      *
      */
-    uint16_t GetChildId(void) const { return HostSwap16(mTimeoutRsvChildId) & kChildIdMask; }
+    uint16_t GetChildId(void) const {
+        return HostSwap16(mTimeoutRsvChildId) & kChildIdMask;
+    }
 
     /**
      * This method sets the Child ID value.
@@ -1208,7 +1389,9 @@ public:
      * @returns The Mode value.
      *
      */
-    uint8_t GetMode(void) const { return mMode; }
+    uint8_t GetMode(void) const {
+        return mMode;
+    }
 
     /**
      * This method sets the Mode value.
@@ -1216,7 +1399,9 @@ public:
      * @param[in]  aMode  The Mode value.
      *
      */
-    void SetMode(uint8_t aMode) { mMode = aMode; }
+    void SetMode(uint8_t aMode) {
+        mMode = aMode;
+    }
 
     /**
      * This method returns the Reserved value.
@@ -1224,7 +1409,9 @@ public:
      * @returns The Reserved value.
      *
      */
-    uint8_t GetReserved(void) const { return (HostSwap16(mTimeoutRsvChildId) & kReservedMask) >> kReservedOffset; }
+    uint8_t GetReserved(void) const {
+        return (HostSwap16(mTimeoutRsvChildId) & kReservedMask) >> kReservedOffset;
+    }
 
     /**
      * This method sets the Reserved value.
@@ -1260,14 +1447,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTableTlv: public NetworkDiagnosticTlv
+class ChildTableTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kChildTable); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kChildTable); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1276,7 +1465,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
     /**
      * This method returns the number of Child Table entries.
@@ -1284,7 +1475,9 @@ public:
      * @returns The number of Child Table entries.
      *
      */
-    uint8_t GetNumEntries(void) const { return GetLength() / sizeof(ChildTableEntry); }
+    uint8_t GetNumEntries(void) const {
+        return GetLength() / sizeof(ChildTableEntry);
+    }
 
     /**
      * This method returns the Child Table entry at @p aIndex.
@@ -1305,14 +1498,16 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelPagesTlv: public NetworkDiagnosticTlv
+class ChannelPagesTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kChannelPages); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kChannelPages); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1321,9 +1516,13 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const {
+        return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv);
+    }
 
-    uint8_t *GetChannelPages(void) { return mChannelPages; }
+    uint8_t *GetChannelPages(void) {
+        return mChannelPages;
+    }
 
 private:
     uint8_t mChannelPages[1];
@@ -1334,14 +1533,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class TypeListTlv: public NetworkDiagnosticTlv
+class TypeListTlv : public NetworkDiagnosticTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kTypeList); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) {
+        SetType(kTypeList); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1350,7 +1551,9 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES; }
+    bool IsValid(void) const {
+        return GetLength() <= OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES;
+    }
 
     /**
      * This method returns a pointer to the Challenge value.
@@ -1365,9 +1568,9 @@ public:
  *
  */
 
-}  // namespace NetworkDiagnostic
+} // namespace NetworkDiagnostic
 
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // NETWORK_DIAGNOSTIC_TLVS_HPP_

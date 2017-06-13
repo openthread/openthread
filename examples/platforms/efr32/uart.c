@@ -60,18 +60,18 @@ static uint16_t       sTransmitLength = 0;
 typedef struct RecvBuffer
 {
     // The data buffer
-    uint8_t mBuffer[kReceiveBufferSize];
+    uint8_t  mBuffer[kReceiveBufferSize];
     // The offset of the first item written to the list.
     uint16_t mHead;
     // The offset of the next item to be written to the list.
     uint16_t mTail;
 } RecvBuffer;
 
-static RecvBuffer     sReceive;
+static RecvBuffer sReceive;
 
 otError otPlatUartEnable(void)
 {
-    USART_TypeDef           *usart = USART0;
+    USART_TypeDef          *usart = USART0;
     USART_InitAsync_TypeDef init   = USART_INITASYNC_DEFAULT;
 
     sReceive.mHead = 0;
@@ -178,7 +178,7 @@ void processTransmit(void)
 {
     otEXPECT(sTransmitBuffer != NULL);
 
-    for (; sTransmitLength > 0; sTransmitLength--)
+    for ( ; sTransmitLength > 0; sTransmitLength--)
     {
         USART_Tx(USART0, *sTransmitBuffer++);
     }

@@ -261,7 +261,7 @@ exit:
 
 namespace ot {
 
-LinkRaw::LinkRaw(otInstance &aInstance):
+LinkRaw::LinkRaw(otInstance &aInstance) :
     mInstance(aInstance),
     mEnabled(false),
     mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
@@ -486,6 +486,7 @@ void LinkRaw::HandleTimer(void *aContext)
 void LinkRaw::HandleTimer(void)
 {
     TimerReason timerReason = mTimerReason;
+
     mTimerReason = kTimerReasonNone;
 
     switch (timerReason)
@@ -607,6 +608,6 @@ void LinkRaw::HandleEnergyScanTask(void)
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
-} // namespace ot
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
