@@ -104,6 +104,10 @@ const NcpBase::CommandHandlerEntry NcpBase::mCommandHandlerTable[] =
     { SPINEL_CMD_NET_SAVE, &NcpBase::CommandHandler_NET_SAVE },
     { SPINEL_CMD_NET_CLEAR, &NcpBase::CommandHandler_NET_CLEAR },
     { SPINEL_CMD_NET_RECALL, &NcpBase::CommandHandler_NET_RECALL },
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+    { SPINEL_CMD_PEEK, &NcpBase::CommandHandler_PEEK },
+    { SPINEL_CMD_POKE, &NcpBase::CommandHandler_POKE },
+#endif
 };
 
 const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
@@ -649,6 +653,10 @@ NcpBase::NcpBase(otInstance *aInstance):
     mHostPowerStateHeader(0),
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     mShouldSignalJamStateChange(false),
+#endif
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+    mAllowPeekDelegate(NULL),
+    mAllowPokeDelegate(NULL),
 #endif
     mDroppedReplyTid(0),
     mDroppedReplyTidBitSet(0),
@@ -2001,6 +2009,109 @@ otError NcpBase::CommandHandler_NET_RECALL(uint8_t header, unsigned int command,
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+
+otError NcpBase::CommandHandler_PEEK(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
+{
+    spinel_ssize_t parsedLength;
+    uint32_t address;
+    uint16_t count;
+    spinel_status_t spinel_error = SPINEL_STATUS_OK;
+    otError errorCode = OT_ERROR_NONE;
+
+    parsedLength = spinel_datatype_unpack(
+                       arg_ptr,
+                       arg_len,
+                       (
+                           SPINEL_DATATYPE_UINT32_S   // Address
+                           SPINEL_DATATYPE_UINT16_S   // Count
+                       ),
+                       &address,
+                       &count
+                   );
+
+    VerifyOrExit(parsedLength == arg_len, spinel_error = SPINEL_STATUS_PARSE_ERROR);
+
+    VerifyOrExit(count != 0, spinel_error = SPINEL_STATUS_INVALID_ARGUMENT);
+
+    if (mAllowPeekDelegate != NULL)
+    {
+        VerifyOrExit(mAllowPeekDelegate(address, count), spinel_error = SPINEL_STATUS_INVALID_ARGUMENT);
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedPacked(
+                        (
+                            SPINEL_DATATYPE_COMMAND_S   // Header and Command
+                            SPINEL_DATATYPE_UINT32_S    // Address
+                            SPINEL_DATATYPE_UINT16_S    // Count
+                        ),
+                        header,
+                        SPINEL_CMD_PEEK_RET,
+                        address,
+                        count
+                    ));
+    SuccessOrExit(errorCode = OutboundFrameFeedData(reinterpret_cast<const uint8_t *>(address), count));
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    if (spinel_error != SPINEL_STATUS_OK)
+    {
+        errorCode = SendLastStatus(header, spinel_error);
+    }
+
+    (void)command;
+
+    return errorCode;
+}
+
+otError NcpBase::CommandHandler_POKE(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
+{
+    spinel_ssize_t parsedLength;
+    uint32_t address;
+    uint16_t count;
+    const uint8_t *data_ptr = NULL;
+    spinel_size_t data_len;
+    spinel_status_t spinel_error = SPINEL_STATUS_OK;
+    otError errorCode = OT_ERROR_NONE;
+
+    parsedLength = spinel_datatype_unpack(
+                       arg_ptr,
+                       arg_len,
+                       (
+                           SPINEL_DATATYPE_UINT32_S   // Address
+                           SPINEL_DATATYPE_UINT16_S   // Count
+                           SPINEL_DATATYPE_DATA_S     // Bytes
+                       ),
+                       &address,
+                       &count,
+                       &data_ptr,
+                       &data_len
+                   );
+
+    VerifyOrExit(parsedLength == arg_len, spinel_error = SPINEL_STATUS_PARSE_ERROR);
+
+    VerifyOrExit(count != 0, spinel_error = SPINEL_STATUS_INVALID_ARGUMENT);
+    VerifyOrExit(count <= data_len, spinel_error = SPINEL_STATUS_INVALID_ARGUMENT);
+
+    if (mAllowPokeDelegate != NULL)
+    {
+        VerifyOrExit(mAllowPokeDelegate(address, count), spinel_error = SPINEL_STATUS_INVALID_ARGUMENT);
+    }
+
+    memcpy(reinterpret_cast<uint8_t *>(address), data_ptr, count);
+
+exit:
+    errorCode = SendLastStatus(header, spinel_error);
+
+    (void)command;
+
+    return errorCode;
+}
+
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Getters
 // ----------------------------------------------------------------------------
@@ -2080,6 +2191,10 @@ otError NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t key)
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_OOB_STEERING_DATA));
+#endif
+
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_PEEK_POKE));
 #endif
 
     // TODO: Somehow get the following capability from the radio.
@@ -7914,8 +8029,18 @@ otError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLe
     return errorCode;
 }
 
-}  // namespace ot
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 
+void NcpBase::RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+                                        otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
+{
+    mAllowPeekDelegate = aAllowPeekDelegate;
+    mAllowPokeDelegate = aAllowPokeDelegate;
+}
+
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+
+}  // namespace ot
 
 // ----------------------------------------------------------------------------
 // MARK: Virtual Datastream I/O (Public API)
@@ -7930,6 +8055,33 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
     {
         errorCode = ncp->StreamWrite(aStreamId, aDataPtr, aDataLen);
     }
+
+    return errorCode;
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Peek/Poke delegate API
+// ----------------------------------------------------------------------------
+
+otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+                                       otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
+{
+    otError errorCode = OT_ERROR_NONE;
+
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+    ot::NcpBase *ncp = ot::NcpBase::GetNcpInstance();
+
+    if (ncp != NULL)
+    {
+        ncp->RegisterPeekPokeDelagates(aAllowPeekDelegate, aAllowPokeDelegate);
+    }
+#else
+    (void)aAllowPeekDelegate;
+    (void)aAllowPokeDelegate;
+
+    errorCode = OT_ERROR_DISABLED_FEATURE;
+
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 
     return errorCode;
 }

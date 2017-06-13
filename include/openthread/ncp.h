@@ -83,6 +83,38 @@ void otNcpInit(otInstance *aInstance);
 */
 otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
+//-----------------------------------------------------------------------------------------
+// Peek/Poke memory access control delegates
+
+/**
+ * Defines delegate (function pointer) type to control behavior of peek/poke operation.
+ *
+ * This delegate function is called to decide whether to allow peek or poke of a specific memory region. It is used
+ * if NCP support for peek/poke commands is enabled.
+ *
+ * @param[in] aAddress    Start address of memory region.
+ * @param[in] aCount      Number of bytes to peek or poke.
+ *
+ * @returns  TRUE to allow peek/poke of the given memory region, FALSE otherwise.
+ *
+ */
+typedef bool (*otNcpDelegateAllowPeekPoke)(uint32_t aAddress, uint16_t aCount);
+
+/**
+ * This method registers peek/poke delegate functions with NCP module.
+ *
+ * The delegate functions are called by NCP module to decide whether to allow peek or poke of a specific memory region.
+ * If the delegate pointer is set to NULL, it allows peek/poke operation for any address.
+ *
+ * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
+ * @param[in] aAllowPeekDelegate      Delegate function pointer for poke operation.
+ *
+ * @retval OT_ERROR_NONE              Successfully registered delegate functions.
+ * @retval OT_ERROR_DISABLED_FEATURE  Peek/Poke feature is disabled (by a build-time configuration option).
+ *
+ */
+otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+                                       otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 
 //-----------------------------------------------------------------------------------------
 // Legacy network APIs

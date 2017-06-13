@@ -810,7 +810,19 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST
-#define OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST       0
+#define OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST        0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+ *
+ * Define as 1 to enable peek/poke functionality on NCP.
+ *
+ * Peek/Poke allows the host to read/write to memory addresses on NCP. This is intended for debugging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+#define OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE                  0
 #endif
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
