@@ -453,6 +453,7 @@ private:
     otError GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key);
 #endif
 
+    otError SendSetPropertyResponse(uint8_t aHeader, spinel_prop_key_t aKey, otError aError);
 
     otError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                            uint16_t value_len);
