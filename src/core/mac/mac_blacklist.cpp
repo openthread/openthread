@@ -129,7 +129,7 @@ exit:
     return rval;
 }
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_MAC_WHITELIST
+#endif  // OPENTHREAD_ENABLE_MAC_WHITELIST

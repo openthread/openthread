@@ -77,7 +77,9 @@ public:
      * @retval FALSE  If the blacklist filter is disabled.
      *
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const {
+        return mEnabled;
+    }
 
     /**
      * This method enables the blacklist filter.
@@ -85,7 +87,9 @@ public:
      * @param[in]  aEnabled  TRUE to enable the blacklist filter, FALSE otherwise.
      *
      */
-    void SetEnabled(bool aEnabled) { mEnabled = aEnabled; }
+    void SetEnabled(bool aEnabled) {
+        mEnabled = aEnabled;
+    }
 
     /**
      * This method returns the maximum number of blacklist entries.
@@ -93,7 +97,9 @@ public:
      * @returns The maximum number of blacklist entries.
      *
      */
-    int GetMaxEntries(void) const { return kMaxEntries; }
+    int GetMaxEntries(void) const {
+        return kMaxEntries;
+    }
 
     /**
      * This method gets a blacklist entry.
@@ -144,7 +150,7 @@ public:
 private:
     Entry mBlacklist[kMaxEntries];
 
-    bool mEnabled;
+    bool  mEnabled;
 };
 
 /**
@@ -152,7 +158,7 @@ private:
  *
  */
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
 #endif  // MAC_BLACKLIST_HPP_

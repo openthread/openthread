@@ -35,9 +35,9 @@
 #include "test_util.h"
 
 extern "C" {
-    uint32_t otNetifAddress_Size_c();
-    uint32_t otNetifAddress_offset_mNext_c();
-    otNetifAddress CreateNetif_c();
+uint32_t otNetifAddress_Size_c();
+uint32_t otNetifAddress_offset_mNext_c();
+otNetifAddress CreateNetif_c();
 }
 
 void test_packed1()

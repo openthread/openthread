@@ -55,7 +55,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data contributed by the local device.
  *
  */
-class Local: public NetworkData
+class Local : public NetworkData
 {
 public:
     /**
@@ -142,12 +142,12 @@ private:
     uint16_t mOldRloc;
 };
 
-}  // namespace NetworkData
+} // namespace NetworkData
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // NETWORK_DATA_LOCAL_HPP_

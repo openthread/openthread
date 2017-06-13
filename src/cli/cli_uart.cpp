@@ -56,16 +56,16 @@ namespace Cli {
 static const char sCommandPrompt[] = {'>', ' '};
 static const char sEraseString[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
-Uart *Uart::sUartServer;
+Uart             *Uart::sUartServer;
 
 static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
-    Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
+    Uart::sUartServer = new (&sCliUartRaw)Uart(aInstance);
 }
 
-Uart::Uart(otInstance *aInstance):
+Uart::Uart(otInstance *aInstance) :
     mInterpreter(aInstance)
 {
     mRxLength = 0;
@@ -87,7 +87,7 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 
     end = aBuf + aBufLength;
 
-    for (; aBuf < end; aBuf++)
+    for ( ; aBuf < end; aBuf++)
     {
         switch (*aBuf)
         {
@@ -179,7 +179,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
 
 int Uart::OutputFormat(const char *fmt, ...)
 {
-    char buf[kMaxLineLength];
+    char    buf[kMaxLineLength];
     va_list ap;
 
     va_start(ap, fmt);
@@ -255,9 +255,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     (void)aLogRegion;
 }
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
-#endif // OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
+#endif  // OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot

@@ -52,7 +52,7 @@
 namespace ot {
 namespace MeshCoP {
 
-Dtls::Dtls(ThreadNetif &aNetif):
+Dtls::Dtls(ThreadNetif &aNetif) :
     mPskLength(0),
     mStarted(false),
     mTimer(aNetif.GetIp6().mTimerScheduler, &Dtls::HandleTimer, this),
@@ -87,8 +87,8 @@ otError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHan
                     SendHandler aSendHandler, void *aContext)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
-    otExtAddress eui64;
-    int rval;
+    otExtAddress     eui64;
+    int              rval;
 
     mConnectedHandler = aConnectedHandler;
     mReceiveHandler = aReceiveHandler;
@@ -197,6 +197,7 @@ exit:
 otError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
 {
     int rval = mbedtls_ssl_set_client_transport_id(&mSsl, aClientId, aLength);
+
     return MapError(rval);
 }
 
@@ -243,7 +244,7 @@ int Dtls::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_
 int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 {
     otError error;
-    int rval = 0;
+    int     rval = 0;
 
     otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
 
@@ -360,6 +361,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
                                   size_t aMacLength, size_t aKeyLength, size_t aIvLength)
 {
     uint8_t kek[Crypto::Sha256::kHashSize];
+
     Crypto::Sha256 sha256;
 
     sha256.Start();
@@ -387,8 +389,8 @@ void Dtls::HandleTimer(void)
 void Dtls::Process(void)
 {
     uint8_t buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
-    bool shouldClose = false;
-    int rval;
+    bool    shouldClose = false;
+    int     rval;
 
     while (mStarted)
     {
@@ -410,7 +412,7 @@ void Dtls::Process(void)
         {
             mReceiveHandler(mContext, buf, static_cast<uint16_t>(rval));
         }
-        else if (rval == 0 || rval == MBEDTLS_ERR_SSL_WANT_READ || rval == MBEDTLS_ERR_SSL_WANT_WRITE)
+        else if ((rval == 0) || (rval == MBEDTLS_ERR_SSL_WANT_READ) || (rval == MBEDTLS_ERR_SSL_WANT_WRITE))
         {
             break;
         }
@@ -491,6 +493,7 @@ otError Dtls::MapError(int rval)
 void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const char *str)
 {
     Dtls *pThis = static_cast<Dtls *>(ctx);
+
     (void)pThis;
 
     switch (level)
@@ -514,7 +517,7 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
     }
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DTLS
+#endif  // OPENTHREAD_ENABLE_DTLS

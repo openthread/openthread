@@ -81,8 +81,8 @@ class Interpreter;
  */
 struct Command
 {
-    const char *mName;                         ///< A pointer to the command string.
-    void (Interpreter::*mCommand)(int argc, char *argv[]);  ///< A function pointer to process the command.
+    const char *mName;                                            ///< A pointer to the command string.
+    void        (Interpreter::*mCommand)(int argc, char *argv[]); ///< A function pointer to process the command.
 };
 
 /**
@@ -152,7 +152,7 @@ private:
     {
         kMaxArgs = 32,
         kMaxAutoAddresses = 8,
-        kDefaultJoinerTimeout = 120,    ///< Default timeout for Joiners, in seconds.
+        kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
     };
 
     void AppendResult(otError error) const;
@@ -170,10 +170,10 @@ private:
     void ProcessChildTimeout(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessCoap(int argc, char *argv[]);
-#endif  //OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif //OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_FTD
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
@@ -184,7 +184,7 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_DIAG
     void ProcessDiag(int argc, char *argv[]);
-#endif  // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_ENABLE_DIAG
     void ProcessDiscover(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void ProcessDns(int argc, char *argv[]);
@@ -212,7 +212,7 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
-#endif  // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_FTD
     void ProcessJoinerPort(int argc, char *argv[]);
 #endif
@@ -334,7 +334,7 @@ private:
 
     static const struct Command sCommands[];
 
-    Server *mServer;
+    Server                     *mServer;
 
 #ifdef OTDLL
 
@@ -348,27 +348,27 @@ private:
         otInstance  *mInstance;
     };
     otCliContext mInstances[MAX_CLI_OT_INSTANCES];
-    uint8_t mInstancesLength;
-    uint8_t mInstanceIndex;
+    uint8_t      mInstancesLength;
+    uint8_t      mInstanceIndex;
 
 #else
 
     Ip6::MessageInfo mMessageInfo;
 
-    uint16_t mLength;
-    uint16_t mCount;
-    uint32_t mInterval;
-    Timer mPingTimer;
+    uint16_t         mLength;
+    uint16_t         mCount;
+    uint32_t         mInterval;
+    Timer            mPingTimer;
 
-    otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+    otNetifAddress   mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcpAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    otDhcpAddress    mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otIcmp6Handler mIcmpHandler;
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    bool mResolvingInProgress;
-    char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
+    bool           mResolvingInProgress;
+    char           mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
 
 #endif
@@ -376,7 +376,7 @@ private:
     otInstance *mInstance;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
 #endif  // CLI_HPP_

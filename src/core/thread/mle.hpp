@@ -96,10 +96,10 @@ class MleRouter;
  */
 enum AttachMode
 {
-    kAttachAny    = 0,  ///< Attach to any Thread partition.
-    kAttachSame1  = 1,  ///< Attach to the same Thread partition (attempt 1).
-    kAttachSame2  = 2,  ///< Attach to the same Thread partition (attempt 2).
-    kAttachBetter = 3,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
+    kAttachAny    = 0, ///< Attach to any Thread partition.
+    kAttachSame1  = 1, ///< Attach to the same Thread partition (attempt 1).
+    kAttachSame2  = 2, ///< Attach to the same Thread partition (attempt 2).
+    kAttachBetter = 3, ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
 };
 
 /**
@@ -132,7 +132,9 @@ public:
      * This method initializes the MLE header.
      *
      */
-    void Init(void) { mSecuritySuite = k154Security; mSecurityControl = Mac::Frame::kSecEncMic32; }
+    void Init(void) {
+        mSecuritySuite = k154Security; mSecurityControl = Mac::Frame::kSecEncMic32;
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -156,7 +158,8 @@ public:
     uint8_t GetLength(void) const {
         uint8_t rval = sizeof(mSecuritySuite) + sizeof(mCommand);
 
-        if (mSecuritySuite == k154Security) {
+        if (mSecuritySuite == k154Security)
+        {
             rval += sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
         }
 
@@ -165,8 +168,8 @@ public:
 
     enum SecuritySuite
     {
-        k154Security = 0,    ///< IEEE 802.15.4-2006 security.
-        kNoSecurity  = 255,  ///< No security enabled.
+        k154Security = 0,   ///< IEEE 802.15.4-2006 security.
+        kNoSecurity  = 255, ///< No security enabled.
     };
 
     /**
@@ -175,7 +178,9 @@ public:
      * @returns The Security Suite value.
      *
      */
-    SecuritySuite GetSecuritySuite(void) const { return static_cast<SecuritySuite>(mSecuritySuite); }
+    SecuritySuite GetSecuritySuite(void) const {
+        return static_cast<SecuritySuite>(mSecuritySuite);
+    }
 
     /**
      * This method sets the Security Suite value.
@@ -183,7 +188,9 @@ public:
      * @param[in]  aSecuritySuite  The Security Suite value.
      *
      */
-    void SetSecuritySuite(SecuritySuite aSecuritySuite) { mSecuritySuite = static_cast<uint8_t>(aSecuritySuite); }
+    void SetSecuritySuite(SecuritySuite aSecuritySuite) {
+        mSecuritySuite = static_cast<uint8_t>(aSecuritySuite);
+    }
 
     /**
      * This method returns the MLE header length (excluding the Command Type).
@@ -211,7 +218,9 @@ public:
      * @returns The Security Control value.
      *
      */
-    uint8_t GetSecurityControl(void) const { return mSecurityControl; }
+    uint8_t GetSecurityControl(void) const {
+        return mSecurityControl;
+    }
 
     /**
      * This method indicates whether or not the Key ID Mode is set to 2.
@@ -279,24 +288,24 @@ public:
      */
     enum Command
     {
-        kCommandLinkRequest          = 0,    ///< Link Reject
-        kCommandLinkAccept           = 1,    ///< Link Accept
-        kCommandLinkAcceptAndRequest = 2,    ///< Link Accept and Reject
-        kCommandLinkReject           = 3,    ///< Link Reject
-        kCommandAdvertisement        = 4,    ///< Advertisement
-        kCommandUpdate               = 5,    ///< Update
-        kCommandUpdateRequest        = 6,    ///< Update Request
-        kCommandDataRequest          = 7,    ///< Data Request
-        kCommandDataResponse         = 8,    ///< Data Response
-        kCommandParentRequest        = 9,    ///< Parent Request
-        kCommandParentResponse       = 10,   ///< Parent Response
-        kCommandChildIdRequest       = 11,   ///< Child ID Request
-        kCommandChildIdResponse      = 12,   ///< Child ID Response
-        kCommandChildUpdateRequest   = 13,   ///< Child Update Request
-        kCommandChildUpdateResponse  = 14,   ///< Child Update Response
-        kCommandAnnounce             = 15,   ///< Announce
-        kCommandDiscoveryRequest     = 16,   ///< Discovery Request
-        kCommandDiscoveryResponse    = 17,   ///< Discovery Response
+        kCommandLinkRequest          = 0,  ///< Link Reject
+        kCommandLinkAccept           = 1,  ///< Link Accept
+        kCommandLinkAcceptAndRequest = 2,  ///< Link Accept and Reject
+        kCommandLinkReject           = 3,  ///< Link Reject
+        kCommandAdvertisement        = 4,  ///< Advertisement
+        kCommandUpdate               = 5,  ///< Update
+        kCommandUpdateRequest        = 6,  ///< Update Request
+        kCommandDataRequest          = 7,  ///< Data Request
+        kCommandDataResponse         = 8,  ///< Data Response
+        kCommandParentRequest        = 9,  ///< Parent Request
+        kCommandParentResponse       = 10, ///< Parent Response
+        kCommandChildIdRequest       = 11, ///< Child ID Request
+        kCommandChildIdResponse      = 12, ///< Child ID Response
+        kCommandChildUpdateRequest   = 13, ///< Child Update Request
+        kCommandChildUpdateResponse  = 14, ///< Child Update Response
+        kCommandAnnounce             = 15, ///< Announce
+        kCommandDiscoveryRequest     = 16, ///< Discovery Request
+        kCommandDiscoveryResponse    = 17, ///< Discovery Response
     };
 
     /**
@@ -306,10 +315,12 @@ public:
      *
      */
     Command GetCommand(void) const {
-        if (mSecuritySuite == kNoSecurity) {
+        if (mSecuritySuite == kNoSecurity)
+        {
             return static_cast<Command>(mSecurityControl);
         }
-        else {
+        else
+        {
             return static_cast<Command>(mCommand);
         }
     }
@@ -321,21 +332,23 @@ public:
      *
      */
     void SetCommand(Command aCommand) {
-        if (mSecuritySuite == kNoSecurity) {
+        if (mSecuritySuite == kNoSecurity)
+        {
             mSecurityControl = static_cast<uint8_t>(aCommand);
         }
-        else {
+        else
+        {
             mCommand = static_cast<uint8_t>(aCommand);
         }
     }
 
 private:
-    uint8_t mSecuritySuite;
-    uint8_t mSecurityControl;
+    uint8_t  mSecuritySuite;
+    uint8_t  mSecurityControl;
     uint32_t mFrameCounter;
     uint32_t mKeySource;
-    uint8_t mKeyIndex;
-    uint8_t mCommand;
+    uint8_t  mKeyIndex;
+    uint8_t  mCommand;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -350,7 +363,9 @@ public:
      * Default constructor for the object.
      *
      */
-    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); };
+    DelayedResponseHeader(void) {
+        memset(this, 0, sizeof(*this));
+    }
 
     /**
      * This constructor initializes the object with specific values.
@@ -362,7 +377,7 @@ public:
     DelayedResponseHeader(uint32_t aSendTime, const Ip6::Address &aDestination) {
         mSendTime = aSendTime;
         mDestination = aDestination;
-    };
+    }
 
     /**
      * This method appends delayed response header to the message.
@@ -375,7 +390,7 @@ public:
      */
     otError AppendTo(Message &aMessage) {
         return aMessage.Append(this, sizeof(*this));
-    };
+    }
 
     /**
      * This method reads delayed response header from the message.
@@ -387,7 +402,7 @@ public:
      */
     uint16_t ReadFrom(Message &aMessage) {
         return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+    }
 
     /**
      * This method removes delayed response header from the message.
@@ -399,7 +414,7 @@ public:
      */
     static otError RemoveFrom(Message &aMessage) {
         return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
-    };
+    }
 
     /**
      * This method returns a time when the message shall be sent.
@@ -407,7 +422,9 @@ public:
      * @returns  A time when the message shall be sent.
      *
      */
-    uint32_t GetSendTime(void) const { return mSendTime; };
+    uint32_t GetSendTime(void) const {
+        return mSendTime;
+    }
 
     /**
      * This method returns a destination of the delayed message.
@@ -415,7 +432,9 @@ public:
      * @returns  A destination of the delayed message.
      *
      */
-    const Ip6::Address &GetDestination(void) const { return mDestination; };
+    const Ip6::Address &GetDestination(void) const {
+        return mDestination;
+    }
 
     /**
      * This method checks if the message shall be sent before the given time.
@@ -425,7 +444,9 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); };
+    bool IsEarlier(uint32_t aTime) {
+        return (static_cast<int32_t>(aTime - mSendTime) > 0);
+    }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -435,11 +456,13 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); };
+    bool IsLater(uint32_t aTime) {
+        return (static_cast<int32_t>(aTime - mSendTime) < 0);
+    }
 
 private:
-    Ip6::Address mDestination;  ///< IPv6 address of the message destination.
-    uint32_t mSendTime;         ///< Time when the message shall be sent.
+    Ip6::Address mDestination; ///< IPv6 address of the message destination.
+    uint32_t     mSendTime;    ///< Time when the message shall be sent.
 } OT_TOOL_PACKED_END;
 
 /**
@@ -613,7 +636,9 @@ public:
      * @returns The current Thread interface state.
      *
      */
-    otDeviceRole GetRole(void) const { return mRole; }
+    otDeviceRole GetRole(void) const {
+        return mRole;
+    }
 
     /**
      * This method returns the Device Mode as reported in the Mode TLV.
@@ -621,7 +646,9 @@ public:
      * @returns The Device Mode as reported in the Mode TLV.
      *
      */
-    uint8_t GetDeviceMode(void) const { return mDeviceMode; }
+    uint8_t GetDeviceMode(void) const {
+        return mDeviceMode;
+    }
 
     /**
      * This method indicates whether or not the device is a Minimal End Device.
@@ -738,7 +765,9 @@ public:
      * @returns The MLE Timeout value.
      *
      */
-    uint32_t GetTimeout(void) const { return mTimeout; }
+    uint32_t GetTimeout(void) const {
+        return mTimeout;
+    }
 
     /**
      * This method sets the MLE Timeout value.
@@ -858,7 +887,9 @@ public:
      * @returns The Child ID portion of an RLOC16.
      *
      */
-    static uint16_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
+    static uint16_t GetChildId(uint16_t aRloc16) {
+        return aRloc16 & kMaxChildId;
+    }
 
     /**
      * This method returns the Router ID portion of an RLOC16.
@@ -868,7 +899,9 @@ public:
      * @returns The Router ID portion of an RLOC16.
      *
      */
-    static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
+    static uint8_t GetRouterId(uint16_t aRloc16) {
+        return aRloc16 >> kRouterIdOffset;
+    }
 
     /**
      * This method returns the RLOC16 of a given Router ID.
@@ -878,7 +911,9 @@ public:
      * @returns The RLOC16 of the given Router ID.
      *
      */
-    static uint16_t GetRloc16(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
+    static uint16_t GetRloc16(uint8_t aRouterId) {
+        return static_cast<uint16_t>(aRouterId << kRouterIdOffset);
+    }
 
     /**
      * This method indicates whether or not @p aRloc16 refers to an active router.
@@ -889,7 +924,9 @@ public:
      * @retval FALSE  If @p aRloc16 does not refer to an active router.
      *
      */
-    static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
+    static bool IsActiveRouter(uint16_t aRloc16) {
+        return GetChildId(aRloc16) == 0;
+    }
 
     /**
      * This method fills the NetworkDataTlv.
@@ -906,12 +943,14 @@ public:
      * @returns A reference to the send queue.
      *
      */
-    const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
+    const MessageQueue &GetMessageQueue(void) const {
+        return mDelayedResponses;
+    }
 
 protected:
     enum
     {
-        kMleMaxResponseDelay = 1000u,  ///< Maximum delay before responding to a multicast request.
+        kMleMaxResponseDelay = 1000u, ///< Maximum delay before responding to a multicast request.
     };
 
     /**
@@ -1209,7 +1248,9 @@ protected:
      * @returns A pointer to the neighbor object.
      *
      */
-    Neighbor *GetNeighbor(const Ip6::Address &aAddress) { (void)aAddress; return NULL; }
+    Neighbor *GetNeighbor(const Ip6::Address &aAddress) {
+        (void)aAddress; return NULL;
+    }
 
     /**
      * This method returns the next hop towards an RLOC16 destination.
@@ -1319,19 +1360,19 @@ protected:
      */
     otError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
-    ThreadNetif           &mNetif;            ///< The Thread Network Interface object.
+    ThreadNetif    &mNetif;                  ///< The Thread Network Interface object.
 
-    LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
-    bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
+    LeaderDataTlv   mLeaderData;             ///< Last received Leader Data TLV.
+    bool            mRetrieveNewNetworkData; ///< Indicating new Network Data is needed if set.
 
-    otDeviceRole mRole;                     ///< Current Thread role.
-    Router mParent;                         ///< Parent information.
-    uint8_t mDeviceMode;                    ///< Device mode setting.
+    otDeviceRole    mRole;                   ///< Current Thread role.
+    Router          mParent;                 ///< Parent information.
+    uint8_t         mDeviceMode;             ///< Device mode setting.
 
-    bool isAssignLinkQuality;    ///< Indicating an assigned link quality is used on the link
-    uint8_t mAssignLinkQuality;  ///< The assigned link quality value
-    uint8_t mAssignLinkMargin;   ///< The maximum link margin corresponding to mAssignLinkQuality
-    Mac::ExtAddress mAddr64;     ///< A given IEEE 802.15.4 Extended Address
+    bool            isAssignLinkQuality;     ///< Indicating an assigned link quality is used on the link
+    uint8_t         mAssignLinkQuality;      ///< The assigned link quality value
+    uint8_t         mAssignLinkMargin;       ///< The maximum link margin corresponding to mAssignLinkQuality
+    Mac::ExtAddress mAddr64;                 ///< A given IEEE 802.15.4 Extended Address
 
     /**
      * States when searching for a parent.
@@ -1339,14 +1380,14 @@ protected:
      */
     enum ParentRequestState
     {
-        kParentIdle,           ///< Not currently searching for a parent.
-        kParentSynchronize,    ///< Looking to synchronize with a parent (after reset).
-        kParentRequestStart,   ///< Starting to look for a parent.
-        kParentRequestRouter,  ///< Searching for a Router to attach to.
-        kParentRequestChild,   ///< Searching for Routers or REEDs to attach to.
-        kChildIdRequest,       ///< Sending a Child ID Request message.
+        kParentIdle,                        ///< Not currently searching for a parent.
+        kParentSynchronize,                 ///< Looking to synchronize with a parent (after reset).
+        kParentRequestStart,                ///< Starting to look for a parent.
+        kParentRequestRouter,               ///< Searching for a Router to attach to.
+        kParentRequestChild,                ///< Searching for Routers or REEDs to attach to.
+        kChildIdRequest,                    ///< Sending a Child ID Request message.
     };
-    ParentRequestState mParentRequestState;  ///< The parent request state.
+    ParentRequestState mParentRequestState; ///< The parent request state.
 
     /**
      * States when reattaching network using stored dataset
@@ -1354,17 +1395,17 @@ protected:
      */
     enum ReattachState
     {
-        kReattachStop       = 0,   ///< Reattach process is disabled or finished
-        kReattachStart      = 1,   ///< Start reattach process
-        kReattachActive     = 2,   ///< Reattach using stored Active Dataset
-        kReattachPending    = 3,   ///< Reattach using stored Pending Dataset
+        kReattachStop       = 0, ///< Reattach process is disabled or finished
+        kReattachStart      = 1, ///< Start reattach process
+        kReattachActive     = 2, ///< Reattach using stored Active Dataset
+        kReattachPending    = 3, ///< Reattach using stored Pending Dataset
     };
     ReattachState mReattachState;
 
-    Timer mParentRequestTimer;    ///< The timer for driving the Parent Request process.
-    Timer mDelayedResponseTimer;  ///< The timer to delay MLE responses.
-    uint8_t mLastPartitionRouterIdSequence;
-    uint32_t mLastPartitionId;
+    Timer         mParentRequestTimer;   ///< The timer for driving the Parent Request process.
+    Timer         mDelayedResponseTimer; ///< The timer to delay MLE responses.
+    uint8_t       mLastPartitionRouterIdSequence;
+    uint32_t      mLastPartitionId;
 
 protected:
     uint8_t mParentLeaderCost;
@@ -1420,49 +1461,49 @@ private:
         uint8_t mChallenge[ChallengeTlv::kMaxSize];
     } mParentRequest;
 
-    AttachMode mParentRequestMode;
-    int8_t mParentPriority;
-    uint8_t mParentLinkQuality3;
-    uint8_t mParentLinkQuality2;
-    uint8_t mParentLinkQuality1;
-    uint8_t mChildUpdateAttempts;
-    LeaderDataTlv mParentLeaderData;
-    bool mParentIsSingleton;
+    AttachMode                 mParentRequestMode;
+    int8_t                     mParentPriority;
+    uint8_t                    mParentLinkQuality3;
+    uint8_t                    mParentLinkQuality2;
+    uint8_t                    mParentLinkQuality1;
+    uint8_t                    mChildUpdateAttempts;
+    LeaderDataTlv              mParentLeaderData;
+    bool                       mParentIsSingleton;
 
-    Router mParentCandidate;
+    Router                     mParentCandidate;
 
-    Ip6::UdpSocket mSocket;
-    uint32_t mTimeout;
+    Ip6::UdpSocket             mSocket;
+    uint32_t                   mTimeout;
 
-    Tasklet mSendChildUpdateRequest;
+    Tasklet                    mSendChildUpdateRequest;
 
-    DiscoverHandler mDiscoverHandler;
-    void *mDiscoverContext;
-    bool mIsDiscoverInProgress;
-    bool mEnableEui64Filtering;
+    DiscoverHandler            mDiscoverHandler;
+    void                      *mDiscoverContext;
+    bool                       mIsDiscoverInProgress;
+    bool                       mEnableEui64Filtering;
 
-    uint8_t mAnnounceChannel;
-    uint8_t mPreviousChannel;
-    uint16_t mPreviousPanId;
+    uint8_t                    mAnnounceChannel;
+    uint8_t                    mPreviousChannel;
+    uint16_t                   mPreviousPanId;
 
-    Ip6::NetifUnicastAddress mLeaderAloc;
+    Ip6::NetifUnicastAddress   mLeaderAloc;
 
-    Ip6::NetifUnicastAddress mLinkLocal64;
-    Ip6::NetifUnicastAddress mMeshLocal64;
-    Ip6::NetifUnicastAddress mMeshLocal16;
+    Ip6::NetifUnicastAddress   mLinkLocal64;
+    Ip6::NetifUnicastAddress   mMeshLocal64;
+    Ip6::NetifUnicastAddress   mMeshLocal16;
     Ip6::NetifMulticastAddress mLinkLocalAllThreadNodes;
     Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
 
-    Ip6::NetifCallback mNetifCallback;
+    Ip6::NetifCallback         mNetifCallback;
 };
 
-}  // namespace Mle
+} // namespace Mle
 
 /**
  * @}
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // MLE_HPP_

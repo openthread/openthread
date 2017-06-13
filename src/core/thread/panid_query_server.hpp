@@ -74,7 +74,7 @@ public:
 private:
     enum
     {
-        kScanDelay = 1000,  ///< SCAN_DELAY (milliseconds)
+        kScanDelay = 1000, ///< SCAN_DELAY (milliseconds)
     };
 
     static void HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -90,21 +90,21 @@ private:
 
     otError SendConflict(void);
 
-    Ip6::Address mCommissioner;
-    uint32_t mChannelMask;
-    uint16_t mPanId;
+    Ip6::Address   mCommissioner;
+    uint32_t       mChannelMask;
+    uint16_t       mPanId;
 
-    Timer mTimer;
+    Timer          mTimer;
 
     Coap::Resource mPanIdQuery;
 
-    ThreadNetif &mNetif;
+    ThreadNetif   &mNetif;
 };
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // PANID_QUERY_SERVER_HPP_

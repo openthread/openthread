@@ -61,9 +61,9 @@ public:
      */
     typedef enum Mode
     {
-        kModeNormal     = 0,  ///< Runs the normal trickle logic.
-        kModePlainTimer = 1,  ///< Runs a normal timer between Imin and Imax.
-        kModeMPL        = 2,  ///< Runs the trickle logic modified for MPL.
+        kModeNormal     = 0, ///< Runs the normal trickle logic.
+        kModePlainTimer = 1, ///< Runs a normal timer between Imin and Imax.
+        kModeMPL        = 2, ///< Runs the trickle logic modified for MPL.
     } Mode;
 
     /**
@@ -131,8 +131,12 @@ public:
     void IndicateInconsistent(void);
 
 private:
-    bool TransmitFired(void) { return mTransmitHandler(mContext); }
-    bool IntervalExpiredFired(void) { return mIntervalExpiredHandler ? mIntervalExpiredHandler(mContext) : true; }
+    bool TransmitFired(void) {
+        return mTransmitHandler(mContext);
+    }
+    bool IntervalExpiredFired(void) {
+        return mIntervalExpiredHandler ? mIntervalExpiredHandler(mContext) : true;
+    }
 
     void StartNewInterval(void);
 
@@ -164,7 +168,7 @@ private:
     // Maximum interval size
     uint32_t Imax;
     // The mode of operation
-    Mode mMode;
+    Mode     mMode;
 
     // The current interval size (in milliseconds)
     uint32_t I;
@@ -177,7 +181,7 @@ private:
     // Callback variables
     Handler mTransmitHandler;
     Handler mIntervalExpiredHandler;
-    void *mContext;
+    void   *mContext;
 };
 
 /**
@@ -185,6 +189,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // TRICKLE_TIMER_HPP_

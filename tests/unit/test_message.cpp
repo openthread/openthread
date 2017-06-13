@@ -39,10 +39,11 @@
 void TestMessage(void)
 {
     otInstance instance;
+
     ot::MessagePool messagePool(&instance);
-    ot::Message *message;
-    uint8_t writeBuffer[1024];
-    uint8_t readBuffer[1024];
+    ot::Message    *message;
+    uint8_t         writeBuffer[1024];
+    uint8_t         readBuffer[1024];
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {

@@ -64,4 +64,4 @@ void Crc16::Update(uint8_t aByte)
     while (--i);
 }
 
-}  // namespace ot
+} // namespace ot

@@ -141,4 +141,4 @@ otError otBorderRouterRegister(otInstance *aInstance)
     return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
 }
 
-#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER

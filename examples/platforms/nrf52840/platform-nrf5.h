@@ -143,4 +143,4 @@ void nrf5CryptoInit(void);
  */
 void nrf5CryptoDeinit(void);
 
-#endif  // PLATFORM_NRF5_H_
+#endif // PLATFORM_NRF5_H_

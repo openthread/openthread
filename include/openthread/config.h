@@ -42,6 +42,3 @@
 #include OPENTHREAD_CONFIG_FILE
 
 #endif //OPENTHREAD_CONFIG_H_
-
-
-

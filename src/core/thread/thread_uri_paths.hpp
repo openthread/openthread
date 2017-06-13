@@ -258,6 +258,6 @@ namespace ot {
  */
 #define OT_URI_PATH_DIAGNOSTIC_RESET       "d/dr"
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // THREAD_URIS_HPP_

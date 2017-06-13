@@ -45,7 +45,7 @@
 namespace ot {
 namespace Cli {
 
-Udp::Udp(otInstance *aInstance, Interpreter *aInterpreter):
+Udp::Udp(otInstance *aInstance, Interpreter *aInterpreter) :
     mInstance(aInstance),
     mInterpreter(aInterpreter)
 {
@@ -58,6 +58,7 @@ otError Udp::Start(void)
     otError error;
 
     otSockAddr sockaddr;
+
     memset(&sockaddr, 0, sizeof(otSockAddr));
     sockaddr.mPort = 7335;
 
@@ -76,7 +77,7 @@ void Udp::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageI
 void Udp::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     uint16_t payloadLength = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    char buf[512];
+    char     buf[512];
 
     VerifyOrExit(payloadLength <= sizeof(buf));
     otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, payloadLength);
@@ -101,7 +102,7 @@ exit:
 
 int Udp::Output(const char *aBuf, uint16_t aBufLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
     otMessage *message;
 
     VerifyOrExit((message = otUdpNewMessage(mInstance, true)) != NULL, error = OT_ERROR_NO_BUFS);
@@ -111,7 +112,7 @@ int Udp::Output(const char *aBuf, uint16_t aBufLength)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         otMessageFree(message);
         aBufLength = 0;
@@ -122,7 +123,7 @@ exit:
 
 int Udp::OutputFormat(const char *fmt, ...)
 {
-    char buf[kMaxLineLength];
+    char    buf[kMaxLineLength];
     va_list ap;
 
     va_start(ap, fmt);
@@ -132,5 +133,5 @@ int Udp::OutputFormat(const char *fmt, ...)
     return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot

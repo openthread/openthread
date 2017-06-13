@@ -104,9 +104,9 @@ exit:
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint32_t start = otPlatAlarmGetNow();
-    bool busy = true;
+    bool     busy = true;
     uint32_t status = 0x01;
 
     while (busy && ((otPlatAlarmGetNow() - start) < aTimeout))
@@ -123,12 +123,12 @@ exit:
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    int32_t written_size = 0;
+    int32_t  written_size = 0;
     uint32_t size = 0;
 
     otEXPECT_ACTION((aAddress >= OPENTHREAD_FLASH_BASE) &&
                     ((aAddress + aSize) <= OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE) &&
-                    (!(aAddress & 3)) && (!(aSize & 3)), ;);
+                    (!(aAddress & 3)) && (!(aSize & 3)),; );
 
     written_size = flash_write(aAddress, aSize, aData);
 
@@ -147,11 +147,11 @@ exit:
 
 uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    int32_t read_size = 0;
+    int32_t  read_size = 0;
     uint32_t size = 0;
 
     otEXPECT_ACTION((aAddress >= OPENTHREAD_FLASH_BASE) &&
-                    ((aAddress + aSize) <= OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE), ;);
+                    ((aAddress + aSize) <= OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE),; );
 
     read_size = flash_read(aAddress, aSize, aData);
 

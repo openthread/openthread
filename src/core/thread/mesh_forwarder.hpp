@@ -176,7 +176,9 @@ public:
      *
      * @ returns   A reference to the thread network interface instance.
      */
-    ThreadNetif &GetNetif(void) { return mNetif; }
+    ThreadNetif &GetNetif(void) {
+        return mNetif;
+    }
 
     /**
      * This method returns a reference to the send queue.
@@ -184,7 +186,9 @@ public:
      * @returns  A reference to the send queue.
      *
      */
-    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
+    const PriorityQueue &GetSendQueue(void) const {
+        return mSendQueue;
+    }
 
     /**
      * This method returns a reference to the reassembly queue.
@@ -192,7 +196,9 @@ public:
      * @returns  A reference to the reassembly queue.
      *
      */
-    const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
+    const MessageQueue &GetReassemblyQueue(void) const {
+        return mReassemblyList;
+    }
 
     /**
      * This method returns a reference to the resolving queue.
@@ -200,7 +206,9 @@ public:
      * @returns  A reference to the resolving queue.
      *
      */
-    const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
+    const MessageQueue &GetResolvingQueue(void) const {
+        return mResolvingQueue;
+    }
 
     /**
      * This method returns a reference to the data poll manager.
@@ -208,7 +216,9 @@ public:
      * @returns  A reference to the data poll manager.
      *
      */
-    DataPollManager &GetDataPollManager(void) { return mDataPollManager; }
+    DataPollManager &GetDataPollManager(void) {
+        return mDataPollManager;
+    }
 
     /**
      * This method returns a reference to the source match controller.
@@ -216,12 +226,14 @@ public:
      * @returns  A reference to the source match controller.
      *
      */
-    SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
+    SourceMatchController &GetSourceMatchController(void) {
+        return mSourceMatchController;
+    }
 
 private:
     enum
     {
-        kStateUpdatePeriod     = 1000,  ///< State update period in milliseconds.
+        kStateUpdatePeriod     = 1000, ///< State update period in milliseconds.
     };
 
     enum
@@ -241,12 +253,12 @@ private:
         kSupervisionMsgAckRequest   = (OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
     };
 
-    enum MessageAction                   ///< Defines the action parameter in `LogMessageInfo()` method.
+    enum MessageAction           ///< Defines the action parameter in `LogMessageInfo()` method.
     {
-        kMessageReceive,                 ///< Indicates that the message was received.
-        kMessageTransmit,                ///< Indicates that the message was sent.
-        kMessagePrepareIndirect,         ///< Indicates that the message is being prepared for indirect tx.
-        kMessageDrop,                    ///< Indicates that the message is being dropped from reassembly list.
+        kMessageReceive,         ///< Indicates that the message was received.
+        kMessageTransmit,        ///< Indicates that the message was sent.
+        kMessagePrepareIndirect, ///< Indicates that the message is being prepared for indirect tx.
+        kMessageDrop,            ///< Indicates that the message is being dropped from reassembly list.
     };
 
     otError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
@@ -298,45 +310,45 @@ private:
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        otError aError);
 
-    ThreadNetif &mNetif;
+    ThreadNetif          &mNetif;
 
-    Mac::Receiver mMacReceiver;
-    Mac::Sender mMacSender;
-    Timer mDiscoverTimer;
-    Timer mReassemblyTimer;
+    Mac::Receiver         mMacReceiver;
+    Mac::Sender           mMacSender;
+    Timer                 mDiscoverTimer;
+    Timer                 mReassemblyTimer;
 
-    PriorityQueue mSendQueue;
-    MessageQueue mReassemblyList;
-    MessageQueue mResolvingQueue;
-    uint16_t mFragTag;
-    uint16_t mMessageNextOffset;
+    PriorityQueue         mSendQueue;
+    MessageQueue          mReassemblyList;
+    MessageQueue          mResolvingQueue;
+    uint16_t              mFragTag;
+    uint16_t              mMessageNextOffset;
 
-    uint32_t mSendMessageFrameCounter;
-    Message *mSendMessage;
-    bool     mSendMessageIsARetransmission;
-    uint8_t  mSendMessageMaxMacTxAttempts;
-    uint8_t  mSendMessageKeyId;
-    uint8_t  mSendMessageDataSequenceNumber;
-    uint8_t  mStartChildIndex;
+    uint32_t              mSendMessageFrameCounter;
+    Message              *mSendMessage;
+    bool                  mSendMessageIsARetransmission;
+    uint8_t               mSendMessageMaxMacTxAttempts;
+    uint8_t               mSendMessageKeyId;
+    uint8_t               mSendMessageDataSequenceNumber;
+    uint8_t               mStartChildIndex;
 
-    Mac::Address mMacSource;
-    Mac::Address mMacDest;
-    uint16_t mMeshSource;
-    uint16_t mMeshDest;
-    bool mAddMeshHeader;
+    Mac::Address          mMacSource;
+    Mac::Address          mMacDest;
+    uint16_t              mMeshSource;
+    uint16_t              mMeshDest;
+    bool                  mAddMeshHeader;
 
-    bool mSendBusy;
+    bool                  mSendBusy;
 
-    Tasklet mScheduleTransmissionTask;
-    bool mEnabled;
+    Tasklet               mScheduleTransmissionTask;
+    bool                  mEnabled;
 
-    uint32_t mScanChannels;
-    uint8_t mScanChannel;
-    uint8_t mRestoreChannel;
-    uint16_t mRestorePanId;
-    bool mScanning;
+    uint32_t              mScanChannels;
+    uint8_t               mScanChannel;
+    uint8_t               mRestoreChannel;
+    uint16_t              mRestorePanId;
+    bool                  mScanning;
 
-    DataPollManager mDataPollManager;
+    DataPollManager       mDataPollManager;
     SourceMatchController mSourceMatchController;
 };
 
@@ -345,6 +357,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // MESH_FORWARDER_HPP_

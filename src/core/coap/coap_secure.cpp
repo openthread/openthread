@@ -46,7 +46,7 @@
 namespace ot {
 namespace Coap {
 
-CoapSecure::CoapSecure(ThreadNetif &aNetif):
+CoapSecure::CoapSecure(ThreadNetif &aNetif) :
     Coap(aNetif),
     mConnectedCallback(NULL),
     mConnectedContext(NULL),
@@ -60,6 +60,7 @@ CoapSecure::CoapSecure(ThreadNetif &aNetif):
 otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_NONE;
+
     mTransportCallback = aCallback;
     mTransportContext = aContext;
 
@@ -261,7 +262,7 @@ otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_
 
 exit:
 
-    if (error != OT_ERROR_NONE && mTransmitMessage != NULL)
+    if ((error != OT_ERROR_NONE) && (mTransmitMessage != NULL))
     {
         mTransmitMessage->Free();
     }
@@ -295,7 +296,7 @@ void CoapSecure::HandleUdpTransmit(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && mTransmitMessage != NULL)
+    if ((error != OT_ERROR_NONE) && (mTransmitMessage != NULL))
     {
         mTransmitMessage->Free();
     }
@@ -305,7 +306,7 @@ exit:
     otLogFuncExit();
 }
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DTLS
+#endif  // OPENTHREAD_ENABLE_DTLS

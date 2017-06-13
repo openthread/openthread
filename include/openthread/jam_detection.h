@@ -193,10 +193,10 @@ uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance);
  *
  */
 
-#endif  // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_JAM_DETECTION_H_
+#endif // OPENTHREAD_JAM_DETECTION_H_

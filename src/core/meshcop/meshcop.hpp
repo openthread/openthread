@@ -56,8 +56,8 @@ inline Message *NewMeshCoPMessage(Coap::Coap &aCoap, const Coap::Header &aHeader
 }
 
 
-}  // namespace MeshCoP
+} // namespace MeshCoP
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // MESHCOP_HPP_

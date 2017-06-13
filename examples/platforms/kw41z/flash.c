@@ -54,7 +54,7 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    otError error;
+    otError  error;
     status_t status;
 
     status = FLASH_Erase(&sFlashConfig, aAddress, FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE, kFLASH_ApiEraseKey);
@@ -77,7 +77,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_BUSY;
+    otError  error = OT_ERROR_BUSY;
     uint32_t start = otPlatAlarmGetNow();
 
     do

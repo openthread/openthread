@@ -118,12 +118,19 @@ As part of the cleanup process, you should also run `make pretty-check` to ensur
 
 ```bash
 ./bootstrap
-./configure --enable-ftd --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix
+./configure
 make pretty-check
-
 ```
 
-Make sure to include any code format changes in your commits.
+Make sure to include any code format changes in your commits.  The `make pretty` build target may be used to automatically reformat code.  Note, however, that `make pretty` may not automatically resolve all code style issues flagged by `make pretty-check`.
+
+```bash
+./bootstrap
+./configure
+make pretty
+```
+
+The `make pretty` and `make pretty-check` targets rely on [uncrustify-0.64](https://github.com/uncrustify/uncrustify/releases/tag/uncrustify-0.64).
 
 #### Push and Test
 

@@ -59,7 +59,7 @@
 #define ZLL_IRQSTS_TMR_ALL_MSK_MASK  (ZLL_IRQSTS_TMR1MSK_MASK | \
                                       ZLL_IRQSTS_TMR2MSK_MASK | \
                                       ZLL_IRQSTS_TMR3MSK_MASK | \
-                                      ZLL_IRQSTS_TMR4MSK_MASK )
+                                      ZLL_IRQSTS_TMR4MSK_MASK)
 
 typedef enum xcvr_state_tag
 {
@@ -73,29 +73,29 @@ typedef enum xcvr_state_tag
 
 typedef enum xcvr_cca_type_tag
 {
-    XCVR_ED_c,            /* energy detect - CCA bit not active, not to be used for T and CCCA sequences */
-    XCVR_CCA_MODE1_c,     /* energy detect - CCA bit ACTIVE */
-    SCVR_CCA_MODE2_c,     /* 802.15.4 compliant signal detect - CCA bit ACTIVE */
-    XCVR_CCA_MODE3_c      /* 802.15.4 compliant signal detect and energy detect - CCA bit ACTIVE */
+    XCVR_ED_c,        /* energy detect - CCA bit not active, not to be used for T and CCCA sequences */
+    XCVR_CCA_MODE1_c, /* energy detect - CCA bit ACTIVE */
+    SCVR_CCA_MODE2_c, /* 802.15.4 compliant signal detect - CCA bit ACTIVE */
+    XCVR_CCA_MODE3_c  /* 802.15.4 compliant signal detect and energy detect - CCA bit ACTIVE */
 } xcvr_cca_type_t;
 
-static otRadioState  sState = OT_RADIO_STATE_DISABLED;
-static uint16_t      sPanId;
-static uint8_t       sExtSrcAddrBitmap[(RADIO_CONFIG_SRC_MATCH_ENTRY_NUM + 7) / 8];
-static uint8_t       sChannel;
-static int8_t        sMaxED;
-static int8_t        sAutoTxPwrLevel = 0;
+static otRadioState sState = OT_RADIO_STATE_DISABLED;
+static uint16_t     sPanId;
+static uint8_t      sExtSrcAddrBitmap[(RADIO_CONFIG_SRC_MATCH_ENTRY_NUM + 7) / 8];
+static uint8_t      sChannel;
+static int8_t       sMaxED;
+static int8_t       sAutoTxPwrLevel = 0;
 
 /* ISR Signaling Flags */
-static bool          sTxDone     = false;
-static bool          sRxDone     = false;
-static bool          sEdScanDone = false;
-static otError       sTxStatus;
+static bool    sTxDone     = false;
+static bool    sRxDone     = false;
+static bool    sEdScanDone = false;
+static otError sTxStatus;
 
-static otRadioFrame  sTxFrame;
-static otRadioFrame  sRxFrame;
+static otRadioFrame sTxFrame;
+static otRadioFrame sRxFrame;
 #if DOUBLE_BUFFERING
-static uint8_t       sRxData[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t sRxData[OT_RADIO_FRAME_MAX_SIZE];
 #endif
 
 /* Private functions */
@@ -205,6 +205,7 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError status = OT_ERROR_NONE;
+
     (void) aInstance;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
@@ -220,6 +221,7 @@ exit:
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError status = OT_ERROR_NONE;
+
     (void) aInstance;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
@@ -239,7 +241,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     /* Clear all IRQ flags */
     ZLL->IRQSTS = ZLL->IRQSTS;
     /* Start the RX sequence */
-    ZLL->PHY_CTRL |= XCVR_RX_c ;
+    ZLL->PHY_CTRL |= XCVR_RX_c;
 
     /* Unmask SEQ interrupt */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
@@ -332,7 +334,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError status = OT_ERROR_NONE;
+    otError  status = OT_ERROR_NONE;
     uint32_t timeout;
 
     (void) aInstance;
@@ -428,8 +430,9 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    otError status = OT_ERROR_NONE;
+    otError  status = OT_ERROR_NONE;
     uint32_t timeout;
+
     (void) aInstance;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
@@ -629,7 +632,7 @@ exit:
 
 static otError rf_remove_addr_table_entry(uint16_t checksum)
 {
-    otError status = OT_ERROR_NO_ADDRESS;
+    otError  status = OT_ERROR_NO_ADDRESS;
     uint32_t i, temp;
 
     /* Search for an entry to match the provided checksum */
@@ -714,7 +717,7 @@ static void rf_set_timeout(uint32_t abs_timeout)
 static bool rf_process_rx_frame(void)
 {
     uint8_t temp;
-    bool status = true;
+    bool    status = true;
 
     /* Get Rx length */
     temp = (ZLL->IRQSTS & ZLL_IRQSTS_RX_FRAME_LENGTH_MASK) >> ZLL_IRQSTS_RX_FRAME_LENGTH_SHIFT;
@@ -742,8 +745,8 @@ exit:
 void Radio_1_IRQHandler(void)
 {
     xcvr_state_t state = rf_get_state();
-    uint32_t irqStatus = ZLL->IRQSTS;
-    int8_t temp;
+    uint32_t     irqStatus = ZLL->IRQSTS;
+    int8_t       temp;
 
     ZLL->IRQSTS = irqStatus;
 
@@ -870,7 +873,7 @@ void kw41zRadioInit(void)
     ZLL->IRQSTS = ZLL->IRQSTS;
 
     /*  Frame Filtering
-    FRM_VER[7:6] = b11. Accept FrameVersion 0 and 1 packets, reject all others */
+       FRM_VER[7:6] = b11. Accept FrameVersion 0 and 1 packets, reject all others */
     ZLL->RX_FRAME_FILTER &= ~ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK;
     ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) |
                            ZLL_RX_FRAME_FILTER_CMD_FT_MASK       |

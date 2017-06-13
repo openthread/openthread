@@ -57,9 +57,8 @@ SUBDIRS                             = \
     $(NULL)
 
 EXTRA_DIST                          = \
-    .astyle/astyle-opts               \
-    .astyle/astyle-wrap.sh            \
     .default-version                  \
+    .uncrustify.cfg                   \
     bootstrap                         \
     etc                               \
     README.md                         \

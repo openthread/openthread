@@ -248,7 +248,7 @@ otError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress
     (void)aExtAddress;
 
     error = OT_ERROR_DISABLED_FEATURE;
-#endif  // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
     return error;
 }

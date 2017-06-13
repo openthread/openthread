@@ -57,7 +57,7 @@ class Udp;
  * This class implements a UDP/IPv6 socket.
  *
  */
-class UdpSocket: public otUdpSocket
+class UdpSocket : public otUdpSocket
 {
     friend class Udp;
 
@@ -137,7 +137,9 @@ public:
      * @returns A reference to the local socket address.
      *
      */
-    SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
+    SockAddr &GetSockName(void) {
+        return *static_cast<SockAddr *>(&mSockName);
+    }
 
     /**
      * This method returns the peer's socket address.
@@ -145,11 +147,17 @@ public:
      * @returns A reference to the peer's socket address.
      *
      */
-    SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
+    SockAddr &GetPeerName(void) {
+        return *static_cast<SockAddr *>(&mPeerName);
+    }
 
 private:
-    UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
-    void SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
+    UdpSocket *GetNext(void) {
+        return static_cast<UdpSocket *>(mNext);
+    }
+    void SetNext(UdpSocket *socket) {
+        mNext = static_cast<otUdpSocket *>(socket);
+    }
 
     void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo) {
         mHandler(mContext, &aMessage, &aMessageInfo);
@@ -251,13 +259,13 @@ public:
 private:
     enum
     {
-        kDynamicPortMin = 49152,  ///< Service Name and Transport Protocol Port Number Registry
-        kDynamicPortMax = 65535,  ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
-    uint16_t mEphemeralPort;
+    uint16_t   mEphemeralPort;
     UdpSocket *mSockets;
 
-    Ip6 &mIp6;
+    Ip6       &mIp6;
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -274,7 +282,7 @@ struct UdpHeaderPoD
  *
  */
 OT_TOOL_PACKED_BEGIN
-class UdpHeader: private UdpHeaderPoD
+class UdpHeader : private UdpHeaderPoD
 {
 public:
     /**
@@ -283,7 +291,9 @@ public:
      * @returns The UDP Source Port.
      *
      */
-    uint16_t GetSourcePort(void) const { return HostSwap16(mSource); }
+    uint16_t GetSourcePort(void) const {
+        return HostSwap16(mSource);
+    }
 
     /**
      * This method sets the UDP Source Port.
@@ -291,7 +301,9 @@ public:
      * @param[in]  aPort  The UDP Source Port.
      *
      */
-    void SetSourcePort(uint16_t aPort) { mSource = HostSwap16(aPort); }
+    void SetSourcePort(uint16_t aPort) {
+        mSource = HostSwap16(aPort);
+    }
 
     /**
      * This method returns the UDP Destination Port.
@@ -299,7 +311,9 @@ public:
      * @returns The UDP Destination Port.
      *
      */
-    uint16_t GetDestinationPort(void) const { return HostSwap16(mDestination); }
+    uint16_t GetDestinationPort(void) const {
+        return HostSwap16(mDestination);
+    }
 
     /**
      * This method sets the UDP Destination Port.
@@ -307,7 +321,9 @@ public:
      * @param[in]  aPort  The UDP Destination Port.
      *
      */
-    void SetDestinationPort(uint16_t aPort) { mDestination = HostSwap16(aPort); }
+    void SetDestinationPort(uint16_t aPort) {
+        mDestination = HostSwap16(aPort);
+    }
 
     /**
      * This method returns the UDP Length.
@@ -315,7 +331,9 @@ public:
      * @returns The UDP Length.
      *
      */
-    uint16_t GetLength(void) const { return HostSwap16(mLength); }
+    uint16_t GetLength(void) const {
+        return HostSwap16(mLength);
+    }
 
     /**
      * This method sets the UDP Length.
@@ -323,7 +341,9 @@ public:
      * @param[in]  aLength  The UDP Length.
      *
      */
-    void SetLength(uint16_t aLength) { mLength = HostSwap16(aLength); }
+    void SetLength(uint16_t aLength) {
+        mLength = HostSwap16(aLength);
+    }
 
     /**
      * This method returns the UDP Checksum.
@@ -331,7 +351,9 @@ public:
      * @returns The UDP Checksum.
      *
      */
-    uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
+    uint16_t GetChecksum(void) const {
+        return HostSwap16(mChecksum);
+    }
 
     /**
      * This method sets the UDP Checksum.
@@ -339,7 +361,9 @@ public:
      * @param[in]  aChecksum  The UDP Checksum.
      *
      */
-    void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+    void SetChecksum(uint16_t aChecksum) {
+        mChecksum = HostSwap16(aChecksum);
+    }
 
     /**
      * This static method returns the byte offset for the UDP Length.
@@ -347,7 +371,9 @@ public:
      * @returns The byte offset for the UDP Length.
      *
      */
-    static uint8_t GetLengthOffset(void) { return offsetof(UdpHeaderPoD, mLength); }
+    static uint8_t GetLengthOffset(void) {
+        return offsetof(UdpHeaderPoD, mLength);
+    }
 
     /**
      * This static method returns the byte offset for the UDP Checksum.
@@ -355,7 +381,9 @@ public:
      * @returns The byte offset for the UDP Checksum.
      *
      */
-    static uint8_t GetChecksumOffset(void) { return offsetof(UdpHeaderPoD, mChecksum); }
+    static uint8_t GetChecksumOffset(void) {
+        return offsetof(UdpHeaderPoD, mChecksum);
+    }
 
 } OT_TOOL_PACKED_END;
 
@@ -364,7 +392,7 @@ public:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
 #endif  // NET_UDP6_HPP_

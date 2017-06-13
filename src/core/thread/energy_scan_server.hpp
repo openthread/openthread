@@ -74,8 +74,8 @@ public:
 private:
     enum
     {
-        kScanDelay   = 1000,  ///< SCAN_DELAY (milliseconds)
-        kReportDelay = 500,   ///< Delay before sending a report (milliseconds)
+        kScanDelay   = 1000, ///< SCAN_DELAY (milliseconds)
+        kReportDelay = 500,  ///< Delay before sending a report (milliseconds)
     };
 
     static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -93,30 +93,30 @@ private:
 
     otError SendReport(void);
 
-    Ip6::Address mCommissioner;
-    uint32_t mChannelMask;
-    uint32_t mChannelMaskCurrent;
-    uint16_t mPeriod;
-    uint16_t mScanDuration;
-    uint8_t mCount;
-    bool mActive;
+    Ip6::Address       mCommissioner;
+    uint32_t           mChannelMask;
+    uint32_t           mChannelMaskCurrent;
+    uint16_t           mPeriod;
+    uint16_t           mScanDuration;
+    uint8_t            mCount;
+    bool               mActive;
 
-    int8_t mScanResults[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
-    uint8_t mScanResultsLength;
+    int8_t             mScanResults[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
+    uint8_t            mScanResultsLength;
 
-    Timer mTimer;
+    Timer              mTimer;
 
     Ip6::NetifCallback mNetifCallback;
 
-    Coap::Resource mEnergyScan;
+    Coap::Resource     mEnergyScan;
 
-    ThreadNetif &mNetif;
+    ThreadNetif       &mNetif;
 };
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // ENERGY_SCAN_SERVER_HPP_

@@ -90,7 +90,9 @@ public:
      * @returns `true` if source address matching is enabled, `false` otherwise.
      *
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const {
+        return mEnabled;
+    }
 
     /**
      * This method increments the message count for a child and updates the source match table.
@@ -192,7 +194,7 @@ private:
     otError AddPendingEntries(void);
 
     MeshForwarder &mMeshForwarder;
-    bool mEnabled;
+    bool           mEnabled;
 };
 
 /**
@@ -200,6 +202,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // SOURCE_MATCH_CONTROLLER_HPP_

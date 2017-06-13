@@ -50,9 +50,9 @@ void otPbkdf2Cmac(
     uint32_t blockCounter = 0;
     uint16_t useLen = 0;
     uint16_t prfBlockLen = MBEDTLS_CIPHER_BLKSIZE_MAX;
-    uint8_t prfInput[OT_PBKDF2_SALT_MAX_LEN + 4]; // Salt || INT(), for U1 calculation
-    uint8_t prfOutput[MBEDTLS_CIPHER_BLKSIZE_MAX];
-    uint8_t keyBlock[MBEDTLS_CIPHER_BLKSIZE_MAX];
+    uint8_t  prfInput[OT_PBKDF2_SALT_MAX_LEN + 4]; // Salt || INT(), for U1 calculation
+    uint8_t  prfOutput[MBEDTLS_CIPHER_BLKSIZE_MAX];
+    uint8_t  keyBlock[MBEDTLS_CIPHER_BLKSIZE_MAX];
     uint8_t *key = aKey;
     uint16_t keyLen = aKeyLen;
 

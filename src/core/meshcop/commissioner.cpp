@@ -61,7 +61,7 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Commissioner::Commissioner(ThreadNetif &aThreadNetif):
+Commissioner::Commissioner(ThreadNetif &aThreadNetif) :
     mAnnounceBegin(aThreadNetif),
     mEnergyScan(aThreadNetif),
     mPanIdQuery(aThreadNetif),
@@ -144,9 +144,9 @@ exit:
 
 otError Commissioner::SendCommissionerSet(void)
 {
-    otError error;
+    otError                error;
     otCommissioningDataset dataset;
-    SteeringDataTlv steeringData;
+    SteeringDataTlv        steeringData;
 
     otLogFuncEntry();
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
@@ -211,7 +211,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *
 
     otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
-    RemoveJoiner(aExtAddress, 0);  // remove imediately
+    RemoveJoiner(aExtAddress, 0); // remove imediately
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
@@ -356,7 +356,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
         if (static_cast<int32_t>(now - mJoiners[i].mExpirationTime) >= 0)
         {
             otLogDebgMeshCoP(GetInstance(), "removing joiner due to timeout or successfully joined");
-            RemoveJoiner(&mJoiners[i].mExtAddress, 0);  // remove imediately
+            RemoveJoiner(&mJoiners[i].mExtAddress, 0); // remove imediately
         }
     }
 
@@ -400,10 +400,11 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
                                                      uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
-    Message *message;
+
+    Coap::Header     header;
+    Message         *message;
     Ip6::MessageInfo messageInfo;
-    MeshCoP::Tlv tlv;
+    MeshCoP::Tlv     tlv;
 
     otLogFuncEntry();
 
@@ -436,7 +437,7 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -472,8 +473,9 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
                                                      const uint8_t *aTlvs, uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
-    Message *message;
+
+    Coap::Header     header;
+    Message         *message;
     Ip6::MessageInfo messageInfo;
 
     otLogFuncEntry();
@@ -539,7 +541,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -574,9 +576,10 @@ exit:
 otError Commissioner::SendPetition(void)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
-    Message *message = NULL;
-    Ip6::MessageInfo messageInfo;
+
+    Coap::Header      header;
+    Message          *message = NULL;
+    Ip6::MessageInfo  messageInfo;
     CommissionerIdTlv commissionerId;
 
     otLogFuncEntry();
@@ -605,7 +608,7 @@ otError Commissioner::SendPetition(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -628,9 +631,9 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
 {
     (void) aMessageInfo;
 
-    StateTlv state;
+    StateTlv                 state;
     CommissionerSessionIdTlv sessionId;
-    bool retransmit = false;
+    bool                     retransmit = false;
 
     otLogFuncEntry();
 
@@ -674,10 +677,11 @@ exit:
 otError Commissioner::SendKeepAlive(void)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
-    Message *message = NULL;
-    Ip6::MessageInfo messageInfo;
-    StateTlv state;
+
+    Coap::Header             header;
+    Message                 *message = NULL;
+    Ip6::MessageInfo         messageInfo;
+    StateTlv                 state;
     CommissionerSessionIdTlv sessionId;
 
     otLogFuncEntry();
@@ -707,7 +711,7 @@ otError Commissioner::SendKeepAlive(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -766,14 +770,15 @@ void Commissioner::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otM
 
 void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error;
-    JoinerUdpPortTlv joinerPort;
-    JoinerIidTlv joinerIid;
+    otError                error;
+    JoinerUdpPortTlv       joinerPort;
+    JoinerIidTlv           joinerIid;
     JoinerRouterLocatorTlv joinerRloc;
+
     Ip6::MessageInfo joinerMessageInfo;
-    uint16_t offset;
-    uint16_t length;
-    bool enableJoiner = false;
+    uint16_t         offset;
+    uint16_t         length;
+    bool             enableJoiner = false;
 
     otLogFuncEntry();
 
@@ -882,7 +887,7 @@ void Commissioner::HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, o
 void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     (void)aMessageInfo;
-    StateTlv::State state = StateTlv::kAccept;
+    StateTlv::State    state = StateTlv::kAccept;
     ProvisioningUrlTlv provisioningUrl;
 
     otLogFuncEntry();
@@ -890,9 +895,9 @@ void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage
 
     if (Tlv::GetTlv(aMessage, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == OT_ERROR_NONE)
     {
-        if (provisioningUrl.GetLength() != mNetif.GetDtls().mProvisioningUrl.GetLength() ||
-            memcmp(provisioningUrl.GetProvisioningUrl(), mNetif.GetDtls().mProvisioningUrl.GetProvisioningUrl(),
-                   provisioningUrl.GetLength()) != 0)
+        if ((provisioningUrl.GetLength() != mNetif.GetDtls().mProvisioningUrl.GetLength()) ||
+            (memcmp(provisioningUrl.GetProvisioningUrl(), mNetif.GetDtls().mProvisioningUrl.GetProvisioningUrl(),
+                    provisioningUrl.GetLength()) != 0))
         {
             state = StateTlv::kReject;
         }
@@ -917,11 +922,12 @@ exit:
 void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header responseHeader;
-    Ip6::MessageInfo joinerMessageInfo;
+
+    Coap::Header      responseHeader;
+    Ip6::MessageInfo  joinerMessageInfo;
     MeshCoP::StateTlv stateTlv;
-    Message *message;
-    Mac::ExtAddress extAddr;
+    Message          *message;
+    Mac::ExtAddress   extAddr;
 
     otLogFuncEntry();
 
@@ -953,13 +959,13 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
 
     memcpy(extAddr.m8, mJoinerIid, sizeof(extAddr.m8));
     extAddr.SetLocal(!extAddr.IsLocal());
-    RemoveJoiner(&extAddr, kRemoveJoinerDelay);  // remove after kRemoveJoinerDelay (seconds)
+    RemoveJoiner(&extAddr, kRemoveJoinerDelay); // remove after kRemoveJoinerDelay (seconds)
 
     otLogInfoMeshCoP(GetInstance(), "sent joiner finalize response");
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -975,15 +981,15 @@ otError Commissioner::SendRelayTransmit(void *aContext, Message &aMessage, const
 otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     (void)aMessageInfo;
-    otError error = OT_ERROR_NONE;
-    Coap::Header header;
-    JoinerUdpPortTlv udpPort;
-    JoinerIidTlv iid;
+    otError                error = OT_ERROR_NONE;
+    Coap::Header           header;
+    JoinerUdpPortTlv       udpPort;
+    JoinerIidTlv           iid;
     JoinerRouterLocatorTlv rloc;
-    ExtendedTlv tlv;
-    Message *message;
-    uint16_t offset;
-    Ip6::MessageInfo messageInfo;
+    ExtendedTlv            tlv;
+    Message               *message;
+    uint16_t               offset;
+    Ip6::MessageInfo       messageInfo;
 
     otLogFuncEntry();
 
@@ -1031,7 +1037,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -1043,10 +1049,10 @@ exit:
 otError Commissioner::GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
                                    uint8_t *aPSKc)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     const char *saltPrefix = "Thread";
-    uint8_t salt[OT_PBKDF2_SALT_MAX_LEN];
-    uint16_t saltLen = 0;
+    uint8_t     salt[OT_PBKDF2_SALT_MAX_LEN];
+    uint16_t    saltLen = 0;
 
     VerifyOrExit((strlen(aPassPhrase) >= OT_COMMISSIONING_PASSPHRASE_MIN_SIZE) &&
                  (strlen(aPassPhrase) <= OT_COMMISSIONING_PASSPHRASE_MAX_SIZE), error = OT_ERROR_INVALID_ARGS);
@@ -1068,7 +1074,7 @@ exit:
     return error;
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER

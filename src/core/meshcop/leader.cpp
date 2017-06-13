@@ -55,7 +55,7 @@
 namespace ot {
 namespace MeshCoP {
 
-Leader::Leader(ThreadNetif &aThreadNetif):
+Leader::Leader(ThreadNetif &aThreadNetif) :
     mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this),
     mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
@@ -84,6 +84,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
 {
     CommissioningData data;
     CommissionerIdTlv commissionerId;
+
     StateTlv::State state = StateTlv::kReject;
 
     otLogInfoMeshCoP(GetInstance(), "received petition");
@@ -119,10 +120,11 @@ otError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, const I
                                      StateTlv::State aState)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header responseHeader;
-    StateTlv state;
+
+    Coap::Header             responseHeader;
+    StateTlv                 state;
     CommissionerSessionIdTlv sessionId;
-    Message *message;
+    Message                 *message;
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
@@ -152,7 +154,7 @@ otError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, const I
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -170,8 +172,9 @@ void Leader::HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage *a
 
 void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    StateTlv state;
+    StateTlv                 state;
     CommissionerSessionIdTlv sessionId;
+
     StateTlv::State responseState;
 
     otLogInfoMeshCoP(GetInstance(), "received keep alive");
@@ -208,9 +211,10 @@ otError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, const 
                                       StateTlv::State aState)
 {
     otError error = OT_ERROR_NONE;
+
     Coap::Header responseHeader;
-    StateTlv state;
-    Message *message;
+    StateTlv     state;
+    Message     *message;
 
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
@@ -228,7 +232,7 @@ otError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, const 
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -239,9 +243,10 @@ exit:
 otError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
+
+    Coap::Header     header;
     Ip6::MessageInfo messageInfo;
-    Message *message;
+    Message         *message;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -258,7 +263,7 @@ otError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -269,6 +274,7 @@ exit:
 otError Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
 {
     otError error = OT_ERROR_NONE;
+
     VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kDelayTimerDefault),
                  error = OT_ERROR_INVALID_ARGS);
     mDelayTimerMinimal = aDelayTimerMinimal;
@@ -315,8 +321,7 @@ void Leader::ResignCommissioner(void)
     otLogInfoMeshCoP(GetInstance(), "commissioner inactive");
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif // OPENTHREAD_FTD
-
+#endif  // OPENTHREAD_FTD

@@ -68,6 +68,7 @@ uint32_t utilsFlashGetSize(void)
 otError utilsFlashErasePage(uint32_t aAddress)
 {
     otError error = OT_ERROR_NONE;
+
     otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = OT_ERROR_INVALID_ARGS);
 
     nrf_nvmc_page_erase(mapAddress(aAddress & FLASH_PAGE_ADDR_MASK));
@@ -108,6 +109,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t result = 0;
+
     otEXPECT(aData);
     otEXPECT(aAddress < utilsFlashGetSize());
 
@@ -121,6 +123,7 @@ exit:
 uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t result = 0;
+
     otEXPECT(aData);
     otEXPECT(aAddress < utilsFlashGetSize());
 

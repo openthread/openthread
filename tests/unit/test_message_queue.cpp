@@ -43,6 +43,7 @@
 void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
     va_list args;
+
     ot::Message *message;
     ot::Message *msgArg;
 
@@ -74,11 +75,12 @@ void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLen
 void TestMessageQueue(void)
 {
     otInstance instance;
-    ot::MessagePool messagePool(&instance);
+
+    ot::MessagePool  messagePool(&instance);
     ot::MessageQueue messageQueue;
-    ot::Message *msg[kNumTestMessages];
-    otError error;
-    uint16_t msgCount, bufferCount;
+    ot::Message     *msg[kNumTestMessages];
+    otError          error;
+    uint16_t         msgCount, bufferCount;
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
@@ -151,7 +153,7 @@ void TestMessageQueue(void)
 // This function verifies the content of the message queue to match the passed in messages
 void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLength, ...)
 {
-    va_list args;
+    va_list    args;
     otMessage *message;
     otMessage *msgArg;
 
@@ -167,7 +169,7 @@ void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLe
         for (message = otMessageQueueGetHead(aQueue);
              message != NULL;
              message = otMessageQueueGetNext(aQueue, message)
-            )
+        )
         {
             VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected\n");
 
@@ -186,15 +188,15 @@ void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLe
 // This test checks all the OpenThread C APIs for `otMessageQueue`
 void TestMessageQueueOtApis(void)
 {
-    otInstance *instance;
+    otInstance    *instance;
     otMessageQueue queue, queue2;
 
     otMessage *msg[kNumTestMessages];
-    otError error;
+    otError    error;
     otMessage *message;
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    size_t otInstanceBufferLength = 0;
+    size_t   otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 
     // Call to query the buffer size

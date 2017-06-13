@@ -48,7 +48,7 @@
 
 namespace ot {
 
-DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
+DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder) :
     mMeshForwarder(aMeshForwarder),
     mTimer(aMeshForwarder.GetNetif().GetIp6().mTimerScheduler, &DataPollManager::HandlePollTimer, this),
     mExternalPollPeriod(0),
@@ -97,7 +97,7 @@ void DataPollManager::StopPolling(void)
 
 otError DataPollManager::SendDataPoll(void)
 {
-    otError error;
+    otError  error;
     Message *message;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
@@ -394,4 +394,4 @@ void DataPollManager::HandlePollTimer(void *aContext)
     static_cast<DataPollManager *>(aContext)->SendDataPoll();
 }
 
-}  // namespace ot
+} // namespace ot

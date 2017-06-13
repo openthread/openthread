@@ -88,7 +88,9 @@ public:
     otError Post(void);
 
 private:
-    void RunTask(void) { mHandler(mContext); }
+    void RunTask(void) {
+        mHandler(mContext);
+    }
 
     TaskletScheduler &mScheduler;
     Handler           mHandler;
@@ -126,7 +128,9 @@ public:
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    bool AreTaskletsPending(void) { return mHead != NULL; }
+    bool AreTaskletsPending(void) {
+        return mHead != NULL;
+    }
 
     /**
      * This method processes all tasklets queued when this is called.
@@ -153,6 +157,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // TASKLET_HPP_

@@ -33,4 +33,3 @@
 #else
 #error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
-

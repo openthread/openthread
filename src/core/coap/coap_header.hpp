@@ -123,7 +123,9 @@ public:
      * @returns The Version value.
      *
      */
-    uint8_t GetVersion(void) const { return (mHeader.mFields.mVersionTypeToken & kVersionMask) >> kVersionOffset; }
+    uint8_t GetVersion(void) const {
+        return (mHeader.mFields.mVersionTypeToken & kVersionMask) >> kVersionOffset;
+    }
 
     /**
      * This method sets the Version value.
@@ -142,7 +144,9 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Header::Type>(mHeader.mFields.mVersionTypeToken & kTypeMask); }
+    Type GetType(void) const {
+        return static_cast<Header::Type>(mHeader.mFields.mVersionTypeToken & kTypeMask);
+    }
 
     /**
      * This method sets the Type value.
@@ -161,7 +165,9 @@ public:
      * @returns The Code value.
      *
      */
-    Code GetCode(void) const { return static_cast<Code>(mHeader.mFields.mCode); }
+    Code GetCode(void) const {
+        return static_cast<Code>(mHeader.mFields.mCode);
+    }
 
     /**
      * This method sets the Code value.
@@ -169,7 +175,9 @@ public:
      * @param[in]  aCode  The Code value.
      *
      */
-    void SetCode(Code aCode) { mHeader.mFields.mCode = static_cast<uint8_t>(aCode); }
+    void SetCode(Code aCode) {
+        mHeader.mFields.mCode = static_cast<uint8_t>(aCode);
+    }
 
     /**
      * This method returns the Message ID value.
@@ -177,7 +185,9 @@ public:
      * @returns The Message ID value.
      *
      */
-    uint16_t GetMessageId(void) const { return HostSwap16(mHeader.mFields.mMessageId); }
+    uint16_t GetMessageId(void) const {
+        return HostSwap16(mHeader.mFields.mMessageId);
+    }
 
     /**
      * This method sets the Message ID value.
@@ -185,7 +195,9 @@ public:
      * @param[in]  aMessageId  The Message ID value.
      *
      */
-    void SetMessageId(uint16_t aMessageId) { mHeader.mFields.mMessageId = HostSwap16(aMessageId); }
+    void SetMessageId(uint16_t aMessageId) {
+        mHeader.mFields.mMessageId = HostSwap16(aMessageId);
+    }
 
     /**
      * This method returns the Token length.
@@ -193,7 +205,9 @@ public:
      * @returns The Token length.
      *
      */
-    uint8_t GetTokenLength(void) const { return (mHeader.mFields.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset; }
+    uint8_t GetTokenLength(void) const {
+        return (mHeader.mFields.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset;
+    }
 
     /**
      * This method returns a pointer to the Token value.
@@ -201,7 +215,9 @@ public:
      * @returns A pointer to the Token value.
      *
      */
-    const uint8_t *GetToken(void) const { return mHeader.mBytes + kTokenOffset; }
+    const uint8_t *GetToken(void) const {
+        return mHeader.mBytes + kTokenOffset;
+    }
 
     /**
      * This method sets the Token value and length.
@@ -251,8 +267,8 @@ public:
          */
         enum
         {
-            kOptionDeltaOffset   = 4,                          ///< Delta Offset
-            kOptionDeltaMask     = 0xf << kOptionDeltaOffset,  ///< Delta Mask
+            kOptionDeltaOffset   = 4,                         ///< Delta Offset
+            kOptionDeltaMask     = 0xf << kOptionDeltaOffset, ///< Delta Mask
         };
 
         /**
@@ -316,7 +332,7 @@ public:
      */
     enum MediaType
     {
-        kApplicationOctetStream = 42,  ///< application/octet-stream
+        kApplicationOctetStream = 42, ///< application/octet-stream
     };
 
     /**
@@ -384,7 +400,9 @@ public:
      * @returns A pointer to the first byte of the header.
      *
      */
-    const uint8_t *GetBytes(void) const { return mHeader.mBytes; }
+    const uint8_t *GetBytes(void) const {
+        return mHeader.mBytes;
+    }
 
     /**
      * This method returns the header length in bytes.
@@ -392,7 +410,9 @@ public:
      * @returns The header length in bytes.
      *
      */
-    uint8_t GetLength(void) const { return mHeaderLength; }
+    uint8_t GetLength(void) const {
+        return mHeaderLength;
+    }
 
     /**
      * This method sets a default response header based on request header.
@@ -409,7 +429,9 @@ public:
      * @retval FALSE  Header is not an empty message header.
      *
      */
-    bool IsEmpty(void) const { return (GetCode() == 0); };
+    bool IsEmpty(void) const {
+        return (GetCode() == 0);
+    }
 
     /**
      * This method checks if a header is a request header.
@@ -418,7 +440,9 @@ public:
      * @retval FALSE  Header is not a request header.
      *
      */
-    bool IsRequest(void) const { return (GetCode() >= OT_COAP_CODE_GET && GetCode() <= OT_COAP_CODE_DELETE); };
+    bool IsRequest(void) const {
+        return (GetCode() >= OT_COAP_CODE_GET && GetCode() <= OT_COAP_CODE_DELETE);
+    }
 
     /**
      * This method checks if a header is a response header.
@@ -427,7 +451,9 @@ public:
      * @retval FALSE  Header is not a response header.
      *
      */
-    bool IsResponse(void) const { return (GetCode() >= OT_COAP_CODE_RESPONSE_MIN); };
+    bool IsResponse(void) const {
+        return (GetCode() >= OT_COAP_CODE_RESPONSE_MIN);
+    }
 
     /**
      * This method checks if a header is a CON message header.
@@ -436,7 +462,9 @@ public:
      * @retval FALSE  Header is not is a CON message header.
      *
      */
-    bool IsConfirmable(void) const { return (GetType() == OT_COAP_TYPE_CONFIRMABLE); };
+    bool IsConfirmable(void) const {
+        return (GetType() == OT_COAP_TYPE_CONFIRMABLE);
+    }
 
     /**
      * This method checks if a header is a NON message header.
@@ -445,7 +473,9 @@ public:
      * @retval FALSE  Header is not is a NON message header.
      *
      */
-    bool IsNonConfirmable(void) const { return (GetType() == OT_COAP_TYPE_NON_CONFIRMABLE); };
+    bool IsNonConfirmable(void) const {
+        return (GetType() == OT_COAP_TYPE_NON_CONFIRMABLE);
+    }
 
     /**
      * This method checks if a header is a ACK message header.
@@ -454,7 +484,9 @@ public:
      * @retval FALSE  Header is not is a ACK message header.
      *
      */
-    bool IsAck(void) const { return (GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT); };
+    bool IsAck(void) const {
+        return (GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT);
+    }
 
     /**
      * This method checks if a header is a RST message header.
@@ -463,7 +495,9 @@ public:
      * @retval FALSE  Header is not is a RST message header.
      *
      */
-    bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET);  };
+    bool IsReset(void) const {
+        return (GetType() == OT_COAP_TYPE_RESET);
+    }
 
 private:
     /**
@@ -472,23 +506,23 @@ private:
      */
     enum
     {
-        kVersionMask                = 0xc0,  ///< Version mask as specified (RFC 7252).
-        kVersionOffset              = 6,     ///< Version offset as specified (RFC 7252).
+        kVersionMask                = 0xc0, ///< Version mask as specified (RFC 7252).
+        kVersionOffset              = 6,    ///< Version offset as specified (RFC 7252).
 
-        kTypeMask                   = 0x30,  ///< Type mask as specified (RFC 7252).
+        kTypeMask                   = 0x30, ///< Type mask as specified (RFC 7252).
 
-        kTokenLengthMask            = 0x0f,  ///< Token Length mask as specified (RFC 7252).
-        kTokenLengthOffset          = 0,     ///< Token Length offset as specified (RFC 7252).
-        kTokenOffset                = 4,     ///< Token offset as specified (RFC 7252).
-        kMaxTokenLength             = 8,     ///< Max token length as specified (RFC 7252).
+        kTokenLengthMask            = 0x0f, ///< Token Length mask as specified (RFC 7252).
+        kTokenLengthOffset          = 0,    ///< Token Length offset as specified (RFC 7252).
+        kTokenOffset                = 4,    ///< Token offset as specified (RFC 7252).
+        kMaxTokenLength             = 8,    ///< Max token length as specified (RFC 7252).
 
-        kMaxOptionHeaderSize        = 5,     ///< Maximum size of an Option header
+        kMaxOptionHeaderSize        = 5,    ///< Maximum size of an Option header
 
-        kOption1ByteExtension       = 13,    ///< Indicates a 1 byte extension (RFC 7252).
-        kOption2ByteExtension       = 14,    ///< Indicates a 1 byte extension (RFC 7252).
+        kOption1ByteExtension       = 13,   ///< Indicates a 1 byte extension (RFC 7252).
+        kOption2ByteExtension       = 14,   ///< Indicates a 1 byte extension (RFC 7252).
 
-        kOption1ByteExtensionOffset = 13,    ///< Delta/Length offset as specified (RFC 7252).
-        kOption2ByteExtensionOffset = 269,   ///< Delta/Length offset as specified (RFC 7252).
+        kOption1ByteExtensionOffset = 13,   ///< Delta/Length offset as specified (RFC 7252).
+        kOption2ByteExtensionOffset = 269,  ///< Delta/Length offset as specified (RFC 7252).
     };
 };
 
@@ -497,7 +531,7 @@ private:
  *
  */
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot
 
 #endif  // COAP_HEADER_HPP_

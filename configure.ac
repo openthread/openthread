@@ -334,10 +334,10 @@ fi
 # Code style
 #
 
-AC_SUBST(PRETTY, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts"])
-AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts --dry-run"])
+AC_SUBST(PRETTY, [uncrustify])
+AC_SUBST(PRETTY_ARGS, ["-c \${abs_top_srcdir}/.uncrustify.cfg --no-backup --if-changed"])
+AC_SUBST(PRETTY_CHECK, [uncrustify])
+AC_SUBST(PRETTY_CHECK_ARGS, ["-c \${abs_top_srcdir}/.uncrustify.cfg --check"])
 
 #
 # Tests

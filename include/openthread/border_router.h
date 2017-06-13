@@ -166,7 +166,7 @@ OTAPI otError OTCALL otBorderRouterRegister(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_BORDER_ROUTER_H_
+#endif // OPENTHREAD_BORDER_ROUTER_H_

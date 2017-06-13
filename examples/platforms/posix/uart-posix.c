@@ -48,13 +48,13 @@ int posix_openpt(int oflag);
 int grantpt(int fildes);
 int unlockpt(int fd);
 char *ptsname(int fd);
-#endif  // OPENTHREAD_TARGET_LINUX
+#endif // OPENTHREAD_TARGET_LINUX
 
-static uint8_t s_receive_buffer[128];
+static uint8_t        s_receive_buffer[128];
 static const uint8_t *s_write_buffer;
-static uint16_t s_write_length;
-static int s_in_fd;
-static int s_out_fd;
+static uint16_t       s_write_length;
+static int            s_in_fd;
+static int            s_out_fd;
 
 static struct termios original_stdin_termios;
 static struct termios original_stdout_termios;
@@ -78,7 +78,7 @@ void platformUartRestore(void)
 
 otError otPlatUartEnable(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
     struct termios termios;
 
 #ifdef OPENTHREAD_TARGET_LINUX
@@ -196,7 +196,7 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
             FD_SET(s_in_fd, aErrorFdSet);
         }
 
-        if (aMaxFd != NULL && *aMaxFd < s_in_fd)
+        if ((aMaxFd != NULL) && (*aMaxFd < s_in_fd))
         {
             *aMaxFd = s_in_fd;
         }
@@ -211,7 +211,7 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
             FD_SET(s_out_fd, aErrorFdSet);
         }
 
-        if (aMaxFd != NULL && *aMaxFd < s_out_fd)
+        if ((aMaxFd != NULL) && (*aMaxFd < s_out_fd))
         {
             *aMaxFd = s_out_fd;
         }
@@ -220,8 +220,8 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 
 void platformUartProcess(void)
 {
-    ssize_t rval;
-    const int error_flags = POLLERR | POLLNVAL | POLLHUP;
+    ssize_t       rval;
+    const int     error_flags = POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd[] =
     {
         { s_in_fd,  POLLIN  | error_flags, 0 },

@@ -77,40 +77,40 @@ struct MessageInfo
 {
     enum
     {
-        kListAll        = 0,             ///< Identifies the all messages list (maintained by the MessagePool).
-        kListInterface  = 1,             ///< Identifies the list for per-interface message queue.
-        kNumLists       = 2,             ///< Number of lists.
+        kListAll        = 0, ///< Identifies the all messages list (maintained by the MessagePool).
+        kListInterface  = 1, ///< Identifies the list for per-interface message queue.
+        kNumLists       = 2, ///< Number of lists.
     };
 
-    Message         *mNext[kNumLists];   ///< A pointer to the next Message in a doubly linked list.
-    Message         *mPrev[kNumLists];   ///< A pointer to the previous Message in a doubly linked list.
-    MessagePool     *mMessagePool;       ///< Identifies the message pool for this message.
+    Message     *mNext[kNumLists]; ///< A pointer to the next Message in a doubly linked list.
+    Message     *mPrev[kNumLists]; ///< A pointer to the previous Message in a doubly linked list.
+    MessagePool *mMessagePool;     ///< Identifies the message pool for this message.
     union
     {
-        MessageQueue    *mMessage;       ///< Identifies the message queue (if any) where this message is queued.
-        PriorityQueue   *mPriority;      ///< Identifies the priority queue (if any) where this message is queued.
-    } mQueue;                            ///< Identifies the queue (if any) where this message is queued.
+        MessageQueue  *mMessage;  ///< Identifies the message queue (if any) where this message is queued.
+        PriorityQueue *mPriority; ///< Identifies the priority queue (if any) where this message is queued.
+    } mQueue;                     ///< Identifies the queue (if any) where this message is queued.
 
-    uint16_t         mReserved;          ///< Number of header bytes reserved for the message.
-    uint16_t         mLength;            ///< Number of bytes within the message.
-    uint16_t         mOffset;            ///< A byte offset within the message.
-    uint16_t         mDatagramTag;       ///< The datagram tag used for 6LoWPAN fragmentation.
+    uint16_t mReserved;           ///< Number of header bytes reserved for the message.
+    uint16_t mLength;             ///< Number of bytes within the message.
+    uint16_t mOffset;             ///< A byte offset within the message.
+    uint16_t mDatagramTag;        ///< The datagram tag used for 6LoWPAN fragmentation.
 
-    uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
-    int8_t           mInterfaceId;       ///< The interface ID.
+    uint8_t  mChildMask[8];       ///< A bit-vector to indicate which sleepy children need to receive this.
+    uint8_t  mTimeout;            ///< Seconds remaining before dropping the message.
+    int8_t   mInterfaceId;        ///< The interface ID.
     union
     {
-        uint16_t     mPanId;             ///< Used for MLE Discover Request and Response messages.
-        uint8_t      mChannel;           ///< Used for MLE Announce.
-    } mPanIdChannel;                     ///< Used for MLE Discover Request, Response, and Announce messages.
+        uint16_t mPanId;       ///< Used for MLE Discover Request and Response messages.
+        uint8_t  mChannel;     ///< Used for MLE Announce.
+    } mPanIdChannel;           ///< Used for MLE Discover Request, Response, and Announce messages.
 
-    uint8_t          mType : 2;          ///< Identifies the type of message.
-    uint8_t          mSubType : 4;       ///< Identifies the message sub type.
-    bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
-    bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
-    uint8_t          mPriority : 2;      ///< Identifies the message priority level (lower value is higher priority).
-    bool             mInPriorityQ : 1;   ///< Indicates whether the message is queued in normal or priority queue.
+    uint8_t mType : 2;         ///< Identifies the type of message.
+    uint8_t mSubType : 4;      ///< Identifies the message sub type.
+    bool    mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
+    bool    mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
+    uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
+    bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
 };
 
 /**
@@ -128,13 +128,17 @@ public:
      * @returns A pointer to the next message buffer.
      *
      */
-    class Buffer *GetNextBuffer(void) const { return static_cast<Buffer *>(mNext); }
+    class Buffer *GetNextBuffer(void) const {
+        return static_cast<Buffer *>(mNext);
+    }
 
     /**
      * This method sets the pointer to the next message buffer.
      *
      */
-    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<otMessage *>(buf); }
+    void SetNextBuffer(class Buffer *buf) {
+        mNext = static_cast<otMessage *>(buf);
+    }
 
 private:
     /**
@@ -143,7 +147,9 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    uint8_t *GetFirstData(void) { return mBuffer.mHead.mData; }
+    uint8_t *GetFirstData(void) {
+        return mBuffer.mHead.mData;
+    }
 
     /**
      * This method returns a pointer to the first byte of data in the first message buffer.
@@ -151,7 +157,9 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    const uint8_t *GetFirstData(void) const { return mBuffer.mHead.mData; }
+    const uint8_t *GetFirstData(void) const {
+        return mBuffer.mHead.mData;
+    }
 
     /**
      * This method returns a pointer to the first data byte of a subsequent message buffer.
@@ -159,7 +167,9 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    uint8_t *GetData(void) { return mBuffer.mData; }
+    uint8_t *GetData(void) {
+        return mBuffer.mData;
+    }
 
     /**
      * This method returns a pointer to the first data byte of a subsequent message buffer.
@@ -167,7 +177,9 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    const uint8_t *GetData(void) const { return mBuffer.mData; }
+    const uint8_t *GetData(void) const {
+        return mBuffer.mData;
+    }
 
     enum
     {
@@ -180,7 +192,7 @@ private:
         struct
         {
             MessageInfo mInfo;
-            uint8_t mData[kHeadBufferDataSize];
+            uint8_t     mData[kHeadBufferDataSize];
         } mHead;
         uint8_t mData[kBufferDataSize];
     } mBuffer;
@@ -190,7 +202,7 @@ private:
  * This class represents a message.
  *
  */
-class Message: public Buffer
+class Message : public Buffer
 {
     friend class MessagePool;
     friend class MessageQueue;
@@ -199,33 +211,33 @@ class Message: public Buffer
 public:
     enum
     {
-        kTypeIp6         = 0,   ///< A full uncompressed IPv6 packet
-        kType6lowpan     = 1,   ///< A 6lowpan frame
-        kTypeMacDataPoll = 2,   ///< A MAC data poll message
-        kTypeSupervision = 3,   ///< A child supervision frame.
+        kTypeIp6         = 0, ///< A full uncompressed IPv6 packet
+        kType6lowpan     = 1, ///< A 6lowpan frame
+        kTypeMacDataPoll = 2, ///< A MAC data poll message
+        kTypeSupervision = 3, ///< A child supervision frame.
     };
 
     enum
     {
-        kSubTypeNone                   = 0,  ///< None
-        kSubTypeMleAnnounce            = 1,  ///< MLE Announce
-        kSubTypeMleDiscoverRequest     = 2,  ///< MLE Discover Request
-        kSubTypeMleDiscoverResponse    = 3,  ///< MLE Discover Response
-        kSubTypeJoinerEntrust          = 4,  ///< Joiner Entrust
-        kSubTypeMplRetransmission      = 5,  ///< MPL next retransmission message
-        kSubTypeMleGeneral             = 6,  ///< General MLE
-        kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
-        kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request
+        kSubTypeNone                   = 0, ///< None
+        kSubTypeMleAnnounce            = 1, ///< MLE Announce
+        kSubTypeMleDiscoverRequest     = 2, ///< MLE Discover Request
+        kSubTypeMleDiscoverResponse    = 3, ///< MLE Discover Response
+        kSubTypeJoinerEntrust          = 4, ///< Joiner Entrust
+        kSubTypeMplRetransmission      = 5, ///< MPL next retransmission message
+        kSubTypeMleGeneral             = 6, ///< General MLE
+        kSubTypeJoinerFinalizeResponse = 7, ///< Joiner Finalize Response
+        kSubTypeMleChildUpdateRequest  = 8, ///< MLE Child Update Request
     };
 
     enum
     {
-        kPriorityHigh       = 0,    ///< High priority level.
-        kPriorityMedium     = 1,    ///< Medium priority level.
-        kPriorityLow        = 2,    ///< Low priority level.
-        kPriorityVeryLow    = 3,    ///< Very low priority level.
+        kPriorityHigh       = 0, ///< High priority level.
+        kPriorityMedium     = 1, ///< Medium priority level.
+        kPriorityLow        = 2, ///< Low priority level.
+        kPriorityVeryLow    = 3, ///< Very low priority level.
 
-        kNumPriorities      = 4,    ///< Number of priority levels.
+        kNumPriorities      = 4, ///< Number of priority levels.
     };
 
     /**
@@ -247,7 +259,9 @@ public:
      *
      * @returns The number of bytes in the message.
      */
-    uint16_t GetLength(void) const { return mBuffer.mHead.mInfo.mLength; }
+    uint16_t GetLength(void) const {
+        return mBuffer.mHead.mInfo.mLength;
+    }
 
     /**
      * This method sets the number of bytes in the message.
@@ -272,7 +286,9 @@ public:
      * @returns A byte offset within the message.
      *
      */
-    uint16_t GetOffset(void) const { return mBuffer.mHead.mInfo.mOffset; }
+    uint16_t GetOffset(void) const {
+        return mBuffer.mHead.mInfo.mOffset;
+    }
 
     /**
      * This method moves the byte offset within the message.
@@ -302,7 +318,9 @@ public:
      * @returns The type of the message.
      *
      */
-    uint8_t GetType(void) const { return mBuffer.mHead.mInfo.mType; }
+    uint8_t GetType(void) const {
+        return mBuffer.mHead.mInfo.mType;
+    }
 
     /**
      * This method sets the message type.
@@ -310,7 +328,9 @@ public:
      * @param[in]  aType  The message type.
      *
      */
-    void SetType(uint8_t aType) { mBuffer.mHead.mInfo.mType = aType; }
+    void SetType(uint8_t aType) {
+        mBuffer.mHead.mInfo.mType = aType;
+    }
 
     /**
      * This method returns the sub type of the message.
@@ -318,7 +338,9 @@ public:
      * @returns The sub type of the message.
      *
      */
-    uint8_t GetSubType(void) const { return mBuffer.mHead.mInfo.mSubType; }
+    uint8_t GetSubType(void) const {
+        return mBuffer.mHead.mInfo.mSubType;
+    }
 
     /**
      * This method sets the message sub type.
@@ -326,7 +348,9 @@ public:
      * @param[in]  aSubType  The message sub type.
      *
      */
-    void SetSubType(uint8_t aSubType) { mBuffer.mHead.mInfo.mSubType = aSubType; }
+    void SetSubType(uint8_t aSubType) {
+        mBuffer.mHead.mInfo.mSubType = aSubType;
+    }
 
     /**
      * This method returns whether or not the message is of MLE subtype.
@@ -343,7 +367,9 @@ public:
      * @returns The priority level associated with this message.
      *
      */
-    uint8_t GetPriority(void) const { return mBuffer.mHead.mInfo.mPriority; }
+    uint8_t GetPriority(void) const {
+        return mBuffer.mHead.mInfo.mPriority;
+    }
 
     /**
      * This method sets the messages priority.
@@ -452,7 +478,9 @@ public:
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      */
-    Message *Clone(void) const { return Clone(GetLength()); };
+    Message *Clone(void) const {
+        return Clone(GetLength());
+    }
 
     /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.
@@ -460,7 +488,9 @@ public:
      * @returns The 6LoWPAN datagram tag.
      *
      */
-    uint16_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
+    uint16_t GetDatagramTag(void) const {
+        return mBuffer.mHead.mInfo.mDatagramTag;
+    }
 
     /**
      * This method sets the datagram tag used for 6LoWPAN fragmentation.
@@ -468,7 +498,9 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
-    void SetDatagramTag(uint16_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
+    void SetDatagramTag(uint16_t aTag) {
+        mBuffer.mHead.mInfo.mDatagramTag = aTag;
+    }
 
     /**
      * This method returns whether or not the message forwarding is scheduled for the child.
@@ -514,7 +546,9 @@ public:
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    uint16_t GetPanId(void) const { return mBuffer.mHead.mInfo.mPanIdChannel.mPanId; }
+    uint16_t GetPanId(void) const {
+        return mBuffer.mHead.mInfo.mPanIdChannel.mPanId;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Destination PAN ID.
@@ -524,7 +558,9 @@ public:
      * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    void SetPanId(uint16_t aPanId) { mBuffer.mHead.mInfo.mPanIdChannel.mPanId = aPanId; }
+    void SetPanId(uint16_t aPanId) {
+        mBuffer.mHead.mInfo.mPanIdChannel.mPanId = aPanId;
+    }
 
     /**
      * This method returns the IEEE 802.15.4 Channel to use for transmission.
@@ -534,7 +570,9 @@ public:
      * @returns The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    uint8_t GetChannel(void) const { return mBuffer.mHead.mInfo.mPanIdChannel.mChannel; }
+    uint8_t GetChannel(void) const {
+        return mBuffer.mHead.mInfo.mPanIdChannel.mChannel;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Channel to use for transmission.
@@ -544,7 +582,9 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    void SetChannel(uint8_t aChannel) { mBuffer.mHead.mInfo.mPanIdChannel.mChannel = aChannel; }
+    void SetChannel(uint8_t aChannel) {
+        mBuffer.mHead.mInfo.mPanIdChannel.mChannel = aChannel;
+    }
 
     /**
      * This method returns the timeout used for 6LoWPAN reassembly.
@@ -552,7 +592,9 @@ public:
      * @returns The time remaining in seconds.
      *
      */
-    uint8_t GetTimeout(void) const { return mBuffer.mHead.mInfo.mTimeout; }
+    uint8_t GetTimeout(void) const {
+        return mBuffer.mHead.mInfo.mTimeout;
+    }
 
     /**
      * This method sets the timeout used for 6LoWPAN reassembly.
@@ -560,7 +602,9 @@ public:
      * @param[in]  aTimeout  The timeout value.
      *
      */
-    void SetTimeout(uint8_t aTimeout) { mBuffer.mHead.mInfo.mTimeout = aTimeout; }
+    void SetTimeout(uint8_t aTimeout) {
+        mBuffer.mHead.mInfo.mTimeout = aTimeout;
+    }
 
     /**
      * This method returns the interface ID.
@@ -568,7 +612,9 @@ public:
      * @returns The interface ID.
      *
      */
-    int8_t GetInterfaceId(void) const { return mBuffer.mHead.mInfo.mInterfaceId; }
+    int8_t GetInterfaceId(void) const {
+        return mBuffer.mHead.mInfo.mInterfaceId;
+    }
 
     /**
      * This method sets the interface ID.
@@ -576,7 +622,9 @@ public:
      * @param[in]  aInterfaceId  The interface ID value.
      *
      */
-    void SetInterfaceId(int8_t aInterfaceId) { mBuffer.mHead.mInfo.mInterfaceId = aInterfaceId; }
+    void SetInterfaceId(int8_t aInterfaceId) {
+        mBuffer.mHead.mInfo.mInterfaceId = aInterfaceId;
+    }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
@@ -585,19 +633,25 @@ public:
      * @retval FALSE  If message forwarding is not scheduled for direct transmission.
      *
      */
-    bool GetDirectTransmission(void) const { return mBuffer.mHead.mInfo.mDirectTx; }
+    bool GetDirectTransmission(void) const {
+        return mBuffer.mHead.mInfo.mDirectTx;
+    }
 
     /**
      * This method unschedules forwarding using direct transmission.
      *
      */
-    void ClearDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = false; }
+    void ClearDirectTransmission(void) {
+        mBuffer.mHead.mInfo.mDirectTx = false;
+    }
 
     /**
      * This method schedules forwarding using direct transmission.
      *
      */
-    void SetDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = true; }
+    void SetDirectTransmission(void) {
+        mBuffer.mHead.mInfo.mDirectTx = true;
+    }
 
     /**
      * This method indicates whether or not link security is enabled for the message.
@@ -606,7 +660,9 @@ public:
      * @retval FALSE  If link security is not enabled.
      *
      */
-    bool IsLinkSecurityEnabled(void) const { return mBuffer.mHead.mInfo.mLinkSecurity; }
+    bool IsLinkSecurityEnabled(void) const {
+        return mBuffer.mHead.mInfo.mLinkSecurity;
+    }
 
     /**
      * This method sets whether or not link security is enabled for the message.
@@ -614,7 +670,9 @@ public:
      * @param[in]  aEnabled  TRUE if link security is enabled, FALSE otherwise.
      *
      */
-    void SetLinkSecurityEnabled(bool aEnabled) { mBuffer.mHead.mInfo.mLinkSecurity = aEnabled; }
+    void SetLinkSecurityEnabled(bool aEnabled) {
+        mBuffer.mHead.mInfo.mLinkSecurity = aEnabled;
+    }
 
     /**
      * This method is used to update a checksum value.
@@ -646,7 +704,9 @@ private:
      * @returns A pointer to the message pool.
      *
      */
-    MessagePool *GetMessagePool(void) const { return mBuffer.mHead.mInfo.mMessagePool; }
+    MessagePool *GetMessagePool(void) const {
+        return mBuffer.mHead.mInfo.mMessagePool;
+    }
 
     /**
      * This method sets the message pool this message to which this message belongs.
@@ -654,7 +714,9 @@ private:
      * @param[in] aMessagePool  A pointer to the message pool
      *
      */
-    void SetMessagePool(MessagePool *aMessagePool) { mBuffer.mHead.mInfo.mMessagePool = aMessagePool; }
+    void SetMessagePool(MessagePool *aMessagePool) {
+        mBuffer.mHead.mInfo.mMessagePool = aMessagePool;
+    }
 
     /**
      * This method returns `true` if the message is enqueued in any queue (`MessageQueue` or `PriorityQueue`).
@@ -662,7 +724,9 @@ private:
      * @returns `true` if the message is in any queue, `false` otherwise.
      *
      */
-    bool IsInAQueue(void) const { return (mBuffer.mHead.mInfo.mQueue.mMessage != NULL); }
+    bool IsInAQueue(void) const {
+        return (mBuffer.mHead.mInfo.mQueue.mMessage != NULL);
+    }
 
     /**
      * This method sets the message queue information for the message.
@@ -698,7 +762,9 @@ private:
      * @returns A reference to the mNext pointer for the specified list.
      *
      */
-    Message *&Next(uint8_t aList) { return mBuffer.mHead.mInfo.mNext[aList]; }
+    Message * &Next(uint8_t aList) {
+        return mBuffer.mHead.mInfo.mNext[aList];
+    }
 
     /**
      * This method returns a const reference to the `mNext` pointer for a given list.
@@ -708,7 +774,9 @@ private:
      * @returns A const reference to the mNext pointer for the specified list.
      *
      */
-    Message *const &Next(uint8_t aList) const { return mBuffer.mHead.mInfo.mNext[aList]; }
+    Message *const &Next(uint8_t aList) const {
+        return mBuffer.mHead.mInfo.mNext[aList];
+    }
 
     /**
      * This method returns a reference to the `mPrev` pointer for a given list.
@@ -718,7 +786,9 @@ private:
      * @returns A reference to the mPrev pointer for the specified list.
      *
      */
-    Message *&Prev(uint8_t aList) { return mBuffer.mHead.mInfo.mPrev[aList]; }
+    Message * &Prev(uint8_t aList) {
+        return mBuffer.mHead.mInfo.mPrev[aList];
+    }
 
     /**
      * This method returns the number of reserved header bytes.
@@ -726,7 +796,9 @@ private:
      * @returns The number of reserved header bytes.
      *
      */
-    uint16_t GetReserved(void) const { return mBuffer.mHead.mInfo.mReserved; }
+    uint16_t GetReserved(void) const {
+        return mBuffer.mHead.mInfo.mReserved;
+    }
 
     /**
      * This method sets the number of reserved header bytes.
@@ -734,7 +806,9 @@ private:
      * @pram[in]  aReservedHeader  The number of header bytes to reserve.
      *
      */
-    void SetReserved(uint16_t aReservedHeader) { mBuffer.mHead.mInfo.mReserved = aReservedHeader; }
+    void SetReserved(uint16_t aReservedHeader) {
+        mBuffer.mHead.mInfo.mReserved = aReservedHeader;
+    }
 
     /**
      * This method adds or frees message buffers to meet the requested length.
@@ -811,7 +885,9 @@ private:
      * @returns A pointer to the tail of the list.
      *
      */
-    Message *GetTail(void) const { return static_cast<Message *>(mData); }
+    Message *GetTail(void) const {
+        return static_cast<Message *>(mData);
+    }
 
     /**
      * This method set the tail of the list.
@@ -819,7 +895,9 @@ private:
      * @param[in]  aMessage  A pointer to the message to set as new tail.
      *
      */
-    void SetTail(Message *aMessage) { mData = aMessage; }
+    void SetTail(Message *aMessage) {
+        mData = aMessage;
+    }
 
     /**
      * This method adds a message to a list.
@@ -866,14 +944,14 @@ public:
     Message *GetHead(void) const;
 
     /**
-      * This method returns a pointer to the first message for a given priority level.
-      *
-      * @param[in] aPriority   Priority level.
-      *
-      * @returns A pointer to the first message with given priority level or NULL if there is no messages with
-      *          this priority level.
-      *
-      */
+     * This method returns a pointer to the first message for a given priority level.
+     *
+     * @param[in] aPriority   Priority level.
+     *
+     * @returns A pointer to the first message with given priority level or NULL if there is no messages with
+     *          this priority level.
+     *
+     */
     Message *GetHeadForPriority(uint8_t aPriority) const;
 
     /**
@@ -960,7 +1038,7 @@ private:
 
 private:
 
-    Message *mTails[Message::kNumPriorities];   ///< Tail pointers associated with different priority levels.
+    Message *mTails[Message::kNumPriorities]; ///< Tail pointers associated with different priority levels.
 };
 
 /**
@@ -976,9 +1054,9 @@ class MessagePool
 public:
 
     /**
-    * This class represents an iterator for iterating through all queued message from this pool.
-    *
-    */
+     * This class represents an iterator for iterating through all queued message from this pool.
+     *
+     */
     class Iterator
     {
         friend class MessagePool;
@@ -987,7 +1065,8 @@ public:
         /**
          * This constructor initializes an empty iterator.
          */
-        Iterator(void) : mMessage(NULL) { }
+        Iterator(void) : mMessage(NULL) {
+        }
 
         /**
          * This method returns the associated message with the iterator.
@@ -995,21 +1074,27 @@ public:
          * @returns A pointer to associated message with this iterator.
          *
          */
-        Message *GetMessage(void) const { return mMessage; }
+        Message *GetMessage(void) const {
+            return mMessage;
+        }
 
         /**
          * This method returns `true` if the iterator is empty (i.e., associated with a NULL message)
          *
          * @returns `true` if the iterator is empty, `false` otherwise.
          */
-        bool IsEmpty(void) const { return (mMessage == NULL); }
+        bool IsEmpty(void) const {
+            return (mMessage == NULL);
+        }
 
         /**
          * This method returns `true` if the iterator has ended (beyond the last message on list).
          *
          * @returns `true` if the iterator has ended , `false` otherwise.
          */
-        bool HasEnded(void) const { return IsEmpty(); }
+        bool HasEnded(void) const {
+            return IsEmpty();
+        }
 
         /**
          * This method returns a new iterator corresponding to next message on the list.
@@ -1017,7 +1102,9 @@ public:
          * @returns An iterator corresponding to next message on the list.
          *
          */
-        Iterator GetNext(void) const { return Iterator(Next()); }
+        Iterator GetNext(void) const {
+            return Iterator(Next());
+        }
 
         /**
          * This method returns a new iterator corresponding to previous message on the list.
@@ -1025,7 +1112,9 @@ public:
          * @returns An iterator corresponding to previous message on the list.
          *
          */
-        Iterator GetPrev(void) const { return Iterator(Prev()); }
+        Iterator GetPrev(void) const {
+            return Iterator(Prev());
+        }
 
         /**
          * This method moves the current iterator to the next message on the list.
@@ -1033,7 +1122,9 @@ public:
          * @returns A reference to current iterator.
          *
          */
-        Iterator &GoToNext(void) { mMessage = Next(); return *this; }
+        Iterator &GoToNext(void) {
+            mMessage = Next(); return *this;
+        }
 
         /**
          * This method moves the current iterator to the previous message on the list.
@@ -1041,10 +1132,13 @@ public:
          * @returns A reference to current iterator.
          *
          */
-        Iterator &GoToPrev(void) { mMessage = Prev(); return *this; }
+        Iterator &GoToPrev(void) {
+            mMessage = Prev(); return *this;
+        }
 
     private:
-        Iterator(Message *aMessage) : mMessage(aMessage) { }
+        Iterator(Message *aMessage) : mMessage(aMessage) {
+        }
         Message *Next(void) const;
         Message *Prev(void) const;
 
@@ -1096,7 +1190,9 @@ public:
      * @returns A pointer to the last message.
      *
      */
-    Iterator GetAllMessagesTail(void) const { return Iterator(mAllQueue.GetTail()); }
+    Iterator GetAllMessagesTail(void) const {
+        return Iterator(mAllQueue.GetTail());
+    }
 
     /**
      * This method returns the number of free buffers.
@@ -1105,9 +1201,13 @@ public:
      *
      */
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    uint16_t GetFreeBufferCount(void) const { return otPlatMessagePoolNumFreeBuffers(mInstance); }
+    uint16_t GetFreeBufferCount(void) const {
+        return otPlatMessagePoolNumFreeBuffers(mInstance);
+    }
 #else
-    uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
+    uint16_t GetFreeBufferCount(void) const {
+        return mNumFreeBuffers;
+    }
 #endif
 
 private:
@@ -1119,15 +1219,17 @@ private:
     Buffer *NewBuffer(void);
     otError FreeBuffers(Buffer *aBuffer);
     otError ReclaimBuffers(int aNumBuffers);
-    PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
+    PriorityQueue *GetAllMessagesQueue(void) {
+        return &mAllQueue;
+    }
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
     uint16_t mNumFreeBuffers;
     Buffer   mBuffers[kNumBuffers];
-    Buffer   *mFreeBuffers;
+    Buffer  *mFreeBuffers;
 #endif
 
-    otInstance *mInstance;
+    otInstance   *mInstance;
     PriorityQueue mAllQueue;
 };
 
@@ -1136,6 +1238,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // MESSAGE_HPP_

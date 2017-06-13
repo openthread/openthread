@@ -91,7 +91,7 @@ public:
 private:
     enum
     {
-        kDelayJoinEnt = 50,  ///< milliseconds
+        kDelayJoinEnt = 50, ///< milliseconds
     };
 
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
@@ -120,17 +120,17 @@ private:
 
     Ip6::NetifCallback mNetifCallback;
 
-    Ip6::UdpSocket mSocket;
-    Coap::Resource mRelayTransmit;
-    ThreadNetif &mNetif;
+    Ip6::UdpSocket     mSocket;
+    Coap::Resource     mRelayTransmit;
+    ThreadNetif       &mNetif;
 
-    Timer mTimer;
-    MessageQueue mDelayedJoinEnts;
+    Timer              mTimer;
+    MessageQueue       mDelayedJoinEnts;
 
-    uint16_t mJoinerUdpPort;
+    uint16_t           mJoinerUdpPort;
 
-    bool mIsJoinerPortConfigured : 1;
-    bool mExpectJoinEntRsp : 1;
+    bool               mIsJoinerPortConfigured : 1;
+    bool               mExpectJoinEntRsp : 1;
 };
 
 /**
@@ -144,7 +144,9 @@ public:
      * Default constructor for the object.
      *
      */
-    DelayedJoinEntHeader(void) { memset(this, 0, sizeof(*this)); }
+    DelayedJoinEntHeader(void) {
+        memset(this, 0, sizeof(*this));
+    }
 
     /**
      * This constructor initializes the object with specific values.
@@ -202,7 +204,9 @@ public:
      * @returns  A time when the message shall be sent.
      *
      */
-    uint32_t GetSendTime(void) const { return mSendTime; }
+    uint32_t GetSendTime(void) const {
+        return mSendTime;
+    }
 
     /**
      * This method returns a destination of the delayed message.
@@ -210,7 +214,9 @@ public:
      * @returns  A destination of the delayed message.
      *
      */
-    const Ip6::MessageInfo *GetMessageInfo(void) const { return &mMessageInfo; }
+    const Ip6::MessageInfo *GetMessageInfo(void) const {
+        return &mMessageInfo;
+    }
 
     /**
      * This method returns a pointer to the KEK that should be used to send the delayed message.
@@ -218,7 +224,9 @@ public:
      * @returns  A pointer to the KEK.
      *
      */
-    const uint8_t *GetKek(void) const { return mKek; }
+    const uint8_t *GetKek(void) const {
+        return mKek;
+    }
 
     /**
      * This method checks if the message shall be sent before the given time.
@@ -228,7 +236,9 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
+    bool IsEarlier(uint32_t aTime) {
+        return (static_cast<int32_t>(aTime - mSendTime) > 0);
+    }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -238,16 +248,18 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
+    bool IsLater(uint32_t aTime) {
+        return (static_cast<int32_t>(aTime - mSendTime) < 0);
+    }
 
 private:
-    Ip6::MessageInfo mMessageInfo;            ///< Message info of the message to send.
-    uint32_t mSendTime;                       ///< Time when the message shall be sent.
-    uint8_t mKek[KeyManager::kMaxKeyLength];  ///< KEK used by MAC layer to encode this message.
+    Ip6::MessageInfo mMessageInfo;                    ///< Message info of the message to send.
+    uint32_t         mSendTime;                       ///< Time when the message shall be sent.
+    uint8_t          mKek[KeyManager::kMaxKeyLength]; ///< KEK used by MAC layer to encode this message.
 };
 
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // JOINER_ROUTER_HPP_

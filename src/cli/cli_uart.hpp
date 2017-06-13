@@ -47,7 +47,7 @@ namespace Cli {
  * This class implements the CLI server on top of the UART platform abstraction.
  *
  */
-class Uart: public Server
+class Uart : public Server
 {
 public:
     /**
@@ -107,21 +107,21 @@ private:
     otError ProcessCommand(void);
     void Send(void);
 
-    char mRxBuffer[kRxBufferSize];
-    uint16_t mRxLength;
+    char        mRxBuffer[kRxBufferSize];
+    uint16_t    mRxLength;
 
-    char mTxBuffer[kTxBufferSize];
-    uint16_t mTxHead;
-    uint16_t mTxLength;
+    char        mTxBuffer[kTxBufferSize];
+    uint16_t    mTxHead;
+    uint16_t    mTxLength;
 
-    uint16_t mSendLength;
+    uint16_t    mSendLength;
 
     Interpreter mInterpreter;
 
     friend class Interpreter;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
 #endif  // CLI_UART_HPP_

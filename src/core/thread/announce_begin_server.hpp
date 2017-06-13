@@ -102,21 +102,21 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    uint32_t mChannelMask;
-    uint16_t mPeriod;
-    uint8_t mCount;
-    uint8_t mChannel;
+    uint32_t       mChannelMask;
+    uint16_t       mPeriod;
+    uint8_t        mCount;
+    uint8_t        mChannel;
 
-    Timer mTimer;
+    Timer          mTimer;
 
     Coap::Resource mAnnounceBegin;
-    ThreadNetif &mNetif;
+    ThreadNetif   &mNetif;
 };
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // ANNOUNCE_BEGIN_SERVER_HPP_

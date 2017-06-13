@@ -61,7 +61,9 @@ public:
      * Default constructor for the object.
      *
      */
-    QueryMetadata(void) { memset(this, 0, sizeof(*this)); };
+    QueryMetadata(void) {
+        memset(this, 0, sizeof(*this));
+    }
 
     /**
      * This constructor initializes the object with specific values.
@@ -74,7 +76,7 @@ public:
         memset(this, 0, sizeof(*this));
         mResponseHandler = aHandler;
         mResponseContext = aContext;
-    };
+    }
 
     /**
      * This method appends request data to the message.
@@ -87,7 +89,7 @@ public:
      */
     otError AppendTo(Message &aMessage) const {
         return aMessage.Append(this, sizeof(*this));
-    };
+    }
 
     /**
      * This method reads request data from the message.
@@ -99,7 +101,7 @@ public:
      */
     uint16_t ReadFrom(const Message &aMessage) {
         return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+    }
 
     /**
      * This method updates request data in the message.
@@ -121,7 +123,9 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); };
+    bool IsEarlier(uint32_t aTime) const {
+        return (static_cast<int32_t>(aTime - mTransmissionTime) > 0);
+    }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -131,17 +135,19 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); };
+    bool IsLater(uint32_t aTime) const {
+        return (static_cast<int32_t>(aTime - mTransmissionTime) < 0);
+    }
 
 private:
-    const char            *mHostname;             ///< A hostname to be find.
-    otDnsResponseHandler   mResponseHandler;      ///< A function pointer that is called on response reception.
-    void                  *mResponseContext;      ///< A pointer to arbitrary context information.
-    uint32_t               mTransmissionTime;     ///< Time when the timer should shoot for this message.
-    Ip6::Address           mSourceAddress;        ///< IPv6 address of the message source.
-    Ip6::Address           mDestinationAddress;   ///< IPv6 address of the message destination.
-    uint16_t               mDestinationPort;      ///< UDP port of the message destination.
-    uint8_t                mRetransmissionCount;  ///< Number of retransmissions.
+    const char          *mHostname;            ///< A hostname to be find.
+    otDnsResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
+    void                *mResponseContext;     ///< A pointer to arbitrary context information.
+    uint32_t             mTransmissionTime;    ///< Time when the timer should shoot for this message.
+    Ip6::Address         mSourceAddress;       ///< IPv6 address of the message source.
+    Ip6::Address         mDestinationAddress;  ///< IPv6 address of the message destination.
+    uint16_t             mDestinationPort;     ///< UDP port of the message destination.
+    uint8_t              mRetransmissionCount; ///< Number of retransmissions.
 } OT_TOOL_PACKED_END;
 
 /**
@@ -157,11 +163,11 @@ public:
      * @param[in]  aNetif    A reference to the network interface that DNS client should be assigned to.
      *
      */
-    Client(Ip6::Netif &aNetif):
+    Client(Ip6::Netif &aNetif) :
         mSocket(aNetif.GetIp6().mUdp),
         mMessageId(0),
         mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Client::HandleRetransmissionTimer, this) {
-    };
+    }
 
     /**
      * This method starts the DNS client.
@@ -199,7 +205,9 @@ public:
      * @returns A port number.
      *
      */
-    uint16_t GetPort(void) { return mSocket.GetSockName().mPort; };
+    uint16_t GetPort(void) {
+        return mSocket.GetSockName().mPort;
+    }
 
 private:
     /**
@@ -253,12 +261,12 @@ private:
 
     Ip6::UdpSocket mSocket;
 
-    uint16_t mMessageId;
-    MessageQueue mPendingQueries;
-    Timer mRetransmissionTimer;
+    uint16_t       mMessageId;
+    MessageQueue   mPendingQueries;
+    Timer          mRetransmissionTimer;
 };
 
-}  // namespace Dns
-}  // namespace ot
+} // namespace Dns
+} // namespace ot
 
 #endif  // DNS_CLIENT_HPP_

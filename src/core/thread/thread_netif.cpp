@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
@@ -59,18 +58,18 @@ static const otMasterKey kThreadMasterKey =
     }
 };
 
-ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
+ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6) :
     Netif(aIp6, OT_NETIF_INTERFACE_ID_THREAD),
     mCoap(*this),
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     mDhcp6Client(*this),
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     mDhcp6Server(*this),
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient(*this),
-#endif  // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif // OPENTHREAD_ENABLE_DNS_CLIENT
     mActiveDataset(*this),
     mPendingDataset(*this),
     mKeyManager(*this),
@@ -87,14 +86,14 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     mCommissioner(*this),
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
     mDtls(*this),
     mCoapSecure(*this),
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     mJoiner(*this),
-#endif  // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     mJamDetector(*this),
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
@@ -105,7 +104,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mJoinerRouter(*this),
     mLeader(*this),
     mAddressResolver(*this),
-#endif  // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD
     mChildSupervisor(*this),
     mSupervisionListener(*this),
     mAnnounceBegin(*this),
@@ -166,7 +165,7 @@ otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 
 otError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Address &destination, uint8_t *prefixMatch)
 {
-    otError error;
+    otError  error;
     uint16_t rloc;
 
     SuccessOrExit(error = mNetworkDataLeader.RouteLookup(source, destination, prefixMatch, &rloc));
@@ -204,4 +203,4 @@ otInstance *ThreadNetif::GetInstance(void)
     return otInstanceFromThreadNetif(this);
 }
 
-}  // namespace ot
+} // namespace ot

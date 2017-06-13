@@ -162,7 +162,7 @@ OTAPI otError OTCALL otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_DATASET_FTD_H_
+#endif // OPENTHREAD_DATASET_FTD_H_

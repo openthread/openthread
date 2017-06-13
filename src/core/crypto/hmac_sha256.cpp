@@ -41,6 +41,7 @@ namespace Crypto {
 HmacSha256::HmacSha256()
 {
     const mbedtls_md_info_t *mdInfo = NULL;
+
     mbedtls_md_init(&mContext);
     mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
     mbedtls_md_setup(&mContext, mdInfo, 1);
@@ -66,5 +67,5 @@ void HmacSha256::Finish(uint8_t aHash[kHashSize])
     mbedtls_md_hmac_finish(&mContext, aHash);
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot

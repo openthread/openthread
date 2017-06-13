@@ -118,7 +118,7 @@ extern "C" {
 
 #elif defined(_MSC_VER)
 
-#define OT_TOOL_PACKED_BEGIN                __pragma(pack(push,1))
+#define OT_TOOL_PACKED_BEGIN                __pragma(pack(push, 1))
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END                  __pragma(pack(pop))
 
@@ -195,7 +195,7 @@ extern "C" {
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif // TOOLCHAIN_H_

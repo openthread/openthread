@@ -84,7 +84,7 @@ void otPlatFree(void *aPtr);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // DEBUG_H_
+#endif // DEBUG_H_

@@ -46,8 +46,8 @@ class Dataset
 public:
     enum
     {
-        kMaxSize = 256,      ///< Maximum size of MeshCoP Dataset (bytes)
-        kMaxValueSize = 16,  /// < Maximum size of each Dataset TLV value (bytes)
+        kMaxSize = 256,     ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxValueSize = 16, /// < Maximum size of each Dataset TLV value (bytes)
     };
 
     /**
@@ -89,7 +89,9 @@ public:
      * @returns A pointer to the byte representation of the Dataset.
      *
      */
-    const uint8_t *GetBytes(void) const { return mTlvs; }
+    const uint8_t *GetBytes(void) const {
+        return mTlvs;
+    }
 
     /**
      * This method converts the TLV representation to structure representation.
@@ -103,7 +105,9 @@ public:
      * @returns The Dataset size in bytes.
      *
      */
-    uint16_t GetSize(void) const { return mLength; }
+    uint16_t GetSize(void) const {
+        return mLength;
+    }
 
     /**
      * This method returns a reference to the Timestamp.
@@ -190,13 +194,13 @@ private:
 
     void Remove(uint8_t *aStart, uint8_t aLength);
 
-    Tlv::Type  mType;            ///< Active or Pending
-    uint8_t    mTlvs[kMaxSize];  ///< The Dataset buffer
-    uint16_t   mLength;          ///< The number of valid bytes in @var mTlvs
+    Tlv::Type   mType;           ///< Active or Pending
+    uint8_t     mTlvs[kMaxSize]; ///< The Dataset buffer
+    uint16_t    mLength;         ///< The number of valid bytes in @var mTlvs
     otInstance *mInstance;       ///< The pointer to an OpenThread instance
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #endif  // MESHCOP_DATASET_HPP_

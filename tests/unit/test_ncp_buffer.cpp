@@ -54,20 +54,20 @@ static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 
-static otInstance sInstance;
+static otInstance  sInstance;
 static MessagePool sMessagePool(&sInstance);
 
 struct CallbackContext
 {
-    uint32_t mFrameAddedCount;           // Number of times FrameAddedCallback is invoked.
-    uint32_t mFrameRemovedCount;         // Number of times FrameRemovedCallback is invoked.
+    uint32_t mFrameAddedCount;   // Number of times FrameAddedCallback is invoked.
+    uint32_t mFrameRemovedCount; // Number of times FrameRemovedCallback is invoked.
 };
 
 CallbackContext sContext;
 
 NcpFrameBuffer::FrameTag sTagHistoryArray[kTagArraySize];
-uint32_t sTagHistoryHead = 0;
-uint32_t sTagHistoryTail = 0;
+uint32_t                 sTagHistoryHead = 0;
+uint32_t                 sTagHistoryTail = 0;
 NcpFrameBuffer::FrameTag sExpectedRemovedTag = NcpFrameBuffer::kInvalidTag;
 
 void ClearTagHistory(void)
@@ -134,12 +134,12 @@ void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLeng
 {
     enum
     {
-        kBytesPerLine = 32,    // Number of bytes per line.
+        kBytesPerLine = 32, // Number of bytes per line.
     };
 
-    char charBuff[kBytesPerLine + 1];
+    char     charBuff[kBytesPerLine + 1];
     uint16_t counter;
-    uint8_t byte;
+    uint8_t  byte;
 
     printf("\n%s - len = %u\n    ", aTextMessage, aBufferLength);
 
@@ -184,7 +184,7 @@ void ReadAndVerifyContent(NcpFrameBuffer &aNcpBuffer, const uint8_t *aContentBuf
 
 void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer)
 {
-    Message *message;
+    Message        *message;
     CallbackContext oldContext;
 
     message = sMessagePool.New(Message::kTypeIp6, 0);
@@ -231,8 +231,8 @@ void VerifyAndRemoveFrame1(NcpFrameBuffer &aNcpBuffer)
 
 void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer)
 {
-    Message *message1;
-    Message *message2;
+    Message        *message1;
+    Message        *message2;
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool.New(Message::kTypeIp6, 0);
@@ -279,7 +279,7 @@ void VerifyAndRemoveFrame2(NcpFrameBuffer &aNcpBuffer)
 
 void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer)
 {
-    Message *message1;
+    Message        *message1;
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool.New(Message::kTypeIp6, 0);
@@ -319,12 +319,12 @@ void VerifyAndRemoveFrame3(NcpFrameBuffer &aNcpBuffer)
 // This function implements the NcpFrameBuffer tests
 void TestNcpFrameBuffer(void)
 {
-    unsigned i, j;
-    uint8_t buffer[kTestBufferSize];
+    unsigned       i, j;
+    uint8_t        buffer[kTestBufferSize];
     NcpFrameBuffer ncpBuffer(buffer, kTestBufferSize);
 
     Message *message;
-    uint8_t readBuffer[16];
+    uint8_t  readBuffer[16];
     uint16_t readLen, readOffset;
 
     for (i = 0; i < sizeof(buffer); i++)
@@ -525,15 +525,15 @@ void TestNcpFrameBuffer(void)
 
 enum
 {
-    kFuzTestBufferSize = 2000,             // Size of the buffer used during fuzz testing
-    kFuzTestIterationAttempts = 500000,    // Number of iterations  to run
-    kLensArraySize = 500,                  // Size of "Lengths" array.
-    kMaxFrameLen = 400,                    // Maximum frame length
-    kReadProbability = 50,                 // Probability (in percent) to randomly choose to read vs write frame
-    kUseTrueRandomNumberGenerator = 1,     // To use true random number generator or not.
+    kFuzTestBufferSize = 2000,          // Size of the buffer used during fuzz testing
+    kFuzTestIterationAttempts = 500000, // Number of iterations  to run
+    kLensArraySize = 500,               // Size of "Lengths" array.
+    kMaxFrameLen = 400,                 // Maximum frame length
+    kReadProbability = 50,              // Probability (in percent) to randomly choose to read vs write frame
+    kUseTrueRandomNumberGenerator = 1,  // To use true random number generator or not.
 };
 
-uint8_t sFrameBuffer[kFuzTestBufferSize];
+uint8_t  sFrameBuffer[kFuzTestBufferSize];
 uint32_t sFrameBufferTailIndex = 0;
 
 uint32_t GetRandom(uint32_t max)
@@ -554,10 +554,10 @@ uint32_t GetRandom(uint32_t max)
 
 otError WriteRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer)
 {
-    otError error;
-    uint8_t byte;
+    otError         error;
+    uint8_t         byte;
     CallbackContext oldContext = sContext;
-    uint32_t tail = sFrameBufferTailIndex;
+    uint32_t        tail = sFrameBufferTailIndex;
 
     SuccessOrExit(error = aNcpBuffer.InFrameBegin());
 
@@ -607,10 +607,10 @@ otError ReadRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer)
 // This runs a fuzz test of NCP buffer
 void TestFuzzNcpFrameBuffer(void)
 {
-    uint8_t buffer[kFuzTestBufferSize];
+    uint8_t        buffer[kFuzTestBufferSize];
     NcpFrameBuffer ncpBuffer(buffer, kFuzTestBufferSize);
 
-    uint32_t lensArray[kLensArraySize];          // Keeps track of length of written frames so far
+    uint32_t lensArray[kLensArraySize]; // Keeps track of length of written frames so far
     uint32_t lensArrayStart;
     uint32_t lensArrayCount;
 
@@ -684,7 +684,7 @@ void TestFuzzNcpFrameBuffer(void)
     printf("\n -- PASS\n");
 }
 
-}  // namespace ot
+} // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

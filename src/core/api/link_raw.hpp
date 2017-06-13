@@ -60,13 +60,17 @@ public:
      * This method returns true if the raw link-layer is enabled.
      *
      */
-    bool IsEnabled() { return mEnabled; }
+    bool IsEnabled() {
+        return mEnabled;
+    }
 
     /**
      * This method enables/disables the raw link-layer.
      *
      */
-    void SetEnabled(bool aEnabled) { mEnabled = aEnabled; }
+    void SetEnabled(bool aEnabled) {
+        mEnabled = aEnabled;
+    }
 
     /**
      * This method returns the capabilities of the raw link-layer.
@@ -131,8 +135,8 @@ private:
         kTimerReasonEnergyScanComplete,
     };
 
-    Timer                   mTimer;
-    TimerReason             mTimerReason;
+    Timer       mTimer;
+    TimerReason mTimerReason;
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
@@ -141,8 +145,8 @@ private:
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
-    uint8_t                 mTransmitAttempts;
-    uint8_t                 mCsmaAttempts;
+    uint8_t mTransmitAttempts;
+    uint8_t mCsmaAttempts;
 
     void StartCsmaBackoff(void);
 
@@ -155,8 +159,8 @@ private:
         kInvalidRssiValue = 127
     };
 
-    Tasklet                 mEnergyScanTask;
-    int8_t                  mEnergyScanRssi;
+    Tasklet mEnergyScanTask;
+    int8_t  mEnergyScanRssi;
 
     static void HandleEnergyScanTask(void *aContext);
     void HandleEnergyScanTask(void);
@@ -164,6 +168,6 @@ private:
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 };
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // LINK_RAW_HPP_

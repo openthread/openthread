@@ -46,7 +46,7 @@ otInstance *sInstance;
 void PlatformInit(int argc, char *argv[])
 {
     uint32_t temp, tempTrim;
-    uint8_t revId;
+    uint8_t  revId;
 
     /* enable clock for PORTs */
     CLOCK_EnableClock(kCLOCK_PortA);
@@ -83,7 +83,7 @@ void PlatformInit(int argc, char *argv[])
                            XCVR_TSM_OVRD0_BB_LDO_ADCDAC_EN_OVRD_MASK; /* Force ADC DAC LDO on to prevent BGAP failure */
         /* Reset LDO trim settings */
         RSIM->ANA_TRIM = tempTrim;
-    }/* Workaround for Rev 1.0 XTAL startup and ADC analog diagnostics circuitry */
+    } /* Workaround for Rev 1.0 XTAL startup and ADC analog diagnostics circuitry */
 
     /* Init board clock */
     BOARD_BootClockRUN();

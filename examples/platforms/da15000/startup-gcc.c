@@ -27,9 +27,9 @@
  */
 
 /**
-* Stubs out exception handling and general C++ bloat
-* for suitability for embedded environments.
-*/
+ * Stubs out exception handling and general C++ bloat
+ * for suitability for embedded environments.
+ */
 
 #include <stdint.h>
 
@@ -53,7 +53,7 @@ void __cxa_guard_abort(__guard *g)
 }
 void __cxa_pure_virtual(void)
 {
-    while (1);
+    while (1) {}
 }
 
 void *__dso_handle;

@@ -43,16 +43,16 @@ class ThreadNetif;
 
 namespace Coap {
 
-class CoapSecure: public Coap
+class CoapSecure : public Coap
 {
 public:
     /**
-      * This function pointer is called once DTLS connection is established.
-      *
-      * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
-      * @param[in]  aContext    A pointer to arbitrary context information.
-      *
-      */
+     * This function pointer is called once DTLS connection is established.
+     *
+     * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
+     * @param[in]  aContext    A pointer to arbitrary context information.
+     *
+     */
     typedef void (*ConnectedCallback)(bool aConnected, void *aContext);
 
     /**
@@ -63,7 +63,7 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    typedef otError(*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError (*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This constructor initializes the object.
@@ -214,16 +214,16 @@ private:
     static void HandleUdpTransmit(void *aContext);
     void HandleUdpTransmit(void);
 
-    Ip6::MessageInfo mPeerAddress;
+    Ip6::MessageInfo  mPeerAddress;
     ConnectedCallback mConnectedCallback;
-    void *mConnectedContext;
+    void             *mConnectedContext;
     TransportCallback mTransportCallback;
-    void *mTransportContext;
-    Message *mTransmitMessage;
-    Tasklet mTransmitTask;
+    void             *mTransportContext;
+    Message          *mTransmitMessage;
+    Tasklet           mTransmitTask;
 };
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot
 
 #endif  // COAP_SECURE_HPP_

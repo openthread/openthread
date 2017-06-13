@@ -48,7 +48,7 @@ static uint32_t sTimerHi = 0;
 static uint32_t sTimerLo = 0;
 static uint32_t sAlarmT0 = 0;
 static uint32_t sAlarmDt = 0;
-static bool sIsRunning   = false;
+static bool     sIsRunning   = false;
 
 void efr32AlarmInit(void)
 {
@@ -88,7 +88,7 @@ void efr32AlarmProcess(otInstance *aInstance)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t expires;
-    bool fire = false;
+    bool     fire = false;
 
     otEXPECT(sIsRunning);
 

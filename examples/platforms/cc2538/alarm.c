@@ -45,14 +45,14 @@
 
 enum
 {
-    kSystemClock = 32000000,  ///< MHz
-    kTicksPerSec = 1000,      ///< Ticks per second
+    kSystemClock = 32000000, ///< MHz
+    kTicksPerSec = 1000,     ///< Ticks per second
 };
 
 static uint32_t sCounter = 0;
 static uint32_t sAlarmT0 = 0;
 static uint32_t sAlarmDt = 0;
-static bool sIsRunning = false;
+static bool     sIsRunning = false;
 
 void cc2538AlarmInit(void)
 {
@@ -82,7 +82,7 @@ void otPlatAlarmStop(otInstance *aInstance)
 void cc2538AlarmProcess(otInstance *aInstance)
 {
     uint32_t expires;
-    bool fire = false;
+    bool     fire = false;
 
     if (sIsRunning)
     {
@@ -90,14 +90,14 @@ void cc2538AlarmProcess(otInstance *aInstance)
 
         if (sAlarmT0 <= sCounter)
         {
-            if (expires >= sAlarmT0 && expires <= sCounter)
+            if ((expires >= sAlarmT0) && (expires <= sCounter))
             {
                 fire = true;
             }
         }
         else
         {
-            if (expires >= sAlarmT0 || expires <= sCounter)
+            if ((expires >= sAlarmT0) || (expires <= sCounter))
             {
                 fire = true;
             }

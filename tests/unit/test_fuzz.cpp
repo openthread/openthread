@@ -31,11 +31,11 @@
 
 //#define DBG_FUZZ 1
 
-bool g_fRadioEnabled = false;
-uint8_t g_RecvChannel = 0;
-uint8_t g_TransmitPsdu[128];
+bool         g_fRadioEnabled = false;
+uint8_t      g_RecvChannel = 0;
+uint8_t      g_TransmitPsdu[128];
 otRadioFrame g_TransmitRadioFrame;
-bool g_fTransmit = false;
+bool         g_fTransmit = false;
 
 bool testFuzzRadioIsEnabled(otInstance *)
 {
@@ -110,7 +110,7 @@ void TestFuzz(uint32_t aSeconds)
 #endif
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    size_t otInstanceBufferLength = 0;
+    size_t   otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 
     // Call to query the buffer size
@@ -140,7 +140,7 @@ void TestFuzz(uint32_t aSeconds)
     {
         otTaskletsProcess(aInstance);
 
-        if (g_testPlatAlarmSet && otPlatAlarmGetNow() >= g_testPlatAlarmNext)
+        if (g_testPlatAlarmSet && (otPlatAlarmGetNow() >= g_testPlatAlarmNext))
         {
             g_testPlatAlarmSet = false;
             otPlatAlarmFired(aInstance);
@@ -159,7 +159,7 @@ void TestFuzz(uint32_t aSeconds)
 
             if (g_RecvChannel != 0)
             {
-                uint8_t fuzzRecvBuff[128];
+                uint8_t      fuzzRecvBuff[128];
                 otRadioFrame fuzzPacket;
 
                 // Initialize the radio packet with a random length

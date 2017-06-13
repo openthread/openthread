@@ -40,7 +40,7 @@
 #include "platform-emsk.h"
 
 #include <stdio.h>
-#define DBG(fmt, ...)   printf(fmt, ##__VA_ARGS__)
+#define DBG(fmt, ...)   printf(fmt, ## __VA_ARGS__)
 
 enum
 {
@@ -53,9 +53,9 @@ static void processReceive(void);
 static void processTransmit(void);
 
 static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t sTransmitLength = 0;
+static uint16_t       sTransmitLength = 0;
 
-static uint8_t sReceiveBuffer[kReceiveBufferSize];
+static uint8_t  sReceiveBuffer[kReceiveBufferSize];
 static uint16_t sReceiveHead = 0;
 
 static DEV_UART *consoleUart;
@@ -115,11 +115,11 @@ exit:
 void processReceive(void)
 {
 
-    int32_t rdAvail = 0;
+    int32_t  rdAvail = 0;
     uint16_t remaining;
 
     consoleUart->uart_control(UART_CMD_GET_RXAVAIL, (void *)(&rdAvail));
-    otEXPECT_ACTION(rdAvail > 0, ;);
+    otEXPECT_ACTION(rdAvail > 0,; );
 
     remaining = kReceiveBufferSize - sReceiveHead;
 
@@ -151,7 +151,7 @@ exit:
 
 void processTransmit(void)
 {
-    otEXPECT_ACTION(sTransmitBuffer != NULL, ;);
+    otEXPECT_ACTION(sTransmitBuffer != NULL,; );
 
     consoleUart->uart_write((void *)sTransmitBuffer, (int32_t)sTransmitLength);
 
@@ -167,4 +167,3 @@ void emskUartProcess(void)
     processReceive();
     processTransmit();
 }
-

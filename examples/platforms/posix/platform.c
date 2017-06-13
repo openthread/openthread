@@ -54,8 +54,8 @@ uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
 #ifndef _WIN32
-int     gArgumentsCount = 0;
-char  **gArguments = NULL;
+int    gArgumentsCount = 0;
+char **gArguments = NULL;
 #endif
 
 void PlatformInit(int argc, char *argv[])
@@ -90,12 +90,12 @@ void PlatformInit(int argc, char *argv[])
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
-    fd_set read_fds;
-    fd_set write_fds;
-    fd_set error_fds;
-    int max_fd = -1;
+    fd_set         read_fds;
+    fd_set         write_fds;
+    fd_set         error_fds;
+    int            max_fd = -1;
     struct timeval timeout;
-    int rval;
+    int            rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);

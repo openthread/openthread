@@ -66,14 +66,15 @@ otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, 
                                          const Ip6::Address &aAddress)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
+
+    Coap::Header                      header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
+    MeshCoP::ChannelMask0Tlv          channelMask;
+    MeshCoP::CountTlv                 count;
+    MeshCoP::PeriodTlv                period;
 
     Ip6::MessageInfo messageInfo;
-    Message *message = NULL;
+    Message         *message = NULL;
 
     VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
@@ -113,7 +114,7 @@ otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, 
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -121,7 +122,6 @@ exit:
     return error;
 }
 
-}  // namespace ot
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

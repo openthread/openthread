@@ -114,7 +114,7 @@ OTAPI uint8_t OTCALL otNetDataGetStableVersion(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_NETDATA_H_
+#endif // OPENTHREAD_NETDATA_H_

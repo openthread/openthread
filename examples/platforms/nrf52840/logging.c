@@ -62,7 +62,7 @@
 #define RTT_COLOR_CODE_CYAN    ""
 #endif // LOG_RTT_COLOR_ENABLE == 1
 
-static bool sLogInitialized = false;
+static bool    sLogInitialized = false;
 static uint8_t sLogBuffer[LOG_RTT_BUFFER_SIZE];
 
 /**
@@ -128,6 +128,7 @@ void nrf5LogInit()
                                         LOG_RTT_BUFFER_NAME, sLogBuffer,
                                         LOG_RTT_BUFFER_SIZE,
                                         SEGGER_RTT_MODE_NO_BLOCK_TRIM);
+
     otEXPECT(res >= 0);
 
     sLogInitialized = true;
@@ -148,7 +149,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,
 
     otEXPECT(sLogInitialized == true);
 
-    char logString[LOG_PARSE_BUFFER_SIZE + 1];
+    char     logString[LOG_PARSE_BUFFER_SIZE + 1];
     uint16_t length = 0;
 
 #if (LOG_TIMESTAMP_ENABLE == 1)

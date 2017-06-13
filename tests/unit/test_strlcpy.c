@@ -33,10 +33,10 @@
 
 int main(int argc, char **argv)
 {
-    char string_a[8] = "foo";
-    char string_b[] = "barbarbar";
+    char   string_a[8] = "foo";
+    char   string_b[] = "barbarbar";
     size_t ret = 0;
-    int errors = 0;
+    int    errors = 0;
 
     (void)argc;
     (void)argv;

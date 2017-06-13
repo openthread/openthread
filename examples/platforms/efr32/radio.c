@@ -63,25 +63,25 @@ enum
 
 enum
 {
-    EFR32_RECEIVE_SENSITIVITY = -100,  // dBm
+    EFR32_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
-static uint16_t       sPanId             = 0;
-static uint8_t        sChannel           = 0;
-static bool           sTransmitBusy      = false;
-static bool           sPromiscuous       = false;
-static bool           sIsReceiverEnabled = false;
-static bool           sIsSrcMatchEnabled = false;
-static otRadioState   sState             = OT_RADIO_STATE_DISABLED;
+static uint16_t     sPanId             = 0;
+static uint8_t      sChannel           = 0;
+static bool         sTransmitBusy      = false;
+static bool         sPromiscuous       = false;
+static bool         sIsReceiverEnabled = false;
+static bool         sIsSrcMatchEnabled = false;
+static otRadioState sState             = OT_RADIO_STATE_DISABLED;
 
-static uint8_t        sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
-static uint8_t        sReceivePsdu[IEEE802154_MAX_LENGTH];
-static otRadioFrame   sReceiveFrame;
-static otError        sReceiveError;
+static uint8_t      sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
+static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
+static otRadioFrame sReceiveFrame;
+static otError      sReceiveError;
 
-static otRadioFrame   sTransmitFrame;
-static uint8_t        sTransmitPsdu[IEEE802154_MAX_LENGTH];
-static otError        sTransmitError;
+static otRadioFrame sTransmitFrame;
+static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static otError      sTransmitError;
 
 typedef struct        srcMatchEntry
 {
@@ -108,14 +108,14 @@ void efr32RadioInit(void)
     // 802.15.4 configuration
     RAIL_IEEE802154_Config_t config =
     {
-        false,                                   // promiscuousMode
-        false,                                   // isPanCoordinator
-        RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES,  // framesMask
-        RAIL_RF_STATE_RX,                        // defaultState
-        100,                                     // idleTime
-        192,                                     // turnaroundTime
-        894,                                     // ackTimeout
-        NULL                                     // addresses
+        false,                                  // promiscuousMode
+        false,                                  // isPanCoordinator
+        RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES, // framesMask
+        RAIL_RF_STATE_RX,                       // defaultState
+        100,                                    // idleTime
+        192,                                    // turnaroundTime
+        894,                                    // ackTimeout
+        NULL                                    // addresses
     };
 
     sReceiveFrame.mLength  = 0;
@@ -179,6 +179,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     uint64_t eui64;
     uint8_t *eui64Ptr = NULL;
+
     (void)aInstance;
 
     eui64 = SYSTEM_GetUnique();
@@ -259,6 +260,7 @@ exit:
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
+
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -284,6 +286,7 @@ exit:
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
+
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -310,12 +313,13 @@ exit:
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError error = OT_ERROR_NONE;
+    otError           error = OT_ERROR_NONE;
     RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
-    RAIL_TxData_t txData;
-    RAIL_TxOptions_t txOption;
-    uint8_t frame[IEEE802154_MAX_LENGTH + 1];
-    bool isAckRequested = (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST) ? true : false;
+    RAIL_TxData_t     txData;
+    RAIL_TxOptions_t  txOption;
+    uint8_t           frame[IEEE802154_MAX_LENGTH + 1];
+    bool              isAckRequested = (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST) ? true : false;
+
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -421,12 +425,12 @@ int8_t findSrcMatchAvailEntry(bool aShortAddress)
 
 int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
 {
-    int8_t entry = -1;
+    int8_t   entry = -1;
     uint16_t checksum = aShortAddress + sPanId;
 
     for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM; i++)
     {
-        if (checksum == srcMatchShortEntry[i].checksum &&
+        if ((checksum == srcMatchShortEntry[i].checksum) &&
             srcMatchShortEntry[i].allocated)
         {
             entry = i;
@@ -439,7 +443,7 @@ int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
 
 int8_t findSrcMatchExtEntry(const uint8_t *aExtAddress)
 {
-    int8_t entry = -1;
+    int8_t   entry = -1;
     uint16_t checksum = sPanId;
 
     checksum += (uint16_t)aExtAddress[0] | (uint16_t)(aExtAddress[1] << 8);
@@ -449,7 +453,7 @@ int8_t findSrcMatchExtEntry(const uint8_t *aExtAddress)
 
     for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM; i++)
     {
-        if (checksum == srcMatchExtEntry[i].checksum &&
+        if ((checksum == srcMatchExtEntry[i].checksum) &&
             srcMatchExtEntry[i].allocated)
         {
             entry = i;
@@ -510,7 +514,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 {
     (void)aInstance;
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
 
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
@@ -531,7 +535,8 @@ exit:
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
+
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -553,7 +558,8 @@ exit:
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
+
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -575,7 +581,8 @@ exit:
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
+
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -616,10 +623,10 @@ void RAILCb_IEEE802154_DataRequestCommand(RAIL_IEEE802154_Address_t *aAddress)
 {
     if (sIsSrcMatchEnabled)
     {
-        if ((aAddress->length == RAIL_IEEE802154_LongAddress &&
-             findSrcMatchExtEntry(aAddress->longAddress) >= 0) ||
-            (aAddress->length == RAIL_IEEE802154_ShortAddress &&
-             findSrcMatchShortEntry(aAddress->shortAddress) >= 0))
+        if (((aAddress->length == RAIL_IEEE802154_LongAddress) &&
+             (findSrcMatchExtEntry(aAddress->longAddress) >= 0)) ||
+            ((aAddress->length == RAIL_IEEE802154_ShortAddress) &&
+             (findSrcMatchShortEntry(aAddress->shortAddress) >= 0)))
         {
             RAIL_IEEE802154_SetFramePending();
         }
@@ -668,7 +675,7 @@ void RAILCb_TxPacketSent(RAIL_TxPacketInfo_t *aTxPacketInfo)
 void RAILCb_RxPacketReceived(void *aRxPacketHandle)
 {
     RAIL_RxPacketInfo_t *rxPacketInfo;
-    uint8_t length;
+    uint8_t              length;
 
     rxPacketInfo = (RAIL_RxPacketInfo_t *)aRxPacketHandle;
 
@@ -702,8 +709,8 @@ void efr32RadioProcess(otInstance *aInstance)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
-        (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
+    if (((sState == OT_RADIO_STATE_RECEIVE) && (sReceiveFrame.mLength > 0)) ||
+        ((sState == OT_RADIO_STATE_TRANSMIT) && (sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)))
     {
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -716,7 +723,7 @@ void efr32RadioProcess(otInstance *aInstance)
         {
             // signal MAC layer for each received frame if promiscous is enabled
             // otherwise only signal MAC layer for non-ACK frame
-            if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
+            if (sPromiscuous || (sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
             {
                 otLogInfoPlat(sInstance, "Received %d bytes", sReceiveFrame.mLength);
                 otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
@@ -724,9 +731,9 @@ void efr32RadioProcess(otInstance *aInstance)
         }
     }
 
-    if (sState == OT_RADIO_STATE_TRANSMIT && sTransmitBusy == false)
+    if ((sState == OT_RADIO_STATE_TRANSMIT) && (sTransmitBusy == false))
     {
-        if (sTransmitError != OT_ERROR_NONE || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
+        if ((sTransmitError != OT_ERROR_NONE) || ((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0))
         {
             if (sTransmitError != OT_ERROR_NONE)
             {
@@ -747,8 +754,8 @@ void efr32RadioProcess(otInstance *aInstance)
                 otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
             }
         }
-        else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
-                 (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
+        else if ((sReceiveFrame.mLength == IEEE802154_ACK_LENGTH) &&
+                 ((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK) &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             sState = OT_RADIO_STATE_RECEIVE;
@@ -803,6 +810,7 @@ void RAILCb_TxFifoAlmostEmpty(uint16_t aSpaceAvailable)
 void *RAILCb_AllocateMemory(uint32_t aSize)
 {
     uint8_t *pointer = NULL;
+
     CORE_DECLARE_IRQ_STATE;
 
     CORE_ENTER_CRITICAL();

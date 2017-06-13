@@ -35,8 +35,8 @@
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/diag.h>
 
-static bool s_is_running = false;
-static uint32_t s_alarm = 0;
+static bool           s_is_running = false;
+static uint32_t       s_alarm = 0;
 static struct timeval s_start;
 
 void platformAlarmInit(void)

@@ -27,9 +27,9 @@
  */
 
 /**
-* @file radio.cpp
-* Platform abstraction for radio communication.
-*/
+ * @file radio.cpp
+ * Platform abstraction for radio communication.
+ */
 
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm.h>
@@ -66,35 +66,35 @@
 
 enum
 {
-    DA15000_RECEIVE_SENSITIVITY = -100,  // dBm
+    DA15000_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
 static void          da15000OtpRead(void);
-static uint8_t       eui64[EUI64_TABLE_SIZE] = {0};
+static uint8_t eui64[EUI64_TABLE_SIZE] = {0};
 
-static otInstance   *sThreadInstance;
-static otRadioState  sRadioState             = OT_RADIO_STATE_DISABLED;
-static otRadioFrame  sReceiveFrame;
-static otRadioFrame  sTransmitFrame;
-static otError       sTransmitStatus;
-static bool          sFramePending           = false;
-static bool          sRadioPromiscuous       = false;
-static bool          sRssiInit               = true;
-static uint8_t       sChannel                = DEFAULT_CHANNEL;
-static uint8_t       sRssiCtr                = 0;
-static uint32_t      sSleepInitDelay         = 0;
+static otInstance  *sThreadInstance;
+static otRadioState sRadioState             = OT_RADIO_STATE_DISABLED;
+static otRadioFrame sReceiveFrame;
+static otRadioFrame sTransmitFrame;
+static otError      sTransmitStatus;
+static bool         sFramePending           = false;
+static bool         sRadioPromiscuous       = false;
+static bool         sRssiInit               = true;
+static uint8_t      sChannel                = DEFAULT_CHANNEL;
+static uint8_t      sRssiCtr                = 0;
+static uint32_t     sSleepInitDelay         = 0;
 
-static uint8_t       sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE];
-static uint8_t       sRssiTable[RSSI_TABLE_SIZE];
-static uint8_t       sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t sRssiTable[RSSI_TABLE_SIZE];
+static uint8_t sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 
 PRIVILEGED_DATA static uint8_t sEnableRX;
 
 static void da15000OtpRead(void)
 {
-    hw_otpc_init();         // Start clock.
-    hw_otpc_disable();      // Make sure it is in standby mode.
-    hw_otpc_init();         // Restart clock.
+    hw_otpc_init();    // Start clock.
+    hw_otpc_disable(); // Make sure it is in standby mode.
+    hw_otpc_init();    // Restart clock.
     hw_otpc_manual_read_on(false);
 
     __DMB();
@@ -102,7 +102,7 @@ static void da15000OtpRead(void)
     uint32_t *factoryTestId         = (uint32_t *) FACTORY_TESTER_ID;
     __DMB();
 
-    eui64[0] = 0x80;    //80-EA-CA is for Dialog Semiconductor
+    eui64[0] = 0x80; //80-EA-CA is for Dialog Semiconductor
     eui64[1] = 0xEA;
     eui64[2] = 0xCA;
     eui64[3] = (*factoryTestId        >>  8) & 0xff;
@@ -120,11 +120,11 @@ void da15000RadioInit(void)
     /* Wake up power domains */
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);
 
-    while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0);
+    while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0) {}
 
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, RADIO_SLEEP);
 
-    while (REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_UP) == 0x0);
+    while (REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_UP) == 0x0) {}
 
     REG_SETF(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_ENABLE, 1);
     REG_SETF(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_DIV, 0);
@@ -173,6 +173,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
     uint8_t maxRetries;
 
     otError error = OT_ERROR_NONE;
+
     otEXPECT_ACTION(sRadioState == OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     sThreadInstance = aInstance;
@@ -220,7 +221,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 {
     (void)aInstance;
 
-    if (sRadioState == OT_RADIO_STATE_RECEIVE && sSleepInitDelay == 0)
+    if ((sRadioState == OT_RADIO_STATE_RECEIVE) && (sSleepInitDelay == 0))
     {
         sSleepInitDelay = otPlatAlarmGetNow();
         return OT_ERROR_NONE;
@@ -296,10 +297,10 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aEx
 {
     (void)aInstance;
 
-    uint8_t entry;
+    uint8_t         entry;
     FTDF_ExtAddress addr;
-    uint32_t addrL;
-    uint64_t addrH;
+    uint32_t        addrL;
+    uint64_t        addrH;
 
     addrL = (aExtAddress[3] << 24) | (aExtAddress[2] << 16) | (aExtAddress[1] << 8) | (aExtAddress[0] << 0);
     addrH = (aExtAddress[7] << 24) | (aExtAddress[6] << 16) | (aExtAddress[5] << 8) | (aExtAddress[4] << 0);
@@ -339,10 +340,10 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *a
 {
     (void)aInstance;
 
-    uint8_t entry;
+    uint8_t         entry;
     FTDF_ExtAddress addr;
-    uint32_t addrL;
-    uint64_t addrH;
+    uint32_t        addrL;
+    uint64_t        addrH;
 
     addrL = (aExtAddress[3] << 24) | (aExtAddress[2] << 16) | (aExtAddress[1] << 8) | (aExtAddress[0] << 0);
     addrH = (aExtAddress[7] << 24) | (aExtAddress[6] << 16) | (aExtAddress[5] << 8) | (aExtAddress[4] << 0);
@@ -538,7 +539,7 @@ void FTDF_sendFrameTransparentConfirm(void *handle, FTDF_Bitmap32 status)
 
     sRadioState = OT_RADIO_STATE_RECEIVE;
 
-    if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || sTransmitStatus != OT_ERROR_NONE)
+    if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || (sTransmitStatus != OT_ERROR_NONE))
     {
         otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, NULL, sTransmitStatus);
     }
@@ -564,7 +565,7 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
         sRadioState = OT_RADIO_STATE_RECEIVE;
     }
 
-    if ((sReceiveFrame.mPsdu[0]  & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
+    if (((sReceiveFrame.mPsdu[0]  & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK) &&
         ((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0))
     {
         sFramePending = true;

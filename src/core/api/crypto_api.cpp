@@ -63,7 +63,7 @@ void otCryptoAesCcm(
     void *aPlainText, void *aCipherText, uint32_t aLength, bool aEncrypt,
     void *aTag)
 {
-    AesCcm aesCcm;
+    AesCcm  aesCcm;
     uint8_t tagLength;
 
     assert((aKey != NULL) && (aNonce != NULL) && (aPlainText != NULL) && (aCipherText != NULL) && (aTag != NULL));

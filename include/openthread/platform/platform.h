@@ -62,7 +62,7 @@ void PlatformDeinit(void);
 void PlatformProcessDrivers(otInstance *aInstance);
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
-#endif  // PLATFORM_H_
+#endif // PLATFORM_H_

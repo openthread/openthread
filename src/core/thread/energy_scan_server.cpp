@@ -86,11 +86,11 @@ void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMe
 
 void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
+    MeshCoP::CountTlv        count;
+    MeshCoP::PeriodTlv       period;
     MeshCoP::ScanDurationTlv scanDuration;
     MeshCoP::ChannelMask0Tlv channelMask;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
+    Ip6::MessageInfo         responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
@@ -192,11 +192,12 @@ exit:
 otError EnergyScanServer::SendReport(void)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
+
+    Coap::Header             header;
     MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::EnergyListTlv energyList;
-    Ip6::MessageInfo messageInfo;
-    Message *message;
+    MeshCoP::EnergyListTlv   energyList;
+    Ip6::MessageInfo         messageInfo;
+    Message                 *message;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -224,7 +225,7 @@ otError EnergyScanServer::SendReport(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -241,13 +242,13 @@ void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
 {
-    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0 &&
+    if (((aFlags & OT_CHANGED_THREAD_NETDATA) != 0) &&
         !mActive &&
-        mNetif.GetNetworkDataLeader().GetCommissioningData() == NULL)
+        (mNetif.GetNetworkDataLeader().GetCommissioningData() == NULL))
     {
         mActive = false;
         mTimer.Stop();
     }
 }
 
-}  // namespace ot
+} // namespace ot

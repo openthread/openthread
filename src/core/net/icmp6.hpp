@@ -59,14 +59,16 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IcmpHeader: public otIcmp6Header
+class IcmpHeader : public otIcmp6Header
 {
 public:
     /**
      * This method initializes the ICMPv6 header to all zeros.
      *
      */
-    void Init(void) { mType = 0; mCode = 0; mChecksum = 0; mData.m32[0] = 0; }
+    void Init(void) {
+        mType = 0; mCode = 0; mChecksum = 0; mData.m32[0] = 0;
+    }
 
     /**
      * ICMPv6 Message Types
@@ -74,9 +76,9 @@ public:
      */
     enum Type
     {
-        kTypeDstUnreach  = OT_ICMP6_TYPE_DST_UNREACH,   ///< Destination Unreachable
-        kTypeEchoRequest = OT_ICMP6_TYPE_ECHO_REQUEST,  ///< Echo Request
-        kTypeEchoReply   = OT_ICMP6_TYPE_ECHO_REPLY,    ///< Echo Reply
+        kTypeDstUnreach  = OT_ICMP6_TYPE_DST_UNREACH,  ///< Destination Unreachable
+        kTypeEchoRequest = OT_ICMP6_TYPE_ECHO_REQUEST, ///< Echo Request
+        kTypeEchoReply   = OT_ICMP6_TYPE_ECHO_REPLY,   ///< Echo Reply
     };
 
     /**
@@ -85,7 +87,7 @@ public:
      */
     enum Code
     {
-        kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE,  ///< Destination Unreachable No Route
+        kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
     };
 
     /**
@@ -94,7 +96,9 @@ public:
      * @returns The ICMPv6 message type.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(mType); }
+    Type GetType(void) const {
+        return static_cast<Type>(mType);
+    }
 
     /**
      * This method sets the ICMPv6 message type.
@@ -102,7 +106,9 @@ public:
      * @param[in]  aType  The ICMPv6 message type.
      *
      */
-    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
+    void SetType(Type aType) {
+        mType = static_cast<uint8_t>(aType);
+    }
 
     /**
      * This method returns the ICMPv6 message code.
@@ -110,14 +116,18 @@ public:
      * @returns The ICMPv6 message code.
      *
      */
-    Code GetCode(void) const { return static_cast<Code>(mCode); }
+    Code GetCode(void) const {
+        return static_cast<Code>(mCode);
+    }
 
     /**
      * This method sets the ICMPv6 message code.
      *
      * @param[in]  aCode  The ICMPv6 message code.
      */
-    void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
+    void SetCode(Code aCode) {
+        mCode = static_cast<uint8_t>(aCode);
+    }
 
     /**
      * This method returns the ICMPv6 message checksum.
@@ -125,7 +135,9 @@ public:
      * @returns The ICMPv6 message checksum.
      *
      */
-    uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
+    uint16_t GetChecksum(void) const {
+        return HostSwap16(mChecksum);
+    }
 
     /**
      * This method sets the ICMPv6 message checksum.
@@ -133,7 +145,9 @@ public:
      * @param[in]  aChecksum  The ICMPv6 message checksum.
      *
      */
-    void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+    void SetChecksum(uint16_t aChecksum) {
+        mChecksum = HostSwap16(aChecksum);
+    }
 
     /**
      * This method returns the ICMPv6 message ID for Echo Requests and Replies.
@@ -141,7 +155,9 @@ public:
      * @returns The ICMPv6 message ID.
      *
      */
-    uint16_t GetId(void) const { return HostSwap16(mData.m16[0]); }
+    uint16_t GetId(void) const {
+        return HostSwap16(mData.m16[0]);
+    }
 
     /**
      * This method sets the ICMPv6 message ID for Echo Requests and Replies.
@@ -149,7 +165,9 @@ public:
      * @param[in]  aId  The ICMPv6 message ID.
      *
      */
-    void SetId(uint16_t aId) { mData.m16[0] = HostSwap16(aId); }
+    void SetId(uint16_t aId) {
+        mData.m16[0] = HostSwap16(aId);
+    }
 
     /**
      * This method returns the ICMPv6 message sequence for Echo Requests and Replies.
@@ -157,7 +175,9 @@ public:
      * @returns The ICMPv6 message sequence.
      *
      */
-    uint16_t GetSequence(void) const { return HostSwap16(mData.m16[1]); }
+    uint16_t GetSequence(void) const {
+        return HostSwap16(mData.m16[1]);
+    }
 
     /**
      * This method sets the ICMPv6 message sequence for Echo Requests and Replies.
@@ -165,7 +185,9 @@ public:
      * @param[in]  aSequence  The ICMPv6 message sequence.
      *
      */
-    void SetSequence(uint16_t aSequence) { mData.m16[1] = HostSwap16(aSequence); }
+    void SetSequence(uint16_t aSequence) {
+        mData.m16[1] = HostSwap16(aSequence);
+    }
 
     /**
      * This static method returns the byte offset of the Checksum field in the ICMPv6 header.
@@ -173,7 +195,9 @@ public:
      * @returns The byte offset of the Checksum field.
      *
      */
-    static uint8_t GetChecksumOffset(void) { return offsetof(otIcmp6Header, mChecksum); }
+    static uint8_t GetChecksumOffset(void) {
+        return offsetof(otIcmp6Header, mChecksum);
+    }
 
     /**
      * This static method returns the byte offset of the ICMPv6 payload.
@@ -181,7 +205,9 @@ public:
      * @returns The Byte offset of the ICMPv6 payload.
      *
      */
-    static uint8_t GetDataOffset(void) { return offsetof(otIcmp6Header, mData); }
+    static uint8_t GetDataOffset(void) {
+        return offsetof(otIcmp6Header, mData);
+    }
 
 } OT_TOOL_PACKED_END;
 
@@ -212,7 +238,9 @@ private:
         mReceiveCallback(mContext, &message, &messageInfo, &icmp6Header);
     }
 
-    IcmpHandler *GetNext(void) { return static_cast<IcmpHandler *>(mNext); }
+    IcmpHandler *GetNext(void) {
+        return static_cast<IcmpHandler *>(mNext);
+    }
 };
 
 /**
@@ -320,7 +348,9 @@ public:
      * @retval FALSE  ICMPv6 Echo processing is disabled.
      *
      */
-    bool IsEchoEnabled(void) { return mIsEchoEnabled; }
+    bool IsEchoEnabled(void) {
+        return mIsEchoEnabled;
+    }
 
     /**
      * This method sets whether or not ICMPv6 Echo processing is enabled.
@@ -328,17 +358,19 @@ public:
      * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
      *
      */
-    void SetEchoEnabled(bool aEnabled) { mIsEchoEnabled = aEnabled; }
+    void SetEchoEnabled(bool aEnabled) {
+        mIsEchoEnabled = aEnabled;
+    }
 
 private:
     otError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
 
     IcmpHandler *mHandlers;
 
-    uint16_t mEchoSequence;
-    bool mIsEchoEnabled;
+    uint16_t     mEchoSequence;
+    bool         mIsEchoEnabled;
 
-    Ip6 &mIp6;
+    Ip6         &mIp6;
 };
 
 /**
@@ -346,7 +378,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
 #endif  // NET_ICMP6_HPP_

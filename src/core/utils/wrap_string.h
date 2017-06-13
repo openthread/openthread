@@ -60,15 +60,15 @@ WRAP_EXTERN_C size_t missing_strnlen(const char *s, size_t maxlen);
 
 
 #if (!HAVE_STRNLEN)
-#define strnlen( S, N )     missing_strnlen( S, N )
+#define strnlen(S, N)     missing_strnlen(S, N)
 #endif
 
 #if (!HAVE_STRLCPY)
-#define strlcpy( D, S, N )  missing_strlcpy( D, S, N )
+#define strlcpy(D, S, N)  missing_strlcpy(D, S, N)
 #endif
 
 #if (!HAVE_STRLCAT)
-#define strlcat( D, S, N )  missing_strlcat( D, S, N )
+#define strlcat(D, S, N)  missing_strlcat(D, S, N)
 #endif
 
-#endif  // WRAP_STRING_H
+#endif // WRAP_STRING_H

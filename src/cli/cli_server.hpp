@@ -69,7 +69,7 @@ public:
     virtual int OutputFormat(const char *fmt, ...) = 0;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
 #endif  // CLI_SERVER_HPP_

@@ -67,12 +67,12 @@ namespace Settings {
  */
 enum
 {
-    kKeyActiveDataset   = 0x0001,  ///< Active Operational Dataset
-    kKeyPendingDataset  = 0x0002,  ///< Pending Operational Dataset
-    kKeyNetworkInfo     = 0x0003,  ///< Thread network information
-    kKeyParentInfo      = 0x0004,  ///< Parent information
-    kKeyChildInfo       = 0x0005,  ///< Child information
-    kKeyThreadAutoStart = 0x0006,  ///< Auto-start information
+    kKeyActiveDataset   = 0x0001, ///< Active Operational Dataset
+    kKeyPendingDataset  = 0x0002, ///< Pending Operational Dataset
+    kKeyNetworkInfo     = 0x0003, ///< Thread network information
+    kKeyParentInfo      = 0x0004, ///< Parent information
+    kKeyChildInfo       = 0x0005, ///< Child information
+    kKeyThreadAutoStart = 0x0006, ///< Auto-start information
 };
 
 /**
@@ -81,15 +81,15 @@ enum
  */
 struct NetworkInfo
 {
-    uint8_t          mRole;                    ///< Current Thread role.
-    uint8_t          mDeviceMode;              ///< Device mode setting.
-    uint16_t         mRloc16;                  ///< RLOC16
-    uint32_t         mKeySequence;             ///< Key Sequence
-    uint32_t         mMleFrameCounter;         ///< MLE Frame Counter
-    uint32_t         mMacFrameCounter;         ///< MAC Frame Counter
-    uint32_t         mPreviousPartitionId;     ///< PartitionId
-    Mac::ExtAddress  mExtAddress;              ///< Extended Address
-    uint8_t          mMlIid[OT_IP6_IID_SIZE];  ///< IID from ML-EID
+    uint8_t         mRole;                   ///< Current Thread role.
+    uint8_t         mDeviceMode;             ///< Device mode setting.
+    uint16_t        mRloc16;                 ///< RLOC16
+    uint32_t        mKeySequence;            ///< Key Sequence
+    uint32_t        mMleFrameCounter;        ///< MLE Frame Counter
+    uint32_t        mMacFrameCounter;        ///< MAC Frame Counter
+    uint32_t        mPreviousPartitionId;    ///< PartitionId
+    Mac::ExtAddress mExtAddress;             ///< Extended Address
+    uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
 };
 
 /**
@@ -98,7 +98,7 @@ struct NetworkInfo
  */
 struct ParentInfo
 {
-    Mac::ExtAddress  mExtAddress;   ///< Extended Address
+    Mac::ExtAddress mExtAddress; ///< Extended Address
 };
 
 /**
@@ -107,13 +107,13 @@ struct ParentInfo
  */
 struct ChildInfo
 {
-    Mac::ExtAddress  mExtAddress;    ///< Extended Address
-    uint32_t         mTimeout;       ///< Timeout
-    uint16_t         mRloc16;        ///< RLOC16
-    uint8_t          mMode;          ///< The MLE device mode
+    Mac::ExtAddress mExtAddress; ///< Extended Address
+    uint32_t        mTimeout;    ///< Timeout
+    uint16_t        mRloc16;     ///< RLOC16
+    uint8_t         mMode;       ///< The MLE device mode
 };
 
-}  // namespace Settings
-}  // namespace ot
+} // namespace Settings
+} // namespace ot
 
 #endif  // SETTINGS_HPP_

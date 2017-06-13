@@ -42,7 +42,7 @@ namespace ot {
 
 otError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error = OT_ERROR_NOT_FOUND;
     uint16_t offset;
 
     SuccessOrExit(error = GetOffset(aMessage, aType, offset));
@@ -61,10 +61,10 @@ exit:
 
 otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error = OT_ERROR_NOT_FOUND;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end = aMessage.GetLength();
-    Tlv tlv;
+    Tlv      tlv;
 
     while (offset < end)
     {
@@ -79,7 +79,7 @@ otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset
             aMessage.Read(offset, sizeof(length), &length);
             offset += sizeof(length) + HostSwap16(length);
         }
-        else if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
+        else if ((tlv.GetType() == aType) && ((offset + sizeof(tlv) + tlv.GetLength()) <= end))
         {
             aOffset = offset;
             ExitNow(error = OT_ERROR_NONE);
@@ -96,13 +96,13 @@ exit:
 
 otError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error = OT_ERROR_NOT_FOUND;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end = aMessage.GetLength();
 
     while (offset < end)
     {
-        Tlv tlv;
+        Tlv      tlv;
         uint16_t length;
 
         aMessage.Read(offset, sizeof(tlv), &tlv);
@@ -131,4 +131,4 @@ exit:
     return error;
 }
 
-}  // namespace ot
+} // namespace ot

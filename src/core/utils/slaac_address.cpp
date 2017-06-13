@@ -52,13 +52,13 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
                             IidCreator aIidCreator, void *aContext)
 {
     otNetworkDataIterator iterator;
-    otBorderRouterConfig config;
+    otBorderRouterConfig  config;
 
     // remove addresses
     for (size_t i = 0; i < aNumAddresses; i++)
     {
         otNetifAddress *address = &aAddresses[i];
-        bool found = false;
+        bool            found = false;
 
         if (!address->mValid)
         {
@@ -74,8 +74,8 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
                 continue;
             }
 
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
+            if ((otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength) &&
+                (config.mPrefix.mLength == address->mPrefixLength))
             {
                 found = true;
                 break;
@@ -110,8 +110,8 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
                 continue;
             }
 
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
+            if ((otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength) &&
+                (config.mPrefix.mLength == address->mPrefixLength))
             {
                 found = true;
                 break;
@@ -177,9 +177,10 @@ exit:
 otError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress)
 {
     otError error = OT_ERROR_NONE;
+
     Crypto::Sha256 sha256;
-    uint8_t hash[Crypto::Sha256::kHashSize];
-    Ip6::Address *address = static_cast<Ip6::Address *>(&aAddress->mAddress);
+    uint8_t        hash[Crypto::Sha256::kHashSize];
+    Ip6::Address  *address = static_cast<Ip6::Address *>(&aAddress->mAddress);
 
     sha256.Start();
 
@@ -213,7 +214,7 @@ exit:
 
 bool SemanticallyOpaqueIidGenerator::IsAddressRegistered(otInstance *aInstance, otNetifAddress *aCreatedAddress)
 {
-    bool result = false;
+    bool                  result = false;
     const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance);
 
     while (address != NULL)
@@ -232,5 +233,5 @@ exit:
 }
 
 
-}  // namespace Slaac
-}  // namespace ot
+} // namespace Slaac
+} // namespace ot

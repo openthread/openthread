@@ -119,7 +119,7 @@ bool otTmfProxyIsEnabled(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_TMF_PROXY_H_
+#endif // OPENTHREAD_TMF_PROXY_H_

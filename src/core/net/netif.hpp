@@ -61,7 +61,7 @@ class Ip6;
  */
 class LinkAddress
 {
-public :
+public:
     /**
      * Hardware types.
      *
@@ -70,16 +70,16 @@ public :
     {
         kEui64 = 27,
     };
-    HardwareType   mType;       ///< Link address type.
-    uint8_t        mLength;     ///< Length of link address.
-    Mac::ExtAddress mExtAddress;  ///< Link address.
+    HardwareType    mType;       ///< Link address type.
+    uint8_t         mLength;     ///< Length of link address.
+    Mac::ExtAddress mExtAddress; ///< Link address.
 };
 
 /**
  * This class implements an IPv6 network interface unicast address.
  *
  */
-class NetifUnicastAddress: public otNetifAddress
+class NetifUnicastAddress : public otNetifAddress
 {
     friend class Netif;
 
@@ -90,7 +90,9 @@ public:
      * @returns The unicast address.
      *
      */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
+    const Address &GetAddress(void) const {
+        return *static_cast<const Address *>(&mAddress);
+    }
 
     /**
      * This method returns the unicast address.
@@ -98,7 +100,9 @@ public:
      * @returns The unicast address.
      *
      */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
+    Address &GetAddress(void) {
+        return *static_cast<Address *>(&mAddress);
+    }
 
     /**
      * This method returns the IPv6 scope value.
@@ -116,7 +120,9 @@ public:
      * @returns A pointer to the next unicast address.
      *
      */
-    const NetifUnicastAddress *GetNext(void) const { return static_cast<const NetifUnicastAddress *>(mNext); }
+    const NetifUnicastAddress *GetNext(void) const {
+        return static_cast<const NetifUnicastAddress *>(mNext);
+    }
 
     /**
      * This method returns the next unicast address assigned to the interface.
@@ -124,14 +130,16 @@ public:
      * @returns A pointer to the next unicast address.
      *
      */
-    NetifUnicastAddress *GetNext(void) { return static_cast<NetifUnicastAddress *>(mNext); }
+    NetifUnicastAddress *GetNext(void) {
+        return static_cast<NetifUnicastAddress *>(mNext);
+    }
 };
 
 /**
  * This class implements an IPv6 network interface multicast address.
  *
  */
-class NetifMulticastAddress: public otNetifMulticastAddress
+class NetifMulticastAddress : public otNetifMulticastAddress
 {
     friend class Netif;
 
@@ -142,7 +150,9 @@ public:
      * @returns The multicast address.
      *
      */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
+    const Address &GetAddress(void) const {
+        return *static_cast<const Address *>(&mAddress);
+    }
 
     /**
      * This method returns the multicast address.
@@ -150,7 +160,9 @@ public:
      * @returns The multicast address.
      *
      */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
+    Address &GetAddress(void) {
+        return *static_cast<Address *>(&mAddress);
+    }
 
     /**
      * This method returns the next multicast address subscribed to the interface.
@@ -158,7 +170,9 @@ public:
      * @returns A pointer to the next multicast address.
      *
      */
-    const NetifMulticastAddress *GetNext(void) const { return static_cast<NetifMulticastAddress *>(mNext); }
+    const NetifMulticastAddress *GetNext(void) const {
+        return static_cast<NetifMulticastAddress *>(mNext);
+    }
 
     /**
      * This method returns the next multicast address subscribed to the interface.
@@ -166,7 +180,9 @@ public:
      * @returns A pointer to the next multicast address.
      *
      */
-    NetifMulticastAddress *GetNext(void) { return static_cast<NetifMulticastAddress *>(mNext); }
+    NetifMulticastAddress *GetNext(void) {
+        return static_cast<NetifMulticastAddress *>(mNext);
+    }
 };
 
 /**
@@ -182,7 +198,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    NetifCallback(void):
+    NetifCallback(void) :
         mCallback(NULL),
         mContext(NULL),
         mNext(NULL) {
@@ -206,7 +222,9 @@ public:
      * @returns True if the object is free, false otherwise.
      *
      */
-    bool IsFree(void) { return (mCallback == NULL); }
+    bool IsFree(void) {
+        return (mCallback == NULL);
+    }
 
     /**
      * This method frees the object.
@@ -233,14 +251,15 @@ public:
 
 private:
     void Callback(uint32_t aFlags) {
-        if (mCallback != NULL) {
+        if (mCallback != NULL)
+        {
             mCallback(aFlags, mContext);
         }
     }
 
     otStateChangedCallback mCallback;
-    void *mContext;
-    NetifCallback *mNext;
+    void                  *mContext;
+    NetifCallback         *mNext;
 };
 
 /**
@@ -267,14 +286,18 @@ public:
      * @returns A reference to the IPv6 network object.
      *
      */
-    Ip6 &GetIp6(void) { return mIp6; }
+    Ip6 &GetIp6(void) {
+        return mIp6;
+    }
 
     /**
      * This method returns the next network interface in the list.
      *
      * @returns A pointer to the next network interface.
      */
-    Netif *GetNext(void) const { return mNext; }
+    Netif *GetNext(void) const {
+        return mNext;
+    }
 
     /**
      * This method returns the network interface identifier.
@@ -282,7 +305,9 @@ public:
      * @returns The network interface identifier.
      *
      */
-    int8_t GetInterfaceId(void) const { return mInterfaceId; }
+    int8_t GetInterfaceId(void) const {
+        return mInterfaceId;
+    }
 
     /**
      * This method returns a pointer to the list of unicast addresses.
@@ -290,7 +315,9 @@ public:
      * @returns A pointer to the list of unicast addresses.
      *
      */
-    const NetifUnicastAddress *GetUnicastAddresses(void) const { return mUnicastAddresses; }
+    const NetifUnicastAddress *GetUnicastAddresses(void) const {
+        return mUnicastAddresses;
+    }
 
     /**
      * This method adds a unicast address to the network interface.
@@ -370,13 +397,17 @@ public:
      * This method subscribes the network interface to the link-local and realm-local all routers address.
      *
      */
-    void SubscribeAllRoutersMulticast(void) { mAllRoutersSubscribed = true; }
+    void SubscribeAllRoutersMulticast(void) {
+        mAllRoutersSubscribed = true;
+    }
 
     /**
      * This method unsubscribes the network interface to the link-local and realm-local all routers address.
      *
      */
-    void UnsubscribeAllRoutersMulticast(void) { mAllRoutersSubscribed = false; }
+    void UnsubscribeAllRoutersMulticast(void) {
+        mAllRoutersSubscribed = false;
+    }
 
     /**
      * This method returns a pointer to the list of multicast addresses.
@@ -384,7 +415,9 @@ public:
      * @returns A pointer to the list of multicast addresses.
      *
      */
-    const NetifMulticastAddress *GetMulticastAddresses(void) const { return mMulticastAddresses; }
+    const NetifMulticastAddress *GetMulticastAddresses(void) const {
+        return mMulticastAddresses;
+    }
 
     /**
      * This method subscribes the network interface to a multicast address.
@@ -445,7 +478,9 @@ public:
      * @retval TRUE   If the multicast promiscuous mode is enabled.
      * @retval FALSE  If the multicast promiscuous mode is disabled.
      */
-    bool IsMulticastPromiscuousEnabled(void) { return mMulticastPromiscuous; }
+    bool IsMulticastPromiscuousEnabled(void) {
+        return mMulticastPromiscuous;
+    }
 
     /**
      * This method enables multicast promiscuous mode on the network interface.
@@ -453,7 +488,9 @@ public:
      * @param[in]  aEnabled  TRUE if Multicast Promiscuous mode is enabled, FALSE otherwise.
      *
      */
-    void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
+    void SetMulticastPromiscuous(bool aEnabled) {
+        mMulticastPromiscuous = aEnabled;
+    }
 
     /**
      * This method registers a network interface callback.
@@ -481,7 +518,9 @@ public:
      * @retval TRUE if a state changed callback is pending, FALSE otherwise.
      *
      */
-    bool IsStateChangedCallbackPending(void) { return mStateChangedFlags != 0; }
+    bool IsStateChangedCallbackPending(void) {
+        return mStateChangedFlags != 0;
+    }
 
     /**
      * This method schedules notification of @p aFlags.
@@ -534,19 +573,19 @@ private:
     static void HandleStateChangedTask(void *aContext);
     void HandleStateChangedTask(void);
 
-    NetifCallback *mCallbacks;
-    NetifUnicastAddress *mUnicastAddresses;
+    NetifCallback         *mCallbacks;
+    NetifUnicastAddress   *mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
-    int8_t mInterfaceId;
-    bool mAllRoutersSubscribed;
-    bool mMulticastPromiscuous;
-    Tasklet mStateChangedTask;
-    Netif *mNext;
+    int8_t                 mInterfaceId;
+    bool                   mAllRoutersSubscribed;
+    bool                   mMulticastPromiscuous;
+    Tasklet                mStateChangedTask;
+    Netif                 *mNext;
 
-    uint32_t mStateChangedFlags;
+    uint32_t               mStateChangedFlags;
 
-    NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
-    NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
+    NetifUnicastAddress    mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
+    NetifMulticastAddress  mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
 };
 
 /**
@@ -554,7 +593,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
 #endif  // NET_NETIF_HPP_

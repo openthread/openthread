@@ -111,7 +111,7 @@ void TrickleTimer::IndicateConsistent(void)
 void TrickleTimer::IndicateInconsistent(void)
 {
     // Only relevant if we aren't already at 'I' == 'Imin'
-    if (IsRunning() && I != Imin)
+    if (IsRunning() && (I != Imin))
     {
         // Reset I to Imin
         I = Imin;
@@ -162,13 +162,14 @@ void TrickleTimer::StartNewInterval(void)
 void TrickleTimer::HandleTimerFired(void *aContext)
 {
     TrickleTimer *obj = static_cast<TrickleTimer *>(aContext);
+
     obj->HandleTimerFired();
 }
 
 void TrickleTimer::HandleTimerFired(void)
 {
     Phase curPhase = mPhase;
-    bool shouldContinue = true;
+    bool  shouldContinue = true;
 
     // Default the current state to Dormant
     mPhase = kPhaseDormant;
@@ -180,7 +181,7 @@ void TrickleTimer::HandleTimerFired(void)
     {
         // Are we not using redundancy or is the counter still less than it?
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-        if (k == 0 || c < k)
+        if ((k == 0) || (c < k))
 #endif
         {
             // Invoke the transmission callback
@@ -218,7 +219,10 @@ void TrickleTimer::HandleTimerFired(void)
         // Double 'I' to get the new interval length
         uint32_t newI = I == 0 ? 1 : I << 1;
 
-        if (newI > Imax) { newI = Imax; }
+        if (newI > Imax)
+        {
+            newI = Imax;
+        }
 
         I = newI;
 
@@ -239,4 +243,4 @@ void TrickleTimer::HandleTimerFired(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot

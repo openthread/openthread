@@ -96,7 +96,7 @@ extern void otPlatDiagAlarmFired(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // ALARM_H_
+#endif // ALARM_H_

@@ -85,7 +85,9 @@ public:
      * @returns A reference to the IPv6 prefix.
      *
      */
-    otIp6Prefix *GetPrefix(void) { return &mIp6Prefix; }
+    otIp6Prefix *GetPrefix(void) {
+        return &mIp6Prefix;
+    }
 
     /**
      * This method sets the IPv6 prefix.
@@ -93,10 +95,12 @@ public:
      * @param[in]  aIp6Prefix The reference to the IPv6 prefix to set.
      *
      */
-    void SetPrefix(otIp6Prefix &aIp6Prefix) { memcpy(&mIp6Prefix, &aIp6Prefix, sizeof(otIp6Prefix)); }
+    void SetPrefix(otIp6Prefix &aIp6Prefix) {
+        memcpy(&mIp6Prefix, &aIp6Prefix, sizeof(otIp6Prefix));
+    }
 
 private:
-    otIp6Prefix mIp6Prefix;                  ///< prefix
+    otIp6Prefix mIp6Prefix; ///< prefix
 } OT_TOOL_PACKED_END;
 
 class Dhcp6Server
@@ -147,17 +151,17 @@ private:
 
     otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientIdentifier, IaNa &aIaNa);
 
-    Ip6::UdpSocket mSocket;
+    Ip6::UdpSocket           mSocket;
 
-    ThreadNetif &mNetif;
+    ThreadNetif             &mNetif;
 
     Ip6::NetifUnicastAddress mAgentsAloc[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-    uint8_t mPrefixAgentsMask;
-    uint8_t mPrefixAgentsCount;
+    PrefixAgent              mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    uint8_t                  mPrefixAgentsMask;
+    uint8_t                  mPrefixAgentsCount;
 };
 
-}  // namespace Dhcp6
-}  // namespace ot
+} // namespace Dhcp6
+} // namespace ot
 
 #endif  // DHCP6_SERVER_HPP_

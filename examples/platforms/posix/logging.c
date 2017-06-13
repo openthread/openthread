@@ -46,17 +46,17 @@
 // Macro to append content to end of the log string.
 
 #define LOG_PRINTF(...)                                                                     \
-    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset , __VA_ARGS__);  \
+    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset, __VA_ARGS__);  \
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                              \
     offset += (unsigned int)charsWritten;                                                   \
-    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
+    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1 ] = 0)
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    char logString[512];
+    char         logString[512];
     unsigned int offset;
-    int charsWritten;
-    va_list args;
+    int          charsWritten;
+    va_list      args;
 
     offset = 0;
 
@@ -78,4 +78,3 @@ exit:
     (void)aLogLevel;
     (void)aLogRegion;
 }
-

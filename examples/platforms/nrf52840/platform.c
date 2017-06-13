@@ -40,7 +40,11 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
-void __cxa_pure_virtual(void) { while (1); }
+void __cxa_pure_virtual(void) {
+    while (1)
+    {
+    }
+}
 
 void PlatformInit(int argc, char *argv[])
 {

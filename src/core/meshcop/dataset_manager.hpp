@@ -62,8 +62,12 @@ public:
      */
     otInstance *GetInstance(void);
 
-    Dataset &GetLocal(void) { return mLocal; }
-    Dataset &GetNetwork(void) { return mNetwork; }
+    Dataset &GetLocal(void) {
+        return mLocal;
+    }
+    Dataset &GetNetwork(void) {
+        return mNetwork;
+    }
 
     otError ApplyConfiguration(void);
 
@@ -87,8 +91,8 @@ protected:
 
     void HandleNetworkUpdate(uint8_t &aFlags);
 
-    Dataset mLocal;
-    Dataset mNetwork;
+    Dataset      mLocal;
+    Dataset      mNetwork;
 
     ThreadNetif &mNetif;
 
@@ -103,12 +107,13 @@ private:
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                          uint8_t *aTlvs, uint8_t aLength);
 
-    Timer mTimer;
+    Timer       mTimer;
 
     const char *mUriSet;
     const char *mUriGet;
 
 #if OPENTHREAD_FTD
+
 public:
     otError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
     otError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
@@ -122,7 +127,7 @@ private:
 #endif
 };
 
-class ActiveDatasetBase: public DatasetManager
+class ActiveDatasetBase : public DatasetManager
 {
 public:
     ActiveDatasetBase(ThreadNetif &aThreadNetif);
@@ -147,7 +152,7 @@ private:
     Coap::Resource mResourceGet;
 };
 
-class PendingDatasetBase: public DatasetManager
+class PendingDatasetBase : public DatasetManager
 {
 public:
     PendingDatasetBase(ThreadNetif &aThreadNetif);
@@ -175,7 +180,7 @@ protected:
 
     void HandleNetworkUpdate(uint8_t &aFlags);
 
-    Timer mTimer;
+    Timer    mTimer;
     uint32_t mLocalTime;
     uint32_t mNetworkTime;
 
@@ -187,8 +192,8 @@ private:
     Coap::Resource mResourceGet;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
 #if OPENTHREAD_MTD
 #include "dataset_manager_mtd.hpp"
@@ -198,4 +203,4 @@ private:
 #error Must define OPENTHREAD_MTD or OPENTHREAD_FTD
 #endif
 
-#endif  // MESHCOP_DATASET_MANAGER_HPP_
+#endif // MESHCOP_DATASET_MANAGER_HPP_

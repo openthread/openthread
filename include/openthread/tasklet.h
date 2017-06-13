@@ -82,7 +82,7 @@ extern void otTaskletsSignalPending(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_TASKLET_H_
+#endif // OPENTHREAD_TASKLET_H_

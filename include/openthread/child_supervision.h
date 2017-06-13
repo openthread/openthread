@@ -105,10 +105,10 @@ void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
  *
  */
 
-#endif  // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_CHILD_SUPERVISION_H_
+#endif // OPENTHREAD_CHILD_SUPERVISION_H_

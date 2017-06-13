@@ -42,7 +42,7 @@
 #include "hal/nrf_rng.h"
 #include "platform-nrf5.h"
 
-static uint8_t sBuffer[RNG_BUFFER_SIZE];
+static uint8_t           sBuffer[RNG_BUFFER_SIZE];
 static volatile uint32_t sReadPosition;
 static volatile uint32_t sWritePosition;
 
@@ -130,7 +130,7 @@ void nrf5RandomInit(void)
     generatorStart();
 
     // Wait for the first randomized 4 bytes, to randomize software generator seed.
-    while (!bufferIsUint32Ready()) ;
+    while (!bufferIsUint32Ready()) {}
 
     uint32_t seed = bufferGetUint32();
     srand(seed);

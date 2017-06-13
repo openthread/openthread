@@ -85,6 +85,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // ANNOUNCE_BEGIN_CLIENT_HPP_

@@ -112,7 +112,7 @@ void otPlatWakeHost(void);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OT_PLATFORM_MISC_H
+#endif // OT_PLATFORM_MISC_H

@@ -73,8 +73,8 @@ void LinkQualityInfo::Clear(void)
 
 void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
 {
-    uint16_t    newValue;
-    uint16_t    oldAverage;
+    uint16_t newValue;
+    uint16_t oldAverage;
 
     VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID);
 
@@ -152,7 +152,7 @@ uint16_t LinkQualityInfo::GetAverageRssAsEncodedWord(void) const
 otError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const
 {
     otError error = OT_ERROR_NONE;
-    int charsWritten = 0;
+    int     charsWritten = 0;
 
     if (mCount == 0)
     {
@@ -206,7 +206,7 @@ uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
 {
     int8_t linkMargin = aRss - aNoiseFloor;
 
-    if (linkMargin < 0 || aRss == OT_RADIO_RSSI_INVALID)
+    if ((linkMargin < 0) || (aRss == OT_RADIO_RSSI_INVALID))
     {
         linkMargin = 0;
     }
@@ -272,4 +272,4 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     return linkQuality;
 }
 
-}  // namespace ot
+} // namespace ot

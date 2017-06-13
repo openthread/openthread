@@ -51,7 +51,7 @@ public:
 
     struct Payload
     {
-        uint8_t mData[kPayloadMaxLength];
+        uint8_t  mData[kPayloadMaxLength];
         uint16_t mLength;
     };
 
@@ -201,7 +201,9 @@ public:
      * @param aError  Expected result.
      *
      */
-    void SetError(otError aError) { mError = aError; }
+    void SetError(otError aError) {
+        mError = aError;
+    }
 
     /**
      * This method initializes IPv6 Payload (uncompressed data).
@@ -223,7 +225,9 @@ public:
      *                        payload.
      *
      */
-    void SetPayloadOffset(uint16_t aPayloadOffset) { mPayloadOffset = aPayloadOffset; }
+    void SetPayloadOffset(uint16_t aPayloadOffset) {
+        mPayloadOffset = aPayloadOffset;
+    }
 
     /**
      * This method returns compressed LOWPAN_IPHC frame.
@@ -264,20 +268,20 @@ public:
      * This fields represent compressed IPv6 packet.
      *
      */
-    Payload           mIphcHeader;
-    uint16_t          mPayloadOffset;
-    Lowpan::Context   mSrcContext;
-    Lowpan::Context   mDstContext;
+    Payload         mIphcHeader;
+    uint16_t        mPayloadOffset;
+    Lowpan::Context mSrcContext;
+    Lowpan::Context mDstContext;
 
     /**
      * General purpose fields.
      *
      */
-    Payload           mPayload;
-    otError       mError;
-    const char       *mTestName;
+    Payload     mPayload;
+    otError     mError;
+    const char *mTestName;
 };
 
-}  // namespace ot
+} // namespace ot
 
-#endif // TEST_LOWPAN_HPP
+#endif  // TEST_LOWPAN_HPP

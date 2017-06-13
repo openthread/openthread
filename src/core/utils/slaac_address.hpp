@@ -67,7 +67,7 @@ public:
      * @retval  OT_ERROR_FAILED  if creating IID failed.
      *
      */
-    typedef otError(*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+    typedef otError (*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
 
     /**
      * This function update addresses that shall be automatically created using SLAAC.
@@ -98,7 +98,7 @@ public:
  * This class implements the Method for Generating Semantically Opaque IIDs with IPv6 SLAAC (RFC 7217).
  *
  */
-class SemanticallyOpaqueIidGenerator: public otSemanticallyOpaqueIidGeneratorData
+class SemanticallyOpaqueIidGenerator : public otSemanticallyOpaqueIidGeneratorData
 {
 public:
     /**
@@ -155,8 +155,7 @@ private:
  * @}
  */
 
-}  // namespace Slaac
-}  // namespace ot
+} // namespace Slaac
+} // namespace ot
 
 #endif  // SLAAC_ADDRESS_HPP_
-

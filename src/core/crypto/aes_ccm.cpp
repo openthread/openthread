@@ -51,10 +51,10 @@ void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTa
                   const void *aNonce, uint8_t aNonceLength)
 {
     const uint8_t *nonceBytes = reinterpret_cast<const uint8_t *>(aNonce);
-    uint8_t blockLength = 0;
-    uint32_t len;
-    uint8_t L;
-    uint8_t i;
+    uint8_t        blockLength = 0;
+    uint32_t       len;
+    uint8_t        L;
+    uint8_t        i;
 
     // aTagLength must be even
     aTagLength &= ~1;
@@ -197,7 +197,7 @@ void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncr
 {
     uint8_t *plaintextBytes = reinterpret_cast<uint8_t *>(plaintext);
     uint8_t *ciphertextBytes = reinterpret_cast<uint8_t *>(ciphertext);
-    uint8_t byte;
+    uint8_t  byte;
 
     assert(mPlainTextCur + len <= mPlainTextLength);
 
@@ -276,5 +276,5 @@ void AesCcm::Finalize(void *tag, uint8_t *aTagLength)
     }
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot

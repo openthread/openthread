@@ -74,14 +74,15 @@ otError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, uint1
                                     otCommissionerEnergyReportCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_NONE;
-    Coap::Header header;
+
+    Coap::Header                      header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
-    MeshCoP::ScanDurationTlv scanDuration;
-    Ip6::MessageInfo messageInfo;
-    Message *message = NULL;
+    MeshCoP::ChannelMask0Tlv          channelMask;
+    MeshCoP::CountTlv                 count;
+    MeshCoP::PeriodTlv                period;
+    MeshCoP::ScanDurationTlv          scanDuration;
+    Ip6::MessageInfo                  messageInfo;
+    Message                          *message = NULL;
 
     VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
@@ -127,7 +128,7 @@ otError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, uint1
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -146,13 +147,13 @@ void EnergyScanClient::HandleReport(void *aContext, otCoapHeader *aHeader, otMes
 void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     MeshCoP::ChannelMask0Tlv channelMask;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
+    Ip6::MessageInfo         responseInfo(aMessageInfo);
 
     OT_TOOL_PACKED_BEGIN
     struct
     {
         MeshCoP::EnergyListTlv tlv;
-        uint8_t list[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
+        uint8_t                list[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
     } OT_TOOL_PACKED_END energyList;
 
     VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
@@ -179,7 +180,6 @@ exit:
     return;
 }
 
-}  // namespace ot
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

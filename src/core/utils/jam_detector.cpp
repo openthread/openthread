@@ -143,7 +143,7 @@ void JamDetector::HandleTimer(void *aContext)
 void JamDetector::HandleTimer(void)
 {
     int8_t rssi;
-    bool didExceedThreshold = true;
+    bool   didExceedThreshold = true;
 
     VerifyOrExit(mEnabled);
 
@@ -215,9 +215,9 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 
 void JamDetector::UpdateJamState(void)
 {
-    uint8_t numJammedSeconds = 0;
+    uint8_t  numJammedSeconds = 0;
     uint64_t bitmap = mHistoryBitmap;
-    bool oldJamState = mJamState;
+    bool     oldJamState = mJamState;
 
     // Clear all history bits beyond the current window size
     bitmap &= (static_cast<uint64_t>(1) << mWindow) - 1;
@@ -239,7 +239,7 @@ void JamDetector::UpdateJamState(void)
     }
 }
 
-}  // namespace Utils
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif  // OPENTHREAD_ENABLE_JAM_DETECTION

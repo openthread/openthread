@@ -165,7 +165,7 @@ static void processReceive(void)
 void LPUART0_IRQHandler(void)
 {
     uint32_t interrupts = LPUART_GetEnabledInterrupts(LPUART0);
-    uint8_t rx_data;
+    uint8_t  rx_data;
 
     /* Check if data was received */
     while (LPUART_GetStatusFlags(LPUART0) & (kLPUART_RxDataRegFullFlag))

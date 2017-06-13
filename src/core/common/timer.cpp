@@ -47,7 +47,7 @@
 
 namespace ot {
 
-TimerScheduler::TimerScheduler(void):
+TimerScheduler::TimerScheduler(void) :
     mHead(NULL)
 {
 }
@@ -154,7 +154,7 @@ void TimerScheduler::FireTimers(void)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
-    Timer *timer = mHead;
+    Timer   *timer = mHead;
 
     if (timer)
     {
@@ -186,9 +186,9 @@ bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsedA = now - aTimerA.mT0;
     uint32_t elapsedB = now - aTimerB.mT0;
-    bool retval = false;
+    bool     retval = false;
 
-    if (aTimerA.mDt >= elapsedA && aTimerB.mDt >= elapsedB)
+    if ((aTimerA.mDt >= elapsedA) && (aTimerB.mDt >= elapsedB))
     {
         uint32_t remainingA = aTimerA.mDt - elapsedA;
         uint32_t remainingB = aTimerB.mDt - elapsedB;
@@ -198,11 +198,11 @@ bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)
             retval = true;
         }
     }
-    else if (aTimerA.mDt < elapsedA && aTimerB.mDt >= elapsedB)
+    else if ((aTimerA.mDt < elapsedA) && (aTimerB.mDt >= elapsedB))
     {
         retval = true;
     }
-    else if (aTimerA.mDt < elapsedA && aTimerB.mDt < elapsedB)
+    else if ((aTimerA.mDt < elapsedA) && (aTimerB.mDt < elapsedB))
     {
         uint32_t expiredByA = elapsedA - aTimerA.mDt;
         uint32_t expiredByB = elapsedB - aTimerB.mDt;
@@ -216,4 +216,4 @@ bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)
     return retval;
 }
 
-}  // namespace ot
+} // namespace ot

@@ -44,24 +44,24 @@ extern "C" {
 #define ENABLE_TEST_MAIN
 
 #define SuccessOrQuit(ERR, MSG)                 \
-  do { \
-    if ((ERR) != OT_ERROR_NONE)     \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
+    do { \
+        if ((ERR) != OT_ERROR_NONE)     \
+        { \
+            fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
+            fputs(MSG, stderr); \
+            exit(-1); \
+        } \
+    } while (0)
 
 #define VerifyOrQuit(TST, MSG) \
-  do { \
-    if (!(TST)) \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
+    do { \
+        if (!(TST)) \
+        { \
+            fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
+            fputs(MSG, stderr); \
+            exit(-1); \
+        } \
+    } while (0)
 
 //#define CompileTimeAssert(COND, MSG) typedef char __C_ASSERT__[(COND)?1:-1]
 
@@ -86,9 +86,9 @@ extern utAssertTrue s_AssertTrue;
 typedef void (*utLogMessage)(const char *format, ...);
 extern utLogMessage s_LogMessage;
 
-#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == OT_ERROR_NONE, L##MSG)
+#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == OT_ERROR_NONE, L ## MSG)
 
-#define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
+#define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L ## MSG)
 
 #define CompileTimeAssert(COND, MSG) static_assert(COND, MSG)
 

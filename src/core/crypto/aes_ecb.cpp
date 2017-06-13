@@ -58,5 +58,5 @@ AesEcb::~AesEcb()
     mbedtls_aes_free(&mContext);
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot

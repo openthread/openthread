@@ -164,7 +164,7 @@ OTAPI const char *OTCALL otGetVersionString(void);
 OTAPI const char *OTCALL otThreadErrorToString(otError aError);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_H_
+#endif // OPENTHREAD_H_

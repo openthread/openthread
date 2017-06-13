@@ -56,4 +56,4 @@ otError otJoinerStop(otInstance *aInstance)
     return aInstance->mThreadNetif.GetJoiner().Stop();
 }
 
-#endif  // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_ENABLE_JOINER

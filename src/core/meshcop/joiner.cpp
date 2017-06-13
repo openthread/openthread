@@ -60,7 +60,7 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Joiner::Joiner(ThreadNetif &aNetif):
+Joiner::Joiner(ThreadNetif &aNetif) :
     mState(kStateIdle),
     mCallback(NULL),
     mContext(NULL),
@@ -90,9 +90,10 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
                       const char *aVendorData, otJoinerCallback aCallback, void *aContext)
 {
     otError error;
+
     Mac::ExtAddress extAddress;
-    Crc16 ccitt(Crc16::kCcitt);
-    Crc16 ansi(Crc16::kAnsi);
+    Crc16           ccitt(Crc16::kCcitt);
+    Crc16           ansi(Crc16::kAnsi);
 
     otLogFuncEntry();
 
@@ -268,13 +269,13 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected)
 
 void Joiner::SendJoinerFinalize(void)
 {
-    Coap::Header header;
-    otError error = OT_ERROR_NONE;
-    Message *message = NULL;
-    StateTlv stateTlv;
-    VendorNameTlv vendorNameTlv;
-    VendorModelTlv vendorModelTlv;
-    VendorSwVersionTlv vendorSwVersionTlv;
+    Coap::Header          header;
+    otError               error = OT_ERROR_NONE;
+    Message              *message = NULL;
+    StateTlv              stateTlv;
+    VendorNameTlv         vendorNameTlv;
+    VendorModelTlv        vendorModelTlv;
+    VendorSwVersionTlv    vendorSwVersionTlv;
     VendorStackVersionTlv vendorStackVersionTlv;
 
     otLogFuncEntry();
@@ -336,7 +337,7 @@ void Joiner::SendJoinerFinalize(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -397,11 +398,11 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 {
     otError error;
 
-    NetworkMasterKeyTlv masterKey;
-    MeshLocalPrefixTlv meshLocalPrefix;
-    ExtendedPanIdTlv extendedPanId;
-    NetworkNameTlv networkName;
-    ActiveTimestampTlv activeTimestamp;
+    NetworkMasterKeyTlv   masterKey;
+    MeshLocalPrefixTlv    meshLocalPrefix;
+    ExtendedPanIdTlv      extendedPanId;
+    NetworkNameTlv        networkName;
+    ActiveTimestampTlv    activeTimestamp;
     NetworkKeySequenceTlv networkKeySeq;
 
     otLogFuncEntry();
@@ -452,9 +453,10 @@ exit:
 void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
                                        const Ip6::MessageInfo &aRequestInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     Message *message;
-    Coap::Header responseHeader;
+
+    Coap::Header     responseHeader;
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
     otLogFuncEntry();
@@ -476,7 +478,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if ((error != OT_ERROR_NONE) && (message != NULL))
     {
         message->Free();
     }
@@ -521,7 +523,7 @@ void Joiner::HandleTimer(void)
     Complete(error);
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif  // OPENTHREAD_ENABLE_JOINER

@@ -92,7 +92,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_BUSY;
+    otError  error = OT_ERROR_BUSY;
     uint32_t start = otPlatAlarmGetNow();
 
     do
@@ -111,7 +111,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t rval = aSize;
-    int32_t status;
+    int32_t  status;
 
     otEXPECT_ACTION(aData, rval = 0);
     otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) &&

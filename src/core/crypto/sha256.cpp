@@ -63,5 +63,5 @@ void Sha256::Finish(uint8_t aHash[kHashSize])
     mbedtls_sha256_finish(&mContext, aHash);
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot

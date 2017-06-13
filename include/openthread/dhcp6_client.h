@@ -54,9 +54,9 @@ extern "C" {
  */
 typedef struct otDhcpAddress
 {
-    otNetifAddress mAddress;            ///< The network interface address.
-    uint32_t       mPreferredLifetime;  ///< The preferred lifetime.
-    uint32_t       mValidLifetime;      ///< The valid lifetime.
+    otNetifAddress mAddress;           ///< The network interface address.
+    uint32_t       mPreferredLifetime; ///< The preferred lifetime.
+    uint32_t       mValidLifetime;     ///< The valid lifetime.
 } otDhcpAddress;
 
 /**
@@ -76,7 +76,7 @@ void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint3
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
-#endif  // OPENTHREAD_DHCP6_CLIENT_H_
+#endif // OPENTHREAD_DHCP6_CLIENT_H_

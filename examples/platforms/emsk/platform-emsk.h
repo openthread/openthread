@@ -88,4 +88,4 @@ void emskRandomInit(void);
  */
 void emskUartProcess(void);
 
-#endif  // PLATFORM_EMSK_H_
+#endif // PLATFORM_EMSK_H_

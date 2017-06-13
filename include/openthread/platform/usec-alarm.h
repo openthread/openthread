@@ -56,8 +56,8 @@ extern "C" {
  */
 typedef struct
 {
-    uint32_t mMs;  ///< Time in milliseconds.
-    uint16_t mUs;  ///< Time fraction in microseconds.
+    uint32_t mMs; ///< Time in milliseconds.
+    uint16_t mUs; ///< Time fraction in microseconds.
 } otPlatUsecAlarmTime;
 
 /**
@@ -106,7 +106,7 @@ void otPlatUsecAlarmGetNow(otPlatUsecAlarmTime *aNow);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // USEC_ALARM_H_
+#endif // USEC_ALARM_H_

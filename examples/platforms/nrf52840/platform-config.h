@@ -337,4 +337,4 @@
  */
 #define RADIO_RX_BUFFERS  16
 
-#endif  // PLATFORM_CONFIG_H_
+#endif // PLATFORM_CONFIG_H_

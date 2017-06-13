@@ -36,8 +36,8 @@
 #include <openthread/platform/misc.h>
 
 #ifndef _WIN32
-extern int      gArgumentsCount;
-extern char   **gArguments;
+extern int    gArgumentsCount;
+extern char **gArguments;
 #endif
 
 void otPlatReset(otInstance *aInstance)

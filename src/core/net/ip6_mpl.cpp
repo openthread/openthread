@@ -54,7 +54,7 @@ void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentT
     SetIntervalOffset(aInterval - t);
 }
 
-Mpl::Mpl(Ip6 &aIp6):
+Mpl::Mpl(Ip6 &aIp6) :
     mIp6(aIp6),
     mSeedSetTimer(aIp6.mTimerScheduler, &Mpl::HandleSeedSetTimer, this),
     mRetransmissionTimer(aIp6.mTimerScheduler, &Mpl::HandleRetransmissionTimer, this),
@@ -72,7 +72,7 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
     aOption.SetSequence(mSequence++);
 
     // Check if Seed Id can be elided.
-    if (mMatchingAddress && aAddress == *mMatchingAddress)
+    if (mMatchingAddress && (aAddress == *mMatchingAddress))
     {
         aOption.SetSeedIdLength(OptionMpl::kSeedIdLength0);
 
@@ -88,9 +88,9 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
 
 otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 {
-    otError error = OT_ERROR_NONE;
+    otError       error = OT_ERROR_NONE;
     MplSeedEntry *entry = NULL;
-    int8_t diff;
+    int8_t        diff;
 
     for (uint32_t i = 0; i < kNumSeedEntries; i++)
     {
@@ -126,7 +126,7 @@ exit:
 
 void Mpl::UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence)
 {
-    int8_t diff;
+    int8_t                     diff;
     MplBufferedMessageMetadata messageMetadata;
 
     Message *message = mBufferedMessageSet.GetHead();
@@ -163,12 +163,12 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t now = Timer::GetNow();
-    otError error = OT_ERROR_NONE;
-    Message *messageCopy = NULL;
+    uint32_t                   now = Timer::GetNow();
+    otError                    error = OT_ERROR_NONE;
+    Message                   *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
-    uint32_t nextTransmissionTime;
-    uint8_t hopLimit = 0;
+    uint32_t                   nextTransmissionTime;
+    uint8_t                    hopLimit = 0;
 
     VerifyOrExit(GetTimerExpirations() > 0);
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -207,7 +207,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if ((error != OT_ERROR_NONE) && (messageCopy != NULL))
     {
         messageCopy->Free();
     }
@@ -215,7 +215,7 @@ exit:
 
 otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
 {
-    otError error;
+    otError   error;
     OptionMpl option;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
@@ -257,8 +257,8 @@ void Mpl::HandleRetransmissionTimer(void *aContext)
 
 void Mpl::HandleRetransmissionTimer()
 {
-    uint32_t now = Timer::GetNow();
-    uint32_t nextDelta = 0xffffffff;
+    uint32_t                   now = Timer::GetNow();
+    uint32_t                   nextDelta = 0xffffffff;
     MplBufferedMessageMetadata messageMetadata;
 
     Message *message = mBufferedMessageSet.GetHead();
@@ -361,5 +361,5 @@ void Mpl::HandleSeedSetTimer()
     }
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

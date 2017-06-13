@@ -156,7 +156,7 @@ otError otLinkRawSleep(otInstance *aInstance);
  *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
  *
  */
-typedef void (OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+typedef void (OTCALL * otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * Transitioning the radio from Sleep to Receive.
@@ -359,7 +359,7 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // LINK_RAW_H_
+#endif // LINK_RAW_H_

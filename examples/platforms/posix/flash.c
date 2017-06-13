@@ -41,7 +41,7 @@
 #include "utils/flash.h"
 
 static int sFlashFd;
-uint32_t sEraseAddress;
+uint32_t   sEraseAddress;
 
 enum
 {
@@ -52,10 +52,10 @@ enum
 
 otError utilsFlashInit(void)
 {
-    otError error = OT_ERROR_NONE;
-    char fileName[20];
+    otError     error = OT_ERROR_NONE;
+    char        fileName[20];
     struct stat st;
-    bool create = false;
+    bool        create = false;
     const char *offset = getenv("PORT_OFFSET");
 
     memset(&st, 0, sizeof(st));
@@ -102,9 +102,9 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint32_t address;
-    uint8_t dummyPage[ FLASH_SIZE ];
+    uint8_t  dummyPage[ FLASH_SIZE ];
 
     otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
     otEXPECT_ACTION(aAddress < FLASH_SIZE, error = OT_ERROR_INVALID_ARGS);
@@ -135,7 +135,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t ret = 0;
     uint32_t index = 0;
-    uint8_t byte;
+    uint8_t  byte;
 
     otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
 

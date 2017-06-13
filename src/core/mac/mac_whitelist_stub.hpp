@@ -48,32 +48,50 @@ class Whitelist
 public:
     typedef otMacWhitelistEntry Entry;
 
-    Whitelist(void) { }
+    Whitelist(void) {
+    }
 
-    bool IsEnabled(void) const { return false; }
+    bool IsEnabled(void) const {
+        return false;
+    }
 
-    void SetEnabled(bool) { }
+    void SetEnabled(bool) {
+    }
 
-    int GetMaxEntries(void) const { return 0; }
+    int GetMaxEntries(void) const {
+        return 0;
+    }
 
-    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError GetEntry(uint8_t, Entry &) const {
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
 
-    Entry *Add(const ExtAddress &) { return NULL; }
+    Entry *Add(const ExtAddress &) {
+        return NULL;
+    }
 
-    void Remove(const ExtAddress &) { }
+    void Remove(const ExtAddress &) {
+    }
 
-    void Clear(void) { }
+    void Clear(void) {
+    }
 
-    Entry *Find(const ExtAddress &) { return NULL; }
+    Entry *Find(const ExtAddress &) {
+        return NULL;
+    }
 
-    void ClearFixedRssi(Entry &) { }
+    void ClearFixedRssi(Entry &) {
+    }
 
-    otError GetFixedRssi(Entry &, int8_t &) const { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError GetFixedRssi(Entry &, int8_t &) const {
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
 
-    void SetFixedRssi(Entry &, int8_t) { }
+    void SetFixedRssi(Entry &, int8_t) {
+    }
 };
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
 #endif  // MAC_WHITELIST_HPP_

@@ -55,7 +55,7 @@ namespace ot {
  * strength (RSS), link margin and link quality value (value in 0-3). The average is obtained using an adaptive
  * exponential moving average filter.
  *
-  */
+ */
 class LinkQualityInfo
 {
 public:
@@ -192,15 +192,15 @@ private:
 
         // Constants related to RSS adaptive exponential moving average filter:
 
-        kRssAveragePrecisionMultipleBitShift   = 3,    // Precision multiple for RSS average (1 << PrecisionBitShift).
+        kRssAveragePrecisionMultipleBitShift   = 3, // Precision multiple for RSS average (1 << PrecisionBitShift).
         kRssAveragePrecisionMultiple           = (1 << kRssAveragePrecisionMultipleBitShift),
         kRssAveragePrecisionMultipleBitMask    = (kRssAveragePrecisionMultiple - 1),
 
-        kRssCountMax                           = 7,    // mCount max limit value.
+        kRssCountMax                           = 7, // mCount max limit value.
 
-        kRssCountForWeightCoefficientOneEighth = 5,    // mCount threshold to use average weight coefficient of 1/8.
-        kRssCountForWeightCoefficientOneFourth = 2,    // mCount threshold to use average weight coefficient of 1/4.
-        kRssCountForWeightCoefficientOneHalf   = 1,    // mCount threshold to use average weight coefficient of 1/2.
+        kRssCountForWeightCoefficientOneEighth = 5, // mCount threshold to use average weight coefficient of 1/8.
+        kRssCountForWeightCoefficientOneFourth = 2, // mCount threshold to use average weight coefficient of 1/4.
+        kRssCountForWeightCoefficientOneHalf   = 1, // mCount threshold to use average weight coefficient of 1/2.
     };
 
     /* Private method to update the mLinkQuality value. This is called when a new RSS value is added to average
@@ -215,13 +215,13 @@ private:
      */
     static uint8_t CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality);
 
-    static const char kUnknownRssString[];           // Constant string used when RSS average is unknown.
+    static const char kUnknownRssString[]; // Constant string used when RSS average is unknown.
 
     // All data should fit into a 16-bit (uint16_t) value.
 
-    uint16_t mRssAverage  : 11;  // The encoded average signal strength value (stored as rss times precision multiple).
-    uint8_t  mCount       : 3;   // Number of RSS values added to average so far (limited to kRssCountMax).
-    uint8_t  mLinkQuality : 2;   // Current link quality value (0-3).
+    uint16_t mRssAverage  : 11; // The encoded average signal strength value (stored as rss times precision multiple).
+    uint8_t  mCount       : 3;  // Number of RSS values added to average so far (limited to kRssCountMax).
+    uint8_t  mLinkQuality : 2;  // Current link quality value (0-3).
     int8_t   mLastRss;
 };
 
@@ -229,6 +229,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif // LINK_QUALITY_HPP_
+#endif  // LINK_QUALITY_HPP_

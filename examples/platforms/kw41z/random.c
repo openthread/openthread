@@ -43,7 +43,7 @@
 void kw41zRandomInit(void)
 {
     trng_config_t config;
-    uint32_t seed;
+    uint32_t      seed;
 
     TRNG_GetDefaultConfig(&config);
     config.frequencyCountLimit.minimum = 0x00000100;

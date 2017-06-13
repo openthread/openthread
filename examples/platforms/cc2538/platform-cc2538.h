@@ -84,4 +84,4 @@ void cc2538RandomInit(void);
  */
 void cc2538UartProcess(void);
 
-#endif  // PLATFORM_CC2538_H_
+#endif // PLATFORM_CC2538_H_

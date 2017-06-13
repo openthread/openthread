@@ -88,7 +88,7 @@ class NetworkData
 public:
     enum
     {
-        kMaxSize = 255,  ///< Maximum size of Thread Network Data in bytes.
+        kMaxSize = 255, ///< Maximum size of Thread Network Data in bytes.
     };
 
     /**
@@ -351,28 +351,28 @@ protected:
      */
     otError SendServerDataNotification(uint16_t aRloc16);
 
-    uint8_t mTlvs[kMaxSize];  ///< The Network Data buffer.
-    uint8_t mLength;          ///< The number of valid bytes in @var mTlvs.
+    uint8_t      mTlvs[kMaxSize]; ///< The Network Data buffer.
+    uint8_t      mLength;         ///< The number of valid bytes in @var mTlvs.
 
     ThreadNetif &mNetif;
 
 private:
     enum
     {
-        kDataResubmitDelay = 300000,  ///< DATA_RESUBMIT_DELAY (miliseconds)
+        kDataResubmitDelay = 300000, ///< DATA_RESUBMIT_DELAY (miliseconds)
     };
 
-    const bool      mLocal;
-    bool            mLastAttemptWait;
-    uint32_t        mLastAttempt;
+    const bool mLocal;
+    bool       mLastAttemptWait;
+    uint32_t   mLastAttempt;
 };
 
-}  // namespace NetworkData
+} // namespace NetworkData
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif  // NETWORK_DATA_HPP_
