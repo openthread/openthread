@@ -73,6 +73,7 @@ void platformUartRestore(void)
 {
     restore_stdin_termios();
     restore_stdout_termios();
+    dup2(s_out_fd, STDOUT_FILENO);
 }
 
 otError otPlatUartEnable(void)
