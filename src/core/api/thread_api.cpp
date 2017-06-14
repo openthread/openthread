@@ -492,3 +492,8 @@ bool otThreadIsDiscoverInProgress(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
 }
+
+otIpCounters otThreadGetIPv6Counters(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMeshForwarder().GetCounters();
+}

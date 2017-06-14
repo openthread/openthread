@@ -3626,19 +3626,19 @@ otError NcpBase::GetPropertyHandler_IP_CNTR(uint8_t header, spinel_prop_key_t ke
     switch (key)
     {
     case SPINEL_PROP_CNTR_IP_TX_SUCCESS:
-        value = mInstance->mThreadNetif.GetMeshForwarder().GetCounters().mTxSuccess;
+        value = otThreadGetIPv6Counters().mTxSuccess;
         break;
 
     case SPINEL_PROP_CNTR_IP_RX_SUCCESS:
-        value = mInstance->mThreadNetif.GetMeshForwarder().GetCounters().mRxSuccess;
+        value = otThreadGetIPv6Counters().mRxSuccess;
         break;
 
     case SPINEL_PROP_CNTR_IP_TX_FAILURE:
-        value = mInstance->mThreadNetif.GetMeshForwarder().GetCounters().mTxFailure;
+        value = otThreadGetIPv6Counters().mTxFailure;
         break;
 
     case SPINEL_PROP_CNTR_IP_RX_FAILURE:
-        value = mInstance->mThreadNetif.GetMeshForwarder().GetCounters().mRxFailure;
+        value = otThreadGetIPv6Counters().mRxFailure;
         break;
 
     default:
