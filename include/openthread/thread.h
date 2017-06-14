@@ -541,7 +541,7 @@ OTAPI otError OTCALL otThreadSendDiagnosticReset(otInstance *aInstance, const ot
  * @returns A pointer to the IPv6 counters.
  *
  */
-OTAPI otIpCounters OTCALL otThreadGetIPv6Counters(otInstance *aInstance);
+OTAPI const otIpCounters * OTCALL otThreadGetIp6Counters(otInstance *aInstance);
 
 /**
  * @}
