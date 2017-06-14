@@ -46,10 +46,7 @@ class Cert_5_5_4_SplitMergeRouters(unittest.TestCase):
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_selection_jitter(1)
+        self._setUpLeader()
 
         self.nodes[ROUTER1].set_panid(0xface)
         self.nodes[ROUTER1].set_mode('rsdn')
@@ -77,6 +74,12 @@ class Cert_5_5_4_SplitMergeRouters(unittest.TestCase):
         self.nodes[ROUTER4].enable_whitelist()
         self.nodes[ROUTER4].set_router_selection_jitter(1)
 
+    def _setUpLeader(self):
+        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_router_selection_jitter(1)        
+
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
@@ -103,7 +106,8 @@ class Cert_5_5_4_SplitMergeRouters(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER4].get_state(), 'router')
 
-        self.nodes[LEADER].stop()
+        self.nodes[LEADER].reset()
+        self._setUpLeader()
         time.sleep(150)
 
         self.nodes[LEADER].start()

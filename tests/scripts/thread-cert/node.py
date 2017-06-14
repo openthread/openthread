@@ -220,6 +220,9 @@ class Node:
     def ping(self, ipaddr, num_responses=1, size=None, timeout=5000):
         return self.interface.ping(ipaddr, num_responses, size, timeout)
 
+    def reset(self):
+        return self.interface.reset()
+
     def set_router_selection_jitter(self, jitter):
         self.interface.set_router_selection_jitter(jitter)
 

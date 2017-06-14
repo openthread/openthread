@@ -444,6 +444,9 @@ class otCli:
 
         return result
 
+    def reset(self):
+        self.send_command('reset')
+
     def set_router_selection_jitter(self, jitter):
         cmd = 'routerselectionjitter %d' % jitter
         self.send_command(cmd)

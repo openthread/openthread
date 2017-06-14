@@ -49,8 +49,11 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
         self.nodes[ED].set_timeout(3)
+        self._setUpEd()
+
+    def _setUpEd(self):
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
+        self.nodes[ED].enable_whitelist()        
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -66,7 +69,8 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[ED].stop()
+        self.nodes[ED].reset()
+        self._setUpEd()
         time.sleep(5)
 
         self.nodes[ED].set_timeout(100)
@@ -74,8 +78,10 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[ED].stop()
+        self.nodes[ED].reset()
+        self._setUpEd()
         time.sleep(5)
+        self.nodes[ED].set_timeout(100)
         self.nodes[ED].start()
         time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
