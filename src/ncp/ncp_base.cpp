@@ -3623,22 +3623,24 @@ otError NcpBase::GetPropertyHandler_IP_CNTR(uint8_t header, spinel_prop_key_t ke
     uint32_t value;
     otError errorCode = OT_ERROR_NONE;
 
+    otIpCounters counters = otThreadGetIPv6Counters(mInstance);
+
     switch (key)
     {
     case SPINEL_PROP_CNTR_IP_TX_SUCCESS:
-        value = otThreadGetIPv6Counters().mTxSuccess;
+        value = counters.mTxSuccess;
         break;
 
     case SPINEL_PROP_CNTR_IP_RX_SUCCESS:
-        value = otThreadGetIPv6Counters().mRxSuccess;
+        value = counters.mRxSuccess;
         break;
 
     case SPINEL_PROP_CNTR_IP_TX_FAILURE:
-        value = otThreadGetIPv6Counters().mTxFailure;
+        value = counters.mTxFailure;
         break;
 
     case SPINEL_PROP_CNTR_IP_RX_FAILURE:
-        value = otThreadGetIPv6Counters().mRxFailure;
+        value = counters.mRxFailure;
         break;
 
     default:
