@@ -271,6 +271,7 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
  * @param[inout]  aHeader           A pointer to the CoAP header.
  * @param[in]     aContentFormat    One of the content formats listed in
  *                                  otCoapOptionContentFormat above.
+ *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
