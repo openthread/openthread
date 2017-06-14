@@ -315,7 +315,7 @@ exit:
 
 otError Header::AppendContentFormatOption(otCoapOptionContentFormat aContentFormat)
 {
-    return AppendUintOption(OT_COAP_OPTION_CONTENT_FORMAT, (uint32_t)aContentFormat);
+    return AppendUintOption(OT_COAP_OPTION_CONTENT_FORMAT, static_cast<uint32_t>(aContentFormat));
 }
 
 otError Header::AppendMaxAgeOption(uint32_t aMaxAge)
