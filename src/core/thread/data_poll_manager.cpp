@@ -51,6 +51,7 @@ namespace ot {
 DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
     mMeshForwarder(aMeshForwarder),
     mTimer(aMeshForwarder.GetNetif().GetIp6().mTimerScheduler, &DataPollManager::HandlePollTimer, this),
+    mTimerStartTime(0),
     mExternalPollPeriod(0),
     mPollPeriod(0),
     mEnabled(false),
@@ -327,11 +328,12 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 
     if (mTimer.IsRunning())
     {
-        mTimer.StartAt(mTimer.Gett0(), mPollPeriod);
+        mTimer.StartAt(mTimerStartTime, mPollPeriod);
     }
     else
     {
-        mTimer.Start(mPollPeriod);
+        mTimerStartTime = Timer::GetNow();
+        mTimer.StartAt(mTimerStartTime, mPollPeriod);
     }
 }
 

@@ -69,7 +69,7 @@ void TimerScheduler::Add(Timer &aTimer)
 
         for (cur = mHead; cur; cur = cur->mNext)
         {
-            if (TimerCompare(aTimer, *cur))
+            if (IsStrictlyBefore(aTimer.mFireTime, cur->mFireTime))
             {
                 if (prev)
                 {
@@ -126,18 +126,14 @@ exit:
 
 void TimerScheduler::SetAlarm(void)
 {
-    uint32_t now = otPlatAlarmGetNow();
-    uint32_t elapsed;
-    uint32_t remaining;
-
     if (mHead == NULL)
     {
         otPlatAlarmStop(GetIp6()->GetInstance());
     }
     else
     {
-        elapsed = now - mHead->mT0;
-        remaining = (mHead->mDt > elapsed) ? mHead->mDt - elapsed : 0;
+        uint32_t now = otPlatAlarmGetNow();
+        uint32_t remaining = IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
 
         otPlatAlarmStartAt(GetIp6()->GetInstance(), now, remaining);
     }
@@ -146,21 +142,17 @@ void TimerScheduler::SetAlarm(void)
 extern "C" void otPlatAlarmFired(otInstance *aInstance)
 {
     otLogFuncEntry();
-    aInstance->mIp6.mTimerScheduler.FireTimers();
+    aInstance->mIp6.mTimerScheduler.ProcessTimers();
     otLogFuncExit();
 }
 
-void TimerScheduler::FireTimers(void)
+void TimerScheduler::ProcessTimers(void)
 {
-    uint32_t now = otPlatAlarmGetNow();
-    uint32_t elapsed;
     Timer *timer = mHead;
 
     if (timer)
     {
-        elapsed = now - timer->mT0;
-
-        if (elapsed >= timer->mDt)
+        if (!IsStrictlyBefore(otPlatAlarmGetNow(), timer->mFireTime))
         {
             Remove(*timer);
             timer->Fired();
@@ -181,39 +173,16 @@ Ip6::Ip6 *TimerScheduler::GetIp6(void)
     return Ip6::Ip6FromTimerScheduler(this);
 }
 
-bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)
+bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
 {
-    uint32_t now = otPlatAlarmGetNow();
-    uint32_t elapsedA = now - aTimerA.mT0;
-    uint32_t elapsedB = now - aTimerB.mT0;
-    bool retval = false;
+    uint32_t diff = aTimeA - aTimeB;
 
-    if (aTimerA.mDt >= elapsedA && aTimerB.mDt >= elapsedB)
-    {
-        uint32_t remainingA = aTimerA.mDt - elapsedA;
-        uint32_t remainingB = aTimerB.mDt - elapsedB;
+    // Three cases:
+    // 1) aTimeA is before  aTimeB  =>  Difference is negative (last bit of difference is set)   => Returning true.
+    // 2) aTimeA is same as aTimeB  =>  Difference is zero     (last bit of difference is clear) => Returning false.
+    // 3) aTimeA is after   aTimeB  =>  Difference is positive (last bit of difference is clear) => Returning false.
 
-        if (remainingA < remainingB)
-        {
-            retval = true;
-        }
-    }
-    else if (aTimerA.mDt < elapsedA && aTimerB.mDt >= elapsedB)
-    {
-        retval = true;
-    }
-    else if (aTimerA.mDt < elapsedA && aTimerB.mDt < elapsedB)
-    {
-        uint32_t expiredByA = elapsedA - aTimerA.mDt;
-        uint32_t expiredByB = elapsedB - aTimerB.mDt;
-
-        if (expiredByB < expiredByA)
-        {
-            retval = true;
-        }
-    }
-
-    return retval;
+    return ((diff & (1UL << 31)) != 0);
 }
 
 }  // namespace ot

@@ -405,7 +405,7 @@ Message *Coap::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLeng
     if (mRetransmissionTimer.IsRunning())
     {
         // If timer is already running, check if it should be restarted with earlier fire time.
-        alarmFireTime = mRetransmissionTimer.Gett0() + mRetransmissionTimer.Getdt();
+        alarmFireTime = mRetransmissionTimer.GetFireTime();
 
         if (aCoapMetadata.IsEarlier(alarmFireTime))
         {
