@@ -1206,6 +1206,22 @@ typedef enum
     SPINEL_PROP_CNTR_RX_SPINEL_OUT_OF_ORDER_TID
                                         = SPINEL_PROP_CNTR__BEGIN + 303,
 
+    /// The number of successful Tx IP packets
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_IP_TX_SUCCESS      = SPINEL_PROP_CNTR__BEGIN + 304,
+
+    /// The number of successful Rx IP packets
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_IP_RX_SUCCESS      = SPINEL_PROP_CNTR__BEGIN + 305,
+
+    /// The number of failed Tx IP packets
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_IP_TX_FAILURE      = SPINEL_PROP_CNTR__BEGIN + 306,
+
+    /// The number of failed Rx IP packets
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_IP_RX_FAILURE      = SPINEL_PROP_CNTR__BEGIN + 307,
+
     /// The message buffer counter info
     /** Format: `SSSSSSSSSSSSSSSS` (Read-only)
      *      `S`, (TotalBuffers)           The number of buffers in the pool.

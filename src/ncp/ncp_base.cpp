@@ -266,6 +266,11 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_RX_SPINEL_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_SPINEL_ERR, &NcpBase::GetPropertyHandler_NCP_CNTR },
 
+    { SPINEL_PROP_CNTR_IP_TX_SUCCESS, &NcpBase::GetPropertyHandler_IP_CNTR },
+    { SPINEL_PROP_CNTR_IP_RX_SUCCESS, &NcpBase::GetPropertyHandler_IP_CNTR },
+    { SPINEL_PROP_CNTR_IP_TX_FAILURE, &NcpBase::GetPropertyHandler_IP_CNTR },
+    { SPINEL_PROP_CNTR_IP_RX_FAILURE, &NcpBase::GetPropertyHandler_IP_CNTR },
+
     { SPINEL_PROP_MSG_BUFFER_COUNTERS, &NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS },
     { SPINEL_PROP_DEBUG_TEST_ASSERT, &NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT },
     { SPINEL_PROP_DEBUG_NCP_LOG_LEVEL, &NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL },
@@ -3773,6 +3778,49 @@ otError NcpBase::GetPropertyHandler_NCP_CNTR(uint8_t header, spinel_prop_key_t k
 
     case SPINEL_PROP_CNTR_RX_SPINEL_ERR:
         value = mFramingErrorCounter;
+        break;
+
+    default:
+        errorCode = SendLastStatus(header, SPINEL_STATUS_INTERNAL_ERROR);
+        goto bail;
+        break;
+    }
+
+    errorCode = SendPropertyUpdate(
+                    header,
+                    SPINEL_CMD_PROP_VALUE_IS,
+                    key,
+                    SPINEL_DATATYPE_UINT32_S,
+                    value
+                );
+
+bail:
+    return errorCode;
+}
+
+otError NcpBase::GetPropertyHandler_IP_CNTR(uint8_t header, spinel_prop_key_t key)
+{
+    uint32_t value;
+    otError errorCode = OT_ERROR_NONE;
+
+    const otIpCounters *counters = otThreadGetIp6Counters(mInstance);
+
+    switch (key)
+    {
+    case SPINEL_PROP_CNTR_IP_TX_SUCCESS:
+        value = counters->mTxSuccess;
+        break;
+
+    case SPINEL_PROP_CNTR_IP_RX_SUCCESS:
+        value = counters->mRxSuccess;
+        break;
+
+    case SPINEL_PROP_CNTR_IP_TX_FAILURE:
+        value = counters->mTxFailure;
+        break;
+
+    case SPINEL_PROP_CNTR_IP_RX_FAILURE:
+        value = counters->mRxFailure;
         break;
 
     default:

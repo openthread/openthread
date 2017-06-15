@@ -1531,6 +1531,22 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_CNTR_RX_SPINEL_OUT_OF_ORDER_TID";
         break;
 
+    case SPINEL_PROP_CNTR_IP_TX_SUCCESS:
+        ret = "PROP_CNTR_IP_TX_SUCCESS";
+        break;
+
+    case SPINEL_PROP_CNTR_IP_RX_SUCCESS:
+        ret = "PROP_CNTR_IP_RX_SUCCESS";
+        break;
+
+    case SPINEL_PROP_CNTR_IP_TX_FAILURE:
+        ret = "PROP_CNTR_IP_TX_FAILURE";
+        break;
+
+    case SPINEL_PROP_CNTR_IP_RX_FAILURE:
+        ret = "PROP_CNTR_IP_RX_FAILURE";
+        break;
+
     case SPINEL_PROP_MSG_BUFFER_COUNTERS:
         ret = "PROP_MSG_BUFFER_COUNTERS";
         break;

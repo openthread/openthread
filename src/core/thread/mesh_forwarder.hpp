@@ -218,6 +218,14 @@ public:
      */
     SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
 
+    /**
+     * This method returns a reference to the IP level counters.
+     *
+     * @returns A reference to the IP level counters.
+     *
+     */
+    const otIpCounters &GetCounters(void) const { return mIpCounters; }
+
 private:
     enum
     {
@@ -298,46 +306,49 @@ private:
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        otError aError);
 
-    ThreadNetif &mNetif;
 
-    Mac::Receiver mMacReceiver;
-    Mac::Sender mMacSender;
-    Timer mDiscoverTimer;
-    Timer mReassemblyTimer;
+    ThreadNetif           &mNetif;
 
-    PriorityQueue mSendQueue;
-    MessageQueue mReassemblyList;
-    MessageQueue mResolvingQueue;
-    uint16_t mFragTag;
-    uint16_t mMessageNextOffset;
+    Mac::Receiver         mMacReceiver;
+    Mac::Sender           mMacSender;
+    Timer                 mDiscoverTimer;
+    Timer                 mReassemblyTimer;
 
-    uint32_t mSendMessageFrameCounter;
-    Message *mSendMessage;
-    bool     mSendMessageIsARetransmission;
-    uint8_t  mSendMessageMaxMacTxAttempts;
-    uint8_t  mSendMessageKeyId;
-    uint8_t  mSendMessageDataSequenceNumber;
-    uint8_t  mStartChildIndex;
+    PriorityQueue         mSendQueue;
+    MessageQueue          mReassemblyList;
+    MessageQueue          mResolvingQueue;
+    uint16_t              mFragTag;
+    uint16_t              mMessageNextOffset;
 
-    Mac::Address mMacSource;
-    Mac::Address mMacDest;
-    uint16_t mMeshSource;
-    uint16_t mMeshDest;
-    bool mAddMeshHeader;
+    uint32_t              mSendMessageFrameCounter;
+    Message               *mSendMessage;
+    bool                  mSendMessageIsARetransmission;
+    uint8_t               mSendMessageMaxMacTxAttempts;
+    uint8_t               mSendMessageKeyId;
+    uint8_t               mSendMessageDataSequenceNumber;
+    uint8_t               mStartChildIndex;
 
-    bool mSendBusy;
+    Mac::Address          mMacSource;
+    Mac::Address          mMacDest;
+    uint16_t              mMeshSource;
+    uint16_t              mMeshDest;
+    bool                  mAddMeshHeader;
 
-    Tasklet mScheduleTransmissionTask;
-    bool mEnabled;
+    bool                  mSendBusy;
 
-    uint32_t mScanChannels;
-    uint8_t mScanChannel;
-    uint8_t mRestoreChannel;
-    uint16_t mRestorePanId;
-    bool mScanning;
+    Tasklet               mScheduleTransmissionTask;
+    bool                  mEnabled;
 
-    DataPollManager mDataPollManager;
+    uint32_t              mScanChannels;
+    uint8_t               mScanChannel;
+    uint8_t               mRestoreChannel;
+    uint16_t              mRestorePanId;
+    bool                  mScanning;
+
+    DataPollManager       mDataPollManager;
     SourceMatchController mSourceMatchController;
+
+    otIpCounters          mIpCounters;
 };
 
 /**
