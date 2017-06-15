@@ -86,7 +86,6 @@ AC_DEFUN([NL_ENABLE_COVERAGE],
                 ])
 
             if test "${nl_cv_build_coverage}" = "yes"; then         
-                AM_EXTRA_RECURSIVE_TARGETS([coverage])
                 if test "${GCC}" != "yes"; then
                     AC_MSG_ERROR([GCC or a GCC-compatible toolchain is required for --enable-coverage])
 

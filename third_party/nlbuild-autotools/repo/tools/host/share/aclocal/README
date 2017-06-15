@@ -1,9 +1,0 @@
-This directory is where .m4 files providing third-party autoconf
-macros can be placed to be automatically found by the aclocal(1)
-program.
-
-The .m4 files placed here could be shared among different versions
-of aclocal, so be careful.
-
-Even if no actual .m4 files are present, this directory is required
-in order for aclocal to work properly.  Please do not remove it.
