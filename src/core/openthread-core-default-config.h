@@ -739,6 +739,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+ *
+ * Define to 1 if you want to enable beacon response for joinable networks.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+#define OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE         0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
  *
  * The size of mbedTLS heap buffer when DTLS is enabled.
