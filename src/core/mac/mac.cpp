@@ -637,7 +637,6 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstPanId(kShortAddrBroadcast);
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
-
     otLogInfoMac(GetInstance(), "Sending Beacon Request");
 }
 
@@ -1574,7 +1573,11 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
         mCounters.mRxBeaconRequest++;
         otLogInfoMac(GetInstance(), "Received Beacon Request");
 
-        if (mBeaconsEnabled)
+        if ((mBeaconsEnabled)
+#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+            && (IsBeaconJoinable())
+#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+           )
         {
             mTransmitBeacon = true;
 
@@ -1654,6 +1657,27 @@ void Mac::ResetCounters(void)
 {
     memset(&mCounters, 0, sizeof(mCounters));
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+bool Mac::IsBeaconJoinable(void)
+{
+    uint8_t numUnsecurePorts;
+    bool joinable = false;
+
+    mNetif.GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+
+    if (numUnsecurePorts)
+    {
+        joinable = true;
+    }
+    else
+    {
+        joinable = false;
+    }
+
+    return joinable;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
 
 }  // namespace Mac
 }  // namespace ot
