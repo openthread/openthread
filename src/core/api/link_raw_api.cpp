@@ -32,12 +32,13 @@
  */
 
 #include <openthread/config.h>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
+
 #include <openthread/platform/random.h>
 #include <openthread/platform/usec-alarm.h>
 
 #include "openthread-instance.h"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -483,6 +484,11 @@ void LinkRaw::HandleTimer(void *aContext)
     static_cast<LinkRaw *>(aContext)->HandleTimer();
 }
 
+void LinkRaw::HandleTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).HandleTimer();
+}
+
 void LinkRaw::HandleTimer(void)
 {
     TimerReason timerReason = mTimerReason;
@@ -578,9 +584,9 @@ void LinkRaw::StartCsmaBackoff(void)
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
-void LinkRaw::HandleEnergyScanTask(void *aContext)
+void LinkRaw::HandleEnergyScanTask(Tasklet &aTasklet)
 {
-    static_cast<LinkRaw *>(aContext)->HandleEnergyScanTask();
+    GetOwner(aTasklet).HandleEnergyScanTask();
 }
 
 void LinkRaw::HandleEnergyScanTask(void)
@@ -606,6 +612,17 @@ void LinkRaw::HandleEnergyScanTask(void)
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+
+LinkRaw &LinkRaw::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    LinkRaw &link = *static_cast<LinkRaw *>(aContext.GetContext());
+#else
+    LinkRaw &link = otGetInstance()->mLinkRaw;
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return link;
+}
 
 } // namespace ot
 

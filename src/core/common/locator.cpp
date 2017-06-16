@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,74 +26,49 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file implements the locator class for OpenThread objects.
+ */
+
+#define WPP_NAME "locator.tmh"
+
 #include <openthread/config.h>
 
-#include <assert.h>
+#include "locator.hpp"
 
-#include <openthread/cli.h>
-#include <openthread/diag.h>
-#include <openthread/openthread.h>
-#include <openthread/platform/platform.h>
+#include "openthread-instance.h"
+#include "net/ip6.hpp"
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-void *otPlatCAlloc(size_t aNum, size_t aSize)
-{
-    return calloc(aNum, aSize);
-}
-
-void otPlatFree(void *aPtr)
-{
-    free(aPtr);
-}
-#endif
-
-void otTaskletsSignalPending(otInstance *aInstance)
-{
-    (void)aInstance;
-}
-
-int main(int argc, char *argv[])
-{
-    otInstance *sInstance;
+namespace ot {
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    size_t otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer = NULL;
-#endif
 
-    PlatformInit(argc, argv);
-
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    // Call to query the buffer size
-    (void)otInstanceInit(NULL, &otInstanceBufferLength);
-
-    // Call to allocate the buffer
-    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
-    assert(otInstanceBuffer);
-
-    // Initialize OpenThread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
-#else
-    sInstance = otInstanceInitSingle();
-#endif
-    assert(sInstance);
-
-    otCliUartInit(sInstance);
-
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
-#endif
-
-    while (1)
-    {
-        otTaskletsProcess(sInstance);
-        PlatformProcessDrivers(sInstance);
-    }
-
-    // otInstanceFinalize(sInstance);
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    // free(otInstanceBuffer);
-#endif
-
-    return 0;
+otInstance *ThreadNetifLocator::GetInstance(void) const
+{
+    return otInstanceFromThreadNetif(&GetNetif());
 }
+
+otInstance *MeshForwarderLocator::GetInstance(void) const
+{
+    return otInstanceFromThreadNetif(&GetMeshForwarder().GetNetif());
+}
+
+otInstance *TimerSchedulerLocator::GetInstance(void) const
+{
+    return otInstanceFromIp6(Ip6::Ip6FromTimerScheduler(&GetTimerScheduler()));
+}
+
+otInstance *TaskletSchedulerLocator::GetInstance(void) const
+{
+    return otInstanceFromIp6(Ip6::Ip6FromTaskletScheduler(&GetTaskletScheduler()));
+}
+
+otInstance *Ip6Locator::GetInstance(void) const
+{
+    return otInstanceFromIp6(&GetIp6());
+}
+
+#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
+}  // namespace ot

@@ -37,6 +37,7 @@
 
 #include <openthread/openthread.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "net/ip6.hpp"
@@ -44,16 +45,16 @@
 namespace ot {
 
 Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext):
-    mScheduler(aScheduler),
+    TaskletSchedulerLocator(aScheduler),
+    Context(aContext),
     mHandler(aHandler),
-    mContext(aContext),
     mNext(NULL)
 {
 }
 
 otError Tasklet::Post(void)
 {
-    return mScheduler.Post(*this);
+    return GetTaskletScheduler().Post(*this);
 }
 
 TaskletScheduler::TaskletScheduler(void):
@@ -72,7 +73,7 @@ otError TaskletScheduler::Post(Tasklet &aTasklet)
     {
         mHead = &aTasklet;
         mTail = &aTasklet;
-        otTaskletsSignalPending(aTasklet.mScheduler.GetIp6()->GetInstance());
+        otTaskletsSignalPending(aTasklet.GetInstance());
     }
     else
     {
@@ -117,17 +118,12 @@ void TaskletScheduler::ProcessQueuedTasklets(void)
         {
             if (mHead != NULL)
             {
-                otTaskletsSignalPending(cur->mScheduler.GetIp6()->GetInstance());
+                otTaskletsSignalPending(mHead->GetInstance());
             }
 
             break;
         }
     }
-}
-
-Ip6::Ip6 *TaskletScheduler::GetIp6(void)
-{
-    return Ip6::Ip6FromTaskletScheduler(this);
 }
 
 }  // namespace ot

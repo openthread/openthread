@@ -46,7 +46,6 @@
 namespace ot {
 namespace Dns {
 
-
 /**
  * This class implements metadata required for DNS retransmission.
  *
@@ -245,11 +244,13 @@ private:
                                 otIp6Address *aAddress, uint32_t aTtl,
                                 otError aResult);
 
-    static void HandleRetransmissionTimer(void *aContext);
+    static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static Client &GetOwner(const Context &aContext);
 
     Ip6::UdpSocket mSocket;
 

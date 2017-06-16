@@ -52,7 +52,7 @@ namespace ot {
 namespace NetworkData {
 
 NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
-    mNetif(aThreadNetif),
+    ThreadNetifLocator(aThreadNetif),
     mLocal(aLocal),
     mLastAttemptWait(false),
     mLastAttempt(0)
@@ -60,10 +60,6 @@ NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
     mLength = 0;
 }
 
-otInstance *NetworkData::GetInstance(void)
-{
-    return mNetif.GetInstance();
-}
 
 void NetworkData::Clear(void)
 {
@@ -198,7 +194,7 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint
         aConfig->mPrefix.mLength = prefix->GetPrefixLength();
         aConfig->mPreference = hasRouteEntry->GetPreference();
         aConfig->mStable = cur->IsStable();
-        aConfig->mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == mNetif.GetMle().GetRloc16());
+        aConfig->mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == GetNetif().GetMle().GetRloc16());
 
         *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
 
@@ -606,6 +602,7 @@ otError NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
 
 otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     Coap::Header header;
     Message *message = NULL;
@@ -619,7 +616,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     header.AppendUriPathOptions(OT_URI_PATH_SERVER_DATA);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     if (mLocal)
     {
@@ -638,10 +635,10 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
     }
 
-    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     if (mLocal)
     {

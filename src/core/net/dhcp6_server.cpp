@@ -54,8 +54,8 @@ namespace ot {
 namespace Dhcp6 {
 
 Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
-    mSocket(aThreadNetif.GetIp6().mUdp),
-    mNetif(aThreadNetif)
+    ThreadNetifLocator(aThreadNetif),
+    mSocket(aThreadNetif.GetIp6().mUdp)
 {
     for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
     {
@@ -69,10 +69,11 @@ Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
 
 otError Dhcp6Server::UpdateService(void)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     bool found;
     uint8_t i;
-    uint16_t rloc16 = mNetif.GetMle().GetRloc16();
+    uint16_t rloc16 = netif.GetMle().GetRloc16();
     Ip6::Address *address = NULL;
     otNetworkDataIterator iterator;
     otBorderRouterConfig config;
@@ -91,15 +92,15 @@ otError Dhcp6Server::UpdateService(void)
         address = &(mAgentsAloc[i].GetAddress());
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while (mNetif.GetNetworkDataLeader().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
+        while (netif.GetNetworkDataLeader().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
         {
             if (!config.mDhcp)
             {
                 continue;
             }
 
-            mNetif.GetNetworkDataLeader().GetContext(*static_cast<const Ip6::Address *>(&(config.mPrefix.mPrefix)),
-                                                     lowpanContext);
+            netif.GetNetworkDataLeader().GetContext(*static_cast<const Ip6::Address *>(&(config.mPrefix.mPrefix)),
+                                                    lowpanContext);
 
             if (address->mFields.m8[15] == lowpanContext.mContextId)
             {
@@ -111,8 +112,8 @@ otError Dhcp6Server::UpdateService(void)
 
         if (!found)
         {
-            mNetif.GetNetworkDataLeader().GetContext(address->mFields.m8[15], lowpanContext);
-            mNetif.RemoveUnicastAddress(mAgentsAloc[i]);
+            netif.GetNetworkDataLeader().GetContext(address->mFields.m8[15], lowpanContext);
+            netif.RemoveUnicastAddress(mAgentsAloc[i]);
             mAgentsAloc[i].mValid = false;
             RemovePrefixAgent(lowpanContext.mPrefix);
         }
@@ -121,7 +122,7 @@ otError Dhcp6Server::UpdateService(void)
     // add dhcp agent aloc and prefix delegation
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-    while (mNetif.GetNetworkDataLeader().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
+    while (netif.GetNetworkDataLeader().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
     {
         found = false;
 
@@ -130,8 +131,8 @@ otError Dhcp6Server::UpdateService(void)
             continue;
         }
 
-        mNetif.GetNetworkDataLeader().GetContext(*static_cast<const Ip6::Address *>(&config.mPrefix.mPrefix),
-                                                 lowpanContext);
+        netif.GetNetworkDataLeader().GetContext(*static_cast<const Ip6::Address *>(&config.mPrefix.mPrefix),
+                                                lowpanContext);
 
         for (i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
         {
@@ -155,7 +156,7 @@ otError Dhcp6Server::UpdateService(void)
             if (!mAgentsAloc[i].mValid)
             {
                 address = &(mAgentsAloc[i].GetAddress());
-                memcpy(address, mNetif.GetMle().GetMeshLocalPrefix(), 8);
+                memcpy(address, netif.GetMle().GetMeshLocalPrefix(), 8);
                 address->mFields.m16[4] = HostSwap16(0x0000);
                 address->mFields.m16[5] = HostSwap16(0x00ff);
                 address->mFields.m16[6] = HostSwap16(0xfe00);
@@ -164,7 +165,7 @@ otError Dhcp6Server::UpdateService(void)
                 mAgentsAloc[i].mPrefixLength = 128;
                 mAgentsAloc[i].mPreferred = true;
                 mAgentsAloc[i].mValid = true;
-                mNetif.AddUnicastAddress(mAgentsAloc[i]);
+                netif.AddUnicastAddress(mAgentsAloc[i]);
                 AddPrefixAgent(config.mPrefix);
                 break;
             }
@@ -466,7 +467,7 @@ otError Dhcp6Server::AppendServerIdentifier(Message &aMessage)
     option.Init();
     option.SetDuidType(kDuidLL);
     option.SetDuidHardwareType(kHardwareTypeEui64);
-    option.SetDuidLinkLayerAddress(mNetif.GetMac().GetExtAddress());
+    option.SetDuidLinkLayerAddress(GetNetif().GetMac().GetExtAddress());
     SuccessOrExit(error = aMessage.Append(&option, sizeof(option)));
 
 exit:

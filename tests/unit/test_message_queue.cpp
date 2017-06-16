@@ -27,17 +27,23 @@
  */
 
 #include <stdarg.h>
-#include "utils/wrap_string.h"
 
+#include "test_platform.h"
+
+#include <openthread/config.h>
 #include <openthread/openthread.h>
 
 #include "openthread-instance.h"
 #include "common/debug.hpp"
 #include "common/message.hpp"
+#include "utils/wrap_string.h"
 
 #include "test_util.h"
 
 #define kNumTestMessages      5
+
+static otInstance *sInstance;
+static ot::MessagePool *sMessagePool;
 
 // This function verifies the content of the message queue to match the passed in messages
 void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
@@ -73,16 +79,19 @@ void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLen
 
 void TestMessageQueue(void)
 {
-    otInstance instance;
-    ot::MessagePool messagePool(&instance);
     ot::MessageQueue messageQueue;
     ot::Message *msg[kNumTestMessages];
     otError error;
     uint16_t msgCount, bufferCount;
 
+    sInstance = testInitInstance();
+    VerifyOrQuit(sInstance != NULL, "Null instance");
+
+    sMessagePool = &sInstance->mIp6.mMessagePool;
+
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = messagePool.New(ot::Message::kTypeIp6, 0);
+        msg[i] = sMessagePool->New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msg[i] != NULL, "Message::New failed\n");
     }
 
@@ -146,6 +155,8 @@ void TestMessageQueue(void)
     error = messageQueue.Dequeue(*msg[1]);
     VerifyOrQuit(error == OT_ERROR_NOT_FOUND,
                  "Dequeuing a message not in the queue did not fail as expected.\n");
+
+    testFreeInstance(sInstance);
 }
 
 // This function verifies the content of the message queue to match the passed in messages
@@ -186,35 +197,17 @@ void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLe
 // This test checks all the OpenThread C APIs for `otMessageQueue`
 void TestMessageQueueOtApis(void)
 {
-    otInstance *instance;
-    otMessageQueue queue, queue2;
-
     otMessage *msg[kNumTestMessages];
     otError error;
     otMessage *message;
+    otMessageQueue queue, queue2;
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    size_t otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer = NULL;
-
-    // Call to query the buffer size
-    (void)otInstanceInit(NULL, &otInstanceBufferLength);
-
-    // Call to allocate the buffer
-    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
-    assert(otInstanceBuffer);
-
-    // Initialize OpenThread with the buffer
-    instance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
-#else
-    instance = otInstanceInit();
-#endif
-
-    VerifyOrQuit(instance != NULL, "Failed to get and init an otInstance.\n");
+    sInstance = testInitInstance();
+    VerifyOrQuit(sInstance != NULL, "Null instance");
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = otIp6NewMessage(instance, true);
+        msg[i] = otIp6NewMessage(sInstance, true);
         VerifyOrQuit(msg[i] != NULL, "otIp6NewMessage() failed.\n");
     }
 
@@ -270,10 +263,7 @@ void TestMessageQueueOtApis(void)
     SuccessOrQuit(otMessageQueueDequeue(&queue, msg[2]), "Failed to dequeue a message from otMessageQueue.\n");
     VerifyMessageQueueContentUsingOtApi(&queue, 0);
 
-    otInstanceFinalize(instance);
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    free(otInstanceBuffer);
-#endif
+    testFreeInstance(sInstance);
 }
 
 #ifdef ENABLE_TEST_MAIN

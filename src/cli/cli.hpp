@@ -50,6 +50,7 @@
 #endif
 
 #include "common/code_utils.hpp"
+#include "common/context.hpp"
 
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
@@ -283,7 +284,7 @@ private:
 #ifndef OTDLL
     static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
-    static void s_HandlePingTimer(void *aContext);
+    static void s_HandlePingTimer(Timer &aTimer);
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
@@ -328,6 +329,8 @@ private:
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
+
+    static Interpreter &GetOwner(const Context &aContext);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

@@ -27,14 +27,15 @@
  */
 
 #include <stdarg.h>
-#include "utils/wrap_string.h"
 
 #include <openthread/openthread.h>
 #include <openthread-instance.h>
 
 #include "common/debug.hpp"
 #include "common/message.hpp"
+#include "utils/wrap_string.h"
 
+#include "test_platform.h"
 #include "test_util.h"
 
 #define kNumTestMessages      3
@@ -113,7 +114,7 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
 }
 
 // This function verifies the content of the all message queue to match the passed in messages
-void VerifyAllMessagesContent(ot::MessagePool &aMessagePool, int aExpectedLength, ...)
+void VerifyAllMessagesContent(ot::MessagePool *aMessagePool, int aExpectedLength, ...)
 {
     va_list args;
     ot::MessagePool::Iterator it;
@@ -123,12 +124,12 @@ void VerifyAllMessagesContent(ot::MessagePool &aMessagePool, int aExpectedLength
 
     if (aExpectedLength == 0)
     {
-        VerifyOrQuit(aMessagePool.GetAllMessagesHead().IsEmpty(), "Head is not empty when expected len is zero.\n");
-        VerifyOrQuit(aMessagePool.GetAllMessagesTail().IsEmpty(), "Tail is not empty when expected len is zero.\n");
+        VerifyOrQuit(aMessagePool->GetAllMessagesHead().IsEmpty(), "Head is not empty when expected len is zero.\n");
+        VerifyOrQuit(aMessagePool->GetAllMessagesTail().IsEmpty(), "Tail is not empty when expected len is zero.\n");
     }
     else
     {
-        for (it = aMessagePool.GetAllMessagesHead(); !it.HasEnded() ; it.GoToNext())
+        for (it = aMessagePool->GetAllMessagesHead(); !it.HasEnded() ; it.GoToNext())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
             msgArg = va_arg(args, ot::Message *);
@@ -144,7 +145,7 @@ void VerifyAllMessagesContent(ot::MessagePool &aMessagePool, int aExpectedLength
 
 // This function verifies the content of the all message queue to match the passed in messages. It goes
 // through the AllMessages list in reverse.
-void VerifyAllMessagesContentInReverse(ot::MessagePool &aMessagePool, int aExpectedLength, ...)
+void VerifyAllMessagesContentInReverse(ot::MessagePool *aMessagePool, int aExpectedLength, ...)
 {
     va_list args;
     ot::MessagePool::Iterator it;
@@ -154,12 +155,12 @@ void VerifyAllMessagesContentInReverse(ot::MessagePool &aMessagePool, int aExpec
 
     if (aExpectedLength == 0)
     {
-        VerifyOrQuit(aMessagePool.GetAllMessagesHead().IsEmpty(), "Head is not empty when expected len is zero.\n");
-        VerifyOrQuit(aMessagePool.GetAllMessagesTail().IsEmpty(), "Tail is not empty when expected len is zero.\n");
+        VerifyOrQuit(aMessagePool->GetAllMessagesHead().IsEmpty(), "Head is not empty when expected len is zero.\n");
+        VerifyOrQuit(aMessagePool->GetAllMessagesTail().IsEmpty(), "Tail is not empty when expected len is zero.\n");
     }
     else
     {
-        for (it = aMessagePool.GetAllMessagesTail(); !it.HasEnded() ; it.GoToPrev())
+        for (it = aMessagePool->GetAllMessagesTail(); !it.HasEnded() ; it.GoToPrev())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
             msgArg = va_arg(args, ot::Message *);
@@ -207,8 +208,8 @@ void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength,
 
 void TestPriorityQueue(void)
 {
-    otInstance instance;
-    ot::MessagePool messagePool(&instance);
+    otInstance *instance;
+    ot::MessagePool *messagePool;
     ot::PriorityQueue queue;
     ot::MessageQueue messageQueue;
     ot::Message *msgHigh    [kNumTestMessages];
@@ -217,19 +218,24 @@ void TestPriorityQueue(void)
     ot::Message *msgVeryLow [kNumTestMessages];
     ot::MessagePool::Iterator it;
 
+    instance = testInitInstance();
+    VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
+
+    messagePool = &instance->mIp6.mMessagePool;
+
     // Allocate messages with different priorities.
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msgHigh[i] = messagePool.New(ot::Message::kTypeIp6, 0);
+        msgHigh[i] = messagePool->New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgHigh[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgHigh[i]->SetPriority(0), "Message:SetPriority failed\n");
-        msgMed[i] = messagePool.New(ot::Message::kTypeIp6, 0);
+        msgMed[i] = messagePool->New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgMed[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgMed[i]->SetPriority(1), "Message:SetPriority failed\n");
-        msgLow[i] = messagePool.New(ot::Message::kTypeIp6, 0);
+        msgLow[i] = messagePool->New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgLow[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgLow[i]->SetPriority(2), "Message:SetPriority failed\n");
-        msgVeryLow[i] = messagePool.New(ot::Message::kTypeIp6, 0);
+        msgVeryLow[i] = messagePool->New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgVeryLow[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgVeryLow[i]->SetPriority(3), "Message:SetPriority failed\n");
     }
@@ -278,7 +284,7 @@ void TestPriorityQueue(void)
     it.GoToNext();
     VerifyOrQuit(it.IsEmpty(), "Iterator::IsEmpty() failed to return `true` for an empty iterator.\n");
 
-    it = messagePool.GetAllMessagesHead();
+    it = messagePool->GetAllMessagesHead();
     VerifyOrQuit(!it.IsEmpty(), "Iterator::IsEmpty() failed to return `false` when it is not empty.\n");
     VerifyOrQuit(it.GetMessage() == msgHigh[0], "Iterator::GetMessage() failed.\n");
     it = it.GetNext();
@@ -288,7 +294,7 @@ void TestPriorityQueue(void)
     VerifyOrQuit(it.GetMessage() == msgHigh[0], "Iterator::GetPrev() failed.\n");
     it = it.GetPrev();
     VerifyOrQuit(it.HasEnded(), "Iterator::GetPrev() failed to return empty at head.\n");
-    it = messagePool.GetAllMessagesTail();
+    it = messagePool->GetAllMessagesTail();
     it = it.GetNext();
     VerifyOrQuit(it.HasEnded(), "Iterator::GetNext() failed to return empty at tail.\n");
 
@@ -397,6 +403,8 @@ void TestPriorityQueue(void)
     VerifyAllMessagesContent(messagePool, 2, msgLow[1], msgLow[0]);
     VerifyPriorityQueueContent(queue, 1, msgLow[0]);
     VerifyMsgQueueContent(messageQueue, 1, msgLow[1]);
+
+    testFreeInstance(instance);
 }
 
 #ifdef ENABLE_TEST_MAIN

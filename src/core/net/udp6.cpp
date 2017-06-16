@@ -128,9 +128,9 @@ exit:
 }
 
 Udp::Udp(Ip6 &aIp6):
+    Ip6Locator(aIp6),
     mEphemeralPort(kDynamicPortMin),
-    mSockets(NULL),
-    mIp6(aIp6)
+    mSockets(NULL)
 {
 }
 
@@ -192,12 +192,12 @@ uint16_t Udp::GetEphemeralPort(void)
 
 Message *Udp::NewMessage(uint16_t aReserved)
 {
-    return mIp6.NewMessage(sizeof(UdpHeader) + aReserved);
+    return GetIp6().NewMessage(sizeof(UdpHeader) + aReserved);
 }
 
 otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto)
 {
-    return mIp6.SendDatagram(aMessage, aMessageInfo, aIpProto);
+    return GetIp6().SendDatagram(aMessage, aMessageInfo, aIpProto);
 }
 
 otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)

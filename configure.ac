@@ -507,6 +507,37 @@ AC_MSG_CHECKING([sould NCP support UART])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
 
 #
+# Multiple OpenThread Instances
+#
+
+AC_ARG_ENABLE(multiple-instances,
+    [AS_HELP_STRING([--enable-multiple-instances],[Enable support for multiple OpenThread instances @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_multiple_instances=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_multiple_instances} for --enable-multiple-instances])
+            ;;
+        esac
+    ],
+    [enable_multiple_instances=no])
+
+if test "$enable_multiple_instances" = "yes"; then
+    OPENTHREAD_ENABLE_MULTIPLE_INSTANCES=1
+else
+    OPENTHREAD_ENABLE_MULTIPLE_INSTANCES=0
+fi
+
+AC_MSG_RESULT(${enable_multiple_instances})
+AC_SUBST(OPENTHREAD_ENABLE_MULTIPLE_INSTANCES)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_MULTIPLE_INSTANCES], [test "${enable_multiple_instances}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MULTIPLE_INSTANCES],[${OPENTHREAD_ENABLE_MULTIPLE_INSTANCES}],[Define to 1 if you want to enable support for multiple OpenThread instances.])
+
+#
 # Builtin mbedtls
 #
 
@@ -1382,6 +1413,7 @@ AC_MSG_NOTICE([
   OpenThread NCP-MTD support                : ${enable_ncp_app_mtd}
   OpenThread NCP-FTD support                : ${enable_ncp_app_ftd}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
+  OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread TMF Proxy support              : ${enable_tmf_proxy}

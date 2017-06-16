@@ -397,12 +397,20 @@ public:
     Utils::SupervisionListener &GetSupervisionListener(void) { return mSupervisionListener; }
 
     /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
+      * This method returns a reference to the energy scan server object.
+      *
+      * @returns A reference to the energy scan server object.
+      *
+      */
+    EnergyScanServer &GetEnergyScanServer(void) { return mEnergyScan; }
+
+    /**
+      * This method returns a reference to the PAN ID query server object.
+      *
+      * @returns A reference to the PAN ID query server object.
+      *
+      */
+    PanIdQueryServer &GetPanIdQueryServer(void) { return mPanIdQuery; }
 
 private:
     static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);

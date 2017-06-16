@@ -36,6 +36,7 @@
 
 #include <openthread/dhcp6_client.h>
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
@@ -167,7 +168,7 @@ private:
  * This class implements DHCPv6 Client.
  *
  */
-class Dhcp6Client
+class Dhcp6Client: public ThreadNetifLocator
 {
 public:
     /**
@@ -177,14 +178,6 @@ public:
      *
      */
     explicit Dhcp6Client(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method update addresses that shall be automatically created using DHCP.
@@ -226,13 +219,14 @@ private:
     otError ProcessStatusCode(Message &aMessage, uint16_t aOffset);
     otError ProcessIaAddress(Message &aMessage, uint16_t aOffset);
 
-    static bool HandleTrickleTimer(void *aContext);
+    static bool HandleTrickleTimer(TrickleTimer &aTrickleTimer);
     bool HandleTrickleTimer(void);
+
+    static Dhcp6Client &GetOwner(const Context &aContext);
 
     TrickleTimer mTrickleTimer;
 
     Ip6::UdpSocket mSocket;
-    ThreadNetif &mNetif;
 
     uint8_t mTransactionId[kTransactionIdSize];
     uint32_t mStartTime;

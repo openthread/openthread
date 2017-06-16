@@ -37,6 +37,8 @@
 
 #include <openthread/openthread.h>
 
+#include "openthread-core-config.h"
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "thread/thread_netif.hpp"
@@ -49,7 +51,7 @@ namespace Utils {
 #if OPENTHREAD_FTD
 
 ChildSupervisor::ChildSupervisor(ThreadNetif &aThreadNetif) :
-    mNetif(aThreadNetif),
+    ThreadNetifLocator(aThreadNetif),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &ChildSupervisor::HandleTimer, this),
     mSupervisionInterval(kDefaultSupervisionInterval)
 {
@@ -85,7 +87,7 @@ Child *ChildSupervisor::GetDestination(const Message &aMessage) const
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
 
     aMessage.Read(0, sizeof(childIndex), &childIndex);
-    child = mNetif.GetMle().GetChildren(&numChildren);
+    child = GetNetif().GetMle().GetChildren(&numChildren);
     VerifyOrExit(childIndex < numChildren, child = NULL);
     child += childIndex;
 
@@ -95,13 +97,14 @@ exit:
 
 void ChildSupervisor::SendMessage(Child &aChild)
 {
+    ThreadNetif &netif = GetNetif();
     Message *message = NULL;
     otError error = OT_ERROR_NONE;
     uint8_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
-    message = mNetif.GetIp6().mMessagePool.New(Message::kTypeSupervision, sizeof(uint8_t));
+    message = netif.GetIp6().mMessagePool.New(Message::kTypeSupervision, sizeof(uint8_t));
     VerifyOrExit(message != NULL);
 
     // Supervision message is an empty payload 15.4 data frame.
@@ -109,10 +112,10 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // the destination of the message to be later retrieved using
     // `ChildSupervisor::GetDestination(message)`.
 
-    childIndex = mNetif.GetMle().GetChildIndex(aChild);
+    childIndex = netif.GetMle().GetChildIndex(aChild);
     SuccessOrExit(error = message->Append(&childIndex, sizeof(childIndex)));
 
-    SuccessOrExit(error = mNetif.SendMessage(*message));
+    SuccessOrExit(error = netif.SendMessage(*message));
     message = NULL;
 
 exit:
@@ -128,9 +131,9 @@ void ChildSupervisor::UpdateOnSend(Child &aChild)
     aChild.ResetSecondsSinceLastSupervision();
 }
 
-void ChildSupervisor::HandleTimer(void *aContext)
+void ChildSupervisor::HandleTimer(Timer &aTimer)
 {
-    static_cast<ChildSupervisor *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void ChildSupervisor::HandleTimer(void)
@@ -140,7 +143,7 @@ void ChildSupervisor::HandleTimer(void)
 
     VerifyOrExit(mSupervisionInterval != 0);
 
-    child = mNetif.GetMle().GetChildren(&numChildren);
+    child = GetNetif().GetMle().GetChildren(&numChildren);
 
     for (uint8_t i = 0; i < numChildren; i++, child++)
     {
@@ -163,10 +166,21 @@ exit:
     return;
 }
 
+ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    ChildSupervisor &supervisor = *static_cast<ChildSupervisor *>(aContext.GetContext());
+#else
+    ChildSupervisor &supervisor = otGetThreadNetif().GetChildSupervisor();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return supervisor;
+}
+
 #endif // #if OPENTHREAD_FTD
 
 SupervisionListener::SupervisionListener(ThreadNetif &aThreadNetif) :
-    mNetif(aThreadNetif),
+    ThreadNetifLocator(aThreadNetif),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &SupervisionListener::HandleTimer, this),
     mTimeout(0)
 {
@@ -194,10 +208,12 @@ void SupervisionListener::SetTimeout(uint16_t aTimeout)
 
 void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure)
 {
+    ThreadNetif &netif = GetNetif();
+
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure  && (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
-                 (mNetif.GetMle().GetNeighbor(aSourceAddress) == mNetif.GetMle().GetParent()));
+    VerifyOrExit(mTimer.IsRunning() && aIsSecure  && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
+                 (netif.GetMle().GetNeighbor(aSourceAddress) == netif.GetMle().GetParent()));
 
     RestartTimer();
 
@@ -207,10 +223,12 @@ exit:
 
 void SupervisionListener::RestartTimer(void)
 {
+    ThreadNetif &netif = GetNetif();
+
     // Restart the timer, if the timeout value is non-zero and the device is a sleepy child.
 
-    if ((mTimeout != 0) && (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
-        (mNetif.GetMeshForwarder().GetRxOnWhenIdle() == false))
+    if ((mTimeout != 0) && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
+        (netif.GetMeshForwarder().GetRxOnWhenIdle() == false))
     {
         mTimer.Start(Timer::SecToMsec(mTimeout));
     }
@@ -220,22 +238,35 @@ void SupervisionListener::RestartTimer(void)
     }
 }
 
-void SupervisionListener::HandleTimer(void *aContext)
+void SupervisionListener::HandleTimer(Timer &aTimer)
 {
-    static_cast<SupervisionListener *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void SupervisionListener::HandleTimer(void)
 {
-    VerifyOrExit((mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
-                 (mNetif.GetMeshForwarder().GetRxOnWhenIdle() == false));
+    ThreadNetif &netif = GetNetif();
 
-    otLogWarnMle(mNetif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
+    VerifyOrExit((netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
+                 (netif.GetMeshForwarder().GetRxOnWhenIdle() == false));
 
-    mNetif.GetMle().SendChildUpdateRequest();
+    otLogWarnMle(netif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
+
+    netif.GetMle().SendChildUpdateRequest();
 
 exit:
     RestartTimer();
+}
+
+SupervisionListener &SupervisionListener::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    SupervisionListener &listener = *static_cast<SupervisionListener *>(aContext.GetContext());
+#else
+    SupervisionListener &listener = otGetThreadNetif().GetSupervisionListener();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return listener;
 }
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION

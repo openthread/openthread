@@ -38,9 +38,10 @@
 
 #include <openthread/tasklet.h>
 
-namespace ot {
+#include "common/context.hpp"
+#include "common/locator.hpp"
 
-namespace Ip6 { class Ip6; }
+namespace ot {
 
 class TaskletScheduler;
 
@@ -58,7 +59,7 @@ class TaskletScheduler;
  * This class is used to represent a tasklet.
  *
  */
-class Tasklet
+class Tasklet: public TaskletSchedulerLocator, public Context
 {
     friend class TaskletScheduler;
 
@@ -66,10 +67,10 @@ public:
     /**
      * This function pointer is called when the tasklet is run.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aTasklet  A reference to the tasklet being run.
      *
      */
-    typedef void (*Handler)(void *aContext);
+    typedef void (*Handler)(Tasklet &aTasklet);
 
     /**
      * This constructor creates a tasklet instance.
@@ -88,11 +89,9 @@ public:
     otError Post(void);
 
 private:
-    void RunTask(void) { mHandler(mContext); }
+    void RunTask(void) { mHandler(*this); }
 
-    TaskletScheduler &mScheduler;
     Handler           mHandler;
-    void             *mContext;
     Tasklet          *mNext;
 };
 
@@ -133,14 +132,6 @@ public:
      *
      */
     void ProcessQueuedTasklets(void);
-
-    /**
-     * This method returns the pointer to the parent Ip6 structure.
-     *
-     * @returns The pointer to the parent Ip6 structure.
-     *
-     */
-    Ip6::Ip6 *GetIp6(void);
 
 private:
     Tasklet *PopTasklet(void);

@@ -58,9 +58,9 @@ namespace ot {
 namespace Dhcp6 {
 
 Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
+    ThreadNetifLocator(aThreadNetif),
     mTrickleTimer(aThreadNetif.GetIp6().mTimerScheduler, &Dhcp6Client::HandleTrickleTimer, NULL, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mNetif(aThreadNetif),
     mStartTime(0),
     mAddresses(NULL),
     mNumAddresses(0)
@@ -74,11 +74,6 @@ Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
 
     mIdentityAssociationHead = NULL;
     mIdentityAssociationAvail = &mIdentityAssociations[0];
-}
-
-otInstance *Dhcp6Client::GetInstance(void)
-{
-    return mNetif.GetInstance();
 }
 
 void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses,
@@ -336,10 +331,9 @@ exit:
     return rval;
 }
 
-bool Dhcp6Client::HandleTrickleTimer(void *aContext)
+bool Dhcp6Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
 {
-    Dhcp6Client *obj = static_cast<Dhcp6Client *>(aContext);
-    return obj->HandleTrickleTimer();
+    return GetOwner(aTrickleTimer).HandleTrickleTimer();
 }
 
 bool Dhcp6Client::HandleTrickleTimer(void)
@@ -380,6 +374,7 @@ exit:
 
 otError Dhcp6Client::Solicit(uint16_t aRloc16)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     Message *message;
     Ip6::MessageInfo messageInfo;
@@ -395,14 +390,14 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendRapidCommit(*message));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(messageInfo.GetPeerAddr().mFields.m8, mNetif.GetMle().GetMeshLocalPrefix(), 8);
+    memcpy(messageInfo.GetPeerAddr().mFields.m8, netif.GetMle().GetMeshLocalPrefix(), 8);
     messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
     messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x00ff);
     messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc16);
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.mPeerPort = kDhcpServerPort;
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
+    messageInfo.mInterfaceId = netif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
     otLogInfoIp6(GetInstance(), "solicit");
@@ -443,7 +438,7 @@ otError Dhcp6Client::AppendClientIdentifier(Message &aMessage)
     option.Init();
     option.SetDuidType(kDuidLL);
     option.SetDuidHardwareType(kHardwareTypeEui64);
-    option.SetDuidLinkLayerAddress(mNetif.GetMac().GetExtAddress());
+    option.SetDuidLinkLayerAddress(GetNetif().GetMac().GetExtAddress());
     return aMessage.Append(&option, sizeof(option));
 }
 
@@ -614,7 +609,7 @@ otError Dhcp6Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset
                    (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
                    (option.GetDuidType() == kDuidLL) &&
                    (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
-                  (!memcmp(option.GetDuidLinkLayerAddress(), mNetif.GetMac().GetExtAddress(),
+                  (!memcmp(option.GetDuidLinkLayerAddress(), GetNetif().GetMac().GetExtAddress(),
                            sizeof(Mac::ExtAddress)))),
                  error = OT_ERROR_PARSE);
 exit:
@@ -700,7 +695,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             address->mValidLifetime = option.GetValidLifetime();
             address->mAddress.mPreferred = address->mPreferredLifetime != 0;
             address->mAddress.mValid = address->mValidLifetime != 0;
-            otIp6AddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
+            otIp6AddUnicastAddress(GetNetif().GetInstance(), &address->mAddress);
             break;
         }
     }
@@ -720,6 +715,17 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 
 exit:
     return error;
+}
+
+Dhcp6Client &Dhcp6Client::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Dhcp6Client &client = *static_cast<Dhcp6Client *>(aContext.GetContext());
+#else
+    Dhcp6Client &client = otGetThreadNetif().GetDhcp6Client();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return client;
 }
 
 }  // namespace Dhcp6

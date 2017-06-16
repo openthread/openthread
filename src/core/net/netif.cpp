@@ -34,6 +34,7 @@
 
 #include "netif.hpp"
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/message.hpp"
@@ -43,7 +44,7 @@ namespace ot {
 namespace Ip6 {
 
 Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
-    mIp6(aIp6),
+    Ip6Locator(aIp6),
     mCallbacks(NULL),
     mUnicastAddresses(NULL),
     mMulticastAddresses(NULL),
@@ -444,9 +445,9 @@ void Netif::SetStateChangedFlags(uint32_t aFlags)
     mStateChangedTask.Post();
 }
 
-void Netif::HandleStateChangedTask(void *aContext)
+void Netif::HandleStateChangedTask(Tasklet &aTasklet)
 {
-    static_cast<Netif *>(aContext)->HandleStateChangedTask();
+    GetOwner(aTasklet).HandleStateChangedTask();
 }
 
 void Netif::HandleStateChangedTask(void)
@@ -459,6 +460,17 @@ void Netif::HandleStateChangedTask(void)
     {
         callback->Callback(flags);
     }
+}
+
+Netif &Netif::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Netif &netif = *static_cast<Netif *>(aContext.GetContext());
+#else
+    Netif &netif = otGetThreadNetif();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return netif;
 }
 
 }  // namespace Ip6

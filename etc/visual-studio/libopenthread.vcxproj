@@ -40,7 +40,6 @@
         %(PreprocessorDefinitions);
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
-        OPENTHREAD_MULTIPLE_INSTANCE;
         OPENTHREAD_FTD=1;
         OTBUILD;
       </PreprocessorDefinitions>
@@ -77,6 +76,7 @@
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
+    <ClCompile Include="..\..\src\core\common\locator.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
@@ -149,8 +149,10 @@
     <ClInclude Include="..\..\src\core\coap\coap_secure.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />
     <ClInclude Include="..\..\src\core\common\crc16.hpp" />
+    <ClInclude Include="..\..\src\core\common\context.hpp" />
     <ClInclude Include="..\..\src\core\common\debug.hpp" />
     <ClInclude Include="..\..\src\core\common\encoding.hpp" />
+    <ClInclude Include="..\..\src\core\common\locator.hpp" />
     <ClInclude Include="..\..\src\core\common\logging.hpp" />
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />

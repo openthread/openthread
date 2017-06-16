@@ -773,10 +773,12 @@ private:
     uint8_t AllocateRouterId(uint8_t aRouterId);
     bool InRouterIdMask(uint8_t aRouterId);
 
-    static bool HandleAdvertiseTimer(void *aContext);
+    static bool HandleAdvertiseTimer(TrickleTimer &aTimer);
     bool HandleAdvertiseTimer(void);
-    static void HandleStateUpdateTimer(void *aContext);
+    static void HandleStateUpdateTimer(Timer &aTimer);
     void HandleStateUpdateTimer(void);
+
+    static MleRouter &GetOwner(const Context &aContext);
 
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;

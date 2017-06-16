@@ -38,6 +38,7 @@
 #include <openthread/types.h>
 
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
 #include "net/udp6.hpp"
@@ -50,18 +51,9 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class DatasetManager
+class DatasetManager: public ThreadNetifLocator
 {
 public:
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
-
     Dataset &GetLocal(void) { return mLocal; }
     Dataset &GetNetwork(void) { return mNetwork; }
 
@@ -74,7 +66,8 @@ protected:
         kFlagNetworkUpdated = 1 << 1,
     };
 
-    DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet);
+    DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
+                   Timer::Handler aTimerHander);
 
     otError Clear(uint8_t &aFlags, bool aOnlyClearNetwork);
 
@@ -86,23 +79,18 @@ protected:
     void Get(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleNetworkUpdate(uint8_t &aFlags);
+    void HandleTimer(void);
 
     Dataset mLocal;
     Dataset mNetwork;
-
-    ThreadNetif &mNetif;
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
-
     otError Register(void);
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                          uint8_t *aTlvs, uint8_t aLength);
-
     Timer mTimer;
 
     const char *mUriSet;
@@ -144,6 +132,9 @@ private:
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static void HandleTimer(Timer &aTimer);
+    void HandleTimer(void) { DatasetManager::HandleTimer(); }
+
     Coap::Resource mResourceGet;
 };
 
@@ -167,15 +158,15 @@ public:
     void UpdateDelayTimer(void);
 
 protected:
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
+    static void HandleDelayTimer(Timer &aTimer);
+    void HandleDelayTimer(void);
 
     void ResetDelayTimer(uint8_t aFlags);
     void UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTime);
 
     void HandleNetworkUpdate(uint8_t &aFlags);
 
-    Timer mTimer;
+    Timer mDelayTimer;
     uint32_t mLocalTime;
     uint32_t mNetworkTime;
 
@@ -183,6 +174,9 @@ private:
     static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleTimer(Timer &aTimer);
+    void HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     Coap::Resource mResourceGet;
 };

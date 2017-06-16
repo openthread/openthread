@@ -37,11 +37,10 @@
 #include <openthread/types.h>
 
 #include "openthread-core-config.h"
+#include "common/locator.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
-
-class MeshForwarder;
 
 /**
  * @addtogroup core-source-match-controller
@@ -65,7 +64,7 @@ class MeshForwarder;
  * address or an extended/long address can be added to the source address match table.
  *
  */
-class SourceMatchController
+class SourceMatchController: public MeshForwarderLocator
 {
 public:
     /**
@@ -75,14 +74,6 @@ public:
      *
      */
     explicit SourceMatchController(MeshForwarder &aMeshForwarder);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method returns the current state of source address matching.
@@ -191,7 +182,6 @@ private:
      */
     otError AddPendingEntries(void);
 
-    MeshForwarder &mMeshForwarder;
     bool mEnabled;
 };
 

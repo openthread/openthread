@@ -98,33 +98,33 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallb
     mConnectedCallback = aCallback;
     mConnectedContext = aContext;
 
-    return mNetif.GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                                  &CoapSecure::HandleDtlsSend, this);
+    return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+                                      &CoapSecure::HandleDtlsSend, this);
 }
 
 bool CoapSecure::IsConnectionActive(void)
 {
-    return mNetif.GetDtls().IsStarted();
+    return GetNetif().GetDtls().IsStarted();
 }
 
 bool CoapSecure::IsConnected(void)
 {
-    return mNetif.GetDtls().IsConnected();
+    return GetNetif().GetDtls().IsConnected();
 }
 
 otError CoapSecure::Disconnect(void)
 {
-    return mNetif.GetDtls().Stop();
+    return GetNetif().GetDtls().Stop();
 }
 
 MeshCoP::Dtls &CoapSecure::GetDtls(void)
 {
-    return mNetif.GetDtls();
+    return GetNetif().GetDtls();
 }
 
 otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 {
-    return mNetif.GetDtls().SetPsk(aPsk, aPskLength);
+    return GetNetif().GetDtls().SetPsk(aPsk, aPskLength);
 }
 
 otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandler, void *aContext)
@@ -151,14 +151,16 @@ otError CoapSecure::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
 otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
-    return mNetif.GetDtls().Send(aMessage, aMessage.GetLength());
+    return GetNetif().GetDtls().Send(aMessage, aMessage.GetLength());
 }
 
 void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetif &netif = GetNetif();
+
     otLogFuncEntry();
 
-    if (!mNetif.GetDtls().IsStarted())
+    if (!netif.GetDtls().IsStarted())
     {
         Ip6::SockAddr sockAddr;
         sockAddr.mAddress = aMessageInfo.GetPeerAddr();
@@ -168,14 +170,14 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
 
-        if (mNetif.IsUnicastAddress(aMessageInfo.GetSockAddr()))
+        if (netif.IsUnicastAddress(aMessageInfo.GetSockAddr()))
         {
             mPeerAddress.SetSockAddr(aMessageInfo.GetSockAddr());
         }
 
         mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
-        mNetif.GetDtls().Start(false, HandleDtlsConnected, HandleDtlsReceive, HandleDtlsSend, this);
+        netif.GetDtls().Start(false, HandleDtlsConnected, HandleDtlsReceive, HandleDtlsSend, this);
     }
     else
     {
@@ -184,9 +186,9 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
                      (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()));
     }
 
-    mNetif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8,
-                                 sizeof(mPeerAddress.GetPeerAddr().mFields));
-    mNetif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
+    netif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8,
+                                sizeof(mPeerAddress.GetPeerAddr().mFields));
+    netif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
 
 exit:
     otLogFuncExit();
@@ -216,7 +218,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
     otLogFuncEntry();
 
-    VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
+    VerifyOrExit((message = GetNetif().GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     Coap::Receive(*message, mPeerAddress);
@@ -271,9 +273,9 @@ exit:
     return error;
 }
 
-void CoapSecure::HandleUdpTransmit(void *aContext)
+void CoapSecure::HandleUdpTransmit(Tasklet &aTasklet)
 {
-    return static_cast<CoapSecure *>(aContext)->HandleUdpTransmit();
+    GetOwner(aTasklet).HandleUdpTransmit();
 }
 
 void CoapSecure::HandleUdpTransmit(void)
@@ -303,6 +305,17 @@ exit:
     mTransmitMessage = NULL;
 
     otLogFuncExit();
+}
+
+CoapSecure &CoapSecure::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    CoapSecure &coap = *static_cast<CoapSecure *>(aContext.GetContext());
+#else
+    CoapSecure &coap = otGetThreadNetif().GetCoapSecure();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return coap;
 }
 
 }  // namespace Coap

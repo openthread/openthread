@@ -377,7 +377,7 @@ public:
     TimerScheduler mTimerScheduler;
 
 private:
-    static void HandleSendQueue(void *aContext);
+    static void HandleSendQueue(Tasklet &aTasklet);
     void HandleSendQueue(void);
 
     otError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
@@ -392,6 +392,8 @@ private:
     otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
     int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
+
+    static Ip6 &GetOwner(const Context &aContext);
 
     bool mForwardingEnabled;
 

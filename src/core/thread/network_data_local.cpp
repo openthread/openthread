@@ -59,7 +59,7 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
     PrefixTlv *prefixTlv;
     BorderRouterTlv *brTlv;
 
-    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, mNetif.GetMle().GetMeshLocalPrefix(),
+    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, GetNetif().GetMle().GetMeshLocalPrefix(),
                                            (aPrefixLength + 7) / 8) < Ip6::Address::kMeshLocalPrefixLength,
                  error = OT_ERROR_INVALID_ARGS);
 
@@ -202,41 +202,47 @@ otError Local::UpdateRloc(PrefixTlv &aPrefix)
 otError Local::UpdateRloc(HasRouteTlv &aHasRoute)
 {
     HasRouteEntry *entry = aHasRoute.GetEntry(0);
-    entry->SetRloc(mNetif.GetMle().GetRloc16());
+    entry->SetRloc(GetNetif().GetMle().GetRloc16());
     return OT_ERROR_NONE;
 }
 
 otError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
 {
     BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
-    entry->SetRloc(mNetif.GetMle().GetRloc16());
+    entry->SetRloc(GetNetif().GetMle().GetRloc16());
     return OT_ERROR_NONE;
 }
 
 bool Local::IsOnMeshPrefixConsistent(void)
 {
-    return (mNetif.GetNetworkDataLeader().ContainsOnMeshPrefixes(*this, mNetif.GetMle().GetRloc16()) &&
-            ContainsOnMeshPrefixes(mNetif.GetNetworkDataLeader(), mNetif.GetMle().GetRloc16()));
+    ThreadNetif &netif = GetNetif();
+
+    return (netif.GetNetworkDataLeader().ContainsOnMeshPrefixes(*this, netif.GetMle().GetRloc16()) &&
+            ContainsOnMeshPrefixes(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
 }
 
 bool Local::IsExternalRouteConsistent(void)
 {
-    return (mNetif.GetNetworkDataLeader().ContainsExternalRoutes(*this, mNetif.GetMle().GetRloc16()) &&
-            ContainsExternalRoutes(mNetif.GetNetworkDataLeader(), mNetif.GetMle().GetRloc16()));
+    ThreadNetif &netif = GetNetif();
+
+    return (netif.GetNetworkDataLeader().ContainsExternalRoutes(*this, netif.GetMle().GetRloc16()) &&
+            ContainsExternalRoutes(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
 }
 
 otError Local::SendServerDataNotification(void)
 {
+    ThreadNetif &netif = GetNetif();
+    Mle::MleRouter &mle = netif.GetMle();
     otError error = OT_ERROR_NONE;
-    uint16_t rloc = mNetif.GetMle().GetRloc16();
+    uint16_t rloc = mle.GetRloc16();
 
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
-        (mNetif.GetMle().IsRouterRoleEnabled()) &&
-        (mNetif.GetMle().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
-        (mNetif.GetMle().GetActiveRouterCount() < mNetif.GetMle().GetRouterUpgradeThreshold()))
+    if ((mle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
+        (mle.IsRouterRoleEnabled()) &&
+        (mle.GetRole() < OT_DEVICE_ROLE_ROUTER) &&
+        (mle.GetActiveRouterCount() < mle.GetRouterUpgradeThreshold()))
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);
     }

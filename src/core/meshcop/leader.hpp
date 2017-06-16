@@ -35,6 +35,7 @@
 #define MESHCOP_LEADER_HPP_
 
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/udp6.hpp"
@@ -58,7 +59,7 @@ public:
     SteeringDataTlv mSteeringData;
 } OT_TOOL_PACKED_END;
 
-class Leader
+class Leader: public ThreadNetifLocator
 {
 public:
     /**
@@ -68,14 +69,6 @@ public:
      *
      */
     Leader(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method sends a MGMT_DATASET_CHANGED message to commissioner.
@@ -119,7 +112,7 @@ private:
         kTimeoutLeaderPetition = 50, ///< TIMEOUT_LEAD_PET (seconds)
     };
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     static void HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -138,6 +131,8 @@ private:
 
     void ResignCommissioner(void);
 
+    static Leader &GetOwner(const Context &aContext);
+
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
     Timer mTimer;
@@ -146,7 +141,6 @@ private:
 
     CommissionerIdTlv mCommissionerId;
     uint16_t mSessionId;
-    ThreadNetif &mNetif;
 };
 
 }  // namespace MeshCoP

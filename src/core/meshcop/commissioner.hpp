@@ -39,6 +39,7 @@
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/announce_begin_client.hpp"
@@ -54,7 +55,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class Commissioner
+class Commissioner: public ThreadNetifLocator
 {
 public:
     /**
@@ -64,14 +65,6 @@ public:
      *
      */
     Commissioner(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method starts the Commissioner service.
@@ -219,10 +212,10 @@ private:
     void AddCoapResources(void);
     void RemoveCoapResources(void);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
-    static void HandleJoinerExpirationTimer(void *aContext);
+    static void HandleJoinerExpirationTimer(Timer &aTimer);
     void HandleJoinerExpirationTimer(void);
 
     void UpdateJoinerExpirationTimer(void);
@@ -265,6 +258,8 @@ private:
     otError SendPetition(void);
     otError SendKeepAlive(void);
 
+    static Commissioner &GetOwner(const Context &aContext);
+
     otCommissionerState mState;
 
     struct Joiner
@@ -293,8 +288,6 @@ private:
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
     Coap::Resource mJoinerFinalize;
-
-    ThreadNetif &mNetif;
 };
 
 }  // namespace MeshCoP

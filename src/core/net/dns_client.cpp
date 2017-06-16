@@ -35,6 +35,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "net/udp6.hpp"
+#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
 
@@ -381,9 +382,9 @@ void Client::FinalizeDnsTransaction(Message &aQuery, const QueryMetadata &aQuery
     }
 }
 
-void Client::HandleRetransmissionTimer(void *aContext)
+void Client::HandleRetransmissionTimer(Timer &aTimer)
 {
-    static_cast<Client *>(aContext)->HandleRetransmissionTimer();
+    GetOwner(aTimer).HandleRetransmissionTimer();
 }
 
 void Client::HandleRetransmissionTimer(void)
@@ -516,6 +517,17 @@ exit:
     }
 
     return;
+}
+
+Client &Client::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Client &client = *static_cast<Client *>(aContext.GetContext());
+#else
+    Client &client = otGetThreadNetif().GetDnsClient();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return client;
 }
 
 }  // namespace Coap

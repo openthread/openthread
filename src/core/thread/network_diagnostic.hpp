@@ -38,11 +38,10 @@
 
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
-
-class ThreadNetif;
 
 namespace NetworkDiagnostic {
 
@@ -63,7 +62,7 @@ class NetworkDiagnosticTlv;
  * This class implements the Network Diagnostic processing.
  *
  */
-class NetworkDiagnostic
+class NetworkDiagnostic: public ThreadNetifLocator
 {
 public:
     /**
@@ -71,14 +70,6 @@ public:
      *
      */
     explicit NetworkDiagnostic(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance();
 
     /**
      * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.
@@ -142,8 +133,6 @@ private:
     Coap::Resource mDiagnosticGetQuery;
     Coap::Resource mDiagnosticGetAnswer;
     Coap::Resource mDiagnosticReset;
-
-    ThreadNetif &mNetif;
 
     otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
     void *mReceiveDiagnosticGetCallbackContext;

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{69BE8E8C-CF1E-46D6-932B-DB435F47059B}</ProjectGuid>
     <TemplateGuid>{8c0e3d8b-df43-455b-815a-4a0e72973bc6}</TemplateGuid>
@@ -50,7 +50,6 @@
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         HAVE_STDBOOL_H=1;
         HAVE_STDINT_H=1;
-        OPENTHREAD_MULTIPLE_INSTANCE;
       </PreprocessorDefinitions>
       <DisableSpecificWarnings>4132;4242;4245;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <WarningLevel>Level4</WarningLevel>

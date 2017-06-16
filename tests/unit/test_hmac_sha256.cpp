@@ -26,19 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils/wrap_string.h"
-
+#include <openthread/config.h>
 #include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "crypto/hmac_sha256.hpp"
-#include "crypto/mbedtls.hpp"
+#include "utils/wrap_string.h"
 
+#include "test_platform.h"
 #include "test_util.h"
-
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
-static ot::Crypto::MbedTls mMbedTls;
-#endif
 
 void TestHmacSha256(void)
 {
@@ -66,8 +62,11 @@ void TestHmacSha256(void)
         },
     };
 
+    otInstance *instance = testInitInstance();
     ot::Crypto::HmacSha256 hmac;
     uint8_t hash[ot::Crypto::HmacSha256::kHashSize];
+
+    VerifyOrQuit(instance != NULL, "Null OpenThread instance");
 
     for (int i = 0; tests[i].key != NULL; i++)
     {
@@ -78,6 +77,8 @@ void TestHmacSha256(void)
         VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
                      "HMAC-SHA-256 failed\n");
     }
+
+    testFreeInstance(instance);
 }
 
 #ifdef ENABLE_TEST_MAIN

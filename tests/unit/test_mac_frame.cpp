@@ -26,12 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils/wrap_string.h"
-
 #include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "mac/mac_frame.hpp"
+#include "utils/wrap_string.h"
 
 #include "test_util.h"
 

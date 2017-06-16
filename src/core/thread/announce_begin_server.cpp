@@ -39,6 +39,7 @@
 
 #include <openthread/platform/radio.h>
 
+#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -52,20 +53,15 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 
 AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
+    ThreadNetifLocator(aThreadNetif),
     mChannelMask(0),
     mPeriod(0),
     mCount(0),
     mChannel(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AnnounceBeginServer::HandleTimer, this),
-    mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
-    mNetif(aThreadNetif)
+    mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
-    mNetif.GetCoap().AddResource(mAnnounceBegin);
-}
-
-otInstance *AnnounceBeginServer::GetInstance(void)
-{
-    return mNetif.GetInstance();
+    aThreadNetif.GetCoap().AddResource(mAnnounceBegin);
 }
 
 otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)
@@ -123,7 +119,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
 
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, responseInfo));
+        SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, responseInfo));
         otLogInfoMeshCoP(GetInstance(), "sent announce begin response");
     }
 
@@ -131,14 +127,14 @@ exit:
     return;
 }
 
-void AnnounceBeginServer::HandleTimer(void *aContext)
+void AnnounceBeginServer::HandleTimer(Timer &aTimer)
 {
-    static_cast<AnnounceBeginServer *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void AnnounceBeginServer::HandleTimer(void)
 {
-    mNetif.GetMle().SendAnnounce(mChannel++, false);
+    GetNetif().GetMle().SendAnnounce(mChannel++, false);
 
     while (mCount > 0)
     {
@@ -156,6 +152,17 @@ void AnnounceBeginServer::HandleTimer(void)
             mCount--;
         }
     }
+}
+
+AnnounceBeginServer &AnnounceBeginServer::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    AnnounceBeginServer &server = *static_cast<AnnounceBeginServer *>(aContext.GetContext());
+#else
+    AnnounceBeginServer &server = otGetThreadNetif().GetAnnounceBeginServer();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return server;
 }
 
 }  // namespace ot

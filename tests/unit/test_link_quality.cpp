@@ -26,11 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils/wrap_string.h"
-
 #include <openthread/openthread.h>
 
 #include "thread/link_quality.hpp"
+#include "utils/wrap_string.h"
 
 #include "test_util.h"
 

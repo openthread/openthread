@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9EEF9DCD-EA8F-4154-BD02-AB2B31CEC324}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -40,7 +40,6 @@
         %(PreprocessorDefinitions);
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_FTD=1;
-        OPENTHREAD_MULTIPLE_INSTANCE;
         OPENTHREAD_ENABLE_NCP_SPI=0;
         OPENTHREAD_ENABLE_NCP_UART=1;
       </PreprocessorDefinitions>

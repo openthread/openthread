@@ -35,6 +35,7 @@
 #include "common/message.hpp"
 #include "ncp/ncp_buffer.hpp"
 
+#include "test_platform.h"
 #include "test_util.h"
 
 namespace ot {
@@ -54,8 +55,8 @@ static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 
-static otInstance sInstance;
-static MessagePool sMessagePool(&sInstance);
+static otInstance *sInstance;
+static MessagePool *sMessagePool;
 
 struct CallbackContext
 {
@@ -187,7 +188,7 @@ void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer)
     Message *message;
     CallbackContext oldContext;
 
-    message = sMessagePool.New(Message::kTypeIp6, 0);
+    message = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message != NULL, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMottoText)), "Could not set the length of message.");
     message->Write(0, sizeof(sMottoText), sMottoText);
@@ -235,12 +236,12 @@ void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer)
     Message *message2;
     CallbackContext oldContext = sContext;
 
-    message1 = sMessagePool.New(Message::kTypeIp6, 0);
+    message1 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message1 != NULL, "Null Message");
     SuccessOrQuit(message1->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
     message1->Write(0, sizeof(sMysteryText), sMysteryText);
 
-    message2 = sMessagePool.New(Message::kTypeIp6, 0);
+    message2 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message2 != NULL, "Null Message");
     SuccessOrQuit(message2->SetLength(sizeof(sHelloText)), "Could not set the length of message.");
     message2->Write(0, sizeof(sHelloText), sHelloText);
@@ -282,7 +283,7 @@ void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer)
     Message *message1;
     CallbackContext oldContext = sContext;
 
-    message1 = sMessagePool.New(Message::kTypeIp6, 0);
+    message1 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message1 != NULL, "Null Message");
 
     // An empty message with no content.
@@ -326,6 +327,9 @@ void TestNcpFrameBuffer(void)
     Message *message;
     uint8_t readBuffer[16];
     uint16_t readLen, readOffset;
+
+    sInstance = testInitInstance();
+    sMessagePool = &sInstance->mIp6.mMessagePool;
 
     for (i = 0; i < sizeof(buffer); i++)
     {
@@ -423,7 +427,7 @@ void TestNcpFrameBuffer(void)
         ncpBuffer.InFrameBegin();
         ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText));
 
-        message = sMessagePool.New(Message::kTypeIp6, 0);
+        message = sMessagePool->New(Message::kTypeIp6, 0);
         VerifyOrQuit(message != NULL, "Null Message");
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
         message->Write(0, sizeof(sMysteryText), sMysteryText);
@@ -509,6 +513,8 @@ void TestNcpFrameBuffer(void)
 
     VerifyOrQuit(readOffset == sizeof(sMottoText), "Read len does not match expected length.");
     printf("\n -- PASS\n");
+
+    testFreeInstance(sInstance);
 }
 
 /**
@@ -614,6 +620,9 @@ void TestFuzzNcpFrameBuffer(void)
     uint32_t lensArrayStart;
     uint32_t lensArrayCount;
 
+    sInstance = testInitInstance();
+    sMessagePool = &sInstance->mIp6.mMessagePool;
+
     memset(buffer, 0, sizeof(buffer));
 
     memset(lensArray, 0, sizeof(lensArray));
@@ -682,6 +691,8 @@ void TestFuzzNcpFrameBuffer(void)
     }
 
     printf("\n -- PASS\n");
+
+    testFreeInstance(sInstance);
 }
 
 }  // namespace ot

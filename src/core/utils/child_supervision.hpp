@@ -37,6 +37,8 @@
 
 #include <openthread/config.h>
 
+#include "openthread-core-config.h"
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
@@ -85,7 +87,7 @@ namespace Utils {
  * This class implements a child supervisor.
  *
  */
-class ChildSupervisor
+class ChildSupervisor: public ThreadNetifLocator
 {
 public:
     /**
@@ -154,10 +156,10 @@ private:
     };
 
     void SendMessage(Child &aChild);
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
+    static ChildSupervisor &GetOwner(const Context &aContext);
 
-    ThreadNetif &mNetif;
     Timer        mTimer;
     uint16_t     mSupervisionInterval;
 };
@@ -184,7 +186,7 @@ public:
  * This class implements a child supervision listener.
  *
  */
-class SupervisionListener
+class SupervisionListener: public ThreadNetifLocator
 {
 public:
     /**
@@ -246,10 +248,10 @@ private:
     };
 
     void RestartTimer(void);
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
+    static SupervisionListener &GetOwner(const Context &aContext);
 
-    ThreadNetif &mNetif;
     Timer mTimer;
     uint16_t mTimeout;
 };

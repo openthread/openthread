@@ -35,19 +35,18 @@
 #define ANNOUNCE_BEGIN_CLIENT_HPP_
 
 #include "openthread-core-config.h"
+#include "common/locator.hpp"
 #include "coap/coap.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
 
-class ThreadNetif;
-
 /**
  * This class implements handling Announce Begin Requests.
  *
  */
-class AnnounceBeginClient
+class AnnounceBeginClient: public ThreadNetifLocator
 {
 public:
     /**
@@ -55,14 +54,6 @@ public:
      *
      */
     AnnounceBeginClient(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method sends a Announce Begin message.
@@ -76,9 +67,6 @@ public:
      *
      */
     otError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t mPeriod, const Ip6::Address &aAddress);
-
-private:
-    ThreadNetif &mNetif;
 };
 
 /**

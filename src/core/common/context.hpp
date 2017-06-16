@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,74 +26,77 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file includes definitions for maintaining a pointer to arbitrary context information.
+ */
+
+#ifndef CONTEXT_HPP_
+#define CONTEXT_HPP_
+
 #include <openthread/config.h>
+#include <openthread/platform/toolchain.h>
 
-#include <assert.h>
+#include "openthread-core-config.h"
 
-#include <openthread/cli.h>
-#include <openthread/diag.h>
-#include <openthread/openthread.h>
-#include <openthread/platform/platform.h>
+namespace ot {
+
+/**
+ * @addtogroup core-context
+ *
+ * @brief
+ *   This module includes definitions for maintaining a pointer to arbitrary context information.
+ *
+ * @{
+ *
+ */
+
+/**
+ * This class implements definitions for maintaining a pointer to arbitrary context information.
+ *
+ * This is used as base class for objects that provide a callback or handler (e.g., Timer or Tasklet).
+ *
+ */
+class Context
+{
+public:
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-void *otPlatCAlloc(size_t aNum, size_t aSize)
-{
-    return calloc(aNum, aSize);
-}
-
-void otPlatFree(void *aPtr)
-{
-    free(aPtr);
-}
+    /**
+     * This method returns the pointer to the arbitrary context information.
+     *
+     * @returns The pointer to the context information.
+     *
+     */
+    void *GetContext(void) const { return mContext; }
 #endif
 
-void otTaskletsSignalPending(otInstance *aInstance)
-{
-    (void)aInstance;
-}
-
-int main(int argc, char *argv[])
-{
-    otInstance *sInstance;
-
+protected:
+    /**
+     * This constructor initializes the context object.
+     *
+     * @param[in]  aContext    A pointer to arbitrary context information.
+     *
+     */
+    Context(void *aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    size_t otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer = NULL;
+        : mContext(aContext)
 #endif
-
-    PlatformInit(argc, argv);
-
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    // Call to query the buffer size
-    (void)otInstanceInit(NULL, &otInstanceBufferLength);
-
-    // Call to allocate the buffer
-    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
-    assert(otInstanceBuffer);
-
-    // Initialize OpenThread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
-#else
-    sInstance = otInstanceInitSingle();
-#endif
-    assert(sInstance);
-
-    otCliUartInit(sInstance);
-
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
-#endif
-
-    while (1)
     {
-        otTaskletsProcess(sInstance);
-        PlatformProcessDrivers(sInstance);
+        OT_UNUSED_VARIABLE(aContext);
     }
 
-    // otInstanceFinalize(sInstance);
+private:
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    // free(otInstanceBuffer);
+    void *mContext;
 #endif
+};
 
-    return 0;
-}
+/**
+ * @}
+ *
+ */
+
+}  // namespace ot
+
+#endif  // CONTEXT_HPP_

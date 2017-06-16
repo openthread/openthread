@@ -45,12 +45,12 @@
 namespace ot {
 
 MessagePool::MessagePool(otInstance *aInstance) :
-    mInstance(aInstance),
+    InstanceLocator(aInstance),
     mAllQueue()
 {
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     // Initialize Platform buffer pool management.
-    otPlatMessagePoolInit(mInstance, kNumBuffers, sizeof(Buffer));
+    otPlatMessagePoolInit(GetInstance(), kNumBuffers, sizeof(Buffer));
 #else
     memset(mBuffers, 0, sizeof(mBuffers));
 
@@ -64,8 +64,6 @@ MessagePool::MessagePool(otInstance *aInstance) :
     mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
     mNumFreeBuffers = kNumBuffers;
 #endif
-
-    OT_UNUSED_VARIABLE(mInstance);
 }
 
 Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
@@ -108,7 +106,7 @@ Buffer *MessagePool::NewBuffer(void)
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
-    buffer = static_cast<Buffer *>(otPlatMessagePoolNew(mInstance));
+    buffer = static_cast<Buffer *>(otPlatMessagePoolNew(GetInstance()));
 
 #else
 
@@ -124,7 +122,7 @@ Buffer *MessagePool::NewBuffer(void)
 
     if (buffer == NULL)
     {
-        otLogInfoMem(mInstance, "No available message buffer");
+        otLogInfoMem(GetInstance(), "No available message buffer");
     }
 
     return buffer;
@@ -138,7 +136,7 @@ otError MessagePool::FreeBuffers(Buffer *aBuffer)
     {
         tmpBuffer = aBuffer->GetNextBuffer();
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-        otPlatMessagePoolFree(mInstance, aBuffer);
+        otPlatMessagePoolFree(GetInstance(), aBuffer);
 #else // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         aBuffer->SetNextBuffer(mFreeBuffers);
         mFreeBuffers = aBuffer;
@@ -155,7 +153,7 @@ otError MessagePool::ReclaimBuffers(int aNumBuffers)
     uint16_t numFreeBuffers;
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    numFreeBuffers = otPlatMessagePoolNumFreeBuffers(mInstance);
+    numFreeBuffers = otPlatMessagePoolNumFreeBuffers(GetInstance());
 #else
     numFreeBuffers = mNumFreeBuffers;
 #endif

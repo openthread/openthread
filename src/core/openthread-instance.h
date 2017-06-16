@@ -44,11 +44,10 @@
 #include <openthread/platform/logging.h>
 
 #include "openthread-core-config.h"
-
+#include "openthread-single-instance.h"
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 #include "api/link_raw.hpp"
 #endif
-
 #include "coap/coap.hpp"
 #include "crypto/mbedtls.hpp"
 #include "net/ip6.hpp"
@@ -78,7 +77,7 @@ typedef struct otInstance
     // State
     //
 
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     ot::Crypto::MbedTls mMbedTls;
 #endif
     ot::Ip6::Ip6 mIp6;

@@ -40,6 +40,7 @@
 
 #include <openthread/platform/settings.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/settings.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -49,9 +50,9 @@ namespace ot {
 namespace MeshCoP {
 
 Dataset::Dataset(otInstance *aInstance, const Tlv::Type aType) :
+    InstanceLocator(aInstance),
     mType(aType),
-    mLength(0),
-    mInstance(aInstance)
+    mLength(0)
 {
 }
 
@@ -61,7 +62,7 @@ void Dataset::Clear(bool isLocal)
 
     if (isLocal)
     {
-        otPlatSettingsDelete(mInstance, GetSettingsKey(), -1);
+        otPlatSettingsDelete(GetInstance(), GetSettingsKey(), -1);
     }
 }
 
@@ -436,7 +437,7 @@ otError Dataset::Restore(void)
     otError error;
     uint16_t length = sizeof(mTlvs);
 
-    error = otPlatSettingsGet(mInstance, GetSettingsKey(), 0, mTlvs, &length);
+    error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, mTlvs, &length);
     mLength = (error == OT_ERROR_NONE) ? length : 0;
 
     return error;
@@ -449,11 +450,11 @@ otError Dataset::Store(void)
 
     if (mLength == 0)
     {
-        error = otPlatSettingsDelete(mInstance, key, 0);
+        error = otPlatSettingsDelete(GetInstance(), key, 0);
     }
     else
     {
-        error = otPlatSettingsSet(mInstance, key, mTlvs, mLength);
+        error = otPlatSettingsSet(GetInstance(), key, mTlvs, mLength);
     }
 
     return error;
