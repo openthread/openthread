@@ -166,9 +166,9 @@ goal.
 
 Thread is a registered trademark of The Thread Group, Inc.
 
-Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Piotr
-Szkotak, Arjuna Sivasithambaresan and Martin Turon for their substantial
-contributions and feedback related to this document.
+Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Buke Po,
+Piotr Szkotak, Arjuna Sivasithambaresan and Martin Turon for their
+substantial contributions and feedback related to this document.
 
 This document was prepared using [mmark](https://github.com/miekg/mmark)
 by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).
