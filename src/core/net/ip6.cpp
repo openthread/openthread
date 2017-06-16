@@ -654,6 +654,32 @@ exit:
     return error;
 }
 
+otError Ip6::SendFromNcpHost(Message &aMessage, int8_t aInterfaceId)
+{
+    otError error = OT_ERROR_NONE;
+    Header header;
+    MessageInfo messageInfo;
+
+    // check aMessage length
+    VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_DROP);
+
+    messageInfo.SetPeerAddr(header.GetSource());
+    messageInfo.SetSockAddr(header.GetDestination());
+    messageInfo.SetInterfaceId(aInterfaceId);
+    messageInfo.SetHopLimit(header.GetHopLimit());
+    messageInfo.SetLinkInfo(NULL);
+
+    if (header.GetDestination().IsMulticast())
+    {
+        SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
+    }
+
+    error = HandleDatagram(aMessage, NULL, aInterfaceId, NULL, true);
+
+exit:
+    return error;
+}
+
 otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId, const void *aLinkMessageInfo,
                             bool aFromNcpHost)
 {
@@ -711,11 +737,6 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceI
         else
         {
             forward = true;
-
-            if (aFromNcpHost)
-            {
-                SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
-            }
         }
     }
     else
