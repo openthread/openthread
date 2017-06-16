@@ -1074,7 +1074,7 @@ int Lowpan::Decompress(Message &aMessage, const Mac::Address &aMacSource, const 
                 remaining--;
 
                 VerifyOrExit((rval = Decompress(aMessage, aMacSource, aMacDest, cur, remaining,
-                                                (aDatagramLength ? aDatagramLength - aMessage.GetLength() : 0))) >= 0);
+                                                aDatagramLength)) >= 0);
             }
             else
             {
@@ -1101,7 +1101,7 @@ int Lowpan::Decompress(Message &aMessage, const Mac::Address &aMacSource, const 
 
     if (aDatagramLength)
     {
-        ip6PayloadLength = HostSwap16(aDatagramLength - sizeof(Ip6::Header));
+        ip6PayloadLength = HostSwap16(aDatagramLength - currentOffset - sizeof(Ip6::Header));
     }
     else
     {
