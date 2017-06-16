@@ -169,7 +169,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
     if (mRetransmissionTimer.IsRunning())
     {
         // If timer is already running, check if it should be restarted with earlier fire time.
-        nextTransmissionTime = mRetransmissionTimer.Gett0() + mRetransmissionTimer.Getdt();
+        nextTransmissionTime = mRetransmissionTimer.GetFireTime();
 
         if (aQueryMetadata.IsEarlier(nextTransmissionTime))
         {

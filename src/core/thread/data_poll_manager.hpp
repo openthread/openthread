@@ -222,6 +222,7 @@ private:
 
     MeshForwarder &mMeshForwarder;
     Timer     mTimer;
+    uint32_t  mTimerStartTime;
     uint32_t  mExternalPollPeriod;
     uint32_t  mPollPeriod;
 

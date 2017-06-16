@@ -103,6 +103,8 @@ int TestOneTimer(void)
     InitTestTimer();
     InitCounters();
 
+    printf("TestOneTimer() ");
+
     sNow = kTimeT0;
     timer.Start(kTimerInterval);
 
@@ -130,12 +132,12 @@ int TestOneTimer(void)
     sNow = 0 - (kTimerInterval - 2);
     timer.Start(kTimerInterval);
 
-    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,         "TestOneTimer: Start CallCount Failed.\n");
-    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,         "TestOneTimer: Stop CallCount Failed.\n");
-    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,         "TestOneTimer: Handler CallCount Failed.\n");
-    VerifyOrQuit(sPlatT0 == 0 - (kTimerInterval - 2) && sPlatDt == 10,  "TestOneTimer: Start params Failed.\n");
-    VerifyOrQuit(timer.IsRunning(),                                     "TestOneTimer: Timer running Failed.\n");
-    VerifyOrQuit(sTimerOn,                                              "TestOneTimer: Platform Timer State Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,        "TestOneTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,        "TestOneTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,        "TestOneTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == 0 - (kTimerInterval - 2) && sPlatDt == 10, "TestOneTimer: Start params Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                                    "TestOneTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                             "TestOneTimer: Platform Timer State Failed.\n");
 
     sNow += kTimerInterval;
 
@@ -205,13 +207,19 @@ int TestOneTimer(void)
     VerifyOrQuit(timer.IsRunning() == false,                    "TestOneTimer: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn == false,                             "TestOneTimer: Platform Timer State Failed.\n");
 
+    printf(" --> PASSED\n");
+
     return 0;
 }
 
+
 /**
  * Test the TimerScheduler's behavior of ten timers started and fired.
+ *
+ * `aTimeShift` is added to the t0 and trigger times for all timers. It can be used to check the ten timer behavior
+ * at different start time (e.g., around a 32-bit wrap).
  */
-int TestTenTimers(void)
+static void TenTimers(uint32_t aTimeShift)
 {
     const uint32_t kNumTimers = 10;
     const uint32_t kNumTriggers = 7;
@@ -232,27 +240,27 @@ int TestTenTimers(void)
     {
         20,
         100,
-        (0 - kTimeT0[2]),
+        (ot::Timer::kMaxDt - kTimeT0[2]),
         100000,
         1000000,
         10,
-        (1000 - kTimeT0[6]),
+        ot::Timer::kMaxDt,
         200,
         200,
         200
     };
     // Expected timer fire order
-    // timer #    Trigger time
-    //   5         1014
-    //   0         1020
-    //   1         1100
-    //   7         1206
-    //   8         1207
-    //   9         1208
-    //   3       101002
-    //   4      1001003
-    //   2            0 <timer wrapped>
-    //   6         1000 <timer wrapped>
+    // timer #     Trigger time
+    //   5            1014
+    //   0            1020
+    //   1            1100
+    //   7            1206
+    //   8            1207
+    //   9            1208
+    //   3          101002
+    //   4         1001003
+    //   2          kMaxDt
+    //   6   kMaxDt + 1005
     const uint32_t kTriggerTimes[kNumTriggers] =
     {
         1014,
@@ -260,9 +268,8 @@ int TestTenTimers(void)
         1100,
         1207,
         101004,
-        /* timer wrap here */
-        2,
-        1000
+        ot::Timer::kMaxDt,
+        ot::Timer::kMaxDt + kTimeT0[6]
     };
     // Expected timers fired by each kTriggerTimes[] value
     //  Trigger #    Timers Fired
@@ -341,8 +348,22 @@ int TestTenTimers(void)
     ot::Timer timer7(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[7]);
     ot::Timer timer8(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[8]);
     ot::Timer timer9(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[9]);
-    ot::Timer *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4, &timer5, &timer6, &timer7, &timer8, &timer9};
+    ot::Timer *timers[kNumTimers] =
+    {
+        &timer0,
+        &timer1,
+        &timer2,
+        &timer3,
+        &timer4,
+        &timer5,
+        &timer6,
+        &timer7,
+        &timer8,
+        &timer9
+    };
     size_t i;
+
+    printf("TestTenTimer() with aTimeShift=%-10u ", aTimeShift);
 
     // Start the Ten timers.
 
@@ -351,17 +372,18 @@ int TestTenTimers(void)
 
     for (i = 0; i < kNumTimers ; i++)
     {
-        sNow = kTimeT0[i];
+        sNow = kTimeT0[i] + aTimeShift;
         timers[i]->Start(kTimerInterval[i]);
     }
 
     // given the order in which timers are started, the TimerScheduler should call otPlatAlarmStartAt 2 times.
     // one for timer[0] and one for timer[5] which will supercede timer[0].
-    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2,         "TestTenTimer: Start CallCount Failed.\n");
-    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,         "TestTenTimer: Stop CallCount Failed.\n");
-    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,         "TestTenTimer: Handler CallCount Failed.\n");
-    VerifyOrQuit(sPlatT0 == kTimeT0[5] && sPlatDt == kTimerInterval[5], "TestTenTimer: Start params Failed.\n");
-    VerifyOrQuit(sTimerOn,                                              "TestTenTimer: Platform Timer State Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTenTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTenTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestTenTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == kTimeT0[5] + aTimeShift,            "TestTenTimer: Start params Failed.\n");
+    VerifyOrQuit(sPlatDt == kTimerInterval[5],                  "TestTenTimer: Start params Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestTenTimer: Platform Timer State Failed.\n");
 
     for (i = 0 ; i < kNumTimers ; i++)
     {
@@ -372,7 +394,7 @@ int TestTenTimers(void)
 
     for (size_t trigger = 0 ; trigger < kNumTriggers ; trigger++)
     {
-        sNow = kTriggerTimes[trigger];
+        sNow = kTriggerTimes[trigger] + aTimeShift;
 
         do
         {
@@ -397,13 +419,39 @@ int TestTenTimers(void)
 
         for (i = 0 ; i < kNumTimers ; i++)
         {
-            VerifyOrQuit(timers[i]->IsRunning() == kTimerStateAfterTrigger[trigger][i], "TestTenTimer: Timer running Failed.\n");
+            VerifyOrQuit(
+                timers[i]->IsRunning() == kTimerStateAfterTrigger[trigger][i],
+                "TestTenTimer: Timer running Failed.\n"
+            );
         }
     }
 
     for (i = 0 ; i < kNumTimers ; i++)
     {
         VerifyOrQuit(timerContextHandleCounter[i] == 1, "TestTenTimer: Timer context counter Failed.\n");
+    }
+
+    printf("--> PASSED\n");
+}
+
+int TestTenTimers(void)
+{
+    // Time shift to change the start/fire time of ten timers.
+    const uint32_t kTimeShift[] =
+    {
+        0,
+        100000U,
+        0U - 1U,
+        0U - 1100U,
+        ot::Timer::kMaxDt,
+        ot::Timer::kMaxDt + 1020U,
+    };
+
+    size_t i;
+
+    for (i = 0; i < sizeof(kTimeShift) / sizeof(kTimeShift[0]); i++)
+    {
+        TenTimers(kTimeShift[i]);
     }
 
     return 0;

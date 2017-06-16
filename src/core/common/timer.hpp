@@ -40,6 +40,7 @@
 #include <openthread/types.h>
 #include <openthread/platform/alarm.h>
 
+#include "common/debug.hpp"
 #include "common/tasklet.hpp"
 
 namespace ot {
@@ -90,12 +91,17 @@ public:
     void Remove(Timer &aTimer);
 
     /**
-     * This method processes all running timers.
-     *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * This method processes the running timers.
      *
      */
-    void FireTimers(void);
+    void ProcessTimers(void);
+
+private:
+    /**
+     * This method sets the platform alarm based on timer at front of the list.
+     *
+     */
+    void SetAlarm(void);
 
     /**
      * This method returns the pointer to the parent Ip6 structure.
@@ -105,20 +111,20 @@ public:
      */
     Ip6::Ip6 *GetIp6(void);
 
-private:
-    void SetAlarm(void);
-
     /**
-     * This method compares two timers and returns a value to indicate
-     * which timer will fire earlier.
+     * This static method compares two times and indicates if the first time is strictly before (earlier) than the
+     * second time.
      *
-     * @param[in] aTimerA   The first timer for comparison.
-     * @param[in] aTimerB   The second timer for comparison.
+     * This method requires that the difference between the two given times to be smaller than kMaxDt.
      *
-     * @returns true if aTimerA will fire before aTimerB.
-     * @returns false if aTimerA will fire at the same time or after aTimerB.
+     * @param[in] aTimerA   The first time for comparison.
+     * @param[in] aTimerB   The second time for comparison.
+     *
+     * @returns TRUE  if aTimeA is before aTimeB.
+     * @returns FALSE if aTimeA is same time or after aTimeB.
+     *
      */
-    static bool TimerCompare(const Timer &aTimerA, const Timer &aTimerB);
+    static bool IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB);
 
     Timer *mHead;
 };
@@ -132,6 +138,12 @@ class Timer
     friend class TimerScheduler;
 
 public:
+
+    enum
+    {
+        kMaxDt = (1UL << 31) - 1,  //< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
+    };
+
     /**
      * This function pointer is called when the timer expires.
      *
@@ -151,32 +163,24 @@ public:
         mScheduler(aScheduler),
         mHandler(aHandler),
         mContext(aContext),
-        mT0(0),
-        mDt(0),
+        mFireTime(0),
         mNext(this) {
     }
 
     /**
-     * This method returns the start time in milliseconds for the timer.
+     * This method returns the fire time of the timer.
      *
-     * @returns The start time in milliseconds.
-     *
-     */
-    uint32_t Gett0(void) const { return mT0; }
-
-    /**
-     * This method returns the delta time in milliseconds for the timer.
-     *
-     * @returns The delta time.
+     * @returns The fire time in milliseconds.
      *
      */
-    uint32_t Getdt(void) const { return mDt; }
+    uint32_t GetFireTime(void) const { return mFireTime; }
 
     /**
      * This method indicates whether or not the timer instance is running.
      *
      * @retval TRUE   If the timer is running.
      * @retval FALSE  If the timer is not running.
+     *
      */
     bool IsRunning(void) const { return (mNext != this); }
 
@@ -184,16 +188,20 @@ public:
      * This method schedules the timer to fire a @p dt milliseconds from now.
      *
      * @param[in]  aDt  The expire time in milliseconds from now.
+     *                  (aDt must be smaller than or equal to kMaxDt).
+     *
      */
     void Start(uint32_t aDt) { StartAt(GetNow(), aDt); }
 
     /**
-     * This method schedules the timer to fire at @p dt milliseconds from @p t0.
+     * This method schedules the timer to fire at @p aDt milliseconds from @p aT0.
      *
      * @param[in]  aT0  The start time in milliseconds.
-     * @param[in]  aDt  The expire time in milliseconds from @p t0.
+     * @param[in]  aDt  The expire time in milliseconds from @p aT0.
+     *                  (aDt must be smaller than or equal to kMaxDt).
+     *
      */
-    void StartAt(uint32_t aT0, uint32_t aDt) { mT0 = aT0; mDt = aDt; mScheduler.Add(*this); }
+    void StartAt(uint32_t aT0, uint32_t aDt) { assert(aDt <= kMaxDt); mFireTime = aT0 + aDt; mScheduler.Add(*this); }
 
     /**
      * This method stops the timer.
@@ -247,8 +255,7 @@ private:
     TimerScheduler &mScheduler;
     Handler         mHandler;
     void           *mContext;
-    uint32_t        mT0;
-    uint32_t        mDt;
+    uint32_t        mFireTime;
     Timer          *mNext;
 };
 
