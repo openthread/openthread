@@ -162,8 +162,8 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 
     otLogFuncEntry();
 
-    error = aInstance->mIp6.SendFromNcpHost(*static_cast<Message *>(aMessage),
-                                            aInstance->mThreadNetif.GetInterfaceId());
+    error = aInstance->mIp6.SendRaw(*static_cast<Message *>(aMessage),
+                                    aInstance->mThreadNetif.GetInterfaceId());
 
     otLogFuncExitErr(error);
 

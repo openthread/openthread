@@ -654,7 +654,7 @@ exit:
     return error;
 }
 
-otError Ip6::SendFromNcpHost(Message &aMessage, int8_t aInterfaceId)
+otError Ip6::SendRaw(Message &aMessage, int8_t aInterfaceId)
 {
     otError error = OT_ERROR_NONE;
     Header header;

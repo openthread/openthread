@@ -133,7 +133,7 @@ public:
     otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
 
     /**
-     * This method sends a IPv6 datagram as Ncp Host.
+     * This method sends a raw IPv6 datagram with a fully formed IPv6 header.
      *
      * @param[in]  aMessage          A reference to the message.
      * @param[in]  aInterfaceId      The interface identifier of the network interface that received the message.
@@ -142,7 +142,7 @@ public:
      * @retval OT_ERROR_DROP   Message processing failed and the message should be dropped.
      *
      */
-    otError SendFromNcpHost(Message &aMessage, int8_t aInterfaceId);
+    otError SendRaw(Message &aMessage, int8_t aInterfaceId);
 
     /**
      * This method processes a received IPv6 datagram.
