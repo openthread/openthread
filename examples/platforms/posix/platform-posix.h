@@ -120,6 +120,12 @@ void platformAlarmProcess(otInstance *aInstance);
 void platformRadioInit(void);
 
 /**
+ * This function close the radio service used by OpenThread.
+ *
+ */
+void platformRadioClose(void);
+
+/**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
  *
  * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
