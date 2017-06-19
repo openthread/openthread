@@ -69,7 +69,7 @@ void TimerScheduler::Add(Timer &aTimer)
 
         for (cur = mHead; cur; cur = cur->mNext)
         {
-            if (IsStrictlyBefore(aTimer.mFireTime, cur->mFireTime))
+            if (aTimer.DoesFireBefore(*cur))
             {
                 if (prev)
                 {
@@ -183,6 +183,31 @@ bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
     // 3) aTimeA is after   aTimeB  =>  Difference is positive (last bit of difference is clear) => Returning false.
 
     return ((diff & (1UL << 31)) != 0);
+}
+
+bool Timer::DoesFireBefore(const Timer &aSecondTimer)
+{
+    bool retval;
+    uint32_t now = GetNow();
+    bool isBeforeNow = TimerScheduler::IsStrictlyBefore(GetFireTime(), now);
+
+    // Check if one timer is before `now` and the other one is not.
+    if (TimerScheduler::IsStrictlyBefore(aSecondTimer.GetFireTime(), now) != isBeforeNow)
+    {
+        // One timer is before `now` and the other one is not, so if this timer's fire time is before `now` then
+        // the second fire time would be after `now` and this timer would fire before the second timer.
+
+        retval = isBeforeNow;
+    }
+    else
+    {
+        // Both timers are before `now` or both are after `now`. Either way the difference is guaranteed to be less
+        // than `kMaxDt` so we can safely compare the fire times directly.
+
+        retval = TimerScheduler::IsStrictlyBefore(GetFireTime(), aSecondTimer.GetFireTime());
+    }
+
+    return retval;
 }
 
 }  // namespace ot
