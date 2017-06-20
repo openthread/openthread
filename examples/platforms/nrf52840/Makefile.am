@@ -216,16 +216,16 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52/nrf_mbr.h                    \
     $(NULL)
 
-PRETTY_FILES                                                                                              = \
-    $(PLATFORM_SOURCES)                                                                                     \
+PRETTY_FILES                                                                                               = \
+    $(PLATFORM_SOURCES)                                                                                      \
     $(NULL)
 
-Dash                                                                                                      = -
+Dash                                                                                                       = -
 
-libopenthread_nrf52840_a_LIBADD                                                                           = \
+libopenthread_nrf52840_a_LIBADD                                                                            = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
-libopenthread_nrf52840_sdk_a_LIBADD                                                                       = \
+libopenthread_nrf52840_sdk_a_LIBADD                                                                        = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                             = \
