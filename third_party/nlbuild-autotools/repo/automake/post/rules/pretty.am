@@ -38,14 +38,14 @@
 #      are the key automake-specific dependencies to ensure that happens.
 #
 
-# nl-make-pretty <TERSE OUTPUT COMMAND> <COMMAND> <COMMAND ARGUMENTS>
+# nl-make-pretty <TERSE OUTPUT COMMAND> <COMMAND> <COMMAND ARGUMENTS> <PATHS>
 #
-# This function iterates over PRETTY_FILES, invoking COMMAND with
+# This function iterates over PATHS, invoking COMMAND with
 # COMMAND ARGUEMENTS on each file. If a non-verbose make has been
 # requested TERSE OUTPUT COMMAND is emitted to standard output.
 
 define nl-make-pretty
-$(AM_V_at)for file in $(PRETTY_FILES); do \
+$(AM_V_at)for file in $(4); do \
     $(1) \
     if test -f $${file}; then d=.; else d=$(srcdir); fi; \
     $(2) $(3) $${d}/$${file} \
@@ -59,6 +59,8 @@ pretty: pretty-recursive
 
 pretty pretty-check: $(BUILT_SOURCES)
 
+# Map the build action 'lint' to the more vernacular 'pretty-check'.
+
 lint: pretty-check
 
 pretty-check: pretty-check-recursive
@@ -66,12 +68,12 @@ pretty-check: pretty-check-recursive
 pretty-recursive pretty-check-recursive:
 	$(call nl-make-subdirs-with-dirs,$(PRETTY_SUBDIRS))
 
-pretty:
+pretty: $(PRETTY_FILES)
 ifneq ($(PRETTY),)
-	$(call nl-make-pretty,$(AM_V_PRETTY),$(PRETTY),$(PRETTY_ARGS))
+	$(call nl-make-pretty,$(AM_V_PRETTY),$(PRETTY),$(PRETTY_ARGS),$(filter-out $(@)-recursive,$(PRETTY_FILES)))
 endif
 
-pretty-check:
+pretty-check: $(PRETTY_FILES)
 ifneq ($(PRETTY_CHECK),)
-	$(call nl-make-pretty,$(AM_V_PRETTY_CHECK),$(PRETTY_CHECK),$(PRETTY_CHECK_ARGS))
+	$(call nl-make-pretty,$(AM_V_PRETTY_CHECK),$(PRETTY_CHECK),$(PRETTY_CHECK_ARGS),$(filter-out $(@)-recursive,$(PRETTY_FILES)))
 endif

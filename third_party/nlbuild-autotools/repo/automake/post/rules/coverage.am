@@ -27,6 +27,13 @@
 #      automake-specific dependencies to ensure that happens.
 #
 
-coverage-local: check-am
+.PHONY: coverage coverage-recursive
+ 
+coverage: coverage-recursive
 
-coverage-local: $(BUILT_SOURCES)
+coverage: check-am
+
+coverage: $(BUILT_SOURCES)
+
+coverage-recursive:
+	$(nl-make-subdirs)
