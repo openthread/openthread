@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,77 +32,88 @@
  *
  */
 
+#define WPP_NAME "dataset_local.tmh"
+
 #include <openthread/config.h>
 
-#include "dataset.hpp"
+#include "dataset_local.hpp"
 
 #include <stdio.h>
 
-#include "openthread-instance.h"
+#include <openthread/platform/settings.h>
+
 #include "common/code_utils.hpp"
+#include "common/logging.hpp"
 #include "common/settings.hpp"
+#include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
-Dataset::Dataset(const Tlv::Type aType) :
+DatasetLocal::DatasetLocal(otInstance *aInstance, const Tlv::Type aType) :
+    InstanceLocator(aInstance),
     mUpdateTime(0),
-    mLength(0),
     mType(aType)
 {
 }
 
-void Dataset::Clear(void)
+void DatasetLocal::Clear(void)
 {
-    mLength = 0;
+    otPlatSettingsDelete(GetInstance(), GetSettingsKey(), -1);
 }
 
-Tlv *Dataset::Get(Tlv::Type aType)
+bool DatasetLocal::IsPresent(void) const
 {
-    Tlv *cur = reinterpret_cast<Tlv *>(mTlvs);
-    Tlv *end = reinterpret_cast<Tlv *>(mTlvs + mLength);
-    Tlv *rval = NULL;
+    return otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, NULL, NULL) == OT_ERROR_NONE;
+}
 
-    while (cur < end)
+otError DatasetLocal::Get(Dataset &aDataset)
+{
+    DelayTimerTlv *delayTimer;
+    uint32_t elapsed;
+    otError error;
+
+    aDataset.mLength = sizeof(aDataset.mTlvs);
+
+    error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
+    SuccessOrExit(error);
+
+    delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
+    VerifyOrExit(delayTimer);
+
+    elapsed = Timer::GetNow() - mUpdateTime;
+
+    if (delayTimer->GetDelayTimer() > elapsed)
     {
-        if (cur->GetType() == aType)
-        {
-            ExitNow(rval = cur);
-        }
-
-        cur = cur->GetNext();
+        delayTimer->SetDelayTimer(delayTimer->GetDelayTimer() - elapsed);
+    }
+    else
+    {
+        delayTimer->SetDelayTimer(0);
     }
 
-exit:
-    return rval;
-}
-
-const Tlv *Dataset::Get(Tlv::Type aType) const
-{
-    const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
-    const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
-    const Tlv *rval = NULL;
-
-    while (cur < end)
-    {
-        if (cur->GetType() == aType)
-        {
-            ExitNow(rval = cur);
-        }
-
-        cur = cur->GetNext();
-    }
+    aDataset.mUpdateTime = Timer::GetNow();
 
 exit:
-    return rval;
+    return error;
 }
 
-void Dataset::Get(otOperationalDataset &aDataset) const
+otError DatasetLocal::Get(otOperationalDataset &aDataset) const
 {
-    const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
-    const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+    Dataset    dataset(mType);
+    otError    error;
+    const Tlv *cur;
+    const Tlv *end;
+
+    dataset.mLength = sizeof(dataset.mTlvs);
+
+    error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
+    SuccessOrExit(error);
+
+    cur = reinterpret_cast<const Tlv *>(dataset.mTlvs);
+    end = reinterpret_cast<const Tlv *>(dataset.mTlvs + dataset.mLength);
 
     memset(&aDataset, 0, sizeof(aDataset));
 
@@ -129,9 +140,9 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kChannelMask:
         {
-            uint8_t length = cur->GetLength();
+            uint8_t tlvLength = cur->GetLength();
             const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
-            const uint8_t *entryEnd =  entry + length;
+            const uint8_t *entryEnd =  entry + tlvLength;
 
             while (entry < entryEnd)
             {
@@ -232,28 +243,17 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         cur = cur->GetNext();
     }
-}
 
-otError Dataset::Set(const Dataset &aDataset)
-{
-    memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
-    mLength = aDataset.mLength;
-
-    if (mType == Tlv::kActiveTimestamp)
-    {
-        Remove(Tlv::kPendingTimestamp);
-        Remove(Tlv::kDelayTimer);
-    }
-
-    mUpdateTime = aDataset.GetUpdateTime();
-
-    return OT_ERROR_NONE;
+exit:
+    return error;
 }
 
 #if OPENTHREAD_FTD
-otError Dataset::Set(const otOperationalDataset &aDataset)
+
+otError DatasetLocal::Set(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;
+    Dataset dataset(mType);
     MeshCoP::ActiveTimestampTlv activeTimestampTlv;
 
     VerifyOrExit(aDataset.mIsActiveTimestampSet, error = OT_ERROR_INVALID_ARGS);
@@ -261,7 +261,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     activeTimestampTlv.Init();
     activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
     activeTimestampTlv.SetTicks(0);
-    Set(activeTimestampTlv);
+    dataset.Set(activeTimestampTlv);
 
     if (mType == Tlv::kPendingTimestamp)
     {
@@ -272,14 +272,14 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         pendingTimestampTlv.Init();
         pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
         pendingTimestampTlv.SetTicks(0);
-        Set(pendingTimestampTlv);
+        dataset.Set(pendingTimestampTlv);
 
         if (aDataset.mIsDelaySet)
         {
             MeshCoP::DelayTimerTlv tlv;
             tlv.Init();
             tlv.SetDelayTimer(aDataset.mDelay);
-            Set(tlv);
+            dataset.Set(tlv);
         }
     }
 
@@ -289,7 +289,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         tlv.Init();
         tlv.SetChannelPage(0);
         tlv.SetChannel(aDataset.mChannel);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsChannelMaskPage0Set)
@@ -297,7 +297,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::ChannelMask0Tlv tlv;
         tlv.Init();
         tlv.SetMask(aDataset.mChannelMaskPage0);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsExtendedPanIdSet)
@@ -305,7 +305,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::ExtendedPanIdTlv tlv;
         tlv.Init();
         tlv.SetExtendedPanId(aDataset.mExtendedPanId.m8);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsMeshLocalPrefixSet)
@@ -313,7 +313,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::MeshLocalPrefixTlv tlv;
         tlv.Init();
         tlv.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix.m8);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsMasterKeySet)
@@ -321,7 +321,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::NetworkMasterKeyTlv tlv;
         tlv.Init();
         tlv.SetNetworkMasterKey(aDataset.mMasterKey);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsNetworkNameSet)
@@ -329,7 +329,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::NetworkNameTlv tlv;
         tlv.Init();
         tlv.SetNetworkName(aDataset.mNetworkName.m8);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsPanIdSet)
@@ -337,7 +337,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::PanIdTlv tlv;
         tlv.Init();
         tlv.SetPanId(aDataset.mPanId);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsPSKcSet)
@@ -345,7 +345,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::PSKcTlv tlv;
         tlv.Init();
         tlv.SetPSKc(aDataset.mPSKc.m8);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
     if (aDataset.mIsSecurityPolicySet)
@@ -354,77 +354,49 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         tlv.Init();
         tlv.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
         tlv.SetFlags(aDataset.mSecurityPolicy.mFlags);
-        Set(tlv);
+        dataset.Set(tlv);
     }
 
-    mUpdateTime = Timer::GetNow();
+    if (dataset.GetSize() == 0)
+    {
+        error = otPlatSettingsDelete(GetInstance(), GetSettingsKey(), 0);
+        otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+    }
+    else
+    {
+        error = otPlatSettingsSet(GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
+        otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+    }
 
 exit:
     return error;
 }
+
 #endif  // OPENTHREAD_FTD
 
-const Timestamp *Dataset::GetTimestamp(void) const
+otError DatasetLocal::Set(const Dataset &aDataset)
 {
-    const Timestamp *timestamp = NULL;
+    Dataset dataset(aDataset);
+    otError error;
 
     if (mType == Tlv::kActiveTimestamp)
     {
-        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
-        VerifyOrExit(tlv != NULL);
-        timestamp = static_cast<const Timestamp *>(tlv);
+        dataset.Remove(Tlv::kPendingTimestamp);
+        dataset.Remove(Tlv::kDelayTimer);
+    }
+
+    if (dataset.GetSize() == 0)
+    {
+        error = otPlatSettingsDelete(GetInstance(), GetSettingsKey(), 0);
+        otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
-        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
-        VerifyOrExit(tlv != NULL);
-        timestamp = static_cast<const Timestamp *>(tlv);
+        error = otPlatSettingsSet(GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
+        otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 
-exit:
-    return timestamp;
-}
-
-void Dataset::SetTimestamp(const Timestamp &aTimestamp)
-{
-    if (mType == Tlv::kActiveTimestamp)
-    {
-        ActiveTimestampTlv activeTimestamp;
-        activeTimestamp.Init();
-        *static_cast<Timestamp *>(&activeTimestamp) = aTimestamp;
-        Set(activeTimestamp);
-    }
-    else
-    {
-        PendingTimestampTlv pendingTimestamp;
-        pendingTimestamp.Init();
-        *static_cast<Timestamp *>(&pendingTimestamp) = aTimestamp;
-        Set(pendingTimestamp);
-    }
-}
-
-otError Dataset::Set(const Tlv &aTlv)
-{
-    otError error = OT_ERROR_NONE;
-    uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
-    Tlv *old = Get(aTlv.GetType());
-
-    if (old != NULL)
-    {
-        bytesAvailable += sizeof(Tlv) + old->GetLength();
-    }
-
-    VerifyOrExit(sizeof(Tlv) + aTlv.GetLength() <= bytesAvailable, error = OT_ERROR_NO_BUFS);
-
-    // remove old TLV
-    if (old != NULL)
-    {
-        Remove(reinterpret_cast<uint8_t *>(old), sizeof(Tlv) + old->GetLength());
-    }
-
-    // add new TLV
-    memcpy(mTlvs + mLength, &aTlv, sizeof(Tlv) + aTlv.GetLength());
-    mLength += sizeof(Tlv) + aTlv.GetLength();
+    SuccessOrExit(error);
 
     mUpdateTime = Timer::GetNow();
 
@@ -432,12 +404,14 @@ exit:
     return error;
 }
 
-otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+otError DatasetLocal::Restore(void)
 {
-    otError error = OT_ERROR_NONE;
+    Dataset dataset(mType);
+    otError error;
 
-    VerifyOrExit(aLength == aMessage.Read(aOffset, aLength, mTlvs), error = OT_ERROR_INVALID_ARGS);
-    mLength = aLength;
+    dataset.mLength = sizeof(dataset.mTlvs);
+    error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
+    SuccessOrExit(error);
 
     mUpdateTime = Timer::GetNow();
 
@@ -445,70 +419,7 @@ exit:
     return error;
 }
 
-void Dataset::Remove(Tlv::Type aType)
-{
-    Tlv *tlv;
-
-    VerifyOrExit((tlv = Get(aType)) != NULL);
-    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(Tlv) + tlv->GetLength());
-
-exit:
-    return;
-}
-
-otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
-{
-    otError error = OT_ERROR_NONE;
-    Mle::Tlv tlv;
-    Mle::Tlv::Type type;
-    const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
-    const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
-
-    VerifyOrExit(mLength > 0);
-
-    type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
-
-    tlv.SetType(type);
-    tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv)));
-
-    while (cur < end)
-    {
-        if (cur->GetType() == mType)
-        {
-            ; // skip Active or Pending Timestamp TLV
-        }
-        else if (cur->GetType() == Tlv::kDelayTimer)
-        {
-            uint32_t elapsed = Timer::GetNow() - mUpdateTime;
-            DelayTimerTlv delayTimer;
-
-            memcpy(&delayTimer, cur, sizeof(delayTimer));
-
-            if (delayTimer.GetDelayTimer() > elapsed)
-            {
-                delayTimer.SetDelayTimer(delayTimer.GetDelayTimer() - elapsed);
-            }
-            else
-            {
-                delayTimer.SetDelayTimer(0);
-            }
-
-            SuccessOrExit(error = aMessage.Append(&delayTimer, sizeof(delayTimer)));
-        }
-        else
-        {
-            SuccessOrExit(error = aMessage.Append(cur, sizeof(Tlv) + cur->GetLength()));
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return error;
-}
-
-uint16_t Dataset::GetSettingsKey(void)
+uint16_t DatasetLocal::GetSettingsKey(void) const
 {
     uint16_t rval;
 
@@ -524,10 +435,35 @@ uint16_t Dataset::GetSettingsKey(void)
     return rval;
 }
 
-void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
+int DatasetLocal::Compare(const Timestamp *aCompareTimestamp)
 {
-    memmove(aStart, aStart + aLength, mLength - (static_cast<uint8_t>(aStart - mTlvs) + aLength));
-    mLength -= aLength;
+    const Timestamp *thisTimestamp;
+    Dataset dataset(mType);
+    int rval = 1;
+
+    SuccessOrExit(Get(dataset));
+
+    thisTimestamp = dataset.GetTimestamp();
+
+    if (aCompareTimestamp == NULL && thisTimestamp == NULL)
+    {
+        rval = 0;
+    }
+    else if (aCompareTimestamp == NULL && thisTimestamp != NULL)
+    {
+        rval = -1;
+    }
+    else if (aCompareTimestamp != NULL && thisTimestamp == NULL)
+    {
+        rval = 1;
+    }
+    else
+    {
+        rval = thisTimestamp->Compare(*aCompareTimestamp);
+    }
+
+exit:
+    return rval;
 }
 
 }  // namespace MeshCoP

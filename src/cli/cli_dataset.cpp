@@ -232,21 +232,29 @@ otError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otDatasetGetActive(aInstance, &dataset);
+    otError error;
 
+    SuccessOrExit(error = otDatasetGetActive(aInstance, &dataset));
+    error = Print(dataset);
+
+exit:
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
-    return Print(dataset);
+    return error;
 }
 
 otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otDatasetGetPending(aInstance, &dataset);
+    otError error;
 
+    SuccessOrExit(error = otDatasetGetPending(aInstance, &dataset));
+    error = Print(dataset);
+
+exit:
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
-    return Print(dataset);
+    return error;
 }
 
 #if OPENTHREAD_FTD
