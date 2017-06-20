@@ -425,6 +425,30 @@ OTAPI const uint8_t *OTCALL otThreadGetPSKc(otInstance *aInstance);
 OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc);
 
 /**
+ * Get the assigned parent priority.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ *
+ * @returns The assigned parent priority value, -2 means not assigned.
+ *
+ * @sa otThreadSetParentPriority
+ */
+OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
+
+/**
+ * Set the parent priority.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aParentPriority  The parent priority value.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the parent priority.
+ * @retval OT_ERROR_INVALID_ARGS   If the parent priority value is not among 1, 0, -1 and -2.
+ *
+ * @sa otThreadGetParentPriority
+ */
+OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
+
+/**
  * @}
  *
  */

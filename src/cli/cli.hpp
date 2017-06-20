@@ -237,6 +237,9 @@ private:
     void ProcessNetworkName(int argc, char *argv[]);
     void ProcessPanId(int argc, char *argv[]);
     void ProcessParent(int argc, char *argv[]);
+#if OPENTHREAD_FTD
+    void ProcessParentPriority(int argc, char *argv[]);
+#endif
     void ProcessPing(int argc, char *argv[]);
     void ProcessPollPeriod(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_BORDER_ROUTER

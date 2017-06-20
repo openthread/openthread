@@ -165,6 +165,9 @@ const struct Command Interpreter::sCommands[] =
     { "networkname", &Interpreter::ProcessNetworkName },
     { "panid", &Interpreter::ProcessPanId },
     { "parent", &Interpreter::ProcessParent },
+#if OPENTHREAD_FTD
+    { "parentpriority", &Interpreter::ProcessParentPriority },
+#endif
 #ifndef OTDLL
     { "ping", &Interpreter::ProcessPing },
 #endif
@@ -1551,6 +1554,27 @@ exit:
     (void)argv;
     AppendResult(error);
 }
+
+#if OPENTHREAD_FTD
+void Interpreter::ProcessParentPriority(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+    long value;
+
+    if (argc == 0)
+    {
+        mServer->OutputFormat("%d\r\n", otThreadGetParentPriority(mInstance));
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        error = otThreadSetParentPriority(mInstance, static_cast<int8_t>(value));
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif
 
 #ifndef OTDLL
 void Interpreter::s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,

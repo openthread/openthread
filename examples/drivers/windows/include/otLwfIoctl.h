@@ -694,8 +694,13 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // otPSKc - aPSKc
 
+#define IOCTL_OTLWF_OT_PARENT_PRIORITY \
+    OTLWF_CTL_CODE(196, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+    // int8_t - aParentPriority
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 195
+#define MAX_OTLWF_IOCTL_FUNC_CODE 196
 
 #endif //__OTLWFIOCTL_H__

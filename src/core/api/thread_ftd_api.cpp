@@ -273,4 +273,14 @@ exit:
     return error;
 }
 
+int8_t otThreadGetParentPriority(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMle().GetAssignParentPriority();
+}
+
+otError otThreadSetParentPriority(otInstance *aInstance, const int8_t aParentPriority)
+{
+    return aInstance->mThreadNetif.GetMle().SetAssignParentPriority(aParentPriority);
+}
+
 #endif // OPENTHREAD_FTD

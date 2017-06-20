@@ -77,7 +77,8 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mIsRouterRestoringChildren(false),
     mPreviousPartitionId(0),
     mRouterSelectionJitter(kRouterSelectionJitter),
-    mRouterSelectionJitterTimeout(0)
+    mRouterSelectionJitterTimeout(0),
+    mParentPriority(kParentPriorityUnspecified)
 {
     mDeviceMode |= ModeTlv::kModeFFD | ModeTlv::kModeFullNetworkData;
 
@@ -4212,23 +4213,33 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     uint8_t cost;
     uint8_t linkQuality;
     uint8_t numChildren = 0;
+    int8_t parentPriority = kParentPriorityMedium;
 
-    for (int i = 0; i < mMaxChildrenAllowed; i++)
+    if (mParentPriority != kParentPriorityUnspecified)
     {
-        if (mChildren[i].GetState() == Neighbor::kStateValid)
-        {
-            numChildren++;
-        }
-    }
-
-    if ((mMaxChildrenAllowed - numChildren) < (mMaxChildrenAllowed / 3))
-    {
-        tlv.SetParentPriority(-1);
+        parentPriority = mParentPriority;
     }
     else
     {
-        tlv.SetParentPriority(0);
+        for (int i = 0; i < mMaxChildrenAllowed; i++)
+        {
+            if (mChildren[i].GetState() == Neighbor::kStateValid)
+            {
+                numChildren++;
+            }
+        }
+
+        if ((mMaxChildrenAllowed - numChildren) < (mMaxChildrenAllowed / 3))
+        {
+            parentPriority = kParentPriorityLow;
+        }
+        else
+        {
+            parentPriority = kParentPriorityMedium;
+        }
     }
+
+    tlv.SetParentPriority(parentPriority);
 
     // compute leader cost and link qualities
     tlv.SetLinkQuality1(0);
@@ -4656,6 +4667,24 @@ uint8_t MleRouter::GetMinDowngradeNeighborRouters(void)
     }
 
     return routerCount;
+}
+
+int8_t MleRouter::GetAssignParentPriority(void) const
+{
+    return mParentPriority;
+}
+
+otError MleRouter::SetAssignParentPriority(int8_t aParentPriority)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aParentPriority <= kParentPriorityHigh &&
+                 aParentPriority >= kParentPriorityUnspecified, error = OT_ERROR_INVALID_ARGS);
+
+    mParentPriority = aParentPriority;
+
+exit:
+    return error;
 }
 
 }  // namespace Mle
