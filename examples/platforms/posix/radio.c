@@ -375,6 +375,11 @@ void platformRadioInit(void)
     sAckFrame.mPsdu = sAckMessage.mPsdu;
 }
 
+void platformRadioDeinit(void)
+{
+    close(sSockFd);
+}
+
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;

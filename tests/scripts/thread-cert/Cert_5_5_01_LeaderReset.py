@@ -43,14 +43,17 @@ class Cert_5_5_1_LeaderReset(unittest.TestCase):
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
+        self._setUpLeader()
 
         self.nodes[ROUTER].set_panid(0xface)
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
+
+    def _setUpLeader(self):
+        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
+        self.nodes[LEADER].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -68,7 +71,8 @@ class Cert_5_5_1_LeaderReset(unittest.TestCase):
 
         rloc16 = self.nodes[LEADER].get_addr16()
 
-        self.nodes[LEADER].stop();
+        self.nodes[LEADER].reset();
+        self._setUpLeader()
         time.sleep(5)
 
         self.nodes[LEADER].start()

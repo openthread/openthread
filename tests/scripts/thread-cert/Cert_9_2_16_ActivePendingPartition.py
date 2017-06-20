@@ -72,6 +72,9 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
 
         self.nodes[ROUTER2].set_active_dataset(1, channel=CHANNEL_INIT, panid=PANID_INIT)
         self.nodes[ROUTER2].set_mode('rsdn')
+        self._setUpRouter2()
+
+    def _setUpRouter2(self):
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
@@ -106,7 +109,8 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        self.nodes[ROUTER2].stop()
+        self.nodes[ROUTER2].reset()
+        self._setUpRouter2()
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=20,
                                                        active_timestamp=20,

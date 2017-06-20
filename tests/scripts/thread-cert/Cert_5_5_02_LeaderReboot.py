@@ -44,9 +44,7 @@ class Cert_5_5_2_LeaderReboot(unittest.TestCase):
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_selection_jitter(1)
+        self._setUpLeader()
 
         self.nodes[ROUTER].set_panid(0xface)
         self.nodes[ROUTER].set_mode('rsdn')
@@ -59,6 +57,11 @@ class Cert_5_5_2_LeaderReboot(unittest.TestCase):
         self.nodes[ED].set_mode('rsn')
         self.nodes[ED].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[ED].enable_whitelist()
+
+    def _setUpLeader(self):
+        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
+        self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_router_selection_jitter(1)        
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -78,7 +81,8 @@ class Cert_5_5_2_LeaderReboot(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[LEADER].stop()
+        self.nodes[LEADER].reset()
+        self._setUpLeader()
         time.sleep(140)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
