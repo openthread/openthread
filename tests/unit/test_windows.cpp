@@ -79,6 +79,7 @@ namespace ot
 
 // test_timer.cpp
 int TestOneTimer();
+int TestTwoTimers();
 int TestTenTimers();
 
 // test_toolchain.cpp
@@ -159,6 +160,7 @@ namespace ot
 
         // test_timer.cpp
         TEST_METHOD(TestOneTimer) { ::TestOneTimer(); }
+        TEST_METHOD(TestTwoTimers) { ::TestTwoTimers(); }
         TEST_METHOD(TestTenTimers) { ::TestTenTimers(); }
 
         // test_ncp_buffer.cpp

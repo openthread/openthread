@@ -250,6 +250,17 @@ public:
     static uint32_t MsecToHours(uint32_t aMilliseconds) { return MsecToSec(aMilliseconds / 3600u); }
 
 private:
+    /**
+     * This method indicates if the fire time of this timer is strictly before the fire time of a second given timer.
+     *
+     * @param[in]  aTimer   A reference to the second timer object.
+     *
+     * @retval TRUE  If the fire time of this timer object is strictly before aTimer's fire time
+     * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
+     *
+     */
+    bool DoesFireBefore(const Timer &aTimer);
+
     void Fired(void) { mHandler(mContext); }
 
     TimerScheduler &mScheduler;
