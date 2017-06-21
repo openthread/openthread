@@ -42,6 +42,7 @@
 #include "mac/mac_blacklist.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_whitelist.hpp"
+#include "mac/radio.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/topology.hpp"

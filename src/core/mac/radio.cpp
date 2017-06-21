@@ -31,6 +31,7 @@
  *   This file implements the wrappers around the platform radio calls.
  */
 
+#include "mac/radio.hpp"
 #include <openthread/platform/radio.h>
 
 namespace ot {
