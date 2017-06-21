@@ -50,8 +50,8 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
 
-#include "device/nrf.h"
-#include "drivers/nrf_drv_radio802154.h"
+#include <device/nrf.h>
+#include <nrf_drv_radio802154.h>
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
@@ -70,8 +70,19 @@ static bool sDisabled;
 
 static otRadioFrame sReceivedFrames[RADIO_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
+
+#if defined ( __GNUC__ )
+
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1]
 __attribute__((section("nrf_radio_buffer.sTransmiPsdu")));
+
+#elif defined ( __ICCARM__ )
+
+#pragma location="NRF_RADIO_BUFFER"
+static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
+
+#endif
+
 static otRadioFrame sAckFrame;
 
 static uint32_t     sEnergyDetectionTime;
@@ -121,10 +132,10 @@ static void setPendingEvent(RadioPendingEvents aEvent)
 
     do
     {
-        pendingEvents = __LDREXW(&sPendingEvents);
+        pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
         pendingEvents |= bitToSet;
     }
-    while (__STREXW(pendingEvents, &sPendingEvents));
+    while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 }
 
 static void resetPendingEvent(RadioPendingEvents aEvent)
@@ -134,10 +145,10 @@ static void resetPendingEvent(RadioPendingEvents aEvent)
 
     do
     {
-        pendingEvents = __LDREXW(&sPendingEvents);
+        pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
         pendingEvents &= bitsToRemain;
     }
-    while (__STREXW(pendingEvents, &sPendingEvents));
+    while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 }
 
 static inline void clearPendingEvents(void)
@@ -153,18 +164,18 @@ static inline void clearPendingEvents(void)
 
     do
     {
-        pendingEvents = __LDREXW(&sPendingEvents);
+        pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
         pendingEvents &= bitsToRemain;
     }
-    while (__STREXW(pendingEvents, &sPendingEvents));
+    while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     (void) aInstance;
 
-    uint64_t factoryAddress;
-    factoryAddress = (((uint64_t)NRF_FICR->DEVICEID[0] << 32) | NRF_FICR->DEVICEID[1]);
+    uint64_t factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
+    factoryAddress |=  NRF_FICR->DEVICEID[1];
 
     memcpy(aIeeeEui64, &factoryAddress, sizeof(factoryAddress));
 }

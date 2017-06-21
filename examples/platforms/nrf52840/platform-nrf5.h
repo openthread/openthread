@@ -143,4 +143,36 @@ void nrf5CryptoInit(void);
  */
 void nrf5CryptoDeinit(void);
 
+/**
+ * Function for erasing page in flash.
+ *
+ */
+otError nrf5FlashPageErase(uint32_t aAddress);
+
+/**
+ * Function for checking state of flash driver.
+ *
+ */
+bool nrf5FlashIsBusy(void);
+
+/**
+ * Function for writing data into flash.
+ *
+ */
+uint32_t nrf5FlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
+
+#if SOFTDEVICE_PRESENT
+/**
+ * Function for translating SoftDevice error into OpenThread's one.
+ *
+ */
+otError nrf5SdErrorToOtError(uint32_t aSdError);
+
+/**
+ * Function for processing SoftDevice SoC events in flash module.
+ *
+ */
+void nrf5SdSocFlashProcess(uint32_t aEvtId);
+#endif // SOFTDEVICE_PRESENT
+
 #endif  // PLATFORM_NRF5_H_

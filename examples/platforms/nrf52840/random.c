@@ -39,8 +39,12 @@
 #include <openthread/platform/random.h>
 #include <utils/code_utils.h>
 
-#include "hal/nrf_rng.h"
 #include "platform-nrf5.h"
+
+#if SOFTDEVICE_PRESENT
+#include "softdevice.h"
+#else
+#include <hal/nrf_rng.h>
 
 static uint8_t sBuffer[RNG_BUFFER_SIZE];
 static volatile uint32_t sReadPosition;
@@ -48,7 +52,8 @@ static volatile uint32_t sWritePosition;
 
 static inline uint32_t bufferCount(void)
 {
-    return (sWritePosition - sReadPosition);
+    uint32_t writePos = sWritePosition;
+    return writePos - sReadPosition;
 }
 
 static inline bool bufferIsEmpty(void)
@@ -115,8 +120,38 @@ static void generatorStop(void)
     nrf_rng_task_trigger(NRF_RNG_TASK_STOP);
 }
 
+void RNG_IRQHandler(void)
+{
+    if (nrf_rng_event_get(NRF_RNG_EVENT_VALRDY) &&
+        nrf_rng_int_get(NRF_RNG_INT_VALRDY_MASK))
+    {
+        nrf_rng_event_clear(NRF_RNG_EVENT_VALRDY);
+
+        bufferPut(nrf_rng_random_value_get());
+
+        if (bufferIsFull())
+        {
+            generatorStop();
+        }
+    }
+}
+#endif // SOFTDEVICE_PRESENT
+
 void nrf5RandomInit(void)
 {
+    uint32_t seed = 0;
+
+#if SOFTDEVICE_PRESENT
+    uint32_t retval;
+
+    do
+    {
+        // Wait for the first randomized 4 bytes, to randomize software generator seed.
+        retval = sd_rand_application_vector_get((uint8_t *)&seed, sizeof(seed));
+    }
+    while (retval != NRF_SUCCESS && seed == 0);
+
+#else // SOFTDEVICE_PRESENT
     memset(sBuffer, 0, sizeof(sBuffer));
     sReadPosition = 0;
     sWritePosition = 0;
@@ -132,17 +167,21 @@ void nrf5RandomInit(void)
     // Wait for the first randomized 4 bytes, to randomize software generator seed.
     while (!bufferIsUint32Ready()) ;
 
-    uint32_t seed = bufferGetUint32();
+    seed = bufferGetUint32();
+#endif // SOFTDEVICE_PRESENT
+
     srand(seed);
 }
 
 void nrf5RandomDeinit(void)
 {
+#ifndef SOFTDEVICE_PRESENT
     generatorStop();
 
     NVIC_DisableIRQ(RNG_IRQn);
     NVIC_ClearPendingIRQ(RNG_IRQn);
     NVIC_SetPriority(RNG_IRQn, 0);
+#endif // SOFTDEVICE_PRESENT
 }
 
 uint32_t otPlatRandomGet(void)
@@ -153,40 +192,45 @@ uint32_t otPlatRandomGet(void)
 otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
+    uint8_t  copyLength;
+    uint16_t index = 0;
 
-    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
-    otEXPECT_ACTION(!bufferIsEmpty(), error = OT_ERROR_FAILED);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
-    uint16_t copyLength = (uint16_t)bufferCount();
-
-    if (copyLength > aOutputLength)
+    do
     {
-        copyLength = aOutputLength;
-    }
+#if SOFTDEVICE_PRESENT
+        sd_rand_application_bytes_available_get(&copyLength);
+#else // SOFTDEVICE_PRESENT
+        copyLength = (uint8_t)bufferCount();
+#endif // SOFTDEVICE_PRESENT
 
-    for (uint32_t i = 0; i < copyLength; i++)
-    {
-        aOutput[i] = bufferGet();
-    }
+        if (copyLength > aOutputLength - index)
+        {
+            copyLength = aOutputLength - index;
+        }
 
-    generatorStart();
+        if (copyLength > 0)
+        {
+
+#if SOFTDEVICE_PRESENT
+            uint32_t retval = sd_rand_application_vector_get(aOutput + index, copyLength);
+            otEXPECT_ACTION(retval == NRF_SUCCESS, error = OT_ERROR_FAILED);
+#else // SOFTDEVICE_PRESENT
+
+            for (uint32_t i = 0; i < copyLength; i++)
+            {
+                aOutput[i + index] = bufferGet();
+            }
+
+            generatorStart();
+#endif // SOFTDEVICE_PRESENT
+
+            index += copyLength;
+        }
+    }
+    while (index < aOutputLength);
 
 exit:
     return error;
-}
-
-void RNG_IRQHandler(void)
-{
-    if (nrf_rng_event_get(NRF_RNG_EVENT_VALRDY) &&
-        nrf_rng_int_get(NRF_RNG_INT_VALRDY_MASK))
-    {
-        nrf_rng_event_clear(NRF_RNG_EVENT_VALRDY);
-
-        bufferPut(nrf_rng_random_value_get());
-
-        if (bufferIsFull())
-        {
-            generatorStop();
-        }
-    }
 }

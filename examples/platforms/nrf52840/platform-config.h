@@ -40,7 +40,7 @@
 #include "hal/nrf_peripherals.h"
 #include "hal/nrf_radio.h"
 
-#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 /*******************************************************************************
  * @section UART Driver Configuration.
