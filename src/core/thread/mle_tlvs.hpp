@@ -1023,7 +1023,7 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const { return (mParentPriority & kParentPriorityMask) >> kParentPriorityOffset; }
+    int8_t GetParentPriority(void) const { return (static_cast<int8_t>(mParentPriority & kParentPriorityMask)) >> kParentPriorityOffset; }
 
     /**
      * This method sets the Parent Priority value.
