@@ -74,8 +74,10 @@
 namespace ot {
 
 #define NCP_INVALID_SCAN_CHANNEL              (-1)
-#define NCP_PLAT_RESET_REASON                 (1U<<31)
-#define NCP_ON_MESH_NETS_CHANGED_BIT_FLAG     (1U<<30)
+
+#define NCP_CHANGED_PLATFORM_RESET            (1U << 31)
+#define NCP_CHANGED_THREAD_ON_MESH_NETS       (1U << 30)
+#define NCP_CHANGED_THREAD_OFF_MESH_ROUTES    (1U << 29)
 
 enum
 {
@@ -642,7 +644,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mDiscoveryScanEnableFiltering(false),
     mDiscoveryScanPanId(0xffff),
     mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this),
-    mChangedFlags(NCP_PLAT_RESET_REASON),
+    mChangedFlags(NCP_CHANGED_PLATFORM_RESET),
     mShouldSignalEndOfScan(false),
     mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),
     mHostPowerStateInProgress(false),
@@ -1183,7 +1185,7 @@ void NcpBase::UpdateChangedProps(void)
 {
     while (mChangedFlags != 0)
     {
-        if ((mChangedFlags & NCP_PLAT_RESET_REASON) != 0)
+        if ((mChangedFlags & NCP_CHANGED_PLATFORM_RESET) != 0)
         {
             SuccessOrExit(
                 SendLastStatus(
@@ -1191,7 +1193,7 @@ void NcpBase::UpdateChangedProps(void)
                     ResetReasonToSpinelStatus(otPlatGetResetReason(mInstance))
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(NCP_PLAT_RESET_REASON);
+            mChangedFlags &= ~static_cast<uint32_t>(NCP_CHANGED_PLATFORM_RESET);
         }
         else if ((mChangedFlags & OT_CHANGED_THREAD_LL_ADDR) != 0)
         {
@@ -1322,12 +1324,13 @@ void NcpBase::UpdateChangedProps(void)
             mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_NETDATA);
 
             // If the network data is updated, after successfully sending (or queuing) the
-            // network data spinel message, we add `NCP_ON_MESH_NETS_CHANGED_BIT_FLAG` to
-            // the `mChangedFlags` so that we separately send the list of on-mesh prefixes.
+            // network data spinel message, we add `NCP_CHANGED_THREAD_ON_MESH_NETS` and
+            // `NCP_CHANGED_THREAD_OFF_MESH_ROUTES` to the `mChangedFlags` so that we
+            // separately send the list of on-mesh prefixes and off-mesh routes.
 
-            mChangedFlags |= NCP_ON_MESH_NETS_CHANGED_BIT_FLAG;
+            mChangedFlags |= NCP_CHANGED_THREAD_ON_MESH_NETS | NCP_CHANGED_THREAD_OFF_MESH_ROUTES;
         }
-        else if ((mChangedFlags & NCP_ON_MESH_NETS_CHANGED_BIT_FLAG) != 0)
+        else if ((mChangedFlags & NCP_CHANGED_THREAD_ON_MESH_NETS) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1335,7 +1338,17 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_THREAD_ON_MESH_NETS
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(NCP_ON_MESH_NETS_CHANGED_BIT_FLAG);
+            mChangedFlags &= ~static_cast<uint32_t>(NCP_CHANGED_THREAD_ON_MESH_NETS);
+        }
+        else if ((mChangedFlags & NCP_CHANGED_THREAD_OFF_MESH_ROUTES) != 0)
+        {
+            SuccessOrExit(
+                HandleCommandPropertyGet(
+                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                    SPINEL_PROP_THREAD_OFF_MESH_ROUTES
+                ));
+
+            mChangedFlags &= ~static_cast<uint32_t>(NCP_CHANGED_THREAD_OFF_MESH_ROUTES);
         }
         else if ((mChangedFlags & (OT_CHANGED_THREAD_RLOC_ADDED | OT_CHANGED_THREAD_RLOC_REMOVED)) != 0)
         {
@@ -1836,7 +1849,7 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader, unsigned int aCommand, co
 
     if (error != OT_ERROR_NONE)
     {
-        mChangedFlags |= NCP_PLAT_RESET_REASON;
+        mChangedFlags |= NCP_CHANGED_PLATFORM_RESET;
         mUpdateChangedPropsTask.Post();
     }
 
