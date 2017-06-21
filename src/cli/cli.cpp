@@ -1599,6 +1599,21 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     long value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+
+    if (strcmp(argv[0], "stop") == 0)
+    {
+        if (!mPingTimer.IsRunning())
+        {
+            error = OT_ERROR_INVALID_STATE;
+        }
+        else
+        {
+            mPingTimer.Stop();
+        }
+
+        ExitNow();
+    }
+
     VerifyOrExit(!mPingTimer.IsRunning(), error = OT_ERROR_BUSY);
 
     memset(&mMessageInfo, 0, sizeof(mMessageInfo));
