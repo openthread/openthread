@@ -751,6 +751,8 @@ private:
 
     otMacCounters mCounters;
     uint32_t mKeyIdMode2FrameCounter;
+
+    Radio mRadio;
 };
 
 /**
