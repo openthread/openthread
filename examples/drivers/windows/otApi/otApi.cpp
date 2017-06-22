@@ -3843,3 +3843,27 @@ otJoinerStop(
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_STOP));
 }
+
+OTAPI
+int8_t
+OTCALL
+otThreadGetParentPriority(
+    _In_ otInstance *aInstance
+)
+{
+    int8_t Result = 0;
+    if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_PARENT_PRIORITY, &Result);
+    return Result;
+}
+
+OTAPI
+otError
+OTCALL
+otThreadSetParentPriority(
+    _In_ otInstance *aInstance,
+    int8_t aParentPriority
+    )
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PARENT_PRIORITY, aParentPriority));
+}

@@ -29,7 +29,13 @@
 #include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
-#include "device/nrf.h"
+#include <device/nrf.h>
+
+#include "platform-nrf5.h"
+
+#if SOFTDEVICE_PRESENT
+#include "softdevice.h"
+#endif
 
 static uint32_t sResetReason;
 
@@ -45,11 +51,13 @@ __WEAK void nrf5CryptoDeinit(void)
 
 void nrf5MiscInit(void)
 {
-    // Read the reason of last reset.
+#if SOFTDEVICE_PRESENT
+    sd_power_reset_reason_get(&sResetReason);
+    sd_power_reset_reason_clr(0xFFFFFFFF);
+#else
     sResetReason = NRF_POWER->RESETREAS;
-
-    // Clear the register, as the reasons cumulate over resets.
     NRF_POWER->RESETREAS = 0xFFFFFFFF;
+#endif // SOFTDEVICE_PRESENT 
 }
 
 void nrf5MiscDeinit(void)

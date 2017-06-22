@@ -665,6 +665,25 @@ public:
     otError SetSteeringData(otExtAddress *aExtAddress);
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
+    /**
+     * This method gets the assigned parent priority.
+     *
+     * @returns The assigned parent priority value, -2 means not assigned.
+     *
+     */
+    int8_t GetAssignParentPriority(void) const;
+
+    /**
+     * This method sets the parent priority.
+     *
+     * @param[in]  aParentPriority  The parent priority value.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the parent priority.
+     * @retval OT_ERROR_INVALID_ARGS   If the parent priority value is not among 1, 0, -1 and -2.
+     *
+     */
+    otError SetAssignParentPriority(int8_t aParentPriority);
+
 private:
     enum
     {
@@ -788,6 +807,8 @@ private:
 
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
+
+    int8_t mParentPriority;  ///< The assigned parent priority value, -2 means not assigned.
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     MeshCoP::SteeringDataTlv mSteeringData;

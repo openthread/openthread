@@ -52,6 +52,7 @@ void otPlatReset(otInstance *aInstance)
 
     argv[gArgumentsCount] = NULL;
 
+    platformRadioDeinit();
     platformUartRestore();
 
     execvp(argv[0], argv);

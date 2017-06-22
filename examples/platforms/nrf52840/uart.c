@@ -39,9 +39,9 @@
 #include <openthread/platform/uart.h>
 #include <utils/code_utils.h>
 
-#include "drivers/nrf_drv_clock.h"
-#include "hal/nrf_uart.h"
-#include "hal/nrf_gpio.h"
+#include <drivers/clock/nrf_drv_clock.h>
+#include <hal/nrf_uart.h>
+#include <hal/nrf_gpio.h>
 #include "platform-nrf5.h"
 
 /**
@@ -86,10 +86,10 @@ static __INLINE bool isRxBufferEmpty()
  */
 static void processReceive(void)
 {
-    otEXPECT(isRxBufferEmpty() == false);
-
     // Set head position to not be changed during read procedure.
     uint16_t head = sReceiveHead;
+
+    otEXPECT(isRxBufferEmpty() == false);
 
     // In case head roll back to the beginning of the buffer, notify about left
     // bytes from the end of the buffer.

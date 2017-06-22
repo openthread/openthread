@@ -46,6 +46,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [networkname](#networkname)
 * [panid](#panid)
 * [parent](#parent)
+* [parentpriority](#parentpriority)
 * [ping](#ping-ipaddr-size-count-interval)
 * [pollperiod](#pollperiod-pollperiod)
 * [prefix](#prefix-add-prefix-pvdcsr-prf)
@@ -1243,6 +1244,25 @@ Age: 20
 Done
 ```
 
+### parentpriority
+
+Get the assigned parent priority value, -2 means not assigned.
+
+```bash
+> parentpriority
+1
+Done
+```
+
+### parentpriority \<parentpriority\>
+
+Set the assigned parent priority value: 1, 0, -1 or -2.
+
+```bash
+> parentpriority 1
+Done
+```
+
 ### ping \<ipaddr\> [size] [count] [interval]
 
 Send an ICMPv6 Echo Request.
@@ -1250,6 +1270,15 @@ Send an ICMPv6 Echo Request.
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+```
+
+### ping stop
+
+Stop sending ICMPv6 Echo Requests.
+
+```bash
+> ping stop
+Done
 ```
 
 ### pollperiod

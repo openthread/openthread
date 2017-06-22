@@ -42,9 +42,10 @@
 #include <openthread/platform/usec-alarm.h>
 
 #include "platform-config.h"
-#include "cmsis/cmsis_gcc.h"
-#include "drivers/nrf_drv_clock.h"
-#include "hal/nrf_rtc.h"
+#include "cmsis/core_cmFunc.h"
+
+#include <drivers/clock/nrf_drv_clock.h>
+#include <hal/nrf_rtc.h>
 
 #include <openthread/config.h>
 #include <openthread/types.h>
@@ -414,7 +415,7 @@ void RTC_IRQ_HANDLER(void)
         if (nrf_rtc_int_is_enabled(RTC_INSTANCE, sChannelData[i].mCompareInt) &&
             nrf_rtc_event_pending(RTC_INSTANCE, sChannelData[i].mCompareEvent))
         {
-            HandleCompareMatch(i, false);
+            HandleCompareMatch((AlarmIndex)i, false);
         }
     }
 }

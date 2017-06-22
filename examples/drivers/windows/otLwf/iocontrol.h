@@ -227,5 +227,6 @@ DECL_IOCTL_FUNC(otFactoryReset);
 DECL_IOCTL_FUNC(otThreadAutoStart);
 DECL_IOCTL_FUNC(otThreadPreferredRouterId);
 DECL_IOCTL_FUNC_WITH_TUN2(otPSKc);
+DECL_IOCTL_FUNC(otParentPriority);
 
 #endif // _IOCONTROL_H

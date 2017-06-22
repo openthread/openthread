@@ -51,11 +51,7 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
+        self._setUpRouter3()
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
@@ -76,6 +72,13 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
         self.nodes[ED1].set_mode('rsn')
         self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ED1].enable_whitelist()
+
+    def _setUpRouter3(self):
+        self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER1].get_addr64())
+        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ROUTER3].enable_whitelist()
+        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -108,7 +111,8 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER1].ping(addr))
 
-        self.nodes[ROUTER3].stop()
+        self.nodes[ROUTER3].reset()
+        self._setUpRouter3()
         time.sleep(140)
 
         self.nodes[ROUTER3].start()        

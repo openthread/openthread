@@ -212,6 +212,172 @@ int TestOneTimer(void)
     return 0;
 }
 
+/**
+ * Test the TimerScheduler's behavior of two timers started and fired.
+ */
+int TestTwoTimers(void)
+{
+    const uint32_t kTimeT0 = 1000;
+    const uint32_t kTimerInterval = 10;
+    otInstance aInstance;
+    uint32_t timerContextHandleCounter[2] = {0};
+    ot::Timer timer1(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[0]);
+    ot::Timer timer2(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[1]);
+
+    InitTestTimer();
+    printf("TestTwoTimers() ");
+
+    // Test when second timer stars at the fire time of first timer (before alarm callback).
+
+    InitCounters();
+    memset(timerContextHandleCounter, 0, sizeof(timerContextHandleCounter));
+
+    sNow = kTimeT0;
+    timer1.Start(kTimerInterval);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,   "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == kTimeT0 && sPlatDt == kTimerInterval, "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(timer1.IsRunning(),                              "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == false,                     "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
+
+    sNow += kTimerInterval;
+
+    timer2.Start(kTimerInterval);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,   "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == kTimeT0 && sPlatDt == kTimerInterval, "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timerContextHandleCounter[0] == 1,             "TestTwoTimers: Context handler failed.\n");
+    VerifyOrQuit(sPlatT0 == sNow && sPlatDt == kTimerInterval, "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == true,                    "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == true,                              "TestTwoTimers: Platform Timer State Failed.\n");
+
+    sNow += kTimerInterval;
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 2, "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timerContextHandleCounter[1] == 1,             "TestTwoTimers: Context handler failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestTwoTimers: Platform Timer State Failed.\n");
+
+    // Test when second timer starts at the fire time of first timer (before otPlatAlarmFired()) and its fire time
+    // is before the first timer. Ensure that the second timer handler is invoked before the first one.
+
+    InitCounters();
+    memset(timerContextHandleCounter, 0, sizeof(timerContextHandleCounter));
+
+    sNow = kTimeT0;
+    timer1.Start(kTimerInterval);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,   "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == kTimeT0 && sPlatDt == kTimerInterval, "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(timer1.IsRunning(),                              "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == false,                     "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
+
+    sNow += kTimerInterval;
+
+    timer2.StartAt(kTimeT0, kTimerInterval - 2);  // Timer 2 is even before timer 1
+
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,   "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timerContextHandleCounter[1] == 1,             "TestTwoTimers: Context handler failed.\n");
+    VerifyOrQuit(sPlatT0 == sNow && sPlatDt == 0,               "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == true,                    "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == true,                              "TestTwoTimers: Platform Timer State Failed.\n");
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 2, "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timerContextHandleCounter[0] == 1,             "TestTwoTimers: Context handler failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestTwoTimers: Platform Timer State Failed.\n");
+
+    // Timer 1 fire callback is late by some ticks/ms, and second timer is scheduled (before call to otPlatAlarmFired)
+    // with a maximum interval. This is to test (corner-case) scenario where the fire time of two timers spanning over
+    // the maximum interval.
+
+    InitCounters();
+    memset(timerContextHandleCounter, 0, sizeof(timerContextHandleCounter));
+
+    sNow = kTimeT0;
+    timer1.Start(kTimerInterval);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,   "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == kTimeT0 && sPlatDt == kTimerInterval, "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(timer1.IsRunning(),                              "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == false,                     "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
+
+    sNow += kTimerInterval + 5;
+
+    timer2.Start(ot::Timer::kMaxDt);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,   "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timerContextHandleCounter[0] == 1,             "TestTwoTimers: Context handler failed.\n");
+    VerifyOrQuit(sPlatT0 == sNow,                               "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(sPlatDt == ot::Timer::kMaxDt,                  "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == true,                    "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == true,                              "TestTwoTimers: Platform Timer State Failed.\n");
+
+    sNow += ot::Timer::kMaxDt;
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestTwoTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 2, "TestTwoTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(timerContextHandleCounter[1] == 1,             "TestTwoTimers: Context handler failed.\n");
+    VerifyOrQuit(timer1.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(timer2.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestTwoTimers: Platform Timer State Failed.\n");
+
+    printf(" --> PASSED\n");
+
+    return 0;
+}
 
 /**
  * Test the TimerScheduler's behavior of ten timers started and fired.
@@ -460,6 +626,7 @@ int TestTenTimers(void)
 void RunTimerTests(void)
 {
     TestOneTimer();
+    TestTwoTimers();
     TestTenTimers();
 }
 

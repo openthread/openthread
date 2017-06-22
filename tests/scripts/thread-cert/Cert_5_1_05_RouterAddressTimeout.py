@@ -54,12 +54,15 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
 
         self.nodes[ROUTER1].set_panid(0xface)
         self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
+        self._setUpRouter1()
 
         self.sniffer = config.create_default_thread_sniffer(SNIFFER)
         self.sniffer.start()
+
+    def _setUpRouter1(self):
+        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
         self.sniffer.stop()
@@ -81,7 +84,8 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
 
         rloc16 = self.nodes[ROUTER1].get_addr16()
 
-        self.nodes[ROUTER1].stop()
+        self.nodes[ROUTER1].reset()
+        self._setUpRouter1()
         time.sleep(200)
         self.nodes[ROUTER1].start()
         time.sleep(5)
@@ -89,8 +93,8 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
         self.assertNotEqual(self.nodes[ROUTER1].get_addr16(), rloc16)
 
         rloc16 = self.nodes[ROUTER1].get_addr16()
-
-        self.nodes[ROUTER1].stop()
+        self.nodes[ROUTER1].reset()
+        self._setUpRouter1()
         time.sleep(300)
         self.nodes[ROUTER1].start()
         time.sleep(5)

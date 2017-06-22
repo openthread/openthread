@@ -34,10 +34,9 @@
 
 #include <openthread/platform/logging.h>
 
-#include "drivers/nrf_drv_clock.h"
+#include <drivers/clock/nrf_drv_clock.h>
 #include "platform-nrf5.h"
 
-#include <openthread-core-config.h>
 #include <openthread/config.h>
 
 void __cxa_pure_virtual(void) { while (1); }
@@ -48,28 +47,29 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 
     nrf_drv_clock_init();
+
+#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+    nrf5LogInit();
+#endif
     nrf5AlarmInit();
     nrf5RandomInit();
     nrf5UartInit();
     nrf5MiscInit();
     nrf5CryptoInit();
     nrf5RadioInit();
-#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
-    nrf5LogInit();
-#endif
 }
 
 void PlatformDeinit(void)
 {
-#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
-    nrf5LogDeinit();
-#endif
     nrf5RadioDeinit();
     nrf5CryptoDeinit();
     nrf5MiscDeinit();
     nrf5UartDeinit();
     nrf5RandomDeinit();
     nrf5AlarmDeinit();
+#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+    nrf5LogDeinit();
+#endif
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)
