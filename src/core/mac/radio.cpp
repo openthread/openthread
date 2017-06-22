@@ -34,6 +34,8 @@
 #include "radio.hpp"
 #include "common/timer.hpp"
 #include "common/code_utils.hpp"
+#include "common/logging.hpp"
+#include "openthread-instance.h"
 
 #include <openthread/platform/radio.h>
 
