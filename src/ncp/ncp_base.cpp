@@ -5557,7 +5557,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-otError NcpBase::SetPropertyHandler_THREAD_THREAD_STEERING_DATA(uint8_t aHeader, spinel_prop_key_t aKey,
+otError NcpBase::SetPropertyHandler_THREAD_STEERING_DATA(uint8_t aHeader, spinel_prop_key_t aKey,
                                                                 const uint8_t *aValuePtr, uint16_t aValueLen)
 {
     otExtAddress *extAddress;
