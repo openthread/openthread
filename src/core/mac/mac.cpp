@@ -1409,7 +1409,6 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     PanId panid;
     Neighbor *neighbor;
     otMacWhitelistEntry *whitelistEntry;
-    otMacBlacklistEntry *blacklistEntry;
     int8_t rssi;
     bool receive = false;
     uint8_t commandId;
@@ -1479,7 +1478,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     // Source Blacklist Processing
     if (srcaddr.mLength != 0 && mBlacklist.IsEnabled())
     {
-        VerifyOrExit((blacklistEntry = mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
+        VerifyOrExit((mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
     }
 
     // Destination Address Filtering
@@ -1665,8 +1664,6 @@ exit:
             break;
         }
     }
-
-    OT_UNUSED_VARIABLE(blacklistEntry);
 }
 
 otError Mac::HandleMacCommand(Frame &aFrame)

@@ -333,7 +333,12 @@ void MeshForwarder::ScheduleTransmissionTask(void)
     }
 
 exit:
-    OT_UNUSED_VARIABLE(error);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMac(GetInstance(), "Error while scheduling transmission task: %s",
+                     otThreadErrorToString(error));
+    }
 }
 
 otError MeshForwarder::SendMessage(Message &aMessage)

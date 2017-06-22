@@ -857,7 +857,6 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame, void *aContext)
 
 void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
 {
-    otError error = OT_ERROR_NONE;
     uint16_t flags = 0;
 
     if (!mIsRawStreamEnabled)
@@ -865,7 +864,7 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
         goto exit;
     }
 
-    SuccessOrExit(error = OutboundFrameBegin());
+    SuccessOrExit(OutboundFrameBegin());
 
     if (aFrame->mDidTX)
     {
@@ -874,40 +873,39 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
 
     // Append frame header and frame length
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_CMD_PROP_VALUE_IS,
-                    SPINEL_PROP_STREAM_RAW,
-                    aFrame->mLength
-                ));
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            aFrame->mLength
+        ));
 
     // Append the frame contents
-    SuccessOrExit(error = OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
+    SuccessOrExit(OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_UINT16_S
-                    SPINEL_DATATYPE_STRUCT_S(  // PHY-data
-                        SPINEL_DATATYPE_NULL_S // Empty for now
-                    )
-                    SPINEL_DATATYPE_STRUCT_S(  // Vendor-data
-                        SPINEL_DATATYPE_NULL_S // Empty for now
-                    ),
-                    aFrame->mPower,   // TX Power
-                    -128,             // Noise Floor (Currently unused)
-                    flags             // Flags
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_UINT16_S
+            SPINEL_DATATYPE_STRUCT_S(  // PHY-data
+                SPINEL_DATATYPE_NULL_S // Empty for now
+            )
+            SPINEL_DATATYPE_STRUCT_S(  // Vendor-data
+                SPINEL_DATATYPE_NULL_S // Empty for now
+            ),
+            aFrame->mPower,   // TX Power
+            -128,             // Noise Floor (Currently unused)
+            flags             // Flags
 
-                   // Skip PHY and Vendor data for now
-                ));
+           // Skip PHY and Vendor data for now
+        ));
 
-    SuccessOrExit(error = OutboundFrameSend());
+    SuccessOrExit(OutboundFrameSend());
 
 exit:
-    OT_UNUSED_VARIABLE(error);
     return;
 }
 
@@ -1042,10 +1040,9 @@ void NcpBase::LinkRawReceiveDone(otInstance *, otRadioFrame *aFrame, otError aEr
 
 void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 {
-    otError error = OT_ERROR_NONE;
     uint16_t flags = 0;
 
-    SuccessOrExit(error = OutboundFrameBegin());
+    SuccessOrExit(OutboundFrameBegin());
 
     if (aFrame->mDidTX)
     {
@@ -1054,45 +1051,44 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 
     // Append frame header and frame length
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_CMD_PROP_VALUE_IS,
-                    SPINEL_PROP_STREAM_RAW,
-                    (aError == OT_ERROR_NONE) ? aFrame->mLength : 0
-                ));
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            (aError == OT_ERROR_NONE) ? aFrame->mLength : 0
+        ));
 
     if (aError == OT_ERROR_NONE)
     {
         // Append the frame contents
-        SuccessOrExit(error = OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
+        SuccessOrExit(OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
     }
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_UINT16_S
-                    SPINEL_DATATYPE_STRUCT_S( // PHY-data
-                        SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
-                        SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
-                    )
-                    SPINEL_DATATYPE_STRUCT_S( // Vendor-data
-                        SPINEL_DATATYPE_UINT_PACKED_S
-                    ),
-                    aFrame->mPower,    // TX Power
-                    -128,              // Noise Floor (Currently unused)
-                    flags,             // Flags
-                    aFrame->mChannel,  // Receive channel
-                    aFrame->mLqi,      // Link quality indicator
-                    aError             // Receive error
-                ));
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_UINT16_S
+            SPINEL_DATATYPE_STRUCT_S( // PHY-data
+                SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
+                SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
+            )
+            SPINEL_DATATYPE_STRUCT_S( // Vendor-data
+                SPINEL_DATATYPE_UINT_PACKED_S
+            ),
+            aFrame->mPower,    // TX Power
+            -128,              // Noise Floor (Currently unused)
+            flags,             // Flags
+            aFrame->mChannel,  // Receive channel
+            aFrame->mLqi,      // Link quality indicator
+            aError             // Receive error
+        ));
 
-    SuccessOrExit(error = OutboundFrameSend());
+    SuccessOrExit(OutboundFrameSend());
 
 exit:
-    OT_UNUSED_VARIABLE(error);
     return;
 }
 
