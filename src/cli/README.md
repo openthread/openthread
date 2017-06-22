@@ -1272,6 +1272,15 @@ Send an ICMPv6 Echo Request.
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
 ```
 
+### ping stop
+
+Stop sending ICMPv6 Echo Requests.
+
+```bash
+> ping stop
+Done
+```
+
 ### pollperiod
 
 Get the customized data poll period of sleepy end device (seconds). Only for certification test
