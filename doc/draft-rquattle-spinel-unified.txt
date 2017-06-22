@@ -5,11 +5,11 @@
 Network Working Group                                     R. Quattlebaum
 Internet-Draft                                          J. Woodyatt, Ed.
 Intended status: Informational                           Nest Labs, Inc.
-Expires: December 18, 2017                                 June 16, 2017
+Expires: December 24, 2017                                 June 22, 2017
 
 
                     Spinel Host-Controller Protocol
-                 draft-rquattle-spinel-unified-cf5677a4
+                 draft-rquattle-spinel-unified-ab5628a5
 
 Abstract
 
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 18, 2017.
+   This Internet-Draft will expire on December 24, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 1]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 1]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 2]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 2]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -165,7 +165,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 3]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 3]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -221,7 +221,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 4]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 4]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -277,7 +277,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 5]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 5]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -333,7 +333,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 6]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 6]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -389,7 +389,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 7]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 7]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -445,7 +445,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 8]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 8]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -501,7 +501,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017               [Page 9]
+Quattlebaum & Woodyatt  Expires December 24, 2017               [Page 9]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -557,7 +557,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 10]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 10]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -613,7 +613,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 11]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 11]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -669,7 +669,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 12]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 12]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -725,7 +725,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 13]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 13]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -781,7 +781,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 14]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 14]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -837,7 +837,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 15]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 15]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -893,7 +893,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 16]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 16]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -949,7 +949,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 17]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 17]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1005,7 +1005,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 18]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 18]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1061,7 +1061,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 19]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 19]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1117,7 +1117,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 20]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 20]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1173,7 +1173,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 21]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 21]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1229,7 +1229,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 22]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 22]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1285,7 +1285,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 23]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 23]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1341,7 +1341,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 24]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 24]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1397,7 +1397,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 25]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 25]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1453,7 +1453,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 26]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 26]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1509,7 +1509,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 27]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 27]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1565,7 +1565,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 28]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 28]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1621,7 +1621,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 29]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 29]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1677,7 +1677,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 30]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 30]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1733,7 +1733,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 31]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 31]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1789,7 +1789,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 32]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 32]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1845,7 +1845,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 33]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 33]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1901,7 +1901,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 34]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 34]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -1957,7 +1957,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 35]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 35]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2013,7 +2013,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 36]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 36]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2069,7 +2069,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 37]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 37]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2125,7 +2125,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 38]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 38]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2181,7 +2181,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 39]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 39]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2237,7 +2237,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 40]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 40]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2293,7 +2293,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 41]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 41]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2349,7 +2349,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 42]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 42]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2405,7 +2405,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 43]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 43]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2461,7 +2461,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 44]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 44]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2517,7 +2517,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 45]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 45]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2573,7 +2573,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 46]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 46]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2629,7 +2629,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 47]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 47]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2685,7 +2685,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 48]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 48]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2741,7 +2741,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 49]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 49]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2797,7 +2797,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 50]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 50]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2853,7 +2853,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 51]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 51]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2909,7 +2909,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 52]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 52]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -2965,7 +2965,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 53]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 53]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3021,7 +3021,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 54]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 54]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3077,7 +3077,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 55]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 55]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3133,7 +3133,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 56]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 56]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3189,7 +3189,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 57]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 57]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3245,7 +3245,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 58]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 58]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3301,7 +3301,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 59]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 59]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3357,7 +3357,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 60]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 60]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3413,7 +3413,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 61]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 61]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3469,7 +3469,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 62]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 62]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3525,7 +3525,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 63]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 63]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3581,7 +3581,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 64]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 64]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3637,7 +3637,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 65]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 65]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3693,7 +3693,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 66]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 66]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3749,7 +3749,7 @@ A.1.  UART Recommendations
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 67]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 67]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3805,7 +3805,7 @@ A.1.2.  HDLC-Lite
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 68]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 68]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3861,7 +3861,7 @@ A.2.  SPI Recommendations
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 69]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 69]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3917,7 +3917,7 @@ A.2.1.  SPI Framing Protocol
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 70]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 70]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -3973,7 +3973,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 71]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 71]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4029,7 +4029,7 @@ B.2.  Test Vector: Reset Command
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 72]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 72]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4085,7 +4085,7 @@ B.5.  Test Vector: Inbound IPv6 Packet
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 73]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 73]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4141,7 +4141,7 @@ B.9.  Test Vector: Adding an on-mesh network
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 74]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 74]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4197,7 +4197,7 @@ B.11.  Test Vector: Removing a local on-mesh network
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 75]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 75]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4253,7 +4253,7 @@ C.1.  NCP Initialization
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 76]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 76]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4309,7 +4309,7 @@ C.3.  Successfully joining a pre-existing network
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 77]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 77]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4365,7 +4365,7 @@ C.5.  Detaching from a network
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 78]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 78]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4421,7 +4421,7 @@ C.10.  Sniffing raw packets
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 79]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 79]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4477,7 +4477,7 @@ Appendix D.  Glossary
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 80]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 80]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4498,8 +4498,8 @@ Appendix E.  Acknowledgments
 
    Thread is a registered trademark of The Thread Group, Inc.
 
-   Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Buke
-   Po, Piotr Szkotak, Arjuna Sivasithambaresan and Martin Turon for
+   Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Yakun
+   Xu, Piotr Szkotak, Arjuna Sivasithambaresan and Martin Turon for
    their substantial contributions and feedback related to this
    document.
 
@@ -4533,7 +4533,7 @@ Editorial Comments
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 81]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 81]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4589,7 +4589,7 @@ Authors' Addresses
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 82]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 82]
 
 Internet-Draft          Spinel Protocol (Unified)              June 2017
 
@@ -4645,4 +4645,4 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 
 
 
-Quattlebaum & Woodyatt  Expires December 18, 2017              [Page 83]
+Quattlebaum & Woodyatt  Expires December 24, 2017              [Page 83]
