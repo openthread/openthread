@@ -93,13 +93,14 @@ extern "C" {
  *
  * @{
  *
- * @defgroup api-tmf-proxy      TMF Proxy
+ * @defgroup api-border-router  Border Router
  * @defgroup api-commissioner   Commissioner
  * @defgroup api-thread-general General
  * @brief This module includes functions for all Thread roles.
  * @defgroup api-joiner         Joiner
  * @defgroup api-thread-router  Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
+ * @defgroup api-tmf-proxy      TMF Proxy
  *
  * @}
  *

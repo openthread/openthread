@@ -35,6 +35,12 @@
 #ifndef OPENTHREAD_CONFIG_H_
 #define OPENTHREAD_CONFIG_H_
 
+/**
+ * @def OPENTHREAD_CONFIG_FILE
+ *
+ * The OpenThread feature configuration file.
+ *
+ */
 #if !defined(OPENTHREAD_CONFIG_FILE)
 #define OPENTHREAD_CONFIG_FILE <openthread-config-generic.h>
 #endif
