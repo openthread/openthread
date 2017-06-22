@@ -36,6 +36,7 @@
 #include <stdint.h>
 
 #include <openthread/types.h>
+#include <openthread/platform/toolchain.h>
 #include <openthread/platform/uart.h>
 #include <utils/code_utils.h>
 
@@ -279,4 +280,18 @@ void UARTE0_UART0_IRQHandler(void)
             nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STOPTX);
         }
     }
+}
+
+/**
+ * The UART driver weak functions definition.
+ *
+ */
+OT_TOOL_WEAK void otPlatUartSendDone(void)
+{
+}
+
+OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
 }

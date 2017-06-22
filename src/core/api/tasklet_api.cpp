@@ -52,3 +52,10 @@ bool otTaskletsArePending(otInstance *aInstance)
 {
     return aInstance->mIp6.mTaskletScheduler.AreTaskletsPending();
 }
+
+#ifndef _MSC_VER
+OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
+{
+}
+#endif
+
