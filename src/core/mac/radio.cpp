@@ -98,5 +98,48 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aRxPending,
+                                        otError aError)
+{
+    otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+    if (aInstance->mLinkRaw.IsEnabled())
+    {
+        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, aRxPending, aError);
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+    {
+        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aRxPending, aError);
+    }
+
+    otLogFuncExit();
+}
+
+#else // #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame,
+                                  otError aError)
+{
+    otLogFuncEntryMsg("%!otError!", aError);
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+    if (aInstance->mLinkRaw.IsEnabled())
+    {
+        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, (static_cast<Frame *>(aAckFrame))->GetFramePending(), aError);
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+    {
+        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
+    }
+
+    otLogFuncExit();
+}
+#endif // OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+
 }  // namespace Mac
 }  // namespace ot
