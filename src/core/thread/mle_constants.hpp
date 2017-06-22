@@ -105,6 +105,18 @@ enum
     kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT,  ///< MLE_END_DEVICE_TIMEOUT (seconds)
 };
 
+/**
+ * Parent Priority values
+ *
+ */
+enum
+{
+    kParentPriorityHigh        = 1,    // Parent Priority High
+    kParentPriorityMedium      = 0,    // Parent Priority Medium (default)
+    kParentPriorityLow         = -1,   // Parent Priority Low
+    kParentPriorityUnspecified = -2,   // Parent Priority Unspecified
+};
+
 enum
 {
     kLinkQuality3LinkCost       = 1,    ///< Link Cost for Link Quality 3

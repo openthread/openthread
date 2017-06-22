@@ -46,6 +46,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [networkname](#networkname)
 * [panid](#panid)
 * [parent](#parent)
+* [parentpriority](#parentpriority)
 * [ping](#ping-ipaddr-size-count-interval)
 * [pollperiod](#pollperiod-pollperiod)
 * [prefix](#prefix-add-prefix-pvdcsr-prf)
@@ -1240,6 +1241,25 @@ Rloc: 5c00
 Link Quality In: 3
 Link Quality Out: 3
 Age: 20
+Done
+```
+
+### parentpriority
+
+Get the assigned parent priority value, -2 means not assigned.
+
+```bash
+> parentpriority
+1
+Done
+```
+
+### parentpriority \<parentpriority\>
+
+Set the assigned parent priority value: 1, 0, -1 or -2.
+
+```bash
+> parentpriority 1
 Done
 ```
 
