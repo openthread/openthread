@@ -100,6 +100,18 @@ exit:
     return error;
 }
 
+otError Radio::TransmitDone(void)
+{
+    otError error = OT_ERROR_NONE;
+    uint32_t now;
+
+    now = Timer::GetNow();
+    mTxTotal += now - mLastChange;
+    mLastChange = now;
+
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aRxPending,
                                         otError aError)

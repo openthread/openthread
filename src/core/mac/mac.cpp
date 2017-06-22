@@ -864,6 +864,7 @@ exit:
 void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError)
 {
     mMacTimer.Stop();
+    mRadio.TransmitDone();
 
     mCounters.mTxTotal++;
 
@@ -936,6 +937,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
     bool framePending = false;
 
     mMacTimer.Stop();
+    mRadio.TransmitDone();
 
     mCounters.mTxTotal++;
 

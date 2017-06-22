@@ -105,6 +105,13 @@ public:
     otError Transmit(otInstance *aInstance, otRadioFrame *aFrame);
 
     /**
+     * This function handles transmit done signals, should be called from Mac::TransmitDoneTask
+     *
+     * @retval OT_ERROR_NONE  Successfully handled transmit done.
+     */
+    otError TransmitDone(void);
+
+    /**
      * This method returns the amount of time the radio has spent in Tx mode.
      *
      * @returns  A pointer to the total Tx time.
