@@ -31,36 +31,70 @@
  *   This file implements the wrappers around the platform radio calls.
  */
 
-#include "mac/radio.hpp"
+#include "radio.hpp"
+#include "common/timer.hpp"
+#include "common/code_utils.hpp"
+
 #include <openthread/platform/radio.h>
 
 namespace ot {
 namespace Mac {
 
+Radio::Radio()
+{
+    mRxTotal    = 0;
+    mTxTotal    = 0;
+    mLastChange = 0;
+}
+
 otError Radio::Sleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
+    uint32_t now;
 
     error = otPlatRadioSleep(aInstance);
+    VerifyOrExit(error == OT_ERROR_NONE);
 
+    now = Timer::GetNow();
+    mRxTotal += now - mLastChange;
+    mLastChange = 0;
+
+exit:
     return error;
 }
 
 otError Radio::Receive(otInstance *aInstance, uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
+    uint32_t now;
 
     error = otPlatRadioReceive(aInstance, aChannel);
+    VerifyOrExit(error == OT_ERROR_NONE);
 
+    now = Timer::GetNow();
+    if (mLastChange != 0)
+    {
+        mTxTotal += now - mLastChange;
+    }
+    mLastChange = now;
+
+exit:
     return error;
 }
 
 otError Radio::Transmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_NONE;
+    uint32_t now;
 
     error = otPlatRadioTransmit(aInstance, aFrame);
+    VerifyOrExit(error == OT_ERROR_NONE);
 
+    now = Timer::GetNow();
+    mRxTotal += now - mLastChange;
+    mLastChange = now;
+
+exit:
     return error;
 }
 
