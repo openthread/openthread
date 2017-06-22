@@ -625,6 +625,9 @@ typedef enum
     SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 5,
 
+    SPINEL_PROP_TX_TOTAL_TIME           = SPINEL_PROP_PHY_EXT__BEGIN + 6,
+    SPINEL_PROP_RX_TOTAL_TIME           = SPINEL_PROP_PHY_EXT__BEGIN + 7,
+
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN              = 0x30,
