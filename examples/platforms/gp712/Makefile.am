@@ -45,8 +45,26 @@ libopenthread_gp712_settings.cpp: $(srcdir)/../utils/settings.cpp
 CLEANFILES = libopenthread_gp712_settings.cpp
 
 libopenthread_gp712_a_SOURCES        = \
+    alarm.c                                 \
+    misc.c                                  \
+    logging.c                               \
+    platform.c                              \
+    radio.c                                 \
+    random.c                                \
+    uart-posix.c                            \
+    flash.c                                 \
     libopenthread_gp712_settings.cpp   \
     $(NULL)
+
+#    uart-socket.c                           \
+#
+
+if OPENTHREAD_ENABLE_DIAG
+libopenthread_gp712_a_SOURCES            += \
+    diag.c                                  \
+    $(NULL)
+endif
+
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                               += $(wildcard *.gcda *.gcno)

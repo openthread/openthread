@@ -49,6 +49,7 @@ BuildJobs                      ?= 9
 configure_OPTIONS               = \
     --enable-cli-app=ftd          \
     --enable-diag                 \
+    --enable-default-logging      \
     --with-examples=$(PPREFIX)    \
     --with-platform-info=$(INFO)  \
     $(NULL)
@@ -77,11 +78,19 @@ ifeq ($(DHCP6_CLIENT),1)
 configure_OPTIONS              += --enable-dhcp6-client
 endif
 
+ifeq ($(BORDER_ROUTER),1)
+configure_OPTIONS              += --enable-border-router
+endif
+
+GP712_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-gp712-config.h\"'
+GP712_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/gp712/
+
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
     -Os                           \
     -g                            \
+    $(GP712_CONFIG_FILE_CPPFLAGS) \
     -W                            \
     -Wall                         \
     $(NULL)
