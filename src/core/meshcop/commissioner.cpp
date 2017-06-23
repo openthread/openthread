@@ -842,7 +842,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     mNetif.GetCoapSecure().Receive(aMessage, joinerMessageInfo);
 
 exit:
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
     otLogFuncExit();
 }
 
@@ -861,7 +861,7 @@ void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage
                  aHeader.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoMeshCoP(GetInstance(), "received dataset changed");
-    (void)aMessage;
+    OT_UNUSED_VARIABLE(aMessage);
 
     SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo));
 
@@ -881,7 +881,7 @@ void Commissioner::HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, o
 
 void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
     StateTlv::State state = StateTlv::kAccept;
     ProvisioningUrlTlv provisioningUrl;
 
@@ -974,7 +974,7 @@ otError Commissioner::SendRelayTransmit(void *aContext, Message &aMessage, const
 
 otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
     otError error = OT_ERROR_NONE;
     Coap::Header header;
     JoinerUdpPortTlv udpPort;

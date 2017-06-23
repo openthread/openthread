@@ -248,8 +248,8 @@ void NcpSpi::SpiTransactionProcess(void)
 
 void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer *aNcpFrameBuffer)
 {
-    (void)aNcpFrameBuffer;
-    (void)aTag;
+    OT_UNUSED_VARIABLE(aNcpFrameBuffer);
+    OT_UNUSED_VARIABLE(aTag);
 
     static_cast<NcpSpi *>(aContext)->mPrepareTxFrameTask.Post();
 }

@@ -149,8 +149,8 @@ void Diag::ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMax
     snprintf(aOutput, aOutputMaxLen, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
@@ -169,8 +169,8 @@ void Diag::ProcessStop(int argc, char *argv[], char *aOutput, size_t aOutputMaxL
             static_cast<int>(sStats.first_lqi), error);
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
@@ -314,8 +314,8 @@ void Diag::ProcessSleep(int argc, char *argv[], char *aOutput, size_t aOutputMax
     snprintf(aOutput, aOutputMaxLen, "sleeping now...\r\n");
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
@@ -330,14 +330,14 @@ void Diag::ProcessStats(int argc, char *argv[], char *aOutput, size_t aOutputMax
             static_cast<int>(sStats.first_rssi), static_cast<int>(sStats.first_lqi));
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
 void Diag::DiagTransmitDone(otInstance *aInstance, otError aError)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     if (aError == OT_ERROR_NONE)
     {
         sStats.sent_packets++;
@@ -356,7 +356,7 @@ void Diag::DiagTransmitDone(otInstance *aInstance, otError aError)
 
 void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     if (aError == OT_ERROR_NONE)
     {
         // for sensitivity test, only record the rssi and lqi for the first packet
@@ -394,7 +394,7 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 
 extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aFrame;
+    OT_UNUSED_VARIABLE(aFrame);
 
     Diag::DiagTransmitDone(aInstance, aError);
 }

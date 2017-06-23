@@ -1783,7 +1783,7 @@ exit:
         otLogInfoMac(GetInstance(), "Dropping rx frame, error:%s, %s", otThreadErrorToString(error),
                      aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
 
-        (void)stringBuffer;
+        OT_UNUSED_VARIABLE(stringBuffer);
     }
 }
 
@@ -1859,7 +1859,7 @@ exit:
             aMessageInfo.mLinkSecurity ? "yes" : "no"
         );
 
-        (void)srcStringBuffer;
+        OT_UNUSED_VARIABLE(srcStringBuffer);
 
         if (message != NULL)
         {
@@ -2014,8 +2014,8 @@ exit:
         char srcStringBuffer[Mac::Address::kAddressStringSize];
         char dstStringBuffer[Mac::Address::kAddressStringSize];
 
-        (void)srcStringBuffer;
-        (void)dstStringBuffer;
+        OT_UNUSED_VARIABLE(srcStringBuffer);
+        OT_UNUSED_VARIABLE(dstStringBuffer);
 
         otLogInfoMac(
             GetInstance(),
@@ -2126,8 +2126,8 @@ exit:
         char srcStringBuffer[Mac::Address::kAddressStringSize];
         char dstStringBuffer[Mac::Address::kAddressStringSize];
 
-        (void)srcStringBuffer;
-        (void)dstStringBuffer;
+        OT_UNUSED_VARIABLE(srcStringBuffer);
+        OT_UNUSED_VARIABLE(dstStringBuffer);
 
         otLogInfoMac(
             GetInstance(),

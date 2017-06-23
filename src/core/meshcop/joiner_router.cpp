@@ -303,7 +303,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     }
 
 exit:
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
     if (error != OT_ERROR_NONE && message != NULL)
     {
@@ -513,7 +513,7 @@ void JoinerRouter::HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHe
 void JoinerRouter::HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
                                                const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
     mExpectJoinEntRsp = false;
     SendDelayedJoinerEntrust();

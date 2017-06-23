@@ -370,7 +370,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
 
     otLogInfoMeshCoP(GetInstance(), "Generated KEK");
 
-    (void)aMasterSecret;
+    OT_UNUSED_VARIABLE(aMasterSecret);
     return 0;
 }
 

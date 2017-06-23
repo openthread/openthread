@@ -458,7 +458,7 @@ bool otThreadGetAutoStart(otInstance *aInstance)
 
     return autoStart != 0;
 #else
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return false;
 #endif
 }
@@ -469,8 +469,8 @@ otError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically)
     uint8_t autoStart = aStartAutomatically ? 1 : 0;
     return otPlatSettingsSet(aInstance, Settings::kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
 #else
-    (void)aInstance;
-    (void)aStartAutomatically;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aStartAutomatically);
     return OT_ERROR_NOT_IMPLEMENTED;
 #endif
 }

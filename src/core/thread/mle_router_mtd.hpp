@@ -146,7 +146,7 @@ private:
     otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
 
     void StopAdvertiseTimer(void) { }
-    otError ProcessRouteTlv(const RouteTlv &aRoute) { (void)aRoute; return OT_ERROR_NONE; }
+    otError ProcessRouteTlv(const RouteTlv &aRoute) { OT_UNUSED_VARIABLE(aRoute); return OT_ERROR_NONE; }
 };
 
 }  // namespace Mle

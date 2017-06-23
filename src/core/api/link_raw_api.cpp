@@ -345,7 +345,7 @@ otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
         mTransmitDoneCallback = aCallback;
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-        (void)aFrame;
+        OT_UNUSED_VARIABLE(aFrame);
         mTransmitAttempts = 0;
         mCsmaAttempts = 0;
 
