@@ -79,14 +79,6 @@ namespace ot {
 #define NCP_CHANGED_THREAD_ON_MESH_NETS       (1U << 30)
 #define NCP_CHANGED_THREAD_OFF_MESH_ROUTES    (1U << 29)
 
-enum
-{
-    kThreadMode_RxOnWhenIdle        = (1 << 3),
-    kThreadMode_SecureDataRequest   = (1 << 2),
-    kThreadMode_FullFunctionDevice  = (1 << 1),
-    kThreadMode_FullNetworkData     = (1 << 0),
-};
-
 #define RSSI_OVERRIDE_DISABLED        127 // Used for PROP_MAC_WHITELIST
 
 #define IGNORE_RETURN_VALUE(s)        do { if (s){} } while (0)
@@ -571,6 +563,33 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &aConfig)
     }
 
     flags |= (aConfig.mPreference << SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+
+    return flags;
+}
+
+static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData)
+{
+    uint8_t flags(0);
+
+    if (aRxOnWhenIdle)
+    {
+        flags |= SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE;
+    }
+
+    if (aSecureDataRequests)
+    {
+        flags |= SPINEL_THREAD_MODE_SECURE_DATA_REQUEST;
+    }
+
+    if (aDeviceType)
+    {
+        flags |= SPINEL_THREAD_MODE_FULL_FUNCTION_DEV
+    }
+
+    if (aNetworkData)
+    {
+        flags |= SPINEL_THREAD_MODE_FULL_NETWORK_DATA
+    }
 
     return flags;
 }
@@ -2955,27 +2974,10 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t aHeader, spinel_p
             continue;
         }
 
-        modeFlags = 0;
-
-        if (childInfo.mRxOnWhenIdle)
-        {
-            modeFlags |= kThreadMode_RxOnWhenIdle;
-        }
-
-        if (childInfo.mSecureDataRequest)
-        {
-            modeFlags |= kThreadMode_SecureDataRequest;
-        }
-
-        if (childInfo.mFullFunction)
-        {
-            modeFlags |= kThreadMode_FullFunctionDevice;
-        }
-
-        if (childInfo.mFullNetworkData)
-        {
-            modeFlags |= kThreadMode_FullNetworkData;
-        }
+        modeFlags = LinkFlagsToFlagByte(childInfo.mRxOnWhenIdle,
+                                        childInfo.mSecureDataRequest,
+                                        childInfo.mFullFunction,
+                                        childInfo.mFullNetworkData);
 
         SuccessOrExit(
             error = OutboundFrameFeedPacked(
@@ -3025,27 +3027,10 @@ otError NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE(uint8_t aHeader, spine
 
     while (otThreadGetNextNeighborInfo(mInstance, &iter, &neighInfo) == OT_ERROR_NONE)
     {
-        modeFlags = 0;
-
-        if (neighInfo.mRxOnWhenIdle)
-        {
-            modeFlags |= kThreadMode_RxOnWhenIdle;
-        }
-
-        if (neighInfo.mSecureDataRequest)
-        {
-            modeFlags |= kThreadMode_SecureDataRequest;
-        }
-
-        if (neighInfo.mFullFunction)
-        {
-            modeFlags |= kThreadMode_FullFunctionDevice;
-        }
-
-        if (neighInfo.mFullNetworkData)
-        {
-            modeFlags |= kThreadMode_FullNetworkData;
-        }
+        modeFlags = LinkFlagsToFlagByte(neighInfo.mRxOnWhenIdle,
+                                        neighInfo.mSecureDataRequest,
+                                        neighInfo.mFullFunction,
+                                        neighInfo.mFullNetworkData);
 
         SuccessOrExit(
             error = OutboundFrameFeedPacked(
@@ -4086,28 +4071,13 @@ otError NcpBase::GetPropertyHandler_NET_PSKC(uint8_t aHeader, spinel_prop_key_t 
 
 otError NcpBase::GetPropertyHandler_THREAD_MODE(uint8_t aHeader, spinel_prop_key_t aKey)
 {
-    uint8_t numericMode = 0;
+    uint8_t numericMode;
     otLinkModeConfig modeConfig = otThreadGetLinkMode(mInstance);
 
-    if (modeConfig.mRxOnWhenIdle)
-    {
-        numericMode |= kThreadMode_RxOnWhenIdle;
-    }
-
-    if (modeConfig.mSecureDataRequests)
-    {
-        numericMode |= kThreadMode_SecureDataRequest;
-    }
-
-    if (modeConfig.mDeviceType)
-    {
-        numericMode |= kThreadMode_FullFunctionDevice;
-    }
-
-    if (modeConfig.mNetworkData)
-    {
-        numericMode |= kThreadMode_FullNetworkData;
-    }
+    numericMode = LinkFlagsToFlagByte(modeConfig.mRxOnWhenIdle,
+                                      modeConfig.mSecureDataRequests,
+                                      modeConfig.mDeviceType,
+                                      modeConfig.mNetworkData);
 
     return SendPropertyUpdate(
                aHeader,
@@ -6023,11 +5993,11 @@ otError NcpBase::SetPropertyHandler_THREAD_MODE(uint8_t aHeader, spinel_prop_key
 
     VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
 
-    modeConfig.mRxOnWhenIdle = ((numericMode & kThreadMode_RxOnWhenIdle) == kThreadMode_RxOnWhenIdle);
+    modeConfig.mRxOnWhenIdle = ((numericMode & SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE) == SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE);
     modeConfig.mSecureDataRequests =
-        ((numericMode & kThreadMode_SecureDataRequest) == kThreadMode_SecureDataRequest);
-    modeConfig.mDeviceType = ((numericMode & kThreadMode_FullFunctionDevice) == kThreadMode_FullFunctionDevice);
-    modeConfig.mNetworkData = ((numericMode & kThreadMode_FullNetworkData) == kThreadMode_FullNetworkData);
+        ((numericMode & SPINEL_THREAD_MODE_SECURE_DATA_REQUEST) == SPINEL_THREAD_MODE_SECURE_DATA_REQUEST);
+    modeConfig.mDeviceType = ((numericMode & SPINEL_THREAD_MODE_FULL_FUNCTION_DEV) == SPINEL_THREAD_MODE_FULL_FUNCTION_DEV);
+    modeConfig.mNetworkData = ((numericMode & SPINEL_THREAD_MODE_FULL_NETWORK_DATA) == SPINEL_THREAD_MODE_FULL_NETWORK_DATA);
 
     error = otThreadSetLinkMode(mInstance, modeConfig);
 
