@@ -150,6 +150,22 @@
 #endif // OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
 
 /**
+ * @def OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
+ *
+ * Define as 1 for OpenThread to drop a message (and not send any remaining fragments of the message) if all transmit
+ * attempts fail for a fragment of the message. For a direct transmission, a failure occurs after all MAC transmission
+ * attempts for a given fragment are unsuccessful. For an indirect transmission, a failure occurs after all data poll
+ * triggered transmission attempts for a given fragment fail.
+ *
+ * If set to zero (disabled), OpenThread will attempt to send subsequent fragments, whether or not all transmission
+ * attempts fail for a given fragment.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
+#define OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE   1
+#endif // OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
+
+/**
  * @def OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
  *
  * The Data Poll period during attach in milliseconds.
