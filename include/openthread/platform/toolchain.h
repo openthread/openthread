@@ -101,6 +101,7 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD                __attribute__((packed))
 #define OT_TOOL_PACKED_END                  __attribute__((packed))
+#define OT_TOOL_WEAK                        __attribute__((weak))
 
 #define OT_TOOL_ALIGN(X)
 
@@ -113,6 +114,8 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN                __packed
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
+#define OT_TOOL_WEAK                        __weak
+
 
 #define OT_TOOL_ALIGN(X)
 
@@ -121,6 +124,8 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN                __pragma(pack(push,1))
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END                  __pragma(pack(pop))
+#define OT_TOOL_WEAK
+
 
 #define OT_TOOL_ALIGN(X)                    __declspec(align(4))
 
@@ -131,6 +136,7 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
+#define OT_TOOL_WEAK
 
 #define OT_TOOL_ALIGN(X)
 
@@ -143,6 +149,7 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
+#define OT_TOOL_WEAK
 
 #define OT_TOOL_ALIGN(X)
 
