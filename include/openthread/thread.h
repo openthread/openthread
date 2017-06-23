@@ -112,7 +112,7 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  * @retval OT_ERROR_BUSY  Already performing an Thread Discovery.
  *
  */
-OTAPI otError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanid, bool aJoiner,
+OTAPI otError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
                                       bool aEnableEui64Filtering, otHandleActiveScanResult aCallback,
                                       void *aCallbackContext);
 
