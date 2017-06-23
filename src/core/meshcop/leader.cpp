@@ -91,9 +91,13 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
     VerifyOrExit(commissionerId.IsValid());
 
-    if (strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(), sizeof(mCommissionerId)))
+    if (mTimer.IsRunning())
     {
-        VerifyOrExit(!mTimer.IsRunning());
+        VerifyOrExit(!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
+                              sizeof(mCommissionerId)));
+
+        mTimer.Stop();
+        ResignCommissioner();
     }
 
     data.mBorderAgentLocator.Init();
