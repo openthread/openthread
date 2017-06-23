@@ -380,7 +380,8 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
     if (period == 0)
     {
-        period = Timer::SecToMsec(mMeshForwarder.GetNetif().GetMle().GetTimeout()) -  kRetxPollPeriod * kMaxPollRetxAttempts;
+        period = Timer::SecToMsec(mMeshForwarder.GetNetif().GetMle().GetTimeout()) -
+                 static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 
         if (period == 0)
         {

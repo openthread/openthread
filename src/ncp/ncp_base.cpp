@@ -481,7 +481,7 @@ static spinel_status_t ThreadErrorToSpinelStatus(otError aError)
 
     default:
         // Unknown error code. Wrap it as a Spinel status and return that.
-        ret = static_cast<spinel_status_t>(SPINEL_STATUS_STACK_NATIVE__BEGIN + aError);
+        ret = static_cast<spinel_status_t>(SPINEL_STATUS_STACK_NATIVE__BEGIN + static_cast<uint32_t>(aError));
         break;
     }
 
@@ -863,7 +863,6 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame, void *aContext)
 
 void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
 {
-    otError error = OT_ERROR_NONE;
     uint16_t flags = 0;
 
     if (!mIsRawStreamEnabled)
@@ -871,7 +870,7 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
         goto exit;
     }
 
-    SuccessOrExit(error = OutboundFrameBegin());
+    SuccessOrExit(OutboundFrameBegin());
 
     if (aFrame->mDidTX)
     {
@@ -880,37 +879,37 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
 
     // Append frame header and frame length
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_CMD_PROP_VALUE_IS,
-                    SPINEL_PROP_STREAM_RAW,
-                    aFrame->mLength
-                ));
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            aFrame->mLength
+        ));
 
     // Append the frame contents
-    SuccessOrExit(error = OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
+    SuccessOrExit(OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_UINT16_S
-                    SPINEL_DATATYPE_STRUCT_S(  // PHY-data
-                        SPINEL_DATATYPE_NULL_S // Empty for now
-                    )
-                    SPINEL_DATATYPE_STRUCT_S(  // Vendor-data
-                        SPINEL_DATATYPE_NULL_S // Empty for now
-                    ),
-                    aFrame->mPower,   // TX Power
-                    -128,             // Noise Floor (Currently unused)
-                    flags             // Flags
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_UINT16_S
+            SPINEL_DATATYPE_STRUCT_S(  // PHY-data
+                SPINEL_DATATYPE_NULL_S // Empty for now
+            )
+            SPINEL_DATATYPE_STRUCT_S(  // Vendor-data
+                SPINEL_DATATYPE_NULL_S // Empty for now
+            ),
+            aFrame->mPower,   // TX Power
+            -128,             // Noise Floor (Currently unused)
+            flags             // Flags
 
-                   // Skip PHY and Vendor data for now
-                ));
+           // Skip PHY and Vendor data for now
+        ));
 
-    SuccessOrExit(error = OutboundFrameSend());
+    SuccessOrExit(OutboundFrameSend());
 
 exit:
     return;
@@ -1047,10 +1046,9 @@ void NcpBase::LinkRawReceiveDone(otInstance *, otRadioFrame *aFrame, otError aEr
 
 void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 {
-    otError error = OT_ERROR_NONE;
     uint16_t flags = 0;
 
-    SuccessOrExit(error = OutboundFrameBegin());
+    SuccessOrExit(OutboundFrameBegin());
 
     if (aFrame->mDidTX)
     {
@@ -1059,42 +1057,42 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 
     // Append frame header and frame length
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_CMD_PROP_VALUE_IS,
-                    SPINEL_PROP_STREAM_RAW,
-                    (aError == OT_ERROR_NONE) ? aFrame->mLength : 0
-                ));
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            (aError == OT_ERROR_NONE) ? aFrame->mLength : 0
+        ));
 
     if (aError == OT_ERROR_NONE)
     {
         // Append the frame contents
-        SuccessOrExit(error = OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
+        SuccessOrExit(OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
     }
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
-        error = OutboundFrameFeedPacked(
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_INT8_S
-                    SPINEL_DATATYPE_UINT16_S
-                    SPINEL_DATATYPE_STRUCT_S( // PHY-data
-                        SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
-                        SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
-                    )
-                    SPINEL_DATATYPE_STRUCT_S( // Vendor-data
-                        SPINEL_DATATYPE_UINT_PACKED_S
-                    ),
-                    aFrame->mPower,    // TX Power
-                    -128,              // Noise Floor (Currently unused)
-                    flags,             // Flags
-                    aFrame->mChannel,  // Receive channel
-                    aFrame->mLqi,      // Link quality indicator
-                    aError             // Receive error
-                ));
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_UINT16_S
+            SPINEL_DATATYPE_STRUCT_S( // PHY-data
+                SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
+                SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
+            )
+            SPINEL_DATATYPE_STRUCT_S( // Vendor-data
+                SPINEL_DATATYPE_UINT_PACKED_S
+            ),
+            aFrame->mPower,    // TX Power
+            -128,              // Noise Floor (Currently unused)
+            flags,             // Flags
+            aFrame->mChannel,  // Receive channel
+            aFrame->mLqi,      // Link quality indicator
+            aError             // Receive error
+        ));
 
-    SuccessOrExit(error = OutboundFrameSend());
+    SuccessOrExit(OutboundFrameSend());
 
 exit:
     return;
@@ -3700,7 +3698,6 @@ otError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t aHeader, spinel_prop_key_t 
     default:
         error = SendLastStatus(aHeader, SPINEL_STATUS_INTERNAL_ERROR);
         ExitNow();
-        break;
     }
 
     error = SendPropertyUpdate(
@@ -3765,7 +3762,6 @@ otError NcpBase::GetPropertyHandler_NCP_CNTR(uint8_t aHeader, spinel_prop_key_t 
     default:
         error = SendLastStatus(aHeader, SPINEL_STATUS_INTERNAL_ERROR);
         ExitNow();
-        break;
     }
 
     error = SendPropertyUpdate(
@@ -3892,13 +3888,15 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t aHeader, spinel_pr
     // In such a case we return `false` as the
     // property value to indicate this.
 
-    return SendPropertyUpdate(
-               aHeader,
-               SPINEL_CMD_PROP_VALUE_IS,
-               aKey,
-               SPINEL_DATATYPE_BOOL_S,
-               false
-           );
+    OT_UNREACHABLE_CODE(
+        return SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_IS,
+                aKey,
+                SPINEL_DATATYPE_BOOL_S,
+                false
+            );
+    )
 }
 
 otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t aHeader, spinel_prop_key_t aKey)
@@ -5131,9 +5129,9 @@ otError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t aHeader, spinel_
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    (void)metaPtr;
-    (void)metaLen;
-    (void)parsedLength;
+    OT_UNUSED_VARIABLE(metaPtr);
+    OT_UNUSED_VARIABLE(metaLen);
+    OT_UNUSED_VARIABLE(parsedLength);
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
 
@@ -5274,9 +5272,9 @@ otError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t aHeader, spinel_prop_key_
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    (void)metaPtr;
-    (void)metaLen;
-    (void)parsedLength;
+    OT_UNUSED_VARIABLE(metaPtr);
+    OT_UNUSED_VARIABLE(metaLen);
+    OT_UNUSED_VARIABLE(parsedLength);
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
 
@@ -5312,7 +5310,7 @@ exit:
         error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
     }
 
-    (void)aKey;
+    OT_UNUSED_VARIABLE(aKey);
 
     return error;
 }

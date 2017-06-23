@@ -491,6 +491,13 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnArp(GetInstance(), "Error while processing address error notification: %s",
+                     otThreadErrorToString(error));
+    }
+
     return;
 }
 

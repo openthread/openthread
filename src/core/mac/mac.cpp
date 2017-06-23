@@ -96,7 +96,7 @@ void Mac::StartCsmaBackoff(void)
         }
 
         backoff = (otPlatRandomGet() % (1UL << backoffExponent));
-        backoff *= (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME);
+        backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
         otPlatUsecAlarmTime now;
@@ -1409,7 +1409,6 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     PanId panid;
     Neighbor *neighbor;
     otMacWhitelistEntry *whitelistEntry;
-    otMacBlacklistEntry *blacklistEntry;
     int8_t rssi;
     bool receive = false;
     uint8_t commandId;
@@ -1479,7 +1478,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     // Source Blacklist Processing
     if (srcaddr.mLength != 0 && mBlacklist.IsEnabled())
     {
-        VerifyOrExit((blacklistEntry = mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
+        VerifyOrExit((mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
     }
 
     // Destination Address Filtering
