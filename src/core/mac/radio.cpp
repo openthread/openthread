@@ -47,6 +47,7 @@ Radio::Radio()
     mRxTotal    = 0;
     mTxTotal    = 0;
     mLastChange = 0;
+    mState      = kRadioStateUnknown;
 }
 
 otError Radio::Sleep(otInstance *aInstance)
@@ -58,8 +59,13 @@ otError Radio::Sleep(otInstance *aInstance)
     VerifyOrExit(error == OT_ERROR_NONE);
 
     now = Timer::GetNow();
-    mRxTotal += now - mLastChange;
-    mLastChange = 0;
+    if (mState == kRadioStateRx)
+    {
+        mRxTotal += now - mLastChange;
+    }
+
+    mLastChange = now;
+    mState      = kRadioStateSleep;
 
 exit:
     return error;
@@ -74,11 +80,13 @@ otError Radio::Receive(otInstance *aInstance, uint8_t aChannel)
     VerifyOrExit(error == OT_ERROR_NONE);
 
     now = Timer::GetNow();
-    if (mLastChange != 0)
+    if (mState == kRadioStateTx)
     {
         mTxTotal += now - mLastChange;
     }
+
     mLastChange = now;
+    mState      = kRadioStateRx;
 
 exit:
     return error;
@@ -93,8 +101,13 @@ otError Radio::Transmit(otInstance *aInstance, otRadioFrame *aFrame)
     VerifyOrExit(error == OT_ERROR_NONE);
 
     now = Timer::GetNow();
-    mRxTotal += now - mLastChange;
+    if (mState == kRadioStateRx)
+    {
+        mRxTotal += now - mLastChange;
+    }
+
     mLastChange = now;
+    mState      = kRadioStateTx;
 
 exit:
     return error;
@@ -106,8 +119,13 @@ otError Radio::TransmitDone(void)
     uint32_t now;
 
     now = Timer::GetNow();
-    mTxTotal += now - mLastChange;
+    if (mState == kRadioStateTx)
+    {
+        mTxTotal += now - mLastChange;
+    }
+
     mLastChange = now;
+    mState      = kRadioStateRx;
 
     return error;
 }

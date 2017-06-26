@@ -131,6 +131,16 @@ private:
     uint32_t mRxTotal;
     uint32_t mTxTotal;
     uint32_t mLastChange;
+
+    enum RadioState
+    {
+        kRadioStateUnknown,
+        kRadioStateSleep,
+        kRadioStateRx,
+        kRadioStateTx
+    };
+
+    RadioState mState;
 };
 
 } // namespace Mac
