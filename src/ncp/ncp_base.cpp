@@ -583,12 +583,12 @@ static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests,
 
     if (aDeviceType)
     {
-        flags |= SPINEL_THREAD_MODE_FULL_FUNCTION_DEV
+        flags |= SPINEL_THREAD_MODE_FULL_FUNCTION_DEV;
     }
 
     if (aNetworkData)
     {
-        flags |= SPINEL_THREAD_MODE_FULL_NETWORK_DATA
+        flags |= SPINEL_THREAD_MODE_FULL_NETWORK_DATA;
     }
 
     return flags;
