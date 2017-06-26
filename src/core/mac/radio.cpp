@@ -58,14 +58,18 @@ otError Radio::Sleep(otInstance *aInstance)
     error = otPlatRadioSleep(aInstance);
     VerifyOrExit(error == OT_ERROR_NONE);
 
-    now = Timer::GetNow();
-    if (mState == kRadioStateRx)
+    if (mState != kRadioStateSleep)
     {
-        mRxTotal += now - mLastChange;
-    }
+        now = Timer::GetNow();
 
-    mLastChange = now;
-    mState      = kRadioStateSleep;
+        if (mState == kRadioStateRx)
+        {
+            mRxTotal += now - mLastChange;
+        }
+
+        mLastChange = now;
+        mState      = kRadioStateSleep;
+    }
 
 exit:
     return error;
@@ -79,14 +83,18 @@ otError Radio::Receive(otInstance *aInstance, uint8_t aChannel)
     error = otPlatRadioReceive(aInstance, aChannel);
     VerifyOrExit(error == OT_ERROR_NONE);
 
-    now = Timer::GetNow();
-    if (mState == kRadioStateTx)
+    if (mState != kRadioStateRx)
     {
-        mTxTotal += now - mLastChange;
-    }
+        now = Timer::GetNow();
 
-    mLastChange = now;
-    mState      = kRadioStateRx;
+        if (mState == kRadioStateTx)
+        {
+            mTxTotal += now - mLastChange;
+        }
+
+        mLastChange = now;
+        mState      = kRadioStateRx;
+    }
 
 exit:
     return error;
@@ -100,14 +108,18 @@ otError Radio::Transmit(otInstance *aInstance, otRadioFrame *aFrame)
     error = otPlatRadioTransmit(aInstance, aFrame);
     VerifyOrExit(error == OT_ERROR_NONE);
 
-    now = Timer::GetNow();
-    if (mState == kRadioStateRx)
+    if (mState != kRadioStateTx)
     {
-        mRxTotal += now - mLastChange;
-    }
+        now = Timer::GetNow();
 
-    mLastChange = now;
-    mState      = kRadioStateTx;
+        if (mState == kRadioStateRx)
+        {
+            mRxTotal += now - mLastChange;
+        }
+
+        mLastChange = now;
+        mState      = kRadioStateTx;
+    }
 
 exit:
     return error;
@@ -118,14 +130,18 @@ otError Radio::TransmitDone(void)
     otError error = OT_ERROR_NONE;
     uint32_t now;
 
-    now = Timer::GetNow();
-    if (mState == kRadioStateTx)
+    if (mState != kRadioStateRx)
     {
-        mTxTotal += now - mLastChange;
-    }
+        now = Timer::GetNow();
 
-    mLastChange = now;
-    mState      = kRadioStateRx;
+        if (mState == kRadioStateTx)
+        {
+            mTxTotal += now - mLastChange;
+        }
+
+        mLastChange = now;
+        mState      = kRadioStateRx;
+    }
 
     return error;
 }
