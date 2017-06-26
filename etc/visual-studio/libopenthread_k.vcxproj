@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
@@ -101,6 +101,7 @@
     <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_frame.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp" />
+    <ClCompile Include="..\..\src\core\mac\radio.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp" />
+    <ClInclude Include="..\..\src\core\mac\radio.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dataset.hpp" />
