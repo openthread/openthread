@@ -215,7 +215,7 @@ extern "C" {
 #define OT_UNUSED_VARIABLE(VARIABLE)    \
     do                                  \
     {                                   \
-        if (VARIABLE) {}                \
+        if (&VARIABLE == NULL) {}       \
     } while (false)
 
 #define OT_UNREACHABLE_CODE(CODE)       \
