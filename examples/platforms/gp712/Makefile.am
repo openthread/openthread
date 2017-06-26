@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2016-2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                             = libopenthread-gp712.a
 
-libopenthread_gp712_a_CPPFLAGS       =  \
+libopenthread_gp712_a_CPPFLAGS           =  \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/examples/platforms/utils\
@@ -44,7 +44,7 @@ libopenthread_gp712_settings.cpp: $(srcdir)/../utils/settings.cpp
 
 CLEANFILES = libopenthread_gp712_settings.cpp
 
-libopenthread_gp712_a_SOURCES        = \
+libopenthread_gp712_a_SOURCES             = \
     alarm.c                                 \
     misc.c                                  \
     logging.c                               \
@@ -53,7 +53,7 @@ libopenthread_gp712_a_SOURCES        = \
     random.c                                \
     uart-posix.c                            \
     flash.c                                 \
-    libopenthread_gp712_settings.cpp   \
+    libopenthread_gp712_settings.cpp        \
     $(NULL)
 
 #    uart-socket.c                           \

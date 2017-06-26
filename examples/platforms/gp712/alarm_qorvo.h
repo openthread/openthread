@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,8 @@
 #include <unistd.h>
 #include <openthread/types.h>
 
+typedef void (*qorvoAlarmCallback_t)( void* );
+
 /**
  * This function initializes the alarm service used by OpenThread.
  *
@@ -53,17 +55,38 @@ void qorvoAlarmInit(void);
  *
  */
 void qorvoAlarmUpdateTimeout(struct timeval *aTimeout);
+
 /**
  * This function performs alarm driver processing.
  *
- * @param[in]  aInstance  The OpenThread instance structure.
+ */
+void qorvoAlarmProcess(void);
+
+/**
+ * This function retrieves the current time.
+ *
+ * @param[out]  The current time in ms.
  *
  */
-void qorvoAlarmProcess(otInstance *aInstance);
-
-typedef void (*qorvoAlarmCallback_t)( void* );
 uint32_t qorvoAlarmGetTimeMs(void);
-bool qorvoAlarmUnScheduleEventArg(qorvoAlarmCallback_t callback, void* arg);
+
+/**
+ * This function schedules a callback after a relative amount of time.
+ *
+ * @param[in]  rel_time  The relative time in ms.
+ * @param[in]  callback  A callback function which will be called.
+ * @param[in]  arg       A context pointer which will be passed as an argument to the callback.
+ *
+ */
 void qorvoAlarmScheduleEventArg(uint32_t rel_time, qorvoAlarmCallback_t callback, void* arg);
+
+/**
+ * This function unschedules the callback.
+ *
+ * @param[in]  callback  A callback function which will be removed from the list.
+ * @param[in]  arg       A context pointer which will be passed as an argument to the callback.
+ *
+ */
+bool qorvoAlarmUnScheduleEventArg(qorvoAlarmCallback_t callback, void* arg);
 
 #endif  // ALARM_QORVO_H_

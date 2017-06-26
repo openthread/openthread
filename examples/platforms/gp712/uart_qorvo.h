@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -50,11 +50,40 @@ void qorvoUartInit(void);
  */
 void qorvoUartProcess(void);
 
-
+/**
+ * This function enables the UART driver.
+ *
+ */
 void qorvoUartInit(void);
+
+/**
+ * This function disables the UART driver.
+ *
+ */
 void qorvoUartDeInit(void);
+
+/**
+ * Callback function which will be called when uart transmission is done.
+ *
+ */
 void cbQorvoUartTxDone(void);
-void qorvoUartSendInput(uint8_t* buffer, uint16_t length);
+
+/**
+ * Callback function which will be called when uart data is received.
+ *
+ * @param[in]  aBuf         A pointer to an array of received bytes.
+ * @param[in]  aBufLength   The number of bytes received from the uart.
+ *
+ */
+void qorvoUartSendInput(uint8_t* aBuf, uint16_t aBufLength);
+
+/**
+ * Function which transmits data via the uart.
+ *
+ * @param[out]  aBuf        A pointer to an array of bytes which need to be transmitted.
+ * @param[in]   aBufLength  The number of bytes to be transmitted via the uart.
+ *
+ */
 void qorvoUartSendOutput(const uint8_t *aBuf, uint16_t aBufLength);
 
 #endif  // UART_QORVO_H_

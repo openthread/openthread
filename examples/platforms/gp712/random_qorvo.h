@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,13 @@
  */
 void qorvoRandomInit(void);
 
+/**
+ * This function returns an array of random numbers.
+ *
+ * @param[out]  aOutput        Pointer to an array which will be filled with random data.
+ * @param[in]   aOutputLength  number of bytes which will be written into the array.
+ *
+ */
 void qorvoRandomGet(uint8_t *aOutput, uint8_t aOutputLength);
 
 

@@ -36,9 +36,9 @@ DIST_SUBDIRS                            = \
     da15000                               \
     efr32                                 \
     emsk                                  \
+    gp712                                 \
     kw41z                                 \
     nrf52840                              \
-    gp712                                 \
     posix                                 \
     utils                                 \
     $(NULL)
@@ -69,16 +69,16 @@ if OPENTHREAD_EXAMPLES_EMSK
 SUBDIRS                                += emsk
 endif
 
+if OPENTHREAD_EXAMPLES_GP712
+SUBDIRS                                += gp712
+endif
+
 if OPENTHREAD_EXAMPLES_KW41Z
 SUBDIRS                                += kw41z
 endif
 
 if OPENTHREAD_EXAMPLES_NRF52840
 SUBDIRS                                += nrf52840
-endif
-
-if OPENTHREAD_EXAMPLES_GP712
-SUBDIRS                                += gp712
 endif
 
 if OPENTHREAD_EXAMPLES_POSIX
@@ -93,9 +93,9 @@ PRETTY_SUBDIRS                          = \
     da15000                               \
     efr32                                 \
     emsk                                  \
+    gp712                                 \
     kw41z                                 \
     nrf52840                              \
-    gp712                                 \
     posix                                 \
     utils                                 \
     $(NULL)
