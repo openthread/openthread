@@ -26,21 +26,52 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform_qorvo.h"
+
+#ifndef _WIN32
+#include <unistd.h>
+#include <stdio.h>
+#endif
+
+#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 #include "radio_qorvo.h"
 #include <stdlib.h>
 
+#ifndef _WIN32
+extern int      gArgumentsCount;
+extern char   **gArguments;
+#endif
+
+extern void platformUartRestore(void);
+
 void otPlatReset(otInstance *aInstance)
 {
-    (void)aInstance;
+#ifndef _WIN32
+    char *argv[gArgumentsCount + 1];
+
+    for (int i = 0; i < gArgumentsCount; ++i)
+    {
+        argv[i] = gArguments[i];
+    }
+
+    argv[gArgumentsCount] = NULL;
+
     qorvoRadioReset();
-    exit(EXIT_SUCCESS);
+    platformUartRestore();
+
+    execvp(argv[0], argv);
+    perror("reset failed");
+    exit(EXIT_FAILURE);
+#else
+    // This function does nothing on the Windows platform.
+#endif // _WIN32
+    (void)aInstance;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;
-    // TODO: Write me!
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 

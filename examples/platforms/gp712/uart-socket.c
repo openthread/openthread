@@ -75,6 +75,7 @@ typedef struct
 
 PlatSocket_t   PlatSocketConnection;
 int PlatSocketPipeFd [2];
+int PlatServerSocketId;
 
 void PlatSocketRxNewConn(uint8_t id);
 void PlatSocketInit(void);
@@ -193,7 +194,6 @@ PlatSocketListenForClients_error:
     (void) ret;
 }
 
-
 void PlatSocketRxSignaled(uint8_t id)
 {
     (void)(id);
@@ -247,7 +247,6 @@ void* PlatSocketReadThread(void *pClientSocket)
     return NULL;
 }
 
-
 void PlatSocketRxNewConn(uint8_t id)
 {
     //Find first non-valid client in list - add here
@@ -298,8 +297,8 @@ void PlatSocketInit(void)
     memset(&PlatSocketConnection, 0, sizeof(PlatSocketConnection));
 
     // in case we are a server, setup listening for client
-    int hal_ServerSocketId = PlatSocketListenForClients();
-    qorvoPlatRegisterPollFunction(hal_ServerSocketId, PlatSocketRxNewConn);
+    PlatServerSocketId = PlatSocketListenForClients();
+    qorvoPlatRegisterPollFunction(PlatServerSocketId, PlatSocketRxNewConn);
 
     // hack
     res = pipe(PlatSocketPipeFd);
@@ -307,9 +306,19 @@ void PlatSocketInit(void)
     qorvoPlatRegisterPollFunction(PlatSocketPipeFd [0], PlatSocketRxSignaled);
 }
 
+void platformUartRestore(void)
+{
+    PlatSocketDeInit();
+}
+
 void PlatSocketDeInit(void)
 {
+    qorvoPlatUnRegisterPollFunction(PlatServerSocketId);
+    close(PlatServerSocketId);
     qorvoPlatUnRegisterPollFunction(PlatSocketPipeFd[0]);
+    close(PlatSocketPipeFd[0]);
+    close(PlatSocketPipeFd[1]);
+    close(PlatSocketConnection.socketId);
 }
 
 int PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId)
