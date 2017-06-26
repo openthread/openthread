@@ -246,10 +246,12 @@ void NcpSpi::SpiTransactionProcess(void)
     }
 }
 
-void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer *aNcpFrameBuffer)
+void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
+                                        NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpFrameBuffer);
     OT_UNUSED_VARIABLE(aTag);
+    OT_UNUSED_VARIABLE(aPriority);
 
     static_cast<NcpSpi *>(aContext)->mPrepareTxFrameTask.Post();
 }

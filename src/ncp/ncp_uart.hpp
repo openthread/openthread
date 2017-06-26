@@ -105,7 +105,7 @@ private:
     static void     HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
     static void     HandleError(void *context, otError aError, uint8_t *aBuf, uint16_t aBufLength);
     static void     HandleFrameAddedToNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
-                                                NcpFrameBuffer *aNcpFrameBuffer);
+                                                NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer);
 
     Hdlc::Encoder   mFrameEncoder;
     Hdlc::Decoder   mFrameDecoder;
