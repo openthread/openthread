@@ -96,7 +96,6 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
         VerifyOrExit(!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
                               sizeof(mCommissionerId)));
 
-        mTimer.Stop();
         ResignCommissioner();
     }
 
@@ -196,7 +195,6 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     else if (state.GetState() != StateTlv::kAccept)
     {
         responseState = StateTlv::kReject;
-        mTimer.Stop();
         ResignCommissioner();
     }
     else
@@ -317,6 +315,7 @@ void Leader::SetEmptyCommissionerData(void)
 
 void Leader::ResignCommissioner(void)
 {
+    mTimer.Stop();
     SetEmptyCommissionerData();
 
     otLogInfoMeshCoP(GetInstance(), "commissioner inactive");
