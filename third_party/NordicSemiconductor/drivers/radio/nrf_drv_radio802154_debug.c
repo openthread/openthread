@@ -44,11 +44,16 @@
 #include "nrf.h"
 
 #if ENABLE_DEBUG_LOG
+/// Buffer used to store debug log messages.
 volatile uint32_t nrf_drv_radio802154_debug_log_buffer[NRF_DRV_RADIO802154_DEBUG_LOG_BUFFER_LEN];
+/// Index of the log buffer pointing to the element that should be filled with next log message.
 volatile uint32_t nrf_drv_radio802154_debug_log_ptr = 0;
 #endif
 
 #if ENABLE_DEBUG_GPIO
+/**
+ * @brief Initialize PPI to toggle GPIO pins on radio events.
+ */
 static void radio_event_gpio_toggle_init(void)
 {
     nrf_gpio_cfg_output(PIN_DBG_RADIO_EVT_END);
@@ -82,6 +87,9 @@ static void radio_event_gpio_toggle_init(void)
     nrf_ppi_channel_enable(NRF_PPI_CHANNEL4);
 }
 
+/**
+ * @brief Initialize GPIO to set it simulated arbiter events.
+ */
 static void raal_simulator_gpio_init(void)
 {
 #if RAAL_SIMULATOR
@@ -90,6 +98,10 @@ static void raal_simulator_gpio_init(void)
 #endif
 }
 
+/**
+ * @brief Initialize PPI to toggle GPIO pins on Softdevice events. Initialize GPIO to set it
+ *        according to Softdevice arbiter client events.
+ */
 static void raal_softdevice_event_gpio_toggle_init(void)
 {
 #if RAAL_SOFTDEVICE

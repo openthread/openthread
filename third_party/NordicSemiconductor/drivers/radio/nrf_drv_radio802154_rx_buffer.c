@@ -46,7 +46,7 @@
 
 #if defined ( __GNUC__ )
 
-// Receive buffer (EasyDMA cannot address whole RAM. Place buffer in the special section.)
+/// Receive buffer (EasyDMA cannot address whole RAM. Place buffer in the special section.)
 rx_buffer_t nrf_drv_radio802154_rx_buffers[RADIO_RX_BUFFERS]
                 __attribute__ ((section ("nrf_radio_buffer.nrf_drv_radio802154_rx_buffers")));
 

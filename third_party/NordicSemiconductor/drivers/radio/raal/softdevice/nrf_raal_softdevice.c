@@ -128,6 +128,12 @@ static inline uint32_t timer_time_get(void)
     return NRF_TIMER0->CC[TIMER_CC_CAPTURE];
 }
 
+/**@brief Check if margin is already reached. */
+static inline bool timer_is_margin_reached(void)
+{
+    return NRF_TIMER0->EVENTS_COMPARE[TIMER_CC_MARGIN];
+}
+
 /**@brief Enter timeslot critical section. */
 static inline void timeslot_critical_section_enter(void)
 {
@@ -438,28 +444,38 @@ static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_t
 
     case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO: /**< This signal indicates the NRF_RADIO interrupt. */
         nrf_drv_radio802154_pin_set(PIN_DBG_TIMESLOT_RADIO_IRQ);
+        nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_RADIO);
 
-        if (m_in_timeslot && !NRF_TIMER0->EVENTS_COMPARE[TIMER_CC_MARGIN])
+        if (m_in_timeslot)
         {
-            RADIO_IRQHandler();
-        }
-        else
-        {
-            NVIC_ClearPendingIRQ(RADIO_IRQn);
+            if (!timer_is_margin_reached())
+            {
+                RADIO_IRQHandler();
+            }
+            else
+            {
+                //  Handle margin exceeded event.
+                timer_irq_handle();
+            }
         }
 
+        nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_RADIO);
         nrf_drv_radio802154_pin_clr(PIN_DBG_TIMESLOT_RADIO_IRQ);
         break;
 
     case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED: /**< This signal indicates extend action failed. */
         nrf_drv_radio802154_pin_clr(PIN_DBG_TIMESLOT_EXTEND_REQ);
         nrf_drv_radio802154_pin_tgl(PIN_DBG_TIMESLOT_FAILED);
+        nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_EXCEED_FAIL);
 
         timeslot_extend();
+
+        nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_EXCEED_FAIL);
         break;
 
     case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED: /**< This signal indicates extend action succeeded. */
         nrf_drv_radio802154_pin_clr(PIN_DBG_TIMESLOT_EXTEND_REQ);
+        nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_EXCEED_SUCCESS);
 
         timer_extend();
 
@@ -467,7 +483,8 @@ static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_t
         {
             timeslot_extend();
         }
-        
+
+        nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_EXCEED_SUCCESS);
         break;
 
     default:

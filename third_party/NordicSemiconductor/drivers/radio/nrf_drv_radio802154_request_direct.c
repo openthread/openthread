@@ -72,12 +72,12 @@ bool nrf_drv_radio802154_request_receive(uint8_t channel)
     return result;
 }
 
-bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power)
+bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca)
 {
     bool result;
     nrf_drv_radio802154_critical_section_enter();
 
-    result = nrf_drv_radio802154_fsm_transmit(p_data, channel, power);
+    result = nrf_drv_radio802154_fsm_transmit(p_data, channel, power, cca);
 
     nrf_drv_radio802154_critical_section_exit();
     return result;

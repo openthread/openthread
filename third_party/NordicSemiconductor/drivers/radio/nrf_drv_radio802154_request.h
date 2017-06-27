@@ -74,11 +74,12 @@ bool nrf_drv_radio802154_request_receive(uint8_t channel);
  * @param[in]  p_data   Pointer to the frame to transmit.
  * @param[in]  channel  Channel number used to transmit the frame.
  * @param[in]  power    Transmitter power used to transmit the frame.
+ * @param[in]  cca      If the driver should perform CCA procedure before transmission.
  *
  * @retval  true   The driver will enter transmit state.
  * @retval  false  The driver cannot enter transmit state due to ongoing operation.
  */
-bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power);
+bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca);
 
 /**
  * @brief Request entering energy detection state.

@@ -108,11 +108,13 @@ void nrf_drv_radio802154_swi_receive(uint8_t channel, bool * p_result);
  * @param[in]   p_data    Pointer to PSDU of the frame to transmit.
  * @param[in]   channel   Channel number used for requested transmission.
  * @param[in]   power     Transmitter power for requested transmission.
+ * @param[in]   cca       If the driver should perform CCA procedure before transmission.
  * @param[out]  p_result  Result of entering transmit state.
  */
 void nrf_drv_radio802154_swi_transmit(const uint8_t * p_data,
                                       uint8_t         channel,
                                       int8_t          power,
+                                      bool            cca,
                                       bool          * p_result);
 
 /**

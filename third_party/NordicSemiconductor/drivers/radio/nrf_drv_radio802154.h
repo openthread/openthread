@@ -176,11 +176,12 @@ void nrf_drv_radio802154_receive(uint8_t channel);
  * @param[in]  channel  Channel number on which radio will transmit given frame.
  * @param[in]  power    Transmission power [dBm]. Given value is rounded up to nearest permitted
  *                      value.
+ * @param[in]  cca      If the driver should perform CCA procedure before transmission.
  *
  * @return  true   If the transmission procedure was scheduled.
  * @return  false  If the driver could not schedule the transmission procedure.
  */
-bool nrf_drv_radio802154_transmit(const uint8_t *p_data, uint8_t channel, int8_t power);
+bool nrf_drv_radio802154_transmit(const uint8_t *p_data, uint8_t channel, int8_t power, bool cca);
 
 /**
  * @brief Change radio state to Energy Detection.
@@ -207,6 +208,15 @@ bool nrf_drv_radio802154_energy_detection(uint8_t channel, uint32_t time_us);
  */
 
 /**
+ * @brief Notify that receiving frame has started.
+ *
+ * @note It is possible the frame is dropped during receive procedure and
+ *       @sa nrf_drv_radio802154_received won't be called.
+ * @note This function should be very short to prevent dropping frames by the driver.
+ */
+extern void nrf_drv_radio802154_rx_started(void);
+
+/**
  * @brief Notify that frame was received.
  *
  * @note Buffer pointed by the p_data pointer is not modified by the radio driver (and can't
@@ -220,6 +230,15 @@ bool nrf_drv_radio802154_energy_detection(uint8_t channel, uint32_t time_us);
  * @param[in]  lqi     LQI of received frame.
  */
 extern void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi);
+
+/**
+ * @brief Notify that transmitting frame has started.
+ *
+ * @note It is possible that transmit procedure is interrupted and
+ *       @sa nrf_drv_radio802154_transmitted won't be called.
+ * @note This function should be very short to prevent dropping frames by the driver.
+ */
+extern void nrf_drv_radio802154_tx_started(void);
 
 /**
  * @brief Notify that frame was transmitted.

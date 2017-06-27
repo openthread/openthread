@@ -44,61 +44,64 @@ extern "C" {
 
 #define NRF_DRV_RADIO802154_DEBUG_LOG_BUFFER_LEN 1024
 
-#define EVENT_TRACE_ENTER              0x0001UL
-#define EVENT_TRACE_EXIT               0x0002UL
-#define EVENT_MUTEX_LOCK               0x0003UL
-#define EVENT_MUTEX_UNLOCK             0x0004UL
-#define EVENT_SET_STATE                0x0005UL
-#define EVENT_RADIO_RESET              0x0006UL
+#define EVENT_TRACE_ENTER                      0x0001UL
+#define EVENT_TRACE_EXIT                       0x0002UL
+#define EVENT_MUTEX_LOCK                       0x0003UL
+#define EVENT_MUTEX_UNLOCK                     0x0004UL
+#define EVENT_SET_STATE                        0x0005UL
+#define EVENT_RADIO_RESET                      0x0006UL
 
-#define FUNCTION_SLEEP                 0x0001UL
-#define FUNCTION_RECEIVE               0x0002UL
-#define FUNCTION_TRANSMIT              0x0003UL
-#define FUNCTION_ENERGY_DETECTION      0x0004UL
-#define FUNCTION_BUFFER_FREE           0x0005UL
+#define FUNCTION_SLEEP                         0x0001UL
+#define FUNCTION_RECEIVE                       0x0002UL
+#define FUNCTION_TRANSMIT                      0x0003UL
+#define FUNCTION_ENERGY_DETECTION              0x0004UL
+#define FUNCTION_BUFFER_FREE                   0x0005UL
 
-#define FUNCTION_IRQ_HANDLER           0x0100UL
-#define FUNCTION_EVENT_FRAMESTART      0x0101UL
-#define FUNCTION_EVENT_BCMATCH         0x0102UL
-#define FUNCTION_EVENT_END             0x0103UL
-#define FUNCTION_EVENT_DISABLED        0x0104UL
-#define FUNCTION_EVENT_READY           0x0105UL
-#define FUNCTION_EVENT_CCAIDLE         0x0106UL
-#define FUNCTION_EVENT_CCABUSY         0x0107UL
-#define FUNCTION_EVENT_EDEND           0x0108UL
+#define FUNCTION_IRQ_HANDLER                   0x0100UL
+#define FUNCTION_EVENT_FRAMESTART              0x0101UL
+#define FUNCTION_EVENT_BCMATCH                 0x0102UL
+#define FUNCTION_EVENT_END                     0x0103UL
+#define FUNCTION_EVENT_DISABLED                0x0104UL
+#define FUNCTION_EVENT_READY                   0x0105UL
+#define FUNCTION_EVENT_CCAIDLE                 0x0106UL
+#define FUNCTION_EVENT_CCABUSY                 0x0107UL
+#define FUNCTION_EVENT_EDEND                   0x0108UL
 
-#define FUNCTION_AUTO_ACK_ABORT        0x0201UL
-#define FUNCTION_TIMESLOT_STARTED      0x0202UL
-#define FUNCTION_TIMESLOT_ENDED        0x0203UL
-#define FUNCTION_CRIT_SECT_ENTER       0x0204UL
-#define FUNCTION_CRIT_SECT_EXIT        0x0205UL
+#define FUNCTION_AUTO_ACK_ABORT                0x0201UL
+#define FUNCTION_TIMESLOT_STARTED              0x0202UL
+#define FUNCTION_TIMESLOT_ENDED                0x0203UL
+#define FUNCTION_CRIT_SECT_ENTER               0x0204UL
+#define FUNCTION_CRIT_SECT_EXIT                0x0205UL
 
-#define FUNCTION_RAAL_CRIT_SECT_ENTER  0x0301UL
-#define FUNCTION_RAAL_CRIT_SECT_EXIT   0x0302UL
-#define FUNCTION_RAAL_CONTINUOUS_ENTER 0x0303UL
-#define FUNCTION_RAAL_CONTINUOUS_EXIT  0x0304UL
+#define FUNCTION_RAAL_CRIT_SECT_ENTER          0x0301UL
+#define FUNCTION_RAAL_CRIT_SECT_EXIT           0x0302UL
+#define FUNCTION_RAAL_CONTINUOUS_ENTER         0x0303UL
+#define FUNCTION_RAAL_CONTINUOUS_EXIT          0x0304UL
 
-#define FUNCTION_RAAL_SIG_HANDLER      0x0400UL
-#define FUNCTION_RAAL_SIG_EVENT_START  0x0401UL
-#define FUNCTION_RAAL_SIG_EVENT_MARGIN 0x0402UL
-#define FUNCTION_RAAL_SIG_EVENT_EXTEND 0x0403UL
-#define FUNCTION_RAAL_SIG_EVENT_ENDED  0x0404UL
+#define FUNCTION_RAAL_SIG_HANDLER              0x0400UL
+#define FUNCTION_RAAL_SIG_EVENT_START          0x0401UL
+#define FUNCTION_RAAL_SIG_EVENT_MARGIN         0x0402UL
+#define FUNCTION_RAAL_SIG_EVENT_EXTEND         0x0403UL
+#define FUNCTION_RAAL_SIG_EVENT_ENDED          0x0404UL
+#define FUNCTION_RAAL_SIG_EVENT_RADIO          0x0405UL
+#define FUNCTION_RAAL_SIG_EVENT_EXCEED_SUCCESS 0x0406UL
+#define FUNCTION_RAAL_SIG_EVENT_EXCEED_FAIL    0x0407UL
 
-#define PIN_DBG_RADIO_EVT_END             11
-#define PIN_DBG_RADIO_EVT_DISABLED        12
-#define PIN_DBG_RADIO_EVT_READY           13
-#define PIN_DBG_RADIO_EVT_FRAMESTART      14
-#define PIN_DBG_RADIO_EVT_EDEND           25
+#define PIN_DBG_RADIO_EVT_END                  11
+#define PIN_DBG_RADIO_EVT_DISABLED             12
+#define PIN_DBG_RADIO_EVT_READY                13
+#define PIN_DBG_RADIO_EVT_FRAMESTART           14
+#define PIN_DBG_RADIO_EVT_EDEND                25
 
-#define PIN_DBG_TIMESLOT_ACTIVE           3
-#define PIN_DBG_TIMESLOT_EXTEND_REQ       4
-#define PIN_DBG_TIMESLOT_SESSION_IDLE     16
-#define PIN_DBG_TIMESLOT_RADIO_IRQ        28
-#define PIN_DBG_TIMESLOT_FAILED           29
-#define PIN_DBG_TIMESLOT_BLOCKED          30
-#define PIN_DBG_RAAL_CRITICAL_SECTION     15
+#define PIN_DBG_TIMESLOT_ACTIVE                3
+#define PIN_DBG_TIMESLOT_EXTEND_REQ            4
+#define PIN_DBG_TIMESLOT_SESSION_IDLE          16
+#define PIN_DBG_TIMESLOT_RADIO_IRQ             28
+#define PIN_DBG_TIMESLOT_FAILED                29
+#define PIN_DBG_TIMESLOT_BLOCKED               30
+#define PIN_DBG_RAAL_CRITICAL_SECTION          15
 
-#define PIN_DBG_RTC0_EVT_REM              31
+#define PIN_DBG_RTC0_EVT_REM                   31
 
 #if ENABLE_DEBUG_LOG
 extern volatile uint32_t nrf_drv_radio802154_debug_log_buffer[
