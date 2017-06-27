@@ -341,8 +341,8 @@ void Coap::HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
         PrintPayload(aMessage);
     }
 
-    (void)aHeader;
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aHeader);
+    OT_UNUSED_VARIABLE(aMessageInfo);
 }
 
 }  // namespace Cli

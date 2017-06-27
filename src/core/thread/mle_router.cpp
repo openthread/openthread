@@ -2033,7 +2033,7 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
                      (count == 1) ? "" : "es");
     }
 
-    (void)stringBuffer;
+    OT_UNUSED_VARIABLE(stringBuffer);
 
     return OT_ERROR_NONE;
 }
@@ -3886,8 +3886,8 @@ void MleRouter::HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHead
 void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage,
                                              const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
-    (void)aResult;
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aResult);
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
     ThreadStatusTlv statusTlv;
     ThreadRloc16Tlv rlocTlv;

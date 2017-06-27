@@ -366,8 +366,8 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
         mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
 
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 }
 
 void Interpreter::ProcessAutoStart(int argc, char *argv[])
@@ -470,8 +470,8 @@ exit:
 void Interpreter::ProcessBufferInfo(int argc, char *argv[])
 {
     otBufferInfo bufferInfo;
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 
     otMessageGetBufferInfo(mInstance, &bufferInfo);
 
@@ -914,8 +914,8 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
     }
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(OT_ERROR_NONE);
 }
 #endif  // OPENTHREAD_FTD
@@ -932,7 +932,7 @@ void Interpreter::ProcessEui64(int argc, char *argv[])
     mServer->OutputFormat("\r\n");
 
 exit:
-    (void)argv;
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -963,8 +963,8 @@ exit:
 void Interpreter::ProcessExit(int argc, char *argv[])
 {
     exit(0);
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 }
 #endif
 
@@ -994,8 +994,8 @@ exit:
 void Interpreter::ProcessFactoryReset(int argc, char *argv[])
 {
     otInstanceFactoryReset(mInstance);
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 }
 
 void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
@@ -1010,7 +1010,7 @@ void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
     mServer->OutputFormat("\r\n");
 
 exit:
-    (void)argv;
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -1264,8 +1264,8 @@ void Interpreter::ProcessLeaderData(int argc, char *argv[])
     mServer->OutputFormat("Leader Router ID: %d\r\n", leaderData.mLeaderRouterId);
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -1465,8 +1465,8 @@ void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
     SuccessOrExit(error = otBorderRouterRegister(mInstance));
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 #endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -1550,8 +1550,8 @@ void Interpreter::ProcessParent(int argc, char *argv[])
     mServer->OutputFormat("Age: %d\r\n", parentInfo.mAge);
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -1962,7 +1962,7 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &prefix);
 
 exit:
-    (void)argc;
+    OT_UNUSED_VARIABLE(argc);
     return error;
 }
 
@@ -2079,16 +2079,16 @@ exit:
 void Interpreter::ProcessReset(int argc, char *argv[])
 {
     otInstanceReset(mInstance);
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 }
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
 {
     mServer->OutputFormat("%04x\r\n", otThreadGetRloc16(mInstance));
     mServer->OutputFormat("Done\r\n");
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -2455,8 +2455,8 @@ void Interpreter::ProcessSingleton(int argc, char *argv[])
         mServer->OutputFormat("false\r\n");
     }
 
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 
     AppendResult(error);
 }
@@ -2545,8 +2545,8 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
 
 exit:
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -2574,8 +2574,8 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     otStringPtr version(otGetVersionString());
     mServer->OutputFormat("%s\r\n", (const char *)version);
     AppendResult(OT_ERROR_NONE);
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

@@ -1209,7 +1209,7 @@ protected:
      * @returns A pointer to the neighbor object.
      *
      */
-    Neighbor *GetNeighbor(const Ip6::Address &aAddress) { (void)aAddress; return NULL; }
+    Neighbor *GetNeighbor(const Ip6::Address &aAddress) { OT_UNUSED_VARIABLE(aAddress); return NULL; }
 
     /**
      * This method returns the next hop towards an RLOC16 destination.

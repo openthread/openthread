@@ -222,7 +222,7 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance)
     logLevel =  aInstance->mLogLevel;
 #else
     logLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 #endif
 
     return logLevel;
@@ -236,8 +236,8 @@ otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
     aInstance->mLogLevel = aLogLevel;
 #else
     error = OT_ERROR_DISABLED_FEATURE;
-    (void)aInstance;
-    (void)aLogLevel;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLogLevel);
 #endif
 
     return error;

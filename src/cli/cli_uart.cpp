@@ -251,8 +251,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     Uart::sUartServer->OutputFormat("\r\n");
     va_end(args);
 
-    (void)aLogLevel;
-    (void)aLogRegion;
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
 }
 #ifdef __cplusplus
 }  // extern "C"

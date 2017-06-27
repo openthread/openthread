@@ -195,7 +195,7 @@ otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &
                  (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()),
                  error = OT_ERROR_NOT_TMF);
 exit:
-    (void)aMessage;
+    OT_UNUSED_VARIABLE(aMessage);
     return error;
 }
 

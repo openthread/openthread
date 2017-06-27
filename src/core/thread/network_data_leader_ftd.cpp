@@ -541,7 +541,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
     }
 
 exit:
-    (void)aRloc16;
+    OT_UNUSED_VARIABLE(aRloc16);
     return rval;
 }
 

@@ -150,7 +150,7 @@ otError CoapSecure::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
 
 otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
     return mNetif.GetDtls().Send(aMessage, aMessage.GetLength());
 }
 

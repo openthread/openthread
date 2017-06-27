@@ -286,7 +286,7 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
 
     otLogInfoMac(GetInstance(), "Received Beacon, %s", beaconPayload->ToInfoString(stringBuffer, sizeof(stringBuffer)));
 
-    (void)stringBuffer;
+    OT_UNUSED_VARIABLE(stringBuffer);
 
 exit:
     return error;
@@ -684,7 +684,7 @@ void Mac::SendBeacon(Frame &aFrame)
 
     otLogInfoMac(GetInstance(), "Sending Beacon, %s", beaconPayload->ToInfoString(stringBuffer, sizeof(stringBuffer)));
 
-    (void)stringBuffer;
+    OT_UNUSED_VARIABLE(stringBuffer);
 }
 
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
@@ -1169,7 +1169,7 @@ void Mac::SentFrame(otError aError)
             ExitNow();
         }
 
-        (void)stringBuffer;
+        OT_UNUSED_VARIABLE(stringBuffer);
         break;
     }
 
@@ -1622,7 +1622,7 @@ exit:
             otLogInfoMac(GetInstance(), "Frame rx failed, error:%s, %s", otThreadErrorToString(error),
                          aFrame->ToInfoString(stringBuffer, sizeof(stringBuffer)));
 
-            (void)stringBuffer;
+            OT_UNUSED_VARIABLE(stringBuffer);
         }
 
         switch (error)

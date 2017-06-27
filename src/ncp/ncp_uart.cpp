@@ -108,8 +108,8 @@ NcpUart::NcpUart(otInstance *aInstance):
 void NcpUart::HandleFrameAddedToNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
                                           NcpFrameBuffer *aNcpFrameBuffer)
 {
-    (void)aNcpFrameBuffer;
-    (void)aTag;
+    OT_UNUSED_VARIABLE(aNcpFrameBuffer);
+    OT_UNUSED_VARIABLE(aTag);
 
     static_cast<NcpUart *>(aContext)->HandleFrameAddedToNcpBuffer();
 }
@@ -293,8 +293,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     va_end(args);
 
-    (void)aLogLevel;
-    (void)aLogRegion;
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
 }
 #ifdef __cplusplus
 }  // extern "C"

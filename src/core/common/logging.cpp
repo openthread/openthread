@@ -108,7 +108,7 @@ static void DumpLine(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aL
 
     otLogDump("%s", buf);
 
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otDump(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf,

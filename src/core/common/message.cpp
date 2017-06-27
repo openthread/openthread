@@ -65,8 +65,7 @@ MessagePool::MessagePool(otInstance *aInstance) :
     mNumFreeBuffers = kNumBuffers;
 #endif
 
-    // This is required to remove warning of "unused member variable".
-    (void)mInstance;
+    OT_UNUSED_VARIABLE(mInstance);
 }
 
 Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
@@ -418,7 +417,7 @@ otError Message::Append(const void *aBuf, uint16_t aLength)
     bytesWritten = Write(oldLength, aLength, aBuf);
 
     assert(bytesWritten == (int)aLength);
-    (void)bytesWritten;
+    OT_UNUSED_VARIABLE(bytesWritten);
 
 exit:
     return error;

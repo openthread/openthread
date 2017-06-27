@@ -117,7 +117,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     mTimer.Start(Timer::SecToMsec(kTimeoutLeaderPetition));
 
 exit:
-    (void)aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
     SendPetitionResponse(aHeader, aMessageInfo, state);
 }
 
