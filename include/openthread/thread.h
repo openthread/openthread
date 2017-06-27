@@ -550,7 +550,7 @@ OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
  *
  * @returns A pointer to the Tx total time in ms.
  */
- OTAPI const uint32_t *OTCALL otThreadGetTxTotalTime(otInstance *aInstance);
+OTAPI const uint32_t *OTCALL otThreadGetTxTotalTime(otInstance *aInstance);
 
 /**
  * Get the total amount of time spent in Rx mode.
@@ -559,7 +559,7 @@ OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
  *
  * @returns A pointer to the Rx total time in ms.
  */
- OTAPI const uint32_t *OTCALL otThreadGetRxTotalTime(otInstance *aInstance);
+OTAPI const uint32_t *OTCALL otThreadGetRxTotalTime(otInstance *aInstance);
 
 /**
  * @}
