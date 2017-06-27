@@ -1353,6 +1353,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
             otEXPECT_ACTION(rfCoreSendTransmitCmd(aFrame->mPsdu, aFrame->mLength - 2) == CMDSTA_Done,
                             error = OT_ERROR_FAILED);
             error = OT_ERROR_NONE;
+
+            otPlatRadioTxStarted(aInstance, aFrame);
         }
     }
 

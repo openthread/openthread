@@ -335,8 +335,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     otError status = OT_ERROR_NONE;
     uint32_t timeout;
 
-    (void) aInstance;
-
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
                      (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
 
@@ -378,6 +376,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     sState = OT_RADIO_STATE_TRANSMIT;
     /* Unmask SEQ interrupt */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
+
+    otPlatRadioTxStarted(aInstance, aFrame);
 
 exit:
     return status;

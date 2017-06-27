@@ -327,6 +327,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     if (nrf_drv_radio802154_transmit(&aFrame->mPsdu[-1], aFrame->mChannel, aFrame->mPower, true))
     {
         clearPendingEvents();
+        otPlatRadioTxStarted(aInstance, aFrame);
     }
     else
     {

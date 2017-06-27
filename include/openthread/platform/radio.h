@@ -389,6 +389,15 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame);
 
 /**
+ * The radio driver calls this method to notify OpenThread that the transmission has started.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance structure.
+ * @param[in]  aFrame     A pointer to the frame that is being transmitted.
+ *
+ */
+extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
+
+/**
  * The radio driver calls this method to notify OpenThread that the transmission has completed,
  * this callback pass up the ACK frame, new add platforms should use this callback function.
  *
