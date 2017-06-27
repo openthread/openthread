@@ -91,7 +91,13 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
     VerifyOrExit(commissionerId.IsValid());
 
-    VerifyOrExit(!mTimer.IsRunning());
+    if (mTimer.IsRunning())
+    {
+        VerifyOrExit(!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
+                              sizeof(mCommissionerId)));
+
+        ResignCommissioner();
+    }
 
     data.mBorderAgentLocator.Init();
     data.mBorderAgentLocator.SetBorderAgentLocator(HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
@@ -189,7 +195,6 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     else if (state.GetState() != StateTlv::kAccept)
     {
         responseState = StateTlv::kReject;
-        mTimer.Stop();
         ResignCommissioner();
     }
     else
@@ -310,6 +315,7 @@ void Leader::SetEmptyCommissionerData(void)
 
 void Leader::ResignCommissioner(void)
 {
+    mTimer.Stop();
     SetEmptyCommissionerData();
 
     otLogInfoMeshCoP(GetInstance(), "commissioner inactive");
