@@ -48,7 +48,7 @@ void PlatformInit(int argc, char *argv[])
 
     nrf_drv_clock_init();
 
-#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
     nrf5LogInit();
 #endif
     nrf5AlarmInit();
@@ -67,7 +67,7 @@ void PlatformDeinit(void)
     nrf5UartDeinit();
     nrf5RandomDeinit();
     nrf5AlarmDeinit();
-#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
     nrf5LogDeinit();
 #endif
 }

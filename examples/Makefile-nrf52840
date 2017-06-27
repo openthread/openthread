@@ -79,6 +79,10 @@ COMMONCFLAGS                   := \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
 
+ifeq ($(CERT_LOG),1)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT=1
+endif
+
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(target_CPPFLAGS)            \
