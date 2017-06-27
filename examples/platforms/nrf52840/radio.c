@@ -324,7 +324,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     aFrame->mPsdu[-1] = aFrame->mLength;
 
-    if (nrf_drv_radio802154_transmit(&aFrame->mPsdu[-1], aFrame->mChannel, aFrame->mPower))
+    if (nrf_drv_radio802154_transmit(&aFrame->mPsdu[-1], aFrame->mChannel, aFrame->mPower, true))
     {
         clearPendingEvents();
     }
@@ -637,7 +637,8 @@ void nrf_drv_radio802154_busy_channel(void)
 
 void nrf_drv_radio802154_energy_detected(int8_t result)
 {
-    sEnergyDetected = result;
+    // TODO: Correct RSSI calculation after lab tests.
+    sEnergyDetected = 94 - result;
 
     setPendingEvent(kPendingEventEnergyDetected);
 }

@@ -42,20 +42,20 @@
 
 #include "nrf_drv_radio802154_const.h"
 
-#define BROADCAST_ADDRESS    ((uint8_t [SHORT_ADDRESS_SIZE]) {0xff, 0xff}) // Broadcast Short Address
+#define BROADCAST_ADDRESS    ((uint8_t [SHORT_ADDRESS_SIZE]) {0xff, 0xff}) ///< Broadcast Short Address
 
 typedef struct
 {
-    int8_t  tx_power;                                // Transmit power.
-    uint8_t pan_id[PAN_ID_SIZE];                     // Pan Id of this node.
-    uint8_t short_addr[SHORT_ADDRESS_SIZE];          // Short Address of this node.
-    uint8_t extended_addr[EXTENDED_ADDRESS_SIZE];    // Extended Address of this node.
-    bool    promiscuous                          :1; // Indicating if radio is in promiscuous mode.
-    bool    auto_ack                             :1; // Indicating if auto ACK procedure is enabled.
-    uint8_t channel                              :5; // Channel on which the node receives messages.
+    int8_t  tx_power;                                 ///< Transmit power.
+    uint8_t pan_id[PAN_ID_SIZE];                      ///< Pan Id of this node.
+    uint8_t short_addr[SHORT_ADDRESS_SIZE];           ///< Short Address of this node.
+    uint8_t extended_addr[EXTENDED_ADDRESS_SIZE];     ///< Extended Address of this node.
+    bool    promiscuous                          :1;  ///< Indicating if radio is in promiscuous mode.
+    bool    auto_ack                             :1;  ///< Indicating if auto ACK procedure is enabled.
+    uint8_t channel                              :5;  ///< Channel on which the node receives messages.
 } nrf_drv_radio802154_pib_data_t;
 
-static nrf_drv_radio802154_pib_data_t m_data;
+static nrf_drv_radio802154_pib_data_t m_data;  ///< Buffer containing PIB data.
 
 void nrf_drv_radio802154_pib_init(void)
 {

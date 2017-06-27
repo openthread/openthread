@@ -48,59 +48,71 @@
 #include "hal/nrf_egu.h"
 #include "raal/nrf_raal_api.h"
 
-#define NTF_QUEUE_SIZE (RADIO_RX_BUFFERS + 3) // for each rx buffer, 1 for tx, 1 for channel busy, 1 for energy detection
-#define REQ_QUEUE_SIZE 2                      // minimal queue size
+/** Size of notification queue.
+ *
+ * One slot for each receive buffer, one for transmission, one for busy channel and one for energy
+ * detection.
+ */
+#define NTF_QUEUE_SIZE (RADIO_RX_BUFFERS + 3)
+/** Size of requests queue.
+ *
+ * Two is minimal queue size. It is not expected in current implementation to queue a few requests.
+ */
+#define REQ_QUEUE_SIZE 2
 
-#define SWI_EGU  NRF_EGU3
-#define SWI_IRQn SWI3_EGU3_IRQn
-#define SWI_IRQHandler SWI3_EGU3_IRQHandler
+#define SWI_EGU        NRF_EGU3                       ///< Label of SWI peripheral.
+#define SWI_IRQn       SWI3_EGU3_IRQn                 ///< Symbol of SWI IRQ number.
+#define SWI_IRQHandler SWI3_EGU3_IRQHandler           ///< Symbol of SWI IRQ handler.
 
-#define NTF_INT   NRF_EGU_INT_TRIGGERED0
-#define NTF_TASK  NRF_EGU_TASK_TRIGGER0
-#define NTF_EVENT NRF_EGU_EVENT_TRIGGERED0
+#define NTF_INT   NRF_EGU_INT_TRIGGERED0              ///< Label of notification interrupt.
+#define NTF_TASK  NRF_EGU_TASK_TRIGGER0               ///< Label of notification task.
+#define NTF_EVENT NRF_EGU_EVENT_TRIGGERED0            ///< Label of notification event.
 
-#define TIMESLOT_EXIT_INT   NRF_EGU_INT_TRIGGERED1
-#define TIMESLOT_EXIT_TASK  NRF_EGU_TASK_TRIGGER1
-#define TIMESLOT_EXIT_EVENT NRF_EGU_EVENT_TRIGGERED1
+#define TIMESLOT_EXIT_INT   NRF_EGU_INT_TRIGGERED1    ///< Label of timeslot exit interrupt.
+#define TIMESLOT_EXIT_TASK  NRF_EGU_TASK_TRIGGER1     ///< Label of timeslot exit task.
+#define TIMESLOT_EXIT_EVENT NRF_EGU_EVENT_TRIGGERED1  ///< Label of timeslot exit event.
 
-#define REQ_INT   NRF_EGU_INT_TRIGGERED2
-#define REQ_TASK  NRF_EGU_TASK_TRIGGER2
-#define REQ_EVENT NRF_EGU_EVENT_TRIGGERED2
+#define REQ_INT   NRF_EGU_INT_TRIGGERED2              ///< Label of request interrupt.
+#define REQ_TASK  NRF_EGU_TASK_TRIGGER2               ///< Label of request task.
+#define REQ_EVENT NRF_EGU_EVENT_TRIGGERED2            ///< Label of request event.
 
+/// Types of notifications in notification queue.
 typedef enum
 {
-    NTF_TYPE_RECEIVED,
-    NTF_TYPE_TRANSMITTED,
-    NTF_TYPE_CHANNEL_BUSY,
-    NTF_TYPE_ENERGY_DETECTED,
+    NTF_TYPE_RECEIVED,         ///< Frame received
+    NTF_TYPE_TRANSMITTED,      ///< Frame transmitted
+    NTF_TYPE_CHANNEL_BUSY,     ///< Frame transmission failure
+    NTF_TYPE_ENERGY_DETECTED,  ///< Energy detection procedure ended
 } nrf_drv_radio802154_ntf_type_t;
 
+/// Notification data in the notification queue.
 typedef struct
 {
-    nrf_drv_radio802154_ntf_type_t type;
+    nrf_drv_radio802154_ntf_type_t type;  ///< Notification type.
     union
     {
         struct
         {
-            uint8_t * p_psdu;
-            int8_t    power;
-            int8_t    lqi;
-        } received;
+            uint8_t * p_psdu;             ///< Pointer to received frame PSDU.
+            int8_t    power;              ///< RSSI of received frame.
+            int8_t    lqi;                ///< LQI of received frame.
+        } received;                       ///< Received frame details.
 
         struct
         {
-            uint8_t * p_psdu;
-            int8_t    power;
-            int8_t    lqi;
-        } transmitted;
+            uint8_t * p_psdu;             ///< Pointer to received ACK PSDU or NULL.
+            int8_t    power;              ///< RSSI of received ACK or 0.
+            int8_t    lqi;                ///< LQI of received ACK or 0.
+        } transmitted;                    ///< Transmitted frame details.
 
         struct
         {
-            int8_t    result;
-        } energy_detected;
-    } data;
+            int8_t    result;             ///< Energy detection result.
+        } energy_detected;                ///< Energy detection details.
+    } data;                               ///< Notification data depending on it's type.
 } nrf_drv_radio802154_ntf_data_t;
 
+/// Type of requests in request queue.
 typedef enum
 {
     REQ_TYPE_SLEEP,
@@ -110,52 +122,60 @@ typedef enum
     REQ_TYPE_BUFFER_FREE,
 } nrf_drv_radio802154_req_type_t;
 
+/// Request data in request queue.
 typedef struct
 {
-    nrf_drv_radio802154_req_type_t type;
+    nrf_drv_radio802154_req_type_t type;  ///< Type of the request.
     union
     {
         struct
         {
-            bool * p_result;
-        } sleep;
+            bool * p_result;              ///< Sleep request result.
+        } sleep;                          ///< Sleep request details.
 
         struct
         {
-            bool  * p_result;
-            uint8_t channel;
-        } receive;
+            bool  * p_result;             ///< Receive request result.
+            uint8_t channel;              ///< Channel to receive on.
+        } receive;                        ///< Receive request details.
 
         struct
         {
-            bool          * p_result;
-            const uint8_t * p_data;
-            uint8_t         channel;
-            int8_t          power;
-        } transmit;
+            bool          * p_result;     ///< Transmit request result.
+            const uint8_t * p_data;       ///< Pointer to PSDU to transmit.
+            uint8_t         channel;      ///< Channel to transmit on.
+            int8_t          power;        ///< Requested transmission power.
+            bool            cca;          ///< If CCA was requested prior to transmission.
+        } transmit;                       ///< Transmit request details.
 
         struct
         {
-            bool   * p_result;
-            uint8_t  channel;
-            uint32_t time_us;
-        } energy_detection;
+            bool   * p_result;            ///< Energy detection request result.
+            uint8_t  channel;             ///< Channel to perform energy detection on.
+            uint32_t time_us;             ///< Requested time of energy detection procedure.
+        } energy_detection;               ///< Energy detection request details.
 
         struct
         {
-            rx_buffer_t * p_data;
-        } buffer_free;
-    } data;
+            rx_buffer_t * p_data;         ///< Pointer to receive buffer to free.
+        } buffer_free;                    ///< Buffer free request details.
+    } data;                               ///< Request data depending on it's type.
 } nrf_drv_radio802154_req_data_t;
 
-static nrf_drv_radio802154_ntf_data_t m_ntf_queue[NTF_QUEUE_SIZE];
-static uint8_t                        m_ntf_r_ptr;
-static uint8_t                        m_ntf_w_ptr;
+static nrf_drv_radio802154_ntf_data_t m_ntf_queue[NTF_QUEUE_SIZE];  ///< Notification queue.
+static uint8_t                        m_ntf_r_ptr;  ///< Notification queue read index.
+static uint8_t                        m_ntf_w_ptr;  ///< Notification queue write index.
 
-static nrf_drv_radio802154_req_data_t m_req_queue[REQ_QUEUE_SIZE];
-static uint8_t                        m_req_r_ptr;
-static uint8_t                        m_req_w_ptr;
+static nrf_drv_radio802154_req_data_t m_req_queue[REQ_QUEUE_SIZE];  ///< Request queue.
+static uint8_t                        m_req_r_ptr;  // Request queue read index.
+static uint8_t                        m_req_w_ptr;  // Request queue write index.
 
+/**
+ * Increment given index for any queue.
+ *
+ * @param[inout]  p_ptr       Index to increment.
+ * @param[in]     queue_size  Number of elements in the queue.
+ */
 static void queue_ptr_increment(uint8_t * p_ptr, uint8_t queue_size)
 {
     if (++(*p_ptr) >= queue_size)
@@ -164,6 +184,16 @@ static void queue_ptr_increment(uint8_t * p_ptr, uint8_t queue_size)
     }
 }
 
+/**
+ * Check if given queue is full.
+ *
+ * @param[in]  r_ptr       Read index associated with given queue.
+ * @param[in]  w_ptr       Write index associated with given queue.
+ * @param[in]  queue_size  Number of elements in the queue.
+ *
+ * @retval  true   Given queue is full.
+ * @retval  false  Given queue is not full.
+ */
 static bool queue_is_full(uint8_t r_ptr, uint8_t w_ptr, uint8_t queue_size)
 {
     if (w_ptr == (r_ptr - 1))
@@ -179,36 +209,79 @@ static bool queue_is_full(uint8_t r_ptr, uint8_t w_ptr, uint8_t queue_size)
     return false;
 }
 
+/**
+ * Check if given queue is empty.
+ *
+ * @param[in]  r_ptr  Read index associated with given queue.
+ * @param[in]  w_ptr  Write index associated with given queue.
+ *
+ * @retval  true   Given queue is empty.
+ * @retval  false  Given queue is not empty.
+ */
 static bool queue_is_empty(uint8_t r_ptr, uint8_t w_ptr)
 {
     return (r_ptr == w_ptr);
 }
 
+/**
+ * Increment given index associated with notification queue.
+ *
+ * @param[inout]  p_ptr  Pointer to the index to increment.
+ */
 static void ntf_queue_ptr_increment(uint8_t * p_ptr)
 {
     queue_ptr_increment(p_ptr, NTF_QUEUE_SIZE);
 }
 
+/**
+ * Check if notification queue is full.
+ *
+ * @retval  true   Notification queue is full.
+ * @retval  false  Notification queue is not full.
+ */
 static bool ntf_queue_is_full(void)
 {
     return queue_is_full(m_ntf_r_ptr, m_ntf_w_ptr, NTF_QUEUE_SIZE);
 }
 
+/**
+ * Check if notification queue is empty.
+ *
+ * @retval  true   Notification queue is empty.
+ * @retval  false  Notification queue is not empty.
+ */
 static bool ntf_queue_is_empty(void)
 {
     return queue_is_empty(m_ntf_r_ptr, m_ntf_w_ptr);
 }
 
+/**
+ * Increment given index associated with request queue.
+ *
+ * @param[inout]  p_ptr  Pointer to the index to increment.
+ */
 static void req_queue_ptr_increment(uint8_t * p_ptr)
 {
     queue_ptr_increment(p_ptr, REQ_QUEUE_SIZE);
 }
 
+/**
+ * Check if request queue is full.
+ *
+ * @retval  true   Request queue is full.
+ * @retval  false  Request queue is not full.
+ */
 static bool req_queue_is_full(void)
 {
     return queue_is_full(m_req_r_ptr, m_req_w_ptr, REQ_QUEUE_SIZE);
 }
 
+/**
+ * Check if request queue is empty.
+ *
+ * @retval  true   Request queue is empty.
+ * @retval  false  Request queue is not empty.
+ */
 static bool req_queue_is_empty(void)
 {
     return queue_is_empty(m_req_r_ptr, m_req_w_ptr);
@@ -331,6 +404,7 @@ void nrf_drv_radio802154_swi_receive(uint8_t channel, bool * p_result)
 void nrf_drv_radio802154_swi_transmit(const uint8_t * p_data,
                                       uint8_t         channel,
                                       int8_t          power,
+                                      bool            cca,
                                       bool          * p_result)
 {
     nrf_drv_radio802154_critical_section_enter();
@@ -342,6 +416,7 @@ void nrf_drv_radio802154_swi_transmit(const uint8_t * p_data,
     p_slot->data.transmit.p_data   = p_data;
     p_slot->data.transmit.channel  = channel;
     p_slot->data.transmit.power    = power;
+    p_slot->data.transmit.cca      = cca;
     p_slot->data.transmit.p_result = p_result;
 
     req_queue_ptr_increment(&m_req_w_ptr);
@@ -454,7 +529,8 @@ void SWI_IRQHandler(void)
                     *(p_slot->data.transmit.p_result) = nrf_drv_radio802154_fsm_transmit(
                             p_slot->data.transmit.p_data,
                             p_slot->data.transmit.channel,
-                            p_slot->data.transmit.power);
+                            p_slot->data.transmit.power,
+                            p_slot->data.transmit.cca);
                     break;
 
                 case REQ_TYPE_ENERGY_DETECTION:

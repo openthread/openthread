@@ -48,22 +48,27 @@
 
 #if RAAL_SOFTDEVICE
 // When Softdevice is selected as arbiter critical sections should not be nested.
-static volatile bool m_in_critical_section;
+#define PREVENT_NESTED_CRIT_SECTIONS 1
 #endif // RAAL_SOFTDEVICE
+
+#if PREVENT_NESTED_CRIT_SECTIONS
+/// Flag indicating if the driver entered critical section.
+static volatile bool m_in_critical_section;
+#endif // PREVENT_NESTED_CRIT_SECTIONS
 
 void nrf_drv_radio802154_critical_section_enter(void)
 {
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_CRIT_SECT_ENTER);
     radio_state_t state;
 
-#if RAAL_SOFTDEVICE
+#if PREVENT_NESTED_CRIT_SECTIONS
     __disable_irq();
     __DSB();
     __ISB();
 
     assert(!m_in_critical_section);
     m_in_critical_section = true;
-#endif // RAAL_SOFTDEVICE
+#endif // PREVENT_NESTED_CRIT_SECTIONS
 
     nrf_raal_critical_section_enter();
 
@@ -79,9 +84,9 @@ void nrf_drv_radio802154_critical_section_enter(void)
 #endif // !RAAL_SOFTDEVICE
     }
 
-#if RAAL_SOFTDEVICE
+#if PREVENT_NESTED_CRIT_SECTIONS
     __enable_irq();
-#endif // RAAL_SOFTDEVICE
+#endif // PREVENT_NESTED_CRIT_SECTIONS
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_CRIT_SECT_ENTER);
 }
@@ -90,10 +95,10 @@ void nrf_drv_radio802154_critical_section_exit(void)
 {
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_CRIT_SECT_EXIT);
 
-#if RAAL_SOFTDEVICE
+#if PREVENT_NESTED_CRIT_SECTIONS
     assert(m_in_critical_section);
     m_in_critical_section = false;
-#endif // RAAL_SOFTDEVICE
+#endif // PREVENT_NESTED_CRIT_SECTIONS
 
     radio_state_t state;
 

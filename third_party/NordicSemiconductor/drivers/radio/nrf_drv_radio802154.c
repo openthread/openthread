@@ -165,12 +165,12 @@ void nrf_drv_radio802154_receive(uint8_t channel)
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RECEIVE);
 }
 
-bool nrf_drv_radio802154_transmit(const uint8_t * p_data, uint8_t channel, int8_t power)
+bool nrf_drv_radio802154_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca)
 {
     bool result;
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_TRANSMIT);
 
-    result = nrf_drv_radio802154_request_transmit(p_data, channel, power);
+    result = nrf_drv_radio802154_request_transmit(p_data, channel, power, cca);
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_TRANSMIT);
     return result;
@@ -246,23 +246,38 @@ void nrf_drv_radio802154_pending_bit_for_addr_reset(bool extended)
     nrf_drv_radio802154_ack_pending_bit_for_addr_reset(extended);
 }
 
+__WEAK void nrf_drv_radio802154_rx_started(void)
+{
+    // Intentionally empty
+}
+
 __WEAK void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi)
 {
-    (void) p_data;
     (void) power;
     (void) lqi;
+
+    nrf_drv_radio802154_buffer_free(p_data);
+}
+
+__WEAK void nrf_drv_radio802154_tx_started(void)
+{
+    // Intentionally empty
 }
 
 __WEAK void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi)
 {
-    (void) p_ack;
     (void) power;
     (void) lqi;
+
+    if (p_ack != NULL)
+    {
+        nrf_drv_radio802154_buffer_free(p_ack);
+    }
 }
 
 __WEAK void nrf_drv_radio802154_busy_channel(void)
 {
-
+    // Intentionally empty
 }
 
 __WEAK void nrf_drv_radio802154_energy_detected(int8_t result)

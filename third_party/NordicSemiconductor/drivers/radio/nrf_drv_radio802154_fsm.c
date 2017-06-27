@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "nrf_drv_radio802154.h"
 #include "nrf_drv_radio802154_ack_pending_bit.h"
 #include "nrf_drv_radio802154_config.h"
 #include "nrf_drv_radio802154_const.h"
@@ -53,46 +54,62 @@
 #include "hal/nrf_radio.h"
 #include "raal/nrf_raal_api.h"
 
+/// Value set to SHORTS register when no shorts should be enabled.
 #define SHORTS_IDLE         0
+/// Value set to SHORTS register when receiver is waiting for incoming frame.
 #define SHORTS_RX_INITIAL   (NRF_RADIO_SHORT_END_DISABLE_MASK | NRF_RADIO_SHORT_DISABLED_TXEN_MASK | \
                              NRF_RADIO_SHORT_FRAMESTART_BCSTART_MASK)
+/// Value set to SHORTS register when receiver started receiving a frame.
 #define SHORTS_RX_FOLLOWING (NRF_RADIO_SHORT_END_DISABLE_MASK | NRF_RADIO_SHORT_READY_START_MASK | \
                              NRF_RADIO_SHORT_FRAMESTART_BCSTART_MASK)
+/// Value set to SHORTS register when received frame should be acknowledged.
 #define SHORTS_TX_ACK       (NRF_RADIO_SHORT_END_DISABLE_MASK)
 #if RADIO_SHORT_CCAIDLE_TXEN
+/// Value set to SHORTS register during transmission of a frame
 #define SHORTS_TX_FRAME     (NRF_RADIO_SHORT_END_DISABLE_MASK | NRF_RADIO_SHORT_READY_START_MASK | \
                              NRF_RADIO_SHORT_CCAIDLE_TXEN_MASK)
 #else
+/// Value set to SHORTS register during transmission of a frame
 #define SHORTS_TX_FRAME     (NRF_RADIO_SHORT_END_DISABLE_MASK | NRF_RADIO_SHORT_READY_START_MASK)
 #endif
 
-// Delay before sending ACK (10sym = 192uS)
+/// Delay before sending ACK (12sym = 192uS)
 #define TIFS_ACK_US         192
-// Delay before first check of received frame: 16 bits is MAC Frame Control field.
+/// Delay before first check of received frame: 16 bits is MAC Frame Control field.
 #define BCC_INIT            (2 * 8)
-// Delay before second check of received frame if destination address is short.
+/// Delay before second check of received frame if destination address is short.
 #define BCC_SHORT_ADDR      ((DEST_ADDR_OFFSET + SHORT_ADDRESS_SIZE) * 8)
-// Delay before second check of received frame if destination address is extended.
+/// Delay before second check of received frame if destination address is extended.
 #define BCC_EXTENDED_ADDR   ((DEST_ADDR_OFFSET + EXTENDED_ADDRESS_SIZE) * 8)
 
-// Duration of single iteration of Energy Detection procedure
+/// Duration of single iteration of Energy Detection procedure
 #define ED_ITER_DURATION   128U
-// Overhead of hardware preparation for ED procedure (aTurnaroundTime) [number of iterations]
+/// Overhead of hardware preparation for ED procedure (aTurnaroundTime) [number of iterations]
 #define ED_ITERS_OVERHEAD  2U
 
-// Get LQI of given received packet. If CRC is calculated by hardware LQI is included instead of CRC
-// in the frame. Length is stored in byte with index 0; CRC is 2 last bytes.
+#define CRC_LENGTH      2         ///< Length of CRC in 802.15.4 frames [bytes]
+#define CRC_POLYNOMIAL  0x011021  ///< Polynomial used for CRC calculation in 802.15.4 frames
+
+#define MHMU_MASK               0xff000700  ///< Mask of known bytes in ACK packet
+#define MHMU_PATTERN            0x00000200  ///< Values of known bytes in ACK packet
+#define MHMU_PATTERN_DSN_OFFSET 24          ///< Offset of DSN in MHMU_PATTER [bits]
+
+/** Get LQI of given received packet. If CRC is calculated by hardware LQI is included instead of CRC
+ *  in the frame. Length is stored in byte with index 0; CRC is 2 last bytes.
+ */
 #define RX_FRAME_LQI(psdu)  ((psdu)[(psdu)[0] - 1])
 
 #if RADIO_RX_BUFFERS > 1
-static rx_buffer_t * mp_current_rx_buffer; // Pointer to currently used receive buffer.
+/// Pointer to currently used receive buffer.
+static rx_buffer_t * mp_current_rx_buffer;
 #else
-static rx_buffer_t * const mp_current_rx_buffer = &nrf_drv_radio802154_rx_buffers[0]; // If there is only one buffer use const pointer.
+/// If there is only one buffer use const pointer to the receive buffer.
+static rx_buffer_t * const mp_current_rx_buffer = &nrf_drv_radio802154_rx_buffers[0];
 #endif
 
 #if defined ( __GNUC__ )
 
-// Ack frame buffer (EasyDMA cannot address whole RAM. Place buffer in the special section.)
+/// Ack frame buffer (EasyDMA cannot address whole RAM. Place buffer in the special section.)
 static uint8_t m_ack_psdu[ACK_LENGTH + 1]
                 __attribute__ ((section ("nrf_radio_buffer.m_ack_psdu")));
 
@@ -103,27 +120,26 @@ static uint8_t m_ack_psdu[ACK_LENGTH + 1];
 
 #endif
 
-static const uint8_t * mp_tx_data;      // Pointer to data to transmit.
-static uint32_t        m_ed_time_left;  // Remaining time of current energy detection procedure [us].
-static uint8_t         m_ed_result;     // Result of current energy detection procedure.
+static const uint8_t * mp_tx_data;      ///< Pointer to data to transmit.
+static uint32_t        m_ed_time_left;  ///< Remaining time of current energy detection procedure [us].
+static uint8_t         m_ed_result;     ///< Result of current energy detection procedure.
 
-static volatile radio_state_t m_state = RADIO_STATE_SLEEP;  // State of the radio driver
+static volatile radio_state_t m_state = RADIO_STATE_SLEEP;  ///< State of the radio driver
 
 typedef struct
 {
-    bool prevent_ack :1;  // If frame being received is not destined to this node (promiscuous mode).
+    bool prevent_ack :1;  ///< If frame being received is not destined to this node (promiscuous mode).
 } nrf_radio802154_flags_t;
-static nrf_radio802154_flags_t m_flags;
+static nrf_radio802154_flags_t m_flags;  ///< Flags used to store current driver state.
 
-// Mutex preventing race condition.
-static volatile uint8_t m_mutex;
+static volatile uint8_t m_mutex;  ///< Mutex preventing race condition.
 
 
 /***************************************************************************************************
  * @section Mutex
  **************************************************************************************************/
 
-// Lock mutex to prevent run conditions.
+/// Lock mutex to prevent race conditions.
 static bool mutex_lock(void)
 {
     do
@@ -149,7 +165,7 @@ static bool mutex_lock(void)
     return true;
 }
 
-// Unlock mutex.
+/// Unlock mutex.
 static void mutex_unlock(void)
 {
     assert(m_state == RADIO_STATE_SLEEP ||
@@ -166,7 +182,10 @@ static void mutex_unlock(void)
  * @section FSM common operations
  **************************************************************************************************/
 
-// Set radio state
+/** Set driver state.
+ *
+ * @param[in]  state  Driver state to set.
+ */
 static inline void state_set(radio_state_t state)
 {
     m_state = state;
@@ -174,7 +193,7 @@ static inline void state_set(radio_state_t state)
     nrf_drv_radio802154_log(EVENT_SET_STATE, (uint32_t)state);
 }
 
-// Set state to SLEEP, exit timeslot, stop clock, unlock mutex.
+/// Common procedure when the driver enters SLEEP state.
 static inline void sleep_start(void)
 {
     state_set(RADIO_STATE_SLEEP);
@@ -182,24 +201,33 @@ static inline void sleep_start(void)
     mutex_unlock();
 }
 
-// Start receiver to wait for frames.
+/// Start receiver to wait for frames.
 static inline void rx_start(void)
 {
     nrf_radio_packet_ptr_set(mp_current_rx_buffer->psdu);
     nrf_radio_task_trigger(NRF_RADIO_TASK_START);
+}
+
+/// Start receiver to wait for frame that can be acknowledged.
+static inline void rx_frame_start(void)
+{
+    rx_start();
 
     // Just after starting receiving to receive buffer set packet pointer to ACK frame that can be
     // sent automatically.
     nrf_radio_packet_ptr_set(m_ack_psdu);
 }
 
-// Get result of last RSSI measurement
+/** Get result of last RSSI measurement.
+ *
+ * @returns  Result of last RSSI measurement [dBm].
+ */
 static inline int8_t rssi_last_measurement_get(void)
 {
     return -((int8_t)nrf_radio_rssi_sample_get());
 }
 
-// Notify MAC layer that a frame was received.
+/// Notify MAC layer that a frame was received.
 static inline void received_frame_notify(void)
 {
     mp_current_rx_buffer->free = false;
@@ -208,6 +236,10 @@ static inline void received_frame_notify(void)
                                         RX_FRAME_LQI(mp_current_rx_buffer->psdu)); // lqi
 }
 
+/** Set currently used rx buffer to given address.
+ *
+ * @param[in]  p_rx_buffer  Pointer to receive buffer that should be used now.
+ */
 static inline void rx_buffer_in_use_set(rx_buffer_t * p_rx_buffer)
 {
 #if RADIO_RX_BUFFERS > 1
@@ -222,19 +254,30 @@ static inline void rx_buffer_in_use_set(rx_buffer_t * p_rx_buffer)
  * @section Radio parameters calculators
  **************************************************************************************************/
 
-// Set radio channel
+/** Set radio channel
+ *
+ *  @param[in]  channel  Channel number to set (11-26).
+ */
 static void channel_set(uint8_t channel)
 {
+    assert(channel >= 11 && channel <= 26);
+
     nrf_radio_frequency_set(5 + (5 * (channel - 11)));
 }
 
-// Get radio channel
+/** Get radio channel.
+ *
+ * @returns  Currently set channel number.
+ */
 static uint8_t channel_get(void)
 {
     return ((nrf_radio_frequency_get() - 5) / 5) + 11;
 }
 
-// Set transmit power
+/** Set transmit power.
+ *
+ * @param[in]  dbm  Transmit power to set [dbm].
+ */
 static void tx_power_set(int8_t dbm)
 {
     const int8_t allowed_values[] = {-40, -20, -16, -12, -8, -4, 0, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -263,21 +306,20 @@ static void tx_power_set(int8_t dbm)
  * @section Shorts management
  **************************************************************************************************/
 
-// Disable peripheral shorts.
+/// Disable peripheral shorts.
 static inline void shorts_disable(void)
 {
     nrf_radio_shorts_set(SHORTS_IDLE);
     nrf_radio_ifs_set(0);
 }
 
-// Enable peripheral shorts used during data frame transmission.
+/// Enable peripheral shorts used during data frame transmission.
 static inline void shorts_tx_frame_set(void)
 {
     nrf_radio_shorts_set(SHORTS_TX_FRAME);
 }
 
-// Enable peripheral shorts used during automatic ACK transmission.
-// TIFS shorts are splitted
+/// Enable peripheral shorts used in receive state to enable automatic ACK procedure.
 static inline void shorts_rx_initial_set(void)
 {
     nrf_radio_ifs_set(TIFS_ACK_US);
@@ -286,14 +328,13 @@ static inline void shorts_rx_initial_set(void)
     nrf_radio_shorts_set(SHORTS_RX_INITIAL);
 }
 
-// Enable peripheral shorts used during automatic ACK transmission.
+/// Enable peripheral shorts used during automatic ACK transmission.
 static inline void shorts_rx_following_set(void)
 {
     nrf_radio_shorts_set(SHORTS_RX_FOLLOWING);
 }
 
-// Disable peripheral shorts used during automatic ACK transmission if ACK is transmitted
-// (short disabling transmitter persists).
+/// Disable peripheral shorts used during automatic ACK transmission when ACK is being transmitted
 static inline void shorts_tx_ack_set(void)
 {
     // If ACK is sent END_DISABLE short should persist to disable transmitter automatically.
@@ -306,14 +347,14 @@ static inline void shorts_tx_ack_set(void)
  * @section ACK transmission management
  **************************************************************************************************/
 
-// Set valid sequence number in ACK frame.
+/// Set valid sequence number in ACK frame.
 static inline void ack_prepare(void)
 {
     // Copy sequence number from received frame to ACK frame.
     m_ack_psdu[DSN_OFFSET] = mp_current_rx_buffer->psdu[DSN_OFFSET];
 }
 
-// Set pending bit in ACK frame.
+/// Set pending bit in ACK frame.
 static inline void ack_pending_bit_set(void)
 {
     m_ack_psdu[FRAME_PENDING_OFFSET] = ACK_HEADER_WITH_PENDING;
@@ -324,13 +365,22 @@ static inline void ack_pending_bit_set(void)
     }
 }
 
-// Check if ACK is requested in given frame.
+/** Check if ACK is requested in given frame.
+ *
+ * @param[in]  p_frame  Pointer to a frame to check.
+ *
+ * @retval  true   ACK is requested in given frame.
+ * @retval  false  ACK is not requested in given frame.
+ */
 static inline bool ack_is_requested(const uint8_t * p_frame)
 {
     return (p_frame[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT) ? true : false;
 }
 
-// Abort automatic sending ACK.
+/** Abort automatic ACK procedure.
+ *
+ * @param[in]  state_to_set  Driver state that shall be set after the procedure is aborted.
+ */
 static void auto_ack_abort(radio_state_t state_to_set)
 {
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_AUTO_ACK_ABORT);
@@ -367,6 +417,7 @@ static void auto_ack_abort(radio_state_t state_to_set)
  * @section ACK receiving management
  **************************************************************************************************/
 
+/// Enable hardware ACK matching accelerator.
 static inline void ack_matching_enable(void)
 {
     nrf_radio_event_clear(NRF_RADIO_EVENT_MHRMATCH);
@@ -375,18 +426,25 @@ static inline void ack_matching_enable(void)
                                        MHMU_PATTERN_DSN_OFFSET));
 }
 
+/// Disable hardware ACK matching accelerator.
 static inline void ack_matching_disable(void)
 {
     nrf_radio_mhmu_search_pattern_set(0);
     nrf_radio_event_clear(NRF_RADIO_EVENT_MHRMATCH);
 }
 
+/** Check if hardware ACK matching accelerator matched ACK pattern in received frame.
+ *
+ * @retval  true   ACK matching accelerator matched ACK pattern.
+ * @retval  false  ACK matching accelerator did not match ACK pattern.
+ */
 static inline bool ack_is_matched(void)
 {
     return (nrf_radio_event_get(NRF_RADIO_EVENT_MHRMATCH)) &&
             (nrf_radio_crc_status_get() == NRF_RADIO_CRC_STATUS_OK);
 }
 
+/// Start receiver to receive data after receiving of ACK frame.
 static inline void frame_rx_start_after_ack_rx(void)
 {
     ack_matching_disable();
@@ -398,7 +456,7 @@ static inline void frame_rx_start_after_ack_rx(void)
  * @section RADIO peripheral management
  **************************************************************************************************/
 
-// Initialize radio peripheral
+/// Initialize radio peripheral
 static void nrf_radio_init(void)
 {
     nrf_radio_mode_set(NRF_RADIO_MODE_IEEE802154_250KBIT);
@@ -434,7 +492,7 @@ static void nrf_radio_init(void)
     nrf_radio_int_enable(NRF_RADIO_INT_EDEND_MASK);
 }
 
-// Reset radio peripheral
+/// Reset radio peripheral
 static void nrf_radio_reset(void)
 {
     nrf_radio_power_set(false);
@@ -443,7 +501,7 @@ static void nrf_radio_reset(void)
     nrf_drv_radio802154_log(EVENT_RADIO_RESET, 0);
 }
 
-// Initialize interrupts for radio peripheral
+/// Initialize interrupts for radio peripheral
 static void irq_init(void)
 {
     NVIC_SetPriority(RADIO_IRQn, RADIO_IRQ_PRIORITY);
@@ -451,7 +509,7 @@ static void irq_init(void)
     NVIC_EnableIRQ(RADIO_IRQn);
 }
 
-// Deinitialize interrupts for radio peripheral
+/// Deinitialize interrupts for radio peripheral
 static void irq_deinit(void)
 {
     NVIC_DisableIRQ(RADIO_IRQn);
@@ -467,6 +525,17 @@ static void irq_deinit(void)
  * @section Energy detection management
  **************************************************************************************************/
 
+/** Setup next iteration of energy detection procedure.
+ *
+ *  Energy detection procedure is performed in iterations to make sure it is performed for requested
+ *  time regardless radio arbitration.
+ *
+ *  @param[in]  Remaining time of energy detection procedure [us].
+ *
+ *  @retval  true   Next iteration of energy detection procedure will be performed now.
+ *  @retval  false  Next iteration of energy detection procedure will not be performed now due to
+ *                  ending timeslot.
+ */
 static inline bool ed_iter_setup(uint32_t time_us)
 {
     uint32_t us_left_in_timeslot = nrf_raal_timeslot_us_left_get();
@@ -592,7 +661,7 @@ void nrf_raal_timeslot_ended(void)
  * @section RADIO interrupt handler
  **************************************************************************************************/
 
-// When the radio starts receiving a frame it generates this event.
+/// This event is handled when the radio starts receiving a frame.
 static inline void irq_framestart_state_waiting_rx_frame(void)
 {
     if (mutex_lock())
@@ -611,6 +680,8 @@ static inline void irq_framestart_state_waiting_rx_frame(void)
         else
         {
             nrf_radio_task_trigger(NRF_RADIO_TASK_RSSISTART);
+
+            nrf_drv_radio802154_rx_started();
         }
     }
 
@@ -641,7 +712,7 @@ static inline void irq_framestart_state_waiting_rx_frame(void)
     }
 }
 
-// When the radio starts receiving an ACK frame this event is generated.
+/// This event is handled when the radio starts receiving an ACK frame.
 static inline void irq_framestart_state_rx_ack(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -660,7 +731,13 @@ static inline void irq_framestart_state_rx_ack(void)
     }
 }
 
-// This event is handled when MHR was received
+/// This event is handled when the radio starts transmitting a requested frame.
+static inline void irq_framestart_state_tx_frame(void)
+{
+    nrf_drv_radio802154_tx_started();
+}
+
+/// This event is handled when MHR is received
 static inline void irq_bcmatch_mhr(void)
 {
     // Verify if time slot for receiving is available.
@@ -726,7 +803,7 @@ static inline void irq_bcmatch_mhr(void)
     }
 }
 
-// This event is generated when destination address fields are received
+/// This event is generated when destination address fields are received.
 static inline void irq_bcmatch_address(void)
 {
     if (nrf_drv_radio802154_pib_dest_addr_matches(mp_current_rx_buffer->psdu))
@@ -750,9 +827,9 @@ static inline void irq_bcmatch_address(void)
     }
 }
 
-// This event is generated two times during frame reception:
-// When MHR is received
-// When destination address fields are received
+/** This event is generated twice during frame reception:
+ *  when MHR is received and when destination address fields are received.
+ */
 static inline void irq_bcmatch_state_rx_header(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_RX_INITIAL);
@@ -795,8 +872,9 @@ static inline void irq_bcmatch_state_rx_header(void)
     }
 }
 
-// This event is generated when radio receives invalid frame with length set to 0 or started
-// receiving a frame after other procedure locked mutex.
+/** This event is generated when radio receives invalid frame with length set to 0 or started
+ *  receiving a frame after other procedure locked mutex.
+ */
 static inline void irq_end_state_waiting_rx_frame(void)
 {
     // Radio state is not asserted here. It can be a lot of states due to shorts.
@@ -816,7 +894,7 @@ static inline void irq_end_state_waiting_rx_frame(void)
     }
 }
 
-// This event is generated if frame being received is shorter than expected MAC header length.
+/// This event is generated if frame being received is shorter than expected MAC header length.
 static inline void irq_end_state_rx_header(void)
 {
     // Frame ended before header was received.
@@ -824,7 +902,7 @@ static inline void irq_end_state_rx_header(void)
     nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
 }
 
-// This event is generated when radio peripheral ends receiving of a complete frame.
+/// This event is generated when radio peripheral ends receiving of a complete frame.
 static inline void irq_end_state_rx_frame(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_RX_INITIAL);
@@ -871,7 +949,7 @@ static inline void irq_end_state_rx_frame(void)
     }
 }
 
-// This event is generated when the radio ends transmission of ACK frame.
+/// This event is generated when the radio ends transmission of ACK frame.
 static inline void irq_end_state_tx_ack(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_TX_ACK);
@@ -883,13 +961,15 @@ static inline void irq_end_state_tx_ack(void)
     // Receiver is enabled by shorts.
 }
 
-// This could happen at the beginning of transmission procedure (the procedure already has disabled shorts).
+/** This event may occur at the beginning of transmission procedure (the procedure already has
+ *  disabled shorts).
+ */
 static inline void irq_end_state_cca(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
 }
 
-// This event is generated when the radio ends transmission of a frame.
+/// This event is generated when the radio ends transmission of a frame.
 static inline void irq_end_state_tx_frame(void)
 {
     shorts_disable();
@@ -911,7 +991,7 @@ static inline void irq_end_state_tx_frame(void)
     // Task DISABLE is triggered by shorts.
 }
 
-// This event is generated when the radio ends receiving of ACK frame.
+/// This event is generated when the radio ends receiving of ACK frame.
 static inline void irq_end_state_rx_ack(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -932,7 +1012,7 @@ static inline void irq_end_state_rx_ack(void)
     frame_rx_start_after_ack_rx();
 }
 
-// This event is generated when radio peripheral disables in order to enter sleep state.
+/// This event is generated when radio peripheral disables in order to enter sleep state.
 static inline void irq_disabled_state_disabling(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -940,8 +1020,10 @@ static inline void irq_disabled_state_disabling(void)
     sleep_start();
 }
 
-// This event is generated when the driver enters receive state. The radio is now disabled and the
-// driver starts enabling receiver.
+/** This event is generated when the driver enters receive state.
+ *
+ *  The radio is now disabled and the driver starts enabling receiver.
+ */
 static inline void irq_disabled_state_waiting_rx_frame(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -964,8 +1046,25 @@ static inline void irq_disabled_state_waiting_rx_frame(void)
     nrf_radio_event_clear(NRF_RADIO_EVENT_DISABLED);
 }
 
-// This event is generated during automatic ACK transmission: receiver is disabled and transmitter
-// is being enabled by shorts.
+/** This event is generated in case both END and DISABLED events are notified between
+ *  checking if END event was notified and checking if DISABLED event was notified.
+ *
+ *  In this invalid and rare case just drop received frame.
+ */
+static inline void irq_disabled_state_rx_frame(void)
+{
+    assert(nrf_radio_event_get(NRF_RADIO_EVENT_END));
+    assert(nrf_radio_shorts_get() == SHORTS_RX_INITIAL);
+
+    auto_ack_abort(RADIO_STATE_WAITING_RX_FRAME);
+    nrf_radio_event_clear(NRF_RADIO_EVENT_END);
+    nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
+}
+
+/** This event is generated during automatic ACK transmission.
+ *
+ *  Receiver is disabled and transmitter is being enabled by shorts.
+ */
 static inline void irq_disabled_state_tx_ack(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_RX_INITIAL);
@@ -984,8 +1083,10 @@ static inline void irq_disabled_state_tx_ack(void)
     }
 }
 
-// This event is generated before CCA procedure starts. The radio is disabled and the drivers
-// enables receiver in order to start CCA procedure.
+/** This event is generated before CCA procedure starts.
+ *
+ *  The radio is disabled and the drivers enables receiver in order to start CCA procedure.
+ */
 static inline void irq_disabled_state_cca(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -993,18 +1094,25 @@ static inline void irq_disabled_state_cca(void)
     nrf_radio_task_trigger(NRF_RADIO_TASK_RXEN);
 }
 
-// This event is generated before transmission of a frame starts. The radio is disabled and
-// enabling transmitter is requested by shorts or by the driver.
+/** This event is generated before transmission of a frame starts.
+ *
+ *  The radio is disabled and enabling transmitter is requested by shorts or by the driver.
+ */
 static inline void irq_disabled_state_tx_frame(void)
 {
+    if (nrf_radio_state_get() == NRF_RADIO_STATE_DISABLED)
+    {
+        shorts_tx_frame_set();
+        nrf_radio_task_trigger(NRF_RADIO_TASK_TXEN);
+    }
+
     assert(nrf_radio_shorts_get() == SHORTS_TX_FRAME);
-#if !RADIO_SHORT_CCAIDLE_TXEN
-    nrf_radio_task_trigger(NRF_RADIO_TASK_TXEN);
-#endif
 }
 
-// This event is generated when radio is disabled after transmission of a frame with ACK request.
-// The driver enables receiver to receive ACK frame.
+/** This event is generated when radio is disabled after transmission of a frame with ACK request.
+ *
+ *  The driver enables receiver to receive ACK frame.
+ */
 static inline void irq_disabled_state_rx_ack(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -1017,8 +1125,11 @@ static inline void irq_disabled_state_rx_ack(void)
     }
 }
 
-// This event is generated before energy detection procedure. The radio is disabled and the driver
-// enables receiver in order to start energy detection procedure.
+/** This event is generated before energy detection procedure.
+ *
+ *  The radio is disabled and the driver enables receiver in order to start energy detection
+ *  procedure.
+ */
 static inline void irq_disabled_state_ed(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -1026,8 +1137,10 @@ static inline void irq_disabled_state_ed(void)
     nrf_radio_task_trigger(NRF_RADIO_TASK_RXEN);
 }
 
-// This event is generated when receiver is ready to start receiving a frame. Driver checks if
-// buffer for a frame is available and starts receiver.
+/** This event is generated when receiver is ready to start receiving a frame.
+ *
+ *  Driver checks if buffer for a frame is available and starts receiver.
+ */
 static inline void irq_ready_state_waiting_rx_frame(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -1038,23 +1151,27 @@ static inline void irq_ready_state_waiting_rx_frame(void)
         if (mutex_lock())
         {
             shorts_rx_initial_set();
-            rx_start();
+            rx_frame_start();
 
             mutex_unlock();
         }
     }
 }
 
-// This event is generated when transmitter is ready to transmit ACK frame. Transmission is started
-// by shorts. The driver sets shorts to gracefully end transmission of ACK.
+/** This event is generated when transmitter is ready to transmit ACK frame.
+ *
+ *  Transmission is started by shorts. The driver sets shorts to gracefully end transmission of ACK.
+ */
 static inline void irq_ready_state_tx_ack(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_RX_FOLLOWING);
     shorts_tx_ack_set();
 }
 
-// This event is generated when receiver is ready to start CCA procedure. The driver prepares for
-// transmission and starts CCA procedure.
+/** This event is generated when receiver is ready to start CCA procedure.
+ *
+ *  The driver prepares for transmission and starts CCA procedure.
+ */
 static inline void irq_ready_state_cca(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -1066,14 +1183,16 @@ static inline void irq_ready_state_cca(void)
     nrf_radio_task_trigger(NRF_RADIO_TASK_CCASTART);
 }
 
-// This event is generated when transmitter is ready to transmit a frame. Transmission is started by
-// shorts.
+/** This event is generated when transmitter is ready to transmit a frame.
+ *
+ *  Transmission is started by shorts.
+ */
 static inline void irq_ready_state_tx_frame(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_TX_FRAME);
 }
 
-// This event is generated when receiver is ready to receive an ACK frame.
+/// This event is generated when receiver is ready to receive an ACK frame.
 static inline void irq_ready_state_rx_ack(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -1090,7 +1209,7 @@ static inline void irq_ready_state_rx_ack(void)
     }
 }
 
-// This event is generated when receiver is ready to start energy detection procedure.
+/// This event is generated when receiver is ready to start energy detection procedure.
 static inline void irq_ready_state_ed(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -1099,16 +1218,17 @@ static inline void irq_ready_state_ed(void)
 }
 
 #if !RADIO_SHORT_CCAIDLE_TXEN
-// This event is generated when CCA reports that channel is idle.
+/// This event is generated when CCA reports that channel is idle.
 static inline void irq_ccaidle(void)
 {
-    assert (m_state == RADIO_STATE_TX_FRAME);
+    assert(m_state == RADIO_STATE_TX_FRAME);
+    assert(nrf_radio_shorts_get() == SHORTS_TX_FRAME);
 
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
 }
 #endif // RADIO_SHORT_CCAIDLE_TXEN
 
-// This event is generated when CCA reports busy channel prior to transmission.
+/// This event is generated when CCA reports busy channel prior to transmission.
 static inline void irq_ccabusy_state_tx_frame(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_TX_FRAME);
@@ -1122,7 +1242,7 @@ static inline void irq_ccabusy_state_tx_frame(void)
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
 }
 
-// This event is generated when energy detection procedure ends.
+/// This event is generated when energy detection procedure ends.
 static inline void irq_edend(void)
 {
     assert(m_state == RADIO_STATE_ED);
@@ -1148,7 +1268,7 @@ static inline void irq_edend(void)
     }
 }
 
-// Handler of radio interrupts.
+/// Handler of radio interrupts.
 void RADIO_IRQHandler(void)
 {
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_IRQ_HANDLER);
@@ -1168,8 +1288,11 @@ void RADIO_IRQHandler(void)
                 irq_framestart_state_rx_ack();
                 break;
 
-            case RADIO_STATE_TX_ACK:
             case RADIO_STATE_TX_FRAME:
+                irq_framestart_state_tx_frame();
+                break;
+
+            case RADIO_STATE_TX_ACK:
             case RADIO_STATE_CCA: // This could happen at the beginning of transmission procedure.
             case RADIO_STATE_WAITING_TIMESLOT:
                 break;
@@ -1265,6 +1388,11 @@ void RADIO_IRQHandler(void)
 
             case RADIO_STATE_WAITING_RX_FRAME:
                 irq_disabled_state_waiting_rx_frame();
+                break;
+
+            case RADIO_STATE_RX_HEADER:
+            case RADIO_STATE_RX_FRAME:
+                irq_disabled_state_rx_frame();
                 break;
 
             case RADIO_STATE_TX_ACK:
@@ -1392,8 +1520,10 @@ void RADIO_IRQHandler(void)
  * @section FSM transition request sub-procedures
  **************************************************************************************************/
 
-// Abort transmission procedure.
-// This function is called when MAC layer requests transition from transmit to receive state.
+/** Abort transmission procedure.
+ *
+ *  This function is called when MAC layer requests transition from transmit to receive state.
+ */
 static inline void tx_procedure_abort(void)
 {
     shorts_disable();
@@ -1563,7 +1693,7 @@ bool nrf_drv_radio802154_fsm_receive(uint8_t channel)
     return result;
 }
 
-bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, int8_t power)
+bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca)
 {
     bool result = false;
     mp_tx_data  = p_data;
@@ -1576,9 +1706,8 @@ bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, i
             assert(m_state == RADIO_STATE_WAITING_RX_FRAME);
 
             channel_set(channel);
-            auto_ack_abort(RADIO_STATE_CCA);
 
-            assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+            auto_ack_abort(cca ? RADIO_STATE_CCA : RADIO_STATE_TX_FRAME);
 
             tx_power_set(power);
             nrf_radio_packet_ptr_set(p_data);
@@ -1707,7 +1836,7 @@ void nrf_drv_radio802154_fsm_notify_buffer_free(rx_buffer_t * p_buffer)
                         shorts_rx_initial_set();
 
                         rx_buffer_in_use_set(p_buffer);
-                        rx_start();
+                        rx_frame_start();
 
                         // Clear events that could have happened in critical section due to RX
                         // ramp up.

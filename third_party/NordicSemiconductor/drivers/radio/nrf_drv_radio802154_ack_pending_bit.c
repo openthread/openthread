@@ -45,20 +45,20 @@
 
 #include "hal/nrf_radio.h"
 
-// Maximum number of Short Addresses of nodes for which there is pending data in buffer.
+/// Maximum number of Short Addresses of nodes for which there is pending data in buffer.
 #define NUM_PENDING_SHORT_ADDRESSES     RADIO_PENDING_SHORT_ADDRESSES
-// Maximum number of Extended Addresses of nodes for which there is pending data in buffer.
+/// Maximum number of Extended Addresses of nodes for which there is pending data in buffer.
 #define NUM_PENDING_EXTENDED_ADDRESSES  RADIO_PENDING_EXTENDED_ADDRESSES
-// Value used to mark Short Address as unused.
+/// Value used to mark Short Address as unused.
 #define UNUSED_PENDING_SHORT_ADDRESS    ((uint8_t [SHORT_ADDRESS_SIZE]) {0xff, 0xff})
-// Value used to mark Extended Address as unused.
+/// Value used to mark Extended Address as unused.
 #define UNUSED_PENDING_EXTENDED_ADDRESS ((uint8_t [EXTENDED_ADDRESS_SIZE]) {0})
 
-// If pending bit in ACK frame should be set to valid or default value.
+/// If pending bit in ACK frame should be set to valid or default value.
 static bool m_setting_pending_bit_enabled;
-// Array of Short Addresses of nodes for which there is pending data in the buffer.
+/// Array of Short Addresses of nodes for which there is pending data in the buffer.
 static uint8_t m_pending_short[NUM_PENDING_SHORT_ADDRESSES][SHORT_ADDRESS_SIZE];
-// Array of Extended Addresses of nodes for which there is pending data in the buffer.
+/// Array of Extended Addresses of nodes for which there is pending data in the buffer.
 static uint8_t m_pending_extended[NUM_PENDING_EXTENDED_ADDRESSES][EXTENDED_ADDRESS_SIZE];
 
 void nrf_drv_radio802154_ack_pending_bit_init(void)

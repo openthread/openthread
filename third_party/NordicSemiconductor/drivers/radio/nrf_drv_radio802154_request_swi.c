@@ -37,6 +37,7 @@
 
 #include "nrf_drv_radio802154_request.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -51,12 +52,31 @@
 #include <cmsis/core_cmFunc.h>
 #include <cmsis/core_cm4.h>
 
-static bool active_verctor_priority_is_high(void)
-{
-    uint32_t active_vector_id = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos;
-    uint32_t active_priority = NVIC_GetPriority((IRQn_Type)active_vector_id);
+#define CMSIS_IRQ_NUM_VECTACTIVE_DIFF 16
 
-    return active_priority >= RADIO_NOTIFICATION_SWI_PRIORITY;
+/** Check if active vector priority is high enough to call requests directly.
+ *
+ *  @retval  true   Active vector priority is greater or equal to SWI priority.
+ *  @retval  false  Active vector priority is lower than SWI priority.
+ */
+static bool active_vector_priority_is_high(void)
+{
+    uint32_t  active_vector_id = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos;
+    IRQn_Type irq_number;
+    uint32_t  active_priority;
+
+    // Check if this function is called from main thread.
+    if (active_vector_id == 0)
+    {
+        return false;
+    }
+
+    assert(active_vector_id >= CMSIS_IRQ_NUM_VECTACTIVE_DIFF);
+
+    irq_number      = (IRQn_Type)(active_vector_id - CMSIS_IRQ_NUM_VECTACTIVE_DIFF);
+    active_priority = NVIC_GetPriority(irq_number);
+
+    return active_priority <= RADIO_NOTIFICATION_SWI_PRIORITY;
 }
 
 void nrf_drv_radio802154_request_init(void)
@@ -68,7 +88,7 @@ bool nrf_drv_radio802154_request_sleep(void)
 {
     bool result = false;
 
-    if (active_verctor_priority_is_high())
+    if (active_vector_priority_is_high())
     {
         nrf_drv_radio802154_critical_section_enter();
         result = nrf_drv_radio802154_fsm_sleep();
@@ -86,7 +106,7 @@ bool nrf_drv_radio802154_request_receive(uint8_t channel)
 {
     bool result = false;
 
-    if (active_verctor_priority_is_high())
+    if (active_vector_priority_is_high())
     {
         nrf_drv_radio802154_critical_section_enter();
         result = nrf_drv_radio802154_fsm_receive(channel);
@@ -100,19 +120,19 @@ bool nrf_drv_radio802154_request_receive(uint8_t channel)
     return result;
 }
 
-bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power)
+bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca)
 {
     bool result = false;
 
-    if (active_verctor_priority_is_high())
+    if (active_vector_priority_is_high())
     {
         nrf_drv_radio802154_critical_section_enter();
-        result = nrf_drv_radio802154_fsm_transmit(p_data, channel, power);
+        result = nrf_drv_radio802154_fsm_transmit(p_data, channel, power, cca);
         nrf_drv_radio802154_critical_section_exit();
     }
     else
     {
-        nrf_drv_radio802154_swi_transmit(p_data, channel, power, &result);
+        nrf_drv_radio802154_swi_transmit(p_data, channel, power, cca, &result);
     }
 
     return result;
@@ -122,7 +142,7 @@ bool nrf_drv_radio802154_request_energy_detection(uint8_t channel, uint32_t time
 {
     bool result = false;
 
-    if (active_verctor_priority_is_high())
+    if (active_vector_priority_is_high())
     {
         nrf_drv_radio802154_critical_section_enter();
         result = nrf_drv_radio802154_fsm_energy_detection(channel, time_us);
@@ -138,5 +158,14 @@ bool nrf_drv_radio802154_request_energy_detection(uint8_t channel, uint32_t time
 
 void nrf_drv_radio802154_request_buffer_free(uint8_t * p_data)
 {
-    nrf_drv_radio802154_swi_buffer_free(p_data);
+    if (active_vector_priority_is_high())
+    {
+        nrf_drv_radio802154_critical_section_enter();
+        nrf_drv_radio802154_fsm_notify_buffer_free((rx_buffer_t *)p_data);
+        nrf_drv_radio802154_critical_section_exit();
+    }
+    else
+    {
+        nrf_drv_radio802154_swi_buffer_free(p_data);
+    }
 }

@@ -130,11 +130,12 @@ bool nrf_drv_radio802154_fsm_receive(uint8_t channel);
  * @param[in]  p_data   Pointer to a frame to transmit.
  * @param[in]  channel  Channel number that the radio should use to transmit the frame.
  * @param[in]  power    Transmission power.
+ * @param[in]  cca      If the driver should perform CCA procedure before transmission.
  *
  * @retval  true   Entering TRANSMIT state succeeded.
  * @retval  false  Entering TRANSMIT state failed (driver is performing other procedure).
  */
-bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, int8_t power);
+bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca);
 
 /**
  * @brief Request transition to ENERGY_DETECTION state.
