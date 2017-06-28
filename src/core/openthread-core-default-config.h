@@ -851,4 +851,15 @@
 #define OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE                  0
 #endif
 
+/*
+ * @def OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+ *
+ * Define as 1 to stay awake between fragments while transmitting a large packet,
+ * and to stay awake after receiving a packet with frame pending set to true.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#define OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS          0
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
