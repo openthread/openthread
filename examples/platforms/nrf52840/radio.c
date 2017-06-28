@@ -92,6 +92,7 @@ static int8_t       sEnergyDetected;
 typedef enum
 {
     kPendingEventSleep,                // Requested to enter Sleep state.
+    kPendingEventTransmit,             // Frame is queued for transmission.
     kPendingEventFrameTransmitted,     // Transmitted frame and received ACK (if requested).
     kPendingEventChannelAccessFailure, // Failed to transmit frame (channel busy).
     kPendingEventEnergyDetectionStart, // Requested to start Energy Detection procedure.
@@ -332,7 +333,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     else
     {
         clearPendingEvents();
-        setPendingEvent(kPendingEventChannelAccessFailure);
+        setPendingEvent(kPendingEventTransmit);
     }
 
     return OT_ERROR_NONE;
@@ -524,6 +525,15 @@ void nrf5RadioProcess(otInstance *aInstance)
         }
     }
 
+    if (isPendingEventSet(kPendingEventTransmit))
+    {
+        if (nrf_drv_radio802154_transmit(sTransmitPsdu, sTransmitFrame.mChannel, sTransmitFrame.mPower, true))
+        {
+            resetPendingEvent(kPendingEventTransmit);
+            otPlatRadioTxStarted(aInstance, &sTransmitFrame);
+        }
+    }
+
     if (isPendingEventSet(kPendingEventFrameTransmitted))
     {
 #if OPENTHREAD_ENABLE_DIAG
@@ -592,6 +602,13 @@ void nrf5RadioProcess(otInstance *aInstance)
 void nrf_drv_radio802154_received(uint8_t *p_data, int8_t power, int8_t lqi)
 {
     otRadioFrame *receivedFrame = NULL;
+
+    if (isPendingEventSet(kPendingEventTransmit))
+    {
+        nrf_drv_radio802154_buffer_free(p_data);
+
+        return;
+    }
 
     for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
     {
