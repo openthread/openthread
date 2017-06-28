@@ -156,6 +156,9 @@
     <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\mac\radio.cpp">
+      <Filter>Source Files\mac</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
@@ -378,6 +381,9 @@
       <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\radio.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp">

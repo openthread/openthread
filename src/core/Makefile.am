@@ -134,6 +134,7 @@ SOURCES_COMMON                      = \
     mac/mac_blacklist.cpp             \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
+    mac/radio.cpp                     \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
@@ -229,6 +230,7 @@ HEADERS_COMMON                      = \
     mac/mac_whitelist.hpp             \
     mac/mac_whitelist_impl.hpp        \
     mac/mac_whitelist_stub.hpp        \
+    mac/radio.hpp                     \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \

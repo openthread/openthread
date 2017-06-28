@@ -42,6 +42,7 @@
 #include "mac/mac_blacklist.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_whitelist.hpp"
+#include "mac/radio.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/topology.hpp"
@@ -653,6 +654,22 @@ public:
      */
     bool RadioSupportsRetries(void);
 
+    /**
+     * This method returns the amount of time the radio has spent in Tx mode.
+     *
+     * @returns  A pointer to the total Tx time.
+     *
+     */
+    const uint32_t *GetRadioTxTotalTime(void) { return mRadio.GetTxTotalTime(); }
+
+    /**
+     * This method returns the amount of time the radio has spent in Rx mode.
+     *
+     * @returns  A pointer to the total Rx time.
+     *
+     */
+    const uint32_t *GetRadioRxTotalTime(void) { return mRadio.GetRxTotalTime(); }
+
 private:
     enum ScanType
     {
@@ -751,6 +768,8 @@ private:
 
     otMacCounters mCounters;
     uint32_t mKeyIdMode2FrameCounter;
+
+    Radio mRadio;
 };
 
 /**

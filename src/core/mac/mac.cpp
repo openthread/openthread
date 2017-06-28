@@ -50,6 +50,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/radio.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -353,7 +354,7 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
         // and start the next transmission task
         if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
         {
-            otPlatRadioReceive(GetInstance(), mChannel);
+            mRadio.Receive(GetInstance(), mChannel);
             mEnergyScanHandler(mScanContext, NULL);
             ScheduleNextTransmission();
             ExitNow();
@@ -555,17 +556,17 @@ void Mac::NextOperation(void)
     {
     case kStateActiveScan:
     case kStateEnergyScan:
-        otPlatRadioReceive(GetInstance(), mScanChannel);
+        mRadio.Receive(GetInstance(), mScanChannel);
         break;
 
     default:
         if (mRxOnWhenIdle || mReceiveTimer.IsRunning() || otPlatRadioGetPromiscuous(GetInstance()))
         {
-            otPlatRadioReceive(GetInstance(), mChannel);
+            mRadio.Receive(GetInstance(), mChannel);
         }
         else
         {
-            otPlatRadioSleep(GetInstance());
+            mRadio.Sleep(GetInstance());
         }
 
         break;
@@ -830,9 +831,9 @@ void Mac::HandleBeginTransmit(void)
         }
     }
 
-    error = otPlatRadioReceive(GetInstance(), sendFrame.GetChannel());
+    error = mRadio.Receive(GetInstance(), sendFrame.GetChannel());
     assert(error == OT_ERROR_NONE);
-    error = otPlatRadioTransmit(GetInstance(), static_cast<otRadioFrame *>(&sendFrame));
+    error = mRadio.Transmit(GetInstance(), static_cast<otRadioFrame *>(&sendFrame));
     assert(error == OT_ERROR_NONE);
 
     if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_ACK_TIMEOUT))
@@ -860,29 +861,10 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aRxPending,
-                                        otError aError)
-{
-    otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-
-    if (aInstance->mLinkRaw.IsEnabled())
-    {
-        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, aRxPending, aError);
-    }
-    else
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    {
-        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aRxPending, aError);
-    }
-
-    otLogFuncExit();
-}
-
 void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError)
 {
     mMacTimer.Stop();
+    mRadio.TransmitDone();
 
     mCounters.mTxTotal++;
 
@@ -948,26 +930,6 @@ exit:
 }
 
 #else // #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame,
-                                  otError aError)
-{
-    otLogFuncEntryMsg("%!otError!", aError);
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-
-    if (aInstance->mLinkRaw.IsEnabled())
-    {
-        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, (static_cast<Frame *>(aAckFrame))->GetFramePending(), aError);
-    }
-    else
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    {
-        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
-    }
-
-    otLogFuncExit();
-}
-
 void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
     Frame *txFrame = static_cast<Frame *>(aFrame);
@@ -975,6 +937,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
     bool framePending = false;
 
     mMacTimer.Stop();
+    mRadio.TransmitDone();
 
     mCounters.mTxTotal++;
 
@@ -1072,7 +1035,7 @@ void Mac::HandleMacTimer(void)
 
             if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
             {
-                otPlatRadioReceive(GetInstance(), mChannel);
+                mRadio.Receive(GetInstance(), mChannel);
                 otPlatRadioSetPanId(GetInstance(), mPanId);
                 mActiveScanHandler(mScanContext, NULL);
                 ScheduleNextTransmission();
@@ -1090,7 +1053,7 @@ void Mac::HandleMacTimer(void)
 
     case kStateTransmitData:
         otLogDebgMac(GetInstance(), "Ack timer fired");
-        otPlatRadioReceive(GetInstance(), mChannel);
+        mRadio.Receive(GetInstance(), mChannel);
         mCounters.mTxTotal++;
 
         mTxFrame->GetDstAddr(addr);
@@ -1565,7 +1528,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         if (!mRxOnWhenIdle && dstaddr.mLength != 0)
         {
             mReceiveTimer.Stop();
-            otPlatRadioSleep(GetInstance());
+            mRadio.Sleep(GetInstance());
         }
 
         switch (aFrame->GetType())
