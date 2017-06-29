@@ -239,41 +239,41 @@ void* PlatSocketReadThread(void *pClientSocket)
 void PlatSocketRxNewConn(uint8_t id)
 {
     //Find first non-valid client in list - add here
-        if (PlatSocketConnection.isValid == 0)
-        {
-            //Add new client to client list
-            socklen_t len;
-            len = sizeof(PlatSocketConnection.addr);
-            int retval = accept (id, (struct sockaddr *)&PlatSocketConnection.addr, (socklen_t*) &len);
+    if (PlatSocketConnection.isValid == 0)
+    {
+        //Add new client to client list
+        socklen_t len;
+        len = sizeof(PlatSocketConnection.addr);
+        int retval = accept (id, (struct sockaddr *)&PlatSocketConnection.addr, (socklen_t*) &len);
 
-            if (retval >= 0)
+        if (retval >= 0)
+        {
+            int retErr;
+            PlatSocketConnection.socketId = retval;
+            retErr = pthread_create( &PlatSocketConnection.rfReadThread,
+                                    NULL,
+                                    PlatSocketReadThread,
+                                    &PlatSocketConnection);
+            if (retErr)
             {
-                int retErr;
-                PlatSocketConnection.socketId = retval;
-                retErr = pthread_create( &PlatSocketConnection.rfReadThread,
-                                        NULL,
-                                        PlatSocketReadThread,
-                                        &PlatSocketConnection);
-                if (retErr)
-                {
-                    close(PlatSocketConnection.socketId);
-                }
-                else
-                {
-                    PlatSocketConnection.isValid = 1;
-                }
+                close(PlatSocketConnection.socketId);
+            }
+            else
+            {
+                PlatSocketConnection.isValid = 1;
             }
         }
-        else
-        {
+    }
+    else
+    {
 
-            int tempfd;
-            tempfd = accept (id, (struct sockaddr *)NULL, NULL);
-            if (tempfd >= 0)
-            {
-                close(tempfd);
-            }
+        int tempfd;
+        tempfd = accept (id, (struct sockaddr *)NULL, NULL);
+        if (tempfd >= 0)
+        {
+            close(tempfd);
         }
+    }
 }
 
 /*****************************************************************************
@@ -317,7 +317,7 @@ int PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId)
     //All sockets
     if(PlatSocketConnection.isValid)
     {
-        if((int)PlatSocketConnection.socketId == (int)socketId)
+        if(PlatSocketConnection.socketId == socketId)
         {
             if(SOCKET_WRITE(PlatSocketConnection, (const char*)pData, length) < 0)
             {
