@@ -42,7 +42,7 @@
 <uri></uri>
 </address>
 </author>
-<date year="2017" month="June" day="22"/>
+<date year="2017" month="June" day="29"/>
 
 <area>Internet</area>
 <workgroup></workgroup>
@@ -78,7 +78,7 @@
 </t>
 
 <section anchor="requirements-language-and-conventions" title="Requirements Language and Conventions">
-<t>(EDITOR: Insert boilerplate about RFC 2119 here.)
+<t>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;,  &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this document are to be interpreted as described in <xref target="RFC2119"/>.
 </t>
 <t>The layout diagrams in this document that show encodings of data in octet sequences use the convention described in Guide for Internet Standards Writers <xref target="RFC2360"/> section 3.1, Packet Diagrams. Specifically, bits in octets are indexed from most significant to least significant, and the least significant bit in a field representing an integer value more than one bit in length is the least significant bit of a the signed or unsigned number, as the case requires.
 </t>
@@ -321,7 +321,7 @@ commands sent to the OS from the NCP.
 <t>For all values less than 127, the packed form of the number is simply a single octet which directly represents the number. For values larger than 127, the following process is used to encode the value:
 </t>
 <t>
-<list style="symbols">
+<list style="numbers">
 <t>The unsigned integer is broken up into <spanx style="emph">n</spanx> 7-bit chunks and placed into <spanx style="emph">n</spanx> octets, leaving the most significant bit of each octet unused.</t>
 <t>Order the octets from least-significant to most-significant. (Little-endian)</t>
 <t>Clear the most significant bit of the most significant octet. Set the least significant bit on all other octets.</t>
@@ -1890,6 +1890,9 @@ Fields: | <spanx style="verb">HOST_POWER_STATE</spanx>
 
 </middle>
 <back>
+<references title="Normative References">
+<?rfc include="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"?>
+</references>
 <references title="Informative References">
 <?rfc include="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2360.xml"?>
 <?rfc include="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5424.xml"?>

@@ -68,7 +68,7 @@ Beyond this core framework, properties and commands enable various common featur
 
 ## Requirements Language and Conventions
 
-(EDITOR: Insert boilerplate about RFC 2119 here.)
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [@!RFC2119].
 
 The layout diagrams in this document that show encodings of data in octet sequences use the convention described in Guide for Internet Standards Writers [@?RFC2360] section 3.1, Packet Diagrams. Specifically, bits in octets are indexed from most significant to least significant, and the least significant bit in a field representing an integer value more than one bit in length is the least significant bit of a the signed or unsigned number, as the case requires.
 

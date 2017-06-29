@@ -5,7 +5,7 @@
 Network Working Group                                     R. Quattlebaum
 Internet-Draft                                               j. woodyatt
 Intended status: Standards Track                         Nest Labs, Inc.
-Expires: December 24, 2017                                 June 22, 2017
+Expires: December 31, 2017                                 June 29, 2017
 
 
   Spinel: A protocol basis for control and management of IPv6 network
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 24, 2017.
+   This Internet-Draft will expire on December 31, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 1]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 1]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 2]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 2]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -165,7 +165,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 3]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 3]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -183,31 +183,32 @@ Internet-Draft                Spinel Basis                     June 2017
      12.1.  Raw Application Access . . . . . . . . . . . . . . . . .  49
    13. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  49
    14. References  . . . . . . . . . . . . . . . . . . . . . . . . .  49
-     14.1.  Informative References . . . . . . . . . . . . . . . . .  49
-     14.2.  URIs . . . . . . . . . . . . . . . . . . . . . . . . . .  49
+     14.1.  Normative References . . . . . . . . . . . . . . . . . .  49
+     14.2.  Informative References . . . . . . . . . . . . . . . . .  49
+     14.3.  URIs . . . . . . . . . . . . . . . . . . . . . . . . . .  49
    Appendix A.  Example Sessions . . . . . . . . . . . . . . . . . .  50
      A.1.  NCP Initialization  . . . . . . . . . . . . . . . . . . .  50
-     A.2.  Attaching to a network  . . . . . . . . . . . . . . . . .  50
+     A.2.  Attaching to a network  . . . . . . . . . . . . . . . . .  51
      A.3.  Detaching from a network  . . . . . . . . . . . . . . . .  51
      A.4.  Attaching to a saved network  . . . . . . . . . . . . . .  51
-     A.5.  NCP Software Reset  . . . . . . . . . . . . . . . . . . .  51
+     A.5.  NCP Software Reset  . . . . . . . . . . . . . . . . . . .  52
    Appendix B.  Framing Protocol . . . . . . . . . . . . . . . . . .  52
      B.1.  UART Recommendations  . . . . . . . . . . . . . . . . . .  52
        B.1.1.  UART Bit Rate Detection . . . . . . . . . . . . . . .  52
        B.1.2.  HDLC-Lite . . . . . . . . . . . . . . . . . . . . . .  53
      B.2.  SPI Recommendations . . . . . . . . . . . . . . . . . . .  54
-       B.2.1.  SPI Framing Protocol  . . . . . . . . . . . . . . . .  54
+       B.2.1.  SPI Framing Protocol  . . . . . . . . . . . . . . . .  55
      B.3.  I2C Recommendations . . . . . . . . . . . . . . . . . . .  56
-     B.4.  Native USB Recommendations  . . . . . . . . . . . . . . .  56
-   Appendix C.  Test Vectors . . . . . . . . . . . . . . . . . . . .  56
-     C.1.  Test Vector: Packed Unsigned Integer  . . . . . . . . . .  56
+     B.4.  Native USB Recommendations  . . . . . . . . . . . . . . .  57
+   Appendix C.  Test Vectors . . . . . . . . . . . . . . . . . . . .  57
+     C.1.  Test Vector: Packed Unsigned Integer  . . . . . . . . . .  57
      C.2.  Test Vector: Reset Command  . . . . . . . . . . . . . . .  57
      C.3.  Test Vector: Reset Notification . . . . . . . . . . . . .  57
-     C.4.  Test Vector: Inbound IPv6 Packet  . . . . . . . . . . . .  57
+     C.4.  Test Vector: Inbound IPv6 Packet  . . . . . . . . . . . .  58
      C.5.  Test Vector: Outbound IPv6 Packet . . . . . . . . . . . .  58
    Appendix D.  Glossary . . . . . . . . . . . . . . . . . . . . . .  58
    Appendix E.  Acknowledgments  . . . . . . . . . . . . . . . . . .  58
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  59
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  60
 
 1.  Introduction
 
@@ -220,8 +221,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 4]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 4]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -245,7 +245,9 @@ Internet-Draft                Spinel Basis                     June 2017
 
 1.1.  Requirements Language and Conventions
 
-   (EDITOR: Insert boilerplate about RFC 2119 here.)
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
 
    The layout diagrams in this document that show encodings of data in
    octet sequences use the convention described in Guide for Internet
@@ -272,16 +274,15 @@ Internet-Draft                Spinel Basis                     June 2017
    argument lists.  The reason for avoiding these is because they have a
    tendency to change, especially early in development.  Adding or
    removing a property from a structure can render the entire protocol
-   incompatible.  By using properties, conforming to a well-designed
 
 
 
-
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 5]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 5]
 
 Internet-Draft                Spinel Basis                     June 2017
 
 
+   incompatible.  By using properties, conforming to a well-designed
    information model, extending the protocol is usually as simple as an
    additional property.
 
@@ -332,8 +333,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 6]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 6]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -389,7 +389,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 7]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 7]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -445,7 +445,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 8]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 8]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -501,7 +501,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017               [Page 9]
+Quattlebaum & woodyatt  Expires December 31, 2017               [Page 9]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -557,7 +557,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 10]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 10]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -613,7 +613,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 11]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 11]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -629,13 +629,13 @@ Internet-Draft                Spinel Basis                     June 2017
    a single octet which directly represents the number.  For values
    larger than 127, the following process is used to encode the value:
 
-   o  The unsigned integer is broken up into _n_ 7-bit chunks and placed
-      into _n_ octets, leaving the most significant bit of each octet
-      unused.
-   o  Order the octets from least-significant to most-significant.
-      (Little-endian)
-   o  Clear the most significant bit of the most significant octet.  Set
-      the least significant bit on all other octets.
+   1.  The unsigned integer is broken up into _n_ 7-bit chunks and
+       placed into _n_ octets, leaving the most significant bit of each
+       octet unused.
+   2.  Order the octets from least-significant to most-significant.
+       (Little-endian)
+   3.  Clear the most significant bit of the most significant octet.
+       Set the least significant bit on all other octets.
 
    Where _n_ is the smallest number of 7-bit chunks you can use to
    represent the given value.
@@ -669,7 +669,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 12]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 12]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -725,7 +725,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 13]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 13]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -781,7 +781,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 14]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 14]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -837,7 +837,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 15]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 15]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -893,7 +893,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 16]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 16]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -949,7 +949,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 17]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 17]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1005,7 +1005,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 18]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 18]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1061,7 +1061,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 19]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 19]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1117,7 +1117,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 20]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 20]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1173,7 +1173,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 21]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 21]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1229,7 +1229,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 22]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 22]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1285,7 +1285,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 23]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 23]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1341,7 +1341,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 24]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 24]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1397,7 +1397,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 25]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 25]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1453,7 +1453,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 26]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 26]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1509,7 +1509,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 27]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 27]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1565,7 +1565,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 28]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 28]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1621,7 +1621,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 29]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 29]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1677,7 +1677,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 30]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 30]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1733,7 +1733,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 31]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 31]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1789,7 +1789,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 32]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 32]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1845,7 +1845,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 33]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 33]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1901,7 +1901,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 34]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 34]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -1957,7 +1957,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 35]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 35]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2013,7 +2013,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 36]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 36]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2069,7 +2069,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 37]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 37]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2125,7 +2125,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 38]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 38]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2181,7 +2181,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 39]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 39]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2237,7 +2237,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 40]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 40]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2293,7 +2293,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 41]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 41]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2349,7 +2349,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 42]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 42]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2405,7 +2405,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 43]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 43]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2461,7 +2461,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 44]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 44]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2517,7 +2517,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 45]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 45]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2573,7 +2573,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 46]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 46]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2629,7 +2629,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 47]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 47]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2685,7 +2685,7 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 48]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 48]
 
 Internet-Draft                Spinel Basis                     June 2017
 
@@ -2715,7 +2715,14 @@ Internet-Draft                Spinel Basis                     June 2017
 
 14.  References
 
-14.1.  Informative References
+14.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <http://www.rfc-editor.org/info/rfc2119>.
+
+14.2.  Informative References
 
    [RFC2360]  Scott, G., "Guide for Internet Standards Writers", BCP 22,
               RFC 2360, DOI 10.17487/RFC2360, June 1998,
@@ -2725,26 +2732,25 @@ Internet-Draft                Spinel Basis                     June 2017
               DOI 10.17487/RFC5424, March 2009,
               <http://www.rfc-editor.org/info/rfc5424>.
 
-14.2.  URIs
+14.3.  URIs
 
    [1] https://www.freedesktop.org/wiki/Software/dbus/
 
    [2] http://docs.oracle.com/javase/8/docs/api/java/io/
        DataInput.html#modified-utf-8
 
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 49]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
    [3] https://www.w3.org/TR/exi/#encodingUnsignedInteger
 
    [4] http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit
 
    [5] https://github.com/miekg/mmark
-
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 49]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
    [6] http://xml2rfc.ietf.org/
 
@@ -2786,6 +2792,16 @@ A.1.  NCP Initialization
 
    o  CMD_NET_RECALL
 
+
+
+
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 50]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
 A.2.  Attaching to a network
 
    [CREF4]
@@ -2794,13 +2810,6 @@ A.2.  Attaching to a network
    network at physical and media access layers.  The basis layer steps
    proceed after the initial phase of initializing the specific network
    layer stack.
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 50]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
    Bring the network interface up:
 
@@ -2841,6 +2850,14 @@ A.4.  Attaching to a saved network
 
    Bring the routing stack up:
 
+
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 51]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
    o  CMD_VALUE_SET:PROP_NET_STACK_UP:TRUE
    o  CMD_VALUE_IS:PROP_NET_STACK_UP:TRUE
 
@@ -2850,13 +2867,6 @@ A.5.  NCP Software Reset
 
    o  CMD_RESET
    o  CMD_VALUE_IS:PROP_LAST_STATUS:STATUS_RESET_SOFTWARE
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 51]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
    Then jump to Appendix A.1.
 
@@ -2896,6 +2906,14 @@ B.1.1.  UART Bit Rate Detection
    When using a UART, the issue of an appropriate bit rate must be
    considered. 115200 bits/s is the conventional baud rate for many
    serial peripherals.  This rate, however, is slower than the
+
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 52]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
    theoretical maximum bitrate of many relevant network interfaces, e.g.
    the 802.15.4 2.4GHz PHY (250kbit).  In most circumstances this
    mismatch is not significant because the overall bitrate will be much
@@ -2904,15 +2922,6 @@ B.1.1.  UART Bit Rate Detection
    simple bitrate detection scheme that can be employed by the OS to
    detect when the attached NCP is initially running at a higher
    bitrate.
-
-
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 52]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
    The algorithm is to send successive NOOP commands to the NCP at
    increasing bitrates.  When a valid "CMD_LAST_STATUS" response has
@@ -2946,6 +2955,21 @@ B.1.2.  HDLC-Lite
    The following octets values are considered _special_ and should be
    escaped when present in data frames:
 
+
+
+
+
+
+
+
+
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 53]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
                  +-------------+------------------------+
                  | Octet Value | Description            |
                  +-------------+------------------------+
@@ -2962,14 +2986,6 @@ B.1.2.  HDLC-Lite
 
    When receiving a frame, the CRC must be verified after the frame is
    unescaped.  If the CRC value does not match what is calculated for
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 53]
-
-Internet-Draft                Spinel Basis                     June 2017
-
-
    the frame data, the frame MUST be discarded.  The implementation MAY
    indicate the failure to higher levels to handle as they see fit, but
    MUST NOT attempt to process the deceived frame.
@@ -3002,6 +3018,14 @@ B.2.  SPI Recommendations
    o  "CS" is active low.
    o  "CLK" is active high.
    o  "CLK" speed is larger than 500 kHz.
+
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 54]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
    o  Data is valid on leading edge of "CLK".
    o  Data is sent in multiples of 8-bits (octets).
    o  Octets are sent most-significant bit first.
@@ -3018,13 +3042,6 @@ B.2.1.  SPI Framing Protocol
                   +---------+-----+----------+----------+
                   | Fields: | HDR | RECV_LEN | DATA_LEN |
                   +---------+-----+----------+----------+
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 54]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
    o  "HDR": The first byte is the header byte (defined below)
    o  "RECV_LEN": The second and third bytes indicate the largest frame
@@ -3056,6 +3073,15 @@ Internet-Draft                Spinel Basis                     June 2017
    o  "PATTERN": These bits are set to a fixed value to help distinguish
       valid SPI frames from garbage (by explicitly making "0xFF" and
       "0x00" invalid values).  Bit 6 MUST be set to be one and bit 7
+
+
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 55]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
       MUST be cleared (0).  A frame received that has any other values
       for these bits MUST be dropped.
 
@@ -3074,13 +3100,6 @@ Internet-Draft                Spinel Basis                     June 2017
 
    This protocol can be used either unidirectionally or bidirectionally,
    determined by the behavior of the master and the slave.
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 55]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
    If the the master notices "PATTERN" is not set correctly, the master
    should consider the transaction to have failed and try again after 10
@@ -3109,6 +3128,16 @@ B.3.  I2C Recommendations
 
    [CREF7]
 
+
+
+
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 56]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
 B.4.  Native USB Recommendations
 
    TBD
@@ -3118,25 +3147,6 @@ B.4.  Native USB Recommendations
 Appendix C.  Test Vectors
 
 C.1.  Test Vector: Packed Unsigned Integer
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 56]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
                  +---------------+-----------------------+
                  | Decimal Value | Packet Octet Encoding |
@@ -3177,22 +3187,18 @@ C.3.  Test Vector: Reset Notification
 
                                 80 06 00 72
 
+
+
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 57]
+
+Internet-Draft                Spinel Basis                     June 2017
+
+
 C.4.  Test Vector: Inbound IPv6 Packet
 
    CMD_VALUE_IS(PROP_STREAM_NET)
 
    [CREF10]
-
-
-
-
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 57]
-
-Internet-Draft                Spinel Basis                     June 2017
-
 
 C.5.  Test Vector: Outbound IPv6 Packet
 
@@ -3236,19 +3242,16 @@ Appendix E.  Acknowledgments
    their substantial contributions and feedback related to this
    document.
 
-   This document was prepared using mmark [5] by (Miek Gieben) and
-   xml2rfc (version 2) [6].
 
 
 
-
-
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 58]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 58]
 
 Internet-Draft                Spinel Basis                     June 2017
 
+
+   This document was prepared using mmark [5] by (Miek Gieben) and
+   xml2rfc (version 2) [6].
 
 Editorial Comments
 
@@ -3292,19 +3295,18 @@ Editorial Comments
 
 [CREF12] RQ: Alphabetize before finalization.
 
-Authors' Addresses
 
 
 
 
 
 
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 59]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 59]
 
 Internet-Draft                Spinel Basis                     June 2017
 
+
+Authors' Addresses
 
    Robert S. Quattlebaum
    Nest Labs, Inc.
@@ -3355,6 +3357,4 @@ Internet-Draft                Spinel Basis                     June 2017
 
 
 
-
-
-Quattlebaum & woodyatt  Expires December 24, 2017              [Page 60]
+Quattlebaum & woodyatt  Expires December 31, 2017              [Page 60]

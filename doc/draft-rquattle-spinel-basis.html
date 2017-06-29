@@ -475,7 +475,9 @@
 <link href="#rfc.section.12" rel="Chapter" title="12 Security Considerations"/>
 <link href="#rfc.section.12.1" rel="Chapter" title="12.1 Raw Application Access"/>
 <link href="#rfc.section.13" rel="Chapter" title="13 IANA Considerations"/>
-<link href="#rfc.references" rel="Chapter" title="14 Informative References"/>
+<link href="#rfc.references" rel="Chapter" title="14 References"/>
+<link href="#rfc.references.1" rel="Chapter" title="14.1 Normative References"/>
+<link href="#rfc.references.2" rel="Chapter" title="14.2 Informative References"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Example Sessions"/>
 <link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 NCP Initialization"/>
 <link href="#rfc.appendix.A.2" rel="Chapter" title="A.2 Attaching to a network"/>
@@ -506,7 +508,7 @@
 
   <meta name="dct.creator" content="Quattlebaum, R. and j. woodyatt" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-rquattle-spinel-basis" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-6-22" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-6-29" />
   <meta name="dct.abstract" content="This document specifies the basis of the Spinel protocol, which facilitates the control and management of IPv6 network interfaces on devices where general purpose application processors offload network functions at their interfaces to network co-processors (NCP) connected by simple communication links like serial data channels. Spinel was initially designed for use with Thread(R) network co-processors, but its basis is general purpose and intended to be easily adapted to other types of IPv6 network interface.  " />
   <meta name="description" content="This document specifies the basis of the Spinel protocol, which facilitates the control and management of IPv6 network interfaces on devices where general purpose application processors offload network functions at their interfaces to network co-processors (NCP) connected by simple communication links like serial data channels. Spinel was initially designed for use with Thread(R) network co-processors, but its basis is general purpose and intended to be easily adapted to other types of IPv6 network interface.  " />
 
@@ -530,8 +532,8 @@
   <td class="right">Nest Labs, Inc.</td>
 </tr>
 <tr>
-  <td class="left">Expires: December 24, 2017</td>
-  <td class="right">June 22, 2017</td>
+  <td class="left">Expires: December 31, 2017</td>
+  <td class="right">June 29, 2017</td>
 </tr>
 
     	
@@ -551,7 +553,7 @@
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on December 24, 2017.</p>
+<p>This Internet-Draft will expire on December 31, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -664,8 +666,10 @@
 </ul></ul><li>12.   <a href="#rfc.section.12">Security Considerations</a></li>
 <ul><li>12.1.   <a href="#rfc.section.12.1">Raw Application Access</a></li>
 </ul><li>13.   <a href="#rfc.section.13">IANA Considerations</a></li>
-<li>14.   <a href="#rfc.references">Informative References</a></li>
-<li>Appendix A.   <a href="#rfc.appendix.A">Example Sessions</a></li>
+<li>14.   <a href="#rfc.references">References</a></li>
+<ul><li>14.1.   <a href="#rfc.references.1">Normative References</a></li>
+<li>14.2.   <a href="#rfc.references.2">Informative References</a></li>
+</ul><li>Appendix A.   <a href="#rfc.appendix.A">Example Sessions</a></li>
 <ul><li>A.1.   <a href="#rfc.appendix.A.1">NCP Initialization</a></li>
 <li>A.2.   <a href="#rfc.appendix.A.2">Attaching to a network</a></li>
 <li>A.3.   <a href="#rfc.appendix.A.3">Detaching from a network</a></li>
@@ -708,7 +712,7 @@
 <p> </p>
 <p id="rfc.section.1.p.3">Beyond this core framework, properties and commands enable various common features of IPv6. In related and forthcoming documents, the Spinel protocol is extended to support NCP implementations for specific IPv6 link types, e.g. Thread(R).  </p>
 <h1 id="rfc.section.1.1"><a href="#rfc.section.1.1">1.1.</a> <a href="#requirements-language-and-conventions" id="requirements-language-and-conventions">Requirements Language and Conventions</a></h1>
-<p id="rfc.section.1.1.p.1">(EDITOR: Insert boilerplate about RFC 2119 here.) </p>
+<p id="rfc.section.1.1.p.1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in <a href="#RFC2119">[RFC2119]</a>.  </p>
 <p id="rfc.section.1.1.p.2">The layout diagrams in this document that show encodings of data in octet sequences use the convention described in Guide for Internet Standards Writers <a href="#RFC2360">[RFC2360]</a> section 3.1, Packet Diagrams. Specifically, bits in octets are indexed from most significant to least significant, and the least significant bit in a field representing an integer value more than one bit in length is the least significant bit of a the signed or unsigned number, as the case requires.  </p>
 <h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#property-overview" id="property-overview">Property Overview</a></h1>
 <p id="rfc.section.2.p.1">Spinel is largely a property-based protocol between an Operating System (OS) and one or more Network Control Processors (NCP). Its theory of operation is similar to representational state transfer (REST), with a property defined for every attribute of the operational state of a network interface for which an IPv6 node may need the typical operators, i.e. Create, Read, Update, Delete and Alert.  </p>
@@ -1021,11 +1025,11 @@
 <p id="rfc.section.4.2.p.3">For all values less than 127, the packed form of the number is simply a single octet which directly represents the number. For values larger than 127, the following process is used to encode the value: </p>
 <p/>
 
-<ul>
+<ol>
   <li>The unsigned integer is broken up into <em>n</em> 7-bit chunks and placed into <em>n</em> octets, leaving the most significant bit of each octet unused.</li>
   <li>Order the octets from least-significant to most-significant. (Little-endian)</li>
   <li>Clear the most significant bit of the most significant octet. Set the least significant bit on all other octets.</li>
-</ul>
+</ol>
 
 <p> </p>
 <p id="rfc.section.4.2.p.5">Where <em>n</em> is the smallest number of 7-bit chunks you can use to represent the given value.  </p>
@@ -3140,7 +3144,19 @@
 <p id="rfc.section.12.1.p.1">Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.  </p>
 <h1 id="rfc.section.13"><a href="#rfc.section.13">13.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a></h1>
 <p id="rfc.section.13.p.1">EDITOR: insert verbiage here: registry creation forms, et cetera.  </p>
-<h1 id="rfc.references"><a href="#rfc.references">14.</a> Informative References</h1>
+<h1 id="rfc.references"><a href="#rfc.references">14.</a> References</h1>
+<h1 id="rfc.references.1"><a href="#rfc.references.1">14.1.</a> Normative References</h1>
+<table>
+  <tbody>
+    <tr>
+      <td class="reference">
+        <b id="RFC2119">[RFC2119]</b>
+      </td>
+      <td class="top"><a>Bradner, S.</a>, "<a href="http://tools.ietf.org/html/rfc2119">Key words for use in RFCs to Indicate Requirement Levels</a>", BCP 14, RFC 2119, DOI 10.17487/RFC2119, March 1997.</td>
+    </tr>
+  </tbody>
+</table>
+<h1 id="rfc.references.2"><a href="#rfc.references.2">14.2.</a> Informative References</h1>
 <table>
   <tbody>
     <tr>
