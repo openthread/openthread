@@ -97,22 +97,22 @@ draft-rquattle-spinel-basis.xml: \
 
 draft-rquattle-spinel-unified.xml: \
 	draft-rquattle-spinel-unified.md \
-	spinel-commands.md \
-	spinel-data-packing.md \
+	spinel-basis-appendix-framing.md \
+	spinel-basis-detail-commands.md \
+	spinel-basis-feature-gpio.md \
+	spinel-basis-feature-host-buffer-offload.md \
+	spinel-basis-feature-network-save.md \
+	spinel-basis-feature-trng.md \
+	spinel-basis-detail-properties-debug.md \
+	spinel-basis-detail-properties-ipv6.md \
+	spinel-basis-intro-encoding.md \
+	spinel-basis-intro-frames.md \
 	spinel-example-sessions.md \
-	spinel-feature-host-buffer-offload.md \
-	spinel-feature-network-save.md \
 	spinel-feature-jam-detect.md \
-	spinel-feature-gpio.md \
-	spinel-feature-trng.md \
-	spinel-frame-format.md \
-	spinel-framing.md \
-	spinel-prop-overview.md \
 	spinel-prop-core.md \
-	spinel-prop-debug.md \
-	spinel-prop-ipv6.md \
 	spinel-prop-mac.md \
 	spinel-prop-net.md \
+	spinel-prop-overview.md \
 	spinel-prop-phy.md \
 	spinel-prop.md \
 	spinel-status-codes.md \

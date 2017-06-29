@@ -53,6 +53,6 @@ allocated from the former range.
 
 {{spinel-prop-net.md}}
 
-{{spinel-prop-ipv6.md}}
+{{spinel-basis-detail-properties-ipv6.md}}
 
-{{spinel-prop-debug.md}}
+{{spinel-basis-detail-properties-debug.md}}

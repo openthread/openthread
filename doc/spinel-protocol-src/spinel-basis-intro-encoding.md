@@ -58,9 +58,9 @@ The packed unsigned integer format is based on the [unsigned integer format in E
 
 For all values less than 127, the packed form of the number is simply a single octet which directly represents the number. For values larger than 127, the following process is used to encode the value:
 
-- The unsigned integer is broken up into *n* 7-bit chunks and placed into *n* octets, leaving the most significant bit of each octet unused.
-- Order the octets from least-significant to most-significant. (Little-endian)
-- Clear the most significant bit of the most significant octet. Set the least significant bit on all other octets.
+1. The unsigned integer is broken up into *n* 7-bit chunks and placed into *n* octets, leaving the most significant bit of each octet unused.
+2. Order the octets from least-significant to most-significant. (Little-endian)
+3. Clear the most significant bit of the most significant octet. Set the least significant bit on all other octets.
 
 Where *n* is the smallest number of 7-bit chunks you can use to
 represent the given value.

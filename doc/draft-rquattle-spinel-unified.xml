@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE rfc SYSTEM 'rfc2629.dtd' []>
-<rfc ipr="noDerivativesTrust200902" category="info" docName="draft-rquattle-spinel-unified-2cb23088-dirty">
+<rfc ipr="noDerivativesTrust200902" category="info" docName="draft-rquattle-spinel-unified-65d7952a-dirty">
 <?rfc toc="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
@@ -42,7 +42,7 @@
 <uri></uri>
 </address>
 </author>
-<date year="2017" month="June" day="22"/>
+<date year="2017" month="April" day="14"/>
 
 <area>Internet</area>
 <workgroup></workgroup>
@@ -144,12 +144,12 @@ goal.
 </section>
 
 <section anchor="frame-format" title="Frame Format">
-<t>A frame is defined simply as the concatenation of
+<t>A frame is the concatenation of the following elements:
 </t>
 <t>
 <list style="symbols">
-<t>A header byte</t>
-<t>A command (up to three bytes, see <xref target="packed-unsigned-integer"/> for format)</t>
+<t>A header comprising a single octet (see <xref target="header-format"/> below).</t>
+<t>A command identifier (up to three octets, see <xref target="packed-unsigned-integer"/> for format)</t>
 <t>An optional command payload</t>
 </list>
 </t>
@@ -161,9 +161,11 @@ goal.
 
 <c>Fields:</c><c>HEADER</c><c>CMD</c><c>CMD_PAYLOAD</c>
 </texttable>
+<t>Each of the property operators described in the previous section is defined as a command with a different identifier and a payload according to the property type. Additional commands are defined for special purposes (see <xref target="commands"/>), and the command identifier registry has values reserved for future standard expansion, application specialization, and experimental purposes.
+</t>
 
 <section anchor="header-format" title="Header Format">
-<t>The header byte is broken down as follows:
+<t>The header comprises the following information elements packed into a single octet:
 </t>
 
 <figure align="center"><artwork align="center">
@@ -180,102 +182,66 @@ is addressed, the above table should be swapped out with this:
 |  FLG ||  NLI ||      TID   ||||</cref></t>
 
 <section anchor="flg-flag" title="FLG: Flag">
-<t>The flag field of the header byte (<spanx style="verb">FLG</spanx>) is always set to the value
-two (or <spanx style="verb">10</spanx> in binary). Any frame received with these bits set to
-any other value else MUST NOT be considered a Spinel frame.
+<t>The Flag (FLG) field in the two most significant bits of the header octet (<spanx style="verb">FLG</spanx>) is always set to the value two (or <spanx style="verb">10</spanx> in binary). Any frame received with these bits set to any other value else MUST NOT be considered a Spinel frame.
 </t>
-<t>This convention allows Spinel to be line compatible with BTLE HCI. By
-defining the first two bit in this way we can disambiguate between
-Spinel frames and HCI frames (which always start with either <spanx style="verb">0x01</spanx>
-or <spanx style="verb">0x04</spanx>) without any additional framing overhead.
+<t>This convention allows Spinel to be line compatible with BTLE HCI. By defining the first two bit in this way we can disambiguate between Spinel frames and HCI frames (which always start with either <spanx style="verb">0x01</spanx> or <spanx style="verb">0x04</spanx>) without any additional framing overhead.
 </t>
 </section>
 
 <section anchor="nli-network-link-identifier" title="NLI: Network Link Identifier">
-<t>The Network Link Identifier (NLI) is a number between 0 and 3, which is associated by the OS with one of up to four IPv6 zone indices corresponding to conceptual IPv6 interfaces on the NCP. This allows the protocol to support IPv6 nodes connecting simultaneously to more than one IPv6 network link using a single NCP instance. The first Network Link Identifier (0) MUST refer to a distinguished conceptual interface provided by the NCP for its IPv6 link type. The other three Network Link Identifiers (1, 2 and 3) MAY be dissociated from any conceptual interface.
+<t>The Network Link Identifier (NLI) field in the third and fourth most significant bits is a number between 0 and 3, which is associated by the OS with one of up to four IPv6 zone indices corresponding to conceptual IPv6 interfaces on the NCP. This allows the protocol to support IPv6 nodes connecting simultaneously to more than one IPv6 network link using a single NCP instance. The zero value of NLI is reserved, and it MUST refer to a distinguished conceptual interface provided by the NCP for its IPv6 link type. The other three NLI numbers (1, 2 and 3) MAY be dissociated from any conceptual interface.
 </t>
 </section>
 
 <section anchor="tid-transaction-identifier" title="TID: Transaction Identifier">
-<t>The least significant bits of the header represent the Transaction
-Identifier(TID). The TID is used for correlating responses to the
+<t>The Transaction Identifier (TID) field in the four least significant bits of the header is used for correlating responses to the
 commands which generated them.
 </t>
-<t>When a command is sent from the host, any reply to that command sent
-by the NCP will use the same value for the TID. When the host receives
-a frame that matches the TID of the command it sent, it can easily
-recognize that frame as the actual response to that command.
+<t>When a command is sent from the OS, any reply to that command sent by the NCP will use the same value for the TID. When the OS receives a frame that matches the TID of the command it sent, it can easily recognize that frame as the actual response to that command.
 </t>
-<t>The TID value of zero (0) is used for commands to which a correlated
-response is not expected or needed, such as for unsolicited update
-commands sent to the host from the NCP.
+<t>The zero value of TID is used for commands to which a correlated response is not expected or needed, such as for unsolicited update
+commands sent to the OS from the NCP.
 </t>
+</section>
 </section>
 
 <section anchor="command-identifier-cmd" title="Command Identifier (CMD)">
-<t>The command identifier is a 21-bit unsigned integer encoded in up to
-three bytes using the packed unsigned integer format described in
-<xref target="packed-unsigned-integer"/>. This encoding allows for up to 2,097,152 individual
-commands, with the first 127 commands represented as a single byte.
-Command identifiers larger than 2,097,151 are explicitly forbidden.
+<t>The command identifier is a 21-bit unsigned integer encoded in up to three octets using the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>. This encoding allows for up to 2,097,152 individual commands, with the first 127 commands represented as a single octet. Command identifiers larger than 2,097,151 are explicitly forbidden.
 </t>
-<texttable>
-<ttcol align="center">CID Range</ttcol>
-<ttcol align="center">Description</ttcol>
-
-<c>0 - 63</c><c>Reserved for core commands</c>
-<c>64 - 15,359</c><c><spanx style="emph">UNALLOCATED</spanx></c>
-<c>15,360 - 16,383</c><c>Vendor-specific</c>
-<c>16,384 - 1,999,999</c><c><spanx style="emph">UNALLOCATED</spanx></c>
-<c>2,000,000 - 2,097,151</c><c>Experimental use only</c>
-</texttable>
-</section>
 
 <section anchor="command-payload-optional" title="Command Payload (Optional)">
-<t>Depending on the semantics of the command in question, a payload MAY
-be included in the frame. The exact composition and length of the
-payload is defined by the command identifier.
+<t>The operational semantics of each command definition determine whether a payload of non-zero length is included in the frame. If included in the frame, then the exact composition of a command payload is determined by solely the command identifier.
 </t>
 </section>
 </section>
 </section>
 
 <section anchor="data-packing" title="Data Packing">
-<t>Data serialization for properties is performed using a light-weight
-data packing format which was loosely inspired by D-Bus. The format of
-a serialization is defined by a specially formatted string.
+<t>Data serialization for properties is performed using a light-weight data packing format which was loosely inspired by <eref target="https://www.freedesktop.org/wiki/Software/dbus/">the D-Bus</eref> developed by the X Desktop Group.
 </t>
-<t>This packing format is used for notational convenience. While this
-string-based datatype format has been designed so that the strings may
-be directly used by a structured data parser, such a thing is not
-required to implement Spinel. Indeed, higly constrained applications
-may find such a thing to be too heavyweight.
+<t>As with the D-Bus, the Spinel data packing format also defines a terse modeling language for describing the format of data packed for interchange between the OS and the NCP. With Spinel, however, the modeling language is an optional notational convenience, mainly of use in protocol definitions. As most NCP programming environments are highly constrained, it is not necessary to implement a structured validating parser for Spinel packed data to implement the Spinel protocol.
 </t>
 <t>Goals:
 </t>
 <t>
 <list style="symbols">
 <t>Be lightweight and favor direct representation of values.</t>
-<t>Use an easily readable and memorable format string.</t>
 <t>Support lists and structures.</t>
-<t>Allow properties to be appended to structures while maintaining
-backward compatibility.</t>
+<t>Allow fields to be appended to structures while maintaining backward compatibility.</t>
+<t>Use an easily readable and memorable language for data modeling.</t>
 </list>
 </t>
-<t>Each primitive datatype has an ASCII character associated with it.
-Structures can be represented as strings of these characters. For
-example:
+<t>The Spinel data packing format is a method of encoding and decoding several &quot;primitive&quot; types of scalar data, e.g. fixed width integers, fixed-size network addresses, et cetera, and some simple aggregate types, i.e. arrays of a specific type, structures with fields of varying type, Unicode text strings.
+</t>
+<t>Each primitive datatype has an ASCII character associated with it in the corresponding modeling language. Fields in structures are identified by their position. The data model for any encoding of the Spinel data packing format can be represented as a strings of modeling language characters characters. These strings are called &quot;type signatures&quot; and some examples follow:
 </t>
 <t>
 <list style="symbols">
-<t><spanx style="verb">C</spanx>: A single unsigned byte.</t>
-<t><spanx style="verb">C6U</spanx>: A single unsigned byte, followed by a 128-bit IPv6
-address, followed by a zero-terminated UTF8 string.</t>
-<t><spanx style="verb">A(6)</spanx>: An array of concatenated IPv6 addresses</t>
+<t><spanx style="verb">C</spanx>: An unsigned integer encoded as a single octet.</t>
+<t><spanx style="verb">C6U</spanx>: An unsigned integer encoded as a single octet, followed by a 128-but IPv6 address, followed by a Unicode text string.</t>
 </list>
 </t>
-<t>In each case, the data is represented exactly as described. For
-example, an array of 10 IPv6 address is stored as 160 bytes.
+<t>In each case, the data is represented exactly as described. For example, an array of 10 IPv6 address is stored as 160 octets.
 </t>
 
 <section anchor="primitive-types" title="Primitive Types">
@@ -298,39 +264,26 @@ example, an array of 10 IPv6 address is stored as 160 bytes.
 <c><spanx style="verb">e</spanx></c><c>DATATYPE_EUI48</c><c>EUI-48 Address. (Big-endian)</c>
 <c><spanx style="verb">D</spanx></c><c>DATATYPE_DATA</c><c>Arbitrary data. See <xref target="data-blobs"/>.</c>
 <c><spanx style="verb">d</spanx></c><c>DATATYPE_DATA_WLEN</c><c>Arbitrary data with prepended length. See <xref target="data-blobs"/>.</c>
-<c><spanx style="verb">U</spanx></c><c>DATATYPE_UTF8</c><c>Zero-terminated UTF8-encoded string.</c>
+<c><spanx style="verb">U</spanx></c><c>DATATYPE_UTF8</c><c>A text string encoded in <eref target="http://docs.oracle.com/javase/8/docs/api/java/io/DataInput.html#modified-utf-8">modified UTF-8</eref> and terminated by U+0000 NUL character.</c>
 <c><spanx style="verb">t(...)</spanx></c><c>DATATYPE_STRUCT</c><c>Structured datatype with prepended length. See <xref target="structured-data"/>.</c>
 <c><spanx style="verb">A(...)</spanx></c><c>DATATYPE_ARRAY</c><c>Array of datatypes. Compound type. See <xref target="arrays"/>.</c>
 </texttable>
-<t>All multi-byte values are little-endian unless explicitly stated
-otherwise.
+<t>All multi-octet values are little-endian unless explicitly stated otherwise.
 </t>
 </section>
 
 <section anchor="packed-unsigned-integer" title="Packed Unsigned Integer">
-<t>For certain types of integers, such command or property identifiers,
-usually have a value on the wire that is less than 127. However, in
-order to not preclude the use of values larger than 255, we would need
-to add an extra byte. Doing this would add an extra byte to the
-majority of instances, which can add up in terms of bandwidth.
+<t>Certain types of integers, such as command or property identifiers, usually have a value on the wire that is less than 127. However, in order to not preclude the use of values larger than 255, we would need to add an extra octet. Doing this would add an extra octet to the majority of instances, which can add up in terms of bandwidth.
 </t>
-<t>The packed unsigned integer format is based on the <eref target="https://www.w3.org/TR/exi/#encodingUnsignedInteger">unsigned integer
-format in EXI</eref>, except that we limit the maximum value to the
-largest value that can be encoded into three bytes(2,097,151).
+<t>The packed unsigned integer format is based on the <eref target="https://www.w3.org/TR/exi/#encodingUnsignedInteger">unsigned integer format in EXI</eref>, except that we limit the maximum value to the largest value that can be encoded to three octets o(2,097,151).
 </t>
-<t>For all values less than 127, the packed form of the number is simply
-a single byte which directly represents the number. For values larger
-than 127, the following process is used to encode the value:
+<t>For all values less than 127, the packed form of the number is simply a single octet which directly represents the number. For values larger than 127, the following process is used to encode the value:
 </t>
 <t>
 <list style="numbers">
-<t>The unsigned integer is broken up into <spanx style="emph">n</spanx> 7-bit chunks and placed
-into <spanx style="emph">n</spanx> octets, leaving the most significant bit of each octet
-unused.</t>
-<t>Order the octets from least-significant to most-significant.
-(Little-endian)</t>
-<t>Clear the most significant bit of the most significant octet. Set
-the least significant bit on all other octets.</t>
+<t>The unsigned integer is broken up into <spanx style="emph">n</spanx> 7-bit chunks and placed into <spanx style="emph">n</spanx> octets, leaving the most significant bit of each octet unused.</t>
+<t>Order the octets from least-significant to most-significant. (Little-endian)</t>
+<t>Clear the most significant bit of the most significant octet. Set the least significant bit on all other octets.</t>
 </list>
 </t>
 <t>Where <spanx style="emph">n</spanx> is the smallest number of 7-bit chunks you can use to
@@ -344,8 +297,7 @@ represent the given value.
      =&gt; [39 0A]
      =&gt; [B9 0A]
 </artwork></figure>
-<t>To decode the value, you collect the 7-bit chunks until you find an
-octet with the most significant bit clear.
+<t>To decode the value, you collect the 7-bit chunks until you find an octet with the most significant bit clear.
 </t>
 </section>
 
@@ -354,83 +306,64 @@ octet with the most significant bit clear.
 </t>
 <t>
 <list style="symbols">
-<t><spanx style="verb">d</spanx> has the length of the data (in bytes) prepended to the data
-(with the length encoded as type <spanx style="verb">S</spanx>). The size of the length
-field is not included in the length.</t>
-<t><spanx style="verb">D</spanx> does not have a prepended length: the length of the data is
-implied by the bytes remaining to be parsed. It is an error for
-<spanx style="verb">D</spanx> to not be the last type in a type in a type signature.</t>
+<t><spanx style="verb">d</spanx> has the length of the data (in octets) prepended to the data (with the length encoded as type <spanx style="verb">S</spanx>). The size of the length field is not included in the length.</t>
+<t><spanx style="verb">D</spanx> does not have a prepended length: the length of the data is implied by the octets remaining to be parsed. It is an error for <spanx style="verb">D</spanx> to not be the last type in a type in a type signature.</t>
 </list>
 </t>
-<t>This dichotomy allows for more efficient encoding by eliminating
-redundency. If the rest of the buffer is a data blob, encoding the
-length would be redundant because we already know how many bytes are
-in the rest of the buffer.
+<t>This dichotomy allows for more efficient encoding by eliminating redundancy. If the rest of the frame is a data blob, encoding the length would be redundant because we already know how many octets are in the rest of the frame.
 </t>
-<t>In some cases we use <spanx style="verb">d</spanx> even if it is the last field in a type signature.
-We do this to allow for us to be able to append additional fields
-to the type signature if necessary in the future. This is usually the
-case with embedded structs, like in the scan results.
+<t>In some cases we use <spanx style="verb">d</spanx> even if it is the last field in a type signature. We do this to allow for us to be able to append additional fields to the type signature if necessary in the future. This is usually the case with embedded structs, like in the scan results.
 </t>
-<t>For example, let's say we have a buffer that is encoded with the
-datatype signature of <spanx style="verb">CLLD</spanx>. In this case, it is pretty easy to tell
-where the start and end of the data blob is: the start is 9 bytes from
-the start of the buffer, and its length is the length of the buffer
-minus 9. (9 is the number of bytes taken up by a byte and two longs)
+<t>For example, let's say we have a buffer that is encoded with the datatype signature of <spanx style="verb">CLLD</spanx>. In this case, it is pretty easy to tell where the start and end of the data blob is: the start is 9 octets from the start of the buffer, and its length is the length of the buffer minus 9. (9 is the number of octets taken up by a octet and two longs)
 </t>
-<t>The datatype signature <spanx style="verb">CLLDU</spanx> is illegal because we can't determine
-where the last field (a zero-terminated UTF8 string) starts. But the
-datatype <spanx style="verb">CLLdU</spanx> <spanx style="emph">is</spanx> legal, because the parser can determine the
-exact length of the data blob-- allowing it to know where the start
-of the next field would be.
+<t>The datatype signature <spanx style="verb">CLLDU</spanx> is illegal because we can't determine where the last field (a zero-terminated UTF8 string) starts. But the datatype <spanx style="verb">CLLdU</spanx> <spanx style="emph">is</spanx> legal, because the parser can determine the exact length of the data blob-- allowing it to know where the start of the next field would be.
 </t>
 </section>
 
 <section anchor="structured-data" title="Structured Data">
-<t>The structure data type (<spanx style="verb">t(...)</spanx>) is a way of bundling together
-several fields into a single structure. It can be thought of as a
-<spanx style="verb">d</spanx> type except that instead of being opaque, the fields in the
-content are known. This is useful for things like scan results where
-you have substructures which are defined by different layers.
+<t>The structure data type (<spanx style="verb">t(...)</spanx>) is a way of bundling together several fields into a single structure. It can be thought of as a <spanx style="verb">d</spanx> type except that instead of being opaque, the fields in the content are known and the parsing frame for the type signature bounded by the <spanx style="verb">(</spanx> and <spanx style="verb">)</spanx> characters is limited by the length of the structure in octets. This is useful for things like scan results where you have substructures which are defined by different layers. The limiting constraint of the length of the structure allowed the type signature of the structure contents to end in <spanx style="verb">D</spanx> to signify a data blob of implied length.
 </t>
-<t>For example, consider the type signature <spanx style="verb">Lt(ES)t(6C)</spanx>. In this
-hypothetical case, the first struct is defined by the MAC layer, and
-the second struct is defined by the PHY layer. Because of the use of
-structures, we know exactly what part comes from that layer.
-Additionally, we can add fields to each structure without introducing
-backward compatability problems: Data encoded as <spanx style="verb">Lt(ESU)t(6C)</spanx> (Notice
-the extra <spanx style="verb">U</spanx>) will
-decode just fine as <spanx style="verb">Lt(ES)t(6C)</spanx>. Additionally, if we don't care
-about the MAC layer and only care about the network layer, we could
-parse as <spanx style="verb">Lt()t(6C)</spanx>.
+<t>For example, consider the type signature <spanx style="verb">Lt(ES)t(6D)</spanx>. In this hypothetical case, the first struct is defined by the MAC layer, and the second struct is defined by the PHY layer. Because of the use of structures, we know exactly what part comes from that layer. Additionally, we can add fields to each structure without introducing backward compatability problems: Data encoded as <spanx style="verb">Lt(ESU)t(6D)</spanx> (Notice the extra <spanx style="verb">U</spanx>) will decode just fine as <spanx style="verb">Lt(ES)t(6D)</spanx>. Additionally, if we don't care about the MAC layer and only care about the network layer, we could parse as <spanx style="verb">Lt()t(6D)</spanx>.
 </t>
-<t>Note that data encoded as <spanx style="verb">Lt(ES)t(6C)</spanx> will also parse as <spanx style="verb">Ldd</spanx>,
-with the structures from both layers now being opaque data blobs.
+<t>Note that data encoded as <spanx style="verb">Lt(ES)t(6D)</spanx> will also parse as <spanx style="verb">Ldd</spanx>, with the structures from both layers now being opaque data blobs.
 </t>
 </section>
 
 <section anchor="arrays" title="Arrays">
-<t>An array is simply a concatenated set of <spanx style="emph">n</spanx> data encodings. For example,
-the type <spanx style="verb">A(6)</spanx> is simply a list of IPv6 addresses---one after the other.
-The type <spanx style="verb">A(6E)</spanx> likewise a concatenation of IPv6-address/EUI-64 pairs.
+<t>An array is simply a concatenated set of <spanx style="emph">n</spanx> data encodings. For example, the type <spanx style="verb">A(6)</spanx> is simply a list of IPv6 addresses---one after the other. The type <spanx style="verb">A(6E)</spanx> likewise a concatenation of IPv6-address/EUI-64 pairs.
 </t>
-<t>If an array contains many fields, the fields will often be surrounded
-by a structure (<spanx style="verb">t(...)</spanx>). This effectively prepends each item in the
-array with its length. This is useful for improving parsing performance
-or to allow additional fields to be added in the future in a backward
-compatible way. If there is a high certainty that additional
-fields will never be added, the struct may be omitted (saving two bytes
-per item).
+<t>If an array contains many fields, the fields will often be surrounded by a structure (<spanx style="verb">t(...)</spanx>). This effectively prepends each item in the array with its length. This is useful for improving parsing performance or to allow additional fields to be added in the future in a backward compatible way. If there is a high certainty that additional fields will never be added, the struct may be omitted (saving two octets per item).
 </t>
-<t>This specification does not define a way to embed an array as a field
-alongside other fields.
+<t>This specification does not define a way to embed an array as a field alongside other fields.
 </t>
 </section>
 </section>
 
 <section anchor="commands" title="Commands">
+<t>This section defines the standard commands used in all Spinel protocol interactions. Each command is defined for one of the following two contexts:
+</t>
+<t>
+<list style="symbols">
+<t>OS -&gt; NCP: commands sent by the operating system (OS) to the network control processor (NCP).</t>
+<t>NCP -&gt; OS: commands sent by the network control processor (NCP) to the operating system (OS).</t>
+</list>
+</t>
+<t>A conforming implementation MAY transmit any command defined for its operating context, and MUST process any command received for its operating context, according to the operational semantics defined in this section.
+</t>
+<t>IANA maintains a registry of Spinel <spanx style="verb">CMD</spanx> command numbers, with varying registration policies assigned for different ranges according to the following table:
+</t>
+<texttable>
+<ttcol align="center">CMD Number</ttcol>
+<ttcol align="center">Reservation policy</ttcol>
 
-<section anchor="cmd-noop" title="CMD 0: (Host-&gt;NCP) CMD_NOOP">
+<c>0 - 63</c><c>Standards Action</c>
+<c>64 - 15,359</c><c>Unassigned</c>
+<c>15,360 - 16,383</c><c>Private Use</c>
+<c>16,384 - 1,999,999</c><c>Unassigned</c>
+<c>2,000,000 - 2,097,151</c><c>Experimental Use</c>
+</texttable>
+
+<section anchor="cmd-noop" title="CMD 0: (OS -&gt; NCP) CMD_NOOP">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -438,17 +371,15 @@ alongside other fields.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_NOOP</c>
 </texttable>
-<t>No-Operation command. Induces the NCP to send a success status back to
-the host. This is primarily used for liveliness checks.
+<t>No-Operation. Commands the NCP to reply with a <spanx style="verb">STATUS_OK</spanx> code. This is primarily used for liveliness checks.
 </t>
-<t>The command payload for this command SHOULD be empty. The receiver
-MUST ignore any non-empty command payload.
+<t>The command payload for this command SHOULD be empty. The receiver MUST ignore any non-empty command payload.
 </t>
 <t>There is no error condition for this command.
 </t>
 </section>
 
-<section anchor="cmd-reset" title="CMD 1: (Host-&gt;NCP) CMD_RESET">
+<section anchor="cmd-reset" title="CMD 1: (OS -&gt; NCP) CMD_RESET">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -456,20 +387,15 @@ MUST ignore any non-empty command payload.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_RESET</c>
 </texttable>
-<t>Reset NCP command. Causes the NCP to perform a software reset. Due to
-the nature of this command, the TID is ignored. The host should
-instead wait for a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> command from the NCP indicating
-<spanx style="verb">PROP_LAST_STATUS</spanx> has been set to <spanx style="verb">STATUS_RESET_SOFTWARE</spanx>.
+<t>Reset NCP. Commands the NCP to perform a software reset. Due to the nature of this command, the TID is ignored. The OS should instead wait for a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> command from the NCP indicating <spanx style="verb">PROP_LAST_STATUS</spanx> has been set to <spanx style="verb">STATUS_RESET_SOFTWARE</spanx> (see <xref target="status-codes"/>).
 </t>
-<t>The command payload for this command SHOULD be empty. The receiver
-MUST ignore any non-empty command payload.
+<t>The command payload SHOULD be empty, and it SHOULD NOT be processed.
 </t>
-<t>If an error occurs, the value of <spanx style="verb">PROP_LAST_STATUS</spanx> will be emitted
-instead with the value set to the generated status code for the error.
+<t>If an error occurs, the value of the emitted <spanx style="verb">PROP_LAST_STATUS</spanx> will be set accordingly to the status code for the error.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-get" title="CMD 2: (Host-&gt;NCP) CMD_PROP_VALUE_GET">
+<section anchor="cmd-prop-value-get" title="CMD 2: (OS -&gt; NCP) CMD_PROP_VALUE_GET">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -478,18 +404,15 @@ instead with the value set to the generated status code for the error.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PROP_VALUE_GET</c><c>PROP_ID</c>
 </texttable>
-<t>Get property value command. Causes the NCP to emit a
-<spanx style="verb">CMD_PROP_VALUE_IS</spanx> command for the given property identifier.
+<t>Get property value. Commands the NCP to emit a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> command for the given property identifier.
 </t>
-<t>The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in <xref target="packed-unsigned-integer"/>.
+<t>The payload for this command is the property identifier encoded in the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>.
 </t>
-<t>If an error occurs, the value of <spanx style="verb">PROP_LAST_STATUS</spanx> will be emitted
-instead with the value set to the generated status code for the error.
+<t>If an error occurs, the value of the emitted <spanx style="verb">PROP_LAST_STATUS</spanx> will be set accordingly to the status code for the error.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-set" title="CMD 3: (Host-&gt;NCP) CMD_PROP_VALUE_SET">
+<section anchor="cmd-prop-value-set" title="CMD 3: (OS -&gt; NCP) CMD_PROP_VALUE_SET">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -499,20 +422,15 @@ instead with the value set to the generated status code for the error.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PROP_VALUE_SET</c><c>PROP_ID</c><c>VALUE</c>
 </texttable>
-<t>Set property value command. Instructs the NCP to set the given
-property to the specific given value, replacing any previous value.
+<t>Set property value. Commands the NCP to set the given property to the specific given value, replacing any previous value, and to emit a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> command for the <spanx style="verb">PROP_LAST_STATUS</spanx> command indicating <spanx style="verb">STATUS_OK</spanx> if successful.
 </t>
-<t>The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by
-the property value. The exact format of the property value is defined
-by the property.
+<t>The payload for this command is the property identifier encoded in the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by the property value. The exact format of the property value is defined by the property.
 </t>
-<t>If an error occurs, the value of <spanx style="verb">PROP_LAST_STATUS</spanx> will be emitted
-with the value set to the generated status code for the error.
+<t>If an error occurs, the value of the emitted <spanx style="verb">PROP_LAST_STATUS</spanx> will be set accordingly to the status code for the error.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-insert" title="CMD 4: (Host-&gt;NCP) CMD_PROP_VALUE_INSERT">
+<section anchor="cmd-prop-value-insert" title="CMD 4: (OS -&gt; NCP) CMD_PROP_VALUE_INSERT">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -522,29 +440,17 @@ with the value set to the generated status code for the error.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PROP_VALUE_INSERT</c><c>PROP_ID</c><c>VALUE</c>
 </texttable>
-<t>Insert value into property command. Instructs the NCP to insert the
-given value into a list-oriented property, without removing other
-items in the list. The resulting order of items in the list is defined
-by the individual property being operated on.
+<t>Insert value into list property. Commands the NCP to insert the given value into a list-oriented property, without removing other items in the list. The resulting order of items in the list is defined by the individual property being operated on.
 </t>
-<t>The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by
-the value to be inserted. The exact format of the value is defined by
-the property.
+<t>The payload for this command is the property identifier encoded in the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by the value to be inserted. The exact format of the value is defined by the property.
 </t>
-<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists
-of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the
-contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>)
-rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically,
-the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This
-helps to eliminate redundant data.
+<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>) rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically, the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This helps to eliminate redundant data.
 </t>
-<t>If an error occurs, the value of <spanx style="verb">PROP_LAST_STATUS</spanx> will be emitted
-with the value set to the generated status code for the error.
+<t>If an error occurs, the value of the emitted <spanx style="verb">PROP_LAST_STATUS</spanx> will be set accordingly to the status code for the error.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-remove" title="CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE">
+<section anchor="cmd-prop-value-remove" title="CMD 5: (OS -&gt; NCP) CMD_PROP_VALUE_REMOVE">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -554,31 +460,19 @@ with the value set to the generated status code for the error.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PROP_VALUE_REMOVE</c><c>PROP_ID</c><c>VALUE</c>
 </texttable>
-<t>Remove value from property command. Instructs the NCP to remove the
-given value from a list-oriented property, without affecting other
-items in the list. The resulting order of items in the list is defined
-by the individual property being operated on.
+<t>Remove value from list property. Commands the NCP to remove the given value from a list-oriented property, without affecting other items in the list. The resulting order of items in the list is defined by the individual property being operated on.
 </t>
 <t>Note that this command operates <spanx style="emph">by value</spanx>, not by index!
 </t>
-<t>The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by
-the value to be removed. The exact format of the value is defined by
-the property.
+<t>The payload for this command is the property identifier encoded in the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by the value to be removed. The exact format of the value is defined by the property.
 </t>
-<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists
-of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the
-contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>)
-rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically,
-the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This
-helps to eliminate redundant data.
+<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>) rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically, the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This helps to eliminate redundant data.
 </t>
-<t>If an error occurs, the value of <spanx style="verb">PROP_LAST_STATUS</spanx> will be emitted
-with the value set to the generated status code for the error.
+<t>If an error occurs, the value of the emitted <spanx style="verb">PROP_LAST_STATUS</spanx> will be set accordingly to the status code for the error.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-is" title="CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS">
+<section anchor="cmd-prop-value-is" title="CMD 6: (NCP -&gt; OS) CMD_PROP_VALUE_IS">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -588,18 +482,13 @@ with the value set to the generated status code for the error.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PROP_VALUE_IS</c><c>PROP_ID</c><c>VALUE</c>
 </texttable>
-<t>Property value notification command. This command can be sent by the
-NCP in response to a previous command from the host, or it can be sent
-by the NCP in an unsolicited fashion to notify the host of various
-state changes asynchronously.
+<t>Property value notification. This command can be sent by the NCP in response to a previous command from the OS, or it can be sent by the NCP in an unsolicited fashion to notify the OS of various state changes asynchronously.
 </t>
-<t>The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by
-the current value of the given property.
+<t>The payload for this command is the property identifier encoded in the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by the current value of the given property.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-inserted" title="CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED">
+<section anchor="cmd-prop-value-inserted" title="CMD 7: (NCP -&gt; OS) CMD_PROP_VALUE_INSERTED">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -609,28 +498,17 @@ the current value of the given property.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PROP_VALUE_INSERTED</c><c>PROP_ID</c><c>VALUE</c>
 </texttable>
-<t>Property value insertion notification command. This command can be
-sent by the NCP in response to the <spanx style="verb">CMD_PROP_VALUE_INSERT</spanx> command, or
-it can be sent by the NCP in an unsolicited fashion to notify the host
-of various state changes asynchronously.
+<t>Property value insertion notification. This command can be sent by the NCP in response to the <spanx style="verb">CMD_PROP_VALUE_INSERT</spanx> command, or it can be sent by the NCP in an unsolicited fashion to notify the OS of various state changes asynchronously.
 </t>
-<t>The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by
-the value that was inserted into the given property.
+<t>The payload for this command is the property identifier encoded in the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by the value that was inserted into the given property.
 </t>
-<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists
-of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the
-contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>)
-rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically,
-the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This
-helps to eliminate redundant data.
+<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>) rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically, the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This helps to eliminate redundant data.
 </t>
-<t>The resulting order of items in the list is defined by the given
-property.
+<t>The resulting order of items in the list is defined by the given property.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-removed" title="CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED">
+<section anchor="cmd-prop-value-removed" title="CMD 8: (NCP -&gt; OS) CMD_PROP_VALUE_REMOVED">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -640,30 +518,19 @@ property.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PROP_VALUE_REMOVED</c><c>PROP_ID</c><c>VALUE</c>
 </texttable>
-<t>Property value removal notification command. This command can be sent
-by the NCP in response to the <spanx style="verb">CMD_PROP_VALUE_REMOVE</spanx> command, or it
-can be sent by the NCP in an unsolicited fashion to notify the host of
-various state changes asynchronously.
+<t>Property value removal notification command. This command can be sent by the NCP in response to the <spanx style="verb">CMD_PROP_VALUE_REMOVE</spanx> command, or it can be sent by the NCP in an unsolicited fashion to notify the OS of various state changes asynchronously.
 </t>
 <t>Note that this command operates <spanx style="emph">by value</spanx>, not by index!
 </t>
-<t>The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by
-the value that was removed from the given property.
+<t>The payload for this command is the property identifier encoded in the packed unsigned integer format described in <xref target="packed-unsigned-integer"/>, followed by the value that was removed from the given property.
 </t>
-<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists
-of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the
-contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>)
-rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically,
-the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This
-helps to eliminate redundant data.
+<t>If the type signature of the property specified by <spanx style="verb">PROP_ID</spanx> consists of a single structure enclosed by an array (<spanx style="verb">A(t(...))</spanx>), then the contents of <spanx style="verb">VALUE</spanx> MUST contain the contents of the structure (<spanx style="verb">...</spanx>) rather than the serialization of the whole item (<spanx style="verb">t(...)</spanx>).  Specifically, the length of the structure MUST NOT be prepended to <spanx style="verb">VALUE</spanx>. This helps to eliminate redundant data.
 </t>
-<t>The resulting order of items in the list is defined by the given
-property.
+<t>The resulting order of items in the list is defined by the given property.
 </t>
 </section>
 
-<section anchor="cmd-peek" title="CMD 18: (Host-&gt;NCP) CMD_PEEK">
+<section anchor="cmd-peek" title="CMD 18: (OS -&gt; NCP) CMD_PEEK">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -673,24 +540,19 @@ property.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PEEK</c><c>ADDRESS</c><c>COUNT</c>
 </texttable>
-<t>This command allows the NCP to fetch values from the RAM of the NCP
-for debugging purposes. Upon success, <spanx style="verb">CMD_PEEK_RET</spanx> is sent from the
-NCP to the host. Upon failure, <spanx style="verb">PROP_LAST_STATUS</spanx> is emitted with
-the appropriate error indication.
+<t>This command allows the NCP to fetch values from the RAM of the NCP for debugging purposes. Upon success, <spanx style="verb">CMD_PEEK_RET</spanx> is sent from the NCP to the OS. Upon failure, <spanx style="verb">PROP_LAST_STATUS</spanx> is emitted with the appropriate error indication.
 </t>
-<t>Due to the low-level nature of this command, certain error conditions
-may induce the NCP to reset.
+<t>Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.
 </t>
 <t>The NCP MAY prevent certain regions of memory from being accessed.
 </t>
-<t>The implementation of this command has security implications.
-See <xref target="security-considerations"/> for more information.
+<t>The implementation of this command has security implications. See <xref target="security-considerations"/> for more information.
 </t>
 <t>This command requires the capability <spanx style="verb">CAP_PEEK_POKE</spanx> to be present.
 </t>
 </section>
 
-<section anchor="cmd-peek-ret" title="CMD 19: (NCP-&gt;Host) CMD_PEEK_RET">
+<section anchor="cmd-peek-ret" title="CMD 19: (NCP -&gt; OS) CMD_PEEK_RET">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -701,14 +563,13 @@ See <xref target="security-considerations"/> for more information.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_PEEK_RET</c><c>ADDRESS</c><c>COUNT</c><c>BYTES</c>
 </texttable>
-<t>This command contains the contents of memory that was requested by
-a previous call to <spanx style="verb">CMD_PEEK</spanx>.
+<t>This command contains the contents of memory that was requested by a previous call to <spanx style="verb">CMD_PEEK</spanx>.
 </t>
 <t>This command requires the capability <spanx style="verb">CAP_PEEK_POKE</spanx> to be present.
 </t>
 </section>
 
-<section anchor="cmd-poke" title="CMD 20: (Host-&gt;NCP) CMD_POKE">
+<section anchor="cmd-poke" title="CMD 20: (OS -&gt; NCP) CMD_POKE">
 <texttable>
 <ttcol align="center">Octets:</ttcol>
 <ttcol align="center">1</ttcol>
@@ -719,43 +580,32 @@ a previous call to <spanx style="verb">CMD_PEEK</spanx>.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_POKE</c><c>ADDRESS</c><c>COUNT</c><c>BYTES</c>
 </texttable>
-<t>This command writes the bytes to the specified memory address
-for debugging purposes.
+<t>This command writes the bytes to the specified memory address for debugging purposes.
 </t>
-<t>Due to the low-level nature of this command, certain error conditions
-may induce the NCP to reset.
+<t>Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.
 </t>
-<t>The implementation of this command has security implications.
-See <xref target="security-considerations"/> for more information.
+<t>The implementation of this command has security implications. See <xref target="security-considerations"/> for more information.
 </t>
 <t>This command requires the capability <spanx style="verb">CAP_PEEK_POKE</spanx> to be present.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-multi-get" title="CMD 21: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_GET">
+<section anchor="cmd-prop-value-multi-get" title="CMD 21: (OS -&gt; NCP) CMD_PROP_VALUE_MULTI_GET">
 <t>
 <list style="symbols">
 <t>Argument-Encoding: <spanx style="verb">A(i)</spanx></t>
 <t>Required Capability: <spanx style="verb">CAP_CMD_MULTI</spanx></t>
 </list>
 </t>
-<t>Fetch the value of multiple properties in one command. Arguments are
-an array of property IDs. If all properties are fetched successfully,
-a <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> command is sent back to the host containing
-the propertyid and value of each fetched property. The order of the
-results in <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> match the order of properties given
-in <spanx style="verb">CMD_PROP_VALUE_GET</spanx>.
+<t>Fetch the value of multiple properties in one command. Arguments are an array of property IDs. If all properties are fetched successfully, a <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> command is sent back to the OS containing the property identifier and value of each fetched property. The order of the results in <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> match the order of properties given in <spanx style="verb">CMD_PROP_VALUE_GET</spanx>.
 </t>
-<t>Errors fetching individual properties are reflected as indicating a
-change to <spanx style="verb">PROP_LAST_STATUS</spanx> for that property's place.
+<t>Errors fetching individual properties are reflected as indicating a change to <spanx style="verb">PROP_LAST_STATUS</spanx> for that property's place.
 </t>
-<t>Not all properties can be fetched using this method. As a general rule
-of thumb, any property that blocks when getting will fail for that
-individual property with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</spanx>.
+<t>Not all properties can be fetched using this method. As a general rule of thumb, any property that blocks when getting will fail for that individual property with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</spanx>.
 </t>
 </section>
 
-<section anchor="cmd-prop-value-multi-set" title="CMD 22: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_SET">
+<section anchor="cmd-prop-value-multi-set" title="CMD 22: (OS -&gt; NCP) CMD_PROP_VALUE_MULTI_SET">
 <t>
 <list style="symbols">
 <t>Argument-Encoding: <spanx style="verb">A(iD)</spanx></t>
@@ -780,27 +630,17 @@ individual property with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</sp
 
 <c>Fields:</c><c>LENGTH</c><c>PROP_ID</c><c>PROP_VALUE</c>
 </texttable>
-<t>This command sets the value of several properties at once in the given
-order. The setting of properties stops at the first error, ignoring
-any later properties.
+<t>This command sets the value of several properties at once in the given order. The setting of properties stops at the first error, ignoring any later properties.
 </t>
-<t>The result of this command is generally <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> unless
-(for example) a parsing error has occured (in which case
-<spanx style="verb">CMD_PROP_VALUE_IS</spanx> for <spanx style="verb">PROP_LAST_STATUS</spanx> would be the result). The
-order of the results in <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> match the order of
-properties given in <spanx style="verb">CMD_PROP_VALUE_MULTI_SET</spanx>.
+<t>The result of this command is generally <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> unless (for example) a parsing error has occured (in which case <spanx style="verb">CMD_PROP_VALUE_IS</spanx> for <spanx style="verb">PROP_LAST_STATUS</spanx> would be the result). The order of the results in <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> match the order of properties given in <spanx style="verb">CMD_PROP_VALUE_MULTI_SET</spanx>.
 </t>
-<t>Since the processing of properties to set stops at the first error,
-the resulting <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> can contain fewer items than the
-requested number of properties to set.
+<t>Since the processing of properties to set stops at the first error, the resulting <spanx style="verb">CMD_PROP_VALUES_ARE</spanx> can contain fewer items than the requested number of properties to set.
 </t>
-<t>Not all properties can be set using this method. As a general rule
-of thumb, any property that blocks when setting will fail for that
-individual property with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</spanx>.
+<t>Not all properties can be set using this method. As a general rule of thumb, any property that blocks when setting will fail for that individual property with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</spanx>.
 </t>
 </section>
 
-<section anchor="cmd-prop-values-are" title="CMD 23: (NCP-&gt;Host) CMD_PROP_VALUES_ARE">
+<section anchor="cmd-prop-values-are" title="CMD 23: (NCP -&gt; OS) CMD_PROP_VALUES_ARE">
 <t>
 <list style="symbols">
 <t>Argument-Encoding: <spanx style="verb">A(iD)</spanx></t>
@@ -825,20 +665,11 @@ individual property with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</sp
 
 <c>Fields:</c><c>LENGTH</c><c>PROP_ID</c><c>PROP_VALUE</c>
 </texttable>
-<t>This command is emitted by the NCP as the response to both the
-<spanx style="verb">CMD_PROP_VALUE_MULTI_GET</spanx> and <spanx style="verb">CMD_PROP_VALUE_MULTI_SET</spanx> commands. It
-is roughly analogous to <spanx style="verb">CMD_PROP_VALUE_IS</spanx>, except that it contains
-more than one property.
+<t>This command is emitted by the NCP as the response to both the <spanx style="verb">CMD_PROP_VALUE_MULTI_GET</spanx> and <spanx style="verb">CMD_PROP_VALUE_MULTI_SET</spanx> commands. It is roughly analogous to <spanx style="verb">CMD_PROP_VALUE_IS</spanx>, except that it contains more than one property.
 </t>
-<t>This command SHOULD NOT be emitted asynchronously, or in response to
-any command other than <spanx style="verb">CMD_PROP_VALUE_MULTI_GET</spanx> or
-<spanx style="verb">CMD_PROP_VALUE_MULTI_SET</spanx>.
+<t>This command SHOULD NOT be emitted asynchronously, or in response to any command other than <spanx style="verb">CMD_PROP_VALUE_MULTI_GET</spanx> or <spanx style="verb">CMD_PROP_VALUE_MULTI_SET</spanx>.
 </t>
-<t>The arguments are a list of structures containing the emitted property
-and the associated value. These are presented in the same order as
-given in the associated initiating command. In cases where getting or
-setting a specific property resulted in an error, the associated slot
-in this command will describe <spanx style="verb">PROP_LAST_STATUS</spanx>.
+<t>The arguments are a list of structures containing the emitted property and the associated value. These are presented in the same order as given in the associated initiating command. In cases where getting or setting a specific property resulted in an error, the associated slot in this command will describe <spanx style="verb">PROP_LAST_STATUS</spanx>.
 </t>
 </section>
 </section>
@@ -2239,29 +2070,7 @@ zero indicates down.
 <t>Packed-Encoding: <spanx style="verb">6</spanx></t>
 </list>
 </t>
-<t>IPv6 Address
-</t>
-</section>
-
-<section anchor="prop-ipv6-ml-addr" title="PROP 97: PROP_IPV6_ML_ADDR">
-<t>
-<list style="symbols">
-<t>Type: Read-Only</t>
-<t>Packed-Encoding: <spanx style="verb">6</spanx></t>
-</list>
-</t>
-<t>IPv6 Address + Prefix Length
-</t>
-</section>
-
-<section anchor="prop-ipv6-ml-prefix" title="PROP 98: PROP_IPV6_ML_PREFIX">
-<t>
-<list style="symbols">
-<t>Type: Read-Write</t>
-<t>Packed-Encoding: <spanx style="verb">6C</spanx></t>
-</list>
-</t>
-<t>IPv6 Prefix + Prefix Length
+<t>The IPv6 link-local scope address.
 </t>
 </section>
 
@@ -2283,6 +2092,10 @@ zero indicates down.
 <t><spanx style="verb">C</spanx>: Flags</t>
 </list>
 </t>
+<t>EDITOR: this conflates the IPv6 interface address list with the IPv6 on-link prefix used in IPv6 Neighbor Discovery and other address reservation and resolution protocols with similar function, e.g. Thread(R). It probably makes sense to create an additional set of properties that represent neighbor discovery and router discovery parameters.
+</t>
+<t>EDITOR: the operational semantics of the Flags field is not well-specified.
+</t>
 </section>
 
 <section anchor="prop-101-propipv6icmppingoffload" title="PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD">
@@ -2292,8 +2105,7 @@ zero indicates down.
 <t>Packed-Encoding: <spanx style="verb">b</spanx></t>
 </list>
 </t>
-<t>Allow the NCP to directly respond to ICMP ping requests. If this is
-turned on, ping request ICMP packets will not be passed to the host.
+<t>Allow the NCP to directly respond to ICMP ping requests. If this is turned on, ICMP echo request packets will not be passed to the OS.
 </t>
 <t>Default value is <spanx style="verb">false</spanx>.
 </t>
@@ -2309,11 +2121,7 @@ turned on, ping request ICMP packets will not be passed to the host.
 <t>Packed-Encoding: <spanx style="verb">b</spanx></t>
 </list>
 </t>
-<t>Reading this property will cause an assert on the NCP. This
-is intended for testing the assert functionality of
-underlying platform/NCP. Assert should ideally cause the
-NCP to reset, but if <spanx style="verb">assert</spanx> is not supported or disabled
-boolean value of <spanx style="verb">false</spanx> is returned in response.
+<t>Reading this property will cause an assert on the NCP. This is intended for testing the assert functionality of underlying platform/NCP. Assert should ideally cause the NCP to reset, but if <spanx style="verb">assert</spanx> is not supported or disabled boolean value of <spanx style="verb">false</spanx> is returned in response.
 </t>
 </section>
 
@@ -2324,8 +2132,7 @@ boolean value of <spanx style="verb">false</spanx> is returned in response.
 <t>Packed-Encoding: <spanx style="verb">C</spanx></t>
 </list>
 </t>
-<t>Provides access to the NCP log level. Currently defined values are (which follows
-the RFC 5424):
+<t>Provides access to the NCP log level. Standard log level codes, which are derived from <xref target="RFC5424"/>, are shown below:
 </t>
 <t>
 <list style="symbols">
@@ -2339,10 +2146,7 @@ the RFC 5424):
 <t>7: Debug (debug).</t>
 </list>
 </t>
-<t>If the NCP supports dynamic log level control, setting this property
-changes the log level accordingly. Getting the value returns the current
-log level.  If the dynamic log level control is not supported, setting this
-property returns a <spanx style="verb">PROP_LAST_STATUS</spanx> with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</spanx>.
+<t>If the NCP supports dynamic log level control, setting this property changes the log level accordingly. Getting the value returns the current log level.  If the dynamic log level control is not supported, setting this property returns a <spanx style="verb">PROP_LAST_STATUS</spanx> with <spanx style="verb">STATUS_INVALID_COMMAND_FOR_PROP</spanx>.
 </t>
 </section>
 </section>
@@ -2968,63 +2772,48 @@ Response messages.
 </section>
 
 <section anchor="feature-network-save" title="Feature: Network Save">
-<t>The network save/recall feature is an optional NCP capability that, when
-present, allows the host to save and recall network credentials and
-state to and from nonvolatile storage.
+<t>The network save/recall feature is an OPTIONAL NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.
 </t>
-<t>The presence of the save/recall feature can be detected by checking for
-the presence of the <spanx style="verb">CAP_NET_SAVE</spanx> capability in <spanx style="verb">PROP_CAPS</spanx>.
+<t>The presence of the save/recall feature can be detected by checking for the presence of the <spanx style="verb">CAP_NET_SAVE</spanx> capability in <spanx style="verb">PROP_CAPS</spanx>.
 </t>
-<t>Network clear feature allows host to erase all network credentials and
-state from non-volatile memory.
+<t>Network clear feature allows host to erase all network credentials and state from non-volatile memory.
 </t>
 
 <section anchor="commands-1" title="Commands">
 
 <section anchor="cmd-9-hostncp-cmdnetsave" title="CMD 9: (Host-&gt;NCP) CMD_NET_SAVE">
 <texttable>
-<ttcol align="center">Octets:</ttcol>
-<ttcol align="center">1</ttcol>
-<ttcol align="center">1</ttcol>
+<ttcol align="left">Octets:</ttcol>
+<ttcol align="left">1</ttcol>
+<ttcol align="left">1</ttcol>
 
-<c>Fields:</c><c>HEADER</c><c>CMD_NET_SAVE</c>
+<c>Fields:</c><c><spanx style="verb">HEADER</spanx></c><c><spanx style="verb">CMD_NET_SAVE</spanx></c>
 </texttable>
-<t>Save network state command. Saves any current network credentials and
-state necessary to reconnect to the current network to non-volatile
-memory.
+<t>Save network state command. Saves any current network credentials and state necessary to reconnect to the current network to non-volatile memory.
 </t>
-<t>This operation affects non-volatile memory only. The current network
-information stored in volatile memory is unaffected.
+<t>This operation affects non-volatile memory only. The current network information stored in volatile memory is unaffected.
 </t>
-<t>The response to this command is always a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> for
-<spanx style="verb">PROP_LAST_STATUS</spanx>, indicating the result of the operation.
+<t>The response to this command is always a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> for <spanx style="verb">PROP_LAST_STATUS</spanx>, indicating the result of the operation.
 </t>
-<t>This command is only available if the <spanx style="verb">CAP_NET_SAVE</spanx> capability is
-set.
+<t>This command is only available if the <spanx style="verb">CAP_NET_SAVE</spanx> capability is set.
 </t>
 </section>
 
 <section anchor="cmd-10-hostncp-cmdnetclear" title="CMD 10: (Host-&gt;NCP) CMD_NET_CLEAR">
 <texttable>
-<ttcol align="center">Octets:</ttcol>
-<ttcol align="center">1</ttcol>
-<ttcol align="center">1</ttcol>
+<ttcol align="left">Octets:</ttcol>
+<ttcol align="left">1</ttcol>
+<ttcol align="left">1</ttcol>
 
-<c>Fields:</c><c>HEADER</c><c>CMD_NET_CLEAR</c>
+<c>Fields:</c><c><spanx style="verb">HEADER</spanx></c><c><spanx style="verb">CMD_NET_CLEAR</spanx></c>
 </texttable>
-<t>Clear saved network settings command. Erases all network credentials
-and state from non-volatile memory. The erased settings include any data
-saved automatically by the network stack firmware and/or data saved by
-<spanx style="verb">CMD_NET_SAVE</spanx> operation.
+<t>Clear saved network settings command. Erases all network credentials and state from non-volatile memory. The erased settings include any data saved automatically by the network stack firmware and/or data saved by <spanx style="verb">CMD_NET_SAVE</spanx> operation.
 </t>
-<t>This operation affects non-volatile memory only. The current network
-information stored in volatile memory is unaffected.
+<t>This operation affects non-volatile memory only. The current network information stored in volatile memory is unaffected.
 </t>
-<t>The response to this command is always a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> for
-<spanx style="verb">PROP_LAST_STATUS</spanx>, indicating the result of the operation.
+<t>The response to this command is always a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> for <spanx style="verb">PROP_LAST_STATUS</spanx>, indicating the result of the operation.
 </t>
-<t>This command is always available independent of the value of
-<spanx style="verb">CAP_NET_SAVE</spanx> capability.
+<t>This command is always available independent of the value of <spanx style="verb">CAP_NET_SAVE</spanx> capability.
 </t>
 </section>
 
@@ -3036,36 +2825,22 @@ information stored in volatile memory is unaffected.
 
 <c>Fields:</c><c>HEADER</c><c>CMD_NET_RECALL</c>
 </texttable>
-<t>Recall saved network state command. Recalls any previously saved
-network credentials and state previously stored by <spanx style="verb">CMD_NET_SAVE</spanx> from
-non-volatile memory.
+<t>Recall saved network state command. Recalls any previously saved network credentials and state previously stored by <spanx style="verb">CMD_NET_SAVE</spanx> from non-volatile memory.
 </t>
-<t>This command will typically generated several unsolicited property
-updates as the network state is loaded. At the conclusion of loading,
-the authoritative response to this command is always a
-<spanx style="verb">CMD_PROP_VALUE_IS</spanx> for <spanx style="verb">PROP_LAST_STATUS</spanx>, indicating the result of
-the operation.
+<t>This command will typically generated several unsolicited property updates as the network state is loaded. At the conclusion of loading, the authoritative response to this command is always a <spanx style="verb">CMD_PROP_VALUE_IS</spanx> for <spanx style="verb">PROP_LAST_STATUS</spanx>, indicating the result of the operation.
 </t>
-<t>This command is only available if the <spanx style="verb">CAP_NET_SAVE</spanx> capability is
-set.
+<t>This command is only available if the <spanx style="verb">CAP_NET_SAVE</spanx> capability is set.
 </t>
 </section>
 </section>
 </section>
 
 <section anchor="feature-host-buffer-offload" title="Feature: Host Buffer Offload">
-<t>The memory on an NCP may be much more limited than the memory on
-the host processor. In such situations, it is sometimes useful
-for the NCP to offload buffers to the host processor temporarily
-so that it can perform other operations.
+<t>The memory on an NCP may be much more limited than the memory on the host processor of the OS. In such situations, it is sometimes useful for the NCP to offload buffers to the OS temporarily so that it can perform other operations.
 </t>
-<t>Host buffer offload is an optional NCP capability that, when
-present, allows the NCP to store data buffers on the host processor
-that can be recalled at a later time.
+<t>Host buffer offload is an optional NCP capability that, when present, allows the NCP to store data buffers on the host processor that can be recalled at a later time.
 </t>
-<t>The presence of this feature can be detected by the host by
-checking for the presence of the <spanx style="verb">CAP_HBO</spanx>
-capability in <spanx style="verb">PROP_CAPS</spanx>.
+<t>The presence of this feature can be detected by the host by checking for the presence of the <spanx style="verb">CAP_HBO</spanx> capability in <spanx style="verb">PROP_CAPS</spanx>.
 </t>
 
 <section anchor="commands-2" title="Commands">
@@ -3090,8 +2865,7 @@ capability in <spanx style="verb">PROP_CAPS</spanx>.
 <t>Argument-Encoding: <spanx style="verb">Lb</spanx>
 <list style="symbols">
 <t><spanx style="verb">OffloadId</spanx>: 32-bit unique block identifier</t>
-<t><spanx style="verb">KeepAfterReclaim</spanx>: If not set to true, the block will be
-dropped by the host after it is sent to the NCP.</t>
+<t><spanx style="verb">KeepAfterReclaim</spanx>: If not set to true, the block will be dropped by the host after it is sent to the NCP.</t>
 </list></t>
 </list>
 </t>
@@ -3156,19 +2930,16 @@ dropped by the host after it is sent to the NCP.</t>
 </list>
 </t>
 <texttable>
-<ttcol align="center">Octets:</ttcol>
-<ttcol align="center">4</ttcol>
+<ttcol align="left">Octets:</ttcol>
+<ttcol align="left">4</ttcol>
 
 <c>Fields:</c><c><spanx style="verb">PROP_HBO_MEM_MAX</spanx></c>
 </texttable>
-<t>Describes the number of bytes that may be offloaded from the NCP to
-the host. Default value is zero, so this property must be set by the
-host to a non-zero value before the NCP will begin offloading blocks.
+<t>Describes the number of bytes that may be offloaded from the NCP to the OS. Default value is zero, so this property must be set by the OS to a non-zero value before the NCP will begin offloading blocks.
 </t>
 <t>This value is encoded as an unsigned 32-bit integer.
 </t>
-<t>This property is only available if the <spanx style="verb">CAP_HBO</spanx>
-capability is present in <spanx style="verb">PROP_CAPS</spanx>.
+<t>This property is only available if the <spanx style="verb">CAP_HBO</spanx> capability is present in <spanx style="verb">PROP_CAPS</spanx>.
 </t>
 </section>
 
@@ -3180,19 +2951,16 @@ capability is present in <spanx style="verb">PROP_CAPS</spanx>.
 </list>
 </t>
 <texttable>
-<ttcol align="center">Octets:</ttcol>
-<ttcol align="center">2</ttcol>
+<ttcol align="left">Octets:</ttcol>
+<ttcol align="left">2</ttcol>
 
 <c>Fields:</c><c><spanx style="verb">PROP_HBO_BLOCK_MAX</spanx></c>
 </texttable>
-<t>Describes the number of blocks that may be offloaded from the NCP to
-the host. Default value is 32. Setting this value to zero will cause
-host block offload to be effectively disabled.
+<t>Describes the number of blocks that may be offloaded from the NCP to the OS. Default value is 32. Setting this value to zero will cause OS block offload to be effectively disabled.
 </t>
 <t>This value is encoded as an unsigned 16-bit integer.
 </t>
-<t>This property is only available if the <spanx style="verb">CAP_HBO</spanx>
-capability is present in <spanx style="verb">PROP_CAPS</spanx>.
+<t>This property is only available if the <spanx style="verb">CAP_HBO</spanx> capability is present in <spanx style="verb">PROP_CAPS</spanx>.
 </t>
 </section>
 </section>
@@ -3330,10 +3098,7 @@ corresponding to more recent history).
 </section>
 
 <section anchor="feature-gpio-access" title="Feature: GPIO Access">
-<t>This feature allows the host to have control over some or all of the
-GPIO pins on the NCP. The host can determine which GPIOs are available
-by examining <spanx style="verb">PROP_GPIO_CONFIG</spanx>, described below. This API supports a
-maximum of 256 individual GPIO pins.
+<t>This feature allows the host to have control over some or all of the GPIO pins on the NCP. The host can determine which GPIOs are available by examining <spanx style="verb">PROP_GPIO_CONFIG</spanx>, described below. This API supports a maximum of 256 individual GPIO pins.
 </t>
 <t>Support for this feature can be determined by the presence of <spanx style="verb">CAP_GPIO</spanx>.
 </t>
@@ -3344,8 +3109,7 @@ maximum of 256 individual GPIO pins.
 <t>
 <list style="symbols">
 <t>Argument-Encoding: <spanx style="verb">A(t(CCU))</spanx></t>
-<t>Type: Read-write (Writable only using <spanx style="verb">CMD_PROP_VALUE_INSERT</spanx>,
-<xref target="cmd-prop-value-insert"/>)</t>
+<t>Type: Read-write (Writable only using <spanx style="verb">CMD_PROP_VALUE_INSERT</spanx>, <xref target="cmd-prop-value-insert"/>)</t>
 </list>
 </t>
 <t>An array of structures which contain the following fields:
@@ -3359,8 +3123,7 @@ maximum of 256 individual GPIO pins.
 </t>
 <t>GPIOs which do not have a corresponding entry are not supported.
 </t>
-<t>The configuration parameter contains the configuration flags for the
-GPIO:
+<t>The configuration parameter contains the configuration flags for the GPIO:
 </t>
 
 <figure align="center"><artwork align="center">
@@ -3380,24 +3143,17 @@ GPIO:
 <t>Input: Pull-down enabled.</t>
 <t>Output: Output is an open-drain.</t>
 </list></t>
-<t><spanx style="verb">TRIGGER</spanx>: Enumeration describing how pin changes generate
-asynchronous notification commands (TBD) from the NCP to the host.
+<t><spanx style="verb">TRIGGER</spanx>: Enumeration describing how pin changes generate asynchronous notification commands (TBD) from the NCP to the host.
 <list style="symbols">
 <t>0: Feature disabled for this pin</t>
 <t>1: Trigger on falling edge</t>
 <t>2: Trigger on rising edge</t>
 <t>3: Trigger on level change</t>
 </list></t>
-<t><spanx style="verb">RESERVED</spanx>: Bits reserved for future use. Always cleared to zero
-and ignored when read.</t>
+<t><spanx style="verb">RESERVED</spanx>: Bits reserved for future use. Always cleared to zero and ignored when read.</t>
 </list>
 </t>
-<t>As an optional feature, the configuration of individual pins may be
-modified using the <spanx style="verb">CMD_PROP_VALUE_INSERT</spanx> command. Only the GPIO
-number and flags fields MUST be present, the GPIO name (if present)
-would be ignored. This command can only be used to modify the
-configuration of GPIOs which are already exposed---it cannot be used
-by the host to add addional GPIOs.
+<t>As an optional feature, the configuration of individual pins may be modified using the <spanx style="verb">CMD_PROP_VALUE_INSERT</spanx> command. Only the GPIO number and flags fields MUST be present, the GPIO name (if present) would be ignored. This command can only be used to modify the configuration of GPIOs which are already exposed---it cannot be used by the host to add addional GPIOs.
 </t>
 </section>
 
@@ -3407,42 +3163,30 @@ by the host to add addional GPIOs.
 <t>Type: Read-Write</t>
 </list>
 </t>
-<t>Contains a bit field identifying the state of the GPIOs. The length of
-the data associated with these properties depends on the number of
-GPIOs. If you have 10 GPIOs, you'd have two bytes. GPIOs are numbered
-from most significant bit to least significant bit, so 0x80 is GPIO 0,
-0x40 is GPIO 1, etc.
+<t>Contains a bit field identifying the state of the GPIOs. The length of the data associated with these properties depends on the number of GPIOs. If you have 10 GPIOs, you'd have two bytes. GPIOs are numbered from most significant bit to least significant bit, so 0x80 is GPIO 0, 0x40 is GPIO 1, etc.
 </t>
 <t>For GPIOs configured as inputs:
 </t>
 <t>
 <list style="symbols">
-<t><spanx style="verb">CMD_PROP_VAUE_GET</spanx>: The value of the associated bit describes the
-logic level read from the pin.</t>
-<t><spanx style="verb">CMD_PROP_VALUE_SET</spanx>: The value of the associated bit is ignored
-for these pins.</t>
+<t><spanx style="verb">CMD_PROP_VAUE_GET</spanx>: The value of the associated bit describes the logic level read from the pin.</t>
+<t><spanx style="verb">CMD_PROP_VALUE_SET</spanx>: The value of the associated bit is ignored for these pins.</t>
 </list>
 </t>
 <t>For GPIOs configured as outputs:
 </t>
 <t>
 <list style="symbols">
-<t><spanx style="verb">CMD_PROP_VAUE_GET</spanx>: The value of the associated bit is
-implementation specific.</t>
-<t><spanx style="verb">CMD_PROP_VALUE_SET</spanx>: The value of the associated bit determines
-the new logic level of the output. If this pin is configured as an
-open-drain, setting the associated bit to 1 will cause the pin to
-enter a Hi-Z state.</t>
+<t><spanx style="verb">CMD_PROP_VAUE_GET</spanx>: The value of the associated bit is implementation specific.</t>
+<t><spanx style="verb">CMD_PROP_VALUE_SET</spanx>: The value of the associated bit determines the new logic level of the output. If this pin is configured as an open-drain, setting the associated bit to 1 will cause the pin to enter a Hi-Z state.</t>
 </list>
 </t>
 <t>For GPIOs which are not specified in <spanx style="verb">PROP_GPIO_CONFIG</spanx>:
 </t>
 <t>
 <list style="symbols">
-<t><spanx style="verb">CMD_PROP_VAUE_GET</spanx>: The value of the associated bit is
-implementation specific.</t>
-<t><spanx style="verb">CMD_PROP_VALUE_SET</spanx>: The value of the associated bit MUST be
-ignored by the NCP.</t>
+<t><spanx style="verb">CMD_PROP_VAUE_GET</spanx>: The value of the associated bit is implementation specific.</t>
+<t><spanx style="verb">CMD_PROP_VALUE_SET</spanx>: The value of the associated bit MUST be ignored by the NCP.</t>
 </list>
 </t>
 <t>When writing, unspecified bits are assumed to be zero.
@@ -3455,13 +3199,9 @@ ignored by the NCP.</t>
 <t>Type: Write-only</t>
 </list>
 </t>
-<t>Allows for the state of various output GPIOs to be set without
-affecting other GPIO states. Contains a bit field identifying the
-output GPIOs that should have their state set to 1.
+<t>Allows for the state of various output GPIOs to be set without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state set to 1.
 </t>
-<t>When writing, unspecified bits are assumed to be zero. The value of
-any bits for GPIOs which are not specified in <spanx style="verb">PROP_GPIO_CONFIG</spanx> MUST
-be ignored.
+<t>When writing, unspecified bits are assumed to be zero. The value of any bits for GPIOs which are not specified in <spanx style="verb">PROP_GPIO_CONFIG</spanx> MUST be ignored.
 </t>
 </section>
 
@@ -3471,31 +3211,20 @@ be ignored.
 <t>Type: Write-only</t>
 </list>
 </t>
-<t>Allows for the state of various output GPIOs to be cleared without
-affecting other GPIO states. Contains a bit field identifying the
-output GPIOs that should have their state cleared to 0.
+<t>Allows for the state of various output GPIOs to be cleared without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state cleared to 0.
 </t>
-<t>When writing, unspecified bits are assumed to be zero. The value of
-any bits for GPIOs which are not specified in <spanx style="verb">PROP_GPIO_CONFIG</spanx> MUST
-be ignored.
+<t>When writing, unspecified bits are assumed to be zero. The value of any bits for GPIOs which are not specified in <spanx style="verb">PROP_GPIO_CONFIG</spanx> MUST be ignored.
 </t>
 </section>
 </section>
 </section>
 
 <section anchor="feature-trng" title="Feature: True Random Number Generation">
-<t>This feature allows the host to have access to any strong hardware
-random number generator that might be present on the NCP, for things
-like key generation or seeding PRNGs.
+<t>This feature allows the host to have access to any strong hardware random number generator that might be present on the NCP, for things like key generation or seeding PRNGs.
 </t>
 <t>Support for this feature can be determined by the presence of <spanx style="verb">CAP_TRNG</spanx>.
 </t>
-<t>Note well that implementing a cryptographically-strong software-based true
-random number generator (that is impervious to things like temperature
-changes, manufacturing differences across devices, or unexpected output
-correlations) is non-trivial without a well-designed, dedicated hardware
-random number generator. Implementors who have little or no experience in
-this area are encouraged to not advertise this capability.
+<t>Note well that implementing a cryptographically-strong software-based true random number generator (that is impervious to things like temperature changes, manufacturing differences across devices, or unexpected output correlations) is non-trivial without a well-designed, dedicated hardware random number generator. Implementors who have little or no experience in this area are encouraged to not advertise this capability.
 </t>
 
 <section anchor="properties-4" title="Properties">
@@ -3507,24 +3236,17 @@ this area are encouraged to not advertise this capability.
 <t>Type: Read-Only</t>
 </list>
 </t>
-<t>Fetching this property returns a strong random 32-bit integer that is suitable
-for use as a PRNG seed or for cryptographic use.
+<t>Fetching this property returns a strong random 32-bit integer that is suitable for use as a PRNG seed or for cryptographic use.
 </t>
-<t>While the exact mechanism behind the calculation of this value is
-implementation-specific, the implementation must satisfy the following
-requirements:
+<t>While the exact mechanism behind the calculation of this value is implementation-specific, the implementation MUST satisfy the following requirements:
 </t>
 <t>
 <list style="symbols">
-<t>Data representing at least 32 bits of fresh entropy (extracted from the
-primary entropy source) MUST be consumed by the calculation of each query.</t>
-<t>Each of the 32 bits returned MUST be free of bias and have no statistical
-correlation to any part of the raw data used for the calculation of any
-query.</t>
+<t>Data representing at least 32 bits of fresh entropy (extracted from the primary entropy source) MUST be consumed by the calculation of each query.</t>
+<t>Each of the 32 bits returned MUST be free of bias and have no statistical correlation to any part of the raw data used for the calculation of any query.</t>
 </list>
 </t>
-<t>Support for this property is REQUIRED if <spanx style="verb">CAP_TRNG</spanx> is included in the
-device capabilities.
+<t>Support for this property is REQUIRED if <spanx style="verb">CAP_TRNG</spanx> is included in the device capabilities.
 </t>
 </section>
 
@@ -3535,25 +3257,17 @@ device capabilities.
 <t>Type: Read-Only</t>
 </list>
 </t>
-<t>Fetching this property returns 16 bytes of strong random data suitable for
-direct cryptographic use without further processing(For example, as an
-AES key).
+<t>Fetching this property returns 16 bytes of strong random data suitable for direct cryptographic use without further processing (for example, as an AES key).
 </t>
-<t>While the exact mechanism behind the calculation of this value is
-implementation-specific, the implementation must satisfy the following
-requirements:
+<t>While the exact mechanism behind the calculation of this value is implementation-specific, the implementation MUST satisfy the following requirements:
 </t>
 <t>
 <list style="symbols">
-<t>Data representing at least 128 bits of fresh entropy (extracted from the
-primary entropy source) MUST be consumed by the calculation of each query.</t>
-<t>Each of the 128 bits returned MUST be free of bias and have no statistical
-correlation to any part of the raw data used for the calculation of any
-query.</t>
+<t>Data representing at least 128 bits of fresh entropy (extracted from the primary entropy source) MUST be consumed by the calculation of each query.</t>
+<t>Each of the 128 bits returned MUST be free of bias and have no statistical correlation to any part of the raw data used for the calculation of any query.</t>
 </list>
 </t>
-<t>Support for this property is REQUIRED if <spanx style="verb">CAP_TRNG</spanx> is included in the
-device capabilities.
+<t>Support for this property is REQUIRED if <spanx style="verb">CAP_TRNG</spanx> is included in the device capabilities.
 </t>
 </section>
 
@@ -3564,43 +3278,36 @@ device capabilities.
 <t>Type: Read-Only</t>
 </list>
 </t>
-<t>This property is primarily used to diagnose and debug the behavior
-of the entropy source used for strong random number generation.
+<t>This property is primarily used to diagnose and debug the behavior of the entropy source used for strong random number generation.
 </t>
-<t>When queried, returns the raw output from the entropy source used to
-generate <spanx style="verb">PROP_TRNG_32</spanx>, prior to any reduction/whitening and/or mixing
-with prior state.
+<t>When queried, returns the raw output from the entropy source used to generate <spanx style="verb">PROP_TRNG_32</spanx>, prior to any reduction/whitening and/or mixing with prior state.
 </t>
-<t>The length of the returned buffer is implementation specific and should be
-expected to be non-deterministic.
+<t>The length of the returned buffer is implementation specific and should be expected to be non-deterministic.
 </t>
-<t>Support for this property is RECOMMENDED if <spanx style="verb">CAP_TRNG</spanx> is included in the
-device capabilities.
+<t>Support for this property is RECOMMENDED if <spanx style="verb">CAP_TRNG</spanx> is included in the device capabilities.
 </t>
 </section>
 </section>
 </section>
 
 <section anchor="security-considerations" title="Security Considerations">
+<t>EDITOR: Insert verbiage here conforming to RFC Editor guidelines.
+</t>
 
 <section anchor="raw-application-access" title="Raw Application Access">
-<t>Spinel MAY be used as an API boundary for allowing processes to configure
-the NCP. However, such a system MUST NOT give unprivileged processess the
-ability to send or receive arbitrary command frames to the NCP. Only the
-specific commands and properties that are required should be allowed to be
-passed, and then only after being checked for proper format.
+<t>Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.
 </t>
 </section>
 </section>
 
 </middle>
 <back>
+<references title="Informative References">
+<?rfc include="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5424.xml"?>
+</references>
 
 <section anchor="framing-protocol" title="Framing Protocol">
-<t>Since this NCP protocol is defined independently of the physical
-transport or framing, any number of transports and framing protocols
-could be used successfully. However, in the interests of compatibility,
-this document provides some recommendations.
+<t>Since this NCP protocol is defined independently of the physical transport or framing, any number of transports and framing protocols could be used successfully. However, in the interests of compatibility, this document provides some recommendations.
 </t>
 
 <section anchor="uart-recommendations" title="UART Recommendations">
@@ -3616,38 +3323,17 @@ this document provides some recommendations.
 <t>Flow Control: Hardware</t>
 </list>
 </t>
-<t>These values may be adjusted depending on the individual needs of
-the application or product, but some sort of flow control MUST be used.
-Hardware flow control is preferred over software flow control. In the
-absence of hardware flow control, software flow control (XON/XOFF) MUST
-be used instead.
+<t>These values may be adjusted depending on the individual needs of the application or product, but some sort of flow control MUST be used. Hardware flow control is preferred over software flow control. In the absence of hardware flow control, software flow control (XON/XOFF) MUST be used instead.
 </t>
-<t>We also <spanx style="strong">RECOMMEND</spanx> an Arduino-style hardware reset, where the DTR
-signal is coupled to the <spanx style="verb">R̅E̅S̅</spanx> pin through a 0.01µF capacitor. This
-causes the NCP to automatically reset whenever the serial port is
-opened. At the very least we <spanx style="strong">RECOMMEND</spanx> dedicating one of your host
-pins to controlling the <spanx style="verb">R̅E̅S̅</spanx> pin on the NCP, so that you can
-easily perform a hardware reset if necessary.
+<t>We also <spanx style="strong">RECOMMEND</spanx> an Arduino-style hardware reset, where the DTR signal is coupled to the <spanx style="verb">RES</spanx> pin through a 0.01 micro-Farad capacitor. This causes the NCP to automatically reset whenever the serial port is opened. At the very least we <spanx style="strong">RECOMMEND</spanx> dedicating one of your OS host pins to controlling the <spanx style="verb">RES</spanx> pin on the NCP, so that you can easily perform a hardware reset if necessary.
 </t>
 
 <section anchor="uart-bit-rate-detection" title="UART Bit Rate Detection">
-<t>When using a UART, the issue of an appropriate bit rate must be
-considered. A bitrate of 115200 bits per second has become a defacto
-standard baud rate for many serial peripherals. This rate, however,
-is slower than the theoretical maximum bitrate of the 802.15.4 2.4GHz
-PHY (250kbit). In most circumstances this mismatch is not significant
-because the overall bitrate will be much lower than either of these
-rates, but there are circumstances where a faster UART bitrate is
-desirable. Thus, this document proposes a simple bitrate detection
-scheme that can be employed by the host to detect when the attached
-NCP is initially running at a higher bitrate.
+<t>When using a UART, the issue of an appropriate bit rate must be considered. 115200 bits/s is the conventional baud rate for many serial peripherals. This rate, however, is slower than the theoretical maximum bitrate of many relevant network interfaces, e.g. the 802.15.4 2.4GHz PHY (250kbit). In most circumstances this mismatch is not significant because the overall bitrate will be much lower than either of these rates, but there are circumstances where a faster UART bitrate is desirable. Thus, this document proposes a simple bitrate detection scheme that can be employed by the OS to detect when the attached NCP is initially running at a higher bitrate.
 </t>
-<t>The algorithm is to send successive NOOP commands to the NCP at increasing
-bitrates. When a valid <spanx style="verb">CMD_LAST_STATUS</spanx> response has been received, we
-have identified the correct bitrate.
+<t>The algorithm is to send successive NOOP commands to the NCP at increasing bitrates. When a valid <spanx style="verb">CMD_LAST_STATUS</spanx> response has been received, we have identified the correct bitrate.
 </t>
-<t>In order to limit the time spent hunting for the appropriate bitrate,
-we RECOMMEND that only the following bitrates be checked:
+<t>In order to limit the time spent hunting for the appropriate bitrate, we RECOMMEND that only the following bitrates be checked:
 </t>
 <t>
 <list style="symbols">
@@ -3656,31 +3342,22 @@ we RECOMMEND that only the following bitrates be checked:
 <t>1000000 (1Mbit)</t>
 </list>
 </t>
-<t>The bitrate MAY also be changed programmatically by adjusting
-<spanx style="verb">PROP_UART_BITRATE</spanx>, if implemented.
+<t>The bitrate MAY also be changed programmatically by adjusting <spanx style="verb">PROP_UART_BITRATE</spanx>, if implemented.
 </t>
 </section>
 
 <section anchor="hdlc-lite" title="HDLC-Lite">
-<t><spanx style="emph">HDLC-Lite</spanx> is the recommended framing protocol for transmitting
-Spinel frames over a UART. HDLC-Lite consists of only the framing,
-escaping, and CRC parts of the larger HDLC protocol---all other parts
-of HDLC are omitted. This protocol was chosen because it works well
-with software flow control and is widely implemented.
+<t><spanx style="emph">HDLC-Lite</spanx> is the recommended framing protocol for transmitting Spinel frames over a UART. HDLC-Lite consists of only the framing, escaping, and CRC parts of the larger HDLC protocol---all other parts of HDLC are omitted. This protocol was chosen because it works well with software flow control and is widely implemented.
 </t>
-<t>To transmit a frame with HDLC-lite, the 16-bit CRC must first be
-appended to the frame. The CRC function is defined to be CRC-16/CCITT,
-otherwise known as the <eref target="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit">KERMIT CRC</eref>.
+<t>To transmit a frame with HDLC-lite, the 16-bit CRC must first be appended to the frame. The CRC function is defined to be CRC-16/CCITT, otherwise known as the <eref target="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit">KERMIT CRC</eref>.
 </t>
-<t>Individual frames are terminated with a frame delimiter octet called
-the 'flag' octet (<spanx style="verb">0x7E</spanx>).
+<t>Individual frames are terminated with a frame delimiter octet called the 'flag' octet (<spanx style="verb">0x7E</spanx>).
 </t>
-<t>The following octets values are considered <spanx style="emph">special</spanx> and should be
-escaped when present in data frames:
+<t>The following octets values are considered <spanx style="emph">special</spanx> and should be escaped when present in data frames:
 </t>
 <texttable>
-<ttcol align="center">Octet Value</ttcol>
-<ttcol align="center">Description</ttcol>
+<ttcol align="left">Octet Value</ttcol>
+<ttcol align="left">Description</ttcol>
 
 <c>0x7E</c><c>Frame Delimiter (Flag)</c>
 <c>0x7D</c><c>Escape Byte</c>
@@ -3688,48 +3365,37 @@ escaped when present in data frames:
 <c>0x13</c><c>XOFF</c>
 <c>0xF8</c><c>Vendor-Specific</c>
 </texttable>
-<t>When present in a data frame, these octet values are escaped by
-prepending the escape octet (<spanx style="verb">0x7D</spanx>) and XORing the value with <spanx style="verb">0x20</spanx>.
+<t>When present in a data frame, these octet values are escaped by prepending the escape octet (<spanx style="verb">0x7D</spanx>) and XORing the value with <spanx style="verb">0x20</spanx>.
 </t>
-<t>When receiving a frame, the CRC must be verified after the frame is
-unescaped. If the CRC value does not match what is calculated for the
-frame data, the frame MUST be discarded. The implementation MAY
-indicate the failure to higher levels to handle as they see fit, but
-MUST NOT attempt to process the deceived frame.
+<t>When receiving a frame, the CRC must be verified after the frame is unescaped. If the CRC value does not match what is calculated for the frame data, the frame MUST be discarded. The implementation MAY indicate the failure to higher levels to handle as they see fit, but MUST NOT attempt to process the deceived frame.
 </t>
-<t>Consecutive flag octets are entirely legal and MUST NOT be treated as
-a framing error. Consecutive flag octets MAY be used as a way to wake
-up a sleeping NCP.
+<t>Consecutive flag octets are entirely legal and MUST NOT be treated as a framing error. Consecutive flag octets MAY be used as a way to wake up a sleeping NCP.
 </t>
-<t>When first establishing a connection to the NCP, it is customary to
-send one or more flag octets to ensure that any previously received
-data is discarded.
+<t>When first establishing a connection to the NCP, it is customary to send one or more flag octets to ensure that any previously received data is discarded.
 </t>
 </section>
 </section>
 
 <section anchor="spi-recommendations" title="SPI Recommendations">
-<t>We RECOMMEND the use of the following standard SPI signals:
+<t>We <spanx style="strong">RECOMMEND</spanx> the use of the following standard SPI signals:
 </t>
 <t>
 <list style="symbols">
-<t><spanx style="verb">C̅S̅</spanx>:   (Host-to-NCP) Chip Select</t>
-<t><spanx style="verb">CLK</spanx>:  (Host-to-NCP) Clock</t>
+<t><spanx style="verb">CS</spanx>:   (OS-to-NCP) Chip Select</t>
+<t><spanx style="verb">CLK</spanx>:  (OS-to-NCP) Clock</t>
 <t><spanx style="verb">MOSI</spanx>: Master-Output/Slave-Input</t>
 <t><spanx style="verb">MISO</spanx>: Master-Input/Slave-Output</t>
-<t><spanx style="verb">I̅N̅T̅</spanx>:  (NCP-to-Host) Host Interrupt</t>
-<t><spanx style="verb">R̅E̅S̅</spanx>:  (Host-to-NCP) NCP Hardware Reset</t>
+<t><spanx style="verb">INT</spanx>:  (NCP-to-OS) Host Interrupt</t>
+<t><spanx style="verb">RES</spanx>:  (OS-to-NCP) NCP Hardware Reset</t>
 </list>
 </t>
-<t>The <spanx style="verb">I̅N̅T̅</spanx> signal is used by the NCP to indicate to the host that
-the NCP has frames pending to send to it. When asserted, the host
-SHOULD initiate a SPI transaction in a timely manner.
+<t>The <spanx style="verb">INT</spanx> signal is used by the NCP to indicate to the OS that the NCP has frames pending to send to it. When asserted, the OS SHOULD initiate a SPI transaction in a timely manner.
 </t>
 <t>We RECOMMEND the following SPI properties:
 </t>
 <t>
 <list style="symbols">
-<t><spanx style="verb">C̅S̅</spanx> is active low.</t>
+<t><spanx style="verb">CS</spanx> is active low.</t>
 <t><spanx style="verb">CLK</spanx> is active high.</t>
 <t><spanx style="verb">CLK</spanx> speed is larger than 500 kHz.</t>
 <t>Data is valid on leading edge of <spanx style="verb">CLK</spanx>.</t>
@@ -3737,8 +3403,7 @@ SHOULD initiate a SPI transaction in a timely manner.
 <t>Octets are sent most-significant bit first.</t>
 </list>
 </t>
-<t>This recommended configuration may be adjusted depending on the
-individual needs of the application or product.
+<t>This recommended configuration may be adjusted depending on the individual needs of the application or product.
 </t>
 
 <section anchor="spi-framing-protocol" title="SPI Framing Protocol">
@@ -3755,14 +3420,8 @@ individual needs of the application or product.
 <t>
 <list style="symbols">
 <t><spanx style="verb">HDR</spanx>: The first byte is the header byte (defined below)</t>
-<t><spanx style="verb">RECV_LEN</spanx>: The second and third bytes indicate the largest frame
-size that that device is ready to receive. If zero, then the other
-device must not send any data. (Little endian)</t>
-<t><spanx style="verb">DATA_LEN</spanx>: The fourth and fifth bytes indicate the size of the
-pending data frame to be sent to the other device. If this value
-is equal-to or less-than the number of bytes that the other device
-is willing to receive, then the data of the frame is immediately
-after the header. (Little Endian)</t>
+<t><spanx style="verb">RECV_LEN</spanx>: The second and third bytes indicate the largest frame size that that device is ready to receive. If zero, then the other device must not send any data. (Little endian)</t>
+<t><spanx style="verb">DATA_LEN</spanx>: The fourth and fifth bytes indicate the size of the pending data frame to be sent to the other device. If this value is equal-to or less-than the number of bytes that the other device is willing to receive, then the data of the frame is immediately after the header. (Little Endian)</t>
 </list>
 </t>
 <t>The <spanx style="verb">HDR</spanx> byte is defined as:
@@ -3776,65 +3435,29 @@ after the header. (Little Endian)</t>
 </artwork></figure>
 <t>
 <list style="symbols">
-<t><spanx style="verb">RST</spanx>: This bit is set when that device has been reset since the
-last time <spanx style="verb">C̅S̅</spanx> was asserted.</t>
-<t><spanx style="verb">CRC</spanx>: This bit is set when that device supports writing a 16-bit
-CRC at the end of the data. The CRC length is NOT included in DATA_LEN.</t>
-<t><spanx style="verb">CCF</spanx>: &quot;CRC Check Failure&quot;. Set if the CRC check on the last received
-frame failed, cleared to zero otherwise. This bit is only used if both
-sides support CRC.</t>
-<t><spanx style="verb">RESERVED</spanx>: These bits are all reserved for future used. They
-MUST be cleared to zero and MUST be ignored if set.</t>
-<t><spanx style="verb">PATTERN</spanx>: These bits are set to a fixed value to help distinguish
-valid SPI frames from garbage (by explicitly making <spanx style="verb">0xFF</spanx> and <spanx style="verb">0x00</spanx>
-invalid values). Bit 6 MUST be set to be one and bit 7 MUST be
-cleared (0). A frame received that has any other values for these bits
-MUST be dropped.</t>
+<t><spanx style="verb">RST</spanx>: This bit is set when that device has been reset since the last time <spanx style="verb">CS</spanx> was asserted.</t>
+<t><spanx style="verb">CRC</spanx>: This bit is set when that device supports writing a 16-bit CRC at the end of the data. The CRC length is NOT included in DATA_LEN.</t>
+<t><spanx style="verb">CCF</spanx>: &quot;CRC Check Failure&quot;. Set if the CRC check on the last received frame failed, cleared to zero otherwise. This bit is only used if both sides support CRC.</t>
+<t><spanx style="verb">RESERVED</spanx>: These bits are all reserved for future used. They MUST be cleared to zero and MUST be ignored if set.</t>
+<t><spanx style="verb">PATTERN</spanx>: These bits are set to a fixed value to help distinguish valid SPI frames from garbage (by explicitly making <spanx style="verb">0xFF</spanx> and <spanx style="verb">0x00</spanx> invalid values). Bit 6 MUST be set to be one and bit 7 MUST be cleared (0). A frame received that has any other values for these bits MUST be dropped.</t>
 </list>
 </t>
-<t>Prior to a sending or receiving a frame, the master MAY send a
-5-octet frame with zeros for both the max receive frame size and the
-the contained frame length. This will induce the slave device to
-indicate the length of the frame it wants to send (if any) and
-indicate the largest frame it is capable of receiving at the moment.
-This allows the master to calculate the size of the next transaction.
-Alternatively, if the master has a frame to send it can just go ahead
-and send a frame of that length and determine if the frame was accepted
-by checking that the <spanx style="verb">RECV_LEN</spanx> from the slave frame is larger than
-the frame the master just tried to send. If the <spanx style="verb">RECV_LEN</spanx> is smaller
-then the frame wasn't accepted and will need to be transmitted again.
+<t>Prior to a sending or receiving a frame, the master MAY send a 5-octet frame with zeros for both the max receive frame size and the the contained frame length. This will induce the slave device to indicate the length of the frame it wants to send (if any) and indicate the largest frame it is capable of receiving at the moment. This allows the master to calculate the size of the next transaction. Alternatively, if the master has a frame to send it can just go ahead and send a frame of that length and determine if the frame was accepted by checking that the <spanx style="verb">RECV_LEN</spanx> from the slave frame is larger than the frame the master just tried to send. If the <spanx style="verb">RECV_LEN</spanx> is smaller then the frame wasn't accepted and will need to be transmitted again.
 </t>
-<t>This protocol can be used either unidirectionally or bidirectionally,
-determined by the behavior of the master and the slave.
+<t>This protocol can be used either unidirectionally or bidirectionally, determined by the behavior of the master and the slave.
 </t>
-<t>If the the master notices <spanx style="verb">PATTERN</spanx> is not set correctly, the master
-should consider the transaction to have failed and try again after 10
-milliseconds, retrying up to 200 times. After unsuccessfully trying
-200 times in a row, the master MAY take appropriate remedial action
-(like a NCP hardware reset, or indicating a communication failure to a
-user interface).
+<t>If the the master notices <spanx style="verb">PATTERN</spanx> is not set correctly, the master should consider the transaction to have failed and try again after 10 milliseconds, retrying up to 200 times. After unsuccessfully trying 200 times in a row, the master MAY take appropriate remedial action (like a NCP hardware reset, or indicating a communication failure to a user interface).
 </t>
-<t>At the end of the data of a frame is an optional 16-bit CRC, support for
-which is indicated by the <spanx style="verb">CRC</spanx> bit of the <spanx style="verb">HDR</spanx> byte being set. If these
-bits are set for both the master and slave frames, then CRC checking is
-enabled on both sides, effectively requiring that frame sizes be two bytes
-longer than would be otherwise required. The CRC is calculated using the
-same mechanism used for the CRC calculation in HDLC-Lite (See <xref target="hdlc-lite"/>).
-When both of the <spanx style="verb">CRC</spanx> bits are set, both sides must verify that the <spanx style="verb">CRC</spanx>
-is valid before accepting the frame. If not enough bytes were clocked out
-for the CRC to be read, then the frame must be ignored. If enough bytes
-were clocked out to perform a CRC check, but the CRC check fails, then
-the frame must be rejected and the <spanx style="verb">CRC_FAIL</spanx> bit on the next frame (and
-ONLY the next frame) MUST be set.
+<t>At the end of the data of a frame is an optional 16-bit CRC, support for which is indicated by the <spanx style="verb">CRC</spanx> bit of the <spanx style="verb">HDR</spanx> byte being set. If these bits are set for both the master and slave frames, then CRC checking is enabled on both sides, effectively requiring that frame sizes be two bytes longer than would be otherwise required. The CRC is calculated using the same mechanism used for the CRC calculation in HDLC-Lite (See <xref target="hdlc-lite"/>). When both of the <spanx style="verb">CRC</spanx> bits are set, both sides must verify that the <spanx style="verb">CRC</spanx> is valid before accepting the frame. If not enough bytes were clocked out for the CRC to be read, then the frame must be ignored. If enough bytes were clocked out to perform a CRC check, but the CRC check fails, then the frame must be rejected and the <spanx style="verb">CRC_FAIL</spanx> bit on the next frame (and ONLY the next frame) MUST be set.
 </t>
 </section>
 </section>
 
-<section anchor="i2c-recommendations" title="I²C Recommendations">
+<section anchor="i2c-recommendations" title="I2C Recommendations">
 <t>TBD
 </t>
 <t><cref source="RQ">It may make sense to have a look at what Bluetooth HCI is doing
-     for native I²C framing and go with that.</cref></t>
+     for native I2C framing and go with that.</cref></t>
 </section>
 
 <section anchor="native-usb-recommendations" title="Native USB Recommendations">
