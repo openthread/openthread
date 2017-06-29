@@ -38,8 +38,8 @@
 #include <stdint.h>
 #include <openthread/types.h>
 
-typedef void (*qorvoPlatPollFunction_t)(uint8_t);
-typedef uint8_t (* qorvoPlatGotoSleepCheckCallback_t) ( void );
+typedef void     (*qorvoPlatPollFunction_t)(uint8_t);
+typedef uint8_t  (*qorvoPlatGotoSleepCheckCallback_t) (void);
 
 /**
  * This function registers a callback to a file descriptor.

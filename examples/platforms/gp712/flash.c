@@ -43,21 +43,18 @@
 #include "utils/flash.h"
 
 static int sFlashFd;
-uint32_t sEraseAddress;
+uint32_t   sEraseAddress;
 
-enum
-{
-    FLASH_SIZE = 0x40000,
-    FLASH_PAGE_SIZE = 0x800,
-    FLASH_PAGE_NUM = 128,
-};
+#define FLASH_SIZE      0x40000
+#define FLASH_PAGE_SIZE 0x800
+#define FLASH_PAGE_NUM  128
 
 otError utilsFlashInit(void)
 {
-    otError error = OT_ERROR_NONE;
-    char fileName[20];
+    otError     error = OT_ERROR_NONE;
+    char        fileName[20];
     struct stat st;
-    bool create = false;
+    bool        create = false;
 
     memset(&st, 0, sizeof(st));
 
@@ -98,9 +95,10 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    otError error = OT_ERROR_NONE;
-    uint32_t address;
-    uint8_t dummyPage[ FLASH_SIZE ];
+    otError   error = OT_ERROR_NONE;
+    uint32_t  address;
+    uint8_t   dummyPage[ FLASH_SIZE ];
+    ssize_t   r;
 
     otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
     otEXPECT_ACTION(aAddress < FLASH_SIZE, error = OT_ERROR_INVALID_ARGS);
@@ -112,7 +110,6 @@ otError utilsFlashErasePage(uint32_t aAddress)
     memset((void *)(&dummyPage[0]), 0xff, FLASH_PAGE_SIZE);
 
     // Write the page
-    ssize_t r;
     r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, (off_t)address);
     otEXPECT_ACTION(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = OT_ERROR_FAILED);
 
@@ -137,10 +134,12 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     for (index = 0; index < aSize; index++)
     {
-        otEXPECT((ret = utilsFlashRead(aAddress + index, &byte, 1)) == 1);
+        ret = utilsFlashRead(aAddress + index, &byte, 1);
+        otEXPECT(ret == 1);
         // Use bitwise AND to emulate the behavior of flash memory
         byte &= aData[index];
-        otEXPECT((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, (off_t)(aAddress + index))) == 1);
+        ret = (uint32_t)pwrite(sFlashFd, &byte, 1, (off_t)(aAddress + index));
+        otEXPECT(ret == 1);
     }
 
 exit:

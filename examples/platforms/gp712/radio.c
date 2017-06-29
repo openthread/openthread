@@ -39,6 +39,9 @@
 
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
+
+#include "utils/code_utils.h"
+
 #include "radio_qorvo.h"
 
 enum
@@ -106,7 +109,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != OT_RADIO_STATE_DISABLED) ? true : false;
+    return (sState != OT_RADIO_STATE_DISABLED);
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
@@ -125,15 +128,15 @@ otError otPlatRadioEnable(otInstance *aInstance)
 otError otPlatRadioDisable(otInstance *aInstance)
 {
     (void)aInstance;
-    if (otPlatRadioIsEnabled(aInstance))
-    {
-        if (sState == OT_RADIO_STATE_RECEIVE)
-        {
-            qorvoRadioSetRxOnWhenIdle(false);
-        }
-        sState = OT_RADIO_STATE_DISABLED;
-    }
+    otEXPECT(otPlatRadioIsEnabled(aInstance));
 
+    if (sState == OT_RADIO_STATE_RECEIVE)
+    {
+        qorvoRadioSetRxOnWhenIdle(false);
+    }
+    sState = OT_RADIO_STATE_DISABLED;
+
+exit:
     return OT_ERROR_NONE;
 }
 
@@ -175,14 +178,16 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aPacket)
 {
+    otError err = OT_ERROR_NONE;
+
     pQorvoInstance = aInstance;
 
-    if (sState == OT_RADIO_STATE_DISABLED)
-    {
-        return OT_ERROR_INVALID_STATE;
-    }
+    otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, err = OT_ERROR_INVALID_STATE);
 
-    return qorvoRadioTransmit(aPacket);
+    err = qorvoRadioTransmit(aPacket);
+
+exit:
+    return err;
 }
 
 void cbQorvoRadioTransmitDone(otRadioFrame *aPacket, bool aFramePending, otError aError)

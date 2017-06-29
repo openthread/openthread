@@ -53,10 +53,10 @@
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    char logString[512];
+    char         logString[512];
     unsigned int offset;
-    int charsWritten;
-    va_list args;
+    int          charsWritten;
+    va_list      args;
 
     offset = 0;
 
@@ -67,11 +67,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
 
 exit:
-#ifndef _WIN32
     syslog(LOG_CRIT, "%s", logString);
-#else
-    printf("%s\r\n", logString);
-#endif
 
     (void)aLogLevel;
     (void)aLogRegion;

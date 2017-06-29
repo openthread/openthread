@@ -210,37 +210,36 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
     (void) aWriteFdSet;
     (void) aErrorFdSet;
     (void) aMaxFd;
-#if 0
-    if (aReadFdSet != NULL)
-    {
-        FD_SET(s_in_fd, aReadFdSet);
+    /* not needed anymore */
+    // if (aReadFdSet != NULL)
+    // {
+    //     FD_SET(s_in_fd, aReadFdSet);
 
-        if (aErrorFdSet != NULL)
-        {
-            FD_SET(s_in_fd, aErrorFdSet);
-        }
+    //     if (aErrorFdSet != NULL)
+    //     {
+    //         FD_SET(s_in_fd, aErrorFdSet);
+    //     }
 
-        if (aMaxFd != NULL && *aMaxFd < s_in_fd)
-        {
-            *aMaxFd = s_in_fd;
-        }
-    }
+    //     if (aMaxFd != NULL && *aMaxFd < s_in_fd)
+    //     {
+    //         *aMaxFd = s_in_fd;
+    //     }
+    // }
 
-    if ((aWriteFdSet != NULL) && (s_write_length > 0))
-    {
-        FD_SET(s_out_fd, aWriteFdSet);
+    // if ((aWriteFdSet != NULL) && (s_write_length > 0))
+    // {
+    //     FD_SET(s_out_fd, aWriteFdSet);
 
-        if (aErrorFdSet != NULL)
-        {
-            FD_SET(s_out_fd, aErrorFdSet);
-        }
+    //     if (aErrorFdSet != NULL)
+    //     {
+    //         FD_SET(s_out_fd, aErrorFdSet);
+    //     }
 
-        if (aMaxFd != NULL && *aMaxFd < s_out_fd)
-        {
-            *aMaxFd = s_out_fd;
-        }
-    }
-#endif
+    //     if (aMaxFd != NULL && *aMaxFd < s_out_fd)
+    //     {
+    //         *aMaxFd = s_out_fd;
+    //     }
+    // }
 }
 
 void platformUartProcess(void)

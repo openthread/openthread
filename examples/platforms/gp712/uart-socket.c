@@ -60,6 +60,8 @@
 #include <common/code_utils.hpp>
 #include <openthread/platform/uart.h>
 
+#include "utils/code_utils.h"
+
 #define BUFFER_MAX_SIZE     255
 #define SOCKET_PORT 9190
 #define SOCKET_WRITE(socketInfo, buf, length)       sendto(socketInfo.socketId, (const char*)buf, length, 0, &socketInfo.addr, sizeof(socketInfo.addr))
@@ -88,7 +90,7 @@ uint32_t PlatSocketId = 0;
 
 void PlatSocketSendInput(void* buffer)
 {
-    uint8_t len = 0;
+    uint8_t  len = 0;
     uint8_t* buf = (uint8_t*) buffer;
     len = strlen((char*)buf);
     otPlatUartReceived((uint8_t*) buf, (uint16_t)len);
@@ -131,7 +133,7 @@ otError otPlatUartDisable(void)
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
-    char localbuf[PLAT_UART_MAX_CHAR];
+    char    localbuf[PLAT_UART_MAX_CHAR];
 
     memcpy(localbuf, aBuf, aBufLength);
     localbuf[aBufLength] = 0;
@@ -156,42 +158,29 @@ void platformUartProcess(void)
 int PlatSocketListenForClients()
 {
     //Setup server side socket
-    int sockfd;
-    struct sockaddr_in serv_addr;
+    int      sockfd;
+    struct   sockaddr_in serv_addr;
     uint32_t flag = 1;
-    int32_t ret;
+    int      ret;
 
-    if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0)
-    {
-        perror("SetupListener: Error creating socket");
-        return -1;
-    }
+    sockfd = socket(AF_INET,SOCK_STREAM,0);
+    otEXPECT_ACTION(sockfd >= 0, sockfd = -1);
 
     // disable Nagle's algorithm to avoid long latency
-    ret = setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag));
+    setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag));
     // allow reuse of the same address
-    ret = setsockopt(sockfd, SOL_SOCKET,SO_REUSEADDR, (char *)&flag,sizeof(flag));
+    setsockopt(sockfd, SOL_SOCKET,SO_REUSEADDR, (char *)&flag,sizeof(flag));
     memset(&serv_addr, 0, sizeof(serv_addr));
 
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(SOCKET_PORT);
-    if(bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        perror("SetupListener: Error binding socket");
-        goto PlatSocketListenForClients_error;
-    }
-    if(listen(sockfd, 10) == -1)
-    {
-        perror("listen");
-        exit(1);
-    }
+    ret = bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    otEXPECT_ACTION(ret >= 0, close(sockfd); sockfd = -1);
+    ret = listen(sockfd, 10);
+    otEXPECT_ACTION(ret != -1, exit(1));
+exit:
     return sockfd;
-PlatSocketListenForClients_error:
-    close(sockfd);
-    return -1;
-
-    (void) ret;
 }
 
 void PlatSocketRxSignaled(uint8_t id)

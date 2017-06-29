@@ -49,10 +49,8 @@ void platformUartProcess(void);
 
 otInstance *localInstance = NULL;
 
-#ifndef _WIN32
 int     gArgumentsCount = 0;
 char  **gArguments = NULL;
-#endif
 
 bool qorvoPlatGotoSleepCheck(void)
 {
@@ -68,13 +66,8 @@ bool qorvoPlatGotoSleepCheck(void)
 
 void PlatformInit(int argc, char *argv[])
 {
-#ifndef _WIN32
     gArgumentsCount = argc;
-    gArguments = argv;
-#else
-    (void) argc;
-    (void) argv;
-#endif
+    gArguments      = argv;
 
     qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
     platformUartInit();
