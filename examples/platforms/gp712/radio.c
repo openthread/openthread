@@ -68,17 +68,18 @@ enum
     QORVO_LQI_BIT_MASK = 0x7f,
 };
 
-extern otRadioFrame sTransmitFrame;
+extern otRadioFrame  sTransmitFrame;
 
-static otRadioState sState;
-static otInstance *pQorvoInstance;
+static otRadioState  sState;
+static otInstance   *pQorvoInstance;
 
 typedef struct otCachedSettings_s {
     uint16_t panid;
 } otCachedSettings_t;
 static otCachedSettings_t otCachedSettings;
 
-static uint8_t scanstate = 0;
+static uint8_t  sScanstate          = 0;
+static int8_t   sLastReceivedPower  = 127;
 
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -160,7 +161,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError error = OT_ERROR_INVALID_STATE;
     pQorvoInstance = aInstance;
 
-    if ((sState != OT_RADIO_STATE_DISABLED) && (scanstate==0))
+    if ((sState != OT_RADIO_STATE_DISABLED) && (sScanstate==0))
     {
         qorvoRadioSetCurrentChannel(aChannel);
         error = OT_ERROR_NONE;
@@ -197,6 +198,11 @@ void cbQorvoRadioTransmitDone(otRadioFrame *aPacket, bool aFramePending, otError
 
 void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
 {
+    if(aError == OT_ERROR_NONE)
+    {
+        sLastReceivedPower = aPacket->mPower;
+    }
+
     otPlatRadioReceiveDone(pQorvoInstance, aPacket, aError);
 }
 
@@ -209,7 +215,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     (void)aInstance;
-    return 0;
+    return sLastReceivedPower;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
@@ -278,13 +284,13 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     (void)aInstance;
-    scanstate = 1;
+    sScanstate = 1;
     return qorvoRadioEnergyScan(aScanChannel, aScanDuration);
 }
 
 void cbQorvoRadioEnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
-    scanstate = 0;
+    sScanstate = 0;
     otPlatRadioEnergyScanDone(pQorvoInstance, aEnergyScanMaxRssi);
 }
 

@@ -51,6 +51,34 @@
     offset += (unsigned int)charsWritten;                                                   \
     otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
+int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
+{
+    int sysloglevel;
+
+    switch(aLogLevel)
+    {
+        case OT_LOG_LEVEL_NONE:
+            sysloglevel = LOG_ERR; 
+            break;
+        case OT_LOG_LEVEL_CRIT:
+            sysloglevel = LOG_CRIT; 
+            break;
+        case OT_LOG_LEVEL_WARN:
+            sysloglevel = LOG_WARNING; 
+            break;
+        case OT_LOG_LEVEL_INFO:
+            sysloglevel = LOG_INFO; 
+            break;
+        case OT_LOG_LEVEL_DEBG:
+            sysloglevel = LOG_DEBUG; 
+            break;
+        default:
+            sysloglevel = LOG_ERR; 
+    }
+
+    return sysloglevel;
+}
+
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     char         logString[512];
@@ -67,9 +95,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
 
 exit:
-    syslog(LOG_CRIT, "%s", logString);
+    syslog(PlatOtLogLevelToSysLogLevel(aLogLevel), "%s", logString);
 
-    (void)aLogLevel;
     (void)aLogRegion;
 }
 

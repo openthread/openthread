@@ -35,8 +35,8 @@ libopenthread_gp712_a_CPPFLAGS           =  \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/examples/platforms/utils\
     -I$(top_srcdir)/src/core                \
-    -lrt        \
-    -lpthread   \
+    -lrt                                    \
+    -lpthread                               \
     $(NULL)
 
 libopenthread_gp712_settings.cpp: $(srcdir)/../utils/settings.cpp
