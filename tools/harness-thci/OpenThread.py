@@ -2271,29 +2271,24 @@ class OpenThread(IThci):
 
                 cmd += pskc
 
-            if listSecurityPolicy != None:
+            if listSecurityPolicy != None and isinstance(listSecurityPolicy, list):
                 cmd += '0c03'
-                policy = str(hex(listSecurityPolicy[2]))[2:]
+
+                rotationTime = 0
+                if len(listSecurityPolicy) >= 1:
+                    rotationTime = listSecurityPolicy[0]
+                policy = str(hex(rotationTime))[2:]
 
                 if len(policy) < 4:
                     policy = policy.zfill(4)
 
                 cmd += policy
 
-                policyBit = 0
+                policyBits = 0
+                if len(listSecurityPolicy) > 1:
+                    policyBits = listSecurityPolicy[1]
 
-                if listSecurityPolicy[0]:
-                    policyBit = policyBit | 0b10000000
-                if listSecurityPolicy[1]:
-                    policyBit = policyBit | 0b01000000
-                if listSecurityPolicy[3]:
-                    policyBit = policyBit | 0b00100000
-                if listSecurityPolicy[4]:
-                    policyBit = policyBit | 0b00010000
-                if listSecurityPolicy[5]:
-                    policyBit = policyBit | 0b00001000
-
-                cmd += str(hex(policyBit))[2:]
+                cmd += str(hex(policyBits))[2:]
 
             if xCommissioningSessionId != None:
                 cmd += '0b02'
