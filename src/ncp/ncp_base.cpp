@@ -138,6 +138,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(MAC_RAW_STREAM_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_PROMISCUOUS_MODE),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_EXTENDED_ADDR),
+    NCP_GET_PROP_HANDLER_ENTRY(MAC_DATA_POLL_PERIOD),
     NCP_GET_PROP_HANDLER_ENTRY(NET_SAVED),
     NCP_GET_PROP_HANDLER_ENTRY(NET_IF_UP),
     NCP_GET_PROP_HANDLER_ENTRY(NET_STACK_UP),
@@ -287,6 +288,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(MAC_SCAN_PERIOD),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_PANID),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_LADDR),
+    NCP_SET_PROP_HANDLER_ENTRY(MAC_DATA_POLL_PERIOD),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_RAW_STREAM_ENABLED),
     NCP_SET_PROP_HANDLER_ENTRY(NET_IF_UP),
     NCP_SET_PROP_HANDLER_ENTRY(NET_STACK_UP),
@@ -2576,6 +2578,17 @@ otError NcpBase::GetPropertyHandler_MAC_EXTENDED_ADDR(uint8_t aHeader, spinel_pr
            );
 }
 
+otError NcpBase::GetPropertyHandler_MAC_DATA_POLL_PERIOD(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    return SendPropertyUpdate(
+               aHeader,
+               SPINEL_CMD_PROP_VALUE_IS,
+               aKey,
+               SPINEL_DATATYPE_UINT32_S,
+               otLinkGetPollPeriod(mInstance)
+           );
+}
+
 otError NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey)
 {
     return SendPropertyUpdate(
@@ -4705,6 +4718,28 @@ otError NcpBase::SetPropertyHandler_MAC_15_4_LADDR(uint8_t aHeader, spinel_prop_
     VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
 
     error = otLinkSetExtendedAddress(mInstance, extAddress);
+
+exit:
+    return SendSetPropertyResponse(aHeader, aKey, error);
+}
+
+otError NcpBase::SetPropertyHandler_MAC_DATA_POLL_PERIOD(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                         const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    uint32_t pollPeriod;
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_UINT32_S,
+                       &pollPeriod
+                   );
+
+    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+
+    otLinkSetPollPeriod(mInstance, pollPeriod);
 
 exit:
     return SendSetPropertyResponse(aHeader, aKey, error);
