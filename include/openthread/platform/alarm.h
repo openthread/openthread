@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the alarm service.
+ *   This file includes the platform abstraction for the millisecond alarm service.
  */
 
 #ifndef ALARM_H_

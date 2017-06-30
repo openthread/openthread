@@ -99,14 +99,7 @@ void Mac::StartCsmaBackoff(void)
         backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-        otPlatUsecAlarmTime now;
-        otPlatUsecAlarmTime delay;
-
-        otPlatUsecAlarmGetNow(&now);
-        delay.mMs = backoff / 1000UL;
-        delay.mUs = backoff - (delay.mMs * 1000UL);
-
-        otPlatUsecAlarmStartAt(GetInstance(), &now, &delay, &Mac::HandleBeginTransmit, this);
+        otPlatUsecAlarmStartAt(GetInstance(), otPlatUsecAlarmGetNow(), backoff, &Mac::HandleBeginTransmit, this);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
         mBackoffTimer.Start(backoff / 1000UL);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
