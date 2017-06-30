@@ -62,23 +62,18 @@ namespace ot {
 namespace NetworkDiagnostic {
 
 NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
+    ThreadNetifLocator(aThreadNetif),
     mDiagnosticGetRequest(OT_URI_PATH_DIAGNOSTIC_GET_REQUEST, &NetworkDiagnostic::HandleDiagnosticGetRequest, this),
     mDiagnosticGetQuery(OT_URI_PATH_DIAGNOSTIC_GET_QUERY, &NetworkDiagnostic::HandleDiagnosticGetQuery, this),
     mDiagnosticGetAnswer(OT_URI_PATH_DIAGNOSTIC_GET_ANSWER, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this),
     mDiagnosticReset(OT_URI_PATH_DIAGNOSTIC_RESET, &NetworkDiagnostic::HandleDiagnosticReset, this),
-    mNetif(aThreadNetif),
     mReceiveDiagnosticGetCallback(NULL),
     mReceiveDiagnosticGetCallbackContext(NULL)
 {
-    mNetif.GetCoap().AddResource(mDiagnosticGetRequest);
-    mNetif.GetCoap().AddResource(mDiagnosticGetQuery);
-    mNetif.GetCoap().AddResource(mDiagnosticGetAnswer);
-    mNetif.GetCoap().AddResource(mDiagnosticReset);
-}
-
-otInstance *NetworkDiagnostic::GetInstance(void)
-{
-    return mNetif.GetInstance();
+    aThreadNetif.GetCoap().AddResource(mDiagnosticGetRequest);
+    aThreadNetif.GetCoap().AddResource(mDiagnosticGetQuery);
+    aThreadNetif.GetCoap().AddResource(mDiagnosticGetAnswer);
+    aThreadNetif.GetCoap().AddResource(mDiagnosticReset);
 }
 
 void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,
@@ -91,6 +86,7 @@ void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCa
 otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
                                              uint8_t aCount)
 {
+    ThreadNetif &netif = GetNetif();
     otError error;
     Message *message;
     Coap::Header header;
@@ -116,16 +112,16 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, c
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Append(aTlvTypes, aCount));
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo, handler, this));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo, handler, this));
 
     otLogInfoNetDiag(GetInstance(), "Sent diagnostic get");
 
@@ -187,7 +183,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message
         mReceiveDiagnosticGetCallback(&aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
     }
 
-    SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoNetDiag(GetInstance(), "Sent diagnostic answer acknowledgment");
 
@@ -197,13 +193,14 @@ exit:
 
 otError NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     Ip6AddressListTlv tlv;
     uint8_t count = 0;
 
     tlv.Init();
 
-    for (const Ip6::NetifUnicastAddress *addr = mNetif.GetUnicastAddresses(); addr; addr = addr->GetNext())
+    for (const Ip6::NetifUnicastAddress *addr = netif.GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         count++;
     }
@@ -211,7 +208,7 @@ otError NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
     tlv.SetLength(count * sizeof(Ip6::Address));
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    for (const Ip6::NetifUnicastAddress *addr = mNetif.GetUnicastAddresses(); addr; addr = addr->GetNext())
+    for (const Ip6::NetifUnicastAddress *addr = netif.GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         SuccessOrExit(error = aMessage.Append(&addr->GetAddress(), sizeof(Ip6::Address)));
     }
@@ -223,11 +220,12 @@ exit:
 
 otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     uint8_t count = 0;
     uint8_t timeout = 0;
     uint8_t numChildren;
-    const Child *children = mNetif.GetMle().GetChildren(&numChildren);
+    const Child *children = netif.GetMle().GetChildren(&numChildren);
     ChildTableTlv tlv;
     ChildTableEntry entry;
 
@@ -255,7 +253,7 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
             entry.SetReserved(0);
             entry.SetTimeout(timeout + 4);
-            entry.SetChildId(mNetif.GetMle().GetChildId(children[i].GetRloc16()));
+            entry.SetChildId(netif.GetMle().GetChildId(children[i].GetRloc16()));
             entry.SetMode(children[i].GetDeviceMode());
 
             SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
@@ -270,6 +268,7 @@ exit:
 otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aResponse,
                                              NetworkDiagnosticTlv &aNetworkDiagnosticTlv)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     uint16_t offset = 0;
     uint8_t type;
@@ -288,7 +287,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         {
             ExtMacAddressTlv tlv;
             tlv.Init();
-            tlv.SetMacAddr(*mNetif.GetMac().GetExtAddress());
+            tlv.SetMacAddr(*netif.GetMac().GetExtAddress());
             SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             break;
         }
@@ -297,7 +296,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         {
             Address16Tlv tlv;
             tlv.Init();
-            tlv.SetRloc16(mNetif.GetMle().GetRloc16());
+            tlv.SetRloc16(netif.GetMle().GetRloc16());
             SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             break;
         }
@@ -306,18 +305,18 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         {
             ModeTlv tlv;
             tlv.Init();
-            tlv.SetMode(mNetif.GetMle().GetDeviceMode());
+            tlv.SetMode(netif.GetMle().GetDeviceMode());
             SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             break;
         }
 
         case NetworkDiagnosticTlv::kTimeout:
         {
-            if ((mNetif.GetMle().GetDeviceMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
+            if ((netif.GetMle().GetDeviceMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
             {
                 TimeoutTlv tlv;
                 tlv.Init();
-                tlv.SetTimeout(mNetif.GetMle().GetTimeout());
+                tlv.SetTimeout(netif.GetMle().GetTimeout());
                 SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             }
 
@@ -328,7 +327,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         {
             ConnectivityTlv tlv;
             tlv.Init();
-            mNetif.GetMle().FillConnectivityTlv(*reinterpret_cast<Mle::ConnectivityTlv *>(&tlv));
+            netif.GetMle().FillConnectivityTlv(*reinterpret_cast<Mle::ConnectivityTlv *>(&tlv));
             SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             break;
         }
@@ -337,7 +336,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         {
             RouteTlv tlv;
             tlv.Init();
-            mNetif.GetMle().FillRouteTlv(*reinterpret_cast<Mle::RouteTlv *>(&tlv));
+            netif.GetMle().FillRouteTlv(*reinterpret_cast<Mle::RouteTlv *>(&tlv));
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }
@@ -345,7 +344,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         case NetworkDiagnosticTlv::kLeaderData:
         {
             LeaderDataTlv tlv;
-            memcpy(&tlv, &mNetif.GetMle().GetLeaderDataTlv(), sizeof(tlv));
+            memcpy(&tlv, &netif.GetMle().GetLeaderDataTlv(), sizeof(tlv));
             tlv.Init();
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
@@ -355,7 +354,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         {
             NetworkDataTlv tlv;
             tlv.Init();
-            mNetif.GetMle().FillNetworkDataTlv((*reinterpret_cast<Mle::NetworkDataTlv *>(&tlv)), true);
+            netif.GetMle().FillNetworkDataTlv((*reinterpret_cast<Mle::NetworkDataTlv *>(&tlv)), true);
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }
@@ -371,7 +370,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
             MacCountersTlv tlv;
             memset(&tlv, 0, sizeof(tlv));
             tlv.Init();
-            mNetif.GetMac().FillMacCountersTlv(tlv);
+            netif.GetMac().FillMacCountersTlv(tlv);
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }
@@ -434,6 +433,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *a
 void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage,
                                                  const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     Message *message = NULL;
     NetworkDiagnosticTlv networkDiagnosticTlv;
@@ -454,7 +454,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
     // DIAG_GET.qry may be sent as a confirmable message.
     if (aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE)
     {
-        if (mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
+        if (netif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
         {
             otLogInfoNetDiag(GetInstance(), "Sent diagnostic get query acknowledgment");
         }
@@ -469,16 +469,16 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     messageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo, NULL, this));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo, NULL, this));
 
     otLogInfoNetDiag(GetInstance(), "Sent diagnostic get answer");
 
@@ -501,6 +501,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader 
 void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage,
                                                    const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     Message *message = NULL;
     NetworkDiagnosticTlv networkDiagnosticTlv;
@@ -522,7 +523,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
     header.SetDefaultResponseHeader(aHeader);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -532,7 +533,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
         message->SetLength(header.GetLength() - 1);
     }
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoNetDiag(GetInstance(), "Sent diagnostic get response");
 
@@ -547,6 +548,7 @@ exit:
 otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
                                                uint8_t aCount)
 {
+    ThreadNetif &netif = GetNetif();
     otError error;
     Message *message;
     Coap::Header header;
@@ -561,16 +563,16 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Append(aTlvTypes, aCount));
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoNetDiag(GetInstance(), "Sent network diagnostic reset");
 
@@ -595,6 +597,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHea
 void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,
                                               const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetif &netif = GetNetif();
     uint16_t offset = 0;
     uint8_t type;
     NetworkDiagnosticTlv networkDiagnosticTlv;
@@ -620,7 +623,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
         switch (type)
         {
         case NetworkDiagnosticTlv::kMacCounters:
-            mNetif.GetMac().ResetCounters();
+            netif.GetMac().ResetCounters();
             otLogInfoNetDiag(GetInstance(), "Received diagnostic reset type kMacCounters(9)");
             break;
 
@@ -630,7 +633,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
         }
     }
 
-    SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(netif.GetCoap().SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoNetDiag(GetInstance(), "Sent diagnostic reset acknowledgment");
 

@@ -43,7 +43,6 @@
         OPENTHREAD_FTD=1;
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
-        OPENTHREAD_MULTIPLE_INSTANCE;
       </PreProcessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);

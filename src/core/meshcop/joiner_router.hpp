@@ -38,6 +38,7 @@
 
 #include "coap/coap.hpp"
 #include "coap/coap_header.hpp"
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
@@ -51,7 +52,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class JoinerRouter
+class JoinerRouter: public ThreadNetifLocator
 {
 public:
     /**
@@ -61,14 +62,6 @@ public:
      *
      */
     JoinerRouter(ThreadNetif &aNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method returns the Joiner UDP Port.
@@ -109,7 +102,7 @@ private:
     void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
                                      const Ip6::MessageInfo *aMessageInfo, otError result);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
@@ -118,11 +111,12 @@ private:
 
     otError GetBorderAgentRloc(uint16_t &aRloc);
 
+    static JoinerRouter &GetOwner(const Context &aContext);
+
     Ip6::NetifCallback mNetifCallback;
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
-    ThreadNetif &mNetif;
 
     Timer mTimer;
     MessageQueue mDelayedJoinEnts;

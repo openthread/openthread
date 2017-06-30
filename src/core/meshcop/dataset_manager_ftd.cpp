@@ -74,10 +74,11 @@ bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
 
 otError ActiveDataset::GenerateLocal(void)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     otOperationalDataset dataset;
 
-    VerifyOrExit(mNetif.GetMle().IsAttached(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(netif.GetMle().IsAttached(), error = OT_ERROR_INVALID_STATE);
 
     memset(&dataset, 0, sizeof(dataset));
 
@@ -97,7 +98,7 @@ otError ActiveDataset::GenerateLocal(void)
         ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannelPage(0);
-        tlv.SetChannel(mNetif.GetMac().GetChannel());
+        tlv.SetChannel(netif.GetMac().GetChannel());
         mLocal.Set(tlv);
     }
 
@@ -115,7 +116,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         ExtendedPanIdTlv tlv;
         tlv.Init();
-        tlv.SetExtendedPanId(mNetif.GetMac().GetExtendedPanId());
+        tlv.SetExtendedPanId(netif.GetMac().GetExtendedPanId());
         mLocal.Set(tlv);
     }
 
@@ -124,7 +125,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         MeshLocalPrefixTlv tlv;
         tlv.Init();
-        tlv.SetMeshLocalPrefix(mNetif.GetMle().GetMeshLocalPrefix());
+        tlv.SetMeshLocalPrefix(netif.GetMle().GetMeshLocalPrefix());
         mLocal.Set(tlv);
     }
 
@@ -133,7 +134,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         NetworkMasterKeyTlv tlv;
         tlv.Init();
-        tlv.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey());
+        tlv.SetNetworkMasterKey(netif.GetKeyManager().GetMasterKey());
         mLocal.Set(tlv);
     }
 
@@ -142,7 +143,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         NetworkNameTlv tlv;
         tlv.Init();
-        tlv.SetNetworkName(mNetif.GetMac().GetNetworkName());
+        tlv.SetNetworkName(netif.GetMac().GetNetworkName());
         mLocal.Set(tlv);
     }
 
@@ -151,7 +152,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         PanIdTlv tlv;
         tlv.Init();
-        tlv.SetPanId(mNetif.GetMac().GetPanId());
+        tlv.SetPanId(netif.GetMac().GetPanId());
         mLocal.Set(tlv);
     }
 
@@ -160,7 +161,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         PSKcTlv tlv;
         tlv.Init();
-        tlv.SetPSKc(mNetif.GetKeyManager().GetPSKc());
+        tlv.SetPSKc(netif.GetKeyManager().GetPSKc());
         mLocal.Set(tlv);
     }
 
@@ -169,8 +170,8 @@ otError ActiveDataset::GenerateLocal(void)
     {
         SecurityPolicyTlv tlv;
         tlv.Init();
-        tlv.SetRotationTime(static_cast<uint16_t>(mNetif.GetKeyManager().GetKeyRotation()));
-        tlv.SetFlags(mNetif.GetKeyManager().GetSecurityPolicyFlags());
+        tlv.SetRotationTime(static_cast<uint16_t>(netif.GetKeyManager().GetKeyRotation()));
+        tlv.SetFlags(netif.GetKeyManager().GetSecurityPolicyFlags());
         mLocal.Set(tlv);
     }
 
@@ -184,12 +185,12 @@ void ActiveDataset::StartLeader(void)
 
     mLocal.Store();
     mNetwork = mLocal;
-    mNetif.GetCoap().AddResource(mResourceSet);
+    GetNetif().GetCoap().AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
 {
-    mNetif.GetCoap().RemoveResource(mResourceSet);
+    GetNetif().GetCoap().RemoveResource(mResourceSet);
 }
 
 void ActiveDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -222,12 +223,12 @@ void PendingDataset::StartLeader(void)
     mNetwork = mLocal;
     ResetDelayTimer(kFlagNetworkUpdated);
 
-    mNetif.GetCoap().AddResource(mResourceSet);
+    GetNetif().GetCoap().AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)
 {
-    mNetif.GetCoap().RemoveResource(mResourceSet);
+    GetNetif().GetCoap().RemoveResource(mResourceSet);
 }
 
 void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -249,11 +250,12 @@ exit:
 
 void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage)
 {
+    ThreadNetif &netif = GetNetif();
     uint16_t offset = aMessage.GetOffset();
     DelayTimerTlv delayTimer;
     uint8_t flags;
 
-    VerifyOrExit(mNetif.GetMle().IsAttached());
+    VerifyOrExit(netif.GetMle().IsAttached());
 
     while (offset < aMessage.GetLength())
     {
@@ -272,7 +274,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aM
 
     // add delay timer tlv
     delayTimer.Init();
-    delayTimer.SetDelayTimer(mNetif.GetLeader().GetDelayTimerMinimal());
+    delayTimer.SetDelayTimer(netif.GetLeader().GetDelayTimerMinimal());
     mNetwork.Set(delayTimer);
 
     // add pending timestamp tlv

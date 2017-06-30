@@ -35,13 +35,14 @@
 #ifndef MESHCOP_DATASET_HPP_
 #define MESHCOP_DATASET_HPP_
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
-class Dataset
+class Dataset: public InstanceLocator
 {
 public:
     enum
@@ -193,7 +194,6 @@ private:
     Tlv::Type  mType;            ///< Active or Pending
     uint8_t    mTlvs[kMaxSize];  ///< The Dataset buffer
     uint16_t   mLength;          ///< The number of valid bytes in @var mTlvs
-    otInstance *mInstance;       ///< The pointer to an OpenThread instance
 };
 
 }  // namespace MeshCoP

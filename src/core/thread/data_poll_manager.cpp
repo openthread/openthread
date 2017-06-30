@@ -37,6 +37,7 @@
 #include "data_poll_manager.hpp"
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
@@ -49,7 +50,7 @@
 namespace ot {
 
 DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
-    mMeshForwarder(aMeshForwarder),
+    MeshForwarderLocator(aMeshForwarder),
     mTimer(aMeshForwarder.GetNetif().GetIp6().mTimerScheduler, &DataPollManager::HandlePollTimer, this),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
@@ -64,17 +65,12 @@ DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
 {
 }
 
-otInstance *DataPollManager::GetInstance(void)
-{
-    return mMeshForwarder.GetInstance();
-}
-
 otError DataPollManager::StartPolling(void)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit((mMeshForwarder.GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0,
+    VerifyOrExit((GetMeshForwarder().GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0,
                  error = OT_ERROR_INVALID_STATE);
 
     mEnabled = true;
@@ -98,23 +94,24 @@ void DataPollManager::StopPolling(void)
 
 otError DataPollManager::SendDataPoll(void)
 {
+    MeshForwarder &meshForwarder = GetMeshForwarder();
     otError error;
     Message *message;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mMeshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!meshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
-    for (message = mMeshForwarder.GetSendQueue().GetHead(); message; message = message->GetNext())
+    for (message = meshForwarder.GetSendQueue().GetHead(); message; message = message->GetNext())
     {
         VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
     }
 
-    message = mMeshForwarder.GetNetif().GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0);
+    message = meshForwarder.GetNetif().GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    error = mMeshForwarder.SendMessage(*message);
+    error = meshForwarder.SendMessage(*message);
 
     if (error != OT_ERROR_NONE)
     {
@@ -380,7 +377,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
     if (period == 0)
     {
-        period = Timer::SecToMsec(mMeshForwarder.GetNetif().GetMle().GetTimeout()) -
+        period = Timer::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
                  static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 
         if (period == 0)
@@ -392,9 +389,20 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
     return period;
 }
 
-void DataPollManager::HandlePollTimer(void *aContext)
+void DataPollManager::HandlePollTimer(Timer &aTimer)
 {
-    static_cast<DataPollManager *>(aContext)->SendDataPoll();
+    GetOwner(aTimer).SendDataPoll();
+}
+
+DataPollManager &DataPollManager::GetOwner(Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    DataPollManager &manager = *static_cast<DataPollManager *>(aContext.GetContext());
+#else
+    DataPollManager &manager = otGetMeshForwarder().GetDataPollManager();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return manager;
 }
 
 }  // namespace ot

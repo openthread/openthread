@@ -69,19 +69,20 @@ void LeaderBase::Reset(void)
     mVersion = static_cast<uint8_t>(otPlatRandomGet());
     mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
     mLength = 0;
-    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
 {
+    ThreadNetif &netif = GetNetif();
     PrefixTlv *prefix;
     ContextTlv *contextTlv;
 
     aContext.mPrefixLength = 0;
 
-    if (PrefixMatch(mNetif.GetMle().GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
+    if (PrefixMatch(netif.GetMle().GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
     {
-        aContext.mPrefix = mNetif.GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix = netif.GetMle().GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
         aContext.mContextId = 0;
         aContext.mCompressFlag = true;
@@ -130,7 +131,7 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
 
     if (aContextId == 0)
     {
-        aContext.mPrefix = mNetif.GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix = GetNetif().GetMle().GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
         aContext.mContextId = 0;
         aContext.mCompressFlag = true;
@@ -202,7 +203,7 @@ bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
     PrefixTlv *prefix;
     bool rval = false;
 
-    if (memcmp(aAddress.mFields.m8, mNetif.GetMle().GetMeshLocalPrefix(), 8) == 0)
+    if (memcmp(aAddress.mFields.m8, GetNetif().GetMle().GetMeshLocalPrefix(), 8) == 0)
     {
         ExitNow(rval = true);
     }
@@ -278,6 +279,7 @@ exit:
 otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination,
                                         uint8_t *aPrefixMatch, uint16_t *aRloc16)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NO_ROUTE;
     PrefixTlv *prefix;
     HasRouteTlv *hasRoute;
@@ -325,7 +327,7 @@ otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
                     if (rvalRoute == NULL ||
                         entry->GetPreference() > rvalRoute->GetPreference() ||
                         (entry->GetPreference() == rvalRoute->GetPreference() &&
-                         mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(rvalRoute->GetRloc())))
+                         netif.GetMle().GetCost(entry->GetRloc()) < netif.GetMle().GetCost(rvalRoute->GetRloc())))
                     {
                         rvalRoute = entry;
                         rval_plen = static_cast<uint8_t>(plen);
@@ -356,6 +358,7 @@ otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
 
 otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NO_ROUTE;
     BorderRouterTlv *borderRouter;
     BorderRouterEntry *entry;
@@ -382,9 +385,9 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
             if (route == NULL ||
                 entry->GetPreference() > route->GetPreference() ||
                 (entry->GetPreference() == route->GetPreference() &&
-                 (entry->GetRloc() == mNetif.GetMle().GetRloc16() ||
-                  (route->GetRloc() != mNetif.GetMle().GetRloc16() &&
-                   mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(route->GetRloc())))))
+                 (entry->GetRloc() == netif.GetMle().GetRloc16() ||
+                  (route->GetRloc() != netif.GetMle().GetRloc16() &&
+                   netif.GetMle().GetCost(entry->GetRloc()) < netif.GetMle().GetCost(route->GetRloc())))))
             {
                 route = entry;
             }
@@ -419,7 +422,7 @@ void LeaderBase::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool a
 
     otDumpDebgNetData(GetInstance(), "set network data", mTlvs, mLength);
 
-    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
@@ -442,7 +445,7 @@ otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLe
     }
 
     mVersion++;
-    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;

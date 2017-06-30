@@ -26,11 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils/wrap_string.h"
-
 #include <openthread/diag.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
+
+#include "utils/wrap_string.h"
 
 #include "test_util.h"
 

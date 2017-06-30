@@ -38,12 +38,11 @@
 
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
-
-class MeshForwarder;
 
 /**
  * @addtogroup core-data-poll-manager
@@ -59,7 +58,7 @@ class MeshForwarder;
  *
  */
 
-class DataPollManager
+class DataPollManager: public MeshForwarderLocator
 {
 public:
     enum
@@ -75,14 +74,6 @@ public:
      *
      */
     explicit DataPollManager(MeshForwarder &aMeshForwarder);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method instructs the data poll manager to start sending periodic data polls.
@@ -218,9 +209,9 @@ private:
 
     void ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t CalculatePollPeriod(void) const;
-    static void HandlePollTimer(void *aContext);
+    static void HandlePollTimer(Timer &aTimer);
+    static DataPollManager &GetOwner(Context &aContext);
 
-    MeshForwarder &mMeshForwarder;
     Timer     mTimer;
     uint32_t  mTimerStartTime;
     uint32_t  mExternalPollPeriod;

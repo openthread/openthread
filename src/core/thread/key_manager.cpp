@@ -36,6 +36,7 @@
 
 #include "key_manager.hpp"
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
@@ -50,7 +51,7 @@ static const uint8_t kThreadString[] =
 };
 
 KeyManager::KeyManager(ThreadNetif &aThreadNetif):
-    mNetif(aThreadNetif),
+    ThreadNetifLocator(aThreadNetif),
     mKeySequence(0),
     mMacFrameCounter(0),
     mMleFrameCounter(0),
@@ -108,13 +109,13 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    routers = mNetif.GetMle().GetParent();
+    routers = GetNetif().GetMle().GetParent();
     routers->SetKeySequence(0);
     routers->SetLinkFrameCounter(0);
     routers->SetMleFrameCounter(0);
 
     // reset router frame counters
-    routers = mNetif.GetMle().GetRouters(&num);
+    routers = GetNetif().GetMle().GetRouters(&num);
 
     for (uint8_t i = 0; i < num; i++)
     {
@@ -124,7 +125,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     }
 
     // reset child frame counters
-    children = mNetif.GetMle().GetChildren(&num);
+    children = GetNetif().GetMle().GetChildren(&num);
 
     for (uint8_t i = 0; i < num; i++)
     {
@@ -133,7 +134,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
         children[i].SetMleFrameCounter(0);
     }
 
-    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
+    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
 exit:
     return error;
@@ -186,7 +187,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         StartKeyRotationTimer();
     }
 
-    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
+    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
 exit:
     return;
@@ -210,7 +211,7 @@ void KeyManager::IncrementMacFrameCounter(void)
 
     if (mMacFrameCounter >= mStoredMacFrameCounter)
     {
-        mNetif.GetMle().Store();
+        GetNetif().GetMle().Store();
     }
 }
 
@@ -220,7 +221,7 @@ void KeyManager::IncrementMleFrameCounter(void)
 
     if (mMleFrameCounter >= mStoredMleFrameCounter)
     {
-        mNetif.GetMle().Store();
+        GetNetif().GetMle().Store();
     }
 }
 
@@ -248,9 +249,9 @@ void KeyManager::StartKeyRotationTimer(void)
     mKeyRotationTimer.Start(kOneHourIntervalInMsec);
 }
 
-void KeyManager::HandleKeyRotationTimer(void *aContext)
+void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
 {
-    static_cast<KeyManager *>(aContext)->HandleKeyRotationTimer();
+    GetOwner(aTimer).HandleKeyRotationTimer();
 }
 
 void KeyManager::HandleKeyRotationTimer(void)
@@ -270,6 +271,17 @@ void KeyManager::HandleKeyRotationTimer(void)
     {
         SetCurrentKeySequence(mKeySequence + 1);
     }
+}
+
+KeyManager &KeyManager::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    KeyManager &keyManager = *static_cast<KeyManager *>(aContext.GetContext());
+#else
+    KeyManager &keyManager = otGetThreadNetif().GetKeyManager();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return keyManager;
 }
 
 }  // namespace ot

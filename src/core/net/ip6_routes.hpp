@@ -36,6 +36,7 @@
 
 #include <openthread/types.h>
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_routes.hpp"
@@ -68,7 +69,7 @@ struct Route
  * This class implements IPv6 route management.
  *
  */
-class Routes
+class Routes: public Ip6Locator
 {
 public:
     /**
@@ -114,7 +115,6 @@ public:
 
 private:
     Route *mRoutes;
-    Ip6 &mIp6;
 };
 
 /**

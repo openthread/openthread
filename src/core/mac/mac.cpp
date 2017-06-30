@@ -114,12 +114,12 @@ void Mac::StartCsmaBackoff(void)
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
+    ThreadNetifLocator(aThreadNetif),
     mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
 #endif
     mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
-    mNetif(aThreadNetif),
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
     mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
@@ -166,11 +166,6 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     SetShortAddress(mShortAddress);
 
     otPlatRadioEnable(GetInstance());
-}
-
-otInstance *Mac::GetInstance(void)
-{
-    return mNetif.GetInstance();
 }
 
 otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -372,9 +367,9 @@ exit:
     return;
 }
 
-void Mac::HandleEnergyScanSampleRssi(void *aContext)
+void Mac::HandleEnergyScanSampleRssi(Tasklet &aTasklet)
 {
-    static_cast<Mac *>(aContext)->HandleEnergyScanSampleRssi();
+    GetOwner(aTasklet).HandleEnergyScanSampleRssi();
 }
 
 void Mac::HandleEnergyScanSampleRssi(void)
@@ -667,12 +662,12 @@ void Mac::SendBeacon(Frame &aFrame)
 
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
 
-    if (mNetif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_BEACONS)
+    if (GetNetif().GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_BEACONS)
     {
         beaconPayload->Init();
 
         // set the Joining Permitted flag
-        mNetif.GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+        GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
 
         if (numUnsecurePorts)
         {
@@ -698,6 +693,7 @@ void Mac::SendBeacon(Frame &aFrame)
 
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
+    KeyManager &keyManager = GetNetif().GetKeyManager();
     uint32_t frameCounter = 0;
     uint8_t securityLevel;
     uint8_t keyIdMode;
@@ -717,19 +713,19 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        key = mNetif.GetKeyManager().GetKek();
+        key = keyManager.GetKek();
         extAddress = &mExtAddress;
 
         if (!aFrame.IsARetransmission())
         {
-            aFrame.SetFrameCounter(mNetif.GetKeyManager().GetKekFrameCounter());
-            mNetif.GetKeyManager().IncrementKekFrameCounter();
+            aFrame.SetFrameCounter(keyManager.GetKekFrameCounter());
+            keyManager.IncrementKekFrameCounter();
         }
 
         break;
 
     case Frame::kKeyIdMode1:
-        key = mNetif.GetKeyManager().GetCurrentMacKey();
+        key = keyManager.GetCurrentMacKey();
         extAddress = &mExtAddress;
 
         // If the frame is marked as a retransmission, the `Mac::Sender` which
@@ -740,9 +736,9 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
 
         if (!aFrame.IsARetransmission())
         {
-            aFrame.SetFrameCounter(mNetif.GetKeyManager().GetMacFrameCounter());
-            mNetif.GetKeyManager().IncrementMacFrameCounter();
-            aFrame.SetKeyId((mNetif.GetKeyManager().GetCurrentKeySequence() & 0x7f) + 1);
+            aFrame.SetFrameCounter(keyManager.GetMacFrameCounter());
+            keyManager.IncrementMacFrameCounter();
+            aFrame.SetKeyId((keyManager.GetCurrentKeySequence() & 0x7f) + 1);
         }
 
         break;
@@ -785,6 +781,11 @@ exit:
 void Mac::HandleBeginTransmit(void *aContext)
 {
     static_cast<Mac *>(aContext)->HandleBeginTransmit();
+}
+
+void Mac::HandleBeginTransmit(Timer &aTimer)
+{
+    GetOwner(aTimer).HandleBeginTransmit();
 }
 
 void Mac::HandleBeginTransmit(void)
@@ -1002,7 +1003,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
         Neighbor *neighbor;
 
         framePending = ackFrame->GetFramePending();
-        neighbor = mNetif.GetMle().GetNeighbor(addr);
+        neighbor = GetNetif().GetMle().GetNeighbor(addr);
 
         if (neighbor != NULL)
         {
@@ -1124,9 +1125,9 @@ void Mac::RadioSleep(void)
     }
 }
 
-void Mac::HandleMacTimer(void *aContext)
+void Mac::HandleMacTimer(Timer &aTimer)
 {
-    static_cast<Mac *>(aContext)->HandleMacTimer();
+    GetOwner(aTimer).HandleMacTimer();
 }
 
 void Mac::HandleMacTimer(void)
@@ -1189,9 +1190,9 @@ exit:
     return;
 }
 
-void Mac::HandleReceiveTimer(void *aContext)
+void Mac::HandleReceiveTimer(Timer &aTimer)
 {
-    static_cast<Mac *>(aContext)->HandleReceiveTimer();
+    GetOwner(aTimer).HandleReceiveTimer();
 }
 
 void Mac::HandleReceiveTimer(void)
@@ -1322,6 +1323,7 @@ exit:
 
 otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
+    KeyManager &keyManager = GetNetif().GetKeyManager();
     otError error = OT_ERROR_NONE;
     uint8_t securityLevel;
     uint8_t keyIdMode;
@@ -1351,7 +1353,7 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        VerifyOrExit((macKey = mNetif.GetKeyManager().GetKek()) != NULL, error = OT_ERROR_SECURITY);
+        VerifyOrExit((macKey = keyManager.GetKek()) != NULL, error = OT_ERROR_SECURITY);
         extAddress = &aSrcAddr.mExtAddress;
         break;
 
@@ -1361,23 +1363,23 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
         aFrame.GetKeyId(keyid);
         keyid--;
 
-        if (keyid == (mNetif.GetKeyManager().GetCurrentKeySequence() & 0x7f))
+        if (keyid == (keyManager.GetCurrentKeySequence() & 0x7f))
         {
             // same key index
-            keySequence = mNetif.GetKeyManager().GetCurrentKeySequence();
-            macKey = mNetif.GetKeyManager().GetCurrentMacKey();
+            keySequence = keyManager.GetCurrentKeySequence();
+            macKey = keyManager.GetCurrentMacKey();
         }
-        else if (keyid == ((mNetif.GetKeyManager().GetCurrentKeySequence() - 1) & 0x7f))
+        else if (keyid == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
         {
             // previous key index
-            keySequence = mNetif.GetKeyManager().GetCurrentKeySequence() - 1;
-            macKey = mNetif.GetKeyManager().GetTemporaryMacKey(keySequence);
+            keySequence = keyManager.GetCurrentKeySequence() - 1;
+            macKey = keyManager.GetTemporaryMacKey(keySequence);
         }
-        else if (keyid == ((mNetif.GetKeyManager().GetCurrentKeySequence() + 1) & 0x7f))
+        else if (keyid == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
         {
             // next key index
-            keySequence = mNetif.GetKeyManager().GetCurrentKeySequence() + 1;
-            macKey = mNetif.GetKeyManager().GetTemporaryMacKey(keySequence);
+            keySequence = keyManager.GetCurrentKeySequence() + 1;
+            macKey = keyManager.GetTemporaryMacKey(keySequence);
         }
         else
         {
@@ -1444,9 +1446,9 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
 
         aNeighbor->SetLinkFrameCounter(frameCounter + 1);
 
-        if (keySequence > mNetif.GetKeyManager().GetCurrentKeySequence())
+        if (keySequence > keyManager.GetCurrentKeySequence())
         {
-            mNetif.GetKeyManager().SetCurrentKeySequence(keySequence);
+            keyManager.SetCurrentKeySequence(keySequence);
         }
     }
 
@@ -1506,7 +1508,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     SuccessOrExit(error = aFrame->ValidatePsdu());
 
     aFrame->GetSrcAddr(srcaddr);
-    neighbor = mNetif.GetMle().GetNeighbor(srcaddr);
+    neighbor = GetNetif().GetMle().GetNeighbor(srcaddr);
 
     switch (srcaddr.mLength)
     {
@@ -1857,7 +1859,7 @@ bool Mac::IsBeaconJoinable(void)
     uint8_t numUnsecurePorts;
     bool joinable = false;
 
-    mNetif.GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+    GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
 
     if (numUnsecurePorts)
     {
@@ -1871,6 +1873,17 @@ bool Mac::IsBeaconJoinable(void)
     return joinable;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+
+Mac &Mac::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Mac &mac = *static_cast<Mac *>(aContext.GetContext());
+#else
+    Mac &mac = otGetInstance()->mThreadNetif.GetMac();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return mac;
+}
 
 }  // namespace Mac
 }  // namespace ot

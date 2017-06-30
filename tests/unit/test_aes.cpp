@@ -26,19 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils/wrap_string.h"
-
+#include <openthread/config.h>
 #include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"
-#include "crypto/mbedtls.hpp"
+#include "utils/wrap_string.h"
 
+#include "test_platform.h"
 #include "test_util.h"
-
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
-static ot::Crypto::MbedTls mbedtls;
-#endif
 
 /**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1
@@ -78,6 +74,7 @@ void TestMacBeaconFrame(void)
         0xB5, 0x53
     };
 
+    otInstance *instance = testInitInstance();
     ot::Crypto::AesCcm aesCcm;
     uint32_t headerLength = sizeof(test) - 8;
     uint32_t payloadLength = 0;
@@ -88,6 +85,8 @@ void TestMacBeaconFrame(void)
         0xAC, 0xDE, 0x48, 0x00, 0x00, 0x00, 0x00, 0x01,
         0x00, 0x00, 0x00, 0x05, 0x02,
     };
+
+    VerifyOrQuit(instance != NULL, "Null OpenThread instance");
 
     aesCcm.SetKey(key, sizeof(key));
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
@@ -103,6 +102,8 @@ void TestMacBeaconFrame(void)
 
     VerifyOrQuit(memcmp(test, decrypted, sizeof(decrypted)) == 0,
                  "TestMacBeaconFrame decrypt failed");
+
+    testFreeInstance(instance);
 }
 
 /**

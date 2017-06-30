@@ -38,6 +38,7 @@
 
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 
@@ -49,7 +50,7 @@ class ThreadNetif;
  * This class implements handling PANID Query Requests.
  *
  */
-class EnergyScanClient
+class EnergyScanClient: public ThreadNetifLocator
 {
 public:
     /**
@@ -57,14 +58,6 @@ public:
      *
      */
     EnergyScanClient(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method sends an Energy Scan Query message.
@@ -93,8 +86,6 @@ private:
     void *mContext;
 
     Coap::Resource mEnergyScan;
-
-    ThreadNetif &mNetif;
 };
 
 /**

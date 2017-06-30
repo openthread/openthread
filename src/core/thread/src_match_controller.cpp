@@ -46,15 +46,10 @@
 namespace ot {
 
 SourceMatchController::SourceMatchController(MeshForwarder &aMeshForwarder) :
-    mMeshForwarder(aMeshForwarder),
+    MeshForwarderLocator(aMeshForwarder),
     mEnabled(false)
 {
     ClearTable();
-}
-
-otInstance *SourceMatchController::GetInstance(void)
-{
-    return mMeshForwarder.GetInstance();
 }
 
 void SourceMatchController::IncrementMessageCount(Child &aChild)
@@ -227,7 +222,7 @@ otError SourceMatchController::AddPendingEntries(void)
     uint8_t numChildren;
     Child *child;
 
-    child = mMeshForwarder.GetNetif().GetMle().GetChildren(&numChildren);
+    child = GetMeshForwarder().GetNetif().GetMle().GetChildren(&numChildren);
 
     for (uint8_t i = 0; i < numChildren; i++, child++)
     {

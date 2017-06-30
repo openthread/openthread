@@ -1192,10 +1192,10 @@ void NcpBase::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
     obj->mUpdateChangedPropsTask.Post();
 }
 
-void NcpBase::UpdateChangedProps(void *aContext)
+void NcpBase::UpdateChangedProps(Tasklet &aTasklet)
 {
-    NcpBase *obj = static_cast<NcpBase *>(aContext);
-    obj->UpdateChangedProps();
+    OT_UNUSED_VARIABLE(aTasklet);
+    GetNcpInstance()->UpdateChangedProps();
 }
 
 void NcpBase::UpdateChangedProps(void)

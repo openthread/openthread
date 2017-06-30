@@ -119,6 +119,7 @@ SOURCES_COMMON                      = \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
     common/logging.cpp                \
+    common/locator.cpp                \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
@@ -199,14 +200,17 @@ HEADERS_COMMON                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     openthread-instance.h             \
+    openthread-single-instance.h      \
     api/link_raw.hpp                  \
     coap/coap.hpp                     \
     coap/coap_header.hpp              \
     coap/coap_secure.hpp              \
     common/code_utils.hpp             \
+    common/context.hpp                \
     common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
+    common/locator.hpp                \
     common/logging.hpp                \
     common/message.hpp                \
     common/settings.hpp               \

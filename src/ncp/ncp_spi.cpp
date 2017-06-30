@@ -311,9 +311,10 @@ exit:
     return errorCode;
 }
 
-void NcpSpi::PrepareTxFrame(void *aContext)
+void NcpSpi::PrepareTxFrame(Tasklet &aTasklet)
 {
-    static_cast<NcpSpi *>(aContext)->PrepareTxFrame();
+    OT_UNUSED_VARIABLE(aTasklet);
+    static_cast<NcpSpi *>(GetNcpInstance())->PrepareTxFrame();
 }
 
 void NcpSpi::PrepareTxFrame(void)

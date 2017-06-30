@@ -34,6 +34,7 @@
 #ifndef NET_NETIF_HPP_
 #define NET_NETIF_HPP_
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/tasklet.hpp"
 #include "mac/mac_frame.hpp"
@@ -247,7 +248,7 @@ private:
  * This class implements an IPv6 network interface.
  *
  */
-class Netif
+class Netif: public Ip6Locator
 {
     friend class Ip6;
 
@@ -260,14 +261,6 @@ public:
      *
      */
     Netif(Ip6 &aIp6, int8_t aInterfaceId);
-
-    /**
-     * This method returns a reference to the IPv6 network object.
-     *
-     * @returns A reference to the IPv6 network object.
-     *
-     */
-    Ip6 &GetIp6(void) { return mIp6; }
 
     /**
      * This method returns the next network interface in the list.
@@ -527,12 +520,10 @@ public:
     virtual otError RouteLookup(const Address &aSource, const Address &aDestination,
                                 uint8_t *aPrefixMatch) = 0;
 
-protected:
-    Ip6 &mIp6;
-
 private:
-    static void HandleStateChangedTask(void *aContext);
+    static void HandleStateChangedTask(Tasklet &aTasklet);
     void HandleStateChangedTask(void);
+    static Netif &GetOwner(const Context &aContext);
 
     NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;

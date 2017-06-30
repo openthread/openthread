@@ -50,7 +50,7 @@ namespace ot {
 namespace Coap {
 
 Coap::Coap(ThreadNetif &aNetif):
-    mNetif(aNetif),
+    ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
     mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Coap::HandleRetransmissionTimer, this),
     mResources(NULL),
@@ -287,9 +287,20 @@ exit:
     return error;
 }
 
-void Coap::HandleRetransmissionTimer(void *aContext)
+Coap &Coap::GetOwner(const Context &aContext)
 {
-    static_cast<Coap *>(aContext)->HandleRetransmissionTimer();
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Coap &coap = *static_cast<Coap *>(aContext.GetContext());
+#else
+    Coap &coap = otGetThreadNetif().GetCoap();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return coap;
+}
+
+void Coap::HandleRetransmissionTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).HandleRetransmissionTimer();
 }
 
 void Coap::HandleRetransmissionTimer(void)
@@ -543,7 +554,7 @@ exit:
 
     if (error)
     {
-        otLogInfoCoapErr(mNetif.GetInstance(), error, "Receive failed");
+        otLogInfoCoapErr(GetNetif().GetInstance(), error, "Receive failed");
     }
 }
 
@@ -704,7 +715,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoCoapErr(mNetif.GetInstance(), error, "Failed to process request");
+        otLogInfoCoapErr(GetNetif().GetInstance(), error, "Failed to process request");
 
         if (error == OT_ERROR_NOT_FOUND)
         {
@@ -887,9 +898,20 @@ void ResponsesQueue::DequeueAllResponses(void)
     }
 }
 
-void ResponsesQueue::HandleTimer(void *aContext)
+ResponsesQueue &ResponsesQueue::GetOwner(const Context &aContext)
 {
-    static_cast<ResponsesQueue *>(aContext)->HandleTimer();
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    ResponsesQueue &queue = *static_cast<ResponsesQueue *>(aContext.GetContext());
+#else
+    ResponsesQueue &queue = otGetThreadNetif().GetCoap().mResponsesQueue;
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return queue;
+}
+
+void ResponsesQueue::HandleTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).HandleTimer();
 }
 
 void ResponsesQueue::HandleTimer(void)

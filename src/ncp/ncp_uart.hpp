@@ -101,7 +101,7 @@ private:
     void            TxFrameBufferHasData(void);
     void            HandleFrameAddedToNcpBuffer(void);
 
-    static void     EncodeAndSendToUart(void *aContext);
+    static void     EncodeAndSendToUart(Tasklet &aTasklet);
     static void     HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
     static void     HandleError(void *context, otError aError, uint8_t *aBuf, uint16_t aBufLength);
     static void     HandleFrameAddedToNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,

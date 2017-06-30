@@ -109,7 +109,7 @@ void TestFuzz(uint32_t aSeconds)
     Log("Initialized seed = 0x%X", seed);
 #endif
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     size_t otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 
@@ -124,7 +124,7 @@ void TestFuzz(uint32_t aSeconds)
     // Initialize OpenThread with the buffer
     aInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    aInstance = otInstanceInit();
+    aInstance = otInstanceInitSingle();
 #endif
 
     VerifyOrQuit(aInstance != NULL, "Failed to initialize otInstance");
@@ -196,7 +196,7 @@ void TestFuzz(uint32_t aSeconds)
     // Clean up the instance
     otInstanceFinalize(aInstance);
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     free(otInstanceBuffer);
 #endif
 }

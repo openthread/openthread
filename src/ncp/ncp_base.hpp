@@ -210,7 +210,7 @@ private:
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
     void HandleJamStateChange(bool aJamState);
 
-    static void UpdateChangedProps(void *aContext);
+    static void UpdateChangedProps(Tasklet &aTasklet);
     void UpdateChangedProps(void);
 
     static void SendDoneTask(void *aContext);

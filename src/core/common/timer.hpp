@@ -40,7 +40,9 @@
 #include <openthread/types.h>
 #include <openthread/platform/alarm.h>
 
+#include "common/context.hpp"
 #include "common/debug.hpp"
+#include "common/locator.hpp"
 #include "common/tasklet.hpp"
 
 namespace ot {
@@ -133,7 +135,7 @@ private:
  * This class implements a timer.
  *
  */
-class Timer
+class Timer: public TimerSchedulerLocator, public Context
 {
     friend class TimerScheduler;
 
@@ -147,9 +149,10 @@ public:
     /**
      * This function pointer is called when the timer expires.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aTimer    A reference to the expired timer instance.
+     *
      */
-    typedef void (*Handler)(void *aContext);
+    typedef void (*Handler)(Timer &aTimer);
 
     /**
      * This constructor creates a timer instance.
@@ -160,9 +163,9 @@ public:
      *
      */
     Timer(TimerScheduler &aScheduler, Handler aHandler, void *aContext):
-        mScheduler(aScheduler),
+        TimerSchedulerLocator(aScheduler),
+        Context(aContext),
         mHandler(aHandler),
-        mContext(aContext),
         mFireTime(0),
         mNext(this) {
     }
@@ -201,13 +204,17 @@ public:
      *                  (aDt must be smaller than or equal to kMaxDt).
      *
      */
-    void StartAt(uint32_t aT0, uint32_t aDt) { assert(aDt <= kMaxDt); mFireTime = aT0 + aDt; mScheduler.Add(*this); }
+    void StartAt(uint32_t aT0, uint32_t aDt) {
+        assert(aDt <= kMaxDt);
+        mFireTime = aT0 + aDt;
+        GetTimerScheduler().Add(*this);
+    }
 
     /**
      * This method stops the timer.
      *
      */
-    void Stop(void) { mScheduler.Remove(*this); }
+    void Stop(void) { GetTimerScheduler().Remove(*this); }
 
     /**
      * This static method returns the current time in milliseconds.
@@ -245,11 +252,9 @@ private:
      */
     bool DoesFireBefore(const Timer &aTimer);
 
-    void Fired(void) { mHandler(mContext); }
+    void Fired(void) { mHandler(*this); }
 
-    TimerScheduler &mScheduler;
     Handler         mHandler;
-    void           *mContext;
     uint32_t        mFireTime;
     Timer          *mNext;
 };

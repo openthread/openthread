@@ -38,6 +38,7 @@
 
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
@@ -54,7 +55,7 @@ class ThreadTargetTlv;
  * This class implements handling Energy Scan Requests.
  *
  */
-class EnergyScanServer
+class EnergyScanServer: public ThreadNetifLocator
 {
 public:
     /**
@@ -62,14 +63,6 @@ public:
      *
      */
     EnergyScanServer(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
 private:
     enum
@@ -85,13 +78,15 @@ private:
     static void HandleScanResult(void *aContext, otEnergyScanResult *aResult);
     void HandleScanResult(otEnergyScanResult *aResult);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
     otError SendReport(void);
+
+    static EnergyScanServer &GetOwner(const Context &aContext);
 
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;
@@ -109,8 +104,6 @@ private:
     Ip6::NetifCallback mNetifCallback;
 
     Coap::Resource mEnergyScan;
-
-    ThreadNetif &mNetif;
 };
 
 /**

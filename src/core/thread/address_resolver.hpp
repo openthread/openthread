@@ -38,6 +38,7 @@
 
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "net/icmp6.hpp"
@@ -64,7 +65,7 @@ class ThreadTargetTlv;
  * This class implements the EID-to-RLOC mapping and caching.
  *
  */
-class AddressResolver
+class AddressResolver: public ThreadNetifLocator
 {
 public:
     /**
@@ -72,14 +73,6 @@ public:
      *
      */
     explicit AddressResolver(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method clears the EID-to-RLOC cache.
@@ -186,8 +179,10 @@ private:
                                   const otIcmp6Header *aIcmpHeader);
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
+
+    static AddressResolver &GetOwner(const Context &aContext);
 
     Coap::Resource mAddressError;
     Coap::Resource mAddressQuery;
@@ -195,8 +190,6 @@ private:
     Cache mCache[kCacheEntries];
     Ip6::IcmpHandler mIcmpHandler;
     Timer mTimer;
-
-    ThreadNetif &mNetif;
 };
 
 /**

@@ -39,7 +39,7 @@
       <PreprocessorDefinitions>
         ;%(PreprocessorDefinitions);
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
-        OPENTHREAD_MULTIPLE_INSTANCE;
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         ..\..\include;

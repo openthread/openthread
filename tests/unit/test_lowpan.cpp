@@ -27,6 +27,8 @@
  */
 
 #include "test_lowpan.hpp"
+
+#include "test_platform.h"
 #include "test_util.hpp"
 
 using namespace ot;
@@ -34,9 +36,10 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-Ip6::Ip6 sIp6;
-ThreadNetif sMockThreadNetif(sIp6);
-Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
+otInstance *sInstance;
+Ip6::Ip6 *sIp6;
+ThreadNetif *sThreadNetif;
+Lowpan::Lowpan *sLowpan;
 
 void TestIphcVector::GetCompressedStream(uint8_t *aIphc, uint16_t &aIphcLength)
 {
@@ -108,7 +111,7 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
 static void Init()
 {
     uint8_t meshLocalPrefix[] = {0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34};
-    sMockThreadNetif.GetMle().SetMeshLocalPrefix(meshLocalPrefix);
+    sThreadNetif->GetMle().SetMeshLocalPrefix(meshLocalPrefix);
 
     // Emulate global prefixes with contextes.
     uint8_t mockNetworkData[] =
@@ -128,7 +131,7 @@ static void Init()
         0x02, 0x40  // Context ID = 2, C = FALSE
     };
 
-    sMockThreadNetif.GetNetworkDataLeader().SetNetworkData(0, 0, true, mockNetworkData, sizeof(mockNetworkData));
+    sThreadNetif->GetNetworkDataLeader().SetNetworkData(0, 0, true, mockNetworkData, sizeof(mockNetworkData));
 }
 
 /**
@@ -173,13 +176,13 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aCompress)
     {
-        VerifyOrQuit((message = sIp6.mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sIp6->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         aVector.GetUncompressedStream(*message);
 
-        int compressBytes = sMockLowpan.Compress(*message, aVector.mMacSource, aVector.mMacDestination,
-                                                 result);
+        int compressBytes = sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination,
+                                              result);
 
         if (aVector.mError == OT_ERROR_NONE)
         {
@@ -208,11 +211,11 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aDecompress)
     {
-        VerifyOrQuit((message = sIp6.mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sIp6->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
-        int decompressedBytes = sMockLowpan.Decompress(*message, aVector.mMacSource, aVector.mMacDestination,
-                                                       iphc, iphcLength, 0);
+        int decompressedBytes = sLowpan->Decompress(*message, aVector.mMacSource, aVector.mMacDestination,
+                                                    iphc, iphcLength, 0);
 
         message->Read(0, message->GetLength(), result);
 
@@ -1859,6 +1862,14 @@ static void TestErrorReservedNhc6(void)
 
 void TestLowpanIphc(void)
 {
+    sInstance = testInitInstance();
+
+    VerifyOrQuit(sInstance != NULL, "NULL instance");
+
+    sIp6 = &sInstance->mIp6;
+    sThreadNetif = &sInstance->mThreadNetif;
+    sLowpan = &sThreadNetif->GetLowpan();
+
     Init();
 
     // Stateless unicast addresses compression / decompression tests.
@@ -1938,6 +1949,8 @@ void TestLowpanIphc(void)
     TestErrorUnknownNhc();
     TestErrorReservedNhc5();
     TestErrorReservedNhc6();
+
+    testFreeInstance(sInstance);
 }
 
 }  // namespace ot

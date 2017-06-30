@@ -1682,9 +1682,9 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandlePingTimer(void *aContext)
+void Interpreter::s_HandlePingTimer(Timer &aTimer)
 {
-    static_cast<Interpreter *>(aContext)->HandlePingTimer();
+    GetOwner(aTimer).HandlePingTimer();
 }
 
 void Interpreter::HandlePingTimer()
@@ -3180,6 +3180,17 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
     mServer->OutputFormat("\r\n");
 }
 #endif
+
+Interpreter &Interpreter::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Interpreter &interpreter = *static_cast<Interpreter *>(aContext.GetContext());
+#else
+    Interpreter &interpreter = Uart::sUartServer->GetInterpreter();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return interpreter;
+}
 
 }  // namespace Cli
 }  // namespace ot

@@ -44,6 +44,7 @@
 
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
+#include "common/locator.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
@@ -967,7 +968,7 @@ private:
  * This class represents a message pool
  *
  */
-class MessagePool
+class MessagePool: public InstanceLocator
 {
     friend class Message;
     friend class MessageQueue;
@@ -1105,7 +1106,7 @@ public:
      *
      */
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    uint16_t GetFreeBufferCount(void) const { return otPlatMessagePoolNumFreeBuffers(mInstance); }
+    uint16_t GetFreeBufferCount(void) const { return otPlatMessagePoolNumFreeBuffers(GetInstance()); }
 #else
     uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
 #endif
@@ -1127,7 +1128,6 @@ private:
     Buffer   *mFreeBuffers;
 #endif
 
-    otInstance *mInstance;
     PriorityQueue mAllQueue;
 };
 

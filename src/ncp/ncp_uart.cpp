@@ -122,11 +122,10 @@ void NcpUart::HandleFrameAddedToNcpBuffer(void)
     }
 }
 
-void NcpUart::EncodeAndSendToUart(void *aContext)
+void NcpUart::EncodeAndSendToUart(Tasklet &aTasklet)
 {
-    NcpUart *obj = static_cast<NcpUart *>(aContext);
-
-    obj->EncodeAndSendToUart();
+    OT_UNUSED_VARIABLE(aTasklet);
+    static_cast<NcpUart *>(GetNcpInstance())->EncodeAndSendToUart();
 }
 
 // This method encodes a frame from the tx frame buffer (mTxFrameBuffer) into the uart buffer and sends it over uart.
