@@ -28,52 +28,53 @@
 
 /**
  * @file
- *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
+ *   This file contains definitions for the CLI MacFilter interpreter.
  */
 
-#ifndef MAC_WHITELIST_HPP_
-#define MAC_WHITELIST_HPP_
-
-#include "utils/wrap_stdint.h"
+#ifndef CLI_MACFILTER_HPP_
+#define CLI_MACFILTER_HPP_
 
 #include <openthread/types.h>
 
-#include "mac/mac_frame.hpp"
+#include "cli/cli_server.hpp"
 
 namespace ot {
-namespace Mac {
+namespace Cli {
 
-class Whitelist
+class Interpreter;
+
+/**
+ * This class implements the CLI MacFilter interpreter.
+ *
+ */
+class MacFilter
 {
 public:
-    typedef otMacWhitelistEntry Entry;
+    /**
+     * This method interprets a list of CLI arguments.
+     *
+     * @param[in]  aInstance  A pointer to an OpenThread instance.
+     * @param[in]  argc       The number of elements in argv.
+     * @param[in]  argv       A pointer to an array of command line arguments.
+     * @param[in]  aServer    A reference to the CLI server.
+     *
+     */
+    static otError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
 
-    Whitelist(void) { }
+private:
+    static void OutputExtAddress(const otExtAddress *aAddress);
+    static void PrintFilter();
+    static void PrintLinkQualityInFilter();
+    static void PrintAddressFilter();
 
-    bool IsEnabled(void) const { return false; }
+    static otError ProcessAddressFilter(int argc, char *argv[]);
+    static otError ProcessLinkQualityInFilter(int argc, char *argv[]);
 
-    void SetEnabled(bool) { }
-
-    int GetMaxEntries(void) const { return 0; }
-
-    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    Entry *Add(const ExtAddress &) { return NULL; }
-
-    void Remove(const ExtAddress &) { }
-
-    void Clear(void) { }
-
-    Entry *Find(const ExtAddress &) { return NULL; }
-
-    void ClearFixedRssi(Entry &) { }
-
-    otError GetFixedRssi(Entry &, int8_t &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    void SetFixedRssi(Entry &, int8_t) { }
+    static Server *sServer;
+    static otInstance *sInstance;
 };
 
-}  // namespace Mac
+}  // namespace Cli
 }  // namespace ot
 
-#endif  // MAC_WHITELIST_HPP_
+#endif  // CLI_MACFILTER_HPP_

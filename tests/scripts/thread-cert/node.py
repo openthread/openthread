@@ -43,8 +43,7 @@ class Node:
         else:
             self.interface = node_api.otApi(nodeid)
 
-        self.interface.clear_whitelist()
-        self.interface.disable_whitelist()
+        self.interface.reset_whitelist()
         self.interface.set_timeout(100)
 
     def __del__(self):
@@ -94,11 +93,18 @@ class Node:
     def disable_whitelist(self):
         self.interface.disable_whitelist()
 
-    def add_whitelist(self, addr, rssi=None):
-        self.interface.add_whitelist(addr, rssi)
+    def add_whitelist(self, addr):
+        self.interface.add_whitelist(addr)
 
     def remove_whitelist(self, addr):
         self.interface.remove_whitelist(addr)
+
+    def reset_whitelist(self):
+        self.interface.reset_whitelist()
+
+    def add_lqinfilter(self, addr, lqi):
+        self.interface.add_lqinfilter(addr, lqi)
+
 
     def get_addr16(self):
         return self.interface.get_addr16()

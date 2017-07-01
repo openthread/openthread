@@ -49,6 +49,10 @@
 #include "cli/cli_coap.hpp"
 #endif
 
+#if OPENTHREAD_ENABLE_MAC_FILTER
+#include "cli/cli_macfilter.hpp"
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
+
 #include "common/code_utils.hpp"
 #include "common/context.hpp"
 
@@ -224,6 +228,11 @@ private:
     void ProcessLeaderWeight(int argc, char *argv[]);
 #endif
     void ProcessLinkQuality(int argc, char *argv[]);
+
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    void ProcessMacFilter(int argc, char *argv[]);
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
+
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -337,7 +346,6 @@ private:
     Coap mCoap;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-
     static const struct Command sCommands[];
 
     Server *mServer;

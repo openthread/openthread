@@ -146,8 +146,9 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
     mPcapCallback(NULL),
     mPcapCallbackContext(NULL),
-    mWhitelist(),
-    mBlacklist(),
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    mFilter(),
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
     mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
     mKeyIdMode2FrameCounter(0),
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1483,12 +1484,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     Address dstaddr;
     PanId panid;
     Neighbor *neighbor;
-    otMacWhitelistEntry *whitelistEntry;
-    int8_t rssi;
     bool receive = false;
     uint8_t commandId;
     bool scheduleNextTrasmission = false;
     otError error = aError;
+    uint8_t linkquality = Filter::kInvalidLinkQualityIn;
 
     mCounters.mRxTotal++;
 
@@ -1540,22 +1540,40 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
     }
 
-    // Source Whitelist Processing
-    if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())
-    {
-        VerifyOrExit((whitelistEntry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = OT_ERROR_WHITELIST_FILTERED);
+#if OPENTHREAD_ENABLE_MAC_FILTER
 
-        if (mWhitelist.GetFixedRssi(*whitelistEntry, rssi) == OT_ERROR_NONE)
+    // Source filter Processing
+    if (srcaddr.mLength != 0)
+    {
+        otMacFilterEntry *entry = mFilter.FindEntry(&srcaddr.mExtAddress);
+        mFilter.LinkQualityInFilterGet(&linkquality);
+
+        if (mFilter.AddressFilterGetState() == OT_MAC_ADDRESSFILTER_WHITELIST)
         {
-            aFrame->mPower = rssi;
+            VerifyOrExit(entry != NULL && entry->mFiltered,
+                         error = OT_ERROR_WHITELIST_FILTERED);
+        }
+        else if (mFilter.AddressFilterGetState() == OT_MAC_ADDRESSFILTER_BLACKLIST)
+        {
+            VerifyOrExit(entry == NULL || !entry->mFiltered,
+                         error = OT_ERROR_BLACKLIST_FILTERED);
+        }
+
+        if (entry)
+        {
+            if (entry->mLinkQualityInFixed)
+            {
+                linkquality = entry->mLinkQualityIn;
+            }
+        }
+
+        if (linkquality != Filter::kInvalidLinkQualityIn)
+        {
+            aFrame->mPower = mFilter.ConvertLinkQualityToRss(GetNoiseFloor(), linkquality);
         }
     }
 
-    // Source Blacklist Processing
-    if (srcaddr.mLength != 0 && mBlacklist.IsEnabled())
-    {
-        VerifyOrExit((mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
-    }
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     // Destination Address Filtering
     aFrame->GetDstAddr(dstaddr);
@@ -1597,6 +1615,12 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
     if (neighbor != NULL)
     {
+        // make assigned link quality to take effect quickly
+        if (linkquality != Filter::kInvalidLinkQualityIn)
+        {
+            neighbor->GetLinkInfo().Clear();
+        }
+
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mPower);
 
         if (aFrame->GetSecurityEnabled() == true)

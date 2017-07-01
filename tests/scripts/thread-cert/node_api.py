@@ -84,9 +84,8 @@ class otApi:
         if self.Api.otNodeDisableWhitelist(self.otNode) != 0:
             raise OSError("otNodeDisableWhitelist failed!")
 
-    def add_whitelist(self, addr, rssi=None):
-        if rssi == None:
-            rssi = 0
+    def add_whitelist(self, addr):
+        rssi = 0
         if self.Api.otNodeAddWhitelist(self.otNode, addr.encode('utf-8'), ctypes.c_byte(rssi)) != 0:
             raise OSError("otNodeAddWhitelist failed!")
 
