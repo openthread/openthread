@@ -51,7 +51,7 @@ namespace ot {
 
 DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
     MeshForwarderLocator(aMeshForwarder),
-    mTimer(aMeshForwarder.GetNetif().GetIp6().mTimerScheduler, &DataPollManager::HandlePollTimer, this),
+    mTimer(&DataPollManager::HandlePollTimer, this),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
     mPollPeriod(0),
@@ -82,7 +82,7 @@ exit:
 
 void DataPollManager::StopPolling(void)
 {
-    mTimer.Stop();
+    mTimer.Stop(GetMeshForwarder().GetNetif().GetIp6().mMsecTimerScheduler);
     mAttachMode = false;
     mRetxMode = false;
     mNoBufferRetxMode = false;
@@ -101,7 +101,7 @@ otError DataPollManager::SendDataPoll(void)
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!meshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
-    mTimer.Stop();
+    mTimer.Stop(GetMeshForwarder().GetNetif().GetIp6().mMsecTimerScheduler);
 
     for (message = meshForwarder.GetSendQueue().GetHead(); message; message = message->GetNext())
     {
@@ -325,12 +325,12 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 
     if (mTimer.IsRunning())
     {
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        mTimer.StartAt(GetMeshForwarder().GetNetif().GetIp6().mMsecTimerScheduler, mTimerStartTime, mPollPeriod);
     }
     else
     {
-        mTimerStartTime = Timer::GetNow();
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        mTimerStartTime = TimerScheduler::GetNow();
+        mTimer.StartAt(GetMeshForwarder().GetNetif().GetIp6().mMsecTimerScheduler, mTimerStartTime, mPollPeriod);
     }
 }
 

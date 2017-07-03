@@ -57,8 +57,8 @@ void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentT
 
 Mpl::Mpl(Ip6 &aIp6):
     Ip6Locator(aIp6),
-    mSeedSetTimer(aIp6.mTimerScheduler, &Mpl::HandleSeedSetTimer, this),
-    mRetransmissionTimer(aIp6.mTimerScheduler, &Mpl::HandleRetransmissionTimer, this),
+    mSeedSetTimer(&Mpl::HandleSeedSetTimer, this),
+    mRetransmissionTimer(&Mpl::HandleRetransmissionTimer, this),
     mTimerExpirations(0),
     mSequence(0),
     mSeedId(0),
@@ -119,7 +119,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
     entry->SetSeedId(aSeedId);
     entry->SetSequence(aSequence);
     entry->SetLifetime(kSeedEntryLifetime);
-    mSeedSetTimer.Start(kSeedEntryLifetimeDt);
+    mSeedSetTimer.Start(GetIp6().mMsecTimerScheduler, kSeedEntryLifetimeDt);
 
 exit:
     return error;
@@ -164,7 +164,7 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
     otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
@@ -197,13 +197,13 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
         if (messageMetadata.IsEarlier(nextTransmissionTime))
         {
-            mRetransmissionTimer.Start(messageMetadata.GetTransmissionTime() - now);
+            mRetransmissionTimer.Start(GetIp6().mMsecTimerScheduler, messageMetadata.GetTransmissionTime() - now);
         }
     }
     else
     {
         // Otherwise just set the timer.
-        mRetransmissionTimer.Start(messageMetadata.GetTransmissionTime() - now);
+        mRetransmissionTimer.Start(GetIp6().mMsecTimerScheduler, messageMetadata.GetTransmissionTime() - now);
     }
 
 exit:
@@ -258,7 +258,7 @@ void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
     uint32_t nextDelta = 0xffffffff;
     MplBufferedMessageMetadata messageMetadata;
 
@@ -334,7 +334,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
     if (nextDelta != 0xffffffff)
     {
-        mRetransmissionTimer.Start(nextDelta);
+        mRetransmissionTimer.Start(GetIp6().mMsecTimerScheduler, nextDelta);
     }
 }
 
@@ -358,7 +358,7 @@ void Mpl::HandleSeedSetTimer(void)
 
     if (startTimer)
     {
-        mSeedSetTimer.Start(kSeedEntryLifetimeDt);
+        mSeedSetTimer.Start(GetIp6().mMsecTimerScheduler, kSeedEntryLifetimeDt);
     }
 }
 

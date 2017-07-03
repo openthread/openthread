@@ -59,7 +59,7 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mCount(0),
     mActive(false),
     mScanResultsLength(0),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
+    mTimer(&EnergyScanServer::HandleTimer, this),
     mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
     mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
@@ -105,7 +105,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     mScanDuration = scanDuration.GetScanDuration();
     mScanResultsLength = 0;
     mActive = true;
-    mTimer.Start(kScanDelay);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kScanDelay);
 
     mCommissioner = aMessageInfo.GetPeerAddr();
 
@@ -169,11 +169,11 @@ void EnergyScanServer::HandleScanResult(otEnergyScanResult *aResult)
 
         if (mCount)
         {
-            mTimer.Start(mPeriod);
+            mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, mPeriod);
         }
         else
         {
-            mTimer.Start(kReportDelay);
+            mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kReportDelay);
         }
     }
 
@@ -238,7 +238,7 @@ void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
         GetNetif().GetNetworkDataLeader().GetCommissioningData() == NULL)
     {
         mActive = false;
-        mTimer.Stop();
+        mTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     }
 }
 

@@ -243,7 +243,7 @@ Interpreter::Interpreter(otInstance *aInstance):
     mLength(8),
     mCount(1),
     mInterval(1000),
-    mPingTimer(aInstance->mIp6.mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
+    mPingTimer(&Interpreter::s_HandlePingTimer, this),
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mResolvingInProgress(0),
 #endif
@@ -1607,7 +1607,7 @@ void Interpreter::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &a
     if (aMessage.Read(aMessage.GetOffset(), sizeof(uint32_t), &timestamp) >=
         static_cast<int>(sizeof(uint32_t)))
     {
-        mServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
+        mServer->OutputFormat(" time=%dms", TimerScheduler::GetNow() - HostSwap32(timestamp));
     }
 
     mServer->OutputFormat("\r\n");
@@ -1632,7 +1632,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
         }
         else
         {
-            mPingTimer.Stop();
+            mPingTimer.Stop(mInstance->mIp6.mMsecTimerScheduler);
         }
 
         ExitNow();
@@ -1690,7 +1690,7 @@ void Interpreter::s_HandlePingTimer(Timer &aTimer)
 void Interpreter::HandlePingTimer()
 {
     otError error = OT_ERROR_NONE;
-    uint32_t timestamp = HostSwap32(Timer::GetNow());
+    uint32_t timestamp = HostSwap32(TimerScheduler::GetNow());
 
     otMessage *message;
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&mMessageInfo);
@@ -1711,7 +1711,7 @@ exit:
 
     if (mCount)
     {
-        mPingTimer.Start(mInterval);
+        mPingTimer.Start(mInstance->mIp6.mMsecTimerScheduler, mInterval);
     }
 }
 #endif

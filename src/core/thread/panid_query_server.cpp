@@ -55,7 +55,7 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
     mChannelMask(0),
     mPanId(Mac::kPanIdBroadcast),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
+    mTimer(&PanIdQueryServer::HandleTimer, this),
     mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
     aThreadNetif.GetCoap().AddResource(mPanIdQuery);
@@ -86,7 +86,7 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
     mChannelMask = channelMask.GetMask();
     mCommissioner = aMessageInfo.GetPeerAddr();
     mPanId = panId.GetPanId();
-    mTimer.Start(kScanDelay);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kScanDelay);
 
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {

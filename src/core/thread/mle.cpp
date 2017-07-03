@@ -71,8 +71,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mAssignLinkMargin(0),
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
-    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
-    mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
+    mParentRequestTimer(&Mle::HandleParentRequestTimer, this),
+    mDelayedResponseTimer(&Mle::HandleDelayedResponseTimer, this),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
     mParentLeaderCost(0),
@@ -535,7 +535,8 @@ otError Mle::BecomeChild(AttachMode aMode)
 
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
 
-    mParentRequestTimer.Start((otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
+    mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler,
+                              (otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
 
 exit:
     otLogFuncExitErr(error);
@@ -563,7 +564,7 @@ otError Mle::SetStateDetached(void)
 
     mRole = OT_DEVICE_ROLE_DETACHED;
     mParentRequestState = kParentIdle;
-    mParentRequestTimer.Stop();
+    mParentRequestTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     netif.GetMeshForwarder().SetRxOff();
     netif.GetMac().SetBeaconEnabled(false);
     netif.GetMle().HandleDetachStart();
@@ -596,7 +597,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
-        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) -
+        mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(mTimeout) -
                                   static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts);
     }
 
@@ -1336,7 +1337,7 @@ void Mle::HandleParentRequestTimer(void)
         {
             SendChildIdRequest();
             mParentRequestState = kChildIdRequest;
-            mParentRequestTimer.Start(kParentRequestChildTimeout);
+            mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kParentRequestChildTimeout);
         }
         else
         {
@@ -1352,7 +1353,7 @@ void Mle::HandleParentRequestTimer(void)
         {
             SendChildIdRequest();
             mParentRequestState = kChildIdRequest;
-            mParentRequestTimer.Start(kParentRequestChildTimeout);
+            mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kParentRequestChildTimeout);
         }
         else
         {
@@ -1365,7 +1366,7 @@ void Mle::HandleParentRequestTimer(void)
                     netif.GetPendingDataset().ApplyConfiguration();
                     mReattachState = kReattachPending;
                     mParentRequestState = kParentRequestStart;
-                    mParentRequestTimer.Start(kParentRequestRouterTimeout);
+                    mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kParentRequestRouterTimeout);
                 }
                 else
                 {
@@ -1420,7 +1421,7 @@ void Mle::HandleParentRequestTimer(void)
                     if (mRole == OT_DEVICE_ROLE_CHILD)
                     {
                         // Restart keep-alive timer as it was disturbed by attachment procedure.
-                        mParentRequestTimer.Start(0);
+                        mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, 0);
                     }
 
                     break;
@@ -1441,7 +1442,7 @@ void Mle::HandleParentRequestTimer(void)
             if (mRole == OT_DEVICE_ROLE_CHILD)
             {
                 // Restart keep-alive timer as it was disturbed by attachment procedure.
-                mParentRequestTimer.Start(0);
+                mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, 0);
             }
         }
         else
@@ -1461,7 +1462,7 @@ void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 void Mle::HandleDelayedResponseTimer(void)
 {
     DelayedResponseHeader delayedResponse;
-    uint32_t now = otPlatAlarmGetNow();
+    uint32_t now = TimerScheduler::GetNow();
     uint32_t nextDelay = 0xffffffff;
     Message *message = mDelayedResponses.GetHead();
     Message *nextMessage = NULL;
@@ -1502,7 +1503,7 @@ void Mle::HandleDelayedResponseTimer(void)
 
     if (nextDelay != 0xffffffff)
     {
-        mDelayedResponseTimer.Start(nextDelay);
+        mDelayedResponseTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, nextDelay);
     }
 }
 
@@ -1565,11 +1566,11 @@ exit:
 
     if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
     {
-        mParentRequestTimer.Start(kParentRequestRouterTimeout);
+        mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kParentRequestRouterTimeout);
     }
     else
     {
-        mParentRequestTimer.Start(kParentRequestChildTimeout);
+        mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kParentRequestChildTimeout);
     }
 
     if (error != OT_ERROR_NONE && message != NULL)
@@ -1698,7 +1699,7 @@ otError Mle::SendChildUpdateRequest(void)
         ExitNow();
     }
 
-    mParentRequestTimer.Start(kUnicastRetransmissionDelay);
+    mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kUnicastRetransmissionDelay);
     mChildUpdateAttempts++;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -1988,7 +1989,7 @@ otError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestinat
 {
     otError error = OT_ERROR_NONE;
     uint32_t alarmFireTime;
-    uint32_t sendTime = otPlatAlarmGetNow() + aDelay;
+    uint32_t sendTime = TimerScheduler::GetNow() + aDelay;
 
     // Append the message with DelayedRespnoseHeader and add to the list.
     DelayedResponseHeader delayedResponse(sendTime, aDestination);
@@ -2002,13 +2003,13 @@ otError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestinat
 
         if (delayedResponse.IsEarlier(alarmFireTime))
         {
-            mDelayedResponseTimer.Start(aDelay);
+            mDelayedResponseTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, aDelay);
         }
     }
     else
     {
         // Otherwise just set the timer.
-        mDelayedResponseTimer.Start(aDelay);
+        mDelayedResponseTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, aDelay);
     }
 
 exit:
@@ -2327,7 +2328,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         }
 
         isNeighbor = true;
-        mParent.SetLastHeard(Timer::GetNow());
+        mParent.SetLastHeard(TimerScheduler::GetNow());
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
@@ -2799,7 +2800,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     }
 
     // Parent Attach Success
-    mParentRequestTimer.Stop();
+    mParentRequestTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     mReattachState = kReattachStop;
     SetStateDetached();
 
@@ -3006,11 +3007,11 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
         {
             netif.GetMeshForwarder().GetDataPollManager().SetAttachMode(false);
             netif.GetMeshForwarder().SetRxOnWhenIdle(false);
-            mParentRequestTimer.Stop();
+            mParentRequestTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
         }
         else
         {
-            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) -
+            mParentRequestTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(mTimeout) -
                                       static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts);
             netif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }

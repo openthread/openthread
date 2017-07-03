@@ -49,6 +49,14 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Dns {
 
+Client::Client(ThreadNetif &aNetif) :
+    ThreadNetifLocator(aNetif),
+    mSocket(aNetif.GetIp6().mUdp),
+    mMessageId(0),
+    mRetransmissionTimer(&Client::HandleRetransmissionTimer, this)
+{
+};
+
 otError Client::Start(void)
 {
     otError error;
@@ -112,7 +120,7 @@ otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, v
     messageInfo = static_cast<const Ip6::MessageInfo *>(aQuery->mMessageInfo);
 
     queryMetadata.mHostname            = aQuery->mHostname;
-    queryMetadata.mTransmissionTime    = Timer::GetNow() + kResponseTimeout;
+    queryMetadata.mTransmissionTime    = TimerScheduler::GetNow() + kResponseTimeout;
     queryMetadata.mSourceAddress       = messageInfo->GetSockAddr();
     queryMetadata.mDestinationPort     = messageInfo->GetPeerPort();
     queryMetadata.mDestinationAddress  = messageInfo->GetPeerAddr();
@@ -155,7 +163,7 @@ exit:
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
     otError error = OT_ERROR_NONE;
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
     Message *messageCopy = NULL;
     uint32_t nextTransmissionTime;
 
@@ -174,12 +182,12 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
 
         if (aQueryMetadata.IsEarlier(nextTransmissionTime))
         {
-            mRetransmissionTimer.Start(aQueryMetadata.mTransmissionTime - now);
+            mRetransmissionTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, aQueryMetadata.mTransmissionTime - now);
         }
     }
     else
     {
-        mRetransmissionTimer.Start(aQueryMetadata.mTransmissionTime - now);
+        mRetransmissionTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, aQueryMetadata.mTransmissionTime - now);
     }
 
 exit:
@@ -200,7 +208,7 @@ void Client::DequeueMessage(Message &aMessage)
     if (mRetransmissionTimer.IsRunning() && (mPendingQueries.GetHead() == NULL))
     {
         // No more requests pending, stop the timer.
-        mRetransmissionTimer.Stop();
+        mRetransmissionTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     }
 
     // Free the message memory.
@@ -389,7 +397,7 @@ void Client::HandleRetransmissionTimer(Timer &aTimer)
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
     uint32_t nextDelta = 0xffffffff;
     QueryMetadata queryMetadata;
     Message *message = mPendingQueries.GetHead();
@@ -440,7 +448,7 @@ void Client::HandleRetransmissionTimer(void)
 
     if (nextDelta != 0xffffffff)
     {
-        mRetransmissionTimer.Start(nextDelta);
+        mRetransmissionTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, nextDelta);
     }
 }
 

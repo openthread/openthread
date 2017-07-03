@@ -70,8 +70,8 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mState(OT_COMMISSIONER_STATE_DISABLED),
     mJoinerPort(0),
     mJoinerRloc(0),
-    mJoinerExpirationTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleJoinerExpirationTimer, this),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mJoinerExpirationTimer(HandleJoinerExpirationTimer, this),
+    mTimer(HandleTimer, this),
     mSessionId(0),
     mTransmitAttempts(0),
     mRelayReceive(OT_URI_PATH_RELAY_RX, &Commissioner::HandleRelayReceive, this),
@@ -131,7 +131,7 @@ otError Commissioner::Stop(void)
     RemoveCoapResources();
     mTransmitAttempts = 0;
 
-    mTimer.Stop();
+    mTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
     GetNetif().GetDtls().Stop();
 
@@ -232,7 +232,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *
 
         (void)strlcpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk));
         mJoiners[i].mValid = true;
-        mJoiners[i].mExpirationTime = Timer::GetNow() + Timer::SecToMsec(aTimeout);
+        mJoiners[i].mExpirationTime = TimerScheduler::GetNow() + Timer::SecToMsec(aTimeout);
 
         UpdateJoinerExpirationTimer();
 
@@ -275,7 +275,7 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t 
 
         if (aDelay > 0)
         {
-            uint32_t now = Timer::GetNow();
+            uint32_t now = TimerScheduler::GetNow();
 
             if ((static_cast<int32_t>(mJoiners[i].mExpirationTime - now) > 0) &&
                 (static_cast<uint32_t>(mJoiners[i].mExpirationTime - now) > Timer::SecToMsec(aDelay)))
@@ -343,7 +343,7 @@ void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
 
 void Commissioner::HandleJoinerExpirationTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
 
     // Remove Joiners.
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
@@ -365,7 +365,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
 
 void Commissioner::UpdateJoinerExpirationTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
     uint32_t nextTimeout = 0xffffffff;
 
     // Check if timer should be set for next Joiner.
@@ -387,12 +387,12 @@ void Commissioner::UpdateJoinerExpirationTimer(void)
     if (nextTimeout != 0xffffffff)
     {
         // Update the timer to the timeout of the next Joiner.
-        mJoinerExpirationTimer.Start(nextTimeout);
+        mJoinerExpirationTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, nextTimeout);
     }
     else
     {
         // No Joiners, stop the timer.
-        mJoinerExpirationTimer.Stop();
+        mJoinerExpirationTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     }
 }
 
@@ -655,7 +655,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     mState = OT_COMMISSIONER_STATE_ACTIVE;
 
     mTransmitAttempts = 0;
-    mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(kKeepAliveTimeout) / 2);
 
 exit:
 
@@ -667,7 +667,7 @@ exit:
         }
         else
         {
-            mTimer.Start(Timer::SecToMsec(kPetitionRetryDelay));
+            mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(kPetitionRetryDelay));
         }
     }
 
@@ -748,7 +748,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message 
 
     VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = OT_COMMISSIONER_STATE_DISABLED);
 
-    mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(kKeepAliveTimeout) / 2);
 
 exit:
 

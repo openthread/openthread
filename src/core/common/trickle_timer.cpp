@@ -44,13 +44,14 @@
 namespace ot {
 
 TrickleTimer::TrickleTimer(
-    TimerScheduler &aScheduler,
+    ThreadNetif &aThreadNetif,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     uint32_t aRedundancyConstant,
 #endif
     Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
     :
-    Timer(aScheduler, HandleTimerFired, aContext),
+    ThreadNetifLocator(aThreadNetif),
+    Timer(HandleTimerFired, aContext),
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     k(aRedundancyConstant),
     c(0),
@@ -97,7 +98,7 @@ void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMod
 void TrickleTimer::Stop(void)
 {
     mPhase = kPhaseDormant;
-    Timer::Stop();
+    Timer::Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 }
 
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
@@ -117,7 +118,7 @@ void TrickleTimer::IndicateInconsistent(void)
         I = Imin;
 
         // Stop the existing timer
-        Timer::Stop();
+        Timer::Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
         // Start a new interval
         StartNewInterval();
@@ -156,7 +157,7 @@ void TrickleTimer::StartNewInterval(void)
     }
 
     // Start the timer for 't' milliseconds from now
-    Timer::Start(t);
+    Timer::Start(GetNetif().GetIp6().mMsecTimerScheduler, t);
 }
 
 void TrickleTimer::HandleTimerFired(Timer &aTimer)
@@ -204,7 +205,7 @@ void TrickleTimer::HandleTimerFired(void)
                 mPhase = kPhaseInterval;
 
                 // Start the time for 'I - t' milliseconds
-                Timer::Start(I - t);
+                Timer::Start(GetNetif().GetIp6().mMsecTimerScheduler, I - t);
             }
         }
 

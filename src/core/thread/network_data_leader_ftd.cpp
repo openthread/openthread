@@ -63,7 +63,7 @@ namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
     LeaderBase(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &Leader::HandleTimer, this),
+    mTimer(&Leader::HandleTimer, this),
     mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this),
     mCommissioningDataGet(OT_URI_PATH_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this),
     mCommissioningDataSet(OT_URI_PATH_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)
@@ -897,14 +897,14 @@ otError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
         if (prefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
             context->ClearCompress();
-            mContextLastUsed[context->GetContextId() - kMinContextId] = Timer::GetNow();
+            mContextLastUsed[context->GetContextId() - kMinContextId] = TimerScheduler::GetNow();
 
             if (mContextLastUsed[context->GetContextId() - kMinContextId] == 0)
             {
                 mContextLastUsed[context->GetContextId() - kMinContextId] = 1;
             }
 
-            mTimer.Start(kStateUpdatePeriod);
+            mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kStateUpdatePeriod);
         }
         else
         {
@@ -1066,7 +1066,7 @@ void Leader::HandleTimer(void)
             continue;
         }
 
-        if ((Timer::GetNow() - mContextLastUsed[i]) >= Timer::SecToMsec(mContextIdReuseDelay))
+        if ((TimerScheduler::GetNow() - mContextLastUsed[i]) >= Timer::SecToMsec(mContextIdReuseDelay))
         {
             FreeContext(kMinContextId + i);
         }
@@ -1078,7 +1078,7 @@ void Leader::HandleTimer(void)
 
     if (contextsWaiting)
     {
-        mTimer.Start(kStateUpdatePeriod);
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kStateUpdatePeriod);
     }
 }
 

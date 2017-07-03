@@ -62,8 +62,8 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
-    mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleDiscoverTimer, this),
-    mReassemblyTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleReassemblyTimer, this),
+    mDiscoverTimer(&MeshForwarder::HandleDiscoverTimer, this),
+    mReassemblyTimer(&MeshForwarder::HandleReassemblyTimer, this),
     mMessageNextOffset(0),
     mSendMessageFrameCounter(0),
     mSendMessage(NULL),
@@ -119,7 +119,7 @@ otError MeshForwarder::Stop(void)
     VerifyOrExit(mEnabled == true);
 
     mDataPollManager.StopPolling();
-    mReassemblyTimer.Stop();
+    mReassemblyTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
     if (mScanning)
     {
@@ -1620,7 +1620,8 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
             mSendBusy = true;
-            mDiscoverTimer.Start(static_cast<uint16_t>(Mac::kScanDurationDefault));
+            mDiscoverTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler,
+                                 static_cast<uint16_t>(Mac::kScanDurationDefault));
             ExitNow();
         }
     }
@@ -1977,7 +1978,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
 
         if (!mReassemblyTimer.IsRunning())
         {
-            mReassemblyTimer.Start(kStateUpdatePeriod);
+            mReassemblyTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kStateUpdatePeriod);
         }
     }
     else
@@ -2105,7 +2106,7 @@ void MeshForwarder::HandleReassemblyTimer(void)
 
     if (mReassemblyList.GetHead() != NULL)
     {
-        mReassemblyTimer.Start(kStateUpdatePeriod);
+        mReassemblyTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kStateUpdatePeriod);
     }
 }
 
@@ -2189,7 +2190,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     VerifyOrExit(netif.GetMle().GetRole() != OT_DEVICE_ROLE_DETACHED);
 
     VerifyOrExit((child = netif.GetMle().GetChild(aMacSource)) != NULL);
-    child->SetLastHeard(Timer::GetNow());
+    child->SetLastHeard(TimerScheduler::GetNow());
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
 

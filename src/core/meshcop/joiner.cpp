@@ -74,7 +74,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mVendorModel(NULL),
     mVendorSwVersion(NULL),
     mVendorData(NULL),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &Joiner::HandleTimer, this),
+    mTimer(&Joiner::HandleTimer, this),
     mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
     aNetif.GetCoap().AddResource(mJoinerEntrust);
@@ -251,7 +251,7 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected)
         {
             mState = kStateConnected;
             SendJoinerFinalize();
-            mTimer.Start(kTimeout);
+            mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kTimeout);
         }
         else
         {
@@ -369,7 +369,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     VerifyOrExit(state.IsValid());
 
     mState = kStateEntrust;
-    mTimer.Start(kTimeout);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kTimeout);
 
     otLogInfoMeshCoP(GetInstance(), "received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
 #if OPENTHREAD_ENABLE_CERT_LOG
@@ -443,7 +443,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     SendJoinerEntrustResponse(aHeader, aMessageInfo);
 
     // Delay extended address configuration to allow DTLS wrap up.
-    mTimer.Start(kConfigExtAddressDelay);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kConfigExtAddressDelay);
 
 exit:
 

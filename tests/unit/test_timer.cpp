@@ -85,8 +85,8 @@ void InitCounters(void)
 class TestTimer: public ot::Timer
 {
 public:
-    TestTimer(otInstance *aInstance):
-        ot::Timer(aInstance->mIp6.mTimerScheduler, TestTimer::HandleTimerFired, NULL),
+    TestTimer():
+        ot::Timer(TestTimer::HandleTimerFired, NULL),
         mFiredCounter(0)
     { }
 
@@ -108,14 +108,14 @@ private:
 };
 
 /**
- * Test the TimerScheduler's behavior of one timer started and fired.
+ * Test the MsecTimerScheduler's behavior of one timer started and fired.
  */
 int TestOneTimer(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
     otInstance *instance = testInitInstance();
-    TestTimer timer(instance);
+    TestTimer timer;
 
     // Test one Timer basic operation.
 
@@ -125,7 +125,7 @@ int TestOneTimer(void)
     printf("TestOneTimer() ");
 
     sNow = kTimeT0;
-    timer.Start(kTimerInterval);
+    timer.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
@@ -149,7 +149,7 @@ int TestOneTimer(void)
     InitCounters();
 
     sNow = 0 - (kTimerInterval - 2);
-    timer.Start(kTimerInterval);
+    timer.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,        "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,        "TestOneTimer: Stop CallCount Failed.\n");
@@ -173,7 +173,7 @@ int TestOneTimer(void)
     InitCounters();
 
     sNow = kTimeT0;
-    timer.Start(kTimerInterval);
+    timer.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
@@ -197,7 +197,7 @@ int TestOneTimer(void)
     InitCounters();
 
     sNow = kTimeT0;
-    timer.Start(kTimerInterval);
+    timer.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
@@ -234,15 +234,15 @@ int TestOneTimer(void)
 }
 
 /**
- * Test the TimerScheduler's behavior of two timers started and fired.
+ * Test the MsecTimerScheduler's behavior of two timers started and fired.
  */
 int TestTwoTimers(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
     otInstance *instance = testInitInstance();
-    TestTimer timer1(instance);
-    TestTimer timer2(instance);
+    TestTimer timer1;
+    TestTimer timer2;
 
     InitTestTimer();
     printf("TestTwoTimers() ");
@@ -252,7 +252,7 @@ int TestTwoTimers(void)
     InitCounters();
 
     sNow = kTimeT0;
-    timer1.Start(kTimerInterval);
+    timer1.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
@@ -264,7 +264,7 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval;
 
-    timer2.Start(kTimerInterval);
+    timer2.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
@@ -304,7 +304,7 @@ int TestTwoTimers(void)
     timer2.ResetFiredCounter();
 
     sNow = kTimeT0;
-    timer1.Start(kTimerInterval);
+    timer1.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
@@ -316,7 +316,7 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval;
 
-    timer2.StartAt(kTimeT0, kTimerInterval - 2);  // Timer 2 is even before timer 1
+    timer2.StartAt(instance->mIp6.mMsecTimerScheduler, kTimeT0, kTimerInterval - 2);  // Timer 2 is even before timer 1
 
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,   "TestTwoTimers: Handler CallCount Failed.\n");
     VerifyOrQuit(timer1.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
@@ -351,7 +351,7 @@ int TestTwoTimers(void)
     timer2.ResetFiredCounter();
 
     sNow = kTimeT0;
-    timer1.Start(kTimerInterval);
+    timer1.Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
@@ -363,7 +363,7 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval + 5;
 
-    timer2.Start(ot::Timer::kMaxDt);
+    timer2.Start(instance->mIp6.mMsecTimerScheduler, ot::Timer::kMaxDt);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
@@ -403,7 +403,7 @@ int TestTwoTimers(void)
 }
 
 /**
- * Test the TimerScheduler's behavior of ten timers started and fired.
+ * Test the MsecTimerScheduler's behavior of ten timers started and fired.
  *
  * `aTimeShift` is added to the t0 and trigger times for all timers. It can be used to check the ten timer behavior
  * at different start time (e.g., around a 32-bit wrap).
@@ -526,16 +526,16 @@ static void TenTimers(uint32_t aTimeShift)
 
     otInstance *instance = testInitInstance();
 
-    TestTimer timer0(instance);
-    TestTimer timer1(instance);
-    TestTimer timer2(instance);
-    TestTimer timer3(instance);
-    TestTimer timer4(instance);
-    TestTimer timer5(instance);
-    TestTimer timer6(instance);
-    TestTimer timer7(instance);
-    TestTimer timer8(instance);
-    TestTimer timer9(instance);
+    TestTimer timer0;
+    TestTimer timer1;
+    TestTimer timer2;
+    TestTimer timer3;
+    TestTimer timer4;
+    TestTimer timer5;
+    TestTimer timer6;
+    TestTimer timer7;
+    TestTimer timer8;
+    TestTimer timer9;
     TestTimer *timers[kNumTimers] =
     {
         &timer0,
@@ -561,10 +561,10 @@ static void TenTimers(uint32_t aTimeShift)
     for (i = 0; i < kNumTimers ; i++)
     {
         sNow = kTimeT0[i] + aTimeShift;
-        timers[i]->Start(kTimerInterval[i]);
+        timers[i]->Start(instance->mIp6.mMsecTimerScheduler, kTimerInterval[i]);
     }
 
-    // given the order in which timers are started, the TimerScheduler should call otPlatAlarmStartAt 2 times.
+    // given the order in which timers are started, the MsecTimerScheduler should call otPlatAlarmStartAt 2 times.
     // one for timer[0] and one for timer[5] which will supercede timer[0].
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTenTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTenTimer: Stop CallCount Failed.\n");

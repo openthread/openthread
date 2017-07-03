@@ -64,7 +64,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
     mAddressNotification(OT_URI_PATH_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
     mIcmpHandler(&AddressResolver::HandleIcmpReceive, this),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AddressResolver::HandleTimer, this)
+    mTimer(&AddressResolver::HandleTimer, this)
 {
     Clear();
 
@@ -260,7 +260,7 @@ exit:
 
     if (mTimer.IsRunning() == false)
     {
-        mTimer.Start(kStateUpdatePeriod);
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kStateUpdatePeriod);
     }
 
     if (error != OT_ERROR_NONE && message != NULL)
@@ -557,7 +557,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
             }
 
             mlIidTlv.SetIid(children[i].GetExtAddress());
-            lastTransactionTimeTlv.SetTime(Timer::GetNow() - children[i].GetLastHeard());
+            lastTransactionTimeTlv.SetTime(TimerScheduler::GetNow() - children[i].GetLastHeard());
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }
@@ -660,7 +660,7 @@ void AddressResolver::HandleTimer()
 
     if (continueTimer)
     {
-        mTimer.Start(kStateUpdatePeriod);
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kStateUpdatePeriod);
     }
 }
 

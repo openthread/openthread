@@ -61,7 +61,7 @@ KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mKeyRotationTime(kDefaultKeyRotationTime),
     mKeySwitchGuardTime(kDefaultKeySwitchGuardTime),
     mKeySwitchGuardEnabled(false),
-    mKeyRotationTimer(aThreadNetif.GetIp6().mTimerScheduler, &KeyManager::HandleKeyRotationTimer, this),
+    mKeyRotationTimer(&KeyManager::HandleKeyRotationTimer, this),
     mKekFrameCounter(0),
     mSecurityPolicyFlags(0xff)
 {
@@ -75,7 +75,7 @@ void KeyManager::Start(void)
 
 void KeyManager::Stop(void)
 {
-    mKeyRotationTimer.Stop();
+    mKeyRotationTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 }
 
 #if OPENTHREAD_FTD
@@ -246,7 +246,7 @@ exit:
 void KeyManager::StartKeyRotationTimer(void)
 {
     mHoursSinceKeyRotation = 0;
-    mKeyRotationTimer.Start(kOneHourIntervalInMsec);
+    mKeyRotationTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kOneHourIntervalInMsec);
 }
 
 void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
@@ -265,7 +265,8 @@ void KeyManager::HandleKeyRotationTimer(void)
     // rotation timer (and the `mHoursSinceKeyRotation`) if it updates the key
     // sequence.
 
-    mKeyRotationTimer.StartAt(mKeyRotationTimer.GetFireTime(), kOneHourIntervalInMsec);
+    mKeyRotationTimer.StartAt(GetNetif().GetIp6().mMsecTimerScheduler, mKeyRotationTimer.GetFireTime(),
+                              kOneHourIntervalInMsec);
 
     if (mHoursSinceKeyRotation >= mKeyRotationTime)
     {

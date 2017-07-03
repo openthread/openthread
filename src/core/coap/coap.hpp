@@ -253,7 +253,7 @@ public:
      *
      */
     EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo):
-        mDequeueTime(Timer::GetNow() + Timer::SecToMsec(kExchangeLifetime)),
+        mDequeueTime(TimerScheduler::GetNow() + Timer::SecToMsec(kExchangeLifetime)),
         mMessageInfo(aMessageInfo) {}
 
     /**
@@ -324,7 +324,7 @@ private:
  * This class caches CoAP responses to implement message deduplication.
  *
  */
-class ResponsesQueue
+class ResponsesQueue: public ThreadNetifLocator
 {
 public:
     /**

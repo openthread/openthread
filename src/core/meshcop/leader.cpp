@@ -60,7 +60,7 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
     mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this),
     mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mTimer(HandleTimer, this),
     mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal),
     mSessionId(0xffff)
 {
@@ -111,7 +111,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     mCommissionerId = commissionerId;
 
     state = StateTlv::kAccept;
-    mTimer.Start(Timer::SecToMsec(kTimeoutLeaderPetition));
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(kTimeoutLeaderPetition));
 
 exit:
     OT_UNUSED_VARIABLE(aMessageInfo);
@@ -198,7 +198,7 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     else
     {
         responseState = StateTlv::kAccept;
-        mTimer.Start(Timer::SecToMsec(kTimeoutLeaderPetition));
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(kTimeoutLeaderPetition));
     }
 
     SendKeepAliveResponse(aHeader, aMessageInfo, responseState);
@@ -314,7 +314,7 @@ void Leader::SetEmptyCommissionerData(void)
 
 void Leader::ResignCommissioner(void)
 {
-    mTimer.Stop();
+    mTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     SetEmptyCommissionerData();
 
     otLogInfoMeshCoP(GetInstance(), "commissioner inactive");

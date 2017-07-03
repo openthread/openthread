@@ -32,6 +32,7 @@
 #include <openthread/dns.h>
 #include <openthread/types.h>
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "net/dns_headers.hpp"
@@ -147,7 +148,7 @@ private:
  * This class implements DNS client.
  *
  */
-class Client
+class Client: public ThreadNetifLocator
 {
 public:
     /**
@@ -156,11 +157,7 @@ public:
      * @param[in]  aNetif    A reference to the network interface that DNS client should be assigned to.
      *
      */
-    Client(Ip6::Netif &aNetif):
-        mSocket(aNetif.GetIp6().mUdp),
-        mMessageId(0),
-        mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Client::HandleRetransmissionTimer, this) {
-    };
+    explicit Client(ThreadNetif &aNetif);
 
     /**
      * This method starts the DNS client.
