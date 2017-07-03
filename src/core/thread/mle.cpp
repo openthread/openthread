@@ -774,6 +774,10 @@ otError Mle::SetRloc16(uint16_t aRloc16)
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
         netif.AddUnicastAddress(mMeshLocal16);
+
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+        netif.GetNetworkDataLocal().UpdateNetworkDataRloc();
+#endif
     }
 
     netif.GetMac().SetShortAddress(aRloc16);
@@ -1282,7 +1286,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
-        netif.GetNetworkDataLocal().SendServerDataNotification();
+        netif.GetNetworkDataLocal().UpdateConsistency();
 #endif
     }
 
@@ -2349,6 +2353,10 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
             delay = otPlatRandomGet() % kMleMaxResponseDelay;
             SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
         }
+
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+        netif.GetNetworkDataLocal().SendServerDataNotification();
+#endif
     }
 
 exit:

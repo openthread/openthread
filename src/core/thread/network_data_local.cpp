@@ -48,6 +48,7 @@ namespace NetworkData {
 
 Local::Local(ThreadNetif &aThreadNetif):
     NetworkData(aThreadNetif, true),
+    mUpdating(false),
     mOldRloc(Mac::kShortAddrInvalid)
 {
 }
@@ -78,6 +79,11 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
     brTlv->GetEntry(0)->SetPreference(aPrf);
     brTlv->GetEntry(0)->SetFlags(aFlags);
 
+    if (GetNetif().GetMle().IsAttached())
+    {
+        brTlv->GetEntry(0)->SetRloc(GetNetif().GetMle().GetRloc16());
+    }
+
     if (aStable)
     {
         prefixTlv->SetStable();
@@ -85,6 +91,7 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
     }
 
     ClearResubmitDelayTimer();
+    mUpdating = true;
 
     otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
 
@@ -101,6 +108,7 @@ otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
     VerifyOrExit(FindBorderRouter(*tlv) != NULL, error = OT_ERROR_NOT_FOUND);
     Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
     ClearResubmitDelayTimer();
+    mUpdating = true;
 
 exit:
     otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
@@ -126,6 +134,11 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
     hasRouteTlv->GetEntry(0)->Init();
     hasRouteTlv->GetEntry(0)->SetPreference(aPrf);
 
+    if (GetNetif().GetMle().IsAttached())
+    {
+        hasRouteTlv->GetEntry(0)->SetRloc(GetNetif().GetMle().GetRloc16());
+    }
+
     if (aStable)
     {
         prefixTlv->SetStable();
@@ -133,6 +146,7 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
     }
 
     ClearResubmitDelayTimer();
+    mUpdating = true;
 
     otDumpDebgNetData(GetInstance(), "add route done", mTlvs, mLength);
     return OT_ERROR_NONE;
@@ -147,6 +161,7 @@ otError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLengt
     VerifyOrExit(FindHasRoute(*tlv) != NULL, error = OT_ERROR_NOT_FOUND);
     Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
     ClearResubmitDelayTimer();
+    mUpdating = true;
 
 exit:
     otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
@@ -236,6 +251,8 @@ otError Local::SendServerDataNotification(void)
     otError error = OT_ERROR_NONE;
     uint16_t rloc = mle.GetRloc16();
 
+    VerifyOrExit(mle.IsAttached(), error = OT_ERROR_INVALID_STATE);
+
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
@@ -249,9 +266,13 @@ otError Local::SendServerDataNotification(void)
 
 #endif
 
-    UpdateRloc();
+    // rloc change would trigger server data registraiton
+    if (mOldRloc != Mac::kShortAddrInvalid && mOldRloc != rloc)
+    {
+        mUpdating = true;
+    }
 
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), ClearResubmitDelayTimer());
+    VerifyOrExit(mUpdating);
 
     if (mOldRloc == rloc)
     {
@@ -263,6 +284,34 @@ otError Local::SendServerDataNotification(void)
 
 exit:
     return error;
+}
+
+void Local::UpdateNetworkDataRloc()
+{
+    VerifyOrExit(GetNetif().GetMle().IsAttached());
+    VerifyOrExit(mLength > 0);
+    UpdateRloc();
+
+exit:
+    return;
+}
+
+void Local::UpdateConsistency(void)
+{
+    // only check consistency when local network data has update (added or removed)
+    VerifyOrExit(mUpdating);
+
+    // only check consistency and clear mUpdating flag if consistent for attached device, not attaching device
+    VerifyOrExit(GetNetif().GetMle().IsAttached());
+
+    if (IsOnMeshPrefixConsistent() && IsExternalRouteConsistent())
+    {
+        ClearResubmitDelayTimer();
+        mUpdating = false;
+    }
+
+exit:
+    return;
 }
 
 }  // namespace NetworkData

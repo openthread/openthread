@@ -1511,10 +1511,6 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
     UpdateRoutes(route, routerId);
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
-    netif.GetNetworkDataLocal().SendServerDataNotification();
-#endif
-
 exit:
     return error;
 }
