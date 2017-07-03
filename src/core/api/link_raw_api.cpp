@@ -270,7 +270,7 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     mTransmitDoneCallback(NULL),
     mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-    , mTimer(aInstance.mIp6.mTimerScheduler, &LinkRaw::HandleTimer, this)
+    , mTimer(&LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -374,7 +374,7 @@ otError LinkRaw::DoTransmit(otRadioFrame *aFrame)
     {
         otLogDebgPlat(aInstance, "LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
-        mTimer.Start(Mac::kAckTimeout);
+        mTimer.Start(mInstance.mIp6.mMsecTimerScheduler, Mac::kAckTimeout);
     }
 
 #endif
@@ -387,7 +387,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otErr
     otLogDebgPlat(aInstance, "LinkRaw Transmit Done (err=0x%x)", aError);
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-    mTimer.Stop();
+    mTimer.Stop(mInstance.mIp6.mMsecTimerScheduler);
 #endif
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
@@ -457,7 +457,7 @@ otError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLink
         // Reset the RSSI value and start scanning
         mEnergyScanRssi = kInvalidRssiValue;
         mTimerReason = kTimerReasonEnergyScanComplete;
-        mTimer.Start(aScanDuration);
+        mTimer.Start(mInstance.mIp6.mMsecTimerScheduler, aScanDuration);
         mEnergyScanTask.Post();
 #else
         // Do the HW offloaded energy scan
@@ -575,7 +575,7 @@ void LinkRaw::StartCsmaBackoff(void)
     otPlatUsecAlarmStartAt(&mInstance, &now, &delay, &HandleTimer, this);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     mTimerReason = kTimerReasonRetransmitTimeout;
-    mTimer.Start(backoff / 1000UL);
+    mTimer.Start(mInstance.mIp6.mMsecTimerScheduler, backoff / 1000UL);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
 
 }

@@ -58,7 +58,7 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mPeriod(0),
     mCount(0),
     mChannel(0),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AnnounceBeginServer::HandleTimer, this),
+    mTimer(&AnnounceBeginServer::HandleTimer, this),
     mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
     aThreadNetif.GetCoap().AddResource(mAnnounceBegin);
@@ -84,7 +84,7 @@ otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount,
         VerifyOrExit(mChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
     }
 
-    mTimer.Start(mPeriod);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, mPeriod);
 
 exit:
     return error;
@@ -140,7 +140,7 @@ void AnnounceBeginServer::HandleTimer(void)
     {
         if (mChannelMask & (1 << mChannel))
         {
-            mTimer.Start(mPeriod);
+            mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, mPeriod);
             break;
         }
 

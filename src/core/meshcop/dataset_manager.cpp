@@ -66,7 +66,7 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType,
     ThreadNetifLocator(aThreadNetif),
     mLocal(aThreadNetif.GetInstance(), aType),
     mNetwork(aThreadNetif.GetInstance(), aType),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, aTimerHander, this),
+    mTimer(aTimerHander, this),
     mUriSet(aUriSet),
     mUriGet(aUriGet)
 {
@@ -179,7 +179,7 @@ otError DatasetManager::Set(const otOperationalDataset &aDataset, uint8_t &aFlag
     {
     case OT_DEVICE_ROLE_CHILD:
     case OT_DEVICE_ROLE_ROUTER:
-        mTimer.Start(1000);
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, 1000);
         break;
 
     case OT_DEVICE_ROLE_LEADER:
@@ -250,7 +250,7 @@ void DatasetManager::HandleNetworkUpdate(uint8_t &aFlags)
     }
     else if (compare < 0)
     {
-        mTimer.Start(1000);
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, 1000);
     }
 }
 
@@ -281,7 +281,7 @@ void DatasetManager::HandleTimer(void)
     }
     else
     {
-        mTimer.Start(1000);
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, 1000);
     }
 
 exit:
@@ -1004,7 +1004,7 @@ static PendingDatasetBase &GetPendingDatasetOwner(const Context &aContext)
 PendingDatasetBase::PendingDatasetBase(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OT_URI_PATH_PENDING_SET, OT_URI_PATH_PENDING_GET,
                    &PendingDatasetBase::HandleTimer),
-    mDelayTimer(aThreadNetif.GetIp6().mTimerScheduler, &PendingDatasetBase::HandleDelayTimer, this),
+    mDelayTimer(&PendingDatasetBase::HandleDelayTimer, this),
     mLocalTime(0),
     mNetworkTime(0),
     mResourceGet(OT_URI_PATH_PENDING_GET, &PendingDatasetBase::HandleGet, this)
@@ -1080,13 +1080,13 @@ void PendingDatasetBase::ResetDelayTimer(uint8_t aFlags)
 
     if (aFlags & kFlagLocalUpdated)
     {
-        mLocalTime = Timer::GetNow();
+        mLocalTime = TimerScheduler::GetNow();
     }
 
     if (aFlags & kFlagNetworkUpdated)
     {
-        mNetworkTime = Timer::GetNow();
-        mDelayTimer.Stop();
+        mNetworkTime = TimerScheduler::GetNow();
+        mDelayTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
         if ((delayTimer = static_cast<DelayTimerTlv *>(mNetwork.Get(Tlv::kDelayTimer))) != NULL)
         {
@@ -1096,7 +1096,7 @@ void PendingDatasetBase::ResetDelayTimer(uint8_t aFlags)
             }
             else
             {
-                mDelayTimer.Start(delayTimer->GetDelayTimer());
+                mDelayTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, delayTimer->GetDelayTimer());
                 otLogInfoMeshCoP(GetInstance(), "delay timer started");
             }
         }
@@ -1112,7 +1112,7 @@ void PendingDatasetBase::UpdateDelayTimer(void)
 void PendingDatasetBase::UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTime)
 {
     DelayTimerTlv *delayTimer;
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
     uint32_t elapsed;
     uint32_t delay;
 

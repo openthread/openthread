@@ -108,18 +108,18 @@ void Mac::StartCsmaBackoff(void)
 
         otPlatUsecAlarmStartAt(GetInstance(), &now, &delay, &Mac::HandleBeginTransmit, this);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-        mBackoffTimer.Start(backoff / 1000UL);
+        mBackoffTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, backoff / 1000UL);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     }
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
-    mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
+    mMacTimer(&Mac::HandleMacTimer, this),
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
+    mBackoffTimer(&Mac::HandleBeginTransmit, this),
 #endif
-    mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
+    mReceiveTimer(&Mac::HandleReceiveTimer, this),
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
     mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
@@ -298,7 +298,7 @@ void Mac::StartEnergyScan(void)
     if (!(otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN))
     {
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mMacTimer.Start(mScanDuration);
+        mMacTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, mScanDuration);
         mEnergyScanSampleRssiTask.Post();
         NextOperation();
     }
@@ -848,7 +848,7 @@ void Mac::HandleBeginTransmit(void)
 
     if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_ACK_TIMEOUT))
     {
-        mMacTimer.Start(kAckTimeout);
+        mMacTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kAckTimeout);
         otLogDebgMac(GetInstance(), "Ack timer start");
     }
 
@@ -893,7 +893,7 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFr
 
 void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError)
 {
-    mMacTimer.Stop();
+    mMacTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
     mCounters.mTxTotal++;
 
@@ -944,7 +944,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError
             (commandId == Frame::kMacCmdDataRequest) && (aRxPending))
         {
             mWaitingForData = true;
-            mReceiveTimer.Start(kDataPollTimeout);
+            mReceiveTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kDataPollTimeout);
         }
     }
 
@@ -991,7 +991,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
     Address addr;
     bool framePending = false;
 
-    mMacTimer.Stop();
+    mMacTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
     mCounters.mTxTotal++;
 
@@ -1054,7 +1054,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
             (commandId == Frame::kMacCmdDataRequest) && (framePending))
         {
             mWaitingForData = true;
-            mReceiveTimer.Start(kDataPollTimeout);
+            mReceiveTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kDataPollTimeout);
         }
     }
 
@@ -1083,7 +1083,7 @@ otError Mac::RadioTransmit(Frame *aSendFrame)
     if (!mRxOnWhenIdle)
     {
         // Cancel delay sleep timer
-        mReceiveTimer.Stop();
+        mReceiveTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
         // Delay sleep if we have another frame pending to transmit
         mDelaySleep = aSendFrame->GetFramePending();
@@ -1101,7 +1101,7 @@ otError Mac::RadioReceive(uint8_t aChannel)
     if (!mRxOnWhenIdle)
     {
         // Cancel delay sleep timer
-        mReceiveTimer.Stop();
+        mReceiveTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     }
 
 #endif
@@ -1116,7 +1116,7 @@ void Mac::RadioSleep(void)
     if (mDelaySleep)
     {
         // Restart delay sleep timer
-        mReceiveTimer.Start(kSleepDelay);
+        mReceiveTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kSleepDelay);
     }
     else
 #endif
@@ -1273,7 +1273,7 @@ void Mac::SentFrame(otError aError)
     {
     case kStateActiveScan:
         mCounters.mTxBeaconRequest++;
-        mMacTimer.Start(mScanDuration);
+        mMacTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, mScanDuration);
         break;
 
     case kStateTransmitBeacon:
@@ -1644,7 +1644,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
             if (!mRxOnWhenIdle)
             {
-                mReceiveTimer.Stop();
+                mReceiveTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
                 scheduleNextTrasmission = true;
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
                 mDelaySleep = aFrame->GetFramePending();

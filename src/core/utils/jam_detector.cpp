@@ -52,7 +52,7 @@ JamDetector::JamDetector(ThreadNetif &aNetif) :
     mHandler(NULL),
     mContext(NULL),
     mRssiThreshold(kDefaultRssiThreshold),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &JamDetector::HandleTimer, this),
+    mTimer(&JamDetector::HandleTimer, this),
     mHistoryBitmap(0),
     mCurSecondStartTime(0),
     mSampleInterval(0),
@@ -76,13 +76,13 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
 
     mEnabled = true;
 
-    mCurSecondStartTime = Timer::GetNow();
+    mCurSecondStartTime = TimerScheduler::GetNow();
     mAlwaysAboveThreshold = true;
     mHistoryBitmap = 0;
     mJamState = false;
     mSampleInterval = kMaxSampleInterval;
 
-    mTimer.Start(kMinSampleInterval);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kMinSampleInterval);
 
 exit:
     return error;
@@ -97,7 +97,7 @@ otError JamDetector::Stop(void)
     mEnabled = false;
     mJamState = false;
 
-    mTimer.Stop();
+    mTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 
 exit:
     return error;
@@ -176,7 +176,7 @@ void JamDetector::HandleTimer(void)
         }
     }
 
-    mTimer.Start(mSampleInterval + (otPlatRandomGet() % kMaxRandomDelay));
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, mSampleInterval + (otPlatRandomGet() % kMaxRandomDelay));
 
 exit:
     return;
@@ -184,7 +184,7 @@ exit:
 
 void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerScheduler::GetNow();
 
     // If the RSSI is ever below the threshold, update mAlwaysAboveThreshold
     // for current second interval.

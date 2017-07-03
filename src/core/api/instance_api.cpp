@@ -64,11 +64,6 @@ ot::MeshForwarder &otGetMeshForwarder(void)
     return sInstance->mThreadNetif.GetMeshForwarder();
 }
 
-ot::TimerScheduler &otGetTimerScheduler(void)
-{
-    return sInstance->mIp6.mTimerScheduler;
-}
-
 ot::TaskletScheduler &otGetTaskletScheduler(void)
 {
     return sInstance->mIp6.mTaskletScheduler;

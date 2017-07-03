@@ -48,7 +48,7 @@ namespace ot {
 
 class ThreadNetif;
 class MeshForwarder;
-class TimerScheduler;
+class MsecTimerScheduler;
 class TaskletScheduler;
 namespace Ip6 { class Ip6; }
 
@@ -78,14 +78,6 @@ ot::ThreadNetif &otGetThreadNetif(void);
  *
  */
 ot::MeshForwarder &otGetMeshForwarder(void);
-
-/**
- * This function returns a reference to the single TimerScheduler instance.
- *
- * @returns A reference to the TimerScheduler instance.
- *
- */
-ot::TimerScheduler &otGetTimerScheduler(void);
 
 /**
  * This function returns a reference to the single TaskletShceduler instance.

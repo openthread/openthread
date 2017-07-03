@@ -52,7 +52,7 @@ namespace Utils {
 
 ChildSupervisor::ChildSupervisor(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &ChildSupervisor::HandleTimer, this),
+    mTimer(&ChildSupervisor::HandleTimer, this),
     mSupervisionInterval(kDefaultSupervisionInterval)
 {
 }
@@ -61,7 +61,7 @@ void ChildSupervisor::Start(void)
 {
     VerifyOrExit(mSupervisionInterval != 0);
     VerifyOrExit(!mTimer.IsRunning());
-    mTimer.Start(kOneSecond);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kOneSecond);
 
 exit:
     return;
@@ -69,7 +69,7 @@ exit:
 
 void ChildSupervisor::Stop(void)
 {
-    mTimer.Stop();
+    mTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 }
 
 void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
@@ -160,7 +160,7 @@ void ChildSupervisor::HandleTimer(void)
         }
     }
 
-    mTimer.Start(kOneSecond);
+    mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, kOneSecond);
 
 exit:
     return;
@@ -181,7 +181,7 @@ ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
 
 SupervisionListener::SupervisionListener(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &SupervisionListener::HandleTimer, this),
+    mTimer(&SupervisionListener::HandleTimer, this),
     mTimeout(0)
 {
     SetTimeout(kDefaultTimeout);
@@ -194,7 +194,7 @@ void SupervisionListener::Start(void)
 
 void SupervisionListener::Stop(void)
 {
-    mTimer.Stop();
+    mTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
 }
 
 void SupervisionListener::SetTimeout(uint16_t aTimeout)
@@ -230,11 +230,11 @@ void SupervisionListener::RestartTimer(void)
     if ((mTimeout != 0) && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
         (netif.GetMeshForwarder().GetRxOnWhenIdle() == false))
     {
-        mTimer.Start(Timer::SecToMsec(mTimeout));
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(mTimeout));
     }
     else
     {
-        mTimer.Stop();
+        mTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     }
 }
 

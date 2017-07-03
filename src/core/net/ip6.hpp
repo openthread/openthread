@@ -374,7 +374,7 @@ public:
 
     MessagePool mMessagePool;
     TaskletScheduler mTaskletScheduler;
-    TimerScheduler mTimerScheduler;
+    TimerScheduler mMsecTimerScheduler;
 
 private:
     static void HandleSendQueue(Tasklet &aTasklet);
@@ -414,7 +414,7 @@ static inline Ip6 *Ip6FromTaskletScheduler(TaskletScheduler *aTaskletScheduler)
 
 static inline Ip6 *Ip6FromTimerScheduler(TimerScheduler *aTimerScheduler)
 {
-    return (Ip6 *)CONTAINING_RECORD(aTimerScheduler, Ip6, mTimerScheduler);
+    return (Ip6 *)CONTAINING_RECORD(aTimerScheduler, Ip6, mMsecTimerScheduler);
 }
 
 /**

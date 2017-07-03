@@ -52,7 +52,7 @@ namespace Coap {
 Coap::Coap(ThreadNetif &aNetif):
     ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
-    mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Coap::HandleRetransmissionTimer, this),
+    mRetransmissionTimer(&Coap::HandleRetransmissionTimer, this),
     mResources(NULL),
     mContext(NULL),
     mInterceptor(NULL),
@@ -305,7 +305,7 @@ void Coap::HandleRetransmissionTimer(Timer &aTimer)
 
 void Coap::HandleRetransmissionTimer(void)
 {
-    uint32_t now = otPlatAlarmGetNow();
+    uint32_t now = TimerScheduler::GetNow();
     uint32_t nextDelta = 0xffffffff;
     CoapMetadata coapMetadata;
     Message *message = mPendingRequests.GetHead();
@@ -361,7 +361,7 @@ void Coap::HandleRetransmissionTimer(void)
 
     if (nextDelta != 0xffffffff)
     {
-        mRetransmissionTimer.Start(nextDelta);
+        mRetransmissionTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, nextDelta);
     }
 }
 
@@ -420,12 +420,12 @@ Message *Coap::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLeng
 
         if (aCoapMetadata.IsEarlier(alarmFireTime))
         {
-            mRetransmissionTimer.Start(aCoapMetadata.mRetransmissionTimeout);
+            mRetransmissionTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, aCoapMetadata.mRetransmissionTimeout);
         }
     }
     else
     {
-        mRetransmissionTimer.Start(aCoapMetadata.mRetransmissionTimeout);
+        mRetransmissionTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, aCoapMetadata.mRetransmissionTimeout);
     }
 
     // Enqueue the message.
@@ -449,7 +449,7 @@ void Coap::DequeueMessage(Message &aMessage)
     if (mRetransmissionTimer.IsRunning() && (mPendingRequests.GetHead() == NULL))
     {
         // No more requests pending, stop the timer.
-        mRetransmissionTimer.Stop();
+        mRetransmissionTimer.Stop(GetNetif().GetIp6().mMsecTimerScheduler);
     }
 
     // Free the message memory.
@@ -748,20 +748,21 @@ CoapMetadata::CoapMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageIn
     if (aConfirmable)
     {
         // Set next retransmission timeout.
-        mNextTimerShot = Timer::GetNow() + mRetransmissionTimeout;
+        mNextTimerShot = TimerScheduler::GetNow() + mRetransmissionTimeout;
     }
     else
     {
         // Set overall response timeout.
-        mNextTimerShot = Timer::GetNow() + kMaxTransmitWait;
+        mNextTimerShot = TimerScheduler::GetNow() + kMaxTransmitWait;
     }
 
     mAcknowledged = false;
     mConfirmable = aConfirmable;
 }
 
-ResponsesQueue::ResponsesQueue(ThreadNetif &aNetif):
-    mTimer(aNetif.GetIp6().mTimerScheduler, &ResponsesQueue::HandleTimer, this)
+ResponsesQueue::ResponsesQueue(ThreadNetif &aThreadNetif):
+    ThreadNetifLocator(aThreadNetif),
+    mTimer(&ResponsesQueue::HandleTimer, this)
 {
 }
 
@@ -870,7 +871,7 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(Timer::SecToMsec(kExchangeLifetime));
+        mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, Timer::SecToMsec(kExchangeLifetime));
     }
 
 exit:
@@ -923,13 +924,13 @@ void ResponsesQueue::HandleTimer(void)
     {
         enqueuedResponseHeader.ReadFrom(*message);
 
-        if (enqueuedResponseHeader.IsEarlier(Timer::GetNow()))
+        if (enqueuedResponseHeader.IsEarlier(TimerScheduler::GetNow()))
         {
             DequeueResponse(*message);
         }
         else
         {
-            mTimer.Start(enqueuedResponseHeader.GetRemainingTime());
+            mTimer.Start(GetNetif().GetIp6().mMsecTimerScheduler, enqueuedResponseHeader.GetRemainingTime());
             break;
         }
     }
@@ -937,7 +938,7 @@ void ResponsesQueue::HandleTimer(void)
 
 uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 {
-    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - Timer::GetNow());
+    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - TimerScheduler::GetNow());
 
     return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
 }
