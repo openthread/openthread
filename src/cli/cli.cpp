@@ -89,7 +89,6 @@ const struct Command Interpreter::sCommands[] =
 {
     { "help", &Interpreter::ProcessHelp },
     { "autostart", &Interpreter::ProcessAutoStart },
-    { "blacklist", &Interpreter::ProcessBlacklist },
     { "bufferinfo", &Interpreter::ProcessBufferInfo },
     { "channel", &Interpreter::ProcessChannel },
 #if OPENTHREAD_FTD
@@ -150,7 +149,9 @@ const struct Command Interpreter::sCommands[] =
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
     { "leaderweight", &Interpreter::ProcessLeaderWeight },
 #endif
-    { "linkquality", &Interpreter::ProcessLinkQuality },
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    { "macfilter", &Interpreter::ProcessMacFilter},
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -200,7 +201,6 @@ const struct Command Interpreter::sCommands[] =
     { "thread", &Interpreter::ProcessThread },
     { "txpowermax", &Interpreter::ProcessTxPowerMax },
     { "version", &Interpreter::ProcessVersion },
-    { "whitelist", &Interpreter::ProcessWhitelist },
 };
 
 #ifdef OTDLL
@@ -398,72 +398,6 @@ void Interpreter::ProcessAutoStart(int argc, char *argv[])
         error = OT_ERROR_INVALID_ARGS;
     }
 
-    AppendResult(error);
-}
-
-void Interpreter::ProcessBlacklist(int argc, char *argv[])
-{
-    otError error = OT_ERROR_NONE;
-    otMacBlacklistEntry entry;
-    int argcur = 0;
-    uint8_t extAddr[8];
-
-    if (argcur >= argc)
-    {
-        if (otLinkIsBlacklistEnabled(mInstance))
-        {
-            mServer->OutputFormat("Enabled\r\n");
-        }
-        else
-        {
-            mServer->OutputFormat("Disabled\r\n");
-        }
-
-        for (uint8_t i = 0; ; i++)
-        {
-            if (otLinkGetBlacklistEntry(mInstance, i, &entry) != OT_ERROR_NONE)
-            {
-                break;
-            }
-
-            if (entry.mValid == false)
-            {
-                continue;
-            }
-
-            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
-
-            mServer->OutputFormat("\r\n");
-        }
-    }
-    else if (strcmp(argv[argcur], "add") == 0)
-    {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
-
-        otLinkAddBlacklist(mInstance, extAddr);
-        VerifyOrExit(otLinkAddBlacklist(mInstance, extAddr) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
-    }
-    else if (strcmp(argv[argcur], "clear") == 0)
-    {
-        otLinkClearBlacklist(mInstance);
-    }
-    else if (strcmp(argv[argcur], "disable") == 0)
-    {
-        otLinkSetBlacklistEnabled(mInstance, false);
-    }
-    else if (strcmp(argv[argcur], "enable") == 0)
-    {
-        otLinkSetBlacklistEnabled(mInstance, true);
-    }
-    else if (strcmp(argv[argcur], "remove") == 0)
-    {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
-        otLinkRemoveBlacklist(mInstance, extAddr);
-    }
-
-exit:
     AppendResult(error);
 }
 
@@ -721,7 +655,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             mServer->OutputFormat("    TxOther: %d\r\n", counters->mTxOther);
             mServer->OutputFormat("    TxRetry: %d\r\n", counters->mTxRetry);
             mServer->OutputFormat("    TxErrCca: %d\r\n", counters->mTxErrCca);
-            mServer->OutputFormat("RxTotal: %d\r\n", counters->mRxTotal);
+            mServer->OutputFormat("    RxTotal: %d\r\n", counters->mRxTotal);
             mServer->OutputFormat("    RxUnicast: %d\r\n", counters->mRxUnicast);
             mServer->OutputFormat("    RxBroadcast: %d\r\n", counters->mRxBroadcast);
             mServer->OutputFormat("    RxData: %d\r\n", counters->mRxData);
@@ -1309,31 +1243,16 @@ exit:
 }
 #endif  // OPENTHREAD_FTD
 
-void Interpreter::ProcessLinkQuality(int argc, char *argv[])
+#if OPENTHREAD_ENABLE_MAC_FILTER
+
+void Interpreter::ProcessMacFilter(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t extAddress[8];
-    uint8_t linkQuality;
-    long value;
-
-    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = OT_ERROR_PARSE);
-
-    if (argc == 1)
-    {
-        VerifyOrExit(otLinkGetAssignLinkQuality(mInstance, extAddress, &linkQuality) == OT_ERROR_NONE,
-                     error = OT_ERROR_INVALID_ARGS);
-        mServer->OutputFormat("%d\r\n", linkQuality);
-    }
-    else
-    {
-        SuccessOrExit(error = ParseLong(argv[1], value));
-        otLinkSetAssignLinkQuality(mInstance, extAddress, static_cast<uint8_t>(value));
-    }
-
-exit:
+    otError error;
+    error = MacFilter::Process(mInstance, argc, argv, *mServer);
     AppendResult(error);
 }
+
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessPSKc(int argc, char *argv[])
@@ -2931,86 +2850,6 @@ exit:
     AppendResult(error);
 }
 #endif
-
-void Interpreter::ProcessWhitelist(int argc, char *argv[])
-{
-    otError error = OT_ERROR_NONE;
-    otMacWhitelistEntry entry;
-    int argcur = 0;
-    uint8_t extAddr[8];
-    int8_t rssi;
-
-    if (argcur >= argc)
-    {
-        if (otLinkIsWhitelistEnabled(mInstance))
-        {
-            mServer->OutputFormat("Enabled\r\n");
-        }
-        else
-        {
-            mServer->OutputFormat("Disabled\r\n");
-        }
-
-        for (uint8_t i = 0; ; i++)
-        {
-            if (otLinkGetWhitelistEntry(mInstance, i, &entry) != OT_ERROR_NONE)
-            {
-                break;
-            }
-
-            if (entry.mValid == false)
-            {
-                continue;
-            }
-
-            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
-
-            if (entry.mFixedRssi)
-            {
-                mServer->OutputFormat(" %d", entry.mRssi);
-            }
-
-            mServer->OutputFormat("\r\n");
-        }
-    }
-    else if (strcmp(argv[argcur], "add") == 0)
-    {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
-
-        if (++argcur < argc)
-        {
-            rssi = static_cast<int8_t>(strtol(argv[argcur], NULL, 0));
-            VerifyOrExit(otLinkAddWhitelistRssi(mInstance, extAddr, rssi) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
-        }
-        else
-        {
-            otLinkAddWhitelist(mInstance, extAddr);
-            VerifyOrExit(otLinkAddWhitelist(mInstance, extAddr) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
-        }
-    }
-    else if (strcmp(argv[argcur], "clear") == 0)
-    {
-        otLinkClearWhitelist(mInstance);
-    }
-    else if (strcmp(argv[argcur], "disable") == 0)
-    {
-        otLinkSetWhitelistEnabled(mInstance, false);
-    }
-    else if (strcmp(argv[argcur], "enable") == 0)
-    {
-        otLinkSetWhitelistEnabled(mInstance, true);
-    }
-    else if (strcmp(argv[argcur], "remove") == 0)
-    {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
-        otLinkRemoveWhitelist(mInstance, extAddr);
-    }
-
-exit:
-    AppendResult(error);
-}
 
 #if OPENTHREAD_ENABLE_DIAG
 void Interpreter::ProcessDiag(int argc, char *argv[])

@@ -1071,12 +1071,20 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MAC_ENERGY_SCAN_RESULT";
         break;
 
-    case SPINEL_PROP_MAC_WHITELIST:
-        ret = "PROP_MAC_WHITELIST";
+    case SPINEL_PROP_MAC_ADDRESSFILTER:
+        ret = "PROP_MAC_ADDRESSFILTER";
         break;
 
-    case SPINEL_PROP_MAC_WHITELIST_ENABLED:
-        ret = "PROP_MAC_WHITELIST_ENABLED";
+    case SPINEL_PROP_MAC_ADDRESSFILTER_ENTRY:
+        ret = "PROP_MAC_ADDRESSFILTER_ENTRY";
+        break;
+
+    case SPINEL_PROP_MAC_LQINFILTER:
+        ret = "PROP_MAC_LQINFILTER";
+        break;
+
+    case SPINEL_PROP_MAC_LQINFILTER_ENTRY:
+        ret = "PROP_MAC_LQINFILTER_ENTRY";
         break;
 
     case SPINEL_PROP_MAC_EXTENDED_ADDR:
@@ -1093,14 +1101,6 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
         ret = "PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES";
-        break;
-
-    case SPINEL_PROP_MAC_BLACKLIST:
-        ret = "PROP_MAC_BLACKLIST";
-        break;
-
-    case SPINEL_PROP_MAC_BLACKLIST_ENABLED:
-        ret = "PROP_MAC_BLACKLIST_ENABLED";
         break;
 
     case SPINEL_PROP_NET_SAVED:
@@ -1866,8 +1866,8 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "CAP_NET_THREAD_1_0";
         break;
 
-    case SPINEL_CAP_MAC_WHITELIST:
-        ret = "CAP_MAC_WHITELIST";
+    case SPINEL_CAP_MAC_ADDRESSFILTER:
+        ret = "CAP_MAC_ADDRESSFILTER";
         break;
 
     case SPINEL_CAP_MAC_RAW:

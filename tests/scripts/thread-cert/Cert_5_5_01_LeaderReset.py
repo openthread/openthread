@@ -54,6 +54,7 @@ class Cert_5_5_1_LeaderReset(unittest.TestCase):
     def _setUpLeader(self):
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

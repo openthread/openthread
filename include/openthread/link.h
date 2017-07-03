@@ -306,228 +306,6 @@ OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPerio
 OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
 
 /**
- * Add an IEEE 802.15.4 Extended Address to the MAC whitelist.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- *
- * @retval OT_ERROR_NONE     Successfully added to the MAC whitelist.
- * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC whitelist entry.
- *
- * @sa otLinkAddWhitelistRssi
- * @sa otLinkRemoveWhitelist
- * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
- * @sa otLinkSetWhitelistEnabled
- */
-OTAPI otError OTCALL otLinkAddWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
-
-/**
- * Add an IEEE 802.15.4 Extended Address to the MAC whitelist and fix the RSSI value.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- * @param[in]  aRssi     The RSSI in dBm to use when receiving messages from aExtAddr.
- *
- * @retval OT_ERROR_NONE     Successfully added to the MAC whitelist.
- * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC whitelist entry.
- *
- * @sa otLinkAddWhitelistRssi
- * @sa otLinkRemoveWhitelist
- * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
- * @sa otLinkIsWhitelistEnabled
- * @sa otLinkSetWhitelistEnabled
- */
-OTAPI otError OTCALL otLinkAddWhitelistRssi(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi);
-
-/**
- * Remove an IEEE 802.15.4 Extended Address from the MAC whitelist.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- *
- * @sa otLinkAddWhitelist
- * @sa otLinkAddWhitelistRssi
- * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
- * @sa otLinkIsWhitelistEnabled
- * @sa otLinkSetWhitelistEnabled
- */
-OTAPI void OTCALL otLinkRemoveWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
-
-/**
- * This function gets a MAC whitelist entry.
- *
- * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[in]   aIndex    An index into the MAC whitelist table.
- * @param[out]  aEntry    A pointer to where the information is placed.
- *
- * @retval OT_ERROR_NONE          Successfully retrieved the MAC whitelist entry.
- * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
- *
- */
-OTAPI otError OTCALL otLinkGetWhitelistEntry(otInstance *aInstance, uint8_t aIndex, otMacWhitelistEntry *aEntry);
-
-/**
- * Remove all entries from the MAC whitelist.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @sa otLinkAddWhitelist
- * @sa otLinkAddWhitelistRssi
- * @sa otLinkRemoveWhitelist
- * @sa otLinkGetWhitelistEntry
- * @sa otLinkIsWhitelistEnabled
- * @sa otLinkSetWhitelistEnabled
- */
-OTAPI void OTCALL otLinkClearWhitelist(otInstance *aInstance);
-
-/**
- * Enable MAC whitelist filtering.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aEnabled   TRUE to enable the whitelist, FALSE otherwise.
- *
- * @sa otLinkAddWhitelist
- * @sa otLinkAddWhitelistRssi
- * @sa otLinkRemoveWhitelist
- * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
- * @sa otLinkIsWhitelistEnabled
- */
-OTAPI void OTCALL otLinkSetWhitelistEnabled(otInstance *aInstance, bool aEnabled);
-
-/**
- * This function indicates whether or not the MAC whitelist is enabled.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @returns TRUE if the MAC whitelist is enabled, FALSE otherwise.
- *
- * @sa otLinkAddWhitelist
- * @sa otLinkAddWhitelistRssi
- * @sa otLinkRemoveWhitelist
- * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
- * @sa otLinkSetWhitelistEnabled
- */
-OTAPI bool OTCALL otLinkIsWhitelistEnabled(otInstance *aInstance);
-
-/**
- * Add an IEEE 802.15.4 Extended Address to the MAC blacklist.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- *
- * @retval OT_ERROR_NONE     Successfully added to the MAC blacklist.
- * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC blacklist entry.
- *
- * @sa otLinkRemoveBlacklist
- * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
- * @sa otLinkIsBlacklistEnabled
- * @sa otLinkSetBlacklistEnabled
- */
-OTAPI otError OTCALL otLinkAddBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
-
-/**
- * Remove an IEEE 802.15.4 Extended Address from the MAC blacklist.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- *
- * @sa otLinkAddBlacklist
- * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
- * @sa otLinkIsBlacklistEnabled
- * @sa otLinkSetBlacklistEnabled
- */
-OTAPI void OTCALL otLinkRemoveBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
-
-/**
- * This function gets a MAC Blacklist entry.
- *
- * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[in]   aIndex    An index into the MAC Blacklist table.
- * @param[out]  aEntry    A pointer to where the information is placed.
- *
- * @retval OT_ERROR_NONE          Successfully retrieved the MAC Blacklist entry.
- * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
- *
- */
-OTAPI otError OTCALL otLinkGetBlacklistEntry(otInstance *aInstance, uint8_t aIndex, otMacBlacklistEntry *aEntry);
-
-/**
- *  Remove all entries from the MAC Blacklist.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @sa otLinkAddBlacklist
- * @sa otLinkRemoveBlacklist
- * @sa otLinkGetBlacklistEntry
- * @sa otLinkIsBlacklistEnabled
- * @sa otLinkSetBlacklistEnabled
- */
-OTAPI void OTCALL otLinkClearBlacklist(otInstance *aInstance);
-
-/**
- * Enable MAC Blacklist filtering.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aEnabled   TRUE to enable the blacklist, FALSE otherwise.
- *
- * @sa otLinkAddBlacklist
- * @sa otLinkRemoveBlacklist
- * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
- * @sa otLinkIsBlacklistEnabled
- */
-OTAPI void OTCALL otLinkSetBlacklistEnabled(otInstance *aInstance, bool aEnabled);
-
-/**
- * This function indicates whether or not the MAC Blacklist is enabled.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @returns TRUE if the MAC Blacklist is enabled, FALSE otherwise.
- *
- * @sa otLinkAddBlacklist
- * @sa otLinkRemoveBlacklist
- * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
- * @sa otLinkSetBlacklistEnabled
- *
- */
-OTAPI bool OTCALL otLinkIsBlacklistEnabled(otInstance *aInstance);
-
-/**
- * Get the assigned link quality which is on the link to a given extended address.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- * @param[in]  aLinkQuality A pointer to the assigned link quality.
- *
- * @retval OT_ERROR_NONE           Successfully retrieved the link quality to aLinkQuality.
- * @retval OT_ERROR_INVALID_STATE  No attached child matches with a given extended address.
- *
- * @sa otLinkSetAssignLinkQuality
- */
-OTAPI otError OTCALL otLinkGetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr,
-                                                uint8_t *aLinkQuality);
-
-/**
- * Set the link quality which is on the link to a given extended address.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- * @param[in]  aLinkQuality  The link quality to be set on the link.
- *
- * @sa otLinkGetAssignLinkQuality
- */
-OTAPI void OTCALL otLinkSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t aLinkQuality);
-
-/**
  * Get the MAC layer counters.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -586,6 +364,258 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
  *
  */
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
+
+/**
+ * This function gets the AddressFilter state.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @returns  the AddressFilter State.
+ *
+ * @sa otLinkAddressFilterSetState
+ * @sa otLinkAddressFilterAddEntry
+ * @sa otLinkAddressFilterRemoveEntry
+ * @sa otLinkAddressFilterClearEntries
+ * @sa otLinkAddressFilterReset
+ *
+ */
+uint8_t otLinkAddressFilterGetState(otInstance *aInstance);
+
+/**
+ * This function sets the AddressFilter state.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aState        The AddressFilter state to set.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the AddressFilter State.
+ * @retval OT_ERROR_INVALID_STATE  The AddressFilter is in use.
+ *
+ * @sa otLinkAddressFilterGetState
+ * @sa otLinkAddressFilterAddEntry
+ * @sa otLinkAddressFilterRemoveEntry
+ * @sa otLinkAddressFilterClearEntries
+ * @sa otLinkAddressFilterReset
+ *
+ */
+otError otLinkAddressFilterSetState(otInstance *aInstance, uint8_t aState);
+
+/**
+ * This method adds an Extended Address to the address filter.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aAddress  A pointer to the Extended Address.
+ *
+ * @retval OT_ERROR_NONE           Successfully added the Extended Address to the filter.
+ * @retval OT_ERROR_ALREADY        The Extended Address is already in the filter.
+ * @retval OT_ERROR_NO_BUFS        No available filter enty.
+ *
+ * @sa otLinkAddressFilterGetState
+ * @sa otLinkAddressFilterSetState
+ * @sa otLinkAddressFilterRemoveEntry
+ * @sa otLinkAddressFilterClearEntries
+ * @sa otLinkAddressFilterReset
+ *
+ */
+otError otLinkAddressFilterAddEntry(otInstance *aInstance, const otExtAddress *aAddress);
+
+/**
+ * This method removes an Extended Address from the filter.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aAddress      A pointer to the Extended Address.
+ *
+ * @retval OT_ERROR_NONE           Successfully removed the MAC Filter entry.
+ * @retval OT_ERROR_NOT_FOUND      The Extended Address is not filtered.
+ *
+ * @sa otLinkAddressFilterGetState
+ * @sa otLinkAddressFilterSetState
+ * @sa otLinkAddressFilterAddEntry
+ * @sa otLinkAddressFilterClearEntries
+ * @sa otLinkAddressFilterReset
+ *
+ */
+otError otLinkAddressFilterRemoveEntry(otInstance *aInstance, const otExtAddress *aAddress);
+
+/**
+ * This method removes all address filter entries from the filter.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_INVALID_STATE  The AddressFilter is not in use.
+ *
+ * @sa otLinkAddressFilterGetState
+ * @sa otLinkAddressFilterSetState
+ * @sa otLinkAddressFilterAddEntry
+ * @sa otLinkAddressFilterRemoveEntry
+ * @sa otLinkAddressFilterReset
+ *
+ */
+otError otLinkAddressFilterClearEntries(otInstance *aInstance);
+
+/**
+ * This method resets address filter which would be disabled and cleared.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @sa otLinkAddressFilterGetState
+ * @sa otLinkAddressFilterSetState
+ * @sa otLinkAddressFilterAddEntry
+ * @sa otLinkAddressFilterRemoveEntry
+ * @sa otLinkAddressFilterClearEntries
+ *
+ */
+void otLinkAddressFilterReset(otInstance *aInstance);
+
+/**
+ * This method sets the default fixed LinkQualityIn value for all the received messages.
+ *
+ * @param[in] aInstance       A pointer to an OpenThread instance.
+ * @param[in] aLinkQualityIn  The LinkQualityIn value.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the default fixed LinkQualityIn.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aLinkQualityIn is not valid.
+ *
+ * @sa otLinkLinkQualityInFilterGet
+ * @sa otLinkLinkQualityInFilterUnset
+ * @sa otLinkLinkQualityInFilterAddEntry
+ * @sa otLinkLinkQualityInFilterRemoveEntry
+ * @sa otLinkLinkQualityInFilterClearEntries
+ * @sa otLinkLinkQualityInFilterReset
+ */
+otError otLinkLinkQualityInFilterSet(otInstance *aInstance, uint8_t aLinkQuality);
+
+/**
+ * This method gets the default fixed LinkQualityIn value for all the received messages if any
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in] aLinkQualityIn  A pointer to where the information is placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the default fixed LinkQualityIn.
+ * @retval OT_ERROR_NOT_FOUND     No default fixed LinkQualityIn is set.
+ *
+ * @sa otLinkLinkQualityInFilterSet
+ * @sa otLinkLinkQualityInFilterUnset
+ * @sa otLinkLinkQualityInFilterAddEntry
+ * @sa otLinkLinkQualityInFilterRemoveEntry
+ * @sa otLinkLinkQualityInFilterClearEntries
+ * @sa otLinkLinkQualityInFilterReset
+ *
+ */
+
+otError otLinkLinkQualityInFilterGet(otInstance *aInstance, uint8_t *aLinkQuality);
+
+/**
+ * This method unsets the default fixed LinkQualityIn value for all the received messages if any.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @sa otLinkLinkQualityInFilterSet
+ * @sa otLinkLinkQualityInFilterGet
+ * @sa otLinkLinkQualityInFilterAddEntry
+ * @sa otLinkLinkQualityInFilterRemoveEntry
+ * @sa otLinkLinkQualityInFilterClearEntries
+ * @sa otLinkLinkQualityInFilterReset
+ *
+ */
+void otLinkLinkQualityInFilterUnset(otInstance *aInstance);
+
+/**
+ * This method sets the LinkQualityIn for the Extended Address with a fixed value.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aAddress        A pointer to the Extended Address.
+ * @param[in]  aLinkQualityIn  A fixed LinkQualityIn value to set.
+ *
+ * @retval OT_ERROR_NONE          The default fixed LinkQualityIn is set and written to @p aLinkQualityIn.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aLinkQualityIn is not valid.
+ * @retval OT_ERROR_NO_BUFS       No available filter enty.
+ *
+ * @sa otLinkLinkQualityInFilterSet
+ * @sa otLinkLinkQualityInFilterGet
+ * @sa otLinkLinkQualityInFilterUnset
+ * @sa otLinkLinkQualityInFilterRemoveEntry
+ * @sa otLinkLinkQualityInFilterClearEntries
+ * @sa otLinkLinkQualityInFilterReset
+ *
+ */
+otError otLinkLinkQualityInFilterAddEntry(otInstance *aInstance, const otExtAddress *aAddress, uint8_t aLinkQuality);
+
+/**
+ * This method removes the fixed LinkQualityIn setting from the Extended Address.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aAddress        A pointer to the Extended Address.
+ *
+ * @retval OT_ERROR_NONE       Successfully removed the fixed LinkQualityIn for @p aAddress
+ * @retval OT_ERROR_NOT_FOUND  No fixed LinkQualityIn for @p aAddress.
+ *
+ * @sa otLinkLinkQualityInFilterSet
+ * @sa otLinkLinkQualityInFilterGet
+ * @sa otLinkLinkQualityInFilterUnset
+ * @sa otLinkLinkQualityInFilterAddEntry
+ * @sa otLinkLinkQualityInFilterClearEntries
+ * @sa otLinkLinkQualityInFilterReset
+ *
+ */
+otError otLinkLinkQualityInFilterRemoveEntry(otInstance *aInstance, const otExtAddress *aAddress);
+
+/**
+ * This method removes LinkQualityIn filter entry if any.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ *
+ * @sa otLinkLinkQualityInFilterSet
+ * @sa otLinkLinkQualityInFilterGet
+ * @sa otLinkLinkQualityInFilterUnset
+ * @sa otLinkLinkQualityInFilterAddEntry
+ * @sa otLinkLinkQualityInFilterRemoveEntry
+ * @sa otLinkLinkQualityInFilterReset
+ *
+ */
+void otLinkLinkQualityInFilterClearEntries(otInstance *aInstance);
+
+/**
+ * This method resets LinkQualityIn filter.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ *
+ * @sa otLinkLinkQualityInFilterSet
+ * @sa otLinkLinkQualityInFilterGet
+ * @sa otLinkLinkQualityInFilterUnset
+ * @sa otLinkLinkQualityInFilterAddEntry
+ * @sa otLinkLinkQualityInFilterRemoveEntry
+ * @sa otLinkLinkQualityInFilterClearEntries
+ *
+ */
+void otLinkLinkQualityInFilterReset(otInstance *aInstance);
+
+/**
+ * This method gets an in-use Filter entry.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aIterator  A pointer to the MAC filter iterator context. To get the first in-use filter entry,
+ *                        it should be set to OT_MAC_FILTER_ITEERATOR_INIT.
+ * @param[out]  aEntry    A pointer to where the information is placed.
+ *
+ * @retval OT_ERROR_NONE       Successfully retrieved the in-use Filter entry.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent entry exists.
+ *
+ * @sa otLinkAddressFilterGetState
+ * @sa otLinkAddressFilterSetState
+ * @sa otLinkAddressFilterAddEntry
+ * @sa otLinkAddressFilterRemoveEntry
+ * @sa otLinkAddressFilterClearEntries
+ * @sa otLinkAddressFilterReset
+ * @sa otLinkLinkQualityInFilterSet
+ * @sa otLinkLinkQualityInFilterGet
+ * @sa otLinkLinkQualityInFilterUnset
+ * @sa otLinkLinkQualityInFilterAddEntry
+ * @sa otLinkLinkQualityInFilterRemoveEntry
+ * @sa otLinkLinkQualityInFilterClearEntries
+ * @sa otLinkLinkQualityInFilterReset
+ *
+ */
+otError otLinkFilterGetNextEntry(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
  * @}

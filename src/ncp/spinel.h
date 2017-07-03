@@ -390,7 +390,7 @@ enum
     SPINEL_CAP_NET__END                 = 64,
 
     SPINEL_CAP_OPENTHREAD__BEGIN        = 512,
-    SPINEL_CAP_MAC_WHITELIST            = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
+    SPINEL_CAP_MAC_ADDRESSFILTER        = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                  = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
     SPINEL_CAP_OOB_STEERING_DATA        = (SPINEL_CAP_OPENTHREAD__BEGIN + 2),
     SPINEL_CAP_OPENTHREAD__END          = 640,
@@ -649,20 +649,17 @@ typedef enum
     SPINEL_PROP_MAC__END                = 0x40,
 
     SPINEL_PROP_MAC_EXT__BEGIN          = 0x1300,
-    /// MAC Whitelist
-    /** Format: `A(t(Ec))`
-     *
-     * Structure Parameters:
-     *
-     * * `E`: EUI64 address of node
-     * * `c`: Optional fixed RSSI. 127 means not set.
-     */
-    SPINEL_PROP_MAC_WHITELIST           = SPINEL_PROP_MAC_EXT__BEGIN + 0,
 
-    /// MAC Whitelist Enabled Flag
-    /** Format: `b`
+    /// MAC AddressFilter state
+    /** Format: `C`
      */
-    SPINEL_PROP_MAC_WHITELIST_ENABLED   = SPINEL_PROP_MAC_EXT__BEGIN + 1,
+    SPINEL_PROP_MAC_ADDRESSFILTER       = SPINEL_PROP_MAC_EXT__BEGIN + 0,  ///< [C]
+
+    /** Format: `E`
+     *
+     *  EUI64 address in the address filter.
+     */
+    SPINEL_PROP_MAC_ADDRESSFILTER_ENTRY       = SPINEL_PROP_MAC_EXT__BEGIN + 1,  ///< [E]
 
     /// MAC Extended Address
     /** Format: `E`
@@ -688,19 +685,21 @@ typedef enum
     SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES
                                         = SPINEL_PROP_MAC_EXT__BEGIN + 5,
 
-    /// MAC Blacklist
-    /** Format: `A(t(E))`
-     *
-     * Structure Parameters:
-     *
-     * * `E`: EUI64 address of node
+    /// MAC LqinFilter default fixed linkQualityIn for receiving messages from all link
+    /** Format: `C`
      */
-    SPINEL_PROP_MAC_BLACKLIST           = SPINEL_PROP_MAC_EXT__BEGIN + 6,
+    SPINEL_PROP_MAC_LQINFILTER          = SPINEL_PROP_MAC_EXT__BEGIN + 6,  ///< [C]
 
-    /// MAC Blacklist Enabled Flag
-    /** Format: `b`
+    /// MAC LqinFilter fixed LinkQualityIn for receiving messages from specific link
+    /** Format: `A(E(C))`
+     * Data per item is:
+     *
+     *  `E`: EUI64 address in the address filter.
+     *  `C`: fixed LinkQualityIn value
      */
-    SPINEL_PROP_MAC_BLACKLIST_ENABLED   = SPINEL_PROP_MAC_EXT__BEGIN + 7,
+    SPINEL_PROP_MAC_LQINFILTER_ENTRY       = SPINEL_PROP_MAC_EXT__BEGIN + 7,  ///< [A(E(C))]
+
+
     SPINEL_PROP_MAC_EXT__END            = 0x1400,
 
     SPINEL_PROP_NET__BEGIN              = 0x40,

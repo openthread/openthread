@@ -37,12 +37,14 @@ class otCli:
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
+	self.__filtercmd_prefix =''
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
         elif self.node_type == 'ncp-sim':
             self.__init_ncp_sim(nodeid)
         else:
+            self.__filtercmd_prefix = 'macfilter '
             self.__init_sim(nodeid)
 
         if self.verbose:
@@ -150,26 +152,37 @@ class otCli:
         self.pexpect.expect('Done')
 
     def clear_whitelist(self):
-        self.send_command('whitelist clear')
+        cmd = self.__filtercmd_prefix + 'addressfilter clear'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def enable_whitelist(self):
-        self.send_command('whitelist enable')
+        cmd = self.__filtercmd_prefix + 'addressfilter on-whitelist'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def disable_whitelist(self):
-        self.send_command('whitelist disable')
+        cmd = self.__filtercmd_prefix + 'addressfilter off'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
-    def add_whitelist(self, addr, rssi=None):
-        cmd = 'whitelist add ' + addr
-        if rssi != None:
-            cmd += ' ' + str(rssi)
+    def add_whitelist(self, addr):
+        cmd = self.__filtercmd_prefix + 'addressfilter add ' + addr
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def remove_whitelist(self, addr):
-        cmd = 'whitelist remove ' + addr
+        cmd = self.__filtercmd_prefix + 'addressfilter remove ' + addr
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def reset_whitelist(self):
+        cmd = self.__filtercmd_prefix + 'addressfilter reset'
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def add_lqinfilter(self, addr, lqi):
+        cmd = self.__filtercmd_prefix + 'lqinfilter add ' + addr + ' ' + str(lqi)
         self.send_command(cmd)
         self.pexpect.expect('Done')
 

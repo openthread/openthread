@@ -99,30 +99,30 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-95)
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-95)
+        self.nodes[LEADER].add_lqinfilter(self.nodes[ROUTER1].get_addr64(), lqi=1)
+        self.nodes[ROUTER1].add_lqinfilter(self.nodes[LEADER].get_addr64(), lqi=1)
 
-        time.sleep(70)
-
-        addrs = self.nodes[ROUTER3].get_addrs()
-        for addr in addrs:
-            if addr[0:4] != 'fe80':
-                self.assertTrue(self.nodes[LEADER].ping(addr))
-
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-85)
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-85)
-
-        time.sleep(70)
+        time.sleep(40)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-100)
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-100)
+        self.nodes[LEADER].add_lqinfilter(self.nodes[ROUTER1].get_addr64(), lqi=2)
+        self.nodes[ROUTER1].add_lqinfilter(self.nodes[LEADER].get_addr64(), lqi=2)
 
-        time.sleep(70)
+        time.sleep(40)
+
+        addrs = self.nodes[ROUTER3].get_addrs()
+        for addr in addrs:
+            if addr[0:4] != 'fe80':
+                self.assertTrue(self.nodes[LEADER].ping(addr))
+
+        self.nodes[LEADER].add_lqinfilter(self.nodes[ROUTER1].get_addr64(), lqi=0)
+        self.nodes[ROUTER1].add_lqinfilter(self.nodes[LEADER].get_addr64(), lqi=0)
+
+        time.sleep(40)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
