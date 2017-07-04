@@ -48,12 +48,10 @@ set -x
         --enable-ncp-app=all              \
         --with-ncp-bus=uart               \
         --enable-diag                     \
-        --enable-default-logging          \
         --enable-raw-link-api=yes         \
         --with-examples=posix             \
         --with-platform-info=POSIX        \
         --enable-application-coap         \
-        --enable-border-agent-proxy       \
         --enable-cert-log                 \
         --enable-commissioner             \
         --enable-dhcp6-client             \
@@ -62,8 +60,8 @@ set -x
         --enable-jam-detection            \
         --enable-joiner                   \
         --enable-legacy                   \
-        --enable-mac-whitelist            \
-        --enable-mtd-network-diagnostic || die
+        --enable-mtd-network-diagnostic   \
+        --enable-tmf-proxy || die
     scan-build --status-bugs -analyze-headers -v make || die
 }
 

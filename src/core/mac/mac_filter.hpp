@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,54 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
- */
+#include <openthread/config.h>
 
-#ifndef MAC_WHITELIST_HPP_
-#define MAC_WHITELIST_HPP_
-
-#include "utils/wrap_stdint.h"
-
-#include <openthread/types.h>
-
-#include "mac/mac_frame.hpp"
-
-namespace ot {
-namespace Mac {
-
-class Whitelist
-{
-public:
-    typedef otMacWhitelistEntry Entry;
-
-    Whitelist(void) { }
-
-    bool IsEnabled(void) const { return false; }
-
-    void SetEnabled(bool) { }
-
-    int GetMaxEntries(void) const { return 0; }
-
-    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    Entry *Add(const ExtAddress &) { return NULL; }
-
-    void Remove(const ExtAddress &) { }
-
-    void Clear(void) { }
-
-    Entry *Find(const ExtAddress &) { return NULL; }
-
-    void ClearFixedRssi(Entry &) { }
-
-    otError GetFixedRssi(Entry &, int8_t &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    void SetFixedRssi(Entry &, int8_t) { }
-};
-
-}  // namespace Mac
-}  // namespace ot
-
-#endif  // MAC_WHITELIST_HPP_
+#if OPENTHREAD_ENABLE_MAC_FILTER
+#include "mac_filter_impl.hpp"
+#else
+#include "mac_filter_stub.hpp"
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER

@@ -311,31 +311,34 @@ OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval OT_ERROR_NONE     Successfully added to the MAC whitelist.
- * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC whitelist entry.
+ * @retval OT_ERROR_NONE     Successfully added @p aExtAddr to the MAC whitelist.
+ * @retval OT_ERROR_ALREADY  @p aExtAddr was already in the MAC whitelist.
+ * @retval OT_ERROR_NO_BUFS  No available entry.
  *
  * @sa otLinkAddWhitelistRssi
  * @sa otLinkRemoveWhitelist
  * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
+ * @sa otLinkGetNextWhitelistEntry
  * @sa otLinkSetWhitelistEnabled
  */
 OTAPI otError OTCALL otLinkAddWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
- * Add an IEEE 802.15.4 Extended Address to the MAC whitelist and fix the RSSI value.
+ * Add an IEEE 802.15.4 Extended Address to the MAC whitelist with the specified RssiIn setting.
+ * @note Please ensure the blacklist is disabled when use this function.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- * @param[in]  aRssi     The RSSI in dBm to use when receiving messages from aExtAddr.
+ * @param[in]  aRssi     The RssiIn (in dBm) for the receiving messages from @p aExtAddr.
  *
- * @retval OT_ERROR_NONE     Successfully added to the MAC whitelist.
- * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC whitelist entry.
+ * @retval OT_ERROR_NONE           Successfully added @p aExtAddr with the specified @aRssi to the MAC whitelist.
+ * @retval OT_ERROR_INVALID_STATE  Failure if Blacklist was already enabled.
+ * @retval OT_ERROR_NO_BUFS        No available entry.
  *
- * @sa otLinkAddWhitelistRssi
+ * @sa otLinkAddWhitelist
  * @sa otLinkRemoveWhitelist
  * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
+ * @sa otLinkGetNextWhitelistEntry
  * @sa otLinkIsWhitelistEnabled
  * @sa otLinkSetWhitelistEnabled
  */
@@ -347,59 +350,70 @@ OTAPI otError OTCALL otLinkAddWhitelistRssi(otInstance *aInstance, const uint8_t
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
+ * @retval OT_ERROR_NONE       Successfully removed @p aExtAddr from the MAC whitelist.
+ * @retval OT_ERROR_NOT_FOUND  @p aExtAddr is not in the MAC whitelist.
+ *
  * @sa otLinkAddWhitelist
  * @sa otLinkAddWhitelistRssi
  * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
+ * @sa otLinkGetNextWhitelistEntry
  * @sa otLinkIsWhitelistEnabled
  * @sa otLinkSetWhitelistEnabled
  */
-OTAPI void OTCALL otLinkRemoveWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
+OTAPI otError OTCALL otLinkRemoveWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
- * This function gets a MAC whitelist entry.
+ * Get an in-use MAC whitelist entry.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[in]   aIndex    An index into the MAC whitelist table.
+ * @param[in]   aIterator A pointer to the MAC filter iterator context. To get the first in-use whitelist entry,
+ *                        it should be set to OT_MAC_FILTER_ITEERATOR_INIT.
  * @param[out]  aEntry    A pointer to where the information is placed.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the MAC whitelist entry.
- * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
+ * @retval OT_ERROR_INVALID_ARGS  @p aEntry is NULL.
+ * @retval OT_ERROR_NOT_FOUND     No subsequent entry exists.
  *
  */
-OTAPI otError OTCALL otLinkGetWhitelistEntry(otInstance *aInstance, uint8_t aIndex, otMacWhitelistEntry *aEntry);
+OTAPI otError OTCALL otLinkGetNextWhitelistEntry(otInstance *aInstance,
+                                                 otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
- * Remove all entries from the MAC whitelist.
+ * Clear all entries from the MAC whitelist.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @sa otLinkAddWhitelist
  * @sa otLinkAddWhitelistRssi
  * @sa otLinkRemoveWhitelist
- * @sa otLinkGetWhitelistEntry
+ * @sa otLinkGetNextWhitelistEntry
  * @sa otLinkIsWhitelistEnabled
  * @sa otLinkSetWhitelistEnabled
  */
 OTAPI void OTCALL otLinkClearWhitelist(otInstance *aInstance);
 
 /**
- * Enable MAC whitelist filtering.
+ * Enable/Disable MAC whitelist.
+ *
+ * @note Please ensure the blacklist is disabled when enabling whitelist.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   TRUE to enable the whitelist, FALSE otherwise.
+ *
+ * @retval OT_ERROR_NONE           Successfully set MAC whitelist state.
+ * @retval OT_ERROR_INVALID_STATE  If blacklist was already enabled when enabling whitelist.
  *
  * @sa otLinkAddWhitelist
  * @sa otLinkAddWhitelistRssi
  * @sa otLinkRemoveWhitelist
  * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
+ * @sa otLinkGetNextWhitelistEntry
  * @sa otLinkIsWhitelistEnabled
  */
-OTAPI void OTCALL otLinkSetWhitelistEnabled(otInstance *aInstance, bool aEnabled);
+OTAPI otError OTCALL otLinkSetWhitelistEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether or not the MAC whitelist is enabled.
+ * Indicate whether or not the MAC whitelist is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -409,7 +423,7 @@ OTAPI void OTCALL otLinkSetWhitelistEnabled(otInstance *aInstance, bool aEnabled
  * @sa otLinkAddWhitelistRssi
  * @sa otLinkRemoveWhitelist
  * @sa otLinkClearWhitelist
- * @sa otLinkGetWhitelistEntry
+ * @sa otLinkGetNextWhitelistEntry
  * @sa otLinkSetWhitelistEnabled
  */
 OTAPI bool OTCALL otLinkIsWhitelistEnabled(otInstance *aInstance);
@@ -420,12 +434,13 @@ OTAPI bool OTCALL otLinkIsWhitelistEnabled(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval OT_ERROR_NONE     Successfully added to the MAC blacklist.
- * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC blacklist entry.
+ * @retval OT_ERROR_NONE     Successfully added @p aExtAddr to the MAC blacklist.
+ * @retval OT_ERROR_ALREADY  @p aExtAddr was already in the MAC blacklist.
+ * @retval OT_ERROR_NO_BUFS  No available entry.
  *
  * @sa otLinkRemoveBlacklist
  * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
+ * @sa otLinkGetNextBlacklistEntry
  * @sa otLinkIsBlacklistEnabled
  * @sa otLinkSetBlacklistEnabled
  */
@@ -437,56 +452,69 @@ OTAPI otError OTCALL otLinkAddBlacklist(otInstance *aInstance, const uint8_t *aE
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
+ * @retval OT_ERROR_NONE       Successfully removed @p aExtAddr from the MAC blacklist.
+ * @retval OT_ERROR_NOT_FOUND  @p aExtAddr is not in the MAC blacklist.
+ *
  * @sa otLinkAddBlacklist
  * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
+ * @sa otLinkGetNextBlacklistEntry
  * @sa otLinkIsBlacklistEnabled
  * @sa otLinkSetBlacklistEnabled
  */
-OTAPI void OTCALL otLinkRemoveBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
+OTAPI otError OTCALL otLinkRemoveBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
- * This function gets a MAC Blacklist entry.
+ * Get an in-use MAC Blacklist entry.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[in]   aIndex    An index into the MAC Blacklist table.
+ * @param[in]   aIterator A pointer to the MAC filter iterator context. To get the first in-use whitelist entry,
+ *                        it should be set to OT_MAC_FILTER_ITEERATOR_INIT.
  * @param[out]  aEntry    A pointer to where the information is placed.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the MAC Blacklist entry.
- * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
+ * @retval OT_ERROR_INVALID_ARGS  @p aEntry is NULL.
+ * @retval OT_ERROR_NOT_FOUND     No subsequent entry exists.
  *
  */
-OTAPI otError OTCALL otLinkGetBlacklistEntry(otInstance *aInstance, uint8_t aIndex, otMacBlacklistEntry *aEntry);
+OTAPI otError OTCALL otLinkGetNextBlacklistEntry(otInstance *aInstance,
+                                                 otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
- *  Remove all entries from the MAC Blacklist.
+ *  Clear all entries from the MAC Blacklist.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @sa otLinkAddBlacklist
  * @sa otLinkRemoveBlacklist
- * @sa otLinkGetBlacklistEntry
+ * @sa otLinkGetNextBlacklistEntry
  * @sa otLinkIsBlacklistEnabled
  * @sa otLinkSetBlacklistEnabled
+ *
  */
 OTAPI void OTCALL otLinkClearBlacklist(otInstance *aInstance);
 
 /**
- * Enable MAC Blacklist filtering.
+ * Enable/Disable MAC blacklist.
+ *
+ * @note Please ensure the whitelist is disabled when enabling blacklist.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   TRUE to enable the blacklist, FALSE otherwise.
  *
+ * @retval OT_ERROR_NONE           Successfully set MAC blacklist state.
+ * @retval OT_ERROR_INVALID_STATE  If whitelist was already enabled when enabling blacklist.
+ *
  * @sa otLinkAddBlacklist
  * @sa otLinkRemoveBlacklist
  * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
+ * @sa otLinkGetNextBlacklistEntry
  * @sa otLinkIsBlacklistEnabled
+ *
  */
-OTAPI void OTCALL otLinkSetBlacklistEnabled(otInstance *aInstance, bool aEnabled);
+OTAPI otError OTCALL otLinkSetBlacklistEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether or not the MAC Blacklist is enabled.
+ * Indicate whether or not the MAC blacklist is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -495,37 +523,137 @@ OTAPI void OTCALL otLinkSetBlacklistEnabled(otInstance *aInstance, bool aEnabled
  * @sa otLinkAddBlacklist
  * @sa otLinkRemoveBlacklist
  * @sa otLinkClearBlacklist
- * @sa otLinkGetBlacklistEntry
+ * @sa otLinkGetNextBlacklistEntry
  * @sa otLinkSetBlacklistEnabled
  *
  */
 OTAPI bool OTCALL otLinkIsBlacklistEnabled(otInstance *aInstance);
 
 /**
- * Get the assigned link quality which is on the link to a given extended address.
+ * Set the default RssiIn for all received messages.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- * @param[in]  aLinkQuality A pointer to the assigned link quality.
+ * @param[in]  aRssi     A Rssi value (in dBm) to set.
  *
- * @retval OT_ERROR_NONE           Successfully retrieved the link quality to aLinkQuality.
- * @retval OT_ERROR_INVALID_STATE  No attached child matches with a given extended address.
+ * @sa otLinkGetRssiIn
+ * @sa otLinkAddRssiInEntry
+ * @sa otLinkRemoveAddRssiInEntry
+ * @sa otLinkClearRssiInEntry
+ * @sa otLinkGetNextRssiInEntry
  *
- * @sa otLinkSetAssignLinkQuality
  */
-OTAPI otError OTCALL otLinkGetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr,
-                                                uint8_t *aLinkQuality);
+void otLinkSetRssiIn(otInstance *aInstance, int8_t aRssi);
 
 /**
- * Set the link quality which is on the link to a given extended address.
+ * Get the default RssiIn for all received messages.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns RssiIn value (in dBm) if set or OT_RSSI_OVERRIDE_DISABLED if not set.
+ *
+ * @sa otLinkSetRssiIn
+ * @sa otLinkAddRssiInEntry
+ * @sa otLinkRemoveAddRssiInEntry
+ * @sa otLinkClearRssiInEntry
+ * @sa otLinkGetNextRssiInEntry
+ *
+ */
+int8_t otLinkGetRssiIn(otInstance *aInstance);
+
+/**
+ * Set the RssiIn for the received messages from the Extended Address.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
- * @param[in]  aLinkQuality  The link quality to be set on the link.
+ * @param[in]  aRssi     The RssiIn value (in dBm) to set.
  *
- * @sa otLinkGetAssignLinkQuality
+ * @retval OT_ERROR_NONE     Successfully set the RssiIn as @p aRssi for the received messages from @p aExtAddr.
+ * @retval OT_ERROR_NO_BUFS  No availabl entry.
+ *
+ * @sa otLinkSetRssiIn
+ * @sa otLinkGetRssiIn
+ * @sa otLinkRemoveRssiInEntry
+ * @sa otLinkClearRssiInEntry
+ * @sa otLinkGetNextRssiInEntry
+ *
  */
-OTAPI void OTCALL otLinkSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t aLinkQuality);
+otError otLinkAddRssiInEntry(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi);
+
+/**
+ * Remove the RssiIn setting for the received messages from the Extended Address.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @retval OT_ERROR_NONE       Successfully removed the RssiIn setting for the received messages from @p aExtAddr.
+ * @retval OT_ERROR_NOT_FOUND  No RssiIn entry for @p aExtAddr.
+ *
+ * @sa otLinkSetRssiIn
+ * @sa otLinkGetRssiIn
+ * @sa otLinkAddRssiInEntry
+ * @sa otLinkClearRssiInEntry
+ * @sa otLinkGetNextRssiInEntry
+ *
+ */
+otError otLinkRemoveRssiInEntry(otInstance *aInstance, const uint8_t *aExtAddr);
+
+/**
+ * Clear the RssiIn entries.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @sa otLinkSetRssiIn
+ * @sa otLinkGetRssiIn
+ * @sa otLinkAddRssiInEntry
+ * @sa otLinkRemoveRssiInEntry
+ * @sa otLinkGetNextRssiInEntry
+ *
+ */
+void otLinkClearRssiInEntry(otInstance *aInstance);
+
+/**
+ * Get an in-use MAC RssiInFilter entry.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[in]   aIterator A pointer to the MAC filter iterator context. To get the first in-use whitelist entry,
+ *                        it should be set to OT_MAC_FILTER_ITEERATOR_INIT.
+ * @param[out]  aEntry    A pointer to where the information is placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the MAC RssiInFilter entry.
+ * @retval OT_ERROR_INVALID_ARGS  @p aEntry is NULL.
+ * @retval OT_ERROR_NOT_FOUND     No subsequent entry exists.
+ *
+ * @sa otLinkSetRssiIn
+ * @sa otLinkGetRssiIn
+ * @sa otLinkAddRssiInEntry
+ * @sa otLinkRemoveRssiInEntry
+ * @sa otLinkClearRssiInEntry
+ *
+ */
+otError otLinkGetNextRssiInEntry(otInstance *aInstance,
+                                 otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
+
+/**
+ * Convert rssi to link quality.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aRssi      Rssi value.
+ *
+ * @return Link quality value mapping to the Rssi.
+ *
+ */
+uint8_t otLinkConvertRssiToLinkQuality(otInstance *aInstance, int8_t aRssi);
+
+/**
+ * Convert link quality to typical rssi.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aLinkQuality  LinkQuality value in range [0,3].
+ *
+ * @return Typical platform rssi mapping to the LinkQuality.
+ *
+ */
+int8_t otLinkConvertLinkQualityToRssi(otInstance *aInstance, uint8_t aLinkQuality);
 
 /**
  * Get the MAC layer counters.

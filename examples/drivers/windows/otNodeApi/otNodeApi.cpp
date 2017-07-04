@@ -1079,9 +1079,9 @@ OTNODEAPI int32_t OTCALL otNodeEnableWhitelist(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: whitelist enable\r\n", aNode->mId);
 
-    otLinkSetWhitelistEnabled(aNode->mInstance, true);
+    otError error = otLinkSetWhitelistEnabled(aNode->mInstance, true);
     otLogFuncExit();
-    return 0;
+    return error;
 }
 
 OTNODEAPI int32_t OTCALL otNodeDisableWhitelist(otNode* aNode)
@@ -1089,9 +1089,9 @@ OTNODEAPI int32_t OTCALL otNodeDisableWhitelist(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: whitelist disable\r\n", aNode->mId);
 
-    otLinkSetWhitelistEnabled(aNode->mInstance, false);
+    otError error = otLinkSetWhitelistEnabled(aNode->mInstance, false);
     otLogFuncExit();
-    return 0;
+    return error;
 }
 
 OTNODEAPI int32_t OTCALL otNodeAddWhitelist(otNode* aNode, const char *aExtAddr, int8_t aRssi)
@@ -1127,9 +1127,9 @@ OTNODEAPI int32_t OTCALL otNodeRemoveWhitelist(otNode* aNode, const char *aExtAd
     if (Hex2Bin(aExtAddr, extAddr, sizeof(extAddr)) != sizeof(extAddr))
         return OT_ERROR_INVALID_ARGS;
 
-    otLinkRemoveWhitelist(aNode->mInstance, extAddr);
+    otError error = otLinkRemoveWhitelist(aNode->mInstance, extAddr);
     otLogFuncExit();
-    return 0;
+    return error;
 }
 
 OTNODEAPI uint16_t OTCALL otNodeGetAddr16(otNode* aNode)

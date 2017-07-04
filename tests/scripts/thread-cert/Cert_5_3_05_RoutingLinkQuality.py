@@ -102,7 +102,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-95)
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-95)
 
-        time.sleep(70)
+        time.sleep(40)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
@@ -112,7 +112,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-85)
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-85)
 
-        time.sleep(70)
+        time.sleep(40)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
@@ -122,7 +122,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-100)
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-100)
 
-        time.sleep(70)
+        time.sleep(40)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:

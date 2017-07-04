@@ -79,8 +79,6 @@ namespace ot {
 #define NCP_CHANGED_THREAD_ON_MESH_NETS       (1U << 30)
 #define NCP_CHANGED_THREAD_OFF_MESH_ROUTES    (1U << 29)
 
-#define RSSI_OVERRIDE_DISABLED        127 // Used for PROP_MAC_WHITELIST
-
 #define IGNORE_RETURN_VALUE(s)        do { if (s){} } while (0)
 
 // ----------------------------------------------------------------------------
@@ -167,7 +165,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_COMMISSIONER_ENABLED),
 #endif
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_GET_PROP_HANDLER_ENTRY(MAC_WHITELIST),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_WHITELIST_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
@@ -302,7 +300,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(IPV6_ML_PREFIX),
     NCP_SET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD),
     NCP_SET_PROP_HANDLER_ENTRY(THREAD_RLOC16_DEBUG_PASSTHRU),
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_SET_PROP_HANDLER_ENTRY(MAC_WHITELIST),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_WHITELIST_ENABLED),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
@@ -378,7 +376,7 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     NCP_INSERT_PROP_HANDLER_ENTRY(THREAD_JOINERS),
 #endif
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_WHITELIST),
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
 #endif
@@ -398,7 +396,7 @@ const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[]
     NCP_REMOVE_PROP_HANDLER_ENTRY(THREAD_ON_MESH_NETS),
 #endif
     NCP_REMOVE_PROP_HANDLER_ENTRY(THREAD_ASSISTING_PORTS),
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_WHITELIST),
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
 #endif
@@ -2205,7 +2203,7 @@ otError NcpBase::GetPropertyHandler_CAPS(uint8_t aHeader, spinel_prop_key_t aKey
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_NET_THREAD_1_0));
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_COUNTERS));
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_WHITELIST));
 #endif
 
@@ -3935,11 +3933,12 @@ otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t aHeader, spinel_
            );
 }
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
 
 otError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_key_t aKey)
 {
-    otMacWhitelistEntry entry;
+    otMacFilterEntry entry;
+    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
     otError error = OT_ERROR_NONE;
 
     mDisableStreamWrite = true;
@@ -3953,32 +3952,22 @@ otError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
                     aKey
                 ));
 
-    for (uint8_t i = 0; (i != 255) && (error == OT_ERROR_NONE); i++)
+    while (otLinkGetNextWhitelistEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
     {
-        error = otLinkGetWhitelistEntry(mInstance, i, &entry);
-
-        if (error != OT_ERROR_NONE)
+        if (!entry.mFixedRssi)
         {
-            break;
+            entry.mRssi = OT_RSSI_OVERRIDE_DISABLED;
         }
 
-        if (entry.mValid)
-        {
-            if (!entry.mFixedRssi)
-            {
-                entry.mRssi = RSSI_OVERRIDE_DISABLED;
-            }
-
-            SuccessOrExit(
+        SuccessOrExit(
                 error = OutboundFrameFeedPacked(
-                            SPINEL_DATATYPE_STRUCT_S(
-                                SPINEL_DATATYPE_EUI64_S   // Extended address
-                                SPINEL_DATATYPE_INT8_S    // Rssi
-                            ),
-                            entry.mExtAddress.m8,
-                            entry.mRssi
-                        ));
-        }
+                    SPINEL_DATATYPE_STRUCT_S(
+                        SPINEL_DATATYPE_EUI64_S   // Extended address
+                        SPINEL_DATATYPE_INT8_S    // Rssi
+                        ),
+                    entry.mExtAddress.m8,
+                    entry.mRssi
+                    ));
     }
 
     SuccessOrExit(error = OutboundFrameSend());
@@ -4001,7 +3990,8 @@ otError NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t aHeader, spine
 
 otError NcpBase::GetPropertyHandler_MAC_BLACKLIST(uint8_t aHeader, spinel_prop_key_t aKey)
 {
-    otMacBlacklistEntry entry;
+    otMacFilterEntry entry;
+    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
     otError error = OT_ERROR_NONE;
 
     mDisableStreamWrite = true;
@@ -4015,25 +4005,15 @@ otError NcpBase::GetPropertyHandler_MAC_BLACKLIST(uint8_t aHeader, spinel_prop_k
                     aKey
                 ));
 
-    for (uint8_t i = 0; (i != 255) && (error == OT_ERROR_NONE); i++)
+    while (otLinkGetNextBlacklistEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
     {
-        error = otLinkGetBlacklistEntry(mInstance, i, &entry);
-
-        if (error != OT_ERROR_NONE)
-        {
-            break;
-        }
-
-        if (entry.mValid)
-        {
-            SuccessOrExit(
+        SuccessOrExit(
                 error = OutboundFrameFeedPacked(
-                            SPINEL_DATATYPE_STRUCT_S(
-                                SPINEL_DATATYPE_EUI64_S   // Extended address
-                            ),
-                            entry.mExtAddress.m8
-                        ));
-        }
+                    SPINEL_DATATYPE_STRUCT_S(
+                        SPINEL_DATATYPE_EUI64_S   // Extended address
+                        ),
+                    entry.mExtAddress.m8
+                    ));
     }
 
     SuccessOrExit(error = OutboundFrameSend());
@@ -4054,8 +4034,7 @@ otError NcpBase::GetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t aHeader, spine
            );
 }
 
-
-#endif // OPENTHREAD_ENABLE_MAC_WHITELIST
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
 #if OPENTHREAD_FTD
 otError NcpBase::GetPropertyHandler_NET_PSKC(uint8_t aHeader, spinel_prop_key_t aKey)
@@ -5647,7 +5626,7 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
 
 otError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
                                                   uint16_t aValueLen)
@@ -5662,7 +5641,7 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
     while (aValueLen > 0)
     {
         otExtAddress *extAddress = NULL;
-        int8_t rssi = RSSI_OVERRIDE_DISABLED;
+        int8_t rssi = OT_RSSI_OVERRIDE_DISABLED;
 
         parsedLength = spinel_datatype_unpack(
                            aValuePtr,
@@ -5677,7 +5656,7 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
 
         if (parsedLength <= 0)
         {
-            rssi = RSSI_OVERRIDE_DISABLED;
+            rssi = OT_RSSI_OVERRIDE_DISABLED;
             parsedLength = spinel_datatype_unpack(
                                aValuePtr,
                                aValueLen,
@@ -5689,14 +5668,13 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
         }
 
         VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
-
-        if (rssi == RSSI_OVERRIDE_DISABLED)
+        if (rssi == OT_RSSI_OVERRIDE_DISABLED)
         {
-            SuccessOrExit(error = otLinkAddWhitelist(mInstance, extAddress->m8));
+            error = otLinkAddWhitelist(mInstance, extAddress->m8);
         }
         else
         {
-            SuccessOrExit(error = otLinkAddWhitelistRssi(mInstance, extAddress->m8, rssi));
+            error = otLinkAddWhitelistRssi(mInstance, extAddress->m8, rssi);
         }
 
         aValuePtr += parsedLength;
@@ -5736,7 +5714,7 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t aHeader, spine
 
     VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
 
-    otLinkSetWhitelistEnabled(mInstance, enabled);
+    error = otLinkSetWhitelistEnabled(mInstance, enabled);
 
 exit:
     return SendSetPropertyResponse(aHeader, aKey, error);
@@ -5806,13 +5784,13 @@ otError NcpBase::SetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t aHeader, spine
 
     VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
 
-    otLinkSetBlacklistEnabled(mInstance, enabled);
+    error = otLinkSetBlacklistEnabled(mInstance, enabled);
 
 exit:
     return SendSetPropertyResponse(aHeader, aKey, error);
 }
 
-#endif // OPENTHREAD_ENABLE_MAC_WHITELIST
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -6516,8 +6494,7 @@ otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t aHe
 
     error = otLinkRawSrcMatchAddShortEntry(mInstance, short_address);
 
-    VerifyOrExit(error == OT_ERROR_NONE,
-                 spinelError = ThreadErrorToSpinelStatus(error));
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
                     aHeader,
@@ -6556,8 +6533,7 @@ otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t 
 
     error = otLinkRawSrcMatchAddExtEntry(mInstance, extAddress);
 
-    VerifyOrExit(error == OT_ERROR_NONE,
-                 spinelError = ThreadErrorToSpinelStatus(error));
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
                     aHeader,
@@ -6615,8 +6591,7 @@ otError NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t aHeader, spine
 
     error = otIp6AddUnicastAddress(mInstance, &netifAddr);
 
-    VerifyOrExit(error == OT_ERROR_NONE,
-                 spinelError = ThreadErrorToSpinelStatus(error));
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
                     aHeader,
@@ -6799,7 +6774,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
 
 otError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_key_t aKey,
                                                      const uint8_t *aValuePtr, uint16_t aValueLen)
@@ -6808,7 +6783,7 @@ otError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_pro
     otError error = OT_ERROR_NONE;
     spinel_status_t spinelError = SPINEL_STATUS_OK;
     otExtAddress *extAddress = NULL;
-    int8_t rssi = RSSI_OVERRIDE_DISABLED;
+    int8_t rssi = OT_RSSI_OVERRIDE_DISABLED;
 
     if (aValueLen > static_cast<spinel_ssize_t>(sizeof(otExtAddress)))
     {
@@ -6832,7 +6807,7 @@ otError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_pro
 
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
-    if (rssi == RSSI_OVERRIDE_DISABLED)
+    if (rssi == OT_RSSI_OVERRIDE_DISABLED)
     {
         error = otLinkAddWhitelist(mInstance, extAddress->m8);
     }
@@ -6899,7 +6874,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_MAC_WHITELIST
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_prop_key_t aKey,
@@ -7265,7 +7240,7 @@ exit:
 }
 #endif  // OPENTHREAD_FTD
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
 
 otError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_key_t aKey,
                                                      const uint8_t *aValuePtr, uint16_t aValueLen)
@@ -7284,7 +7259,9 @@ otError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_pro
 
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
-    otLinkRemoveWhitelist(mInstance, extAddress->m8);
+    error = otLinkRemoveWhitelist(mInstance, extAddress->m8);
+
+    VerifyOrExit(error  == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
                 aHeader,
@@ -7321,7 +7298,9 @@ otError NcpBase::RemovePropertyHandler_MAC_BLACKLIST(uint8_t aHeader, spinel_pro
 
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
-        otLinkRemoveBlacklist(mInstance, extAddress->m8);
+    error = otLinkRemoveBlacklist(mInstance, extAddress->m8);
+
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
                 aHeader,
@@ -7341,7 +7320,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_MAC_WHITELIST
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
 #if OPENTHREAD_ENABLE_LEGACY
 

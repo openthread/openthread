@@ -60,6 +60,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [routerrole](#routerrole)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
+* [rssifilter](#rssifilter)
 * [scan](#scan-channel)
 * [singleton](#singleton)
 * [state](#state)
@@ -1543,6 +1544,84 @@ Set the ROUTER_UPGRADE_THRESHOLD value.
 Done
 ```
 
+### rssifilter
+
+Get current rssi filter settings.
+
+```bash
+> rssifilter
+Default rssi: -95 (lqi 1)
+dead00beef00cafe  * fixed rssi -60 (lqi 3)
+dead00beef00caff  * fixed rssi -95 (lqi 1)
+Done
+```
+
+### rssifilter set-lqi \<lqi\>
+
+Set default link quality in for all received messages
+
+```bash
+> rssifilter set-lqi 1
+Done
+```
+
+### rssifilter set-rssi \<rssi\>
+Set default rssi in for all received messages
+
+```bash
+> rssifilter set-rssi -95
+Done
+```
+
+### rssifilter get
+Get default rssi/link quality in in for all received messages
+
+```bash
+> rssifilter get
+Default rssi -95 (lqi 1)
+Done
+```
+
+### rssifilter unset
+Unset default rssi/link quality in in for all received messages
+equivalent with cmd 'rssifilter set-rssi 127'
+
+```bash
+> rssifilter unset
+Done
+```
+
+### rssifilter add-lqi \<extaddr\> \<lqi\>
+Set link quality in for the received messages from specified address
+
+```bash
+> rssifilter add-lqi dead00beef00caff 1
+Done
+```
+
+### rssifilter add-lqi \<extaddr\> \<lqi\>
+Set rssi in for the received messages from specified address
+
+```bash
+> rssifilter add-rssi dead00beef00cafe -60
+Done
+```
+
+### rssifilter remove \<extaddr\>
+Remove rssi/link quality in setting for the received messages from specified address
+
+```bash
+>  rssifilter remove dead00beef00cafe
+Done
+```
+### rssifilter clear
+Clear rssi/link quality in settings
+
+```bash
+>  rssifilter clear
+Done
+```
+
 ### scan \[channel\]
 
 Perform an IEEE 802.15.4 Active Scan.
@@ -1643,12 +1722,17 @@ c467a90a2060fa0e
 Done
 ```
 
-### whitelist add \<extaddr\>
+### whitelist add \<extaddr\> \[rssi\]
 
 Add an IEEE 802.15.4 Extended Address to the whitelist.
 
 ```bash
 > whitelist add dead00beef00cafe
+Done
+```
+
+```bash
+> whitelist add dead00beef00cafe -95
 Done
 ```
 
