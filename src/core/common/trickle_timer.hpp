@@ -80,14 +80,14 @@ public:
     /**
      * This constructor creates a trickle timer instance.
      *
-     * @param[in]  aScheduler               A reference to the timer scheduler.
+     * @param[in]  aIp6                     A reference to the IPv6 network object.
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
      * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
      * @param[in]  aContext                 A pointer to arbitrary context information.
      *
      */
-    TrickleTimer(TimerScheduler &aScheduler,
+    TrickleTimer(Ip6::Ip6 &aIp6,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
                  uint32_t aRedundancyConstant,
 #endif

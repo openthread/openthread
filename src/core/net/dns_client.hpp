@@ -159,7 +159,7 @@ public:
     Client(Ip6::Netif &aNetif):
         mSocket(aNetif.GetIp6().mUdp),
         mMessageId(0),
-        mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Client::HandleRetransmissionTimer, this) {
+        mRetransmissionTimer(aNetif.GetIp6(), &Client::HandleRetransmissionTimer, this) {
     };
 
     /**

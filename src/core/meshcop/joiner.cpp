@@ -74,7 +74,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mVendorModel(NULL),
     mVendorSwVersion(NULL),
     mVendorData(NULL),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &Joiner::HandleTimer, this),
+    mTimer(aNetif.GetIp6(), &Joiner::HandleTimer, this),
     mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
     aNetif.GetCoap().AddResource(mJoinerEntrust);

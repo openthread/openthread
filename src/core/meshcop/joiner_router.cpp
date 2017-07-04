@@ -61,7 +61,7 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this),
+    mTimer(aNetif.GetIp6(), &JoinerRouter::HandleTimer, this),
     mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false),
     mExpectJoinEntRsp(false)

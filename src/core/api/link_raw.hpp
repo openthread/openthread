@@ -133,8 +133,11 @@ private:
 
     Timer                   mTimer;
     TimerReason             mTimerReason;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    UsecTimer               mUsecTimer;
+    static void HandleUsecTimer(UsecTimer &aTimer);
+#endif
 
-    static void HandleTimer(void *aContext);
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 

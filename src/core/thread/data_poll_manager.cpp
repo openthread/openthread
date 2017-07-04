@@ -51,7 +51,7 @@ namespace ot {
 
 DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
     MeshForwarderLocator(aMeshForwarder),
-    mTimer(aMeshForwarder.GetNetif().GetIp6().mTimerScheduler, &DataPollManager::HandlePollTimer, this),
+    mTimer(aMeshForwarder.GetNetif().GetIp6(), &DataPollManager::HandlePollTimer, this),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
     mPollPeriod(0),

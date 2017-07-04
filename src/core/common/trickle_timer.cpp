@@ -44,13 +44,13 @@
 namespace ot {
 
 TrickleTimer::TrickleTimer(
-    TimerScheduler &aScheduler,
+    Ip6::Ip6 &aIp6,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     uint32_t aRedundancyConstant,
 #endif
     Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
     :
-    Timer(aScheduler, HandleTimerFired, aContext),
+    Timer(aIp6, HandleTimerFired, aContext),
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     k(aRedundancyConstant),
     c(0),

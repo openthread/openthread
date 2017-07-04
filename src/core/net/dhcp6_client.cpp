@@ -59,7 +59,7 @@ namespace Dhcp6 {
 
 Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTrickleTimer(aThreadNetif.GetIp6().mTimerScheduler, &Dhcp6Client::HandleTrickleTimer, NULL, this),
+    mTrickleTimer(aThreadNetif.GetIp6(), &Dhcp6Client::HandleTrickleTimer, NULL, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mStartTime(0),
     mAddresses(NULL),

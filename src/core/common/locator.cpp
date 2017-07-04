@@ -54,11 +54,6 @@ otInstance *MeshForwarderLocator::GetInstance(void) const
     return otInstanceFromThreadNetif(&GetMeshForwarder().GetNetif());
 }
 
-otInstance *TimerSchedulerLocator::GetInstance(void) const
-{
-    return otInstanceFromIp6(Ip6::Ip6FromTimerScheduler(&GetTimerScheduler()));
-}
-
 otInstance *TaskletSchedulerLocator::GetInstance(void) const
 {
     return otInstanceFromIp6(Ip6::Ip6FromTaskletScheduler(&GetTaskletScheduler()));

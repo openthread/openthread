@@ -39,6 +39,7 @@
 
 #include <openthread/types.h>
 #include <openthread/platform/alarm.h>
+#include <openthread/platform/usec-alarm.h>
 
 #include "common/context.hpp"
 #include "common/debug.hpp"
@@ -65,7 +66,7 @@ class Timer;
  * This class implements the timer scheduler.
  *
  */
-class TimerScheduler
+class TimerScheduler: public Ip6Locator
 {
     friend class Timer;
 
@@ -73,8 +74,10 @@ public:
     /**
      * This constructor initializes the object.
      *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
      */
-    TimerScheduler(void);
+    TimerScheduler(Ip6::Ip6 &aIp6);
 
     /**
      * This method adds a timer instance to the timer scheduler.
@@ -98,21 +101,6 @@ public:
      */
     void ProcessTimers(void);
 
-private:
-    /**
-     * This method sets the platform alarm based on timer at front of the list.
-     *
-     */
-    void SetAlarm(void);
-
-    /**
-     * This method returns the pointer to the parent Ip6 structure.
-     *
-     * @returns The pointer to the parent Ip6 structure.
-     *
-     */
-    Ip6::Ip6 *GetIp6(void);
-
     /**
      * This static method compares two times and indicates if the first time is strictly before (earlier) than the
      * second time.
@@ -128,6 +116,13 @@ private:
      */
     static bool IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB);
 
+private:
+    /**
+     * This method sets the platform alarm based on timer at front of the list.
+     *
+     */
+    void SetAlarm(void);
+
     Timer *mHead;
 };
 
@@ -135,7 +130,7 @@ private:
  * This class implements a timer.
  *
  */
-class Timer: public TimerSchedulerLocator, public Context
+class Timer: public Ip6Locator, public Context
 {
     friend class TimerScheduler;
 
@@ -157,13 +152,13 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aScheduler  A reference to the timer scheduler.
+     * @param[in]  aIp6        A reference to the IPv6 network object.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Timer(TimerScheduler &aScheduler, Handler aHandler, void *aContext):
-        TimerSchedulerLocator(aScheduler),
+    Timer(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
+        Ip6Locator(aIp6),
         Context(aContext),
         mHandler(aHandler),
         mFireTime(0),
@@ -252,12 +247,193 @@ private:
      */
     bool DoesFireBefore(const Timer &aTimer);
 
+    /**
+     * This method returns a reference to the TimerScheduler.
+     *
+     * @returns   A reference to the TimerScheduler.
+     *
+     */
+    TimerScheduler &GetTimerScheduler(void) const;
+
     void Fired(void) { mHandler(*this); }
 
     Handler         mHandler;
     uint32_t        mFireTime;
     Timer          *mNext;
 };
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+class UsecTimer;
+
+/**
+ * This class implements the microsecond timer scheduler.
+ *
+ */
+class UsecTimerScheduler: public Ip6Locator
+{
+    friend class UsecTimer;
+
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
+     */
+    UsecTimerScheduler(Ip6::Ip6 &aIp6);
+
+    /**
+     * This method adds a timer instance to the timer scheduler.
+     *
+     * @param[in]  aTimer  A reference to the timer instance.
+     *
+     */
+    void Add(UsecTimer &aTimer);
+
+    /**
+     * This method removes a timer instance to the timer scheduler.
+     *
+     * @param[in]  aTimer  A reference to the timer instance.
+     *
+     */
+    void Remove(UsecTimer &aTimer);
+
+    /**
+     * This method processes the running timers.
+     *
+     */
+    void ProcessTimers(void);
+
+private:
+    /**
+     * This method sets the platform alarm based on timer at front of the list.
+     *
+     */
+    void SetAlarm(void);
+
+    UsecTimer *mHead;
+};
+
+/**
+ * This class implements a timer.
+ *
+ */
+class UsecTimer: public Ip6Locator, public Context
+{
+    friend class UsecTimerScheduler;
+
+public:
+
+    enum
+    {
+        kMaxDt = (1UL << 31) - 1,  //< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
+    };
+
+    /**
+     * This function pointer is called when the timer expires.
+     *
+     * @param[in]  aTimer    A reference to the expired timer instance.
+     *
+     */
+    typedef void (*Handler)(UsecTimer &aTimer);
+
+    /**
+     * This constructor creates a timer instance.
+     *
+     * @param[in]  aIp6        A reference to the IPv6 network object.
+     * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
+     * @param[in]  aContext    A pointer to arbitrary context information.
+     *
+     */
+    UsecTimer(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
+        Ip6Locator(aIp6),
+        Context(aContext),
+        mHandler(aHandler),
+        mFireTime(0),
+        mNext(this) {
+    }
+
+    /**
+     * This method returns the fire time of the timer.
+     *
+     * @returns The fire time in milliseconds.
+     *
+     */
+    uint32_t GetFireTime(void) const { return mFireTime; }
+
+    /**
+     * This method indicates whether or not the timer instance is running.
+     *
+     * @retval TRUE   If the timer is running.
+     * @retval FALSE  If the timer is not running.
+     *
+     */
+    bool IsRunning(void) const { return (mNext != this); }
+
+    /**
+     * This method schedules the timer to fire a @p dt milliseconds from now.
+     *
+     * @param[in]  aDt  The expire time in milliseconds from now.
+     *                  (aDt must be smaller than or equal to kMaxDt).
+     *
+     */
+    void Start(uint32_t aDt) { StartAt(GetNow(), aDt); }
+
+    /**
+     * This method schedules the timer to fire at @p aDt milliseconds from @p aT0.
+     *
+     * @param[in]  aT0  The start time in milliseconds.
+     * @param[in]  aDt  The expire time in milliseconds from @p aT0.
+     *                  (aDt must be smaller than or equal to kMaxDt).
+     *
+     */
+    void StartAt(uint32_t aT0, uint32_t aDt) {
+        assert(aDt <= kMaxDt);
+        mFireTime = aT0 + aDt;
+        GetUsecTimerScheduler().Add(*this);
+    }
+
+    /**
+     * This method stops the timer.
+     *
+     */
+    void Stop(void) { GetUsecTimerScheduler().Remove(*this); }
+
+    /**
+     * This static method returns the current time in microseconds.
+     *
+     * @returns The current time in microseconds.
+     *
+     */
+    static uint32_t GetNow(void) { return otPlatUsecAlarmGetNow(); }
+
+private:
+    /**
+     * This method indicates if the fire time of this timer is strictly before the fire time of a second given timer.
+     *
+     * @param[in]  aTimer   A reference to the second timer object.
+     *
+     * @retval TRUE  If the fire time of this timer object is strictly before aTimer's fire time
+     * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
+     *
+     */
+    bool DoesFireBefore(const UsecTimer &aTimer);
+
+    /**
+     * This method returns a reference to the UsecTimerScheduler.
+     *
+     * @returns   A reference to the UsecTimerScheduler.
+     *
+     */
+    UsecTimerScheduler &GetUsecTimerScheduler(void) const;
+
+    void Fired(void) { mHandler(*this); }
+
+    Handler         mHandler;
+    uint32_t        mFireTime;
+    UsecTimer      *mNext;
+};
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 /**
  * @}

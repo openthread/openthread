@@ -60,7 +60,7 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
     mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this),
     mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6(), HandleTimer, this),
     mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal),
     mSessionId(0xffff)
 {

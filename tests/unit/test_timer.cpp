@@ -86,7 +86,7 @@ class TestTimer: public ot::Timer
 {
 public:
     TestTimer(otInstance *aInstance):
-        ot::Timer(aInstance->mIp6.mTimerScheduler, TestTimer::HandleTimerFired, NULL),
+        ot::Timer(aInstance->mIp6, TestTimer::HandleTimerFired, NULL),
         mFiredCounter(0)
     { }
 

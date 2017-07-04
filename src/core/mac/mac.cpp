@@ -98,21 +98,23 @@ void Mac::StartCsmaBackoff(void)
         backoff = (otPlatRandomGet() % (1UL << backoffExponent));
         backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-        otPlatUsecAlarmStartAt(GetInstance(), otPlatUsecAlarmGetNow(), backoff, &Mac::HandleBeginTransmit, this);
-#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        mBackoffUsecTimer.Start(backoff);
+#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
         mBackoffTimer.Start(backoff / 1000UL);
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     }
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
-    mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
+    mMacTimer(aThreadNetif.GetIp6(), &Mac::HandleMacTimer, this),
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    mBackoffUsecTimer(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
+#else
+    mBackoffTimer(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
 #endif
-    mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
+    mReceiveTimer(aThreadNetif.GetIp6(), &Mac::HandleReceiveTimer, this),
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
     mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
@@ -771,12 +773,11 @@ exit:
     return;
 }
 
-void Mac::HandleBeginTransmit(void *aContext)
-{
-    static_cast<Mac *>(aContext)->HandleBeginTransmit();
-}
-
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+void Mac::HandleBeginTransmit(UsecTimer &aTimer)
+#else
 void Mac::HandleBeginTransmit(Timer &aTimer)
+#endif
 {
     GetOwner(aTimer).HandleBeginTransmit();
 }

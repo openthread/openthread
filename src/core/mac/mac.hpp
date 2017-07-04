@@ -674,8 +674,11 @@ private:
 
     static void HandleMacTimer(Timer &aTimer);
     void HandleMacTimer(void);
-    static void HandleBeginTransmit(void *aContext);
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    static void HandleBeginTransmit(UsecTimer &aTimer);
+#else
     static void HandleBeginTransmit(Timer &aTimer);
+#endif
     void HandleBeginTransmit(void);
     static void HandleReceiveTimer(Timer &aTimer);
     void HandleReceiveTimer(void);
@@ -692,7 +695,9 @@ private:
     static Mac &GetOwner(const Context &aContext);
 
     Timer mMacTimer;
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    UsecTimer mBackoffUsecTimer;
+#else
     Timer mBackoffTimer;
 #endif
     Timer mReceiveTimer;

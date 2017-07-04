@@ -100,9 +100,6 @@ static const AlarmChannelData sChannelData[kNumTimers] =
     }
 };
 
-static otPlatUsecAlarmHandler sUsecHandler = NULL;  ///< Handler called when usec alarm fires.
-static void *sUsecContext = NULL;                   ///< The context information passed to the usec handler callback.
-
 static void HandleOverflow(void);
 
 static inline uint32_t TimeToTicks(uint32_t aTime, AlarmIndex aIndex)
@@ -343,7 +340,7 @@ void nrf5AlarmProcess(otInstance *aInstance)
     {
         sTimerData[kUsTimer].mFireAlarm = false;
 
-        sUsecHandler(sUsecContext);
+        otPlatUsecAlarmFired(aInstance);
     }
 }
 
@@ -372,16 +369,12 @@ uint32_t otPlatUsecAlarmGetNow(void)
     return (uint32_t)AlarmGetCurrentTime();
 }
 
-void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt,
-                            otPlatUsecAlarmHandler aHandler, void *aContext)
+void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
     uint32_t targetTime = aT0 + aDt;
 
     AlarmStartAt(targetTime, kUsTimer);
-
-    sUsecHandler = aHandler;
-    sUsecContext = aContext;
 }
 
 void otPlatUsecAlarmStop(otInstance *aInstance)

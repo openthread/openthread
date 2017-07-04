@@ -51,25 +51,14 @@ extern "C" {
  */
 
 /**
- * This defines the callback for indicating when the alarm has expired.
- *
- * @param[in]  aContext  A pointer to arbitrary context information.
- *
- */
-typedef void (*otPlatUsecAlarmHandler)(void *aContext);
-
-/**
  * Set the alarm to fire at @p aDt microseconds after @p aT0.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aT0        The reference time.
  * @param[in]  aDt        The time delay in microseconds from @p aT0.
- * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
- * @param[in]  aContext   A pointer to arbitrary context information.
  *
  */
-void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt,
-                            otPlatUsecAlarmHandler aHandler, void *aContext);
+void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
@@ -86,6 +75,13 @@ void otPlatUsecAlarmStop(otInstance *aInstance);
  *
  */
 uint32_t otPlatUsecAlarmGetNow(void);
+
+/**
+ * Signal that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+extern void otPlatUsecAlarmFired(otInstance *aInstance);
 
 /**
  * @}
