@@ -765,26 +765,30 @@ typedef enum otRoutePreference
 } otRoutePreference;
 
 /**
- * This structure represents a whitelist entry.
- *
+ * Used to indicate no fixed received signal strength was set
  */
-typedef struct otMacWhitelistEntry
+#define OT_MAC_FILTER_FIXED_RSS_DISABLED       127
+
+#define OT_MAC_FILTER_ITERATOR_INIT            0     ///< Initializer for otMacFilterIterator.
+typedef uint8_t otMacFilterIterator;    ///< Used to iterate through mac filter entries.
+
+typedef enum otMacFilterAddressMode
 {
-    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    int8_t       mRssi;             ///< RSSI value
-    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is valid
-    bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
-} otMacWhitelistEntry;
+    OT_MAC_FILTER_ADDRESS_MODE_DISABLED,     ///< Address filter is disabled.
+    OT_MAC_FILTER_ADDRESS_MODE_WHITELIST,    ///< Whitelist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST,    ///< Blacklist address filter mode is enabled.
+} otMacFilterAddressMode;
 
 /**
- * This structure represents a blacklist entry.
+ * This structure represents a Mac Filter entry.
  *
  */
-typedef struct otMacBlacklistEntry
+typedef struct otMacFilterEntry
 {
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    bool         mValid;            ///< Indicates whether or not the blacklist entry is valid
-} otMacBlacklistEntry;
+    int8_t       mRssIn;            ///< Received signal strength
+    bool         mFiltered;         ///< Indicates whether or not this entry is filtered.
+} otMacFilterEntry;
 
 /**
  * Represents a Thread device role.

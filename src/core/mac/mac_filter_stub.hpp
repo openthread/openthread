@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,50 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
+/**
+ * @file
+ *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
+ */
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_whitelist_impl.hpp"
-#else
-#include "mac_whitelist_stub.hpp"
-#endif
+#ifndef MAC_FILTER_HPP_
+#define MAC_FILTER_HPP_
+
+#include "utils/wrap_stdint.h"
+
+#include <openthread/types.h>
+
+#include "mac/mac_frame.hpp"
+
+namespace ot {
+namespace Mac {
+
+class Filter
+{
+public:
+    typedef otMacFilterEntry Entry;
+    Filter(void) { }
+    uint8_t GetMaxEntries(void) const { return 0; }
+    otMacFilterAddressMode GetAddressMode(void) const { return OT_MAC_FILTER_ADDRESS_MODE_DISABLED; }
+    otError SetAddressMode(otMacFilterAddressMode) { return OT_ERROR_NOT_IMPLEMENTED; }
+
+    otError AddAddress(const ExtAddress &aExtAddress) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError AddAddressRssIn(const ExtAddress &aExtAddress, int8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RemoveAddress(const ExtAddress &)  { return OT_ERROR_NOT_IMPLEMENTED; }
+    void ClearAddresses(void) { }
+    otError GetNextAddress(otMacFilterIterator &, Entry &) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError AddRssIn(const ExtAddress *, int8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RemoveRssIn(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
+    void ClearRssIn(void) { }
+    otError GetNextRssIn(otMacFilterIterator &, Entry &) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError Apply(const ExtAddress &, int8_t &) { return OT_ERROR_NONE; }
+};
+
+/**
+ * @}
+ *
+ */
+
+}  // namespace Mac
+}  // namespace ot
+
+#endif  // MAC_FILTER_HPP_

@@ -160,6 +160,7 @@ private:
  */
 class LinkQualityInfo
 {
+
 public:
     enum
     {
@@ -284,6 +285,18 @@ public:
      */
     static uint8_t ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss);
 
+    /**
+     * This method converts a link quality value to a typical received signal strength value .
+     * @note only for test
+     *
+     * @param[in]  aNoiseFloor   The noise floor value (in dBm).
+     * @param[in]  aLinkQuality  The link quality value in [0, 3].
+     *
+     * @returns The typical platform rssi.
+     *
+     */
+    static int8_t ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality);
+
 private:
     enum
     {
@@ -293,6 +306,13 @@ private:
         kThreshold2             = 10,   // Link margin threshold for quality 2 link.
         kThreshold1             = 2,    // Link margin threshold for quality 1 link.
         kHysteresisThreshold    = 2,    // Link margin hysteresis threshold.
+
+        // constants for test:
+
+        kLinkQuality3LinkMargin     = 50, ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality2LinkMargin     = 15, ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality1LinkMargin     = 5,  ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality0LinkMargin     = 0,  ///< link margin for Link Quality 3 (21 - 255)
 
         kNoLinkQuality          = 0xff, // Used to indicate that there is no previous/last link quality.
     };

@@ -45,7 +45,6 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[LEADER].enable_whitelist()
 
         for i in range(2,17):

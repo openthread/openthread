@@ -8,7 +8,6 @@ OpenThread test scripts use the CLI to execute test cases.
 ## OpenThread Command List
 
 * [autostart](#autostart)
-* [blacklist](#blacklist)
 * [bufferinfo](#bufferinfo)
 * [channel](#channel)
 * [child](#child-list)
@@ -26,6 +25,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [eui64](#eui64)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
+* [filter](#filter)
 * [factoryreset](#factoryreset)
 * [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
@@ -66,7 +66,6 @@ OpenThread test scripts use the CLI to execute test cases.
 * [thread](#thread-start)
 * [txpowermax](#txpowermax)
 * [version](#version)
-* [whitelist](#whitelist)
 * [diag](#diag)
 
 ## OpenThread Command Details
@@ -1630,61 +1629,148 @@ OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
 Done
 ```
 
-### whitelist
+### filter
 
-List the whitelist entries.
+List the filter status, including address and rss filtering entries.
 
 ```bash
-> whitelist
-Enabled
-e2b3540590b0fd87
-d38d7f875888fccb
-c467a90a2060fa0e
+> filter
+Address Mode: Whitelist
+0f6127e33af6b403 : rss -95 (lqi 1)
+0f6127e33af6b402
+RssIn List:
+0f6127e33af6b403 : rss -95 (lqi 1)
+Default rss : -50 (lqi 3)
 Done
 ```
 
-### whitelist add \<extaddr\>
+### filter addr
 
-Add an IEEE 802.15.4 Extended Address to the whitelist.
+List the address filter status.
 
 ```bash
-> whitelist add dead00beef00cafe
+> filter addr
+Whitelist
+0f6127e33af6b403 : rss -95 (lqi 1)
+0f6127e33af6b402
 Done
 ```
 
-### whitelist clear
+### filter addr whitelist
 
-Clear all entries from the whitelist.
+Enable whitelist address filter mode.
 
 ```bash
-> whitelist clear
+> filter addr whitelist
 Done
 ```
 
-### whitelist disable
+### filter addr blacklist
 
-Disable MAC whitelist filtering.
+Enable blacklist address filter mode.
 
 ```bash
-> whitelist disable
+> filter addr blacklist
 Done
 ```
 
-### whitelist enable
+### filter addr add \<extaddr\> \[rss\]
 
-Enable MAC whitelist filtering.
+Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received singal strength for the messages from the address if rss is specified.
 
 ```bash
-> whitelist enable
+> filter addr add 0f6127e33af6b403 -95
 Done
 ```
 
-### whitelist remove \<extaddr\>
+```bash
+> filter addr add 0f6127e33af6b402
+Done
+```
 
-Remove an IEEE 802.15.4 Extended Address from the whitelist.
+### filter addr remove \<extaddr\>
+
+Remove the IEEE802.15.4 Extended Address from the address filter.
 
 ```bash
-> whitelist remove dead00beef00cafe
+> filter addr remove 0f6127e33af6b402
+Done
+```
+
+### filter addr clear
+
+Clear all the IEEE802.15.4 Extended Addresses from the address filter.
+
+```bash
+> filter addr clear 
+Done
+```
+
+### filter rss
+
+List the rss filter status
+
+```bash
+> filter rss
+0f6127e33af6b403 : rss -95 (lqi 1)
+Default rss: -50 (lqi 3)
+Done
+```
+
+### filter rss add \<extaddr\> \<rss\>
+
+Set the received signal strength for the messages from the IEEE802.15.4 Extended Address.
+If extaddr is "\*", default received signal strength for all received messages would be set.
+
+
+```bash
+> filter rss add * -50
+Done
+```
+
+```bash
+> filter rss add 0f6127e33af6b404 -85
+Done
+```
+
+### filter rss add-lqi \<extaddr\> \<lqi\>
+
+Set the received link quality for the messages from the IEEE802.15.4 Extended Address. Valid lqi range [0,3]
+If extaddr is \*, default received link quality for all received messages would be set.
+Equivalent with 'filter rss add' with similar usage
+
+
+```bash
+> filter rss add-lqi * 3
+Done
+```
+
+```bash
+> filter rss add 0f6127e33af6b404 2 
+Done
+```
+
+### filter rss remove \<extaddr\>
+
+Removes the received signal strength or received link quality setting on the Extended Address.
+If extaddr is "\*", default received signal strength or link quality for all received messages would be unset.
+
+```bash
+> filter rss remove *
+Done
+```
+
+```bash
+> filter rss remove 0f6127e33af6b404 
+Done
+```
+
+### filter rss clear
+
+Clear all the the received signal strength or received link quality settings.
+
+```bash
+> filter rss clear
 Done
 ```
 

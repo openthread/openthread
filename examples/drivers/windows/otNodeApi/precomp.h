@@ -55,6 +55,7 @@ using namespace std;
 #include <openthread/thread_ftd.h>
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
+#include <openthread/link.h>
 #include <openthread/platform/logging-windows.h>
 #include <otNode.h>
 

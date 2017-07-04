@@ -61,7 +61,7 @@ set -x
         --enable-jam-detection            \
         --enable-joiner                   \
         --enable-legacy                   \
-        --enable-mac-whitelist            \
+        --enable-mac-filter               \
         --enable-mtd-network-diagnostic   \
         --enable-raw-link-api             \
         --enable-tmf-proxy || die

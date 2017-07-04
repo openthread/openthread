@@ -136,8 +136,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
     mPcapCallback(NULL),
     mPcapCallbackContext(NULL),
-    mWhitelist(),
-    mBlacklist(),
+    mFilter(),
     mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
     mKeyIdMode2FrameCounter(0),
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1468,12 +1467,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     Address dstaddr;
     PanId panid;
     Neighbor *neighbor;
-    otMacWhitelistEntry *whitelistEntry;
-    int8_t rssi;
     bool receive = false;
     uint8_t commandId;
     bool scheduleNextTrasmission = false;
     otError error = aError;
+    int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
 
     mCounters.mRxTotal++;
 
@@ -1525,21 +1523,17 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
     }
 
-    // Source Whitelist Processing
-    if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())
+    // Source filter Processing.
+    if (srcaddr.mLength != 0)
     {
-        VerifyOrExit((whitelistEntry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = OT_ERROR_WHITELIST_FILTERED);
+        // check if filtered out by whitelist or blacklist.
+        SuccessOrExit(error = mFilter.Apply(srcaddr.mExtAddress, rssi));
 
-        if (mWhitelist.GetFixedRssi(*whitelistEntry, rssi) == OT_ERROR_NONE)
+        // override with the rssi in setting
+        if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
             aFrame->mPower = rssi;
         }
-    }
-
-    // Source Blacklist Processing
-    if (srcaddr.mLength != 0 && mBlacklist.IsEnabled())
-    {
-        VerifyOrExit((mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
     }
 
     // Destination Address Filtering
@@ -1582,6 +1576,12 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
     if (neighbor != NULL)
     {
+        // make assigned rssi to take effect quickly
+        if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
+        {
+            neighbor->GetLinkInfo().Clear();
+        }
+
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mPower);
 
         if (aFrame->GetSecurityEnabled() == true)

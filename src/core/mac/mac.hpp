@@ -41,9 +41,8 @@
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_blacklist.hpp"
 #include "mac/mac_frame.hpp"
-#include "mac/mac_whitelist.hpp"
+#include "mac/mac_filter.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/topology.hpp"
@@ -483,20 +482,12 @@ public:
     otError SetExtendedPanId(const uint8_t *aExtPanId);
 
     /**
-     * This method returns the MAC whitelist filter.
+     * This method returns the MAC filter.
      *
-     * @returns A reference to the MAC whitelist filter.
-     *
-     */
-    Whitelist &GetWhitelist(void) { return mWhitelist; }
-
-    /**
-     * This method returns the MAC blacklist filter.
-     *
-     * @returns A reference to the MAC blacklist filter.
+     * @returns A reference to the MAC filter.
      *
      */
-    Blacklist &GetBlacklist(void) { return mBlacklist; }
+    Filter &GetFilter(void) { return mFilter; }
 
     /**
      * This method is called to handle receive events.
@@ -744,8 +735,7 @@ private:
     otLinkPcapCallback mPcapCallback;
     void *mPcapCallbackContext;
 
-    Whitelist mWhitelist;
-    Blacklist mBlacklist;
+    Filter mFilter;
 
     Frame *mTxFrame;
 

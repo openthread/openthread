@@ -37,11 +37,13 @@ class otCli:
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
+        self.filter_prefix = 'filter addr'
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
         elif self.node_type == 'ncp-sim':
             self.__init_ncp_sim(nodeid)
+            self.filter_prefix = 'filter-addr'
         else:
             self.__init_sim(nodeid)
 
@@ -150,26 +152,31 @@ class otCli:
         self.pexpect.expect('Done')
 
     def clear_whitelist(self):
-        self.send_command('whitelist clear')
+        cmd = self.filter_prefix + ' clear'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def enable_whitelist(self):
-        self.send_command('whitelist enable')
+        cmd = self.filter_prefix + ' whitelist'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def disable_whitelist(self):
-        self.send_command('whitelist disable')
+        cmd = self.filter_prefix + ' disable'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def add_whitelist(self, addr, rssi=None):
-        cmd = 'whitelist add ' + addr
+        cmd = self.filter_prefix + ' add ' + addr
+
         if rssi != None:
             cmd += ' ' + str(rssi)
+
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def remove_whitelist(self, addr):
-        cmd = 'whitelist remove ' + addr
+        cmd = self.filter_prefix + ' remove ' + addr
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -186,6 +193,7 @@ class otCli:
         i = self.pexpect.expect('([0-9a-fA-F]{16})')
         if i == 0:
             addr64 = self.pexpect.match.groups()[0].decode("utf-8")
+
         self.pexpect.expect('Done')
         return addr64
 
