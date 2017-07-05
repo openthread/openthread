@@ -636,16 +636,17 @@ typedef enum
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN              = 0x30,
-    SPINEL_PROP_MAC_SCAN_STATE          = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]
-    SPINEL_PROP_MAC_SCAN_MASK           = SPINEL_PROP_MAC__BEGIN + 1, ///< [A(C)]
-    SPINEL_PROP_MAC_SCAN_PERIOD         = SPINEL_PROP_MAC__BEGIN + 2, ///< ms-per-channel [S]
-    SPINEL_PROP_MAC_SCAN_BEACON         = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,mac_data,net_data [CcdD]
-    SPINEL_PROP_MAC_15_4_LADDR          = SPINEL_PROP_MAC__BEGIN + 4, ///< [E]
-    SPINEL_PROP_MAC_15_4_SADDR          = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
-    SPINEL_PROP_MAC_15_4_PANID          = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
-    SPINEL_PROP_MAC_RAW_STREAM_ENABLED  = SPINEL_PROP_MAC__BEGIN + 7, ///< [C]
-    SPINEL_PROP_MAC_PROMISCUOUS_MODE    = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
-    SPINEL_PROP_MAC_ENERGY_SCAN_RESULT  = SPINEL_PROP_MAC__BEGIN + 9, ///< chan,maxRssi [Cc]
+    SPINEL_PROP_MAC_SCAN_STATE          = SPINEL_PROP_MAC__BEGIN + 0,  ///< [C]
+    SPINEL_PROP_MAC_SCAN_MASK           = SPINEL_PROP_MAC__BEGIN + 1,  ///< [A(C)]
+    SPINEL_PROP_MAC_SCAN_PERIOD         = SPINEL_PROP_MAC__BEGIN + 2,  ///< ms-per-channel [S]
+    SPINEL_PROP_MAC_SCAN_BEACON         = SPINEL_PROP_MAC__BEGIN + 3,  ///< chan,rssi,mac_data,net_data [CcdD]
+    SPINEL_PROP_MAC_15_4_LADDR          = SPINEL_PROP_MAC__BEGIN + 4,  ///< [E]
+    SPINEL_PROP_MAC_15_4_SADDR          = SPINEL_PROP_MAC__BEGIN + 5,  ///< [S]
+    SPINEL_PROP_MAC_15_4_PANID          = SPINEL_PROP_MAC__BEGIN + 6,  ///< [S]
+    SPINEL_PROP_MAC_RAW_STREAM_ENABLED  = SPINEL_PROP_MAC__BEGIN + 7,  ///< [C]
+    SPINEL_PROP_MAC_PROMISCUOUS_MODE    = SPINEL_PROP_MAC__BEGIN + 8,  ///< [C]
+    SPINEL_PROP_MAC_ENERGY_SCAN_RESULT  = SPINEL_PROP_MAC__BEGIN + 9,  ///< chan,maxRssi [Cc]
+    SPINEL_PROP_MAC_DATA_POLL_PERIOD    = SPINEL_PROP_MAC__BEGIN + 10, ///< pollPeriod (in ms) [L]
     SPINEL_PROP_MAC__END                = 0x40,
 
     SPINEL_PROP_MAC_EXT__BEGIN          = 0x1300,

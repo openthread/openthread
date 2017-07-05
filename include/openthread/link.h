@@ -277,7 +277,7 @@ OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @returns  The data poll period of sleepy end device.
+ * @returns  The data poll period of sleepy end device in milliseconds.
  *
  * @sa otLinkSetPollPeriod
  */
@@ -290,7 +290,7 @@ OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
  *       otSetChildTimeout() shall be called.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aPollPeriod  data poll period.
+ * @param[in]  aPollPeriod  data poll period in milliseconds.
  *
  * @sa otLinkGetPollPeriod
  */
