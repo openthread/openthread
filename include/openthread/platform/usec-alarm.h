@@ -51,16 +51,6 @@ extern "C" {
  */
 
 /**
- * This structure represents time in microseconds.
- *
- */
-typedef struct
-{
-    uint32_t mMs;  ///< Time in milliseconds.
-    uint16_t mUs;  ///< Time fraction in microseconds.
-} otPlatUsecAlarmTime;
-
-/**
  * This defines the callback for indicating when the alarm has expired.
  *
  * @param[in]  aContext  A pointer to arbitrary context information.
@@ -69,20 +59,17 @@ typedef struct
 typedef void (*otPlatUsecAlarmHandler)(void *aContext);
 
 /**
- * Set the alarm to fire at @p aDt milliseconds and microseconds after @p aT0.
+ * Set the alarm to fire at @p aDt microseconds after @p aT0.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aT0        The reference time.
- * @param[in]  aDt        The time delay in milliseconds and microseconds from @p aT0.
+ * @param[in]  aDt        The time delay in microseconds from @p aT0.
  * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
  * @param[in]  aContext   A pointer to arbitrary context information.
  *
  */
-void otPlatUsecAlarmStartAt(otInstance *aInstance,
-                            const otPlatUsecAlarmTime *aT0,
-                            const otPlatUsecAlarmTime *aDt,
-                            otPlatUsecAlarmHandler aHandler,
-                            void *aContext);
+void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt,
+                            otPlatUsecAlarmHandler aHandler, void *aContext);
 
 /**
  * Stop the alarm.
@@ -95,10 +82,10 @@ void otPlatUsecAlarmStop(otInstance *aInstance);
 /**
  * Get the current time.
  *
- * @param[out]  aNow  The current time in milliseconds and microseconds.
+ * @param[out]  aNow  The current time in microseconds.
  *
  */
-void otPlatUsecAlarmGetNow(otPlatUsecAlarmTime *aNow);
+uint32_t otPlatUsecAlarmGetNow(void);
 
 /**
  * @}

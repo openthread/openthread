@@ -562,22 +562,14 @@ void LinkRaw::StartCsmaBackoff(void)
     backoff = (otPlatRandomGet() % (1UL << backoffExponent));
     backoff *= (static_cast<uint32_t>(Mac::kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    otPlatUsecAlarmTime now;
-    otPlatUsecAlarmTime delay;
-
-    otPlatUsecAlarmGetNow(&now);
-    delay.mMs = backoff / 1000UL;
-    delay.mUs = backoff - (delay.mMs * 1000UL);
-
     otLogDebgPlat(aInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
     mTimerReason = kTimerReasonRetransmitTimeout;
-    otPlatUsecAlarmStartAt(&mInstance, &now, &delay, &HandleTimer, this);
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+    otPlatUsecAlarmStartAt(&mInstance, otPlatUsecAlarmGetNow(), backoff, &HandleTimer, this);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    mTimerReason = kTimerReasonRetransmitTimeout;
     mTimer.Start(backoff / 1000UL);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
