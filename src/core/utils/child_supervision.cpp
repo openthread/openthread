@@ -118,6 +118,8 @@ void ChildSupervisor::SendMessage(Child &aChild)
     SuccessOrExit(error = netif.SendMessage(*message));
     message = NULL;
 
+    otLogInfoMle(GetInstance(), "Sending supervision message to child 0x%04x", aChild.GetRloc16());
+
 exit:
 
     if (message != NULL)
