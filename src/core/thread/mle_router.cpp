@@ -1706,13 +1706,6 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     child = FindChild(macAddr);
 
-    if (child != NULL && !child->IsFullThreadDevice())
-    {
-        // Parent Request from a MTD child means that the child had detached. It can be safely removed.
-        RemoveNeighbor(*child);
-        child = NULL;
-    }
-
     if (child == NULL)
     {
         VerifyOrExit((child = NewChild()) != NULL);
@@ -1919,6 +1912,8 @@ otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challen
     uint16_t delay;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
+    message->SetDirectTransmission();
+
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -2084,6 +2079,10 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
                  memcmp(response.GetResponse(), child->GetChallenge(), child->GetChallengeSize()) == 0,
                  error = OT_ERROR_SECURITY);
 
+    // Remove existing MLE messages
+    netif.GetMeshForwarder().RemoveMessages(*child, Message::kSubTypeMleGeneral);
+    netif.GetMeshForwarder().RemoveMessages(*child, Message::kSubTypeMleChildUpdateRequest);
+
     // Link-Layer Frame Counter
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter),
                                       linkFrameCounter));
@@ -2162,7 +2161,6 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
             netif.GetMeshForwarder().ClearChildIndirectMessages(*child);
         }
     }
-
 
     child->SetLastHeard(TimerMilli::GetNow());
     child->SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
