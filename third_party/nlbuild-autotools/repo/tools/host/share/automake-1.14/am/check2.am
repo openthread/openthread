@@ -1,0 +1,60 @@
+## automake - create Makefile.in from Makefile.am
+## Copyright (C) 2008-2013 Free Software Foundation, Inc.
+
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if %?FIRST%
+## When BSD make is run in parallel mode, it apparently strips any
+## leading directory component from the automatic variable '$*' (of
+## course, against what POSIX mandates).  Try to detect and work
+## around this incompatibility.
+am__set_b = \
+  case '$@' in \
+    */*) \
+      case '$*' in \
+        */*) b='$*';; \
+          *) b=`echo '$@' | sed 's/\.log$$//'`; \
+       esac;; \
+    *) \
+      b='$*';; \
+  esac
+endif %?FIRST%
+
+## From a test file to a .log and .trs file.
+?GENERIC?%EXT%.log:
+?!GENERIC?%OBJ%: %SOURCE%
+	@p='%SOURCE%'; \
+## Another hack to support BSD make in parallel mode.
+?!GENERIC?	b='%BASE%'; \
+?GENERIC?	$(am__set_b); \
+	$(am__check_pre) %DRIVER% --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) %DRIVER_FLAGS% -- %COMPILE% \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+
+## If no programs are built in this package, then this rule is removed
+## at automake time.  Otherwise, %am__EXEEXT% expands to a configure time
+## conditional, true if $(EXEEXT) is nonempty, thus this rule does not
+## conflict with the previous one.
+if %am__EXEEXT%
+?GENERIC?%EXT%$(EXEEXT).log:
+	@p='%SOURCE%'; \
+	## Another hack to support BSD make in parallel mode.
+?!GENERIC?	b='%BASE%'; \
+?GENERIC?	$(am__set_b); \
+	$(am__check_pre) %DRIVER% --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) %DRIVER_FLAGS% -- %COMPILE% \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+endif %am__EXEEXT%

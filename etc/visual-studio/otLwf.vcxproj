@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="openthread.configuration.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3F1F7F6C-2A33-4635-9880-08FC5BC4E435}</ProjectGuid>
+    <TemplateGuid>{8b1800b9-d017-4029-9785-13ef5e5b328e}</TemplateGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <RootNamespace>Thread</RootNamespace>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+  </PropertyGroup>
+  <PropertyGroup Label="PropertySheets">
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\sys\</OutDir>
+    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreProcessorDefinitions>
+        %(PreProcessorDefinitions);
+        NDIS_WDM=1;
+        NDIS630=1;
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
+        OPENTHREAD_MULTIPLE_INSTANCE;
+      </PreProcessorDefinitions>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        ..\..\include;
+        ..\..\examples\drivers\windows\include;
+        ..\..\examples\drivers\windows\otLwf;
+        ..\..\src;
+        ..\..\src\core;
+        ..\..\src\missing\stdint;
+        ..\..\src\missing\stdbool;
+      </AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4201;4214</DisableSpecificWarnings>
+      <PreCompiledHeaderFile>precomp.h</PreCompiledHeaderFile>
+      <PreCompiledHeader>Use</PreCompiledHeader>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>otLwf</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
+      <EnablePREfast>true</EnablePREfast>
+    </ClCompile>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..;.;</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>
+        %(AdditionalDependencies);
+        ndis.lib;
+        wdmsec.lib;
+        netio.lib;
+        uuid.lib;
+        cng.lib;
+      </AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Platform)'=='ARM'">inf2cat /driver:$(TargetDir) /os:8_ARM</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\address.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\alarm.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\datapath.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\driver.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\eventprocessing.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\iocontrol.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\thread.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\tunnel.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\oid.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\precomp.c">
+      <AdditionalIncludeDirectories>..;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreProcessorDefinitions>%(PreProcessorDefinitions);NDIS_WDM=1</PreProcessorDefinitions>
+      <PreCompiledHeaderFile>precomp.h</PreCompiledHeaderFile>
+      <PreCompiledHeader>Create</PreCompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\filter.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\device.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\radio.c" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\device.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\driver.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\iocontrol.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\nsihelper.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\oid.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\radio.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\thread.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\tunnel.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\precomp.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\filter.h" />
+    <ResourceCompile Include="..\..\examples\drivers\windows\otLwf\filter.rc" />
+    <Inf Include="..\..\examples\drivers\windows\otLwf\otLwf.inf" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToPackage Include="$(TargetPath)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="libopenthread_k.vcxproj">
+      <Project>{9b33c190-5d07-40bf-9536-68843dc5d7af}</Project>
+    </ProjectReference>
+    <ProjectReference Include="mbedtls_k.vcxproj">
+      <Project>{69be8e8c-cf1e-46d6-932b-db435f47059b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="spinel_k.vcxproj">
+      <Project>{a55766b5-58b6-4519-835e-5a4b7c164b5a}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

@@ -1,0 +1,92 @@
+## automake - create Makefile.in from Makefile.am
+## Copyright (C) 1998-2013 Free Software Foundation, Inc.
+
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+## ---------- ##
+## Building.  ##
+## ---------- ##
+
+if %?FIRST%
+JAVAC = javac
+CLASSPATH_ENV = CLASSPATH=$(JAVAROOT):$(srcdir)/$(JAVAROOT)$${CLASSPATH:+":$$CLASSPATH"}
+JAVAROOT = $(top_builddir)
+endif %?FIRST%
+
+class%NDIR%.stamp: $(am__java_sources)
+	@list1='$?'; list2=; if test -n "$$list1"; then \
+	  for p in $$list1; do \
+	    if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	    list2="$$list2 $$d$$p"; \
+	  done; \
+	  echo '$(CLASSPATH_ENV) $(JAVAC) -d $(JAVAROOT) $(AM_JAVACFLAGS) $(JAVACFLAGS) '"$$list2"; \
+	  $(CLASSPATH_ENV) $(JAVAC) -d $(JAVAROOT) $(AM_JAVACFLAGS) $(JAVACFLAGS) $$list2; \
+	else :; fi
+	echo timestamp > $@
+
+
+## ------------ ##
+## Installing.  ##
+## ------------ ##
+
+if %?INSTALL%
+am__installdirs += "$(DESTDIR)$(%NDIR%dir)"
+?EXEC?.PHONY install-exec-am: install-%DIR%JAVA
+?!EXEC?.PHONY install-data-am: install-%DIR%JAVA
+install-%DIR%JAVA: class%NDIR%.stamp
+	@$(NORMAL_INSTALL)
+## A single .java file can be compiled into multiple .class files.  So
+## we just install all the .class files that got built into this
+## directory.  This is not optimal, but will have to do for now.
+	@test -n "$(%DIR%_JAVA)" && test -n "$(%NDIR%dir)" || exit 0; \
+	echo " $(MKDIR_P) '$(DESTDIR)$(%NDIR%dir)'"; \
+	$(MKDIR_P) "$(DESTDIR)$(%NDIR%dir)"; \
+	set x *.class; shift; test "$$1" != "*.class" || exit 0; \
+	echo " $(INSTALL_DATA)" "$$@" "'$(DESTDIR)$(%NDIR%dir)/$$p'"; \
+	$(INSTALL_DATA) "$$@" "$(DESTDIR)$(%NDIR%dir)"
+endif %?INSTALL%
+
+
+## -------------- ##
+## Uninstalling.  ##
+## -------------- ##
+
+if %?INSTALL%
+.PHONY uninstall-am: uninstall-%DIR%JAVA
+uninstall-%DIR%JAVA:
+	@$(NORMAL_UNINSTALL)
+	@test -n "$(%DIR%_JAVA)" && test -n "$(%NDIR%dir)" || exit 0; \
+	set x *.class; shift; test "$$1" != "*.class" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(%NDIR%dir)' && rm -f" "$$@" ")"; \
+	cd "$(DESTDIR)$(%NDIR%dir)" && rm -f "$$@"
+endif %?INSTALL%
+
+
+## ---------- ##
+## Cleaning.  ##
+## ---------- ##
+
+.PHONY clean-am: clean-%NDIR%JAVA
+clean-%NDIR%JAVA:
+	-rm -f *.class class%NDIR%.stamp
+
+
+## -------------- ##
+## Distributing.  ##
+## -------------- ##
+
+if %?DIST%
+DIST_COMMON += %DISTVAR%
+endif %?DIST%

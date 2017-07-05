@@ -1,0 +1,106 @@
+;
+;  Copyright (c) 2016, The OpenThread Authors.
+;  All rights reserved.
+;
+;  Redistribution and use in source and binary forms, with or without
+;  modification, are permitted provided that the following conditions are met:
+;  1. Redistributions of source code must retain the above copyright
+;     notice, this list of conditions and the following disclaimer.
+;  2. Redistributions in binary form must reproduce the above copyright
+;     notice, this list of conditions and the following disclaimer in the
+;     documentation and/or other materials provided with the distribution.
+;  3. Neither the name of the copyright holder nor the
+;     names of its contributors may be used to endorse or promote products
+;     derived from this software without specific prior written permission.
+;
+;  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;  POSSIBILITY OF SUCH DAMAGE.
+;
+
+[Version]
+Signature           = "$Windows NT$"
+Class               = NetService
+ClassGUID           = {4D36E974-E325-11CE-BFC1-08002BE10318}
+Provider            = %OpenThread%
+DriverVer           = 
+PnpLockDown         = 1
+CatalogFile         = otLwf.cat
+
+[Manufacturer]
+%OpenThread%        = OpenThread,NT$ARCH$
+
+[OpenThread.NT$ARCH$]
+%otlwf.DeviceDesc%  = otlwf.ndi, otLwf
+
+;-------------------------------------------------------------------------------
+; OpenThread NDIS Filter Driver
+;-------------------------------------------------------------------------------
+[otlwf.ndi]
+Characteristics     = 0x40000
+NetCfgInstanceId    = "{B3A3845A-164E-4727-B12E-32B8DCE1F6CD}"
+AddReg              = otlwf.Reg
+Copyfiles           = otLwf.CopyFiles
+
+[otlwf.ndi.Services]
+AddService          = otLwf, , otlwf.Service
+
+[otlwf.ndi.Remove.Services]
+; The SPSVCINST_STOPSERVICE flag instructs SCM to stop the NT service
+; before uninstalling the driver.
+DelService          =   otLwf,  0x200 ; SPSVCINST_STOPSERVICE
+
+;-------------------------------------------------------------------------------
+; OpenThread NDIS Filter Common
+;-------------------------------------------------------------------------------
+[otlwf.Reg]
+HKR, Ndi,               Service,            ,           "otLwf"
+HKR, Ndi,               CoServices,         0x00010000, "otLwf"
+HKR, Ndi,               FilterClass,        ,           ms_medium_converter_top
+HKR, Ndi,               FilterType,         0x00010001, 0x00000002
+HKR, Ndi,               FilterRunType,      0x00010001, 0x00000002   ;OPTIONAL filter 
+HKR, Ndi\Interfaces,    UpperRange,         ,           "noupper"
+HKR, Ndi\Interfaces,    LowerRange,         ,           "nolower"
+HKR, Ndi\Interfaces,    FilterMediaTypes,   ,           "802.15.4"
+
+;-------------------------------------------------------------------------------
+; Driver and Service Section
+;-------------------------------------------------------------------------------
+[otLwf.CopyFiles]
+otLwf.sys,,,2
+
+[otlwf.Service]
+DisplayName         = %otlwf.Service.DispName%
+ServiceType         = 1 ;SERVICE_KERNEL_DRIVER
+StartType           = 1 ;SERVICE_SYSTEM_START
+ErrorControl        = 1 ;SERVICE_ERROR_NORMAL
+ServiceBinary       = %12%\otLwf.sys
+LoadOrderGroup      = NDIS
+Description         = %otlwf.DeviceDesc%
+
+[SourceDisksNames]
+1 = %otlwf.DeviceDesc%,"",,
+
+[SourceDisksFiles]
+; TODO: Include any related files that should be installed with your driver.
+otLwf.sys = 1
+
+[DestinationDirs]
+DefaultDestDir = 12
+otLwf.CopyFiles = 12
+
+;-------------------------------------------------------------------------------
+; Localizable Strings
+;-------------------------------------------------------------------------------
+[Strings]
+OpenThread              = "OpenThread"
+otlwf.DeviceDesc        = "OpenThread NDIS LightWeight Filter"
+otlwf.Service.DispName  = "OpenThread NDIS LightWeight Filter"

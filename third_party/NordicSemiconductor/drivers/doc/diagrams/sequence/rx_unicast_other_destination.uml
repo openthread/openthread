@@ -1,0 +1,34 @@
+@startuml
+
+participant RADIO
+participant Driver
+
+      -> State: WaitingRxFrame
+      
+RADIO  -> Driver: EV: FRAMESTART
+activate RADIO
+Driver -> Mutex: lock
+activate Mutex
+Driver -> State: RxHeader
+
+RADIO   -> Driver: EV: BCMATCH
+Driver -->> RADIO: get_bcc()
+RADIO  --> Driver: BCC_INIT
+Driver  -> Driver: Check frame type: Data
+Driver  -> Driver: Check dest address: short
+Driver  -> RADIO:  set_bcc(BCC_SHORT_ADDR)
+
+RADIO   -> Driver: EV: BCMATCH
+Driver -->> RADIO: get_bcc()
+RADIO  --> Driver: BCC_SHORT_ADDR
+Driver  -> Driver: Check dest addr: Missed unicast
+Driver  -> Driver: stopSendingAck(WaitingRxFrame)
+
+RADIO   -> Driver: EV: DISABLED
+Driver  -> RADIO:  TASK: RXEN
+Driver  -> Mutex:  unlock
+deactivate Mutex
+Driver  -> RADIO:  clear_event(DISABLED)
+     
+
+@enduml

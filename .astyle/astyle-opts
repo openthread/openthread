@@ -1,0 +1,16 @@
+--style=allman
+--max-code-length=120
+--max-instatement-indent=100
+--attach-namespaces --attach-inlines
+--attach-extern-c
+--min-conditional-indent=0
+--break-blocks
+--pad-oper
+--pad-header
+--unpad-paren
+--align-pointer=name
+--add-brackets
+--keep-one-line-blocks
+--convert-tabs
+--break-after-logical
+--formatted

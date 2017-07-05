@@ -1,0 +1,220 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="openthread.configuration.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9B33C190-5D07-40BF-9536-68843DC5D7AF}</ProjectGuid>
+    <TemplateGuid>{8c0e3d8b-df43-455b-815a-4a0e72973bc6}</TemplateGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <Configuration>Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">Win32</Platform>
+    <RootNamespace>Thread</RootNamespace>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+  </PropertyGroup>
+  <PropertyGroup Label="PropertySheets">
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
+    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>
+        %(PreprocessorDefinitions);
+        MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
+        WINDOWS_LOGGING;
+        OPENTHREAD_MULTIPLE_INSTANCE;
+      </PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        ..\..\include;
+        ..\..\examples\drivers\windows\include;
+        ..\..\src\core;
+        ..\..\src\missing\stdint;
+        ..\..\src\missing\stdbool;
+        ..\..\third_party\mbedtls;
+        ..\..\third_party\mbedtls\repo\include;
+      </AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>otCore</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_base.cpp" />
+    <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
+    <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
+    <ClCompile Include="..\..\src\core\coap\coap_server.cpp" />
+    <ClCompile Include="..\..\src\core\coap\secure_coap_client.cpp" />
+    <ClCompile Include="..\..\src\core\coap\secure_coap_server.cpp" />
+    <ClCompile Include="..\..\src\core\common\crc16.cpp" />
+    <ClCompile Include="..\..\src\core\common\logging.cpp" />
+    <ClCompile Include="..\..\src\core\common\message.cpp" />
+    <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
+    <ClCompile Include="..\..\src\core\common\timer.cpp" />
+    <ClCompile Include="..\..\src\core\common\tlvs.cpp" />
+    <ClCompile Include="..\..\src\core\common\trickle_timer.cpp" />
+    <ClCompile Include="..\..\src\core\crypto\aes_ccm.cpp" />
+    <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp" />
+    <ClCompile Include="..\..\src\core\crypto\hmac_sha256.cpp" />
+    <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
+    <ClCompile Include="..\..\src\core\mac\mac.cpp" />
+    <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp" />
+    <ClCompile Include="..\..\src\core\mac\mac_frame.cpp" />
+    <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager_ftd.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dtls.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\energy_scan_client.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\joiner.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\leader.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\timestamp.cpp" />
+    <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp" />
+    <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp" />
+    <ClCompile Include="..\..\src\core\net\icmp6.cpp" />
+    <ClCompile Include="..\..\src\core\net\ip6.cpp" />
+    <ClCompile Include="..\..\src\core\net\ip6_address.cpp" />
+    <ClCompile Include="..\..\src\core\net\ip6_filter.cpp" />
+    <ClCompile Include="..\..\src\core\net\ip6_mpl.cpp" />
+    <ClCompile Include="..\..\src\core\net\ip6_routes.cpp" />
+    <ClCompile Include="..\..\src\core\net\netif.cpp" />
+    <ClCompile Include="..\..\src\core\net\udp6.cpp" />
+    <ClCompile Include="..\..\src\core\openthread.cpp" />
+    <ClCompile Include="..\..\src\core\thread\address_resolver.cpp" />
+    <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp" />
+    <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp" />
+    <ClCompile Include="..\..\src\core\thread\key_manager.cpp" />
+    <ClCompile Include="..\..\src\core\thread\link_quality.cpp" />
+    <ClCompile Include="..\..\src\core\thread\lowpan.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mle.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mle_router.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_data.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_data_leader.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_data_leader_ftd.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_data_local.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp" />
+    <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp" />
+    <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
+    <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
+    <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\openthread.h" />
+    <ClInclude Include="..\..\include\openthread-types.h" />
+    <ClInclude Include="..\..\include\openthread-windows-config.h" />
+    <ClInclude Include="..\..\include\openthread\link_raw.h" />
+    <ClInclude Include="..\..\src\core\coap\coap_base.hpp" />
+    <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
+    <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
+    <ClInclude Include="..\..\src\core\coap\coap_server.hpp" />
+    <ClInclude Include="..\..\src\core\coap\secure_coap_client.hpp" />
+    <ClInclude Include="..\..\src\core\coap\secure_coap_server.hpp" />
+    <ClInclude Include="..\..\src\core\common\code_utils.hpp" />
+    <ClInclude Include="..\..\src\core\common\crc16.hpp" />
+    <ClInclude Include="..\..\src\core\common\debug.hpp" />
+    <ClInclude Include="..\..\src\core\common\encoding.hpp" />
+    <ClInclude Include="..\..\src\core\common\logging.hpp" />
+    <ClInclude Include="..\..\src\core\common\message.hpp" />
+    <ClInclude Include="..\..\src\core\common\new.hpp" />
+    <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
+    <ClInclude Include="..\..\src\core\common\timer.hpp" />
+    <ClInclude Include="..\..\src\core\common\tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\common\trickle_timer.hpp" />
+    <ClInclude Include="..\..\src\core\crypto\aes_ccm.hpp" />
+    <ClInclude Include="..\..\src\core\crypto\aes_ecb.hpp" />
+    <ClInclude Include="..\..\src\core\crypto\hmac_sha256.hpp" />
+    <ClInclude Include="..\..\src\core\crypto\mbedtls.hpp" />
+    <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_blacklist_impl.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_blacklist_stub.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_frame.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\dataset.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\dtls.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\energy_scan_client.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\joiner.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\joiner_router.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\leader.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\timestamp.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_client.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_server.hpp" />
+    <ClInclude Include="..\..\src\core\net\icmp6.hpp" />
+    <ClInclude Include="..\..\src\core\net\ip6.hpp" />
+    <ClInclude Include="..\..\src\core\net\ip6_address.hpp" />
+    <ClInclude Include="..\..\src\core\net\ip6_filter.hpp" />
+    <ClInclude Include="..\..\src\core\net\ip6_mpl.hpp" />
+    <ClInclude Include="..\..\src\core\net\ip6_routes.hpp" />
+    <ClInclude Include="..\..\src\core\net\netif.hpp" />
+    <ClInclude Include="..\..\src\core\net\socket.hpp" />
+    <ClInclude Include="..\..\src\core\net\udp6.hpp" />
+    <ClInclude Include="..\..\src\core\openthread-core-config.h" />
+    <ClInclude Include="..\..\src\core\openthread-core-default-config.h" />
+    <ClInclude Include="..\..\src\core\openthread-core-windows-config.h" />
+    <ClInclude Include="..\..\src\core\openthread-instance.h" />
+    <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\key_manager.hpp" />
+    <ClInclude Include="..\..\src\core\thread\link_quality.hpp" />
+    <ClInclude Include="..\..\src\core\thread\lowpan.hpp" />
+    <ClInclude Include="..\..\src\core\thread\mesh_forwarder.hpp" />
+    <ClInclude Include="..\..\src\core\thread\mle.hpp" />
+    <ClInclude Include="..\..\src\core\thread\mle_constants.hpp" />
+    <ClInclude Include="..\..\src\core\thread\mle_router.hpp" />
+    <ClInclude Include="..\..\src\core\thread\mle_tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_data.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_data_leader.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_data_local.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_data_tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\thread_netif.hpp" />
+    <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
+    <ClInclude Include="..\..\src\core\thread\topology.hpp" />
+    <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
+    <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

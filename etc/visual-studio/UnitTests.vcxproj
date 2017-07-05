@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="openthread.configuration.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FD64BF17-8D36-4578-8D13-77B123BE30D3}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Thread</RootNamespace>
+    <ApplicationType>Windows Store</ApplicationType>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\dll\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        $(VCInstallDir)UnitTest\include;
+        ..\..\include;
+        ..\..\src;
+        ..\..\src\core;
+        ..\..\third_party\mbedtls;
+        ..\..\third_party\mbedtls\repo\include;
+      </AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+        %(PreprocessorDefinitions)
+        MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+      </PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+      <UseFullPaths>true</UseFullPaths>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>
+        %(AdditionalLibraryDirectories);
+        $(VCInstallDir)UnitTest\lib;
+        </AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\tests\unit\test_aes.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_fuzz.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_hmac_sha256.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_link_quality.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_lowpan.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_mac_frame.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_message.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_message_queue.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_ncp_buffer.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_platform.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_priority_queue.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_timer.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_toolchain_c.c" />
+    <ClCompile Include="..\..\tests\unit\test_toolchain.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_util.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_windows.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\tests\unit\test_platform.h" />
+    <ClInclude Include="..\..\tests\unit\test_lowpan.hpp" />
+    <ClInclude Include="..\..\tests\unit\test_util.h" />
+    <ClInclude Include="..\..\tests\unit\test_util.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="libopenthread-ncp-uart.vcxproj">
+      <Project>{d94867d2-6dae-47e2-962a-5e8e658134d1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libopenthread.vcxproj">
+      <Project>{dd5018be-54c6-4fd4-9f8d-08d52fc0cd40}</Project>
+    </ProjectReference>
+    <ProjectReference Include="mbedtls.vcxproj">
+      <Project>{4111c8bb-d354-4348-ad3c-eb6832e84831}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

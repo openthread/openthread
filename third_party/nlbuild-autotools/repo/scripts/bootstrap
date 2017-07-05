@@ -1,0 +1,243 @@
+#!/bin/sh
+
+#
+#    Copyright 2014-2016 Nest Labs Inc. All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+
+#
+#    Description:
+#      This file is a convenience script that will bootstrap the GNU
+#      autotools system for a project after any build system changes.
+#
+
+#
+# usage
+#
+# Display program usage.
+#
+usage() {
+    name=`basename $0`
+
+    echo "Usage: ${name} [ options ] [ -w <what> ]"
+
+    if [ $1 -ne 0 ]; then
+        echo "Try '${name} -h' for more information."
+    fi
+
+    if [ $1 -ne 1 ]; then
+        echo ""
+        echo "  -h, --help       Print this help, then exit."
+        echo "  -I DIR           Specify directory DIR as the root of the "
+        echo "                   nlbuild-autotools repository."
+        echo "  -v, --verbose    Verbosely report bootstrap progress."
+        echo "  -w, --what WHAT  Specify what part of the package should be "
+        echo "                   bootstrapped: all, config, make, or none "
+        echo "                   (default: all)."
+        echo ""
+    fi
+
+    exit $1
+}
+
+#
+# removetmp
+#
+# Remove temporary files and directories used during the run of this
+# script.
+#
+removetmp() {
+    rm -f "${LIBTOOLIZE}"
+    rm -f "${AUTOM4TE_CFG}"
+    rm -r -f "${BOOTSTRAP_TMPDIR}"
+}
+
+what="all"
+verbose=
+nlbuild_autotools_dir=
+
+# Parse out any command line options
+
+while [ ${#} -gt 0 ]; do
+    case ${1} in
+    -h|--help)
+        usage 0
+        ;;
+
+    -I)
+        nlbuild_autotools_dir="${2}"
+        shift 2
+        ;;
+
+    -v|--verbose)
+        verbose="--verbose"
+        shift 1
+        ;;
+
+    -w|--what)
+        case "${2}" in
+        all|make*|conf*|none)
+            what="${2}"
+            shift 2
+            ;;
+
+        *)
+	    echo "Unknown what value '${2}'."
+            usage 1
+            ;;
+
+        esac
+        ;;
+
+    *)
+        usage 1
+        ;;
+
+    esac
+done
+
+# Check to ensure that the location of the nlbuild-autotools directory
+# is sane.
+
+if [ -z "${nlbuild_autotools_dir}" ]; then
+    echo "$0: No -I option specified. Please provide the location of the nlbuild-autotools directory."
+    exit 1
+
+elif [ ! -d "${nlbuild_autotools_dir}" ]; then
+    echo "$0: No such directory: ${nlbuild_autotools_dir}. Please provide a valid path to the nlbuild-autotools directory."
+    exit 1
+
+fi
+
+# Establish some key directories
+
+srcdir=`dirname ${0}`
+abs_srcdir=`pwd`
+abs_top_srcdir="${abs_srcdir}"
+
+abs_top_hostdir="${nlbuild_autotools_dir}/tools/host"
+
+# Figure out what sort of build host we are running on, stripping off
+# any trailing version number information typically included on Darwin
+# / Mac OS X.
+
+host=`${nlbuild_autotools_dir}/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g'`
+
+# Attempt to be self-sufficient, relying on GNU autotools executables
+# installed along with the SDK itself.
+
+export PATH="${abs_top_hostdir}/bin:${abs_top_hostdir}/${host}/bin:${PATH}"
+
+export ACLOCAL=`which aclocal`
+export AUTOCONF="`which autoconf`"
+export AUTOHEADER="`which autoheader`"
+export AUTOM4TE="`which autom4te`"
+export AUTOMAKE="`which automake`"
+export M4=`which m4`
+
+# Establish some SDK-specific directories needed to override various
+# paths in GNU autotools that otherwise expect to be absolute
+# (e.g. /usr/share, etc.).
+
+export AC_MACRODIR="${abs_top_hostdir}/share/autoconf"
+
+export autom4te_perllibdir="${abs_top_hostdir}/share/autoconf"
+export PERL5LIB="${abs_top_hostdir}/share/automake-1.14:${PERL5LIB}"
+
+# Both autom4te.cfg and libtoolize, as installed from source, want to
+# use absolute file system paths that cannot be
+# overridden. Consequently, we create temporary, local versions of
+# these, patched up with SDK-specific paths.
+
+BOOTSTRAP_TMPDIR="`mktemp -d /tmp/tmp.bootstrapXXXXXX`"
+
+trap "removetmp" 1 2 3 9 15
+
+export AUTOM4TE_CFG="${BOOTSTRAP_TMPDIR}/autom4te.cfg"
+export LIBTOOLIZE="${BOOTSTRAP_TMPDIR}/libtoolize"
+
+#
+# Generate any temporary files that need to be patched at run time
+# with the location of the SDK tree, including:
+#
+#   -  The autom4te configuration file
+#   -  The libtoolize executable script
+#
+
+sed -e "s,//share/autoconf,${abs_top_hostdir}/share/autoconf,g" < "${abs_top_hostdir}/share/autoconf/autom4te.cfg" > "${AUTOM4TE_CFG}"
+
+sed -e "s,//share/libtool,${abs_top_hostdir}/share/libtool,g" -e "s,//share/aclocal,${abs_top_hostdir}/share/aclocal,g" < "${abs_top_hostdir}/${host}/bin/libtoolize" > "${LIBTOOLIZE}"
+chmod 775 "${LIBTOOLIZE}"
+
+if [ -n "${verbose}" ]; then
+    echo ACLOCAL="${ACLOCAL}"
+    echo AUTOCONF="${AUTOCONF}"
+    echo AUTOHEADER="${AUTOHEADER}"
+    echo AUTOM4TE="${AUTOM4TE}"
+    echo AUTOMAKE="${AUTOMAKE}"
+    echo LIBTOOLIZE="${LIBTOOLIZE}"
+    echo M4="${M4}"
+
+    echo AC_MACRODIR="${AC_MACRODIR}"
+    echo AUTOM4TE_CFG="${AUTOM4TE_CFG}"
+    echo PERL5LIB="${PERL5LIB}"
+    echo autom4te_perllibdir="${autom4te_perllibdir}"
+fi
+
+# Set up the default actions for each bootstrap stage.
+
+local_action="${ACLOCAL} ${verbose} --automake-acdir=${abs_top_hostdir}/share/aclocal-1.14 --system-acdir=${abs_top_hostdir}/share/aclocal -I${nlbuild_autotools_dir}/autoconf/m4"
+header_action="${AUTOHEADER} ${verbose}"
+tool_action="${LIBTOOLIZE} ${verbose} --automake --copy --force"
+make_action="${AUTOMAKE} ${verbose} --libdir ${abs_top_hostdir}/share/automake-1.14 --add-missing --copy"
+config_action="${AUTOCONF} ${verbose}"
+
+# Determine what needs to be short-circuited based on the
+# user-specified "what".
+
+case "${what}" in
+
+    all)
+        ;;
+
+    conf*)
+        local_action=true
+        header_action=true
+        tool_action=true
+        make_action=true
+        ;;
+
+    make*)
+        local_action=true
+        header_action=true
+        config_action=true
+        ;;
+
+    none)
+        local_action=true
+        header_action=true
+        tool_action=true
+        make_action=true
+        config_action=true
+        ;;
+
+esac
+
+# Bootstrap the package.
+
+${local_action} && ${header_action} && ${tool_action} && ${make_action} && ${config_action}
+
+# Clean up any temporary files created.
+
+removetmp
