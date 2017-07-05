@@ -94,10 +94,4 @@ void efr32MiscInit(void);
  */
 void efr32RandomInit(void);
 
-/**
- * Initialization of EFR32 Hardware Abstract Layer.
- *
- */
-void efr32HalInit(void);
-
 #endif  // PLATFORM_EFR32_H_

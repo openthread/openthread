@@ -315,7 +315,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     RAIL_TxData_t txData;
     RAIL_TxOptions_t txOption;
     uint8_t frame[IEEE802154_MAX_LENGTH + 1];
-    bool isAckRequested = (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST) ? true : false;
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -330,27 +329,21 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     frame[0] = aFrame->mLength;
     memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
-
     txData.dataPtr = frame;
     txData.dataLength = aFrame->mLength - 1;
+
+    txOption.waitForAck = (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST) ? true : false;
+    txOption.removeCrc  = false;
+    txOption.syncWordId = 0;
+
     RAIL_TxPowerSet(aFrame->mPower);
     setChannel(aFrame->mChannel);
     RAIL_RfIdleExt(RAIL_IDLE, true);
 
     otEXPECT_ACTION(RAIL_TxDataLoad(&txData) == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
-    if (isAckRequested)
-    {
-        otEXPECT_ACTION(RAIL_TxStart(aFrame->mChannel, RAIL_CcaCsma, &csmaConfig) == RAIL_STATUS_NO_ERROR,
-                        error = OT_ERROR_FAILED);
-    }
-    else
-    {
-        txOption.waitForAck = false;
-
-        otEXPECT_ACTION(RAIL_TxStartWithOptions(aFrame->mChannel, &txOption, RAIL_CcaCsma, &csmaConfig) == RAIL_STATUS_NO_ERROR,
-                        error = OT_ERROR_FAILED);
-    }
+    otEXPECT_ACTION(RAIL_TxStartWithOptions(aFrame->mChannel, &txOption, RAIL_CcaCsma, &csmaConfig) == RAIL_STATUS_NO_ERROR,
+                    error = OT_ERROR_FAILED);
 
 exit:
     CORE_EXIT_CRITICAL();
@@ -653,6 +646,11 @@ void RAILCb_TxRadioStatus(uint8_t aStatus)
         sTransmitBusy = false;
         break;
 
+    case RAIL_TX_CONFIG_BUFFER_UNDERFLOW:
+        sTransmitError = OT_ERROR_ABORT;
+        sTransmitBusy = false;
+        break;
+
     default:
         break;
     }
@@ -684,6 +682,8 @@ void RAILCb_RxPacketReceived(void *aRxPacketHandle)
 
     // check the lenght validity of recv packet
     otEXPECT(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
+
+    otLogInfoPlat(sInstance, "Received data:%d", rxPacketInfo->dataLength);
 
     memcpy(sReceiveFrame.mPsdu, rxPacketInfo->dataPtr + 1, rxPacketInfo->dataLength);
     sReceiveFrame.mPower = rxPacketInfo->appendedInfo.rssiLatch;
