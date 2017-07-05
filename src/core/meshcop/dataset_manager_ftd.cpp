@@ -34,7 +34,7 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "dataset_manager.tmh"
+#define WPP_NAME "dataset_manager_ftd.tmh"
 
 #include <openthread/config.h>
 
@@ -67,113 +67,112 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
 {
 }
 
-bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
-{
-    return mLocal.Get(aType) != NULL;
-}
-
 otError ActiveDataset::GenerateLocal(void)
 {
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
-    otOperationalDataset dataset;
+    Dataset dataset(mLocal.GetType());
 
     VerifyOrExit(netif.GetMle().IsAttached(), error = OT_ERROR_INVALID_STATE);
 
-    memset(&dataset, 0, sizeof(dataset));
+    mLocal.Get(dataset);
 
     // Active Timestamp
-    if (!IsTlvInitialized(Tlv::kActiveTimestamp))
+    if (dataset.Get(Tlv::kActiveTimestamp) == NULL)
     {
         ActiveTimestampTlv activeTimestampTlv;
         activeTimestampTlv.Init();
         activeTimestampTlv.SetSeconds(0);
         activeTimestampTlv.SetTicks(0);
-        mLocal.Set(activeTimestampTlv);
+        dataset.Set(activeTimestampTlv);
     }
 
     // Channel
-    if (!IsTlvInitialized(Tlv::kChannel))
+    if (dataset.Get(Tlv::kChannel) == NULL)
     {
         ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannelPage(0);
         tlv.SetChannel(netif.GetMac().GetChannel());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // channelMask
-    if (!IsTlvInitialized(Tlv::kChannelMask))
+    if (dataset.Get(Tlv::kChannelMask) == NULL)
     {
         ChannelMask0Tlv tlv;
         tlv.Init();
         tlv.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // Extended PAN ID
-    if (!IsTlvInitialized(Tlv::kExtendedPanId))
+    if (dataset.Get(Tlv::kExtendedPanId) == NULL)
     {
         ExtendedPanIdTlv tlv;
         tlv.Init();
         tlv.SetExtendedPanId(netif.GetMac().GetExtendedPanId());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // Mesh-Local Prefix
-    if (!IsTlvInitialized(Tlv::kMeshLocalPrefix))
+    if (dataset.Get(Tlv::kMeshLocalPrefix) == NULL)
     {
         MeshLocalPrefixTlv tlv;
         tlv.Init();
         tlv.SetMeshLocalPrefix(netif.GetMle().GetMeshLocalPrefix());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // Master Key
-    if (!IsTlvInitialized(Tlv::kNetworkMasterKey))
+    if (dataset.Get(Tlv::kNetworkMasterKey) == NULL)
     {
         NetworkMasterKeyTlv tlv;
         tlv.Init();
         tlv.SetNetworkMasterKey(netif.GetKeyManager().GetMasterKey());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // Network Name
-    if (!IsTlvInitialized(Tlv::kNetworkName))
+    if (dataset.Get(Tlv::kNetworkName) == NULL)
     {
         NetworkNameTlv tlv;
         tlv.Init();
         tlv.SetNetworkName(netif.GetMac().GetNetworkName());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // Pan ID
-    if (!IsTlvInitialized(Tlv::kPanId))
+    if (dataset.Get(Tlv::kPanId) == NULL)
     {
         PanIdTlv tlv;
         tlv.Init();
         tlv.SetPanId(netif.GetMac().GetPanId());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // PSKc
-    if (!IsTlvInitialized(Tlv::kPSKc))
+    if (dataset.Get(Tlv::kPSKc) == NULL)
     {
         PSKcTlv tlv;
         tlv.Init();
         tlv.SetPSKc(netif.GetKeyManager().GetPSKc());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
 
     // Security Policy
-    if (!IsTlvInitialized(Tlv::kSecurityPolicy))
+    if (dataset.Get(Tlv::kSecurityPolicy) == NULL)
     {
         SecurityPolicyTlv tlv;
         tlv.Init();
         tlv.SetRotationTime(static_cast<uint16_t>(netif.GetKeyManager().GetKeyRotation()));
         tlv.SetFlags(netif.GetKeyManager().GetSecurityPolicyFlags());
-        mLocal.Set(tlv);
+        dataset.Set(tlv);
     }
+
+    SuccessOrExit(error = mLocal.Set(dataset));
+
+    otLogInfoMeshCoP(GetInstance(), "Generated local dataset");
 
 exit:
     return error;
@@ -183,8 +182,7 @@ void ActiveDataset::StartLeader(void)
 {
     GenerateLocal();
 
-    mLocal.Store();
-    mNetwork = mLocal;
+    mLocal.Get(mNetwork);
     GetNetif().GetCoap().AddResource(mResourceSet);
 }
 
@@ -218,10 +216,8 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
 
 void PendingDataset::StartLeader(void)
 {
-    UpdateDelayTimer(mLocal, mLocalTime);
-    mLocal.Store();
-    mNetwork = mLocal;
-    ResetDelayTimer(kFlagNetworkUpdated);
+    mLocal.Get(mNetwork);
+    StartDelayTimer();
 
     GetNetif().GetCoap().AddResource(mResourceSet);
 }
@@ -242,7 +238,7 @@ void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage 
 void PendingDataset::HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     SuccessOrExit(DatasetManager::Set(aHeader, aMessage, aMessageInfo));
-    ResetDelayTimer(kFlagLocalUpdated | kFlagNetworkUpdated);
+    StartDelayTimer();
 
 exit:
     return;
@@ -253,7 +249,6 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aM
     ThreadNetif &netif = GetNetif();
     uint16_t offset = aMessage.GetOffset();
     DelayTimerTlv delayTimer;
-    uint8_t flags;
 
     VerifyOrExit(netif.GetMle().IsAttached());
 
@@ -279,10 +274,10 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aM
 
     // add pending timestamp tlv
     mNetwork.SetTimestamp(aTimestamp);
-    HandleNetworkUpdate(flags);
+    DatasetManager::HandleNetworkUpdate();
 
     // reset delay timer
-    ResetDelayTimer(kFlagNetworkUpdated);
+    StartDelayTimer();
 
 exit:
     return;

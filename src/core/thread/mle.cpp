@@ -260,8 +260,8 @@ otError Mle::Stop(bool aClearNetworkDatasets)
 
     if (aClearNetworkDatasets)
     {
-        netif.GetActiveDataset().Clear(true);
-        netif.GetPendingDataset().Clear(true);
+        netif.GetActiveDataset().HandleDetach();
+        netif.GetPendingDataset().HandleDetach();
     }
 
     mRole = OT_DEVICE_ROLE_DISABLED;
@@ -353,10 +353,9 @@ otError Mle::Store(void)
 
     VerifyOrExit(IsAttached(), error = OT_ERROR_INVALID_STATE);
 
-    if (netif.GetActiveDataset().GetLocal().GetTimestamp() == NULL)
+    if (netif.GetActiveDataset().GetTimestamp() == NULL)
     {
         netif.GetActiveDataset().GenerateLocal();
-        netif.GetActiveDataset().GetLocal().Store();
     }
 
     memset(&networkInfo, 0, sizeof(networkInfo));
@@ -475,11 +474,7 @@ otError Mle::BecomeDetached(void)
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    if (mReattachState == kReattachStop)
-    {
-        netif.GetPendingDataset().UpdateDelayTimer();
-        netif.GetPendingDataset().Set(netif.GetPendingDataset().GetLocal());
-    }
+    netif.GetPendingDataset().HandleDetach();
 
     SetStateDetached();
     SetRloc16(Mac::kShortAddrInvalid);
@@ -1201,18 +1196,14 @@ exit:
     return error;
 }
 
-otError Mle::AppendActiveTimestamp(Message &aMessage, bool aCouldUseLocal)
+otError Mle::AppendActiveTimestamp(Message &aMessage)
 {
     ThreadNetif &netif = GetNetif();
     otError error;
     ActiveTimestampTlv timestampTlv;
     const MeshCoP::Timestamp *timestamp;
 
-    if ((timestamp = netif.GetActiveDataset().GetNetwork().GetTimestamp()) == NULL && aCouldUseLocal)
-    {
-        timestamp = netif.GetActiveDataset().GetLocal().GetTimestamp();
-    }
-
+    timestamp = netif.GetActiveDataset().GetTimestamp();
     VerifyOrExit(timestamp, error = OT_ERROR_NONE);
 
     timestampTlv.Init();
@@ -1229,7 +1220,7 @@ otError Mle::AppendPendingTimestamp(Message &aMessage)
     PendingTimestampTlv timestampTlv;
     const MeshCoP::Timestamp *timestamp;
 
-    timestamp = GetNetif().GetPendingDataset().GetNetwork().GetTimestamp();
+    timestamp = GetNetif().GetPendingDataset().GetTimestamp();
     VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = OT_ERROR_NONE);
 
     timestampTlv.Init();
@@ -1376,7 +1367,6 @@ void Mle::HandleParentRequestTimer(void)
             {
                 mReattachState = kReattachStop;
                 netif.GetActiveDataset().Restore();
-                netif.GetPendingDataset().Set(netif.GetPendingDataset().GetLocal());
             }
 
             if (mReattachState == kReattachStop)
@@ -1602,7 +1592,7 @@ otError Mle::SendChildIdRequest(void)
     }
 
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
-    SuccessOrExit(error = AppendActiveTimestamp(*message, true));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     memset(&destination, 0, sizeof(destination));
@@ -1636,7 +1626,7 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aT
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
-    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     if (aDelay)
@@ -1853,7 +1843,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
     }
     else
     {
-        SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+        SuccessOrExit(error = AppendActiveTimestamp(*message));
     }
 
     panid.Init();
@@ -1879,11 +1869,11 @@ exit:
 
 void Mle::SendOrphanAnnounce(void)
 {
-    MeshCoP::ChannelMask0Tlv *channelMask;
+    const MeshCoP::ChannelMask0Tlv *channelMask;
     uint8_t channel;
 
-    channelMask = static_cast<MeshCoP::ChannelMask0Tlv *>(GetNetif().GetActiveDataset().GetNetwork().Get(
-                                                              MeshCoP::Tlv::kChannelMask));
+    channelMask = static_cast<const MeshCoP::ChannelMask0Tlv *>(GetNetif().GetActiveDataset().GetTlv(
+                                                                    MeshCoP::Tlv::kChannelMask));
 
     VerifyOrExit(channelMask != NULL);
 
@@ -2432,7 +2422,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         const MeshCoP::Timestamp *timestamp;
 
         VerifyOrExit(activeTimestamp.IsValid(), error = OT_ERROR_PARSE);
-        timestamp = netif.GetActiveDataset().GetNetwork().GetTimestamp();
+        timestamp = netif.GetActiveDataset().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
@@ -2453,7 +2443,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         const MeshCoP::Timestamp *timestamp;
 
         VerifyOrExit(pendingTimestamp.IsValid(), error = OT_ERROR_PARSE);
-        timestamp = netif.GetPendingDataset().GetNetwork().GetTimestamp();
+        timestamp = netif.GetPendingDataset().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
@@ -2491,10 +2481,6 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
                                          tlv.GetLength());
         }
     }
-    else
-    {
-        netif.GetActiveDataset().Clear(false);
-    }
 
     // Pending Dataset
     if (pendingTimestamp.GetLength() > 0)
@@ -2505,10 +2491,6 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
             netif.GetPendingDataset().Set(pendingTimestamp, aMessage, pendingDatasetOffset + sizeof(tlv),
                                           tlv.GetLength());
         }
-    }
-    else
-    {
-        netif.GetPendingDataset().Clear(false);
     }
 
     mRetrieveNewNetworkData = false;
@@ -2768,17 +2750,12 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
             aMessage.Read(offset, sizeof(tlv), &tlv);
             netif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
-        else if (netif.GetActiveDataset().GetNetwork().GetTimestamp() == NULL &&
-                 netif.GetActiveDataset().GetLocal().GetTimestamp() != NULL)
-        {
-            netif.GetActiveDataset().Set(netif.GetActiveDataset().GetLocal());
-        }
     }
 
-    // clear local Pending Dataset if device succeed to reattach using stored Pending Dataset
+    // clear Pending Dataset if device succeed to reattach using stored Pending Dataset
     if (mReattachState == kReattachPending)
     {
-        netif.GetPendingDataset().GetLocal().Clear(true);
+        netif.GetPendingDataset().Clear();
     }
 
     // Pending Timestamp
@@ -2795,7 +2772,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     }
     else
     {
-        netif.GetPendingDataset().Clear(true);
+        netif.GetPendingDataset().ClearNetwork();
     }
 
     // Parent Attach Success
@@ -3054,7 +3031,7 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panid), panid));
     VerifyOrExit(panid.IsValid(), error = OT_ERROR_PARSE);
 
-    localTimestamp = netif.GetActiveDataset().GetNetwork().GetTimestamp();
+    localTimestamp = netif.GetActiveDataset().GetTimestamp();
 
     if (localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0)
     {

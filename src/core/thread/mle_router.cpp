@@ -2191,15 +2191,13 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     }
 
     if (activeTimestamp.GetLength() == 0 ||
-        netif.GetActiveDataset().GetNetwork().GetTimestamp() == NULL ||
-        netif.GetActiveDataset().GetNetwork().GetTimestamp()->Compare(activeTimestamp) != 0)
+        netif.GetActiveDataset().Compare(activeTimestamp) != 0)
     {
         child->SetRequestTlv(numTlvs++, Tlv::kActiveDataset);
     }
 
     if (pendingTimestamp.GetLength() == 0 ||
-        netif.GetPendingDataset().GetNetwork().GetTimestamp() == NULL ||
-        netif.GetPendingDataset().GetNetwork().GetTimestamp()->Compare(pendingTimestamp) != 0)
+        netif.GetPendingDataset().Compare(pendingTimestamp) != 0)
     {
         child->SetRequestTlv(numTlvs++, Tlv::kPendingDataset);
     }
@@ -2465,15 +2463,13 @@ otError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Message
     numTlvs = tlvRequest.GetLength();
 
     if (activeTimestamp.GetLength() == 0 ||
-        netif.GetActiveDataset().GetNetwork().GetTimestamp() == NULL ||
-        netif.GetActiveDataset().GetNetwork().GetTimestamp()->Compare(activeTimestamp) != 0)
+        netif.GetActiveDataset().Compare(activeTimestamp))
     {
         tlvs[numTlvs++] = Tlv::kActiveDataset;
     }
 
     if (pendingTimestamp.GetLength() == 0 ||
-        netif.GetPendingDataset().GetNetwork().GetTimestamp() == NULL ||
-        netif.GetPendingDataset().GetNetwork().GetTimestamp()->Compare(pendingTimestamp) != 0)
+        netif.GetPendingDataset().Compare(pendingTimestamp))
     {
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
@@ -2747,7 +2743,7 @@ otError MleRouter::SendChildIdResponse(Child *aChild)
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
-    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     if (aChild->GetState() != Neighbor::kStateValid)
@@ -2852,7 +2848,7 @@ otError MleRouter::SendChildUpdateRequest(Child *aChild)
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendNetworkData(*message, !aChild->IsFullNetworkData()));
-    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
 
@@ -2915,7 +2911,7 @@ otError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo
 
         case Tlv::kNetworkData:
             SuccessOrExit(error = AppendNetworkData(*message, !aChild->IsFullNetworkData()));
-            SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+            SuccessOrExit(error = AppendActiveTimestamp(*message));
             SuccessOrExit(error = AppendPendingTimestamp(*message));
             break;
 
@@ -2967,7 +2963,7 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
-    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     for (int i = 0; i < aTlvsLength; i++)
@@ -4497,29 +4493,12 @@ exit:
 
 otError MleRouter::AppendActiveDataset(Message &aMessage)
 {
-    ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(netif.GetActiveDataset().GetNetwork().GetSize() > 0);
-
-    SuccessOrExit(error = netif.GetActiveDataset().GetNetwork().AppendMleDatasetTlv(aMessage));
-
-exit:
-    return error;
+    return GetNetif().GetActiveDataset().AppendMleDatasetTlv(aMessage);
 }
 
 otError MleRouter::AppendPendingDataset(Message &aMessage)
 {
-    ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(netif.GetPendingDataset().GetNetwork().GetSize() > 0);
-
-    netif.GetPendingDataset().UpdateDelayTimer();
-    SuccessOrExit(error = netif.GetPendingDataset().GetNetwork().AppendMleDatasetTlv(aMessage));
-
-exit:
-    return error;
+    return GetNetif().GetPendingDataset().AppendMleDatasetTlv(aMessage);
 }
 
 bool MleRouter::HasMinDowngradeNeighborRouters(void)

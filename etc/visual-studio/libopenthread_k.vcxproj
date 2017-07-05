@@ -103,6 +103,7 @@
     <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset_local.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager_ftd.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dataset.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\dataset_local.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dtls.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\energy_scan_client.hpp" />

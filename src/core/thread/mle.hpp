@@ -1120,14 +1120,12 @@ protected:
      * This method appends a Active Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aCouldUseLocal  True to use local Active Timestamp when network Active Timestamp is not available,
-     *                             False not.
      *
      * @retval OT_ERROR_NONE     Successfully appended the Active Timestamp TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Active Timestamp TLV.
      *
      */
-    otError AppendActiveTimestamp(Message &aMessage, bool aCouldUseLocal);
+    otError AppendActiveTimestamp(Message &aMessage);
 
     /**
      * This method appends a Pending Timestamp TLV to a message.

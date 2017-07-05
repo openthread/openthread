@@ -266,8 +266,8 @@ otError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
                  error = OT_ERROR_INVALID_STATE);
 
     aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
-    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
-    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+    aInstance->mThreadNetif.GetActiveDataset().Clear();
+    aInstance->mThreadNetif.GetPendingDataset().Clear();
 
 exit:
     return error;

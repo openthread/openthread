@@ -249,6 +249,9 @@
     <ClCompile Include="..\..\src\core\meshcop\dataset.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset_local.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
@@ -507,6 +510,9 @@
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\dataset.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\dataset_local.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp">

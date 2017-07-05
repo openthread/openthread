@@ -75,8 +75,8 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtended
     mlPrefix[7] = 0x00;
     aInstance->mThreadNetif.GetMle().SetMeshLocalPrefix(mlPrefix);
 
-    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
-    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+    aInstance->mThreadNetif.GetActiveDataset().Clear();
+    aInstance->mThreadNetif.GetPendingDataset().Clear();
 
 exit:
     return error;
@@ -165,8 +165,8 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetKeyManager().SetMasterKey(*aKey);
-    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
-    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+    aInstance->mThreadNetif.GetActiveDataset().Clear();
+    aInstance->mThreadNetif.GetPendingDataset().Clear();
 
 exit:
     return error;
@@ -190,8 +190,8 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLo
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetMle().SetMeshLocalPrefix(aMeshLocalPrefix);
-    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
-    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+    aInstance->mThreadNetif.GetActiveDataset().Clear();
+    aInstance->mThreadNetif.GetPendingDataset().Clear();
 
 exit:
     return error;
@@ -215,8 +215,8 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetMac().SetNetworkName(aNetworkName);
-    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
-    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+    aInstance->mThreadNetif.GetActiveDataset().Clear();
+    aInstance->mThreadNetif.GetPendingDataset().Clear();
 
 exit:
     return error;

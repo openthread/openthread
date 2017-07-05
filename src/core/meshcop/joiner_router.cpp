@@ -327,7 +327,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     ExtendedPanIdTlv extendedPanId;
     NetworkNameTlv networkName;
     NetworkKeySequenceTlv networkKeySequence;
-    Tlv *tlv;
+    const Tlv *tlv;
 
     DelayedJoinEntHeader delayedMessage;
 
@@ -356,7 +356,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     networkName.SetNetworkName(netif.GetMac().GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(Tlv) + networkName.GetLength()));
 
-    if ((tlv = netif.GetActiveDataset().GetNetwork().Get(Tlv::kActiveTimestamp)) != NULL)
+    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kActiveTimestamp)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }
@@ -367,7 +367,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
         SuccessOrExit(error = message->Append(&activeTimestamp, sizeof(activeTimestamp)));
     }
 
-    if ((tlv = netif.GetActiveDataset().GetNetwork().Get(Tlv::kChannelMask)) != NULL)
+    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kChannelMask)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }
@@ -378,7 +378,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }
 
-    if ((tlv = netif.GetActiveDataset().GetNetwork().Get(Tlv::kPSKc)) != NULL)
+    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kPSKc)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }
@@ -389,7 +389,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
         SuccessOrExit(error = message->Append(&pskc, sizeof(pskc)));
     }
 
-    if ((tlv = netif.GetActiveDataset().GetNetwork().Get(Tlv::kSecurityPolicy)) != NULL)
+    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kSecurityPolicy)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }

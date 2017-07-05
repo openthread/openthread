@@ -138,6 +138,7 @@ SOURCES_COMMON                      = \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
+    meshcop/dataset_local.cpp         \
     meshcop/dataset_manager.cpp       \
     meshcop/dataset_manager_ftd.cpp   \
     meshcop/dtls.cpp                  \
@@ -236,6 +237,7 @@ HEADERS_COMMON                      = \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \
+    meshcop/dataset_local.hpp         \
     meshcop/dataset_manager.hpp       \
     meshcop/dataset_manager_ftd.hpp   \
     meshcop/dataset_manager_mtd.hpp   \
