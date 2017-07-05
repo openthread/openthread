@@ -55,25 +55,30 @@ int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
 {
     int sysloglevel;
 
-    switch(aLogLevel)
+    switch (aLogLevel)
     {
-        case OT_LOG_LEVEL_NONE:
-            sysloglevel = LOG_ERR; 
-            break;
-        case OT_LOG_LEVEL_CRIT:
-            sysloglevel = LOG_CRIT; 
-            break;
-        case OT_LOG_LEVEL_WARN:
-            sysloglevel = LOG_WARNING; 
-            break;
-        case OT_LOG_LEVEL_INFO:
-            sysloglevel = LOG_INFO; 
-            break;
-        case OT_LOG_LEVEL_DEBG:
-            sysloglevel = LOG_DEBUG; 
-            break;
-        default:
-            sysloglevel = LOG_ERR; 
+    case OT_LOG_LEVEL_NONE:
+        sysloglevel = LOG_ERR;
+        break;
+
+    case OT_LOG_LEVEL_CRIT:
+        sysloglevel = LOG_CRIT;
+        break;
+
+    case OT_LOG_LEVEL_WARN:
+        sysloglevel = LOG_WARNING;
+        break;
+
+    case OT_LOG_LEVEL_INFO:
+        sysloglevel = LOG_INFO;
+        break;
+
+    case OT_LOG_LEVEL_DEBG:
+        sysloglevel = LOG_DEBUG;
+        break;
+
+    default:
+        sysloglevel = LOG_ERR;
     }
 
     return sysloglevel;

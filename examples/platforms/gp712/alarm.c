@@ -51,7 +51,7 @@ uint32_t otPlatAlarmGetNow(void)
     return qorvoAlarmGetTimeMs();
 }
 
-static void qorvoAlarmFired(void* aInstance)
+static void qorvoAlarmFired(void *aInstance)
 {
     otPlatAlarmFired((otInstance *)aInstance);
 }

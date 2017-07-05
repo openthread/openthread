@@ -54,7 +54,7 @@ char  **gArguments = NULL;
 
 bool qorvoPlatGotoSleepCheck(void)
 {
-    if(localInstance)
+    if (localInstance)
     {
         return !otTaskletsArePending(localInstance);
     }
@@ -79,7 +79,7 @@ void PlatformInit(int argc, char *argv[])
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
-    if(localInstance == NULL)
+    if (localInstance == NULL)
     {
         // local copy in case we need to perform a callback.
         localInstance = aInstance;

@@ -73,7 +73,8 @@ extern otRadioFrame  sTransmitFrame;
 static otRadioState  sState;
 static otInstance   *pQorvoInstance;
 
-typedef struct otCachedSettings_s {
+typedef struct otCachedSettings_s
+{
     uint16_t panid;
 } otCachedSettings_t;
 static otCachedSettings_t otCachedSettings;
@@ -135,6 +136,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
     {
         qorvoRadioSetRxOnWhenIdle(false);
     }
+
     sState = OT_RADIO_STATE_DISABLED;
 
 exit:
@@ -161,11 +163,12 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError error = OT_ERROR_INVALID_STATE;
     pQorvoInstance = aInstance;
 
-    if ((sState != OT_RADIO_STATE_DISABLED) && (sScanstate==0))
+    if ((sState != OT_RADIO_STATE_DISABLED) && (sScanstate == 0))
     {
         qorvoRadioSetCurrentChannel(aChannel);
         error = OT_ERROR_NONE;
     }
+
     if (sState == OT_RADIO_STATE_SLEEP)
     {
         qorvoRadioSetRxOnWhenIdle(true);
@@ -198,7 +201,7 @@ void cbQorvoRadioTransmitDone(otRadioFrame *aPacket, bool aFramePending, otError
 
 void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
 {
-    if(aError == OT_ERROR_NONE)
+    if (aError == OT_ERROR_NONE)
     {
         sLastReceivedPower = aPacket->mPower;
     }

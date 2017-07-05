@@ -88,28 +88,29 @@ int PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId);
 
 uint32_t PlatSocketId = 0;
 
-void PlatSocketSendInput(void* buffer)
+void PlatSocketSendInput(void *buffer)
 {
     uint8_t  len = 0;
-    uint8_t* buf = (uint8_t*) buffer;
-    len = strlen((char*)buf);
-    otPlatUartReceived((uint8_t*) buf, (uint16_t)len);
+    uint8_t *buf = (uint8_t *) buffer;
+    len = strlen((char *)buf);
+    otPlatUartReceived((uint8_t *) buf, (uint16_t)len);
     free(buf);
     buf = 0;
     len = 0;
 }
 
-void PlatSocketRx(uint16_t length, const char* buffer, uint32_t socketId)
+void PlatSocketRx(uint16_t length, const char *buffer, uint32_t socketId)
 {
-    uint8_t* buf = 0;
+    uint8_t *buf = 0;
     PlatSocketId = socketId;
+
     if (length > 0)
     {
-        buf = malloc(length+2);
+        buf = malloc(length + 2);
         memcpy(buf, buffer, length);
         buf[length]   = '\n';
-        buf[length+1] = 0;
-        qorvoAlarmScheduleEventArg(0, PlatSocketSendInput, (void*) buf);
+        buf[length + 1] = 0;
+        qorvoAlarmScheduleEventArg(0, PlatSocketSendInput, (void *) buf);
     }
 }
 
@@ -139,10 +140,11 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     localbuf[aBufLength] = 0;
     printf("%s", localbuf);
 
-    if(PlatSocketId)
+    if (PlatSocketId)
     {
-        PlatSocketTxData(aBufLength, (uint8_t*) aBuf, PlatSocketId);
+        PlatSocketTxData(aBufLength, (uint8_t *) aBuf, PlatSocketId);
     }
+
     otPlatUartSendDone();
     return error;
 }
@@ -163,13 +165,13 @@ int PlatSocketListenForClients()
     uint32_t flag = 1;
     int      ret;
 
-    sockfd = socket(AF_INET,SOCK_STREAM,0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     otEXPECT_ACTION(sockfd >= 0, sockfd = -1);
 
     // disable Nagle's algorithm to avoid long latency
     setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag));
     // allow reuse of the same address
-    setsockopt(sockfd, SOL_SOCKET,SO_REUSEADDR, (char *)&flag,sizeof(flag));
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag));
     memset(&serv_addr, 0, sizeof(serv_addr));
 
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -194,24 +196,25 @@ void PlatSocketRxSignaled(uint8_t id)
     (void)(res);
 }
 
-void* PlatSocketReadThread(void *pClientSocket)
+void *PlatSocketReadThread(void *pClientSocket)
 {
     char buffer[BUFFER_MAX_SIZE];
-    PlatSocket_t* clientSocket = ((PlatSocket_t *)pClientSocket);
+    PlatSocket_t *clientSocket = ((PlatSocket_t *)pClientSocket);
 
-    memset(buffer,0,BUFFER_MAX_SIZE);
+    memset(buffer, 0, BUFFER_MAX_SIZE);
 
-    while(1)
+    while (1)
     {
         int readLen = SOCKET_READ(clientSocket->socketId, buffer, BUFFER_MAX_SIZE);
-        if( readLen < 0)
+
+        if (readLen < 0)
         {
             perror("Reading socket");
             break;
         }
         else
         {
-            if(readLen == 0)
+            if (readLen == 0)
             {
                 break;
             }
@@ -227,6 +230,7 @@ void* PlatSocketReadThread(void *pClientSocket)
             }
         }
     }
+
     clientSocket->isValid = 0;
     qorvoPlatUnRegisterPollFunction(clientSocket->socketId);
     close(clientSocket->socketId);
@@ -244,16 +248,17 @@ void PlatSocketRxNewConn(uint8_t id)
         //Add new client to client list
         socklen_t len;
         len = sizeof(PlatSocketConnection.addr);
-        int retval = accept (id, (struct sockaddr *)&PlatSocketConnection.addr, (socklen_t*) &len);
+        int retval = accept(id, (struct sockaddr *)&PlatSocketConnection.addr, (socklen_t *) &len);
 
         if (retval >= 0)
         {
             int retErr;
             PlatSocketConnection.socketId = retval;
-            retErr = pthread_create( &PlatSocketConnection.rfReadThread,
+            retErr = pthread_create(&PlatSocketConnection.rfReadThread,
                                     NULL,
                                     PlatSocketReadThread,
                                     &PlatSocketConnection);
+
             if (retErr)
             {
                 close(PlatSocketConnection.socketId);
@@ -268,7 +273,8 @@ void PlatSocketRxNewConn(uint8_t id)
     {
 
         int tempfd;
-        tempfd = accept (id, (struct sockaddr *)NULL, NULL);
+        tempfd = accept(id, (struct sockaddr *)NULL, NULL);
+
         if (tempfd >= 0)
         {
             close(tempfd);
@@ -315,13 +321,13 @@ int PlatSocketTxData(uint16_t length, uint8_t *pData, uint32_t socketId)
     int result = -1;
 
     //All sockets
-    if(PlatSocketConnection.isValid)
+    if (PlatSocketConnection.isValid)
     {
-        if(PlatSocketConnection.socketId == socketId)
+        if (PlatSocketConnection.socketId == socketId)
         {
-            if(SOCKET_WRITE(PlatSocketConnection, (const char*)pData, length) < 0)
+            if (SOCKET_WRITE(PlatSocketConnection, (const char *)pData, length) < 0)
             {
-                perror ("TxSocket: Error Writing to client");
+                perror("TxSocket: Error Writing to client");
                 close(PlatSocketConnection.socketId);
                 PlatSocketConnection.isValid = 0;
             }
