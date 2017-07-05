@@ -204,13 +204,7 @@ otError DatasetManager::ApplyConfiguration(void)
 
 otError DatasetManager::Restore(void)
 {
-    otError error;
-
-    SuccessOrExit(error = mLocal.Restore());
-    mLocal.Get(mNetwork);
-
-exit:
-    return error;
+    return mLocal.Get(mNetwork);
 }
 
 void DatasetManager::Clear(void)
