@@ -2232,6 +2232,8 @@ otError NcpBase::GetPropertyHandler_CAPS(uint8_t aHeader, spinel_prop_key_t aKey
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_ROLE_ROUTER));
 #endif
 
+    SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_ROLE_SLEEPY));
+
 #if OPENTHREAD_ENABLE_LEGACY
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_NEST_LEGACY_INTERFACE));
 #endif
