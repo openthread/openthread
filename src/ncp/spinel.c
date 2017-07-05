@@ -43,9 +43,6 @@
 // MARK: -
 // MARK: Headers
 
-
-#include <openthread/config.h>
-
 #include "spinel.h"
 
 #include <assert.h>
