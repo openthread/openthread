@@ -70,7 +70,7 @@ static void restore_stdout_termios(void)
     tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
 }
 
-void platformDummy(void* dummyPointer)
+void platformDummy(void *dummyPointer)
 {
     (void)dummyPointer;
 }
@@ -78,7 +78,7 @@ void platformDummy(void* dummyPointer)
 static void cbKeyPressed(uint8_t Param)
 {
     (void) Param;
-    qorvoAlarmScheduleEventArg(0, platformDummy, (void*) &s_in_fd);
+    qorvoAlarmScheduleEventArg(0, platformDummy, (void *) &s_in_fd);
 }
 
 void platformUartRestore(void)
