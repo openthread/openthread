@@ -1725,6 +1725,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     uint8_t payloadLength;
     uint8_t commandId;
     otError error = OT_ERROR_NONE;
+    char stringBuffer[Mac::Frame::kInfoStringSize];
 
     if (!mEnabled)
     {
@@ -1766,7 +1767,10 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         }
         else
         {
-            error = OT_ERROR_NOT_LOWPAN_DATA_FRAME;
+            VerifyOrExit(payloadLength == 0, error = OT_ERROR_NOT_LOWPAN_DATA_FRAME);
+
+            otLogInfoMac(GetInstance(), "Received empty payload frame, %s",
+                         aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
         }
 
         break;
@@ -1794,13 +1798,12 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        char stringBuffer[Mac::Frame::kInfoStringSize];
-
         otLogInfoMac(GetInstance(), "Dropping rx frame, error:%s, %s", otThreadErrorToString(error),
                      aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
 
-        OT_UNUSED_VARIABLE(stringBuffer);
     }
+
+    OT_UNUSED_VARIABLE(stringBuffer);
 }
 
 void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac::Address &aMacSource,
