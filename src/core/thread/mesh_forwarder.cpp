@@ -1520,6 +1520,8 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
                     // of the frame following the receipt of a data request command (data
                     // poll) from the sleepy child.
 
+                    child->SetIndirectDataSequenceNumber(aFrame.GetSequence());
+
                     if (aFrame.GetSecurityEnabled())
                     {
                         uint32_t frameCounter;
@@ -1530,8 +1532,6 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
                         aFrame.GetKeyId(keyId);
                         child->SetIndirectKeyId(keyId);
-
-                        child->SetIndirectDataSequenceNumber(aFrame.GetSequence());
                     }
 
                     ExitNow();
