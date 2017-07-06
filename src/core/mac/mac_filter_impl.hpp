@@ -234,6 +234,19 @@ public:
      */
     Entry *RssiInFilterFindEntry(const ExtAddress *aAddress);
 
+    /**
+     * This method applies the filter rules on the Extended Address.
+     *
+     * @param[in]  aAddress        A pointer to the Extended Address.
+     * @param[out] aRssi           A reference to where the Rssi value to be placed.
+     *
+     * @retval OT_ERROR_NONE                Successfully applied the fiter rules on @p aAddress.
+     * @retval OT_ERROR_WHITELIST_FILTERED  Whitelist is enabled and @p aAddress is not in the whitelist
+     * @retval OT_ERROR_BLACKLIST_FILTERED  Blacklist is enabled and @p aAddress is in the blacklist
+     *
+     */
+    otError Apply(const ExtAddress *aAddress, int8_t &aRssi);
+
 private:
     Entry *FindAvailEntry(void);
 

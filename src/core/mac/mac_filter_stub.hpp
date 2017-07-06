@@ -51,19 +51,20 @@ public:
     int GetMaxEntries(void) const { return 0; }
     otError AddEntry(const ExtAddress *, int8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
     uint8_t AddressFilterGetState(void) const { return 0; }
-    otError AddressFilterSetState(uint8_t) { return OT_ERROR_NOT_IMPLEMNTED; }
-    otError AddressFilterAddEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMNTED; }
-    otError AddressFilterRemoveEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMNTED; }
+    otError AddressFilterSetState(uint8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError AddressFilterAddEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError AddressFilterRemoveEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
     void AddressFilterClearEntries(void) { }
-    otError GetNextAddressFilterEntry(otMacFilterIterator *, Entry *) const { return OT_ERROR_NOT_IMPLEMNTED; }
+    otError GetNextAddressFilterEntry(otMacFilterIterator *, Entry *) const { return OT_ERROR_NOT_IMPLEMENTED; }
     Entry *AddressFilterFindEntry(const ExtAddress *) { return NULL; }
     void RssiInFilterSet(int8_t) { }
     int8_t RssiInFilterGet(void) { return OT_RSSI_OVERRIDE_DISABLED; }
-    otError RssiInFilterAddEntry(const ExtAddress *, int8_t) { return OT_ERROR_NOT_IMPLEMNTED; }
-    otError RssiInFilterRemoveEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMNTED; }
+    otError RssiInFilterAddEntry(const ExtAddress *, int8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RssiInFilterRemoveEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
     void RssiInFilterClearEntries(void) { }
-    otError GetNextRssiInFilterEntry(otMacFilterIterator *, Entry *) const { return OT_ERROR_NOT_IMPLEMNTED; }
+    otError GetNextRssiInFilterEntry(otMacFilterIterator *, Entry *) const { return OT_ERROR_NOT_IMPLEMENTED; }
     Entry *RssiInFilterFindEntry(const ExtAddress *) { return NULL; }
+    otError Apply(const ExtAddress *, int8_t &) { return OT_ERROR_NONE; }
 };
 
 /**

@@ -296,6 +296,34 @@ void Filter::RssiInFilterClearEntries(void)
     }
 }
 
+otError Filter::Apply(const ExtAddress *aAddress, int8_t &aRssi)
+{
+    otError error = OT_ERROR_NONE;
+    otMacFilterEntry *entry = AddressFilterFindEntry(aAddress);
+
+    // assign the default RssiIn setting for all receiving messages first
+    aRssi = mRssiIn;
+
+    // check AddressFilter
+    if (mAddressFilterState == OT_MAC_ADDRESSFILTER_WHITELIST)
+    {
+        VerifyOrExit(entry != NULL, error = OT_ERROR_WHITELIST_FILTERED);
+    }
+    else if (mAddressFilterState == OT_MAC_ADDRESSFILTER_BLACKLIST)
+    {
+        VerifyOrExit(entry == NULL, error = OT_ERROR_BLACKLIST_FILTERED);
+    }
+
+    // check RssiInFilter
+    if ((entry = RssiInFilterFindEntry(aAddress)) != NULL)
+    {
+        aRssi = entry->mRssi;
+    }
+
+exit:
+    return error;
+}
+
 }  // namespace Mac
 }  // namespace ot
 

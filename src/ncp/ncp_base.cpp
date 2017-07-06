@@ -3964,10 +3964,10 @@ otError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
                     SPINEL_DATATYPE_STRUCT_S(
                         SPINEL_DATATYPE_EUI64_S   // Extended address
                         SPINEL_DATATYPE_INT8_S    // Rssi
-                        ),
+                    ),
                     entry.mExtAddress.m8,
                     entry.mRssi
-                    ));
+                ));
     }
 
     SuccessOrExit(error = OutboundFrameSend());
@@ -4011,9 +4011,9 @@ otError NcpBase::GetPropertyHandler_MAC_BLACKLIST(uint8_t aHeader, spinel_prop_k
                 error = OutboundFrameFeedPacked(
                     SPINEL_DATATYPE_STRUCT_S(
                         SPINEL_DATATYPE_EUI64_S   // Extended address
-                        ),
+                    ),
                     entry.mExtAddress.m8
-                    ));
+                ));
     }
 
     SuccessOrExit(error = OutboundFrameSend());
@@ -5668,6 +5668,7 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
         }
 
         VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+
         if (rssi == OT_RSSI_OVERRIDE_DISABLED)
         {
             error = otLinkAddWhitelist(mInstance, extAddress->m8);
@@ -5676,6 +5677,8 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
         {
             error = otLinkAddWhitelistRssi(mInstance, extAddress->m8, rssi);
         }
+
+        VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
 
         aValuePtr += parsedLength;
         aValueLen -= parsedLength;
@@ -7261,7 +7264,7 @@ otError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_pro
 
     error = otLinkRemoveWhitelist(mInstance, extAddress->m8);
 
-    VerifyOrExit(error  == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
                 aHeader,

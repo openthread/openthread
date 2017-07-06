@@ -1538,28 +1538,13 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
     }
 
-    // Source filter Processing
+    // Source filter Processing.
     if (srcaddr.mLength != 0)
     {
-        rssi = mFilter.RssiInFilterGet();
-        otMacFilterEntry *entry = NULL;
+        // check if filtered out by whitelist or blacklist.
+        SuccessOrExit(error = mFilter.Apply(&srcaddr.mExtAddress, rssi));
 
-        if (mFilter.AddressFilterGetState() == OT_MAC_ADDRESSFILTER_WHITELIST)
-        {
-            VerifyOrExit((entry = mFilter.AddressFilterFindEntry(&srcaddr.mExtAddress)) != NULL,
-                         error = OT_ERROR_WHITELIST_FILTERED);
-        }
-        else if (mFilter.AddressFilterGetState() == OT_MAC_ADDRESSFILTER_BLACKLIST)
-        {
-            VerifyOrExit((entry = mFilter.AddressFilterFindEntry(&srcaddr.mExtAddress)) == NULL,
-                         error = OT_ERROR_BLACKLIST_FILTERED);
-        }
-
-        if ((entry = mFilter.RssiInFilterFindEntry(&srcaddr.mExtAddress)) != NULL)
-        {
-            rssi = entry->mRssi;
-        }
-
+        // override with the rssi in setting
         if (rssi != OT_RSSI_OVERRIDE_DISABLED)
         {
             aFrame->mPower = rssi;

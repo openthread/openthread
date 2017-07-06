@@ -760,11 +760,10 @@ typedef enum otRoutePreference
     OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
 
-#define OT_MAC_FILTER_ITERATOR_INIT  0     ///< Initializer for otMacFilterEntry.
+#define OT_MAC_FILTER_ITERATOR_INIT  0     ///< Initializer for otMacFilterIterator.
 #define OT_RSSI_OVERRIDE_DISABLED    127
 
-typedef uint8_t
-otMacFilterIterator;    ///< Used to iterate through mac filter entries.
+typedef uint8_t otMacFilterIterator;    ///< Used to iterate through mac filter entries.
 
 typedef enum otMacAddressFilterState
 {
