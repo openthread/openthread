@@ -244,7 +244,7 @@ private:
                                 otIp6Address *aAddress, uint32_t aTtl,
                                 otError aResult);
 
-    static void HandleRetransmissionTimer(Timer &aTimer);
+    static void HandleRetransmissionTimer(TimerMilli &aTimer);
     void HandleRetransmissionTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -256,7 +256,7 @@ private:
 
     uint16_t mMessageId;
     MessageQueue mPendingQueries;
-    Timer mRetransmissionTimer;
+    TimerMilli mRetransmissionTimer;
 };
 
 }  // namespace Dns

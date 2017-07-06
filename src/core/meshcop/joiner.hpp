@@ -101,7 +101,7 @@ private:
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
     void HandleDiscoverResult(otActiveScanResult *aResult);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     void Close(void);
@@ -150,7 +150,7 @@ private:
     const char *mVendorSwVersion;
     const char *mVendorData;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     Coap::Resource mJoinerEntrust;
 };
 

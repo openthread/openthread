@@ -127,7 +127,7 @@ exit:
     return;
 }
 
-void AnnounceBeginServer::HandleTimer(Timer &aTimer)
+void AnnounceBeginServer::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

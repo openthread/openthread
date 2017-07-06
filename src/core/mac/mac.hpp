@@ -672,15 +672,15 @@ private:
     void StartEnergyScan(void);
     otError HandleMacCommand(Frame &aFrame);
 
-    static void HandleMacTimer(Timer &aTimer);
+    static void HandleMacTimer(TimerMilli &aTimer);
     void HandleMacTimer(void);
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    static void HandleBeginTransmit(UsecTimer &aTimer);
+    static void HandleBeginTransmit(TimerMicro &aTimer);
 #else
-    static void HandleBeginTransmit(Timer &aTimer);
+    static void HandleBeginTransmit(TimerMilli &aTimer);
 #endif
     void HandleBeginTransmit(void);
-    static void HandleReceiveTimer(Timer &aTimer);
+    static void HandleReceiveTimer(TimerMilli &aTimer);
     void HandleReceiveTimer(void);
     static void HandleEnergyScanSampleRssi(Tasklet &aTasklet);
     void HandleEnergyScanSampleRssi(void);
@@ -694,13 +694,13 @@ private:
 
     static Mac &GetOwner(const Context &aContext);
 
-    Timer mMacTimer;
+    TimerMilli mMacTimer;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    UsecTimer mBackoffUsecTimer;
+    TimerMicro mBackoffTimerMicro;
 #else
-    Timer mBackoffTimer;
+    TimerMilli mBackoffTimer;
 #endif
-    Timer mReceiveTimer;
+    TimerMilli mReceiveTimer;
 
     ExtAddress mExtAddress;
     ShortAddress mShortAddress;

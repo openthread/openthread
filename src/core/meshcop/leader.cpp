@@ -111,7 +111,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     mCommissionerId = commissionerId;
 
     state = StateTlv::kAccept;
-    mTimer.Start(Timer::SecToMsec(kTimeoutLeaderPetition));
+    mTimer.Start(TimerMilli::SecToMsec(kTimeoutLeaderPetition));
 
 exit:
     OT_UNUSED_VARIABLE(aMessageInfo);
@@ -198,7 +198,7 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     else
     {
         responseState = StateTlv::kAccept;
-        mTimer.Start(Timer::SecToMsec(kTimeoutLeaderPetition));
+        mTimer.Start(TimerMilli::SecToMsec(kTimeoutLeaderPetition));
     }
 
     SendKeepAliveResponse(aHeader, aMessageInfo, responseState);
@@ -286,7 +286,7 @@ uint32_t Leader::GetDelayTimerMinimal(void) const
     return mDelayTimerMinimal;
 }
 
-void Leader::HandleTimer(Timer &aTimer)
+void Leader::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

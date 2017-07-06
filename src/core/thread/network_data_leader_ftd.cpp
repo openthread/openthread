@@ -897,7 +897,7 @@ otError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
         if (prefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
             context->ClearCompress();
-            mContextLastUsed[context->GetContextId() - kMinContextId] = Timer::GetNow();
+            mContextLastUsed[context->GetContextId() - kMinContextId] = TimerMilli::GetNow();
 
             if (mContextLastUsed[context->GetContextId() - kMinContextId] == 0)
             {
@@ -1050,7 +1050,7 @@ otError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     return OT_ERROR_NONE;
 }
 
-void Leader::HandleTimer(Timer &aTimer)
+void Leader::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }
@@ -1066,7 +1066,7 @@ void Leader::HandleTimer(void)
             continue;
         }
 
-        if ((Timer::GetNow() - mContextLastUsed[i]) >= Timer::SecToMsec(mContextIdReuseDelay))
+        if ((TimerMilli::GetNow() - mContextLastUsed[i]) >= TimerMilli::SecToMsec(mContextIdReuseDelay))
         {
             FreeContext(kMinContextId + i);
         }

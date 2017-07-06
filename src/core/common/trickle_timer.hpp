@@ -53,7 +53,7 @@ namespace ot {
  * This class implements a trickle timer.
  *
  */
-class TrickleTimer: public Timer
+class TrickleTimer: public TimerMilli
 {
 public:
 
@@ -148,7 +148,7 @@ private:
 
     void StartNewInterval(void);
 
-    static void HandleTimerFired(Timer &aTimer);
+    static void HandleTimerFired(TimerMilli &aTimer);
     void HandleTimerFired(void);
 
     // Shadow base class method to ensure it is hidden.

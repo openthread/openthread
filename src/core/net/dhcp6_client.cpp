@@ -318,8 +318,8 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         }
 
         mTrickleTimer.Start(
-            Timer::SecToMsec(kTrickleTimerImin),
-            Timer::SecToMsec(kTrickleTimerImax),
+            TimerMilli::SecToMsec(kTrickleTimerImin),
+            TimerMilli::SecToMsec(kTrickleTimerImax),
             TrickleTimer::kModeNormal);
 
         mTrickleTimer.IndicateInconsistent();
@@ -345,7 +345,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
     switch (mIdentityAssociationHead->GetStatus())
     {
     case IdentityAssociation::kStatusSolicit:
-        mStartTime = otPlatAlarmGetNow();
+        mStartTime = TimerMilli::GetNow();
         mIdentityAssociationHead->SetStatus(IdentityAssociation::kStatusSoliciting);
 
     // fall through
@@ -427,7 +427,7 @@ otError Dhcp6Client::AppendElapsedTime(Message &aMessage)
     ElapsedTime option;
 
     option.Init();
-    option.SetElapsedTime(static_cast<uint16_t>(Timer::MsecToSec(otPlatAlarmGetNow() - mStartTime)));
+    option.SetElapsedTime(static_cast<uint16_t>(TimerMilli::MsecToSec(TimerMilli::GetNow() - mStartTime)));
     return aMessage.Append(&option, sizeof(option));
 }
 

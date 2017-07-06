@@ -76,7 +76,7 @@ private:
     static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
     void HandleScanResult(Mac::Frame *aFrame);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -89,7 +89,7 @@ private:
     uint32_t mChannelMask;
     uint16_t mPanId;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource mPanIdQuery;
 };

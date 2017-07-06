@@ -358,7 +358,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         Set(tlv);
     }
 
-    mUpdateTime = Timer::GetNow();
+    mUpdateTime = TimerMilli::GetNow();
 
 exit:
     return error;
@@ -427,7 +427,7 @@ otError Dataset::Set(const Tlv &aTlv)
     memcpy(mTlvs + mLength, &aTlv, sizeof(Tlv) + aTlv.GetLength());
     mLength += sizeof(Tlv) + aTlv.GetLength();
 
-    mUpdateTime = Timer::GetNow();
+    mUpdateTime = TimerMilli::GetNow();
 
 exit:
     return error;
@@ -440,7 +440,7 @@ otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
     VerifyOrExit(aLength == aMessage.Read(aOffset, aLength, mTlvs), error = OT_ERROR_INVALID_ARGS);
     mLength = aLength;
 
-    mUpdateTime = Timer::GetNow();
+    mUpdateTime = TimerMilli::GetNow();
 
 exit:
     return error;
@@ -481,7 +481,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
         }
         else if (cur->GetType() == Tlv::kDelayTimer)
         {
-            uint32_t elapsed = Timer::GetNow() - mUpdateTime;
+            uint32_t elapsed = TimerMilli::GetNow() - mUpdateTime;
             DelayTimerTlv delayTimer;
 
             memcpy(&delayTimer, cur, sizeof(delayTimer));

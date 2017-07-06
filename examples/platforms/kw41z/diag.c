@@ -38,7 +38,7 @@
 #include "fsl_device_registers.h"
 #include "openthread/openthread.h"
 
-#include "openthread/platform/alarm.h"
+#include "openthread/platform/alarm-milli.h"
 #include "openthread/platform/radio.h"
 
 /**

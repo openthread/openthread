@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the microsecond alarm service.
  */
 
-#ifndef USEC_ALARM_H_
-#define USEC_ALARM_H_
+#ifndef ALARM_MICRO_H_
+#define ALARM_MICRO_H_
 
 #include <stdint.h>
 
@@ -58,7 +58,7 @@ extern "C" {
  * @param[in]  aDt        The time delay in microseconds from @p aT0.
  *
  */
-void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
@@ -66,7 +66,7 @@ void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
  * @param[in] aInstance  The OpenThread instance structure.
  *
  */
-void otPlatUsecAlarmStop(otInstance *aInstance);
+void otPlatAlarmMicroStop(otInstance *aInstance);
 
 /**
  * Get the current time.
@@ -74,14 +74,14 @@ void otPlatUsecAlarmStop(otInstance *aInstance);
  * @param[out]  aNow  The current time in microseconds.
  *
  */
-uint32_t otPlatUsecAlarmGetNow(void);
+uint32_t otPlatAlarmMicroGetNow(void);
 
 /**
  * Signal that the alarm has fired.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatUsecAlarmFired(otInstance *aInstance);
+extern void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
  * @}
@@ -92,4 +92,4 @@ extern void otPlatUsecAlarmFired(otInstance *aInstance);
 }  // extern "C"
 #endif
 
-#endif  // USEC_ALARM_H_
+#endif  // ALARM_MICRO_H_

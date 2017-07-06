@@ -131,7 +131,7 @@ protected:
      *
      */
     DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
-                   Timer::Handler aTimerHander);
+                   TimerMilli::Handler aTimerHander);
 
     /**
      * This method restores the Operational Dataset from non-volatile memory.
@@ -213,7 +213,7 @@ private:
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                          uint8_t *aTlvs, uint8_t aLength) const;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     const char *mUriSet;
     const char *mUriGet;
@@ -347,7 +347,7 @@ private:
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     Coap::Resource mResourceGet;
@@ -437,19 +437,19 @@ public:
     otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 protected:
-    static void HandleDelayTimer(Timer &aTimer);
+    static void HandleDelayTimer(TimerMilli &aTimer);
     void HandleDelayTimer(void);
     void StartDelayTimer(void);
     void HandleNetworkUpdate(void);
 
-    Timer mDelayTimer;
+    TimerMilli mDelayTimer;
 
 private:
     static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     Coap::Resource mResourceGet;

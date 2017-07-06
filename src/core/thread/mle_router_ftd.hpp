@@ -787,13 +787,13 @@ private:
 
     static bool HandleAdvertiseTimer(TrickleTimer &aTimer);
     bool HandleAdvertiseTimer(void);
-    static void HandleStateUpdateTimer(Timer &aTimer);
+    static void HandleStateUpdateTimer(TimerMilli &aTimer);
     void HandleStateUpdateTimer(void);
 
     static MleRouter &GetOwner(const Context &aContext);
 
     TrickleTimer mAdvertiseTimer;
-    Timer mStateUpdateTimer;
+    TimerMilli mStateUpdateTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;

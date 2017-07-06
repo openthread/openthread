@@ -36,7 +36,7 @@
 #include "alarm.tmh"
 
 uint32_t 
-otPlatAlarmGetNow()
+otPlatAlarmMilliGetNow()
 {
     // Return number of 'ticks'
     LARGE_INTEGER PerformanceCounter = KeQueryPerformanceCounter(NULL);
@@ -46,22 +46,22 @@ otPlatAlarmGetNow()
 }
 
 void 
-otPlatAlarmStop(
+otPlatAlarmMilliStop(
     _In_ otInstance *otCtx
     )
 {
-    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmStop");
+    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmMilliStop");
     otLwfEventProcessingIndicateNewWaitTime(otCtxToFilter(otCtx), (ULONG)(-1));
 }
 
 void 
-otPlatAlarmStartAt(
+otPlatAlarmMilliStartAt(
     _In_ otInstance *otCtx, 
     uint32_t now, 
     uint32_t waitTime
     )
 {
     UNREFERENCED_PARAMETER(now);
-    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmStartAt %u ms", waitTime);
+    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmMilliStartAt %u ms", waitTime);
     otLwfEventProcessingIndicateNewWaitTime(otCtxToFilter(otCtx), waitTime);
 }

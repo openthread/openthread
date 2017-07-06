@@ -82,7 +82,7 @@ otError DatasetLocal::Get(Dataset &aDataset)
     delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
     VerifyOrExit(delayTimer);
 
-    elapsed = Timer::GetNow() - mUpdateTime;
+    elapsed = TimerMilli::GetNow() - mUpdateTime;
 
     if (delayTimer->GetDelayTimer() > elapsed)
     {
@@ -93,7 +93,7 @@ otError DatasetLocal::Get(Dataset &aDataset)
         delayTimer->SetDelayTimer(0);
     }
 
-    aDataset.mUpdateTime = Timer::GetNow();
+    aDataset.mUpdateTime = TimerMilli::GetNow();
 
 exit:
     return error;
@@ -396,7 +396,7 @@ otError DatasetLocal::Set(const Dataset &aDataset)
 
     SuccessOrExit(error);
 
-    mUpdateTime = Timer::GetNow();
+    mUpdateTime = TimerMilli::GetNow();
 
 exit:
     return error;

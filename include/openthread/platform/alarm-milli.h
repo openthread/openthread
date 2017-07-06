@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the millisecond alarm service.
  */
 
-#ifndef ALARM_H_
-#define ALARM_H_
+#ifndef ALARM_MILLI_H_
+#define ALARM_MILLI_H_
 
 #include <stdint.h>
 
@@ -60,28 +60,28 @@ extern "C" {
  * @param[in] aT0        The reference time.
  * @param[in] aDt        The time delay in milliseconds from @p aT0.
  */
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-void otPlatAlarmStop(otInstance *aInstance);
+void otPlatAlarmMilliStop(otInstance *aInstance);
 
 /**
  * Get the current time.
  *
  * @returns The current time in milliseconds.
  */
-uint32_t otPlatAlarmGetNow(void);
+uint32_t otPlatAlarmMilliGetNow(void);
 
 /**
  * Signal that the alarm has fired.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatAlarmFired(otInstance *aInstance);
+extern void otPlatAlarmMilliFired(otInstance *aInstance);
 
 /**
  * Signal diagnostics module that the alarm has fired.
@@ -99,4 +99,4 @@ extern void otPlatDiagAlarmFired(otInstance *aInstance);
 }  // extern "C"
 #endif
 
-#endif  // ALARM_H_
+#endif  // ALARM_MILLI_H_

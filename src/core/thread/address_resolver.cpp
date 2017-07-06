@@ -557,7 +557,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
             }
 
             mlIidTlv.SetIid(children[i].GetExtAddress());
-            lastTransactionTimeTlv.SetTime(Timer::GetNow() - children[i].GetLastHeard());
+            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - children[i].GetLastHeard());
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }
@@ -613,7 +613,7 @@ exit:
     }
 }
 
-void AddressResolver::HandleTimer(Timer &aTimer)
+void AddressResolver::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

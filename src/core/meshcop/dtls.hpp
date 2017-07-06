@@ -217,7 +217,7 @@ private:
     int HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsigned char *aKeyBlock,
                                 size_t aMacLength, size_t aKeyLength, size_t aIvLength);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     void Close(void);
@@ -235,7 +235,7 @@ private:
     mbedtls_ssl_cookie_ctx mCookieCtx;
     bool mStarted;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     uint32_t mTimerIntermediate;
     bool mTimerSet;
 

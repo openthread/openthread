@@ -284,7 +284,7 @@ private:
 #ifndef OTDLL
     static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
-    static void s_HandlePingTimer(Timer &aTimer);
+    static void s_HandlePingTimer(TimerMilli &aTimer);
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
@@ -364,7 +364,7 @@ private:
     uint16_t mLength;
     uint16_t mCount;
     uint32_t mInterval;
-    Timer mPingTimer;
+    TimerMilli mPingTimer;
 
     otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

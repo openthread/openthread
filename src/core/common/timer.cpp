@@ -37,7 +37,7 @@
 
 #include "timer.hpp"
 
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "openthread-instance.h"
 #include "common/code_utils.hpp"
@@ -47,13 +47,13 @@
 
 namespace ot {
 
-TimerScheduler::TimerScheduler(Ip6::Ip6 &aIp6):
+TimerMilliScheduler::TimerMilliScheduler(Ip6::Ip6 &aIp6):
     Ip6Locator(aIp6),
     mHead(NULL)
 {
 }
 
-void TimerScheduler::Add(Timer &aTimer)
+void TimerMilliScheduler::Add(TimerMilli &aTimer)
 {
     Remove(aTimer);
 
@@ -65,8 +65,8 @@ void TimerScheduler::Add(Timer &aTimer)
     }
     else
     {
-        Timer *prev = NULL;
-        Timer *cur;
+        TimerMilli *prev = NULL;
+        TimerMilli *cur;
 
         for (cur = mHead; cur; cur = cur->mNext)
         {
@@ -98,7 +98,7 @@ void TimerScheduler::Add(Timer &aTimer)
     }
 }
 
-void TimerScheduler::Remove(Timer &aTimer)
+void TimerMilliScheduler::Remove(TimerMilli &aTimer)
 {
     VerifyOrExit(aTimer.mNext != &aTimer);
 
@@ -109,7 +109,7 @@ void TimerScheduler::Remove(Timer &aTimer)
     }
     else
     {
-        for (Timer *cur = mHead; cur; cur = cur->mNext)
+        for (TimerMilli *cur = mHead; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aTimer)
             {
@@ -125,35 +125,35 @@ exit:
     return;
 }
 
-void TimerScheduler::SetAlarm(void)
+void TimerMilliScheduler::SetAlarm(void)
 {
     if (mHead == NULL)
     {
-        otPlatAlarmStop(GetIp6().GetInstance());
+        otPlatAlarmMilliStop(GetIp6().GetInstance());
     }
     else
     {
-        uint32_t now = otPlatAlarmGetNow();
+        uint32_t now = TimerMilli::GetNow();
         uint32_t remaining = IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
 
-        otPlatAlarmStartAt(GetIp6().GetInstance(), now, remaining);
+        otPlatAlarmMilliStartAt(GetIp6().GetInstance(), now, remaining);
     }
 }
 
-extern "C" void otPlatAlarmFired(otInstance *aInstance)
+extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
     otLogFuncEntry();
-    aInstance->mIp6.mTimerScheduler.ProcessTimers();
+    aInstance->mIp6.mTimerMilliScheduler.ProcessTimers();
     otLogFuncExit();
 }
 
-void TimerScheduler::ProcessTimers(void)
+void TimerMilliScheduler::ProcessTimers(void)
 {
-    Timer *timer = mHead;
+    TimerMilli *timer = mHead;
 
     if (timer)
     {
-        if (!IsStrictlyBefore(otPlatAlarmGetNow(), timer->mFireTime))
+        if (!IsStrictlyBefore(TimerMilli::GetNow(), timer->mFireTime))
         {
             Remove(*timer);
             timer->Fired();
@@ -169,7 +169,7 @@ void TimerScheduler::ProcessTimers(void)
     }
 }
 
-bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
+bool TimerMilliScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
 {
     uint32_t diff = aTimeA - aTimeB;
 
@@ -181,19 +181,19 @@ bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
     return ((diff & (1UL << 31)) != 0);
 }
 
-TimerScheduler &Timer::GetTimerScheduler(void) const
+TimerMilliScheduler &TimerMilli::GetTimerMilliScheduler(void) const
 {
-    return GetIp6().mTimerScheduler;
+    return GetIp6().mTimerMilliScheduler;
 }
 
-bool Timer::DoesFireBefore(const Timer &aSecondTimer)
+bool TimerMilli::DoesFireBefore(const TimerMilli &aSecondTimer)
 {
     bool retval;
     uint32_t now = GetNow();
-    bool isBeforeNow = TimerScheduler::IsStrictlyBefore(GetFireTime(), now);
+    bool isBeforeNow = TimerMilliScheduler::IsStrictlyBefore(GetFireTime(), now);
 
     // Check if one timer is before `now` and the other one is not.
-    if (TimerScheduler::IsStrictlyBefore(aSecondTimer.GetFireTime(), now) != isBeforeNow)
+    if (TimerMilliScheduler::IsStrictlyBefore(aSecondTimer.GetFireTime(), now) != isBeforeNow)
     {
         // One timer is before `now` and the other one is not, so if this timer's fire time is before `now` then
         // the second fire time would be after `now` and this timer would fire before the second timer.
@@ -205,20 +205,20 @@ bool Timer::DoesFireBefore(const Timer &aSecondTimer)
         // Both timers are before `now` or both are after `now`. Either way the difference is guaranteed to be less
         // than `kMaxDt` so we can safely compare the fire times directly.
 
-        retval = TimerScheduler::IsStrictlyBefore(GetFireTime(), aSecondTimer.GetFireTime());
+        retval = TimerMilliScheduler::IsStrictlyBefore(GetFireTime(), aSecondTimer.GetFireTime());
     }
 
     return retval;
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-UsecTimerScheduler::UsecTimerScheduler(Ip6::Ip6 &aIp6):
+TimerMicroScheduler::TimerMicroScheduler(Ip6::Ip6 &aIp6):
     Ip6Locator(aIp6),
     mHead(NULL)
 {
 }
 
-void UsecTimerScheduler::Add(UsecTimer &aTimer)
+void TimerMicroScheduler::Add(TimerMicro &aTimer)
 {
     Remove(aTimer);
 
@@ -230,8 +230,8 @@ void UsecTimerScheduler::Add(UsecTimer &aTimer)
     }
     else
     {
-        UsecTimer *prev = NULL;
-        UsecTimer *cur;
+        TimerMicro *prev = NULL;
+        TimerMicro *cur;
 
         for (cur = mHead; cur; cur = cur->mNext)
         {
@@ -263,7 +263,7 @@ void UsecTimerScheduler::Add(UsecTimer &aTimer)
     }
 }
 
-void UsecTimerScheduler::Remove(UsecTimer &aTimer)
+void TimerMicroScheduler::Remove(TimerMicro &aTimer)
 {
     VerifyOrExit(aTimer.mNext != &aTimer);
 
@@ -274,7 +274,7 @@ void UsecTimerScheduler::Remove(UsecTimer &aTimer)
     }
     else
     {
-        for (UsecTimer *cur = mHead; cur; cur = cur->mNext)
+        for (TimerMicro *cur = mHead; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aTimer)
             {
@@ -290,35 +290,35 @@ exit:
     return;
 }
 
-void UsecTimerScheduler::SetAlarm(void)
+void TimerMicroScheduler::SetAlarm(void)
 {
     if (mHead == NULL)
     {
-        otPlatUsecAlarmStop(GetIp6().GetInstance());
+        otPlatAlarmMicroStop(GetIp6().GetInstance());
     }
     else
     {
-        uint32_t now = otPlatUsecAlarmGetNow();
-        uint32_t remaining = TimerScheduler::IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
+        uint32_t now = TimerMicro::GetNow();
+        uint32_t remaining = TimerMilliScheduler::IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
 
-        otPlatUsecAlarmStartAt(GetIp6().GetInstance(), now, remaining);
+        otPlatAlarmMicroStartAt(GetIp6().GetInstance(), now, remaining);
     }
 }
 
-extern "C" void otPlatUsecAlarmFired(otInstance *aInstance)
+extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
     otLogFuncEntry();
-    aInstance->mIp6.mUsecTimerScheduler.ProcessTimers();
+    aInstance->mIp6.mTimerMicroScheduler.ProcessTimers();
     otLogFuncExit();
 }
 
-void UsecTimerScheduler::ProcessTimers(void)
+void TimerMicroScheduler::ProcessTimers(void)
 {
-    UsecTimer *timer = mHead;
+    TimerMicro *timer = mHead;
 
     if (timer)
     {
-        if (!TimerScheduler::IsStrictlyBefore(otPlatUsecAlarmGetNow(), timer->mFireTime))
+        if (!TimerMilliScheduler::IsStrictlyBefore(TimerMicro::GetNow(), timer->mFireTime))
         {
             Remove(*timer);
             timer->Fired();
@@ -334,19 +334,19 @@ void UsecTimerScheduler::ProcessTimers(void)
     }
 }
 
-UsecTimerScheduler &UsecTimer::GetUsecTimerScheduler(void) const
+TimerMicroScheduler &TimerMicro::GetTimerMicroScheduler(void) const
 {
-    return GetIp6().mUsecTimerScheduler;
+    return GetIp6().mTimerMicroScheduler;
 }
 
-bool UsecTimer::DoesFireBefore(const UsecTimer &aSecondTimer)
+bool TimerMicro::DoesFireBefore(const TimerMicro &aSecondTimer)
 {
     bool retval;
     uint32_t now = GetNow();
-    bool isBeforeNow = TimerScheduler::IsStrictlyBefore(GetFireTime(), now);
+    bool isBeforeNow = TimerMilliScheduler::IsStrictlyBefore(GetFireTime(), now);
 
     // Check if one timer is before `now` and the other one is not.
-    if (TimerScheduler::IsStrictlyBefore(aSecondTimer.GetFireTime(), now) != isBeforeNow)
+    if (TimerMilliScheduler::IsStrictlyBefore(aSecondTimer.GetFireTime(), now) != isBeforeNow)
     {
         // One timer is before `now` and the other one is not, so if this timer's fire time is before `now` then
         // the second fire time would be after `now` and this timer would fire before the second timer.
@@ -358,7 +358,7 @@ bool UsecTimer::DoesFireBefore(const UsecTimer &aSecondTimer)
         // Both timers are before `now` or both are after `now`. Either way the difference is guaranteed to be less
         // than `kMaxDt` so we can safely compare the fire times directly.
 
-        retval = TimerScheduler::IsStrictlyBefore(GetFireTime(), aSecondTimer.GetFireTime());
+        retval = TimerMilliScheduler::IsStrictlyBefore(GetFireTime(), aSecondTimer.GetFireTime());
     }
 
     return retval;

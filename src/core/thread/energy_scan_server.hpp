@@ -78,7 +78,7 @@ private:
     static void HandleScanResult(void *aContext, otEnergyScanResult *aResult);
     void HandleScanResult(otEnergyScanResult *aResult);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
@@ -99,7 +99,7 @@ private:
     int8_t mScanResults[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
     uint8_t mScanResultsLength;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Ip6::NetifCallback mNetifCallback;
 

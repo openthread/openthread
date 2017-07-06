@@ -32,8 +32,8 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/alarm.h>
 #include <openthread/platform/radio.h>
 
 #include <common/logging.hpp>
@@ -150,17 +150,17 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        otPlatAlarmStop(aInstance);
+        otPlatAlarmMilliStop(aInstance);
         snprintf(aOutput, aOutputMaxLen, "diagnostic message transmission is stopped\r\nstatus 0x%02x\r\n", error);
         sTransmitActive = false;
     }
     else if (strcmp(argv[0], "start") == 0)
     {
-        otPlatAlarmStop(aInstance);
+        otPlatAlarmMilliStop(aInstance);
         sTransmitActive = true;
         sTxCount = sTxRequestedCount;
-        uint32_t now = otPlatAlarmGetNow();
-        otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+        uint32_t now = otPlatAlarmMilliGetNow();
+        otPlatAlarmMilliStartAt(aInstance, now, sTxPeriod);
         snprintf(aOutput, aOutputMaxLen, "sending %" PRId32 " diagnostic messages with %" PRIu32
                  " ms interval\r\nstatus 0x%02x\r\n",
                  sTxRequestedCount, sTxPeriod, error);
@@ -300,13 +300,13 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
                 sTxCount--;
             }
 
-            uint32_t now = otPlatAlarmGetNow();
-            otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+            uint32_t now = otPlatAlarmMilliGetNow();
+            otPlatAlarmMilliStartAt(aInstance, now, sTxPeriod);
         }
         else
         {
             sTransmitActive = false;
-            otPlatAlarmStop(aInstance);
+            otPlatAlarmMilliStop(aInstance);
             otPlatLog(OT_LOG_LEVEL_DEBG, OT_LOG_REGION_PLATFORM, "Transmit done");
         }
     }

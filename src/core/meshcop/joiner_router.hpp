@@ -102,7 +102,7 @@ private:
     void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
                                      const Ip6::MessageInfo *aMessageInfo, otError result);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
@@ -118,7 +118,7 @@ private:
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     MessageQueue mDelayedJoinEnts;
 
     uint16_t mJoinerUdpPort;

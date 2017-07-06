@@ -1675,7 +1675,7 @@ void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels)
     mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(Mac::kScanChannelsAll) : aScanChannels;
 }
 
-void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
+void MeshForwarder::HandleDiscoverTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleDiscoverTimer();
 }
@@ -2076,7 +2076,7 @@ void MeshForwarder::ClearReassemblyList(void)
     }
 }
 
-void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
+void MeshForwarder::HandleReassemblyTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleReassemblyTimer();
 }
@@ -2192,7 +2192,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     VerifyOrExit(netif.GetMle().GetRole() != OT_DEVICE_ROLE_DETACHED);
 
     VerifyOrExit((child = netif.GetMle().GetChild(aMacSource)) != NULL);
-    child->SetLastHeard(Timer::GetNow());
+    child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
 

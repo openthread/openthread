@@ -492,7 +492,7 @@ exit:
     otLogFuncExit();
 }
 
-void Joiner::HandleTimer(Timer &aTimer)
+void Joiner::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

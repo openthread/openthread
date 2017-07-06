@@ -527,16 +527,16 @@ private:
     void UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence);
     void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
-    static void HandleSeedSetTimer(Timer &aTimer);
+    static void HandleSeedSetTimer(TimerMilli &aTimer);
     void HandleSeedSetTimer(void);
 
-    static void HandleRetransmissionTimer(Timer &aTimer);
+    static void HandleRetransmissionTimer(TimerMilli &aTimer);
     void HandleRetransmissionTimer(void);
 
     static Mpl &GetOwner(const Context &aContext);
 
-    Timer mSeedSetTimer;
-    Timer mRetransmissionTimer;
+    TimerMilli mSeedSetTimer;
+    TimerMilli mRetransmissionTimer;
 
     uint8_t mTimerExpirations;
     uint8_t mSequence;

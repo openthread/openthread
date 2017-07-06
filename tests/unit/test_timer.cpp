@@ -79,18 +79,18 @@ void InitCounters(void)
 }
 
 /**
- * `TestTimer` sub-classes `ot::Timer` and provides a handler and a counter to keep track of number of times timer gets
+ * `TestTimer` sub-classes `ot::TimerMilli` and provides a handler and a counter to keep track of number of times timer gets
  * fired.
  */
-class TestTimer: public ot::Timer
+class TestTimer: public ot::TimerMilli
 {
 public:
     TestTimer(otInstance *aInstance):
-        ot::Timer(aInstance->mIp6, TestTimer::HandleTimerFired, NULL),
+        ot::TimerMilli(aInstance->mIp6, TestTimer::HandleTimerFired, NULL),
         mFiredCounter(0)
     { }
 
-    static void HandleTimerFired(ot::Timer &aTimer) {
+    static void HandleTimerFired(ot::TimerMilli &aTimer) {
         static_cast<TestTimer &>(aTimer).HandleTimerFired();
     }
 
@@ -136,7 +136,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -160,7 +160,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -184,7 +184,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval + 5;
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -208,7 +208,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval - 2;
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
@@ -218,7 +218,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -274,7 +274,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTwoTimers: Stop CallCount Failed.\n");
@@ -286,7 +286,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(sTimerOn == true,                              "TestTwoTimers: Platform Timer State Failed.\n");
 
     sNow += kTimerInterval;
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestTwoTimers: Stop CallCount Failed.\n");
@@ -296,7 +296,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn == false,                             "TestTwoTimers: Platform Timer State Failed.\n");
 
-    // Test when second timer starts at the fire time of first timer (before otPlatAlarmFired()) and its fire time
+    // Test when second timer starts at the fire time of first timer (before otPlatAlarmMilliFired()) and its fire time
     // is before the first timer. Ensure that the second timer handler is invoked before the first one.
 
     InitCounters();
@@ -323,7 +323,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTwoTimers: Stop CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestTwoTimers: Handler CallCount Failed.\n");
@@ -333,7 +333,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn == true,                              "TestTwoTimers: Platform Timer State Failed.\n");
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestTwoTimers: Stop CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 2, "TestTwoTimers: Handler CallCount Failed.\n");
@@ -342,7 +342,7 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn == false,                             "TestTwoTimers: Platform Timer State Failed.\n");
 
-    // Timer 1 fire callback is late by some ticks/ms, and second timer is scheduled (before call to otPlatAlarmFired)
+    // Timer 1 fire callback is late by some ticks/ms, and second timer is scheduled (before call to otPlatAlarmMilliFired)
     // with a maximum interval. This is to test (corner-case) scenario where the fire time of two timers spanning over
     // the maximum interval.
 
@@ -363,7 +363,7 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval + 5;
 
-    timer2.Start(ot::Timer::kMaxDt);
+    timer2.Start(ot::TimerMilli::kMaxDt);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
@@ -372,20 +372,20 @@ int TestTwoTimers(void)
     VerifyOrQuit(timer2.IsRunning() == true,                      "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn,                                        "TestTwoTimers: Platform Timer State Failed.\n");
 
-    otPlatAlarmFired(instance);
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTwoTimers: Stop CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestTwoTimers: Handler CallCount Failed.\n");
     VerifyOrQuit(timer1.GetFiredCounter() == 1,                 "TestTwoTimers: Fire Counter failed.\n");
     VerifyOrQuit(sPlatT0 == sNow,                               "TestTwoTimers: Start params Failed.\n");
-    VerifyOrQuit(sPlatDt == ot::Timer::kMaxDt,                  "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(sPlatDt == ot::TimerMilli::kMaxDt,                  "TestTwoTimers: Start params Failed.\n");
     VerifyOrQuit(timer1.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(timer2.IsRunning() == true,                    "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn == true,                              "TestTwoTimers: Platform Timer State Failed.\n");
 
-    sNow += ot::Timer::kMaxDt;
-    otPlatAlarmFired(instance);
+    sNow += ot::TimerMilli::kMaxDt;
+    otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestTwoTimers: Stop CallCount Failed.\n");
@@ -429,11 +429,11 @@ static void TenTimers(uint32_t aTimeShift)
     {
         20,
         100,
-        (ot::Timer::kMaxDt - kTimeT0[2]),
+        (ot::TimerMilli::kMaxDt - kTimeT0[2]),
         100000,
         1000000,
         10,
-        ot::Timer::kMaxDt,
+        ot::TimerMilli::kMaxDt,
         200,
         200,
         200
@@ -457,8 +457,8 @@ static void TenTimers(uint32_t aTimeShift)
         1100,
         1207,
         101004,
-        ot::Timer::kMaxDt,
-        ot::Timer::kMaxDt + kTimeT0[6]
+        ot::TimerMilli::kMaxDt,
+        ot::TimerMilli::kMaxDt + kTimeT0[6]
     };
     // Expected timers fired by each kTriggerTimes[] value
     //  Trigger #    Timers Fired
@@ -564,7 +564,7 @@ static void TenTimers(uint32_t aTimeShift)
         timers[i]->Start(kTimerInterval[i]);
     }
 
-    // given the order in which timers are started, the TimerScheduler should call otPlatAlarmStartAt 2 times.
+    // given the order in which timers are started, the TimerScheduler should call otPlatAlarmMilliStartAt 2 times.
     // one for timer[0] and one for timer[5] which will supercede timer[0].
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTenTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestTenTimer: Stop CallCount Failed.\n");
@@ -586,13 +586,13 @@ static void TenTimers(uint32_t aTimeShift)
 
         do
         {
-            // By design, each call to otPlatAlarmFired() can result in 0 or 1 calls to a timer handler.
-            // For some combinations of sNow and Timers queued, it is necessary to call otPlatAlarmFired()
+            // By design, each call to otPlatAlarmMilliFired() can result in 0 or 1 calls to a timer handler.
+            // For some combinations of sNow and Timers queued, it is necessary to call otPlatAlarmMilliFired()
             // multiple times in order to handle all the expired timers.  It can be determined that another
-            // timer is ready to be triggered by examining the aDt arg passed into otPlatAlarmStartAt().  If
-            // that value is 0, then otPlatAlarmFired should be fired immediately. This loop calls otPlatAlarmFired()
+            // timer is ready to be triggered by examining the aDt arg passed into otPlatAlarmMilliStartAt().  If
+            // that value is 0, then otPlatAlarmMilliFired should be fired immediately. This loop calls otPlatAlarmMilliFired()
             // the requisite number of times based on the aDt argument.
-            otPlatAlarmFired(instance);
+            otPlatAlarmMilliFired(instance);
         }
         while (sPlatDt == 0);
 
@@ -633,8 +633,8 @@ int TestTenTimers(void)
         100000U,
         0U - 1U,
         0U - 1100U,
-        ot::Timer::kMaxDt,
-        ot::Timer::kMaxDt + 1020U,
+        ot::TimerMilli::kMaxDt,
+        ot::TimerMilli::kMaxDt + 1020U,
     };
 
     size_t i;

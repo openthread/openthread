@@ -36,7 +36,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "hw_timer0.h"
 #include "hw_gpio.h"
@@ -57,7 +57,7 @@ void da15000AlarmProcess(otInstance *aInstance)
     if ((sIsRunning) && (sAlarm <= sCounter))
     {
         sIsRunning = false;
-        otPlatAlarmFired(aInstance);
+        otPlatAlarmMilliFired(aInstance);
     }
 }
 
@@ -72,12 +72,12 @@ void da15000AlarmInit(void)
     hw_timer0_set_on_clock_div(false);
 }
 
-uint32_t otPlatAlarmGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     return sCounter;
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)aInstance;
     sAlarm = t0 + dt;
@@ -97,7 +97,7 @@ void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
     hw_timer0_unfreeze();
 }
 
-void otPlatAlarmStop(otInstance *aInstance)
+void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     (void)aInstance;
     sIsRunning = false;

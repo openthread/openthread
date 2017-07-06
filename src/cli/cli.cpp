@@ -1607,7 +1607,7 @@ void Interpreter::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &a
     if (aMessage.Read(aMessage.GetOffset(), sizeof(uint32_t), &timestamp) >=
         static_cast<int>(sizeof(uint32_t)))
     {
-        mServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
+        mServer->OutputFormat(" time=%dms", TimerMilli::GetNow() - HostSwap32(timestamp));
     }
 
     mServer->OutputFormat("\r\n");
@@ -1682,7 +1682,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandlePingTimer(Timer &aTimer)
+void Interpreter::s_HandlePingTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandlePingTimer();
 }
@@ -1690,7 +1690,7 @@ void Interpreter::s_HandlePingTimer(Timer &aTimer)
 void Interpreter::HandlePingTimer()
 {
     otError error = OT_ERROR_NONE;
-    uint32_t timestamp = HostSwap32(Timer::GetNow());
+    uint32_t timestamp = HostSwap32(TimerMilli::GetNow());
 
     otMessage *message;
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&mMessageInfo);

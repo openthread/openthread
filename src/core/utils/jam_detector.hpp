@@ -174,7 +174,7 @@ public:
     uint64_t GetHistoryBitmap(void) const { return mHistoryBitmap; }
 
 private:
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
     void UpdateHistory(bool aThresholdExceeded);
     void UpdateJamState(void);
@@ -196,7 +196,7 @@ private:
     Handler      mHandler;                  // Handler/callback to inform about jamming state
     void        *mContext;                  // Context for handler/callback
     int8_t       mRssiThreshold;            // RSSI threshold for jam detection
-    Timer        mTimer;                    // RSSI sample timer
+    TimerMilli   mTimer;                    // RSSI sample timer
     uint64_t     mHistoryBitmap;            // History bitmap, each bit correspond to 1 sec interval
     uint32_t     mCurSecondStartTime;       // Start time for current 1 sec interval
     uint16_t     mSampleInterval;           // Current sample interval

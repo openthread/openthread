@@ -38,8 +38,8 @@
 #include "utils/wrap_stdint.h"
 
 #include <openthread/types.h>
-#include <openthread/platform/alarm.h>
-#include <openthread/platform/usec-alarm.h>
+#include <openthread/platform/alarm-micro.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "common/context.hpp"
 #include "common/debug.hpp"
@@ -50,7 +50,7 @@ namespace ot {
 
 namespace Ip6 { class Ip6; }
 
-class Timer;
+class TimerMilli;
 
 /**
  * @addtogroup core-timer
@@ -66,9 +66,9 @@ class Timer;
  * This class implements the timer scheduler.
  *
  */
-class TimerScheduler: public Ip6Locator
+class TimerMilliScheduler: public Ip6Locator
 {
-    friend class Timer;
+    friend class TimerMilli;
 
 public:
     /**
@@ -77,7 +77,7 @@ public:
      * @param[in]  aIp6  A reference to the IPv6 network object.
      *
      */
-    TimerScheduler(Ip6::Ip6 &aIp6);
+    TimerMilliScheduler(Ip6::Ip6 &aIp6);
 
     /**
      * This method adds a timer instance to the timer scheduler.
@@ -85,7 +85,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Add(Timer &aTimer);
+    void Add(TimerMilli &aTimer);
 
     /**
      * This method removes a timer instance to the timer scheduler.
@@ -93,7 +93,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Remove(Timer &aTimer);
+    void Remove(TimerMilli &aTimer);
 
     /**
      * This method processes the running timers.
@@ -123,16 +123,16 @@ private:
      */
     void SetAlarm(void);
 
-    Timer *mHead;
+    TimerMilli *mHead;
 };
 
 /**
  * This class implements a timer.
  *
  */
-class Timer: public Ip6Locator, public Context
+class TimerMilli: public Ip6Locator, public Context
 {
-    friend class TimerScheduler;
+    friend class TimerMilliScheduler;
 
 public:
 
@@ -147,7 +147,7 @@ public:
      * @param[in]  aTimer    A reference to the expired timer instance.
      *
      */
-    typedef void (*Handler)(Timer &aTimer);
+    typedef void (*Handler)(TimerMilli &aTimer);
 
     /**
      * This constructor creates a timer instance.
@@ -157,7 +157,7 @@ public:
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Timer(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
+    TimerMilli(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
         Ip6Locator(aIp6),
         Context(aContext),
         mHandler(aHandler),
@@ -202,14 +202,14 @@ public:
     void StartAt(uint32_t aT0, uint32_t aDt) {
         assert(aDt <= kMaxDt);
         mFireTime = aT0 + aDt;
-        GetTimerScheduler().Add(*this);
+        GetTimerMilliScheduler().Add(*this);
     }
 
     /**
      * This method stops the timer.
      *
      */
-    void Stop(void) { GetTimerScheduler().Remove(*this); }
+    void Stop(void) { GetTimerMilliScheduler().Remove(*this); }
 
     /**
      * This static method returns the current time in milliseconds.
@@ -217,7 +217,7 @@ public:
      * @returns The current time in milliseconds.
      *
      */
-    static uint32_t GetNow(void) { return otPlatAlarmGetNow(); }
+    static uint32_t GetNow(void) { return otPlatAlarmMilliGetNow(); }
 
     /**
      * This static method returns the number of milliseconds given seconds.
@@ -245,33 +245,33 @@ private:
      * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
      *
      */
-    bool DoesFireBefore(const Timer &aTimer);
+    bool DoesFireBefore(const TimerMilli &aTimer);
 
     /**
-     * This method returns a reference to the TimerScheduler.
+     * This method returns a reference to the TimerMilliScheduler.
      *
-     * @returns   A reference to the TimerScheduler.
+     * @returns   A reference to the TimerMilliScheduler.
      *
      */
-    TimerScheduler &GetTimerScheduler(void) const;
+    TimerMilliScheduler &GetTimerMilliScheduler(void) const;
 
     void Fired(void) { mHandler(*this); }
 
     Handler         mHandler;
     uint32_t        mFireTime;
-    Timer          *mNext;
+    TimerMilli     *mNext;
 };
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-class UsecTimer;
+class TimerMicro;
 
 /**
  * This class implements the microsecond timer scheduler.
  *
  */
-class UsecTimerScheduler: public Ip6Locator
+class TimerMicroScheduler: public Ip6Locator
 {
-    friend class UsecTimer;
+    friend class TimerMicro;
 
 public:
     /**
@@ -280,7 +280,7 @@ public:
      * @param[in]  aIp6  A reference to the IPv6 network object.
      *
      */
-    UsecTimerScheduler(Ip6::Ip6 &aIp6);
+    TimerMicroScheduler(Ip6::Ip6 &aIp6);
 
     /**
      * This method adds a timer instance to the timer scheduler.
@@ -288,7 +288,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Add(UsecTimer &aTimer);
+    void Add(TimerMicro &aTimer);
 
     /**
      * This method removes a timer instance to the timer scheduler.
@@ -296,7 +296,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Remove(UsecTimer &aTimer);
+    void Remove(TimerMicro &aTimer);
 
     /**
      * This method processes the running timers.
@@ -311,16 +311,16 @@ private:
      */
     void SetAlarm(void);
 
-    UsecTimer *mHead;
+    TimerMicro *mHead;
 };
 
 /**
  * This class implements a timer.
  *
  */
-class UsecTimer: public Ip6Locator, public Context
+class TimerMicro: public Ip6Locator, public Context
 {
-    friend class UsecTimerScheduler;
+    friend class TimerMicroScheduler;
 
 public:
 
@@ -335,7 +335,7 @@ public:
      * @param[in]  aTimer    A reference to the expired timer instance.
      *
      */
-    typedef void (*Handler)(UsecTimer &aTimer);
+    typedef void (*Handler)(TimerMicro &aTimer);
 
     /**
      * This constructor creates a timer instance.
@@ -345,7 +345,7 @@ public:
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    UsecTimer(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
+    TimerMicro(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
         Ip6Locator(aIp6),
         Context(aContext),
         mHandler(aHandler),
@@ -390,14 +390,14 @@ public:
     void StartAt(uint32_t aT0, uint32_t aDt) {
         assert(aDt <= kMaxDt);
         mFireTime = aT0 + aDt;
-        GetUsecTimerScheduler().Add(*this);
+        GetTimerMicroScheduler().Add(*this);
     }
 
     /**
      * This method stops the timer.
      *
      */
-    void Stop(void) { GetUsecTimerScheduler().Remove(*this); }
+    void Stop(void) { GetTimerMicroScheduler().Remove(*this); }
 
     /**
      * This static method returns the current time in microseconds.
@@ -405,7 +405,7 @@ public:
      * @returns The current time in microseconds.
      *
      */
-    static uint32_t GetNow(void) { return otPlatUsecAlarmGetNow(); }
+    static uint32_t GetNow(void) { return otPlatAlarmMicroGetNow(); }
 
 private:
     /**
@@ -417,21 +417,21 @@ private:
      * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
      *
      */
-    bool DoesFireBefore(const UsecTimer &aTimer);
+    bool DoesFireBefore(const TimerMicro &aTimer);
 
     /**
-     * This method returns a reference to the UsecTimerScheduler.
+     * This method returns a reference to the TimerMicroScheduler.
      *
-     * @returns   A reference to the UsecTimerScheduler.
+     * @returns   A reference to the TimerMicroScheduler.
      *
      */
-    UsecTimerScheduler &GetUsecTimerScheduler(void) const;
+    TimerMicroScheduler &GetTimerMicroScheduler(void) const;
 
     void Fired(void) { mHandler(*this); }
 
     Handler         mHandler;
     uint32_t        mFireTime;
-    UsecTimer      *mNext;
+    TimerMicro     *mNext;
 };
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 

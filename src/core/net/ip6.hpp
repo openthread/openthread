@@ -374,9 +374,9 @@ public:
 
     MessagePool mMessagePool;
     TaskletScheduler mTaskletScheduler;
-    TimerScheduler mTimerScheduler;
+    TimerMilliScheduler mTimerMilliScheduler;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    UsecTimerScheduler mUsecTimerScheduler;
+    TimerMicroScheduler mTimerMicroScheduler;
 #endif
 
 private:

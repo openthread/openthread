@@ -32,7 +32,7 @@
 */
 
 #include <openthread/openthread.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 #include "utils/code_utils.h"
 
@@ -222,10 +222,10 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (sRadioState == OT_RADIO_STATE_RECEIVE && sSleepInitDelay == 0)
     {
-        sSleepInitDelay = otPlatAlarmGetNow();
+        sSleepInitDelay = otPlatAlarmMilliGetNow();
         return OT_ERROR_NONE;
     }
-    else if ((otPlatAlarmGetNow() - sSleepInitDelay) < dg_configINITIAL_SLEEP_DELAY_TIME)
+    else if ((otPlatAlarmMilliGetNow() - sSleepInitDelay) < dg_configINITIAL_SLEEP_DELAY_TIME)
     {
         return OT_ERROR_NONE;
     }

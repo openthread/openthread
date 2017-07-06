@@ -179,7 +179,7 @@ private:
                                   const otIcmp6Header *aIcmpHeader);
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     static AddressResolver &GetOwner(const Context &aContext);
@@ -189,7 +189,7 @@ private:
     Coap::Resource mAddressNotification;
     Cache mCache[kCacheEntries];
     Ip6::IcmpHandler mIcmpHandler;
-    Timer mTimer;
+    TimerMilli mTimer;
 };
 
 /**

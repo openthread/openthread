@@ -98,7 +98,7 @@ void TestFuzz(uint32_t aSeconds)
     g_testPlatRadioGetTransmitBuffer = testFuzztRadioGetTransmitBuffer;
 
     // Initialize our timing variables
-    uint32_t tStart = otPlatAlarmGetNow();
+    uint32_t tStart = otPlatAlarmMilliGetNow();
     uint32_t tEnd = tStart + (aSeconds * 1000);
 
     otInstance *aInstance;
@@ -136,14 +136,14 @@ void TestFuzz(uint32_t aSeconds)
 
     uint32_t countRecv = 0;
 
-    while (otPlatAlarmGetNow() < tEnd)
+    while (otPlatAlarmMilliGetNow() < tEnd)
     {
         otTaskletsProcess(aInstance);
 
-        if (g_testPlatAlarmSet && otPlatAlarmGetNow() >= g_testPlatAlarmNext)
+        if (g_testPlatAlarmSet && otPlatAlarmMilliGetNow() >= g_testPlatAlarmNext)
         {
             g_testPlatAlarmSet = false;
-            otPlatAlarmFired(aInstance);
+            otPlatAlarmMilliFired(aInstance);
         }
 
         if (g_fRadioEnabled)

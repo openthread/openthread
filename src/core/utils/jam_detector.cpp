@@ -76,7 +76,7 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
 
     mEnabled = true;
 
-    mCurSecondStartTime = Timer::GetNow();
+    mCurSecondStartTime = TimerMilli::GetNow();
     mAlwaysAboveThreshold = true;
     mHistoryBitmap = 0;
     mJamState = false;
@@ -136,7 +136,7 @@ exit:
     return error;
 }
 
-void JamDetector::HandleTimer(Timer &aTimer)
+void JamDetector::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }
@@ -184,7 +184,7 @@ exit:
 
 void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
 
     // If the RSSI is ever below the threshold, update mAlwaysAboveThreshold
     // for current second interval.

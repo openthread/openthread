@@ -311,7 +311,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
     {
         rval = 2;
     }
-    else if (static_cast<int32_t>(mTimerIntermediate - Timer::GetNow()) <= 0)
+    else if (static_cast<int32_t>(mTimerIntermediate - TimerMilli::GetNow()) <= 0)
     {
         rval = 1;
     }
@@ -341,7 +341,7 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
     {
         mTimerSet = true;
         mTimer.Start(aFinish);
-        mTimerIntermediate = Timer::GetNow() + aIntermediate;
+        mTimerIntermediate = TimerMilli::GetNow() + aIntermediate;
     }
 }
 
@@ -370,7 +370,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
     return 0;
 }
 
-void Dtls::HandleTimer(Timer &aTimer)
+void Dtls::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

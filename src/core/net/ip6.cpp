@@ -58,9 +58,9 @@ Ip6::Ip6(void):
     mUdp(*this),
     mMpl(*this),
     mMessagePool(GetInstance()),
-    mTimerScheduler(*this),
+    mTimerMilliScheduler(*this),
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    mUsecTimerScheduler(*this),
+    mTimerMicroScheduler(*this),
 #endif
     mForwardingEnabled(false),
     mSendQueueTask(mTaskletScheduler, HandleSendQueue, this),

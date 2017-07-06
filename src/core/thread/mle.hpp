@@ -1350,8 +1350,8 @@ protected:
     };
     ReattachState mReattachState;
 
-    Timer mParentRequestTimer;    ///< The timer for driving the Parent Request process.
-    Timer mDelayedResponseTimer;  ///< The timer to delay MLE responses.
+    TimerMilli mParentRequestTimer;    ///< The timer for driving the Parent Request process.
+    TimerMilli mDelayedResponseTimer;  ///< The timer to delay MLE responses.
     uint8_t mLastPartitionRouterIdSequence;
     uint32_t mLastPartitionId;
 
@@ -1369,9 +1369,9 @@ private:
 
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
-    static void HandleParentRequestTimer(Timer &aTimer);
+    static void HandleParentRequestTimer(TimerMilli &aTimer);
     void HandleParentRequestTimer(void);
-    static void HandleDelayedResponseTimer(Timer &aTimer);
+    static void HandleDelayedResponseTimer(TimerMilli &aTimer);
     void HandleDelayedResponseTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

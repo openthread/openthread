@@ -112,7 +112,7 @@ private:
         kTimeoutLeaderPetition = 50, ///< TIMEOUT_LEAD_PET (seconds)
     };
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     static void HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -135,7 +135,7 @@ private:
 
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
-    Timer mTimer;
+    TimerMilli mTimer;
 
     uint32_t mDelayTimerMinimal;
 

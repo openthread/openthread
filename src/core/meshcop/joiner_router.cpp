@@ -407,7 +407,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);
 
-    delayedMessage = DelayedJoinEntHeader(Timer::GetNow() + kDelayJoinEnt, messageInfo, aKek.GetKek());
+    delayedMessage = DelayedJoinEntHeader(TimerMilli::GetNow() + kDelayJoinEnt, messageInfo, aKek.GetKek());
     SuccessOrExit(delayedMessage.AppendTo(*message));
     mDelayedJoinEnts.Enqueue(*message);
 
@@ -427,7 +427,7 @@ exit:
     return error;
 }
 
-void JoinerRouter::HandleTimer(Timer &aTimer)
+void JoinerRouter::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }
@@ -442,7 +442,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     ThreadNetif &netif = GetNetif();
     DelayedJoinEntHeader delayedJoinEnt;
     Message *message = mDelayedJoinEnts.GetHead();
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit(message != NULL);

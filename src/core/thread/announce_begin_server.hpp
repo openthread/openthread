@@ -90,7 +90,7 @@ private:
                               const otMessageInfo *aMessageInfo);
     void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
     static AnnounceBeginServer &GetOwner(const Context &aContext);
@@ -100,7 +100,7 @@ private:
     uint8_t mCount;
     uint8_t mChannel;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource mAnnounceBegin;
 };

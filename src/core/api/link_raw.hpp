@@ -131,14 +131,14 @@ private:
         kTimerReasonEnergyScanComplete,
     };
 
-    Timer                   mTimer;
+    TimerMilli              mTimer;
     TimerReason             mTimerReason;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    UsecTimer               mUsecTimer;
-    static void HandleUsecTimer(UsecTimer &aTimer);
+    TimerMicro              mTimerMicro;
+    static void HandleTimerMicro(TimerMicro &aTimer);
 #endif
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED

@@ -164,7 +164,7 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
@@ -251,14 +251,14 @@ exit:
     return error;
 }
 
-void Mpl::HandleRetransmissionTimer(Timer &aTimer)
+void Mpl::HandleRetransmissionTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleRetransmissionTimer();
 }
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
     MplBufferedMessageMetadata messageMetadata;
 
@@ -338,7 +338,7 @@ void Mpl::HandleRetransmissionTimer(void)
     }
 }
 
-void Mpl::HandleSeedSetTimer(Timer &aTimer)
+void Mpl::HandleSeedSetTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleSeedSetTimer();
 }

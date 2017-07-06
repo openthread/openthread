@@ -212,10 +212,10 @@ private:
     void AddCoapResources(void);
     void RemoveCoapResources(void);
 
-    static void HandleTimer(Timer &aTimer);
+    static void HandleTimer(TimerMilli &aTimer);
     void HandleTimer(void);
 
-    static void HandleJoinerExpirationTimer(Timer &aTimer);
+    static void HandleJoinerExpirationTimer(TimerMilli &aTimer);
     void HandleJoinerExpirationTimer(void);
 
     void UpdateJoinerExpirationTimer(void);
@@ -279,9 +279,9 @@ private:
     };
     uint16_t mJoinerPort;
     uint16_t mJoinerRloc;
-    Timer mJoinerExpirationTimer;
+    TimerMilli mJoinerExpirationTimer;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     uint16_t mSessionId;
     uint8_t mTransmitAttempts;
 

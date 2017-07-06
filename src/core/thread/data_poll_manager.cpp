@@ -345,7 +345,7 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
     else
     {
-        mTimerStartTime = Timer::GetNow();
+        mTimerStartTime = TimerMilli::GetNow();
         mTimer.StartAt(mTimerStartTime, mPollPeriod);
     }
 }
@@ -404,7 +404,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
     return period;
 }
 
-void DataPollManager::HandlePollTimer(Timer &aTimer)
+void DataPollManager::HandlePollTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).SendDataPoll();
 }
@@ -422,7 +422,7 @@ DataPollManager &DataPollManager::GetOwner(Context &aContext)
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const
 {
-    return Timer::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
+    return TimerMilli::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 

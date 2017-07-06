@@ -40,7 +40,6 @@
 #include "utils/wrap_string.h"
 
 #include <openthread/platform/random.h>
-#include <openthread/platform/usec-alarm.h>
 
 #include "openthread-instance.h"
 #include "common/code_utils.hpp"
@@ -99,7 +98,7 @@ void Mac::StartCsmaBackoff(void)
         backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-        mBackoffUsecTimer.Start(backoff);
+        mBackoffTimerMicro.Start(backoff);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
         mBackoffTimer.Start(backoff / 1000UL);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -110,7 +109,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
     mMacTimer(aThreadNetif.GetIp6(), &Mac::HandleMacTimer, this),
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    mBackoffUsecTimer(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
+    mBackoffTimerMicro(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
 #else
     mBackoffTimer(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
 #endif
@@ -774,9 +773,9 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-void Mac::HandleBeginTransmit(UsecTimer &aTimer)
+void Mac::HandleBeginTransmit(TimerMicro &aTimer)
 #else
-void Mac::HandleBeginTransmit(Timer &aTimer)
+void Mac::HandleBeginTransmit(TimerMilli &aTimer)
 #endif
 {
     GetOwner(aTimer).HandleBeginTransmit();
@@ -1119,7 +1118,7 @@ void Mac::RadioSleep(void)
     }
 }
 
-void Mac::HandleMacTimer(Timer &aTimer)
+void Mac::HandleMacTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleMacTimer();
 }
@@ -1184,7 +1183,7 @@ exit:
     return;
 }
 
-void Mac::HandleReceiveTimer(Timer &aTimer)
+void Mac::HandleReceiveTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleReceiveTimer();
 }

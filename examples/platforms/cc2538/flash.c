@@ -32,7 +32,7 @@
 #include <unistd.h>
 
 #include <openthread/config.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "platform-cc2538.h"
 #include "rom-utility.h"
@@ -102,10 +102,10 @@ exit:
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
     otError error = OT_ERROR_NONE;
-    uint32_t start = otPlatAlarmGetNow();
+    uint32_t start = otPlatAlarmMilliGetNow();
     uint32_t busy = 1;
 
-    while (busy && ((otPlatAlarmGetNow() - start) < aTimeout))
+    while (busy && ((otPlatAlarmMilliGetNow() - start) < aTimeout))
     {
         busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
     }

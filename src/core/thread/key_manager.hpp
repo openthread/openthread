@@ -336,7 +336,7 @@ private:
     otError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
     void StartKeyRotationTimer(void);
-    static void HandleKeyRotationTimer(Timer &aTimer);
+    static void HandleKeyRotationTimer(TimerMilli &aTimer);
     void HandleKeyRotationTimer(void);
 
     static KeyManager &GetOwner(const Context &aContext);
@@ -357,7 +357,7 @@ private:
     uint32_t mKeyRotationTime;
     uint32_t mKeySwitchGuardTime;
     bool     mKeySwitchGuardEnabled;
-    Timer    mKeyRotationTimer;
+    TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_FTD
     uint8_t mPSKc[kMaxKeyLength];

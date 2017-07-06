@@ -277,9 +277,9 @@ private:
     otError HandleFrameRequest(Mac::Frame &aFrame);
     static void HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError);
     void HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    static void HandleDiscoverTimer(Timer &aTimer);
+    static void HandleDiscoverTimer(TimerMilli &aTimer);
     void HandleDiscoverTimer(void);
-    static void HandleReassemblyTimer(Timer &aTimer);
+    static void HandleReassemblyTimer(TimerMilli &aTimer);
     void HandleReassemblyTimer(void);
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
     void ScheduleTransmissionTask(void);
@@ -296,8 +296,8 @@ private:
 
     Mac::Receiver         mMacReceiver;
     Mac::Sender           mMacSender;
-    Timer                 mDiscoverTimer;
-    Timer                 mReassemblyTimer;
+    TimerMilli            mDiscoverTimer;
+    TimerMilli            mReassemblyTimer;
 
     PriorityQueue         mSendQueue;
     MessageQueue          mReassemblyList;

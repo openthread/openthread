@@ -32,7 +32,7 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "utils/code_utils.h"
 #include "utils/flash.h"
@@ -93,7 +93,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
     otError error = OT_ERROR_BUSY;
-    uint32_t start = otPlatAlarmGetNow();
+    uint32_t start = otPlatAlarmMilliGetNow();
 
     do
     {
@@ -103,7 +103,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
             break;
         }
     }
-    while (aTimeout && ((otPlatAlarmGetNow() - start) < aTimeout));
+    while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
 
     return error;
 }
