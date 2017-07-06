@@ -1,0 +1,14 @@
+This repository contains a copy of OpenThread, intended to be used for testing and simulation only.
+
+See http://openthread.io/ for more information.
+
+The following commands will rebuild the Android.mk files:
+
+    ./bootstrap
+    AUTOANDR_MODULE_TAGS=optional ../wpantund/etc/autoandr/autoandr start \
+        --enable-shared \
+        --with-examples=posix \
+        --enable-ncp=uart \
+        CXXFLAGS="-Wno-non-virtual-dtor -Wno-date-time -Wno-variadic-macros -Wno-c++11-extensions -Wno-gnu-anonymous-struct -Wno-nested-anon-types -Wno-zero-length-array -Wno-pedantic" \
+        CFLAGS="-Wno-date-time" \
+        --disable-tools
