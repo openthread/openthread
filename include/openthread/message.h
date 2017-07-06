@@ -164,6 +164,14 @@ bool otMessageIsLinkSecurityEnabled(otMessage *aMessage);
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
 
 /**
+ * This function returns the average RSS (received signal strength) associated with the message.
+ *
+ * @returns The average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average/RSS is available.
+ *
+ */
+int8_t otMessageGetRss(otMessage *aMessage);
+
+/**
  * Append bytes to a message.
  *
  * @param[in]  aMessage  A pointer to a message buffer.

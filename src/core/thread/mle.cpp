@@ -2515,7 +2515,7 @@ bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv
 {
     bool rval = false;
 
-    uint8_t candidateLinkQualityIn = mParentCandidate.GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor());
+    uint8_t candidateLinkQualityIn = mParentCandidate.GetLinkInfo().GetLinkQuality();
     uint8_t candidateTwoWayLinkQuality = (candidateLinkQualityIn < mParentCandidate.GetLinkQualityOut())
                                          ?  candidateLinkQualityIn : mParentCandidate.GetLinkQualityOut();
 

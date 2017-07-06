@@ -1946,6 +1946,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
                      error = OT_ERROR_NO_BUFS);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
         message->SetPanId(aMessageInfo.mPanId);
+        message->AddRss(aMessageInfo.mRss);
         headerLength = netif.GetLowpan().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength,
                                                     datagramLength);
         VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
@@ -2019,6 +2020,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         // copy Fragment
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
+        message->AddRss(aMessageInfo.mRss);
     }
 
 exit:
@@ -2125,6 +2127,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
                  error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
     message->SetPanId(aMessageInfo.mPanId);
+    message->AddRss(aMessageInfo.mRss);
 
     headerLength = netif.GetLowpan().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
     VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
@@ -2233,10 +2236,12 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     uint16_t checksum = 0;
     Ip6::Header ip6Header;
     Ip6::IpProto protocol;
-    char stringBuffer[Ip6::Address::kIp6AddressStringSize];
     const char *actionText;
     const char *priorityText;
+    bool shouldLogRss = false;
     bool shouldLogSrcDstAddresses = true;
+    char stringBuffer[Ip6::Address::kIp6AddressStringSize];
+    char rssString[RssAverager::kStringSize];
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeIp6);
 
@@ -2279,6 +2284,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     {
     case kMessageReceive:
         actionText = "Received";
+        shouldLogRss = true;
         break;
 
     case kMessageTransmit:
@@ -2300,6 +2306,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageDrop:
         actionText = "Dropping";
+        shouldLogRss = true;
         break;
 
     default:
@@ -2332,7 +2339,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     otLogInfoMac(
         GetInstance(),
-        "%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s",
+        "%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s",
         actionText,
         Ip6::Ip6::IpProtoToString(protocol),
         aMessage.GetLength(),
@@ -2342,7 +2349,9 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
         aMessage.IsLinkSecurityEnabled() ? "yes" : "no",
         (aError == OT_ERROR_NONE) ? "" : ", error:",
         (aError == OT_ERROR_NONE) ? "" : otThreadErrorToString(aError),
-        priorityText
+        priorityText,
+        shouldLogRss ? "" : ", rss:",
+        shouldLogRss ? "" : aMessage.GetRssAverager().ToString(rssString, sizeof(rssString))
     );
 
     if (shouldLogSrcDstAddresses)

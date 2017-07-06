@@ -1123,7 +1123,7 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
     // NULL aRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
     VerifyOrExit(aRouterId != mRouterId && router != NULL && router->GetState() == Neighbor::kStateValid);
 
-    rval = router->GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor());
+    rval = router->GetLinkInfo().GetLinkQuality();
 
     if (rval > router->GetLinkQualityOut())
     {
@@ -1637,7 +1637,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                      GetRloc16(i),
                      GetRloc16(mRouters[i].GetNextHop()),
                      mRouters[i].GetCost(),
-                     GetLinkCost(i), mRouters[i].GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor()),
+                     GetLinkCost(i), mRouters[i].GetLinkInfo().GetLinkQuality(),
                      mRouters[i].GetLinkQualityOut());
     }
 
@@ -3624,7 +3624,7 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mChildId            = GetChildId(aChild.GetRloc16());
     aChildInfo.mNetworkDataVersion = aChild.GetNetworkDataVersion();
     aChildInfo.mAge                = TimerMilli::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
-    aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor());
+    aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
     aChildInfo.mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
     aChildInfo.mLastRssi           = aChild.GetLinkInfo().GetLastRss();
 
@@ -3663,7 +3663,7 @@ otError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo)
     aRouterInfo.mNextHop         = router->GetNextHop();
     aRouterInfo.mLinkEstablished = router->GetState() == Neighbor::kStateValid;
     aRouterInfo.mPathCost        = router->GetCost();
-    aRouterInfo.mLinkQualityIn   = router->GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor());
+    aRouterInfo.mLinkQualityIn   = router->GetLinkInfo().GetLinkQuality();
     aRouterInfo.mLinkQualityOut  = router->GetLinkQualityOut();
     aRouterInfo.mAge             = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::GetNow() -
                                                                               router->GetLastHeard()));
@@ -3725,7 +3725,7 @@ exit:
         aNeighInfo.mRloc16 = neighbor->GetRloc16();
         aNeighInfo.mLinkFrameCounter = neighbor->GetLinkFrameCounter();
         aNeighInfo.mMleFrameCounter = neighbor->GetMleFrameCounter();
-        aNeighInfo.mLinkQualityIn = neighbor->GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor());
+        aNeighInfo.mLinkQualityIn = neighbor->GetLinkInfo().GetLinkQuality();
         aNeighInfo.mAverageRssi = neighbor->GetLinkInfo().GetAverageRss();
         aNeighInfo.mLastRssi = neighbor->GetLinkInfo().GetLastRss();
         aNeighInfo.mRxOnWhenIdle = neighbor->IsRxOnWhenIdle();
@@ -4235,7 +4235,6 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     uint8_t linkQuality;
     uint8_t numChildren = 0;
     int8_t parentPriority = kParentPriorityMedium;
-    int8_t noiseFloor = GetNetif().GetMac().GetNoiseFloor();
 
     if (mParentPriority != kParentPriorityUnspecified)
     {
@@ -4278,7 +4277,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
-        switch (mParent.GetLinkInfo().GetLinkQuality(noiseFloor))
+        switch (mParent.GetLinkInfo().GetLinkQuality())
         {
         case 1:
             tlv.SetLinkQuality1(tlv.GetLinkQuality1() + 1);
@@ -4293,7 +4292,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             break;
         }
 
-        cost += LinkQualityToCost(mParent.GetLinkInfo().GetLinkQuality(noiseFloor));
+        cost += LinkQualityToCost(mParent.GetLinkInfo().GetLinkQuality());
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
@@ -4325,7 +4324,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             continue;
         }
 
-        linkQuality = mRouters[i].GetLinkInfo().GetLinkQuality(noiseFloor);
+        linkQuality = mRouters[i].GetLinkInfo().GetLinkQuality();
 
         if (linkQuality > mRouters[i].GetLinkQualityOut())
         {
@@ -4470,8 +4469,7 @@ void MleRouter::FillRouteTlv(RouteTlv &tlv)
             }
             else
             {
-                tlv.SetLinkQualityIn(routeCount,
-                                     mRouters[i].GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor()));
+                tlv.SetLinkQualityIn(routeCount, mRouters[i].GetLinkInfo().GetLinkQuality());
             }
         }
 
@@ -4533,7 +4531,7 @@ bool MleRouter::HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute,
                 continue;
             }
 
-            localLinkQuality = mRouters[i].GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor());
+            localLinkQuality = mRouters[i].GetLinkInfo().GetLinkQuality();
 
             if (localLinkQuality > mRouters[i].GetLinkQualityOut())
             {
@@ -4662,7 +4660,7 @@ uint8_t MleRouter::GetMinDowngradeNeighborRouters(void)
             continue;
         }
 
-        linkQuality = mRouters[i].GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor());
+        linkQuality = mRouters[i].GetLinkInfo().GetLinkQuality();
 
         if (linkQuality > mRouters[i].GetLinkQualityOut())
         {
