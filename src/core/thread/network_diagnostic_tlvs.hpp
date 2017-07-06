@@ -97,6 +97,7 @@ public:
         kChildTable          = 16,   ///< Child Table TLV
         kChannelPages        = 17,   ///< Channel Pages TLV
         kTypeList            = 18,   ///< Type List TLV
+        kMaxChildTimeout     = 19,   ///< Max Child Timeout TLV
         kInvalid             = 255,
     };
 
@@ -1358,6 +1359,49 @@ public:
      * @returns A pointer to the Challenge value.
      *
      */
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Max Child Timeout TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class MaxChildTimeoutTlv: public NetworkDiagnosticTlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kMaxChildTimeout); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+
+    /**
+     * This method returns the Timeout value.
+     *
+     * @returns The Timeout value.
+     *
+     */
+    uint32_t GetTimeout(void) const { return HostSwap32(mTimeout); }
+
+    /**
+     * This method sets the Timeout value.
+     *
+     * @param[in]  aTimeout  The Timeout value.
+     *
+     */
+    void SetTimeout(uint32_t aTimeout) { mTimeout = HostSwap32(aTimeout); }
+
+private:
+    uint32_t mTimeout;
 } OT_TOOL_PACKED_END;
 
 /**

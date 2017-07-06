@@ -185,6 +185,14 @@ public:
      */
     void SendFastPolls(uint8_t aNumFastPolls);
 
+    /**
+     * This methods gets the sleepy polling period
+     *
+     * @returns the sleepy polling period
+     *
+     */
+    uint32_t GetKeepAlivePollPeriod(void);
+
 private:
     enum  // Poll period under different conditions (in milliseconds).
     {

@@ -277,8 +277,12 @@ typedef enum otError
 
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
 
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE   18  ///< Concatenated List of Type Identifiers of Other Diagnostics TLVs Used to Request or Reset Multiple Diagnostic Values
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   18  ///< Maximum Number of Other Network Diagnostic TLV Types
+/**
+ * Concatenated List of Type Identifiers of Other Diagnostics TLVs Used to Request or Reset Multiple Diagnostic Values.
+ */
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE          18
+
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   19  ///< Maximum Number of Other Network Diagnostic TLV Types
 
 /**
  * @struct otMasterKey

@@ -126,7 +126,7 @@ exit:
 
 uint32_t otLinkGetPollPeriod(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMeshForwarder().GetDataPollManager().GetExternalPollPeriod();
+    return aInstance->mThreadNetif.GetMeshForwarder().GetDataPollManager().GetKeepAlivePollPeriod();
 }
 
 void otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)

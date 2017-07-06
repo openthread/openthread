@@ -170,6 +170,23 @@ void DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
     }
 }
 
+uint32_t DataPollManager::GetKeepAlivePollPeriod(void)
+{
+    uint32_t pollperiod = 0;
+
+    if (mExternalPollPeriod != 0)
+    {
+        pollperiod = mExternalPollPeriod;
+    }
+    else
+    {
+        pollperiod = Timer::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
+                     static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
+    }
+
+    return pollperiod;
+}
+
 void DataPollManager::HandlePollSent(otError aError)
 {
     bool shouldRecalculatePollPeriod = false;

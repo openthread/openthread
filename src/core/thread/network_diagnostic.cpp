@@ -316,7 +316,8 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
             {
                 TimeoutTlv tlv;
                 tlv.Init();
-                tlv.SetTimeout(netif.GetMle().GetTimeout());
+                tlv.SetTimeout(
+                    Timer::MsecToSec(netif.GetMeshForwarder().GetDataPollManager().GetKeepAlivePollPeriod()));
                 SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             }
 
@@ -408,6 +409,21 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
             tlv.GetChannelPages()[0] = 0;
             tlv.SetLength(1);
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kMaxChildTimeout:
+        {
+            uint32_t maxTimeout = 0;
+
+            if (netif.GetMle().GetMaxChildTimeout(maxTimeout) == OT_ERROR_NONE)
+            {
+                MaxChildTimeoutTlv tlv;
+                tlv.Init();
+                tlv.SetTimeout(maxTimeout);
+                SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
+            }
+
             break;
         }
 

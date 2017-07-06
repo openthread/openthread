@@ -4706,6 +4706,36 @@ MleRouter &MleRouter::GetOwner(const Context &aContext)
     return mle;
 }
 
+otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+
+    VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
+
+    for (uint8_t i = 0; i < kMaxChildren; i++)
+    {
+        if (mChildren[i].GetState() != Neighbor::kStateValid)
+        {
+            continue;
+        }
+
+        if (mChildren[i].IsFullThreadDevice())
+        {
+            continue;
+        }
+
+        if (mChildren[i].GetTimeout() > aTimeout)
+        {
+            aTimeout = mChildren[i].GetTimeout();
+        }
+
+        error = OT_ERROR_NONE;
+    }
+
+exit:
+    return error;
+}
+
 }  // namespace Mle
 }  // namespace ot
 
