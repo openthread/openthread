@@ -76,9 +76,8 @@ otError DatasetLocal::Get(Dataset &aDataset)
     otError error;
 
     aDataset.mLength = sizeof(aDataset.mTlvs);
-
     error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
-    SuccessOrExit(error);
+    VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
     delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
     VerifyOrExit(delayTimer);
@@ -107,15 +106,14 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
     const Tlv *cur;
     const Tlv *end;
 
-    dataset.mLength = sizeof(dataset.mTlvs);
+    memset(&aDataset, 0, sizeof(aDataset));
 
+    dataset.mLength = sizeof(dataset.mTlvs);
     error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
     SuccessOrExit(error);
 
     cur = reinterpret_cast<const Tlv *>(dataset.mTlvs);
     end = reinterpret_cast<const Tlv *>(dataset.mTlvs + dataset.mLength);
-
-    memset(&aDataset, 0, sizeof(aDataset));
 
     while (cur < end)
     {
@@ -396,21 +394,6 @@ otError DatasetLocal::Set(const Dataset &aDataset)
         otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 
-    SuccessOrExit(error);
-
-    mUpdateTime = Timer::GetNow();
-
-exit:
-    return error;
-}
-
-otError DatasetLocal::Restore(void)
-{
-    Dataset dataset(mType);
-    otError error;
-
-    dataset.mLength = sizeof(dataset.mTlvs);
-    error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
     SuccessOrExit(error);
 
     mUpdateTime = Timer::GetNow();
