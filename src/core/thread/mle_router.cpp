@@ -4706,13 +4706,13 @@ MleRouter &MleRouter::GetOwner(const Context &aContext)
     return mle;
 }
 
-otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout)
+otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const
 {
     otError error = OT_ERROR_NOT_FOUND;
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
 
-    for (uint8_t i = 0; i < kMaxChildren; i++)
+    for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
         if (mChildren[i].GetState() != Neighbor::kStateValid)
         {

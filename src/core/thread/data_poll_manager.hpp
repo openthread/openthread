@@ -186,12 +186,12 @@ public:
     void SendFastPolls(uint8_t aNumFastPolls);
 
     /**
-     * This methods gets the sleepy polling period
+     * This method gets the maximum data polling period in use.
      *
-     * @returns the sleepy polling period
+     * @returns the maximum data polling period in use.
      *
      */
-    uint32_t GetKeepAlivePollPeriod(void);
+    uint32_t GetKeepAlivePollPeriod(void) const;
 
 private:
     enum  // Poll period under different conditions (in milliseconds).
@@ -219,6 +219,7 @@ private:
     uint32_t CalculatePollPeriod(void) const;
     static void HandlePollTimer(Timer &aTimer);
     static DataPollManager &GetOwner(Context &aContext);
+    uint32_t GetDefaultPollPeriod(void) const;
 
     Timer     mTimer;
     uint32_t  mTimerStartTime;
