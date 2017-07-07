@@ -2304,7 +2304,7 @@ class OpenThread(IThci):
                 if len(policy) < 4:
                     policy = policy.zfill(4)
 
-                cmd += policy 
+                cmd += policy
 
                 cmd += str(hex(policyBits))[2:]
 
