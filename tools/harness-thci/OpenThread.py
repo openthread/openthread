@@ -2271,22 +2271,40 @@ class OpenThread(IThci):
 
                 cmd += pskc
 
-            if listSecurityPolicy != None and isinstance(listSecurityPolicy, list):
+            if listSecurityPolicy != None:
                 cmd += '0c03'
 
                 rotationTime = 0
-                if len(listSecurityPolicy) >= 1:
+                policyBits = 0
+
+                # previous passing way listSecurityPolicy=[True, True, 3600, False, False, True]
+                if (len(listSecurityPolicy) == 6):
+                    rotationTime = listSecurityPolicy[2]
+
+                    # the last three reserved bits must be 1
+                    policyBits = 0b00000111
+
+                    if listSecurityPolicy[0]:
+                        policyBits = policyBits | 0b10000000
+                    if listSecurityPolicy[1]:
+                        policyBits = policyBits | 0b01000000
+                    if listSecurityPolicy[3]:
+                        policyBits = policyBits | 0b00100000
+                    if listSecurityPolicy[4]:
+                        policyBits = policyBits | 0b00010000
+                    if listSecurityPolicy[5]:
+                        policyBits = policyBits | 0b00001000
+                else:
+                    # new passing way listSecurityPolicy=[3600, 0b11001111]
                     rotationTime = listSecurityPolicy[0]
+                    policyBits = listSecurityPolicy[1]
+
                 policy = str(hex(rotationTime))[2:]
 
                 if len(policy) < 4:
                     policy = policy.zfill(4)
 
                 cmd += policy
-
-                policyBits = 0
-                if len(listSecurityPolicy) > 1:
-                    policyBits = listSecurityPolicy[1]
 
                 cmd += str(hex(policyBits))[2:]
 
