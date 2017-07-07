@@ -771,7 +771,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
-#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE                     (2048 * sizeof(void *))
+#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE                     (1536 * sizeof(void *))
 #endif
 
 /**

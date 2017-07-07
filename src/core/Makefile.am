@@ -127,6 +127,7 @@ SOURCES_COMMON                      = \
     common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
+    crypto/heap.cpp                   \
     crypto/hmac_sha256.cpp            \
     crypto/mbedtls.cpp                \
     crypto/pbkdf2_cmac.cpp            \
@@ -222,6 +223,7 @@ HEADERS_COMMON                      = \
     common/trickle_timer.hpp          \
     crypto/aes_ccm.hpp                \
     crypto/aes_ecb.hpp                \
+    crypto/heap.hpp                   \
     crypto/hmac_sha256.hpp            \
     crypto/mbedtls.hpp                \
     crypto/pbkdf2_cmac.h              \
