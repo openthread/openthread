@@ -495,7 +495,7 @@ exit:
         (void)aValue;
         (void)aValueLength;
 
-        return OT_ERROR_NONE;
+        return OT_ERROR_NOT_FOUND;
     }
 
     otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)

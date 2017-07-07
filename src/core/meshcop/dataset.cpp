@@ -52,6 +52,7 @@ Dataset::Dataset(const Tlv::Type aType) :
     mLength(0),
     mType(aType)
 {
+    memset(mTlvs, 0, sizeof(mTlvs));
 }
 
 void Dataset::Clear(void)
