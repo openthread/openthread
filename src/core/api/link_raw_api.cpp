@@ -272,7 +272,7 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     , mTimer(aInstance.mIp6, &LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    , mTimerMicro(aInstance.mIp6, &LinkRaw::HandleTimerMicro, this)
+    , mTimerMicro(aInstance.mIp6, &LinkRaw::HandleTimer, this)
 #endif
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -481,14 +481,7 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-void LinkRaw::HandleTimerMicro(TimerMicro &aTimer)
-{
-    GetOwner(aTimer).HandleTimer();
-}
-#endif
-
-void LinkRaw::HandleTimer(TimerMilli &aTimer)
+void LinkRaw::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

@@ -1286,7 +1286,7 @@ exit:
     return;
 }
 
-void Mle::HandleParentRequestTimer(TimerMilli &aTimer)
+void Mle::HandleParentRequestTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleParentRequestTimer();
 }
@@ -1443,7 +1443,7 @@ void Mle::HandleParentRequestTimer(void)
     }
 }
 
-void Mle::HandleDelayedResponseTimer(TimerMilli &aTimer)
+void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleDelayedResponseTimer();
 }

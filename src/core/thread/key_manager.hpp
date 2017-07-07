@@ -336,7 +336,7 @@ private:
     otError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
     void StartKeyRotationTimer(void);
-    static void HandleKeyRotationTimer(TimerMilli &aTimer);
+    static void HandleKeyRotationTimer(Timer &aTimer);
     void HandleKeyRotationTimer(void);
 
     static KeyManager &GetOwner(const Context &aContext);

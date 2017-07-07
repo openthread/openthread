@@ -135,10 +135,9 @@ private:
     TimerReason             mTimerReason;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     TimerMicro              mTimerMicro;
-    static void HandleTimerMicro(TimerMicro &aTimer);
 #endif
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED

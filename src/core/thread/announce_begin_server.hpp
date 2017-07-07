@@ -90,7 +90,7 @@ private:
                               const otMessageInfo *aMessageInfo);
     void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     static AnnounceBeginServer &GetOwner(const Context &aContext);

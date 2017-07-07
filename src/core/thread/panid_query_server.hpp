@@ -76,7 +76,7 @@ private:
     static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
     void HandleScanResult(Mac::Frame *aFrame);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

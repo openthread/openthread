@@ -409,7 +409,7 @@ private:
 
     void DequeueResponse(Message &aMessage) { mQueue.Dequeue(aMessage); aMessage.Free(); }
     static ResponsesQueue &GetOwner(const Context &aContext);
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     MessageQueue mQueue;
@@ -688,7 +688,7 @@ private:
     otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
                              const Ip6::MessageInfo &aMessageInfo);
-    static void HandleRetransmissionTimer(TimerMilli &aTimer);
+    static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
 
     static Coap &GetOwner(const Context &aContext);

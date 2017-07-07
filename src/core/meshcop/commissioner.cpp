@@ -314,7 +314,7 @@ otCommissionerState Commissioner::GetState(void) const
     return mState;
 }
 
-void Commissioner::HandleTimer(TimerMilli &aTimer)
+void Commissioner::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }
@@ -336,7 +336,7 @@ void Commissioner::HandleTimer(void)
     }
 }
 
-void Commissioner::HandleJoinerExpirationTimer(TimerMilli &aTimer)
+void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleJoinerExpirationTimer();
 }

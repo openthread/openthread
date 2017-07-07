@@ -1675,7 +1675,7 @@ void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels)
     mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(Mac::kScanChannelsAll) : aScanChannels;
 }
 
-void MeshForwarder::HandleDiscoverTimer(TimerMilli &aTimer)
+void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleDiscoverTimer();
 }
@@ -2076,7 +2076,7 @@ void MeshForwarder::ClearReassemblyList(void)
     }
 }
 
-void MeshForwarder::HandleReassemblyTimer(TimerMilli &aTimer)
+void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleReassemblyTimer();
 }

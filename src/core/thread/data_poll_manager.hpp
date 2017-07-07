@@ -217,7 +217,7 @@ private:
 
     void ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t CalculatePollPeriod(void) const;
-    static void HandlePollTimer(TimerMilli &aTimer);
+    static void HandlePollTimer(Timer &aTimer);
     static DataPollManager &GetOwner(Context &aContext);
     uint32_t GetDefaultPollPeriod(void) const;
 

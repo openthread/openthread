@@ -1050,7 +1050,7 @@ otError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     return OT_ERROR_NONE;
 }
 
-void Leader::HandleTimer(TimerMilli &aTimer)
+void Leader::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

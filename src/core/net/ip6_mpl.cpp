@@ -251,7 +251,7 @@ exit:
     return error;
 }
 
-void Mpl::HandleRetransmissionTimer(TimerMilli &aTimer)
+void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleRetransmissionTimer();
 }
@@ -338,7 +338,7 @@ void Mpl::HandleRetransmissionTimer(void)
     }
 }
 
-void Mpl::HandleSeedSetTimer(TimerMilli &aTimer)
+void Mpl::HandleSeedSetTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleSeedSetTimer();
 }

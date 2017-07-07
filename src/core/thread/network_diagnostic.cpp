@@ -317,7 +317,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
                 TimeoutTlv tlv;
                 tlv.Init();
                 tlv.SetTimeout(
-                    Timer::MsecToSec(netif.GetMeshForwarder().GetDataPollManager().GetKeepAlivePollPeriod()));
+                    TimerMilli::MsecToSec(netif.GetMeshForwarder().GetDataPollManager().GetKeepAlivePollPeriod()));
                 SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             }
 

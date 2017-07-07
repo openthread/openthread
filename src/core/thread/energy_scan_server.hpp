@@ -78,7 +78,7 @@ private:
     static void HandleScanResult(void *aContext, otEnergyScanResult *aResult);
     void HandleScanResult(otEnergyScanResult *aResult);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);

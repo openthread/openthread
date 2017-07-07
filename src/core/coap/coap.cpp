@@ -298,7 +298,7 @@ Coap &Coap::GetOwner(const Context &aContext)
     return coap;
 }
 
-void Coap::HandleRetransmissionTimer(TimerMilli &aTimer)
+void Coap::HandleRetransmissionTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleRetransmissionTimer();
 }
@@ -909,7 +909,7 @@ ResponsesQueue &ResponsesQueue::GetOwner(const Context &aContext)
     return queue;
 }
 
-void ResponsesQueue::HandleTimer(TimerMilli &aTimer)
+void ResponsesQueue::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

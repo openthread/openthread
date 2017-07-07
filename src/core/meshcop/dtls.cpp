@@ -370,7 +370,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
     return 0;
 }
 
-void Dtls::HandleTimer(TimerMilli &aTimer)
+void Dtls::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

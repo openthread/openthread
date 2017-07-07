@@ -249,7 +249,7 @@ void KeyManager::StartKeyRotationTimer(void)
     mKeyRotationTimer.Start(kOneHourIntervalInMsec);
 }
 
-void KeyManager::HandleKeyRotationTimer(TimerMilli &aTimer)
+void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleKeyRotationTimer();
 }

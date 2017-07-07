@@ -159,7 +159,7 @@ void TrickleTimer::StartNewInterval(void)
     TimerMilli::Start(t);
 }
 
-void TrickleTimer::HandleTimerFired(TimerMilli &aTimer)
+void TrickleTimer::HandleTimerFired(Timer &aTimer)
 {
     static_cast<TrickleTimer *>(&aTimer)->HandleTimerFired();
 }

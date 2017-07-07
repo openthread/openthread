@@ -212,10 +212,10 @@ private:
     void AddCoapResources(void);
     void RemoveCoapResources(void);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
-    static void HandleJoinerExpirationTimer(TimerMilli &aTimer);
+    static void HandleJoinerExpirationTimer(Timer &aTimer);
     void HandleJoinerExpirationTimer(void);
 
     void UpdateJoinerExpirationTimer(void);

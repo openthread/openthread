@@ -164,7 +164,7 @@ exit:
     return error;
 }
 
-void PanIdQueryServer::HandleTimer(TimerMilli &aTimer)
+void PanIdQueryServer::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

@@ -90,7 +90,7 @@ public:
         mFiredCounter(0)
     { }
 
-    static void HandleTimerFired(ot::TimerMilli &aTimer) {
+    static void HandleTimerFired(ot::Timer &aTimer) {
         static_cast<TestTimer &>(aTimer).HandleTimerFired();
     }
 
@@ -363,7 +363,7 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval + 5;
 
-    timer2.Start(ot::TimerMilli::kMaxDt);
+    timer2.Start(ot::Timer::kMaxDt);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,   "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,   "TestTwoTimers: Stop CallCount Failed.\n");
@@ -379,12 +379,12 @@ int TestTwoTimers(void)
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestTwoTimers: Handler CallCount Failed.\n");
     VerifyOrQuit(timer1.GetFiredCounter() == 1,                 "TestTwoTimers: Fire Counter failed.\n");
     VerifyOrQuit(sPlatT0 == sNow,                               "TestTwoTimers: Start params Failed.\n");
-    VerifyOrQuit(sPlatDt == ot::TimerMilli::kMaxDt,                  "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(sPlatDt == ot::Timer::kMaxDt,              "TestTwoTimers: Start params Failed.\n");
     VerifyOrQuit(timer1.IsRunning() == false,                   "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(timer2.IsRunning() == true,                    "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn == true,                              "TestTwoTimers: Platform Timer State Failed.\n");
 
-    sNow += ot::TimerMilli::kMaxDt;
+    sNow += ot::Timer::kMaxDt;
     otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestTwoTimers: Start CallCount Failed.\n");
@@ -429,11 +429,11 @@ static void TenTimers(uint32_t aTimeShift)
     {
         20,
         100,
-        (ot::TimerMilli::kMaxDt - kTimeT0[2]),
+        (ot::Timer::kMaxDt - kTimeT0[2]),
         100000,
         1000000,
         10,
-        ot::TimerMilli::kMaxDt,
+        ot::Timer::kMaxDt,
         200,
         200,
         200
@@ -457,8 +457,8 @@ static void TenTimers(uint32_t aTimeShift)
         1100,
         1207,
         101004,
-        ot::TimerMilli::kMaxDt,
-        ot::TimerMilli::kMaxDt + kTimeT0[6]
+        ot::Timer::kMaxDt,
+        ot::Timer::kMaxDt + kTimeT0[6]
     };
     // Expected timers fired by each kTriggerTimes[] value
     //  Trigger #    Timers Fired
@@ -633,8 +633,8 @@ int TestTenTimers(void)
         100000U,
         0U - 1U,
         0U - 1100U,
-        ot::TimerMilli::kMaxDt,
-        ot::TimerMilli::kMaxDt + 1020U,
+        ot::Timer::kMaxDt,
+        ot::Timer::kMaxDt + 1020U,
     };
 
     size_t i;

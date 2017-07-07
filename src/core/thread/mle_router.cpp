@@ -1737,7 +1737,7 @@ exit:
     return error;
 }
 
-void MleRouter::HandleStateUpdateTimer(TimerMilli &aTimer)
+void MleRouter::HandleStateUpdateTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleStateUpdateTimer();
 }

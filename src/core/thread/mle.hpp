@@ -1369,9 +1369,9 @@ private:
 
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
-    static void HandleParentRequestTimer(TimerMilli &aTimer);
+    static void HandleParentRequestTimer(Timer &aTimer);
     void HandleParentRequestTimer(void);
-    static void HandleDelayedResponseTimer(TimerMilli &aTimer);
+    static void HandleDelayedResponseTimer(Timer &aTimer);
     void HandleDelayedResponseTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

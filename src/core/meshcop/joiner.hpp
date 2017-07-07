@@ -101,7 +101,7 @@ private:
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
     void HandleDiscoverResult(otActiveScanResult *aResult);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     void Close(void);

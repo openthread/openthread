@@ -1682,7 +1682,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandlePingTimer(TimerMilli &aTimer)
+void Interpreter::s_HandlePingTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandlePingTimer();
 }

@@ -136,7 +136,7 @@ exit:
     return error;
 }
 
-void JamDetector::HandleTimer(TimerMilli &aTimer)
+void JamDetector::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

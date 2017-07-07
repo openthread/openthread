@@ -347,7 +347,7 @@ private:
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     Coap::Resource mResourceGet;
@@ -437,7 +437,7 @@ public:
     otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 protected:
-    static void HandleDelayTimer(TimerMilli &aTimer);
+    static void HandleDelayTimer(Timer &aTimer);
     void HandleDelayTimer(void);
     void StartDelayTimer(void);
     void HandleNetworkUpdate(void);
@@ -449,7 +449,7 @@ private:
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     Coap::Resource mResourceGet;

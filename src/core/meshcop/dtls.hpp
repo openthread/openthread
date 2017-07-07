@@ -217,7 +217,7 @@ private:
     int HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsigned char *aKeyBlock,
                                 size_t aMacLength, size_t aKeyLength, size_t aIvLength);
 
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     void Close(void);

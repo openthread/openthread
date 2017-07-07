@@ -382,7 +382,7 @@ void Client::FinalizeDnsTransaction(Message &aQuery, const QueryMetadata &aQuery
     }
 }
 
-void Client::HandleRetransmissionTimer(TimerMilli &aTimer)
+void Client::HandleRetransmissionTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleRetransmissionTimer();
 }

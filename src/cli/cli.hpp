@@ -284,7 +284,7 @@ private:
 #ifndef OTDLL
     static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
-    static void s_HandlePingTimer(TimerMilli &aTimer);
+    static void s_HandlePingTimer(Timer &aTimer);
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);

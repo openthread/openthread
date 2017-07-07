@@ -148,7 +148,7 @@ private:
 
     void StartNewInterval(void);
 
-    static void HandleTimerFired(TimerMilli &aTimer);
+    static void HandleTimerFired(Timer &aTimer);
     void HandleTimerFired(void);
 
     // Shadow base class method to ensure it is hidden.

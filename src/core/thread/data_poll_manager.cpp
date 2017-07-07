@@ -404,7 +404,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
     return period;
 }
 
-void DataPollManager::HandlePollTimer(TimerMilli &aTimer)
+void DataPollManager::HandlePollTimer(Timer &aTimer)
 {
     GetOwner(aTimer).SendDataPoll();
 }

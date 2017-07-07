@@ -62,7 +62,7 @@ namespace ot {
 namespace MeshCoP {
 
 DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
-                               const char *aUriGet, TimerMilli::Handler aTimerHander):
+                               const char *aUriGet, Timer::Handler aTimerHander):
     ThreadNetifLocator(aThreadNetif),
     mLocal(aThreadNetif.GetInstance(), aType),
     mNetwork(aType),
@@ -1003,7 +1003,7 @@ void ActiveDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, cons
     DatasetManager::Get(aHeader, aMessage, aMessageInfo);
 }
 
-void ActiveDatasetBase::HandleTimer(TimerMilli &aTimer)
+void ActiveDatasetBase::HandleTimer(Timer &aTimer)
 {
     GetActiveDatasetOwner(aTimer).HandleTimer();
 }
@@ -1095,7 +1095,7 @@ void PendingDatasetBase::StartDelayTimer(void)
     }
 }
 
-void PendingDatasetBase::HandleDelayTimer(TimerMilli &aTimer)
+void PendingDatasetBase::HandleDelayTimer(Timer &aTimer)
 {
     GetPendingDatasetOwner(aTimer).HandleDelayTimer();
 }
@@ -1122,7 +1122,7 @@ void PendingDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, con
     DatasetManager::Get(aHeader, aMessage, aMessageInfo);
 }
 
-void PendingDatasetBase::HandleTimer(TimerMilli &aTimer)
+void PendingDatasetBase::HandleTimer(Timer &aTimer)
 {
     GetPendingDatasetOwner(aTimer).HandleTimer();
 }

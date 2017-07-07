@@ -427,7 +427,7 @@ exit:
     return error;
 }
 
-void JoinerRouter::HandleTimer(TimerMilli &aTimer)
+void JoinerRouter::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

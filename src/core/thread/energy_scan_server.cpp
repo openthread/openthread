@@ -119,7 +119,7 @@ exit:
     return;
 }
 
-void EnergyScanServer::HandleTimer(TimerMilli &aTimer)
+void EnergyScanServer::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

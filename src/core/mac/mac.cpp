@@ -98,7 +98,7 @@ void Mac::StartCsmaBackoff(void)
         backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-        mBackoffTimerMicro.Start(backoff);
+        mBackoffTimer.Start(backoff);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
         mBackoffTimer.Start(backoff / 1000UL);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -108,11 +108,7 @@ void Mac::StartCsmaBackoff(void)
 Mac::Mac(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
     mMacTimer(aThreadNetif.GetIp6(), &Mac::HandleMacTimer, this),
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    mBackoffTimerMicro(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
-#else
     mBackoffTimer(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
-#endif
     mReceiveTimer(aThreadNetif.GetIp6(), &Mac::HandleReceiveTimer, this),
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
@@ -772,11 +768,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-void Mac::HandleBeginTransmit(TimerMicro &aTimer)
-#else
-void Mac::HandleBeginTransmit(TimerMilli &aTimer)
-#endif
+void Mac::HandleBeginTransmit(Timer &aTimer)
 {
     GetOwner(aTimer).HandleBeginTransmit();
 }
@@ -1118,7 +1110,7 @@ void Mac::RadioSleep(void)
     }
 }
 
-void Mac::HandleMacTimer(TimerMilli &aTimer)
+void Mac::HandleMacTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleMacTimer();
 }
@@ -1183,7 +1175,7 @@ exit:
     return;
 }
 
-void Mac::HandleReceiveTimer(TimerMilli &aTimer)
+void Mac::HandleReceiveTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleReceiveTimer();
 }

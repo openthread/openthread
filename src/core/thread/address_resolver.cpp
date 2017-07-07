@@ -613,7 +613,7 @@ exit:
     }
 }
 
-void AddressResolver::HandleTimer(TimerMilli &aTimer)
+void AddressResolver::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

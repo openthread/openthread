@@ -244,7 +244,7 @@ private:
                                 otIp6Address *aAddress, uint32_t aTtl,
                                 otError aResult);
 
-    static void HandleRetransmissionTimer(TimerMilli &aTimer);
+    static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

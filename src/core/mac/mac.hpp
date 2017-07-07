@@ -672,15 +672,11 @@ private:
     void StartEnergyScan(void);
     otError HandleMacCommand(Frame &aFrame);
 
-    static void HandleMacTimer(TimerMilli &aTimer);
+    static void HandleMacTimer(Timer &aTimer);
     void HandleMacTimer(void);
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    static void HandleBeginTransmit(TimerMicro &aTimer);
-#else
-    static void HandleBeginTransmit(TimerMilli &aTimer);
-#endif
+    static void HandleBeginTransmit(Timer &aTimer);
     void HandleBeginTransmit(void);
-    static void HandleReceiveTimer(TimerMilli &aTimer);
+    static void HandleReceiveTimer(Timer &aTimer);
     void HandleReceiveTimer(void);
     static void HandleEnergyScanSampleRssi(Tasklet &aTasklet);
     void HandleEnergyScanSampleRssi(void);
@@ -696,7 +692,7 @@ private:
 
     TimerMilli mMacTimer;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    TimerMicro mBackoffTimerMicro;
+    TimerMicro mBackoffTimer;
 #else
     TimerMilli mBackoffTimer;
 #endif

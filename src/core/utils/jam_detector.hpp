@@ -174,7 +174,7 @@ public:
     uint64_t GetHistoryBitmap(void) const { return mHistoryBitmap; }
 
 private:
-    static void HandleTimer(TimerMilli &aTimer);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
     void UpdateHistory(bool aThresholdExceeded);
     void UpdateJamState(void);
