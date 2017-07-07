@@ -170,6 +170,22 @@ void DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
     }
 }
 
+uint32_t DataPollManager::GetKeepAlivePollPeriod(void) const
+{
+    uint32_t period = 0;
+
+    if (mExternalPollPeriod != 0)
+    {
+        period = mExternalPollPeriod;
+    }
+    else
+    {
+        period = GetDefaultPollPeriod();
+    }
+
+    return period;
+}
+
 void DataPollManager::HandlePollSent(otError aError)
 {
     bool shouldRecalculatePollPeriod = false;
@@ -377,8 +393,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
     if (period == 0)
     {
-        period = Timer::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
-                 static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
+        period = GetDefaultPollPeriod();
 
         if (period == 0)
         {
@@ -403,6 +418,12 @@ DataPollManager &DataPollManager::GetOwner(Context &aContext)
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return manager;
+}
+
+uint32_t DataPollManager::GetDefaultPollPeriod(void) const
+{
+    return Timer::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
+           static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 
 }  // namespace ot

@@ -684,6 +684,18 @@ public:
      */
     otError SetAssignParentPriority(int8_t aParentPriority);
 
+    /**
+     * This method gets the longest MLE Timeout TLV for all active MTD children.
+     *
+     * @param[out]  aTimeout  A reference to where the information is placed.
+     *
+     * @retval OT_ERROR_NONE           Successfully get the max child timeout
+     * @retval OT_ERROR_INVALID_STATE  Not an active router
+     * @retval OT_ERROR_NOT_FOUND      NO MTD child
+     *
+     */
+    otError GetMaxChildTimeout(uint32_t &aTimeout) const;
+
 private:
     enum
     {
