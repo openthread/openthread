@@ -355,73 +355,65 @@ class OpenThread(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setRouterSelectionJitter() Error: " + str(e))
 
-    def __enableWhiteList(self):
-        """enable white list filter
+    def __enableWhitelist(self):
+        """enable whitelist filter
 
         Returns:
-            True: successful to enable white list filter
-            False: fail to enable white list filter
+            True: successful to enable whitelist filter
+            False: fail to enable whitelist filter
         """
-        print 'call enableWhiteList'
+        print 'call enableWhitelist'
         try:
             if self.__sendCommand('whitelist enable')[0] == 'Done':
-                self.isWhiteListEnabled = True
                 return True
-            else:
-                return False
+            return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("enableWhiteList() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger("enableWhitelist() Error: " + str(e))
 
-    def __enableBlackList(self):
-        """enable black list filter
+    def __enableBlacklist(self):
+        """enable blacklist filter
 
         Returns:
-            True: successful to enable black list filter
-            False: fail to enable black list filter
+            True: successful to enable blacklist filter
+            False: fail to enable blacklist filter
         """
-        print 'call enableBlackList'
+        print 'call enableBlacklist'
         try:
             if self.__sendCommand('blacklist enable')[0] == 'Done':
-                self.isBlackListEnabled = True
                 return True
-            else:
-                return False
+            return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("enableBlackList() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger("enableBlacklist() Error: " + str(e))
 
-    def __disableWhiteList(self):
-        """disable white list filter
+    def __disableWhitelist(self):
+        """dsiable whitelist filter
 
         Returns:
-            True: successful to disable white list filter
-            False: fail to disable white list filter
+            True: successful to disable whitelist filter
+            False: fail to disable whitelist filter
         """
-        print 'call disableWhiteList'
+        print 'call disableWhitelist'
         try:
             if self.__sendCommand('whitelist disable')[0] == 'Done':
-                self.isWhiteListEnabled = False
                 return True
-            else:
-                return False
+            return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("disableWhiteList() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger("disableWhitelist() Error: " + str(e))
 
-    def __disableBlackList(self):
-        """disable black list filter
+    def __disableBlacklist(self):
+        """disable blacklist filter
 
         Returns:
-            True: successful to disable black list filter
-            False: fail to disable black list filter
+            True: successful to disable blacklist filter
+            False: fail to disable blacklist filter
         """
-        print 'call disableBlackList'
+        print 'call disableBlacklist'
         try:
             if self.__sendCommand('blacklist disable')[0] == 'Done':
-                self.isBlackListEnabled = False
                 return True
-            else:
-                return False
+            return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("disableBlackList() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger("disableBlacklist() Error: " + str(e))
 
     def __startOpenThread(self):
         """start OpenThread stack
@@ -438,17 +430,16 @@ class OpenThread(IThci):
                 else:
                     self.hasActiveDatasetToCommit = False
 
-            # restore whitelist if rejoin after reset
-            if self.isPowerDown and self.isWhiteListEnabled:
-                self.__enableWhiteList()
-                for addr in self._whiteList:
-                    self.addAllowMAC(addr)
-
-            # restore blacklist if rejoin after reset
-            if self.isPowerDown and self.isBlackListEnabled:
-                self.__enableBlackList()
-                for addr in self._blackList:
-                    self.addBlockedMAC(addr)
+            # restore whitelist/blacklist if rejoin after reset
+            if self.isPowerDown and self.isAddressFilterEnabled:
+                if self.isWhitelistMode:
+                    if self.__enableWhitelist():
+                        for addr in self._addressfilterSet:
+                            self.addAllowMAC(addr)
+                else:
+                    if self.__enableBlacklist():
+                        for addr in self._addressfilterSet:
+                            self.addBlockedMAC(addr)
 
             if self.__sendCommand('ifconfig up')[0] == 'Done':
                 self.__setRouterSelectionJitter(1)
@@ -882,14 +873,14 @@ class OpenThread(IThci):
         return self.networkKey
 
     def addBlockedMAC(self, xEUI):
-        """add a given extended address to the black list entry
+        """add a given extended address to the blacklist entry
 
         Args:
             xEUI: extended address in hex format
 
         Returns:
-            True: successful to add a given extended address to the black list entry
-            False: fail to add a given extended address to the black list entry
+            True: successful to add a given extended address to the blacklist entry
+            False: fail to add a given extended address to the blacklist entry
         """
         print '%s call addBlockedMAC' % self.port
         print xEUI
@@ -904,25 +895,33 @@ class OpenThread(IThci):
                 print 'block device itself'
                 return True
 
-            if not self.isBlackListEnabled:
-                self.__enableBlackList()
+            if not self.isAddressFilterEnabled:
+                if self.__enableBlacklist():
+                    self.isAddressFilterEnabled = True
+                    self.isWhitelistMode = False
 
             cmd = 'blacklist add %s' % macAddr
             print cmd
-            self._blackList.add(macAddr)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            ret = self.__sendCommand(cmd)[0] == 'Done'
+
+            self._addressfilterSet.add(macAddr)
+            print 'current blacklist entries:'
+            for addr in self._addressfilterSet:
+                print addr
+
+            return ret
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("addBlockedMAC() Error: " + str(e))
 
     def addAllowMAC(self, xEUI):
-        """add a given extended address to the white list entry
+        """add a given extended address to the whitelist addressfilter
 
         Args:
             xEUI: a given extended address in hex format
 
         Returns:
-            True: successful to add a given extended address to the white list entry
-            False: fail to add a given extended address to the white list entry
+            True: successful to add a given extended address to the whitelist entry
+            False: fail to add a given extended address to the whitelist entry
         """
         print '%s call addAllowMAC' % self.port
         print xEUI
@@ -932,54 +931,69 @@ class OpenThread(IThci):
             macAddr = self.__convertLongToString(xEUI)
 
         try:
-            if not self.isWhiteListEnabled:
-                self.__enableWhiteList()
+            if not self.isAddressFilterEnabled:
+                if self.__enableWhitelist():
+                    self.isAddressFilterEnabled = True
+                    self.isWhitelistMode = True
 
             cmd = 'whitelist add %s' % macAddr
             print cmd
-            self._whiteList.add(macAddr)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            ret = self.__sendCommand(cmd)[0] == 'Done'
+
+            self._addressfilterSet.add(macAddr)
+            print 'current whitelist entries:'
+            for addr in self._addressfilterSet:
+                print addr
+            return ret
+
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("addAllowMAC() Error: " + str(e))
 
     def clearBlockList(self):
-        """clear all entries in black list table
+        """clear all entries in blacklist table
 
         Returns:
-            True: successful to clear the black list
-            False: fail to clear the black list
+            True: successful to clear the blacklist
+            False: fail to clear the blacklist
         """
         print '%s call clearBlockList' % self.port
 
-        # remove all entries in black list
+        # remove all entries in blacklist
         try:
-            if self.__sendCommand('blacklist clear')[0] == 'Done':
-                self.__disableBlackList()
-                self._blackList.clear()
-                return True
-            else:
-                return False
+            print 'clearing blacklist entries:'
+            for addr in self._addressfilterSet:
+                print addr
+
+            if self.__disableBlacklist():
+                if self.__sendCommand('blacklist clear')[0] == 'Done':
+                    self._addressfilterSet.clear()
+                    self.isAddressFilterEnabled = False
+                    return True
+            return False
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("clearBlockList() Error: " + str(e))
 
     def clearAllowList(self):
-        """clear all entries in white list table
+        """clear all entries in whitelist table
 
         Returns:
-            True: successful to clear the white list
-            False: fail to clear the white list
+            True: successful to clear the whitelist
+            False: fail to clear the whitelist
         """
         print '%s call clearAllowList' % self.port
 
-        # remove all entries in white list as well as in black list
+        # remove all entries in whitelist
         try:
-            if self.__sendCommand('whitelist clear')[0] == 'Done':
-                self.__disableWhiteList()
-                self._whiteList.clear()
-                self.clearBlockList()
-                return True
-            else:
-                return False
+            print 'clearing whitelist entries:'
+            for addr in self._addressfilterSet:
+                print addr
+
+            if self.__disableWhitelist():
+                if self.__sendCommand('whitelist clear')[0] == 'Done':
+                    self._addressfilterSet.clear()
+                    self.isAddressFilterEnabled = False
+                    return True
+            return False
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("clearAllowList() Error: " + str(e))
 
@@ -1273,10 +1287,9 @@ class OpenThread(IThci):
         self.joinCommissionedStatus = self.joinStatus['notstart']
         self.networkDataRequirement = ''      # indicate Thread device requests full or stable network data
         self.isPowerDown = False              # indicate if Thread device experiences a power down event
-        self.isWhiteListEnabled = False       # indicate if Thread device enables white list filter
-        self.isBlackListEnabled = False       # indicate if Thread device enables black list filter
-        self._whiteList = set()               # cache whitelist devices when white list filter is enabled
-        self._blackList = set()               # cache blacklist devices when black list filter is enabled
+        self.isAddressFilterEnabled = False   # indicate if AddressFilter is enabled or not
+        self.isWhitelistMode = False          # indicate if AddressFilter in whitelist or blacklist mode if enabled
+        self._addressfilterSet = set()        # cache filter entries
         self.isActiveCommissioner = False     # indicate if Thread device is an active commissioner
         self._lines = None                    # buffered lines read from device
 
@@ -1326,11 +1339,11 @@ class OpenThread(IThci):
             ModuleHelper.WriteIntoDebugLogger("setPollingRate() Error: " + str(e))
 
     def setLinkQuality(self, EUIadr, LinkQuality):
-        """set custom link quality on a link to Thread device with a given extended address
+        """set custom LinkQualityIn for all receiving messages from the specified EUIadr
 
         Args:
             EUIadr: a given extended address
-            LinkQuality: a given custom link quality for child devices
+            LinkQuality: a given custom link quality
                          link quality/link margin mapping table
                          3: 21 - 255 (dB)
                          2: 11 - 20 (dB)
@@ -1338,8 +1351,8 @@ class OpenThread(IThci):
                          0: 0 - 2 (dB)
 
         Returns:
-            True: successful to set the link quality on a link to a Thread device
-            False: fail to set the link quality on a link to a Thread device
+            True: successful to set the link quality
+            False: fail to set the link quality
         """
         print '%s call setLinkQuality' % self.port
         print EUIadr
@@ -1352,17 +1365,40 @@ class OpenThread(IThci):
             address64 = ''
             if '0x' in euiStr:
                 address64 = euiStr.lstrip('0x')
-
                 # prepend 0 at the beginning
                 if len(address64) < 16:
-                    address64 = address64.zfill(16)
-                    print address64
+                   address64 = address64.zfill(16)
+                   print address64
 
-            cmd = 'linkquality %s %s' % (address64, str(LinkQuality))
+            cmd = 'rssifilter add-lqi %s %s' % (address64, str(LinkQuality))
             print cmd
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setLinkQuality() Error: " + str(e))
+
+    def setOutBoundLinkQuality(self, LinkQuality):
+        """set custom LinkQualityIn for all receiving messages from the any address
+
+        Args:
+            LinkQuality: a given custom link quality
+                         link quality/link margin mapping table
+                         3: 21 - 255 (dB)
+                         2: 11 - 20 (dB)
+                         1: 3 - 9 (dB)
+                         0: 0 - 2 (dB)
+
+        Returns:
+            True: successful to set the link quality
+            False: fail to set the link quality
+        """
+        print '%s call setOutBoundLinkQuality' % self.port
+        print LinkQuality
+        try:
+            cmd = 'rssifilter set-lqi %s' % str(LinkQuality)
+            print cmd
+            return self.__sendCommand(cmd)[0] == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setOutBoundLinkQuality() Error: " + str(e))
 
     def removeRouterPrefix(self, prefixEntry):
         """remove the configured prefix on a border router

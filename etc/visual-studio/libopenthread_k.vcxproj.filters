@@ -153,10 +153,10 @@
     <ClCompile Include="..\..\src\core\mac\mac.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\mac\mac_frame.cpp">
+    <ClCompile Include="..\..\src\core\mac\mac_filter.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp">
+    <ClCompile Include="..\..\src\core\mac\mac_frame.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp">
@@ -242,9 +242,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\net\udp6.cpp">
       <Filter>Source Files\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp">
-      <Filter>Source Files\mac</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp">
       <Filter>Source Files\meshcop</Filter>
@@ -380,16 +377,16 @@
     <ClInclude Include="..\..\src\core\mac\mac.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_filter.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_filter_impl.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_filter_stub.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp">
@@ -496,15 +493,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\topology.hpp">
       <Filter>Header Files\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_impl.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_stub.hpp">
-      <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp">
       <Filter>Header Files\meshcop</Filter>

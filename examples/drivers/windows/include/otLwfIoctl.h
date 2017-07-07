@@ -350,11 +350,12 @@ typedef enum _OTLWF_NOTIF_TYPE
     // GUID - InterfaceGuid
     // otExtAddress - aExtAddr
 
-#define IOCTL_OTLWF_OT_MAC_WHITELIST_ENTRY \
+#define IOCTL_OTLWF_OT_NEXT_MAC_WHITELIST_ENTRY \
     OTLWF_CTL_CODE(137, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
-    // uint8_t - aIndex (input)
-    // otMacWhitelistEntry - aEntry (output)
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otMacFilterEntry - aEntry (output)
 
 #define IOCTL_OTLWF_OT_CLEAR_MAC_WHITELIST \
     OTLWF_CTL_CODE(138, METHOD_BUFFERED, FILE_WRITE_DATA)
@@ -445,11 +446,12 @@ typedef enum _OTLWF_NOTIF_TYPE
     // GUID - InterfaceGuid
     // otExtAddress - aExtAddr
 
-#define IOCTL_OTLWF_OT_MAC_BLACKLIST_ENTRY \
+#define IOCTL_OTLWF_OT_NEXT_MAC_BLACKLIST_ENTRY \
     OTLWF_CTL_CODE(155, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
-    // uint8_t - aIndex (input)
-    // otMacBlacklistEntry - aEntry (output)
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otMacFilterEntry - aEntry (output)
 
 #define IOCTL_OTLWF_OT_CLEAR_MAC_BLACKLIST \
     OTLWF_CTL_CODE(156, METHOD_BUFFERED, FILE_WRITE_DATA)
@@ -477,12 +479,6 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_CTL_CODE(160, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
     // GUID - InterfaceGuid
     // uint32_t - aPartitionId
-
-#define IOCTL_OTLWF_OT_ASSIGN_LINK_QUALITY \
-    OTLWF_CTL_CODE(161, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
-    // GUID - InterfaceGuid
-    // otExtAddress - aExtAddr (input)
-    // uint8_t - aLinkQuality (input or output)
 
 #define IOCTL_OTLWF_OT_PLATFORM_RESET \
     OTLWF_CTL_CODE(162, METHOD_BUFFERED, FILE_WRITE_DATA)

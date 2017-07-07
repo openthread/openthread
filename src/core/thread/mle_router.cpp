@@ -784,13 +784,6 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neighbor
     // always append a link margin, regardless of whether or not it was requested
     linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(GetNetif().GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
 
-    // add for certification testing
-    if (isAssignLinkQuality && aNeighbor != NULL &&
-        (memcmp(&aNeighbor->GetExtAddress(), mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
-    {
-        linkMargin = mAssignLinkMargin;
-    }
-
     SuccessOrExit(error = AppendLinkMargin(*message, linkMargin));
 
     if (aNeighbor != NULL && IsActiveRouter(aNeighbor->GetRloc16()))
@@ -1128,12 +1121,6 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
     if (rval > router->GetLinkQualityOut())
     {
         rval = router->GetLinkQualityOut();
-    }
-
-    // add for certification testing
-    if (isAssignLinkQuality && (memcmp(&router->GetExtAddress(), mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
-    {
-        rval = mAssignLinkQuality;
     }
 
     rval = LinkQualityToCost(rval);
@@ -1929,18 +1916,8 @@ otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challen
     aChild->GenerateChallenge();
 
     SuccessOrExit(error = AppendChallenge(*message, aChild->GetChallenge(), aChild->GetChallengeSize()));
-
-    if (isAssignLinkQuality &&
-        (memcmp(mAddr64.m8, &aChild->GetExtAddress(), OT_EXT_ADDRESS_SIZE) == 0))
-    {
-        // use assigned one to ensure the link quality
-        SuccessOrExit(error = AppendLinkMargin(*message, mAssignLinkMargin));
-    }
-    else
-    {
-        error = AppendLinkMargin(*message, aChild->GetLinkInfo().GetLinkMargin(GetNetif().GetMac().GetNoiseFloor()));
-        SuccessOrExit(error);
-    }
+    error = AppendLinkMargin(*message, aChild->GetLinkInfo().GetLinkMargin(GetNetif().GetMac().GetNoiseFloor()));
+    SuccessOrExit(error);
 
     SuccessOrExit(error = AppendConnectivity(*message));
     SuccessOrExit(error = AppendVersion(*message));
@@ -4461,17 +4438,7 @@ void MleRouter::FillRouteTlv(RouteTlv &tlv)
 
             tlv.SetRouteCost(routeCount, cost);
             tlv.SetLinkQualityOut(routeCount, mRouters[i].GetLinkQualityOut());
-
-            if (isAssignLinkQuality &&
-                (memcmp(&mRouters[i].GetExtAddress(), mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
-            {
-                tlv.SetLinkQualityIn(routeCount, mAssignLinkQuality);
-            }
-            else
-            {
-                tlv.SetLinkQualityIn(routeCount,
-                                     mRouters[i].GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor()));
-            }
+            tlv.SetLinkQualityIn(routeCount, mRouters[i].GetLinkInfo().GetLinkQuality(GetNetif().GetMac().GetNoiseFloor()));
         }
 
         routeCount++;

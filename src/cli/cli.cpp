@@ -47,6 +47,7 @@
 #include <openthread/commissioner.h>
 #include <openthread/icmp6.h>
 #include <openthread/joiner.h>
+#include <openthread/link.h>
 
 #if OPENTHREAD_FTD
 #include <openthread/dataset_ftd.h>
@@ -150,7 +151,6 @@ const struct Command Interpreter::sCommands[] =
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
     { "leaderweight", &Interpreter::ProcessLeaderWeight },
 #endif
-    { "linkquality", &Interpreter::ProcessLinkQuality },
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -193,6 +193,9 @@ const struct Command Interpreter::sCommands[] =
     { "routerrole", &Interpreter::ProcessRouterRole },
     { "routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter },
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
+#endif
+#ifndef OTDLL
+    { "rssifilter", &Interpreter::ProcessRssiFilter},
 #endif
     { "scan", &Interpreter::ProcessScan },
     { "singleton", &Interpreter::ProcessSingleton },
@@ -398,72 +401,6 @@ void Interpreter::ProcessAutoStart(int argc, char *argv[])
         error = OT_ERROR_INVALID_ARGS;
     }
 
-    AppendResult(error);
-}
-
-void Interpreter::ProcessBlacklist(int argc, char *argv[])
-{
-    otError error = OT_ERROR_NONE;
-    otMacBlacklistEntry entry;
-    int argcur = 0;
-    uint8_t extAddr[8];
-
-    if (argcur >= argc)
-    {
-        if (otLinkIsBlacklistEnabled(mInstance))
-        {
-            mServer->OutputFormat("Enabled\r\n");
-        }
-        else
-        {
-            mServer->OutputFormat("Disabled\r\n");
-        }
-
-        for (uint8_t i = 0; ; i++)
-        {
-            if (otLinkGetBlacklistEntry(mInstance, i, &entry) != OT_ERROR_NONE)
-            {
-                break;
-            }
-
-            if (entry.mValid == false)
-            {
-                continue;
-            }
-
-            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
-
-            mServer->OutputFormat("\r\n");
-        }
-    }
-    else if (strcmp(argv[argcur], "add") == 0)
-    {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
-
-        otLinkAddBlacklist(mInstance, extAddr);
-        VerifyOrExit(otLinkAddBlacklist(mInstance, extAddr) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
-    }
-    else if (strcmp(argv[argcur], "clear") == 0)
-    {
-        otLinkClearBlacklist(mInstance);
-    }
-    else if (strcmp(argv[argcur], "disable") == 0)
-    {
-        otLinkSetBlacklistEnabled(mInstance, false);
-    }
-    else if (strcmp(argv[argcur], "enable") == 0)
-    {
-        otLinkSetBlacklistEnabled(mInstance, true);
-    }
-    else if (strcmp(argv[argcur], "remove") == 0)
-    {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
-        otLinkRemoveBlacklist(mInstance, extAddr);
-    }
-
-exit:
     AppendResult(error);
 }
 
@@ -1308,32 +1245,6 @@ exit:
     AppendResult(error);
 }
 #endif  // OPENTHREAD_FTD
-
-void Interpreter::ProcessLinkQuality(int argc, char *argv[])
-{
-    otError error = OT_ERROR_NONE;
-    uint8_t extAddress[8];
-    uint8_t linkQuality;
-    long value;
-
-    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = OT_ERROR_PARSE);
-
-    if (argc == 1)
-    {
-        VerifyOrExit(otLinkGetAssignLinkQuality(mInstance, extAddress, &linkQuality) == OT_ERROR_NONE,
-                     error = OT_ERROR_INVALID_ARGS);
-        mServer->OutputFormat("%d\r\n", linkQuality);
-    }
-    else
-    {
-        SuccessOrExit(error = ParseLong(argv[1], value));
-        otLinkSetAssignLinkQuality(mInstance, extAddress, static_cast<uint8_t>(value));
-    }
-
-exit:
-    AppendResult(error);
-}
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessPSKc(int argc, char *argv[])
@@ -2932,15 +2843,86 @@ exit:
 }
 #endif
 
+void Interpreter::ProcessBlacklist(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+    otMacFilterEntry entry;
+    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
+    uint8_t extAddr[8];
+
+    if (argc == 0)
+    {
+        if (otLinkIsBlacklistEnabled(mInstance))
+        {
+            mServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            mServer->OutputFormat("Disabled\r\n");
+        }
+
+        VerifyOrExit(otLinkIsWhitelistEnabled(mInstance) == false);
+
+        while (otLinkGetNextBlacklistEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
+        {
+            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+            mServer->OutputFormat("\r\n");
+        }
+    }
+    else
+    {
+        VerifyOrExit(otLinkIsWhitelistEnabled(mInstance) == false, error = OT_ERROR_INVALID_STATE);
+
+        if (strcmp(argv[0], "disable") == 0)
+        {
+            VerifyOrExit(argc == 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = otLinkSetBlacklistEnabled(mInstance, false));
+        }
+        else if (strcmp(argv[0], "enable") == 0)
+        {
+            VerifyOrExit(argc == 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = otLinkSetBlacklistEnabled(mInstance, true));
+        }
+        else if (strcmp(argv[0], "add") == 0)
+        {
+            VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(argv[1], extAddr, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = otLinkAddBlacklist(mInstance, extAddr));
+        }
+        else if (strcmp(argv[0], "remove") == 0)
+        {
+            VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(argv[1], extAddr, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = otLinkRemoveBlacklist(mInstance, extAddr));
+        }
+        else if (strcmp(argv[0], "clear") == 0)
+        {
+            otLinkClearBlacklist(mInstance);
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otThreadErrorToString(error);
+    }
+
+    AppendResult(error);
+}
+
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    otMacWhitelistEntry entry;
-    int argcur = 0;
+    otMacFilterEntry entry;
+    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
     uint8_t extAddr[8];
-    int8_t rssi;
 
-    if (argcur >= argc)
+    if (argc == 0)
     {
         if (otLinkIsWhitelistEnabled(mInstance))
         {
@@ -2951,66 +2933,192 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
             mServer->OutputFormat("Disabled\r\n");
         }
 
-        for (uint8_t i = 0; ; i++)
+        VerifyOrExit(otLinkIsBlacklistEnabled(mInstance) == false);
+
+        while (otLinkGetNextWhitelistEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
         {
-            if (otLinkGetWhitelistEntry(mInstance, i, &entry) != OT_ERROR_NONE)
-            {
-                break;
-            }
-
-            if (entry.mValid == false)
-            {
-                continue;
-            }
-
             OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
 
             if (entry.mFixedRssi)
             {
-                mServer->OutputFormat(" %d", entry.mRssi);
+#ifndef OTDLL
+                mServer->OutputFormat("  * fixed rssi %d (lqi %d)", entry.mRssi,
+                                      otLinkConvertRssiToLinkQuality(mInstance, entry.mRssi));
+#else
+                mServer->OutputFormat("  * fixed rssi %d", entry.mRssi);
+#endif
             }
 
             mServer->OutputFormat("\r\n");
         }
     }
-    else if (strcmp(argv[argcur], "add") == 0)
+    else
     {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
+        VerifyOrExit(otLinkIsBlacklistEnabled(mInstance) == false, error = OT_ERROR_INVALID_STATE);
 
-        if (++argcur < argc)
+        if (strcmp(argv[0], "disable") == 0)
         {
-            rssi = static_cast<int8_t>(strtol(argv[argcur], NULL, 0));
-            VerifyOrExit(otLinkAddWhitelistRssi(mInstance, extAddr, rssi) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+            VerifyOrExit(argc == 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = otLinkSetWhitelistEnabled(mInstance, false));
+        }
+        else if (strcmp(argv[0], "enable") == 0)
+        {
+            VerifyOrExit(argc == 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = otLinkSetWhitelistEnabled(mInstance, true));
+        }
+        else if (strcmp(argv[0], "add") == 0)
+        {
+            VerifyOrExit(argc >= 2, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(argv[1], extAddr, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_PARSE);
+
+            if (argc == 2)
+            {
+                SuccessOrExit(error = otLinkAddWhitelist(mInstance, extAddr));
+            }
+            else
+            {
+                long value;
+                int8_t rssi = 0;
+                VerifyOrExit(argc == 3, error = OT_ERROR_INVALID_ARGS);
+                SuccessOrExit(error = ParseLong(argv[2], value));
+                rssi = static_cast<int8_t>(value);
+                SuccessOrExit(error = otLinkAddWhitelistRssi(mInstance, extAddr, rssi));
+            }
+        }
+        else if (strcmp(argv[0], "remove") == 0)
+        {
+            VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(argv[1], extAddr, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = otLinkRemoveWhitelist(mInstance, extAddr));
+        }
+        else if (strcmp(argv[0], "clear") == 0)
+        {
+            otLinkClearWhitelist(mInstance);
         }
         else
         {
-            otLinkAddWhitelist(mInstance, extAddr);
-            VerifyOrExit(otLinkAddWhitelist(mInstance, extAddr) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+            error = OT_ERROR_INVALID_ARGS;
         }
-    }
-    else if (strcmp(argv[argcur], "clear") == 0)
-    {
-        otLinkClearWhitelist(mInstance);
-    }
-    else if (strcmp(argv[argcur], "disable") == 0)
-    {
-        otLinkSetWhitelistEnabled(mInstance, false);
-    }
-    else if (strcmp(argv[argcur], "enable") == 0)
-    {
-        otLinkSetWhitelistEnabled(mInstance, true);
-    }
-    else if (strcmp(argv[argcur], "remove") == 0)
-    {
-        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
-        otLinkRemoveWhitelist(mInstance, extAddr);
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otThreadErrorToString(error);
+    }
+
     AppendResult(error);
 }
+
+#ifndef OTDLL
+void Interpreter::ProcessRssiFilter(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+    otMacFilterEntry entry;
+    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
+    long value;
+    uint8_t extAddr[8];
+    int8_t rssi;
+
+    if (argc == 0)
+    {
+        rssi = otLinkGetRssiIn(mInstance);
+
+        if (rssi == OT_RSSI_OVERRIDE_DISABLED)
+        {
+            mServer->OutputFormat("Default rssi: Not set\r\n");
+        }
+        else
+        {
+            mServer->OutputFormat("Default rssi: %d (lqi %d)\r\n", rssi, otLinkConvertRssiToLinkQuality(mInstance, rssi));
+        }
+
+        while (otLinkGetNextRssiInEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
+        {
+            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+            mServer->OutputFormat("  * fixed rssi %d (lqi %d)\r\n", entry.mRssi,
+                                  otLinkConvertRssiToLinkQuality(mInstance, entry.mRssi));
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "set-rssi") == 0)
+        {
+            VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[1], value));
+            rssi = static_cast<int8_t>(value);
+            otLinkSetRssiIn(mInstance, rssi);
+        }
+        else if (strcmp(argv[0], "set-lqi") == 0)
+        {
+            uint8_t linkquality = 0;
+            VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[1], value));
+            linkquality = static_cast<uint8_t>(value);
+            VerifyOrExit(linkquality <= 3, error = OT_ERROR_PARSE);
+            rssi = otLinkConvertLinkQualityToRssi(mInstance, linkquality);
+            otLinkSetRssiIn(mInstance, rssi);
+        }
+        else if (strcmp(argv[0], "get") == 0)
+        {
+            VerifyOrExit(argc == 1, error = OT_ERROR_INVALID_ARGS);
+            rssi = otLinkGetRssiIn(mInstance);
+            mServer->OutputFormat("Default rssi %d (lqi %d)\r\n", rssi,
+                                  otLinkConvertRssiToLinkQuality(mInstance, rssi));
+        }
+        else if (strcmp(argv[0], "unset") == 0)
+        {
+            VerifyOrExit(argc == 1, error = OT_ERROR_INVALID_ARGS);
+            rssi = OT_RSSI_OVERRIDE_DISABLED;
+            otLinkSetRssiIn(mInstance, rssi);
+        }
+        else if (strcmp(argv[0], "add-rssi") == 0)
+        {
+            VerifyOrExit(argc == 3, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(argv[1], extAddr, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            rssi = static_cast<int8_t>(value);
+            SuccessOrExit(error = otLinkAddRssiInEntry(mInstance, extAddr, rssi));
+        }
+        else if (strcmp(argv[0], "add-lqi") == 0)
+        {
+            uint8_t linkquality = 0;
+            VerifyOrExit(argc == 3, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(argv[1], extAddr, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            linkquality = static_cast<uint8_t>(value);
+            VerifyOrExit(linkquality <= 3, error = OT_ERROR_PARSE);
+            rssi = otLinkConvertLinkQualityToRssi(mInstance, linkquality);
+            SuccessOrExit(error = otLinkAddRssiInEntry(mInstance, extAddr, rssi));
+        }
+        else if (strcmp(argv[0], "remove") == 0)
+        {
+            VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(argv[1], extAddr, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = otLinkRemoveRssiInEntry(mInstance, extAddr));
+        }
+        else if (strcmp(argv[0], "clear") == 0)
+        {
+            otLinkClearRssiInEntry(mInstance);
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otThreadErrorToString(error);
+    }
+
+    AppendResult(error);
+
+}
+#endif  // OTDLL
 
 #if OPENTHREAD_ENABLE_DIAG
 void Interpreter::ProcessDiag(int argc, char *argv[])

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
  *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
  */
 
-#ifndef MAC_WHITELIST_HPP_
-#define MAC_WHITELIST_HPP_
+#ifndef MAC_FILTER_HPP_
+#define MAC_FILTER_HPP_
 
 #include "utils/wrap_stdint.h"
 
@@ -43,37 +43,36 @@
 namespace ot {
 namespace Mac {
 
-class Whitelist
+class Filter
 {
 public:
-    typedef otMacWhitelistEntry Entry;
-
-    Whitelist(void) { }
-
-    bool IsEnabled(void) const { return false; }
-
-    void SetEnabled(bool) { }
-
+    typedef otMacFilterEntry Entry;
+    Filter(void) { }
     int GetMaxEntries(void) const { return 0; }
-
-    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    Entry *Add(const ExtAddress &) { return NULL; }
-
-    void Remove(const ExtAddress &) { }
-
-    void Clear(void) { }
-
-    Entry *Find(const ExtAddress &) { return NULL; }
-
-    void ClearFixedRssi(Entry &) { }
-
-    otError GetFixedRssi(Entry &, int8_t &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    void SetFixedRssi(Entry &, int8_t) { }
+    otError AddEntry(const ExtAddress *, int8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    uint8_t AddressFilterGetState(void) const { return 0; }
+    otError AddressFilterSetState(uint8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError AddressFilterAddEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError AddressFilterRemoveEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
+    void AddressFilterClearEntries(void) { }
+    otError GetNextAddressFilterEntry(otMacFilterIterator *, Entry *) const { return OT_ERROR_NOT_IMPLEMENTED; }
+    Entry *AddressFilterFindEntry(const ExtAddress *) { return NULL; }
+    void RssiInFilterSet(int8_t) { }
+    int8_t RssiInFilterGet(void) { return OT_RSSI_OVERRIDE_DISABLED; }
+    otError RssiInFilterAddEntry(const ExtAddress *, int8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RssiInFilterRemoveEntry(const ExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
+    void RssiInFilterClearEntries(void) { }
+    otError GetNextRssiInFilterEntry(otMacFilterIterator *, Entry *) const { return OT_ERROR_NOT_IMPLEMENTED; }
+    Entry *RssiInFilterFindEntry(const ExtAddress *) { return NULL; }
+    otError Apply(const ExtAddress *, int8_t &) { return OT_ERROR_NONE; }
 };
+
+/**
+ * @}
+ *
+ */
 
 }  // namespace Mac
 }  // namespace ot
 
-#endif  // MAC_WHITELIST_HPP_
+#endif  // MAC_FILTER_HPP_

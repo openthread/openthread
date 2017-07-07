@@ -760,27 +760,29 @@ typedef enum otRoutePreference
     OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
 
+#define OT_MAC_FILTER_ITERATOR_INIT  0     ///< Initializer for otMacFilterIterator.
+#define OT_RSSI_OVERRIDE_DISABLED    127
+
+typedef uint8_t otMacFilterIterator;    ///< Used to iterate through mac filter entries.
+
+typedef enum otMacAddressFilterState
+{
+    OT_MAC_ADDRESSFILTER_DISABLED,
+    OT_MAC_ADDRESSFILTER_WHITELIST,
+    OT_MAC_ADDRESSFILTER_BLACKLIST,
+} otMacAddressFilterState;
+
 /**
- * This structure represents a whitelist entry.
+ * This structure represents a MacFilter entry.
  *
  */
-typedef struct otMacWhitelistEntry
+typedef struct otMacFilterEntry
 {
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
     int8_t       mRssi;             ///< RSSI value
-    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is valid
+    bool         mFiltered : 1;     ///< Indicates whether or not the Extended Address would be filtered.
     bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
-} otMacWhitelistEntry;
-
-/**
- * This structure represents a blacklist entry.
- *
- */
-typedef struct otMacBlacklistEntry
-{
-    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    bool         mValid;            ///< Indicates whether or not the blacklist entry is valid
-} otMacBlacklistEntry;
+} otMacFilterEntry;
 
 /**
  * Represents a Thread device role.

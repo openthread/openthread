@@ -146,121 +146,146 @@ otShortAddress otLinkGetShortAddress(otInstance *aInstance)
 
 otError otLinkAddWhitelist(otInstance *aInstance, const uint8_t *aExtAddr)
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aInstance->mThreadNetif.GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr)) == NULL)
-    {
-        error = OT_ERROR_NO_BUFS;
-    }
-
-    return error;
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterAddEntry(
+               reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
 }
 
 otError otLinkAddWhitelistRssi(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi)
 {
-    otError error = OT_ERROR_NONE;
-    otMacWhitelistEntry *entry;
-
-    entry = aInstance->mThreadNetif.GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
-    VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
-    aInstance->mThreadNetif.GetMac().GetWhitelist().SetFixedRssi(*entry, aRssi);
-
-exit:
-    return error;
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddEntry(
+               reinterpret_cast<const Mac::ExtAddress *>(aExtAddr), aRssi);
 }
 
-void otLinkRemoveWhitelist(otInstance *aInstance, const uint8_t *aExtAddr)
+otError otLinkRemoveWhitelist(otInstance *aInstance, const uint8_t *aExtAddr)
 {
-    aInstance->mThreadNetif.GetMac().GetWhitelist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterRemoveEntry(
+               reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
 }
 
 void otLinkClearWhitelist(otInstance *aInstance)
 {
-    aInstance->mThreadNetif.GetMac().GetWhitelist().Clear();
+    aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterClearEntries();
 }
 
-otError otLinkGetWhitelistEntry(otInstance *aInstance, uint8_t aIndex, otMacWhitelistEntry *aEntry)
+otError otLinkGetNextWhitelistEntry(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
-    error = aInstance->mThreadNetif.GetMac().GetWhitelist().GetEntry(aIndex, *aEntry);
+    error = aInstance->mThreadNetif.GetMac().GetFilter().GetNextAddressFilterEntry(aIterator, aEntry);
 
 exit:
     return error;
 }
 
-void otLinkSetWhitelistEnabled(otInstance *aInstance, bool aEnabled)
+otError otLinkSetWhitelistEnabled(otInstance *aInstance, bool aEnabled)
 {
-    aInstance->mThreadNetif.GetMac().GetWhitelist().SetEnabled(aEnabled);
+    uint8_t state = OT_MAC_ADDRESSFILTER_DISABLED;
+
+    if (aEnabled)
+    {
+        state = OT_MAC_ADDRESSFILTER_WHITELIST;
+    }
+
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterSetState(state);
 }
 
 bool otLinkIsWhitelistEnabled(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMac().GetWhitelist().IsEnabled();
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterGetState() == OT_MAC_ADDRESSFILTER_WHITELIST;
 }
 
 otError otLinkAddBlacklist(otInstance *aInstance, const uint8_t *aExtAddr)
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aInstance->mThreadNetif.GetMac().GetBlacklist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr)) == NULL)
-    {
-        error = OT_ERROR_NO_BUFS;
-    }
-
-    return error;
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterAddEntry(
+               reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
 }
 
-void otLinkRemoveBlacklist(otInstance *aInstance, const uint8_t *aExtAddr)
+otError otLinkRemoveBlacklist(otInstance *aInstance, const uint8_t *aExtAddr)
 {
-    aInstance->mThreadNetif.GetMac().GetBlacklist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterRemoveEntry(
+               reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
 }
 
 void otLinkClearBlacklist(otInstance *aInstance)
 {
-    aInstance->mThreadNetif.GetMac().GetBlacklist().Clear();
+    aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterClearEntries();
 }
 
-otError otLinkGetBlacklistEntry(otInstance *aInstance, uint8_t aIndex, otMacBlacklistEntry *aEntry)
+otError otLinkGetNextBlacklistEntry(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
-    error = aInstance->mThreadNetif.GetMac().GetBlacklist().GetEntry(aIndex, *aEntry);
+    error = aInstance->mThreadNetif.GetMac().GetFilter().GetNextAddressFilterEntry(aIterator, aEntry);
 
 exit:
     return error;
 }
 
-void otLinkSetBlacklistEnabled(otInstance *aInstance, bool aEnabled)
+otError otLinkSetBlacklistEnabled(otInstance *aInstance, bool aEnabled)
 {
-    aInstance->mThreadNetif.GetMac().GetBlacklist().SetEnabled(aEnabled);
+    uint8_t state = OT_MAC_ADDRESSFILTER_DISABLED;
+
+    if (aEnabled)
+    {
+        state = OT_MAC_ADDRESSFILTER_BLACKLIST;
+    }
+
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterSetState(state);
 }
 
 bool otLinkIsBlacklistEnabled(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMac().GetBlacklist().IsEnabled();
+    return aInstance->mThreadNetif.GetMac().GetFilter().AddressFilterGetState() == OT_MAC_ADDRESSFILTER_BLACKLIST;
 }
 
-otError otLinkGetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t *aLinkQuality)
+void otLinkSetRssiIn(otInstance *aInstance, int8_t aRssi)
 {
-    Mac::ExtAddress extAddress;
-
-    memset(&extAddress, 0, sizeof(extAddress));
-    memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
-
-    return aInstance->mThreadNetif.GetMle().GetAssignLinkQuality(extAddress, *aLinkQuality);
+    aInstance->mThreadNetif.GetMac().GetFilter().RssiInFilterSet(aRssi);
 }
 
-void otLinkSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t aLinkQuality)
+int8_t otLinkGetRssiIn(otInstance *aInstance)
 {
-    Mac::ExtAddress extAddress;
+    return aInstance->mThreadNetif.GetMac().GetFilter().RssiInFilterGet();
+}
 
-    memset(&extAddress, 0, sizeof(extAddress));
-    memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
+otError otLinkAddRssiInEntry(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi)
+{
+    return aInstance->mThreadNetif.GetMac().GetFilter().RssiInFilterAddEntry(
+               reinterpret_cast<const Mac::ExtAddress *>(aExtAddr), aRssi);
+}
 
-    aInstance->mThreadNetif.GetMle().SetAssignLinkQuality(extAddress, aLinkQuality);
+otError otLinkRemoveRssiInEntry(otInstance *aInstance, const uint8_t *aExtAddr)
+{
+    return aInstance->mThreadNetif.GetMac().GetFilter().RssiInFilterRemoveEntry(
+               reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
+}
+
+void otLinkClearRssiInEntry(otInstance *aInstance)
+{
+    aInstance->mThreadNetif.GetMac().GetFilter().RssiInFilterClearEntries();
+}
+
+otError otLinkGetNextRssiInEntry(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
+    error = aInstance->mThreadNetif.GetMac().GetFilter().GetNextRssiInFilterEntry(aIterator, aEntry);
+
+exit:
+    return error;
+}
+
+uint8_t otLinkConvertRssiToLinkQuality(otInstance *aInstance, int8_t aRssi)
+{
+    return LinkQualityInfo::ConvertRssToLinkQuality(aInstance->mThreadNetif.GetMac().GetNoiseFloor(), aRssi);
+}
+
+int8_t otLinkConvertLinkQualityToRssi(otInstance *aInstance, uint8_t aLinkQuality)
+{
+    return LinkQualityInfo::ConvertLinkQualityToRss(aInstance->mThreadNetif.GetMac().GetNoiseFloor(), aLinkQuality);
 }
 
 void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext)
@@ -296,7 +321,8 @@ otError otLinkActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t
 {
     aInstance->mActiveScanCallback = aCallback;
     aInstance->mActiveScanCallbackContext = aCallbackContext;
-    return aInstance->mThreadNetif.GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult, aInstance);
+    return aInstance->mThreadNetif.GetMac().ActiveScan(aScanChannels, aScanDuration,
+                                                       &HandleActiveScanResult, aInstance);
 }
 
 bool otLinkIsActiveScanInProgress(otInstance *aInstance)
@@ -322,7 +348,8 @@ otError otLinkEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t
 {
     aInstance->mEnergyScanCallback = aCallback;
     aInstance->mEnergyScanCallbackContext = aCallbackContext;
-    return aInstance->mThreadNetif.GetMac().EnergyScan(aScanChannels, aScanDuration, &HandleEnergyScanResult, aInstance);
+    return aInstance->mThreadNetif.GetMac().EnergyScan(aScanChannels, aScanDuration,
+                                                       &HandleEnergyScanResult, aInstance);
 }
 
 void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult)

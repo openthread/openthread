@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,8 @@
 
 #include <openthread/config.h>
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_whitelist_impl.hpp"
+#if OPENTHREAD_ENABLE_MAC_FILTER
+#include "mac_filter_impl.hpp"
 #else
-#include "mac_whitelist_stub.hpp"
-#endif
+#include "mac_filter_stub.hpp"
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
