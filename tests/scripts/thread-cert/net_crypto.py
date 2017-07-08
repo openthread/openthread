@@ -33,7 +33,7 @@ import struct
 
 from binascii import hexlify
 
-from Crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 
 
 class CryptoEngine:
