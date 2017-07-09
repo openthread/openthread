@@ -34,6 +34,7 @@
 
 #include <openthread/config.h>
 #include <openthread/openthread.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
@@ -432,6 +433,12 @@ void readFrame(void)
     // read length
     length = HWREG(RFCORE_SFR_RFDATA);
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    // Timestamp
+    sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
+    sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
+#endif
 
     // read psdu
     for (i = 0; i < length - 2; i++)

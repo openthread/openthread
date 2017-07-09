@@ -31,6 +31,7 @@
 * Platform abstraction for radio communication.
 */
 
+#include <openthread/config.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
@@ -616,6 +617,11 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
 
         if (frameHeader.frameType != FTDF_ACKNOWLEDGEMENT_FRAME)
         {
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+            // Timestamp
+            sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
+            sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
+#endif
             sReceiveFrame.mChannel   = sChannel;
             sReceiveFrame.mLength    = frameLength;
             sReceiveFrame.mLqi       = lqi;
@@ -626,6 +632,11 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
         }
         else
         {
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+            // Timestamp
+            sReceiveFrameAck.mMsec = otPlatAlarmMilliGetNow();
+            sReceiveFrameAck.mUsec = 0;  // Don't support microsecond timer for now.
+#endif
             sReceiveFrameAck.mChannel   = sChannel;
             sReceiveFrameAck.mLength    = frameLength;
             sReceiveFrameAck.mLqi       = lqi;

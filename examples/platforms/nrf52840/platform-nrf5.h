@@ -78,6 +78,12 @@ void nrf5AlarmDeinit(void);
 void nrf5AlarmProcess(otInstance *aInstance);
 
 /**
+ * Function for geting current time in mircosecond.
+ *
+ */
+uint64_t nrf5AlarmGetCurrentTime();
+
+/**
  * Initialization of Random Number Generator.
  *
  */
