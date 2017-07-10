@@ -106,10 +106,11 @@ NcpUart::NcpUart(otInstance *aInstance):
 }
 
 void NcpUart::HandleFrameAddedToNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
-                                          NcpFrameBuffer *aNcpFrameBuffer)
+                                          NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpFrameBuffer);
     OT_UNUSED_VARIABLE(aTag);
+    OT_UNUSED_VARIABLE(aPriority);
 
     static_cast<NcpUart *>(aContext)->HandleFrameAddedToNcpBuffer();
 }

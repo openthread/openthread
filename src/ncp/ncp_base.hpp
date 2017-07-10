@@ -111,11 +111,13 @@ protected:
     /**
      * This method is called to start a new outbound frame.
      *
+     * param[in] aHeader           The spinel header byte
+     *
      * @retval OT_ERROR_NONE       Successfully started a new frame.
      * @retval OT_ERROR_NO_BUFS    Insufficient buffer space available to start a new frame.
      *
      */
-    otError OutboundFrameBegin(void);
+    otError OutboundFrameBegin(uint8_t aHeader);
 
     /**
      * This method adds data to the current outbound frame being written.
@@ -192,7 +194,7 @@ private:
 #endif // OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
 
     static void HandleFrameRemovedFromNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
-                                                NcpFrameBuffer *aNcpBuffer);
+                                                NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpBuffer);
     void HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
