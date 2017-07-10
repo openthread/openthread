@@ -54,14 +54,14 @@ char  **gArguments = NULL;
 
 bool qorvoPlatGotoSleepCheck(void)
 {
+    bool canGotoSleep = false;
+
     if (localInstance)
     {
-        return !otTaskletsArePending(localInstance);
+        canGotoSleep = !otTaskletsArePending(localInstance);
     }
-    else
-    {
-        return true;
-    }
+
+    return canGotoSleep;
 }
 
 void PlatformInit(int argc, char *argv[])

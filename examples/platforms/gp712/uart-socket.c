@@ -288,7 +288,6 @@ void PlatSocketRxNewConn(uint8_t id)
 
 void PlatSocketInit(void)
 {
-    int res;
     memset(&PlatSocketConnection, 0, sizeof(PlatSocketConnection));
 
     // in case we are a server, setup listening for client
@@ -296,8 +295,7 @@ void PlatSocketInit(void)
     qorvoPlatRegisterPollFunction(PlatServerSocketId, PlatSocketRxNewConn);
 
     // hack
-    res = pipe(PlatSocketPipeFd);
-    (void)(res);
+    pipe(PlatSocketPipeFd);
     qorvoPlatRegisterPollFunction(PlatSocketPipeFd [0], PlatSocketRxSignaled);
 }
 

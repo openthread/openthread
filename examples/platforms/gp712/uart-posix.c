@@ -172,11 +172,14 @@ otError otPlatUartEnable(void)
         otEXPECT_ACTION(tcsetattr(s_out_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = OT_ERROR_GENERIC);
     }
 
-    return error;
-
 exit:
-    close(s_in_fd);
-    close(s_out_fd);
+
+    if (error != OT_ERROR_NONE)
+    {
+        close(s_in_fd);
+        close(s_out_fd);
+    }
+
     return error;
 }
 
@@ -201,45 +204,6 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
 exit:
     return error;
-}
-
-void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
-{
-    /* not needed anymore */
-    (void) aReadFdSet;
-    (void) aWriteFdSet;
-    (void) aErrorFdSet;
-    (void) aMaxFd;
-    /* not needed anymore */
-    // if (aReadFdSet != NULL)
-    // {
-    //     FD_SET(s_in_fd, aReadFdSet);
-
-    //     if (aErrorFdSet != NULL)
-    //     {
-    //         FD_SET(s_in_fd, aErrorFdSet);
-    //     }
-
-    //     if (aMaxFd != NULL && *aMaxFd < s_in_fd)
-    //     {
-    //         *aMaxFd = s_in_fd;
-    //     }
-    // }
-
-    // if ((aWriteFdSet != NULL) && (s_write_length > 0))
-    // {
-    //     FD_SET(s_out_fd, aWriteFdSet);
-
-    //     if (aErrorFdSet != NULL)
-    //     {
-    //         FD_SET(s_out_fd, aErrorFdSet);
-    //     }
-
-    //     if (aMaxFd != NULL && *aMaxFd < s_out_fd)
-    //     {
-    //         *aMaxFd = s_out_fd;
-    //     }
-    // }
 }
 
 void platformUartProcess(void)

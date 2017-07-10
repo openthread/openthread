@@ -77,11 +77,11 @@ typedef struct otCachedSettings_s
 {
     uint16_t panid;
 } otCachedSettings_t;
+
 static otCachedSettings_t otCachedSettings;
 
 static uint8_t  sScanstate          = 0;
 static int8_t   sLastReceivedPower  = 127;
-
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {

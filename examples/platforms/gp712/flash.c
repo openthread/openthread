@@ -111,7 +111,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
     // Write the page
     r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, (off_t)address);
-    otEXPECT_ACTION(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = OT_ERROR_FAILED);
+    otEXPECT_ACTION((r) == ((FLASH_PAGE_SIZE)), error = OT_ERROR_FAILED);
 
 
 exit:
