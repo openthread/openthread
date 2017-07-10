@@ -31,6 +31,8 @@
  *   This file implements the wrappers around the platform radio calls.
  */
 
+#define WPP_NAME "radio.tmh"
+
 #include "radio.hpp"
 #include "common/timer.hpp"
 #include "common/code_utils.hpp"
