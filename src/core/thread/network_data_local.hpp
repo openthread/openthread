@@ -130,6 +130,18 @@ public:
      */
     otError SendServerDataNotification(void);
 
+    /**
+     * This method updates the consistency of local networkdata and leader networkdata.
+     *
+     */
+    void UpdateConsistency(void);
+
+    /**
+     * This method updates the rloc of local networkdata if any.
+     *
+     */
+    void UpdateNetworkDataRloc(void);
+
 private:
     otError UpdateRloc(void);
     otError UpdateRloc(PrefixTlv &aPrefix);
@@ -139,6 +151,7 @@ private:
     bool IsOnMeshPrefixConsistent(void);
     bool IsExternalRouteConsistent(void);
 
+    bool mUpdating;
     uint16_t mOldRloc;
 };
 
