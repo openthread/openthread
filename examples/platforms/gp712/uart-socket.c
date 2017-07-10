@@ -108,7 +108,7 @@ void PlatSocketRx(uint16_t length, const char *buffer, uint32_t socketId)
     {
         buf = malloc(length + 2);
         memcpy(buf, buffer, length);
-        buf[length]   = '\n';
+        buf[length]     = '\n';
         buf[length + 1] = 0;
         qorvoAlarmScheduleEventArg(0, PlatSocketSendInput, (void *) buf);
     }
