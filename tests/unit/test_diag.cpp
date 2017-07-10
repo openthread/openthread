@@ -53,7 +53,7 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBufLength;
 }
 
-extern "C" void otPlatAlarmFired(otInstance *)
+extern "C" void otPlatAlarmMilliFired(otInstance *)
 {
 }
 

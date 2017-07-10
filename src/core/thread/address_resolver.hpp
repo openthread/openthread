@@ -189,7 +189,7 @@ private:
     Coap::Resource mAddressNotification;
     Cache mCache[kCacheEntries];
     Ip6::IcmpHandler mIcmpHandler;
-    Timer mTimer;
+    TimerMilli mTimer;
 };
 
 /**

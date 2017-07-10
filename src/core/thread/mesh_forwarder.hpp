@@ -296,8 +296,8 @@ private:
 
     Mac::Receiver         mMacReceiver;
     Mac::Sender           mMacSender;
-    Timer                 mDiscoverTimer;
-    Timer                 mReassemblyTimer;
+    TimerMilli            mDiscoverTimer;
+    TimerMilli            mReassemblyTimer;
 
     PriorityQueue         mSendQueue;
     MessageQueue          mReassemblyList;

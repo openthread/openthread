@@ -535,8 +535,8 @@ private:
 
     static Mpl &GetOwner(const Context &aContext);
 
-    Timer mSeedSetTimer;
-    Timer mRetransmissionTimer;
+    TimerMilli mSeedSetTimer;
+    TimerMilli mRetransmissionTimer;
 
     uint8_t mTimerExpirations;
     uint8_t mSequence;

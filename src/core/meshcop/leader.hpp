@@ -135,7 +135,7 @@ private:
 
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
-    Timer mTimer;
+    TimerMilli mTimer;
 
     uint32_t mDelayTimerMinimal;
 

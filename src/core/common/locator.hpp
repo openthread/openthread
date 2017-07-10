@@ -46,7 +46,6 @@ namespace ot {
 class ThreadNetif;
 class MeshForwarder;
 class TaskletScheduler;
-class TimerScheduler;
 namespace Ip6 { class Ip6; }
 
 /**
@@ -166,47 +165,6 @@ protected:
      *
      */
     MeshForwarderLocator(MeshForwarder &aMeshForwarder): Locator(aMeshForwarder) { }
-};
-
-/**
- * This class implements a locator for TimerScheduler object.
- *
- */
-class TimerSchedulerLocator: private Locator<TimerScheduler>
-{
-public:
-    /**
-     * This method returns a reference to the TimerScheduler.
-     *
-     * @returns   A reference to the TimerScheduler.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    TimerScheduler &GetTimerScheduler(void) const { return mLocatorObject; }
-#else
-    TimerScheduler &GetTimerScheduler(void) const { return otGetTimerScheduler(); }
-#endif
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure, or NULL if the instance has been finalized.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance *GetInstance(void) const;
-#else
-    otInstance *GetInstance(void) const { return otGetInstance(); }
-#endif
-
-protected:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aTimerScheduler  A reference to the TimerScheduler.
-     *
-     */
-    TimerSchedulerLocator(TimerScheduler &aTimerScheduler): Locator(aTimerScheduler) { }
 };
 
 /**

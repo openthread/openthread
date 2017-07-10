@@ -131,10 +131,12 @@ private:
         kTimerReasonEnergyScanComplete,
     };
 
-    Timer                   mTimer;
+    TimerMilli              mTimer;
     TimerReason             mTimerReason;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    TimerMicro              mTimerMicro;
+#endif
 
-    static void HandleTimer(void *aContext);
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 

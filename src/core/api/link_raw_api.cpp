@@ -34,7 +34,6 @@
 #include <openthread/config.h>
 
 #include <openthread/platform/random.h>
-#include <openthread/platform/usec-alarm.h>
 
 #include "openthread-instance.h"
 #include "common/debug.hpp"
@@ -270,8 +269,11 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     mTransmitDoneCallback(NULL),
     mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-    , mTimer(aInstance.mIp6.mTimerScheduler, &LinkRaw::HandleTimer, this)
+    , mTimer(aInstance.mIp6, &LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    , mTimerMicro(aInstance.mIp6, &LinkRaw::HandleTimer, this)
+#endif
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     , mEnergyScanTask(aInstance.mIp6.mTaskletScheduler, &LinkRaw::HandleEnergyScanTask, this)
@@ -479,11 +481,6 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
-void LinkRaw::HandleTimer(void *aContext)
-{
-    static_cast<LinkRaw *>(aContext)->HandleTimer();
-}
-
 void LinkRaw::HandleTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
@@ -565,11 +562,11 @@ void LinkRaw::StartCsmaBackoff(void)
     otLogDebgPlat(aInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
     mTimerReason = kTimerReasonRetransmitTimeout;
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    otPlatUsecAlarmStartAt(&mInstance, otPlatUsecAlarmGetNow(), backoff, &HandleTimer, this);
-#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    mTimerMicro.Start(backoff);
+#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     mTimer.Start(backoff / 1000UL);
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT

@@ -52,7 +52,7 @@ namespace Utils {
 
 ChildSupervisor::ChildSupervisor(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &ChildSupervisor::HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6(), &ChildSupervisor::HandleTimer, this),
     mSupervisionInterval(kDefaultSupervisionInterval)
 {
 }
@@ -133,7 +133,7 @@ void ChildSupervisor::UpdateOnSend(Child &aChild)
     aChild.ResetSecondsSinceLastSupervision();
 }
 
-void ChildSupervisor::HandleTimer(Timer &aTimer)
+void ChildSupervisor::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }
@@ -183,7 +183,7 @@ ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
 
 SupervisionListener::SupervisionListener(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &SupervisionListener::HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerMilliScheduler, &SupervisionListener::HandleTimer, this),
     mTimeout(0)
 {
     SetTimeout(kDefaultTimeout);
@@ -232,7 +232,7 @@ void SupervisionListener::RestartTimer(void)
     if ((mTimeout != 0) && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
         (netif.GetMeshForwarder().GetRxOnWhenIdle() == false))
     {
-        mTimer.Start(Timer::SecToMsec(mTimeout));
+        mTimer.Start(TimerMilli::SecToMsec(mTimeout));
     }
     else
     {
@@ -240,7 +240,7 @@ void SupervisionListener::RestartTimer(void)
     }
 }
 
-void SupervisionListener::HandleTimer(Timer &aTimer)
+void SupervisionListener::HandleTimer(TimerMilli &aTimer)
 {
     GetOwner(aTimer).HandleTimer();
 }

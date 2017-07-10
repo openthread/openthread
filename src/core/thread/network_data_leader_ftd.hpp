@@ -200,7 +200,7 @@ private:
     uint16_t mContextUsed;
     uint32_t mContextLastUsed[kNumContextIds];
     uint32_t mContextIdReuseDelay;
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource  mServerData;
 

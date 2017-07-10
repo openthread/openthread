@@ -29,7 +29,8 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 ot_platform_headers                      =\
-    alarm.h                               \
+    alarm-micro.h                         \
+    alarm-milli.h                         \
     diag.h                                \
     memory.h                              \
     misc.h                                \
@@ -42,7 +43,6 @@ ot_platform_headers                      =\
     settings.h                            \
     messagepool.h                         \
     toolchain.h                           \
-    usec-alarm.h                          \
     $(NULL)
 
 ot_platformdir = $(includedir)/openthread/platform

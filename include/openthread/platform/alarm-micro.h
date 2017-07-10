@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the microsecond alarm service.
  */
 
-#ifndef USEC_ALARM_H_
-#define USEC_ALARM_H_
+#ifndef ALARM_MICRO_H_
+#define ALARM_MICRO_H_
 
 #include <stdint.h>
 
@@ -51,25 +51,14 @@ extern "C" {
  */
 
 /**
- * This defines the callback for indicating when the alarm has expired.
- *
- * @param[in]  aContext  A pointer to arbitrary context information.
- *
- */
-typedef void (*otPlatUsecAlarmHandler)(void *aContext);
-
-/**
  * Set the alarm to fire at @p aDt microseconds after @p aT0.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aT0        The reference time.
  * @param[in]  aDt        The time delay in microseconds from @p aT0.
- * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
- * @param[in]  aContext   A pointer to arbitrary context information.
  *
  */
-void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt,
-                            otPlatUsecAlarmHandler aHandler, void *aContext);
+void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
@@ -77,7 +66,7 @@ void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt,
  * @param[in] aInstance  The OpenThread instance structure.
  *
  */
-void otPlatUsecAlarmStop(otInstance *aInstance);
+void otPlatAlarmMicroStop(otInstance *aInstance);
 
 /**
  * Get the current time.
@@ -85,7 +74,14 @@ void otPlatUsecAlarmStop(otInstance *aInstance);
  * @param[out]  aNow  The current time in microseconds.
  *
  */
-uint32_t otPlatUsecAlarmGetNow(void);
+uint32_t otPlatAlarmMicroGetNow(void);
+
+/**
+ * Signal that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+extern void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
  * @}
@@ -96,4 +92,4 @@ uint32_t otPlatUsecAlarmGetNow(void);
 }  // extern "C"
 #endif
 
-#endif  // USEC_ALARM_H_
+#endif  // ALARM_MICRO_H_

@@ -118,7 +118,7 @@ private:
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     MessageQueue mDelayedJoinEnts;
 
     uint16_t mJoinerUdpPort;

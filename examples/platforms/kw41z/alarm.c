@@ -39,7 +39,7 @@
 
 #include "openthread/openthread.h"
 #include "openthread/platform/platform.h"
-#include "openthread/platform/alarm.h"
+#include "openthread/platform/alarm-milli.h"
 #include "openthread/platform/diag.h"
 
 static volatile uint32_t sTime      = 0;
@@ -74,24 +74,24 @@ void kw41zAlarmProcess(otInstance *aInstance)
         else
 #endif
         {
-            otPlatAlarmFired(aInstance);
+            otPlatAlarmMilliFired(aInstance);
         }
     }
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
     sAlarmTime = aT0 + aDt;
 }
 
-void otPlatAlarmStop(otInstance *aInstance)
+void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     (void)aInstance;
     sAlarmTime = 0;
 }
 
-uint32_t otPlatAlarmGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     return sTime;
 }

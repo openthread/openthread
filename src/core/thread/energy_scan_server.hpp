@@ -99,7 +99,7 @@ private:
     int8_t mScanResults[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
     uint8_t mScanResultsLength;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Ip6::NetifCallback mNetifCallback;
 

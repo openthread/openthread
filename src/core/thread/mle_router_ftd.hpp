@@ -793,7 +793,7 @@ private:
     static MleRouter &GetOwner(const Context &aContext);
 
     TrickleTimer mAdvertiseTimer;
-    Timer mStateUpdateTimer;
+    TimerMilli mStateUpdateTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;

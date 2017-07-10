@@ -863,7 +863,7 @@ otLwfEventWorkerThread(
             pFilter->EventTimerState = OT_EVENT_TIMER_NOT_RUNNING;
 
             // Indicate to OpenThread that the alarm has fired
-            otPlatAlarmFired(pFilter->otCtx);
+            otPlatAlarmMilliFired(pFilter->otCtx);
         }
         else if (status == STATUS_WAIT_0 + 1) // EventWorkerThreadProcessNBLs fired
         {

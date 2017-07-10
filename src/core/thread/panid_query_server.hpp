@@ -89,7 +89,7 @@ private:
     uint32_t mChannelMask;
     uint16_t mPanId;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource mPanIdQuery;
 };

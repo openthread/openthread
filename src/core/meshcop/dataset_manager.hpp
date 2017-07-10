@@ -131,7 +131,7 @@ protected:
      *
      */
     DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
-                   Timer::Handler aTimerHander);
+                   TimerMilli::Handler aTimerHander);
 
     /**
      * This method restores the Operational Dataset from non-volatile memory.
@@ -213,7 +213,7 @@ private:
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                          uint8_t *aTlvs, uint8_t aLength) const;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     const char *mUriSet;
     const char *mUriGet;
@@ -442,7 +442,7 @@ protected:
     void StartDelayTimer(void);
     void HandleNetworkUpdate(void);
 
-    Timer mDelayTimer;
+    TimerMilli mDelayTimer;
 
 private:
     static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

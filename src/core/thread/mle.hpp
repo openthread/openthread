@@ -1350,8 +1350,8 @@ protected:
     };
     ReattachState mReattachState;
 
-    Timer mParentRequestTimer;    ///< The timer for driving the Parent Request process.
-    Timer mDelayedResponseTimer;  ///< The timer to delay MLE responses.
+    TimerMilli mParentRequestTimer;    ///< The timer for driving the Parent Request process.
+    TimerMilli mDelayedResponseTimer;  ///< The timer to delay MLE responses.
     uint8_t mLastPartitionRouterIdSequence;
     uint32_t mLastPartitionId;
 

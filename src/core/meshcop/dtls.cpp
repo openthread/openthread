@@ -57,7 +57,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     ThreadNetifLocator(aNetif),
     mPskLength(0),
     mStarted(false),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &Dtls::HandleTimer, this),
+    mTimer(aNetif.GetIp6(), &Dtls::HandleTimer, this),
     mTimerIntermediate(0),
     mTimerSet(false),
     mReceiveMessage(NULL),
@@ -311,7 +311,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
     {
         rval = 2;
     }
-    else if (static_cast<int32_t>(mTimerIntermediate - Timer::GetNow()) <= 0)
+    else if (static_cast<int32_t>(mTimerIntermediate - TimerMilli::GetNow()) <= 0)
     {
         rval = 1;
     }
@@ -341,7 +341,7 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
     {
         mTimerSet = true;
         mTimer.Start(aFinish);
-        mTimerIntermediate = Timer::GetNow() + aIntermediate;
+        mTimerIntermediate = TimerMilli::GetNow() + aIntermediate;
     }
 }
 

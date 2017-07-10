@@ -279,9 +279,9 @@ private:
     };
     uint16_t mJoinerPort;
     uint16_t mJoinerRloc;
-    Timer mJoinerExpirationTimer;
+    TimerMilli mJoinerExpirationTimer;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     uint16_t mSessionId;
     uint8_t mTransmitAttempts;
 

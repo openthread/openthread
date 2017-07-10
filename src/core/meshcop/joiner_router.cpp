@@ -61,7 +61,7 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this),
+    mTimer(aNetif.GetIp6(), &JoinerRouter::HandleTimer, this),
     mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false),
     mExpectJoinEntRsp(false)
@@ -407,7 +407,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);
 
-    delayedMessage = DelayedJoinEntHeader(Timer::GetNow() + kDelayJoinEnt, messageInfo, aKek.GetKek());
+    delayedMessage = DelayedJoinEntHeader(TimerMilli::GetNow() + kDelayJoinEnt, messageInfo, aKek.GetKek());
     SuccessOrExit(delayedMessage.AppendTo(*message));
     mDelayedJoinEnts.Enqueue(*message);
 
@@ -442,7 +442,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     ThreadNetif &netif = GetNetif();
     DelayedJoinEntHeader delayedJoinEnt;
     Message *message = mDelayedJoinEnts.GetHead();
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit(message != NULL);

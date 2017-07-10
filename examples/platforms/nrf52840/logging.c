@@ -36,7 +36,7 @@
 #include <stdio.h>
 
 #include <openthread/platform/logging.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <utils/code_utils.h>
 
 #include "platform-nrf5.h"
@@ -103,7 +103,7 @@ static inline const char *levelToString(otLogLevel aLogLevel)
 static inline uint16_t logTimestamp(char *aLogString, uint16_t aMaxSize)
 {
     return snprintf(aLogString, aMaxSize, "%s[%010ld]", RTT_COLOR_CODE_CYAN,
-                    otPlatAlarmGetNow());
+                    otPlatAlarmMilliGetNow());
 }
 #endif
 

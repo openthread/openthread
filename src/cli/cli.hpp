@@ -364,7 +364,7 @@ private:
     uint16_t mLength;
     uint16_t mCount;
     uint32_t mInterval;
-    Timer mPingTimer;
+    TimerMilli mPingTimer;
 
     otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

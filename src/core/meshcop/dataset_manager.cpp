@@ -66,7 +66,7 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType,
     ThreadNetifLocator(aThreadNetif),
     mLocal(aThreadNetif.GetInstance(), aType),
     mNetwork(aType),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, aTimerHander, this),
+    mTimer(aThreadNetif.GetIp6(), aTimerHander, this),
     mUriSet(aUriSet),
     mUriGet(aUriGet)
 {
@@ -1022,7 +1022,7 @@ static PendingDatasetBase &GetPendingDatasetOwner(const Context &aContext)
 PendingDatasetBase::PendingDatasetBase(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OT_URI_PATH_PENDING_SET, OT_URI_PATH_PENDING_GET,
                    &PendingDatasetBase::HandleTimer),
-    mDelayTimer(aThreadNetif.GetIp6().mTimerScheduler, &PendingDatasetBase::HandleDelayTimer, this),
+    mDelayTimer(aThreadNetif.GetIp6(), &PendingDatasetBase::HandleDelayTimer, this),
     mResourceGet(OT_URI_PATH_PENDING_GET, &PendingDatasetBase::HandleGet, this)
 {
     aThreadNetif.GetCoap().AddResource(mResourceGet);

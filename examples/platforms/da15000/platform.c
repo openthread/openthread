@@ -35,7 +35,7 @@
 #include <stdint.h>
 
 #include <openthread/openthread.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/uart.h>
 
 #include "platform-da15000.h"
@@ -107,13 +107,13 @@ void ExampleProcess(otInstance *aInstance)
 
     devRole = otThreadGetDeviceRole(aInstance);
 
-    if (sBlink == false && otPlatAlarmGetNow() != 0)
+    if (sBlink == false && otPlatAlarmMilliGetNow() != 0)
     {
-        sMsCounterInit = otPlatAlarmGetNow();
+        sMsCounterInit = otPlatAlarmMilliGetNow();
         sBlink = true;
     }
 
-    sMsCounter = otPlatAlarmGetNow() - sMsCounterInit;
+    sMsCounter = otPlatAlarmMilliGetNow() - sMsCounterInit;
 
     switch (devRole)
     {
@@ -136,7 +136,7 @@ void ExampleProcess(otInstance *aInstance)
     if ((thrValue != 0x00) && (sMsCounter >= thrValue))
     {
         hw_gpio_toggle(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
-        sMsCounterInit = otPlatAlarmGetNow();
+        sMsCounterInit = otPlatAlarmMilliGetNow();
     }
 
     if (thrValue == 0)

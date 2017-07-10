@@ -52,7 +52,7 @@ namespace Coap {
 Coap::Coap(ThreadNetif &aNetif):
     ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
-    mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Coap::HandleRetransmissionTimer, this),
+    mRetransmissionTimer(aNetif.GetIp6(), &Coap::HandleRetransmissionTimer, this),
     mResources(NULL),
     mContext(NULL),
     mInterceptor(NULL),
@@ -305,7 +305,7 @@ void Coap::HandleRetransmissionTimer(Timer &aTimer)
 
 void Coap::HandleRetransmissionTimer(void)
 {
-    uint32_t now = otPlatAlarmGetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
     CoapMetadata coapMetadata;
     Message *message = mPendingRequests.GetHead();
@@ -740,20 +740,20 @@ CoapMetadata::CoapMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageIn
     mResponseHandler = aHandler;
     mResponseContext = aContext;
     mRetransmissionCount = 0;
-    mRetransmissionTimeout = Timer::SecToMsec(kAckTimeout);
+    mRetransmissionTimeout = TimerMilli::SecToMsec(kAckTimeout);
     mRetransmissionTimeout += otPlatRandomGet() %
-                              (Timer::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
-                               Timer::SecToMsec(kAckTimeout) + 1);
+                              (TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
+                               TimerMilli::SecToMsec(kAckTimeout) + 1);
 
     if (aConfirmable)
     {
         // Set next retransmission timeout.
-        mNextTimerShot = Timer::GetNow() + mRetransmissionTimeout;
+        mNextTimerShot = TimerMilli::GetNow() + mRetransmissionTimeout;
     }
     else
     {
         // Set overall response timeout.
-        mNextTimerShot = Timer::GetNow() + kMaxTransmitWait;
+        mNextTimerShot = TimerMilli::GetNow() + kMaxTransmitWait;
     }
 
     mAcknowledged = false;
@@ -761,7 +761,7 @@ CoapMetadata::CoapMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageIn
 }
 
 ResponsesQueue::ResponsesQueue(ThreadNetif &aNetif):
-    mTimer(aNetif.GetIp6().mTimerScheduler, &ResponsesQueue::HandleTimer, this)
+    mTimer(aNetif.GetIp6(), &ResponsesQueue::HandleTimer, this)
 {
 }
 
@@ -870,7 +870,7 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(Timer::SecToMsec(kExchangeLifetime));
+        mTimer.Start(TimerMilli::SecToMsec(kExchangeLifetime));
     }
 
 exit:
@@ -923,7 +923,7 @@ void ResponsesQueue::HandleTimer(void)
     {
         enqueuedResponseHeader.ReadFrom(*message);
 
-        if (enqueuedResponseHeader.IsEarlier(Timer::GetNow()))
+        if (enqueuedResponseHeader.IsEarlier(TimerMilli::GetNow()))
         {
             DequeueResponse(*message);
         }
@@ -937,7 +937,7 @@ void ResponsesQueue::HandleTimer(void)
 
 uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 {
-    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - Timer::GetNow());
+    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - TimerMilli::GetNow());
 
     return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
 }

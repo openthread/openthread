@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
 static bool s_is_running = false;
@@ -44,7 +44,7 @@ void platformAlarmInit(void)
     gettimeofday(&s_start, NULL);
 }
 
-uint32_t otPlatAlarmGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     struct timeval tv;
 
@@ -54,14 +54,14 @@ uint32_t otPlatAlarmGetNow(void)
     return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)aInstance;
     s_alarm = t0 + dt;
     s_is_running = true;
 }
 
-void otPlatAlarmStop(otInstance *aInstance)
+void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     (void)aInstance;
     s_is_running = false;
@@ -78,7 +78,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (s_is_running)
     {
-        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
+        remaining = (int32_t)(s_alarm - otPlatAlarmMilliGetNow());
 
         if (remaining > 0)
         {
@@ -104,7 +104,7 @@ void platformAlarmProcess(otInstance *aInstance)
 
     if (s_is_running)
     {
-        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
+        remaining = (int32_t)(s_alarm - otPlatAlarmMilliGetNow());
 
         if (remaining <= 0)
         {
@@ -119,7 +119,7 @@ void platformAlarmProcess(otInstance *aInstance)
             else
 #endif
             {
-                otPlatAlarmFired(aInstance);
+                otPlatAlarmMilliFired(aInstance);
             }
         }
     }

@@ -51,7 +51,7 @@ namespace ot {
 
 DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
     MeshForwarderLocator(aMeshForwarder),
-    mTimer(aMeshForwarder.GetNetif().GetIp6().mTimerScheduler, &DataPollManager::HandlePollTimer, this),
+    mTimer(aMeshForwarder.GetNetif().GetIp6(), &DataPollManager::HandlePollTimer, this),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
     mPollPeriod(0),
@@ -345,7 +345,7 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
     else
     {
-        mTimerStartTime = Timer::GetNow();
+        mTimerStartTime = TimerMilli::GetNow();
         mTimer.StartAt(mTimerStartTime, mPollPeriod);
     }
 }
@@ -422,7 +422,7 @@ DataPollManager &DataPollManager::GetOwner(Context &aContext)
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const
 {
-    return Timer::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
+    return TimerMilli::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 

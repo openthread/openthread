@@ -62,8 +62,8 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
-    mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleDiscoverTimer, this),
-    mReassemblyTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleReassemblyTimer, this),
+    mDiscoverTimer(aThreadNetif.GetIp6(), &MeshForwarder::HandleDiscoverTimer, this),
+    mReassemblyTimer(aThreadNetif.GetIp6(), &MeshForwarder::HandleReassemblyTimer, this),
     mMessageNextOffset(0),
     mSendMessageFrameCounter(0),
     mSendMessage(NULL),
@@ -2192,7 +2192,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     VerifyOrExit(netif.GetMle().GetRole() != OT_DEVICE_ROLE_DETACHED);
 
     VerifyOrExit((child = netif.GetMle().GetChild(aMacSource)) != NULL);
-    child->SetLastHeard(Timer::GetNow());
+    child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
 

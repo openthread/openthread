@@ -235,7 +235,7 @@ private:
     mbedtls_ssl_cookie_ctx mCookieCtx;
     bool mStarted;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     uint32_t mTimerIntermediate;
     bool mTimerSet;
 

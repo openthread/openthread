@@ -112,7 +112,7 @@ otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, v
     messageInfo = static_cast<const Ip6::MessageInfo *>(aQuery->mMessageInfo);
 
     queryMetadata.mHostname            = aQuery->mHostname;
-    queryMetadata.mTransmissionTime    = Timer::GetNow() + kResponseTimeout;
+    queryMetadata.mTransmissionTime    = TimerMilli::GetNow() + kResponseTimeout;
     queryMetadata.mSourceAddress       = messageInfo->GetSockAddr();
     queryMetadata.mDestinationPort     = messageInfo->GetPeerPort();
     queryMetadata.mDestinationAddress  = messageInfo->GetPeerAddr();
@@ -155,7 +155,7 @@ exit:
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
     otError error = OT_ERROR_NONE;
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     Message *messageCopy = NULL;
     uint32_t nextTransmissionTime;
 
@@ -389,7 +389,7 @@ void Client::HandleRetransmissionTimer(Timer &aTimer)
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
     QueryMetadata queryMetadata;
     Message *message = mPendingQueries.GetHead();

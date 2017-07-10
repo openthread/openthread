@@ -57,8 +57,8 @@ void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentT
 
 Mpl::Mpl(Ip6 &aIp6):
     Ip6Locator(aIp6),
-    mSeedSetTimer(aIp6.mTimerScheduler, &Mpl::HandleSeedSetTimer, this),
-    mRetransmissionTimer(aIp6.mTimerScheduler, &Mpl::HandleRetransmissionTimer, this),
+    mSeedSetTimer(aIp6, &Mpl::HandleSeedSetTimer, this),
+    mRetransmissionTimer(aIp6, &Mpl::HandleRetransmissionTimer, this),
     mTimerExpirations(0),
     mSequence(0),
     mSeedId(0),
@@ -164,7 +164,7 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
@@ -258,7 +258,7 @@ void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
     MplBufferedMessageMetadata messageMetadata;
 

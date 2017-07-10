@@ -243,7 +243,7 @@ Interpreter::Interpreter(otInstance *aInstance):
     mLength(8),
     mCount(1),
     mInterval(1000),
-    mPingTimer(aInstance->mIp6.mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
+    mPingTimer(aInstance->mIp6, &Interpreter::s_HandlePingTimer, this),
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mResolvingInProgress(0),
 #endif
@@ -1607,7 +1607,7 @@ void Interpreter::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &a
     if (aMessage.Read(aMessage.GetOffset(), sizeof(uint32_t), &timestamp) >=
         static_cast<int>(sizeof(uint32_t)))
     {
-        mServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
+        mServer->OutputFormat(" time=%dms", TimerMilli::GetNow() - HostSwap32(timestamp));
     }
 
     mServer->OutputFormat("\r\n");
@@ -1690,7 +1690,7 @@ void Interpreter::s_HandlePingTimer(Timer &aTimer)
 void Interpreter::HandlePingTimer()
 {
     otError error = OT_ERROR_NONE;
-    uint32_t timestamp = HostSwap32(Timer::GetNow());
+    uint32_t timestamp = HostSwap32(TimerMilli::GetNow());
 
     otMessage *message;
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&mMessageInfo);

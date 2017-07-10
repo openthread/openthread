@@ -150,7 +150,7 @@ private:
     const char *mVendorSwVersion;
     const char *mVendorData;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     Coap::Resource mJoinerEntrust;
 };
 

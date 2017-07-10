@@ -253,7 +253,7 @@ public:
      *
      */
     EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo):
-        mDequeueTime(Timer::GetNow() + Timer::SecToMsec(kExchangeLifetime)),
+        mDequeueTime(TimerMilli::GetNow() + TimerMilli::SecToMsec(kExchangeLifetime)),
         mMessageInfo(aMessageInfo) {}
 
     /**
@@ -413,7 +413,7 @@ private:
     void HandleTimer(void);
 
     MessageQueue mQueue;
-    Timer        mTimer;
+    TimerMilli   mTimer;
 };
 
 /**
@@ -695,7 +695,7 @@ private:
 
     MessageQueue mPendingRequests;
     uint16_t mMessageId;
-    Timer mRetransmissionTimer;
+    TimerMilli mRetransmissionTimer;
 
     Resource *mResources;
 

@@ -71,8 +71,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mAssignLinkMargin(0),
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
-    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
-    mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
+    mParentRequestTimer(aThreadNetif.GetIp6(), &Mle::HandleParentRequestTimer, this),
+    mDelayedResponseTimer(aThreadNetif.GetIp6(), &Mle::HandleDelayedResponseTimer, this),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
     mParentLeaderCost(0),
@@ -591,7 +591,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
-        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) -
+        mParentRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
                                   static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts);
     }
 
@@ -1451,7 +1451,7 @@ void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 void Mle::HandleDelayedResponseTimer(void)
 {
     DelayedResponseHeader delayedResponse;
-    uint32_t now = otPlatAlarmGetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelay = 0xffffffff;
     Message *message = mDelayedResponses.GetHead();
     Message *nextMessage = NULL;
@@ -1978,7 +1978,7 @@ otError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestinat
 {
     otError error = OT_ERROR_NONE;
     uint32_t alarmFireTime;
-    uint32_t sendTime = otPlatAlarmGetNow() + aDelay;
+    uint32_t sendTime = TimerMilli::GetNow() + aDelay;
 
     // Append the message with DelayedRespnoseHeader and add to the list.
     DelayedResponseHeader delayedResponse(sendTime, aDestination);
@@ -2317,7 +2317,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         }
 
         isNeighbor = true;
-        mParent.SetLastHeard(Timer::GetNow());
+        mParent.SetLastHeard(TimerMilli::GetNow());
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
@@ -2987,7 +2987,7 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
         }
         else
         {
-            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) -
+            mParentRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
                                       static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts);
             netif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }

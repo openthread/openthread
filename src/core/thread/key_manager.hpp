@@ -357,7 +357,7 @@ private:
     uint32_t mKeyRotationTime;
     uint32_t mKeySwitchGuardTime;
     bool     mKeySwitchGuardEnabled;
-    Timer    mKeyRotationTimer;
+    TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_FTD
     uint8_t mPSKc[kMaxKeyLength];

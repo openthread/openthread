@@ -317,7 +317,8 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     aParentInfo->mPathCost        = parent->GetCost();
     aParentInfo->mLinkQualityIn   = parent->GetLinkInfo().GetLinkQuality(aInstance->mThreadNetif.GetMac().GetNoiseFloor());
     aParentInfo->mLinkQualityOut  = parent->GetLinkQualityOut();
-    aParentInfo->mAge             = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - parent->GetLastHeard()));
+    aParentInfo->mAge             = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::GetNow() -
+                                                                               parent->GetLastHeard()));
     aParentInfo->mAllocated       = parent->IsAllocated();
     aParentInfo->mLinkEstablished = parent->GetState() == Neighbor::kStateValid;
 

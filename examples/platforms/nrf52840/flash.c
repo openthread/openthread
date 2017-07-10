@@ -31,7 +31,7 @@
 #include <assert.h>
 
 #include <openthread/types.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <utils/flash.h>
 #include <utils/code_utils.h>
 
@@ -88,7 +88,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
     }
     else
     {
-        uint32_t startTime = otPlatAlarmGetNow();
+        uint32_t startTime = otPlatAlarmMilliGetNow();
 
         do
         {
@@ -98,7 +98,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
                 break;
             }
         }
-        while (otPlatAlarmGetNow() - startTime < aTimeout);
+        while (otPlatAlarmMilliGetNow() - startTime < aTimeout);
     }
 
     return error;

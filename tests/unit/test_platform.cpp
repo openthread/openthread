@@ -135,7 +135,7 @@ extern "C" {
     // Alarm
     //
 
-    void otPlatAlarmStop(otInstance *aInstance)
+    void otPlatAlarmMilliStop(otInstance *aInstance)
     {
         if (g_testPlatAlarmStop)
         {
@@ -147,7 +147,7 @@ extern "C" {
         }
     }
 
-    void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+    void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     {
         if (g_testPlatAlarmStartAt)
         {
@@ -160,7 +160,7 @@ extern "C" {
         }
     }
 
-    uint32_t otPlatAlarmGetNow(void)
+    uint32_t otPlatAlarmMilliGetNow(void)
     {
         if (g_testPlatAlarmGetNow)
         {

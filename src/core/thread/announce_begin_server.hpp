@@ -100,7 +100,7 @@ private:
     uint8_t mCount;
     uint8_t mChannel;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource mAnnounceBegin;
 };

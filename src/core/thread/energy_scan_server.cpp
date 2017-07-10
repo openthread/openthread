@@ -59,7 +59,7 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mCount(0),
     mActive(false),
     mScanResultsLength(0),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6(), &EnergyScanServer::HandleTimer, this),
     mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
     mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);

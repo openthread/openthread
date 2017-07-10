@@ -37,9 +37,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-micro.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/usec-alarm.h>
 
 #include "platform-config.h"
 #include "cmsis/core_cmFunc.h"
@@ -99,9 +99,6 @@ static const AlarmChannelData sChannelData[kNumTimers] =
         .mCompareInt       = NRF_RTC_INT_COMPARE1_MASK,
     }
 };
-
-static otPlatUsecAlarmHandler sUsecHandler = NULL;  ///< Handler called when usec alarm fires.
-static void *sUsecContext = NULL;                   ///< The context information passed to the usec handler callback.
 
 static void HandleOverflow(void);
 
@@ -335,7 +332,7 @@ void nrf5AlarmProcess(otInstance *aInstance)
         else
 #endif
         {
-            otPlatAlarmFired(aInstance);
+            otPlatAlarmMilliFired(aInstance);
         }
     }
 
@@ -343,16 +340,16 @@ void nrf5AlarmProcess(otInstance *aInstance)
     {
         sTimerData[kUsTimer].mFireAlarm = false;
 
-        sUsecHandler(sUsecContext);
+        otPlatAlarmMicroFired(aInstance);
     }
 }
 
-uint32_t otPlatAlarmGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     return (uint32_t)(AlarmGetCurrentTime() / US_PER_MS);
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
     uint32_t targetTime = aT0 + aDt;
@@ -360,31 +357,27 @@ void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     AlarmStartAt(targetTime, kMsTimer);
 }
 
-void otPlatAlarmStop(otInstance *aInstance)
+void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     (void)aInstance;
 
     AlarmStop(kMsTimer);
 }
 
-uint32_t otPlatUsecAlarmGetNow(void)
+uint32_t otPlatAlarmMicroGetNow(void)
 {
     return (uint32_t)AlarmGetCurrentTime();
 }
 
-void otPlatUsecAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt,
-                            otPlatUsecAlarmHandler aHandler, void *aContext)
+void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
     uint32_t targetTime = aT0 + aDt;
 
     AlarmStartAt(targetTime, kUsTimer);
-
-    sUsecHandler = aHandler;
-    sUsecContext = aContext;
 }
 
-void otPlatUsecAlarmStop(otInstance *aInstance)
+void otPlatAlarmMicroStop(otInstance *aInstance)
 {
     (void)aInstance;
 

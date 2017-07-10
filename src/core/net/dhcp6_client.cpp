@@ -59,7 +59,7 @@ namespace Dhcp6 {
 
 Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTrickleTimer(aThreadNetif.GetIp6().mTimerScheduler, &Dhcp6Client::HandleTrickleTimer, NULL, this),
+    mTrickleTimer(aThreadNetif.GetIp6(), &Dhcp6Client::HandleTrickleTimer, NULL, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mStartTime(0),
     mAddresses(NULL),
@@ -318,8 +318,8 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         }
 
         mTrickleTimer.Start(
-            Timer::SecToMsec(kTrickleTimerImin),
-            Timer::SecToMsec(kTrickleTimerImax),
+            TimerMilli::SecToMsec(kTrickleTimerImin),
+            TimerMilli::SecToMsec(kTrickleTimerImax),
             TrickleTimer::kModeNormal);
 
         mTrickleTimer.IndicateInconsistent();
@@ -345,7 +345,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
     switch (mIdentityAssociationHead->GetStatus())
     {
     case IdentityAssociation::kStatusSolicit:
-        mStartTime = otPlatAlarmGetNow();
+        mStartTime = TimerMilli::GetNow();
         mIdentityAssociationHead->SetStatus(IdentityAssociation::kStatusSoliciting);
 
     // fall through
@@ -427,7 +427,7 @@ otError Dhcp6Client::AppendElapsedTime(Message &aMessage)
     ElapsedTime option;
 
     option.Init();
-    option.SetElapsedTime(static_cast<uint16_t>(Timer::MsecToSec(otPlatAlarmGetNow() - mStartTime)));
+    option.SetElapsedTime(static_cast<uint16_t>(TimerMilli::MsecToSec(TimerMilli::GetNow() - mStartTime)));
     return aMessage.Append(&option, sizeof(option));
 }
 
