@@ -355,65 +355,21 @@ class OpenThread(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setRouterSelectionJitter() Error: " + str(e))
 
-    def __enableWhitelist(self):
-        """enable whitelist filter
+    def __setAddressfilterMode(self, mode):
+        """set address filter mode
 
         Returns:
-            True: successful to enable whitelist filter
-            False: fail to enable whitelist filter
+            True: successful to set address filter mode.
+            False: fail to set address filter mode.
         """
-        print 'call enableWhitelist'
+        print 'call setAddressFilterMode() ' +  mode
         try:
-            if self.__sendCommand('whitelist enable')[0] == 'Done':
+            cmd = 'macfilter addr ' + mode
+            if self.__sendCommand(cmd)[0] == 'Done':
                 return True
             return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("enableWhitelist() Error: " + str(e))
-
-    def __enableBlacklist(self):
-        """enable blacklist filter
-
-        Returns:
-            True: successful to enable blacklist filter
-            False: fail to enable blacklist filter
-        """
-        print 'call enableBlacklist'
-        try:
-            if self.__sendCommand('blacklist enable')[0] == 'Done':
-                return True
-            return False
-        except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("enableBlacklist() Error: " + str(e))
-
-    def __disableWhitelist(self):
-        """dsiable whitelist filter
-
-        Returns:
-            True: successful to disable whitelist filter
-            False: fail to disable whitelist filter
-        """
-        print 'call disableWhitelist'
-        try:
-            if self.__sendCommand('whitelist disable')[0] == 'Done':
-                return True
-            return False
-        except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("disableWhitelist() Error: " + str(e))
-
-    def __disableBlacklist(self):
-        """disable blacklist filter
-
-        Returns:
-            True: successful to disable blacklist filter
-            False: fail to disable blacklist filter
-        """
-        print 'call disableBlacklist'
-        try:
-            if self.__sendCommand('blacklist disable')[0] == 'Done':
-                return True
-            return False
-        except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("disableBlacklist() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger("__setAddressFilterMode() Error: " + str(e))
 
     def __startOpenThread(self):
         """start OpenThread stack
@@ -430,14 +386,14 @@ class OpenThread(IThci):
                 else:
                     self.hasActiveDatasetToCommit = False
 
-            # restore whitelist/blacklist if rejoin after reset
-            if self.isPowerDown and self.isAddressFilterEnabled:
-                if self.isWhitelistMode:
-                    if self.__enableWhitelist():
+            # restore whitelist/blacklist address filter mode if rejoin after reset
+            if self.isPowerDown:
+                if self._addressfilterMode == 'whitelist':
+                    if self.__setAddressfilterMode('whitelist'):
                         for addr in self._addressfilterSet:
                             self.addAllowMAC(addr)
-                else:
-                    if self.__enableBlacklist():
+                elif self._addressfilterMode == 'blacklist':
+                    if self.__setAddressfilterMode('blacklist'):
                         for addr in self._addressfilterSet:
                             self.addBlockedMAC(addr)
 
@@ -895,12 +851,11 @@ class OpenThread(IThci):
                 print 'block device itself'
                 return True
 
-            if not self.isAddressFilterEnabled:
-                if self.__enableBlacklist():
-                    self.isAddressFilterEnabled = True
-                    self.isWhitelistMode = False
+            if self._addressfilterMode != 'blacklist':
+                if self.__setAddressfilterMode('blacklist'):
+                    self._addressfilterMode = 'blacklist'
 
-            cmd = 'blacklist add %s' % macAddr
+            cmd = 'macfilter addr add %s' % macAddr
             print cmd
             ret = self.__sendCommand(cmd)[0] == 'Done'
 
@@ -931,12 +886,11 @@ class OpenThread(IThci):
             macAddr = self.__convertLongToString(xEUI)
 
         try:
-            if not self.isAddressFilterEnabled:
-                if self.__enableWhitelist():
-                    self.isAddressFilterEnabled = True
-                    self.isWhitelistMode = True
+            if self._addressfilterMode != 'whitelist':
+                if self.__setAddressfilterMode('whitelist'):
+                    self._addressfilterMode = 'whitelist'
 
-            cmd = 'whitelist add %s' % macAddr
+            cmd = 'macfilter addr add %s' % macAddr
             print cmd
             ret = self.__sendCommand(cmd)[0] == 'Done'
 
@@ -964,10 +918,14 @@ class OpenThread(IThci):
             for addr in self._addressfilterSet:
                 print addr
 
-            if self.__disableBlacklist():
-                if self.__sendCommand('blacklist clear')[0] == 'Done':
+
+            # disable blacklist
+            if self.__setAddressfilterMode('disable'):
+                self._addressfilterMode = 'disable'
+                # clear ops
+                cmd = 'macfilter addr clear'
+                if self.__sendCommand(cmd)[0] == 'Done':
                     self._addressfilterSet.clear()
-                    self.isAddressFilterEnabled = False
                     return True
             return False
         except Exception, e:
@@ -988,10 +946,13 @@ class OpenThread(IThci):
             for addr in self._addressfilterSet:
                 print addr
 
-            if self.__disableWhitelist():
-                if self.__sendCommand('whitelist clear')[0] == 'Done':
+            # disable whitelist
+            if self.__setAddressfilterMode('disable'):
+                self._addressfilterMode = 'disable'
+                # clear ops
+                cmd = 'macfilter addr clear'
+                if self.__sendCommand(cmd)[0] == 'Done':
                     self._addressfilterSet.clear()
-                    self.isAddressFilterEnabled = False
                     return True
             return False
         except Exception, e:
@@ -1287,8 +1248,7 @@ class OpenThread(IThci):
         self.joinCommissionedStatus = self.joinStatus['notstart']
         self.networkDataRequirement = ''      # indicate Thread device requests full or stable network data
         self.isPowerDown = False              # indicate if Thread device experiences a power down event
-        self.isAddressFilterEnabled = False   # indicate if AddressFilter is enabled or not
-        self.isWhitelistMode = False          # indicate if AddressFilter in whitelist or blacklist mode if enabled
+        self._addressfilterMode = 'disable'   # indicate AddressFilter mode ['disable', 'whitelist', 'blacklist']
         self._addressfilterSet = set()        # cache filter entries
         self.isActiveCommissioner = False     # indicate if Thread device is an active commissioner
         self._lines = None                    # buffered lines read from device
@@ -1370,7 +1330,7 @@ class OpenThread(IThci):
                    address64 = address64.zfill(16)
                    print address64
 
-            cmd = 'rssfilter add-lqi %s %s' % (address64, str(LinkQuality))
+            cmd = 'macfilter rss add-lqi %s %s' % (address64, str(LinkQuality))
             print cmd
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
@@ -1394,7 +1354,7 @@ class OpenThread(IThci):
         print '%s call setOutBoundLinkQuality' % self.port
         print LinkQuality
         try:
-            cmd = 'rssfilter set-lqi %s' % str(LinkQuality)
+            cmd = 'macfilter rss add-lqi * %s' % str(LinkQuality)
             print cmd
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:

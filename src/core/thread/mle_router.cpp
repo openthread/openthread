@@ -4437,7 +4437,7 @@ void MleRouter::FillRouteTlv(RouteTlv &tlv)
             tlv.SetRouteCost(routeCount, cost);
             tlv.SetLinkQualityOut(routeCount, mRouters[i].GetLinkQualityOut());
             tlv.SetLinkQualityIn(routeCount, mRouters[i].GetLinkInfo().GetLinkQuality());
-       }
+        }
 
         routeCount++;
     }
