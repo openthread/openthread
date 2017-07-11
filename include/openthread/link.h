@@ -314,7 +314,6 @@ OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
  *
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
@@ -337,7 +336,6 @@ OTAPI otMacFilterAddressMode OTCALL otLinkFilterGetAddressMode(otInstance *aInst
  *
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
@@ -362,7 +360,6 @@ OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilt
  *
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
@@ -373,32 +370,6 @@ OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilt
  *
  */
 OTAPI otError OTCALL otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
-
-/**
- * This method adds an Extended Address to MAC filter and sets the RssIn for all the received messages from the
- * Extended Address.
- *
- * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aExtAddress  A reference to the Extended Address.
- * @param[in]  aRss         The received signal strength to set.
- *
- * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to MAC filter and set @p aRss for @p aExtAddress.
- * @retval OT_ERROR_INVALID_ARGS   If @p aExtAddress is NULL.
- * @retval OT_ERROR_NO_BUFS        No available entry exists.
- *
- * @sa otLinkFilterGetAddressMode
- * @sa otLinkFilterSetAddressMode
- * @sa otLinkFilterAddAddress
- * @sa otLinkFilterRemoveAddress
- * @sa otLinkFilterClearAddresses
- * @sa otLinkFilterGetNextAddress
- * @sa otLinkFilterAddRssIn
- * @sa otLinkFilterRemoveRssIn
- * @sa otLinkFilterClearRssIn
- * @sa otLinkFilterGetNextRssIn
- *
- */
-OTAPI otError OTCALL otLinkFilterAddAddressRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
  * This method removes an Extended Address from MAC filter.
@@ -413,7 +384,6 @@ OTAPI otError OTCALL otLinkFilterAddAddressRssIn(otInstance *aInstance, const ot
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
  * @sa otLinkFilterAddRssIn
@@ -432,7 +402,6 @@ OTAPI otError OTCALL otLinkFilterRemoveAddress(otInstance *aInstance, const otEx
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterGetNextAddress
  * @sa otLinkFilterAddRssIn
@@ -458,7 +427,6 @@ OTAPI void OTCALL otLinkFilterClearAddresses(otInstance *aInstance);
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterAddRssIn
@@ -486,7 +454,6 @@ OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *aInstance,
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
@@ -495,7 +462,7 @@ OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *aInstance,
  * @sa otLinkFilterGetNextRssIn
  *
  */
-otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
+OTAPI otError OTCALL otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
  * This method removes the received signal strength setting for the received messages from the Extended Address or
@@ -512,7 +479,6 @@ otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
@@ -521,7 +487,7 @@ otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
  * @sa otLinkFilterGetNextRssIn
  *
  */
-otError otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
+OTAPI otError OTCALL otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method clears all the received signal strength settings.
@@ -531,7 +497,6 @@ otError otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtA
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
@@ -540,7 +505,7 @@ otError otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtA
  * @sa otLinkFilterGetNextRssIn
  *
  */
-void otLinkFilterClearRssIn(otInstance *aInstance);
+OTAPI void OTCALL otLinkFilterClearRssIn(otInstance *aInstance);
 
 /**
  * This method gets an in-use RssIn filter entry.
@@ -558,7 +523,6 @@ void otLinkFilterClearRssIn(otInstance *aInstance);
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
  * @sa otLinkFilterAddAddress
- * @sa otLinkFilterAddAddressRssIn
  * @sa otLinkFilterRemoveAddress
  * @sa otLinkFilterClearAddresses
  * @sa otLinkFilterGetNextAddress
@@ -567,8 +531,8 @@ void otLinkFilterClearRssIn(otInstance *aInstance);
  * @sa otLinkFilterClearRssIn
  *
  */
-otError otLinkFilterGetNextRssIn(otInstance *aInstance,
-                                 otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
+OTAPI otError OTCALL otLinkFilterGetNextRssIn(otInstance *aInstance,
+                                              otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
  * This method converts received signal strength to link quality.

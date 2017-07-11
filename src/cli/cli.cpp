@@ -151,7 +151,7 @@ const struct Command Interpreter::sCommands[] =
     { "leaderweight", &Interpreter::ProcessLeaderWeight },
 #endif
 #if OPENTHREAD_ENABLE_MAC_FILTER
-    { "macfilter", &Interpreter::ProcessMacFilter},
+    { "macfilter", &Interpreter::ProcessMacFilter },
 #endif
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
@@ -2878,7 +2878,7 @@ void Interpreter::ProcessMacFilter(int argc, char *argv[])
     AppendResult(error);
 }
 
-void Interpreter::PrintMacFilter()
+void Interpreter::PrintMacFilter(void)
 {
     otMacFilterEntry entry;
     otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
@@ -2912,7 +2912,7 @@ void Interpreter::PrintMacFilter()
 
             mServer->OutputFormat(" : rss %d", entry.mRssIn);
 
-#endif   // OTDLL
+#endif  // OTDLL
         }
 
         mServer->OutputFormat("\r\n");
@@ -3019,17 +3019,17 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
             VerifyOrExit(Hex2Bin(argv[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
                          error = OT_ERROR_PARSE);
 
+            error = otLinkFilterAddAddress(mInstance, &extAddr);
+
+            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
+
             if (argc > 2)
             {
                 int8_t rss = 0;
                 VerifyOrExit(argc == 3, error = OT_ERROR_INVALID_ARGS);
                 SuccessOrExit(error = ParseLong(argv[2], value));
                 rss = static_cast<int8_t>(value);
-                SuccessOrExit(error = otLinkFilterAddAddressRssIn(mInstance, &extAddr, rss));
-            }
-            else
-            {
-                SuccessOrExit(error = otLinkFilterAddAddress(mInstance, &extAddr));
+                SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, &extAddr, rss));
             }
         }
         else if (strcmp(argv[0], "remove") == 0)

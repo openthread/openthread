@@ -128,24 +128,6 @@ exit:
     return error;
 }
 
-otError Filter::AddAddressRssIn(const ExtAddress &aExtAddress, int8_t aRss)
-{
-    otError error = OT_ERROR_NONE;
-    Entry *entry = FindEntry(aExtAddress);
-
-    if (entry == NULL)
-    {
-        VerifyOrExit((entry = FindAvailEntry()) != NULL, error = OT_ERROR_NO_BUFS);
-        memcpy(&entry->mExtAddress, &aExtAddress, OT_EXT_ADDRESS_SIZE);
-    }
-
-    entry->mFiltered = true;
-    entry->mRssIn = aRss;
-
-exit:
-    return error;
-}
-
 otError Filter::RemoveAddress(const ExtAddress &aExtAddress)
 {
     otError error = OT_ERROR_NONE;
@@ -194,7 +176,7 @@ otError Filter::AddRssIn(const ExtAddress *aExtAddress, int8_t aRss)
 {
     otError error = OT_ERROR_NONE;
 
-    // set the default RssIn for all received messages
+    // set the default RssIn for all received messages.
     if (aExtAddress == NULL)
     {
         mRssIn = aRss;
@@ -261,7 +243,7 @@ otError Filter::GetNextRssIn(otMacFilterIterator &aIterator, Entry &aEntry)
         }
     }
 
-    // return default rssin setting if no more rssin filter entry
+    // return default rssin setting if no more rssin filter entry.
     if (i == GetMaxEntries() && mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
     {
         memset(&aEntry.mExtAddress, 0xff, OT_EXT_ADDRESS_SIZE);
@@ -280,10 +262,10 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
 
     otMacFilterEntry *entry = FindEntry(aExtAddress);
 
-    // assign the default RssIn setting for all receiving messages first
+    // assign the default RssIn setting for all receiving messages first.
     aRss = mRssIn;
 
-    // check AddressFilter
+    // check AddressFilter.
     if (mAddressMode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST)
     {
         VerifyOrExit(entry != NULL && entry->mFiltered, error = OT_ERROR_WHITELIST_FILTERED);
@@ -293,7 +275,8 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
         VerifyOrExit(entry == NULL || !entry->mFiltered, error = OT_ERROR_BLACKLIST_FILTERED);
     }
 
-    if (entry)
+    // not override the default RssIn setting if no specific RssIn on the Extended Address.
+    if (entry != NULL && entry->mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
     {
         aRss = entry->mRssIn;
     }

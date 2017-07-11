@@ -168,20 +168,6 @@ exit:
     return error;
 }
 
-otError otLinkFilterAddAddressRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
-
-    error = aInstance->mThreadNetif.GetMac().GetFilter().AddAddressRssIn(
-                *static_cast<const Mac::ExtAddress *>(aExtAddress), aRss);
-
-exit:
-    return error;
-}
-
-
 otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;

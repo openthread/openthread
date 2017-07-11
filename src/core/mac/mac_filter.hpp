@@ -112,20 +112,6 @@ public:
     otError AddAddress(const ExtAddress &aExtAddress);
 
     /**
-     * This method adds an Extended Address to address filter and sets the received signal strength for all
-     * received messages from the Extended Address.
-     *
-     * @param[in]  aExtAddress  A reference to the Extended Address.
-     * @param[in]  aRss         The received signal strength to set.
-     *
-     * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to the filter and set @p aRss
-     *                                 for @p aExtAddress.
-     * @retval OT_ERROR_NO_BUFS        No available entry exists.
-     *
-     */
-    otError AddAddressRssIn(const ExtAddress &aExtAddress, int8_t aRss);
-
-    /**
      * This method removes an Extended Address from the filter.
      *
      * @param[in]  aExtAddress  A reference to the Extended Address.

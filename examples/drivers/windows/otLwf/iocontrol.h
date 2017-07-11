@@ -168,7 +168,7 @@ DECL_IOCTL_FUNC_WITH_TUN(otReleaseRouterId);
 DECL_IOCTL_FUNC_WITH_TUN2(otMacWhitelistEnabled);
 DECL_IOCTL_FUNC_WITH_TUN(otAddMacWhitelist);
 DECL_IOCTL_FUNC_WITH_TUN(otRemoveMacWhitelist);
-DECL_IOCTL_FUNC(otNextMacWhitelistEntry);
+DECL_IOCTL_FUNC(otNextMacWhitelist);
 DECL_IOCTL_FUNC_WITH_TUN(otClearMacWhitelist);
 DECL_IOCTL_FUNC_WITH_TUN2(otDeviceRole);
 DECL_IOCTL_FUNC(otChildInfoById);
@@ -186,7 +186,7 @@ DECL_IOCTL_FUNC_WITH_TUN2(otStableNetworkDataVersion);
 DECL_IOCTL_FUNC(otMacBlacklistEnabled);
 DECL_IOCTL_FUNC(otAddMacBlacklist);
 DECL_IOCTL_FUNC(otRemoveMacBlacklist);
-DECL_IOCTL_FUNC(otNextMacBlacklistEntry);
+DECL_IOCTL_FUNC(otNextMacBlacklist);
 DECL_IOCTL_FUNC(otClearMacBlacklist);
 DECL_IOCTL_FUNC(otMaxTransmitPower);
 DECL_IOCTL_FUNC(otNextOnMeshPrefix);
@@ -227,5 +227,9 @@ DECL_IOCTL_FUNC(otThreadAutoStart);
 DECL_IOCTL_FUNC(otThreadPreferredRouterId);
 DECL_IOCTL_FUNC_WITH_TUN2(otPSKc);
 DECL_IOCTL_FUNC(otParentPriority);
+DECL_IOCTL_FUNC_WITH_TUN(otAddMacFixedRss);
+DECL_IOCTL_FUNC_WITH_TUN(otRemoveMacFixedRss);
+DECL_IOCTL_FUNC(otNextMacFixedRss);
+DECL_IOCTL_FUNC_WITH_TUN(otClearMacFixedRss);
 
 #endif // _IOCONTROL_H

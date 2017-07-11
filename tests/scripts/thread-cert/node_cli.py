@@ -37,13 +37,11 @@ class otCli:
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
-        self.filter_prefix = 'macfilter addr'
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
         elif self.node_type == 'ncp-sim':
             self.__init_ncp_sim(nodeid)
-            self.filter_prefix = 'macfilter-addr'
         else:
             self.__init_sim(nodeid)
 
@@ -152,22 +150,22 @@ class otCli:
         self.pexpect.expect('Done')
 
     def clear_whitelist(self):
-        cmd = self.filter_prefix + ' clear'
+        cmd = 'macfilter addr clear'
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def enable_whitelist(self):
-        cmd = self.filter_prefix + ' whitelist'
+        cmd = 'macfilter addr whitelist'
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def disable_whitelist(self):
-        cmd = self.filter_prefix + ' disable'
+        cmd = 'macfilter addr disable'
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def add_whitelist(self, addr, rssi=None):
-        cmd = self.filter_prefix + ' add ' + addr
+        cmd = 'macfilter addr add ' + addr
 
         if rssi != None:
             cmd += ' ' + str(rssi)
@@ -176,7 +174,7 @@ class otCli:
         self.pexpect.expect('Done')
 
     def remove_whitelist(self, addr):
-        cmd = self.filter_prefix + ' remove ' + addr
+        cmd = 'macfilter addr remove ' + addr
         self.send_command(cmd)
         self.pexpect.expect('Done')
 

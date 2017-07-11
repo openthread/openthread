@@ -1104,16 +1104,20 @@ OTNODEAPI int32_t OTCALL otNodeAddWhitelist(otNode* aNode,
     if (Hex2Bin(aExtAddr, extAddress.m8, OT_EXT_ADDRESS_SIZE) != OT_EXT_ADDRESS_SIZE)
         return OT_ERROR_PARSE;
 
-    if (aRssi == OT_MAC_FILTER_FIXED_RSS_DISABLED)
+    printf("%d: whitelist add %s", aNode->mId, aExtAddr);
+
+    error = otLinkFilterAddAddress(aNode->mInstance, &extAddress);
+
+    if (error == OT_ERROR_NONE || error == OT_ERROR_ALREADY)
     {
-        printf("%d: whitelist add %s\r\n", aNode->mId, aExtAddr);
-        error = otLinkFilterAddAddress(aNode->mInstance, &extAddress);
+        if (aRssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
+        {
+            error = otLinkFilterAddRssIn(aNode->mInstance, &extAddress, aRssi);
+            printf(" %d", aRssi);
+        }
     }
-    else
-    {
-        printf("%d: whitelist add %s %d\r\n", aNode->mId, aExtAddr, aRssi);
-        error = otLinkFilterAddAddressRssIn(aNode->mInstance, &extAddress, aRssi);
-    }
+
+    printf("\r\n");
 
     otLogFuncExit();
     return error;

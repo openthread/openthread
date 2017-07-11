@@ -2924,17 +2924,18 @@ otLinkFilterGetNextAddress(
     }
     else
     {
-        // same effect to get an in-use address filter entry with IOCTL_OTLWF_OT_NEXT_MAC_WHITELIST_ENTRY or
-        // IOCTL_OTLWF_OT_NEXT_MAC_BLACKLIST_ENTRY.
-        return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_NEXT_MAC_WHITELIST_ENTRY, aIterator, aEntry));
+        // same effect to get an in-use address filter entry with IOCTL_OTLWF_OT_NEXT_MAC_WHITELIST or
+        // IOCTL_OTLWF_OT_NEXT_MAC_BLACKLIST.
+        return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_NEXT_MAC_WHITELIST, aIterator, aEntry));
     }
     return OT_ERROR_NOT_FOUND;
 }
 
+
 OTAPI
 otError
 OTCALL
-otLinkFilterAddAddressRssIn(
+otLinkFilterAddRssIn(
     _In_ otInstance *aInstance,
     const otExtAddress *aExtAddr,
     int8_t aRss
@@ -2942,17 +2943,95 @@ otLinkFilterAddAddressRssIn(
 {
     otError error = OT_ERROR_NONE;
 
-    if (aInstance == nullptr || aExtAddr == nullptr)
+    if (aInstance == nullptr)
     {
         error = OT_ERROR_INVALID_ARGS;
     }
     else
     {
-        PackedBuffer3<GUID,otExtAddress,int8_t> Buffer(aInstance->InterfaceGuid, *aExtAddr, aRss);
-        error = DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_ADD_MAC_WHITELIST,
-                    &Buffer, sizeof(Buffer), nullptr, 0));
+        if (aExtAddr == nullptr)
+        {
+            PackedBuffer2<GUID,int8_t> Buffer(aInstance->InterfaceGuid, aRss);
+
+            error = DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_ADD_MAC_FIXED_RSS,
+                        &Buffer, sizeof(Buffer), nullptr, 0));
+        }
+        else
+        {
+            PackedBuffer3<GUID,otExtAddress,int8_t> Buffer(aInstance->InterfaceGuid, *aExtAddr, aRss);
+
+            error = DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_ADD_MAC_FIXED_RSS,
+                        &Buffer, sizeof(Buffer), nullptr, 0));
+        }
+
     }
     return error;
+}
+
+OTAPI
+otError
+OTCALL
+otLinkFilterRemoveRssIn(
+    _In_ otInstance *aInstance,
+    const otExtAddress *aExtAddr
+    )
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aInstance == nullptr)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        if (aExtAddr == nullptr)
+        {
+            error = DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_REMOVE_MAC_FIXED_RSS,
+                        nullptr, 0, nullptr, 0));
+        }
+        else
+        {
+            PackedBuffer2<GUID,otExtAddress> Buffer(aInstance->InterfaceGuid, *aExtAddr);
+            error = DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_REMOVE_MAC_FIXED_RSS,
+                        &Buffer, sizeof(Buffer), nullptr, 0));
+        }
+    }
+    return error;
+}
+
+OTAPI
+void
+OTCALL
+otLinkFilterClearRssIn(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance)
+    {
+        (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_CLEAR_MAC_FIXED_RSS);
+    }
+}
+
+OTAPI
+otError
+OTCALL
+otLinkFilterGetNextRssIn(
+    _In_ otInstance *aInstance,
+    _Inout_ otMacFilterIterator *aIterator,
+    _Out_ otMacFilterEntry *aEntry
+    )
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aInstance == nullptr || aIterator == nullptr|| aEntry == nullptr)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_NEXT_MAC_FIXED_RSS, aIterator, aEntry));
+    }
+    return OT_ERROR_NOT_FOUND;
 }
 
 OTAPI 

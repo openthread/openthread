@@ -171,6 +171,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(MAC_WHITELIST_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_BLACKLIST_ENABLED),
+    NCP_GET_PROP_HANDLER_ENTRY(MAC_FIXED_RSS),
 #endif
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_MODE),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_CHILD_TIMEOUT),
@@ -307,6 +308,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(MAC_WHITELIST_ENABLED),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_BLACKLIST_ENABLED),
+    NCP_SET_PROP_HANDLER_ENTRY(MAC_FIXED_RSS),
 #endif
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_ENABLED),
@@ -381,6 +383,7 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
 #if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_WHITELIST),
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
+    NCP_INSERT_PROP_HANDLER_ENTRY(MAC_FIXED_RSS),
 #endif
 };
 
@@ -401,6 +404,7 @@ const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[]
 #if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_WHITELIST),
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_BLACKLIST),
+    NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_FIXED_RSS),
 #endif
 #if OPENTHREAD_FTD
     NCP_REMOVE_PROP_HANDLER_ENTRY(THREAD_ACTIVE_ROUTER_IDS),
@@ -4066,6 +4070,43 @@ otError NcpBase::GetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t aHeader, spine
            );
 }
 
+otError NcpBase::GetPropertyHandler_MAC_FIXED_RSS(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    otMacFilterEntry entry;
+    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
+    otError error = OT_ERROR_NONE;
+
+    mDisableStreamWrite = true;
+
+    SuccessOrExit(error = OutboundFrameBegin());
+    SuccessOrExit(
+        error = OutboundFrameFeedPacked(
+                    SPINEL_DATATYPE_COMMAND_PROP_S,
+                    aHeader,
+                    SPINEL_CMD_PROP_VALUE_IS,
+                    aKey
+                ));
+
+    while (otLinkFilterGetNextRssIn(mInstance, &iterator, &entry) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(
+                error = OutboundFrameFeedPacked(
+                    SPINEL_DATATYPE_STRUCT_S(
+                        SPINEL_DATATYPE_EUI64_S   // Extended address
+                        SPINEL_DATATYPE_INT8_S    // Rss
+                        ),
+                    entry.mExtAddress.m8,
+                    entry.mRssIn
+                    ));
+    }
+
+    SuccessOrExit(error = OutboundFrameSend());
+
+exit:
+    mDisableStreamWrite = false;
+    return error;
+}
+
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
 #if OPENTHREAD_FTD
@@ -5723,16 +5764,14 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_prop_k
 
         VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
 
-        if (rss == OT_MAC_FILTER_FIXED_RSS_DISABLED)
-        {
-            error = otLinkFilterAddAddress(mInstance, extAddress);
-        }
-        else
-        {
-            error = otLinkFilterAddAddressRssIn(mInstance, extAddress, rss);
-        }
+        error = otLinkFilterAddAddress(mInstance, extAddress);
 
         VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
+
+        if (rss != OT_MAC_FILTER_FIXED_RSS_DISABLED)
+        {
+            SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, extAddress, rss));
+        }
 
         aValuePtr += parsedLength;
         aValueLen -= parsedLength;
@@ -5859,6 +5898,70 @@ otError NcpBase::SetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t aHeader, spine
 
 exit:
     return SendSetPropertyResponse(aHeader, aKey, error);
+}
+
+otError NcpBase::SetPropertyHandler_MAC_FIXED_RSS(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
+                                                  uint16_t aValueLen)
+{
+    bool reportAsync;
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+
+    // First, clear the address filter entries.
+    otLinkFilterClearRssIn(mInstance);
+
+    while (aValueLen > 0)
+    {
+        otExtAddress *extAddress;
+        int8_t rss;
+
+        parsedLength = spinel_datatype_unpack(
+                aValuePtr,
+                aValueLen,
+                SPINEL_DATATYPE_STRUCT_S(
+                    SPINEL_DATATYPE_EUI64_S
+                    SPINEL_DATATYPE_INT8_S
+                    ),
+                &extAddress,
+                &rss
+                );
+
+        if (parsedLength < 0)
+        {
+            extAddress = NULL;
+            parsedLength = spinel_datatype_unpack(
+                    aValuePtr,
+                    aValueLen,
+                    SPINEL_DATATYPE_STRUCT_S(
+                        SPINEL_DATATYPE_INT8_S
+                        ),
+                    &rss
+                    );
+        }
+
+        VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+
+        SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, extAddress, rss));
+
+        aValuePtr += parsedLength;
+        aValueLen -= parsedLength;
+    }
+
+exit:
+    // If we had an error, we may have actually changed
+    // the state of the RssIn filter---so we need to report
+    // those incomplete changes via an asynchronous
+    // change event.
+    reportAsync = (error != OT_ERROR_NONE);
+
+    error = SendSetPropertyResponse(aHeader, aKey, error);
+
+    if (reportAsync)
+    {
+        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, aKey);
+    }
+
+    return error;
 }
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
@@ -6878,16 +6981,15 @@ otError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_pro
 
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
-    if (rss == OT_MAC_FILTER_FIXED_RSS_DISABLED)
-    {
-        error = otLinkFilterAddAddress(mInstance, extAddress);
-    }
-    else
-    {
-        error = otLinkFilterAddAddressRssIn(mInstance, extAddress, rss);
-    }
+    error = otLinkFilterAddAddress(mInstance, extAddress);
 
     VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, spinelError = ThreadErrorToSpinelStatus(error));
+
+    if (rss != OT_MAC_FILTER_FIXED_RSS_DISABLED)
+    {
+        error = otLinkFilterAddRssIn(mInstance, extAddress, rss);
+        VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+    }
 
     error = SendPropertyUpdate(
                 aHeader,
@@ -6927,6 +7029,59 @@ otError NcpBase::InsertPropertyHandler_MAC_BLACKLIST(uint8_t aHeader, spinel_pro
     error = otLinkFilterAddAddress(mInstance, extAddress);
 
     VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_INSERTED,
+                aKey,
+                aValuePtr,
+                aValueLen
+            );
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
+
+otError NcpBase::InsertPropertyHandler_MAC_FIXED_RSS(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                     const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    otExtAddress *extAddress = NULL;
+    int8_t rss = OT_MAC_FILTER_FIXED_RSS_DISABLED;
+
+    if (aValueLen > sizeof(int8_t))
+    {
+        parsedLength = spinel_datatype_unpack(
+                           aValuePtr,
+                           aValueLen,
+                           SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_INT8_S,
+                           &extAddress,
+                           &rss
+                       );
+    }
+    else
+    {
+        parsedLength = spinel_datatype_unpack(
+                           aValuePtr,
+                           aValueLen,
+                           SPINEL_DATATYPE_INT8_S,
+                           &rss
+                       );
+    }
+
+    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+
+    error = otLinkFilterAddRssIn(mInstance, extAddress, rss);
+
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
                 aHeader,
@@ -7371,6 +7526,48 @@ otError NcpBase::RemovePropertyHandler_MAC_BLACKLIST(uint8_t aHeader, spinel_pro
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otLinkFilterRemoveAddress(mInstance, extAddress);
+
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_REMOVED,
+                aKey,
+                aValuePtr,
+                aValueLen
+            );
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
+
+otError NcpBase::RemovePropertyHandler_MAC_FIXED_RSS(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                     const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    otExtAddress *extAddress = NULL;
+
+    if (aValueLen > 0)
+    {
+        parsedLength = spinel_datatype_unpack(
+                aValuePtr,
+                aValueLen,
+                SPINEL_DATATYPE_EUI64_S,
+                &extAddress
+                );
+
+        VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    error = otLinkFilterRemoveRssIn(mInstance, extAddress);
 
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
