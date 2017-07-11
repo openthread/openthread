@@ -647,6 +647,22 @@ public:
      */
     bool RadioSupportsRetries(void);
 
+    /**
+     * This method returns the amount of time the radio has spent in Tx mode.
+     *
+     * @returns  A pointer to the total Tx time.
+     *
+     */
+    const uint32_t *GetRadioTxTotalTime(void) { return &mTxTotal; }
+
+    /**
+     * This method returns the amount of time the radio has spent in Rx mode.
+     *
+     * @returns  A pointer to the total Rx time.
+     *
+     */
+    const uint32_t *GetRadioRxTotalTime(void) { return &mRxTotal; }
+
 private:
     enum ScanType
     {
@@ -756,6 +772,20 @@ private:
     bool mDelaySleep;
 #endif
     bool mWaitingForData;
+
+    uint32_t mRxTotal;
+    uint32_t mTxTotal;
+    uint32_t mLastChange;
+
+    enum RadioState
+    {
+        kRadioStateUnknown,
+        kRadioStateSleep,
+        kRadioStateRx,
+        kRadioStateTx
+    };
+
+    RadioState mRadioState;
 };
 
 /**

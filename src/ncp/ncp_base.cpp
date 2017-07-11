@@ -261,6 +261,9 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY_METHOD(CNTR_IP_TX_FAILURE,       IP_CNTR),
     NCP_GET_PROP_HANDLER_ENTRY_METHOD(CNTR_IP_RX_FAILURE,       IP_CNTR),
 
+    NCP_GET_PROP_HANDLER_ENTRY(TX_TOTAL_TIME),
+    NCP_GET_PROP_HANDLER_ENTRY(RX_TOTAL_TIME),
+
     NCP_GET_PROP_HANDLER_ENTRY(MSG_BUFFER_COUNTERS),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_ASSERT),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_NCP_LOG_LEVEL),
@@ -4257,6 +4260,24 @@ otError NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t aHeader, spin
            );
 }
 #endif // OPENTHREAD_ENABLE_LEGACY
+
+otError NcpBase::GetPropertyHandler_TX_TOTAL_TIME(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    return SendPropertyUpdate(aHeader,
+                              SPINEL_CMD_PROP_VALUE_IS,
+                              aKey,
+                              SPINEL_DATATYPE_UINT32_S,
+                              *otThreadGetTxTotalTime(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_RX_TOTAL_TIME(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    return SendPropertyUpdate(aHeader,
+                              SPINEL_CMD_PROP_VALUE_IS,
+                              aKey,
+                              SPINEL_DATATYPE_UINT32_S,
+                              *otThreadGetRxTotalTime(mInstance));
+}
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Setters

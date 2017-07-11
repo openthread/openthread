@@ -1028,6 +1028,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_JAM_DETECT_HISTORY_BITMAP";
         break;
 
+    case SPINEL_PROP_TX_TOTAL_TIME:
+        ret = "PROP_TX_TOTAL_TIME";
+        break;
+
+    case SPINEL_PROP_RX_TOTAL_TIME:
+        ret = "PROP_RX_TOTAL_TIME";
+        break;
+
     case SPINEL_PROP_MAC_SCAN_STATE:
         ret = "PROP_MAC_SCAN_STATE";
         break;

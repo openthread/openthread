@@ -46,6 +46,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/logging.hpp"
+#include "common/timer.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
@@ -156,6 +157,11 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     SetShortAddress(mShortAddress);
 
     otPlatRadioEnable(GetInstance());
+
+    mRxTotal    = 0;
+    mTxTotal    = 0;
+    mLastChange = 0;
+    mState      = kRadioStateUnknown;
 }
 
 otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -1063,6 +1069,9 @@ exit:
 
 otError Mac::RadioTransmit(Frame *aSendFrame)
 {
+    uint32_t now;
+    otError err;
+
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
 
     if (!mRxOnWhenIdle)
@@ -1076,11 +1085,31 @@ otError Mac::RadioTransmit(Frame *aSendFrame)
 
 #endif
     // Transmit packet
-    return otPlatRadioTransmit(GetInstance(), static_cast<otRadioFrame *>(aSendFrame));
+    err = otPlatRadioTransmit(GetInstance(), static_cast<otRadioFrame *>(aSendFrame));
+    VerifyOrExit(err == OT_ERROR_NONE);
+
+    if (mRadioState != kRadioStateTx)
+    {
+        now = TimerMilli::GetNow();
+
+        if (mRadioState == kRadioStateRx)
+        {
+            mRxTotal += now - mLastChange;
+        }
+
+        mLastChange = now;
+        mRadioState = kRadioStateTx;
+    }
+
+exit:
+    return err;
 }
 
 otError Mac::RadioReceive(uint8_t aChannel)
 {
+    uint32_t now;
+    otError err;
+
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
 
     if (!mRxOnWhenIdle)
@@ -1091,11 +1120,31 @@ otError Mac::RadioReceive(uint8_t aChannel)
 
 #endif
     // Receive
-    return otPlatRadioReceive(GetInstance(), aChannel);
+    err = otPlatRadioReceive(GetInstance(), aChannel);
+    VerifyOrExit(err == OT_ERROR_NONE);
+
+    if (mRadioState != kRadioStateRx)
+    {
+        now = TimerMilli::GetNow();
+
+        if (mRadioState == kRadioStateTx)
+        {
+            mTxTotal += now - mLastChange;
+        }
+
+        mLastChange = now;
+        mRadioState = kRadioStateRx;
+    }
+
+exit:
+    return err;
 }
 
 void Mac::RadioSleep(void)
 {
+    uint32_t now;
+    otError err;
+
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
 
     if (mDelaySleep)
@@ -1106,8 +1155,25 @@ void Mac::RadioSleep(void)
     else
 #endif
     {
-        otPlatRadioSleep(GetInstance());
+        err = otPlatRadioSleep(GetInstance());
+        VerifyOrExit(err == OT_ERROR_NONE);
     }
+
+    if (mRadioState != kRadioStateSleep)
+    {
+        now = TimerMilli::GetNow();
+
+        if (mRadioState == kRadioStateRx)
+        {
+            mRxTotal += now - mLastChange;
+        }
+
+        mLastChange = now;
+        mRadioState = kRadioStateSleep;
+    }
+
+exit:
+    return;
 }
 
 void Mac::HandleMacTimer(Timer &aTimer)

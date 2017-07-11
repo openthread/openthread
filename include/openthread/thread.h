@@ -544,6 +544,24 @@ OTAPI otError OTCALL otThreadSendDiagnosticReset(otInstance *aInstance, const ot
 OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
 
 /**
+ * Get the total amount of time spent in Tx mode.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Tx total time in ms.
+ */
+OTAPI const uint32_t *OTCALL otThreadGetTxTotalTime(otInstance *aInstance);
+
+/**
+ * Get the total amount of time spent in Rx mode.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Rx total time in ms.
+ */
+OTAPI const uint32_t *OTCALL otThreadGetRxTotalTime(otInstance *aInstance);
+
+/**
  * @}
  *
  */
