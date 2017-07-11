@@ -237,6 +237,79 @@ void MeshForwarder::UpdateIndirectMessages(void)
     }
 }
 
+void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
+{
+    ThreadNetif &netif = GetNetif();
+    Message *nextMessage;
+
+    for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
+    {
+        uint8_t childIndex = netif.GetMle().GetChildIndex(aChild);
+
+        nextMessage = message->GetNext();
+
+        if ((aSubType != Message::kSubTypeNone) && (aSubType != message->GetSubType()))
+        {
+            continue;
+        }
+
+        if (message->GetChildMask(childIndex))
+        {
+            message->ClearChildMask(childIndex);
+            mSourceMatchController.DecrementMessageCount(aChild);
+        }
+        else
+        {
+            switch (message->GetType())
+            {
+            case Message::kTypeIp6:
+            {
+                Ip6::Header ip6header;
+
+                IgnoreReturnValue(message->Read(0, sizeof(ip6header), &ip6header));
+
+                if (&aChild == static_cast<Child *>(netif.GetMle().GetNeighbor(ip6header.GetDestination())))
+                {
+                    message->ClearDirectTransmission();
+                }
+
+                break;
+            }
+
+            case Message::kType6lowpan:
+            {
+                Lowpan::MeshHeader meshHeader;
+
+                IgnoreReturnValue(meshHeader.Init(*message));
+
+                if (&aChild == static_cast<Child *>(netif.GetMle().GetNeighbor(meshHeader.GetDestination())))
+                {
+                    message->ClearDirectTransmission();
+                }
+
+                break;
+            }
+
+            default:
+            {
+                break;
+            }
+            }
+        }
+
+        if (!message->IsChildPending() && !message->GetDirectTransmission())
+        {
+            if (mSendMessage == message)
+            {
+                mSendMessage = NULL;
+            }
+
+            mSendQueue.Dequeue(*message);
+            message->Free();
+        }
+    }
+}
+
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
     GetOwner(aTasklet).ScheduleTransmissionTask();
