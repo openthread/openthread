@@ -283,14 +283,16 @@ otError Mle::Restore(void)
     length = sizeof(networkInfo);
     SuccessOrExit(error = otPlatSettingsGet(netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
-    VerifyOrExit(length == sizeof(networkInfo), error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(networkInfo.mRole >= OT_DEVICE_ROLE_CHILD, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(length >= sizeof(networkInfo), error = OT_ERROR_NOT_FOUND);
 
-    mDeviceMode = networkInfo.mDeviceMode;
-    SetRloc16(networkInfo.mRloc16);
     netif.GetKeyManager().SetCurrentKeySequence(networkInfo.mKeySequence);
     netif.GetKeyManager().SetMleFrameCounter(networkInfo.mMleFrameCounter);
     netif.GetKeyManager().SetMacFrameCounter(networkInfo.mMacFrameCounter);
+
+    VerifyOrExit(networkInfo.mRole >= OT_DEVICE_ROLE_CHILD);
+
+    mDeviceMode = networkInfo.mDeviceMode;
+    SetRloc16(networkInfo.mRloc16);
     netif.GetMac().SetExtAddress(networkInfo.mExtAddress);
     UpdateLinkLocalAddress();
 
@@ -349,40 +351,50 @@ otError Mle::Store(void)
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     Settings::NetworkInfo networkInfo;
-    Settings::ParentInfo parentInfo;
-
-    VerifyOrExit(IsAttached(), error = OT_ERROR_INVALID_STATE);
-
-    if (netif.GetActiveDataset().GetTimestamp() == NULL)
-    {
-        netif.GetActiveDataset().GenerateLocal();
-    }
 
     memset(&networkInfo, 0, sizeof(networkInfo));
 
-    networkInfo.mDeviceMode = mDeviceMode;
-    networkInfo.mRole = mRole;
-    networkInfo.mRloc16 = GetRloc16();
+    if (IsAttached())
+    {
+        // only update network information while we are attached to avoid losing information when a reboot occurs after
+        // a message is sent but before attaching
+        if (netif.GetActiveDataset().GetTimestamp() == NULL)
+        {
+            netif.GetActiveDataset().GenerateLocal();
+        }
+
+        networkInfo.mDeviceMode = mDeviceMode;
+        networkInfo.mRole = mRole;
+        networkInfo.mRloc16 = GetRloc16();
+        networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
+        memcpy(networkInfo.mExtAddress.m8, netif.GetMac().GetExtAddress(), sizeof(networkInfo.mExtAddress));
+        memcpy(networkInfo.mMlIid, &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], OT_IP6_IID_SIZE);
+
+        if (mRole == OT_DEVICE_ROLE_CHILD)
+        {
+            Settings::ParentInfo parentInfo;
+
+            memset(&parentInfo, 0, sizeof(parentInfo));
+            memcpy(&parentInfo.mExtAddress, &mParent.GetExtAddress(), sizeof(parentInfo.mExtAddress));
+
+            SuccessOrExit(error = otPlatSettingsSet(netif.GetInstance(), Settings::kKeyParentInfo,
+                                                    reinterpret_cast<uint8_t *>(&parentInfo), sizeof(parentInfo)));
+        }
+    }
+    else
+    {
+        // when not attached, read out any existing values so that we do not change them
+        uint16_t length = sizeof(networkInfo);
+        IgnoreReturnValue(otPlatSettingsGet(netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
+                                            reinterpret_cast<uint8_t *>(&networkInfo), &length));
+    }
+
+    // update MAC and MLE Frame Counters even when we are not attached MLE messages are sent before a device attached
     networkInfo.mKeySequence = netif.GetKeyManager().GetCurrentKeySequence();
     networkInfo.mMleFrameCounter = netif.GetKeyManager().GetMleFrameCounter() +
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     networkInfo.mMacFrameCounter = netif.GetKeyManager().GetMacFrameCounter() +
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
-    networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
-    memcpy(networkInfo.mExtAddress.m8, netif.GetMac().GetExtAddress(), sizeof(networkInfo.mExtAddress));
-    memcpy(networkInfo.mMlIid,
-           &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE],
-           OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
-
-
-    if (mRole == OT_DEVICE_ROLE_CHILD)
-    {
-        memset(&parentInfo, 0, sizeof(parentInfo));
-        memcpy(&parentInfo.mExtAddress, &mParent.GetExtAddress(), sizeof(parentInfo.mExtAddress));
-
-        SuccessOrExit(error = otPlatSettingsSet(netif.GetInstance(), Settings::kKeyParentInfo,
-                                                reinterpret_cast<uint8_t *>(&parentInfo), sizeof(parentInfo)));
-    }
 
     SuccessOrExit(error = otPlatSettingsSet(netif.GetInstance(), Settings::kKeyNetworkInfo,
                                             reinterpret_cast<uint8_t *>(&networkInfo), sizeof(networkInfo)));
