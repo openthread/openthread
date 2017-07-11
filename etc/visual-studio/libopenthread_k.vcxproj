@@ -200,8 +200,6 @@
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_filter.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_filter_impl.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_filter_stub.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp" />

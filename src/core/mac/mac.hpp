@@ -481,6 +481,7 @@ public:
      */
     otError SetExtendedPanId(const uint8_t *aExtPanId);
 
+#if OPENTHREAD_ENABLE_MAC_FILTER
     /**
      * This method returns the MAC filter.
      *
@@ -488,6 +489,7 @@ public:
      *
      */
     Filter &GetFilter(void) { return mFilter; }
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     /**
      * This method is called to handle receive events.
@@ -735,7 +737,9 @@ private:
     otLinkPcapCallback mPcapCallback;
     void *mPcapCallbackContext;
 
+#if OPENTHREAD_ENABLE_MAC_FILTER
     Filter mFilter;
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     Frame *mTxFrame;
 

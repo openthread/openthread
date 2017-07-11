@@ -33,13 +33,14 @@
 
 #include <openthread/config.h>
 
+#include "mac_filter.hpp"
+
 #include "openthread/types.h"
 #include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 
 #if OPENTHREAD_ENABLE_MAC_FILTER
-#include "mac_filter.hpp"
 
 namespace ot {
 namespace Mac {

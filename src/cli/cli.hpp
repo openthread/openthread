@@ -273,12 +273,14 @@ private:
     void ProcessThread(int argc, char *argv[]);
     void ProcessTxPowerMax(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
-    void ProcessFilter(int argc, char *argv[]);
-    void PrintFilter();
-    otError ProcessFilterAddress(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    void ProcessMacFilter(int argc, char *argv[]);
+    void PrintMacFilter();
+    otError ProcessMacFilterAddress(int argc, char *argv[]);
 #ifndef OTDLL
-    otError ProcessFilterRss(int argc, char *argv[]);
+    otError ProcessMacFilterRss(int argc, char *argv[]);
 #endif  // OTDLL
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);

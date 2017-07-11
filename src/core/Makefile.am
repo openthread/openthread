@@ -229,8 +229,6 @@ HEADERS_COMMON                      = \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
     mac/mac_filter.hpp                \
-    mac/mac_filter_impl.hpp           \
-    mac/mac_filter_stub.hpp           \
     mac/mac_frame.hpp                 \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \

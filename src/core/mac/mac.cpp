@@ -136,7 +136,9 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
     mPcapCallback(NULL),
     mPcapCallbackContext(NULL),
+#if OPENTHREAD_ENABLE_MAC_FILTER
     mFilter(),
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
     mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
     mKeyIdMode2FrameCounter(0),
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1471,7 +1473,9 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     uint8_t commandId;
     bool scheduleNextTrasmission = false;
     otError error = aError;
+#if OPENTHREAD_ENABLE_MAC_FILTER
     int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     mCounters.mRxTotal++;
 
@@ -1523,6 +1527,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
     }
 
+#if OPENTHREAD_ENABLE_MAC_FILTER
+
     // Source filter Processing.
     if (srcaddr.mLength != 0)
     {
@@ -1535,6 +1541,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
             aFrame->mPower = rssi;
         }
     }
+
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     // Destination Address Filtering
     aFrame->GetDstAddr(dstaddr);
@@ -1576,11 +1584,15 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
     if (neighbor != NULL)
     {
+#if OPENTHREAD_ENABLE_MAC_FILTER
+
         // make assigned rssi to take effect quickly
         if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
             neighbor->GetLinkInfo().Clear();
         }
+
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mPower);
 

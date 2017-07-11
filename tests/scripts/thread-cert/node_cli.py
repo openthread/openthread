@@ -37,13 +37,13 @@ class otCli:
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
-        self.filter_prefix = 'filter addr'
+        self.filter_prefix = 'macfilter addr'
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
         elif self.node_type == 'ncp-sim':
             self.__init_ncp_sim(nodeid)
-            self.filter_prefix = 'filter-addr'
+            self.filter_prefix = 'macfilter-addr'
         else:
             self.__init_sim(nodeid)
 

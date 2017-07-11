@@ -770,8 +770,12 @@ typedef enum otRoutePreference
 #define OT_MAC_FILTER_FIXED_RSS_DISABLED       127
 
 #define OT_MAC_FILTER_ITERATOR_INIT            0     ///< Initializer for otMacFilterIterator.
-typedef uint8_t otMacFilterIterator;    ///< Used to iterate through mac filter entries.
 
+typedef uint8_t otMacFilterIterator;                 ///< Used to iterate through mac filter entries.
+
+/**
+ * Defines address mode of the mac filter.
+ */
 typedef enum otMacFilterAddressMode
 {
     OT_MAC_FILTER_ADDRESS_MODE_DISABLED,     ///< Address filter is disabled.

@@ -759,7 +759,7 @@ AC_ARG_ENABLE(mac_filter,
             ;;
         esac
     ],
-    [enable_mac_filter=yes])
+    [enable_mac_filter=no])
 
 if test "$enable_mac_filter" = "yes"; then
     OPENTHREAD_ENABLE_MAC_FILTER=1

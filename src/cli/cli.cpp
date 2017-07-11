@@ -128,7 +128,6 @@ const struct Command Interpreter::sCommands[] =
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
     { "factoryreset", &Interpreter::ProcessFactoryReset },
-    { "filter", &Interpreter::ProcessFilter},
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
 #ifdef OTDLL
@@ -150,6 +149,9 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_FTD
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
     { "leaderweight", &Interpreter::ProcessLeaderWeight },
+#endif
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    { "macfilter", &Interpreter::ProcessMacFilter},
 #endif
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
@@ -2839,25 +2841,26 @@ exit:
 }
 #endif
 
-void Interpreter::ProcessFilter(int argc, char *argv[])
+#if OPENTHREAD_ENABLE_MAC_FILTER
+void Interpreter::ProcessMacFilter(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
-        PrintFilter();
+        PrintMacFilter();
     }
     else
     {
         if (strcmp(argv[0], "addr") == 0)
         {
-            error = ProcessFilterAddress(argc - 1, argv + 1);
+            error = ProcessMacFilterAddress(argc - 1, argv + 1);
         }
 
 #ifndef OTDLL
         else if (strcmp(argv[0], "rss") == 0)
         {
-            error = ProcessFilterRss(argc - 1, argv + 1);
+            error = ProcessMacFilterRss(argc - 1, argv + 1);
         }
 
 #endif
@@ -2875,7 +2878,7 @@ void Interpreter::ProcessFilter(int argc, char *argv[])
     AppendResult(error);
 }
 
-void Interpreter::PrintFilter()
+void Interpreter::PrintMacFilter()
 {
     otMacFilterEntry entry;
     otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
@@ -2948,7 +2951,7 @@ void Interpreter::PrintFilter()
 #endif  // OTDLL
 }
 
-otError Interpreter::ProcessFilterAddress(int argc, char *argv[])
+otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
     otExtAddress extAddr;
@@ -3053,7 +3056,7 @@ exit:
 
 #ifndef OTDLL
 
-otError Interpreter::ProcessFilterRss(int argc, char *argv[])
+otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
     otMacFilterEntry entry;
@@ -3161,6 +3164,8 @@ exit:
 }
 
 #endif  // OTDLL
+
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
 #if OPENTHREAD_ENABLE_DIAG
 void Interpreter::ProcessDiag(int argc, char *argv[])

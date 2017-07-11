@@ -144,6 +144,8 @@ otShortAddress otLinkGetShortAddress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMac().GetShortAddress();
 }
 
+#if OPENTHREAD_ENABLE_MAC_FILTER
+
 otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().GetFilter().GetAddressMode();
@@ -248,6 +250,8 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 {
     return LinkQualityInfo::ConvertLinkQualityToRss(aInstance->mThreadNetif.GetMac().GetNoiseFloor(), aLinkQuality);
 }
+
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
 void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext)
 {

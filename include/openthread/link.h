@@ -306,7 +306,7 @@ OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPerio
 OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
 
 /**
- * This function gets the address mode of the filter.
+ * This function gets the address mode of MAC filter.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -327,7 +327,7 @@ OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
 OTAPI otMacFilterAddressMode OTCALL otLinkFilterGetAddressMode(otInstance *aInstance);
 
 /**
- * This function sets the address mode of the filter.
+ * This function sets the address mode of MAC filter.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aMode      The address mode to set.
@@ -350,13 +350,13 @@ OTAPI otMacFilterAddressMode OTCALL otLinkFilterGetAddressMode(otInstance *aInst
 OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
 
 /**
- * This method adds an Extended Address to the filter.
+ * This method adds an Extended Address to MAC filter.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A reference to the Extended Address.
  *
- * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to the Filter.
- * @retval OT_ERROR_ALREADY        If @p aExtAddress was already in the Filter.
+ * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to MAC filter.
+ * @retval OT_ERROR_ALREADY        If @p aExtAddress was already in MAC filter.
  * @retval OT_ERROR_INVALID_ARGS   If @p aExtAddress is NULL.
  * @retval OT_ERROR_NO_BUFS        No available entry exists.
  *
@@ -375,14 +375,14 @@ OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilt
 OTAPI otError OTCALL otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
- * This method adds an Extended Address to the filter and sets the RssIn for all the received messages from the
+ * This method adds an Extended Address to MAC filter and sets the RssIn for all the received messages from the
  * Extended Address.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A reference to the Extended Address.
  * @param[in]  aRss         The received signal strength to set.
  *
- * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to the Filter and set @p aRss for @p aExtAddress.
+ * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to MAC filter and set @p aRss for @p aExtAddress.
  * @retval OT_ERROR_INVALID_ARGS   If @p aExtAddress is NULL.
  * @retval OT_ERROR_NO_BUFS        No available entry exists.
  *
@@ -401,14 +401,14 @@ OTAPI otError OTCALL otLinkFilterAddAddress(otInstance *aInstance, const otExtAd
 OTAPI otError OTCALL otLinkFilterAddAddressRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
- * This method removes an Extended Address from the filter.
+ * This method removes an Extended Address from MAC filter.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A reference to the Extended Address.
  *
- * @retval OT_ERROR_NONE           Successfully removed @p aExtAddress from the Filter.
+ * @retval OT_ERROR_NONE           Successfully removed @p aExtAddress from MAC filter.
  * @retval OT_ERROR_INVALID_ARGS   If @p aExtAddress is NULL.
- * @retval OT_ERROR_NOT_FOUND      @p aExtAddress is not in the Filter.
+ * @retval OT_ERROR_NOT_FOUND      @p aExtAddress is not in MAC filter.
  *
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode
@@ -425,7 +425,7 @@ OTAPI otError OTCALL otLinkFilterAddAddressRssIn(otInstance *aInstance, const ot
 OTAPI otError OTCALL otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
- * This method clears all the Extended Addresses from the Filter.
+ * This method clears all the Extended Addresses from MAC filter.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -507,7 +507,7 @@ otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
  *
  * @retval OT_ERROR_NONE       Successfully removed received signal strength setting for @p aExtAddress or
  *                             removed the default received signal strength setting if @p aExtAddress is NULL.
- * @retval OT_ERROR_NOT_FOUND  @p aExtAddress is not in the filter if it is not NULL.
+ * @retval OT_ERROR_NOT_FOUND  @p aExtAddress is not in MAC filter if it is not NULL.
  *
  * @sa otLinkFilterGetAddressMode
  * @sa otLinkFilterSetAddressMode

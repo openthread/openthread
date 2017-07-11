@@ -380,12 +380,6 @@
     <ClInclude Include="..\..\src\core\mac\mac_filter.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_filter_impl.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_filter_stub.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
