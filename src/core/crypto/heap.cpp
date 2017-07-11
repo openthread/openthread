@@ -44,16 +44,16 @@ namespace Crypto {
 
 Heap::Heap(void)
 {
-    Block &head = BlockAt(kSuperBlockOffset);
-    head.SetSize(kSuperBlockSize);
+    Block &super = BlockAt(kSuperBlockOffset);
+    super.SetSize(kSuperBlockSize);
 
-    Block &first = BlockRight(head);
+    Block &first = BlockRight(super);
     first.SetSize(kFirstBlockSize);
 
     Block &guard = BlockRight(first);
     guard.SetSize(Block::kGuardBlockSize);
 
-    head.SetNext(BlockOffset(first));
+    super.SetNext(BlockOffset(first));
     first.SetNext(BlockOffset(guard));
 }
 

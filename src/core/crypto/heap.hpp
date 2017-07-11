@@ -57,7 +57,7 @@ namespace Crypto {
  *     | 2 bytes |  n bytes | 2 bytes |
  *     +------------------------------+
  *
- * Since block meta data is of 4 bytes, mSize and mNext are separated at the begining
+ * Since block metadata is of 4-byte size, mSize and mNext are separated at the begining
  * and end of the block to make sure the mMemory is aligned with long.
  *
  */
@@ -218,11 +218,18 @@ public:
      * This method returns whether the heap is clean.
      *
      */
-    bool IsClean(void)
-    {
-        Block &super = BlockSuper();
-        Block &first = BlockRight(super);
+    bool IsClean(void) {
+        const Block &super = BlockSuper();
+        const Block &first = BlockRight(super);
         return super.GetNext() == BlockOffset(first) && first.GetSize() == kFirstBlockSize;
+    }
+
+    /**
+     * This method returns the capacity of this heap.
+     *
+     */
+    size_t GetCapacity(void) const {
+        return kFirstBlockSize;
     }
 
 private:
@@ -299,7 +306,7 @@ private:
      * @returns Reference to the block on the right side.
      *
      */
-    Block &BlockRight(Block &aBlock) {
+    Block &BlockRight(const Block &aBlock) {
         return BlockAt(BlockOffset(aBlock) + sizeof(Block) + aBlock.GetSize());
     }
 
