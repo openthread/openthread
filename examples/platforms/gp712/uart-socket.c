@@ -188,12 +188,10 @@ exit:
 void PlatSocketRxSignaled(uint8_t id)
 {
     (void)(id);
-    int res;
     //Dummy callback function to flush pipe
     uint8_t readChar;
     //Remove trigger byte from pipe
-    res = read(PlatSocketPipeFd [0], &readChar, 1);
-    (void)(res);
+    read(PlatSocketPipeFd [0], &readChar, 1);
 }
 
 void *PlatSocketReadThread(void *pClientSocket)
@@ -220,13 +218,11 @@ void *PlatSocketReadThread(void *pClientSocket)
             }
 
             {
-                int res;
                 uint8_t someByte = 0x12; //No functional use  only using pipe to kick main thread
 
                 PlatSocketRx(readLen, buffer, clientSocket->socketId);
 
-                res = write(PlatSocketPipeFd [1], &someByte, 1); //[1] = write fd
-                (void)(res);
+                write(PlatSocketPipeFd [1], &someByte, 1); //[1] = write fd
             }
         }
     }
