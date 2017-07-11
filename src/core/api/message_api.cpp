@@ -87,6 +87,12 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
     }
 }
 
+int8_t otMessageGetRss(otMessage *aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->GetAverageRss();
+}
+
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);

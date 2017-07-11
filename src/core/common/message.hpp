@@ -46,6 +46,7 @@
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/link_quality.hpp"
 
 namespace ot {
 
@@ -96,6 +97,7 @@ struct MessageInfo
     uint16_t         mLength;            ///< Number of bytes within the message.
     uint16_t         mOffset;            ///< A byte offset within the message.
     uint16_t         mDatagramTag;       ///< The datagram tag used for 6LoWPAN fragmentation.
+    RssAverager      mRssAverager;       ///< The averager maininting the received signal strength (RSS) average.
 
     uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this.
     uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
@@ -616,6 +618,32 @@ public:
      *
      */
     void SetLinkSecurityEnabled(bool aEnabled) { mBuffer.mHead.mInfo.mLinkSecurity = aEnabled; }
+
+    /**
+     * This method updates the average RSS (Received Signal Strength) associated with the message by adding the given
+     * RSS value to the average. Note that a message can be composed of multiple 802.15.4 data frame fragments each
+     * received with a different signal strength.
+     *
+     * @param[in] aRss A new RSS value (in dBm) to be added to average.
+     *
+     */
+    void AddRss(int8_t aRss) { mBuffer.mHead.mInfo.mRssAverager.Add(aRss); }
+
+    /**
+     * This method returns the average RSS (Received Signal Strength) associated with the message.
+     *
+     * @returns The current average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average is available.
+     *
+     */
+    int8_t GetAverageRss(void) const { return mBuffer.mHead.mInfo.mRssAverager.GetAverage(); }
+
+    /**
+     * This method returns a const reference to RssAverager of the message.
+     *
+     * @returns A const reference to the RssAverager of the message.
+     *
+     */
+    const RssAverager &GetRssAverager(void) const { return mBuffer.mHead.mInfo.mRssAverager; }
 
     /**
      * This method is used to update a checksum value.
