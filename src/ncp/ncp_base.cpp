@@ -4078,7 +4078,7 @@ otError NcpBase::GetPropertyHandler_MAC_FIXED_RSS(uint8_t aHeader, spinel_prop_k
 
     mDisableStreamWrite = true;
 
-    SuccessOrExit(error = OutboundFrameBegin());
+    SuccessOrExit(error = OutboundFrameBegin(aHeader));
     SuccessOrExit(
         error = OutboundFrameFeedPacked(
                     SPINEL_DATATYPE_COMMAND_PROP_S,
