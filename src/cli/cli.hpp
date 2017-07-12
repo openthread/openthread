@@ -162,7 +162,6 @@ private:
     void ProcessHelp(int argc, char *argv[]);
     void ProcessAutoStart(int argc, char *argv[]);
     void ProcessBufferInfo(int argc, char *argv[]);
-    void ProcessBlacklist(int argc, char *argv[]);
     void ProcessChannel(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
@@ -274,7 +273,14 @@ private:
     void ProcessThread(int argc, char *argv[]);
     void ProcessTxPowerMax(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
-    void ProcessWhitelist(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    void ProcessMacFilter(int argc, char *argv[]);
+    void PrintMacFilter(void);
+    otError ProcessMacFilterAddress(int argc, char *argv[]);
+#ifndef OTDLL
+    otError ProcessMacFilterRss(int argc, char *argv[]);
+#endif  // OTDLL
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);

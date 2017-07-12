@@ -150,26 +150,31 @@ class otCli:
         self.pexpect.expect('Done')
 
     def clear_whitelist(self):
-        self.send_command('whitelist clear')
+        cmd = 'macfilter addr clear'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def enable_whitelist(self):
-        self.send_command('whitelist enable')
+        cmd = 'macfilter addr whitelist'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def disable_whitelist(self):
-        self.send_command('whitelist disable')
+        cmd = 'macfilter addr disable'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def add_whitelist(self, addr, rssi=None):
-        cmd = 'whitelist add ' + addr
+        cmd = 'macfilter addr add ' + addr
+
         if rssi != None:
             cmd += ' ' + str(rssi)
+
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def remove_whitelist(self, addr):
-        cmd = 'whitelist remove ' + addr
+        cmd = 'macfilter addr remove ' + addr
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -186,6 +191,7 @@ class otCli:
         i = self.pexpect.expect('([0-9a-fA-F]{16})')
         if i == 0:
             addr64 = self.pexpect.match.groups()[0].decode("utf-8")
+
         self.pexpect.expect('Done')
         return addr64
 

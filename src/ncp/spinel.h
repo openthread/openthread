@@ -702,6 +702,17 @@ typedef enum
     /** Format: `b`
      */
     SPINEL_PROP_MAC_BLACKLIST_ENABLED   = SPINEL_PROP_MAC_EXT__BEGIN + 7,
+
+    /// MAC Received Signal Strength Filter
+    /** Format: `A(t(Ec))`
+     *
+     * Structure Parameters:
+     *
+     * * `E`: Optional EUI64 address of node. Set default RSS if not included.
+     * * `c`: Fixed RSS. OT_MAC_FILTER_FIXED_RSS_OVERRIDE_DISABLED(127) means not set.
+     */
+    SPINEL_PROP_MAC_FIXED_RSS            = SPINEL_PROP_MAC_EXT__BEGIN + 8,
+
     SPINEL_PROP_MAC_EXT__END            = 0x1400,
 
     SPINEL_PROP_NET__BEGIN              = 0x40,

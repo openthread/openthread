@@ -742,36 +742,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
 
 #
-# MAC Whitelist and Blacklist
+# MAC Filter (include AddressFilter and RssInFilter)
 #
 
-AC_ARG_ENABLE(mac_whitelist,
-    [AS_HELP_STRING([--enable-mac-whitelist],[Enable MAC whitelist/blacklist support @<:@default=yes@:>@.])],
+AC_ARG_ENABLE(mac_filter,
+              [AS_HELP_STRING([--enable-mac-filter],[Enable MAC filter support @<:@default=yes@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_mac_whitelist=${enableval}
+            enable_mac_filter=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_mac_whitelist} for --enable-mac-whitelist])
+            AC_MSG_ERROR([Invalid value ${enable_mac_filter} for --enable-mac-filter])
             ;;
         esac
     ],
-    [enable_mac_whitelist=yes])
+    [enable_mac_filter=no])
 
-if test "$enable_mac_whitelist" = "yes"; then
-    OPENTHREAD_ENABLE_MAC_WHITELIST=1
+if test "$enable_mac_filter" = "yes"; then
+    OPENTHREAD_ENABLE_MAC_FILTER=1
 else
-    OPENTHREAD_ENABLE_MAC_WHITELIST=0
+    OPENTHREAD_ENABLE_MAC_FILTER=0
 fi
 
-AC_MSG_CHECKING([whether to enable mac whitelist])
-AC_MSG_RESULT(${enable_mac_whitelist})
-AC_SUBST(OPENTHREAD_ENABLE_MAC_WHITELIST)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_WHITELIST], [test "${enable_mac_whitelist}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MAC_WHITELIST],[${OPENTHREAD_ENABLE_MAC_WHITELIST}],[Define to 1 if you want to use MAC whitelist/blacklist feature])
+AC_MSG_CHECKING([whether to enable mac filter])
+AC_MSG_RESULT(${enable_mac_filter})
+AC_SUBST(OPENTHREAD_ENABLE_MAC_FILTER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_FILTER], [test "${enable_mac_filter}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MAC_FILTER],[${OPENTHREAD_ENABLE_MAC_FILTER}],[Define to 1 if you want to use MAC filter feature])
 
 #
 # Diagnostics Library
@@ -1429,7 +1429,7 @@ AC_MSG_NOTICE([
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Jam Detection support          : ${enable_jam_detection}
-  OpenThread MAC Whitelist support          : ${enable_mac_whitelist}
+  OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Child Supervision support      : ${enable_child_supervision}
   OpenThread Legacy network support         : ${enable_legacy}

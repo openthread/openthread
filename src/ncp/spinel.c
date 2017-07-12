@@ -1104,6 +1104,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MAC_BLACKLIST_ENABLED";
         break;
 
+    case SPINEL_PROP_MAC_FIXED_RSS:
+        ret = "PROP_MAC_FIXED_RSS";
+        break;
+
     case SPINEL_PROP_NET_SAVED:
         ret = "PROP_NET_SAVED";
         break;

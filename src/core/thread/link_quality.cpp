@@ -199,6 +199,32 @@ uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss
     return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, aRss));
 }
 
+int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality)
+{
+    uint8_t linkmargin = 0;
+
+    switch (aLinkQuality)
+    {
+    case 3:
+        linkmargin = kLinkQuality3LinkMargin;
+        break;
+
+    case 2:
+        linkmargin = kLinkQuality2LinkMargin;
+        break;
+
+    case 1:
+        linkmargin = kLinkQuality1LinkMargin;
+        break;
+
+    default:
+        linkmargin = kLinkQuality0LinkMargin;
+        break;
+    }
+
+    return linkmargin + aNoiseFloor;
+}
+
 uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
 {
     uint8_t threshold1, threshold2, threshold3;

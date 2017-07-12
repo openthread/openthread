@@ -350,11 +350,12 @@ typedef enum _OTLWF_NOTIF_TYPE
     // GUID - InterfaceGuid
     // otExtAddress - aExtAddr
 
-#define IOCTL_OTLWF_OT_MAC_WHITELIST_ENTRY \
+#define IOCTL_OTLWF_OT_NEXT_MAC_WHITELIST \
     OTLWF_CTL_CODE(137, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
-    // uint8_t - aIndex (input)
-    // otMacWhitelistEntry - aEntry (output)
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otMacFilterEntry - aEntry (output)
 
 #define IOCTL_OTLWF_OT_CLEAR_MAC_WHITELIST \
     OTLWF_CTL_CODE(138, METHOD_BUFFERED, FILE_WRITE_DATA)
@@ -445,11 +446,12 @@ typedef enum _OTLWF_NOTIF_TYPE
     // GUID - InterfaceGuid
     // otExtAddress - aExtAddr
 
-#define IOCTL_OTLWF_OT_MAC_BLACKLIST_ENTRY \
+#define IOCTL_OTLWF_OT_NEXT_MAC_BLACKLIST \
     OTLWF_CTL_CODE(155, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
-    // uint8_t - aIndex (input)
-    // otMacBlacklistEntry - aEntry (output)
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otMacFilterEntry - aEntry (output)
 
 #define IOCTL_OTLWF_OT_CLEAR_MAC_BLACKLIST \
     OTLWF_CTL_CODE(156, METHOD_BUFFERED, FILE_WRITE_DATA)
@@ -477,12 +479,6 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_CTL_CODE(160, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
     // GUID - InterfaceGuid
     // uint32_t - aPartitionId
-
-#define IOCTL_OTLWF_OT_ASSIGN_LINK_QUALITY \
-    OTLWF_CTL_CODE(161, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
-    // GUID - InterfaceGuid
-    // otExtAddress - aExtAddr (input)
-    // uint8_t - aLinkQuality (input or output)
 
 #define IOCTL_OTLWF_OT_PLATFORM_RESET \
     OTLWF_CTL_CODE(162, METHOD_BUFFERED, FILE_WRITE_DATA)
@@ -699,8 +695,30 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // int8_t - aParentPriority
 
+#define IOCTL_OTLWF_OT_ADD_MAC_FIXED_RSS \
+    OTLWF_CTL_CODE(197, METHOD_BUFFERED, FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+    // otExtAddress - aExtAddr (optional)
+    // int8_t - aRssi
+
+#define IOCTL_OTLWF_OT_REMOVE_MAC_FIXED_RSS \
+    OTLWF_CTL_CODE(198, METHOD_BUFFERED, FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+    // otExtAddress - aExtAddr (optional)
+
+#define IOCTL_OTLWF_OT_NEXT_MAC_FIXED_RSS \
+    OTLWF_CTL_CODE(199, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otMacFilterEntry - aEntry (output)
+
+#define IOCTL_OTLWF_OT_CLEAR_MAC_FIXED_RSS \
+    OTLWF_CTL_CODE(200, METHOD_BUFFERED, FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 196
+#define MAX_OTLWF_IOCTL_FUNC_CODE 200
 
 #endif //__OTLWFIOCTL_H__

@@ -64,7 +64,7 @@
 #define OPENTHREAD_ENABLE_DHCP6_SERVER 1
 
 /* Define to 1 to enable MAC whitelist/blacklist feature. */
-#define OPENTHREAD_ENABLE_MAC_WHITELIST 1
+#define OPENTHREAD_ENABLE_MAC_FILTER 1
 
 /* Define to 1 to enable TMF proxy feature. */
 #define OPENTHREAD_ENABLE_TMF_PROXY 0

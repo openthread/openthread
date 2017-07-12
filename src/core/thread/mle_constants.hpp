@@ -125,15 +125,6 @@ enum
     kLinkQuality0LinkCost       = 16,   ///< Link Cost for Link Quality 0
 };
 
-// add for certification testing
-enum
-{
-    kMinAssignedLinkMargin3     = 0x15, ///< minimal link margin for Link Quality 3 (21 - 255)
-    kMinAssignedLinkMargin2     = 0x0b, ///< minimal link margin for Link Quality 2 (11 - 20)
-    kMinAssignedLinkMargin1     = 0x03, ///< minimal link margin for Link Quality 1 (3 - 9)
-    kMinAssignedLinkMargin0     = 0x00, ///< minimal link margin for Link Quality 0 (0 - 2)
-};
-
 /**
  * Multicast Forwarding Constants
  *

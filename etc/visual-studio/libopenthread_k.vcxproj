@@ -98,9 +98,8 @@
     <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp" />
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac.cpp" />
-    <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp" />
+    <ClCompile Include="..\..\src\core\mac\mac_filter.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_frame.cpp" />
-    <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset_local.cpp" />
@@ -200,13 +199,8 @@
     <ClInclude Include="..\..\src\core\crypto\pbkdf2_cmac.h" />
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_impl.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_stub.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_filter.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dataset.hpp" />
