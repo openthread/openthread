@@ -318,13 +318,12 @@ void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
     ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
     uint8_t numChildren;
     uint8_t childIndex;
     uint8_t nextIndex;
     Child *children;
 
-    VerifyOrExit(mSendBusy == false, error = OT_ERROR_BUSY);
+    VerifyOrExit(mSendBusy == false);
 
     UpdateIndirectMessages();
 
@@ -404,12 +403,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
     }
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMac(GetInstance(), "Error while scheduling transmission task: %s",
-                     otThreadErrorToString(error));
-    }
+    return;
 }
 
 otError MeshForwarder::SendMessage(Message &aMessage)
