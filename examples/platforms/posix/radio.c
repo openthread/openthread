@@ -508,6 +508,7 @@ void radioSendMessage(otInstance *aInstance)
 {
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
+    otPlatRadioTxStarted(aInstance, &sTransmitFrame);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
     sAckWait = isAckRequested(sTransmitFrame.mPsdu);

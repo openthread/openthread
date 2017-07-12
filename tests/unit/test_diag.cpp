@@ -70,6 +70,11 @@ extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *aFrame, otErr
     (void)aError;
 }
 
+extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *aFrame)
+{
+    (void) aFrame;
+}
+
 
 /**
  *  diagnostics module tests

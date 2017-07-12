@@ -345,6 +345,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     otEXPECT_ACTION(RAIL_TxStartWithOptions(aFrame->mChannel, &txOption, RAIL_CcaCsma, &csmaConfig) == RAIL_STATUS_NO_ERROR,
                     error = OT_ERROR_FAILED);
 
+    otPlatRadioTxStarted(aInstance, aFrame);
+
 exit:
     CORE_EXIT_CRITICAL();
     return error;

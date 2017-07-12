@@ -411,6 +411,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     ad_ftdf_send_frame_simple(aFrame->mLength, aFrame->mPsdu, aFrame->mChannel, 0, csmaSuppress); //Prio 0 for all.
     sRadioState = OT_RADIO_STATE_TRANSMIT;
 
+    otPlatRadioTxStarted(aInstance, aFrame);
+
 exit:
     return error;
 }

@@ -473,7 +473,6 @@ exit:
 
 void radioTransmitMessage(otInstance *aInstance)
 {
-    (void)aInstance;
     uint8_t header_len = 0;
 
     sTransmitError = OT_ERROR_NONE;
@@ -505,6 +504,8 @@ void radioTransmitMessage(otInstance *aInstance)
     mrf24j40_txfifo_write(MRF24J40_TXNFIFO, sTransmitFrame.mPsdu, header_len, (sTransmitFrame.mLength - 2));
 
     mrf24j40_write_short_ctrl_reg(MRF24J40_TXNCON, reg | MRF24J40_TXNTRIG);
+
+    otPlatRadioTxStarted(aInstance, &sTransmitFrame);
 
     int16_t tx_timeout = 500;
     Mrf24StatusTx = 0;

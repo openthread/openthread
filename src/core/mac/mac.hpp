@@ -501,6 +501,13 @@ public:
      */
     void ReceiveDoneTask(Frame *aFrame, otError aError);
 
+    /**
+     * This method is called to handle transmission start events.
+     *
+     * @param[in]  aFrame  A pointer to the frame that is transmitted.
+     */
+    void TransmitStartedTask(otRadioFrame *aFrame);
+
 #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
     /**
      * This method is called to handle transmit events.

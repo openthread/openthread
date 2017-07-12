@@ -832,12 +832,6 @@ void Mac::HandleBeginTransmit(void)
 
     assert(error == OT_ERROR_NONE);
 
-    if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_ACK_TIMEOUT))
-    {
-        mMacTimer.Start(kAckTimeout);
-        otLogDebgMac(GetInstance(), "Ack timer start");
-    }
-
     if (mPcapCallback)
     {
         sendFrame.mDidTX = true;
@@ -853,6 +847,26 @@ exit:
 #else
         TransmitDoneTask(mTxFrame, NULL, OT_ERROR_ABORT);
 #endif
+    }
+}
+
+extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
+{
+    otLogFuncEntry();
+
+    aInstance->mThreadNetif.GetMac().TransmitStartedTask(aFrame);
+
+    otLogFuncExit();
+}
+
+void Mac::TransmitStartedTask(otRadioFrame *aFrame)
+{
+    Frame *frame = static_cast<Frame *>(aFrame);
+
+    if (frame->GetAckRequest() && !(otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_ACK_TIMEOUT))
+    {
+        mMacTimer.Start(kAckTimeout);
+        otLogDebgMac(GetInstance(), "Ack timer start");
     }
 }
 

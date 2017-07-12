@@ -369,6 +369,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         // begin transmit
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_TXON;
 
+        otPlatRadioTxStarted(aInstance, aFrame);
+
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
         otLogDebgPlat(sInstance, "Transmitted %d bytes", aFrame->mLength);
