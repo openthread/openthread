@@ -391,6 +391,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame);
 /**
  * The radio driver calls this method to notify OpenThread that the transmission has started.
  *
+ * @note  This function should be called by the same thread that executes all of the other OpenThread code. It should
+ *        not be called by ISR or any other task.
+ *
  * @param[in]  aInstance  A pointer to the OpenThread instance structure.
  * @param[in]  aFrame     A pointer to the frame that is being transmitted.
  *
