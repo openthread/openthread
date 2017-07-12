@@ -862,7 +862,8 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
     // discarded.
     aMessage = NULL;
 
-    // Append any metadata (rssi, lqi, channel, etc) here!
+    // Append metadata
+    SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_INT8_S, otMessageGetRss(aMessage)));
 
     SuccessOrExit(error = OutboundFrameSend());
 
