@@ -979,7 +979,7 @@ typedef struct otNetifAddress
     uint8_t                mPrefixLength;            ///< The Prefix length.
     bool                   mPreferred : 1;           ///< TRUE if the address is preferred, FALSE otherwise.
     bool                   mValid : 1;               ///< TRUE if the address is valid, FALSE otherwise.
-    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE othewrise.
+    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
     unsigned int           mScopeOverride : 4;       ///< The IPv6 scope of this address.
     bool                   mRloc : 1;                ///< TRUE if the address is an RLOC, FALSE otherwise.
     struct otNetifAddress *mNext;                    ///< A pointer to the next network interface address.

@@ -366,7 +366,7 @@ public:
     }
 
     /**
-     * This method schedules the timer to fire a @p dt microseconds from now.
+     * This method schedules the timer to fire a @p aDt microseconds from now.
      *
      * @param[in]  aDt  The expire time in microseconds from now.
      *                  (aDt must be smaller than or equal to kMaxDt).
