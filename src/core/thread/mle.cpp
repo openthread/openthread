@@ -3006,9 +3006,16 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
         netif.GetMac().SetPanId(panid.GetPanId());
         Start(false, true);
     }
-    else
+    else if (localTimestamp->Compare(timestamp) < 0)
     {
         SendAnnounce(static_cast<uint8_t>(channel.GetChannel()), false);
+    }
+    else
+    {
+        // do nothing
+        // timestamps are equal: no behaviour specified by the Thread spec.
+        // If SendAnnounce is executed at this point, there exists a scenario where
+        // multiple devices keep sending MLE Announce messages to one another indefinitely.
     }
 
 exit:
