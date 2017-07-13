@@ -154,6 +154,8 @@ void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
 {
     uint8_t oldLinkQuality = kNoLinkQuality;
 
+    mLastRss = aRss;
+
     if (mRssAverager.HasAverage())
     {
         oldLinkQuality = GetLinkQuality();
