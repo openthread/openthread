@@ -159,6 +159,7 @@ check_SCRIPTS                                                      = \
     test_mle.py                                                      \
     test_network_data.py                                             \
     test_network_layer.py                                            \
+    Cert_5_2_02_LeaderReject1Hop.py                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \
@@ -173,12 +174,10 @@ check_SCRIPTS                                                      = \
     Cert_5_1_12_NewRouterNeighborSync.py                             \
     Cert_5_1_13_RouterReset.py                                       \
     Cert_5_2_01_BecomeActiveRouter.py                                \
-    Cert_5_2_02_LeaderReject1Hop.py                                  \
-    Cert_5_2_03_LeaderReject2Hops.py                                 \
-    Cert_5_2_04_REEDUpgrade.py                                       \
     Cert_5_2_05_AddressQuery.py                                      \
     Cert_5_2_06_RouterDowngrade.py                                   \
     Cert_5_2_07_REEDSynchronization.py                               \
+    Cert_5_2_04_REEDUpgrade.py                                       \
     Cert_5_3_01_LinkLocal.py                                         \
     Cert_5_3_02_RealmLocal.py                                        \
     Cert_5_3_03_AddressQuery.py                                      \
@@ -226,6 +225,7 @@ check_SCRIPTS                                                      = \
     Cert_6_5_02_ChildResetReattach.py                                \
     Cert_6_6_01_KeyIncrement.py                                      \
     Cert_6_6_02_KeyIncrementRollOver.py                              \
+    Cert_5_2_03_LeaderReject2Hops.py                                 \
     Cert_7_1_01_BorderRouterAsLeader.py                              \
     Cert_7_1_02_BorderRouterAsRouter.py                              \
     Cert_7_1_03_BorderRouterAsLeader.py                              \
