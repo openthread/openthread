@@ -368,7 +368,18 @@ void platformRadioInit(void)
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     sSockFd = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+
+    if (sSockFd == -1)
+    {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
+    {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
 
     sReceiveFrame.mPsdu = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
