@@ -1079,6 +1079,30 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_ROUTER], [test "${enable_border_router}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_ROUTER],[${OPENTHREAD_ENABLE_BORDER_ROUTER}],[Define to 1 if you want to enable Border Router])
 
 #
+# Linker Map Output
+#
+
+AC_ARG_ENABLE(linker-map,
+    [AS_HELP_STRING([--enable-linker-map],[Enable linker map output @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_linker_map=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_linker_map} for --enable-linker-map])
+            ;;
+        esac
+    ],
+    [enable_linker_map=no])
+
+AC_MSG_CHECKING([whether to enable linker map output])
+AC_MSG_RESULT(${enable_linker_map})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_LINKER_MAP], [test "${enable_linker_map}" = "yes"])
+
+#
 # Examples
 #
 
@@ -1410,6 +1434,7 @@ AC_MSG_NOTICE([
   Assembler flags                           : ${CCASFLAGS:--}
   Link flags                                : ${LDFLAGS:--}
   Link libraries                            : ${LIBS}
+  Link maps                                 : ${enable_linker_map}
   Pretty                                    : ${PRETTY:--}
   Pretty args                               : ${PRETTY_ARGS:--}
   Pretty check                              : ${PRETTY_CHECK:--}

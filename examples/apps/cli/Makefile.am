@@ -199,6 +199,11 @@ ot_cli_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
+if OPENTHREAD_ENABLE_LINKER_MAP
+ot_cli_ftd_LDFLAGS                                                    += -Wl,-Map=ot-cli-ftd.map
+ot_cli_mtd_LDFLAGS                                                    += -Wl,-Map=ot-cli-mtd.map
+endif
+
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE

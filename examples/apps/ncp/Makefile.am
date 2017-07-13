@@ -191,6 +191,11 @@ ot_ncp_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
+if OPENTHREAD_ENABLE_LINKER_MAP
+ot_ncp_ftd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-ftd.map
+ot_ncp_mtd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-mtd.map
+endif
+
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
