@@ -1706,7 +1706,10 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         child->ResetLinkFailures();
         child->SetState(Neighbor::kStateParentRequest);
         child->SetDataRequestPending(false);
+    }
 
+    if (!child->IsStateValidOrRestoring())
+    {
         child->SetLastHeard(TimerMilli::GetNow());
         child->SetTimeout(TimerMilli::MsecToSec(kMaxChildIdRequestTimeout));
     }
