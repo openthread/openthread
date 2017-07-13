@@ -1332,6 +1332,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_IPV6_ICMP_PING_OFFLOAD";
         break;
 
+    case SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE:
+        ret = "PROP_IPV6_MULTICAST_ADDRESS_TABLE";
+        break;
+
     case SPINEL_PROP_STREAM_DEBUG:
         ret = "PROP_STREAM_DEBUG";
         break;
