@@ -94,7 +94,6 @@ LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(target_LDFLAGS)             \
     -Wl,--gc-sections             \
-    -Wl,-Map=map.map              \
     -lrt                          \
     -lpthread                     \
     $(NULL)

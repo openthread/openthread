@@ -47,6 +47,7 @@ configure_OPTIONS               = \
     --with-ncp-bus=uart           \
     --with-examples=da15000       \
     --with-platform-info=DA15000  \
+    --enable-linker-map           \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
@@ -90,7 +91,6 @@ LDFLAGS                        += \
     -specs=nano.specs             \
     -specs=nosys.specs            \
     -Wl,--gc-sections             \
-    -Wl,-Map=map.map              \
     $(NULL)
 
 ECHO                            := @echo
