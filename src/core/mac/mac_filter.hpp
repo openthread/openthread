@@ -142,7 +142,7 @@ public:
     otError GetNextAddress(otMacFilterIterator &aIterator, Entry &aEntry);
 
     /**
-     * This method sets the received signal strength for the messsages from the Extended Address.
+     * This method sets the received signal strength for the messages from the Extended Address.
      * The default received signal strength for all received messages would be set if no Extended Address is specified.
      *
      * @param[in]  aExtAddress  A pointer to the Extended Address, or NULL to set the default received signal strength.
