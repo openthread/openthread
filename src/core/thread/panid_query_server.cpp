@@ -55,7 +55,7 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
     mChannelMask(0),
     mPanId(Mac::kPanIdBroadcast),
-    mTimer(aThreadNetif.GetIp6(), &PanIdQueryServer::HandleTimer, this),
+    mTimer(aThreadNetif.GetInstance(), &PanIdQueryServer::HandleTimer, this),
     mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
     aThreadNetif.GetCoap().AddResource(mPanIdQuery);

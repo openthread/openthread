@@ -63,7 +63,7 @@ namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
     LeaderBase(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6(), &Leader::HandleTimer, this),
+    mTimer(aThreadNetif.GetInstance(), &Leader::HandleTimer, this),
     mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this),
     mCommissioningDataGet(OT_URI_PATH_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this),
     mCommissioningDataSet(OT_URI_PATH_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)

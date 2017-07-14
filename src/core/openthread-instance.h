@@ -78,6 +78,12 @@ typedef struct otInstance
     // State
     //
 
+    ot::TaskletScheduler mTaskletScheduler;
+    ot::TimerMilliScheduler mTimerMilliScheduler;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    ot::TimerMicroScheduler mTimerMicroScheduler;
+#endif
+
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     ot::Crypto::MbedTls mMbedTls;
     ot::Crypto::Heap    mMbedTlsHeap;

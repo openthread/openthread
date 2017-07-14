@@ -269,14 +269,14 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     mTransmitDoneCallback(NULL),
     mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-    , mTimer(aInstance.mIp6, &LinkRaw::HandleTimer, this)
+    , mTimer(&aInstance, &LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    , mTimerMicro(aInstance.mIp6, &LinkRaw::HandleTimer, this)
+    , mTimerMicro(&aInstance, &LinkRaw::HandleTimer, this)
 #endif
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    , mEnergyScanTask(aInstance.mIp6.mTaskletScheduler, &LinkRaw::HandleEnergyScanTask, this)
+    , mEnergyScanTask(&aInstance, &LinkRaw::HandleEnergyScanTask, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 {
     // Query the capabilities to check asserts

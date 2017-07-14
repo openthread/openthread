@@ -244,7 +244,7 @@ Interpreter::Interpreter(otInstance *aInstance):
     mLength(8),
     mCount(1),
     mInterval(1000),
-    mPingTimer(aInstance->mIp6, &Interpreter::s_HandlePingTimer, this),
+    mPingTimer(aInstance, &Interpreter::s_HandlePingTimer, this),
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mResolvingInProgress(0),
 #endif

@@ -57,8 +57,8 @@ void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentT
 
 Mpl::Mpl(Ip6 &aIp6):
     Ip6Locator(aIp6),
-    mSeedSetTimer(aIp6, &Mpl::HandleSeedSetTimer, this),
-    mRetransmissionTimer(aIp6, &Mpl::HandleRetransmissionTimer, this),
+    mSeedSetTimer(aIp6.GetInstance(), &Mpl::HandleSeedSetTimer, this),
+    mRetransmissionTimer(aIp6.GetInstance(), &Mpl::HandleRetransmissionTimer, this),
     mTimerExpirations(0),
     mSequence(0),
     mSeedId(0),

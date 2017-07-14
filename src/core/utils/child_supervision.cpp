@@ -52,7 +52,7 @@ namespace Utils {
 
 ChildSupervisor::ChildSupervisor(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6(), &ChildSupervisor::HandleTimer, this),
+    mTimer(aThreadNetif.GetInstance(), &ChildSupervisor::HandleTimer, this),
     mSupervisionInterval(kDefaultSupervisionInterval)
 {
 }
@@ -183,7 +183,7 @@ ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
 
 SupervisionListener::SupervisionListener(ThreadNetif &aThreadNetif) :
     ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6(), &SupervisionListener::HandleTimer, this),
+    mTimer(aThreadNetif.GetInstance(), &SupervisionListener::HandleTimer, this),
     mTimeout(0)
 {
     SetTimeout(kDefaultTimeout);

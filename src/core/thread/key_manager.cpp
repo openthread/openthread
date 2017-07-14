@@ -61,7 +61,7 @@ KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mKeyRotationTime(kDefaultKeyRotationTime),
     mKeySwitchGuardTime(kDefaultKeySwitchGuardTime),
     mKeySwitchGuardEnabled(false),
-    mKeyRotationTimer(aThreadNetif.GetIp6(), &KeyManager::HandleKeyRotationTimer, this),
+    mKeyRotationTimer(aThreadNetif.GetInstance(), &KeyManager::HandleKeyRotationTimer, this),
     mKekFrameCounter(0),
     mSecurityPolicyFlags(0xff)
 {

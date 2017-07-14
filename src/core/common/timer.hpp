@@ -48,8 +48,6 @@
 
 namespace ot {
 
-namespace Ip6 { class Ip6; }
-
 class TimerMilliScheduler;
 
 /**
@@ -66,7 +64,7 @@ class TimerMilliScheduler;
  * This class implements a timer.
  *
  */
-class Timer: public Ip6Locator, public Context
+class Timer: public InstanceLocator, public Context
 {
     friend class TimerScheduler;
 
@@ -88,13 +86,13 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aIp6        A reference to the IPv6 network object.
+     * @param[in]  aInstance   A pointer to the instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Timer(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
-        Ip6Locator(aIp6),
+    Timer(otInstance *aInstance, Handler aHandler, void *aContext):
+        InstanceLocator(aInstance),
         Context(aContext),
         mHandler(aHandler),
         mFireTime(0),
@@ -148,13 +146,13 @@ public:
     /**
      * This constructor creates a millisecond timer instance.
      *
-     * @param[in]  aIp6        A reference to the IPv6 network object.
+     * @param[in]  aInstance   A pointer to the instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    TimerMilli(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
-        Timer(aIp6, aHandler, aContext) {
+    TimerMilli(otInstance *aInstance, Handler aHandler, void *aContext):
+        Timer(aInstance, aHandler, aContext) {
     }
 
     /**
@@ -221,7 +219,7 @@ private:
  * This class implements the base timer scheduler.
  *
  */
-class TimerScheduler: public Ip6Locator
+class TimerScheduler: public InstanceLocator
 {
     friend class Timer;
 
@@ -240,11 +238,11 @@ protected:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A pointer to the instance object.
      *
      */
-    TimerScheduler(Ip6::Ip6 &aIp6):
-        Ip6Locator(aIp6),
+    TimerScheduler(otInstance *aInstance):
+        InstanceLocator(aInstance),
         mHead(NULL) {
     }
 
@@ -310,11 +308,11 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A pointer to the instance object.
      *
      */
-    TimerMilliScheduler(Ip6::Ip6 &aIp6):
-        TimerScheduler(aIp6) {
+    TimerMilliScheduler(otInstance *aInstance):
+        TimerScheduler(aInstance) {
     }
 
     /**
@@ -356,13 +354,13 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aIp6        A reference to the IPv6 network object.
+     * @param[in]  aInstance   A pointer to the instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    TimerMicro(Ip6::Ip6 &aIp6, Handler aHandler, void *aContext):
-        Timer(aIp6, aHandler, aContext) {
+    TimerMicro(otInstance *aInstance, Handler aHandler, void *aContext):
+        Timer(aInstance, aHandler, aContext) {
     }
 
     /**
@@ -418,11 +416,11 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A pointer to the instance object.
      *
      */
-    TimerMicroScheduler(Ip6::Ip6 &aIp6):
-        TimerScheduler(aIp6) {
+    TimerMicroScheduler(otInstance *aInstance):
+        TimerScheduler(aInstance) {
     }
 
     /**
