@@ -609,6 +609,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     Coap::Header header;
     Message *message;
     Ip6::MessageInfo messageInfo;
+    bool mIsCommissionerOptionEnabled = false;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -618,6 +619,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+
+    mIsCommissionerOptionEnabled = true;
 
     if (netif.GetCommissioner().IsActive())
     {
@@ -649,20 +652,21 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
-    if (aDataset.mIsActiveTimestampSet)
-    {
-        ActiveTimestampTlv timestamp;
-        timestamp.Init();
-        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
-        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
-        SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
-    }
-
+    // accept configured otOperationalDataset.
     if (aDataset.mIsPendingTimestampSet)
     {
         PendingTimestampTlv timestamp;
         timestamp.Init();
         static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mPendingTimestamp);
+        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
+        SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
+    }
+
+    if (aDataset.mIsActiveTimestampSet)
+    {
+        ActiveTimestampTlv timestamp;
+        timestamp.Init();
+        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
         static_cast<Timestamp *>(&timestamp)->SetTicks(0);
         SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     }
@@ -732,6 +736,100 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }
 
+    // For certificaiton test (suppose activetimestamp or pendingtimestamp would always be set via cli command)
+    // fill other fields and make a complete dataset for updates from thread device
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+
+    if (!mIsCommissionerOptionEnabled || !netif.GetCommissioner().IsActive())
+#else
+    if (!mIsCommissionerOptionEnabled)
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    {
+        if (!aDataset.mIsMasterKeySet)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kNetworkMasterKey);
+
+            if (tlv != NULL)
+            {
+                NetworkMasterKeyTlv masterkey;
+                masterkey.Init();
+                masterkey.SetNetworkMasterKey(static_cast<NetworkMasterKeyTlv *>(tlv)->GetNetworkMasterKey());
+                SuccessOrExit(error = message->Append(&masterkey, sizeof(masterkey)));
+            }
+        }
+
+        if (!aDataset.mIsNetworkNameSet)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kNetworkName);
+
+            if (tlv != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+
+        if (!aDataset.mIsExtendedPanIdSet)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kExtendedPanId);
+
+            if (tlv != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+
+        if (!aDataset.mIsMeshLocalPrefixSet)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kMeshLocalPrefix);
+
+            if (tlv != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+
+        if (!aDataset.mIsDelaySet)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kDelayTimer);
+
+            if (tlv != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+
+        if (!aDataset.mIsPanIdSet)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kPanId);
+
+            if (tlv != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+
+        if (!aDataset.mIsChannelSet)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kChannel);
+
+            if (tlv != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+
+        if (!aDataset.mIsChannelMaskPage0Set)
+        {
+            Tlv *tlv = mNetwork.Get(Tlv::kChannelMask);
+
+            if (tlv != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+    }
+
+    // Tlvs configured via binary format are not mixed the Tlvs configured via otOperationalDataset.
     if (aLength > 0)
     {
         SuccessOrExit(error = message->Append(aTlvs, aLength));
