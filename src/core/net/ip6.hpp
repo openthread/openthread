@@ -373,11 +373,6 @@ public:
     Mpl mMpl;
 
     MessagePool mMessagePool;
-    TaskletScheduler mTaskletScheduler;
-    TimerMilliScheduler mTimerMilliScheduler;
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    TimerMicroScheduler mTimerMicroScheduler;
-#endif
 
 private:
     static void HandleSendQueue(Tasklet &aTasklet);
@@ -409,11 +404,6 @@ private:
 
     Netif *mNetifListHead;
 };
-
-static inline Ip6 *Ip6FromTaskletScheduler(TaskletScheduler *aTaskletScheduler)
-{
-    return (Ip6 *)CONTAINING_RECORD(aTaskletScheduler, Ip6, mTaskletScheduler);
-}
 
 /**
  * @}

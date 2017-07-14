@@ -53,7 +53,7 @@ CoapSecure::CoapSecure(ThreadNetif &aNetif):
     mTransportCallback(NULL),
     mTransportContext(NULL),
     mTransmitMessage(NULL),
-    mTransmitTask(aNetif.GetIp6().mTaskletScheduler, &CoapSecure::HandleUdpTransmit, this)
+    mTransmitTask(aNetif.GetInstance(), &CoapSecure::HandleUdpTransmit, this)
 {
 }
 

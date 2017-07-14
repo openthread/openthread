@@ -44,13 +44,13 @@ using namespace ot;
 void otTaskletsProcess(otInstance *aInstance)
 {
     otLogFuncEntry();
-    aInstance->mIp6.mTaskletScheduler.ProcessQueuedTasklets();
+    aInstance->mTaskletScheduler.ProcessQueuedTasklets();
     otLogFuncExit();
 }
 
 bool otTaskletsArePending(otInstance *aInstance)
 {
-    return aInstance->mIp6.mTaskletScheduler.AreTaskletsPending();
+    return aInstance->mTaskletScheduler.AreTaskletsPending();
 }
 
 #ifndef _MSC_VER

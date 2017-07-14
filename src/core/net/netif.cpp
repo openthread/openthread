@@ -51,7 +51,7 @@ Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
     mInterfaceId(aInterfaceId),
     mAllRoutersSubscribed(false),
     mMulticastPromiscuous(false),
-    mStateChangedTask(aIp6.mTaskletScheduler, &Netif::HandleStateChangedTask, this),
+    mStateChangedTask(aIp6.GetInstance(), &Netif::HandleStateChangedTask, this),
     mNext(NULL),
     mStateChangedFlags(0)
 {

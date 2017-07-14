@@ -168,47 +168,6 @@ protected:
 };
 
 /**
- * This class implements a locator for TaskletScheduler object.
- *
- */
-class TaskletSchedulerLocator: private Locator<TaskletScheduler>
-{
-public:
-    /**
-     * This method returns a reference to the TaskletScheduler.
-     *
-     * @returns   A reference to the TaskletScheduler.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    TaskletScheduler &GetTaskletScheduler(void) const { return mLocatorObject; }
-#else
-    TaskletScheduler &GetTaskletScheduler(void) const { return otGetTaskletScheduler(); }
-#endif
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure, or NULL if the instance has been finalized.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance *GetInstance(void) const;
-#else
-    otInstance *GetInstance(void) const { return otGetInstance(); }
-#endif
-
-protected:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aTaskletScheduler  A reference to the TaskletScheduler.
-     *
-     */
-    TaskletSchedulerLocator(TaskletScheduler &aTaskletScheduler): Locator(aTaskletScheduler) { }
-};
-
-/**
  * This class implements a locator for Ip6 object.
  *
  */

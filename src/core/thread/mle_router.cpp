@@ -60,8 +60,8 @@ namespace Mle {
 
 MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
-    mAdvertiseTimer(aThreadNetif.GetIp6(), &MleRouter::HandleAdvertiseTimer, NULL, this),
-    mStateUpdateTimer(aThreadNetif.GetIp6(), &MleRouter::HandleStateUpdateTimer, this),
+    mAdvertiseTimer(aThreadNetif.GetInstance(), &MleRouter::HandleAdvertiseTimer, NULL, this),
+    mStateUpdateTimer(aThreadNetif.GetInstance(), &MleRouter::HandleStateUpdateTimer, this),
     mAddressSolicit(OT_URI_PATH_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
     mAddressRelease(OT_URI_PATH_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
     mRouterIdSequence(0),

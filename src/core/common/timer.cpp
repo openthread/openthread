@@ -41,7 +41,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
-#include "net/ip6.hpp"
 
 namespace ot {
 
@@ -90,7 +89,7 @@ void TimerMilli::Stop(void)
 
 TimerMilliScheduler &TimerMilli::GetTimerMilliScheduler(void) const
 {
-    return GetIp6().mTimerMilliScheduler;
+    return GetInstance()->mTimerMilliScheduler;
 }
 
 void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
@@ -169,14 +168,14 @@ void TimerScheduler::SetAlarm(const AlarmApi &aAlarmApi)
 {
     if (mHead == NULL)
     {
-        aAlarmApi.AlarmStop(GetIp6().GetInstance());
+        aAlarmApi.AlarmStop(GetInstance());
     }
     else
     {
         uint32_t now = aAlarmApi.AlarmGetNow();
         uint32_t remaining = IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
 
-        aAlarmApi.AlarmStartAt(GetIp6().GetInstance(), now, remaining);
+        aAlarmApi.AlarmStartAt(GetInstance(), now, remaining);
     }
 }
 
@@ -217,7 +216,7 @@ bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
     otLogFuncEntry();
-    aInstance->mIp6.mTimerMilliScheduler.ProcessTimers();
+    aInstance->mTimerMilliScheduler.ProcessTimers();
     otLogFuncExit();
 }
 
@@ -243,13 +242,13 @@ void TimerMicro::Stop(void)
 
 TimerMicroScheduler &TimerMicro::GetTimerMicroScheduler(void) const
 {
-    return GetIp6().mTimerMicroScheduler;
+    return GetInstance()->mTimerMicroScheduler;
 }
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
     otLogFuncEntry();
-    aInstance->mIp6.mTimerMicroScheduler.ProcessTimers();
+    aInstance->mTimerMicroScheduler.ProcessTimers();
     otLogFuncExit();
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

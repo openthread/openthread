@@ -58,7 +58,7 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mPeriod(0),
     mCount(0),
     mChannel(0),
-    mTimer(aThreadNetif.GetIp6(), &AnnounceBeginServer::HandleTimer, this),
+    mTimer(aThreadNetif.GetInstance(), &AnnounceBeginServer::HandleTimer, this),
     mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
     aThreadNetif.GetCoap().AddResource(mAnnounceBegin);

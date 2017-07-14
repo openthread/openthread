@@ -59,7 +59,7 @@ class TaskletScheduler;
  * This class is used to represent a tasklet.
  *
  */
-class Tasklet: public TaskletSchedulerLocator, public Context
+class Tasklet: public InstanceLocator, public Context
 {
     friend class TaskletScheduler;
 
@@ -75,12 +75,12 @@ public:
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aScheduler  A reference to the tasklet scheduler.
+     * @param[in]  aInstance   A pointer to the instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext);
+    Tasklet(otInstance *aInstance, Handler aHandler, void *aContext);
 
     /**
      * This method puts the tasklet on the run queue.

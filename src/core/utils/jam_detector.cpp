@@ -52,7 +52,7 @@ JamDetector::JamDetector(ThreadNetif &aNetif) :
     mHandler(NULL),
     mContext(NULL),
     mRssiThreshold(kDefaultRssiThreshold),
-    mTimer(aNetif.GetIp6(), &JamDetector::HandleTimer, this),
+    mTimer(aNetif.GetInstance(), &JamDetector::HandleTimer, this),
     mHistoryBitmap(0),
     mCurSecondStartTime(0),
     mSampleInterval(0),

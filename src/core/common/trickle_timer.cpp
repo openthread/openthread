@@ -37,20 +37,19 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 
 namespace ot {
 
 TrickleTimer::TrickleTimer(
-    Ip6::Ip6 &aIp6,
+    otInstance *aInstance,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     uint32_t aRedundancyConstant,
 #endif
     Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
     :
-    TimerMilli(aIp6, HandleTimerFired, aContext),
+    TimerMilli(aInstance, HandleTimerFired, aContext),
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     k(aRedundancyConstant),
     c(0),

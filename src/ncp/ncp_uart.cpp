@@ -98,7 +98,7 @@ NcpUart::NcpUart(otInstance *aInstance):
     mUartBuffer(),
     mState(kStartingFrame),
     mByte(0),
-    mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
+    mUartSendTask(aInstance, EncodeAndSendToUart, this)
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 

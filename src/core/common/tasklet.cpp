@@ -44,8 +44,8 @@
 
 namespace ot {
 
-Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext):
-    TaskletSchedulerLocator(aScheduler),
+Tasklet::Tasklet(otInstance *aInstance, Handler aHandler, void *aContext):
+    InstanceLocator(aInstance),
     Context(aContext),
     mHandler(aHandler),
     mNext(NULL)
@@ -54,7 +54,7 @@ Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext)
 
 otError Tasklet::Post(void)
 {
-    return GetTaskletScheduler().Post(*this);
+    return GetInstance()->mTaskletScheduler.Post(*this);
 }
 
 TaskletScheduler::TaskletScheduler(void):

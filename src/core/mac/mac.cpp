@@ -107,9 +107,9 @@ void Mac::StartCsmaBackoff(void)
 
 Mac::Mac(ThreadNetif &aThreadNetif):
     ThreadNetifLocator(aThreadNetif),
-    mMacTimer(aThreadNetif.GetIp6(), &Mac::HandleMacTimer, this),
-    mBackoffTimer(aThreadNetif.GetIp6(), &Mac::HandleBeginTransmit, this),
-    mReceiveTimer(aThreadNetif.GetIp6(), &Mac::HandleReceiveTimer, this),
+    mMacTimer(aThreadNetif.GetInstance(), &Mac::HandleMacTimer, this),
+    mBackoffTimer(aThreadNetif.GetInstance(), &Mac::HandleBeginTransmit, this),
+    mReceiveTimer(aThreadNetif.GetInstance(), &Mac::HandleReceiveTimer, this),
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
     mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
@@ -133,7 +133,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mScanContext(NULL),
     mActiveScanHandler(NULL), // initialize mActiveScanHandler and mEnergyScanHandler union
     mEnergyScanCurrentMaxRssi(kInvalidRssiValue),
-    mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
+    mEnergyScanSampleRssiTask(aThreadNetif.GetInstance(), &Mac::HandleEnergyScanSampleRssi, this),
     mPcapCallback(NULL),
     mPcapCallbackContext(NULL),
 #if OPENTHREAD_ENABLE_MAC_FILTER

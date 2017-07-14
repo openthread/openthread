@@ -57,7 +57,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     ThreadNetifLocator(aNetif),
     mPskLength(0),
     mStarted(false),
-    mTimer(aNetif.GetIp6(), &Dtls::HandleTimer, this),
+    mTimer(aNetif.GetInstance(), &Dtls::HandleTimer, this),
     mTimerIntermediate(0),
     mTimerSet(false),
     mReceiveMessage(NULL),

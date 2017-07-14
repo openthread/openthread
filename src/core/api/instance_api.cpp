@@ -66,7 +66,7 @@ ot::MeshForwarder &otGetMeshForwarder(void)
 
 ot::TaskletScheduler &otGetTaskletScheduler(void)
 {
-    return sInstance->mIp6.mTaskletScheduler;
+    return sInstance->mTaskletScheduler;
 }
 
 ot::Ip6::Ip6 &otGetIp6(void)
@@ -82,6 +82,10 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
+    mTimerMilliScheduler(this),
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    mTimerMicroScheduler(this),
+#endif
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     , mLinkRaw(*this)
