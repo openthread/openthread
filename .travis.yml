@@ -42,6 +42,15 @@ after_success:
 
 matrix:
   include:
+    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1
+      os: linux
+      compiler: clang
+    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-ncp" VERBOSE=1
+      os: linux
+      compiler: gcc
     - env: BUILD_TARGET="pretty-check"
       os: linux
     - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
@@ -82,15 +91,6 @@ matrix:
           packages:
             - gcc-6
             - g++-6
-    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1
-      os: linux
-      compiler: clang
-    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
-      os: linux
-      compiler: gcc
     - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix-ncp" VERBOSE=1
       os: linux
       compiler: gcc
