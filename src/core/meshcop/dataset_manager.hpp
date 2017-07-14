@@ -440,7 +440,6 @@ protected:
     static void HandleDelayTimer(Timer &aTimer);
     void HandleDelayTimer(void);
     void StartDelayTimer(void);
-    void HandleNetworkUpdate(void);
 
     TimerMilli mDelayTimer;
 
