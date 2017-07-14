@@ -481,7 +481,11 @@ otError Mle::BecomeDetached(void)
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    netif.GetPendingDataset().HandleDetach();
+    // not in reattach stage after reset
+    if (mReattachState == kReattachStop)
+    {
+        netif.GetPendingDataset().HandleDetach();
+    }
 
     SetStateDetached();
     SetRloc16(Mac::kShortAddrInvalid);
