@@ -34,6 +34,8 @@
 #ifndef OT_MBEDTLS_HPP_
 #define OT_MBEDTLS_HPP_
 
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
 namespace ot {
 namespace Crypto {
 
@@ -65,5 +67,7 @@ public:
 
 }  // namespace Crypto
 }  // namespace ot
+
+#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 #endif  // OT_MBEDTLS_HPP_

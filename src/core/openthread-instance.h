@@ -49,6 +49,7 @@
 #include "api/link_raw.hpp"
 #endif
 #include "coap/coap.hpp"
+#include "crypto/heap.hpp"
 #include "crypto/mbedtls.hpp"
 #include "net/ip6.hpp"
 #include "thread/thread_netif.hpp"
@@ -79,6 +80,7 @@ typedef struct otInstance
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     ot::Crypto::MbedTls mMbedTls;
+    ot::Crypto::Heap    mMbedTlsHeap;
 #endif
     ot::Ip6::Ip6 mIp6;
     ot::ThreadNetif mThreadNetif;
