@@ -93,7 +93,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
 
     do
     {
-        size_t size = sizeof(Node) + rand() % aSizeLimit;
+        size_t size = sizeof(Node) + static_cast<size_t>(rand()) % aSizeLimit;
         Log("TestAllocateRandomly allocating %zu bytes...", size);
         last->mNext = static_cast<Node *>(heap.CAlloc(1, size));
 
@@ -109,7 +109,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
         ++nnodes;
 
         // 50% probability to randomly free a node.
-        size_t freeIndex = rand() % (nnodes * 2);
+        size_t freeIndex = static_cast<size_t>(rand()) % (nnodes * 2);
 
         if (freeIndex > nnodes)
         {
