@@ -1043,6 +1043,7 @@ void PendingDatasetBase::ClearNetwork(void)
 {
     mNetwork.Clear();
     mDelayTimer.Stop();
+    DatasetManager::HandleNetworkUpdate();
 }
 
 void PendingDatasetBase::HandleDetach(void)
