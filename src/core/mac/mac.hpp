@@ -627,7 +627,7 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) { return otPlatRadioGetReceiveSensitivity(GetInstance()); }
+    int8_t GetNoiseFloor(void) { return otPlatRadioGetReceiveSensitivity(&GetInstance()); }
 
     /**
      * This method indicates whether or not CSMA backoff is supported by the radio layer.

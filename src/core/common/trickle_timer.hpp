@@ -80,14 +80,14 @@ public:
     /**
      * This constructor creates a trickle timer instance.
      *
-     * @param[in]  aInstance                A pointer to the instance.
+     * @param[in]  aInstance                A reference to the instance.
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
      * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
      * @param[in]  aContext                 A pointer to arbitrary context information.
      *
      */
-    TrickleTimer(otInstance *aInstance,
+    TrickleTimer(otInstance &aInstance,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
                  uint32_t aRedundancyConstant,
 #endif

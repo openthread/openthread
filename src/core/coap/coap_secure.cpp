@@ -219,7 +219,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
     otLogFuncEntry();
 
-    VerifyOrExit((message = GetInstance()->mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
+    VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     Coap::Receive(*message, mPeerAddress);

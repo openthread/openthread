@@ -86,12 +86,12 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aInstance   A pointer to the instance.
+     * @param[in]  aInstance   A reference to the instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Timer(otInstance *aInstance, Handler aHandler, void *aContext):
+    Timer(otInstance &aInstance, Handler aHandler, void *aContext):
         InstanceLocator(aInstance),
         Context(aContext),
         mHandler(aHandler),
@@ -146,12 +146,12 @@ public:
     /**
      * This constructor creates a millisecond timer instance.
      *
-     * @param[in]  aInstance   A pointer to the instance.
+     * @param[in]  aInstance   A reference to the instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    TimerMilli(otInstance *aInstance, Handler aHandler, void *aContext):
+    TimerMilli(otInstance &aInstance, Handler aHandler, void *aContext):
         Timer(aInstance, aHandler, aContext) {
     }
 
@@ -238,10 +238,10 @@ protected:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aInstance  A pointer to the instance object.
+     * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerScheduler(otInstance *aInstance):
+    TimerScheduler(otInstance &aInstance):
         InstanceLocator(aInstance),
         mHead(NULL) {
     }
@@ -308,10 +308,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aInstance  A pointer to the instance object.
+     * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMilliScheduler(otInstance *aInstance):
+    TimerMilliScheduler(otInstance &aInstance):
         TimerScheduler(aInstance) {
     }
 
@@ -354,12 +354,12 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aInstance   A pointer to the instance object.
+     * @param[in]  aInstance   A reference to the instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    TimerMicro(otInstance *aInstance, Handler aHandler, void *aContext):
+    TimerMicro(otInstance &aInstance, Handler aHandler, void *aContext):
         Timer(aInstance, aHandler, aContext) {
     }
 
@@ -416,10 +416,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aInstance  A pointer to the instance object.
+     * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMicroScheduler(otInstance *aInstance):
+    TimerMicroScheduler(otInstance &aInstance):
         TimerScheduler(aInstance) {
     }
 

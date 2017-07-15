@@ -89,7 +89,7 @@ void TimerMilli::Stop(void)
 
 TimerMilliScheduler &TimerMilli::GetTimerMilliScheduler(void) const
 {
-    return GetInstance()->mTimerMilliScheduler;
+    return GetInstance().mTimerMilliScheduler;
 }
 
 void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
@@ -168,14 +168,14 @@ void TimerScheduler::SetAlarm(const AlarmApi &aAlarmApi)
 {
     if (mHead == NULL)
     {
-        aAlarmApi.AlarmStop(GetInstance());
+        aAlarmApi.AlarmStop(&GetInstance());
     }
     else
     {
         uint32_t now = aAlarmApi.AlarmGetNow();
         uint32_t remaining = IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
 
-        aAlarmApi.AlarmStartAt(GetInstance(), now, remaining);
+        aAlarmApi.AlarmStartAt(&GetInstance(), now, remaining);
     }
 }
 
@@ -246,7 +246,7 @@ void TimerMicro::Stop(void)
 
 TimerMicroScheduler &TimerMicro::GetTimerMicroScheduler(void) const
 {
-    return GetInstance()->mTimerMicroScheduler;
+    return GetInstance().mTimerMicroScheduler;
 }
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)

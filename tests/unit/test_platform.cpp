@@ -82,19 +82,19 @@ otInstance *testInitInstance(void)
     otInstance *instance = NULL;
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    size_t instaneBufferLength = 0;
+    size_t instanceBufferLength = 0;
     uint8_t *instanceBuffer = NULL;
 
     // Call to query the buffer size
-    (void)otInstanceInit(NULL, &instaneBufferLength);
+    (void)otInstanceInit(NULL, &instanceBufferLength);
 
     // Call to allocate the buffer
-    instanceBuffer = (uint8_t *)malloc(instaneBufferLength);
+    instanceBuffer = (uint8_t *)malloc(instanceBufferLength);
     VerifyOrQuit(instanceBuffer != NULL, "Failed to allocate otInstance");
-    memset(instanceBuffer, 0, instaneBufferLength);
+    memset(instanceBuffer, 0, instanceBufferLength);
 
     // Initialize OpenThread with the buffer
-    instance = otInstanceInit(instanceBuffer, &instaneBufferLength);
+    instance = otInstanceInit(instanceBuffer, &instanceBufferLength);
 #else
     instance = otInstanceInitSingle();
 #endif

@@ -44,7 +44,7 @@
 
 namespace ot {
 
-Tasklet::Tasklet(otInstance *aInstance, Handler aHandler, void *aContext):
+Tasklet::Tasklet(otInstance &aInstance, Handler aHandler, void *aContext):
     InstanceLocator(aInstance),
     Context(aContext),
     mHandler(aHandler),
@@ -54,7 +54,7 @@ Tasklet::Tasklet(otInstance *aInstance, Handler aHandler, void *aContext):
 
 otError Tasklet::Post(void)
 {
-    return GetInstance()->mTaskletScheduler.Post(*this);
+    return GetInstance().mTaskletScheduler.Post(*this);
 }
 
 TaskletScheduler::TaskletScheduler(void):
@@ -73,7 +73,7 @@ otError TaskletScheduler::Post(Tasklet &aTasklet)
     {
         mHead = &aTasklet;
         mTail = &aTasklet;
-        otTaskletsSignalPending(aTasklet.GetInstance());
+        otTaskletsSignalPending(&aTasklet.GetInstance());
     }
     else
     {
@@ -118,7 +118,7 @@ void TaskletScheduler::ProcessQueuedTasklets(void)
         {
             if (mHead != NULL)
             {
-                otTaskletsSignalPending(mHead->GetInstance());
+                otTaskletsSignalPending(&mHead->GetInstance());
             }
 
             break;

@@ -85,7 +85,7 @@ void InitCounters(void)
 class TestTimer: public ot::TimerMilli
 {
 public:
-    TestTimer(otInstance *aInstance):
+    TestTimer(otInstance &aInstance):
         ot::TimerMilli(aInstance, TestTimer::HandleTimerFired, NULL),
         mFiredCounter(0)
     { }
@@ -115,7 +115,7 @@ int TestOneTimer(void)
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
     otInstance *instance = testInitInstance();
-    TestTimer timer(instance);
+    TestTimer timer(*instance);
 
     // Test one Timer basic operation.
 
@@ -241,8 +241,8 @@ int TestTwoTimers(void)
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
     otInstance *instance = testInitInstance();
-    TestTimer timer1(instance);
-    TestTimer timer2(instance);
+    TestTimer timer1(*instance);
+    TestTimer timer2(*instance);
 
     InitTestTimer();
     printf("TestTwoTimers() ");
@@ -526,16 +526,16 @@ static void TenTimers(uint32_t aTimeShift)
 
     otInstance *instance = testInitInstance();
 
-    TestTimer timer0(instance);
-    TestTimer timer1(instance);
-    TestTimer timer2(instance);
-    TestTimer timer3(instance);
-    TestTimer timer4(instance);
-    TestTimer timer5(instance);
-    TestTimer timer6(instance);
-    TestTimer timer7(instance);
-    TestTimer timer8(instance);
-    TestTimer timer9(instance);
+    TestTimer timer0(*instance);
+    TestTimer timer1(*instance);
+    TestTimer timer2(*instance);
+    TestTimer timer3(*instance);
+    TestTimer timer4(*instance);
+    TestTimer timer5(*instance);
+    TestTimer timer6(*instance);
+    TestTimer timer7(*instance);
+    TestTimer timer8(*instance);
+    TestTimer timer9(*instance);
     TestTimer *timers[kNumTimers] =
     {
         &timer0,

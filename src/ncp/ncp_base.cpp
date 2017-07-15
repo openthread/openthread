@@ -669,7 +669,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mDiscoveryScanJoinerFlag(false),
     mDiscoveryScanEnableFiltering(false),
     mDiscoveryScanPanId(0xffff),
-    mUpdateChangedPropsTask(aInstance, &NcpBase::UpdateChangedProps, this),
+    mUpdateChangedPropsTask(*aInstance, &NcpBase::UpdateChangedProps, this),
     mThreadChangedFlags(0),
     mChangedPropsSet(),
     mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),

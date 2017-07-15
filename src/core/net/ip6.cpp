@@ -52,13 +52,14 @@
 namespace ot {
 namespace Ip6 {
 
-Ip6::Ip6(void):
+Ip6::Ip6(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mRoutes(*this),
     mIcmp(*this),
     mUdp(*this),
     mMpl(*this),
     mForwardingEnabled(false),
-    mSendQueueTask(GetInstance(), HandleSendQueue, this),
+    mSendQueueTask(aInstance, HandleSendQueue, this),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
     mIsReceiveIp6FilterEnabled(false),
@@ -68,8 +69,8 @@ Ip6::Ip6(void):
 
 Message *Ip6::NewMessage(uint16_t aReserved)
 {
-    return GetInstance()->mMessagePool.New(Message::kTypeIp6,
-                                           sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
+    return GetInstance().mMessagePool.New(Message::kTypeIp6,
+                                          sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
@@ -1094,11 +1095,6 @@ int8_t Ip6::GetOnLinkNetif(const Address &aAddress)
 
 exit:
     return rval;
-}
-
-otInstance *Ip6::GetInstance(void)
-{
-    return otInstanceFromIp6(this);
 }
 
 Ip6 &Ip6::GetOwner(const Context &aContext)

@@ -3502,7 +3502,7 @@ otError MleRouter::RestoreChildren(void)
         uint16_t length;
 
         length = sizeof(childInfo);
-        SuccessOrExit(error = otPlatSettingsGet(GetInstance(), Settings::kKeyChildInfo, i,
+        SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), Settings::kKeyChildInfo, i,
                                                 reinterpret_cast<uint8_t *>(&childInfo), &length));
         VerifyOrExit(length >= sizeof(childInfo), error = OT_ERROR_PARSE);
 
@@ -3531,13 +3531,13 @@ otError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
         Settings::ChildInfo childInfo;
         uint16_t length = sizeof(childInfo);
 
-        SuccessOrExit(error = otPlatSettingsGet(GetInstance(), Settings::kKeyChildInfo, i,
+        SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), Settings::kKeyChildInfo, i,
                                                 reinterpret_cast<uint8_t *>(&childInfo), &length));
         VerifyOrExit(length == sizeof(childInfo), error = OT_ERROR_PARSE);
 
         if (childInfo.mRloc16 == aChildRloc16)
         {
-            error = otPlatSettingsDelete(GetNetif().GetInstance(), Settings::kKeyChildInfo, i);
+            error = otPlatSettingsDelete(&GetInstance(), Settings::kKeyChildInfo, i);
             ExitNow();
         }
     }
@@ -3563,7 +3563,7 @@ otError MleRouter::StoreChild(uint16_t aChildRloc16)
     childInfo.mRloc16  = child->GetRloc16();
     childInfo.mMode    = child->GetDeviceMode();
 
-    error = otPlatSettingsAdd(GetInstance(), Settings::kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
+    error = otPlatSettingsAdd(&GetInstance(), Settings::kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
 
 exit:
@@ -3574,7 +3574,7 @@ otError MleRouter::RefreshStoredChildren(void)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = otPlatSettingsDelete(GetInstance(), Settings::kKeyChildInfo, -1));
+    SuccessOrExit(error = otPlatSettingsDelete(&GetInstance(), Settings::kKeyChildInfo, -1));
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {

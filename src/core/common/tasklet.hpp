@@ -75,12 +75,12 @@ public:
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aInstance   A pointer to the instance object.
+     * @param[in]  aInstance   A reference to the instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Tasklet(otInstance *aInstance, Handler aHandler, void *aContext);
+    Tasklet(otInstance &aInstance, Handler aHandler, void *aContext);
 
     /**
      * This method puts the tasklet on the run queue.

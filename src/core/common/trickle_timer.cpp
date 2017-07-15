@@ -43,7 +43,7 @@
 namespace ot {
 
 TrickleTimer::TrickleTimer(
-    otInstance *aInstance,
+    otInstance &aInstance,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     uint32_t aRedundancyConstant,
 #endif

@@ -105,15 +105,15 @@ public:
 #endif
 
     /**
-     * This method returns the pointer to the parent otInstance structure.
+     * This method returns the reference to the parent otInstance structure.
      *
-     * @returns The pointer to the parent otInstance structure, or NULL if the instance has been finalized.
+     * @returns A reference to the parent otInstance structure.
      *
      */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance *GetInstance(void) const;
+    otInstance &GetInstance(void) const;
 #else
-    otInstance *GetInstance(void) const { return otGetInstance(); }
+    otInstance &GetInstance(void) const { return *otGetInstance(); }
 #endif
 
 protected:
@@ -146,15 +146,15 @@ public:
 #endif
 
     /**
-     * This method returns the pointer to the parent otInstance structure.
+     * This method returns the reference to the parent otInstance structure.
      *
-     * @returns The pointer to the parent otInstance structure, or NULL if the instance has been finalized.
+     * @returns A reference to the parent otInstance structure.
      *
      */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance *GetInstance(void) const;
+    otInstance &GetInstance(void) const;
 #else
-    otInstance *GetInstance(void) const { return otGetInstance(); }
+    otInstance &GetInstance(void) const { return *otGetInstance(); }
 #endif
 
 protected:
@@ -187,15 +187,15 @@ public:
 #endif
 
     /**
-     * This method returns the pointer to the parent otInstance structure.
+     * This method returns the reference to the parent otInstance structure.
      *
-     * @returns The pointer to the parent otInstance structure, or NULL if the instance has been finalized.
+     * @returns A reference to the parent otInstance structure.
      *
      */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance *GetInstance(void) const;
+    otInstance &GetInstance(void) const;
 #else
-    otInstance *GetInstance(void) const { return otGetInstance(); }
+    otInstance &GetInstance(void) const { return *otGetInstance(); }
 #endif
 
 protected:
@@ -212,19 +212,19 @@ protected:
  * This class implements locator for  otInstance object
  *
  */
-class InstanceLocator
+class InstanceLocator: private Locator<otInstance>
 {
 public:
     /**
-     * This method returns the pointer to the parent otInstance structure.
+     * This method returns a reference to the parent otInstance structure.
      *
-     * @returns The pointer to the parent otInstance structure, or NULL if the instance has been finalized.
+     * @returns A reference to the parent otInstance structure.
      *
      */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance *GetInstance(void) const { return mInstance; }
+    otInstance &GetInstance(void) const { return mLocatorObject; }
 #else
-    otInstance *GetInstance(void) const { return otGetInstance(); }
+    otInstance &GetInstance(void) const { return *otGetInstance(); }
 #endif
 
 protected:
@@ -234,18 +234,7 @@ protected:
      * @param[in]  aInstance  A pointer to the otInstance.
      *
      */
-    InstanceLocator(otInstance *aInstance)
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-        : mInstance(aInstance)
-#endif
-    {
-        OT_UNUSED_VARIABLE(aInstance);
-    }
-
-private:
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance *mInstance;
-#endif
+    InstanceLocator(otInstance &aInstance): Locator(aInstance) { }
 };
 
 /**

@@ -139,7 +139,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 #if OPENTHREAD_ENABLE_MAC_FILTER
     mFilter(),
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
-    mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
+    mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aThreadNetif.GetInstance()))),
     mKeyIdMode2FrameCounter(0),
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelaySleep(false),
@@ -156,7 +156,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     SetExtAddress(mExtAddress);
     SetShortAddress(mShortAddress);
 
-    otPlatRadioEnable(GetInstance());
+    otPlatRadioEnable(&GetInstance());
 }
 
 otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -286,7 +286,7 @@ void Mac::StartEnergyScan(void)
 {
     mState = kStateEnergyScan;
 
-    if (!(otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN))
+    if (!(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN))
     {
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
         mMacTimer.Start(mScanDuration);
@@ -295,7 +295,7 @@ void Mac::StartEnergyScan(void)
     }
     else
     {
-        otError error = otPlatRadioEnergyScan(GetInstance(), mScanChannel, mScanDuration);
+        otError error = otPlatRadioEnergyScan(&GetInstance(), mScanChannel, mScanDuration);
 
         if (error != OT_ERROR_NONE)
         {
@@ -374,7 +374,7 @@ void Mac::HandleEnergyScanSampleRssi(void)
 
     VerifyOrExit(mState == kStateEnergyScan);
 
-    rssi = otPlatRadioGetRssi(GetInstance());
+    rssi = otPlatRadioGetRssi(&GetInstance());
 
     if (rssi != kInvalidRssiValue)
     {
@@ -440,7 +440,7 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
         buf[i] = aExtAddress.m8[7 - i];
     }
 
-    otPlatRadioSetExtendedAddress(GetInstance(), buf);
+    otPlatRadioSetExtendedAddress(&GetInstance(), buf);
     mExtAddress = aExtAddress;
 
     otLogFuncExit();
@@ -453,7 +453,7 @@ void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
 
     otLogFuncEntry();
 
-    otPlatRadioGetIeeeEui64(GetInstance(), buf);
+    otPlatRadioGetIeeeEui64(&GetInstance(), buf);
     sha256.Start();
     sha256.Update(buf, OT_EXT_ADDRESS_SIZE);
     sha256.Finish(buf);
@@ -468,7 +468,7 @@ otError Mac::SetShortAddress(ShortAddress aShortAddress)
 {
     otLogFuncEntryMsg("%d", aShortAddress);
     mShortAddress = aShortAddress;
-    otPlatRadioSetShortAddress(GetInstance(), aShortAddress);
+    otPlatRadioSetShortAddress(&GetInstance(), aShortAddress);
     otLogFuncExit();
     return OT_ERROR_NONE;
 }
@@ -506,7 +506,7 @@ otError Mac::SetPanId(PanId aPanId)
 {
     otLogFuncEntryMsg("%d", aPanId);
     mPanId = aPanId;
-    otPlatRadioSetPanId(GetInstance(), mPanId);
+    otPlatRadioSetPanId(&GetInstance(), mPanId);
     otLogFuncExit();
     return OT_ERROR_NONE;
 }
@@ -554,7 +554,7 @@ void Mac::NextOperation(void)
         break;
 
     default:
-        if (mRxOnWhenIdle || mReceiveTimer.IsRunning() || otPlatRadioGetPromiscuous(GetInstance()))
+        if (mRxOnWhenIdle || mReceiveTimer.IsRunning() || otPlatRadioGetPromiscuous(&GetInstance()))
         {
             RadioReceive(mChannel);
         }
@@ -793,7 +793,7 @@ void Mac::HandleBeginTransmit(void)
         switch (mState)
         {
         case kStateActiveScan:
-            otPlatRadioSetPanId(GetInstance(), kPanIdBroadcast);
+            otPlatRadioSetPanId(&GetInstance(), kPanIdBroadcast);
             sendFrame.SetChannel(mScanChannel);
             SendBeaconRequest(sendFrame);
             sendFrame.SetSequence(0);
@@ -870,7 +870,7 @@ void Mac::TransmitStartedTask(otRadioFrame *aFrame)
 {
     Frame *frame = static_cast<Frame *>(aFrame);
 
-    if (frame->GetAckRequest() && !(otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_ACK_TIMEOUT))
+    if (frame->GetAckRequest() && !(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ACK_TIMEOUT))
     {
         mMacTimer.Start(kAckTimeout);
         otLogDebgMac(GetInstance(), "Ack timer start");
@@ -1102,7 +1102,7 @@ otError Mac::RadioTransmit(Frame *aSendFrame)
 
 #endif
     // Transmit packet
-    return otPlatRadioTransmit(GetInstance(), static_cast<otRadioFrame *>(aSendFrame));
+    return otPlatRadioTransmit(&GetInstance(), static_cast<otRadioFrame *>(aSendFrame));
 }
 
 otError Mac::RadioReceive(uint8_t aChannel)
@@ -1117,7 +1117,7 @@ otError Mac::RadioReceive(uint8_t aChannel)
 
 #endif
     // Receive
-    return otPlatRadioReceive(GetInstance(), aChannel);
+    return otPlatRadioReceive(&GetInstance(), aChannel);
 }
 
 void Mac::RadioSleep(void)
@@ -1132,7 +1132,7 @@ void Mac::RadioSleep(void)
     else
 #endif
     {
-        otPlatRadioSleep(GetInstance());
+        otPlatRadioSleep(&GetInstance());
     }
 }
 
@@ -1156,7 +1156,7 @@ void Mac::HandleMacTimer(void)
             if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
             {
                 RadioReceive(mChannel);
-                otPlatRadioSetPanId(GetInstance(), mPanId);
+                otPlatRadioSetPanId(&GetInstance(), mPanId);
                 mActiveScanHandler(mScanContext, NULL);
                 ScheduleNextTransmission();
                 ExitNow();
@@ -1834,12 +1834,12 @@ void Mac::SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackConte
 
 bool Mac::IsPromiscuous(void)
 {
-    return otPlatRadioGetPromiscuous(GetInstance());
+    return otPlatRadioGetPromiscuous(&GetInstance());
 }
 
 void Mac::SetPromiscuous(bool aPromiscuous)
 {
-    otPlatRadioSetPromiscuous(GetInstance(), aPromiscuous);
+    otPlatRadioSetPromiscuous(&GetInstance(), aPromiscuous);
 
     if (mState == kStateIdle)
     {
@@ -1853,12 +1853,12 @@ bool Mac::RadioSupportsCsmaBackoff(void)
      *   1) Radio provides the CSMA backoff capability (i.e., `OT_RADIO_CAPS_CSMA_BACKOFF` bit is set) or;
      *   2) It provides `OT_RADIO_CAPS_TRANSMIT_RETRIES` which indicates support for MAC retries along with CSMA backoff.
      */
-    return (otPlatRadioGetCaps(GetInstance()) & (OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF)) != 0;
+    return (otPlatRadioGetCaps(&GetInstance()) & (OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF)) != 0;
 }
 
 bool Mac::RadioSupportsRetries(void)
 {
-    return (otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0;
+    return (otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0;
 }
 
 void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const

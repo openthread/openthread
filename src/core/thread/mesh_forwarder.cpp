@@ -1921,7 +1921,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
         meshHeader.SetHopsLeft(meshHeader.GetHopsLeft() - 1);
         meshHeader.AppendTo(aFrame);
 
-        VerifyOrExit((message = netif.GetInstance()->mMessagePool.New(Message::kType6lowpan, 0)) != NULL,
+        VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kType6lowpan, 0)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
@@ -2009,7 +2009,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         aFrame += fragmentHeader->GetHeaderLength();
         aFrameLength -= fragmentHeader->GetHeaderLength();
 
-        VerifyOrExit((message = netif.GetInstance()->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
         message->SetPanId(aMessageInfo.mPanId);
@@ -2190,7 +2190,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     Message *message;
     int headerLength;
 
-    VerifyOrExit((message = netif.GetInstance()->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+    VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                  error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
     message->SetPanId(aMessageInfo.mPanId);
