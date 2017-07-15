@@ -746,7 +746,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DE
 #
 
 AC_ARG_ENABLE(mac_filter,
-              [AS_HELP_STRING([--enable-mac-filter],[Enable MAC filter support @<:@default=yes@:>@.])],
+              [AS_HELP_STRING([--enable-mac-filter],[Enable MAC filter support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
