@@ -522,6 +522,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
             mNetwork.Set(netif.GetActiveDataset().GetNetwork());
         }
     }
+
 #if 0
     // Interim workaround for certification:
     // Thread specification requires entire dataset for MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req from thread device.
@@ -535,6 +536,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
     {
         mNetwork.Clear();
     }
+
 #endif
 
     if (type == Tlv::kPendingTimestamp || !doesAffectConnectivity)
