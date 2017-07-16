@@ -40,7 +40,6 @@
 namespace ot {
 namespace Ncp {
 
-
 /**
  * This class implements a buffer/queue for storing NCP frames.
  *
@@ -52,6 +51,7 @@ namespace Ncp {
  */
 class NcpFrameBuffer
 {
+    friend class SpinelEncoder;
 public:
 
     /**
@@ -164,6 +164,24 @@ public:
     otError InFrameBegin(Priority aPriority);
 
     /**
+     * This method adds a single byte to current input frame.
+     *
+     * Before using this method `InFrameBegin()` must be called to start and prepare a new input frame. Otherwise, this
+     * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
+     *
+     * If no buffer space is available, this method will discard and clear the current input frame and return the
+     * error status `OT_ERROR_NO_BUFS`.
+     *
+     * @param[in]  aByte                The byte value to add to input frame.
+     *
+     * @retval OT_ERROR_NONE            Successfully added given byte to the frame.
+     * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the byte.
+     * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
+     *
+     */
+    otError InFrameFeedByte(uint8_t aByte);
+
+    /**
      * This method adds data to the current input frame.
      *
      * Before using this method `InFrameBegin()` must be called to start and prepare a new input frame. Otherwise, this
@@ -177,7 +195,7 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully added new data to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add data.
-     * @retval OT_ERROR_INVALID_STATE   InFrameBegin() has not been called earlier to start the frame.
+     * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
      *
      */
     otError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
@@ -198,7 +216,7 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully added the message to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the message.
-     * @retval OT_ERROR_INVALID_STATE   InFrameBegin() has not been called earlier to start the frame.
+     * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
      * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is NULL.
      *
      */
@@ -214,10 +232,10 @@ public:
      * @param[out] aPosition            A reference to a `WritePosition` to save the current write position.
      *
      * @retval OT_ERROR_NONE            Successfully saved current write position in @p aPosition.
-     * @retval OT_ERROR_INVALID_STATE   InFrameBegin() has not been called earlier to start the frame.
+     * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
      *
      */
-    otError InFrameGetPosition(WritePosition &aPosition) const;
+    otError InFrameGetPosition(WritePosition &aPosition);
 
     /**
      * This method overwrites the previously written content in the current input frame at a given write position.
@@ -286,7 +304,7 @@ public:
      *
      * @retval OT_ERROR_NONE            Successfully ended the input frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add message.
-     * @retval OT_ERROR_INVALID_STATE   InFrameBegin() has not been called earlier to start the frame.
+     * @retval OT_ERROR_INVALID_STATE   `InFrameBegin()` has not been called earlier to start the frame.
      *
      */
     otError InFrameEnd(void);
@@ -581,7 +599,7 @@ private:
     bool            HasFrame(Priority aPriority) const;
     void            UpdateReadWriteStartPointers(void);
 
-    otError         InFrameFeedByte(uint8_t aByte);
+    otError         InFrameAppend(uint8_t aByte);
     otError         InFrameBeginSegment(void);
     void            InFrameEndSegment(uint16_t aSegmentHeaderFlags);
     void            InFrameDiscard(void);
