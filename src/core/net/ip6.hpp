@@ -373,11 +373,9 @@ public:
     Mpl mMpl;
 
     MessagePool mMessagePool;
-    TaskletScheduler mTaskletScheduler;
-    TimerScheduler mTimerScheduler;
 
 private:
-    static void HandleSendQueue(void *aContext);
+    static void HandleSendQueue(Tasklet &aTasklet);
     void HandleSendQueue(void);
 
     otError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
@@ -393,6 +391,8 @@ private:
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
     int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
 
+    static Ip6 &GetOwner(const Context &aContext);
+
     bool mForwardingEnabled;
 
     PriorityQueue mSendQueue;
@@ -404,16 +404,6 @@ private:
 
     Netif *mNetifListHead;
 };
-
-static inline Ip6 *Ip6FromTaskletScheduler(TaskletScheduler *aTaskletScheduler)
-{
-    return (Ip6 *)CONTAINING_RECORD(aTaskletScheduler, Ip6, mTaskletScheduler);
-}
-
-static inline Ip6 *Ip6FromTimerScheduler(TimerScheduler *aTimerScheduler)
-{
-    return (Ip6 *)CONTAINING_RECORD(aTimerScheduler, Ip6, mTimerScheduler);
-}
 
 /**
  * @}

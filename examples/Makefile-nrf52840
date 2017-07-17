@@ -48,6 +48,7 @@ configure_OPTIONS                                 = \
     --enable-diag                                   \
     --with-examples=nrf52840                        \
     --with-platform-info=NRF52840                   \
+    --enable-linker-map                             \
     MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
@@ -106,7 +107,6 @@ LDFLAGS                        += \
     -specs=nano.specs             \
     -specs=nosys.specs            \
     -Wl,--gc-sections             \
-    -Wl,-Map=map.map              \
     $(NULL)
 
 CCASFLAGS                       += \

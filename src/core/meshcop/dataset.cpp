@@ -38,8 +38,7 @@
 
 #include <stdio.h>
 
-#include <openthread/platform/settings.h>
-
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/settings.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -48,21 +47,17 @@
 namespace ot {
 namespace MeshCoP {
 
-Dataset::Dataset(otInstance *aInstance, const Tlv::Type aType) :
-    mType(aType),
+Dataset::Dataset(const Tlv::Type aType) :
+    mUpdateTime(0),
     mLength(0),
-    mInstance(aInstance)
+    mType(aType)
 {
+    memset(mTlvs, 0, sizeof(mTlvs));
 }
 
-void Dataset::Clear(bool isLocal)
+void Dataset::Clear(void)
 {
     mLength = 0;
-
-    if (isLocal)
-    {
-        otPlatSettingsDelete(mInstance, GetSettingsKey(), -1);
-    }
 }
 
 Tlv *Dataset::Get(Tlv::Type aType)
@@ -251,6 +246,8 @@ otError Dataset::Set(const Dataset &aDataset)
         Remove(Tlv::kDelayTimer);
     }
 
+    mUpdateTime = aDataset.GetUpdateTime();
+
     return OT_ERROR_NONE;
 }
 
@@ -361,6 +358,8 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         Set(tlv);
     }
 
+    mUpdateTime = TimerMilli::GetNow();
+
 exit:
     return error;
 }
@@ -405,60 +404,6 @@ void Dataset::SetTimestamp(const Timestamp &aTimestamp)
     }
 }
 
-int Dataset::Compare(const Dataset &aCompare) const
-{
-    const Timestamp *thisTimestamp = GetTimestamp();
-    const Timestamp *compareTimestamp = aCompare.GetTimestamp();
-    int rval;
-
-    if (compareTimestamp == NULL && thisTimestamp == NULL)
-    {
-        rval = 0;
-    }
-    else if (compareTimestamp == NULL && thisTimestamp != NULL)
-    {
-        rval = -1;
-    }
-    else if (compareTimestamp != NULL && thisTimestamp == NULL)
-    {
-        rval = 1;
-    }
-    else
-    {
-        rval = thisTimestamp->Compare(*compareTimestamp);
-    }
-
-    return rval;
-}
-
-otError Dataset::Restore(void)
-{
-    otError error;
-    uint16_t length = sizeof(mTlvs);
-
-    error = otPlatSettingsGet(mInstance, GetSettingsKey(), 0, mTlvs, &length);
-    mLength = (error == OT_ERROR_NONE) ? length : 0;
-
-    return error;
-}
-
-otError Dataset::Store(void)
-{
-    otError error;
-    uint16_t key = GetSettingsKey();
-
-    if (mLength == 0)
-    {
-        error = otPlatSettingsDelete(mInstance, key, 0);
-    }
-    else
-    {
-        error = otPlatSettingsSet(mInstance, key, mTlvs, mLength);
-    }
-
-    return error;
-}
-
 otError Dataset::Set(const Tlv &aTlv)
 {
     otError error = OT_ERROR_NONE;
@@ -482,15 +427,23 @@ otError Dataset::Set(const Tlv &aTlv)
     memcpy(mTlvs + mLength, &aTlv, sizeof(Tlv) + aTlv.GetLength());
     mLength += sizeof(Tlv) + aTlv.GetLength();
 
+    mUpdateTime = TimerMilli::GetNow();
+
 exit:
     return error;
 }
 
 otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
-    aMessage.Read(aOffset, aLength, mTlvs);
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aLength == aMessage.Read(aOffset, aLength, mTlvs), error = OT_ERROR_INVALID_ARGS);
     mLength = aLength;
-    return OT_ERROR_NONE;
+
+    mUpdateTime = TimerMilli::GetNow();
+
+exit:
+    return error;
 }
 
 void Dataset::Remove(Tlv::Type aType)
@@ -504,13 +457,15 @@ exit:
     return;
 }
 
-otError Dataset::AppendMleDatasetTlv(Message &aMessage)
+otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
 {
     otError error = OT_ERROR_NONE;
     Mle::Tlv tlv;
     Mle::Tlv::Type type;
-    Tlv *cur = reinterpret_cast<Tlv *>(mTlvs);
-    Tlv *end = reinterpret_cast<Tlv *>(mTlvs + mLength);
+    const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
+    const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+
+    VerifyOrExit(mLength > 0);
 
     type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
 
@@ -520,7 +475,29 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage)
 
     while (cur < end)
     {
-        if (cur->GetType() != mType)
+        if (cur->GetType() == mType)
+        {
+            ; // skip Active or Pending Timestamp TLV
+        }
+        else if (cur->GetType() == Tlv::kDelayTimer)
+        {
+            uint32_t elapsed = TimerMilli::GetNow() - mUpdateTime;
+            DelayTimerTlv delayTimer;
+
+            memcpy(&delayTimer, cur, sizeof(delayTimer));
+
+            if (delayTimer.GetDelayTimer() > elapsed)
+            {
+                delayTimer.SetDelayTimer(delayTimer.GetDelayTimer() - elapsed);
+            }
+            else
+            {
+                delayTimer.SetDelayTimer(0);
+            }
+
+            SuccessOrExit(error = aMessage.Append(&delayTimer, sizeof(delayTimer)));
+        }
+        else
         {
             SuccessOrExit(error = aMessage.Append(cur, sizeof(Tlv) + cur->GetLength()));
         }

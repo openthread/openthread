@@ -37,6 +37,7 @@
 #include <openthread/types.h>
 
 #include "openthread-core-config.h"
+#include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6.hpp"
@@ -70,7 +71,7 @@ struct ThreadMessageInfo;
  * This class implements mesh forwarding within Thread.
  *
  */
-class MeshForwarder
+class MeshForwarder: public ThreadNetifLocator
 {
 public:
     /**
@@ -80,14 +81,6 @@ public:
      *
      */
     explicit MeshForwarder(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
@@ -172,11 +165,14 @@ public:
     void UpdateIndirectMessages(void);
 
     /**
-     * This method returns a reference to the thread network interface instance.
+     * This method frees any messages queued for an existing child.
      *
-     * @ returns   A reference to the thread network interface instance.
+     * @param[in]  aChild    A reference to the child.
+     * @param[in]  aSubType  The message sub-type to remove.
+     *                       Use Message::kSubTypeNone remove all messages for @p aChild.
+     *
      */
-    ThreadNetif &GetNetif(void) { return mNetif; }
+    void RemoveMessages(Child &aChild, uint8_t aSubType);
 
     /**
      * This method returns a reference to the send queue.
@@ -285,34 +281,33 @@ private:
                            const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
 
-    static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
+    static void HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);
-    static otError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
+    static otError HandleFrameRequest(Mac::Sender &aSender, Mac::Frame &aFrame);
     otError HandleFrameRequest(Mac::Frame &aFrame);
-    static void HandleSentFrame(void *aContext, Mac::Frame &aFrame, otError aError);
+    static void HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError);
     void HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    static void HandleDiscoverTimer(void *aContext);
+    static void HandleDiscoverTimer(Timer &aTimer);
     void HandleDiscoverTimer(void);
-    static void HandleReassemblyTimer(void *aContext);
+    static void HandleReassemblyTimer(Timer &aTimer);
     void HandleReassemblyTimer(void);
-    static void ScheduleTransmissionTask(void *aContext);
+    static void ScheduleTransmissionTask(Tasklet &aTasklet);
     void ScheduleTransmissionTask(void);
-    static void HandleDataPollTimeout(void *aContext);
+    static void HandleDataPollTimeout(Mac::Receiver &aReceiver);
 
     otError AddPendingSrcMatchEntries(void);
     otError AddSrcMatchEntry(Child &aChild);
     void ClearSrcMatchEntry(Child &aChild);
 
+    static MeshForwarder &GetOwner(const Context &aContext);
+
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        otError aError);
 
-
-    ThreadNetif           &mNetif;
-
     Mac::Receiver         mMacReceiver;
     Mac::Sender           mMacSender;
-    Timer                 mDiscoverTimer;
-    Timer                 mReassemblyTimer;
+    TimerMilli            mDiscoverTimer;
+    TimerMilli            mReassemblyTimer;
 
     PriorityQueue         mSendQueue;
     MessageQueue          mReassemblyList;

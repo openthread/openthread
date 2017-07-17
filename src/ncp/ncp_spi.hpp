@@ -82,9 +82,9 @@ private:
     void SpiTransactionProcess(void);
 
     static void HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
-                                           NcpFrameBuffer *aNcpFrameBuffer);
+                                           NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer);
 
-    static void PrepareTxFrame(void *context);
+    static void PrepareTxFrame(Tasklet &aTasklet);
     void PrepareTxFrame(void);
     void HandleRxFrame(void);
 

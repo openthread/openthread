@@ -38,7 +38,7 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.0
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1
 
 libopenthread_efr32_a_CPPFLAGS                                                = \
     -DEFR32MG12P432F1024GL125                                                   \
@@ -84,24 +84,24 @@ PLATFORM_SOURCES                                                             += 
 endif
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/hardware/kit/common/bsp/bsp_bcc.c                                      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/hardware/kit/common/bsp/bsp_stk.c                                      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emdrv/rtcdrv/src/rtcdriver.c                                  \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emdrv/ustimer/src/ustimer.c                                   \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_adc.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_cmu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_core.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_emu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_gpio.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_rmu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_rtcc.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_system.c                                         \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_timer.c                                          \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_usart.c                                          \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_msc.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/emlib/src/em_crypto.c                                         \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/hardware/kit/common/bsp/bsp_bcc.c                                      \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/hardware/kit/common/bsp/bsp_stk.c                                      \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emdrv/rtcdrv/src/rtcdriver.c                                  \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emdrv/ustimer/src/ustimer.c                                   \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_adc.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_cmu.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_core.c                                           \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_emu.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_gpio.c                                           \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_rmu.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_rtcc.c                                           \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_system.c                                         \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_timer.c                                          \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_usart.c                                          \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_msc.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_crypto.c                                         \
     $(NULL)
 
 noinst_HEADERS                                                                = \

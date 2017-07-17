@@ -277,8 +277,12 @@ typedef enum otError
 
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
 
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE   18  ///< Concatenated List of Type Identifiers of Other Diagnostics TLVs Used to Request or Reset Multiple Diagnostic Values
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   18  ///< Maximum Number of Other Network Diagnostic TLV Types
+/**
+ * Concatenated List of Type Identifiers of Other Diagnostics TLVs Used to Request or Reset Multiple Diagnostic Values.
+ */
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE          18
+
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   19  ///< Maximum Number of Other Network Diagnostic TLV Types
 
 /**
  * @struct otMasterKey
@@ -761,26 +765,34 @@ typedef enum otRoutePreference
 } otRoutePreference;
 
 /**
- * This structure represents a whitelist entry.
- *
+ * Used to indicate no fixed received signal strength was set
  */
-typedef struct otMacWhitelistEntry
-{
-    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    int8_t       mRssi;             ///< RSSI value
-    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is valid
-    bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
-} otMacWhitelistEntry;
+#define OT_MAC_FILTER_FIXED_RSS_DISABLED       127
+
+#define OT_MAC_FILTER_ITERATOR_INIT            0     ///< Initializer for otMacFilterIterator.
+
+typedef uint8_t otMacFilterIterator;                 ///< Used to iterate through mac filter entries.
 
 /**
- * This structure represents a blacklist entry.
+ * Defines address mode of the mac filter.
+ */
+typedef enum otMacFilterAddressMode
+{
+    OT_MAC_FILTER_ADDRESS_MODE_DISABLED,     ///< Address filter is disabled.
+    OT_MAC_FILTER_ADDRESS_MODE_WHITELIST,    ///< Whitelist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST,    ///< Blacklist address filter mode is enabled.
+} otMacFilterAddressMode;
+
+/**
+ * This structure represents a Mac Filter entry.
  *
  */
-typedef struct otMacBlacklistEntry
+typedef struct otMacFilterEntry
 {
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    bool         mValid;            ///< Indicates whether or not the blacklist entry is valid
-} otMacBlacklistEntry;
+    int8_t       mRssIn;            ///< Received signal strength
+    bool         mFiltered;         ///< Indicates whether or not this entry is filtered.
+} otMacFilterEntry;
 
 /**
  * Represents a Thread device role.
@@ -967,7 +979,7 @@ typedef struct otNetifAddress
     uint8_t                mPrefixLength;            ///< The Prefix length.
     bool                   mPreferred : 1;           ///< TRUE if the address is preferred, FALSE otherwise.
     bool                   mValid : 1;               ///< TRUE if the address is valid, FALSE otherwise.
-    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE othewrise.
+    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
     unsigned int           mScopeOverride : 4;       ///< The IPv6 scope of this address.
     bool                   mRloc : 1;                ///< TRUE if the address is an RLOC, FALSE otherwise.
     struct otNetifAddress *mNext;                    ///< A pointer to the next network interface address.

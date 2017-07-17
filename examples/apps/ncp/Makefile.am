@@ -105,11 +105,11 @@ endif # OPENTHREAD_EXAMPLES_DA15000
 if OPENTHREAD_EXAMPLES_EFR32
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/efr32/libopenthread-efr32.a       \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.0/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg12_gcc_release.a \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg12_gcc_release.a \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.0/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
+    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_EFR32
 
@@ -190,6 +190,11 @@ ot_ncp_mtd_LDFLAGS                                                     = \
 ot_ncp_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
+
+if OPENTHREAD_ENABLE_LINKER_MAP
+ot_ncp_ftd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-ftd.map
+ot_ncp_mtd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-mtd.map
+endif
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)

@@ -42,7 +42,6 @@
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
         WINDOWS_LOGGING;
-        OPENTHREAD_MULTIPLE_INSTANCE;
         OPENTHREAD_FTD=1;
         HAVE_STDBOOL_H=1;
         HAVE_STDINT_H=1;
@@ -86,6 +85,7 @@
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
+    <ClCompile Include="..\..\src\core\common\locator.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
@@ -98,11 +98,11 @@
     <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp" />
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac.cpp" />
-    <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp" />
+    <ClCompile Include="..\..\src\core\mac\mac_filter.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_frame.cpp" />
-    <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset_local.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager_ftd.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp" />
@@ -180,9 +180,11 @@
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_secure.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />
+    <ClInclude Include="..\..\src\core\common\context.hpp" />
     <ClInclude Include="..\..\src\core\common\crc16.hpp" />
     <ClInclude Include="..\..\src\core\common\debug.hpp" />
     <ClInclude Include="..\..\src\core\common\encoding.hpp" />
+    <ClInclude Include="..\..\src\core\common\locator.hpp" />
     <ClInclude Include="..\..\src\core\common\logging.hpp" />
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />
@@ -197,16 +199,12 @@
     <ClInclude Include="..\..\src\core\crypto\pbkdf2_cmac.h" />
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_impl.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_stub.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_filter.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp" />
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dataset.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\dataset_local.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dtls.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\energy_scan_client.hpp" />

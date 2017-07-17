@@ -35,15 +35,17 @@
 #include "common/message.hpp"
 #include "ncp/ncp_buffer.hpp"
 
+#include "test_platform.h"
 #include "test_util.h"
 
 namespace ot {
 
 // This module implements unit-test for NcpFrameBuffer class.
 
+// Test related constants:
 enum
 {
-    kTestBufferSize = 2500,
+    kTestBufferSize = 800,
     kTestIterationAttemps = 10000,
     kTagArraySize = 1000,
 };
@@ -54,8 +56,8 @@ static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 
-static otInstance sInstance;
-static MessagePool sMessagePool(&sInstance);
+static otInstance *sInstance;
+static MessagePool *sMessagePool;
 
 struct CallbackContext
 {
@@ -65,36 +67,54 @@ struct CallbackContext
 
 CallbackContext sContext;
 
-NcpFrameBuffer::FrameTag sTagHistoryArray[kTagArraySize];
-uint32_t sTagHistoryHead = 0;
-uint32_t sTagHistoryTail = 0;
+enum
+{
+    kNumPrios = 2,    // Number of priority levels.
+
+    kTestFrame1Size = sizeof(sMottoText) + sizeof(sMysteryText) + sizeof(sMottoText) + sizeof(sHelloText),
+    kTestFrame2Size = sizeof(sMysteryText) + sizeof(sHelloText) + sizeof(sOpenThreadText),
+    kTestFrame3Size = sizeof(sMysteryText),
+    kTestFrame4Size = sizeof(sOpenThreadText),
+};
+
+NcpFrameBuffer::FrameTag sTagHistoryArray[kNumPrios][kTagArraySize];
+uint32_t sTagHistoryHead[kNumPrios] = {0};
+uint32_t sTagHistoryTail[kNumPrios] = {0};
 NcpFrameBuffer::FrameTag sExpectedRemovedTag = NcpFrameBuffer::kInvalidTag;
 
 void ClearTagHistory(void)
 {
-    sTagHistoryHead = sTagHistoryTail;
+    for (uint8_t priority = 0; priority < kNumPrios; priority++)
+    {
+        sTagHistoryHead[priority] = sTagHistoryTail[priority];
+    }
 }
 
-void AddTagToHistory(NcpFrameBuffer::FrameTag aTag)
+void AddTagToHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority)
 {
-    sTagHistoryArray[sTagHistoryTail] = aTag;
+    uint8_t priority = static_cast<uint8_t>(aPriority);
 
-    if (++sTagHistoryTail == kTagArraySize)
+    sTagHistoryArray[priority][sTagHistoryTail[priority]] = aTag;
+
+    if (++sTagHistoryTail[priority] == kTagArraySize)
     {
-        sTagHistoryTail = 0;
+        sTagHistoryTail[priority] = 0;
     }
 
-    VerifyOrQuit(sTagHistoryTail != sTagHistoryHead, "Ran out of space in `TagHistoryArray`, increase its size.");
+    VerifyOrQuit(sTagHistoryTail[priority] != sTagHistoryHead[priority],
+                 "Ran out of space in `TagHistoryArray`, increase its size.");
 }
 
-void VerifyAndRemoveTagFromHistory(NcpFrameBuffer::FrameTag aTag)
+void VerifyAndRemoveTagFromHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority)
 {
-    VerifyOrQuit(sTagHistoryHead != sTagHistoryTail, "Tag history is empty,");
-    VerifyOrQuit(aTag == sTagHistoryArray[sTagHistoryHead], "Removed tag does not match the added one");
+    uint8_t priority = static_cast<uint8_t>(aPriority);
 
-    if (++sTagHistoryHead == kTagArraySize)
+    VerifyOrQuit(sTagHistoryHead[priority] != sTagHistoryTail[priority], "Tag history is empty,");
+    VerifyOrQuit(aTag == sTagHistoryArray[priority][sTagHistoryHead[priority]], "Removed tag does not match the added one");
+
+    if (++sTagHistoryHead[priority] == kTagArraySize)
     {
-        sTagHistoryHead = 0;
+        sTagHistoryHead[priority] = 0;
     }
 
     if (sExpectedRemovedTag != NcpFrameBuffer::kInvalidTag)
@@ -104,7 +124,8 @@ void VerifyAndRemoveTagFromHistory(NcpFrameBuffer::FrameTag aTag)
     }
 }
 
-void FrameAddedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer *aNcpBuffer)
+void FrameAddedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority,
+                        NcpFrameBuffer *aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
@@ -112,19 +133,22 @@ void FrameAddedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameB
     VerifyOrQuit(callbackContext != NULL, "Null context in the callback");
     VerifyOrQuit(aTag != NcpFrameBuffer::kInvalidTag, "Invalid tag in the callback");
     VerifyOrQuit(aTag == aNcpBuffer->InFrameGetLastTag(), "InFrameGetLastTag() does not match the tag from callback");
-    AddTagToHistory(aTag);
+
+    AddTagToHistory(aTag, aPriority);
 
     callbackContext->mFrameAddedCount++;
 }
 
-void FrameRemovedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer *aNcpBuffer)
+void FrameRemovedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority,
+                          NcpFrameBuffer *aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
     VerifyOrQuit(aNcpBuffer != NULL, "Null NcpFrameBuffer in the callback");
     VerifyOrQuit(callbackContext != NULL, "Null context in the callback");
     VerifyOrQuit(aTag != NcpFrameBuffer::kInvalidTag, "Invalid tag in the callback");
-    VerifyAndRemoveTagFromHistory(aTag);
+
+    VerifyAndRemoveTagFromHistory(aTag, aPriority);
 
     callbackContext->mFrameRemovedCount++;
 }
@@ -182,24 +206,23 @@ void ReadAndVerifyContent(NcpFrameBuffer &aNcpBuffer, const uint8_t *aContentBuf
     }
 }
 
-void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer)
+void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
     Message *message;
     CallbackContext oldContext;
 
-    message = sMessagePool.New(Message::kTypeIp6, 0);
+    message = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message != NULL, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMottoText)), "Could not set the length of message.");
     message->Write(0, sizeof(sMottoText), sMottoText);
 
     oldContext = sContext;
-    SuccessOrQuit(aNcpBuffer.InFrameBegin(), "InFrameBegin() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameBegin() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMysteryText, sizeof(sMysteryText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
-
     VerifyOrQuit(oldContext.mFrameAddedCount + 1 == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
     VerifyOrQuit(oldContext.mFrameRemovedCount == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
@@ -209,43 +232,40 @@ void VerifyAndRemoveFrame1(NcpFrameBuffer &aNcpBuffer)
     CallbackContext oldContext = sContext;
 
     sExpectedRemovedTag = aNcpBuffer.OutFrameGetTag();
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     SuccessOrQuit(aNcpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
     VerifyOrQuit(sExpectedRemovedTag == aNcpBuffer.OutFrameGetTag(), "OutFrameGetTag() value changed unexpectedly.");
-
-    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sMottoText) + sizeof(sMysteryText) + sizeof(sMottoText)
-                 + sizeof(sHelloText), "GetLength() is incorrect.");
-
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     ReadAndVerifyContent(aNcpBuffer, sMottoText, sizeof(sMottoText));
     ReadAndVerifyContent(aNcpBuffer, sMysteryText, sizeof(sMysteryText));
     ReadAndVerifyContent(aNcpBuffer, sMottoText, sizeof(sMottoText));
     ReadAndVerifyContent(aNcpBuffer, sHelloText, sizeof(sHelloText));
-
     VerifyOrQuit(aNcpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
     VerifyOrQuit(aNcpBuffer.OutFrameReadByte() == 0, "ReadByte() returned non-zero after end of frame.");
     VerifyOrQuit(sExpectedRemovedTag == aNcpBuffer.OutFrameGetTag(), "OutFrameGetTag() value changed unexpectedly.");
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     SuccessOrQuit(aNcpBuffer.OutFrameRemove(), "Remove() failed.");
-
     VerifyOrQuit(oldContext.mFrameAddedCount == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
     VerifyOrQuit(oldContext.mFrameRemovedCount + 1 == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer)
+void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
     Message *message1;
     Message *message2;
     CallbackContext oldContext = sContext;
 
-    message1 = sMessagePool.New(Message::kTypeIp6, 0);
+    message1 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message1 != NULL, "Null Message");
     SuccessOrQuit(message1->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
     message1->Write(0, sizeof(sMysteryText), sMysteryText);
 
-    message2 = sMessagePool.New(Message::kTypeIp6, 0);
+    message2 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message2 != NULL, "Null Message");
     SuccessOrQuit(message2->SetLength(sizeof(sHelloText)), "Could not set the length of message.");
     message2->Write(0, sizeof(sHelloText), sHelloText);
 
-    SuccessOrQuit(aNcpBuffer.InFrameBegin(), "InFrameFeedBegin() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameFeedBegin() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message1), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message2), "InFrameFeedMessage() failed.");
@@ -259,36 +279,34 @@ void VerifyAndRemoveFrame2(NcpFrameBuffer &aNcpBuffer)
 {
     CallbackContext oldContext = sContext;
 
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == kTestFrame2Size, "GetLength() is incorrect.");
     SuccessOrQuit(aNcpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
-
-    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sMysteryText) + sizeof(sHelloText) + sizeof(sOpenThreadText),
-                 "GetLength() is incorrect.");
-
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == kTestFrame2Size, "GetLength() is incorrect.");
     ReadAndVerifyContent(aNcpBuffer, sMysteryText, sizeof(sMysteryText));
     ReadAndVerifyContent(aNcpBuffer, sOpenThreadText, sizeof(sOpenThreadText));
     ReadAndVerifyContent(aNcpBuffer, sHelloText, sizeof(sHelloText));
-
     VerifyOrQuit(aNcpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
     VerifyOrQuit(aNcpBuffer.OutFrameReadByte() == 0, "ReadByte() returned non-zero after end of frame.");
     sExpectedRemovedTag = aNcpBuffer.OutFrameGetTag();
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == kTestFrame2Size, "GetLength() is incorrect.");
     SuccessOrQuit(aNcpBuffer.OutFrameRemove(), "Remove() failed.");
 
     VerifyOrQuit(oldContext.mFrameAddedCount == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
     VerifyOrQuit(oldContext.mFrameRemovedCount + 1 == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer)
+void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
     Message *message1;
     CallbackContext oldContext = sContext;
 
-    message1 = sMessagePool.New(Message::kTypeIp6, 0);
+    message1 = sMessagePool->New(Message::kTypeIp6, 0);
     VerifyOrQuit(message1 != NULL, "Null Message");
 
     // An empty message with no content.
     SuccessOrQuit(message1->SetLength(0), "Could not set the length of message.");
 
-    SuccessOrQuit(aNcpBuffer.InFrameBegin(), "InFrameFeedBegin() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameFeedBegin() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message1), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMysteryText, sizeof(sMysteryText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
@@ -301,15 +319,44 @@ void VerifyAndRemoveFrame3(NcpFrameBuffer &aNcpBuffer)
 {
     CallbackContext oldContext = sContext;
 
-    SuccessOrQuit(aNcpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
-
     VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sMysteryText), "GetLength() is incorrect.");
-
+    SuccessOrQuit(aNcpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sMysteryText), "GetLength() is incorrect.");
     ReadAndVerifyContent(aNcpBuffer, sMysteryText, sizeof(sMysteryText));
-
     VerifyOrQuit(aNcpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
     VerifyOrQuit(aNcpBuffer.OutFrameReadByte() == 0, "ReadByte() returned non-zero after end of frame.");
     sExpectedRemovedTag = aNcpBuffer.OutFrameGetTag();
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sMysteryText), "GetLength() is incorrect.");
+    SuccessOrQuit(aNcpBuffer.OutFrameRemove(), "Remove() failed.");
+
+    VerifyOrQuit(oldContext.mFrameAddedCount == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
+    VerifyOrQuit(oldContext.mFrameRemovedCount + 1 == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
+}
+
+void WriteTestFrame4(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
+{
+    CallbackContext oldContext = sContext;
+
+    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameFeedBegin() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+
+    VerifyOrQuit(oldContext.mFrameAddedCount + 1 == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
+    VerifyOrQuit(oldContext.mFrameRemovedCount == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
+}
+
+void VerifyAndRemoveFrame4(NcpFrameBuffer &aNcpBuffer)
+{
+    CallbackContext oldContext = sContext;
+
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sOpenThreadText), "GetLength() is incorrect.");
+    SuccessOrQuit(aNcpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sOpenThreadText), "GetLength() is incorrect.");
+    ReadAndVerifyContent(aNcpBuffer, sOpenThreadText, sizeof(sOpenThreadText));
+    VerifyOrQuit(aNcpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
+    VerifyOrQuit(aNcpBuffer.OutFrameReadByte() == 0, "ReadByte() returned non-zero after end of frame.");
+    sExpectedRemovedTag = aNcpBuffer.OutFrameGetTag();
+    VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == sizeof(sOpenThreadText), "GetLength() is incorrect.");
     SuccessOrQuit(aNcpBuffer.OutFrameRemove(), "Remove() failed.");
 
     VerifyOrQuit(oldContext.mFrameAddedCount == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
@@ -326,6 +373,9 @@ void TestNcpFrameBuffer(void)
     Message *message;
     uint8_t readBuffer[16];
     uint16_t readLen, readOffset;
+
+    sInstance = testInitInstance();
+    sMessagePool = &sInstance->mIp6.mMessagePool;
 
     for (i = 0; i < sizeof(buffer); i++)
     {
@@ -348,21 +398,47 @@ void TestNcpFrameBuffer(void)
     VerifyOrQuit(ncpBuffer.OutFrameGetTag() == NcpFrameBuffer::kInvalidTag, "Incorrect OutFrameTag after init.");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    printf("\nTest 2: Write a frame 1 ");
+    printf("\nTest 2: Write and read a single frame");
 
-    WriteTestFrame1(ncpBuffer);
-    DumpBuffer("\nBuffer after frame1", buffer, kTestBufferSize);
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    DumpBuffer("\nBuffer after frame1 (low priority)", buffer, kTestBufferSize);
     printf("\nFrameLen is %u", ncpBuffer.OutFrameGetLength());
+    VerifyAndRemoveFrame1(ncpBuffer);
 
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    DumpBuffer("\nBuffer after frame1 (high priority)", buffer, kTestBufferSize);
+    printf("\nFrameLen is %u", ncpBuffer.OutFrameGetLength());
     VerifyAndRemoveFrame1(ncpBuffer);
 
     printf("\nIterations: ");
 
-    // Repeat this multiple times.
+    // Always add as low priority.
     for (j = 0; j < kTestIterationAttemps; j++)
     {
         printf("*");
-        WriteTestFrame1(ncpBuffer);
+        WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        VerifyOrQuit(ncpBuffer.IsEmpty() == false, "IsEmpty() is incorrect when buffer is non-empty");
+
+        VerifyAndRemoveFrame1(ncpBuffer);
+        VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
+    }
+
+    // Always add as high priority.
+    for (j = 0; j < kTestIterationAttemps; j++)
+    {
+        printf("*");
+        WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+        VerifyOrQuit(ncpBuffer.IsEmpty() == false, "IsEmpty() is incorrect when buffer is non-empty");
+
+        VerifyAndRemoveFrame1(ncpBuffer);
+        VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
+    }
+
+    // Every 5th add as high priority.
+    for (j = 0; j < kTestIterationAttemps; j++)
+    {
+        printf("*");
+        WriteTestFrame1(ncpBuffer, ((j % 5) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
         VerifyOrQuit(ncpBuffer.IsEmpty() == false, "IsEmpty() is incorrect when buffer is non-empty");
 
         VerifyAndRemoveFrame1(ncpBuffer);
@@ -372,12 +448,12 @@ void TestNcpFrameBuffer(void)
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    printf("\nTest 3: Multiple frames write and read ");
+    printf("\nTest 3: Multiple frames write and read (same priority)");
 
-    WriteTestFrame2(ncpBuffer);
-    WriteTestFrame3(ncpBuffer);
-    WriteTestFrame2(ncpBuffer);
-    WriteTestFrame2(ncpBuffer);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
 
     DumpBuffer("\nBuffer after multiple frames", buffer, kTestBufferSize);
 
@@ -393,15 +469,15 @@ void TestNcpFrameBuffer(void)
     {
         printf("*");
 
-        WriteTestFrame2(ncpBuffer);
-        WriteTestFrame3(ncpBuffer);
-        WriteTestFrame2(ncpBuffer);
+        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
 
         VerifyAndRemoveFrame2(ncpBuffer);
         VerifyAndRemoveFrame3(ncpBuffer);
 
-        WriteTestFrame2(ncpBuffer);
-        WriteTestFrame3(ncpBuffer);
+        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
 
         VerifyAndRemoveFrame2(ncpBuffer);
         VerifyAndRemoveFrame2(ncpBuffer);
@@ -413,37 +489,89 @@ void TestNcpFrameBuffer(void)
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    printf("\nTest 4: Frame discard when buffer full and partial read restart");
+    printf("\nTest 4: Multiple frames write and read (mixed priority)");
+
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyAndRemoveFrame3(ncpBuffer);
+    VerifyAndRemoveFrame2(ncpBuffer);
+
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyAndRemoveFrame3(ncpBuffer);
+    VerifyAndRemoveFrame4(ncpBuffer);
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame2(ncpBuffer);
+
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    VerifyAndRemoveFrame4(ncpBuffer);
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame3(ncpBuffer);
+
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    VerifyAndRemoveFrame4(ncpBuffer);
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame3(ncpBuffer);
+
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    VerifyAndRemoveFrame3(ncpBuffer);
+    VerifyAndRemoveFrame4(ncpBuffer);
+
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyAndRemoveFrame3(ncpBuffer);
+    VerifyAndRemoveFrame4(ncpBuffer);
+    VerifyAndRemoveFrame1(ncpBuffer);
+
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\nTest 5: Frame discard when buffer full and partial read restart");
+
+    printf("\nIterations: ");
 
     for (j = 0; j < kTestIterationAttemps; j++)
     {
-        WriteTestFrame2(ncpBuffer);
-        WriteTestFrame3(ncpBuffer);
+        bool frame1IsHighPriority = ((j % 3) == 0);
 
-        ncpBuffer.InFrameBegin();
+        printf("*");
+
+        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+
+        ncpBuffer.InFrameBegin((j % 2) == 0 ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
         ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText));
 
-        message = sMessagePool.New(Message::kTypeIp6, 0);
+        message = sMessagePool->New(Message::kTypeIp6, 0);
         VerifyOrQuit(message != NULL, "Null Message");
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
         message->Write(0, sizeof(sMysteryText), sMysteryText);
 
         ncpBuffer.InFrameFeedMessage(message);
 
-        // Now cause a restart the current frame and test if it's discarded ok.
-        WriteTestFrame2(ncpBuffer);
+        // Start writing a new frame in middle of an unfinished frame. Ensure the first one is discarded.
+        WriteTestFrame1(ncpBuffer,
+                        frame1IsHighPriority ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
 
-        if (j == 0)
-        {
-            DumpBuffer("\nAfter frame gets discarded", buffer, kTestBufferSize);
-            printf("\nIterations: ");
-        }
-        else
-        {
-            printf("*");
-        }
-
-        VerifyAndRemoveFrame2(ncpBuffer);
+        VerifyAndRemoveFrame3(ncpBuffer);
 
         // Start reading few bytes from the frame
         ncpBuffer.OutFrameBegin();
@@ -452,8 +580,17 @@ void TestNcpFrameBuffer(void)
         ncpBuffer.OutFrameReadByte();
 
         // Now reset the read pointer and read/verify the frame from start.
-        VerifyAndRemoveFrame3(ncpBuffer);
-        VerifyAndRemoveFrame2(ncpBuffer);
+        if (frame1IsHighPriority)
+        {
+            VerifyAndRemoveFrame1(ncpBuffer);
+            VerifyAndRemoveFrame2(ncpBuffer);
+        }
+        else
+        {
+            VerifyAndRemoveFrame2(ncpBuffer);
+            VerifyAndRemoveFrame1(ncpBuffer);
+        }
+
 
         VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
     }
@@ -461,9 +598,9 @@ void TestNcpFrameBuffer(void)
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    printf("\nTest 5: Clear() and empty buffer method tests");
+    printf("\nTest 6: Clear() and empty buffer method tests");
 
-    WriteTestFrame1(ncpBuffer);
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
 
     ncpBuffer.Clear();
     ClearTagHistory();
@@ -476,7 +613,7 @@ void TestNcpFrameBuffer(void)
                  "Remove() returned incorrect error status when buffer is empty.");
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0, "OutFrameGetLength() returned non-zero length when buffer is empty.");
 
-    WriteTestFrame1(ncpBuffer);
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
     VerifyAndRemoveFrame1(ncpBuffer);
 
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
@@ -488,9 +625,9 @@ void TestNcpFrameBuffer(void)
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    printf("\nTest 6: OutFrameRead() in parts\n");
+    printf("\nTest 7: OutFrameRead() in parts\n");
 
-    ncpBuffer.InFrameBegin();
+    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow);
     ncpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText));
     ncpBuffer.InFrameEnd();
 
@@ -508,7 +645,160 @@ void TestNcpFrameBuffer(void)
     }
 
     VerifyOrQuit(readOffset == sizeof(sMottoText), "Read len does not match expected length.");
+
+    ncpBuffer.OutFrameRemove();
+
     printf("\n -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\nTest 8: Remove a frame without reading it first");
+
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    SuccessOrQuit(ncpBuffer.OutFrameRemove(), "Remove() failed.");
+    VerifyAndRemoveFrame2(ncpBuffer);
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\nTest 9: Check length when front frame gets changed (a higher priority frame is added)");
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame3Size, "GetLength() is incorrect.");
+    VerifyAndRemoveFrame3(ncpBuffer);
+    VerifyAndRemoveFrame1(ncpBuffer);
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\nTest 10: Active out frame remaining unchanged when a higher priority frame is written while reading it");
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    ReadAndVerifyContent(ncpBuffer, sMysteryText, sizeof(sMysteryText));
+    SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
+    ReadAndVerifyContent(ncpBuffer, sMysteryText, sizeof(sMysteryText));
+    ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
+    ReadAndVerifyContent(ncpBuffer, sHelloText, sizeof(sHelloText));
+    VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    VerifyAndRemoveFrame3(ncpBuffer);
+    VerifyAndRemoveFrame4(ncpBuffer);
+    // Repeat test reversing frame priority orders.
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    ReadAndVerifyContent(ncpBuffer, sMysteryText, sizeof(sMysteryText));
+    SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
+    ReadAndVerifyContent(ncpBuffer, sMysteryText, sizeof(sMysteryText));
+    ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
+    ReadAndVerifyContent(ncpBuffer, sHelloText, sizeof(sHelloText));
+    VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
+    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame3(ncpBuffer);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    VerifyAndRemoveFrame4(ncpBuffer);
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\n Test 11: Read and remove in middle of an active input frame write");
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameFeedBegin() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+    VerifyAndRemoveFrame4(ncpBuffer);
+    // Repeat the test reversing priorities
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow), "InFrameFeedBegin() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+    VerifyAndRemoveFrame4(ncpBuffer);
+    // Repeat the test with same priorities
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameFeedBegin() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+    VerifyAndRemoveFrame4(ncpBuffer);
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\n Test 12: Check returned error status");
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameFeedBegin() failed.");
+    VerifyOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer)) == OT_ERROR_NO_BUFS, "Incorrect error status");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
+
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    // Ensure writes with starting `InFrameBegin()` fail
+    VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 1) == OT_ERROR_INVALID_STATE, "Incorrect error status");
+    VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 0) == OT_ERROR_INVALID_STATE, "Incorrect error status");
+    VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 0) == OT_ERROR_INVALID_STATE, "Incorrect error status");
+    VerifyOrQuit(ncpBuffer.InFrameEnd() == OT_ERROR_INVALID_STATE, "Incorrect error status");
+    message = sMessagePool->New(Message::kTypeIp6, 0);
+    VerifyOrQuit(message != NULL, "Null Message");
+    SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
+    message->Write(0, sizeof(sMysteryText), sMysteryText);
+    VerifyOrQuit(ncpBuffer.InFrameFeedMessage(message) == OT_ERROR_INVALID_STATE, "Incorrect error status");
+    SuccessOrQuit(message->Free(), "Failed to free allocated message");
+    VerifyOrQuit(ncpBuffer.InFrameEnd() == OT_ERROR_INVALID_STATE, "Incorrect error status");
+    VerifyAndRemoveFrame2(ncpBuffer);
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyOrQuit(ncpBuffer.IsEmpty(), "IsEmpty() failed");
+    VerifyOrQuit(ncpBuffer.OutFrameBegin() == OT_ERROR_NOT_FOUND, "OutFrameBegin() failed on empty queue");
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyOrQuit(ncpBuffer.IsEmpty(), "IsEmpty() failed");
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\n Test 13: Ensure we can utilize the full buffer size when frames removed during write");
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameBegin() failed.");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    SuccessOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer) - 4), "InFrameFeedData() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+    SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed.");
+    // Repeat the test with a low priority buffer write
+    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow), "InFrameBegin() failed.");
+    VerifyAndRemoveFrame1(ncpBuffer);
+    VerifyAndRemoveFrame2(ncpBuffer);
+    SuccessOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer) - 4), "InFrameFeedData() failed.");
+    SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+    SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed.");
+    printf(" -- PASS\n");
+
+    testFreeInstance(sInstance);
 }
 
 /**
@@ -530,11 +820,12 @@ enum
     kLensArraySize = 500,                  // Size of "Lengths" array.
     kMaxFrameLen = 400,                    // Maximum frame length
     kReadProbability = 50,                 // Probability (in percent) to randomly choose to read vs write frame
+    kHighPriorityProbablity = 20,          // Probability (in percent) to write a high priority frame
     kUseTrueRandomNumberGenerator = 1,     // To use true random number generator or not.
 };
 
-uint8_t sFrameBuffer[kFuzTestBufferSize];
-uint32_t sFrameBufferTailIndex = 0;
+uint8_t sFrameBuffer[kNumPrios][kFuzTestBufferSize];
+uint32_t sFrameBufferTailIndex[kNumPrios] = {0};
 
 uint32_t GetRandom(uint32_t max)
 {
@@ -552,25 +843,26 @@ uint32_t GetRandom(uint32_t max)
     return value % max;
 }
 
-otError WriteRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer)
+otError WriteRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
     otError error;
     uint8_t byte;
+    uint8_t priority = static_cast<uint8_t>(aPriority);
     CallbackContext oldContext = sContext;
-    uint32_t tail = sFrameBufferTailIndex;
+    uint32_t tail = sFrameBufferTailIndex[priority];
 
-    SuccessOrExit(error = aNcpBuffer.InFrameBegin());
+    SuccessOrExit(error = aNcpBuffer.InFrameBegin(aPriority));
 
     while (aLength--)
     {
         byte = static_cast<uint8_t>(GetRandom(256));
         SuccessOrExit(error = aNcpBuffer.InFrameFeedData(&byte, sizeof(byte)));
-        sFrameBuffer[tail++] = byte;
+        sFrameBuffer[priority][tail++] = byte;
     }
 
     SuccessOrExit(error = aNcpBuffer.InFrameEnd());
 
-    sFrameBufferTailIndex = tail;
+    sFrameBufferTailIndex[priority] = tail;
 
     // check the callbacks
     VerifyOrQuit(oldContext.mFrameAddedCount + 1 == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
@@ -580,7 +872,7 @@ exit:
     return error;
 }
 
-otError ReadRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer)
+otError ReadRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, uint8_t priority)
 {
     CallbackContext oldContext = sContext;
 
@@ -588,13 +880,13 @@ otError ReadRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer)
     VerifyOrQuit(aNcpBuffer.OutFrameGetLength() == aLength, "OutFrameGetLength() does not match");
 
     // Read and verify that the content is same as sFrameBuffer values...
-    ReadAndVerifyContent(aNcpBuffer, sFrameBuffer, static_cast<uint16_t>(aLength));
+    ReadAndVerifyContent(aNcpBuffer, sFrameBuffer[priority], static_cast<uint16_t>(aLength));
     sExpectedRemovedTag = aNcpBuffer.OutFrameGetTag();
 
     SuccessOrQuit(aNcpBuffer.OutFrameRemove(), "OutFrameRemove failed");
 
-    sFrameBufferTailIndex -= aLength;
-    memmove(sFrameBuffer, sFrameBuffer + aLength, sFrameBufferTailIndex);
+    sFrameBufferTailIndex[priority] -= aLength;
+    memmove(sFrameBuffer[priority], sFrameBuffer[priority] + aLength, sFrameBufferTailIndex[priority]);
 
     // If successful check the callbacks
     VerifyOrQuit(oldContext.mFrameAddedCount == sContext.mFrameAddedCount, "FrameAddedCallback failed.");
@@ -610,15 +902,18 @@ void TestFuzzNcpFrameBuffer(void)
     uint8_t buffer[kFuzTestBufferSize];
     NcpFrameBuffer ncpBuffer(buffer, kFuzTestBufferSize);
 
-    uint32_t lensArray[kLensArraySize];          // Keeps track of length of written frames so far
-    uint32_t lensArrayStart;
-    uint32_t lensArrayCount;
+    uint32_t lensArray[kNumPrios][kLensArraySize];          // Keeps track of length of written frames so far
+    uint32_t lensArrayStart[kNumPrios];
+    uint32_t lensArrayCount[kNumPrios];
+
+    sInstance = testInitInstance();
+    sMessagePool = &sInstance->mIp6.mMessagePool;
 
     memset(buffer, 0, sizeof(buffer));
 
     memset(lensArray, 0, sizeof(lensArray));
-    lensArrayStart = 0;
-    lensArrayCount = 0;
+    memset(lensArrayStart, 0, sizeof(lensArrayStart));
+    memset(lensArrayCount, 0, sizeof(lensArrayCount));
 
     sContext.mFrameAddedCount = 0;
     sContext.mFrameRemovedCount = 0;
@@ -631,11 +926,11 @@ void TestFuzzNcpFrameBuffer(void)
     {
         bool shouldRead;
 
-        if (lensArrayCount == 0)
+        if (lensArrayCount[0] == 0 && lensArrayCount[1] == 0)
         {
             shouldRead = false;
         }
-        else if (lensArrayCount == kLensArraySize - 1)
+        else if (lensArrayCount[0] == kLensArraySize - 1 || lensArrayCount[1] == kLensArraySize - 1)
         {
             shouldRead = true;
         }
@@ -647,25 +942,40 @@ void TestFuzzNcpFrameBuffer(void)
 
         if (shouldRead)
         {
-            uint32_t len = lensArray[lensArrayStart];
+            uint32_t len;
+            uint8_t priority;
 
-            lensArrayStart = (lensArrayStart + 1) % kLensArraySize;
-            lensArrayCount--;
+            priority = (lensArrayCount[NcpFrameBuffer::kPriorityHigh] != 0) ?
+                       NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
 
-            printf("R%d ", len);
+            len = lensArray[priority][lensArrayStart[priority]];
+            lensArrayStart[priority] = (lensArrayStart[priority] + 1) % kLensArraySize;
+            lensArrayCount[priority]--;
 
-            SuccessOrQuit(ReadRandomFrame(len, ncpBuffer), "Failed to read random frame.");
+            printf("R%c%d ", priority == NcpFrameBuffer::kPriorityHigh ? 'H' : 'L', len);
+
+            SuccessOrQuit(ReadRandomFrame(len, ncpBuffer, priority), "Failed to read random frame.");
         }
         else
         {
             uint32_t len = GetRandom(kMaxFrameLen) + 1;
+            NcpFrameBuffer::Priority priority;
 
-            if (WriteRandomFrame(len, ncpBuffer) == OT_ERROR_NONE)
+            if (GetRandom(100) < kHighPriorityProbablity)
             {
-                lensArray[(lensArrayStart + lensArrayCount) % kLensArraySize] = len;
-                lensArrayCount++;
+                priority = NcpFrameBuffer::kPriorityHigh;
+            }
+            else
+            {
+                priority = NcpFrameBuffer::kPriorityLow;
+            }
 
-                printf("W%d ", len);
+            if (WriteRandomFrame(len, ncpBuffer, priority) == OT_ERROR_NONE)
+            {
+                lensArray[priority][(lensArrayStart[priority] + lensArrayCount[priority]) % kLensArraySize] = len;
+                lensArrayCount[priority]++;
+
+                printf("W%c%d ", priority == NcpFrameBuffer::kPriorityHigh ? 'H' : 'L', len);
             }
             else
             {
@@ -673,7 +983,7 @@ void TestFuzzNcpFrameBuffer(void)
             }
         }
 
-        if (lensArrayCount == 0)
+        if (lensArrayCount[0] == 0 && lensArrayCount[1] == 0)
         {
             VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty failed.");
             printf("EMPTY ");
@@ -682,6 +992,8 @@ void TestFuzzNcpFrameBuffer(void)
     }
 
     printf("\n -- PASS\n");
+
+    testFreeInstance(sInstance);
 }
 
 }  // namespace ot

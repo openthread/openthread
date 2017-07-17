@@ -37,8 +37,9 @@
 
 #include <string.h>
 
+#include <openthread/config.h>
 #include <openthread/openthread.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
@@ -87,6 +88,9 @@ extern testPlatRadioDisable             g_testPlatRadioDisable;
 extern testPlatRadioReceive             g_testPlatRadioReceive;
 extern testPlatRadioTransmit            g_testPlatRadioTransmit;
 extern testPlatRadioGetTransmitBuffer   g_testPlatRadioGetTransmitBuffer;
+
+otInstance *testInitInstance(void);
+void testFreeInstance(otInstance *aInstance);
 
 // Resets platform functions to defaults
 void testPlatResetToDefaults(void);

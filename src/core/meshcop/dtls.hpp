@@ -43,6 +43,7 @@
 #include <mbedtls/certs.h>
 #include <mbedtls/ssl_cookie.h>
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
@@ -54,7 +55,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class Dtls
+class Dtls: public ThreadNetifLocator
 {
 public:
     enum
@@ -70,14 +71,6 @@ public:
      *
      */
     Dtls(ThreadNetif &aNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This function pointer is called when a connection is established or torn down.
@@ -224,11 +217,13 @@ private:
     int HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsigned char *aKeyBlock,
                                 size_t aMacLength, size_t aKeyLength, size_t aIvLength);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     void Close(void);
     void Process(void);
+
+    static Dtls &GetOwner(const Context &aContext);
 
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
@@ -240,7 +235,7 @@ private:
     mbedtls_ssl_cookie_ctx mCookieCtx;
     bool mStarted;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     uint32_t mTimerIntermediate;
     bool mTimerSet;
 
@@ -255,8 +250,6 @@ private:
     bool mClient;
 
     uint8_t mMessageSubType;
-
-    ThreadNetif &mNetif;
 };
 
 }  // namespace MeshCoP

@@ -34,6 +34,7 @@
 #ifndef TRICKLE_TIMER_HPP_
 #define TRICKLE_TIMER_HPP_
 
+#include "common/context.hpp"
 #include "common/timer.hpp"
 
 namespace ot {
@@ -52,7 +53,7 @@ namespace ot {
  * This class implements a trickle timer.
  *
  */
-class TrickleTimer
+class TrickleTimer: public TimerMilli
 {
 public:
 
@@ -69,24 +70,24 @@ public:
     /**
      * This function pointer is called when the timer expires.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aTimer  A reference to the expired timer.
      *
      * @retval TRUE   If the trickle timer should continue running.
      * @retval FALSE  If the trickle timer should stop running.
      */
-    typedef bool (*Handler)(void *aContext);
+    typedef bool (*Handler)(TrickleTimer &aTimer);
 
     /**
      * This constructor creates a trickle timer instance.
      *
-     * @param[in]  aScheduler               A reference to the timer scheduler.
+     * @param[in]  aInstance                A pointer to the instance.
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
      * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
      * @param[in]  aContext                 A pointer to arbitrary context information.
      *
      */
-    TrickleTimer(TimerScheduler &aScheduler,
+    TrickleTimer(otInstance *aInstance,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
                  uint32_t aRedundancyConstant,
 #endif
@@ -111,6 +112,17 @@ public:
     void Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode);
 
     /**
+     * This method start the trickle timer.
+     *
+     * @param[in]  aStartTime    The start time.
+     * @param[in]  aIntervalMin  The minimum interval for the timer, Imin.
+     * @param[in]  aIntervalMax  The maximum interval for the timer, Imax.
+     * @param[in]  aMode         The operating mode for the timer.
+     *
+     */
+    void StartAt(uint32_t aStartTime, uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode);
+
+    /**
      * This method stops the trickle timer.
      *
      */
@@ -131,13 +143,16 @@ public:
     void IndicateInconsistent(void);
 
 private:
-    bool TransmitFired(void) { return mTransmitHandler(mContext); }
-    bool IntervalExpiredFired(void) { return mIntervalExpiredHandler ? mIntervalExpiredHandler(mContext) : true; }
+    bool TransmitFired(void) { return mTransmitHandler(*this); }
+    bool IntervalExpiredFired(void) { return mIntervalExpiredHandler ? mIntervalExpiredHandler(*this) : true; }
 
     void StartNewInterval(void);
 
-    static void HandleTimerFired(void *aContext);
+    static void HandleTimerFired(Timer &aTimer);
     void HandleTimerFired(void);
+
+    // Shadow base class method to ensure it is hidden.
+    void StartAt(void) { }
 
     typedef enum Phase
     {
@@ -148,8 +163,6 @@ private:
         ///< Indicates that when the timer expires, it should process interval expiration callbacks
         kPhaseInterval   = 3,
     } Phase;
-
-    Timer mTimer;
 
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     // Redundancy constant
@@ -177,7 +190,6 @@ private:
     // Callback variables
     Handler mTransmitHandler;
     Handler mIntervalExpiredHandler;
-    void *mContext;
 };
 
 /**

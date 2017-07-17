@@ -36,6 +36,7 @@
 
 #include <openthread/udp.h>
 
+#include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
 namespace ot {
@@ -160,7 +161,7 @@ private:
  * This class implements core UDP message handling.
  *
  */
-class Udp
+class Udp: public Ip6Locator
 {
     friend class UdpSocket;
 
@@ -256,8 +257,6 @@ private:
     };
     uint16_t mEphemeralPort;
     UdpSocket *mSockets;
-
-    Ip6 &mIp6;
 };
 
 OT_TOOL_PACKED_BEGIN

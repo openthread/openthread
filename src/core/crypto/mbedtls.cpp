@@ -35,13 +35,33 @@
 
 #include "mbedtls.hpp"
 
+#include <mbedtls/platform.h>
+
+#include "heap.hpp"
+#include "openthread-instance.h"
+#include "openthread-single-instance.h"
+
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
 namespace ot {
 namespace Crypto {
 
+static void *CAlloc(size_t aCount, size_t aSize)
+{
+    return otGetInstance()->mMbedTlsHeap.CAlloc(aCount, aSize);
+}
+
+static void Free(void *aPointer)
+{
+    return otGetInstance()->mMbedTlsHeap.Free(aPointer);
+}
+
 MbedTls::MbedTls(void)
 {
-    mbedtls_memory_buffer_alloc_init(mMemory, sizeof(mMemory));
+    mbedtls_platform_set_calloc_free(CAlloc, Free);
 }
 
 }  // namespace Crypto
 }  // namespace ot
+
+#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES

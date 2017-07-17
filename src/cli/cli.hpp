@@ -50,6 +50,7 @@
 #endif
 
 #include "common/code_utils.hpp"
+#include "common/context.hpp"
 
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
@@ -161,7 +162,6 @@ private:
     void ProcessHelp(int argc, char *argv[]);
     void ProcessAutoStart(int argc, char *argv[]);
     void ProcessBufferInfo(int argc, char *argv[]);
-    void ProcessBlacklist(int argc, char *argv[]);
     void ProcessChannel(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
@@ -273,7 +273,14 @@ private:
     void ProcessThread(int argc, char *argv[]);
     void ProcessTxPowerMax(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
-    void ProcessWhitelist(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    void ProcessMacFilter(int argc, char *argv[]);
+    void PrintMacFilter(void);
+    otError ProcessMacFilterAddress(int argc, char *argv[]);
+#ifndef OTDLL
+    otError ProcessMacFilterRss(int argc, char *argv[]);
+#endif  // OTDLL
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);
@@ -283,7 +290,7 @@ private:
 #ifndef OTDLL
     static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
-    static void s_HandlePingTimer(void *aContext);
+    static void s_HandlePingTimer(Timer &aTimer);
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
@@ -329,6 +336,8 @@ private:
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
 
+    static Interpreter &GetOwner(const Context &aContext);
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
     Coap mCoap;
@@ -361,7 +370,7 @@ private:
     uint16_t mLength;
     uint16_t mCount;
     uint32_t mInterval;
-    Timer mPingTimer;
+    TimerMilli mPingTimer;
 
     otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

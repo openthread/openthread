@@ -39,6 +39,7 @@
 
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -51,18 +52,13 @@
 namespace ot {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
+    ThreadNetifLocator(aThreadNetif),
     mChannelMask(0),
     mPanId(Mac::kPanIdBroadcast),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
-    mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
-    mNetif(aThreadNetif)
+    mTimer(aThreadNetif.GetInstance(), &PanIdQueryServer::HandleTimer, this),
+    mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
-    mNetif.GetCoap().AddResource(mPanIdQuery);
-}
-
-otInstance *PanIdQueryServer::GetInstance()
-{
-    return mNetif.GetInstance();
+    aThreadNetif.GetCoap().AddResource(mPanIdQuery);
 }
 
 void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -94,7 +90,7 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
 
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, responseInfo));
+        SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, responseInfo));
         otLogInfoMeshCoP(GetInstance(), "sent panid query response");
     }
 
@@ -128,6 +124,7 @@ void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
 
 otError PanIdQueryServer::SendConflict(void)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     Coap::Header header;
     MeshCoP::ChannelMask0Tlv channelMask;
@@ -140,7 +137,7 @@ otError PanIdQueryServer::SendConflict(void)
     header.AppendUriPathOptions(OT_URI_PATH_PANID_CONFLICT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);
@@ -150,10 +147,10 @@ otError PanIdQueryServer::SendConflict(void)
     panId.SetPanId(mPanId);
     SuccessOrExit(error = message->Append(&panId, sizeof(panId)));
 
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(mCommissioner);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent panid conflict");
 
@@ -167,15 +164,26 @@ exit:
     return error;
 }
 
-void PanIdQueryServer::HandleTimer(void *aContext)
+void PanIdQueryServer::HandleTimer(Timer &aTimer)
 {
-    static_cast<PanIdQueryServer *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void PanIdQueryServer::HandleTimer(void)
 {
-    mNetif.GetMac().ActiveScan(mChannelMask, 0, HandleScanResult, this);
+    GetNetif().GetMac().ActiveScan(mChannelMask, 0, HandleScanResult, this);
     mChannelMask = 0;
+}
+
+PanIdQueryServer &PanIdQueryServer::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    PanIdQueryServer &server = *static_cast<PanIdQueryServer *>(aContext.GetContext());
+#else
+    PanIdQueryServer &server = otGetThreadNetif().GetPanIdQueryServer();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return server;
 }
 
 }  // namespace ot

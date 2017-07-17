@@ -44,12 +44,12 @@
 #include <openthread/platform/logging.h>
 
 #include "openthread-core-config.h"
-
+#include "openthread-single-instance.h"
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 #include "api/link_raw.hpp"
 #endif
-
 #include "coap/coap.hpp"
+#include "crypto/heap.hpp"
 #include "crypto/mbedtls.hpp"
 #include "net/ip6.hpp"
 #include "thread/thread_netif.hpp"
@@ -78,8 +78,15 @@ typedef struct otInstance
     // State
     //
 
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+    ot::TaskletScheduler mTaskletScheduler;
+    ot::TimerMilliScheduler mTimerMilliScheduler;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    ot::TimerMicroScheduler mTimerMicroScheduler;
+#endif
+
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     ot::Crypto::MbedTls mMbedTls;
+    ot::Crypto::Heap    mMbedTlsHeap;
 #endif
     ot::Ip6::Ip6 mIp6;
     ot::ThreadNetif mThreadNetif;

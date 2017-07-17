@@ -32,12 +32,12 @@
  */
 
 #include <openthread/config.h>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
+
 #include <openthread/platform/random.h>
-#include <openthread/platform/usec-alarm.h>
 
 #include "openthread-instance.h"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -269,11 +269,14 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     mTransmitDoneCallback(NULL),
     mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-    , mTimer(aInstance.mIp6.mTimerScheduler, &LinkRaw::HandleTimer, this)
+    , mTimer(&aInstance, &LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    , mTimerMicro(&aInstance, &LinkRaw::HandleTimer, this)
+#endif
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    , mEnergyScanTask(aInstance.mIp6.mTaskletScheduler, &LinkRaw::HandleEnergyScanTask, this)
+    , mEnergyScanTask(&aInstance, &LinkRaw::HandleEnergyScanTask, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 {
     // Query the capabilities to check asserts
@@ -478,9 +481,9 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
-void LinkRaw::HandleTimer(void *aContext)
+void LinkRaw::HandleTimer(Timer &aTimer)
 {
-    static_cast<LinkRaw *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void LinkRaw::HandleTimer(void)
@@ -556,31 +559,23 @@ void LinkRaw::StartCsmaBackoff(void)
     backoff = (otPlatRandomGet() % (1UL << backoffExponent));
     backoff *= (static_cast<uint32_t>(Mac::kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    otPlatUsecAlarmTime now;
-    otPlatUsecAlarmTime delay;
-
-    otPlatUsecAlarmGetNow(&now);
-    delay.mMs = backoff / 1000UL;
-    delay.mUs = backoff - (delay.mMs * 1000UL);
-
     otLogDebgPlat(aInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
     mTimerReason = kTimerReasonRetransmitTimeout;
-    otPlatUsecAlarmStartAt(&mInstance, &now, &delay, &HandleTimer, this);
-#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    mTimerReason = kTimerReasonRetransmitTimeout;
-    mTimer.Start(backoff / 1000UL);
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
 
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    mTimerMicro.Start(backoff);
+#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    mTimer.Start(backoff / 1000UL);
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
-void LinkRaw::HandleEnergyScanTask(void *aContext)
+void LinkRaw::HandleEnergyScanTask(Tasklet &aTasklet)
 {
-    static_cast<LinkRaw *>(aContext)->HandleEnergyScanTask();
+    GetOwner(aTasklet).HandleEnergyScanTask();
 }
 
 void LinkRaw::HandleEnergyScanTask(void)
@@ -606,6 +601,17 @@ void LinkRaw::HandleEnergyScanTask(void)
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+
+LinkRaw &LinkRaw::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    LinkRaw &link = *static_cast<LinkRaw *>(aContext.GetContext());
+#else
+    LinkRaw &link = otGetInstance()->mLinkRaw;
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return link;
+}
 
 } // namespace ot
 

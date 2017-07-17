@@ -40,13 +40,40 @@
 #include <openthread/platform/settings.h>
 
 #include "openthread-instance.h"
+#include "openthread-single-instance.h"
 #include "common/logging.hpp"
 #include "common/new.hpp"
 
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
 static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
-#endif
+
+otInstance *otGetInstance(void)
+{
+    return sInstance;
+}
+
+ot::ThreadNetif &otGetThreadNetif(void)
+{
+    return sInstance->mThreadNetif;
+}
+
+ot::MeshForwarder &otGetMeshForwarder(void)
+{
+    return sInstance->mThreadNetif.GetMeshForwarder();
+}
+
+ot::TaskletScheduler &otGetTaskletScheduler(void)
+{
+    return sInstance->mTaskletScheduler;
+}
+
+ot::Ip6::Ip6 &otGetIp6(void)
+{
+    return sInstance->mIp6;
+}
+#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
@@ -55,6 +82,10 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
+    mTimerMilliScheduler(this),
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    mTimerMicroScheduler(this),
+#endif
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     , mLinkRaw(*this)
@@ -95,11 +126,11 @@ void otInstancePostConstructor(otInstance *aInstance)
 #endif
 }
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
-    otInstance *aInstance = NULL;
+    otInstance *instance = NULL;
 
     otLogFuncEntry();
 
@@ -111,26 +142,30 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     VerifyOrExit(aInstanceBuffer != NULL);
 
     // Construct the context
-    aInstance = new(aInstanceBuffer)otInstance();
+    instance = new(aInstanceBuffer)otInstance();
 
     // Execute post constructor operations
-    otInstancePostConstructor(aInstance);
+    otInstancePostConstructor(instance);
 
-    otLogInfoApi(aInstance, "otInstance Initialized");
+    otLogInfoApi(instance, "otInstance Initialized");
 
 exit:
 
     otLogFuncExit();
-    return aInstance;
+    return instance;
 }
 
-#else
+#else // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
-otInstance *otInstanceInit()
+otInstance *otInstanceInitSingle(void)
 {
     otLogFuncEntry();
 
     VerifyOrExit(sInstance == NULL);
+
+    // We need to ensure `sInstance` pointer is correctly set
+    // before any object constructor is called.
+    sInstance = reinterpret_cast<otInstance *>(&sInstanceRaw);
 
     // Construct the context
     sInstance = new(&sInstanceRaw)otInstance();
@@ -146,7 +181,7 @@ exit:
     return sInstance;
 }
 
-#endif
+#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 void otInstanceFinalize(otInstance *aInstance)
 {
@@ -156,9 +191,10 @@ void otInstanceFinalize(otInstance *aInstance)
     (void)otThreadSetEnabled(aInstance, false);
     (void)otIp6SetEnabled(aInstance, false);
 
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     sInstance = NULL;
 #endif
+
     otLogFuncExit();
 }
 

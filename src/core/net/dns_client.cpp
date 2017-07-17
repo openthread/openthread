@@ -35,6 +35,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "net/udp6.hpp"
+#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
 
@@ -111,7 +112,7 @@ otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, v
     messageInfo = static_cast<const Ip6::MessageInfo *>(aQuery->mMessageInfo);
 
     queryMetadata.mHostname            = aQuery->mHostname;
-    queryMetadata.mTransmissionTime    = Timer::GetNow() + kResponseTimeout;
+    queryMetadata.mTransmissionTime    = TimerMilli::GetNow() + kResponseTimeout;
     queryMetadata.mSourceAddress       = messageInfo->GetSockAddr();
     queryMetadata.mDestinationPort     = messageInfo->GetPeerPort();
     queryMetadata.mDestinationAddress  = messageInfo->GetPeerAddr();
@@ -154,7 +155,7 @@ exit:
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
     otError error = OT_ERROR_NONE;
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     Message *messageCopy = NULL;
     uint32_t nextTransmissionTime;
 
@@ -381,14 +382,14 @@ void Client::FinalizeDnsTransaction(Message &aQuery, const QueryMetadata &aQuery
     }
 }
 
-void Client::HandleRetransmissionTimer(void *aContext)
+void Client::HandleRetransmissionTimer(Timer &aTimer)
 {
-    static_cast<Client *>(aContext)->HandleRetransmissionTimer();
+    GetOwner(aTimer).HandleRetransmissionTimer();
 }
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
     QueryMetadata queryMetadata;
     Message *message = mPendingQueries.GetHead();
@@ -516,6 +517,17 @@ exit:
     }
 
     return;
+}
+
+Client &Client::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Client &client = *static_cast<Client *>(aContext.GetContext());
+#else
+    Client &client = otGetThreadNetif().GetDnsClient();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return client;
 }
 
 }  // namespace Coap

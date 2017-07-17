@@ -145,7 +145,7 @@ private:
                                  const otMessageInfo *aMessageInfo);
     void HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     otError RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength);
@@ -184,6 +184,7 @@ private:
                                       uint8_t *aTlvs, uint8_t aLength);
     void SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
+    static Leader &GetOwner(const Context &aContext);
 
     /**
      * Thread Specification Constants
@@ -199,7 +200,7 @@ private:
     uint16_t mContextUsed;
     uint32_t mContextLastUsed[kNumContextIds];
     uint32_t mContextIdReuseDelay;
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource  mServerData;
 

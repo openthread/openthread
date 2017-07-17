@@ -36,6 +36,7 @@
 
 #include <openthread/config.h>
 
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "utils/wrap_stdint.h"
 
@@ -45,7 +46,7 @@ class ThreadNetif;
 
 namespace Utils {
 
-class JamDetector
+class JamDetector: public ThreadNetifLocator
 {
 public:
 
@@ -173,10 +174,11 @@ public:
     uint64_t GetHistoryBitmap(void) const { return mHistoryBitmap; }
 
 private:
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
     void UpdateHistory(bool aThresholdExceeded);
     void UpdateJamState(void);
+    static JamDetector &GetOwner(const Context &aContext);
 
 private:
     enum
@@ -191,11 +193,10 @@ private:
 
     };
 
-    ThreadNetif &mNetif;
     Handler      mHandler;                  // Handler/callback to inform about jamming state
     void        *mContext;                  // Context for handler/callback
     int8_t       mRssiThreshold;            // RSSI threshold for jam detection
-    Timer        mTimer;                    // RSSI sample timer
+    TimerMilli   mTimer;                    // RSSI sample timer
     uint64_t     mHistoryBitmap;            // History bitmap, each bit correspond to 1 sec interval
     uint32_t     mCurSecondStartTime;       // Start time for current 1 sec interval
     uint16_t     mSampleInterval;           // Current sample interval

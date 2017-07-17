@@ -47,6 +47,7 @@ configure_OPTIONS               = \
     --with-ncp-bus=uart           \
     --with-examples=emsk          \
     --with-platform-info=EMSK     \
+    --enable-linker-map           \
     $(NULL)
 
 ifeq ($(CERT_LOG),1)
@@ -112,7 +113,6 @@ LDFLAGS                        += \
     -nostartfiles                 \
     -specs=nano.specs             \
     -Wl,--gc-sections             \
-    -Wl,-Map=map.map              \
     -Wl,--defsym=_STACKSIZE=524288 \
     -Wl,--defsym=_HEAPSIZE=524288 \
     $(NULL)

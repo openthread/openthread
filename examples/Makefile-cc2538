@@ -48,6 +48,7 @@ configure_OPTIONS               = \
     --enable-diag                 \
     --with-examples=cc2538        \
     --with-platform-info=CC2538   \
+    --enable-linker-map           \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
@@ -91,7 +92,6 @@ LDFLAGS                        += \
     -specs=nano.specs             \
     -specs=nosys.specs            \
     -Wl,--gc-sections             \
-    -Wl,-Map=map.map              \
     $(NULL)
 
 ECHO                            := @echo

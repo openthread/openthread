@@ -8,7 +8,6 @@ OpenThread test scripts use the CLI to execute test cases.
 ## OpenThread Command List
 
 * [autostart](#autostart)
-* [blacklist](#blacklist)
 * [bufferinfo](#bufferinfo)
 * [channel](#channel)
 * [child](#child-list)
@@ -38,6 +37,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
 * [linkquality](#linkquality-extaddr)
+* [macfilter](#macfilter)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [netdataregister](#netdataregister)
@@ -66,7 +66,6 @@ OpenThread test scripts use the CLI to execute test cases.
 * [thread](#thread-start)
 * [txpowermax](#txpowermax)
 * [version](#version)
-* [whitelist](#whitelist)
 * [diag](#diag)
 
 ## OpenThread Command Details
@@ -96,63 +95,6 @@ Show the status of automatically starting Thread on initialization.
 ```bash
 > autostart
 false
-Done
-```
-
-### blacklist
-
-List the blacklist entries.
-
-```bash
-> blacklist
-Enabled
-166e0a0000000002
-166e0a0000000003
-Done
-```
-
-### blacklist add \<extaddr\>
-
-Add an IEEE 802.15.4 Extended Address to the blacklist.
-
-```bash
-> blacklist add 166e0a0000000002
-Done
-```
-
-### blacklist clear
-
-Clear all entries from the blacklist.
-
-```bash
-> blacklist clear
-Done
-```
-
-### blacklist disable
-
-Disable MAC blacklist filtering.
-
-```bash
-> blacklist disable
-Done
-```
-
-### blacklist enable
-
-Enable MAC blacklist filtering.
-
-```bash
-> blacklist enable
-Done
-```
-
-### blacklist remove \<extaddr\>
-
-Remove an IEEE 802.15.4 Extended Address from the blacklist.
-
-```bash
-> blacklist remove 166e0a0000000002
 Done
 ```
 
@@ -1630,61 +1572,158 @@ OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
 Done
 ```
 
-### whitelist
+### macfilter
 
-List the whitelist entries.
+List the macfilter status, including address and received signal strength filter settings.
 
 ```bash
-> whitelist
-Enabled
-e2b3540590b0fd87
-d38d7f875888fccb
-c467a90a2060fa0e
+> macfilter
+Address Mode: Whitelist
+0f6127e33af6b403 : rss -95 (lqi 1)
+0f6127e33af6b402
+RssIn List:
+0f6127e33af6b403 : rss -95 (lqi 1)
+Default rss : -50 (lqi 3)
 Done
 ```
 
-### whitelist add \<extaddr\>
+### macfilter addr
 
-Add an IEEE 802.15.4 Extended Address to the whitelist.
+List the address filter status.
 
 ```bash
-> whitelist add dead00beef00cafe
+> macfilter addr
+Whitelist
+0f6127e33af6b403 : rss -95 (lqi 1)
+0f6127e33af6b402
 Done
 ```
 
-### whitelist clear
+### macfilter addr disable
 
-Clear all entries from the whitelist.
+Disable address filter mode.
 
 ```bash
-> whitelist clear
+> macfilter addr disable
 Done
 ```
 
-### whitelist disable
+### macfilter addr whitelist
 
-Disable MAC whitelist filtering.
+Enable whitelist address filter mode.
 
 ```bash
-> whitelist disable
+> macfilter addr whitelist
 Done
 ```
 
-### whitelist enable
+### macfilter addr blacklist
 
-Enable MAC whitelist filtering.
+Enable blacklist address filter mode.
 
 ```bash
-> whitelist enable
+> macfilter addr blacklist
 Done
 ```
 
-### whitelist remove \<extaddr\>
+### macfilter addr add \<extaddr\> \[rss\]
 
-Remove an IEEE 802.15.4 Extended Address from the whitelist.
+Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received singal strength for
+the messages from the address if rss is specified.
 
 ```bash
-> whitelist remove dead00beef00cafe
+> macfilter addr add 0f6127e33af6b403 -95
+Done
+```
+
+```bash
+> macfilter addr add 0f6127e33af6b402
+Done
+```
+
+### macfilter addr remove \<extaddr\>
+
+Remove the IEEE802.15.4 Extended Address from the address filter.
+
+```bash
+> macfilter addr remove 0f6127e33af6b402
+Done
+```
+
+### macfilter addr clear
+
+Clear all the IEEE802.15.4 Extended Addresses from the address filter.
+
+```bash
+> macfilter addr clear
+Done
+```
+
+### macfilter rss
+
+List the rss filter status
+
+```bash
+> macfilter rss
+0f6127e33af6b403 : rss -95 (lqi 1)
+Default rss: -50 (lqi 3)
+Done
+```
+
+### macfilter rss add \<extaddr\> \<rss\>
+
+Set the received signal strength for the messages from the IEEE802.15.4 Extended Address.
+If extaddr is \*, default received signal strength for all received messages would be set.
+
+
+```bash
+> macfilter rss add * -50
+Done
+```
+
+```bash
+> macfilter rss add 0f6127e33af6b404 -85
+Done
+```
+
+### macfilter rss add-lqi \<extaddr\> \<lqi\>
+
+Set the received link quality for the messages from the IEEE802.15.4 Extended Address. Valid lqi range [0,3]
+If extaddr is \*, default received link quality for all received messages would be set.
+Equivalent with 'filter rss add' with similar usage
+
+
+```bash
+> macfilter rss add-lqi * 3
+Done
+```
+
+```bash
+> macfilter rss add 0f6127e33af6b404 2
+Done
+```
+
+### macfilter rss remove \<extaddr\>
+
+Removes the received signal strength or received link quality setting on the Extended Address.
+If extaddr is \*, default received signal strength or link quality for all received messages would be unset.
+
+```bash
+> macfilter rss remove *
+Done
+```
+
+```bash
+> macfilter rss remove 0f6127e33af6b404
+Done
+```
+
+### macfilter rss clear
+
+Clear all the the received signal strength or received link quality settings.
+
+```bash
+> macfilter rss clear
 Done
 ```
 

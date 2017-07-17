@@ -105,11 +105,11 @@ endif # OPENTHREAD_EXAMPLES_DA15000
 if OPENTHREAD_EXAMPLES_EFR32
     LDADD_COMMON                                                      += \
     $(top_builddir)/examples/platforms/efr32/libopenthread-efr32.a       \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.0/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg12_gcc_release.a \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg12_gcc_release.a \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.0/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
+    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_EFR32
 
@@ -122,6 +122,14 @@ LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/emsk/emsk.ld                     \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_EMSK
+
+if OPENTHREAD_EXAMPLES_GP712
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/gp712/libopenthread-gp712.a       \
+    $(top_srcdir)/third_party/Qorvo/gp712/libQorvoRPi.a                  \
+    $(NULL)
+
+endif # OPENTHREAD_EXAMPLES_GP712
 
 if OPENTHREAD_EXAMPLES_NRF52840
 LDADD_COMMON                                                          += \
@@ -190,6 +198,11 @@ ot_cli_mtd_LDFLAGS                                                     = \
 ot_cli_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
+
+if OPENTHREAD_ENABLE_LINKER_MAP
+ot_cli_ftd_LDFLAGS                                                    += -Wl,-Map=ot-cli-ftd.map
+ot_cli_mtd_LDFLAGS                                                    += -Wl,-Map=ot-cli-mtd.map
+endif
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)

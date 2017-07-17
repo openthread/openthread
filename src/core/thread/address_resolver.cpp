@@ -41,6 +41,7 @@
 
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -58,25 +59,20 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 
 AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
+    ThreadNetifLocator(aThreadNetif),
     mAddressError(OT_URI_PATH_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
     mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
     mAddressNotification(OT_URI_PATH_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
     mIcmpHandler(&AddressResolver::HandleIcmpReceive, this),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AddressResolver::HandleTimer, this),
-    mNetif(aThreadNetif)
+    mTimer(aThreadNetif.GetInstance(), &AddressResolver::HandleTimer, this)
 {
     Clear();
 
-    mNetif.GetCoap().AddResource(mAddressError);
-    mNetif.GetCoap().AddResource(mAddressQuery);
-    mNetif.GetCoap().AddResource(mAddressNotification);
+    aThreadNetif.GetCoap().AddResource(mAddressError);
+    aThreadNetif.GetCoap().AddResource(mAddressQuery);
+    aThreadNetif.GetCoap().AddResource(mAddressNotification);
 
-    mNetif.GetIp6().mIcmp.RegisterHandler(mIcmpHandler);
-}
-
-otInstance *AddressResolver::GetInstance(void)
-{
-    return mNetif.GetInstance();
+    aThreadNetif.GetIp6().mIcmp.RegisterHandler(mIcmpHandler);
 }
 
 void AddressResolver::Clear()
@@ -233,6 +229,7 @@ exit:
 
 otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {
+    ThreadNetif &netif = GetNetif();
     otError error;
     Message *message;
     Coap::Header header;
@@ -243,7 +240,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     targetTlv.Init();
     targetTlv.SetTarget(aEid);
@@ -251,11 +248,11 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoArp(GetInstance(), "Sent address query");
 
@@ -285,6 +282,7 @@ void AddressResolver::HandleAddressNotification(void *aContext, otCoapHeader *aH
 void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &aMessage,
                                                 const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetif &netif = GetNetif();
     ThreadTargetTlv targetTlv;
     ThreadMeshLocalEidTlv mlIidTlv;
     ThreadRloc16Tlv rloc16Tlv;
@@ -351,12 +349,12 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
             mCache[i].mState = Cache::kStateCached;
             MarkCacheEntryAsUsed(mCache[i]);
 
-            if (mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
+            if (netif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
             {
                 otLogInfoArp(GetInstance(), "Sent address notification acknowledgment");
             }
 
-            mNetif.GetMeshForwarder().HandleResolved(*targetTlv.GetTarget(), OT_ERROR_NONE);
+            netif.GetMeshForwarder().HandleResolved(*targetTlv.GetTarget(), OT_ERROR_NONE);
             break;
         }
     }
@@ -368,6 +366,7 @@ exit:
 otError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, const ThreadMeshLocalEidTlv &aEid,
                                           const Ip6::Address *aDestination)
 {
+    ThreadNetif &netif = GetNetif();
     otError error;
     Message *message;
     Coap::Header header;
@@ -378,7 +377,7 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, const 
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Append(&aTarget, sizeof(aTarget)));
     SuccessOrExit(error = message->Append(&aEid, sizeof(aEid)));
@@ -393,11 +392,11 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, const 
         memcpy(&messageInfo.GetPeerAddr(), aDestination, sizeof(messageInfo.GetPeerAddr()));
     }
 
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoArp(GetInstance(), "Sent address error");
 
@@ -422,6 +421,7 @@ void AddressResolver::HandleAddressError(void *aContext, otCoapHeader *aHeader, 
 void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessage,
                                          const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     ThreadTargetTlv targetTlv;
     ThreadMeshLocalEidTlv mlIidTlv;
@@ -437,7 +437,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
 
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
+        if (netif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
         {
             otLogInfoArp(GetInstance(), "Sent address error notification acknowledgment");
         }
@@ -449,18 +449,18 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
     VerifyOrExit(mlIidTlv.IsValid(), error = OT_ERROR_PARSE);
 
-    for (const Ip6::NetifUnicastAddress *address = mNetif.GetUnicastAddresses(); address; address = address->GetNext())
+    for (const Ip6::NetifUnicastAddress *address = netif.GetUnicastAddresses(); address; address = address->GetNext())
     {
         if (memcmp(&address->mAddress, targetTlv.GetTarget(), sizeof(address->mAddress)) == 0 &&
-            memcmp(mNetif.GetMle().GetMeshLocal64().GetIid(), mlIidTlv.GetIid(), 8))
+            memcmp(netif.GetMle().GetMeshLocal64().GetIid(), mlIidTlv.GetIid(), 8))
         {
             // Target EID matches address and Mesh Local EID differs
-            mNetif.RemoveUnicastAddress(*address);
+            netif.RemoveUnicastAddress(*address);
             ExitNow();
         }
     }
 
-    children = mNetif.GetMle().GetChildren(&numChildren);
+    children = netif.GetMle().GetChildren(&numChildren);
 
     memcpy(&macAddr, mlIidTlv.GetIid(), sizeof(macAddr));
     macAddr.m8[0] ^= 0x2;
@@ -512,6 +512,7 @@ void AddressResolver::HandleAddressQuery(void *aContext, otCoapHeader *aHeader, 
 void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessage,
                                          const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetif &netif = GetNetif();
     ThreadTargetTlv targetTlv;
     ThreadMeshLocalEidTlv mlIidTlv;
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
@@ -530,14 +531,14 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
     lastTransactionTimeTlv.Init();
 
-    if (mNetif.IsUnicastAddress(*targetTlv.GetTarget()))
+    if (netif.IsUnicastAddress(*targetTlv.GetTarget()))
     {
-        mlIidTlv.SetIid(mNetif.GetMle().GetMeshLocal64().GetIid());
+        mlIidTlv.SetIid(netif.GetMle().GetMeshLocal64().GetIid());
         SendAddressQueryResponse(targetTlv, mlIidTlv, NULL, aMessageInfo.GetPeerAddr());
         ExitNow();
     }
 
-    children = mNetif.GetMle().GetChildren(&numChildren);
+    children = netif.GetMle().GetChildren(&numChildren);
 
     for (int i = 0; i < numChildren; i++)
     {
@@ -556,7 +557,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
             }
 
             mlIidTlv.SetIid(children[i].GetExtAddress());
-            lastTransactionTimeTlv.SetTime(Timer::GetNow() - children[i].GetLastHeard());
+            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - children[i].GetLastHeard());
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }
@@ -571,6 +572,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
                                                const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
                                                const Ip6::Address &aDestination)
 {
+    ThreadNetif &netif = GetNetif();
     otError error;
     Message *message;
     Coap::Header header;
@@ -581,13 +583,13 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Append(&aTargetTlv, sizeof(aTargetTlv)));
     SuccessOrExit(error = message->Append(&aMlIidTlv, sizeof(aMlIidTlv)));
 
     rloc16Tlv.Init();
-    rloc16Tlv.SetRloc16(mNetif.GetMle().GetRloc16());
+    rloc16Tlv.SetRloc16(netif.GetMle().GetRloc16());
     SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
 
     if (aLastTransactionTimeTlv != NULL)
@@ -596,10 +598,10 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     }
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoArp(GetInstance(), "Sent address notification");
 
@@ -611,9 +613,9 @@ exit:
     }
 }
 
-void AddressResolver::HandleTimer(void *aContext)
+void AddressResolver::HandleTimer(Timer &aTimer)
 {
-    static_cast<AddressResolver *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void AddressResolver::HandleTimer()
@@ -647,7 +649,7 @@ void AddressResolver::HandleTimer()
                     mCache[i].mRetryTimeout = kAddressQueryMaxRetryDelay;
                 }
 
-                mNetif.GetMeshForwarder().HandleResolved(mCache[i].mTarget, OT_ERROR_DROP);
+                GetNetif().GetMeshForwarder().HandleResolved(mCache[i].mTarget, OT_ERROR_DROP);
             }
         }
         else if (mCache[i].mRetryTimeout > 0)
@@ -693,6 +695,17 @@ void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInf
 
 exit:
     OT_UNUSED_VARIABLE(aMessageInfo);
+}
+
+AddressResolver &AddressResolver::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    AddressResolver &resolver = *static_cast<AddressResolver *>(aContext.GetContext());
+#else
+    AddressResolver &resolver = otGetThreadNetif().GetAddressResolver();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return resolver;
 }
 
 }  // namespace ot

@@ -59,7 +59,7 @@ Ip6::Ip6(void):
     mMpl(*this),
     mMessagePool(GetInstance()),
     mForwardingEnabled(false),
-    mSendQueueTask(mTaskletScheduler, HandleSendQueue, this),
+    mSendQueueTask(GetInstance(), HandleSendQueue, this),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
     mIsReceiveIp6FilterEnabled(false),
@@ -421,9 +421,9 @@ exit:
     return error;
 }
 
-void Ip6::HandleSendQueue(void *aContext)
+void Ip6::HandleSendQueue(Tasklet &aTasklet)
 {
-    static_cast<Ip6 *>(aContext)->HandleSendQueue();
+    GetOwner(aTasklet).HandleSendQueue();
 }
 
 void Ip6::HandleSendQueue(void)
@@ -1117,6 +1117,17 @@ exit:
 otInstance *Ip6::GetInstance(void)
 {
     return otInstanceFromIp6(this);
+}
+
+Ip6 &Ip6::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Ip6 &ip6 = *static_cast<Ip6 *>(aContext.GetContext());
+#else
+    Ip6 &ip6 = otGetIp6();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return ip6;
 }
 
 const char *Ip6::IpProtoToString(IpProto aIpProto)

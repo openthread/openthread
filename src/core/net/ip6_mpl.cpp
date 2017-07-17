@@ -37,6 +37,7 @@
 
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
@@ -55,9 +56,9 @@ void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentT
 }
 
 Mpl::Mpl(Ip6 &aIp6):
-    mIp6(aIp6),
-    mSeedSetTimer(aIp6.mTimerScheduler, &Mpl::HandleSeedSetTimer, this),
-    mRetransmissionTimer(aIp6.mTimerScheduler, &Mpl::HandleRetransmissionTimer, this),
+    Ip6Locator(aIp6),
+    mSeedSetTimer(aIp6.GetInstance(), &Mpl::HandleSeedSetTimer, this),
+    mRetransmissionTimer(aIp6.GetInstance(), &Mpl::HandleRetransmissionTimer, this),
     mTimerExpirations(0),
     mSequence(0),
     mSeedId(0),
@@ -163,7 +164,7 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
@@ -250,14 +251,14 @@ exit:
     return error;
 }
 
-void Mpl::HandleRetransmissionTimer(void *aContext)
+void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 {
-    static_cast<Mpl *>(aContext)->HandleRetransmissionTimer();
+    GetOwner(aTimer).HandleRetransmissionTimer();
 }
 
-void Mpl::HandleRetransmissionTimer()
+void Mpl::HandleRetransmissionTimer(void)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
     MplBufferedMessageMetadata messageMetadata;
 
@@ -293,7 +294,7 @@ void Mpl::HandleRetransmissionTimer()
                         messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
                     }
 
-                    mIp6.EnqueueDatagram(*messageCopy);
+                    GetIp6().EnqueueDatagram(*messageCopy);
                 }
 
                 messageMetadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
@@ -318,7 +319,7 @@ void Mpl::HandleRetransmissionTimer()
 
                     // Remove the extra metadata from the MPL Data Message.
                     messageMetadata.RemoveFrom(*message);
-                    mIp6.EnqueueDatagram(*message);
+                    GetIp6().EnqueueDatagram(*message);
                 }
                 else
                 {
@@ -337,12 +338,12 @@ void Mpl::HandleRetransmissionTimer()
     }
 }
 
-void Mpl::HandleSeedSetTimer(void *aContext)
+void Mpl::HandleSeedSetTimer(Timer &aTimer)
 {
-    static_cast<Mpl *>(aContext)->HandleSeedSetTimer();
+    GetOwner(aTimer).HandleSeedSetTimer();
 }
 
-void Mpl::HandleSeedSetTimer()
+void Mpl::HandleSeedSetTimer(void)
 {
     bool startTimer = false;
 
@@ -359,6 +360,17 @@ void Mpl::HandleSeedSetTimer()
     {
         mSeedSetTimer.Start(kSeedEntryLifetimeDt);
     }
+}
+
+Mpl &Mpl::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Mpl &mpl = *static_cast<Mpl *>(aContext.GetContext());
+#else
+    Mpl &mpl = otGetIp6().mMpl;
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return mpl;
 }
 
 }  // namespace Ip6

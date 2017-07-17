@@ -40,7 +40,7 @@
 #include "utils/code_utils.h"
 #include "utils/flash.h"
 
-static int sFlashFd;
+static int sFlashFd = -1;
 uint32_t sEraseAddress;
 
 enum

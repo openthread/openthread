@@ -26,19 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils/wrap_string.h"
-
+#include <openthread/config.h>
 #include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "crypto/hmac_sha256.hpp"
-#include "crypto/mbedtls.hpp"
+#include "utils/wrap_string.h"
 
+#include "test_platform.h"
 #include "test_util.h"
-
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
-static ot::Crypto::MbedTls mMbedTls;
-#endif
 
 void TestHmacSha256(void)
 {
@@ -66,18 +62,27 @@ void TestHmacSha256(void)
         },
     };
 
-    ot::Crypto::HmacSha256 hmac;
-    uint8_t hash[ot::Crypto::HmacSha256::kHashSize];
+    otInstance *instance = testInitInstance();
 
-    for (int i = 0; tests[i].key != NULL; i++)
+    // Make sure hmac is destructed before freeing instance.
     {
-        hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
-        hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
-        hmac.Finish(hash);
+        ot::Crypto::HmacSha256 hmac;
+        uint8_t hash[ot::Crypto::HmacSha256::kHashSize];
 
-        VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
-                     "HMAC-SHA-256 failed\n");
+        VerifyOrQuit(instance != NULL, "Null OpenThread instance");
+
+        for (int i = 0; tests[i].key != NULL; i++)
+        {
+            hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
+            hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
+            hmac.Finish(hash);
+
+            VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
+                         "HMAC-SHA-256 failed\n");
+        }
     }
+
+    testFreeInstance(instance);
 }
 
 #ifdef ENABLE_TEST_MAIN

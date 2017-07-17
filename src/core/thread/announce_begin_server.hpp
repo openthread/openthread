@@ -38,18 +38,17 @@
 
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
 
-class ThreadNetif;
-
 /**
  * This class implements handling Announce Begin Requests.
  *
  */
-class AnnounceBeginServer
+class AnnounceBeginServer: public ThreadNetifLocator
 {
 public:
     /**
@@ -57,14 +56,6 @@ public:
      *
      */
     AnnounceBeginServer(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method begins the MLE Announce transmission process using Count=3 and Period=1s.
@@ -99,18 +90,19 @@ private:
                               const otMessageInfo *aMessageInfo);
     void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
+
+    static AnnounceBeginServer &GetOwner(const Context &aContext);
 
     uint32_t mChannelMask;
     uint16_t mPeriod;
     uint8_t mCount;
     uint8_t mChannel;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource mAnnounceBegin;
-    ThreadNetif &mNetif;
 };
 
 /**

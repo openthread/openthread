@@ -36,6 +36,7 @@
 
 #include <openthread/types.h>
 
+#include "common/locator.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
@@ -99,7 +100,7 @@ private:
     otIp6Prefix mIp6Prefix;                  ///< prefix
 } OT_TOOL_PACKED_END;
 
-class Dhcp6Server
+class Dhcp6Server: public ThreadNetifLocator
 {
 public:
     /**
@@ -148,8 +149,6 @@ private:
     otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientIdentifier, IaNa &aIaNa);
 
     Ip6::UdpSocket mSocket;
-
-    ThreadNetif &mNetif;
 
     Ip6::NetifUnicastAddress mAgentsAloc[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
     PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];

@@ -126,8 +126,10 @@ public:
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-    otError SetSteeringData(otExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; };
+    otError SetSteeringData(otExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
+    otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
 private:
     otError HandleDetachStart(void) { return OT_ERROR_NONE; }

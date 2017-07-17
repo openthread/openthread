@@ -111,6 +111,8 @@ public:
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
 private:
+    otError DoTransmit(otRadioFrame *aFrame);
+    static LinkRaw &GetOwner(const Context &aContext);
 
     otInstance             &mInstance;
     bool                    mEnabled;
@@ -118,8 +120,6 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
-
-    otError DoTransmit(otRadioFrame *aFrame);
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
@@ -131,10 +131,13 @@ private:
         kTimerReasonEnergyScanComplete,
     };
 
-    Timer                   mTimer;
+    TimerMilli              mTimer;
     TimerReason             mTimerReason;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    TimerMicro              mTimerMicro;
+#endif
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
@@ -158,7 +161,7 @@ private:
     Tasklet                 mEnergyScanTask;
     int8_t                  mEnergyScanRssi;
 
-    static void HandleEnergyScanTask(void *aContext);
+    static void HandleEnergyScanTask(Tasklet &aTasklet);
     void HandleEnergyScanTask(void);
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN

@@ -32,7 +32,7 @@
 */
 
 #include <openthread/openthread.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 #include "utils/code_utils.h"
 
@@ -222,10 +222,10 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (sRadioState == OT_RADIO_STATE_RECEIVE && sSleepInitDelay == 0)
     {
-        sSleepInitDelay = otPlatAlarmGetNow();
+        sSleepInitDelay = otPlatAlarmMilliGetNow();
         return OT_ERROR_NONE;
     }
-    else if ((otPlatAlarmGetNow() - sSleepInitDelay) < dg_configINITIAL_SLEEP_DELAY_TIME)
+    else if ((otPlatAlarmMilliGetNow() - sSleepInitDelay) < dg_configINITIAL_SLEEP_DELAY_TIME)
     {
         return OT_ERROR_NONE;
     }
@@ -410,6 +410,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     csmaSuppress = 0;
     ad_ftdf_send_frame_simple(aFrame->mLength, aFrame->mPsdu, aFrame->mChannel, 0, csmaSuppress); //Prio 0 for all.
     sRadioState = OT_RADIO_STATE_TRANSMIT;
+
+    otPlatRadioTxStarted(aInstance, aFrame);
 
 exit:
     return error;

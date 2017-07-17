@@ -105,7 +105,7 @@ NcpSpi::NcpSpi(otInstance *aInstance) :
     mTxState(kTxStateIdle),
     mHandlingRxFrame(false),
     mResetFlag(true),
-    mPrepareTxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
+    mPrepareTxFrameTask(aInstance, &NcpSpi::PrepareTxFrame, this),
     mSendFrameLen(0)
 {
     memset(mSendFrame, 0, kSpiHeaderLength);
@@ -246,10 +246,12 @@ void NcpSpi::SpiTransactionProcess(void)
     }
 }
 
-void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer *aNcpFrameBuffer)
+void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
+                                        NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpFrameBuffer);
     OT_UNUSED_VARIABLE(aTag);
+    OT_UNUSED_VARIABLE(aPriority);
 
     static_cast<NcpSpi *>(aContext)->mPrepareTxFrameTask.Post();
 }
@@ -311,9 +313,10 @@ exit:
     return errorCode;
 }
 
-void NcpSpi::PrepareTxFrame(void *aContext)
+void NcpSpi::PrepareTxFrame(Tasklet &aTasklet)
 {
-    static_cast<NcpSpi *>(aContext)->PrepareTxFrame();
+    OT_UNUSED_VARIABLE(aTasklet);
+    static_cast<NcpSpi *>(GetNcpInstance())->PrepareTxFrame();
 }
 
 void NcpSpi::PrepareTxFrame(void)

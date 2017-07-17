@@ -27,12 +27,12 @@
  */
 
 #include <stdio.h>
-#include "utils/wrap_stdint.h"
 
 #include <openthread/platform/toolchain.h>
 
 #include "thread/topology.hpp"
 #include "test_util.h"
+#include "utils/wrap_stdint.h"
 
 extern "C" {
     uint32_t otNetifAddress_Size_c();

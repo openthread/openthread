@@ -98,7 +98,7 @@ NcpUart::NcpUart(otInstance *aInstance):
     mUartBuffer(),
     mState(kStartingFrame),
     mByte(0),
-    mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
+    mUartSendTask(aInstance, EncodeAndSendToUart, this)
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 
@@ -106,10 +106,11 @@ NcpUart::NcpUart(otInstance *aInstance):
 }
 
 void NcpUart::HandleFrameAddedToNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
-                                          NcpFrameBuffer *aNcpFrameBuffer)
+                                          NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpFrameBuffer);
     OT_UNUSED_VARIABLE(aTag);
+    OT_UNUSED_VARIABLE(aPriority);
 
     static_cast<NcpUart *>(aContext)->HandleFrameAddedToNcpBuffer();
 }
@@ -122,11 +123,10 @@ void NcpUart::HandleFrameAddedToNcpBuffer(void)
     }
 }
 
-void NcpUart::EncodeAndSendToUart(void *aContext)
+void NcpUart::EncodeAndSendToUart(Tasklet &aTasklet)
 {
-    NcpUart *obj = static_cast<NcpUart *>(aContext);
-
-    obj->EncodeAndSendToUart();
+    OT_UNUSED_VARIABLE(aTasklet);
+    static_cast<NcpUart *>(GetNcpInstance())->EncodeAndSendToUart();
 }
 
 // This method encodes a frame from the tx frame buffer (mTxFrameBuffer) into the uart buffer and sends it over uart.

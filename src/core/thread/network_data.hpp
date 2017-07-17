@@ -37,6 +37,7 @@
 #include <openthread/types.h>
 
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "net/udp6.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
@@ -83,7 +84,7 @@ namespace NetworkData {
  * This class implements Network Data processing.
  *
  */
-class NetworkData
+class NetworkData: public ThreadNetifLocator
 {
 public:
     enum
@@ -99,14 +100,6 @@ public:
      *
      */
     NetworkData(ThreadNetif &aThreadNetif, bool aLocal);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method clears the network data.
@@ -353,8 +346,6 @@ protected:
 
     uint8_t mTlvs[kMaxSize];  ///< The Network Data buffer.
     uint8_t mLength;          ///< The number of valid bytes in @var mTlvs.
-
-    ThreadNetif &mNetif;
 
 private:
     enum

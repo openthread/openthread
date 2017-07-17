@@ -37,11 +37,12 @@
 #include <openthread/platform/radio.h>
 
 #include "openthread-core-config.h"
+#include "common/context.hpp"
+#include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_blacklist.hpp"
 #include "mac/mac_frame.hpp"
-#include "mac/mac_whitelist.hpp"
+#include "mac/mac_filter.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/topology.hpp"
@@ -101,7 +102,7 @@ enum
  * This class implements a MAC receiver client.
  *
  */
-class Receiver
+class Receiver: public Context
 {
     friend class Mac;
 
@@ -109,20 +110,20 @@ public:
     /**
      * This function pointer is called when a MAC frame is received.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aReceiver A reference to the MAC receiver client object.
      * @param[in]  aFrame    A reference to the MAC frame.
      *
      */
-    typedef void (*ReceiveFrameHandler)(void *aContext, Frame &aFrame);
+    typedef void (*ReceiveFrameHandler)(Receiver &aReceiver, Frame &aFrame);
 
     /**
      * This function pointer is called on a data request command (data poll) timeout, i.e., when the ack in response to
      * a data request command indicated a frame is pending, but no frame was received after `kDataPollTimeout` interval.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aReceiver  A reference to the MAC receiver client object.
      *
      */
-    typedef void (*DataPollTimeoutHandler)(void *aContext);
+    typedef void (*DataPollTimeoutHandler)(Receiver &aReceiver);
 
     /**
      * This constructor creates a MAC receiver client.
@@ -132,24 +133,24 @@ public:
      * @param[in]  aContext              A pointer to arbitrary context information.
      *
      */
-    Receiver(ReceiveFrameHandler aReceiveFrameHandler, DataPollTimeoutHandler aPollTimeoutHandler, void *aContext) {
-        mReceiveFrameHandler = aReceiveFrameHandler;
-        mPollTimeoutHandler = aPollTimeoutHandler;
-        mContext = aContext;
-        mNext = NULL;
+    Receiver(ReceiveFrameHandler aReceiveFrameHandler, DataPollTimeoutHandler aPollTimeoutHandler, void *aContext):
+        Context(aContext),
+        mReceiveFrameHandler(aReceiveFrameHandler),
+        mPollTimeoutHandler(aPollTimeoutHandler),
+        mNext(NULL) {
     }
 
 private:
-    void HandleReceivedFrame(Frame &frame) { mReceiveFrameHandler(mContext, frame); }
+    void HandleReceivedFrame(Frame &frame) { mReceiveFrameHandler(*this, frame); }
+
     void HandleDataPollTimeout(void) {
         if (mPollTimeoutHandler != NULL) {
-            mPollTimeoutHandler(mContext);
+            mPollTimeoutHandler(*this);
         }
     }
 
     ReceiveFrameHandler mReceiveFrameHandler;
     DataPollTimeoutHandler mPollTimeoutHandler;
-    void *mContext;
     Receiver *mNext;
 };
 
@@ -157,7 +158,7 @@ private:
  * This class implements a MAC sender client.
  *
  */
-class Sender
+class Sender: public Context
 {
     friend class Mac;
 
@@ -165,21 +166,21 @@ public:
     /**
      * This function pointer is called when the MAC is about to transmit the frame.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aSender   A reference to the MAC sender client object.
      * @param[in]  aFrame    A reference to the MAC frame buffer.
      *
      */
-    typedef otError(*FrameRequestHandler)(void *aContext, Frame &aFrame);
+    typedef otError(*FrameRequestHandler)(Sender &aSender, Frame &aFrame);
 
     /**
      * This function pointer is called when the MAC is done sending the frame.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aSender   A reference to the MAC sender client object.
      * @param[in]  aFrame    A reference to the MAC frame buffer that was sent.
      * @param[in]  aError    The status of the last MSDU transmission.
      *
      */
-    typedef void (*SentFrameHandler)(void *aContext, Frame &aFrame, otError aError);
+    typedef void (*SentFrameHandler)(Sender &aSender, Frame &aFrame, otError aError);
 
     /**
      * This constructor creates a MAC sender client.
@@ -189,20 +190,19 @@ public:
      * @param[in]  aContext              A pointer to arbitrary context information.
      *
      */
-    Sender(FrameRequestHandler aFrameRequestHandler, SentFrameHandler aSentFrameHandler, void *aContext) {
-        mFrameRequestHandler = aFrameRequestHandler;
-        mSentFrameHandler = aSentFrameHandler;
-        mContext = aContext;
-        mNext = NULL;
+    Sender(FrameRequestHandler aFrameRequestHandler, SentFrameHandler aSentFrameHandler, void *aContext):
+        Context(aContext),
+        mFrameRequestHandler(aFrameRequestHandler),
+        mSentFrameHandler(aSentFrameHandler),
+        mNext(NULL) {
     }
 
 private:
-    otError HandleFrameRequest(Frame &frame) { return mFrameRequestHandler(mContext, frame); }
-    void HandleSentFrame(Frame &frame, otError error) { mSentFrameHandler(mContext, frame, error); }
+    otError HandleFrameRequest(Frame &frame) { return mFrameRequestHandler(*this, frame); }
+    void HandleSentFrame(Frame &frame, otError error) { mSentFrameHandler(*this, frame, error); }
 
     FrameRequestHandler mFrameRequestHandler;
     SentFrameHandler mSentFrameHandler;
-    void *mContext;
     Sender *mNext;
 };
 
@@ -210,7 +210,7 @@ private:
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
-class Mac
+class Mac: public ThreadNetifLocator
 {
 public:
     /**
@@ -220,14 +220,6 @@ public:
      *
      */
     explicit Mac(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -256,7 +248,7 @@ public:
      * @param[out] aResult                  A reference to `otActiveScanResult` where the result is stored.
      *
      * @retval OT_ERROR_NONE            Successfully converted the beacon into active scan result.
-     * @retavl OT_ERROR_INVALID_ARGS    The @a aBeaconFrame was NULL.
+     * @retval OT_ERROR_INVALID_ARGS    The @a aBeaconFrame was NULL.
      * @retval OT_ERROR_PARSE           Failed parsing the beacon frame.
      *
      */
@@ -489,21 +481,15 @@ public:
      */
     otError SetExtendedPanId(const uint8_t *aExtPanId);
 
+#if OPENTHREAD_ENABLE_MAC_FILTER
     /**
-     * This method returns the MAC whitelist filter.
+     * This method returns the MAC filter.
      *
-     * @returns A reference to the MAC whitelist filter.
+     * @returns A reference to the MAC filter.
      *
      */
-    Whitelist &GetWhitelist(void) { return mWhitelist; }
-
-    /**
-     * This method returns the MAC blacklist filter.
-     *
-     * @returns A reference to the MAC blacklist filter.
-     *
-     */
-    Blacklist &GetBlacklist(void) { return mBlacklist; }
+    Filter &GetFilter(void) { return mFilter; }
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     /**
      * This method is called to handle receive events.
@@ -514,6 +500,13 @@ public:
      *
      */
     void ReceiveDoneTask(Frame *aFrame, otError aError);
+
+    /**
+     * This method is called to handle transmission start events.
+     *
+     * @param[in]  aFrame  A pointer to the frame that is transmitted.
+     */
+    void TransmitStartedTask(otRadioFrame *aFrame);
 
 #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
     /**
@@ -679,13 +672,13 @@ private:
     void StartEnergyScan(void);
     otError HandleMacCommand(Frame &aFrame);
 
-    static void HandleMacTimer(void *aContext);
+    static void HandleMacTimer(Timer &aTimer);
     void HandleMacTimer(void);
-    static void HandleBeginTransmit(void *aContext);
+    static void HandleBeginTransmit(Timer &aTimer);
     void HandleBeginTransmit(void);
-    static void HandleReceiveTimer(void *aContext);
+    static void HandleReceiveTimer(Timer &aTimer);
     void HandleReceiveTimer(void);
-    static void HandleEnergyScanSampleRssi(void *aContext);
+    static void HandleEnergyScanSampleRssi(Tasklet &aTasklet);
     void HandleEnergyScanSampleRssi(void);
 
     void StartCsmaBackoff(void);
@@ -695,13 +688,15 @@ private:
     otError RadioReceive(uint8_t aChannel);
     void RadioSleep(void);
 
-    Timer mMacTimer;
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-    Timer mBackoffTimer;
-#endif
-    Timer mReceiveTimer;
+    static Mac &GetOwner(const Context &aContext);
 
-    ThreadNetif &mNetif;
+    TimerMilli mMacTimer;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    TimerMicro mBackoffTimer;
+#else
+    TimerMilli mBackoffTimer;
+#endif
+    TimerMilli mReceiveTimer;
 
     ExtAddress mExtAddress;
     ShortAddress mShortAddress;
@@ -749,8 +744,9 @@ private:
     otLinkPcapCallback mPcapCallback;
     void *mPcapCallbackContext;
 
-    Whitelist mWhitelist;
-    Blacklist mBlacklist;
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    Filter mFilter;
+#endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     Frame *mTxFrame;
 

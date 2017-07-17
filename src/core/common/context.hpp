@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,75 +28,75 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for the alarm service.
+ *   This file includes definitions for maintaining a pointer to arbitrary context information.
  */
 
-#ifndef ALARM_H_
-#define ALARM_H_
+#ifndef CONTEXT_HPP_
+#define CONTEXT_HPP_
 
-#include <stdint.h>
+#include <openthread/config.h>
+#include <openthread/platform/toolchain.h>
 
-#include <openthread/types.h>
+#include "openthread-core-config.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace ot {
 
 /**
- * @addtogroup plat-alarm
+ * @addtogroup core-context
  *
  * @brief
- *   This module includes the platform abstraction for the alarm service.
+ *   This module includes definitions for maintaining a pointer to arbitrary context information.
  *
  * @{
  *
  */
 
 /**
- * Set the alarm to fire at @p aDt milliseconds after @p aT0.
+ * This class implements definitions for maintaining a pointer to arbitrary context information.
  *
- * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aT0        The reference time.
- * @param[in] aDt        The time delay in milliseconds from @p aT0.
+ * This is used as base class for objects that provide a callback or handler (e.g., Timer or Tasklet).
+ *
  */
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+class Context
+{
+public:
 
-/**
- * Stop the alarm.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- */
-void otPlatAlarmStop(otInstance *aInstance);
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    /**
+     * This method returns the pointer to the arbitrary context information.
+     *
+     * @returns The pointer to the context information.
+     *
+     */
+    void *GetContext(void) const { return mContext; }
+#endif
 
-/**
- * Get the current time.
- *
- * @returns The current time in milliseconds.
- */
-uint32_t otPlatAlarmGetNow(void);
+protected:
+    /**
+     * This constructor initializes the context object.
+     *
+     * @param[in]  aContext    A pointer to arbitrary context information.
+     *
+     */
+    Context(void *aContext)
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+        : mContext(aContext)
+#endif
+    {
+        OT_UNUSED_VARIABLE(aContext);
+    }
 
-/**
- * Signal that the alarm has fired.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- */
-extern void otPlatAlarmFired(otInstance *aInstance);
-
-/**
- * Signal diagnostics module that the alarm has fired.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- */
-extern void otPlatDiagAlarmFired(otInstance *aInstance);
+private:
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    void *mContext;
+#endif
+};
 
 /**
  * @}
  *
  */
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+}  // namespace ot
 
-#endif  // ALARM_H_
+#endif  // CONTEXT_HPP_

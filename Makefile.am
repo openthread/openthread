@@ -44,6 +44,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-dns-client               \
     --enable-application-coap         \
     --enable-border-router            \
+    --enable-mac-filter               \
     $(NULL)
 
 SUBDIRS                             = \

@@ -34,16 +34,13 @@
 #ifndef LOWPAN_HPP_
 #define LOWPAN_HPP_
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
-
-class ThreadNetif;
-
-namespace NetworkData { class Leader; }
 
 /**
  * @addtogroup core-6lowpan
@@ -79,7 +76,7 @@ struct Context
  * This class implements LOWPAN_IPHC header compression.
  *
  */
-class Lowpan
+class Lowpan: public ThreadNetifLocator
 {
 public:
     /**
@@ -209,8 +206,6 @@ private:
 
     static otError CopyContext(const Context &aContext, Ip6::Address &aAddress);
     static otError ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
-
-    NetworkData::Leader &mNetworkData;
 };
 
 /**

@@ -136,7 +136,7 @@ void Diag::ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMax
     otPlatRadioSetPromiscuous(sContext, true);
 
     // stop timer
-    otPlatAlarmStop(sContext);
+    otPlatAlarmMilliStop(sContext);
 
     // start to listen on the default channel
     SuccessOrExit(error = otPlatRadioReceive(sContext, sChannel));
@@ -160,7 +160,7 @@ void Diag::ProcessStop(int argc, char *argv[], char *aOutput, size_t aOutputMaxL
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    otPlatAlarmStop(sContext);
+    otPlatAlarmMilliStop(sContext);
     otPlatDiagModeSet(false);
     otPlatRadioSetPromiscuous(sContext, false);
 
@@ -277,7 +277,7 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMa
 
     if (strcmp(argv[0], "stop") == 0)
     {
-        otPlatAlarmStop(sContext);
+        otPlatAlarmMilliStop(sContext);
         sRepeatActive = false;
         snprintf(aOutput, aOutputMaxLen, "repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
     }
@@ -295,8 +295,8 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMa
         sTxLen = static_cast<uint8_t>(value);
 
         sRepeatActive = true;
-        uint32_t now = otPlatAlarmGetNow();
-        otPlatAlarmStartAt(sContext, now, sTxPeriod);
+        uint32_t now = otPlatAlarmMilliGetNow();
+        otPlatAlarmMilliStartAt(sContext, now, sTxPeriod);
         snprintf(aOutput, aOutputMaxLen, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
     }
 
@@ -376,10 +376,10 @@ void Diag::AlarmFired(otInstance *aInstance)
 {
     if(sRepeatActive)
     {
-        uint32_t now = otPlatAlarmGetNow();
+        uint32_t now = otPlatAlarmMilliGetNow();
 
         TxPacket();
-        otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+        otPlatAlarmMilliStartAt(aInstance, now, sTxPeriod);
     }
     else
     {

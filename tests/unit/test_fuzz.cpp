@@ -98,7 +98,7 @@ void TestFuzz(uint32_t aSeconds)
     g_testPlatRadioGetTransmitBuffer = testFuzztRadioGetTransmitBuffer;
 
     // Initialize our timing variables
-    uint32_t tStart = otPlatAlarmGetNow();
+    uint32_t tStart = otPlatAlarmMilliGetNow();
     uint32_t tEnd = tStart + (aSeconds * 1000);
 
     otInstance *aInstance;
@@ -109,7 +109,7 @@ void TestFuzz(uint32_t aSeconds)
     Log("Initialized seed = 0x%X", seed);
 #endif
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     size_t otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 
@@ -124,7 +124,7 @@ void TestFuzz(uint32_t aSeconds)
     // Initialize OpenThread with the buffer
     aInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    aInstance = otInstanceInit();
+    aInstance = otInstanceInitSingle();
 #endif
 
     VerifyOrQuit(aInstance != NULL, "Failed to initialize otInstance");
@@ -136,14 +136,14 @@ void TestFuzz(uint32_t aSeconds)
 
     uint32_t countRecv = 0;
 
-    while (otPlatAlarmGetNow() < tEnd)
+    while (otPlatAlarmMilliGetNow() < tEnd)
     {
         otTaskletsProcess(aInstance);
 
-        if (g_testPlatAlarmSet && otPlatAlarmGetNow() >= g_testPlatAlarmNext)
+        if (g_testPlatAlarmSet && otPlatAlarmMilliGetNow() >= g_testPlatAlarmNext)
         {
             g_testPlatAlarmSet = false;
-            otPlatAlarmFired(aInstance);
+            otPlatAlarmMilliFired(aInstance);
         }
 
         if (g_fRadioEnabled)
@@ -196,7 +196,7 @@ void TestFuzz(uint32_t aSeconds)
     // Clean up the instance
     otInstanceFinalize(aInstance);
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     free(otInstanceBuffer);
 #endif
 }

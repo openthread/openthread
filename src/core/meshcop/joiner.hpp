@@ -40,6 +40,7 @@
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/crc16.hpp"
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -51,7 +52,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class Joiner
+class Joiner: public ThreadNetifLocator
 {
 public:
     /**
@@ -61,14 +62,6 @@ public:
      *
      */
     Joiner(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method starts the Joiner service.
@@ -108,7 +101,7 @@ private:
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
     void HandleDiscoverResult(otActiveScanResult *aResult);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     void Close(void);
@@ -127,6 +120,8 @@ private:
                                     const otMessageInfo *aMessageInfo);
     void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
+
+    static Joiner &GetOwner(const Context &aContext);
 
     enum State
     {
@@ -155,9 +150,8 @@ private:
     const char *mVendorSwVersion;
     const char *mVendorData;
 
-    Timer mTimer;
+    TimerMilli mTimer;
     Coap::Resource mJoinerEntrust;
-    ThreadNetif &mNetif;
 };
 
 }  // namespace MeshCoP

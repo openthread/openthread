@@ -31,7 +31,7 @@
 #include <assert.h>
 
 #include <openthread/types.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include <utils/code_utils.h>
 #include <utils/flash.h>
@@ -80,7 +80,7 @@ void nrf5SdSocFlashProcess(uint32_t aEvtId)
 static otError sdFlashSingleWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t retval;
-    uint32_t startTime = otPlatAlarmGetNow();
+    uint32_t startTime = otPlatAlarmMilliGetNow();
 
     // Expect SotfDevice Flash Complete event.
     sFlashStatus = FLASH_STATUS_PENDING;
@@ -97,7 +97,7 @@ static otError sdFlashSingleWrite(uint32_t aAddress, uint8_t *aData, uint32_t aS
                 break;
             }
         }
-        while (otPlatAlarmGetNow() - startTime < FLASH_TIMEOUT);
+        while (otPlatAlarmMilliGetNow() - startTime < FLASH_TIMEOUT);
 
         if (sFlashStatus != FLASH_STATUS_SUCCESS)
         {
@@ -113,7 +113,7 @@ static otError sdFlashSingleWrite(uint32_t aAddress, uint8_t *aData, uint32_t aS
 otError nrf5FlashPageErase(uint32_t aAddress)
 {
     uint32_t retval;
-    uint32_t startTime = otPlatAlarmGetNow();
+    uint32_t startTime = otPlatAlarmMilliGetNow();
 
     // Expect SotfDevice Flash Complete event.
     sFlashStatus = FLASH_STATUS_PENDING;
@@ -130,7 +130,7 @@ otError nrf5FlashPageErase(uint32_t aAddress)
                 break;
             }
         }
-        while (otPlatAlarmGetNow() - startTime < FLASH_TIMEOUT);
+        while (otPlatAlarmMilliGetNow() - startTime < FLASH_TIMEOUT);
 
         if (sFlashStatus != FLASH_STATUS_SUCCESS)
         {

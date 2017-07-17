@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_INSTANCE_H_
 #define OPENTHREAD_INSTANCE_H_
 
+#include <stdlib.h>
+
 #include <openthread/types.h>
 #include <openthread/platform/logging.h>
 
@@ -157,16 +159,18 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
 
 #else // OTDLL
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
 /**
  * This function initializes the OpenThread library.
+ *
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
  * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
  *
+ * This function is available and can only be used when support for multiple OpenThread instances is enabled.
+ *
  * @param[in]    aInstanceBuffer      The buffer for OpenThread to use for allocating the otInstance structure.
- * @param[inout] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for otInstance,
-                                      the number of bytes required for otInstance.
+ * @param[inout] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for
+ *                                    otInstance, the number of bytes required for otInstance.
  *
  * @retval otInstance*  The new OpenThread instance structure.
  *
@@ -174,18 +178,19 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
  *
  */
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
-#else // OPENTHREAD_MULTIPLE_INSTANCE
+
 /**
- * This function initializes the static instance of the OpenThread library.
+ * This function initializes the static single instance of the OpenThread library.
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
  * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
  *
- * @retval otInstance*  The new OpenThread instance structure.
+ * This function is available and can only be used when support for multiple OpenThread instances is disabled.
+ *
+ * @retval The new single OpenThread instance structure.
  *
  */
-otInstance *otInstanceInit(void);
-#endif // OPENTHREAD_MULTIPLE_INSTANCE
+otInstance *otInstanceInitSingle(void);
 
 /**
  * This function disables the OpenThread library.

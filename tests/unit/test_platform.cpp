@@ -77,11 +77,45 @@ void testPlatResetToDefaults(void)
     g_testPlatRadioGetTransmitBuffer = NULL;
 }
 
+otInstance *testInitInstance(void)
+{
+    otInstance *instance = NULL;
+
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    size_t instaneBufferLength = 0;
+    uint8_t *instanceBuffer = NULL;
+
+    // Call to query the buffer size
+    (void)otInstanceInit(NULL, &instaneBufferLength);
+
+    // Call to allocate the buffer
+    instanceBuffer = (uint8_t *)malloc(instaneBufferLength);
+    VerifyOrQuit(instanceBuffer != NULL, "Failed to allocate otInstance");
+    memset(instanceBuffer, 0, instaneBufferLength);
+
+    // Initialize OpenThread with the buffer
+    instance = otInstanceInit(instanceBuffer, &instaneBufferLength);
+#else
+    instance = otInstanceInitSingle();
+#endif
+
+    return instance;
+}
+
+void testFreeInstance(otInstance *aInstance)
+{
+    otInstanceFinalize(aInstance);
+
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    free(aInstance);
+#endif
+}
+
 bool sDiagMode = false;
 
 extern "C" {
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     void *otPlatCAlloc(size_t aNum, size_t aSize)
     {
         return calloc(aNum, aSize);
@@ -101,7 +135,7 @@ extern "C" {
     // Alarm
     //
 
-    void otPlatAlarmStop(otInstance *aInstance)
+    void otPlatAlarmMilliStop(otInstance *aInstance)
     {
         if (g_testPlatAlarmStop)
         {
@@ -113,7 +147,7 @@ extern "C" {
         }
     }
 
-    void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+    void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     {
         if (g_testPlatAlarmStartAt)
         {
@@ -126,7 +160,7 @@ extern "C" {
         }
     }
 
-    uint32_t otPlatAlarmGetNow(void)
+    uint32_t otPlatAlarmMilliGetNow(void)
     {
         if (g_testPlatAlarmGetNow)
         {
@@ -461,7 +495,7 @@ exit:
         (void)aValue;
         (void)aValueLength;
 
-        return OT_ERROR_NONE;
+        return OT_ERROR_NOT_FOUND;
     }
 
     otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)

@@ -50,9 +50,9 @@ namespace ot {
 namespace Coap {
 
 Coap::Coap(ThreadNetif &aNetif):
-    mNetif(aNetif),
+    ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
-    mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Coap::HandleRetransmissionTimer, this),
+    mRetransmissionTimer(aNetif.GetInstance(), &Coap::HandleRetransmissionTimer, this),
     mResources(NULL),
     mContext(NULL),
     mInterceptor(NULL),
@@ -287,14 +287,25 @@ exit:
     return error;
 }
 
-void Coap::HandleRetransmissionTimer(void *aContext)
+Coap &Coap::GetOwner(const Context &aContext)
 {
-    static_cast<Coap *>(aContext)->HandleRetransmissionTimer();
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Coap &coap = *static_cast<Coap *>(aContext.GetContext());
+#else
+    Coap &coap = otGetThreadNetif().GetCoap();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return coap;
+}
+
+void Coap::HandleRetransmissionTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).HandleRetransmissionTimer();
 }
 
 void Coap::HandleRetransmissionTimer(void)
 {
-    uint32_t now = otPlatAlarmGetNow();
+    uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
     CoapMetadata coapMetadata;
     Message *message = mPendingRequests.GetHead();
@@ -543,7 +554,7 @@ exit:
 
     if (error)
     {
-        otLogInfoCoapErr(mNetif.GetInstance(), error, "Receive failed");
+        otLogInfoCoapErr(GetNetif().GetInstance(), error, "Receive failed");
     }
 }
 
@@ -704,7 +715,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoCoapErr(mNetif.GetInstance(), error, "Failed to process request");
+        otLogInfoCoapErr(GetNetif().GetInstance(), error, "Failed to process request");
 
         if (error == OT_ERROR_NOT_FOUND)
         {
@@ -729,20 +740,20 @@ CoapMetadata::CoapMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageIn
     mResponseHandler = aHandler;
     mResponseContext = aContext;
     mRetransmissionCount = 0;
-    mRetransmissionTimeout = Timer::SecToMsec(kAckTimeout);
+    mRetransmissionTimeout = TimerMilli::SecToMsec(kAckTimeout);
     mRetransmissionTimeout += otPlatRandomGet() %
-                              (Timer::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
-                               Timer::SecToMsec(kAckTimeout) + 1);
+                              (TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
+                               TimerMilli::SecToMsec(kAckTimeout) + 1);
 
     if (aConfirmable)
     {
         // Set next retransmission timeout.
-        mNextTimerShot = Timer::GetNow() + mRetransmissionTimeout;
+        mNextTimerShot = TimerMilli::GetNow() + mRetransmissionTimeout;
     }
     else
     {
         // Set overall response timeout.
-        mNextTimerShot = Timer::GetNow() + kMaxTransmitWait;
+        mNextTimerShot = TimerMilli::GetNow() + kMaxTransmitWait;
     }
 
     mAcknowledged = false;
@@ -750,7 +761,7 @@ CoapMetadata::CoapMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageIn
 }
 
 ResponsesQueue::ResponsesQueue(ThreadNetif &aNetif):
-    mTimer(aNetif.GetIp6().mTimerScheduler, &ResponsesQueue::HandleTimer, this)
+    mTimer(aNetif.GetInstance(), &ResponsesQueue::HandleTimer, this)
 {
 }
 
@@ -859,7 +870,7 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(Timer::SecToMsec(kExchangeLifetime));
+        mTimer.Start(TimerMilli::SecToMsec(kExchangeLifetime));
     }
 
 exit:
@@ -887,9 +898,20 @@ void ResponsesQueue::DequeueAllResponses(void)
     }
 }
 
-void ResponsesQueue::HandleTimer(void *aContext)
+ResponsesQueue &ResponsesQueue::GetOwner(const Context &aContext)
 {
-    static_cast<ResponsesQueue *>(aContext)->HandleTimer();
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    ResponsesQueue &queue = *static_cast<ResponsesQueue *>(aContext.GetContext());
+#else
+    ResponsesQueue &queue = otGetThreadNetif().GetCoap().mResponsesQueue;
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return queue;
+}
+
+void ResponsesQueue::HandleTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).HandleTimer();
 }
 
 void ResponsesQueue::HandleTimer(void)
@@ -901,7 +923,7 @@ void ResponsesQueue::HandleTimer(void)
     {
         enqueuedResponseHeader.ReadFrom(*message);
 
-        if (enqueuedResponseHeader.IsEarlier(Timer::GetNow()))
+        if (enqueuedResponseHeader.IsEarlier(TimerMilli::GetNow()))
         {
             DequeueResponse(*message);
         }
@@ -915,7 +937,7 @@ void ResponsesQueue::HandleTimer(void)
 
 uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 {
-    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - Timer::GetNow());
+    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - TimerMilli::GetNow());
 
     return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
 }

@@ -33,6 +33,7 @@
 
 #include "coap/coap_header.hpp"
 #include "common/debug.hpp"
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
@@ -252,7 +253,7 @@ public:
      *
      */
     EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo):
-        mDequeueTime(Timer::GetNow() + Timer::SecToMsec(kExchangeLifetime)),
+        mDequeueTime(TimerMilli::GetNow() + TimerMilli::SecToMsec(kExchangeLifetime)),
         mMessageInfo(aMessageInfo) {}
 
     /**
@@ -407,20 +408,22 @@ private:
     };
 
     void DequeueResponse(Message &aMessage) { mQueue.Dequeue(aMessage); aMessage.Free(); }
+    static ResponsesQueue &GetOwner(const Context &aContext);
+    static void HandleTimer(Timer &aTimer);
+    void HandleTimer(void);
 
     MessageQueue mQueue;
-    Timer        mTimer;
-
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
+    TimerMilli   mTimer;
 };
 
 /**
  * This class implements the CoAP client and server.
  *
  */
-class Coap
+class Coap: public ThreadNetifLocator
 {
+    friend class ResponsesQueue;
+
 public:
     /**
      * This function pointer is called before CoAP server processing a CoAP packets.
@@ -661,7 +664,6 @@ protected:
      */
     virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadNetif &mNetif;
     Ip6::UdpSocket mSocket;
 
 private:
@@ -686,12 +688,14 @@ private:
     otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
                              const Ip6::MessageInfo &aMessageInfo);
-    static void HandleRetransmissionTimer(void *aContext);
+    static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
+
+    static Coap &GetOwner(const Context &aContext);
 
     MessageQueue mPendingRequests;
     uint16_t mMessageId;
-    Timer mRetransmissionTimer;
+    TimerMilli mRetransmissionTimer;
 
     Resource *mResources;
 

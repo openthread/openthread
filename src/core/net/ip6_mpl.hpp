@@ -36,6 +36,7 @@
 
 #include <openthread/types.h>
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
@@ -427,7 +428,7 @@ private:
  * This class implements MPL message processing.
  *
  */
-class Mpl
+class Mpl: public Ip6Locator
 {
 public:
     /**
@@ -526,16 +527,16 @@ private:
     void UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence);
     void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
-    static void HandleSeedSetTimer(void *aContext);
+    static void HandleSeedSetTimer(Timer &aTimer);
     void HandleSeedSetTimer(void);
 
-    static void HandleRetransmissionTimer(void *aContext);
+    static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
 
-    Ip6 &mIp6;
+    static Mpl &GetOwner(const Context &aContext);
 
-    Timer mSeedSetTimer;
-    Timer mRetransmissionTimer;
+    TimerMilli mSeedSetTimer;
+    TimerMilli mRetransmissionTimer;
 
     uint8_t mTimerExpirations;
     uint8_t mSequence;

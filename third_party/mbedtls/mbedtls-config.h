@@ -30,8 +30,9 @@
 
 #include <stdlib.h>
 
-#include "openthread/platform/logging.h"
-#include "openthread/platform/memory.h"
+#include <openthread/config.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/memory.h>
 
 #if defined(_WIN32)
 #include <stdarg.h>
@@ -1973,7 +1974,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * Enable this module to enable the buffer memory allocator.
  */
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #endif
 
@@ -2547,7 +2548,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 
 /* Platform options */
 //#define MBEDTLS_PLATFORM_STD_MEM_HDR   <stdlib.h> /**< Header to include if MBEDTLS_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #define MBEDTLS_PLATFORM_STD_CALLOC    otPlatCAlloc /**< Default allocator to use, can be undefined */
 #define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
 #endif

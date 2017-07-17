@@ -46,7 +46,6 @@
 namespace ot {
 namespace Dns {
 
-
 /**
  * This class implements metadata required for DNS retransmission.
  *
@@ -160,7 +159,7 @@ public:
     Client(Ip6::Netif &aNetif):
         mSocket(aNetif.GetIp6().mUdp),
         mMessageId(0),
-        mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Client::HandleRetransmissionTimer, this) {
+        mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this) {
     };
 
     /**
@@ -245,17 +244,19 @@ private:
                                 otIp6Address *aAddress, uint32_t aTtl,
                                 otError aResult);
 
-    static void HandleRetransmissionTimer(void *aContext);
+    static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static Client &GetOwner(const Context &aContext);
+
     Ip6::UdpSocket mSocket;
 
     uint16_t mMessageId;
     MessageQueue mPendingQueries;
-    Timer mRetransmissionTimer;
+    TimerMilli mRetransmissionTimer;
 };
 
 }  // namespace Dns

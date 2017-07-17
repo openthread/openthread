@@ -38,6 +38,7 @@
 
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
@@ -54,7 +55,7 @@ class ThreadTargetTlv;
  * This class implements handling PANID Query Requests.
  *
  */
-class PanIdQueryServer
+class PanIdQueryServer: public ThreadNetifLocator
 {
 public:
     /**
@@ -62,14 +63,6 @@ public:
      *
      */
     PanIdQueryServer(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance();
 
 private:
     enum
@@ -83,22 +76,22 @@ private:
     static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
     void HandleScanResult(Mac::Frame *aFrame);
 
-    static void HandleTimer(void *aContext);
+    static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     otError SendConflict(void);
 
+    static PanIdQueryServer &GetOwner(const Context &aContext);
+
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;
     uint16_t mPanId;
 
-    Timer mTimer;
+    TimerMilli mTimer;
 
     Coap::Resource mPanIdQuery;
-
-    ThreadNetif &mNetif;
 };
 
 /**

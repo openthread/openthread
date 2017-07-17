@@ -36,7 +36,7 @@
 #include <stdint.h>
 
 #include <openthread/config.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/platform.h>
 
@@ -54,7 +54,7 @@ void efr32AlarmInit(void)
 {
 }
 
-uint32_t otPlatAlarmGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     uint32_t timer_lo;
 
@@ -70,7 +70,7 @@ uint32_t otPlatAlarmGetNow(void)
     return (((uint64_t)sTimerHi << 32) | sTimerLo) / 1000;
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)aInstance;
     sAlarmT0 = t0;
@@ -78,7 +78,7 @@ void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
     sIsRunning = true;
 }
 
-void otPlatAlarmStop(otInstance *aInstance)
+void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     (void)aInstance;
     sIsRunning = false;
@@ -86,7 +86,7 @@ void otPlatAlarmStop(otInstance *aInstance)
 
 void efr32AlarmProcess(otInstance *aInstance)
 {
-    uint32_t now = otPlatAlarmGetNow();
+    uint32_t now = otPlatAlarmMilliGetNow();
     uint32_t expires;
     bool fire = false;
 
@@ -116,7 +116,7 @@ void efr32AlarmProcess(otInstance *aInstance)
         else
 #endif
         {
-            otPlatAlarmFired(aInstance);
+            otPlatAlarmMilliFired(aInstance);
         }
     }
 

@@ -111,11 +111,13 @@ protected:
     /**
      * This method is called to start a new outbound frame.
      *
+     * param[in] aHeader           The spinel header byte
+     *
      * @retval OT_ERROR_NONE       Successfully started a new frame.
      * @retval OT_ERROR_NO_BUFS    Insufficient buffer space available to start a new frame.
      *
      */
-    otError OutboundFrameBegin(void);
+    otError OutboundFrameBegin(uint8_t aHeader);
 
     /**
      * This method adds data to the current outbound frame being written.
@@ -192,7 +194,7 @@ private:
 #endif // OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
 
     static void HandleFrameRemovedFromNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
-                                                NcpFrameBuffer *aNcpBuffer);
+                                                NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpBuffer);
     void HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
@@ -210,7 +212,7 @@ private:
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
     void HandleJamStateChange(bool aJamState);
 
-    static void UpdateChangedProps(void *aContext);
+    static void UpdateChangedProps(Tasklet &aTasklet);
     void UpdateChangedProps(void);
 
     static void SendDoneTask(void *aContext);
@@ -355,6 +357,7 @@ private:
     NCP_GET_PROP_HANDLER(MAC_15_4_SADDR);
     NCP_GET_PROP_HANDLER(MAC_RAW_STREAM_ENABLED);
     NCP_GET_PROP_HANDLER(MAC_EXTENDED_ADDR);
+    NCP_GET_PROP_HANDLER(MAC_DATA_POLL_PERIOD);
     NCP_GET_PROP_HANDLER(NET_SAVED);
     NCP_GET_PROP_HANDLER(NET_IF_UP);
     NCP_GET_PROP_HANDLER(NET_STACK_UP);
@@ -397,11 +400,12 @@ private:
     NCP_GET_PROP_HANDLER(NCP_CNTR);
     NCP_GET_PROP_HANDLER(IP_CNTR);
     NCP_GET_PROP_HANDLER(MSG_BUFFER_COUNTERS);
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_GET_PROP_HANDLER(MAC_WHITELIST);
     NCP_GET_PROP_HANDLER(MAC_WHITELIST_ENABLED);
     NCP_GET_PROP_HANDLER(MAC_BLACKLIST);
     NCP_GET_PROP_HANDLER(MAC_BLACKLIST_ENABLED);
+    NCP_GET_PROP_HANDLER(MAC_FIXED_RSS);
 #endif
     NCP_GET_PROP_HANDLER(THREAD_MODE);
     NCP_GET_PROP_HANDLER(THREAD_CHILD_TIMEOUT);
@@ -451,6 +455,7 @@ private:
     NCP_SET_PROP_HANDLER(MAC_SCAN_STATE);
     NCP_SET_PROP_HANDLER(MAC_15_4_PANID);
     NCP_SET_PROP_HANDLER(MAC_15_4_LADDR);
+    NCP_SET_PROP_HANDLER(MAC_DATA_POLL_PERIOD);
     NCP_SET_PROP_HANDLER(MAC_RAW_STREAM_ENABLED);
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_SET_PROP_HANDLER(MAC_15_4_SADDR);
@@ -475,11 +480,12 @@ private:
 #endif
     NCP_SET_PROP_HANDLER(MAC_PROMISCUOUS_MODE);
     NCP_SET_PROP_HANDLER(MAC_SCAN_PERIOD);
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_SET_PROP_HANDLER(MAC_WHITELIST);
     NCP_SET_PROP_HANDLER(MAC_WHITELIST_ENABLED);
     NCP_SET_PROP_HANDLER(MAC_BLACKLIST);
     NCP_SET_PROP_HANDLER(MAC_BLACKLIST_ENABLED);
+    NCP_SET_PROP_HANDLER(MAC_FIXED_RSS);
 #endif
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_SET_PROP_HANDLER(MAC_SRC_MATCH_ENABLED);
@@ -542,9 +548,10 @@ private:
     NCP_INSERT_PROP_HANDLER(THREAD_ON_MESH_NETS);
 #endif
     NCP_INSERT_PROP_HANDLER(THREAD_ASSISTING_PORTS);
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_INSERT_PROP_HANDLER(MAC_WHITELIST);
     NCP_INSERT_PROP_HANDLER(MAC_BLACKLIST);
+    NCP_INSERT_PROP_HANDLER(MAC_FIXED_RSS);
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER
     NCP_INSERT_PROP_HANDLER(THREAD_JOINERS);
@@ -562,9 +569,10 @@ private:
     NCP_REMOVE_PROP_HANDLER(THREAD_ON_MESH_NETS);
 #endif
     NCP_REMOVE_PROP_HANDLER(THREAD_ASSISTING_PORTS);
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
+#if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_REMOVE_PROP_HANDLER(MAC_WHITELIST);
     NCP_REMOVE_PROP_HANDLER(MAC_BLACKLIST);
+    NCP_REMOVE_PROP_HANDLER(MAC_FIXED_RSS);
 #endif
 #if OPENTHREAD_FTD
     NCP_REMOVE_PROP_HANDLER(THREAD_ACTIVE_ROUTER_IDS);

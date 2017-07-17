@@ -38,12 +38,11 @@
 
 #include <openthread/types.h>
 
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
 
 namespace ot {
-
-class ThreadNetif;
 
 /**
  * @addtogroup core-security
@@ -54,7 +53,7 @@ class ThreadNetif;
  * @{
  */
 
-class KeyManager
+class KeyManager: public ThreadNetifLocator
 {
 public:
     enum
@@ -337,10 +336,10 @@ private:
     otError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
     void StartKeyRotationTimer(void);
-    static void HandleKeyRotationTimer(void *aContext);
+    static void HandleKeyRotationTimer(Timer &aTimer);
     void HandleKeyRotationTimer(void);
 
-    ThreadNetif &mNetif;
+    static KeyManager &GetOwner(const Context &aContext);
 
     otMasterKey mMasterKey;
 
@@ -358,7 +357,7 @@ private:
     uint32_t mKeyRotationTime;
     uint32_t mKeySwitchGuardTime;
     bool     mKeySwitchGuardEnabled;
-    Timer    mKeyRotationTimer;
+    TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_FTD
     uint8_t mPSKc[kMaxKeyLength];

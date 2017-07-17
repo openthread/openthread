@@ -82,8 +82,8 @@ ifeq ($(LEGACY),1)
 configure_OPTIONS              += --enable-legacy
 endif
 
-ifeq ($(MAC_WHITELIST),1)
-configure_OPTIONS              += --enable-mac-whitelist
+ifeq ($(MAC_FILTER),1)
+configure_OPTIONS              += --enable-mac-filter
 endif
 
 ifeq ($(MTD_NETDIAG),1)

@@ -34,6 +34,7 @@
 
 #include <openthread/platform/logging.h>
 
+#include <device/nrf.h>
 #include <drivers/clock/nrf_drv_clock.h>
 #include "platform-nrf5.h"
 
@@ -45,6 +46,9 @@ void PlatformInit(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
+
+    // Enable I-code cache
+    NRF_NVMC->ICACHECNF = NVMC_ICACHECNF_CACHEEN_Enabled;
 
     nrf_drv_clock_init();
 

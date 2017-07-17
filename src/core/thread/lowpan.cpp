@@ -49,7 +49,7 @@ namespace ot {
 namespace Lowpan {
 
 Lowpan::Lowpan(ThreadNetif &aThreadNetif):
-    mNetworkData(aThreadNetif.GetNetworkDataLeader())
+    ThreadNetifLocator(aThreadNetif)
 {
 }
 
@@ -176,6 +176,7 @@ int Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr, const Ip6::Addr
 
 int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uint8_t *aBuf)
 {
+    NetworkData::Leader &networkData = GetNetif().GetNetworkDataLeader();
     uint8_t *cur = aBuf;
     Context multicastContext;
 
@@ -211,7 +212,7 @@ int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uin
             else
             {
                 // Check if multicast address can be compressed using Context ID 0.
-                if (mNetworkData.GetContext(0, multicastContext) == OT_ERROR_NONE &&
+                if (networkData.GetContext(0, multicastContext) == OT_ERROR_NONE &&
                     multicastContext.mPrefixLength == aIpAddr.mFields.m8[3] &&
                     memcmp(multicastContext.mPrefix, aIpAddr.mFields.m8 + 4, 8) == 0)
                 {
@@ -236,6 +237,7 @@ int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uin
 
 int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Mac::Address &aMacDest, uint8_t *aBuf)
 {
+    NetworkData::Leader &networkData = GetNetif().GetNetworkDataLeader();
     uint8_t *cur = aBuf;
     uint16_t hcCtl = 0;
     Ip6::Header ip6Header;
@@ -248,17 +250,17 @@ int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Ma
 
     aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header);
 
-    if (mNetworkData.GetContext(ip6Header.GetSource(), srcContext) != OT_ERROR_NONE ||
+    if (networkData.GetContext(ip6Header.GetSource(), srcContext) != OT_ERROR_NONE ||
         srcContext.mCompressFlag == false)
     {
-        mNetworkData.GetContext(0, srcContext);
+        networkData.GetContext(0, srcContext);
         srcContextValid = false;
     }
 
-    if (mNetworkData.GetContext(ip6Header.GetDestination(), dstContext) != OT_ERROR_NONE ||
+    if (networkData.GetContext(ip6Header.GetDestination(), dstContext) != OT_ERROR_NONE ||
         dstContext.mCompressFlag == false)
     {
-        mNetworkData.GetContext(0, dstContext);
+        networkData.GetContext(0, dstContext);
         dstContextValid = false;
     }
 
@@ -595,6 +597,7 @@ exit:
 int Lowpan::DecompressBaseHeader(Ip6::Header &ip6Header, const Mac::Address &aMacSource, const Mac::Address &aMacDest,
                                  const uint8_t *aBuf, uint16_t aBufLength)
 {
+    NetworkData::Leader &networkData = GetNetif().GetNetworkDataLeader();
     otError error = OT_ERROR_PARSE;
     const uint8_t *cur = aBuf;
     uint16_t remaining = aBufLength;
@@ -620,12 +623,12 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &ip6Header, const Mac::Address &aMa
     {
         VerifyOrExit(remaining >= 1);
 
-        if (mNetworkData.GetContext(cur[0] >> 4, srcContext) != OT_ERROR_NONE)
+        if (networkData.GetContext(cur[0] >> 4, srcContext) != OT_ERROR_NONE)
         {
             srcContextValid = false;
         }
 
-        if (mNetworkData.GetContext(cur[0] & 0xf, dstContext) != OT_ERROR_NONE)
+        if (networkData.GetContext(cur[0] & 0xf, dstContext) != OT_ERROR_NONE)
         {
             dstContextValid = false;
         }
@@ -635,8 +638,8 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &ip6Header, const Mac::Address &aMa
     }
     else
     {
-        mNetworkData.GetContext(0, srcContext);
-        mNetworkData.GetContext(0, dstContext);
+        networkData.GetContext(0, srcContext);
+        networkData.GetContext(0, dstContext);
     }
 
     memset(&ip6Header, 0, sizeof(ip6Header));

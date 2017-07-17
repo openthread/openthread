@@ -37,6 +37,7 @@
 #include <openthread/openthread.h>
 
 #include "common/encoding.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
@@ -446,7 +447,7 @@ private:
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
-class Mle
+class Mle: public ThreadNetifLocator
 {
 public:
     /**
@@ -456,14 +457,6 @@ public:
      *
      */
     explicit Mle(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method enables MLE.
@@ -830,27 +823,6 @@ public:
     otError GetLeaderData(otLeaderData &aLeaderData);
 
     /**
-     * This method returns the link quality on the link to a given extended address.
-     *
-     * @param[in]  aMacAddr  The IEEE 802.15.4 Extended Mac Address.
-     * @param[in]  aLinkQuality A reference to the assigned link quality.
-     *
-     * @retval OT_ERROR_NONE          Successfully retrieve the link quality to aLinkQuality.
-     * @retval OT_ERROR_INVALID_ARGS  No match found with a given extended address.
-     *
-     */
-    otError GetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t &aLinkQuality);
-
-    /**
-     * This method sets the link quality on the link to a given extended address.
-     *
-     * @param[in]  aMacAddr  The IEEE 802.15.4 Extended Mac Address.
-     * @param[in]  aLinkQaulity The link quality to be set on the link.
-     *
-     */
-    void SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality);
-
-    /**
      * This method returns the Child ID portion of an RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
@@ -1127,14 +1099,12 @@ protected:
      * This method appends a Active Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aCouldUseLocal  True to use local Active Timestamp when network Active Timestamp is not available,
-     *                             False not.
      *
      * @retval OT_ERROR_NONE     Successfully appended the Active Timestamp TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Active Timestamp TLV.
      *
      */
-    otError AppendActiveTimestamp(Message &aMessage, bool aCouldUseLocal);
+    otError AppendActiveTimestamp(Message &aMessage);
 
     /**
      * This method appends a Pending Timestamp TLV to a message.
@@ -1319,19 +1289,12 @@ protected:
      */
     otError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
-    ThreadNetif           &mNetif;            ///< The Thread Network Interface object.
-
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
     bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
 
     otDeviceRole mRole;                     ///< Current Thread role.
     Router mParent;                         ///< Parent information.
     uint8_t mDeviceMode;                    ///< Device mode setting.
-
-    bool isAssignLinkQuality;    ///< Indicating an assigned link quality is used on the link
-    uint8_t mAssignLinkQuality;  ///< The assigned link quality value
-    uint8_t mAssignLinkMargin;   ///< The maximum link margin corresponding to mAssignLinkQuality
-    Mac::ExtAddress mAddr64;     ///< A given IEEE 802.15.4 Extended Address
 
     /**
      * States when searching for a parent.
@@ -1361,8 +1324,8 @@ protected:
     };
     ReattachState mReattachState;
 
-    Timer mParentRequestTimer;    ///< The timer for driving the Parent Request process.
-    Timer mDelayedResponseTimer;  ///< The timer to delay MLE responses.
+    TimerMilli mParentRequestTimer;    ///< The timer for driving the Parent Request process.
+    TimerMilli mDelayedResponseTimer;  ///< The timer to delay MLE responses.
     uint8_t mLastPartitionRouterIdSequence;
     uint32_t mLastPartitionId;
 
@@ -1380,13 +1343,13 @@ private:
 
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
-    static void HandleParentRequestTimer(void *aContext);
+    static void HandleParentRequestTimer(Timer &aTimer);
     void HandleParentRequestTimer(void);
-    static void HandleDelayedResponseTimer(void *aContext);
+    static void HandleDelayedResponseTimer(Timer &aTimer);
     void HandleDelayedResponseTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleSendChildUpdateRequest(void *aContext);
+    static void HandleSendChildUpdateRequest(Tasklet &aTasklet);
     void HandleSendChildUpdateRequest(void);
 
     otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -1406,6 +1369,8 @@ private:
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
+
+    static Mle &GetOwner(const Context &aContext);
 
     MessageQueue mDelayedResponses;
 

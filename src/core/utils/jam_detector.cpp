@@ -38,6 +38,7 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -47,11 +48,11 @@ namespace ot {
 namespace Utils {
 
 JamDetector::JamDetector(ThreadNetif &aNetif) :
-    mNetif(aNetif),
+    ThreadNetifLocator(aNetif),
     mHandler(NULL),
     mContext(NULL),
     mRssiThreshold(kDefaultRssiThreshold),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &JamDetector::HandleTimer, this),
+    mTimer(aNetif.GetInstance(), &JamDetector::HandleTimer, this),
     mHistoryBitmap(0),
     mCurSecondStartTime(0),
     mSampleInterval(0),
@@ -75,7 +76,7 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
 
     mEnabled = true;
 
-    mCurSecondStartTime = Timer::GetNow();
+    mCurSecondStartTime = TimerMilli::GetNow();
     mAlwaysAboveThreshold = true;
     mHistoryBitmap = 0;
     mJamState = false;
@@ -135,9 +136,9 @@ exit:
     return error;
 }
 
-void JamDetector::HandleTimer(void *aContext)
+void JamDetector::HandleTimer(Timer &aTimer)
 {
-    static_cast<JamDetector *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void JamDetector::HandleTimer(void)
@@ -147,7 +148,7 @@ void JamDetector::HandleTimer(void)
 
     VerifyOrExit(mEnabled);
 
-    rssi = otPlatRadioGetRssi(mNetif.GetInstance());
+    rssi = otPlatRadioGetRssi(GetNetif().GetInstance());
 
     // If the RSSI is valid, check if it exceeds the threshold
     // and try to update the history bit map
@@ -183,7 +184,7 @@ exit:
 
 void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = TimerMilli::GetNow();
 
     // If the RSSI is ever below the threshold, update mAlwaysAboveThreshold
     // for current second interval.
@@ -237,6 +238,17 @@ void JamDetector::UpdateJamState(void)
     {
         mHandler(mJamState, mContext);
     }
+}
+
+JamDetector &JamDetector::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    JamDetector &detector = *static_cast<JamDetector *>(aContext.GetContext());
+#else
+    JamDetector &detector = otGetThreadNetif().GetJamDetector();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return detector;
 }
 
 }  // namespace Utils

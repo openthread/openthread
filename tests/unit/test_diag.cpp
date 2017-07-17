@@ -26,11 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils/wrap_string.h"
-
 #include <openthread/diag.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
+
+#include "utils/wrap_string.h"
 
 #include "test_util.h"
 
@@ -53,7 +53,7 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBufLength;
 }
 
-extern "C" void otPlatAlarmFired(otInstance *)
+extern "C" void otPlatAlarmMilliFired(otInstance *)
 {
 }
 
@@ -68,6 +68,11 @@ extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *aFrame, otErr
 {
     (void)aFrame;
     (void)aError;
+}
+
+extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *aFrame)
+{
+    (void) aFrame;
 }
 
 

@@ -47,23 +47,24 @@ set -x
         --enable-cli-app=all              \
         --enable-ncp-app=all              \
         --with-ncp-bus=uart               \
-        --enable-diag                     \
-        --enable-default-logging          \
-        --enable-raw-link-api=yes         \
         --with-examples=posix             \
         --with-platform-info=POSIX        \
         --enable-application-coap         \
-        --enable-border-agent-proxy       \
+        --enable-border-router            \
         --enable-cert-log                 \
+        --enable-child-supervision        \
         --enable-commissioner             \
         --enable-dhcp6-client             \
         --enable-dhcp6-server             \
+        --enable-diag                     \
         --enable-dns-client               \
         --enable-jam-detection            \
         --enable-joiner                   \
         --enable-legacy                   \
-        --enable-mac-whitelist            \
-        --enable-mtd-network-diagnostic || die
+        --enable-mac-filter               \
+        --enable-mtd-network-diagnostic   \
+        --enable-raw-link-api             \
+        --enable-tmf-proxy || die
     scan-build --status-bugs -analyze-headers -v make || die
 }
 

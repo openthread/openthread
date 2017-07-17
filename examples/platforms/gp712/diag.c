@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,58 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_whitelist_impl.hpp"
-#else
-#include "mac_whitelist_stub.hpp"
-#endif
+#include <openthread/config.h>
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/radio.h>
+
+/**
+ * Diagnostics mode variables.
+ *
+ */
+static bool sDiagMode = false;
+
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    // Add more plarform specific diagnostics features here.
+    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
+    (void) argc;
+    (void) aInstance;
+}
+
+void otPlatDiagModeSet(bool aMode)
+{
+    sDiagMode = aMode;
+}
+
+bool otPlatDiagModeGet()
+{
+    return sDiagMode;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    (void) aChannel;
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    (void) aTxPower;
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    (void) aInstance;
+    (void) aFrame;
+    (void) aError;
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    (void) aInstance;
+}

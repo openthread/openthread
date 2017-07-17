@@ -48,7 +48,7 @@
 
 #include <openthread/openthread.h>
 #include <openthread/tasklet.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;

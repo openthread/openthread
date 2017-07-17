@@ -28,7 +28,7 @@
 
 #include <openthread/config.h>
 #include <openthread/types.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "hw_qspi.h"
 #include "qspi_automode.h"
@@ -81,9 +81,9 @@ uint32_t utilsFlashGetSize(void)
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
 
-    sWaitStatusTimeout = otPlatAlarmGetNow();
+    sWaitStatusTimeout = otPlatAlarmMilliGetNow();
 
-    while (qspi_get_erase_status()  && ((otPlatAlarmGetNow() - sWaitStatusTimeout) < aTimeout));
+    while (qspi_get_erase_status()  && ((otPlatAlarmMilliGetNow() - sWaitStatusTimeout) < aTimeout));
 
     if (qspi_get_erase_status())
     {

@@ -39,6 +39,7 @@
 #include <mbedtls/debug.h>
 #include <openthread/platform/radio.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -53,9 +54,10 @@ namespace ot {
 namespace MeshCoP {
 
 Dtls::Dtls(ThreadNetif &aNetif):
+    ThreadNetifLocator(aNetif),
     mPskLength(0),
     mStarted(false),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &Dtls::HandleTimer, this),
+    mTimer(aNetif.GetInstance(), &Dtls::HandleTimer, this),
     mTimerIntermediate(0),
     mTimerSet(false),
     mReceiveMessage(NULL),
@@ -66,8 +68,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mSendHandler(NULL),
     mContext(NULL),
     mClient(false),
-    mMessageSubType(0),
-    mNetif(aNetif)
+    mMessageSubType(0)
 {
     memset(mPsk, 0, sizeof(mPsk));
     memset(&mEntropy, 0, sizeof(mEntropy));
@@ -76,11 +77,6 @@ Dtls::Dtls(ThreadNetif &aNetif):
     memset(&mConf, 0, sizeof(mConf));
     memset(&mCookieCtx, 0, sizeof(mCookieCtx));
     mProvisioningUrl.Init();
-}
-
-otInstance *Dtls::GetInstance(void)
-{
-    return mNetif.GetInstance();
 }
 
 otError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
@@ -315,7 +311,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
     {
         rval = 2;
     }
-    else if (static_cast<int32_t>(mTimerIntermediate - Timer::GetNow()) <= 0)
+    else if (static_cast<int32_t>(mTimerIntermediate - TimerMilli::GetNow()) <= 0)
     {
         rval = 1;
     }
@@ -345,7 +341,7 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
     {
         mTimerSet = true;
         mTimer.Start(aFinish);
-        mTimerIntermediate = Timer::GetNow() + aIntermediate;
+        mTimerIntermediate = TimerMilli::GetNow() + aIntermediate;
     }
 }
 
@@ -366,7 +362,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
     sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
     sha256.Finish(kek);
 
-    mNetif.GetKeyManager().SetKek(kek);
+    GetNetif().GetKeyManager().SetKek(kek);
 
     otLogInfoMeshCoP(GetInstance(), "Generated KEK");
 
@@ -374,9 +370,9 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
     return 0;
 }
 
-void Dtls::HandleTimer(void *aContext)
+void Dtls::HandleTimer(Timer &aTimer)
 {
-    static_cast<Dtls *>(aContext)->HandleTimer();
+    GetOwner(aTimer).HandleTimer();
 }
 
 void Dtls::HandleTimer(void)
@@ -512,6 +508,17 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
         otLogDebgMbedTls(pThis->GetInstance(), "%s", str);
         break;
     }
+}
+
+Dtls &Dtls::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Dtls &dtls = *static_cast<Dtls *>(aContext.GetContext());
+#else
+    Dtls &dtls = otGetThreadNetif().GetDtls();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return dtls;
 }
 
 }  // namespace MeshCoP

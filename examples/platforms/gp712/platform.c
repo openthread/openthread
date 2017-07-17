@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,68 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
+/**
+ * @file
+ * @brief
+ *   This file includes the platform-specific initializers.
+ */
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_blacklist_impl.hpp"
-#else
-#include "mac_blacklist_stub.hpp"
-#endif
+#include "platform_qorvo.h"
+
+#include "stdio.h"
+#include "stdlib.h"
+
+#include <openthread/tasklet.h>
+#include <openthread/platform/uart.h>
+
+#include "radio_qorvo.h"
+#include "random_qorvo.h"
+#include "uart_qorvo.h"
+
+void platformUartInit(void);
+void platformUartProcess(void);
+
+otInstance *localInstance = NULL;
+
+int     gArgumentsCount = 0;
+char  **gArguments = NULL;
+
+bool qorvoPlatGotoSleepCheck(void)
+{
+    bool canGotoSleep = false;
+
+    if (localInstance)
+    {
+        canGotoSleep = !otTaskletsArePending(localInstance);
+    }
+
+    return canGotoSleep;
+}
+
+void PlatformInit(int argc, char *argv[])
+{
+    gArgumentsCount = argc;
+    gArguments      = argv;
+
+    qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
+    platformUartInit();
+    //qorvoAlarmInit();
+    qorvoRandomInit();
+    qorvoRadioInit();
+
+}
+
+void PlatformProcessDrivers(otInstance *aInstance)
+{
+    if (localInstance == NULL)
+    {
+        // local copy in case we need to perform a callback.
+        localInstance = aInstance;
+    }
+
+    qorvoPlatMainLoop(!otTaskletsArePending(aInstance));
+    platformUartProcess();
+    //qorvoRadioProcess();
+    //qorvoAlarmProcess();
+
+}

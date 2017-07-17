@@ -35,7 +35,7 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/platform.h>
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     return calloc(aNum, aSize);
@@ -56,14 +56,14 @@ int main(int argc, char *argv[])
 {
     otInstance *sInstance;
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     size_t otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 #endif
 
     PlatformInit(argc, argv);
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     // Call to query the buffer size
     (void)otInstanceInit(NULL, &otInstanceBufferLength);
 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     // Initialize OpenThread with the buffer
     sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    sInstance = otInstanceInit();
+    sInstance = otInstanceInitSingle();
 #endif
     assert(sInstance);
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     }
 
     // otInstanceFinalize(sInstance);
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     // free(otInstanceBuffer);
 #endif
 

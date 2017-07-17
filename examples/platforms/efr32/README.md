@@ -185,5 +185,5 @@ The following toolchain has been used for testing and verification:
    - gcc version 4.9.3
 
 The EFR32 example has been verified with following Flex SDK/RAIL Library version:
-   - Flex SDK version 1.1.1.0
-   - RAIL Library version 1.5.2.2
+   - Flex SDK version 1.1.1.0, RAIL Library version 1.5.2
+   - Flex SDK version 1.2.0.0, RAIL Library version 1.6.0

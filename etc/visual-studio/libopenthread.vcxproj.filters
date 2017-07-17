@@ -126,6 +126,9 @@
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\locator.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\common\logging.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -150,10 +153,10 @@
     <ClCompile Include="..\..\src\core\mac\mac.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\mac\mac_frame.cpp">
+    <ClCompile Include="..\..\src\core\mac\mac_filter.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp">
+    <ClCompile Include="..\..\src\core\mac\mac_frame.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp">
@@ -237,13 +240,13 @@
     <ClCompile Include="..\..\src\core\net\udp6.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp">
-      <Filter>Source Files\mac</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\dataset.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset_local.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp">
@@ -335,10 +338,16 @@
     <ClInclude Include="..\..\src\core\common\code_utils.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\common\context.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\common\debug.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\encoding.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\common\locator.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\logging.hpp">
@@ -368,16 +377,10 @@
     <ClInclude Include="..\..\src\core\mac\mac.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_filter.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp">
@@ -482,15 +485,6 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_impl.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\mac\mac_blacklist_stub.hpp">
-      <Filter>Header Files\mac</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
@@ -498,6 +492,9 @@
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\dataset.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\dataset_local.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp">

@@ -37,6 +37,7 @@
 #include <openthread/icmp6.h>
 
 #include "common/encoding.hpp"
+#include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -219,7 +220,7 @@ private:
  * This class implements ICMPv6.
  *
  */
-class Icmp
+class Icmp: public Ip6Locator
 {
 public:
     /**
@@ -229,14 +230,6 @@ public:
      *
      */
     Icmp(Ip6 &aIp6);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method returns a new ICMP message with sufficient header space reserved.
@@ -337,8 +330,6 @@ private:
 
     uint16_t mEchoSequence;
     bool mIsEchoEnabled;
-
-    Ip6 &mIp6;
 };
 
 /**

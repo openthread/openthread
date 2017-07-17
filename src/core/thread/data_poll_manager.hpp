@@ -38,12 +38,11 @@
 
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
-
-class MeshForwarder;
 
 /**
  * @addtogroup core-data-poll-manager
@@ -59,7 +58,7 @@ class MeshForwarder;
  *
  */
 
-class DataPollManager
+class DataPollManager: public MeshForwarderLocator
 {
 public:
     enum
@@ -75,14 +74,6 @@ public:
      *
      */
     explicit DataPollManager(MeshForwarder &aMeshForwarder);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method instructs the data poll manager to start sending periodic data polls.
@@ -194,6 +185,14 @@ public:
      */
     void SendFastPolls(uint8_t aNumFastPolls);
 
+    /**
+     * This method gets the maximum data polling period in use.
+     *
+     * @returns the maximum data polling period in use.
+     *
+     */
+    uint32_t GetKeepAlivePollPeriod(void) const;
+
 private:
     enum  // Poll period under different conditions (in milliseconds).
     {
@@ -218,21 +217,22 @@ private:
 
     void ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t CalculatePollPeriod(void) const;
-    static void HandlePollTimer(void *aContext);
+    static void HandlePollTimer(Timer &aTimer);
+    static DataPollManager &GetOwner(Context &aContext);
+    uint32_t GetDefaultPollPeriod(void) const;
 
-    MeshForwarder &mMeshForwarder;
-    Timer     mTimer;
-    uint32_t  mTimerStartTime;
-    uint32_t  mExternalPollPeriod;
-    uint32_t  mPollPeriod;
+    TimerMilli  mTimer;
+    uint32_t    mTimerStartTime;
+    uint32_t    mExternalPollPeriod;
+    uint32_t    mPollPeriod;
 
-    bool      mEnabled: 1;               //< Indicates whether data polling is enabled/started.
-    bool      mAttachMode: 1;            //< Indicates whether in attach mode (to use attach poll period).
-    bool      mRetxMode: 1;              //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
-    bool      mNoBufferRetxMode: 1;      //< Indicates whether last poll tx failed due to insufficient buffer.
-    uint8_t   mPollTimeoutCounter: 4;    //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
-    uint8_t   mPollTxFailureCounter: 4;  //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
-    uint8_t   mRemainingFastPolls: 4;    //< Number of remaining fast polls when in transient fast polling mode.
+    bool        mEnabled: 1;               //< Indicates whether data polling is enabled/started.
+    bool        mAttachMode: 1;            //< Indicates whether in attach mode (to use attach poll period).
+    bool        mRetxMode: 1;              //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
+    bool        mNoBufferRetxMode: 1;      //< Indicates whether last poll tx failed due to insufficient buffer.
+    uint8_t     mPollTimeoutCounter: 4;    //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
+    uint8_t     mPollTxFailureCounter: 4;  //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
+    uint8_t     mRemainingFastPolls: 4;    //< Number of remaining fast polls when in transient fast polling mode.
 };
 
 /**

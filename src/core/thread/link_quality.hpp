@@ -34,8 +34,6 @@
 #ifndef LINK_QUALITY_HPP_
 #define LINK_QUALITY_HPP_
 
-#include <stdio.h>
-
 #include <openthread/platform/radio.h>
 #include <openthread/types.h>
 
@@ -50,23 +48,133 @@ namespace ot {
  * @{
  */
 
+
+/**
+ * This class implements a Received Signal Strength (RSS) averager.
+ *
+ * The average is maintained using an adaptive exponentially weighted moving filter.
+ *
+ */
+class RssAverager
+{
+    friend class LinkQualityInfo;
+
+public:
+    enum
+    {
+        kStringSize = 10,    ///< Max chars needed for a string representation of average (@sa ToString()).
+    };
+
+    /**
+     * This method reset the averager and clears the average value.
+     *
+     */
+    void Reset(void);
+
+    /**
+     * This method indicates whether the averager contains an average (i.e., at least one RSS value has been added).
+     *
+     * @retval true   If the average value is available (at least one RSS value has been added).
+     * @retval false  Averager is empty (no RSS value added yet).
+     *
+     */
+    bool HasAverage(void) const { return (mCount != 0); }
+
+    /**
+     * This method adds a received signal strength (RSS) value to the average.
+     *
+     * If @p aRss is OT_RADIO_RSSI_INVALID, it is ignored and error status OT_ERROR_INVALID_ARGS is returned.
+     * The value of RSS is capped at 0dBm (i.e., for any given RSS value higher than 0dBm, 0dBm is used instead).
+     *
+     * @param[in] aRss                Received signal strength value (in dBm) to be added to the average.
+     *
+     * @retval OT_ERROR_NONE          New RSS value added to average successfully.
+     * @retval OT_ERROR_INVALID_ARGS  Value of @p aRss is OT_RADIO_RSSI_INVALID.
+     *
+     */
+    otError Add(int8_t aRss);
+
+    /**
+     * This method returns the current average signal strength value maintained by the averager.
+     *
+     * @returns The current average value (in dBm) or OT_RADIO_RSSI_INVALID if no average is available.
+     *
+     */
+    int8_t GetAverage(void) const;
+
+    /**
+     * This method returns an raw/encoded version of current average signal strength value. The raw value is the
+     * average multiplied by a precision factor (currently set as -8).
+     *
+     * @returns The current average multiplied by precision factor or zero if no average is available.
+     *
+     */
+    uint16_t GetRaw(void) const { return mAverage; }
+
+    /**
+     * This method converts the current average RSS value to a human-readable string (e.g., "-80.375"). If the
+     * average is unknown, empty string is returned.
+     *
+     * @param[out]  aBuf   A pointer to the char buffer.
+     * @param[in]   aSize  The maximum size of the buffer.
+     *
+     * @returns A pointer to the char string buffer.
+     *
+     */
+    const char *ToString(char *aBuf, uint16_t aSize) const;
+
+private:
+    /*
+     * The RssAverager uses an adaptive exponentially weighted filter to maintain the average. It keeps track of
+     * current average and the number of added RSS values (up to a 8).
+     *
+     * For the first 8 added RSS values, the average is the arithmetic mean of the added values (e.g., if 5 values are
+     * added, the average is sum of the 5 added RSS values divided by 5. After the 8th RSS value, a weighted filter is
+     * used with coefficients (1/8, 7/8), i.e., newAverage = 1/8 * newRss + 7/8 * oldAverage.
+     *
+     * To add to accuracy of the averaging process, the RSS values and the maintained average are multiplied by a
+     * precision factor of -8.
+     *
+     */
+
+    enum
+    {
+        kPrecisionBitShift      = 3,    // Precision multiple for RSS average (1 << PrecisionBitShift).
+        kPrecision              = (1 << kPrecisionBitShift),
+        kPrecisionBitMask       = (kPrecision - 1),
+
+        kCoeffBitShift          = 3,    // Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
+    };
+
+    // Member variables fit into two bytes.
+
+    uint16_t mAverage     : 11; // The raw average signal strength value (stored as RSS times precision multiple).
+    uint8_t  mCount       : 3;  // Number of RSS values added to averager so far (limited to 2^kCoeffBitShift-1).
+    uint8_t  mLinkQuality : 2;  // Used by friend class LinkQualityInfo to store LinkQuality (0-3) value.
+};
+
 /**
  * This class encapsulates/stores all relevant information about quality of a link, including average received signal
- * strength (RSS), link margin and link quality value (value in 0-3). The average is obtained using an adaptive
- * exponential moving average filter.
+ * strength (RSS), last RSS, link margin, and link quality.
  *
-  */
+ */
 class LinkQualityInfo
 {
+
 public:
+    enum
+    {
+        kInfoStringSize = 50,    ///< Max chars needed for the info string representation (@sa ToInfoString())
+    };
+
     /**
-     * This constructor initializes an instance of the LinkQualityInfo class.
+     * This constructor initializes the object.
      *
      */
     LinkQualityInfo(void);
 
     /**
-     * This method clears the all the data in this instance.
+     * This method clears the all the data in the object.
      *
      */
     void Clear(void);
@@ -86,7 +194,7 @@ public:
      * @returns The current average value or @c OT_RADIO_RSSI_INVALID if no average is available.
      *
      */
-    int8_t GetAverageRss(void) const;
+    int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }
 
     /**
      * This method returns an encoded version of current average signal strength value. The encoded value is the
@@ -95,20 +203,18 @@ public:
      * @returns The current average multiplied by precision factor or zero if no average is available.
      *
      */
-    uint16_t GetAverageRssAsEncodedWord(void) const;
+    uint16_t GetAverageRssRaw(void) const { return mRssAverager.GetRaw(); }
 
     /**
-     * This method provides the current average received signal strength (RSS) as a human-readable string (e.g.,
-     * "-80.375 dBm"). If the average is unknown, "unknown RSS" is used/returned in the buffer.
+     * This method converts the link quality info  to NULL-terminated info/debug human-readable string.
      *
-     * @param[out]    aCharBuffer    A char buffer to store the string corresponding to current average value.
-     * @param[in]     aBufferLen     The char buffer length.
+     * @param[out]  aBuf   A pointer to the string buffer.
+     * @param[in]   aSize  The maximum size of the string buffer.
      *
-     * @retval OT_ERROR_NONE      Successfully formed the string in the given char buffer.
-     * @retval OT_ERROR_NO_BUFS   The string representation of the average value could not fit in the given buffer.
+     * @returns A pointer to the char string buffer.
      *
      */
-    otError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;
+    const char *ToInfoString(char *aBuf, uint16_t aSize) const;
 
     /**
      * This method returns the link margin. The link margin is calculated using the link's current average received
@@ -119,7 +225,7 @@ public:
      * @returns Link margin derived from average received signal strength and average noise floor.
      *
      */
-    uint8_t GetLinkMargin(int8_t aNoiseFloor) const;
+    uint8_t GetLinkMargin(int8_t aNoiseFloor) const { return ConvertRssToLinkMargin(aNoiseFloor, GetAverageRss()); }
 
     /**
      * Returns the current one-way link quality value. The link quality value is a number 0-3.
@@ -135,8 +241,9 @@ public:
      * @param[in]  aNoiseFloor  The noise floor value (in dBm).
      *
      * @returns The current link quality value (value 0-3 as per Thread specification).
+     *
      */
-    uint8_t GetLinkQuality(int8_t aNoiseFloor);
+    uint8_t GetLinkQuality(void) const { return mRssAverager.mLinkQuality; }
 
     /**
      * Returns the most recent RSS value.
@@ -144,7 +251,7 @@ public:
      * @returns The most recent RSS
      *
      */
-    int8_t GetLastRss(void) const;
+    int8_t GetLastRss(void) const { return mLastRss; }
 
     /**
      * This method converts a received signal strength value to a link margin value.
@@ -178,51 +285,49 @@ public:
      */
     static uint8_t ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss);
 
+    /**
+     * This method converts a link quality value to a typical received signal strength value .
+     * @note only for test
+     *
+     * @param[in]  aNoiseFloor   The noise floor value (in dBm).
+     * @param[in]  aLinkQuality  The link quality value in [0, 3].
+     *
+     * @returns The typical platform rssi.
+     *
+     */
+    static int8_t ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality);
+
 private:
     enum
     {
         // Constants for obtaining link quality from link margin:
 
-        kLinkMarginThresholdForLinkQuality3    = 20,   // Link margin threshold for quality 3 link.
-        kLinkMarginThresholdForLinkQuality2    = 10,   // Link margin threshold for quality 2 link.
-        kLinkMarginThresholdForLinkQuality1    = 2,    // Link margin threshold for quality 1 link.
-        kLinkMarginHysteresisThreshold         = 2,    // Link margin hysteresis threshold.
+        kThreshold3             = 20,   // Link margin threshold for quality 3 link.
+        kThreshold2             = 10,   // Link margin threshold for quality 2 link.
+        kThreshold1             = 2,    // Link margin threshold for quality 1 link.
+        kHysteresisThreshold    = 2,    // Link margin hysteresis threshold.
 
-        kNoLastLinkQualityValue                = 0xff, // Used to indicate that there is no previous/last link quality.
+        // constants for test:
 
-        // Constants related to RSS adaptive exponential moving average filter:
+        kLinkQuality3LinkMargin     = 50, ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality2LinkMargin     = 15, ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality1LinkMargin     = 5,  ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality0LinkMargin     = 0,  ///< link margin for Link Quality 3 (21 - 255)
 
-        kRssAveragePrecisionMultipleBitShift   = 3,    // Precision multiple for RSS average (1 << PrecisionBitShift).
-        kRssAveragePrecisionMultiple           = (1 << kRssAveragePrecisionMultipleBitShift),
-        kRssAveragePrecisionMultipleBitMask    = (kRssAveragePrecisionMultiple - 1),
-
-        kRssCountMax                           = 7,    // mCount max limit value.
-
-        kRssCountForWeightCoefficientOneEighth = 5,    // mCount threshold to use average weight coefficient of 1/8.
-        kRssCountForWeightCoefficientOneFourth = 2,    // mCount threshold to use average weight coefficient of 1/4.
-        kRssCountForWeightCoefficientOneHalf   = 1,    // mCount threshold to use average weight coefficient of 1/2.
+        kNoLinkQuality          = 0xff, // Used to indicate that there is no previous/last link quality.
     };
 
-    /* Private method to update the mLinkQuality value. This is called when a new RSS value is added to average
-     * or when GetLinkQuality() is invoked.
-     */
-    void UpdateLinkQuality(int8_t aNoiseFloor);
+    void SetLinkQuality(uint8_t aLinkQuality) { mRssAverager.mLinkQuality = aLinkQuality; }
 
     /* Static private method to calculate the link quality from a given link margin while taking into account the last
      * link quality value and adding the hysteresis value to the thresholds. If there is no previous value for link
-     * quality, the constant kNoLastLinkQualityValue should be passed as the second argument.
+     * quality, the constant kNoLinkQuality should be passed as the second argument.
      *
      */
     static uint8_t CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality);
 
-    static const char kUnknownRssString[];           // Constant string used when RSS average is unknown.
-
-    // All data should fit into a 16-bit (uint16_t) value.
-
-    uint16_t mRssAverage  : 11;  // The encoded average signal strength value (stored as rss times precision multiple).
-    uint8_t  mCount       : 3;   // Number of RSS values added to average so far (limited to kRssCountMax).
-    uint8_t  mLinkQuality : 2;   // Current link quality value (0-3).
-    int8_t   mLastRss;
+    RssAverager mRssAverager;
+    int8_t      mLastRss;
 };
 
 /**

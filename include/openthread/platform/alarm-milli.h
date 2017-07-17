@@ -29,11 +29,11 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the microsecond alarm service.
+ *   This file includes the platform abstraction for the millisecond alarm service.
  */
 
-#ifndef USEC_ALARM_H_
-#define USEC_ALARM_H_
+#ifndef ALARM_MILLI_H_
+#define ALARM_MILLI_H_
 
 #include <stdint.h>
 
@@ -46,59 +46,49 @@ extern "C" {
 /**
  * @addtogroup plat-alarm
  *
+ * @brief
+ *   This module includes the platform abstraction for the alarm service.
+ *
  * @{
  *
  */
 
 /**
- * This structure represents time in microseconds.
+ * Set the alarm to fire at @p aDt milliseconds after @p aT0.
  *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aT0        The reference time.
+ * @param[in] aDt        The time delay in milliseconds from @p aT0.
  */
-typedef struct
-{
-    uint32_t mMs;  ///< Time in milliseconds.
-    uint16_t mUs;  ///< Time fraction in microseconds.
-} otPlatUsecAlarmTime;
-
-/**
- * This defines the callback for indicating when the alarm has expired.
- *
- * @param[in]  aContext  A pointer to arbitrary context information.
- *
- */
-typedef void (*otPlatUsecAlarmHandler)(void *aContext);
-
-/**
- * Set the alarm to fire at @p aDt milliseconds and microseconds after @p aT0.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aT0        The reference time.
- * @param[in]  aDt        The time delay in milliseconds and microseconds from @p aT0.
- * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
- * @param[in]  aContext   A pointer to arbitrary context information.
- *
- */
-void otPlatUsecAlarmStartAt(otInstance *aInstance,
-                            const otPlatUsecAlarmTime *aT0,
-                            const otPlatUsecAlarmTime *aDt,
-                            otPlatUsecAlarmHandler aHandler,
-                            void *aContext);
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- *
  */
-void otPlatUsecAlarmStop(otInstance *aInstance);
+void otPlatAlarmMilliStop(otInstance *aInstance);
 
 /**
  * Get the current time.
  *
- * @param[out]  aNow  The current time in milliseconds and microseconds.
- *
+ * @returns The current time in milliseconds.
  */
-void otPlatUsecAlarmGetNow(otPlatUsecAlarmTime *aNow);
+uint32_t otPlatAlarmMilliGetNow(void);
+
+/**
+ * Signal that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+extern void otPlatAlarmMilliFired(otInstance *aInstance);
+
+/**
+ * Signal diagnostics module that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+extern void otPlatDiagAlarmFired(otInstance *aInstance);
 
 /**
  * @}
@@ -109,4 +99,4 @@ void otPlatUsecAlarmGetNow(otPlatUsecAlarmTime *aNow);
 }  // extern "C"
 #endif
 
-#endif  // USEC_ALARM_H_
+#endif  // ALARM_MILLI_H_

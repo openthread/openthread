@@ -33,7 +33,7 @@
  */
 
 #include <openthread/config.h>
-#include "openthread/platform/alarm.h"
+#include "openthread/platform/alarm-milli.h"
 #include <utils/flash.h>
 #include <utils/code_utils.h>
 #include "platform-emsk.h"
@@ -105,11 +105,11 @@ exit:
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
     otError error = OT_ERROR_NONE;
-    uint32_t start = otPlatAlarmGetNow();
+    uint32_t start = otPlatAlarmMilliGetNow();
     bool busy = true;
     uint32_t status = 0x01;
 
-    while (busy && ((otPlatAlarmGetNow() - start) < aTimeout))
+    while (busy && ((otPlatAlarmMilliGetNow() - start) < aTimeout))
     {
         status = flash_read_status();
         busy =  status & 0x01;

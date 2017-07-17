@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,48 +26,48 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
- */
+#include "platform_qorvo.h"
 
-#ifndef MAC_BLACKLIST_HPP_
-#define MAC_BLACKLIST_HPP_
-
-#include "utils/wrap_stdint.h"
+#include <unistd.h>
+#include <stdio.h>
 
 #include <openthread/types.h>
+#include <openthread/platform/misc.h>
+#include "radio_qorvo.h"
+#include <stdlib.h>
 
-#include "mac/mac_frame.hpp"
+extern int      gArgumentsCount;
+extern char   **gArguments;
 
-namespace ot {
-namespace Mac {
+extern void platformUartRestore(void);
 
-class Blacklist
+void otPlatReset(otInstance *aInstance)
 {
-public:
-    typedef otMacBlacklistEntry Entry;
+    char *argv[gArgumentsCount + 1];
 
-    Blacklist(void) { }
+    for (int i = 0; i < gArgumentsCount; ++i)
+    {
+        argv[i] = gArguments[i];
+    }
 
-    bool IsEnabled(void) const { return false; }
+    argv[gArgumentsCount] = NULL;
 
-    void SetEnabled(bool) { }
+    qorvoRadioReset();
+    platformUartRestore();
 
-    int GetMaxEntries(void) const { return 0; }
+    execvp(argv[0], argv);
+    perror("reset failed");
+    exit(EXIT_FAILURE);
+    (void)aInstance;
+}
 
-    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
+{
+    (void)aInstance;
+    return OT_PLAT_RESET_REASON_POWER_ON;
+}
 
-    Entry *Add(const ExtAddress &) { return NULL; }
-
-    void Remove(const ExtAddress &) { }
-
-    void Clear(void) { }
-
-    Entry *Find(const ExtAddress &) { return NULL; }
-};
-
-}  // namespace Mac
-}  // namespace ot
-
-#endif  // MAC_BLACKLIST_HPP_
+void otPlatWakeHost(void)
+{
+    // TODO: implement an operation to wake the host from sleep state.
+}

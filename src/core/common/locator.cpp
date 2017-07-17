@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,52 +28,37 @@
 
 /**
  * @file
- *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
+ *   This file implements the locator class for OpenThread objects.
  */
 
-#ifndef MAC_WHITELIST_HPP_
-#define MAC_WHITELIST_HPP_
+#define WPP_NAME "locator.tmh"
 
-#include "utils/wrap_stdint.h"
+#include <openthread/config.h>
 
-#include <openthread/types.h>
+#include "locator.hpp"
 
-#include "mac/mac_frame.hpp"
+#include "openthread-instance.h"
+#include "net/ip6.hpp"
 
 namespace ot {
-namespace Mac {
 
-class Whitelist
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
+otInstance *ThreadNetifLocator::GetInstance(void) const
 {
-public:
-    typedef otMacWhitelistEntry Entry;
+    return otInstanceFromThreadNetif(&GetNetif());
+}
 
-    Whitelist(void) { }
+otInstance *MeshForwarderLocator::GetInstance(void) const
+{
+    return otInstanceFromThreadNetif(&GetMeshForwarder().GetNetif());
+}
 
-    bool IsEnabled(void) const { return false; }
+otInstance *Ip6Locator::GetInstance(void) const
+{
+    return otInstanceFromIp6(&GetIp6());
+}
 
-    void SetEnabled(bool) { }
+#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
-    int GetMaxEntries(void) const { return 0; }
-
-    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    Entry *Add(const ExtAddress &) { return NULL; }
-
-    void Remove(const ExtAddress &) { }
-
-    void Clear(void) { }
-
-    Entry *Find(const ExtAddress &) { return NULL; }
-
-    void ClearFixedRssi(Entry &) { }
-
-    otError GetFixedRssi(Entry &, int8_t &) const { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    void SetFixedRssi(Entry &, int8_t) { }
-};
-
-}  // namespace Mac
 }  // namespace ot
-
-#endif  // MAC_WHITELIST_HPP_

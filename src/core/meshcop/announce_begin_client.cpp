@@ -39,6 +39,7 @@
 
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -52,14 +53,9 @@
 
 namespace ot {
 
-AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
-    mNetif(aThreadNetif)
+AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif):
+    ThreadNetifLocator(aThreadNetif)
 {
-}
-
-otInstance *AnnounceBeginClient::GetInstance(void)
-{
-    return mNetif.GetInstance();
 }
 
 otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
@@ -75,7 +71,7 @@ otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, 
     Ip6::MessageInfo messageInfo;
     Message *message = NULL;
 
-    VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(GetNetif().GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
     header.Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
                 OT_COAP_CODE_POST);
@@ -83,11 +79,11 @@ otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, 
     header.AppendUriPathOptions(OT_URI_PATH_ANNOUNCE_BEGIN);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(GetNetif().GetCoap(), header)) != NULL,
                  error = OT_ERROR_NO_BUFS);
 
     sessionId.Init();
-    sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
+    sessionId.SetCommissionerSessionId(GetNetif().GetCommissioner().GetSessionId());
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
@@ -102,12 +98,12 @@ otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, 
     period.SetPeriod(aPeriod);
     SuccessOrExit(error = message->Append(&period, sizeof(period)));
 
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(GetNetif().GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetInterfaceId(GetNetif().GetInterfaceId());
 
-    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = GetNetif().GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent announce begin query");
 

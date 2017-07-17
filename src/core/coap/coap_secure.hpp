@@ -211,8 +211,10 @@ private:
     static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
     otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
-    static void HandleUdpTransmit(void *aContext);
+    static void HandleUdpTransmit(Tasklet &aTasklet);
     void HandleUdpTransmit(void);
+
+    static CoapSecure &GetOwner(const Context &aContext);
 
     Ip6::MessageInfo mPeerAddress;
     ConnectedCallback mConnectedCallback;

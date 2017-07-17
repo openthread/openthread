@@ -36,52 +36,34 @@
 #include "link_quality.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
+#include "utils/wrap_string.h"
 
 namespace ot {
 
-enum
+// This array gives the decimal point digits representing 0/8, 1/8, ..., 7/8 (does not include the '.').
+static const char *const kDigitsString[8] =
 {
-    kDefaultNoiseFloor = -100, // Default noise floor used if no average value is available.
+    // 0/8,  1/8,   2/8,   3/8,   4/8,   5/8,   6/8,   7/8
+    "0",     "125", "25",  "375", "5",   "625", "75",  "875"
 };
 
-// This array gives the decimal point digits representing 0/8, 1/8, ..., 7/8 (it does not include the '.').
-static const char *const kLinkQualityDecimalDigitsString[8] =
+void RssAverager::Reset(void)
 {
-    // 0/8, 1/8,   2/8,   3/8,   4/8,   5/8,   6/8,   7/8
-    "000", "125", "250", "375", "500", "625", "750", "875"
-};
-
-const char LinkQualityInfo::kUnknownRssString[] = "Unknown RSS";
-
-//-------------------------------------------------------------------------------
-
-LinkQualityInfo::LinkQualityInfo(void)
-{
-    Clear();
+    mAverage = 0;
+    mCount = 0;
 }
 
-void LinkQualityInfo::Clear(void)
+otError RssAverager::Add(int8_t aRss)
 {
-    mRssAverage  = 0;
-    mCount       = 0;
-    mLinkQuality = 0;
-    mLastRss     = 0;
-}
+    otError error = OT_ERROR_NONE;
+    uint16_t newValue;
+    uint16_t oldAverage;
 
-void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
-{
-    uint16_t    newValue;
-    uint16_t    oldAverage;
+    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID, error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID);
-
-    mLastRss = aRss;
-
-    // Restrict/Cap the RSS value to the closed range [0, -128] so the value can fit in 8 bits.
-
+    // Restrict the RSS value to the closed range [0, -128] so the RSS times precision multiple can fit in 11 bits.
     if (aRss > 0)
     {
         aRss = 0;
@@ -90,116 +72,111 @@ void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
     // Multiply the the RSS value by a precision multiple (currently -8).
 
     newValue = static_cast<uint16_t>(-aRss);
-    newValue <<= kRssAveragePrecisionMultipleBitShift;
+    newValue <<= kPrecisionBitShift;
 
-    oldAverage = mRssAverage;
-
-    if (mCount >= kRssCountForWeightCoefficientOneEighth)
-    {
-        // New average = old average * 7/8 + new value * 1/8
-        mRssAverage = static_cast<uint16_t>(((oldAverage << 3) - oldAverage + newValue) >> 3);
-    }
-    else if (mCount >= kRssCountForWeightCoefficientOneFourth)
-    {
-        // New average = old average * 3/4 + new value * 1/4
-        mRssAverage = static_cast<uint16_t>(((oldAverage << 2) - oldAverage + newValue) >> 2);
-    }
-    else if (mCount >= kRssCountForWeightCoefficientOneHalf)
-    {
-        // New average = old average * 1/2 + new value * 1/2
-        mRssAverage = (oldAverage + newValue) >> 1;
-    }
-    else
-    {
-        mRssAverage = newValue;
-    }
-
-    if (mCount < kRssCountMax)
-    {
-        mCount++;
-    }
-
-    UpdateLinkQuality(aNoiseFloor);
-
-exit:
-    return;
-}
-
-int8_t LinkQualityInfo::GetAverageRss(void) const
-{
-    int8_t average = OT_RADIO_RSSI_INVALID;
-
-    if (mCount != 0)
-    {
-        average = -static_cast<int8_t>(mRssAverage >> kRssAveragePrecisionMultipleBitShift);
-
-        // Check for round up (e.g. average of -71.5 --> -72)
-
-        if ((mRssAverage & kRssAveragePrecisionMultipleBitMask) >= (kRssAveragePrecisionMultiple >> 1))
-        {
-            average--;
-        }
-    }
-
-    return average;
-}
-
-uint16_t LinkQualityInfo::GetAverageRssAsEncodedWord(void) const
-{
-    return mRssAverage;
-}
-
-otError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const
-{
-    otError error = OT_ERROR_NONE;
-    int charsWritten = 0;
+    oldAverage = mAverage;
 
     if (mCount == 0)
     {
-        charsWritten = static_cast<int>(strlcpy(aCharBuffer, kUnknownRssString, aBufferLen));
+        mCount++;
+        mAverage = newValue;
+    }
+    else if (mCount < (1 << kCoeffBitShift) - 1)
+    {
+        mCount++;
+
+        // Maintain arithmetic mean.
+        // newAverage = newValue * (1/mCount) + oldAverage * ((mCount -1)/mCount)
+        mAverage = static_cast<uint16_t>(((oldAverage * (mCount - 1)) + newValue) / mCount);
     }
     else
     {
-        charsWritten = snprintf(aCharBuffer, aBufferLen, "%d.%s dBm",
-                                -(mRssAverage >> kRssAveragePrecisionMultipleBitShift),
-                                kLinkQualityDecimalDigitsString[mRssAverage & kRssAveragePrecisionMultipleBitMask]);
+        // Maintain exponentially weighted moving average using coefficient of (1/2^kCoeffBitShift).
+        // newAverage = + newValue * 1/2^j + oldAverage * (1 - 1/2^j), for j = kCoeffBitShift.
+
+        mAverage = static_cast<uint16_t>(((oldAverage << kCoeffBitShift) - oldAverage + newValue) >> kCoeffBitShift);
     }
-
-    VerifyOrExit(charsWritten >= 0, error = OT_ERROR_NO_BUFS);
-
-    VerifyOrExit(charsWritten < static_cast<int>(aBufferLen), error = OT_ERROR_NO_BUFS);
 
 exit:
     return error;
 }
 
-uint8_t LinkQualityInfo::GetLinkMargin(int8_t aNoiseFloor) const
+int8_t RssAverager::GetAverage(void) const
 {
-    return ConvertRssToLinkMargin(aNoiseFloor, GetAverageRss());
-}
+    int8_t average;
 
-uint8_t LinkQualityInfo::GetLinkQuality(int8_t aNoiseFloor)
-{
-    UpdateLinkQuality(aNoiseFloor);
+    VerifyOrExit(mCount != 0, average = OT_RADIO_RSSI_INVALID);
 
-    return mLinkQuality;
-}
+    average = -static_cast<int8_t>(mAverage >> kPrecisionBitShift);
 
-int8_t LinkQualityInfo::GetLastRss(void) const
-{
-    return mLastRss;
-}
+    // Check for possible round up (e.g., average of -71.5 --> -72)
 
-void LinkQualityInfo::UpdateLinkQuality(int8_t aNoiseFloor)
-{
-    if (mCount != 0)
+    if ((mAverage & kPrecisionBitMask) >= (kPrecision >> 1))
     {
-        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aNoiseFloor), mLinkQuality);
+        average--;
+    }
+
+exit:
+    return average;
+}
+
+const char *RssAverager::ToString(char *aBuf, uint16_t aSize) const
+{
+    if (mCount == 0)
+    {
+        VerifyOrExit(aSize > 0);
+        *aBuf = 0;
     }
     else
     {
-        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aNoiseFloor), kNoLastLinkQualityValue);
+        snprintf(aBuf, aSize, "%d.%s", -(mAverage >> kPrecisionBitShift), kDigitsString[mAverage & kPrecisionBitMask]);
     }
+
+exit:
+    return aBuf;
+}
+
+LinkQualityInfo::LinkQualityInfo(void):
+    mLastRss(OT_RADIO_RSSI_INVALID)
+{
+    mRssAverager.Reset();
+    SetLinkQuality(0);
+}
+
+void LinkQualityInfo::Clear(void)
+{
+    mRssAverager.Reset();
+    SetLinkQuality(0);
+    mLastRss = OT_RADIO_RSSI_INVALID;
+}
+
+void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
+{
+    uint8_t oldLinkQuality = kNoLinkQuality;
+
+    mLastRss = aRss;
+
+    if (mRssAverager.HasAverage())
+    {
+        oldLinkQuality = GetLinkQuality();
+    }
+
+    SuccessOrExit(mRssAverager.Add(aRss));
+
+    SetLinkQuality(CalculateLinkQuality(GetLinkMargin(aNoiseFloor), oldLinkQuality));
+
+exit:
+    return;
+}
+
+const char *LinkQualityInfo::ToInfoString(char *aBuf, uint16_t aSize) const
+{
+    char rssString[RssAverager::kStringSize];
+
+    snprintf(aBuf, aSize, "aveRss:%s, lastRss:%d, linkQuality:%d",
+             mRssAverager.ToString(rssString, sizeof(rssString)), GetLastRss(), GetLinkQuality());
+
+    return aBuf;
 }
 
 uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
@@ -216,7 +193,7 @@ uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
 
 uint8_t LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
 {
-    return CalculateLinkQuality(aLinkMargin, kNoLastLinkQualityValue);
+    return CalculateLinkQuality(aLinkMargin, kNoLinkQuality);
 }
 
 uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss)
@@ -224,31 +201,57 @@ uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss
     return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, aRss));
 }
 
+int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality)
+{
+    uint8_t linkmargin = 0;
+
+    switch (aLinkQuality)
+    {
+    case 3:
+        linkmargin = kLinkQuality3LinkMargin;
+        break;
+
+    case 2:
+        linkmargin = kLinkQuality2LinkMargin;
+        break;
+
+    case 1:
+        linkmargin = kLinkQuality1LinkMargin;
+        break;
+
+    default:
+        linkmargin = kLinkQuality0LinkMargin;
+        break;
+    }
+
+    return linkmargin + aNoiseFloor;
+}
+
 uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
 {
     uint8_t threshold1, threshold2, threshold3;
     uint8_t linkQuality = 0;
 
-    threshold1 = kLinkMarginThresholdForLinkQuality1;
-    threshold2 = kLinkMarginThresholdForLinkQuality2;
-    threshold3 = kLinkMarginThresholdForLinkQuality3;
+    threshold1 = kThreshold1;
+    threshold2 = kThreshold2;
+    threshold3 = kThreshold3;
 
     // Apply the hysteresis threshold based on the last link quality value.
 
     switch (aLastLinkQuality)
     {
     case 0:
-        threshold1 += kLinkMarginHysteresisThreshold;
+        threshold1 += kHysteresisThreshold;
 
     // Intentional fall-through to next case.
 
     case 1:
-        threshold2 += kLinkMarginHysteresisThreshold;
+        threshold2 += kHysteresisThreshold;
 
     // Intentional fall-through to next case.
 
     case 2:
-        threshold3 += kLinkMarginHysteresisThreshold;
+        threshold3 += kHysteresisThreshold;
 
     // Intentional fall-through to next case.
 
