@@ -634,22 +634,13 @@ typedef enum
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 5,
 
     /// Total Tx Time
-    /** Fromat: `L` (read-only)
+    /** Fromat: `LL` (read-only)
      *  Units: ms
      *
      * This property returns the totaly amount of time the radio has been
-     * in Tx mode.
+     * in Tx/Rx mode.  The first uint32 is the Tx value, the second is Rx.
      */
-    SPINEL_PROP_TX_TOTAL_TIME           = SPINEL_PROP_PHY_EXT__BEGIN + 6,
-
-    /// Total Rx Time
-    /** Fromat: `L` (read-only)
-     *  Units: ms
-     *
-     * This property returns the totaly amount of time the radio has been
-     * in Rx mode.
-     */
-    SPINEL_PROP_RX_TOTAL_TIME           = SPINEL_PROP_PHY_EXT__BEGIN + 7,
+    SPINEL_PROP_TX_RX_TOTAL_TIMES       = SPINEL_PROP_PHY_EXT__BEGIN + 6,
 
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
