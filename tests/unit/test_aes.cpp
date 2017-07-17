@@ -107,70 +107,6 @@ void TestMacBeaconFrame(void)
 }
 
 /**
- * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1
- */
-void TestMacDataFrame()
-{
-    uint8_t key[] =
-    {
-        0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7,
-        0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
-    };
-
-    uint8_t test[] =
-    {
-        0x69, 0xDC, 0x84, 0x21, 0x43, 0x02, 0x00, 0x00,
-        0x00, 0x00, 0x48, 0xDE, 0xAC, 0x01, 0x00, 0x00,
-        0x00, 0x00, 0x48, 0xDE, 0xAC, 0x04, 0x05, 0x00,
-        0x00, 0x00, 0x61, 0x62, 0x63, 0x64
-    };
-
-    uint8_t encrypted[] =
-    {
-        0x69, 0xDC, 0x84, 0x21, 0x43, 0x02, 0x00, 0x00,
-        0x00, 0x00, 0x48, 0xDE, 0xAC, 0x01, 0x00, 0x00,
-        0x00, 0x00, 0x48, 0xDE, 0xAC, 0x04, 0x05, 0x00,
-        0x00, 0x00, 0xD4, 0x3E, 0x02, 0x2B
-    };
-
-    uint8_t decrypted[] =
-    {
-        0x69, 0xDC, 0x84, 0x21, 0x43, 0x02, 0x00, 0x00,
-        0x00, 0x00, 0x48, 0xDE, 0xAC, 0x01, 0x00, 0x00,
-        0x00, 0x00, 0x48, 0xDE, 0xAC, 0x04, 0x05, 0x00,
-        0x00, 0x00, 0x61, 0x62, 0x63, 0x64
-    };
-
-    ot::Crypto::AesCcm aesCcm;
-    uint32_t headerLength = sizeof(test) - 4;
-    uint32_t payloadLength = 4;
-    uint8_t tagLength = 0;
-
-    uint8_t nonce[] =
-    {
-        0xAC, 0xDE, 0x48, 0x00, 0x00, 0x00, 0x00, 0x01,
-        0x00, 0x00, 0x00, 0x05, 0x04,
-    };
-
-    aesCcm.SetKey(key, sizeof(key));
-    aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(test, headerLength);
-    aesCcm.Payload(test + headerLength, test + headerLength, payloadLength, true);
-    aesCcm.Finalize(test + headerLength + payloadLength, &tagLength);
-
-    VerifyOrQuit(memcmp(test, encrypted, sizeof(encrypted)) == 0,
-                 "TestMacDataFrame encrypt failed");
-
-    aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(test, headerLength);
-    aesCcm.Payload(test + headerLength, test + headerLength, payloadLength, false);
-    aesCcm.Finalize(test + headerLength + payloadLength, &tagLength);
-
-    VerifyOrQuit(memcmp(test, decrypted, sizeof(decrypted)) == 0,
-                 "TestMacDataFrame decrypt failed");
-}
-
-/**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.3
  */
 void TestMacCommandFrame()
@@ -239,7 +175,6 @@ void TestMacCommandFrame()
 int main(void)
 {
     TestMacBeaconFrame();
-    TestMacDataFrame();
     TestMacCommandFrame();
     printf("All tests passed\n");
     return 0;

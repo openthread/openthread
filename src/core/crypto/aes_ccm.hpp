@@ -75,9 +75,12 @@ public:
      * @param[in]  aNonce            A pointer to the nonce.
      * @param[in]  aNonceLength      Length of nonce in bytes.
      *
+     * @retval OT_ERROR_NONE          Initialization was successful.
+     * @retval OT_ERROR_INVALID_ARGS  Initialization failed.
+     *
      */
-    void Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,
-              const void *aNonce, uint8_t aNonceLength);
+    otError Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,
+                 const void *aNonce, uint8_t aNonceLength);
 
     /**
      * This method processes the header.
@@ -109,6 +112,11 @@ public:
     void Finalize(void *aTag, uint8_t *aTagLength);
 
 private:
+    enum
+    {
+        kTagLengthMin = 4,
+    };
+
     AesEcb mEcb;
     uint8_t mBlock[AesEcb::kBlockSize];
     uint8_t mCtr[AesEcb::kBlockSize];

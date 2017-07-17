@@ -693,6 +693,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     Crypto::AesCcm aesCcm;
     const uint8_t *key = NULL;
     const ExtAddress *extAddress = NULL;
+    otError error;
 
     if (aFrame.GetSecurityEnabled() == false)
     {
@@ -759,7 +760,8 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     aesCcm.SetKey(key, 16);
     tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
-    aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    error = aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    assert(error == OT_ERROR_NONE);
 
     aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
     aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), true);
@@ -1429,7 +1431,10 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
     tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
     aesCcm.SetKey(macKey, 16);
-    aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+
+    error = aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    VerifyOrExit(error == OT_ERROR_NONE, error = OT_ERROR_SECURITY);
+
     aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
     aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
     aesCcm.Finalize(tag, &tagLength);
