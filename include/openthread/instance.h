@@ -187,10 +187,26 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
  *
  * This function is available and can only be used when support for multiple OpenThread instances is disabled.
  *
- * @retval The new single OpenThread instance structure.
+ * @retval A pointer to the single OpenThread instance structure.
  *
  */
 otInstance *otInstanceInitSingle(void);
+
+/**
+ * This function indicates whether or not the instance is valid/initialized.
+ *
+ * For single-instance case, the instance is considered valid if it is acquired and initialized using
+ * `otInstanceInitSingle()`. A subsequent call to `otInstanceFinalize()` causes the instance to be considered as
+ * invalid (not initialized).
+ *
+ * For multi-instance case, any non-NULL instance pointer is considered as valid/initialized.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if the given instance is valid/initialized, FALSE otherwise.
+ *
+ */
+bool otInstanceIsInitialized(otInstance *aInstance);
 
 /**
  * This function disables the OpenThread library.

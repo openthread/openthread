@@ -216,7 +216,11 @@ bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
     otLogFuncEntry();
+
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
     aInstance->mTimerMilliScheduler.ProcessTimers();
+
+exit:
     otLogFuncExit();
 }
 
@@ -248,7 +252,11 @@ TimerMicroScheduler &TimerMicro::GetTimerMicroScheduler(void) const
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
     otLogFuncEntry();
+
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
     aInstance->mTimerMicroScheduler.ProcessTimers();
+
+exit:
     otLogFuncExit();
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

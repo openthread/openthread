@@ -155,6 +155,11 @@ exit:
     return instance;
 }
 
+bool otInstanceIsInitialized(otInstance *aInstance)
+{
+    return (aInstance != NULL);
+}
+
 #else // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 otInstance *otInstanceInitSingle(void)
@@ -179,6 +184,11 @@ exit:
 
     otLogFuncExit();
     return sInstance;
+}
+
+bool otInstanceIsInitialized(otInstance *aInstance)
+{
+    return (aInstance != NULL) && (aInstance == sInstance);
 }
 
 #endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
