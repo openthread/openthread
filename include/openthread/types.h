@@ -653,6 +653,8 @@ enum
     OT_CHANGED_THREAD_NETDATA               = 1 << 9,   ///< Thread Network Data changed
     OT_CHANGED_THREAD_CHILD_ADDED           = 1 << 10,  ///< Child was added
     OT_CHANGED_THREAD_CHILD_REMOVED         = 1 << 11,  ///< Child was removed
+    OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED    = 1 << 12,  ///< Subscribed to a IPv6 multicast address
+    OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED  = 1 << 13,  ///< Unsubscribed from a IPv6 multicast address
 };
 
 /**

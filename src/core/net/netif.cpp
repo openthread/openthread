@@ -156,6 +156,7 @@ otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 
     aAddress.mNext = mMulticastAddresses;
     mMulticastAddresses = &aAddress;
+    SetStateChangedFlags(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
 exit:
     return error;
@@ -185,6 +186,12 @@ otError Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
     ExitNow(error = OT_ERROR_NOT_FOUND);
 
 exit:
+
+    if (error != OT_ERROR_NOT_FOUND)
+    {
+        SetStateChangedFlags(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+    }
+
     return error;
 }
 
@@ -215,6 +222,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     entry->mAddress = aAddress;
     entry->mNext = mMulticastAddresses;
     mMulticastAddresses = entry;
+    SetStateChangedFlags(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
 exit:
     return error;
@@ -253,6 +261,8 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 
     // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
     entry->mNext = entry;
+
+    SetStateChangedFlags(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
 
 exit:
     return error;

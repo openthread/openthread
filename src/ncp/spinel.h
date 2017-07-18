@@ -990,6 +990,9 @@ typedef enum
      */
     SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD  = SPINEL_PROP_IPV6__BEGIN + 5, ///< [b]
 
+    SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE
+                                        = SPINEL_PROP_IPV6__BEGIN + 6, ///< [A(t(6))]
+
     SPINEL_PROP_IPV6__END               = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN           = 0x70,

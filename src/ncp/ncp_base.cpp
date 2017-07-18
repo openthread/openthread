@@ -184,6 +184,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ROUTE_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD),
+    NCP_GET_PROP_HANDLER_ENTRY(IPV6_MULTICAST_ADDRESS_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_RLOC16_DEBUG_PASSTHRU),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_DISCOVERY_SCAN_JOINER_FLAG),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_DISCOVERY_SCAN_ENABLE_FILTERING),
@@ -372,6 +373,7 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
 #endif
     NCP_INSERT_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
+    NCP_INSERT_PROP_HANDLER_ENTRY(IPV6_MULTICAST_ADDRESS_TABLE),
     NCP_INSERT_PROP_HANDLER_ENTRY(THREAD_ASSISTING_PORTS),
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     NCP_INSERT_PROP_HANDLER_ENTRY(THREAD_OFF_MESH_ROUTES),
@@ -396,6 +398,7 @@ const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[]
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
 #endif
     NCP_REMOVE_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
+    NCP_REMOVE_PROP_HANDLER_ENTRY(IPV6_MULTICAST_ADDRESS_TABLE),
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     NCP_REMOVE_PROP_HANDLER_ENTRY(THREAD_OFF_MESH_ROUTES),
     NCP_REMOVE_PROP_HANDLER_ENTRY(THREAD_ON_MESH_NETS),
@@ -1339,6 +1342,17 @@ void NcpBase::UpdateChangedProps(void)
                 ));
 
             mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED);
+        }
+        else if ((mChangedFlags & (OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED | OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED)) != 0)
+        {
+            SuccessOrExit(
+                HandleCommandPropertyGet(
+                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                    SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE
+                ));
+
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED |
+                                                    OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
         }
         else if ((mChangedFlags & (OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
         {
@@ -3428,6 +3442,40 @@ otError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t aHeader, spin
                SPINEL_DATATYPE_BOOL_S,
                otIcmp6IsEchoEnabled(mInstance)
            );
+}
+
+otError NcpBase::GetPropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    otError error = OT_ERROR_NONE;
+    const otNetifMulticastAddress *address;
+
+    mDisableStreamWrite = true;
+
+    SuccessOrExit(error = OutboundFrameBegin(aHeader));
+    SuccessOrExit(
+        error = OutboundFrameFeedPacked(
+                    SPINEL_DATATYPE_COMMAND_PROP_S,
+                    aHeader,
+                    SPINEL_CMD_PROP_VALUE_IS,
+                    aKey
+                ));
+
+    for (address = otIp6GetMulticastAddresses(mInstance); address; address = address->mNext)
+    {
+        SuccessOrExit(
+            error = OutboundFrameFeedPacked(
+                        SPINEL_DATATYPE_STRUCT_S(
+                            SPINEL_DATATYPE_IPv6ADDR_S  // IPv6 address
+                        ),
+                        &address->mAddress
+                    ));
+    }
+
+    SuccessOrExit(error = OutboundFrameSend());
+
+exit:
+    mDisableStreamWrite = false;
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t aHeader, spinel_prop_key_t aKey)
@@ -6804,6 +6852,46 @@ exit:
     return error;
 }
 
+otError NcpBase::InsertPropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                                   const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    otIp6Address *addrPtr;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_IPv6ADDR_S,    // IPv6 address
+                       &addrPtr
+                   );
+
+    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+
+    error = otIp6SubscribeMulticastAddress(mInstance, addrPtr);
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                    aHeader,
+                    SPINEL_CMD_PROP_VALUE_INSERTED,
+                    aKey,
+                    aValuePtr,
+                    aValueLen
+                );
+
+    spinelError = SPINEL_STATUS_OK;
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
+
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t aHeader, spinel_prop_key_t aKey,
                                                               const uint8_t *aValuePtr, uint16_t aValueLen)
@@ -7285,6 +7373,44 @@ otError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t aHeader, spine
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otIp6RemoveUnicastAddress(mInstance, addrPtr);
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_REMOVED,
+                aKey,
+                aValuePtr,
+                aValueLen
+            );
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
+
+otError NcpBase::RemovePropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                                    const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    otIp6Address *addrPtr;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_IPv6ADDR_S,
+                       &addrPtr
+                   );
+
+    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+
+    error = otIp6UnsubscribeMulticastAddress(mInstance, addrPtr);
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
