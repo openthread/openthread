@@ -128,11 +128,11 @@ and should be revisited if we want to try to achieve the original
 goal.
 
 
-{{spinel-frame-format.md}}
+{{spinel-basis-intro-frames.md}}
 
-{{spinel-data-packing.md}}
+{{spinel-basis-intro-encoding.md}}
 
-{{spinel-commands.md}}
+{{spinel-basis-detail-commands.md}}
 
 {{spinel-prop.md}}
 
@@ -140,21 +140,21 @@ goal.
 
 {{spinel-tech-thread.md}}
 
-{{spinel-feature-network-save.md}}
+{{spinel-basis-feature-network-save.md}}
 
-{{spinel-feature-host-buffer-offload.md}}
+{{spinel-basis-feature-host-buffer-offload.md}}
 
 {{spinel-feature-jam-detect.md}}
 
-{{spinel-feature-gpio.md}}
+{{spinel-basis-feature-gpio.md}}
 
-{{spinel-feature-trng.md}}
+{{spinel-basis-feature-trng.md}}
 
-{{spinel-security-considerations.md}}
+{{spinel-basis-security-considerations.md}}
 
 {backmatter}
 
-{{spinel-framing.md}}
+{{spinel-basis-appendix-framing.md}}
 
 {{spinel-test-vectors.md}}
 
