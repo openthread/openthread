@@ -37,7 +37,6 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 // test_aes.cpp
 void TestMacBeaconFrame();
-void TestMacDataFrame();
 void TestMacCommandFrame();
 
 // test_hmac_sha256.cpp
@@ -133,7 +132,6 @@ namespace ot
 
         // test_aes.cpp
         TEST_METHOD(TestMacBeaconFrame) { ::TestMacBeaconFrame(); }
-        TEST_METHOD(TestMacDataFrame) { ::TestMacDataFrame(); }
         TEST_METHOD(TestMacCommandFrame) { ::TestMacCommandFrame(); }
 
         // test_hmac_sha256.cpp

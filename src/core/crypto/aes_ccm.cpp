@@ -47,10 +47,11 @@ otError AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
     return OT_ERROR_NONE;
 }
 
-void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,
-                  const void *aNonce, uint8_t aNonceLength)
+otError AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,
+                     const void *aNonce, uint8_t aNonceLength)
 {
     const uint8_t *nonceBytes = reinterpret_cast<const uint8_t *>(aNonce);
+    otError error = OT_ERROR_NONE;
     uint8_t blockLength = 0;
     uint32_t len;
     uint8_t L;
@@ -62,6 +63,10 @@ void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTa
     if (aTagLength > sizeof(mBlock))
     {
         aTagLength = sizeof(mBlock);
+    }
+    else if (aTagLength < kTagLengthMin)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
     L = 0;
@@ -159,6 +164,9 @@ void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTa
     mBlockLength = blockLength;
     mCtrLength = sizeof(mCtrPad);
     mTagLength = aTagLength;
+
+exit:
+    return error;
 }
 
 void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
