@@ -36,7 +36,7 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
     -I$(top_srcdir)/src/core                            \
     -I$(top_srcdir)/examples/platforms                  \
     -I$(top_srcdir)/examples/platforms/cc2650           \
-    -I$(top_srcdir)/third_party/ti/cc26xxware           \
+    -I$(top_srcdir)/third_party/ti/devices/cc26x0       \
     -I$(top_srcdir)/third_party/mbedtls/repo/include    \
     $(MBEDTLS_CPPFLAGS)                                 \
     $(NULL)
@@ -51,12 +51,13 @@ libopenthread_cc2650_a_SOURCES                        = \
     uart.c                                              \
     crypto/sha256_alt.c                                 \
     crypto/aes_alt.c                                    \
+    cxx_helpers.c                                       \
     cc2650_ccfg.c                                       \
     cc2650_startup.c                                    \
     $(NULL)
 
-libopenthread_cc2650_a_DEPENDENCIES =                                     \
-    $(top_srcdir)/third_party/ti/cc26xxware/driverlib/bin/gcc/driverlib.a \
+libopenthread_cc2650_a_DEPENDENCIES =                                         \
+    $(top_srcdir)/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG

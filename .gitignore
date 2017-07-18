@@ -12,6 +12,7 @@
 *.suo
 *.trs
 *.user
+*.bak
 *~
 .deps
 .dirstamp

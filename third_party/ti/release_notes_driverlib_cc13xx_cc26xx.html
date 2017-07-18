@@ -1,0 +1,537 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <style type="text/css">
+         body {
+            font-family: Arial;
+            font-size: 14px;
+         }
+         h2 {
+            background: #ff0000;
+            margin-top:0px;
+            padding-top:3px;
+            padding-bottom: 2px;
+            padding-left:6px;
+            color: white;
+            font-size: 16px;
+         }
+         footer {
+            width:100%;
+            height:15px;
+            bottom:0;
+            left:0;
+            background:#ddd;
+            font-size:12px;
+         }
+         div.release-container {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+         }
+         div.content-container {
+            padding: 0px 5px 5px 5px;
+         }
+         td {
+            font-family: Arial;
+            font-size: 13px;
+         }
+         td.keyword_name {
+            font-weight: bold;
+            padding-left: 30px;
+            padding-right: 20px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+         }
+         td.keyword_desc {
+         }
+      </style>
+      <title>Release notes for driverlib_cc13xx_cc26xx</title>
+   </head>
+   <body>
+   <table width="100%">
+   <tbody>
+      <tr>
+         <td bgcolor="black" width="222px" style="padding: 0px;">
+            <a href="http://www.ti.com">
+               <img src="data:image/gif;base64,R0lGODlh3gA2AKIAAAAAAP///7u7u29vbz8/PwYGBujo6BgYGCH5BAAAAAAALAAAAADeADYAAAP/CLrc/jDKSau9OOvNu/9gKI5kaZ5oqq5s675wLM90bd94ru987//AoHBILBqPyKRyyWw6n9CodHorDALYLIHKJVqz2q44eAUHtoDB4DBu48rgLQErcNtnX7NhMDcICIB3gix5ZmtqAAZZew8EAo+QkQIDNVZqiIM1cHGKZ4YPAmaiAWw0c1gFmZqjB3SbZ6kNe6WhsAeOlDV0qjSFAXUAp7lwuREFtVsFgMvLB7fNAM+BCs+lDLd8BNYOuxfV22PL0RiWlwO1u3kDqejAEsjR6GB86FsHoYwA6gxWnVgGEegUuIelWJk6jswAGlXQ36J1xBSoQwfulIEDr/6l+VeK/+AehrAGOHRnAWRBbbWegckXAV6wk4AeRQtDQBEaBYsYlMl2hUCsBt0iKgilT9EfAlfO7SmzdKkrkQUT/fqZSECqLCSlntH375IAA1tqGUilLIBSNVnU+NmJNBRVChlF1QwAdlRWBy5P3QymwCLBYhs73cTHYBq3X33nDQ2wcWuBgef0FRD4GK3jU3VCZZUJAIw1OGg0P+4bFiubOWoOsEP1+KvZn3wurDbZ6lfcuw3yYkFjRSeYzRe7ARAbW0K3PmGIMi0OFDG1Mmha+RnufAHn3xL9ha6uTZ/rXagZ1GKAtTsHeWb+FEQvHILuX4+mLzj2j2r4TrFesTwMbE5Cuv8JzbTSGuRV1xgfUJFC3WbA0JWFalcItpgf8YU2yT/qATaedent5cBb8zk0DzIitgfKbonRFV9Wp2xl3UXq5Ccibp05598BnRigiAIJmrZAexkJQIuBwzX4CB3SQbeYQkPVAUco63DI2HzsAdYAiAvEZdYlaVQ5wXs3+bQAjovEUoBRR9LVAFLaPXCcY/KMqVRasQB5kiJgLcYgTkJiuCWKC2ZpIY/z/LRhYefkBAGW1HTyRy2UjObLHxSAOZ948EUVGCSC3SLZbB7iZKOLc2GRRgMH/VhdHnJwFCgD8iEGx0VKvpqbO+hoaCppEg3UiTES1CTkhNaQ+Qs4LQGql07/lET4mIQ6SvTSVGZ9Bmhz/bkYzK+PFKtpje6wumRm1wrLZzSdQASoZvyswdmSuk7p616HfkjBTxZBQucFgqXCFKdn1NpiUlQJhs8kteBWG0AbATbXS2tBlaeoVkmJRova4KkGPmhMFdiSYmq8cbTRYhrlkiHaNufJ9mIgVqEXnAOJM5JE4sgjudQ8bF82x+cKBP4Iiedecyjgx2/WtMNjjhcL9h+S4xq9RYJgsbeeUbmdrPTSQbPccsyijEXOfI8xyuinVJH1wdkS/MQ2Bc5Iq08DyHYwGglvPyCilbz0fa8GLV7r9+Btb7CJ14Qnzg8HpdKoOOF5Py752JNXvrblNphzEHnmnF/a+ecTbA465qKPXnnppkuOeuqKr8465K+z7nrsfc9Ouyq23z5I7rrfwXvvbhSQAAA7" alt="Texas Instruments" border="0">
+            </a>
+         </td>
+         <td bgcolor="red">
+            <img src="data:image/gif;base64,R0lGODlhOgEaALMAAP8AAP////92dv+3t/+Njf/W1v/t7f8hIf/19f+jo//Hx/8/P/9cXP/j4//6+v/+/iH5BAAAAAAALAAAAAA6ARoAAAT/EMhJq7046827/2AojmRpnmiqrmzrvnAsz3Rt33iu73zv/8CgcEgsGo/IpHLJbDqft0NDMCBQodis1jcADBKE7nYcCpjPgU5AQBKkVYOHAeRudqtXsh60/vRHdSoBBCGBNAkLe4o4f2psgG8pjR6GM5OLmDB/DA0GBoQADAgICRIBBQUOYgwGCg2kEgudBgUHAIGcBg0MsZ0NCnMGYgsBtqEGAbCynrW3AQONgcIFBgiErK6wAAfUtLbCscWiowoAyLDczLZu0AIJCAYOoJn0G38ObAwPEvLEts/O1vUhsA8AAjGonEmA9W6hGAVpEjiQoKBAhT8HJSRkVyEQQAAJ//a5YeMPQIFyACqCnJjSIgFCB4oB+HOSokWOAB6wIWCxnk8MfYh5QsYg5sVHfQLVMSqhztJIxWIaC6QzJy8KfZgqrNT0zR+nUNl8fSMvZ6IDwJCJRfoI7IR4Cub9nDsha6RwR02xUZpGq1utUWUq9FKgYV6/abgOHjt45tquEgY0SDDHoJg+fxhXolKNrmfH/EoR5EdAKmjQfB1qvPmGIQIJ3g4gC2egVF7LqxtP8Ng2cViTKFUCIGbNFKEEmB/VbDlYdqLRn+du8oTg6jjbmfe+CbTM2+BcuySgbQVtQoOCt7s3U8wbsqGs3ZppZLnylwFe8Uql825ogANPckUnYDoOCogxQGXADajggjcw4AA8DSSyTQASMmjhhTQscBWGHHbo4YcghijiiCSWaOKJKKao4oostugiFBEAADs=" alt="Technology for Innovators" border="0">
+         </td>
+      </tr>
+   </tbody>
+   </table>
+      <h1>Release notes for driverlib_cc13xx_cc26xx</h1>
+         Keyword used to group changes done:
+         <table>
+            <tr>        <td class="keyword_name">[RF_API]      </td> <td class="keyword_desc">RF Application interface        </td>
+            </tr><tr>   <td class="keyword_name">[RF_PATCH]    </td> <td class="keyword_desc">RF Patches                      </td>
+            </tr><tr>   <td class="keyword_name">[RF_SETTING]  </td> <td class="keyword_desc">RF Settings                     </td>
+            </tr><tr>   <td class="keyword_name">[HW_INC]      </td> <td class="keyword_desc">Hardware interface description  </td>
+            </tr><tr>   <td class="keyword_name">[DRV_SRC]     </td> <td class="keyword_desc">Driverlib source code           </td>
+            </tr><tr>   <td class="keyword_name">[DRV_DOC]     </td> <td class="keyword_desc">Driverlib documentation         </td>
+            </tr><tr>   <td class="keyword_name">[DRV_LIB]     </td> <td class="keyword_desc">Prebuilt libraries              </td>
+            </tr><tr>   <td class="keyword_name">              </td> <td class="keyword_desc">                                </td>
+            </tr>
+         </table>
+
+      <!-- Start of driverlib_cc13xx_cc26xx entry -->
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_01_01_17779</h2>
+         <div class="content-container">
+            Release date: May 5, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] RFC:</strong> Added new function RFCOverrideUpdate() that deprecates RFCRTrim().</li>
+                  <li><strong>[DRV_SRC] RFC:</strong> Added new function RFCHWIntGetAndClear().</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] PHY:</strong> Added GenFSK Antenna diversity MCE/RFE patches.</li>
+                  <li><strong>[RF_PATCH] PHY:</strong> Added IQ dump MCE patch.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_DOC] General:</strong> General improvement of the documentation.</li>
+                  <li><strong>[HW_INC] General:</strong> Updated/improved hardware register descriptions (inc/hw_*.h and doc/../*.html files).</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] BLE:</strong> Changed comment in BLE5 commands.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] AUX_TIMER:</strong> Corrected masking of TICK_SRC in AUXTimerConfigure().</li>
+                  <li><strong>[DRV_SRC] GCC:</strong> Fixed problem with vector table in startup_gcc.c that gave pointer conversion error when compiling with GNU tools.</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] IEEE 802.15.4:</strong> Changed pShortEntryList pointer to uint32_t from shortAddrEntry.</li>
+                  <li><strong>[RF_API] BLE:</strong> Added missing defines in ble_mailbox.h.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional.</li>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_01_00_17751</h2>
+         <div class="content-container">
+            Release date: April 20, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] I2S:</strong> Removed deprecated parameter (unusedChanCfgWrite0) from function I2SChannelConfigure().</li>
+                  <li><strong>[DRV_LIB] IAR:</strong> Built IAR library (driverlib.lib) with version 8.11.1</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional.</li>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_00_06_17733</h2>
+         <div class="content-container">
+            Release date: March 29, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] RFC:</strong> Added new functions RFCOverrideUpdate() and RFCOverrideSearch().</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] Patches:</strong> Changed include path for hw_types.h </li>
+                  <li><strong>[HW_INC] General:</strong> Updated/improved hardware register descriptions (inc/hw_*.h and doc/../*.html files).</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_LIB] CCS:</strong> Added missing linker section ".TI.noinit" to all Code Composer Studio linker files.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional.</li>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_00_05_17708</h2>
+         <div class="content-container">
+            Release date: March 17, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[HW_INC] General:</strong> Updated/improved hardware register descriptions (inc/hw_*.h and doc/../*.html files).</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] BLE:</strong> Updated BLE5 RFE Patch.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] BLE:</strong> Added missing defines in ble header files.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional.</li>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_00_04_17647</h2>
+         <div class="content-container">
+            Release date: February 7, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] GCC linker files:</strong> Now ensures that CCFG structure is kept.</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] All linker files:</strong> Linker files have been renamed to match device name (example: cc26x0rf128.cmd has been renamed to cc26x0r2f.cmd).</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] Crypto:</strong> Function CRYPTOAesLoadKey(): Corrected one more problem with storing multiple keys (ref. bug fix in the driverlib_cc13xx_cc26xx_3_00_03_17619 release).</li>
+                  <li><strong>[DRV_SRC] GCC linker files:</strong> Fixed problem where initialized variables (.data section) did not get loaded correctly.</li>
+                  <li><strong>[RF_PATCH] General:</strong> Added missing DEVICE_FAMILY_PATH macro to all MCE and RFE patches.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_00_03_17619</h2>
+         <div class="content-container">
+            Release date: February 2, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] BT5:</strong> Added command header files.</li>
+                  <li><strong>[RF_PATCH] BT5:</strong> Added CPE patch.</li>
+               </ul></li>
+               <li><strong>CC26x0</strong>
+               <ul>
+                  <li><strong>[RF_API] IEEE 802.15.4:</strong> Added command header files.</li>
+                  <li><strong>[RF_PATCH] IEEE 802.15.4:</strong> Added CPE patch.</li>
+                  <li><strong>[RF_PATCH] IEEE 802.15.4:</strong> Added MCE/RFE patches for use with single ended frontend.</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] WMBUS:</strong> Added S1- and S2-Mode CPE, MCE and RFE patch.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] General:</strong> All MCE and RFE patches have new include paths for the hw_type.h file.</li>
+                  <li><strong>[RF_PATCH] General:</strong> Added RFE_PATCH_MODE and MCE_PATCH_MODE defines for future partial patching support.</li>
+                  <li><strong>[DRV_SRC] General:</strong> Removed deprecated functions:
+                  <ul>
+                      <li>OSCInterfaceEnable()</li>
+                      <li>OSCInterfaceDisable()</li>
+                      <li>SysCtrlPowerEverything()</li>
+                  </ul></li>
+                  <li><strong>[DRV_SRC] ChipInfo:</strong> Added support for new chip and package types (Note that packages available for a specific device are shown in the device datasheet).
+                  <ul>
+                     <li>Added PACKAGE_7x7_Q1 as new return option from function ChipInfo_GetPackageType() and added function ChipInfo_PackageTypeIs7x7Q1().</li>
+                     <li>Added HWREV_2_4 as new return option from function ChipInfo_GetHwRevision() and added function ChipInfo_HwRevisionIs_GTEQ_2_4().</li>
+                  </ul></li>
+                  <li><strong>[HW_INC] General:</strong> Updated/improved hardware register descriptions (inc/hw_*.h and doc/../*.html files).</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] BLE:</strong> Updating structures with BT5 fields.</li>
+                  <li><strong>[DRV_SRC] SysCtrl:</strong> Added RSTSRC_WAKEUP_FROM_TCK_NOISE as new return option from function SysCtrlResetSourceGet().</li>
+               </ul></li>
+               <li><strong>CC26x0</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> Added dummy define for rfc_CMD_BLE5_RADIO_SETUP_t to increase compatibility with other chips.</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> Added dummy define for rfc_CMD_BLE5_RADIO_SETUP_t to increase compatibility with other chips.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] Crypto:</strong> Function CRYPTOAesLoadKey(): Corrected problem with storing multiple keys.</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands. Fixed with CPE patch.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_00_02_17545</h2>
+         <div class="content-container">
+            Release date: December 1, 2016 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_PATCH]</strong> Added optional BLE 4.x RFE patch. This will improve interference performance. Not used in provided settings.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] IOC</strong> Added missing RF defines to be used for antenna diversity implementation (IOC_PORT_RFC_SMI_*).</li>
+                  <li><strong>[DRV_LIB] ROM</strong> Debug improvement: Include symbols and source for driverlib functions in ROM to enable for source level debugging (Look into additional "rom" folder).</li>
+                  <li><strong>[HW_INC] General:</strong> Updated/improved hardware register descriptions (inc/hw_*.h and doc/../*.html files).</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] </strong> Updated comment of txPower field to better describe function.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li>None</li>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_00_01_17470</h2>
+         <div class="content-container">
+            Release date: November 15, 2016 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] RFC</strong> Added functions RFCClockSet() and RFCClockClear().</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_PATCH]</strong> Added WMBUS C- and T-Mode CPE/MCE/RFE patch.</li>
+                  <li><strong>[RF_PATCH]</strong> Added SimpleLink Long Range CPE/MCE/RFE patch.</li>
+                  <li><strong>[RF_PATCH]</strong> New Wideband DSSS CPE/RFE patch. Same as GENFSK.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[RF_API]</strong> General improvement of all comments.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] FLASH</strong> Handle the FLASH:CFG.DIS_STANDBY configuration as for CC26x0.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li>None</li>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_00_00_17434</h2>
+         <div class="content-container">
+            Release date: October 28, 2016 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] sw_crypto:</strong> Added open source software crypto for ChaCha20 and Poly1305 into the library.</li>
+                  <li><strong>[DRV_SRC] rom_crypto:</strong> Removed direct access to the ROM located crypto software since it's only supported through crypto driver.</li>
+                  <li><strong>[DRV_SRC] ChipInfo:</strong> Added CC2630, CC2640 and CC2640R2 to known types returned from function ChipInfo_GetChipType().</li>
+                  <li><strong>[DRV_SRC] ChipInfo:</strong> Renamed CC13xx and CC26xx to CC13x0 and CC26x0. This applies to both chip family returned from function ChipInfo_GetChipFamily() and the name of all ChipInfo_ChipFamilyIs_...() functions.</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_PATCH]</strong> New Wideband DSSS MCE patch.</li>
+               </ul></li>
+               <li><strong>CC26x0</strong>
+               <ul>
+                  <li>None</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li>Initial revision</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] ChipInfo:</strong> Code size optimization of all functions in the ChipInfo module.</li>
+                  <li><strong>[HW_INC] General:</strong> Updated/improved hardware register descriptions (inc/hw_*.h and doc/../*.html files).</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li>None</li>
+               </ul></li>
+               <li><strong>CC26x0</strong>
+               <ul>
+                  <li><strong>[RF_PATCH]</strong> Updated BLE RFE patch. Improved startup sequence.</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li>Initial revision</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li>None</li>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <!-- End of driverlib_cc13xx_cc26xx entry -->
+
+      <div style="text-align:right">
+         &copy 2016. Texas Instruments | All Rights Reserved
+      </div>
+
+   </body>
+</html>

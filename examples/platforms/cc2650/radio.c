@@ -1820,7 +1820,7 @@ void cc2650RadioProcess(otInstance *aInstance)
         }
     }
 
-    if (sState == cc2650_stateTransmitComplete || sTransmitError != OT_ERROR_NONE)
+    if (sState == cc2650_stateTransmitComplete || (sState == cc2650_stateTransmit && sTransmitError != OT_ERROR_NONE))
     {
         /* we are not looking for an ACK packet, or failed */
         sState = cc2650_stateReceive;
