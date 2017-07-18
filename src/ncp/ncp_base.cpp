@@ -75,12 +75,6 @@ namespace ot {
 
 #define NCP_INVALID_SCAN_CHANNEL              (-1)
 
-#define NCP_CHANGED_PLATFORM_RESET            (1U << 31)
-#define NCP_CHANGED_THREAD_ON_MESH_NETS       (1U << 30)
-#define NCP_CHANGED_THREAD_OFF_MESH_ROUTES    (1U << 29)
-
-#define IGNORE_RETURN_VALUE(s)        do { if (s){} } while (0)
-
 // ----------------------------------------------------------------------------
 // MARK: Command/Property Jump Tables
 // ----------------------------------------------------------------------------
@@ -120,6 +114,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(HWADDR),
     NCP_GET_PROP_HANDLER_ENTRY(LOCK),
     NCP_GET_PROP_HANDLER_ENTRY(HOST_POWER_STATE),
+    NCP_GET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
+    NCP_GET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_LIST),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_FREQ),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_CHAN_SUPPORTED),
@@ -184,6 +180,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ROUTE_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD),
+    NCP_GET_PROP_HANDLER_ENTRY(IPV6_MULTICAST_ADDRESS_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_RLOC16_DEBUG_PASSTHRU),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_DISCOVERY_SCAN_JOINER_FLAG),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_DISCOVERY_SCAN_ENABLE_FILTERING),
@@ -265,6 +262,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_NCP_LOG_LEVEL),
 #if OPENTHREAD_ENABLE_LEGACY
     NCP_GET_PROP_HANDLER_ENTRY(NEST_LEGACY_ULA_PREFIX),
+    NCP_GET_PROP_HANDLER_ENTRY(NEST_LEGACY_LAST_NODE_JOINED),
 #endif
 };
 
@@ -274,6 +272,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 {
     NCP_SET_PROP_HANDLER_ENTRY(POWER_STATE),
     NCP_SET_PROP_HANDLER_ENTRY(HOST_POWER_STATE),
+    NCP_SET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_SET_PROP_HANDLER_ENTRY(PHY_ENABLED),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
@@ -367,11 +366,13 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
 const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
 {
+    NCP_INSERT_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
 #endif
     NCP_INSERT_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
+    NCP_INSERT_PROP_HANDLER_ENTRY(IPV6_MULTICAST_ADDRESS_TABLE),
     NCP_INSERT_PROP_HANDLER_ENTRY(THREAD_ASSISTING_PORTS),
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     NCP_INSERT_PROP_HANDLER_ENTRY(THREAD_OFF_MESH_ROUTES),
@@ -391,11 +392,13 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
 
 const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] =
 {
+    NCP_REMOVE_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
 #endif
     NCP_REMOVE_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
+    NCP_REMOVE_PROP_HANDLER_ENTRY(IPV6_MULTICAST_ADDRESS_TABLE),
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     NCP_REMOVE_PROP_HANDLER_ENTRY(THREAD_OFF_MESH_ROUTES),
     NCP_REMOVE_PROP_HANDLER_ENTRY(THREAD_ON_MESH_NETS),
@@ -667,15 +670,12 @@ NcpBase::NcpBase(otInstance *aInstance):
     mDiscoveryScanEnableFiltering(false),
     mDiscoveryScanPanId(0xffff),
     mUpdateChangedPropsTask(aInstance, &NcpBase::UpdateChangedProps, this),
-    mChangedFlags(NCP_CHANGED_PLATFORM_RESET),
-    mShouldSignalEndOfScan(false),
+    mThreadChangedFlags(0),
+    mChangedPropsSet(),
     mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),
     mHostPowerStateInProgress(false),
     mHostPowerReplyFrameTag(NcpFrameBuffer::kInvalidTag),
     mHostPowerStateHeader(0),
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-    mShouldSignalJamStateChange(false),
-#endif
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     mAllowPeekDelegate(NULL),
     mAllowPokeDelegate(NULL),
@@ -716,12 +716,14 @@ NcpBase::NcpBase(otInstance *aInstance):
     otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void *>(this));
     otIcmp6SetEchoEnabled(mInstance, false);
 
+    mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
     mUpdateChangedPropsTask.Post();
 
 #if OPENTHREAD_ENABLE_LEGACY
     mLegacyNodeDidJoin = false;
     mLegacyHandlers = NULL;
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
+    memset(&mLegacyLastJoinedNode, 0, sizeof(mLegacyLastJoinedNode));
 #endif
 }
 
@@ -821,7 +823,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_DROPPED);
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_DROPPED);
+        mUpdateChangedPropsTask.Post();
     }
 }
 #endif // OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
@@ -875,7 +878,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        SendLastStatus(header, SPINEL_STATUS_DROPPED);
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_DROPPED);
+        mUpdateChangedPropsTask.Post();
         mDroppedOutboundIpFrameCounter++;
     }
     else
@@ -983,28 +987,34 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *aResult)
             flags |= SPINEL_BEACON_THREAD_FLAG_NATIVE;
         }
 
-        SendPropertyUpdate(
-            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-            SPINEL_CMD_PROP_VALUE_INSERTED,
-            SPINEL_PROP_MAC_SCAN_BEACON,
-            SPINEL_DATATYPE_MAC_SCAN_RESULT_S(
-                SPINEL_802_15_4_DATATYPE_MAC_SCAN_RESULT_V1_S,
-                SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V2_S
-            ),
-            aResult->mChannel,                                              // Channel
-            aResult->mRssi,                                                 // RSSI
-                                                                            // "mac-layer data"
-            aResult->mExtAddress.m8,                                        //      laddr
-            0xFFFF,                                                         //      saddr, not given
-            aResult->mPanId,                                                //      panid
-            aResult->mLqi,                                                  //      lqi
-                                                                            // "net-layer data"
-            SPINEL_PROTOCOL_TYPE_THREAD,                                    //      type
-            flags,                                                          //      flags
-            aResult->mNetworkName.m8,                                       //      network name
-            aResult->mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE,                 //      xpanid
-            aResult->mSteeringData.m8, aResult->mSteeringData.mLength       //      steering data
-        );
+        error = SendPropertyUpdate(
+                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                    SPINEL_CMD_PROP_VALUE_INSERTED,
+                    SPINEL_PROP_MAC_SCAN_BEACON,
+                    SPINEL_DATATYPE_MAC_SCAN_RESULT_S(
+                        SPINEL_802_15_4_DATATYPE_MAC_SCAN_RESULT_V1_S,
+                        SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V2_S
+                    ),
+                    aResult->mChannel,                                              // Channel
+                    aResult->mRssi,                                                 // RSSI
+                                                                                    // "mac-layer data"
+                    aResult->mExtAddress.m8,                                        //      laddr
+                    0xFFFF,                                                         //      saddr, not given
+                    aResult->mPanId,                                                //      panid
+                    aResult->mLqi,                                                  //      lqi
+                                                                                    // "net-layer data"
+                    SPINEL_PROTOCOL_TYPE_THREAD,                                    //      type
+                    flags,                                                          //      flags
+                    aResult->mNetworkName.m8,                                       //      network name
+                    aResult->mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE,                 //      xpanid
+                    aResult->mSteeringData.m8, aResult->mSteeringData.mLength       //      steering data
+                );
+
+        if (error != OT_ERROR_NONE)
+        {
+            mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+            mUpdateChangedPropsTask.Post();
+        }
     }
     else
     {
@@ -1019,11 +1029,12 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *aResult)
                 );
 
         // If we could not send the end of scan indicator message now (no
-        // buffer space), we set `mShouldSignalEndOfScan` to true to send
-        // it out when buffer space becomes available.
+        // buffer space), we add the MAC_SCAN_STATE property to changed
+        // property set so that the update is sent when buffer becomes
+        // available.
         if (error != OT_ERROR_NONE)
         {
-            mShouldSignalEndOfScan = true;
+            mChangedPropsSet.AddProperty(SPINEL_PROP_MAC_SCAN_STATE);
         }
     }
 }
@@ -1039,17 +1050,23 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
     if (aResult)
     {
-        SendPropertyUpdate(
-            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-            SPINEL_CMD_PROP_VALUE_INSERTED,
-            SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
-            (
-                SPINEL_DATATYPE_UINT8_S   // Channel
-                SPINEL_DATATYPE_INT8_S    // Rssi
-            ),
-            aResult->mChannel,
-            aResult->mMaxRssi
-        );
+        error = SendPropertyUpdate(
+                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                    SPINEL_CMD_PROP_VALUE_INSERTED,
+                    SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
+                    (
+                        SPINEL_DATATYPE_UINT8_S   // Channel
+                        SPINEL_DATATYPE_INT8_S    // Rssi
+                    ),
+                    aResult->mChannel,
+                    aResult->mMaxRssi
+                );
+
+        if (error != OT_ERROR_NONE)
+        {
+            mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+            mUpdateChangedPropsTask.Post();
+        }
     }
     else
     {
@@ -1064,11 +1081,12 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
                 );
 
         // If we could not send the end of scan indicator message now (no
-        // buffer space), we set `mShouldSignalEndOfScan` to true to send
-        // it out when buffer space becomes available.
+        // buffer space), we add the MAC_SCAN_STATE property to changed
+        // property set so that the update is sent when buffer becomes
+        // available.
         if (error != OT_ERROR_NONE)
         {
-            mShouldSignalEndOfScan = true;
+            mChangedPropsSet.AddProperty(SPINEL_PROP_MAC_SCAN_STATE);
         }
     }
 }
@@ -1199,17 +1217,149 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
+
 // ----------------------------------------------------------------------------
-// MARK: Address Table Changed Glue
+// MARK: ChangedPropsSet class
+// ----------------------------------------------------------------------------
+
+// Defines the list of properties that can support unsolicited update.
+//
+// Note that {`SPINEL_PROP_LAST_STATUS`, `SPINEL_STATUS_RESET_UNKNOWN`} should be first entry to ensure that RESET is
+// reported before any other property update.
+//
+// Since a `uint32_t` is used as bit-mask to track which entries are in the changed set, we should ensure that the
+// number of entries in the list is always less than or equal to 32.
+//
+const NcpBase::ChangedPropsSet::Entry NcpBase::ChangedPropsSet::mSupportedProps[] =
+{
+    // Spinel property                                  Status (if prop is `LAST_STATUS`)  IsFilterable?
+
+    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_RESET_UNKNOWN,       false },         // 0
+    { SPINEL_PROP_STREAM_DEBUG,                          SPINEL_STATUS_OK,                  true  },         // 1
+    { SPINEL_PROP_IPV6_ADDRESS_TABLE,                    SPINEL_STATUS_OK,                  true  },         // 2
+    { SPINEL_PROP_NET_ROLE,                              SPINEL_STATUS_OK,                  true  },         // 3
+    { SPINEL_PROP_IPV6_LL_ADDR,                          SPINEL_STATUS_OK,                  true  },         // 4
+    { SPINEL_PROP_IPV6_ML_ADDR,                          SPINEL_STATUS_OK,                  true  },         // 5
+    { SPINEL_PROP_NET_PARTITION_ID,                      SPINEL_STATUS_OK,                  true  },         // 6
+    { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER,              SPINEL_STATUS_OK,                  true  },         // 7
+    { SPINEL_PROP_THREAD_LEADER_NETWORK_DATA,            SPINEL_STATUS_OK,                  true  },         // 8
+    { SPINEL_PROP_THREAD_CHILD_TABLE,                    SPINEL_STATUS_OK,                  true  },         // 9
+    { SPINEL_PROP_THREAD_ON_MESH_NETS,                   SPINEL_STATUS_OK,                  true  },         // 10
+    { SPINEL_PROP_THREAD_OFF_MESH_ROUTES,                SPINEL_STATUS_OK,                  true  },         // 11
+    { SPINEL_PROP_NET_STACK_UP,                          SPINEL_STATUS_OK,                  true  },         // 12
+    { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING,             SPINEL_STATUS_OK,                  true  },         // 13
+    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_NOMEM,               true  },         // 14
+    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_DROPPED,             true  },         // 15
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    { SPINEL_PROP_JAM_DETECTED,                          SPINEL_STATUS_OK,                  true  },         // 16
+#endif
+#if OPENTHREAD_ENABLE_LEGACY
+    { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX,                SPINEL_STATUS_OK,                  true  },         // 17
+    { SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED,          SPINEL_STATUS_OK,                  true  },         // 18
+#endif
+    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_JOIN_FAILURE,        false },         // 19
+    { SPINEL_PROP_MAC_SCAN_STATE,                        SPINEL_STATUS_OK,                  false },         // 20
+};
+
+uint8_t NcpBase::ChangedPropsSet::GetNumEntries(void) const
+{
+    return (sizeof(mSupportedProps) / sizeof(mSupportedProps[0]));
+}
+
+void NcpBase::ChangedPropsSet::Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus)
+{
+    uint8_t numEntries;
+    const Entry *entry;
+
+    entry = GetSupportedEntries(numEntries);
+
+    for (uint8_t index = 0; index < numEntries; index++, entry++)
+    {
+        if ((entry->mPropKey == aPropKey) && (entry->mStatus == aStatus))
+        {
+            if (!IsEntryFiltered(index))
+            {
+                SetBit(mChangedSet, index);
+            }
+
+            break;
+        }
+    }
+}
+
+otError NcpBase::ChangedPropsSet::EnablePropertyFilter(spinel_prop_key_t aPropKey, bool aEnable)
+{
+    uint8_t numEntries;
+    const Entry *entry;
+    bool didFind = false;
+
+    entry = GetSupportedEntries(numEntries);
+
+    for (uint8_t index = 0; index < numEntries; index++, entry++)
+    {
+        if (entry->mFilterable && (entry->mPropKey == aPropKey))
+        {
+            if (aEnable)
+            {
+                SetBit(mFilterSet, index);
+
+                // If filter is enabled for a property, the `mChangedSet` is cleared
+                // for the same property so to ensure a pending update is also filtered.
+
+                ClearBit(mChangedSet, index);
+            }
+            else
+            {
+                ClearBit(mFilterSet, index);
+            }
+
+            didFind = true;
+
+            // Continue the search only if the prop key is `LAST_STATUS`, as
+            // we have multiple filterable `LAST_STATUS` entries in the table
+            // with different error status (DROPPED and NOMEM).
+
+            if (aPropKey != SPINEL_PROP_LAST_STATUS)
+            {
+                break;
+            }
+        }
+    }
+
+    return didFind ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
+}
+
+bool NcpBase::ChangedPropsSet::IsPropertyFiltered(spinel_prop_key_t aPropKey) const
+{
+    bool isFiltered = false;
+    uint8_t numEntries;
+    const Entry *entry;
+
+    entry = GetSupportedEntries(numEntries);
+
+    for (uint8_t index = 0; index < numEntries; index++, entry++)
+    {
+        if (entry->mFilterable && (entry->mPropKey == aPropKey))
+        {
+            isFiltered = IsEntryFiltered(index);
+
+            break;
+        }
+    }
+
+    return isFiltered;
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
 void NcpBase::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
-    NcpBase *obj = static_cast<NcpBase *>(aContext);
+    NcpBase *ncp = static_cast<NcpBase *>(aContext);
 
-    obj->mChangedFlags |= aFlags;
-
-    obj->mUpdateChangedPropsTask.Post();
+    ncp->mThreadChangedFlags |= aFlags;
+    ncp->mUpdateChangedPropsTask.Post();
 }
 
 void NcpBase::UpdateChangedProps(Tasklet &aTasklet)
@@ -1220,178 +1370,132 @@ void NcpBase::UpdateChangedProps(Tasklet &aTasklet)
 
 void NcpBase::UpdateChangedProps(void)
 {
-    while (mChangedFlags != 0)
+    uint8_t numEntries;
+    spinel_prop_key_t propKey;
+    const ChangedPropsSet::Entry *entry;
+
+    ProcessThreadChangedFlags();
+
+    VerifyOrExit(!mChangedPropsSet.IsEmpty());
+
+    entry = mChangedPropsSet.GetSupportedEntries(numEntries);
+
+    for (uint8_t index = 0; index < numEntries; index++, entry++)
     {
-        if ((mChangedFlags & NCP_CHANGED_PLATFORM_RESET) != 0)
+        if (!mChangedPropsSet.IsEntryChanged(index))
         {
-            SuccessOrExit(
-                SendLastStatus(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    ResetReasonToSpinelStatus(otPlatGetResetReason(mInstance))
-                ));
-
-            mChangedFlags &= ~static_cast<uint32_t>(NCP_CHANGED_PLATFORM_RESET);
+            continue;
         }
-        else if ((mChangedFlags & OT_CHANGED_THREAD_LL_ADDR) != 0)
-        {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_IPV6_LL_ADDR
-                ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_LL_ADDR);
-        }
-        else if ((mChangedFlags & OT_CHANGED_THREAD_ML_ADDR) != 0)
-        {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_IPV6_ML_ADDR
-                ));
+        propKey = entry->mPropKey;
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_ML_ADDR);
-        }
-        else if ((mChangedFlags & OT_CHANGED_THREAD_ROLE) != 0)
+        if (propKey == SPINEL_PROP_LAST_STATUS)
         {
-            if (mRequireJoinExistingNetwork)
+            spinel_status_t status = entry->mStatus;
+
+            if (status == SPINEL_STATUS_RESET_UNKNOWN)
             {
-                switch (otThreadGetDeviceRole(mInstance))
-                {
-                case OT_DEVICE_ROLE_DETACHED:
-                case OT_DEVICE_ROLE_DISABLED:
-                    break;
-
-                default:
-                    mRequireJoinExistingNetwork = false;
-                    break;
-                }
-
-                if ((otThreadGetDeviceRole(mInstance) == OT_DEVICE_ROLE_LEADER)
-                  && otThreadIsSingleton(mInstance)
-#if OPENTHREAD_ENABLE_LEGACY
-                    && !mLegacyNodeDidJoin
-#endif
-                   )
-                {
-                    mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_PARTITION_ID);
-                    otThreadSetEnabled(mInstance, false);
-
-                    // TODO: It would be nice to be able to indicate
-                    //   something more specific than SPINEL_STATUS_JOIN_FAILURE
-                    //   here, but it isn't clear how that would work
-                    //   with the current OpenThread API.
-
-                    SuccessOrExit(
-                        SendLastStatus(
-                            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                            SPINEL_STATUS_JOIN_FAILURE
-                        ));
-
-                    SuccessOrExit(
-                        HandleCommandPropertyGet(
-                            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                            SPINEL_PROP_NET_STACK_UP
-                        ));
-                }
-
-                SuccessOrExit(
-                    HandleCommandPropertyGet(
-                        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                        SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
-                    ));
+                status = ResetReasonToSpinelStatus(otPlatGetResetReason(mInstance));
             }
 
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_NET_ROLE
-                ));
-
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_ROLE);
+            SuccessOrExit(SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, status));
         }
-        else if ((mChangedFlags & OT_CHANGED_THREAD_PARTITION_ID) != 0)
+        else
         {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_NET_PARTITION_ID
-                ));
-
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_PARTITION_ID);
+            SuccessOrExit(HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, propKey));
         }
-        else if ((mChangedFlags & OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER) != 0)
+
+        mChangedPropsSet.RemoveEntry(index);
+        VerifyOrExit(!mChangedPropsSet.IsEmpty());
+    }
+
+exit:
+    return;
+}
+
+void NcpBase::ProcessThreadChangedFlags(void)
+{
+    static const struct
+    {
+        uint32_t mThreadFlag;
+        spinel_prop_key_t mPropKey;
+    } kFlags[] =
+    {
+        { OT_CHANGED_IP6_ADDRESS_ADDED,           SPINEL_PROP_IPV6_ADDRESS_TABLE             },
+        { OT_CHANGED_IP6_ADDRESS_REMOVED,         SPINEL_PROP_IPV6_ADDRESS_TABLE             },
+        { OT_CHANGED_THREAD_ROLE,                 SPINEL_PROP_NET_ROLE                       },
+        { OT_CHANGED_THREAD_LL_ADDR,              SPINEL_PROP_IPV6_LL_ADDR                   },
+        { OT_CHANGED_THREAD_ML_ADDR,              SPINEL_PROP_IPV6_ML_ADDR                   },
+        { OT_CHANGED_THREAD_PARTITION_ID,         SPINEL_PROP_NET_PARTITION_ID               },
+        { OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER, SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER       },
+        { OT_CHANGED_THREAD_NETDATA,              SPINEL_PROP_THREAD_LEADER_NETWORK_DATA     },
+        { OT_CHANGED_THREAD_CHILD_ADDED,          SPINEL_PROP_THREAD_CHILD_TABLE             },
+        { OT_CHANGED_THREAD_CHILD_REMOVED,        SPINEL_PROP_THREAD_CHILD_TABLE             },
+        { OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED,   SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
+        { OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
+    };
+
+    VerifyOrExit(mThreadChangedFlags != 0);
+
+    // If thread role has changed, check for possible "join" error.
+
+    if ((mThreadChangedFlags & OT_CHANGED_THREAD_ROLE) != 0)
+    {
+        if (mRequireJoinExistingNetwork)
         {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER
-                ));
+            switch (otThreadGetDeviceRole(mInstance))
+            {
+            case OT_DEVICE_ROLE_DETACHED:
+            case OT_DEVICE_ROLE_DISABLED:
+                break;
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
-        }
-        else if ((mChangedFlags & (OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED)) != 0)
-        {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_IPV6_ADDRESS_TABLE
-                ));
+            default:
+                mRequireJoinExistingNetwork = false;
+                mChangedPropsSet.AddProperty(SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING);
+                break;
+            }
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED);
-        }
-        else if ((mChangedFlags & (OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
-        {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_THREAD_CHILD_TABLE
-                ));
+            if ((otThreadGetDeviceRole(mInstance) == OT_DEVICE_ROLE_LEADER)
+                && otThreadIsSingleton(mInstance)
+#if OPENTHREAD_ENABLE_LEGACY
+                && !mLegacyNodeDidJoin
+#endif
+               )
+            {
+                mThreadChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_PARTITION_ID);
+                otThreadSetEnabled(mInstance, false);
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED);
-        }
-        else if ((mChangedFlags & OT_CHANGED_THREAD_NETDATA) != 0)
-        {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_THREAD_LEADER_NETWORK_DATA
-                ));
-
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_NETDATA);
-
-            // If the network data is updated, after successfully sending (or queuing) the
-            // network data spinel message, we add `NCP_CHANGED_THREAD_ON_MESH_NETS` and
-            // `NCP_CHANGED_THREAD_OFF_MESH_ROUTES` to the `mChangedFlags` so that we
-            // separately send the list of on-mesh prefixes and off-mesh routes.
-
-            mChangedFlags |= NCP_CHANGED_THREAD_ON_MESH_NETS | NCP_CHANGED_THREAD_OFF_MESH_ROUTES;
-        }
-        else if ((mChangedFlags & NCP_CHANGED_THREAD_ON_MESH_NETS) != 0)
-        {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_THREAD_ON_MESH_NETS
-                ));
-
-            mChangedFlags &= ~static_cast<uint32_t>(NCP_CHANGED_THREAD_ON_MESH_NETS);
-        }
-        else if ((mChangedFlags & NCP_CHANGED_THREAD_OFF_MESH_ROUTES) != 0)
-        {
-            SuccessOrExit(
-                HandleCommandPropertyGet(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_PROP_THREAD_OFF_MESH_ROUTES
-                ));
-
-            mChangedFlags &= ~static_cast<uint32_t>(NCP_CHANGED_THREAD_OFF_MESH_ROUTES);
-        }
-        else if ((mChangedFlags & (OT_CHANGED_THREAD_RLOC_ADDED | OT_CHANGED_THREAD_RLOC_REMOVED)) != 0)
-        {
-            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_RLOC_ADDED | OT_CHANGED_THREAD_RLOC_REMOVED);
+                mChangedPropsSet.AddProperty(SPINEL_PROP_NET_STACK_UP);
+                mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_FAILURE);
+            }
         }
     }
+
+    // Convert OT_CHANGED flags to corresponding NCP property update.
+
+    for (unsigned i = 0; i < sizeof(kFlags) / sizeof(kFlags[0]); i++)
+    {
+        uint32_t threadFlag = kFlags[i].mThreadFlag;
+
+        if (mThreadChangedFlags & threadFlag)
+        {
+            mChangedPropsSet.AddProperty(kFlags[i].mPropKey);
+
+            if (threadFlag == OT_CHANGED_THREAD_NETDATA)
+            {
+                mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_ON_MESH_NETS);
+                mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_OFF_MESH_ROUTES);
+            }
+
+            mThreadChangedFlags &= ~threadFlag;
+            VerifyOrExit(mThreadChangedFlags != 0);
+        }
+    }
+
+    // Clear any remaining ThreadFlag that has no matching
+    // NCP property update (e.g., OT_CHANGED_THREAD_RLOC_ADDED)
+
+    mThreadChangedFlags = 0;
 
 exit:
     return;
@@ -1528,38 +1632,6 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag
         }
         while ((mDroppedReplyTidBitSet & (1 << mDroppedReplyTid)) == 0);
     }
-
-    if (mShouldSignalEndOfScan)
-    {
-        SuccessOrExit(
-            SendPropertyUpdate(
-                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                SPINEL_CMD_PROP_VALUE_IS,
-                SPINEL_PROP_MAC_SCAN_STATE,
-                SPINEL_DATATYPE_UINT8_S,
-                SPINEL_SCAN_STATE_IDLE
-            ));
-
-        mShouldSignalEndOfScan = false;
-    }
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-
-    if (mShouldSignalJamStateChange)
-    {
-        SuccessOrExit(
-            SendPropertyUpdate(
-                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                SPINEL_CMD_PROP_VALUE_IS,
-                SPINEL_PROP_JAM_DETECTED,
-                SPINEL_DATATYPE_BOOL_S,
-                otJamDetectionGetState(mInstance)
-            ));
-
-        mShouldSignalJamStateChange = false;
-    }
-
-#endif  // OPENTHREAD_ENABLE_JAM_DETECTION
 
     if (mHostPowerStateHeader)
     {
@@ -1888,7 +1960,7 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader, unsigned int aCommand, co
 
     if (error != OT_ERROR_NONE)
     {
-        mChangedFlags |= NCP_CHANGED_PLATFORM_RESET;
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
         mUpdateChangedPropsTask.Post();
     }
 
@@ -2225,6 +2297,7 @@ otError NcpBase::GetPropertyHandler_CAPS(uint8_t aHeader, spinel_prop_key_t aKey
 
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_NET_THREAD_1_0));
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_COUNTERS));
+    SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_UNSOL_UPDATE_FILTER));
 
 #if OPENTHREAD_ENABLE_MAC_FILTER
     SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_WHITELIST));
@@ -2336,6 +2409,68 @@ otError NcpBase::GetPropertyHandler_HOST_POWER_STATE(uint8_t aHeader, spinel_pro
                SPINEL_DATATYPE_UINT8_S,
                mHostPowerState
            );
+}
+
+otError NcpBase::GetPropertyHandler_UNSOL_UPDATE_FILTER(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t numEntries;
+    const ChangedPropsSet::Entry *entry;
+
+    SuccessOrExit(error = OutboundFrameBegin(aHeader));
+    SuccessOrExit(
+        error = OutboundFrameFeedPacked(
+                    SPINEL_DATATYPE_COMMAND_PROP_S,
+                    aHeader,
+                    SPINEL_CMD_PROP_VALUE_IS,
+                    aKey
+                ));
+
+    entry = mChangedPropsSet.GetSupportedEntries(numEntries);
+
+    for (uint8_t index = 0; index < numEntries; index++, entry++)
+    {
+        if (mChangedPropsSet.IsEntryFiltered(index))
+        {
+            SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, entry->mPropKey));
+        }
+    }
+
+    SuccessOrExit(error = OutboundFrameSend());
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_UNSOL_UPDATE_LIST(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t numEntries;
+    const ChangedPropsSet::Entry *entry;
+
+    SuccessOrExit(error = OutboundFrameBegin(aHeader));
+    SuccessOrExit(
+        error = OutboundFrameFeedPacked(
+                    SPINEL_DATATYPE_COMMAND_PROP_S,
+                    aHeader,
+                    SPINEL_CMD_PROP_VALUE_IS,
+                    aKey
+                ));
+
+    entry = mChangedPropsSet.GetSupportedEntries(numEntries);
+
+    for (uint8_t index = 0; index < numEntries; index++, entry++)
+    {
+        if (entry->mFilterable)
+        {
+            SuccessOrExit(error = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, entry->mPropKey));
+        }
+    }
+
+    SuccessOrExit(error = OutboundFrameSend());
+
+exit:
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey)
@@ -3430,6 +3565,40 @@ otError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t aHeader, spin
            );
 }
 
+otError NcpBase::GetPropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    otError error = OT_ERROR_NONE;
+    const otNetifMulticastAddress *address;
+
+    mDisableStreamWrite = true;
+
+    SuccessOrExit(error = OutboundFrameBegin(aHeader));
+    SuccessOrExit(
+        error = OutboundFrameFeedPacked(
+                    SPINEL_DATATYPE_COMMAND_PROP_S,
+                    aHeader,
+                    SPINEL_CMD_PROP_VALUE_IS,
+                    aKey
+                ));
+
+    for (address = otIp6GetMulticastAddresses(mInstance); address; address = address->mNext)
+    {
+        SuccessOrExit(
+            error = OutboundFrameFeedPacked(
+                        SPINEL_DATATYPE_STRUCT_S(
+                            SPINEL_DATATYPE_IPv6ADDR_S  // IPv6 address
+                        ),
+                        &address->mAddress
+                    ));
+    }
+
+    SuccessOrExit(error = OutboundFrameSend());
+
+exit:
+    mDisableStreamWrite = false;
+    return error;
+}
+
 otError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t aHeader, spinel_prop_key_t aKey)
 {
     // Note reverse logic: passthru enabled = filter disabled
@@ -4294,6 +4463,23 @@ otError NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t aHeader, spin
                sizeof(mLegacyUlaPrefix)
            );
 }
+
+otError NcpBase::GetPropertyHandler_NEST_LEGACY_LAST_NODE_JOINED(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    if (!mLegacyNodeDidJoin)
+    {
+        memset(&mLegacyLastJoinedNode, 0, sizeof(mLegacyLastJoinedNode));
+    }
+
+    return SendPropertyUpdate(
+               aHeader,
+               SPINEL_CMD_PROP_VALUE_IS,
+               aKey,
+               SPINEL_DATATYPE_EUI64_S,
+               &mLegacyLastJoinedNode,
+               sizeof(mLegacyLastJoinedNode)
+           );
+}
 #endif // OPENTHREAD_ENABLE_LEGACY
 
 // ----------------------------------------------------------------------------
@@ -4401,6 +4587,51 @@ otError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t aHeader, spinel_pro
     else
     {
         error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
+    }
+
+    return error;
+}
+
+otError NcpBase::SetPropertyHandler_UNSOL_UPDATE_FILTER(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                        const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    unsigned int propKey;
+    otError error = OT_ERROR_NONE;
+    bool reportAsync;
+
+    // First clear the current filter.
+    mChangedPropsSet.ClearFilter();
+
+    while (aValueLen > 0)
+    {
+        parsedLength = spinel_datatype_unpack(
+                           aValuePtr,
+                           aValueLen,
+                           SPINEL_DATATYPE_UINT_PACKED_S,
+                           &propKey
+                       );
+
+        VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+
+        IgnoreReturnValue(mChangedPropsSet.EnablePropertyFilter(static_cast<spinel_prop_key_t>(propKey), true));
+
+        aValuePtr += parsedLength;
+        aValueLen -= parsedLength;
+    }
+
+exit:
+    // If we had an error, we may have actually changed
+    // the state of the filter---so we need to report
+    // those incomplete changes via an asynchronous
+    // change event.
+    reportAsync = (error != OT_ERROR_NONE);
+
+    error = SendSetPropertyResponse(aHeader, aKey, error);
+
+    if (reportAsync)
+    {
+        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, aKey);
     }
 
     return error;
@@ -4671,7 +4902,6 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t aHeader, spinel_prop_
         }
 
         SuccessOrExit(error);
-        mShouldSignalEndOfScan = false;
         break;
 
     case SPINEL_SCAN_STATE_ENERGY:
@@ -4708,7 +4938,6 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t aHeader, spinel_prop_
         }
 
         SuccessOrExit(error);
-        mShouldSignalEndOfScan = false;
         break;
 
     case SPINEL_SCAN_STATE_DISCOVER:
@@ -4723,7 +4952,6 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t aHeader, spinel_prop_
                 );
 
         SuccessOrExit(error);
-        mShouldSignalEndOfScan = false;
         break;
 
     default:
@@ -6565,23 +6793,10 @@ void NcpBase::HandleJamStateChange_Jump(bool aJamState, void *aContext)
 
 void NcpBase::HandleJamStateChange(bool aJamState)
 {
-    otError error;
+    OT_UNUSED_VARIABLE(aJamState);
 
-    error = SendPropertyUpdate(
-                    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                    SPINEL_CMD_PROP_VALUE_IS,
-                    SPINEL_PROP_JAM_DETECTED,
-                    SPINEL_DATATYPE_BOOL_S,
-                    aJamState
-                );
-
-    // If we could not send the jam state change indicator (no
-    // buffer space), we set `mShouldSignalJamStateChange` to true to send
-    // it out when buffer space becomes available.
-    if (error != OT_ERROR_NONE)
-    {
-        mShouldSignalJamStateChange = true;
-    }
+    mChangedPropsSet.AddProperty(SPINEL_PROP_JAM_DETECTED);
+    mUpdateChangedPropsTask.Post();
 }
 
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
@@ -6663,6 +6878,44 @@ exit:
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Inserters
 // ----------------------------------------------------------------------------
+
+otError NcpBase::InsertPropertyHandler_UNSOL_UPDATE_FILTER(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                           const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    unsigned int propKey;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_UINT_PACKED_S,
+                       &propKey
+                   );
+
+    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+
+    error = mChangedPropsSet.EnablePropertyFilter(static_cast<spinel_prop_key_t>(propKey), true);
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_INSERTED,
+                aKey,
+                aValuePtr,
+                aValueLen
+            );
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -6782,6 +7035,46 @@ otError NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t aHeader, spine
 
     error = otIp6AddUnicastAddress(mInstance, &netifAddr);
 
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                    aHeader,
+                    SPINEL_CMD_PROP_VALUE_INSERTED,
+                    aKey,
+                    aValuePtr,
+                    aValueLen
+                );
+
+    spinelError = SPINEL_STATUS_OK;
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
+
+otError NcpBase::InsertPropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                                   const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    otIp6Address *addrPtr;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_IPv6ADDR_S,    // IPv6 address
+                       &addrPtr
+                   );
+
+    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+
+    error = otIp6SubscribeMulticastAddress(mInstance, addrPtr);
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -7189,6 +7482,44 @@ exit:
 // MARK: Individual Property Removers
 // ----------------------------------------------------------------------------
 
+otError NcpBase::RemovePropertyHandler_UNSOL_UPDATE_FILTER(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                           const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    unsigned int propKey;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_UINT_PACKED_S,
+                       &propKey
+                   );
+
+    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+
+    error = mChangedPropsSet.EnablePropertyFilter(static_cast<spinel_prop_key_t>(propKey), false);
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_INSERTED,
+                aKey,
+                aValuePtr,
+                aValueLen
+            );
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
+
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t aHeader, spinel_prop_key_t aKey,
                                                                      const uint8_t *aValuePtr, uint16_t aValueLen)
@@ -7285,6 +7616,44 @@ otError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t aHeader, spine
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otIp6RemoveUnicastAddress(mInstance, addrPtr);
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_REMOVED,
+                aKey,
+                aValuePtr,
+                aValueLen
+            );
+
+exit:
+
+    if (spinelError != SPINEL_STATUS_OK)
+    {
+        error = SendLastStatus(aHeader, spinelError);
+    }
+
+    return error;
+}
+
+otError NcpBase::RemovePropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                                    const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+    spinel_status_t spinelError = SPINEL_STATUS_OK;
+    otIp6Address *addrPtr;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_IPv6ADDR_S,
+                       &addrPtr
+                   );
+
+    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+
+    error = otIp6UnsubscribeMulticastAddress(mInstance, addrPtr);
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -7645,48 +8014,17 @@ exit:
 
 void NcpBase::HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
-    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-
     memcpy(mLegacyUlaPrefix, aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH);
-
-    SuccessOrExit(OutboundFrameBegin(header));
-
-    SuccessOrExit(
-        OutboundFrameFeedPacked(
-            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_DATA_S,
-            header,
-            SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_NEST_LEGACY_ULA_PREFIX,
-            aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH
-        ));
-
-    SuccessOrExit(OutboundFrameSend());
-
-exit:
-    return;
+    mChangedPropsSet.AddProperty(SPINEL_PROP_NEST_LEGACY_ULA_PREFIX);
+    mUpdateChangedPropsTask.Post();
 }
 
 void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
-    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-
     mLegacyNodeDidJoin = true;
-
-    SuccessOrExit(OutboundFrameBegin(header));
-
-    SuccessOrExit(
-        OutboundFrameFeedPacked(
-            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_EUI64_S,
-            header,
-            SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_NEST_LEGACY_JOINED_NODE,
-            aExtAddr->m8
-        ));
-
-    SuccessOrExit(OutboundFrameSend());
-
-exit:
-    return;
+    mLegacyLastJoinedNode = *aExtAddr;
+    mChangedPropsSet.AddProperty(SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED);
+    mUpdateChangedPropsTask.Post();
 }
 
 #endif // OPENTHREAD_ENABLE_LEGACY
@@ -7694,21 +8032,33 @@ exit:
 otError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 {
     otError error = OT_ERROR_NONE;
+    spinel_prop_key_t streamPropKey;
 
     if (aStreamId == 0)
     {
-        aStreamId = SPINEL_PROP_STREAM_DEBUG;
+        streamPropKey = SPINEL_PROP_STREAM_DEBUG;
+    }
+    else
+    {
+        streamPropKey = static_cast<spinel_prop_key_t>(aStreamId);
     }
 
     VerifyOrExit(!mDisableStreamWrite, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(streamPropKey), error = OT_ERROR_INVALID_STATE);
 
     error = SendPropertyUpdate(
                 SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                 SPINEL_CMD_PROP_VALUE_IS,
-                static_cast<spinel_prop_key_t>(aStreamId),
+                streamPropKey,
                 aDataPtr,
                 static_cast<uint16_t>(aDataLen)
             );
+
+    if (error != OT_ERROR_NONE)
+    {
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+        mUpdateChangedPropsTask.Post();
+    }
 
 exit:
     return error;

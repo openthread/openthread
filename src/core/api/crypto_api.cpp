@@ -69,7 +69,7 @@ void otCryptoAesCcm(
     assert((aKey != NULL) && (aNonce != NULL) && (aPlainText != NULL) && (aCipherText != NULL) && (aTag != NULL));
 
     SuccessOrExit(aesCcm.SetKey(aKey, aKeyLength));
-    aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
+    SuccessOrExit(aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength));
 
     if (aHeaderLength != 0)
     {

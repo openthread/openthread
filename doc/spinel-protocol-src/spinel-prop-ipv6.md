@@ -22,6 +22,7 @@ IPv6 Prefix + Prefix Length
 * Type: Read-Write
 * Packed-Encoding: `A(t(6CLLC))`
 
+This property provides all unicast addresses.
 Array of structures containing:
 
 * `6`: IPv6 Address
@@ -39,3 +40,10 @@ turned on, ping request ICMP packets will not be passed to the host.
 
 Default value is `false`.
 
+### PROP 102: SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE {#prop-ipv6-multicast-address-table}
+* Type: Read-Write
+* Packed-Encoding: `A(t(6))`
+
+Array of structures containing:
+
+* `6`: Multicast IPv6 Address

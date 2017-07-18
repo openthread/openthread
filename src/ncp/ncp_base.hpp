@@ -214,6 +214,7 @@ private:
 
     static void UpdateChangedProps(Tasklet &aTasklet);
     void UpdateChangedProps(void);
+    void ProcessThreadChangedFlags(void);
 
     static void SendDoneTask(void *aContext);
     void SendDoneTask(void);
@@ -344,6 +345,8 @@ private:
     NCP_GET_PROP_HANDLER(HWADDR);
     NCP_GET_PROP_HANDLER(LOCK);
     NCP_GET_PROP_HANDLER(HOST_POWER_STATE);
+    NCP_GET_PROP_HANDLER(UNSOL_UPDATE_FILTER);
+    NCP_GET_PROP_HANDLER(UNSOL_UPDATE_LIST);
     NCP_GET_PROP_HANDLER(PHY_ENABLED);
     NCP_GET_PROP_HANDLER(PHY_FREQ);
     NCP_GET_PROP_HANDLER(PHY_CHAN_SUPPORTED);
@@ -375,6 +378,7 @@ private:
     NCP_GET_PROP_HANDLER(IPV6_ADDRESS_TABLE);
     NCP_GET_PROP_HANDLER(IPV6_ROUTE_TABLE);
     NCP_GET_PROP_HANDLER(IPV6_ICMP_PING_OFFLOAD);
+    NCP_GET_PROP_HANDLER(IPV6_MULTICAST_ADDRESS_TABLE);
     NCP_GET_PROP_HANDLER(THREAD_RLOC16_DEBUG_PASSTHRU);
     NCP_GET_PROP_HANDLER(THREAD_OFF_MESH_ROUTES);
     NCP_GET_PROP_HANDLER(STREAM_NET);
@@ -443,6 +447,7 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_LEGACY
     NCP_GET_PROP_HANDLER(NEST_LEGACY_ULA_PREFIX);
+    NCP_GET_PROP_HANDLER(NEST_LEGACY_LAST_NODE_JOINED);
 #endif
 
     // Property Set Handlers
@@ -451,6 +456,7 @@ private:
     NCP_SET_PROP_HANDLER(HOST_POWER_STATE);
     NCP_SET_PROP_HANDLER(PHY_TX_POWER);
     NCP_SET_PROP_HANDLER(PHY_CHAN);
+    NCP_SET_PROP_HANDLER(UNSOL_UPDATE_FILTER);
     NCP_SET_PROP_HANDLER(MAC_SCAN_MASK);
     NCP_SET_PROP_HANDLER(MAC_SCAN_STATE);
     NCP_SET_PROP_HANDLER(MAC_15_4_PANID);
@@ -538,11 +544,13 @@ private:
 
     // Property Insert Handlers
 
+    NCP_INSERT_PROP_HANDLER(UNSOL_UPDATE_FILTER);
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_INSERT_PROP_HANDLER(MAC_SRC_MATCH_SHORT_ADDRESSES);
     NCP_INSERT_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
 #endif
     NCP_INSERT_PROP_HANDLER(IPV6_ADDRESS_TABLE);
+    NCP_INSERT_PROP_HANDLER(IPV6_MULTICAST_ADDRESS_TABLE);
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     NCP_INSERT_PROP_HANDLER(THREAD_OFF_MESH_ROUTES);
     NCP_INSERT_PROP_HANDLER(THREAD_ON_MESH_NETS);
@@ -559,11 +567,13 @@ private:
 
     // Property Remove Handlers
 
+    NCP_REMOVE_PROP_HANDLER(UNSOL_UPDATE_FILTER);
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_REMOVE_PROP_HANDLER(MAC_SRC_MATCH_SHORT_ADDRESSES);
     NCP_REMOVE_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
 #endif
     NCP_REMOVE_PROP_HANDLER(IPV6_ADDRESS_TABLE);
+    NCP_REMOVE_PROP_HANDLER(IPV6_MULTICAST_ADDRESS_TABLE);
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     NCP_REMOVE_PROP_HANDLER(THREAD_OFF_MESH_ROUTES);
     NCP_REMOVE_PROP_HANDLER(THREAD_ON_MESH_NETS);
@@ -599,6 +609,169 @@ protected:
     NcpFrameBuffer  mTxFrameBuffer;
 
 private:
+
+    /**
+     * Defines a class to track a set of property/status changes that require update to host. The properties that can
+     * be added to this set must support sending unsolicited updates. This class also provides mechanism for user
+     * to block certain filterable properties disallowing the unsolicited update from them.
+     *
+     */
+    class ChangedPropsSet
+    {
+    public:
+        /**
+         * Defines an entry in the set/list.
+         *
+         */
+        struct Entry
+        {
+            spinel_prop_key_t mPropKey;    ///< The spinel property key.
+            spinel_status_t   mStatus;     ///< The spinel status (used only if prop key is `LAST_STATUS`).
+            bool              mFilterable; ///< Indicates whether the entry can be filtered
+        };
+
+        /**
+         * This constructor initializes the set.
+         *
+         */
+        ChangedPropsSet(void):
+            mChangedSet(0),
+            mFilterSet(0)
+        { }
+
+        /**
+         * This method clears the set.
+         *
+         */
+        void Clear(void)  { mChangedSet = 0; }
+
+        /**
+         * This method indicates if the set is empty or not.
+         *
+         * @returns TRUE if the set if empty, FALSE otherwise.
+         *
+         */
+        bool IsEmpty(void) const { return (mChangedSet == 0); }
+
+        /**
+         * This method adds a property to the set. The property added must be in the list of supported properties
+         * capable of sending unsolicited update, otherwise the input is ignored.
+         *
+         * Note that if the property is already in the set, adding it again does not change the set.
+         *
+         * @param[in] aPropKey    The spinel property key to be added to the set
+         *
+         */
+        void AddProperty(spinel_prop_key_t aPropKey) { Add(aPropKey, SPINEL_STATUS_OK); }
+
+        /**
+         * This method adds a `LAST_STATUS` update to the set. The update must be in list of supported entries.
+         *
+         * @param[in] aStatus     The spinel status update to be added to set.
+         *
+         */
+        void AddLastStatus(spinel_status_t aStatus) {  Add(SPINEL_PROP_LAST_STATUS, aStatus); }
+
+        /**
+         * This method returns a pointer to array of entries of supported property/status updates. The list includes
+         * all properties that can generate unsolicited update.
+         *
+         * @param[out]  aNumEntries  A reference to output the number of entries in the list.
+         *
+         * @returns A pointer to the supported entries array.
+         *
+         */
+        const Entry *GetSupportedEntries(uint8_t &aNumEntries) const {
+            aNumEntries = GetNumEntries();
+            return &mSupportedProps[0];
+        }
+
+        /**
+         * This method returns a pointer to the entry associated with a given index.
+         *
+         * @param[in] aIndex     The index to an entry.
+         *
+         * @returns A pointer to the entry associated with @p aIndex, or NULL if the index is beyond end of array.
+         *
+         */
+        const Entry *GetEntry(uint8_t aIndex) const {
+            return (aIndex < GetNumEntries()) ? &mSupportedProps[aIndex] : NULL;
+        }
+
+        /**
+         * This method indicates if the entry associated with an index is in the set (i.e., it has been changed and
+         * requires an unsolicited update).
+         *
+         * @param[in] aIndex     The index to an entry.
+         *
+         * @returns TRUE if the entry is in the set, FALSE otherwise.
+         *
+         */
+        bool IsEntryChanged(uint8_t aIndex) const { return IsBitSet(mChangedSet, aIndex); }
+
+        /**
+         * This method removes an entry associated with an index in the set.
+         *
+         * Note that if the property/entry is not in the set, removing it simply does nothing.
+         *
+         * @param[in] aIndex               Index of entry to be removed.
+         *
+         */
+        void RemoveEntry(uint8_t aIndex) { ClearBit(mChangedSet, aIndex); }
+
+        /**
+         * This method enables/disables filtering of a given property.
+         *
+         * @param[in] aPropKey             The property key to filter.
+         * @param[in] aEnable              TRUE to enable filtering, FALSE to disable.
+         *
+         * @retval OT_ERROR_NONE           Filter state for given property updated successfully.
+         * @retval OT_ERROR_INVALID_ARGS   The given property is not valid (i.e., not capable of unsolicited update).
+         *
+         */
+        otError EnablePropertyFilter(spinel_prop_key_t aPropKey, bool aEnable);
+
+        /**
+         * This method determines whether filtering is enabled for an entry associated with an index.
+         *
+         * @param[in] aIndex               Index of entry to be checked.
+         *
+         * @returns TRUE if the filter is enabled for the given entry, FALSE otherwise.
+         *
+         */
+        bool IsEntryFiltered(uint8_t aIndex) const { return IsBitSet(mFilterSet, aIndex); }
+
+        /**
+         * This method determines whether filtering is enabled for a given property key.
+         *
+         * @param[in] aPropKey             The property key to check.
+         *
+         * @returns TRUE if the filter is enabled for the given property, FALSE if the property is not filtered or if
+         *          it is not filterable.
+         *
+         */
+        bool IsPropertyFiltered(spinel_prop_key_t aPropKey) const;
+
+        /**
+         * This method clears the filter.
+         *
+         */
+        void ClearFilter(void) { mFilterSet = 0; }
+
+    private:
+        uint8_t GetNumEntries(void) const;
+        void Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus);
+
+        static void SetBit  (uint32_t &aBitset, uint8_t aBitIndex)   { aBitset |= (1U << aBitIndex);                }
+        static void ClearBit(uint32_t &aBitset, uint8_t aBitIndex)   { aBitset &= ~(1U << aBitIndex);               }
+        static bool IsBitSet(uint32_t aBitset, uint8_t aBitIndex)    { return (aBitset & (1U << aBitIndex)) != 0;   }
+
+        static const Entry mSupportedProps[];
+
+        uint32_t mChangedSet;
+        uint32_t mFilterSet;
+    };
+
     enum
     {
         kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,  // Tx Buffer size (used by mTxFrameBuffer).
@@ -611,17 +784,15 @@ private:
     bool mDiscoveryScanJoinerFlag;
     bool mDiscoveryScanEnableFiltering;
     uint16_t mDiscoveryScanPanId;
+
     Tasklet mUpdateChangedPropsTask;
-    uint32_t mChangedFlags;
-    bool mShouldSignalEndOfScan;
+    uint32_t mThreadChangedFlags;
+    ChangedPropsSet mChangedPropsSet;
+
     spinel_host_power_state_t mHostPowerState;
     bool mHostPowerStateInProgress;
     NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
     uint8_t mHostPowerStateHeader;
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-    bool mShouldSignalJamStateChange;
-#endif
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     otNcpDelegateAllowPeekPoke mAllowPeekDelegate;
@@ -658,6 +829,7 @@ private:
 #if OPENTHREAD_ENABLE_LEGACY
     const otNcpLegacyHandlers *mLegacyHandlers;
     uint8_t mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
+    otExtAddress mLegacyLastJoinedNode;
     bool mLegacyNodeDidJoin;
 #endif
 
