@@ -972,6 +972,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_TRNG_RAW_32";
         break;
 
+    case SPINEL_PROP_UNSOL_UPDATE_FILTER:
+        ret = "PROP_UNSOL_UPDATE_FILTER";
+        break;
+
+    case SPINEL_PROP_UNSOL_UPDATE_LIST:
+        ret = "PROP_UNSOL_UPDATE_LIST";
+        break;
+
     case SPINEL_PROP_PHY_ENABLED:
         ret = "PROP_PHY_ENABLED";
         break;
@@ -1568,8 +1576,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_NEST_LEGACY_ULA_PREFIX";
         break;
 
-    case SPINEL_PROP_NEST_LEGACY_JOINED_NODE:
-        ret = "PROP_NEST_LEGACY_JOINED_NODE";
+    case SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED:
+        ret = "PROP_NEST_LEGACY_LAST_NODE_JOINED";
         break;
 
     case SPINEL_PROP_DEBUG_TEST_ASSERT:
@@ -1817,6 +1825,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_CMD_MULTI:
         ret = "CAP_CMD_MULTI";
+        break;
+
+    case SPINEL_CAP_UNSOL_UPDATE_FILTER:
+        ret = "CAP_UNSOL_UPDATE_FILTER";
         break;
 
     case SPINEL_CAP_802_15_4_2003:
