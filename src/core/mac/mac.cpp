@@ -1067,9 +1067,34 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 
-otError Mac::RadioTransmit(Frame *aSendFrame)
+void Mac::RadioStateChange(RadioState aNewState)
 {
     uint32_t now;
+    VerifyOrExit(mRadioState != aNewState);
+
+    now = TimerMilli::GetNow();
+
+    if (mRadioState == kRadioStateRx &&
+        (aNewState  == kRadioStateTx ||
+         aNewState  == kRadioStateSleep))
+    {
+        mRxTotal += now - mLastChange;
+    }
+    else if (mRadioState == kRadioStateTx &&
+             aNewState   == kRadioStateRx)
+    {
+        mTxTotal += now - mLastChange;
+    }
+
+    mLastChange = now;
+    mRadioState = aNewState;
+
+exit:
+    return;
+}
+
+otError Mac::RadioTransmit(Frame *aSendFrame)
+{
     otError err;
 
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1088,26 +1113,13 @@ otError Mac::RadioTransmit(Frame *aSendFrame)
     err = otPlatRadioTransmit(GetInstance(), static_cast<otRadioFrame *>(aSendFrame));
     VerifyOrExit(err == OT_ERROR_NONE);
 
-    if (mRadioState != kRadioStateTx)
-    {
-        now = TimerMilli::GetNow();
-
-        if (mRadioState == kRadioStateRx)
-        {
-            mRxTotal += now - mLastChange;
-        }
-
-        mLastChange = now;
-        mRadioState = kRadioStateTx;
-    }
-
+    RadioStateChange(kRadioStateTx);
 exit:
     return err;
 }
 
 otError Mac::RadioReceive(uint8_t aChannel)
 {
-    uint32_t now;
     otError err;
 
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1123,18 +1135,7 @@ otError Mac::RadioReceive(uint8_t aChannel)
     err = otPlatRadioReceive(GetInstance(), aChannel);
     VerifyOrExit(err == OT_ERROR_NONE);
 
-    if (mRadioState != kRadioStateRx)
-    {
-        now = TimerMilli::GetNow();
-
-        if (mRadioState == kRadioStateTx)
-        {
-            mTxTotal += now - mLastChange;
-        }
-
-        mLastChange = now;
-        mRadioState = kRadioStateRx;
-    }
+    RadioStateChange(kRadioStateRx);
 
 exit:
     return err;
@@ -1142,7 +1143,6 @@ exit:
 
 void Mac::RadioSleep(void)
 {
-    uint32_t now;
     otError err;
 
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1159,18 +1159,7 @@ void Mac::RadioSleep(void)
         VerifyOrExit(err == OT_ERROR_NONE);
     }
 
-    if (mRadioState != kRadioStateSleep)
-    {
-        now = TimerMilli::GetNow();
-
-        if (mRadioState == kRadioStateRx)
-        {
-            mRxTotal += now - mLastChange;
-        }
-
-        mLastChange = now;
-        mRadioState = kRadioStateSleep;
-    }
+    RadioStateChange(kRadioStateSleep);
 
 exit:
     return;

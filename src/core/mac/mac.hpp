@@ -676,6 +676,14 @@ private:
         kInvalidRssiValue = 127
     };
 
+    enum RadioState
+    {
+        kRadioStateUnknown,
+        kRadioStateSleep,
+        kRadioStateRx,
+        kRadioStateTx
+    };
+
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
     void ProcessTransmitSecurity(Frame &aFrame);
@@ -705,6 +713,8 @@ private:
     void RadioSleep(void);
 
     static Mac &GetOwner(const Context &aContext);
+
+    void RadioStateChange(RadioState aNewState);
 
     TimerMilli mMacTimer;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -773,18 +783,9 @@ private:
 #endif
     bool mWaitingForData;
 
-    uint32_t mRxTotal;
-    uint32_t mTxTotal;
-    uint32_t mLastChange;
-
-    enum RadioState
-    {
-        kRadioStateUnknown,
-        kRadioStateSleep,
-        kRadioStateRx,
-        kRadioStateTx
-    };
-
+    uint32_t   mRxTotal;
+    uint32_t   mTxTotal;
+    uint32_t   mLastChange;
     RadioState mRadioState;
 };
 
