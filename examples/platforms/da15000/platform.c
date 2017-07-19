@@ -52,6 +52,8 @@ static bool sBlink = false;
 static int  sMsCounterInit;
 static int  sMsCounter;
 
+#define ALIVE_LED_PERIOD      (50000)
+#define ALIVE_LED_DUTY        (500)
 #define LEADER_BLINK_TIME     (200)
 #define ROUTER_BLINK_TIME     (500)
 #define CHILD_BLINK_TIME      (2000)
@@ -102,6 +104,7 @@ void ClkInit(void)
 
 void ExampleProcess(otInstance *aInstance)
 {
+    static int    aliveLEDcounter = 0;
     otDeviceRole  devRole;
     static int    thrValue;
 
@@ -141,7 +144,22 @@ void ExampleProcess(otInstance *aInstance)
 
     if (thrValue == 0)
     {
-        hw_gpio_set_inactive(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
+        // No specific role, let's generate 'alive blink'
+        // to inform that we are running.
+        // Loop counter is used to run even if timers
+        // are not initialized yet.
+        aliveLEDcounter++;
+
+        if (aliveLEDcounter > ALIVE_LED_PERIOD)
+        {
+            aliveLEDcounter = 0;
+            hw_gpio_set_active(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
+        }
+
+        if (aliveLEDcounter > ALIVE_LED_DUTY)
+        {
+            hw_gpio_set_inactive(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
+        }
     }
 }
 
