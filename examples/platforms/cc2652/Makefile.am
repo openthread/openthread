@@ -28,7 +28,7 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                       = libopenthread-cc2652.a
+lib_LIBRARIES                                         = libopenthread-cc2652.a
 
 libopenthread_cc2652_a_CPPFLAGS                       = \
     -I$(top_srcdir)/include                             \
@@ -55,7 +55,7 @@ libopenthread_cc2652_a_SOURCES                        = \
     cxx_helpers.c                                       \
     $(NULL)
 
-libopenthread_cc2652_a_DEPENDENCIES                                         = \
+libopenthread_cc2652_a_DEPENDENCIES                   =                       \
     $(top_srcdir)/third_party/ti/devices/cc26x2/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 

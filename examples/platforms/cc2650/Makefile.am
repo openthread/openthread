@@ -28,7 +28,7 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                       = libopenthread-cc2650.a
+lib_LIBRARIES                                         = libopenthread-cc2650.a
 
 libopenthread_cc2650_a_CPPFLAGS                       = \
     -I$(top_srcdir)/include                             \
@@ -56,7 +56,7 @@ libopenthread_cc2650_a_SOURCES                        = \
     cc2650_startup.c                                    \
     $(NULL)
 
-libopenthread_cc2650_a_DEPENDENCIES =                                         \
+libopenthread_cc2650_a_DEPENDENCIES                   =                       \
     $(top_srcdir)/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 

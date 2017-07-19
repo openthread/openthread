@@ -1,4 +1,5 @@
 *.a
+*.bak
 *.db
 *.gcda
 *.gcno
@@ -12,7 +13,6 @@
 *.suo
 *.trs
 *.user
-*.bak
 *~
 .deps
 .dirstamp

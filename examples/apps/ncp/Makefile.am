@@ -81,12 +81,12 @@ CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/third_party/ti/devices/cc26x0                        \
     $(NULL)
 
-LDADD_COMMON                                                          +=  \
-    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a      \
+LDADD_COMMON                                                          +=      \
+    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a          \
     $(top_srcdir)/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
-LDFLAGS_COMMON                                                        +=   \
+LDFLAGS_COMMON                                                        +=       \
     -T $(top_srcdir)/third_party/ti/devices/cc26x0/linker_files/cc26x0f128.lds \
     $(NULL)
 
@@ -97,12 +97,12 @@ CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/third_party/ti/devices/cc26x2                        \
     $(NULL)
 
-LDADD_COMMON                                                          +=  \
-    $(top_builddir)/examples/platforms/cc2652/libopenthread-cc2652.a      \
+LDADD_COMMON                                                          +=      \
+    $(top_builddir)/examples/platforms/cc2652/libopenthread-cc2652.a          \
     $(top_srcdir)/third_party/ti/devices/cc26x2/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
-LDFLAGS_COMMON                                                        +=   \
+LDFLAGS_COMMON                                                        +=      \
     -T $(top_srcdir)/third_party/ti/devices/cc26x2/linker_files/cc26x2r1f.lds \
     $(NULL)
 

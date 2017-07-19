@@ -49,6 +49,9 @@ static uint8_t sUsedKeys = 0;
  */
 static unsigned int sRefNum = 0;
 
+/*
+ * Documented in aes_alt.h
+ */
 void mbedtls_aes_init(mbedtls_aes_context *ctx)
 {
     if (sRefNum++ == 0)
@@ -74,6 +77,9 @@ void mbedtls_aes_init(mbedtls_aes_context *ctx)
     ctx->key_idx = CC2652_AES_KEY_UNUSED;
 }
 
+/*
+ * Documented in aes_alt.h
+ */
 void mbedtls_aes_free(mbedtls_aes_context *ctx)
 {
     otEXPECT(ctx->magic == CC2652_AES_CTX_MAGIC);
@@ -108,6 +114,9 @@ exit:
     return;
 }
 
+/*
+ * Documented in aes_alt.h
+ */
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits)
 {
     unsigned char key_idx;
@@ -137,6 +146,9 @@ exit:
     return retval;
 }
 
+/*
+ * Documented in aes_alt.h
+ */
 int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits)
 {
     unsigned char key_idx;
@@ -166,15 +178,8 @@ exit:
     return retval;
 }
 
-/**
- * \brief          AES-ECB block encryption/decryption
- *
- * \param ctx      AES context
- * \param mode     MBEDTLS_AES_ENCRYPT or MBEDTLS_AES_DECRYPT
- * \param input    16-byte input block
- * \param output   16-byte output block
- *
- * \return         0 if successful
+/*
+ * Documented in aes_alt.h
  */
 int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned char input[16], unsigned char output[16])
 {

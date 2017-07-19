@@ -1,19 +1,22 @@
 # OpenThread on CC2652 Example
 
-This directory contains example platform drivers for the [Texas
-Instruments CC2652R1][cc2652r1].
+This directory contains example platform drivers for the [Texas Instruments
+CC2652R1][cc2652r1].
 
 The example platform drivers are intended to present the minimal code necessary
-to support OpenThread.  As a result, the example platform drivers do not
-necessarily highlight the platform's full capabilities.  The platform drivers
-were build for the [CC2652R1 LAUNCHXL][cc2652r1-launchxl], usage on other
+to support OpenThread. As a result, the example platform drivers do not
+necessarily highlight the platform's full capabilities. Consult the [SimpleLink
+CC26X2R1 SDK][cc26x2r1-sdk] for more development option. The platform drivers
+were built for the [CC2652R1 LAUNCHXL][cc2652r1-launchxl], usage on other
 boards with a cc2652r1 may require changes to the peripheral drivers.
 
+[cc2652r1-launchxl]: http://www.ti.com/tool/launchxl-cc26x2r1
+[cc26x2r1-sdk]: http://www.ti.com/tool/simplelink-cc26x2-sdk
 <!---
-TODO: update documentation with live links
---->
-[cc2652r1-launchxl]: http://www.ti.com/tool/Launchxl-cc2652r1
+TODO: Update link when cc2652 product page is live
 [cc2652r1]: http://www.ti.com/product/cc2652r1
+-->
+[cc2652r1]: http://www.ti.com/tool/launchxl-cc26x2r1
 
 ## Toolchain
 
@@ -27,7 +30,6 @@ machine for building on a Windows host system. For help setting up VirtualBox
 with Ubuntu, consult this [community help wiki
 article][ubuntu-wiki-virtualbox].
 
-
 [gnu-autoconf]: https://www.gnu.org/software/autoconf
 [gnu-automake]: https://www.gnu.org/software/automake
 [python]: https://www.python.org
@@ -38,7 +40,7 @@ article][ubuntu-wiki-virtualbox].
 
 ## Building
 
-In a Bash terminal, follow these instructions to build the cc2538 examples.
+In a Bash terminal, follow these instructions to build the cc2652 examples.
 
 ```bash
 $ cd <path-to-openthread>
@@ -51,13 +53,8 @@ $ make -f examples/Makefile-cc2652
 If the build completed successfully, the `elf` files may be found in
 `<path-to-openthread>/output/cc2652/bin`.
 
-To flash the images with [uniflash][uniflash], the files must have the `*.elf`
-extension.
-
-```bash
-$ cd <path-to-openthread>/output/cc2652/bin
-$ cp ot-cli ot-cli.elf
-```
+Flash the images with [Uniflash][uniflash]. Make sure to deselect the binary
+check-box, Uniflash assumes a file without an extension is a binary file.
 
 [uniflash]: http://www.ti.com/tool/uniflash
 
@@ -65,7 +62,7 @@ $ cp ot-cli ot-cli.elf
 
 ### CLI example
 
-1. With a terminal client (putty, minicom, etc.) open the com port associated
+1. With a terminal client (PuTTY, minicom, etc.) open the com port associated
    with the cc2652 UART. The serial port settings are:
     * 115200 baud
     * 8 data bits
