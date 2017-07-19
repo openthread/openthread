@@ -144,10 +144,10 @@ void ExampleProcess(otInstance *aInstance)
 
     if (thrValue == 0)
     {
-        // No specyfic role, let's generate alive blink
-        // to inform taht we are running.
+        // No specific role, let's generate 'alive blink'
+        // to inform that we are running.
         // Loop counter is used to run even if timers
-        // are not iniliazied yet.
+        // are not initialized yet.
         aliveLEDcounter++;
 
         if (aliveLEDcounter > ALIVE_LED_PERIOD)
