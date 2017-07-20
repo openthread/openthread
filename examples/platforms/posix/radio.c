@@ -28,6 +28,7 @@
 
 #include "platform-posix.h"
 
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
@@ -495,6 +496,12 @@ void radioReceive(otInstance *aInstance)
         perror("recvfrom");
         exit(EXIT_FAILURE);
     }
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    // Timestamp
+    sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
+    sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
+#endif
 
     sReceiveFrame.mLength = (uint8_t)(rval - 1);
 

@@ -42,6 +42,7 @@
 #include <openthread/platform/diag.h>
 
 #include "platform-config.h"
+#include "platform-nrf5.h"
 #include "cmsis/core_cmFunc.h"
 
 #include <drivers/clock/nrf_drv_clock.h>
@@ -123,51 +124,9 @@ static inline uint64_t TicksToTime(uint32_t aTicks)
     return CEIL_DIV((US_PER_S * (uint64_t)aTicks), RTC_FREQUENCY);
 }
 
-static inline uint64_t AlarmGetCurrentTime()
-{
-    uint32_t rtcValue1;
-    uint32_t rtcValue2;
-    uint32_t offset;
-
-    rtcValue1 = nrf_rtc_counter_get(RTC_INSTANCE);
-
-    __DMB();
-
-    offset = sTimeOffset;
-
-    __DMB();
-
-    rtcValue2 = nrf_rtc_counter_get(RTC_INSTANCE);
-
-    if ((rtcValue2 < rtcValue1) || (rtcValue1 == 0))
-    {
-        // Overflow detected. Additional condition (rtcValue1 == 0) covers situation when overflow occurred in
-        // interrupt state, before this function was entered. But in general, this function shall not be called
-        // from interrupt other than alarm interrupt.
-
-        // Wait at least 20 cycles, to ensure that if interrupt is going to be called, it will be called now.
-        for (uint32_t i = 0; i < 4; i++)
-        {
-            __NOP();
-            __NOP();
-            __NOP();
-        }
-
-        // If the event flag is still on, it means that the interrupt was not called, as we are in interrupt state.
-        if (nrf_rtc_event_pending(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW))
-        {
-            HandleOverflow();
-        }
-
-        offset = sTimeOffset;
-    }
-
-    return US_PER_MS * (uint64_t)offset + TicksToTime(rtcValue2);
-}
-
 static inline uint32_t AlarmGetCurrentTimeRtcProtected(AlarmIndex aIndex)
 {
-    uint64_t usecTime = AlarmGetCurrentTime() + 2 * US_PER_TICK;
+    uint64_t usecTime = nrf5AlarmGetCurrentTime() + 2 * US_PER_TICK;
     uint32_t currentTime;
 
     if (aIndex == kMsTimer)
@@ -198,7 +157,7 @@ static void HandleCompareMatch(AlarmIndex aIndex, bool aSkipCheck)
 {
     nrf_rtc_event_clear(RTC_INSTANCE, sChannelData[aIndex].mCompareEvent);
 
-    uint64_t usecTime = AlarmGetCurrentTime();
+    uint64_t usecTime = nrf5AlarmGetCurrentTime();
     uint32_t now;
 
     if (aIndex == kMsTimer)
@@ -344,9 +303,51 @@ void nrf5AlarmProcess(otInstance *aInstance)
     }
 }
 
+inline uint64_t nrf5AlarmGetCurrentTime()
+{
+    uint32_t rtcValue1;
+    uint32_t rtcValue2;
+    uint32_t offset;
+
+    rtcValue1 = nrf_rtc_counter_get(RTC_INSTANCE);
+
+    __DMB();
+
+    offset = sTimeOffset;
+
+    __DMB();
+
+    rtcValue2 = nrf_rtc_counter_get(RTC_INSTANCE);
+
+    if ((rtcValue2 < rtcValue1) || (rtcValue1 == 0))
+    {
+        // Overflow detected. Additional condition (rtcValue1 == 0) covers situation when overflow occurred in
+        // interrupt state, before this function was entered. But in general, this function shall not be called
+        // from interrupt other than alarm interrupt.
+
+        // Wait at least 20 cycles, to ensure that if interrupt is going to be called, it will be called now.
+        for (uint32_t i = 0; i < 4; i++)
+        {
+            __NOP();
+            __NOP();
+            __NOP();
+        }
+
+        // If the event flag is still on, it means that the interrupt was not called, as we are in interrupt state.
+        if (nrf_rtc_event_pending(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW))
+        {
+            HandleOverflow();
+        }
+
+        offset = sTimeOffset;
+    }
+
+    return US_PER_MS * (uint64_t)offset + TicksToTime(rtcValue2);
+}
+
 uint32_t otPlatAlarmMilliGetNow(void)
 {
-    return (uint32_t)(AlarmGetCurrentTime() / US_PER_MS);
+    return (uint32_t)(nrf5AlarmGetCurrentTime() / US_PER_MS);
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -366,7 +367,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return (uint32_t)AlarmGetCurrentTime();
+    return (uint32_t)nrf5AlarmGetCurrentTime();
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)

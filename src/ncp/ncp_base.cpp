@@ -1139,6 +1139,8 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
             SPINEL_DATATYPE_STRUCT_S( // PHY-data
                 SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
                 SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
+                SPINEL_DATATYPE_UINT32_S // The timestamp milliseconds
+                SPINEL_DATATYPE_UINT16_S // The timestamp microseconds
             )
             SPINEL_DATATYPE_STRUCT_S( // Vendor-data
                 SPINEL_DATATYPE_UINT_PACKED_S
@@ -1148,6 +1150,8 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
             flags,             // Flags
             aFrame->mChannel,  // Receive channel
             aFrame->mLqi,      // Link quality indicator
+            aFrame->mMsec,     // The timestamp milliseconds
+            aFrame->mUsec,     // The timestamp microseconds, offset to mMsec
             aError             // Receive error
         ));
 

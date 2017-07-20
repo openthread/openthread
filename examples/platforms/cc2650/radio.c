@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <utils/code_utils.h>
 #include "cc2650_radio.h"
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h> /* to seed the CSMA-CA funciton */
 
@@ -1776,6 +1777,12 @@ static void readFrame(void)
 
             if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+                // Timestamp
+                sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
+                sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
+#endif
+
                 sReceiveFrame.mLength = len;
                 memcpy(sReceiveFrame.mPsdu, &(payload[1]), len - 2);
                 sReceiveFrame.mChannel = sReceiveCmd.channel;
