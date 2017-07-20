@@ -4269,8 +4269,8 @@ otError NcpBase::GetPropertyHandler_TX_RX_TOTAL_TIMES(uint8_t aHeader, spinel_pr
                                   SPINEL_DATATYPE_UINT32_S  // Total Tx Time
                                   SPINEL_DATATYPE_UINT32_S  // Total Rx Time
                               ),
-                              *otThreadGetTxTotalTime(mInstance),
-                              *otThreadGetRxTotalTime(mInstance));
+                              otThreadGetTxTotalTime(mInstance),
+                              otThreadGetRxTotalTime(mInstance));
 }
 
 // ----------------------------------------------------------------------------
