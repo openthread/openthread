@@ -308,6 +308,8 @@ void Mac::StartEnergyScan(void)
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
+
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
     if (aInstance->mLinkRaw.IsEnabled())
@@ -319,6 +321,9 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     {
         aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
     }
+
+exit:
+    return;
 }
 
 void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
@@ -855,9 +860,9 @@ exit:
 extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otLogFuncEntry();
-
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
     aInstance->mThreadNetif.GetMac().TransmitStartedTask(aFrame);
-
+exit:
     otLogFuncExit();
 }
 
@@ -877,6 +882,7 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFr
                                         otError aError)
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -890,6 +896,7 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFr
         aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aRxPending, aError);
     }
 
+exit:
     otLogFuncExit();
 }
 
@@ -971,6 +978,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
                                   otError aError)
 {
     otLogFuncEntryMsg("%!otError!", aError);
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -984,6 +992,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
         aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
     }
 
+exit:
     otLogFuncExit();
 }
 
@@ -1466,6 +1475,7 @@ exit:
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     otLogFuncEntryMsg("%!otError!", aError);
+    VerifyOrExit(otInstanceIsInitialized(aInstance));
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -1479,6 +1489,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
         aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
     }
 
+exit:
     otLogFuncExit();
 }
 
