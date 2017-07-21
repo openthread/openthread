@@ -26,15 +26,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include <stddef.h>
 
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
+#include <openthread/message.h>
 #include <openthread/thread.h>
 #include <openthread/types.h>
-#include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
 
@@ -54,23 +53,22 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    otRadioFrame frame;
-    uint8_t *buf;
+    otMessage *message = NULL;
+    otError error = OT_ERROR_NONE;
+    bool isSecure;
 
-    VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
+    VerifyOrExit(size > 0);
 
-    buf = static_cast<uint8_t *>(malloc(size));
+    isSecure = (data[0] & 0x1) != 0;
 
-    memset(&frame, 0, sizeof(frame));
-    frame.mPsdu = buf;
-    frame.mChannel = 11;
-    frame.mLength = static_cast<uint8_t>(size);
+    message = otIp6NewMessage(sInstance, isSecure);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    memcpy(buf, data, frame.mLength);
+    error = otMessageAppend(message, data + 1, static_cast<uint16_t>(size - 1));
+    SuccessOrExit(error);
 
-    otPlatRadioReceiveDone(sInstance, &frame, OT_ERROR_NONE);
-
-    free(buf);
+    error = otIp6Send(sInstance, message);
+    SuccessOrExit(error);
 
 exit:
     return 0;
