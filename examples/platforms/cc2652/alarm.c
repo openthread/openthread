@@ -87,7 +87,7 @@ uint32_t otPlatAlarmMilliGetNow(void)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
-    sTime0 = aT0;
+    sTime0     = aT0;
     sAlarmTime = aDt;
     sIsRunning = true;
 }

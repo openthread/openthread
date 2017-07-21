@@ -46,14 +46,13 @@ static bool sDiagMode = false;
 
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
+    (void) aInstance;
+
     // Add more platform specific diagnostics features here.
     if (argc > 1)
     {
         snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
     }
-
-    (void) argc;
-    (void) aInstance;
 }
 
 void otPlatDiagModeSet(bool aMode)

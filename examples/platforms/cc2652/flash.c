@@ -37,6 +37,8 @@
 #include <openthread-core-config.h>
 #include <openthread/platform/alarm-milli.h>
 
+#include <utils/code_utils.h>
+
 #include "platform-cc2652.h"
 
 /*
@@ -92,13 +94,13 @@ static bool isBatMonOn(void)
  * Check if the supply voltage is high enough to support flash programming.
  *
  * @return If the Voltage is too low to support flash programming.
- * @retval true  The supply voltage is too low.
- * @retval false The supply voltage is sufficient.
+ * @retval false The supply voltage is too low.
+ * @retval true  The supply voltage is sufficient.
  */
-static bool isVoltageLow(void)
+static bool checkVoltage(void)
 {
     bool batMonWasOff = !isBatMonOn();
-    bool ret = true;
+    bool ret          = false;
 
     if (batMonWasOff)
     {
@@ -107,7 +109,7 @@ static bool isVoltageLow(void)
 
     if (AONBatMonBatteryVoltageGet() >= MIN_VDD_FLASH)
     {
-        ret = false;
+        ret = true;
     }
 
     if (batMonWasOff)
@@ -214,12 +216,9 @@ otError utilsFlashErasePage(uint32_t aAddress)
 {
     uint32_t mode;
     uint32_t fsmRet;
+    otError  ret;
 
-    if (isVoltageLow())
-    {
-        /* Supplied voltage was too low. */
-        return OT_ERROR_FAILED;
-    }
+    otEXPECT_ACTION(checkVoltage(), ret = OT_ERROR_FAILED);
 
     mode = disableFlashCache();
 
@@ -227,7 +226,10 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
     restoreFlashCache(mode);
 
-    return fsmErrorToOtError(fsmRet);
+    ret = fsmErrorToOtError(fsmRet);
+
+exit:
+    return ret;
 }
 
 /**
@@ -258,11 +260,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t mode;
     uint32_t written = 0;
 
-    if (isVoltageLow())
-    {
-        /* Supplied voltage was too low. */
-        return OT_ERROR_FAILED;
-    }
+    otEXPECT(checkVoltage());
 
     mode = disableFlashCache();
 
@@ -302,6 +300,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     restoreFlashCache(mode);
 
+exit:
     return written;
 }
 

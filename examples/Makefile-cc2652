@@ -28,101 +28,105 @@
 
 .NOTPARALLEL:
 
-AR                              = arm-none-eabi-ar
-CCAS                            = arm-none-eabi-as
-CPP                             = arm-none-eabi-cpp
-CC                              = arm-none-eabi-gcc
-CXX                             = arm-none-eabi-g++
-LD                              = arm-none-eabi-ld
-STRIP                           = arm-none-eabi-strip
-NM                              = arm-none-eabi-nm
-RANLIB                          = arm-none-eabi-ranlib
-OBJCOPY                         = arm-none-eabi-objcopy
+AR      = arm-none-eabi-ar
+CCAS    = arm-none-eabi-as
+CPP     = arm-none-eabi-cpp
+CC      = arm-none-eabi-gcc
+CXX     = arm-none-eabi-g++
+LD      = arm-none-eabi-ld
+STRIP   = arm-none-eabi-strip
+NM      = arm-none-eabi-nm
+RANLIB  = arm-none-eabi-ranlib
+OBJCOPY = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 10
+BuildJobs                                                 ?= 10
 
-configure_OPTIONS               = \
-    --enable-cli-app=all          \
-    --enable-ncp-app=all          \
-    --with-ncp-bus=uart           \
-    --enable-diag                 \
-    --with-examples=cc2652        \
-    --with-platform-info=cc2652   \
-    MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)" \
+configure_OPTIONS                                          = \
+    --enable-cli-app=all                                     \
+    --enable-ncp-app=all                                     \
+    --with-ncp-bus=uart                                      \
+    --enable-diag                                            \
+    --with-examples=cc2652                                   \
+    --with-platform-info=cc2652                              \
+    MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)"            \
     $(NULL)
 
-DEFAULT_LOGGING ?= 1
+DEFAULT_LOGGING                                           ?= 1
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
-CC2652_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"cc2652-mbedtls-config.h\"'
-CC2652_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/cc2652/crypto
-CC2652_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/ti/devices/cc26x2
-CC2652_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
-CC2652_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
-
-CC2652_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2652-config.h\"'
-CC2652_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/cc2652/
-
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    $(CC2652_CONFIG_FILE_CPPFLAGS)\
+CC2652_MBEDTLS_CPPFLAGS                                    = \
+    -DMBEDTLS_CONFIG_FILE='\"cc2652-mbedtls-config.h\"'      \
+    -I$(PWD)/examples/platforms/cc2652/crypto                \
+    -I$(PWD)/third_party/ti/devices/cc26x2                   \
+    -I$(PWD)/third_party/mbedtls                             \
+    -I$(PWD)/third_party/mbedtls/repo/include                \
     $(NULL)
 
-CPPFLAGS                       += \
-    $(COMMONCFLAGS)               \
-    $(target_CPPFLAGS)            \
+CC2652_CONFIG_FILE_CPPFLAGS                                =                    \
+    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2652-config.h\"' \
+    -I$(PWD)/examples/platforms/cc2652/                                         \
     $(NULL)
 
-CFLAGS                         += \
-    $(COMMONCFLAGS)               \
-    $(target_CFLAGS)              \
+COMMONCFLAGS                                              := \
+    -fdata-sections                                          \
+    -ffunction-sections                                      \
+    -Os                                                      \
+    -g                                                       \
+    $(CC2652_CONFIG_FILE_CPPFLAGS)                           \
     $(NULL)
 
-CXXFLAGS                       += \
-    $(COMMONCFLAGS)               \
-    $(target_CXXFLAGS)            \
-    -fno-exceptions               \
-    -fno-rtti                     \
+CPPFLAGS                                                  += \
+    $(COMMONCFLAGS)                                          \
+    $(target_CPPFLAGS)                                       \
     $(NULL)
 
-LDFLAGS                        += \
-    $(COMMONCFLAGS)               \
-    $(target_LDFLAGS)             \
-    -nostartfiles                 \
-    -specs=nano.specs             \
-    -specs=nosys.specs            \
-    -Wl,--gc-sections             \
-    -Wl,-Map=map.map              \
+CFLAGS                                                    += \
+    $(COMMONCFLAGS)                                          \
+    $(target_CFLAGS)                                         \
     $(NULL)
 
-ECHO                            := @echo
-MAKE                            := make
-MKDIR_P                         := mkdir -p
-LN_S                            := ln -s
-RM_F                            := rm -f
+CXXFLAGS                                                  += \
+    $(COMMONCFLAGS)                                          \
+    $(target_CXXFLAGS)                                       \
+    -fno-exceptions                                          \
+    -fno-rtti                                                \
+    $(NULL)
 
-INSTALL                         := /usr/bin/install
-INSTALLFLAGS                    := -p
+LDFLAGS                                                   += \
+    $(COMMONCFLAGS)                                          \
+    $(target_LDFLAGS)                                        \
+    -nostartfiles                                            \
+    -specs=nano.specs                                        \
+    -specs=nosys.specs                                       \
+    -Wl,--gc-sections                                        \
+    -Wl,-Map=map.map                                         \
+    $(NULL)
 
-TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
+ECHO    := @echo
+MAKE    := make
+MKDIR_P := mkdir -p
+LN_S    := ln -s
+RM_F    := rm -f
 
-BuildPath                       = build
-TopBuildDir                     = $(BuildPath)
-AbsTopBuildDir                  = $(PWD)/$(TopBuildDir)
+INSTALL      := /usr/bin/install
+INSTALLFLAGS := -p
 
-ResultPath                      = output
-TopResultDir                    = $(ResultPath)
-AbsTopResultDir                 = $(PWD)/$(TopResultDir)
+TopSourceDir    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
+AbsTopSourceDir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-TargetTuple                     = cc2652
+BuildPath      = build
+TopBuildDir    = $(BuildPath)
+AbsTopBuildDir = $(PWD)/$(TopBuildDir)
 
-ARCHS                           = cortex-m4f
+ResultPath      = output
+TopResultDir    = $(ResultPath)
+AbsTopResultDir = $(PWD)/$(TopResultDir)
 
-TopTargetLibDir                 = $(TopResultDir)/$(TargetTuple)/lib
+TargetTuple = cc2652
+
+ARCHS = cortex-m4f
+
+TopTargetLibDir = $(TopResultDir)/$(TargetTuple)/lib
 
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)
@@ -138,16 +142,26 @@ JOBSFLAG := -j$(BuildJobs)
 #
 define configure-arch
 $(ECHO) "  CONFIG   $(TargetTuple)..."
-(cd $(BuildPath)/$(TargetTuple) && $(AbsTopSourceDir)/configure \
-INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
-CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" \
-AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" \
-CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" \
-LDFLAGS="$(LDFLAGS)" \
---host=arm-none-eabi \
---prefix=/ \
---exec-prefix=/$(TargetTuple) \
-$(configure_OPTIONS))
+(cd $(BuildPath)/$(TargetTuple)          \
+ && $(AbsTopSourceDir)/configure         \
+    INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
+    CPP="$(CPP)"                         \
+    CC="$(CC)"                           \
+    CXX="$(CXX)"                         \
+    OBJC="$(OBJC)"                       \
+    OBJCXX="$(OBJCXX)"                   \
+    AR="$(AR)"                           \
+    RANLIB="$(RANLIB)"                   \
+    NM="$(NM)"                           \
+    STRIP="$(STRIP)"                     \
+    CPPFLAGS="$(CPPFLAGS)"               \
+    CFLAGS="$(CFLAGS)"                   \
+    CXXFLAGS="$(CXXFLAGS)"               \
+    LDFLAGS="$(LDFLAGS)"                 \
+    --host=arm-none-eabi                 \
+    --prefix=/                           \
+    --exec-prefix=/$(TargetTuple)        \
+    $(configure_OPTIONS))
 endef # configure-arch
 
 #
@@ -160,8 +174,11 @@ endef # configure-arch
 #
 define build-arch
 $(ECHO) "  BUILD    $(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
-all
+$(MAKE)                            \
+    $(JOBSFLAG)                    \
+    -C $(BuildPath)/$(TargetTuple) \
+    --no-print-directory           \
+    all
 endef # build-arch
 
 #
@@ -174,9 +191,12 @@ endef # build-arch
 #
 define stage-arch
 $(ECHO) "  STAGE    $(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
-DESTDIR=$(AbsTopResultDir) \
-install
+$(MAKE)                            \
+    $(JOBSFLAG)                    \
+    -C $(BuildPath)/$(TargetTuple) \
+    --no-print-directory           \
+    DESTDIR=$(AbsTopResultDir)     \
+    install
 endef # stage-arch
 
 #
@@ -246,9 +266,9 @@ build: $(BUILD_TARGETS)
 
 stage: $(STAGE_TARGETS)
 
-DIRECTORIES     = $(TopResultDir) $(TopResultDir)/$(TargetTuple)/lib $(BUILD_DIRS)
+DIRECTORIES = $(TopResultDir) $(TopResultDir)/$(TargetTuple)/lib $(BUILD_DIRS)
 
-CLEAN_DIRS      = $(TopResultDir) $(BUILD_DIRS)
+CLEAN_DIRS  = $(TopResultDir) $(BUILD_DIRS)
 
 all: stage
 

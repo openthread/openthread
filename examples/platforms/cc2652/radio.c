@@ -176,20 +176,20 @@ static void rfCoreInitBufs(void)
     memset(sRxBuf0, 0x00, RX_BUF_SIZE);
     memset(sRxBuf1, 0x00, RX_BUF_SIZE);
 
-    entry = (rfc_dataEntry_t *)sRxBuf0;
-    entry->pNextEntry = sRxBuf1;
+    entry               = (rfc_dataEntry_t *)sRxBuf0;
+    entry->pNextEntry   = sRxBuf1;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-    entry->length = sizeof(sRxBuf0) - sizeof(rfc_dataEntry_t);
+    entry->length       = sizeof(sRxBuf0) - sizeof(rfc_dataEntry_t);
 
-    entry = (rfc_dataEntry_t *)sRxBuf1;
-    entry->pNextEntry = sRxBuf0;
+    entry               = (rfc_dataEntry_t *)sRxBuf1;
+    entry->pNextEntry   = sRxBuf0;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-    entry->length = sizeof(sRxBuf0) - sizeof(rfc_dataEntry_t);
+    entry->length       = sizeof(sRxBuf0) - sizeof(rfc_dataEntry_t);
 
-    sTransmitFrame.mPsdu = sTransmitPsdu;
+    sTransmitFrame.mPsdu   = sTransmitPsdu;
     sTransmitFrame.mLength = 0;
-    sReceiveFrame.mPsdu = sReceivePsdu;
-    sReceiveFrame.mLength = 0;
+    sReceiveFrame.mPsdu    = sReceivePsdu;
+    sReceiveFrame.mLength  = 0;
 }
 
 /**
@@ -447,16 +447,18 @@ static uint_fast8_t rfCoreModifySourceMatchEntry(uint8_t aEntryNo, cc2652_addres
 static uint8_t rfCoreFindShortSrcMatchIdx(const uint16_t aAddress)
 {
     uint8_t i;
+    uint8_t ret = CC2652_SRC_MATCH_NONE;
 
     for (i = 0; i < CC2652_SHORTADD_SRC_MATCH_NUM; i++)
     {
         if (sSrcMatchShortData.extAddrEnt[i].shortAddr == aAddress)
         {
-            return i;
+            ret = i;
+            break;
         }
     }
 
-    return CC2652_SRC_MATCH_NONE;
+    return ret;
 }
 
 /**
@@ -468,16 +470,18 @@ static uint8_t rfCoreFindShortSrcMatchIdx(const uint16_t aAddress)
 static uint8_t rfCoreFindEmptyShortSrcMatchIdx(void)
 {
     uint8_t i;
+    uint8_t ret = CC2652_SRC_MATCH_NONE;
 
     for (i = 0; i < CC2652_SHORTADD_SRC_MATCH_NUM; i++)
     {
         if ((sSrcMatchShortData.srcMatchEn[i / 32] & (1 << (i % 32))) == 0u)
         {
-            return i;
+            ret = i;
+            break;
         }
     }
 
-    return CC2652_SRC_MATCH_NONE;
+    return ret;
 }
 
 /**
@@ -491,16 +495,18 @@ static uint8_t rfCoreFindEmptyShortSrcMatchIdx(void)
 static uint8_t rfCoreFindExtSrcMatchIdx(const uint64_t *aAddress)
 {
     uint8_t i;
+    uint8_t ret = CC2652_SRC_MATCH_NONE;
 
     for (i = 0; i < CC2652_EXTADD_SRC_MATCH_NUM; i++)
     {
         if (sSrcMatchExtData.extAddrEnt[i] == *aAddress)
         {
-            return i;
+            ret = i;
+            break;
         }
     }
 
-    return CC2652_SRC_MATCH_NONE;
+    return ret;
 }
 
 /**
@@ -512,16 +518,18 @@ static uint8_t rfCoreFindExtSrcMatchIdx(const uint64_t *aAddress)
 static uint8_t rfCoreFindEmptyExtSrcMatchIdx(void)
 {
     uint8_t i;
+    uint8_t ret = CC2652_SRC_MATCH_NONE;
 
     for (i = 0; i < CC2652_EXTADD_SRC_MATCH_NUM; i++)
     {
         if ((sSrcMatchExtData.srcMatchEn[i / 32] & (1 << (i % 32))) != 0u)
         {
-            return i;
+            ret = i;
+            break;
         }
     }
 
-    return CC2652_SRC_MATCH_NONE;
+    return ret;
 }
 
 /**
@@ -695,11 +703,7 @@ static void rfCoreSetupInt(void)
 {
     bool interruptsWereDisabled;
 
-    /* We are already turned on by the caller, so this should not happen */
-    if (!PRCMRfReady())
-    {
-        return;
-    }
+    otEXPECT(PRCMRfReady());
 
     interruptsWereDisabled = IntMasterDisable();
 
@@ -718,6 +722,9 @@ static void rfCoreSetupInt(void)
     {
         IntMasterEnable();
     }
+
+exit:
+    return;
 }
 
 /**
@@ -1314,11 +1321,11 @@ otError otPlatRadioSleep(otInstance *aInstance)
         if (rfCoreExecuteAbortCmd() != CMDSTA_Done)
         {
             error = OT_ERROR_BUSY;
-            return error;
         }
-
-        sState = cc2652_stateSleep;
-        return error;
+        else
+        {
+            sState = cc2652_stateSleep;
+        }
     }
 
     return error;
