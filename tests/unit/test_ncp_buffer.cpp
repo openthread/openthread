@@ -817,7 +817,7 @@ void TestNcpFrameBuffer(void)
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
         SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sMysteryText, sizeof(sHexText) - index), "InFrameFeedData() failed.");
-        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index , "InFrameGetDistance() failed");
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index, "InFrameGetDistance() failed");
 
         if (addExtra)
         {
@@ -862,7 +862,7 @@ void TestNcpFrameBuffer(void)
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
         SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sMysteryText, sizeof(sHexText) - index), "InFrameFeedData() failed.");
-        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index , "InFrameGetDistance() failed");
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index, "InFrameGetDistance() failed");
 
         if (addExtra)
         {
