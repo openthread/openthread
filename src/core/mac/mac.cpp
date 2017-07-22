@@ -1126,8 +1126,9 @@ void Mac::RadioSleep(void)
 
     if (mDelaySleep)
     {
-        // Restart delay sleep timer
+        // Start delay sleep timer
         mReceiveTimer.Start(kSleepDelay);
+        mDelaySleep = false;
     }
     else
 #endif
