@@ -37,8 +37,10 @@
 #include "fsl_device_registers.h"
 #include "openthread-core-kw41z-config.h"
 #include "fsl_xcvr.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/diag.h"
+
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/diag.h>
 #include <utils/code_utils.h>
 
 #define DOUBLE_BUFFERING             (1)
@@ -721,6 +723,12 @@ static bool rf_process_rx_frame(void)
 
     /* Check if frame is valid */
     otEXPECT_ACTION((IEEE802154_MIN_LENGTH <= temp) && (temp <= IEEE802154_MAX_LENGTH), status = false);
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    // Timestamp
+    sRxFrame.mMsec = otPlatAlarmMilliGetNow();
+    sRxFrame.mUsec = 0;  // Don't support microsecond timer for now.
+#endif
 
     sRxFrame.mLength = temp;
     temp = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;

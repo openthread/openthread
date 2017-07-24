@@ -382,6 +382,89 @@ exit:
     return error;
 }
 
+otError NcpFrameBuffer::InFrameGetPosition(WritePosition &aPosition) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
+
+    aPosition.mPosition = mWriteSegmentTail;
+    aPosition.mSegmentHead = mWriteSegmentHead;
+
+exit:
+    return error;
+}
+
+otError NcpFrameBuffer::InFrameOverwrite(const WritePosition &aPosition, const uint8_t *aDataBuffer,
+                                         uint16_t aDataBufferLength)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t *bufPtr;
+    uint16_t segmentLength;
+    uint16_t distance;
+
+    VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
+
+    VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead, error = OT_ERROR_INVALID_ARGS);
+
+    // Ensure the overwrite does not go beyond current sgement tail.
+    segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
+    distance = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
+    VerifyOrExit(distance + aDataBufferLength <= segmentLength, error = OT_ERROR_INVALID_ARGS);
+
+    bufPtr = aPosition.mPosition;
+    while (aDataBufferLength > 0)
+    {
+        *bufPtr = *aDataBuffer;
+
+        aDataBuffer++;
+        aDataBufferLength--;
+
+        bufPtr = GetUpdatedBufPtr(bufPtr, 1, mWriteDirection);
+    }
+
+exit:
+    return error;
+}
+
+uint16_t NcpFrameBuffer::InFrameGetDistance(const WritePosition &aPosition) const
+{
+    uint16_t distance = 0;
+    uint16_t segmentLength;
+    uint16_t offset;
+
+    VerifyOrExit(mWriteDirection != kUnknown);
+    VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead);
+
+    segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
+    offset = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
+    VerifyOrExit(offset < segmentLength);
+
+    distance = GetDistance(aPosition.mPosition, mWriteSegmentTail, mWriteDirection);
+
+exit:
+    return distance;
+}
+
+otError NcpFrameBuffer::InFrameReset(const WritePosition &aPosition)
+{
+    otError error = OT_ERROR_NONE;
+    uint16_t segmentLength;
+    uint16_t offset;
+
+    VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead, error = OT_ERROR_INVALID_ARGS);
+
+    segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
+    offset = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
+    VerifyOrExit(offset < segmentLength, error = OT_ERROR_INVALID_ARGS);
+
+    mWriteSegmentTail = aPosition.mPosition;
+
+exit:
+    return error;
+}
+
 otError NcpFrameBuffer::InFrameEnd(void)
 {
     otMessage *message;

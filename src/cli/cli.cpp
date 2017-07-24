@@ -897,7 +897,7 @@ exit:
 #ifdef OPENTHREAD_EXAMPLES_POSIX
 void Interpreter::ProcessExit(int argc, char *argv[])
 {
-    exit(0);
+    exit(EXIT_SUCCESS);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 }

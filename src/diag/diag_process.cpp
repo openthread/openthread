@@ -35,10 +35,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
+
+#include <openthread/instance.h>
 
 #include "diag_process.hpp"
 #include "common/code_utils.hpp"
+#include "utils/wrap_string.h"
 
 namespace ot {
 namespace Diagnostics {
@@ -337,7 +339,8 @@ exit:
 
 void Diag::DiagTransmitDone(otInstance *aInstance, otError aError)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    VerifyOrExit(aInstance == sContext);
+
     if (aError == OT_ERROR_NONE)
     {
         sStats.sent_packets++;
@@ -352,11 +355,15 @@ void Diag::DiagTransmitDone(otInstance *aInstance, otError aError)
     {
         TxPacket();
     }
+
+exit:
+    return;
 }
 
 void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    VerifyOrExit(aInstance == sContext);
+
     if (aError == OT_ERROR_NONE)
     {
         // for sensitivity test, only record the rssi and lqi for the first packet
@@ -370,10 +377,15 @@ void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError 
     }
     otPlatDiagRadioReceived(aInstance, aFrame, aError);
     otPlatRadioReceive(aInstance, sChannel);
+
+exit:
+    return;
 }
 
 void Diag::AlarmFired(otInstance *aInstance)
 {
+    VerifyOrExit(aInstance == sContext);
+
     if(sRepeatActive)
     {
         uint32_t now = otPlatAlarmMilliGetNow();
@@ -385,6 +397,9 @@ void Diag::AlarmFired(otInstance *aInstance)
     {
         otPlatDiagAlarmCallback(aInstance);
     }
+
+exit:
+    return;
 }
 
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)

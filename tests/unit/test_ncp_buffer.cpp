@@ -55,6 +55,7 @@ static const uint8_t sOpenThreadText[] = "OpenThread Rocks";
 static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
+static const uint8_t sHexText[]        = "0123456789abcdef";
 
 static otInstance *sInstance;
 static MessagePool *sMessagePool;
@@ -373,6 +374,7 @@ void TestNcpFrameBuffer(void)
     Message *message;
     uint8_t readBuffer[16];
     uint16_t readLen, readOffset;
+    NcpFrameBuffer::WritePosition pos1, pos2;
 
     sInstance = testInitInstance();
     sMessagePool = &sInstance->mIp6.mMessagePool;
@@ -796,6 +798,97 @@ void TestNcpFrameBuffer(void)
     SuccessOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer) - 4), "InFrameFeedData() failed.");
     SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
     SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed.");
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\n Test 14: Test InFrameOverwrite ");
+    printf("\nIterations: ");
+
+    for (j = 0; j < kTestIterationAttemps; j++)
+    {
+        uint16_t index;
+        bool addExtra = ((j % 7) != 0);
+        NcpFrameBuffer::Priority priority;
+
+        printf("*");
+        priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
+        index = static_cast<uint16_t>(j % sizeof(sHexText));
+        SuccessOrQuit(ncpBuffer.InFrameBegin(priority), "InFrameBegin() failed");
+        SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
+        SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
+        SuccessOrQuit(ncpBuffer.InFrameFeedData(sMysteryText, sizeof(sHexText) - index), "InFrameFeedData() failed.");
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index, "InFrameGetDistance() failed");
+
+        if (addExtra)
+        {
+            SuccessOrQuit(ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)), "InFrameFeedData() failed.");
+        }
+
+        SuccessOrQuit(ncpBuffer.InFrameOverwrite(pos1, sHexText + index, sizeof(sHexText) - index),
+                      "InFrameOverwrite() failed.");
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index + (addExtra ? sizeof(sHelloText) : 0),
+                     "InFrameGetDistance() failed");
+        SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+        VerifyOrQuit(ncpBuffer.InFrameGetPosition(pos2) == OT_ERROR_INVALID_STATE, "GetPosition failed.");
+        VerifyOrQuit(ncpBuffer.InFrameOverwrite(pos1, sHexText, 0) != OT_ERROR_NONE, "Failed to give error.");
+        SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed");
+        ReadAndVerifyContent(ncpBuffer, sHexText, sizeof(sHexText));
+
+        if (addExtra)
+        {
+            ReadAndVerifyContent(ncpBuffer, sHelloText, sizeof(sHelloText));
+        }
+
+        SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed");
+        VerifyOrQuit(ncpBuffer.InFrameGetPosition(pos2) == OT_ERROR_INVALID_STATE, "GetPosition failed");
+    }
+
+    printf(" -- PASS\n");
+
+    printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    printf("\n Test 15: Test InFrameReset()");
+    printf("\nIterations: ");
+
+    for (j = 0; j < kTestIterationAttemps; j++)
+    {
+        uint16_t index;
+        bool addExtra = ((j % 7) != 0);
+        NcpFrameBuffer::Priority priority;
+
+        printf("*");
+        priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
+        index = static_cast<uint16_t>(j % sizeof(sHexText));
+        SuccessOrQuit(ncpBuffer.InFrameBegin(priority), "InFrameBegin() failed");
+        SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
+        SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
+        SuccessOrQuit(ncpBuffer.InFrameFeedData(sMysteryText, sizeof(sHexText) - index), "InFrameFeedData() failed.");
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index, "InFrameGetDistance() failed");
+
+        if (addExtra)
+        {
+            SuccessOrQuit(ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)), "InFrameFeedData() failed.");
+        }
+
+        SuccessOrQuit(ncpBuffer.InFrameReset(pos1), "InFrameReset() failed.");
+        SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText + index, sizeof(sHexText) - index),
+                      "InFrameOverwrite() failed.");
+
+        if (addExtra)
+        {
+            SuccessOrQuit(ncpBuffer.InFrameReset(pos1), "InFrameReset() failed.");
+            SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText + index, sizeof(sHexText) - index),
+                          "InFrameOverwrite() failed.");
+
+        }
+
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index,
+                     "InFrameGetDistance() failed");
+        SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
+        SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed");
+        ReadAndVerifyContent(ncpBuffer, sHexText, sizeof(sHexText));
+        SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed");
+    }
+
     printf(" -- PASS\n");
 
     testFreeInstance(sInstance);

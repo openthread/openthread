@@ -176,11 +176,12 @@ otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 otError Frame::ValidatePsdu(void)
 {
     otError error = OT_ERROR_PARSE;
-    uint8_t offset = 0;
-    uint16_t fcf;
+    uint8_t offset = kFcfSize + kDsnSize;
     uint8_t footerLength = kFcsSize;
+    uint16_t fcf;
 
-    VerifyOrExit((offset += kFcfSize + kDsnSize) <= GetPsduLength());
+    VerifyOrExit((offset + footerLength) <= GetPsduLength());
+
     fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     // Destinatinon PAN + Address
@@ -228,6 +229,8 @@ otError Frame::ValidatePsdu(void)
     default:
         goto exit;
     }
+
+    VerifyOrExit((offset + footerLength) <= GetPsduLength());
 
     // Security Header
     if (fcf & Frame::kFcfSecurityEnabled)

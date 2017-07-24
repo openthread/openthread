@@ -297,6 +297,29 @@ NL_ENABLE_OPTIMIZATION([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_OPTIMIZED], [test "${nl_cv_build_optimized}" = "yes"])
 
+# Fuzz Targets
+
+AC_MSG_CHECKING([whether to build fuzz targets])
+AC_ARG_ENABLE(fuzz-targets,
+    [AS_HELP_STRING([--enable-fuzz-targets],[Enable building of fuzz targets @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_fuzz_targets=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enableval} for --enable-fuzz-targets])
+            ;;
+
+        esac
+    ],
+    [enable_fuzz_targets=no])
+AC_MSG_RESULT(${enable_fuzz_targets})
+
+AM_CONDITIONAL([OPENTHREAD_ENABLE_FUZZ_TARGETS], [test "${enable_fuzz_targets}" = "yes"])
+
 # Address Sanitizer
 
 AC_MSG_CHECKING([whether to build with Address Sanitizer support])
@@ -1385,6 +1408,7 @@ tools/harness-automation/Makefile
 tools/harness-thci/Makefile
 tools/spi-hdlc-adapter/Makefile
 tests/Makefile
+tests/fuzz/Makefile
 tests/scripts/Makefile
 tests/scripts/thread-cert/Makefile
 tests/unit/Makefile
@@ -1422,6 +1446,7 @@ AC_MSG_NOTICE([
   Lcov                                      : ${LCOV:--}
   Genhtml                                   : ${GENHTML:--}
   Build tests                               : ${nl_cv_build_tests}
+  Build fuzz targets                        : ${enable_fuzz_targets}
   Build tools                               : ${build_tools}
   OpenThread tests                          : ${with_tests}
   Prefix                                    : ${prefix}

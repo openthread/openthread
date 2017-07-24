@@ -3717,16 +3717,23 @@ exit:
 
 void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
 {
-    if (aSourceMac == GetNextHop(aDestRloc16))
-    {
-        // loop detected
-        Router *router = GetRouter(GetRouterId(aDestRloc16));
-        assert(router != NULL);
+    Router *router;
 
-        // invalidate next hop
-        router->SetNextHop(kInvalidRouterId);
-        ResetAdvertiseInterval();
+    if (aSourceMac != GetNextHop(aDestRloc16))
+    {
+        ExitNow();
     }
+
+    // loop exists
+    router = GetRouter(GetRouterId(aDestRloc16));
+    VerifyOrExit(router != NULL);
+
+    // invalidate next hop
+    router->SetNextHop(kInvalidRouterId);
+    ResetAdvertiseInterval();
+
+exit:
+    return;
 }
 
 otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)

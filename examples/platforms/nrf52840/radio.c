@@ -50,6 +50,8 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
 
+#include "platform-nrf5.h"
+
 #include <device/nrf.h>
 #include <nrf_drv_radio802154.h>
 
@@ -60,6 +62,7 @@
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8
 #define PENDING_BIT           0x10
+#define US_PER_MS             1000ULL
 
 enum
 {
@@ -628,6 +631,11 @@ void nrf_drv_radio802154_received(uint8_t *p_data, int8_t power, int8_t lqi)
     receivedFrame->mPower   = power;
     receivedFrame->mLqi     = lqi;
     receivedFrame->mChannel = nrf_drv_radio802154_channel_get();
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    uint64_t timestamp      = nrf5AlarmGetCurrentTime();
+    receivedFrame->mMsec    = timestamp / US_PER_MS;
+    receivedFrame->mUsec    = timestamp - receivedFrame->mMsec * US_PER_MS;
+#endif
 }
 
 void nrf_drv_radio802154_transmitted(uint8_t *aAckPsdu, int8_t aPower, int8_t aLqi)

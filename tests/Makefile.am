@@ -33,24 +33,33 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 DIST_SUBDIRS                            = \
     unit                                  \
     scripts                               \
+    fuzz                                  \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
+SUBDIRS                                 = \
+    $(NULL)
+
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    fuzz                                  \
+    unit                                  \
+    $(NULL)
+
 if OPENTHREAD_EXAMPLES_POSIX
 if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                 = \
+SUBDIRS                                += \
     unit                                  \
     scripts                               \
     $(NULL)
 endif
 endif
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    unit                                  \
-    $(NULL)
+if OPENTHREAD_ENABLE_FUZZ_TARGETS
+SUBDIRS                                += fuzz
+endif
 
 if OPENTHREAD_BUILD_TESTS
 if OPENTHREAD_BUILD_COVERAGE
