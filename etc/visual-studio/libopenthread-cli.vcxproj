@@ -59,7 +59,7 @@
     <ClCompile Include="..\..\src\cli\cli.cpp" />
     <ClCompile Include="..\..\src\cli\cli_dataset.cpp" />
     <ClCompile Include="..\..\src\cli\cli_uart.cpp" />
-    <ClCompile Include="..\..\src\cli\cli_udp.cpp" />
+    <ClCompile Include="..\..\src\cli\cli_udp_example.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

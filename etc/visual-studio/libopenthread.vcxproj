@@ -72,6 +72,7 @@
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\udp_api.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp" />

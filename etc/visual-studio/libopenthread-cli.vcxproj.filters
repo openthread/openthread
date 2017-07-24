@@ -10,14 +10,14 @@
     <ClCompile Include="..\..\src\cli\cli.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\cli\cli_udp.cpp">
+    <ClCompile Include="..\..\src\cli\cli_dataset.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
+    </ClCompile> 
     <ClCompile Include="..\..\src\cli\cli_uart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\cli\cli_dataset.cpp">
+    <ClCompile Include="..\..\src\cli\cli_udp_example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
+ </ItemGroup>
 </Project>

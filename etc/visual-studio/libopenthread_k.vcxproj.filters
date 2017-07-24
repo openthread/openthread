@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\udp_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
