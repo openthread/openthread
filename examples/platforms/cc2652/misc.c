@@ -54,29 +54,37 @@ void otPlatReset(otInstance *aInstance)
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;
+    otPlatResetReason ret;
 
     switch (SysCtrlResetSourceGet())
     {
     case RSTSRC_PWR_ON:
-        return OT_PLAT_RESET_REASON_POWER_ON;
+        ret = OT_PLAT_RESET_REASON_POWER_ON;
+        break;
 
     case RSTSRC_PIN_RESET:
-        return OT_PLAT_RESET_REASON_EXTERNAL;
+        ret = OT_PLAT_RESET_REASON_EXTERNAL;
+        break;
 
     case RSTSRC_VDDS_LOSS:
     case RSTSRC_VDD_LOSS:
     case RSTSRC_VDDR_LOSS:
     case RSTSRC_CLK_LOSS:
-        return OT_PLAT_RESET_REASON_CRASH;
+        ret = OT_PLAT_RESET_REASON_CRASH;
+        break;
 
     case RSTSRC_WARMRESET:
     case RSTSRC_SYSRESET:
     case RSTSRC_WAKEUP_FROM_SHUTDOWN:
-        return OT_PLAT_RESET_REASON_SOFTWARE;
+        ret = OT_PLAT_RESET_REASON_SOFTWARE;
+        break;
 
     default:
-        return OT_PLAT_RESET_REASON_UNKNOWN;
+        ret = OT_PLAT_RESET_REASON_UNKNOWN;
+        break;
     }
+
+    return ret;
 }
 
 void otPlatWakeHost(void)

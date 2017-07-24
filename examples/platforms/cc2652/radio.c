@@ -877,8 +877,10 @@ static void rfCorePowerOff(void)
  */
 static uint_fast16_t rfCoreSendEnableCmd(void)
 {
-    uint8_t ret;
-    bool interruptsWereDisabled;
+    uint8_t       doorbellRet;
+    bool          interruptsWereDisabled;
+    uint_fast16_t ret;
+
     static const rfc_CMD_SYNC_START_RAT_t cStartRatCmd =
     {
         .commandNo                  = CMD_SYNC_START_RAT,
@@ -918,25 +920,22 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
 
     interruptsWereDisabled = IntMasterDisable();
 
-    if ((ret = (RFCDoorbellSendTo((uint32_t)&sStartRatCmd) & 0xFF)) != CMDSTA_Done)
-    {
-        if (!interruptsWereDisabled)
-        {
-            IntMasterEnable();
-        }
-
-        return ret;
-    }
+    doorbellRet = (RFCDoorbellSendTo((uint32_t)&sStartRatCmd) & 0xFF);
+    otEXPECT_ACTION(CMDSTA_Done == doorbellRet, ret = doorbellRet);
 
     /* synchronously wait for the CM0 to stop executing */
     while ((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE) == 0x00);
+
+    ret = sRadioSetupCmd.status;
+
+exit:
 
     if (!interruptsWereDisabled)
     {
         IntMasterEnable();
     }
 
-    return sRadioSetupCmd.status;
+    return ret;
 }
 
 /**
@@ -951,8 +950,10 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
  */
 static uint_fast16_t rfCoreSendDisableCmd(void)
 {
-    uint8_t doorbellRet;
-    bool interruptsWereDisabled;
+    uint8_t       doorbellRet;
+    bool          interruptsWereDisabled;
+    uint_fast16_t ret;
+
     static const rfc_CMD_FS_POWERDOWN_t cFsPowerdownCmd =
     {
         .commandNo                  = CMD_FS_POWERDOWN,
@@ -989,31 +990,27 @@ static uint_fast16_t rfCoreSendDisableCmd(void)
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
 
     doorbellRet = (RFCDoorbellSendTo((uint32_t)&sFsPowerdownCmd) & 0xFF);
+    otEXPECT_ACTION(CMDSTA_Done == doorbellRet, ret = doorbellRet);
 
-    if (doorbellRet != CMDSTA_Done)
-    {
-        if (!interruptsWereDisabled)
-        {
-            IntMasterEnable();
-        }
-
-        return doorbellRet;
-    }
 
     /* synchronously wait for the CM0 to stop */
     while ((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE) == 0x00);
 
-    if (!interruptsWereDisabled)
-    {
-        IntMasterEnable();
-    }
+    ret = sStopRatCmd.status;
 
     if (sStopRatCmd.status == DONE_OK)
     {
         sRatOffset = sStopRatCmd.rat0;
     }
 
-    return sStopRatCmd.status;
+exit:
+
+    if (!interruptsWereDisabled)
+    {
+        IntMasterEnable();
+    }
+
+    return ret;
 }
 
 /**
