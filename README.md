@@ -1,11 +1,11 @@
-[![OpenThread][ot-logo]][ot-repo]  
+[![OpenThread][ot-logo]][ot-repo]
 [![Build Status][ot-travis-svg]][ot-travis]
 [![Build Status][ot-appveyor-svg]][ot-appveyor]
 [![Coverage Status][ot-codecov-svg]][ot-codecov]
 
 ---
 
-# What is OpenThread?  
+# What is OpenThread?
 
 OpenThread is...
 <a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
@@ -97,6 +97,7 @@ OpenThread has been ported to several devices and platforms by both the OpenThre
 * [Synopsys ARC EMSK with Microchip MRF24J40](https://github.com/openthread/openthread/wiki/Platforms#synopsys-arc-em-with-microchip-mrf24j40)
 * [Texas Instruments CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
 * [Texas Instruments CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
+* [Texas Instruments CC2652](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2652)
 * [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
 
 See the [Wiki Platform page](https://github.com/openthread/openthread/wiki/Platforms) for more detailed information on supported platforms.
@@ -180,6 +181,6 @@ OpenThread follows the [Semantic Versioning guidelines](http://semver.org/) for 
 
 # License
 
-OpenThread is released under the [BSD 3-Clause license](https://github.com/openthread/openthread/blob/master/LICENSE). See the [`LICENSE`](https://github.com/openthread/openthread/blob/master/LICENSE) file for more information.  
-  
+OpenThread is released under the [BSD 3-Clause license](https://github.com/openthread/openthread/blob/master/LICENSE). See the [`LICENSE`](https://github.com/openthread/openthread/blob/master/LICENSE) file for more information.
+
 Please only use the OpenThread name and marks when accurately referencing this software distribution. Do not use the marks in a way that suggests you are endorsed by or otherwise affiliated with Nest, Google, or The Thread Group.

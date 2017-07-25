@@ -1,0 +1,2 @@
+COMPILER_TOOL = "/cygdrive/c/ti/CCS6.2.0.00019_win32-beta2/ccsv6/tools/compiler/gcc-arm-none-eabi-4_9-2015q3/bin/arm-none-eabi-gcc"
+ARCHIVER_TOOL = "/cygdrive/c/ti/CCS6.2.0.00019_win32-beta2/ccsv6/tools/compiler/gcc-arm-none-eabi-4_9-2015q3/bin/arm-none-eabi-ar"

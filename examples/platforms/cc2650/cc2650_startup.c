@@ -27,6 +27,14 @@
  */
 
 /*
- * Include the standard startup files for the gcc toolchain
+ * Include the standard startup files for the specified toolchain
+ * startup code is in 'third_party/ti'
  */
+#if defined(__GNUC__)
 #include <startup_files/startup_gcc.c>
+#elif defined(__TI_ARM__)
+#include <startup_files/startup_ccs.c>
+#else
+#error "Unknown compiler"
+#endif
+

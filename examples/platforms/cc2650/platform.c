@@ -29,10 +29,11 @@
 #include <stdio.h>
 #include <openthread/types.h>
 #include "platform-cc2650.h"
+#include "inc/hw_ccfg_simple_struct.h"
 
-extern const char __ccfg[];
+extern const ccfg_t __ccfg;
 
-const char *dummy_ccfg_ref = ((const char *)(&(__ccfg[0])));
+void *dummy_ccfg_ref = ((void *)(&(__ccfg)));
 
 /**
  * Function documented in platform-cc2650.h
