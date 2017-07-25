@@ -475,7 +475,12 @@ otError Mac::SetShortAddress(ShortAddress aShortAddress)
 
 otError Mac::SetChannel(uint8_t aChannel)
 {
+    otError error = OT_ERROR_NONE;
+
     otLogFuncEntryMsg("%d", aChannel);
+
+    VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
+
     mChannel = aChannel;
 
     if (mState == kStateIdle)
@@ -483,8 +488,9 @@ otError Mac::SetChannel(uint8_t aChannel)
         NextOperation();
     }
 
+exit:
     otLogFuncExit();
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError Mac::SetNetworkName(const char *aNetworkName)
