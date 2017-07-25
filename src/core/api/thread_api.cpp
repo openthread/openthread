@@ -497,3 +497,13 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)
 {
     return &aInstance->mThreadNetif.GetMeshForwarder().GetCounters();
 }
+
+uint32_t otThreadGetTxTotalTime(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMac().GetRadioTxTotalTime();
+}
+
+uint32_t otThreadGetRxTotalTime(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMac().GetRadioRxTotalTime();
+}

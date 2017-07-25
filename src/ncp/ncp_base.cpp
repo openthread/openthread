@@ -257,6 +257,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY_METHOD(CNTR_IP_TX_FAILURE,       IP_CNTR),
     NCP_GET_PROP_HANDLER_ENTRY_METHOD(CNTR_IP_RX_FAILURE,       IP_CNTR),
 
+    NCP_GET_PROP_HANDLER_ENTRY(TX_RX_TOTAL_TIMES),
+
     NCP_GET_PROP_HANDLER_ENTRY(MSG_BUFFER_COUNTERS),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_ASSERT),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_NCP_LOG_LEVEL),
@@ -4485,6 +4487,19 @@ otError NcpBase::GetPropertyHandler_NEST_LEGACY_LAST_NODE_JOINED(uint8_t aHeader
            );
 }
 #endif // OPENTHREAD_ENABLE_LEGACY
+
+otError NcpBase::GetPropertyHandler_TX_RX_TOTAL_TIMES(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    return SendPropertyUpdate(aHeader,
+                              SPINEL_CMD_PROP_VALUE_IS,
+                              aKey,
+                              (
+                                  SPINEL_DATATYPE_UINT32_S  // Total Tx Time
+                                  SPINEL_DATATYPE_UINT32_S  // Total Rx Time
+                              ),
+                              otThreadGetTxTotalTime(mInstance),
+                              otThreadGetRxTotalTime(mInstance));
+}
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Setters

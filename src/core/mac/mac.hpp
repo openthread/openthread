@@ -647,6 +647,22 @@ public:
      */
     bool RadioSupportsRetries(void);
 
+    /**
+     * This method returns the amount of time the radio has spent in Tx mode.
+     *
+     * @returns  A pointer to the total Tx time.
+     *
+     */
+    uint32_t GetRadioTxTotalTime(void) { return mTxTotal; }
+
+    /**
+     * This method returns the amount of time the radio has spent in Rx mode.
+     *
+     * @returns  A pointer to the total Rx time.
+     *
+     */
+    uint32_t GetRadioRxTotalTime(void) { return mRxTotal; }
+
 private:
     enum ScanType
     {
@@ -658,6 +674,14 @@ private:
     enum
     {
         kInvalidRssiValue = 127
+    };
+
+    enum RadioState
+    {
+        kRadioStateUnknown,
+        kRadioStateSleep,
+        kRadioStateRx,
+        kRadioStateTx
     };
 
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
@@ -689,6 +713,8 @@ private:
     void RadioSleep(void);
 
     static Mac &GetOwner(const Context &aContext);
+
+    void RadioStateChange(RadioState aNewState);
 
     TimerMilli mMacTimer;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -757,6 +783,11 @@ private:
     bool mDelaySleep;
 #endif
     bool mWaitingForData;
+
+    uint32_t   mRxTotal;
+    uint32_t   mTxTotal;
+    uint32_t   mLastChange;
+    RadioState mRadioState;
 };
 
 /**

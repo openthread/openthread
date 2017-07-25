@@ -665,6 +665,15 @@ typedef enum
     SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 5,
 
+    /// Total Tx Time
+    /** Fromat: `LL` (read-only)
+     *  Units: ms
+     *
+     * This property returns the totaly amount of time the radio has been
+     * in Tx/Rx mode.  The first uint32 is the Tx value, the second is Rx.
+     */
+    SPINEL_PROP_TX_RX_TOTAL_TIMES       = SPINEL_PROP_PHY_EXT__BEGIN + 6,
+
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN              = 0x30,
