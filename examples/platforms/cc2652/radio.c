@@ -1464,7 +1464,7 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
     (void)aInstance;
@@ -1497,7 +1497,7 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
     (void)aInstance;
@@ -1693,7 +1693,7 @@ exit:
  * @note it is entirely possible for this function to fail, but there is no
  * valid way to return that error since the function prototype was changed.
  */
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aAddress)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
 {
     (void)aInstance;
 

@@ -596,7 +596,7 @@ otLwfTunValueInserted(
             NotifEntry->Notif.NotifType = OTLWF_NOTIF_ACTIVE_SCAN;
             NotifEntry->Notif.ActiveScanPayload.Valid = TRUE;
 
-            const uint8_t *aExtAddr = NULL;
+            const otExtAddress *aExtAddr = NULL;
             const uint8_t *aExtPanId = NULL;
             const char *aNetworkName = NULL;
             unsigned int xpanid_len = 0;

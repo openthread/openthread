@@ -200,7 +200,7 @@ typedef enum _OTLWF_NOTIF_TYPE
 #define IOCTL_OTLWF_OT_EXTENDED_ADDRESS \
     OTLWF_CTL_CODE(107, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
     // GUID - InterfaceGuid
-    // otExtAddress - aExtendedAddress
+    // otExtAddress - aExtAddress
 
 #define IOCTL_OTLWF_OT_EXTENDED_PANID \
     OTLWF_CTL_CODE(108, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)

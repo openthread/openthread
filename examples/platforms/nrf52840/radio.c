@@ -194,11 +194,11 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
     nrf_drv_radio802154_pan_id_set(address);
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void) aInstance;
 
-    nrf_drv_radio802154_extended_address_set(aExtendedAddress);
+    nrf_drv_radio802154_extended_address_set(aExtAddress->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
@@ -405,13 +405,13 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
     return error;
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void) aInstance;
 
     otError error;
 
-    if (nrf_drv_radio802154_pending_bit_for_addr_set(aExtAddress, true))
+    if (nrf_drv_radio802154_pending_bit_for_addr_set(aExtAddress->m8, true))
     {
         error = OT_ERROR_NONE;
     }
@@ -444,13 +444,13 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     return error;
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void) aInstance;
 
     otError error;
 
-    if (nrf_drv_radio802154_pending_bit_for_addr_clear(aExtAddress, true))
+    if (nrf_drv_radio802154_pending_bit_for_addr_clear(aExtAddress->m8, true))
     {
         error = OT_ERROR_NONE;
     }

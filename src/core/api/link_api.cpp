@@ -62,9 +62,9 @@ exit:
     return error;
 }
 
-const uint8_t *otLinkGetExtendedAddress(otInstance *aInstance)
+const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance)
 {
-    return reinterpret_cast<const uint8_t *>(aInstance->mThreadNetif.GetMac().GetExtAddress());
+    return reinterpret_cast<const otExtAddress *>(aInstance->mThreadNetif.GetMac().GetExtAddress());
 }
 
 otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)

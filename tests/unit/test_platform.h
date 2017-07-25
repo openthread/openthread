@@ -68,7 +68,7 @@ extern testPlatAlarmGetNow              g_testPlatAlarmGetNow;
 //
 
 typedef void (*testPlatRadioSetPanId)(otInstance *, uint16_t);
-typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t *);
+typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, const otExtAddress *);
 typedef void (*testPlatRadioSetShortAddress)(otInstance *, uint16_t);
 
 typedef bool(*testPlatRadioIsEnabled)(otInstance *);

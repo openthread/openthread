@@ -174,11 +174,12 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId);
 /**
  * Set the Extended Address for address filtering.
  *
- * @param[in] aInstance         The OpenThread instance structure.
- * @param[in] aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in] aInstance    The OpenThread instance structure.
+ * @param[in] aExtAddress  A pointer to the IEEE 802.15.4 Extended Address stored in little-endian byte order.
+ *
  *
  */
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress);
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Set the Short Address for address filtering.
@@ -304,12 +305,12 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
  * Add an extended address to the source address match table.
  *
  * @param[in]  aInstance    The OpenThread instance structure.
- * @param[in]  aExtAddress  The extended address to be added.
+ * @param[in]  aExtAddress  The extended address to be added stored in little-endian byte order.
  *
  * @retval OT_ERROR_NONE      Successfully added extended address to the source match table.
  * @retval OT_ERROR_NO_BUFS   No available entry in the source match table.
  */
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Remove a short address from the source address match table.
@@ -326,12 +327,12 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
  * Remove an extended address from the source address match table.
  *
  * @param[in]  aInstance    The OpenThread instance structure.
- * @param[in]  aExtAddress  The extended address to be removed.
+ * @param[in]  aExtAddress  The extended address to be removed stoerd in little-endian byte order.
  *
  * @retval OT_ERROR_NONE        Successfully removed the extended address from the source match table.
  * @retval OT_ERROR_NO_ADDRESS  The extended address is not in source address match table.
  */
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Clear all short addresses from the source address match table.

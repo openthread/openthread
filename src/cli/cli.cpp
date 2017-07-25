@@ -877,7 +877,7 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otBufferPtr extAddress(otLinkGetExtendedAddress(mInstance));
+        otBufferPtr extAddress(reinterpret_cast<const uint8_t *>(otLinkGetExtendedAddress(mInstance)));
         OutputBytes(extAddress, OT_EXT_ADDRESS_SIZE);
         mServer->OutputFormat("\r\n");
     }

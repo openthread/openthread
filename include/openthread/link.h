@@ -186,22 +186,22 @@ OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
  *
  * @returns A pointer to the IEEE 802.15.4 Extended Address.
  */
-OTAPI const uint8_t *OTCALL otLinkGetExtendedAddress(otInstance *aInstance);
+OTAPI const otExtAddress *OTCALL otLinkGetExtendedAddress(otInstance *aInstance);
 
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
  *
  * This function will only succeed when Thread protocols are disabled.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
  * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Extended Address.
- * @retval OT_ERROR_INVALID_ARGS   @p aExtendedAddress was NULL.
+ * @retval OT_ERROR_INVALID_ARGS   @p aExtAddress was NULL.
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  */
-OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress);
+OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Get the factory-assigned IEEE EUI-64.

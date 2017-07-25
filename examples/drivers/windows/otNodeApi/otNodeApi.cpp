@@ -1172,7 +1172,7 @@ OTNODEAPI const char* OTCALL otNodeGetAddr64(otNode* aNode)
     {
         aNode->mMemoryToFree.push_back(str);
         for (int i = 0; i < 8; i++)
-            sprintf_s(str + i * 2, 18 - (2 * i), "%02x", extAddr[i]);
+            sprintf_s(str + i * 2, 18 - (2 * i), "%02x", extAddr->m8[i]);
         printf("%d: extaddr\r\n%s\r\n", aNode->mId, str);
     }
     otFreeMemory(extAddr);

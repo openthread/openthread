@@ -431,16 +431,16 @@ void Mac::GenerateExtAddress(ExtAddress *aExtAddress)
 
 void Mac::SetExtAddress(const ExtAddress &aExtAddress)
 {
-    uint8_t buf[sizeof(aExtAddress)];
+    otExtAddress address;
 
     otLogFuncEntry();
 
-    for (size_t i = 0; i < sizeof(buf); i++)
+    for (size_t i = 0; i < sizeof(address); i++)
     {
-        buf[i] = aExtAddress.m8[7 - i];
+        address.m8[i] = aExtAddress.m8[7 - i];
     }
 
-    otPlatRadioSetExtendedAddress(&GetInstance(), buf);
+    otPlatRadioSetExtendedAddress(&GetInstance(), &address);
     mExtAddress = aExtAddress;
 
     otLogFuncExit();
