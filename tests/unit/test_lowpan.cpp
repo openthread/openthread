@@ -176,7 +176,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aCompress)
     {
-        VerifyOrQuit((message = sIp6->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         aVector.GetUncompressedStream(*message);
@@ -211,7 +211,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aDecompress)
     {
-        VerifyOrQuit((message = sIp6->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         int decompressedBytes = sLowpan->Decompress(*message, aVector.mMacSource, aVector.mMacDestination,

@@ -104,7 +104,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
-    message = netif.GetIp6().mMessagePool.New(Message::kTypeSupervision, sizeof(uint8_t));
+    message = netif.GetInstance()->mMessagePool.New(Message::kTypeSupervision, sizeof(uint8_t));
     VerifyOrExit(message != NULL);
 
     // Supervision message is an empty payload 15.4 data frame.

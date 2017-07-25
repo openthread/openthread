@@ -710,6 +710,24 @@ exit:
     return rval;
 }
 
+uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)
+{
+    uint16_t result = aChecksum + aValue;
+    return result + (result < aChecksum);
+}
+
+uint16_t Message::UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength)
+{
+    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(aBuf);
+
+    for (int i = 0; i < aLength; i++)
+    {
+        aChecksum = UpdateChecksum(aChecksum, (i & 1) ? bytes[i] : static_cast<uint16_t>(bytes[i] << 8));
+    }
+
+    return aChecksum;
+}
+
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
 {
     Buffer *curBuffer;
@@ -730,7 +748,7 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
             bytesToCover = aLength;
         }
 
-        aChecksum = Ip6::Ip6::UpdateChecksum(aChecksum, GetFirstData() + aOffset, bytesToCover);
+        aChecksum = Message::UpdateChecksum(aChecksum, GetFirstData() + aOffset, bytesToCover);
 
         aLength -= bytesToCover;
         bytesCovered += bytesToCover;
@@ -765,7 +783,7 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
             bytesToCover = aLength;
         }
 
-        aChecksum = Ip6::Ip6::UpdateChecksum(aChecksum, curBuffer->GetData() + aOffset, bytesToCover);
+        aChecksum = Message::UpdateChecksum(aChecksum, curBuffer->GetData() + aOffset, bytesToCover);
 
         aLength -= bytesToCover;
         bytesCovered += bytesToCover;

@@ -87,7 +87,7 @@ void TestMessageQueue(void)
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != NULL, "Null instance");
 
-    sMessagePool = &sInstance->mIp6.mMessagePool;
+    sMessagePool = &sInstance->mMessagePool;
 
     for (int i = 0; i < kNumTestMessages; i++)
     {

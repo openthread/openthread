@@ -47,7 +47,7 @@ void TestMessage(void)
     instance = testInitInstance();
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->mIp6.mMessagePool;
+    messagePool = &instance->mMessagePool;
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {

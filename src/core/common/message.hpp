@@ -646,6 +646,29 @@ public:
     const RssAverager &GetRssAverager(void) const { return mBuffer.mHead.mInfo.mRssAverager; }
 
     /**
+     * This static method updates a checksum.
+     *
+     * @param[in]  aChecksum  The checksum value to update.
+     * @param[in]  aValue     The 16-bit value to update @p aChecksum with.
+     *
+     * @returns The updated checksum.
+     *
+     */
+    static uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aValue);
+
+    /**
+     * This static method updates a checksum.
+     *
+     * @param[in]  aChecksum  The checksum value to update.
+     * @param[in]  aBuf       A pointer to a buffer.
+     * @param[in]  aLength    The number of bytes in @p aBuf.
+     *
+     * @returns The updated checksum.
+     *
+     */
+    static uint16_t UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength);
+
+    /**
      * This method is used to update a checksum value.
      *
      * @param[in]  aChecksum  Initial checksum value.
