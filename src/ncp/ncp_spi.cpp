@@ -105,7 +105,7 @@ NcpSpi::NcpSpi(otInstance *aInstance) :
     mTxState(kTxStateIdle),
     mHandlingRxFrame(false),
     mResetFlag(true),
-    mPrepareTxFrameTask(aInstance, &NcpSpi::PrepareTxFrame, this),
+    mPrepareTxFrameTask(*aInstance, &NcpSpi::PrepareTxFrame, this),
     mSendFrameLen(0)
 {
     memset(mSendFrame, 0, kSpiHeaderLength);

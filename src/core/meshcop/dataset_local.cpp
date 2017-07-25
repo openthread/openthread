@@ -52,7 +52,7 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetLocal::DatasetLocal(otInstance *aInstance, const Tlv::Type aType) :
+DatasetLocal::DatasetLocal(otInstance &aInstance, const Tlv::Type aType) :
     InstanceLocator(aInstance),
     mUpdateTime(0),
     mType(aType)
@@ -61,12 +61,12 @@ DatasetLocal::DatasetLocal(otInstance *aInstance, const Tlv::Type aType) :
 
 void DatasetLocal::Clear(void)
 {
-    otPlatSettingsDelete(GetInstance(), GetSettingsKey(), -1);
+    otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), -1);
 }
 
 bool DatasetLocal::IsPresent(void) const
 {
-    return otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, NULL, NULL) == OT_ERROR_NONE;
+    return otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, NULL, NULL) == OT_ERROR_NONE;
 }
 
 otError DatasetLocal::Get(Dataset &aDataset)
@@ -76,7 +76,7 @@ otError DatasetLocal::Get(Dataset &aDataset)
     otError error;
 
     aDataset.mLength = sizeof(aDataset.mTlvs);
-    error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
+    error = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
     VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
     delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
@@ -109,7 +109,7 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
     memset(&aDataset, 0, sizeof(aDataset));
 
     dataset.mLength = sizeof(dataset.mTlvs);
-    error = otPlatSettingsGet(GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
+    error = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
     SuccessOrExit(error);
 
     cur = reinterpret_cast<const Tlv *>(dataset.mTlvs);
@@ -357,12 +357,12 @@ otError DatasetLocal::Set(const otOperationalDataset &aDataset)
 
     if (dataset.GetSize() == 0)
     {
-        error = otPlatSettingsDelete(GetInstance(), GetSettingsKey(), 0);
+        error = otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), 0);
         otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
-        error = otPlatSettingsSet(GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
+        error = otPlatSettingsSet(&GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
         otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 
@@ -385,12 +385,12 @@ otError DatasetLocal::Set(const Dataset &aDataset)
 
     if (dataset.GetSize() == 0)
     {
-        error = otPlatSettingsDelete(GetInstance(), GetSettingsKey(), 0);
+        error = otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), 0);
         otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
-        error = otPlatSettingsSet(GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
+        error = otPlatSettingsSet(&GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
         otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 

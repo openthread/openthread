@@ -40,6 +40,7 @@
 #include <openthread/udp.h>
 
 #include "common/encoding.hpp"
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
@@ -95,7 +96,7 @@ namespace Ip6 {
  * This class implements the core IPv6 message processing.
  *
  */
-class Ip6
+class Ip6 : public InstanceLocator
 {
 public:
     enum
@@ -116,8 +117,11 @@ public:
 
     /**
      * This constructor initializes the object.
+     *
+     * @param[in]  aInstance   A reference to the otInstance object.
+     *
      */
-    Ip6(void);
+    Ip6(otInstance &aInstance);
 
     /**
      * This method sends an IPv6 datagram.
@@ -319,14 +323,6 @@ public:
      *
      */
     int8_t GetOnLinkNetif(const Address &aAddress);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
 
     /**
      * This method returns a reference to the send queue.

@@ -269,14 +269,14 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     mTransmitDoneCallback(NULL),
     mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-    , mTimer(&aInstance, &LinkRaw::HandleTimer, this)
+    , mTimer(aInstance, &LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    , mTimerMicro(&aInstance, &LinkRaw::HandleTimer, this)
+    , mTimerMicro(aInstance, &LinkRaw::HandleTimer, this)
 #endif
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    , mEnergyScanTask(&aInstance, &LinkRaw::HandleEnergyScanTask, this)
+    , mEnergyScanTask(aInstance, &LinkRaw::HandleEnergyScanTask, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 {
     // Query the capabilities to check asserts
@@ -386,7 +386,7 @@ otError LinkRaw::DoTransmit(otRadioFrame *aFrame)
 
 void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError)
 {
-    otLogDebgPlat(aInstance, "LinkRaw Transmit Done (err=0x%x)", aError);
+    otLogDebgPlat(&mInstance, "LinkRaw Transmit Done (err=0x%x)", aError);
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
     mTimer.Stop();
@@ -427,11 +427,11 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otErr
     {
         if (aError == OT_ERROR_NONE)
         {
-            otLogInfoPlat(aInstance, "LinkRaw Invoke Transmit Done");
+            otLogInfoPlat(&mInstance, "LinkRaw Invoke Transmit Done");
         }
         else
         {
-            otLogWarnPlat(aInstance, "LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
+            otLogWarnPlat(&mInstance, "LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
         }
 
         mTransmitDoneCallback(&mInstance, aFrame, aFramePending, aError);
@@ -559,7 +559,7 @@ void LinkRaw::StartCsmaBackoff(void)
     backoff = (otPlatRandomGet() % (1UL << backoffExponent));
     backoff *= (static_cast<uint32_t>(Mac::kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
-    otLogDebgPlat(aInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
+    otLogDebgPlat(&mInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
     mTimerReason = kTimerReasonRetransmitTimeout;
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

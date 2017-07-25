@@ -204,7 +204,7 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     otLogFuncEntry();
 
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(otPlatRadioGetPromiscuous(netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
     mRole = OT_DEVICE_ROLE_DETACHED;
@@ -278,7 +278,7 @@ otError Mle::Restore(void)
     netif.GetPendingDataset().Restore();
 
     length = sizeof(networkInfo);
-    SuccessOrExit(error = otPlatSettingsGet(netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
+    SuccessOrExit(error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
     VerifyOrExit(length >= sizeof(networkInfo), error = OT_ERROR_NOT_FOUND);
 
@@ -305,7 +305,7 @@ otError Mle::Restore(void)
     if (!IsActiveRouter(networkInfo.mRloc16))
     {
         length = sizeof(parentInfo);
-        SuccessOrExit(error = otPlatSettingsGet(netif.GetInstance(), Settings::kKeyParentInfo, 0,
+        SuccessOrExit(error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyParentInfo, 0,
                                                 reinterpret_cast<uint8_t *>(&parentInfo), &length));
         VerifyOrExit(length >= sizeof(parentInfo), error = OT_ERROR_PARSE);
 
@@ -374,7 +374,7 @@ otError Mle::Store(void)
             memset(&parentInfo, 0, sizeof(parentInfo));
             memcpy(&parentInfo.mExtAddress, &mParent.GetExtAddress(), sizeof(parentInfo.mExtAddress));
 
-            SuccessOrExit(error = otPlatSettingsSet(netif.GetInstance(), Settings::kKeyParentInfo,
+            SuccessOrExit(error = otPlatSettingsSet(&netif.GetInstance(), Settings::kKeyParentInfo,
                                                     reinterpret_cast<uint8_t *>(&parentInfo), sizeof(parentInfo)));
         }
     }
@@ -382,7 +382,7 @@ otError Mle::Store(void)
     {
         // when not attached, read out any existing values so that we do not change them
         uint16_t length = sizeof(networkInfo);
-        IgnoreReturnValue(otPlatSettingsGet(netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
+        IgnoreReturnValue(otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
     }
 
@@ -393,7 +393,7 @@ otError Mle::Store(void)
     networkInfo.mMacFrameCounter = netif.GetKeyManager().GetMacFrameCounter() +
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
 
-    SuccessOrExit(error = otPlatSettingsSet(netif.GetInstance(), Settings::kKeyNetworkInfo,
+    SuccessOrExit(error = otPlatSettingsSet(&netif.GetInstance(), Settings::kKeyNetworkInfo,
                                             reinterpret_cast<uint8_t *>(&networkInfo), sizeof(networkInfo)));
 
     netif.GetKeyManager().SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);
@@ -3109,7 +3109,7 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
                 Crc16 ansi(Crc16::kAnsi);
 
                 // Get Factory set EUI64
-                otPlatRadioGetIeeeEui64(GetInstance(), mfgEUI64.m8);
+                otPlatRadioGetIeeeEui64(&GetInstance(), mfgEUI64.m8);
 
                 // Compute bloom filter
                 for (size_t i = 0; i < sizeof(mfgEUI64.m8); i++)

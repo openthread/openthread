@@ -48,11 +48,11 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aInstance  A pointer to an OpenThread instance.
+     * @param[in]  aInstance  A reference to an OpenThread instance.
      * @param[in]  aType      The type of the dataset, active or pending.
      *
      */
-    DatasetLocal(otInstance *aInstance, const Tlv::Type aType);
+    DatasetLocal(otInstance &aInstance, const Tlv::Type aType);
 
     /**
      * This method indicates whether this is an Active or Pending Dataset.

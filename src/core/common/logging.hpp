@@ -73,9 +73,10 @@ extern "C" {
  *
  * Logging at log level critical.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance A pointer to the OpenThread instance.
+ * @param[in]  aRegion   The log region.
+ * @param[in]  aFormat   A pointer to the format string.
+ * @param[in]  ...       Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT
@@ -90,9 +91,10 @@ extern "C" {
  *
  * Logging at log level warning.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance A pointer to the OpenThread instance.
+ * @param[in]  aRegion   The log region.
+ * @param[in]  aFormat   A pointer to the format string.
+ * @param[in]  ...       Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
@@ -107,9 +109,10 @@ extern "C" {
  *
  * Logging at log level info.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance A pointer to the OpenThread instance.
+ * @param[in]  aRegion   The log region.
+ * @param[in]  aFormat   A pointer to the format string.
+ * @param[in]  ...       Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
@@ -124,9 +127,10 @@ extern "C" {
  *
  * Logging at log level debug.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance A pointer to the OpenThread instance.
+ * @param[in]  aRegion   The log region.
+ * @param[in]  aFormat   A pointer to the format string.
+ * @param[in]  ...       Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
@@ -143,8 +147,9 @@ extern "C" {
  *
  * This method generates a log with level critical for the API region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -153,8 +158,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the API region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -163,8 +169,9 @@ extern "C" {
  *
  * This method generates a log with level info for the API region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -173,15 +180,16 @@ extern "C" {
  *
  * This method generates a log with level debug for the API region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_API == 1
-#define otLogCritApi(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
-#define otLogWarnApi(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
-#define otLogInfoApi(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
-#define otLogDebgApi(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
+#define otLogCritApi(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
+#define otLogWarnApi(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
+#define otLogInfoApi(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
+#define otLogDebgApi(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_API, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritApi(aInstance, aFormat, ...)
 #define otLogWarnApi(aInstance, aFormat, ...)
@@ -194,8 +202,10 @@ extern "C" {
  *
  * This method generates a log with level critical for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
  *
  */
 
@@ -204,8 +214,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -214,8 +225,9 @@ extern "C" {
  *
  * This method generates a log with level info for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -224,15 +236,20 @@ extern "C" {
  *
  * This method generates a log with level debug for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
-#define otLogCritMeshCoP(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
-#define otLogWarnMeshCoP(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
-#define otLogInfoMeshCoP(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
-#define otLogDebgMeshCoP(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
+#define otLogCritMeshCoP(aInstance, aFormat, ...)                        \
+    otLogCrit(&aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
+#define otLogWarnMeshCoP(aInstance, aFormat, ...)                        \
+    otLogWarn(&aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
+#define otLogInfoMeshCoP(aInstance, aFormat, ...)                        \
+    otLogInfo(&aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
+#define otLogDebgMeshCoP(aInstance, aFormat, ...)                        \
+    otLogDebg(&aInstance, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritMeshCoP(aInstance, aFormat, ...)
 #define otLogWarnMeshCoP(aInstance, aFormat, ...)
@@ -250,8 +267,9 @@ extern "C" {
  *
  * This method generates a log with level critical for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -260,9 +278,10 @@ extern "C" {
  *
  * This method generates a log with level warning for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
- *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ * *
  */
 
 /**
@@ -270,9 +289,10 @@ extern "C" {
  *
  * This method generates a log with level info for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
- *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ * *
  */
 
 /**
@@ -280,17 +300,19 @@ extern "C" {
  *
  * This method generates a log with level debug for the MLE region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
-#define otLogCritMle(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
-#define otLogWarnMle(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
+#define otLogCritMle(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
+#define otLogWarnMle(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
 #define otLogWarnMleErr(aInstance, aError, aFormat, ...)                    \
-    otLogWarn(aInstance, OT_LOG_REGION_MAC, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
-#define otLogInfoMle(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
-#define otLogDebgMle(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
+    otLogWarn(&aInstance, OT_LOG_REGION_MAC, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogInfoMle(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
+#define otLogDebgMle(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritMle(aInstance, aFormat, ...)
 #define otLogWarnMle(aInstance, aFormat, ...)
@@ -304,8 +326,10 @@ extern "C" {
  *
  * This method generates a log with level critical for the EID-to-RLOC mapping region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
  *
  */
 
@@ -314,8 +338,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the EID-to-RLOC mapping region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -324,8 +349,9 @@ extern "C" {
  *
  * This method generates a log with level info for the EID-to-RLOC mapping region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -334,15 +360,16 @@ extern "C" {
  *
  * This method generates a log with level debug for the EID-to-RLOC mapping region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ARP == 1
-#define otLogCritArp(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
-#define otLogWarnArp(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
-#define otLogInfoArp(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
-#define otLogDebgArp(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
+#define otLogCritArp(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
+#define otLogWarnArp(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
+#define otLogInfoArp(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
+#define otLogDebgArp(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_ARP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritArp(aInstance, aFormat, ...)
 #define otLogWarnArp(aInstance, aFormat, ...)
@@ -355,8 +382,9 @@ extern "C" {
  *
  * This method generates a log with level critical for the Network Data region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -365,8 +393,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the Network Data region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -375,8 +404,9 @@ extern "C" {
  *
  * This method generates a log with level info for the Network Data region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -385,15 +415,20 @@ extern "C" {
  *
  * This method generates a log with level debug for the Network Data region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_NETDATA == 1
-#define otLogCritNetData(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
-#define otLogWarnNetData(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
-#define otLogInfoNetData(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
-#define otLogDebgNetData(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
+#define otLogCritNetData(aInstance, aFormat, ...)                        \
+    otLogCrit(&aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
+#define otLogWarnNetData(aInstance, aFormat, ...)                        \
+    otLogWarn(&aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
+#define otLogInfoNetData(aInstance, aFormat, ...)                        \
+    otLogInfo(&aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
+#define otLogDebgNetData(aInstance, aFormat, ...)                        \
+    otLogDebg(&aInstance, OT_LOG_REGION_NET_DATA, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritNetData(aInstance, aFormat, ...)
 #define otLogWarnNetData(aInstance, aFormat, ...)
@@ -406,8 +441,9 @@ extern "C" {
  *
  * This method generates a log with level critical for the ICMPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -416,8 +452,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the ICMPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -426,8 +463,9 @@ extern "C" {
  *
  * This method generates a log with level info for the ICMPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -436,15 +474,16 @@ extern "C" {
  *
  * This method generates a log with level debug for the ICMPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ICMP == 1
-#define otLogCritIcmp(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
-#define otLogWarnIcmp(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
-#define otLogInfoIcmp(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
-#define otLogDebgIcmp(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
+#define otLogCritIcmp(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
+#define otLogWarnIcmp(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
+#define otLogInfoIcmp(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
+#define otLogDebgIcmp(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_ICMP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritIcmp(aInstance, aFormat, ...)
 #define otLogWarnIcmp(aInstance, aFormat, ...)
@@ -457,8 +496,9 @@ extern "C" {
  *
  * This method generates a log with level critical for the IPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -467,8 +507,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the IPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -477,8 +518,9 @@ extern "C" {
  *
  * This method generates a log with level info for the IPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -487,15 +529,16 @@ extern "C" {
  *
  * This method generates a log with level debug for the IPv6 region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_IP6 == 1
-#define otLogCritIp6(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
-#define otLogWarnIp6(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
-#define otLogInfoIp6(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
-#define otLogDebgIp6(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
+#define otLogCritIp6(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
+#define otLogWarnIp6(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
+#define otLogInfoIp6(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
+#define otLogDebgIp6(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_IP6, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritIp6(aInstance, aFormat, ...)
 #define otLogWarnIp6(aInstance, aFormat, ...)
@@ -508,9 +551,11 @@ extern "C" {
  *
  * This method generates a log with level critical for the MAC region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
+
  */
 
 /**
@@ -518,8 +563,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the MAC region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -528,8 +574,9 @@ extern "C" {
  *
  * This method generates a log with level info for the MAC region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -538,16 +585,17 @@ extern "C" {
  *
  * This method generates a log with level debug for the MAC region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MAC == 1
-#define otLogCritMac(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
-#define otLogWarnMac(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
-#define otLogInfoMac(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
-#define otLogDebgMac(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
-#define otLogDebgMacErr(aInstance, aError, aFormat, ...)                    \
+#define otLogCritMac(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
+#define otLogWarnMac(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
+#define otLogInfoMac(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
+#define otLogDebgMac(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_MAC, aFormat, ## __VA_ARGS__)
+#define otLogDebgMacErr(aInstance, aError, aFormat, ...)                 \
     otLogWarn(aInstance, OT_LOG_REGION_MAC, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
 #else
 #define otLogCritMac(aInstance, aFormat, ...)
@@ -562,8 +610,10 @@ extern "C" {
  *
  * This method generates a log with level critical for the memory region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
  *
  */
 
@@ -572,8 +622,10 @@ extern "C" {
  *
  * This method generates a log with level warning for the memory region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
  *
  */
 
@@ -582,8 +634,9 @@ extern "C" {
  *
  * This method generates a log with level info for the memory region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -592,15 +645,16 @@ extern "C" {
  *
  * This method generates a log with level debug for the memory region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MEM == 1
-#define otLogCritMem(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
-#define otLogWarnMem(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
-#define otLogInfoMem(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
-#define otLogDebgMem(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
+#define otLogCritMem(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
+#define otLogWarnMem(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
+#define otLogInfoMem(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
+#define otLogDebgMem(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_MEM, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritMem(aInstance, aFormat, ...)
 #define otLogWarnMem(aInstance, aFormat, ...)
@@ -613,8 +667,9 @@ extern "C" {
  *
  * This method generates a log with level critical for the NETDIAG region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -623,8 +678,9 @@ extern "C" {
  *
  * This method generates a log with level warning for the NETDIAG region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -633,8 +689,9 @@ extern "C" {
  *
  * This method generates a log with level info for the NETDIAG region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 
@@ -643,15 +700,20 @@ extern "C" {
  *
  * This method generates a log with level debug for the NETDIAG region.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_NETDIAG == 1
-#define otLogCritNetDiag(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
-#define otLogWarnNetDiag(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
-#define otLogInfoNetDiag(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
-#define otLogDebgNetDiag(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
+#define otLogCritNetDiag(aInstance, aFormat, ...)                        \
+    otLogCrit(&aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
+#define otLogWarnNetDiag(aInstance, aFormat, ...)                        \
+    otLogWarn(&aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
+#define otLogInfoNetDiag(aInstance, aFormat, ...)                        \
+    otLogInfo(&aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
+#define otLogDebgNetDiag(aInstance, aFormat, ...)                        \
+    otLogDebg(&aInstance, OT_LOG_REGION_NET_DIAG, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritNetDiag(aInstance, aFormat, ...)
 #define otLogWarnNetDiag(aInstance, aFormat, ...)
@@ -664,15 +726,76 @@ extern "C" {
  *
  * This method generates a log with level none for the certification test.
  *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
  *
  */
 #if OPENTHREAD_ENABLE_CERT_LOG
-#define otLogCertMeshCoP(aInstance, aFormat, ...)                           \
-    _otLogFormatter(aInstance, OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
+#define otLogCertMeshCoP(aInstance, aFormat, ...)                        \
+    _otLogFormatter(&aInstance, OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCertMeshCoP(aInstance, aFormat, ...)
+#endif
+
+
+/**
+ * @def otLogCritCoap
+ *
+ * This method generates a log with level critical for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnCoap
+ *
+ * This method generates a log with level warning for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoCoap
+ *
+ * This method generates a log with level info for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgCoap
+ *
+ * This method generates a log with level debug for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_COAP == 1
+#define otLogCritCoap(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#define otLogWarnCoap(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#define otLogInfoCoap(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#define otLogInfoCoapErr(aInstance, aError, aFormat, ...)                \
+    otLogInfo(&aInstance, OT_LOG_REGION_COAP, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogDebgCoap(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#else
+#define otLogCritCoap(aInstance, aFormat, ...)
+#define otLogWarnCoap(aInstance, aFormat, ...)
+#define otLogInfoCoap(aInstance, aFormat, ...)
+#define otLogInfoCoapErr(aInstance, aError, aFormat, ...)
+#define otLogDebgCoap(aInstance, aFormat, ...)
 #endif
 
 /**
@@ -680,8 +803,9 @@ extern "C" {
 *
 * This method generates a log with level critical for the Platform region.
 *
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
+* @param[in]  aInstance A pointer to the OpenThread instance.
+* @param[in]  aFormat   A pointer to the format string.
+* @param[in]  ...       Arguments for the format specification.
 *
 */
 
@@ -690,8 +814,9 @@ extern "C" {
 *
 * This method generates a log with level warning for the Platform region.
 *
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
+* @param[in]  aInstance A pointer to the OpenThread instance.
+* @param[in]  aFormat   A pointer to the format string.
+* @param[in]  ...       Arguments for the format specification.
 *
 */
 
@@ -700,8 +825,9 @@ extern "C" {
 *
 * This method generates a log with level info for the Platform region.
 *
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
+* @param[in]  aInstance A pointer to the OpenThread instance.
+* @param[in]  aFormat   A pointer to the format string.
+* @param[in]  ...       Arguments for the format specification.
 *
 */
 
@@ -710,8 +836,9 @@ extern "C" {
 *
 * This method generates a log with level debug for the Platform region.
 *
-* @param[in]  aFormat  A pointer to the format string.
-* @param[in]  ...      Arguments for the format specification.
+* @param[in]  aInstance A pointer to the OpenThread instance.
+* @param[in]  aFormat   A pointer to the format string.
+* @param[in]  ...       Arguments for the format specification.
 *
 */
 #if OPENTHREAD_CONFIG_LOG_PLATFORM == 1
@@ -726,60 +853,6 @@ extern "C" {
 #define otLogDebgPlat(aInstance, aFormat, ...)
 #endif
 
-/**
- * @def otLogCritCoap
- *
- * This method generates a log with level critical for the CoAP region.
- *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
- *
- */
-
-/**
- * @def otLogWarnCoap
- *
- * This method generates a log with level warning for the CoAP region.
- *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
- *
- */
-
-/**
- * @def otLogInfoCoap
- *
- * This method generates a log with level info for the CoAP region.
- *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
- *
- */
-
-/**
- * @def otLogDebgCoap
- *
- * This method generates a log with level debug for the CoAP region.
- *
- * @param[in]  aFormat  A pointer to the format string.
- * @param[in]  ...      Arguments for the format specification.
- *
- */
-#if OPENTHREAD_CONFIG_LOG_COAP == 1
-#define otLogCritCoap(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
-#define otLogWarnCoap(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
-#define otLogInfoCoap(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
-#define otLogInfoCoapErr(aInstance, aError, aFormat, ...)               \
-    otLogInfo(aInstance, OT_LOG_REGION_COAP, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
-#define otLogDebgCoap(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
-#else
-#define otLogCritCoap(aInstance, aFormat, ...)
-#define otLogWarnCoap(aInstance, aFormat, ...)
-#define otLogInfoCoap(aInstance, aFormat, ...)
-#define otLogInfoCoapErr(aInstance, aError, aFormat, ...)
-#define otLogDebgCoap(aInstance, aFormat, ...)
-#endif
-
 #endif // WINDOWS_LOGGING
 
 /**
@@ -787,15 +860,16 @@ extern "C" {
  *
  * This method generates a memory dump with log level critical.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aRegion      The log region.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT
 #define otDumpCrit(aInstance, aRegion, aId, aBuf, aLength)                  \
-    otDump(aInstance, OT_LOG_LEVEL_CRIT, aRegion, aId, aBuf, aLength)
+    otDump(&aInstance, OT_LOG_LEVEL_CRIT, aRegion, aId, aBuf, aLength)
 #else
 #define otDumpCrit(aInstance, aRegion, aId, aBuf, aLength)
 #endif
@@ -805,15 +879,16 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aRegion      The log region.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
 #define otDumpWarn(aInstance, aRegion, aId, aBuf, aLength)                  \
-    otDump(aInstance, OT_LOG_LEVEL_WARN, aRegion, aId, aBuf, aLength)
+    otDump(&aInstance, OT_LOG_LEVEL_WARN, aRegion, aId, aBuf, aLength)
 #else
 #define otDumpWarn(aInstance, aRegion, aId, aBuf, aLength)
 #endif
@@ -823,15 +898,16 @@ extern "C" {
  *
  * This method generates a memory dump with log level info.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aRegion      The log region.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
 #define otDumpInfo(aInstance, aRegion, aId, aBuf, aLength)                  \
-    otDump(aInstance, OT_LOG_LEVEL_INFO, aRegion, aId, aBuf, aLength)
+    otDump(&aInstance, OT_LOG_LEVEL_INFO, aRegion, aId, aBuf, aLength)
 #else
 #define otDumpInfo(aInstance, aRegion, aId, aBuf, aLength)
 #endif
@@ -841,15 +917,16 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug.
  *
- * @param[in]  aRegion  The log region.
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aRegion      The log region.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
 #define otDumpDebg(aInstance, aRegion, aId, aBuf, aLength)                  \
-    otDump(aInstance, OT_LOG_LEVEL_DEBG, aRegion, aId, aBuf, aLength)
+    otDump(&aInstance, OT_LOG_LEVEL_DEBG, aRegion, aId, aBuf, aLength)
 #else
 #define otDumpDebg(aInstance, aRegion, aId, aBuf, aLength)
 #endif
@@ -859,9 +936,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region Network Data.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -870,20 +948,19 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning and region Network Data.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
 /**
  * @def otDumpInfoNetData
  *
- * This method generates a memory dump with log level info and region Network Data.
- *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -892,16 +969,21 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region Network Data.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_NETDATA == 1
-#define otDumpCritNetData(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
-#define otDumpWarnNetData(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
-#define otDumpInfoNetData(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
-#define otDumpDebgNetData(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
+#define otDumpCritNetData(aInstance, aId, aBuf, aLength)                 \
+    otDumpCrit(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
+#define otDumpWarnNetData(aInstance, aId, aBuf, aLength)                 \
+    otDumpWarn(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
+#define otDumpInfoNetData(aInstance, aId, aBuf, aLength)                 \
+    otDumpInfo(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
+#define otDumpDebgNetData(aInstance, aId, aBuf, aLength)                 \
+    otDumpDebg(aInstance, OT_LOG_REGION_NET_DATA, aId, aBuf, aLength)
 #else
 #define otDumpCritNetData(aInstance, aId, aBuf, aLength)
 #define otDumpWarnNetData(aInstance, aId, aBuf, aLength)
@@ -914,9 +996,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region MLE.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -925,9 +1008,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning and region MLE.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -936,9 +1020,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level info and region MLE.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -947,9 +1032,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region MLE.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
@@ -969,9 +1055,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region EID-to-RLOC mapping.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -980,9 +1067,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning and region EID-to-RLOC mapping.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -991,9 +1079,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level info and region EID-to-RLOC mapping.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1002,9 +1091,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region EID-to-RLOC mapping.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ARP == 1
@@ -1024,9 +1114,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region ICMPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1035,9 +1126,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning and region ICMPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1046,9 +1138,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level info and region ICMPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1057,16 +1150,21 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region ICMPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ICMP == 1
-#define otDumpCritIcmp(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
-#define otDumpWarnIcmp(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
-#define otDumpInfoIcmp(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
-#define otDumpDebgIcmp(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
+#define otDumpCritIcmp(aInstance, aId, aBuf, aLength)                    \
+    otDumpCrit(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
+#define otDumpWarnIcmp(aInstance, aId, aBuf, aLength)                    \
+    otDumpWarn(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
+#define otDumpInfoIcmp(aInstance, aId, aBuf, aLength)                    \
+    otDumpInfo(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
+#define otDumpDebgIcmp(aInstance, aId, aBuf, aLength)                    \
+    otDumpDebg(aInstance, OT_LOG_REGION_ICMP, aId, aBuf, aLength)
 #else
 #define otDumpCritIcmp(aInstance, aId, aBuf, aLength)
 #define otDumpWarnIcmp(aInstance, aId, aBuf, aLength)
@@ -1079,9 +1177,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region IPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1090,9 +1189,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning and region IPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1101,9 +1201,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level info and region IPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1112,9 +1213,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region IPv6.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_IP6 == 1
@@ -1134,9 +1236,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region MAC.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1145,9 +1248,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning and region MAC.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1156,9 +1260,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level info and region MAC.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1167,9 +1272,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region MAC.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MAC == 1
@@ -1189,9 +1295,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region memory.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1200,9 +1307,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level warning and region memory.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1211,9 +1319,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level info and region memory.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 
@@ -1222,9 +1331,10 @@ extern "C" {
  *
  * This method generates a memory dump with log level debug and region memory.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MEM == 1
@@ -1244,14 +1354,15 @@ extern "C" {
  *
  * This method generates a memory dump with log level none for the certification test.
  *
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
 #if OPENTHREAD_ENABLE_CERT_LOG
 #define otDumpCertMeshCoP(aInstance, aId, aBuf, aLength)                    \
-    otDump(aInstance, OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, aId, aBuf, aLength)
+    otDump(&aInstance, OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, aId, aBuf, aLength)
 #else
 #define otDumpCertMeshCoP(aInstance, aId, aBuf, aLength)
 #endif
@@ -1259,11 +1370,12 @@ extern "C" {
 /**
  * This method dumps bytes to the log in a human-readable fashion.
  *
- * @param[in]  aLevel   The log level.
- * @param[in]  aRegion  The log region.
- * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf     A pointer to the buffer.
- * @param[in]  aLength  Number of bytes to print.
+ * @param[in]  aInstance A pointer to the instance.
+ * @param[in]  aLevel    The log level.
+ * @param[in]  aRegion   The log region.
+ * @param[in]  aId       A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf      A pointer to the buffer.
+ * @param[in]  aLength   Number of bytes to print.
  *
  */
 void otDump(otInstance *aIntsance, otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf,
@@ -1350,7 +1462,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
 /**
 * Local/private macro to format the log message
 */
-#define _otLogFormatter(aInstace, aLogLevel, aRegion, aFormat, ...)         \
+#define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)         \
     _otDynamicLog(                                                          \
         aInstance,                                                          \
         aLogLevel,                                                          \

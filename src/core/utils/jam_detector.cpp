@@ -148,7 +148,7 @@ void JamDetector::HandleTimer(void)
 
     VerifyOrExit(mEnabled);
 
-    rssi = otPlatRadioGetRssi(GetNetif().GetInstance());
+    rssi = otPlatRadioGetRssi(&GetInstance());
 
     // If the RSSI is valid, check if it exceeds the threshold
     // and try to update the history bit map

@@ -82,10 +82,11 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
-    mTimerMilliScheduler(this),
+    mTimerMilliScheduler(*this),
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    mTimerMicroScheduler(this),
+    mTimerMicroScheduler(*this),
 #endif
+    mIp6(*this),
     mThreadNetif(mIp6),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     mLinkRaw(*this),
@@ -96,7 +97,7 @@ otInstance::otInstance(void) :
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL)),
 #endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    mMessagePool(this)
+    mMessagePool(*this)
 {
 }
 
@@ -148,7 +149,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     // Execute post constructor operations
     otInstancePostConstructor(instance);
 
-    otLogInfoApi(instance, "otInstance Initialized");
+    otLogInfoApi(*instance, "otInstance Initialized");
 
 exit:
 
@@ -179,7 +180,7 @@ otInstance *otInstanceInitSingle(void)
     // Execute post constructor operations
     otInstancePostConstructor(sInstance);
 
-    otLogInfoApi(sInstance, "otInstance Initialized");
+    otLogInfoApi(*sInstance, "otInstance Initialized");
 
 exit:
 

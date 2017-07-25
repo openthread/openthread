@@ -695,7 +695,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             address->mValidLifetime = option.GetValidLifetime();
             address->mAddress.mPreferred = address->mPreferredLifetime != 0;
             address->mAddress.mValid = address->mValidLifetime != 0;
-            otIp6AddUnicastAddress(GetNetif().GetInstance(), &address->mAddress);
+            otIp6AddUnicastAddress(&GetNetif().GetInstance(), &address->mAddress);
             break;
         }
     }
