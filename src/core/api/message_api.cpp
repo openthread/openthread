@@ -154,7 +154,7 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 {
     aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
 
-    aBufferInfo->mFreeBuffers = aInstance->mThreadNetif.GetIp6().mMessagePool.GetFreeBufferCount();
+    aBufferInfo->mFreeBuffers = aInstance->mMessagePool.GetFreeBufferCount();
 
     aInstance->mThreadNetif.GetMeshForwarder().GetSendQueue().GetInfo(aBufferInfo->m6loSendMessages,
                                                                       aBufferInfo->m6loSendBuffers);

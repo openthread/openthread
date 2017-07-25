@@ -102,6 +102,7 @@ typedef struct otInstance
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     otLogLevel mLogLevel;
 #endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    ot::MessagePool mMessagePool;
 
     // Constructor
     otInstance(void);

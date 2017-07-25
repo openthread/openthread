@@ -172,7 +172,7 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 
 otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
-    Message *message = aInstance->mIp6.mMessagePool.New(Message::kTypeIp6, 0);
+    Message *message = aInstance->mMessagePool.New(Message::kTypeIp6, 0);
 
     if (message)
     {

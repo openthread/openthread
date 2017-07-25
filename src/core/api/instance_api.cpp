@@ -86,16 +86,17 @@ otInstance::otInstance(void) :
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     mTimerMicroScheduler(this),
 #endif
-    mThreadNetif(mIp6)
+    mThreadNetif(mIp6),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    , mLinkRaw(*this)
+    mLinkRaw(*this),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    , mApplicationCoap(mThreadNetif)
+    mApplicationCoap(mThreadNetif),
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
+    mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL)),
 #endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    mMessagePool(this)
 {
 }
 

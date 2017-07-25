@@ -221,7 +221,7 @@ void TestPriorityQueue(void)
     instance = testInitInstance();
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->mIp6.mMessagePool;
+    messagePool = &instance->mMessagePool;
 
     // Allocate messages with different priorities.
     for (int i = 0; i < kNumTestMessages; i++)

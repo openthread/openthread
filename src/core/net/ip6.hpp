@@ -172,29 +172,6 @@ public:
      * This static method updates a checksum.
      *
      * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aValue     The 16-bit value to update @p aChecksum with.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aValue);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aBuf       A pointer to a buffer.
-     * @param[in]  aLength    The number of bytes in @p aBuf.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
      * @param[in]  aAddress   A reference to an IPv6 address.
      *
      * @returns The updated checksum.
@@ -371,8 +348,6 @@ public:
     Icmp mIcmp;
     Udp mUdp;
     Mpl mMpl;
-
-    MessagePool mMessagePool;
 
 private:
     static void HandleSendQueue(Tasklet &aTasklet);
