@@ -1349,10 +1349,18 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
     VerifyOrExit(error == OT_ERROR_NONE, error = OT_ERROR_SECURITY);
 
     aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
+#else
+    // for fuzz tests, execute AES but do not alter the payload
+    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
+    aesCcm.Payload(fuzz, aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
+#endif
     aesCcm.Finalize(tag, &tagLength);
 
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = OT_ERROR_SECURITY);
+#endif
 
     if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->GetState() == Neighbor::kStateValid))
     {
