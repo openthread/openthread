@@ -60,13 +60,5 @@
  */
 #define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT        1
 
-/**
-  * @def OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-  *
-  * Define to 1 if you want use legacy transmit done.
-  *
-  */
-#define OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE             1
-
 #endif /* OPENTHREAD_CORE_CC2650_CONFIG_H_ */
 

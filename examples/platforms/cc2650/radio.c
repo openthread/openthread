@@ -51,6 +51,7 @@
 
 enum
 {
+    IEEE802154_ACK_LENGTH = 5,
     CC2650_RECEIVE_SENSITIVITY = -100,  // dBm
 };
 
@@ -1840,7 +1841,23 @@ void cc2650RadioProcess(otInstance *aInstance)
         else
 #endif /* OPENTHREAD_ENABLE_DIAG */
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, sReceivedAckPendingBit, sTransmitError);
+            // TODO: pass received ACK frame instead of generating one.
+            otRadioFrame ackFrame;
+            uint8_t psdu[IEEE802154_ACK_LENGTH];
+
+            ackFrame.mPsdu = psdu;
+            ackFrame.mLength = IEEE802154_ACK_LENGTH;
+            ackFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
+
+            if (sReceivedAckPendingBit)
+            {
+                ackFrame.mPsdu[0] |= IEEE802154_FRAME_PENDING;
+            }
+
+            ackFrame.mPsdu[1] = 0;
+            ackFrame.mPsdu[2] = sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET];
+
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, &ackFrame, sTransmitError);
         }
     }
 

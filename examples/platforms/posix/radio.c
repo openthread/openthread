@@ -588,21 +588,21 @@ void platformRadioProcess(otInstance *aInstance)
     }
 }
 
-void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt)
+void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
     uint32_t i;
     struct sockaddr_in sockaddr;
 
     uint16_t crc = 0;
-    uint16_t crc_offset = pkt->mLength - sizeof(uint16_t);
+    uint16_t crc_offset = aFrame->mLength - sizeof(uint16_t);
 
     for (i = 0; i < crc_offset; i++)
     {
-        crc = crc16_citt(crc, msg->mPsdu[i]);
+        crc = crc16_citt(crc, aMessage->mPsdu[i]);
     }
 
-    msg->mPsdu[crc_offset] = crc & 0xff;
-    msg->mPsdu[crc_offset + 1] = crc >> 8;
+    aMessage->mPsdu[crc_offset] = crc & 0xff;
+    aMessage->mPsdu[crc_offset + 1] = crc >> 8;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
@@ -618,7 +618,7 @@ void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt)
         }
 
         sockaddr.sin_port = htons(9000 + sPortOffset + i);
-        rval = sendto(sSockFd, (const char *)msg, 1 + pkt->mLength,
+        rval = sendto(sSockFd, (const char *)aMessage, 1 + aFrame->mLength,
                       0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
         if (rval < 0)

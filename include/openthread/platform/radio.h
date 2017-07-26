@@ -421,22 +421,6 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
                               otError aError);
 
 /**
- * The radio driver calls this method to notify OpenThread that the transmission has completed,
- * this function is going to be deprecated, new add platfroms should not use this callback function.
- *
- * @param[in]  aInstance      The OpenThread instance structure.
- * @param[in]  aFrame         A pointer to the frame that was transmitted.
- * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
- *                            transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
- *                            could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
- *                            aborted for other reasons.
- *
- */
-extern void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending,
-                                    otError aError);
-
-/**
  * Get the most recent RSSI measurement.
  *
  * @param[in] aInstance  The OpenThread instance structure.

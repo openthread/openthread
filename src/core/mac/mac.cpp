@@ -849,11 +849,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-        TransmitDoneTask(mTxFrame, false, OT_ERROR_ABORT);
-#else
         TransmitDoneTask(mTxFrame, NULL, OT_ERROR_ABORT);
-#endif
     }
 }
 
@@ -877,103 +873,6 @@ void Mac::TransmitStartedTask(otRadioFrame *aFrame)
     }
 }
 
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aRxPending,
-                                        otError aError)
-{
-    otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-
-    if (aInstance->mLinkRaw.IsEnabled())
-    {
-        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, aRxPending, aError);
-    }
-    else
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    {
-        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aRxPending, aError);
-    }
-
-exit:
-    otLogFuncExit();
-}
-
-void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError)
-{
-    mMacTimer.Stop();
-
-    mCounters.mTxTotal++;
-
-    Frame *frame = static_cast<Frame *>(aFrame);
-    Address addr;
-    frame->GetDstAddr(addr);
-
-    if (addr.mShortAddress == kShortAddrBroadcast)
-    {
-        // Broadcast frame
-        mCounters.mTxBroadcast++;
-    }
-    else
-    {
-        // Unicast frame
-        mCounters.mTxUnicast++;
-    }
-
-    if (aError == OT_ERROR_ABORT)
-    {
-        mCounters.mTxErrAbort++;
-    }
-
-    if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
-    {
-        mCounters.mTxErrCca++;
-    }
-
-    if (!RadioSupportsCsmaBackoff() &&
-        aError == OT_ERROR_CHANNEL_ACCESS_FAILURE &&
-        mCsmaAttempts < kMaxCSMABackoffs)
-    {
-        mCsmaAttempts++;
-        StartCsmaBackoff();
-
-        ExitNow();
-    }
-
-    mCsmaAttempts = 0;
-
-    switch (mState)
-    {
-    case kStateTransmitData:
-    {
-        uint8_t commandId;
-
-        if ((frame->GetType() == Frame::kFcfFrameMacCmd) && (frame->GetCommandId(commandId) == OT_ERROR_NONE) &&
-            (commandId == Frame::kMacCmdDataRequest) && (aRxPending))
-        {
-            mWaitingForData = true;
-            mReceiveTimer.Start(kDataPollTimeout);
-        }
-    }
-
-    // fall through
-
-    case kStateActiveScan:
-    case kStateTransmitBeacon:
-        SentFrame(aError);
-        break;
-
-    default:
-        assert(false);
-        break;
-    }
-
-exit:
-    return;
-}
-
-#else // #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame,
                                   otError aError)
 {
@@ -1084,8 +983,6 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
 exit:
     return;
 }
-
-#endif // OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 
 otError Mac::RadioTransmit(Frame *aSendFrame)
 {
