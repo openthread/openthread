@@ -34,13 +34,4 @@
 #ifndef OPENTHREAD_CORE_GP712_CONFIG_H_
 #define OPENTHREAD_CORE_GP712_CONFIG_H_
 
-/**
-  * @def OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-  *
-  * Define to 1 if you want use legacy transmit done.
-  *
-  */
-#define OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE 1
-
-
 #endif  // OPENTHREAD_CORE_GP712_CONFIG_H_

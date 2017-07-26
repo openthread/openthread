@@ -30,19 +30,17 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                             = libopenthread-gp712.a
 
-libopenthread_gp712_a_CPPFLAGS           =  \
+libopenthread_gp712_a_CPPFLAGS            = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
-    -I$(top_srcdir)/examples/platforms/utils\
     -I$(top_srcdir)/src/core                \
     -lrt                                    \
     -lpthread                               \
     $(NULL)
 
-libopenthread_gp712_settings.cpp: $(srcdir)/../utils/settings.cpp
-	cp $? $@
-
-CLEANFILES = libopenthread_gp712_settings.cpp
+Dash                                      = -
+libopenthread_gp712_a_LIBADD              = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_gp712_a_SOURCES             = \
     alarm.c                                 \
@@ -53,7 +51,6 @@ libopenthread_gp712_a_SOURCES             = \
     random.c                                \
     uart-posix.c                            \
     flash.c                                 \
-    libopenthread_gp712_settings.cpp        \
     $(NULL)
 
 #    uart-socket.c                           \
@@ -67,7 +64,7 @@ endif
 
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                               += $(wildcard *.gcda *.gcno)
+CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

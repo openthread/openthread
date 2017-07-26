@@ -508,21 +508,6 @@ public:
      */
     void TransmitStartedTask(otRadioFrame *aFrame);
 
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-    /**
-     * This method is called to handle transmit events.
-     *
-     * @param[in]  aFrame         A pointer to the frame that was transmitted.
-     * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
-     * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
-     *                            transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the
-     *                            transmission could not take place due to activity on the channel, OT_ERROR_ABORT when
-     *                            transmission was aborted for other reasons.
-     *
-     */
-    void TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError);
-
-#else // #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
     /**
      * This method is called to handle transmit events.
      *
@@ -535,7 +520,6 @@ public:
      *
      */
     void TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
-#endif // OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 
     /**
      * This method returns if an active scan is in progress.

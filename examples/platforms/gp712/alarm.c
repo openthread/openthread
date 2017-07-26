@@ -38,7 +38,7 @@
 
 #include <openthread/openthread.h>
 #include <openthread/platform/platform.h>
-#include <openthread/platform/alarm.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include "alarm_qorvo.h"
 
@@ -46,24 +46,24 @@ void qorvoAlarmInit(void)
 {
 }
 
-uint32_t otPlatAlarmGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     return qorvoAlarmGetTimeMs();
 }
 
 static void qorvoAlarmFired(void *aInstance)
 {
-    otPlatAlarmFired((otInstance *)aInstance);
+    otPlatAlarmMilliFired((otInstance *)aInstance);
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
+void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)t0;
     qorvoAlarmUnScheduleEventArg((qorvoAlarmCallback_t)qorvoAlarmFired, aInstance);
     qorvoAlarmScheduleEventArg(dt * 1000, qorvoAlarmFired, aInstance);
 }
 
-void otPlatAlarmStop(otInstance *aInstance)
+void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     qorvoAlarmUnScheduleEventArg((qorvoAlarmCallback_t)qorvoAlarmFired, aInstance);
 }
