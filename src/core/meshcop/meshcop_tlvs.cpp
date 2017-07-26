@@ -68,5 +68,5 @@ void SteeringDataTlv::ComputeBloomFilter(otExtAddress *aExtAddress)
     SetBit(ansi.Get() % GetNumBits());
 }
 
+}  // namespace MeshCoP
 }  // namespace ot
-}  // namespace Thread
