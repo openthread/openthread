@@ -43,6 +43,7 @@
 #include <openthread/udp.h>
 
 #include "cli/cli_server.hpp"
+#include "cli/cli_udp_example.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_header.hpp>
@@ -93,6 +94,7 @@ struct Command
 class Interpreter
 {
     friend class Coap;
+    friend class Udp;
 
 public:
 
@@ -288,6 +290,10 @@ private:
 #endif
 
 #ifndef OTDLL
+    void ProcessUdp(int argc, char *argv[]);
+#endif
+
+#ifndef OTDLL
     static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
     static void s_HandlePingTimer(Timer &aTimer);
@@ -382,6 +388,8 @@ private:
     bool mResolvingInProgress;
     char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
+
+    Udp mUdp;
 
 #endif
 
