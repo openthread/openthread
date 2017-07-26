@@ -870,6 +870,19 @@ exit:
     return error;
 }
 
+bool Frame::IsDataRequestCommand(void)
+{
+    bool isDataRequest = false;
+    uint8_t commandId = 0;
+
+    VerifyOrExit(GetType() == kFcfFrameMacCmd);
+    SuccessOrExit(GetCommandId(commandId));
+    isDataRequest = (commandId == kMacCmdDataRequest);
+
+exit:
+    return isDataRequest;
+}
+
 uint8_t Frame::GetHeaderLength(void)
 {
     return static_cast<uint8_t>(GetPayload() - GetPsdu());
