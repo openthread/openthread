@@ -971,7 +971,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 
     if (aInstance->mLinkRaw.IsEnabled())
     {
-        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, (static_cast<Frame *>(aAckFrame))->GetFramePending(), aError);
+        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, aAckFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1060,7 +1060,17 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
         break;
 
     default:
-        assert(false);
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+        if (GetInstance().mLinkRaw.IsEnabled())
+        {
+            GetInstance().mLinkRaw.InvokeTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
+        }
+        else
+#endif
+        {
+            assert(false);
+        }
+
         break;
     }
 

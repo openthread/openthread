@@ -191,7 +191,7 @@ otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance);
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aFrame           A pointer to the frame that was transmitted.
- * @param[in]  aFramePending    TRUE if an ACK frame was received and the Frame Pending bit was set.
+ * @param[in]  aAckFrame        A pointer to the ACK frame.
  * @param[in]  aError           OT_ERROR_NONE when the frame was transmitted.
  *                              OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received
  *                              OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission could not take place
@@ -199,8 +199,8 @@ otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance);
  *                              OT_ERROR_ABORT when transmission was aborted for other reasons.
  *
  */
-typedef void (*otLinkRawTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending,
-                                      otError aError);
+typedef void (*otLinkRawTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame,
+                                      otRadioFrame *aAckFrame, otError aError);
 
 /**
  * This method begins the transmit sequence on the radio.
