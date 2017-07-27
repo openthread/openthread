@@ -542,6 +542,14 @@ public:
     otError SetCommandId(uint8_t aCommandId);
 
     /**
+     * This method indicates whether the frame is a MAC Data Request command (data poll)
+     *
+     * @returns TRUE if frame is a MAC Data Request command, FALSE otherwise.
+     *
+     */
+    bool IsDataRequestCommand(void);
+
+    /**
      * This method returns the MAC Frame Length.
      *
      * @returns The MAC Frame Length.
