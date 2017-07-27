@@ -2062,6 +2062,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
             if (message->GetLength() == datagramLength &&
                 message->GetDatagramTag() == datagramTag &&
                 message->GetOffset() == fragmentHeader->GetDatagramOffset() &&
+                message->GetOffset() + aFrameLength <= datagramLength &&
                 message->IsLinkSecurityEnabled() == aMessageInfo.mLinkSecurity)
             {
                 break;
