@@ -398,6 +398,18 @@ public:
     void Init(void) { mDispatchSize = HostSwap16(kDispatch); }
 
     /**
+     * This method initializes the fragment header from a frame @p aFrame.
+     *
+     * @param[in]  aFrame        The pointer to the frame.
+     * @param[in]  aFrameLength  The length of the frame.
+     *
+     * @retval OT_ERROR_NONE     Fragment Header initialized successfully.
+     * @retval OT_ERROR_PARSE    Fragment header could not be initialized from @p aFrame (e.g., frame not long enough).
+     *
+     */
+    otError Init(const uint8_t *aFrame, uint8_t aFrameLength);
+
+    /**
      * This method indicates whether or not the header is a Fragment Header.
      *
      * @retval TRUE   If the header matches the Fragment Header dispatch value.
@@ -412,9 +424,15 @@ public:
      * @returns The Fragment Header length in bytes.
      *
      */
-    uint8_t GetHeaderLength(void) {
-        return (HostSwap16(mDispatchSize) & kOffset) ? sizeof(*this) : sizeof(*this) - sizeof(mOffset);
-    }
+    uint8_t GetHeaderLength(void) const { return IsOffsetPresent() ? sizeof(*this) : sizeof(*this) - sizeof(mOffset); }
+
+    /**
+     * This method indicates whether or not the Offset field is present.
+     *
+     * @returns TRUE if the Offset field is present, FALSE otherwise.
+     *
+     */
+    bool IsOffsetPresent(void) const { return (HostSwap16(mDispatchSize) & kOffset) != 0; }
 
     /**
      * This method returns the Datagram Size value.
@@ -422,7 +440,7 @@ public:
      * @returns The Datagram Size value.
      *
      */
-    uint16_t GetDatagramSize(void) { return HostSwap16(mDispatchSize) & kSizeMask; }
+    uint16_t GetDatagramSize(void) const { return HostSwap16(mDispatchSize) & kSizeMask; }
 
     /**
      * This method sets the Datagram Size value.
@@ -440,7 +458,7 @@ public:
      * @returns The Datagram Tag value.
      *
      */
-    uint16_t GetDatagramTag(void) { return HostSwap16(mTag); }
+    uint16_t GetDatagramTag(void) const { return HostSwap16(mTag); }
 
     /**
      * This method sets the Datagram Tag value.
@@ -456,7 +474,7 @@ public:
      * @returns The Datagram Offset value.
      *
      */
-    uint16_t GetDatagramOffset(void) { return (HostSwap16(mDispatchSize) & kOffset) ? static_cast<uint16_t>(mOffset) * 8 : 0; }
+    uint16_t GetDatagramOffset(void) const { return IsOffsetPresent() ? static_cast<uint16_t>(mOffset) * 8 : 0; }
 
     /**
      * This method sets the Datagram Offset value.

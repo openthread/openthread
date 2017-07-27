@@ -1175,5 +1175,26 @@ exit:
     return error;
 }
 
+otError FragmentHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
+{
+    otError error = OT_ERROR_PARSE;
+
+    VerifyOrExit(aFrameLength >= sizeof(mDispatchSize) + sizeof(mTag));
+    memcpy(&mDispatchSize, aFrame, sizeof(mDispatchSize) + sizeof(mTag));
+    aFrame += sizeof(mDispatchSize) + sizeof(mTag);
+    aFrameLength -= sizeof(mDispatchSize) + sizeof(mTag);
+
+    if (IsOffsetPresent())
+    {
+        VerifyOrExit(aFrameLength >= sizeof(mOffset));
+        mOffset = *aFrame++;
+    }
+
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
+}
+
 }  // namespace Lowpan
 }  // namespace ot
