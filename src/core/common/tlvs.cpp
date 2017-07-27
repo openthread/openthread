@@ -66,28 +66,32 @@ otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset
     uint16_t end = aMessage.GetLength();
     Tlv tlv;
 
-    while (offset < end)
+    while (offset + sizeof(tlv) <= end)
     {
-        aMessage.Read(offset, sizeof(Tlv), &tlv);
+        uint16_t length;
 
-        // skip extended TLV
-        if (tlv.GetLength() == kExtendedLength)
+        aMessage.Read(offset, sizeof(tlv), &tlv);
+
+        if (tlv.GetLength() != kExtendedLength)
         {
-            uint16_t length = 0;
-
-            offset += sizeof(tlv);
-            aMessage.Read(offset, sizeof(length), &length);
-            offset += sizeof(length) + HostSwap16(length);
+            length = sizeof(tlv) + tlv.GetLength();
         }
-        else if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
+        else
+        {
+            VerifyOrExit(offset + sizeof(tlv) + sizeof(length) <= end);
+            aMessage.Read(offset + sizeof(tlv), sizeof(length), &length);
+            length = sizeof(tlv) + sizeof(length) + HostSwap16(length);
+        }
+
+        VerifyOrExit(length <= end - offset);
+
+        if (tlv.GetType() == aType)
         {
             aOffset = offset;
             ExitNow(error = OT_ERROR_NONE);
         }
-        else
-        {
-            offset += sizeof(tlv) + tlv.GetLength();
-        }
+
+        offset += length;
     }
 
 exit:
@@ -99,23 +103,25 @@ otError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aO
     otError error = OT_ERROR_NOT_FOUND;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end = aMessage.GetLength();
+    Tlv tlv;
 
-    while (offset < end)
+    while (offset + sizeof(tlv) <= end)
     {
-        Tlv tlv;
         uint16_t length;
 
         aMessage.Read(offset, sizeof(tlv), &tlv);
         offset += sizeof(tlv);
-
         length = tlv.GetLength();
 
         if (length == kExtendedLength)
         {
+            VerifyOrExit(offset + sizeof(length) <= end);
             aMessage.Read(offset, sizeof(length), &length);
             offset += sizeof(length);
             length = HostSwap16(length);
         }
+
+        VerifyOrExit(length <= end - offset);
 
         if (tlv.GetType() == aType)
         {
