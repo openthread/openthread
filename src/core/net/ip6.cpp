@@ -572,11 +572,9 @@ otError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &
 
     if (mIsReceiveIp6FilterEnabled)
     {
-        // do not pass messages sent to/from an RLOC
+        // do not pass messages sent to an RLOC/ALOC
         VerifyOrExit(!aMessageInfo.GetSockAddr().IsRoutingLocator() &&
-                     !aMessageInfo.GetPeerAddr().IsRoutingLocator() &&
-                     !aMessageInfo.GetSockAddr().IsAnycastRoutingLocator() &&
-                     !aMessageInfo.GetPeerAddr().IsAnycastRoutingLocator(),
+                     !aMessageInfo.GetSockAddr().IsAnycastRoutingLocator(),
                      error = OT_ERROR_NO_ROUTE);
 
         switch (aIpProto)
@@ -594,17 +592,34 @@ otError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &
             break;
 
         case kProtoUdp:
-            if (aMessageInfo.GetSockAddr().IsLinkLocal() ||
-                aMessageInfo.GetSockAddr().IsLinkLocalMulticast())
-            {
-                UdpHeader udp;
-                aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
+        {
+            UdpHeader udp;
+            aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
 
-                // do not pass MLE messages
-                VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, error = OT_ERROR_NO_ROUTE);
+            // do not pass MLE messages
+            if (udp.GetDestinationPort() == Mle::kUdpPort)
+            {
+                if (aMessageInfo.GetSockAddr().IsLinkLocal() ||
+                    aMessageInfo.GetSockAddr().IsLinkLocalMulticast())
+                {
+                    ExitNow(error = OT_ERROR_NO_ROUTE);
+                }
+            }
+            // do not pass TMF messages
+            else if (udp.GetDestinationPort() == kCoapUdpPort)
+            {
+                if (((GetInstance().mThreadNetif.GetMle().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
+                      aMessageInfo.GetSockAddr().IsLinkLocalMulticast() ||
+                      aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
+                     GetInstance().mThreadNetif.GetMle().IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
+                    (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()))
+                {
+                    ExitNow(error = OT_ERROR_NO_ROUTE);
+                }
             }
 
             break;
+        }
 
         default:
             break;
