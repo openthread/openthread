@@ -159,6 +159,12 @@ void Address::SetIid(const Mac::ExtAddress &aEui64)
     mFields.m8[kInterfaceIdentifierOffset] ^= 0x02;
 }
 
+void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
+{
+    memcpy(aExtAddress.m8, mFields.m8 + kInterfaceIdentifierOffset, sizeof(aExtAddress.m8));
+    aExtAddress.m8[0] ^= 0x02;
+}
+
 uint8_t Address::GetScope(void) const
 {
     if (IsMulticast())

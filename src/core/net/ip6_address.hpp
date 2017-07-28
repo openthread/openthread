@@ -280,6 +280,14 @@ public:
     void SetIid(const Mac::ExtAddress &aEui64);
 
     /**
+     * This method converts the IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.
+     *
+     * @param[out]  aExtAddress  A reference to the extended address.
+     *
+     */
+    void ToExtAddress(Mac::ExtAddress &aExtAddress) const;
+
+    /**
      * This method returns the IPv6 address scope.
      *
      * @returns The IPv6 address scope.

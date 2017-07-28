@@ -40,16 +40,9 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Mac {
-
-void ExtAddress::Set(const Ip6::Address &aIpAddress)
-{
-    memcpy(m8, aIpAddress.GetIid(), sizeof(m8));
-    m8[0] ^= 0x02;
-}
 
 const char *Address::ToString(char *aBuf, uint16_t aSize) const
 {
