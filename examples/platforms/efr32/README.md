@@ -49,6 +49,7 @@ $ cp -rf gecko_sdk_suite <path-to-openthread>/third_party/silabs/
 4. Build OpenThread Firmware (CLI example) on EFR32 platform.
 ```bash
 $ cd <path-to-openthread>
+$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-efr32
 ```
@@ -171,6 +172,7 @@ joiner, DHCPv6 Server/Client, etc.) by assigning compile-options before compilin
 
 ```bash
 $ cd <path-to-openthread>
+$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-efr32 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1
 ```

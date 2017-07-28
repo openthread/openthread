@@ -54,6 +54,7 @@ In a Bash terminal, follow these instructions to build the cc2650 examples.
 
 ```bash
 $ cd <path-to-openthread>
+$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-cc2650
 ```

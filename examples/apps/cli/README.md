@@ -10,6 +10,7 @@ another emulated Thread device.
 
 ```bash
 $ cd <path-to-openthread>
+$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-posix
 ```

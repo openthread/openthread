@@ -31,6 +31,7 @@ Download and install [Digilent Adept Software][digilent-adept] for the Digilent 
 
 ```bash
 $ cd <path-to-openthread>
+$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-emsk clean
 $ make -f examples/Makefile-emsk

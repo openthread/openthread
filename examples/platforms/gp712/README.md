@@ -18,6 +18,7 @@ The build process will complain if additional packages are required.
 
 ```bash
 $ cd <path-to-openthread>
+$ sudo apt-get install libtool
 $ ./bootstrap
 $ CERT_LOG=1 CLI_LOGGING=1 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BORDER_ROUTER=1 make -f examples/Makefile-gp712
 ```

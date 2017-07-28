@@ -20,6 +20,7 @@ Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 ```bash
 $ cd <path-to-openthread>
+$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-kw41z
 ```
