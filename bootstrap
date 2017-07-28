@@ -42,4 +42,10 @@ srcdir=`dirname ${0}`
 abs_srcdir=`pwd`
 abs_top_srcdir="${abs_srcdir}"
 
+if ! $(dpkg -l | grep -qw libtool) ; then
+  echo "You need to install libtool:"
+  echo "$ sudo apt-get install libtool"
+  exit 1
+fi
+
 exec ${srcdir}/${nlbuild_autotools_stem}/scripts/bootstrap -I "${abs_top_srcdir}/${nlbuild_autotools_stem}" $*
