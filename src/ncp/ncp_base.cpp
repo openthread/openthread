@@ -6346,7 +6346,7 @@ otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t aHe
     while (dataLen >= sizeof(otExtAddress))
     {
         spinel_ssize_t parsedLength;
-        uint8_t *extAddress;
+        otExtAddress *extAddress;
 
         parsedLength = spinel_datatype_unpack(
                            data,
@@ -7003,7 +7003,7 @@ otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t 
     spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
     spinel_status_t spinelError = SPINEL_STATUS_OK;
-    uint8_t *extAddress = NULL;
+    otExtAddress *extAddress = NULL;
 
     parsedLength = spinel_datatype_unpack(
                        aValuePtr,
@@ -7604,7 +7604,7 @@ otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t 
     spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
     spinel_status_t spinelError = SPINEL_STATUS_OK;
-    uint8_t *extAddress;
+    otExtAddress *extAddress;
 
     parsedLength = spinel_datatype_unpack(
                        aValuePtr,

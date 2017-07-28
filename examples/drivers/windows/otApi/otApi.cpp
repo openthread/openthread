@@ -1476,7 +1476,7 @@ otThreadSetChildTimeout(
 
 OTAPI 
 const 
-uint8_t *
+otExtAddress *
 OTCALL
 otLinkGetExtendedAddress(
     _In_ otInstance *aInstance
@@ -1490,7 +1490,7 @@ otLinkGetExtendedAddress(
         free(Result);
         Result = nullptr;
     }
-    return (uint8_t*)Result;
+    return Result;
 }
 
 OTAPI 
@@ -1498,11 +1498,11 @@ otError
 OTCALL
 otLinkSetExtendedAddress(
     _In_ otInstance *aInstance, 
-    const otExtAddress *aExtendedAddress
+    const otExtAddress *aExtAddress
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_ADDRESS, aExtendedAddress));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_ADDRESS, aExtAddress));
 }
 
 OTAPI 

@@ -210,7 +210,7 @@ void otPlatRadioSetPanId(_In_ otInstance *otCtx, uint16_t panid)
     }
 }
 
-void otPlatRadioSetExtendedAddress(_In_ otInstance *otCtx, uint8_t *address)
+void otPlatRadioSetExtendedAddress(_In_ otInstance *otCtx, const otExtAddress *address)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -223,7 +223,7 @@ void otPlatRadioSetExtendedAddress(_In_ otInstance *otCtx, uint8_t *address)
 
     for (size_t i = 0; i < OT_EXT_ADDRESS_SIZE; i++)
     {
-        extAddr.bytes[i] = address[7 - i];
+        extAddr.bytes[i] = address->m8[7 - i];
     }
 
     // Indicate to the miniport
@@ -654,7 +654,7 @@ otError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t 
     return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const otExtAddress *aExtAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -696,7 +696,7 @@ otError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_
     return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const otExtAddress *aExtAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);

@@ -96,10 +96,10 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
     otCachedSettings.panid = panid;
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *address)
 {
     (void)aInstance;
-    qorvoRadioSetExtendedAddress(address);
+    qorvoRadioSetExtendedAddress(address->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
@@ -268,10 +268,10 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
     return qorvoRadioAddSrcMatchShortEntry(aShortAddress, otCachedSettings.panid);
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void)aInstance;
-    return qorvoRadioAddSrcMatchExtEntry(aExtAddress, otCachedSettings.panid);
+    return qorvoRadioAddSrcMatchExtEntry(aExtAddress->m8, otCachedSettings.panid);
 }
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
@@ -280,10 +280,10 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     return qorvoRadioClearSrcMatchShortEntry(aShortAddress, otCachedSettings.panid);
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void)aInstance;
-    return qorvoRadioClearSrcMatchExtEntry(aExtAddress, otCachedSettings.panid);
+    return qorvoRadioClearSrcMatchExtEntry(aExtAddress->m8, otCachedSettings.panid);
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)

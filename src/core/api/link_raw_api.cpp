@@ -72,19 +72,19 @@ exit:
     return error;
 }
 
-otError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress)
+otError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    uint8_t buf[sizeof(otExtAddress)];
+    otExtAddress address;
 
     VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    for (size_t i = 0; i < sizeof(buf); i++)
+    for (size_t i = 0; i < sizeof(address); i++)
     {
-        buf[i] = aExtendedAddress->m8[7 - i];
+        address.m8[i] = aExtAddress->m8[7 - i];
     }
 
-    otPlatRadioSetExtendedAddress(aInstance, buf);
+    otPlatRadioSetExtendedAddress(aInstance, &address);
 
 exit:
     return error;
@@ -199,7 +199,7 @@ exit:
     return error;
 }
 
-otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
 
@@ -223,7 +223,7 @@ exit:
     return error;
 }
 
-otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
 

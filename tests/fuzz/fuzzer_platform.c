@@ -84,7 +84,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
     (void)aPanId;
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtAddr)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, otExtAddress *aExtAddr)
 {
     (void)aInstance;
     (void)aExtAddr;
@@ -177,7 +177,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void)aInstance;
     (void)aExtAddress;
@@ -191,7 +191,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void)aInstance;
     (void)aExtAddress;

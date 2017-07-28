@@ -209,17 +209,17 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
     HWREG(RFCORE_FFSM_PAN_ID1) = aPanid >> 8;
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aAddress)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
 {
     (void)aInstance;
 
     otLogInfoPlat(sInstance, "ExtAddr=%X%X%X%X%X%X%X%X",
-                  aAddress[7], aAddress[6], aAddress[5], aAddress[4], aAddress[3],
-                  aAddress[2], aAddress[1], aAddress[0]);
+                  aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
+                  aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
     for (int i = 0; i < 8; i++)
     {
-        ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = aAddress[i];
+        ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = aAddress->m8[i];
     }
 }
 
@@ -593,7 +593,7 @@ int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
     return entry;
 }
 
-int8_t findSrcMatchExtEntry(const uint8_t *aExtAddress)
+int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
 {
     int8_t entry = -1;
     uint32_t bitMask;
@@ -614,7 +614,7 @@ int8_t findSrcMatchExtEntry(const uint8_t *aExtAddress)
 
         for (j = 0; j < sizeof(otExtAddress); j++)
         {
-            if (HWREG(addr + j) != aExtAddress[j])
+            if (HWREG(addr + j) != aExtAddress->m8[j])
             {
                 break;
             }
@@ -746,7 +746,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
     int8_t entry = findSrcMatchAvailEntry(false);
@@ -761,7 +761,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aEx
 
     for (uint8_t i = 0; i < sizeof(otExtAddress); i++)
     {
-        HWREG(addr++) = aExtAddress[i];
+        HWREG(addr++) = aExtAddress->m8[i];
     }
 
     setSrcMatchEntryEnableStatus(false, (uint8_t)(entry), true);
@@ -786,7 +786,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
     int8_t entry = findSrcMatchExtEntry(aExtAddress);

@@ -155,15 +155,15 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
     FTDF_setValue(FTDF_PIB_PAN_ID, &aPanid);
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aAddress)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
 {
     (void)aInstance;
 
     otLogInfoPlat(sInstance, "Set Extended Address: %X%X%X%X%X%X%X%X",
-                  aAddress[7], aAddress[6], aAddress[5], aAddress[4],
-                  aAddress[3], aAddress[2], aAddress[1], aAddress[0]);
+                  aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
+                  aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
-    FTDF_setValue(FTDF_PIB_EXTENDED_ADDRESS, aAddress);
+    FTDF_setValue(FTDF_PIB_EXTENDED_ADDRESS, aAddress->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
@@ -311,7 +311,7 @@ exit:
 
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void)aInstance;
 
@@ -320,8 +320,10 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aEx
     uint32_t addrL;
     uint64_t addrH;
 
-    addrL = (aExtAddress[3] << 24) | (aExtAddress[2] << 16) | (aExtAddress[1] << 8) | (aExtAddress[0] << 0);
-    addrH = (aExtAddress[7] << 24) | (aExtAddress[6] << 16) | (aExtAddress[5] << 8) | (aExtAddress[4] << 0);
+    addrL = (aExtAddress->m8[3] << 24) | (aExtAddress->m8[2] << 16) |
+            (aExtAddress->m8[1] << 8) | (aExtAddress->m8[0] << 0);
+    addrH = (aExtAddress->m8[7] << 24) | (aExtAddress->m8[6] << 16) |
+            (aExtAddress->m8[5] << 8) | (aExtAddress->m8[4] << 0);
     addr = addrL | (addrH << 32);
 
     // check if address already stored
@@ -357,7 +359,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void)aInstance;
 
@@ -366,8 +368,10 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *a
     uint32_t addrL;
     uint64_t addrH;
 
-    addrL = (aExtAddress[3] << 24) | (aExtAddress[2] << 16) | (aExtAddress[1] << 8) | (aExtAddress[0] << 0);
-    addrH = (aExtAddress[7] << 24) | (aExtAddress[6] << 16) | (aExtAddress[5] << 8) | (aExtAddress[4] << 0);
+    addrL = (aExtAddress->m8[3] << 24) | (aExtAddress->m8[2] << 16) |
+            (aExtAddress->m8[1] << 8) | (aExtAddress->m8[0] << 0);
+    addrH = (aExtAddress->m8[7] << 24) | (aExtAddress->m8[6] << 16) |
+            (aExtAddress->m8[5] << 8) | (aExtAddress->m8[4] << 0);
     addr = addrL | (addrH << 32);
 
     otError error = OT_ERROR_NONE;

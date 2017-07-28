@@ -151,14 +151,14 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
     ZLL->MACSHORTADDRS0 |= ZLL_MACSHORTADDRS0_MACPANID0(aPanId);
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void) aInstance;
     uint32_t addrLo;
     uint32_t addrHi;
 
-    memcpy(&addrLo, aExtendedAddress, sizeof(addrLo));
-    memcpy(&addrHi, aExtendedAddress + sizeof(addrLo), sizeof(addrHi));
+    memcpy(&addrLo, aExtAddress->m8, sizeof(addrLo));
+    memcpy(&addrHi, aExtAddress->m8 + sizeof(addrLo), sizeof(addrHi));
 
     ZLL->MACLONGADDRS0_LSB = addrLo;
     ZLL->MACLONGADDRS0_MSB = addrHi;
@@ -272,10 +272,10 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
     return rf_add_addr_table_entry(checksum, false);
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void) aInstance;
-    uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress, true, sPanId);
+    uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress->m8, true, sPanId);
 
     return rf_add_addr_table_entry(checksum, true);
 }
@@ -288,10 +288,10 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     return rf_remove_addr_table_entry(checksum);
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     (void) aInstance;
-    uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress, true, sPanId);
+    uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress->m8, true, sPanId);
 
     return rf_remove_addr_table_entry(checksum);
 }

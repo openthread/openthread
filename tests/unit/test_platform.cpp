@@ -190,7 +190,7 @@ extern "C" {
         }
     }
 
-    void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtAddr)
+    void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddr)
     {
         if (g_testPlatRadioSetExtendedAddress)
         {
@@ -317,7 +317,7 @@ extern "C" {
         return OT_ERROR_NONE;
     }
 
-    otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+    otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
     {
         (void)aInstance;
         (void)aExtAddress;
@@ -331,7 +331,7 @@ extern "C" {
         return OT_ERROR_NONE;
     }
 
-    otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+    otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
     {
         (void)aInstance;
         (void)aExtAddress;
