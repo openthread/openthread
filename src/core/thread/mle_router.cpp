@@ -715,12 +715,12 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
             if (neighbor->GetState() != Neighbor::kStateValid)
             {
-                const ThreadMessageInfo *threadMessageInfo =
-                    static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
+                const otThreadLinkInfo *linkInfo =
+                    static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
 
                 neighbor->SetExtAddress(macAddr);
                 neighbor->GetLinkInfo().Clear();
-                neighbor->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+                neighbor->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
                 neighbor->ResetLinkFailures();
                 neighbor->SetState(Neighbor::kStateLinkRequest);
             }
@@ -764,7 +764,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neighbor
                                   const TlvRequestTlv &aTlvRequest, const ChallengeTlv &aChallenge)
 {
     otError error = OT_ERROR_NONE;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     static const uint8_t routerTlvs[] = {Tlv::kLinkMargin};
     Message *message;
     Header::Command command;
@@ -782,7 +782,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neighbor
     SuccessOrExit(error = AppendMleFrameCounter(*message));
 
     // always append a link margin, regardless of whether or not it was requested
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(GetNetif().GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
 
     SuccessOrExit(error = AppendLinkMargin(*message, linkMargin));
 
@@ -863,7 +863,7 @@ otError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::MessageI
                                     uint32_t aKeySequence, bool aRequest)
 {
     otError error = OT_ERROR_NONE;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Router *router;
     Neighbor *neighbor;
     Mac::ExtAddress macAddr;
@@ -1013,7 +1013,7 @@ otError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::MessageI
     router->SetLastHeard(TimerMilli::GetNow());
     router->SetDeviceMode(ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData);
     router->GetLinkInfo().Clear();
-    router->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+    router->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
     router->ResetLinkFailures();
     router->SetState(Neighbor::kStateValid);
     router->SetKeySequence(aKeySequence);
@@ -1259,7 +1259,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 {
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Mac::ExtAddress macAddr;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
@@ -1437,7 +1437,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
-            router->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+            router->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), linkInfo->mRss);
             router->ResetLinkFailures();
             router->SetState(Neighbor::kStateLinkRequest);
             SendLinkRequest(router);
@@ -1484,7 +1484,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
-            router->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+            router->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), linkInfo->mRss);
             router->ResetLinkFailures();
             router->SetState(Neighbor::kStateLinkRequest);
             router->SetDataRequestPending(false);
@@ -1634,7 +1634,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError error = OT_ERROR_NONE;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Mac::ExtAddress macAddr;
     VersionTlv version;
     ScanMaskTlv scanMask;
@@ -1702,7 +1702,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         // MAC Address
         child->SetExtAddress(macAddr);
         child->GetLinkInfo().Clear();
-        child->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+        child->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
         child->ResetLinkFailures();
         child->SetState(Neighbor::kStateParentRequest);
         child->SetDataRequestPending(false);
@@ -2029,7 +2029,7 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
 {
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Mac::ExtAddress macAddr;
     ResponseTlv response;
     LinkFrameCounterTlv linkFrameCounter;
@@ -2147,7 +2147,7 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     child->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     child->SetKeySequence(aKeySequence);
     child->SetDeviceMode(mode.GetMode());
-    child->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+    child->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), linkInfo->mRss);
     child->SetTimeout(timeout.GetTimeout());
 
     if (mode.GetMode() & ModeTlv::kModeFullNetworkData)
@@ -2319,7 +2319,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
                                              uint32_t aKeySequence)
 {
     otError error = OT_ERROR_NONE;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Mac::ExtAddress macAddr;
     SourceAddressTlv sourceAddress;
     TimeoutTlv timeout;
@@ -2398,7 +2398,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
     SetChildStateToValid(child);
     child->SetLastHeard(TimerMilli::GetNow());
     child->SetKeySequence(aKeySequence);
-    child->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+    child->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
 
 exit:
     return error;

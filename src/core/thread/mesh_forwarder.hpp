@@ -56,7 +56,6 @@ enum
 };
 
 class MleRouter;
-struct ThreadMessageInfo;
 
 /**
  * @addtogroup core-mesh-forwarding
@@ -263,21 +262,21 @@ private:
     otError PrepareDiscoverRequest(void);
     void PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
-                    const ThreadMessageInfo &aMessageInfo);
+                    const otThreadLinkInfo &aLinkInfo);
     void HandleFragment(uint8_t *aFrame, uint8_t aPayloadLength,
                         const Mac::Address &aMacSource, const Mac::Address &aMacDest,
-                        const ThreadMessageInfo &aMessageInfo);
+                        const otThreadLinkInfo &aLinkInfo);
     void HandleLowpanHC(uint8_t *aFrame, uint8_t aPayloadLength,
                         const Mac::Address &aMacSource, const Mac::Address &aMacDest,
-                        const ThreadMessageInfo &aMessageInfo);
-    void HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo);
+                        const otThreadLinkInfo &aLinkInfo);
+    void HandleDataRequest(const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
     otError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     otError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     otError SendFragment(Message &aMessage, Mac::Frame &aFrame);
     otError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
     otError UpdateIp6Route(Message &aMessage);
     otError UpdateMeshRoute(Message &aMessage);
-    otError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo,
+    otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo,
                            const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
 
