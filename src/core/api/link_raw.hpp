@@ -96,7 +96,7 @@ public:
      * This method invokes the mTransmitDoneCallback, if set.
      *
      */
-    void InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError);
+    void InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     /**
      * This method starts a (single) Enery Scan on the link-layer.

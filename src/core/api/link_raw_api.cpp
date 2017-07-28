@@ -384,7 +384,7 @@ otError LinkRaw::DoTransmit(otRadioFrame *aFrame)
     return error;
 }
 
-void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError)
+void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
     otLogDebgPlat(&mInstance, "LinkRaw Transmit Done (err=0x%x)", aError);
 
@@ -434,7 +434,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otErr
             otLogWarnPlat(&mInstance, "LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
         }
 
-        mTransmitDoneCallback(&mInstance, aFrame, aFramePending, aError);
+        mTransmitDoneCallback(&mInstance, aFrame, aAckFrame, aError);
         mTransmitDoneCallback = NULL;
     }
 
@@ -501,7 +501,7 @@ void LinkRaw::HandleTimer(void)
         otPlatRadioReceive(&mInstance, mReceiveChannel);
 
         // Invoke completion callback for transmit
-        InvokeTransmitDone(otPlatRadioGetTransmitBuffer(&mInstance), false, OT_ERROR_NO_ACK);
+        InvokeTransmitDone(otPlatRadioGetTransmitBuffer(&mInstance), NULL, OT_ERROR_NO_ACK);
         break;
     }
 
@@ -518,7 +518,7 @@ void LinkRaw::HandleTimer(void)
 
         if (error != OT_ERROR_NONE)
         {
-            InvokeTransmitDone(aFrame, false, error);
+            InvokeTransmitDone(aFrame, NULL, error);
         }
 
         break;

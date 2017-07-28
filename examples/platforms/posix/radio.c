@@ -351,7 +351,7 @@ void platformRadioInit(void)
         if (*endptr != '\0')
         {
             fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         sPortOffset *= WELLKNOWN_NODE_ID;

@@ -224,8 +224,8 @@ private:
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
 
-    static void LinkRawTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending, otError aError);
-    void LinkRawTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError);
+    static void LinkRawTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+    void LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);

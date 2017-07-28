@@ -69,6 +69,7 @@
 #include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -1161,27 +1162,60 @@ exit:
     return;
 }
 
-void NcpBase::LinkRawTransmitDone(otInstance *, otRadioFrame *aFrame, bool aFramePending, otError aError)
+void NcpBase::LinkRawTransmitDone(otInstance *, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    sNcpInstance->LinkRawTransmitDone(aFrame, aFramePending, aError);
+    sNcpInstance->LinkRawTransmitDone(aFrame, aAckFrame, aError);
 }
 
-void NcpBase::LinkRawTransmitDone(otRadioFrame *, bool aFramePending, otError aError)
+void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
     if (mCurTransmitTID)
     {
-        SendPropertyUpdate(
-            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID,
-            SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_LAST_STATUS,
-            SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_BOOL_S,
-            ThreadErrorToSpinelStatus(aError),
-            aFramePending
-        );
+        uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
+        bool framePending = (aAckFrame != NULL && static_cast<Mac::Frame *>(aAckFrame)->GetFramePending());
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;
+
+        SuccessOrExit(OutboundFrameBegin(header));
+
+        SuccessOrExit(OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_BOOL_S,
+            header,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_LAST_STATUS,
+            ThreadErrorToSpinelStatus(aError),
+            framePending
+        ));
+
+        if (aAckFrame && aError == OT_ERROR_NONE)
+        {
+            SuccessOrExit(OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT16_S, aAckFrame->mLength));
+            SuccessOrExit(OutboundFrameFeedData(aAckFrame->mPsdu, aAckFrame->mLength));
+            SuccessOrExit(OutboundFrameFeedPacked(
+                SPINEL_DATATYPE_INT8_S
+                SPINEL_DATATYPE_INT8_S
+                SPINEL_DATATYPE_UINT16_S
+                SPINEL_DATATYPE_STRUCT_S(   // PHY-data
+                    SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
+                    SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
+                ),
+                aAckFrame->mPower,          // RSSI
+                -128,                       // Noise Floor (Currently unused)
+                0,                          // Flags
+                aAckFrame->mChannel,        // Receive channel
+                aAckFrame->mLqi,            // Link quality indicator
+                aFrame->mMsec,              // The timestamp milliseconds
+                aFrame->mUsec               // The timestamp microseconds, offset to mMsec
+            ));
+        }
+
+        SuccessOrExit(OutboundFrameSend());
     }
+
+exit:
+    OT_UNUSED_VARIABLE(aFrame);
+    return;
 }
 
 void NcpBase::LinkRawEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
