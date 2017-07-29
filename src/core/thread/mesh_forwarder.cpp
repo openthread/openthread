@@ -954,7 +954,7 @@ otError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Ad
     ThreadNetif &netif = GetNetif();
 
     aMacAddr.mLength = sizeof(aMacAddr.mExtAddress);
-    aMacAddr.mExtAddress.Set(aIp6Addr);
+    aIp6Addr.ToExtAddress(aMacAddr.mExtAddress);
 
     if (memcmp(&aMacAddr.mExtAddress, netif.GetMac().GetExtAddress(), sizeof(aMacAddr.mExtAddress)) != 0)
     {
@@ -991,7 +991,7 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
     else
     {
         aMacAddr.mLength = sizeof(aMacAddr.mExtAddress);
-        aMacAddr.mExtAddress.Set(aIp6Addr);
+        aIp6Addr.ToExtAddress(aMacAddr.mExtAddress);
     }
 
     return OT_ERROR_NONE;

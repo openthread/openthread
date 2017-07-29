@@ -676,7 +676,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
     VerifyOrExit(mParentRequestState == kParentIdle, error = OT_ERROR_INVALID_STATE);
 
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     // Challenge
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
@@ -880,7 +880,7 @@ otError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::MessageI
     ChallengeTlv challenge;
     TlvRequestTlv tlvRequest;
 
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     // Version
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
@@ -1270,7 +1270,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
     uint8_t routerId;
     uint8_t routerCount;
 
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
@@ -1661,7 +1661,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
                  (mRouters[GetLeaderId()].GetCost() + GetLinkCost(mRouters[GetLeaderId()].GetNextHop()) < kMaxRouteCost),
                  error = OT_ERROR_DROP);
 
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     // Version
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
@@ -2049,7 +2049,7 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     VerifyOrExit(mRole >= OT_DEVICE_ROLE_CHILD, error = OT_ERROR_INVALID_STATE);
 
     // Find Child
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     VerifyOrExit((child = FindChild(macAddr)) != NULL, error = OT_ERROR_ALREADY);
 
@@ -2226,7 +2226,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::
     VerifyOrExit(mode.IsValid(), error = OT_ERROR_PARSE);
 
     // Find Child
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
     child = FindChild(macAddr);
 
     tlvs[tlvslength++] = Tlv::kSourceAddress;
@@ -2333,7 +2333,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
     otLogInfoMle(GetInstance(), "Received Child Update Response from child");
 
     // Find Child
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     VerifyOrExit((child = FindChild(macAddr)) != NULL, error = OT_ERROR_NOT_FOUND);
 
@@ -3275,7 +3275,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         else
         {
             macaddr.mLength = sizeof(macaddr.mExtAddress);
-            macaddr.mExtAddress.Set(aAddress);
+            aAddress.ToExtAddress(macaddr.mExtAddress);
         }
 
         ExitNow(rval = GetNeighbor(macaddr));

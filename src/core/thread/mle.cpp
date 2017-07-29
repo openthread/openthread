@@ -2054,7 +2054,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     VerifyOrExit(messageTagLength == sizeof(messageTag));
     SuccessOrExit(aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
 
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
     GenerateNonce(macAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
 
     aesCcm.SetKey(mleKey, 16);
@@ -2261,7 +2261,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         SuccessOrExit(error = netif.GetMle().HandleAdvertisement(aMessage, aMessageInfo));
     }
 
-    macAddr.Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     isNeighbor = false;
 
@@ -2653,7 +2653,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     memcpy(mChildIdRequest.mChallenge, challenge.GetChallenge(), challenge.GetLength());
     mChildIdRequest.mChallengeLength = challenge.GetLength();
 
-    mParentCandidate.GetExtAddress().Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(mParentCandidate.GetExtAddress());
     mParentCandidate.SetRloc16(sourceAddress.GetRloc16());
     mParentCandidate.SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     mParentCandidate.SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
@@ -3068,7 +3068,7 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
     result.mChannel = threadMessageInfo->mChannel;
     result.mRssi = threadMessageInfo->mRss;
     result.mLqi = threadMessageInfo->mLqi;
-    static_cast<Mac::ExtAddress *>(&result.mExtAddress)->Set(aMessageInfo.GetPeerAddr());
+    aMessageInfo.GetPeerAddr().ToExtAddress(*static_cast<Mac::ExtAddress *>(&result.mExtAddress));
 
     // process MeshCoP TLVs
     while (offset < end)
