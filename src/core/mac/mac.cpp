@@ -185,13 +185,13 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     memset(&mCounters, 0, sizeof(otMacCounters));
 
+    otPlatRadioEnable(&GetInstance());
+
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
     SetPanId(mPanId);
     SetExtAddress(mExtAddress);
     SetShortAddress(mShortAddress);
-
-    otPlatRadioEnable(&GetInstance());
 }
 
 otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
