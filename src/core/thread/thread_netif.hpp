@@ -412,6 +412,15 @@ public:
       */
     PanIdQueryServer &GetPanIdQueryServer(void) { return mPanIdQuery; }
 
+    /**
+     * This method returns whether Thread Management Framework Addressing Rules are met.
+     *
+     * @retval TRUE   if Thread Management Framework Addressing Rules are met.
+     * @retval FALSE  if Thread Management Framework Addressing Rules are not met.
+     *
+     */
+    bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo);
+
 private:
     static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
