@@ -182,21 +182,27 @@ exit:
 
 otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
-    otError error = OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aMessage);
+
+    return static_cast<ThreadNetif *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
+}
+
+bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
+{
+    bool rval = true;
 
     // A TMF message must comply with following rules:
     // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
     //    and the source is a Mesh Local Address.
     // 2. Both the destination and the source are Link-Local Addresses.
-    VerifyOrExit(((static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
+    VerifyOrExit(((mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
                    aMessageInfo.GetSockAddr().IsLinkLocalMulticast() ||
                    aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-                  static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
+                  mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
                  (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()),
-                 error = OT_ERROR_NOT_TMF);
+                 rval = false);
 exit:
-    OT_UNUSED_VARIABLE(aMessage);
-    return error;
+    return rval;
 }
 
 }  // namespace ot

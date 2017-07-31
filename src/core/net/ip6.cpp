@@ -596,26 +596,31 @@ otError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &
             UdpHeader udp;
             aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
 
-            // do not pass MLE messages
-            if (udp.GetDestinationPort() == Mle::kUdpPort)
+            switch (udp.GetDestinationPort())
             {
+            case Mle::kUdpPort:
+
+                // do not pass MLE messages
                 if (aMessageInfo.GetSockAddr().IsLinkLocal() ||
                     aMessageInfo.GetSockAddr().IsLinkLocalMulticast())
                 {
                     ExitNow(error = OT_ERROR_NO_ROUTE);
                 }
-            }
-            // do not pass TMF messages
-            else if (udp.GetDestinationPort() == kCoapUdpPort)
-            {
-                if (((GetInstance().mThreadNetif.GetMle().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-                      aMessageInfo.GetSockAddr().IsLinkLocalMulticast() ||
-                      aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-                     GetInstance().mThreadNetif.GetMle().IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-                    (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()))
+
+                break;
+
+            case kCoapUdpPort:
+
+                // do not pass TMF messages
+                if (GetInstance().mThreadNetif.IsTmfMessage(aMessageInfo))
                 {
                     ExitNow(error = OT_ERROR_NO_ROUTE);
                 }
+
+                break;
+
+            default:
+                break;
             }
 
             break;
