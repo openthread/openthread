@@ -58,12 +58,17 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\ncp\changed_props_set.cpp" />
     <ClCompile Include="..\..\src\ncp\ncp_base.cpp" />
+    <ClCompile Include="..\..\src\ncp\ncp_base_ftd.cpp" />
+    <ClCompile Include="..\..\src\ncp\ncp_base_mtd.cpp" />
+    <ClCompile Include="..\..\src\ncp\ncp_base_radio.cpp" />
     <ClCompile Include="..\..\src\ncp\ncp_buffer.cpp" />
     <ClCompile Include="..\..\src\ncp\ncp_spi.cpp" />
     <ClCompile Include="..\..\src\ncp\spinel.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\ncp\changed_props_set.hpp" />
     <ClInclude Include="..\..\src\ncp\ncp_base.hpp" />
     <ClInclude Include="..\..\src\ncp\ncp_buffer.hpp" />
     <ClInclude Include="..\..\src\ncp\ncp_spi.hpp" />

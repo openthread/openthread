@@ -71,9 +71,10 @@ void TestMessageQueue();
 void TestPriorityQueue();
 
 // test_ncp_buffer.cpp
-namespace ot
-{
+namespace ot {
+namespace Ncp {
     void TestNcpFrameBuffer(void);
+}
 }
 
 // test_timer.cpp
@@ -162,7 +163,7 @@ namespace ot
         TEST_METHOD(TestTenTimers) { ::TestTenTimers(); }
 
         // test_ncp_buffer.cpp
-        TEST_METHOD(TestNcpFrameBuffer) { ot::TestNcpFrameBuffer(); }
+        TEST_METHOD(TestNcpFrameBuffer) { ot::Ncp::TestNcpFrameBuffer(); }
 
         // test_toolchain.cpp
         TEST_METHOD(test_packed1) { ::test_packed1(); }

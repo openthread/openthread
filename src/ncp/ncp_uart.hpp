@@ -39,6 +39,7 @@
 #include "ncp/ncp_base.hpp"
 
 namespace ot {
+namespace Ncp {
 
 class NcpUart : public NcpBase
 {
@@ -116,6 +117,7 @@ private:
     Tasklet         mUartSendTask;
 };
 
+}  // namespace Ncp
 }  // namespace ot
 
 #endif  // NCP_UART_HPP_
