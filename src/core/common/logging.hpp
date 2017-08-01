@@ -310,7 +310,7 @@ extern "C" {
 #define otLogCritMle(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
 #define otLogWarnMle(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
 #define otLogWarnMleErr(aInstance, aError, aFormat, ...)                    \
-    otLogWarn(&aInstance, OT_LOG_REGION_MAC, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+    otLogWarn(&aInstance, OT_LOG_REGION_MLE, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
 #define otLogInfoMle(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
 #define otLogDebgMle(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_MLE, aFormat, ## __VA_ARGS__)
 #else
