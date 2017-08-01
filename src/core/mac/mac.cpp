@@ -1097,9 +1097,12 @@ otError Mac::RadioTransmit(Frame *aSendFrame)
 
     SuccessOrExit(error = otPlatRadioTransmit(&GetInstance(), static_cast<otRadioFrame *>(aSendFrame)));
 
-    otLogWarnMac(GetInstance(), "otPlatRadioTransmit() failed with error %s", otThreadErrorToString(error));
-
 exit:
+    if(error != OT_ERROR_NONE)
+    {
+    	otLogWarnMac(GetInstance(), "otPlatRadioTransmit() failed with error %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -1119,9 +1122,12 @@ otError Mac::RadioReceive(uint8_t aChannel)
 
     SuccessOrExit(error = otPlatRadioReceive(&GetInstance(), aChannel));
 
-    otLogWarnMac(GetInstance(), "otPlatRadioReceive() failed with error %s", otThreadErrorToString(error));
-
 exit:
+    if(error != OT_ERROR_NONE)
+    {
+    	otLogWarnMac(GetInstance(), "otPlatRadioReceive() failed with error %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -1146,11 +1152,15 @@ otError Mac::RadioSleep(void)
     }
 
 #endif
+
     SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
 
-    otLogWarnMac(GetInstance(), "otPlatRadioSleep() failed with error %s", otThreadErrorToString(error));
-
 exit:
+    if(error != OT_ERROR_NONE)
+    {
+    	otLogWarnMac(GetInstance(), "otPlatRadioSleep() failed with error %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
