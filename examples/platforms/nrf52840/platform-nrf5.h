@@ -167,6 +167,26 @@ bool nrf5FlashIsBusy(void);
  */
 uint32_t nrf5FlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
 
+/**
+ * Initialization of temperature controller.
+ *
+ */
+void nrf5TempInit(void);
+
+/**
+ * Deinitialization of temperature controller.
+ *
+ */
+void nrf5TempDeinit(void);
+
+/**
+ * Function for measuring internal temperature.
+ *
+ * @return Temperature value measured.
+ *
+ */
+int32_t nrf5TempGet(void);
+
 #if SOFTDEVICE_PRESENT
 /**
  * Function for translating SoftDevice error into OpenThread's one.

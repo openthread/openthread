@@ -5,8 +5,10 @@ nRF52840 port extends [OpenThread Diagnostics Module][DIAG].
 New commands allow for more accurate low level radio testing.
 
 ### New commands
+ * [diag ccathreshold](#diag-ccathreshold)
  * [diag id](#diag-id)
  * [diag listen](#diag-listen)
+ * [diag temp](#diag-temp)
  * [diag transmit](#diag-transmit)
 
 ### Diagnostic radio packet
@@ -40,6 +42,16 @@ If [listen](#diag-listen) mode is enabled and OpenThread was built with `DEFAULT
  }}
 ```
 
+### diag ccathreshold
+Get current CCA threshold.
+
+### diag ccathreshold \<threshold\>
+Set CCA threshold.
+
+Value range 0 to 255.
+
+Default: `45`.
+
 ### diag id
 Get board ID.
 
@@ -60,6 +72,9 @@ Set listen state.
 `1` enable listen state.
 
 Default: listen disabled.
+
+### diag temp
+Get temperature from internal temperature sensor.
 
 ### diag transmit
 Get messages count and interval between them that will be transmitted after `diag transmit start`.
@@ -85,5 +100,8 @@ Stop ongoing transmission regardless of remaining number of messages to be sent.
 
 ### diag transmit start
 Start transmiting messages with specified interval.
+
+### diag transmit carrier
+Start transmitting continuous carrier wave.
 
 [DIAG]: ./../../../src/diag/README.md
