@@ -84,7 +84,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
     (void)aPanId;
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, otExtAddress *aExtAddr)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddr)
 {
     (void)aInstance;
     (void)aExtAddr;
