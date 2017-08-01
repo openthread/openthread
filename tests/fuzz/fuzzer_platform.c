@@ -87,6 +87,12 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 
+void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
+{
+    (void)aInstance;
+    (void)aSpeed;
+}
+
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     (void)aLogLevel;

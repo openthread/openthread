@@ -41,6 +41,12 @@ extern char   **gArguments;
 
 extern void platformUartRestore(void);
 
+void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
+{
+    (void)aInstance;
+    (void)aSpeed;
+}
+
 void otPlatReset(otInstance *aInstance)
 {
     char *argv[gArgumentsCount + 1];

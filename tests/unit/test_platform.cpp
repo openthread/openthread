@@ -480,6 +480,12 @@ exit:
     // Misc
     //
 
+    void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
+    {
+        (void)aInstance;
+        (void)aSpeed;
+    }
+
     void otPlatReset(otInstance *aInstance)
     {
         (void)aInstance;

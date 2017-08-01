@@ -30,6 +30,12 @@
 #include <openthread/platform/misc.h>
 #include <driverlib/sys_ctrl.h>
 
+void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
+{
+    (void)aInstance;
+    (void)aSpeed;
+}
+
 /**
  * Function documented in platform/misc.h
  */

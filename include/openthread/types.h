@@ -1132,6 +1132,12 @@ typedef enum otLogRegion
 } otLogRegion;
 
 
+typedef enum otClockSpeed
+{
+    OT_CLOCK_LOW  = 0,
+    OT_CLOCK_HIGH = 1,
+} otClockSpeed;
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

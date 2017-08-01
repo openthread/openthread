@@ -42,6 +42,7 @@
 
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
+#include <openthread/platform/misc.h>
 
 #include "openthread-instance.h"
 #include "coap/coap_header.hpp"
@@ -107,6 +108,7 @@ otError Commissioner::Start(void)
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = GetNetif().GetCoapSecure().Start(OPENTHREAD_CONFIG_JOINER_UDP_PORT, SendRelayTransmit, this));
+    otPlatCommissioningClkChange(&GetInstance(), OT_CLOCK_HIGH);
 
     mState = OT_COMMISSIONER_STATE_PETITION;
     mTransmitAttempts = 0;
@@ -136,6 +138,8 @@ otError Commissioner::Stop(void)
     GetNetif().GetDtls().Stop();
 
     SendKeepAlive();
+
+    otPlatCommissioningClkChange(&GetInstance(), OT_CLOCK_LOW);
 
 exit:
     otLogFuncExitErr(error);

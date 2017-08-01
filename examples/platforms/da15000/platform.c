@@ -37,7 +37,7 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/uart.h>
-
+#include <openthread/platform/misc.h>
 #include "platform-da15000.h"
 
 #include "sdk_defs.h"
@@ -57,8 +57,6 @@ static int  sMsCounter;
 #define LEADER_BLINK_TIME     (200)
 #define ROUTER_BLINK_TIME     (500)
 #define CHILD_BLINK_TIME      (2000)
-
-#define SET_CLOCK_TO_96MHZ
 
 otInstance *sInstance;
 
@@ -80,19 +78,11 @@ void ClkInit(void)
 
     hw_watchdog_freeze();                           // Stop watchdog
     hw_cpm_set_recharge_period((uint16_t)dg_configSET_RECHARGE_PERIOD);
-    hw_watchdog_unfreeze();                         // Start watchdog
-    hw_cpm_pll_sys_on();                            // Turn on PLL
-    hw_watchdog_freeze();                           // Stop watchdog
-
-    hw_qspi_set_div(HW_QSPI_DIV_2);                 // Set QSPI div by 2
-
-    hw_cpm_disable_pll_divider();                   // Disable divider (div by 2)
-    hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
-    hw_cpm_set_hclk_div(ahb_div2);
+    hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M);
+    hw_cpm_set_hclk_div(0);
     hw_cpm_set_pclk_div(0);
-
     hw_otpc_init();
-    hw_otpc_set_speed(HW_OTPC_SYS_CLK_FREQ_48);
+    hw_otpc_set_speed(HW_OTPC_SYS_CLK_FREQ_16);
 }
 
 /*

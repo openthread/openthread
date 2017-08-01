@@ -41,6 +41,7 @@
 
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h>
+#include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
 #include "common/crc16.hpp"
@@ -96,6 +97,8 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
 
     VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
 
+    otPlatCommissioningClkChange(&GetInstance(), OT_CLOCK_HIGH);
+
     // use extended address based on factory-assigned IEEE EUI-64
     netif.GetMac().GetHashMacAddress(&extAddress);
     netif.GetMac().SetExtAddress(extAddress);
@@ -144,6 +147,7 @@ otError Joiner::Stop(void)
     otLogFuncEntry();
 
     Close();
+    otPlatCommissioningClkChange(&GetInstance(), OT_CLOCK_LOW);
 
     otLogFuncExit();
     return OT_ERROR_NONE;

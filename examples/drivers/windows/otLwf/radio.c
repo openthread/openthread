@@ -49,6 +49,16 @@ const char MacRecv[] = "MAC_RECV";
 #define LogMacSend(pFilter, frameLength, frame) LogMac(MacSend, pFilter, frameLength, frame)
 #define LogMacRecv(pFilter, frameLength, frame) LogMac(MacRecv, pFilter, frameLength, frame)
 
+void
+otPlatCommissioningClkChange(
+    otInstance *aInstance,
+    otClockSpeed aSpeed
+    )
+{
+    (void)aInstance;
+    (void)aSpeed;
+}
+
 void 
 otPlatReset(
     _In_ otInstance *otCtx

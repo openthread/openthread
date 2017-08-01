@@ -61,7 +61,6 @@ libopenthread_da15000_a_CPPFLAGS                                                
 PLATFORM_SOURCES                                                                        = \
     alarm.c                                                                               \
     flash.c                                                                               \
-    logging.c                                                                             \
     platform.c                                                                            \
     radio.c                                                                               \
     random.c                                                                              \

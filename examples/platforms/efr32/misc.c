@@ -39,6 +39,12 @@
 
 static uint32_t sResetCause;
 
+void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
+{
+    (void)aInstance;
+    (void)aSpeed;
+}
+
 void efr32MiscInit(void)
 {
     // Read the cause of last reset.

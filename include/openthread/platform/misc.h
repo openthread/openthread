@@ -107,6 +107,16 @@ void otPlatAssertFail(const char *aFilename, int aLineNumber);
 void otPlatWakeHost(void);
 
 /**
+ * This function speed up CPU clock while commissioning process
+ * is active and slow down when inactive
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aSpeed     Clock speed.
+ *
+ */
+void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed);
+
+/**
  * @}
  *
  */

@@ -29,6 +29,12 @@
 #include "openthread/platform/misc.h"
 #include "platform-emsk.h"
 
+void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
+{
+    (void)aInstance;
+    (void)aSpeed;
+}
+
 void otPlatReset(otInstance *aInstance)
 {
     // Default
