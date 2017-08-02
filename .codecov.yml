@@ -1,8 +1,10 @@
 coverage:
-  ignore:
-    - "tests/*"
-    - "third_party/*"
-
   status:
-    project: false
-    patch: false
+    project: off
+    patch: off
+
+ignore:
+  - "tests/*"
+  - "third_party/*"
+
+comment: off

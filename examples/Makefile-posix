@@ -113,6 +113,8 @@ configure_OPTIONS                   = \
     --enable-tmf-proxy                \
     $(NULL)
 
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
+
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)
 endif
