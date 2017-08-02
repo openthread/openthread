@@ -252,21 +252,22 @@ otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_
         mTransmitMessage->SetLinkSecurityEnabled(false);
     }
 
+    SuccessOrExit(error = mTransmitMessage->Append(aBuf, aLength));
+
     // Set message sub type in case Joiner Finalize Response is appended to the message.
     if (aMessageSubType != Message::kSubTypeNone)
     {
         mTransmitMessage->SetSubType(aMessageSubType);
     }
 
-    VerifyOrExit(mTransmitMessage->Append(aBuf, aLength) == OT_ERROR_NONE, error = OT_ERROR_NO_BUFS);
-
     mTransmitTask.Post();
 
 exit:
 
-    if (error != OT_ERROR_NONE && mTransmitMessage != NULL)
+    if (error != OT_ERROR_NONE && mTransmitMessage != NULL && mTransmitMessage->GetLength() == 0)
     {
         mTransmitMessage->Free();
+        mTransmitMessage = NULL;
     }
 
     otLogFuncExitErr(error);
