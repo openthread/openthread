@@ -29,6 +29,7 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                              = \
+    ip6-send-fuzzer                                         \
     radio-receive-done-fuzzer                               \
     $(NULL)
 
@@ -42,6 +43,9 @@ COMMON_LDADD                                              = \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a     \
     $(LIB_FUZZING_ENGINE)                                   \
     $(NULL)
+
+ip6_send_fuzzer_LDADD                                     = $(COMMON_LDADD)
+ip6_send_fuzzer_SOURCES                                   = ip6_send.cpp fuzzer_platform.c
 
 radio_receive_done_fuzzer_LDADD                           = $(COMMON_LDADD)
 radio_receive_done_fuzzer_SOURCES                         = radio_receive_done.cpp fuzzer_platform.c
