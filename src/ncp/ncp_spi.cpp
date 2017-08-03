@@ -53,6 +53,7 @@
 #if OPENTHREAD_ENABLE_NCP_SPI
 
 namespace ot {
+namespace Ncp {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
@@ -377,6 +378,7 @@ void NcpSpi::HandleRxFrame(void)
     }
 }
 
+}  // namespace Ncp
 }  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_NCP_SPI

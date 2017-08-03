@@ -61,8 +61,13 @@ libopenthread_ncp_ftd_a_CPPFLAGS                  = \
     $(NULL)
 
 COMMON_SOURCES                                    = \
-    ncp_base.cpp                                    \
+    changed_props_set.cpp                           \
+    changed_props_set.hpp                           \
     ncp_base.hpp                                    \
+    ncp_base.cpp                                    \
+    ncp_base_mtd.cpp                                \
+    ncp_base_ftd.cpp                                \
+    ncp_base_radio.cpp                              \
     ncp_buffer.cpp                                  \
     ncp_buffer.hpp                                  \
     spinel.c                                        \

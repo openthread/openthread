@@ -38,6 +38,7 @@
 #include "ncp/ncp_base.hpp"
 
 namespace ot {
+namespace Ncp {
 
 class NcpSpi : public NcpBase
 {
@@ -105,6 +106,7 @@ private:
     uint8_t mEmptyReceiveFrame[kSpiHeaderLength];
 };
 
+}  // namespace Ncp
 }  // namespace ot
 
 #endif  // NCP_SPI_HPP_

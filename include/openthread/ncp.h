@@ -173,12 +173,18 @@ typedef struct otNcpLegacyHandlers
 /**
  * This callback is invoked by the legacy stack to notify that a new
  * legacy node did join the network.
+ *
+ * @param[in]   aExtAddr    A pointer to the extended address of the joined node.
+ *
  */
 void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr);
 
 /**
  * This callback is invoked by the legacy stack to notify that the
  * legacy ULA prefix has changed.
+ *
+ * param[in]    aUlaPrefix  A pointer to the received ULA prefix.
+ *
  */
 void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
 
