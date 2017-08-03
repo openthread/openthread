@@ -464,7 +464,8 @@ typedef struct otMessageInfo
 
     /**
      * A pointer to link-specific information. In case @p mInterfaceId is set to OT_NETIF_INTERFACE_ID_THREAD,
-     * @p mLinkInfo points to @sa otThreadLinkInfo.
+     * @p mLinkInfo points to @sa otThreadLinkInfo. This field is only valid for messages received from the
+     * Thread radio and is ignored on transmission.
      */
     const void *mLinkInfo;
 } otMessageInfo;
@@ -1061,7 +1062,7 @@ typedef struct otSockAddr
 } otSockAddr;
 
 /**
- * This structure represents Thread-specific link information.
+ * This structure represents link-specific information for messages received from the Thread radio.
  *
  */
 typedef struct otThreadLinkInfo
