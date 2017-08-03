@@ -1025,7 +1025,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     tlv.SetLength(aMessage.GetLength());
     SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
     offset = message->GetLength();
-    message->SetLength(offset + aMessage.GetLength());
+    SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength()));
     aMessage.CopyTo(0, offset, aMessage.GetLength(), *message);
 
     messageInfo.SetPeerAddr(netif.GetMle().GetMeshLocal16());
