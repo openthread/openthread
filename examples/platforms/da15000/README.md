@@ -12,7 +12,6 @@ Please make sure all Thread nodes in your network have a unique EUI-64 by settin
 ## Build Examples (How to build and flash):
 ```bash
 $ cd <path-to-openthread>
-$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-da15000 clean
 $ make -f examples/Makefile-da15000

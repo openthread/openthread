@@ -6,7 +6,6 @@ This directory contains example platform drivers for POSIX emulation.
 
 ```bash
 $ cd <path-to-openthread>
-$ sudo apt-get install libtool
 $ ./bootstrap
 $ make -f examples/Makefile-posix
 ```
