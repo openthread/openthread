@@ -65,6 +65,11 @@ COMMON_SOURCES                                    = \
     ncp_base.hpp                                    \
     ncp_buffer.cpp                                  \
     ncp_buffer.hpp                                  \
+    ncp_command_defs.hpp                            \
+    ncp_get_prop_defs.hpp                           \
+    ncp_insert_prop_defs.hpp                        \
+    ncp_remove_prop_defs.hpp                        \
+    ncp_set_prop_defs.hpp                           \
     spinel.c                                        \
     spinel.h                                        \
     spinel_platform.h                               \
