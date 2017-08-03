@@ -156,6 +156,7 @@ SOURCES_COMMON                      = \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
     net/ip6_filter.cpp                \
+    net/ip6_headers.cpp               \
     net/ip6_mpl.cpp                   \
     net/ip6_routes.cpp                \
     net/netif.cpp                     \

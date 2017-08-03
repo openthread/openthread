@@ -113,6 +113,7 @@
     <ClCompile Include="..\..\src\core\net\ip6.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_address.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_filter.cpp" />
+    <ClCompile Include="..\..\src\core\net\ip6_headers.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_mpl.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_routes.cpp" />
     <ClCompile Include="..\..\src\core\net\netif.cpp" />
