@@ -427,19 +427,47 @@ struct otIp6Address
  */
 typedef struct otIp6Address otIp6Address;
 
-
 /**
  * This structure represents the local and peer IPv6 socket addresses.
  */
 typedef struct otMessageInfo
 {
-    otIp6Address mSockAddr;     ///< The local IPv6 address.
-    otIp6Address mPeerAddr;     ///< The peer IPv6 address.
-    uint16_t     mSockPort;     ///< The local transport-layer port.
-    uint16_t     mPeerPort;     ///< The peer transport-layer port.
-    int8_t       mInterfaceId;  ///< An IPv6 interface identifier.
-    uint8_t      mHopLimit;     ///< The IPv6 Hop Limit.
-    const void  *mLinkInfo;     ///< A pointer to link-specific information.
+    /**
+     * The local IPv6 address.
+     */
+    otIp6Address mSockAddr;
+
+    /**
+     * The peer IPv6 address.
+     */
+    otIp6Address mPeerAddr;
+
+    /**
+     * The local transport-layer port.
+     */
+    uint16_t mSockPort;
+
+    /**
+     * The peer transport-layer port.
+     */
+    uint16_t mPeerPort;
+
+    /**
+     * An IPv6 interface identifier.
+     */
+    int8_t mInterfaceId;
+
+    /**
+     * The IPv6 Hop Limit.
+     */
+    uint8_t mHopLimit;
+
+    /**
+     * A pointer to link-specific information. In case @p mInterfaceId is set to OT_NETIF_INTERFACE_ID_THREAD,
+     * @p mLinkInfo points to @sa otThreadLinkInfo. This field is only valid for messages received from the
+     * Thread radio and is ignored on transmission.
+     */
+    const void *mLinkInfo;
 } otMessageInfo;
 
 /**
@@ -1032,6 +1060,19 @@ typedef struct otSockAddr
     uint16_t     mPort;     ///< A transport-layer port.
     int8_t       mScopeId;  ///< An IPv6 scope identifier.
 } otSockAddr;
+
+/**
+ * This structure represents link-specific information for messages received from the Thread radio.
+ *
+ */
+typedef struct otThreadLinkInfo
+{
+    uint16_t mPanId;         ///< Source PAN ID
+    uint8_t  mChannel;       ///< 802.15.4 Channel
+    int8_t   mRss;           ///< Received Signal Strength in dBm.
+    uint8_t  mLqi;           ///< Link Quality Indicator for a received message.
+    bool     mLinkSecurity;  ///< Indicates whether or not link security is enabled.
+} otThreadLinkInfo;
 
 #ifdef OTDLL
 
