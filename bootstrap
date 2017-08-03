@@ -42,9 +42,66 @@ srcdir=`dirname ${0}`
 abs_srcdir=`pwd`
 abs_top_srcdir="${abs_srcdir}"
 
-# install Debian flavor dependencies
-if [ -f "Aptfile" ] && $(apropos "package manager" | grep -wq dpkg) ; then
-  cat Aptfile | xargs apt-get -y install
-fi
+install_packages_apt()
+{
+    sudo apt-get update
 
-exec ${srcdir}/${nlbuild_autotools_stem}/scripts/bootstrap -I "${abs_top_srcdir}/${nlbuild_autotools_stem}" $*
+    # apt update and install dependencies
+    sudo apt-get install -y build-essential git make autoconf \
+        autoconf-archive automake dbus libtool gcc \
+        g++ gperf flex bison texinfo ncurses-dev \
+        libexpat-dev python sed python-pip gawk \
+        libreadline6-dev libreadline6 libdbus-1-dev \
+        libboost-dev
+
+    # add gcc-arm-embedded ppa
+    sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
+    sudo apt-get update
+
+    sudo apt-get install gcc-arm-embedded
+}
+
+install_packages_opkg()
+{
+    echo 'opkg not supported currently' && false
+}
+
+install_packages_rpm()
+{
+    echo 'rpm not supported currently' && false
+}
+
+install_packages_brew()
+{
+    echo 'macOS not supported currently' && false
+}
+
+install_packages_source()
+{
+    echo 'source not supported currently' && false
+}
+
+install_packages()
+{
+    PM=source
+    if which apt-get; then
+        PM=apt
+    elif which rpm; then
+        PM=rpm
+    elif which opkg; then
+        PM=opkg
+    elif which brew; then
+        PM=brew
+    fi
+    install_packages_$PM
+}
+
+main()
+{
+    . $BEFORE_HOOK
+    install_packages
+    exec ${srcdir}/${nlbuild_autotools_stem}/scripts/bootstrap -I "${abs_top_srcdir}/${nlbuild_autotools_stem}" $*
+    . $AFTER_HOOK
+}
+
+main
