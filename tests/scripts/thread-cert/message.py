@@ -45,9 +45,10 @@ class MessageType(IntEnum):
     MLE = 0
     COAP = 1
     ICMP = 2
-    ACK = 3 
+    ACK = 3
     BEACON = 4
     DATA = 5
+    COMMAND = 6
 
 
 class Message(object):
@@ -110,6 +111,10 @@ class Message(object):
 
         elif self._mac_header.frame_type == mac802154.MacHeader.FrameType.DATA:
             self._type = MessageType.DATA
+        elif self._mac_header.frame_type == mac802154.MacHeader.FrameType.COMMAND:
+            self._type = MessageType.COMMAND
+        else:
+            raise ValueError('Invalid mac frame type %d' % self._mac_header.frame_type)
 
     @property
     def ipv6_packet(self):
