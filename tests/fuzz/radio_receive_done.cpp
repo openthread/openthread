@@ -33,6 +33,7 @@
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/thread.h>
+#include <openthread/thread_ftd.h>
 #include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
@@ -42,12 +43,16 @@ static otInstance *sInstance;
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
-    (void)argc;
-    (void)argv;
+    const otPanId panId = 0xdead;
 
     sInstance = otInstanceInitSingle();
-    otLinkSetPanId(sInstance, (otPanId)0xdead);
+    otLinkSetPanId(sInstance, panId);
     otIp6SetEnabled(sInstance, true);
+    otThreadSetEnabled(sInstance, true);
+    otThreadBecomeLeader(sInstance);
+
+    (void)argc;
+    (void)argv;
 
     return 0;
 }
