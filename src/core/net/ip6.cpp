@@ -174,6 +174,8 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             aMessage.Read(0, sizeof(hbh), &hbh);
             hbhLength = (hbh.GetLength() + 1) * 8;
 
+            VerifyOrExit(hbhLength <= aIp6Header.GetPayloadLength(), error = OT_ERROR_PARSE);
+
             // increase existing hop-by-hop option header length by 8 bytes
             hbh.SetLength(hbh.GetLength() + 1);
             aMessage.Write(0, sizeof(hbh), &hbh);
