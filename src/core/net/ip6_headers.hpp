@@ -147,6 +147,17 @@ public:
     void Init(uint32_t aVersionClassFlow) { mVersionClassFlow.m32[0] = HostSwap32(aVersionClassFlow); }
 
     /**
+     * This method reads the IPv6 header from @p aMessage.
+     *
+     * @param[in]  aMessage  The IPv6 datagram.
+     *
+     * @retval OT_ERROR_NONE   Successfully read the IPv6 header.
+     * @retval OT_ERROR_PARSE  Malformed IPv6 header.
+     *
+     */
+    otError Init(const Message &aMessage);
+
+    /**
      * This method indicates whether or not the IPv6 Version is set to 6.
      *
      * @retval TRUE   If the IPv6 Version is set to 6.

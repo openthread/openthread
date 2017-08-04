@@ -180,6 +180,9 @@
     <ClCompile Include="..\..\src\core\net\ip6_filter.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\net\ip6_headers.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\net\ip6_mpl.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
