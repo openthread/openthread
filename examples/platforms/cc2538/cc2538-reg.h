@@ -202,7 +202,7 @@
 #define SOC_ADC_ADCCON1_RCTRL0                  0x00000004  // ADCCON1 RCTRL bit 0
 #define SOC_ADC_ADCCON1_RCTRL1                  0x00000008  // ADCCON1 RCTRL bit 1
 
-#define FLASH_BASE                              0x00200000  // Flash base address
+// #define FLASH_BASE                              0x00200000  // Flash base address
 #define FLASH_CTRL_FCTL                         0x400D3008  // Flash control
 #define FLASH_CTRL_DIECFG0                      0x400D3014  // Flash information
 
