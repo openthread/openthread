@@ -662,6 +662,7 @@ otError Ip6::SendRaw(Message &aMessage, int8_t aInterfaceId)
     otError error = OT_ERROR_NONE;
     Header header;
     MessageInfo messageInfo;
+    bool freed = false;
 
     // check aMessage length
     VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_DROP);
@@ -678,8 +679,15 @@ otError Ip6::SendRaw(Message &aMessage, int8_t aInterfaceId)
     }
 
     error = HandleDatagram(aMessage, NULL, aInterfaceId, NULL, true);
+    freed = true;
 
 exit:
+
+    if (!freed)
+    {
+        aMessage.Free();
+    }
+
     return error;
 }
 
