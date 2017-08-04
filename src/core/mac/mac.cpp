@@ -1874,6 +1874,30 @@ bool Mac::RadioSupportsRetries(void)
     return (otPlatRadioGetCaps(GetInstance()) & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0;
 }
 
+uint32_t Mac::GetRadioTxTotalTime(void)
+{
+    uint32_t ret = mTxTotal;
+
+    if (mRadioState == kRadioStateTx)
+    {
+        ret += TimerMilli::GetNow() - mLastChange;
+    }
+
+    return  ret;
+}
+
+uint32_t Mac::GetRadioRxTotalTime(void)
+{
+    uint32_t ret = mRxTotal;
+
+    if (mRadioState == kRadioStateRx)
+    {
+        ret += TimerMilli::GetNow() - mLastChange;
+    }
+
+    return  ret;
+}
+
 void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
 {
     aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);

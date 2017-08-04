@@ -653,7 +653,7 @@ public:
      * @returns  A pointer to the total Tx time.
      *
      */
-    uint32_t GetRadioTxTotalTime(void) { return mTxTotal; }
+    uint32_t GetRadioTxTotalTime(void);
 
     /**
      * This method returns the amount of time the radio has spent in Rx mode.
@@ -661,7 +661,7 @@ public:
      * @returns  A pointer to the total Rx time.
      *
      */
-    uint32_t GetRadioRxTotalTime(void) { return mRxTotal; }
+    uint32_t GetRadioRxTotalTime(void);
 
 private:
     enum ScanType
