@@ -95,6 +95,8 @@ Data per item is:
 * `b`: "Is defined locally" flag. Set if this network was locally
   defined. Assumed to be true for set, insert and replace. Clear if
   the on mesh network was defined by another node.
+* `S`: The RLOC16 of the device that registered this on-mesh prefix entry.
+  This value is not used and ignored when adding an on-mesh prefix.
 
 ### PROP 91: PROP_THREAD_OFF_MESH_ROUTES
 * Type: Read-Write
@@ -114,6 +116,8 @@ Data per item is:
   route is this device itself (i.e., route was added by this device)
   This value is ignored when adding an external route. For any added
   route the next hop is this device.
+* `S`: The RLOC16 of the device that registered this route entry.
+  This value is not used and ignored when adding a route.
 
 ### PROP 92: PROP_THREAD_ASSISTING_PORTS
 * Type: Read-Write

@@ -353,6 +353,21 @@ private:
         kDataResubmitDelay = 300000,  ///< DATA_RESUBMIT_DELAY (miliseconds)
     };
 
+    class NetworkDataIterator
+    {
+    public:
+        NetworkDataIterator(otNetworkDataIterator *aIterator):
+            mIteratorBuffer(reinterpret_cast<uint8_t *>(aIterator)) { }
+
+        uint8_t GetTlvsIndex(void) const { return mIteratorBuffer[0]; }
+        uint8_t GetEntryIndex(void) const { return mIteratorBuffer[1]; }
+        void SetTlvsIndex(uint8_t aIndex) { mIteratorBuffer[0] = aIndex; }
+        void SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[1] = aIndex; }
+
+    private:
+        uint8_t *mIteratorBuffer;
+    };
+
     const bool      mLocal;
     bool            mLastAttemptWait;
     uint32_t        mLastAttempt;

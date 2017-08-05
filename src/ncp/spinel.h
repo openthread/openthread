@@ -807,7 +807,7 @@ typedef enum
                                         = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
                                         = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
-    SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal) [A(t(6CbCb))]
+    SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal,rloc6) [A(t(6CbCbS))]
 
     /// Off-mesh routes
     /** Format: [A(t(6CbCbb))]
@@ -826,6 +826,8 @@ typedef enum
      *       route is this device itself (i.e., route was added by this device)
      *       This value is ignored when adding an external route. For any added
      *       route the next hop is this device.
+     *  `S`: The RLOC16 of the device that registered this route entry.
+     *       This value is not used and ignored when adding a route.
      *
      */
     SPINEL_PROP_THREAD_OFF_MESH_ROUTES  = SPINEL_PROP_THREAD__BEGIN + 11,
