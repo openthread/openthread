@@ -31,13 +31,13 @@
 
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include <openthread/platform/alarm-milli.h>
 
 #include "platform-cc2538.h"
+#include "utils/wrap_string.h"
 #include "rom-utility.h"
 #include "utils/code_utils.h"
 #include "utils/flash.h"
