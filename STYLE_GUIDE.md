@@ -43,11 +43,13 @@
   - Preprocessor `#include` directives shall use brace (“<”) and (“>”) style for all public headers, including C and C++ standard library, or other first- and third-party public library headers.
   - Preprocessor `#include` directives should use double quote (‘“‘) and (‘“‘) style for all private or relative headers.
   - Preprocessor `#include` directives should be grouped, ordered, or sorted as follows:
-    - This compilation unit's corresponding header, if any.
+    - The `<openthread/config.h>` public header
+    - This compilation unit's corresponding header, if any
     - C++ Standard Library headers
     - C Standard Library headers
     - Third-party library headers
     - First-party library headers
+    - The `"openthread-core-config.h"` private header
     - Private or local headers
     - Alphanumeric order within each subgroup
   - The preprocessor shall not be used to redefine reserved language keywords.
