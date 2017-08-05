@@ -62,10 +62,23 @@ _FLASH_settings_pageA   = (_FLASH_end - (3 * _FLASH_page_size));
 
 MEMORY
 {
-  FLASH (rx) :     ORIGIN = _FLASH_start,     LENGTH = _FLASH_usable_size
-  FLASH_CCA (rx) : ORIGIN = (_FLASH_cca_page + 0x7d4)   LENGTH = 0x2c
-  SRAM (rwx) :     ORIGIN = 0x20000000,       LENGTH = 32K
+  /* would like to use SYMBOLS (from above)here but we cannot
+   * GCC version 4.9 does not support symbolic expressions here.
+   * But later versions do support the feature.
+   */
+  FLASH (rx) :     ORIGIN = 0x00200000,     LENGTH = 0x0007c000
+  FLASH_CCA (rx) : ORIGIN = 0x0027FFD4,     LENGTH = 0x2c
+  SRAM (rwx) :     ORIGIN = 0x20000000,     LENGTH = 32K
 }
+/*
+ * To safty check what would have been the SYMBOL values
+ * we use these ASSERTS to verify things are still good.
+ */
+ASSERT( _FLASH_start       == 0x00200000, "invalid flash start address for cc2538")
+ASSERT( _FLASH_cca_page    == 0x0027f800, "invalid cca start address for cc2538")
+ASSERT( _FLASH_usable_size == 0x0007e800, "Invalid usable size for this config")
+
+
 
 ENTRY(flash_cca_lock_page)
 SECTIONS
