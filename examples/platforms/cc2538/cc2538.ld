@@ -31,11 +31,40 @@
  *   GCC linker script for CC2538.
  */
 
+_512k_bytes             = (512*1024);
+_256k_bytes             = (256*1024);
+_128k_bytes             = (128*1024);
+_FLASH_page_size        = 2048;
+
+/*
+ * Change for your chip, default is 512k chips
+ */
+_FLASH_size_bytes       = _512k_bytes;
+_FLASH_n_pages          = (_FLASH_size_bytes / _FLASH_page_size);
+/* reduce the usable size by: the CCA + settings Page A & B, total 3 pages */
+_FLASH_usable_size      = (_FLASH_size_bytes - (3 * _FLASH_page_size));
+_FLASH_start            = 0x00200000;
+_FLASH_end              = (_FLASH_start + _FLASH_size_bytes);
+
+/*
+ * The CCA (Customer Configuration Area) is always the last page.
+ * See: http://www.ti.com/lit/ug/swru319c/swru319c.pdf
+ * table 8-2 for more details.
+ */
+_FLASH_cca_page         = (_FLASH_end - (1 * _FLASH_page_size));
+
+/*
+ * Openthread NV storage goes in the settings page.
+ * Openthread requires at least 2 adjacent pages, call them A and B.
+ */
+_FLASH_settings_pageB   = (_FLASH_end - (2 * _FLASH_page_size));
+_FLASH_settings_pageA   = (_FLASH_end - (3 * _FLASH_page_size));
+
 MEMORY
 {
-  FLASH (rx) :           ORIGIN = 0x00200000,            LENGTH = 0x0007FFD4
-  FLASH_CCA (rx) :       ORIGIN = 0x0027FFD4,            LENGTH = 0x2C
-  SRAM (rwx) :           ORIGIN = 0x20000000,            LENGTH = 32K
+  FLASH (rx) :     ORIGIN = _FLASH_start,     LENGTH = _FLASH_usable_size
+  FLASH_CCA (rx) : ORIGIN = (_FLASH_cca_page + 0x7d4)   LENGTH = 0x2c
+  SRAM (rwx) :     ORIGIN = 0x20000000,       LENGTH = 32K
 }
 
 ENTRY(flash_cca_lock_page)
