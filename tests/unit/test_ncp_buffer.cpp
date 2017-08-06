@@ -769,7 +769,7 @@ void TestNcpFrameBuffer(void)
     SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
     message->Write(0, sizeof(sMysteryText), sMysteryText);
     VerifyOrQuit(ncpBuffer.InFrameFeedMessage(message) == OT_ERROR_INVALID_STATE, "Incorrect error status");
-    SuccessOrQuit(message->Free(), "Failed to free allocated message");
+    message->Free();
     VerifyOrQuit(ncpBuffer.InFrameEnd() == OT_ERROR_INVALID_STATE, "Incorrect error status");
     VerifyAndRemoveFrame2(ncpBuffer);
     VerifyAndRemoveFrame1(ncpBuffer);

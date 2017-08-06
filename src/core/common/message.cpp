@@ -89,7 +89,7 @@ exit:
     return message;
 }
 
-otError MessagePool::Free(Message *aMessage)
+void MessagePool::Free(Message *aMessage)
 {
     assert(aMessage->Next(MessageInfo::kListAll) == NULL &&
            aMessage->Prev(MessageInfo::kListAll) == NULL);
@@ -97,7 +97,7 @@ otError MessagePool::Free(Message *aMessage)
     assert(aMessage->Next(MessageInfo::kListInterface) == NULL &&
            aMessage->Prev(MessageInfo::kListInterface) == NULL);
 
-    return FreeBuffers(static_cast<Buffer *>(aMessage));
+    FreeBuffers(static_cast<Buffer *>(aMessage));
 }
 
 Buffer *MessagePool::NewBuffer(void)
@@ -128,13 +128,11 @@ Buffer *MessagePool::NewBuffer(void)
     return buffer;
 }
 
-otError MessagePool::FreeBuffers(Buffer *aBuffer)
+void MessagePool::FreeBuffers(Buffer *aBuffer)
 {
-    Buffer *tmpBuffer;
-
     while (aBuffer != NULL)
     {
-        tmpBuffer = aBuffer->GetNextBuffer();
+        Buffer *tmpBuffer = aBuffer->GetNextBuffer();
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
 #else // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
@@ -144,8 +142,6 @@ otError MessagePool::FreeBuffers(Buffer *aBuffer)
 #endif // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         aBuffer = tmpBuffer;
     }
-
-    return OT_ERROR_NONE;
 }
 
 otError MessagePool::ReclaimBuffers(int aNumBuffers)
@@ -260,9 +256,9 @@ exit:
     return error;
 }
 
-otError Message::Free(void)
+void Message::Free(void)
 {
-    return GetMessagePool()->Free(this);
+    GetMessagePool()->Free(this);
 }
 
 Message *Message::GetNext(void) const

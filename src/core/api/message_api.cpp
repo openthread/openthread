@@ -38,9 +38,9 @@
 
 using namespace ot;
 
-otError otMessageFree(otMessage *aMessage)
+void otMessageFree(otMessage *aMessage)
 {
-    return static_cast<Message *>(aMessage)->Free();
+    static_cast<Message *>(aMessage)->Free();
 }
 
 uint16_t otMessageGetLength(otMessage *aMessage)

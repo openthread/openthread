@@ -56,8 +56,6 @@ extern "C" {
  *
  * @param[in]  aMessage  A pointer to a message buffer.
  *
- * @retval OT_ERROR_NONE  Successfully freed the message buffer.
- *
  * @sa otMessageAppend
  * @sa otMessageGetLength
  * @sa otMessageSetLength
@@ -66,7 +64,7 @@ extern "C" {
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-otError otMessageFree(otMessage *aMessage);
+void otMessageFree(otMessage *aMessage);
 
 /**
  * Get the message length in bytes.
