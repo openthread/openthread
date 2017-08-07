@@ -65,8 +65,8 @@ NRF52840_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"nrf52840-mbedtls-config.h\"'
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52840/crypto
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include/mbedtls
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52840/

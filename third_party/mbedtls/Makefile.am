@@ -18,7 +18,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                    = \
     mbedtls-config.h                            \
-    repo/include                                \
+    repo.patched/include                        \
     $(NULL)
 
 lib_LIBRARIES                                 = libmbedcrypto.a
@@ -31,7 +31,7 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo
+MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo.patched
 
 libmbedcrypto_a_CPPFLAGS                      = \
     -I$(top_srcdir)/include                     \
@@ -42,11 +42,11 @@ libmbedcrypto_a_CPPFLAGS                      = \
 
 libmbedcrypto_a_SOURCES                       = \
     hardware_entropy.c                          \
-    repo/library/md.c                           \
-    repo/library/md_wrap.c                      \
-    repo/library/memory_buffer_alloc.c          \
-    repo/library/platform.c                     \
-    repo/library/sha256.c                       \
+    repo.patched/library/md.c                   \
+    repo.patched/library/md_wrap.c              \
+    repo.patched/library/memory_buffer_alloc.c  \
+    repo.patched/library/platform.c             \
+    repo.patched/library/sha256.c               \
     $(NULL)
 
 if OPENTHREAD_EXAMPLES_EFR32
@@ -55,29 +55,29 @@ nodist_libmbedcrypto_a_SOURCES                = \
     $(NULL)
 else
 libmbedcrypto_a_SOURCES                      += \
-    repo/library/aes.c                          \
+    repo.patched/library/aes.c                  \
     $(NULL)
 endif  # OPENTHREAD_EXAMPLES_EFR32
 
 if OPENTHREAD_ENABLE_DTLS
 libmbedcrypto_a_SOURCES                      += \
-    repo/library/bignum.c                       \
-    repo/library/ccm.c                          \
-    repo/library/cipher.c                       \
-    repo/library/cipher_wrap.c                  \
-    repo/library/cmac.c                         \
-    repo/library/ctr_drbg.c                     \
-    repo/library/debug.c                        \
-    repo/library/ecjpake.c                      \
-    repo/library/ecp_curves.c                   \
-    repo/library/entropy.c                      \
-    repo/library/entropy_poll.c                 \
-    repo/library/ssl_cookie.c                   \
-    repo/library/ssl_ciphersuites.c             \
-    repo/library/ssl_cli.c                      \
-    repo/library/ssl_srv.c                      \
-    repo/library/ssl_ticket.c                   \
-    repo/library/ssl_tls.c                      \
+    repo.patched/library/bignum.c               \
+    repo.patched/library/ccm.c                  \
+    repo.patched/library/cipher.c               \
+    repo.patched/library/cipher_wrap.c          \
+    repo.patched/library/cmac.c                 \
+    repo.patched/library/ctr_drbg.c             \
+    repo.patched/library/debug.c                \
+    repo.patched/library/ecjpake.c              \
+    repo.patched/library/ecp_curves.c           \
+    repo.patched/library/entropy.c              \
+    repo.patched/library/entropy_poll.c         \
+    repo.patched/library/ssl_cookie.c           \
+    repo.patched/library/ssl_ciphersuites.c     \
+    repo.patched/library/ssl_cli.c              \
+    repo.patched/library/ssl_srv.c              \
+    repo.patched/library/ssl_ticket.c           \
+    repo.patched/library/ssl_tls.c              \
     $(NULL)
 
 if OPENTHREAD_EXAMPLES_EFR32
@@ -87,46 +87,9 @@ nodist_libmbedcrypto_a_SOURCES               += \
     $(NULL)
 else
 libmbedcrypto_a_SOURCES                      += \
-    repo/library/ecp.c                          \
+    repo.patched/library/ecp.c                  \
     $(NULL)
 endif  # OPENTHREAD_EXAMPLES_EFR32
-
-#
-# mbedtls patches
-#
-
-MBEDTLS_ABS_SRCDIR                           := $(abspath $(top_srcdir)/third_party/mbedtls)
-
-EXTRA_DIST                                                         += \
-    patch/0001-Fix-commissioning-problem-with-retransmissions.patch   \
-    patch/0002-Fix-warning-dead-store.patch                           \
-    $(NULL)
-
-repo/library/libmbedcrypto_a-ssl_tls.$(OBJEXT): $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched
-
-$(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched: $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fix-commissioning-problem-with-retransmissions.patch
-	chmod u+w $(MBEDTLS_ABS_SRCDIR)/repo/library/
-	chmod u+w $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c
-	if [ -e $@ ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c $@; fi
-	patch $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c $<
-	cp $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fix-commissioning-problem-with-retransmissions.patch $@
-
-repo/library/libmbedcrypto_a-ssl_srv.$(OBJEXT): $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched
-
-$(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched: $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch
-	chmod u+w $(MBEDTLS_ABS_SRCDIR)/repo/library/
-	chmod u+w $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c
-	if [ -e $@ ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $@; fi
-	patch $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $<
-	cp $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch $@
-
-all-local: libmbedcrypto.a
-	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fix-commissioning-problem-with-retransmissions.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched; fi
-	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched; fi
-
-clean-local:
-	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fix-commissioning-problem-with-retransmissions.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched; fi
-	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched; fi
 
 endif  # OPENTHREAD_ENABLE_DTLS
 

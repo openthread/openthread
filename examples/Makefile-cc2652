@@ -59,7 +59,7 @@ CC2652_MBEDTLS_CPPFLAGS                                    = \
     -I$(PWD)/examples/platforms/cc2652/crypto                \
     -I$(PWD)/third_party/ti/devices/cc26x2                   \
     -I$(PWD)/third_party/mbedtls                             \
-    -I$(PWD)/third_party/mbedtls/repo/include                \
+    -I$(PWD)/third_party/mbedtls/repo.patched/include        \
     $(NULL)
 
 CC2652_CONFIG_FILE_CPPFLAGS                                =                    \
