@@ -235,7 +235,7 @@ public:
      * This method frees this message buffer.
      *
      */
-    otError Free(void);
+    void Free(void);
 
     /**
      * This method returns a pointer to the next message in the same interface list.
@@ -1126,11 +1126,8 @@ public:
      *
      * @param[in]  aMessage  The message to free.
      *
-     * @retval OT_ERROR_NONE          Successfully freed the message.
-     * @retval OT_ERROR_INVALID_ARGS  The message is already freed.
-     *
      */
-    otError Free(Message *aMessage);
+    void Free(Message *aMessage);
 
     /**
      * This method returns a pointer to the first message (head) in the all-messages list.
@@ -1169,7 +1166,7 @@ private:
     };
 
     Buffer *NewBuffer(void);
-    otError FreeBuffers(Buffer *aBuffer);
+    void FreeBuffers(Buffer *aBuffer);
     otError ReclaimBuffers(int aNumBuffers);
     PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
 

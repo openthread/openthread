@@ -66,8 +66,7 @@ void TestMessage(void)
                  "Message compare failed\n");
     VerifyOrQuit(message->GetLength() == 1024,
                  "Message::GetLength failed\n");
-    SuccessOrQuit(message->Free(),
-                  "Message::Free failed\n");
+    message->Free();
 
     testFreeInstance(instance);
 }

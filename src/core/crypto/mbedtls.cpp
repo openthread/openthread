@@ -53,7 +53,7 @@ static void *CAlloc(size_t aCount, size_t aSize)
 
 static void Free(void *aPointer)
 {
-    return otGetInstance()->mMbedTlsHeap.Free(aPointer);
+    otGetInstance()->mMbedTlsHeap.Free(aPointer);
 }
 
 MbedTls::MbedTls(void)
