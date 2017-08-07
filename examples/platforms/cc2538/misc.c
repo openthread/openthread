@@ -37,12 +37,6 @@ void otPlatReset(otInstance *aInstance)
     HWREG(SYS_CTRL_PWRDBG) = SYS_CTRL_PWRDBG_FORCE_WARM_RESET;
 }
 
-void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
-{
-    (void)aInstance;
-    (void)aSpeed;
-}
-
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;

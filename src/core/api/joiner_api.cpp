@@ -39,21 +39,54 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_JOINER
-
 otError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
                       const char *aVendorName, const char *aVendorModel,
                       const char *aVendorSwVersion, const char *aVendorData,
                       otJoinerCallback aCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl,
-                                                     aVendorName, aVendorModel, aVendorSwVersion, aVendorData,
-                                                     aCallback, aContext);
+    otError error = OT_ERROR_DISABLED_FEATURE;
+
+#if OPENTHREAD_ENABLE_JOINER
+    error = aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl,
+                                                      aVendorName, aVendorModel, aVendorSwVersion, aVendorData,
+                                                      aCallback, aContext);
+#else  // OPENTHREAD_ENABLE_JOINER
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPSKd);
+    OT_UNUSED_VARIABLE(aProvisioningUrl);
+    OT_UNUSED_VARIABLE(aVendorName);
+    OT_UNUSED_VARIABLE(aVendorModel);
+    OT_UNUSED_VARIABLE(aVendorSwVersion);
+    OT_UNUSED_VARIABLE(aVendorData);
+    OT_UNUSED_VARIABLE(aCallback);
+    OT_UNUSED_VARIABLE(aContext);
+#endif // OPENTHREAD_ENABLE_JOINER
+
+    return error;
 }
 
 otError otJoinerStop(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJoiner().Stop();
+    otError error = OT_ERROR_DISABLED_FEATURE;
+
+#if OPENTHREAD_ENABLE_JOINER
+    error = aInstance->mThreadNetif.GetJoiner().Stop();
+#else  // OPENTHREAD_ENABLE_JOINER
+    OT_UNUSED_VARIABLE(aInstance);
+#endif // OPENTHREAD_ENABLE_JOINER
+
+    return error;
 }
 
-#endif  // OPENTHREAD_ENABLE_JOINER
+otJoinerState otJoinerGetState(otInstance *aInstance)
+{
+    otJoinerState state = OT_JOINER_STATE_IDLE;
+
+#if OPENTHREAD_ENABLE_JOINER
+    state = aInstance->mThreadNetif.GetJoiner().GetState();
+#else  // OPENTHREAD_ENABLE_JOINER
+    OT_UNUSED_VARIABLE(aInstance);
+#endif // OPENTHREAD_ENABLE_JOINER
+
+    return state;
+}

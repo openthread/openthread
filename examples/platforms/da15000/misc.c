@@ -26,19 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <openthread/config.h>
 
 #include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 
 #include "hw_cpm.h"
-#include "hw_watchdog.h"
 #include "sdk_defs.h"
-
-static void ClkChange(sys_clk_t lastClock, sys_clk_t newClock);
-static sys_clk_t ClkGet(void);
-static void ClkSet(sys_clk_t clock);
 
 void otPlatReset(otInstance *aInstance)
 {
@@ -56,133 +50,3 @@ void otPlatWakeHost(void)
 {
     // TODO: implement an operation to wake the host from sleep state.
 }
-
-void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
-{
-#if (OPENTHREAD_ENABLE_JOINER || (OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER))
-
-    switch (aSpeed)
-    {
-    case OT_CLOCK_HIGH:
-        ClkChange(sysclk_XTAL16M, sysclk_PLL96);
-        break;
-
-    case OT_CLOCK_LOW:
-        ClkChange(sysclk_PLL96, sysclk_XTAL16M);
-        break;
-
-    default:
-        break;
-    }
-
-#endif
-}
-
-static sys_clk_t ClkGet(void)
-{
-    sys_clk_t clk = sysclk_RC16;
-    uint32_t hw_clk = hw_cpm_get_sysclk();
-
-    switch (hw_clk)
-    {
-    case SYS_CLK_IS_RC16:
-        clk = sysclk_RC16;
-        break;
-
-    case SYS_CLK_IS_XTAL16M:
-        if (dg_configEXT_CRYSTAL_FREQ == EXT_CRYSTAL_IS_16M)
-        {
-            clk = sysclk_XTAL16M;
-        }
-        else
-        {
-            clk = sysclk_XTAL32M;
-        }
-
-        break;
-
-    case SYS_CLK_IS_PLL:
-        if (hw_cpm_get_pll_divider_status() == 1)
-        {
-            clk = sysclk_PLL48;
-        }
-        else
-        {
-            clk = sysclk_PLL96;
-        }
-
-        break;
-
-    case SYS_CLK_IS_LP:
-
-    // fall-through
-
-    default:
-        ASSERT_WARNING(0);
-        break;
-    }
-
-    return clk;
-}
-
-static void ClkSet(sys_clk_t clock)
-{
-    switch (clock)
-    {
-    case sysclk_XTAL16M:
-        if (!hw_cpm_check_xtal16m_status()) // XTAL16M disabled
-        {
-            hw_cpm_enable_xtal16m();        // Enable XTAL16M
-        }
-
-        hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M);  // Set XTAL16 as sys_clk
-        hw_watchdog_unfreeze();                 // Start watchdog
-
-        while (!hw_cpm_is_xtal16m_started());   // Block until XTAL16M starts
-
-        hw_watchdog_freeze();                   // Stop watchdog
-        hw_cpm_set_hclk_div(0);
-        hw_cpm_set_pclk_div(0);
-        break;
-
-    case sysclk_PLL48:
-        if (hw_cpm_is_pll_locked() == 0)
-        {
-            hw_watchdog_unfreeze();         // Start watchdog
-            hw_cpm_pll_sys_on();            // Turn on PLL
-            hw_watchdog_freeze();           // Stop watchdog
-        }
-
-        hw_cpm_enable_pll_divider();        // Enable divider (div by 2)
-        hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
-        hw_cpm_set_hclk_div(0);
-        hw_cpm_set_pclk_div(0);
-        break;
-
-    case sysclk_PLL96:
-        if (hw_cpm_is_pll_locked() == 0)
-        {
-            hw_watchdog_unfreeze();         // Start watchdog
-            hw_cpm_pll_sys_on();            // Turn on PLL
-            hw_watchdog_freeze();           // Stop watchdog
-        }
-
-        hw_cpm_disable_pll_divider();       // Enable divider (div by 2)
-        hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
-        hw_cpm_set_hclk_div(0);
-        hw_cpm_set_pclk_div(0);
-        break;
-
-    default:
-        break;
-    }
-}
-
-static void ClkChange(sys_clk_t lastClock, sys_clk_t newClock)
-{
-    if (ClkGet() == lastClock)
-    {
-        ClkSet(newClock);
-    }
-}
-

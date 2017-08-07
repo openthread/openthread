@@ -48,12 +48,6 @@ void otPlatReset(otInstance *aInstance)
     SysCtrlSystemReset();
 }
 
-void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
-{
-    (void)aInstance;
-    (void)aSpeed;
-}
-
 /**
  * Function documented in platform/misc.h
  */

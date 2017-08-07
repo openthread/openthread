@@ -40,12 +40,6 @@ extern int      gArgumentsCount;
 extern char   **gArguments;
 #endif
 
-void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
-{
-    (void)aInstance;
-    (void)aSpeed;
-}
-
 void otPlatReset(otInstance *aInstance)
 {
 #ifndef _WIN32

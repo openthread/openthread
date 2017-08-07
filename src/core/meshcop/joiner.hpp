@@ -91,6 +91,21 @@ public:
      */
     otError Stop(void);
 
+    /**
+     * This function returns the Joiner State.
+     *
+     * @param[in]  aInstance  A pointer to an OpenThread instance.
+     *
+     * @retval OT_JOINER_STATE_IDLE
+     * @retval OT_JOINER_STATE_DISCOVER
+     * @retval OT_JOINER_STATE_CONNECT
+     * @retval OT_JOINER_STATE_CONNECTED
+     * @retval OT_JOINER_STATE_ENTRUST
+     * @retval OT_JOINER_STATE_JOINED
+     *
+     */
+    otJoinerState GetState(void) const;
+
 private:
     enum
     {
@@ -123,16 +138,7 @@ private:
 
     static Joiner &GetOwner(const Context &aContext);
 
-    enum State
-    {
-        kStateIdle      = 0,
-        kStateDiscover  = 1,
-        kStateConnect   = 2,
-        kStateConnected = 3,
-        kStateEntrust   = 4,
-        kStateJoined    = 5,
-    };
-    State mState;
+    otJoinerState mState;
 
     otJoinerCallback mCallback;
     void *mContext;

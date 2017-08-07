@@ -50,12 +50,6 @@ __WEAK void nrf5CryptoDeinit(void)
     // This function is defined as weak so it could be overridden with external implementation.
 }
 
-void otPlatCommissioningClkChange(otInstance *aInstance, otClockSpeed aSpeed)
-{
-    (void)aInstance;
-    (void)aSpeed;
-}
-
 void nrf5MiscInit(void)
 {
 #if SOFTDEVICE_PRESENT
