@@ -76,13 +76,13 @@
 #define SETTINGS_CONFIG_BASE_ADDRESS                           0
 
 /**
- * The CC2538 linker script sets aside 2 pages.
+ * @def The CC2538 linker script sets aside 2 pages.
  */
 #define SETTINGS_CONFIG_PAGE_NUM                               2
 
 /**
- * The page size of settings, 2K bytes
+ * @def The page size of settings, 2K bytes
  */
-#define  SETTINGS_CONFIG_PAGE_SIZE                             2048
+#define SETTINGS_CONFIG_PAGE_SIZE                              2048
 
 #endif  // OPENTHREAD_CORE_CC2538_CONFIG_H_
