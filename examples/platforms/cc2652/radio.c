@@ -61,7 +61,6 @@
 
 enum
 {
-    IEEE802154_ACK_LENGTH = 5,
     CC2652_RECEIVE_SENSITIVITY = -100,  // dBm
 };
 
@@ -80,14 +79,6 @@ static uint32_t sIEEEOverrides[] =
     0x000088D3, // Disabling dynamic DCDC settings control in TX
     0xFFFFFFFF, // END_OVERRIDE
 };
-
-/*
- * Status of the pending bit of the last ack packet found by the
- * sTransmitRxAckCmd radio command.
- *
- * Used to pass data from the radio state ISR to the processing loop.
- */
-static volatile bool sReceivedAckPendingBit = false;
 
 /*
  * Number of retry counts left to the currently transmitting frame.
@@ -143,6 +134,8 @@ static __attribute__((aligned(4))) rfc_ieeeRxOutput_t sRfStats;
 #define RX_BUF_SIZE 144
 static __attribute__((aligned(4))) uint8_t sRxBuf0[RX_BUF_SIZE];
 static __attribute__((aligned(4))) uint8_t sRxBuf1[RX_BUF_SIZE];
+static __attribute__((aligned(4))) uint8_t sRxBuf2[RX_BUF_SIZE];
+static __attribute__((aligned(4))) uint8_t sRxBuf3[RX_BUF_SIZE];
 
 /*
  * The RX Data Queue used by @ref sReceiveCmd.
@@ -153,12 +146,11 @@ static __attribute__((aligned(4))) dataQueue_t sRxDataQueue = { 0 };
  * OpenThread data primitives
  */
 static otRadioFrame sTransmitFrame;
-static otRadioFrame sReceiveFrame;
 static otError sTransmitError;
-static otError sReceiveError;
 
 static __attribute__((aligned(4))) uint8_t sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
-static __attribute__((aligned(4))) uint8_t sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE];
+
+static volatile bool sTxCmdChainDone = false;
 
 /*
  * Interrupt handlers forward declared for register functions.
@@ -175,8 +167,10 @@ void RFCCPE1IntHandler(void);
 static void rfCoreInitBufs(void)
 {
     rfc_dataEntry_t *entry;
-    memset(sRxBuf0, 0x00, RX_BUF_SIZE);
-    memset(sRxBuf1, 0x00, RX_BUF_SIZE);
+    memset(sRxBuf0, 0x00, sizeof(sRxBuf0));
+    memset(sRxBuf1, 0x00, sizeof(sRxBuf1));
+    memset(sRxBuf2, 0x00, sizeof(sRxBuf2));
+    memset(sRxBuf3, 0x00, sizeof(sRxBuf3));
 
     entry               = (rfc_dataEntry_t *)sRxBuf0;
     entry->pNextEntry   = sRxBuf1;
@@ -184,14 +178,22 @@ static void rfCoreInitBufs(void)
     entry->length       = sizeof(sRxBuf0) - sizeof(rfc_dataEntry_t);
 
     entry               = (rfc_dataEntry_t *)sRxBuf1;
+    entry->pNextEntry   = sRxBuf2;
+    entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
+    entry->length       = sizeof(sRxBuf1) - sizeof(rfc_dataEntry_t);
+
+    entry               = (rfc_dataEntry_t *)sRxBuf2;
+    entry->pNextEntry   = sRxBuf3;
+    entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
+    entry->length       = sizeof(sRxBuf2) - sizeof(rfc_dataEntry_t);
+
+    entry               = (rfc_dataEntry_t *)sRxBuf3;
     entry->pNextEntry   = sRxBuf0;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-    entry->length       = sizeof(sRxBuf0) - sizeof(rfc_dataEntry_t);
+    entry->length       = sizeof(sRxBuf3) - sizeof(rfc_dataEntry_t);
 
     sTransmitFrame.mPsdu   = sTransmitPsdu;
     sTransmitFrame.mLength = 0;
-    sReceiveFrame.mPsdu    = sReceivePsdu;
-    sReceiveFrame.mLength  = 0;
 }
 
 /**
@@ -243,7 +245,7 @@ static void rfCoreInitReceiveParams(void)
         {
             .bAcceptFt0Beacon       = 1,
             .bAcceptFt1Data         = 1,
-            .bAcceptFt2Ack          = 0,
+            .bAcceptFt2Ack          = 1,
             .bAcceptFt3MacCmd       = 1,
             .bAcceptFt4Reserved     = 1,
             .bAcceptFt5Reserved     = 1,
@@ -696,7 +698,7 @@ static uint_fast8_t rfCoreSendEdScanCmd(uint8_t aChannel, uint16_t aDurration)
 }
 
 /**
- * enables the cpe0 and cpe1 radio interrupts
+ * Enables the cpe0 and cpe1 radio interrupts.
  *
  * Enables the @ref IRQ_LAST_COMMAND_DONE and @ref IRQ_LAST_FG_COMMAND_DONE to
  * be handled by the @ref RFCCPE0IntHandler interrupt handler.
@@ -1067,29 +1069,27 @@ void RFCCPE0IntHandler(void)
                     {
                         sTransmitError = OT_ERROR_NO_ACK;
                         /* signal polling function we are done transmitting, we failed to send the packet */
-                        sState = cc2652_stateTransmitComplete;
+                        sTxCmdChainDone = true;
                     }
 
                     break;
 
                 case IEEE_DONE_ACK:
-                    sReceivedAckPendingBit = false;
                     sTransmitError = OT_ERROR_NONE;
                     /* signal polling function we are done transmitting */
-                    sState = cc2652_stateTransmitComplete;
+                    sTxCmdChainDone = true;
                     break;
 
                 case IEEE_DONE_ACKPEND:
-                    sReceivedAckPendingBit = true;
                     sTransmitError = OT_ERROR_NONE;
                     /* signal polling function we are done transmitting */
-                    sState = cc2652_stateTransmitComplete;
+                    sTxCmdChainDone = true;
                     break;
 
                 default:
                     sTransmitError = OT_ERROR_FAILED;
                     /* signal polling function we are done transmitting */
-                    sState = cc2652_stateTransmitComplete;
+                    sTxCmdChainDone = true;
                     break;
                 }
             }
@@ -1100,7 +1100,6 @@ void RFCCPE0IntHandler(void)
                 switch (sTransmitCmd.status)
                 {
                 case IEEE_DONE_OK:
-                    sReceivedAckPendingBit = false;
                     sTransmitError = OT_ERROR_NONE;
                     break;
 
@@ -1124,7 +1123,7 @@ void RFCCPE0IntHandler(void)
                 }
 
                 /* signal polling function we are done transmitting */
-                sState = cc2652_stateTransmitComplete;
+                sTxCmdChainDone = true;
             }
         }
     }
@@ -1344,7 +1343,6 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
  */
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    (void)aInstance;
     otError error = OT_ERROR_BUSY;
 
     if (sState == cc2652_stateReceive)
@@ -1355,10 +1353,12 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         otEXPECT_ACTION(rfCoreSendTransmitCmd(aFrame->mPsdu, aFrame->mLength - 2) == CMDSTA_Done,
                         error = OT_ERROR_FAILED);
         error = OT_ERROR_NONE;
+        sTransmitError = OT_ERROR_NONE;
+        sTxCmdChainDone = false;
+        otPlatRadioTxStarted(aInstance, aFrame);
     }
 
 exit:
-    sTransmitError = error;
     return error;
 }
 
@@ -1745,53 +1745,95 @@ exit:
     return;
 }
 
-/**
- * Search the receive queue for unprocessed messages.
- *
- * Loop through the receive queue structure looking for data entries that the
- * radio core has marked as finished. Then place those in @ref sReceiveFrame
- * and mark any errors in @ref sReceiveError.
- */
-static void readFrame(void)
+static void cc2652RadioProcessTransmitDone(otInstance *aInstance, otRadioFrame *aTransmitFrame, otRadioFrame *aAckFrame, otError aTransmitError)
 {
-    rfc_ieeeRxCorrCrc_t *crcCorr;
-    uint8_t rssi;
-    rfc_dataEntryGeneral_t *startEntry = (rfc_dataEntryGeneral_t *)sRxDataQueue.pCurrEntry;
-    rfc_dataEntryGeneral_t *curEntry = startEntry;
+#if OPENTHREAD_ENABLE_DIAG
+
+    if (otPlatDiagModeGet())
+    {
+        otPlatDiagRadioTransmitDone(aInstance, aTransmitFrame, aTransmitError);
+    }
+    else
+#endif /* OPENTHREAD_ENABLE_DIAG */
+    {
+        otPlatRadioTxDone(aInstance, aTransmitFrame, aAckFrame, aTransmitError);
+    }
+}
+
+static void cc2652RadioProcessReceiveDone(otInstance *aInstance, otRadioFrame *aReceiveFrame, otError aReceiveError)
+{
+#if OPENTHREAD_ENABLE_DIAG
+    if (otPlatDiagModeGet())
+    {
+        otPlatDiagRadioReceiveDone(aInstance, aReceiveFrame, aReceiveError);
+    }
+    else
+#endif /* OPENTHREAD_ENABLE_DIAG */
+    {
+        otPlatRadioReceiveDone(aInstance, aReceiveFrame, aReceiveError);
+    }
+}
+
+static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
+{
+    rfc_ieeeRxCorrCrc_t    *crcCorr;
+    rfc_dataEntryGeneral_t *curEntry, *startEntry;
+    uint8_t                 rssi;
+
+    startEntry = (rfc_dataEntryGeneral_t *)sRxDataQueue.pCurrEntry;
+    curEntry = startEntry;
 
     /* loop through receive queue */
     do
     {
         uint8_t *payload = &(curEntry->data);
 
-        if (sReceiveFrame.mLength == 0 && curEntry->status == DATA_ENTRY_FINISHED)
+        if (curEntry->status == DATA_ENTRY_FINISHED)
         {
-            uint8_t len = payload[0];
+            uint8_t      len;
+            otError      receiveError;
+            otRadioFrame receiveFrame;
+
             /* get the information appended to the end of the frame.
              * This array access looks like it is a fencepost error, but the
              * first byte is the number of bytes that follow.
              */
+            len     = payload[0];
             crcCorr = (rfc_ieeeRxCorrCrc_t *)&payload[len];
-            rssi = payload[len - 1];
+            rssi    = payload[len - 1];
 
             if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-                // Timestamp
-                sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-                sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
+                // TODO: Propagate CM0 timestamp
+                receiveFrame.mMsec    = otPlatAlarmMilliGetNow();
+                receiveFrame.mUsec    = 0;  // Don't support microsecond timer for now.
 #endif
 
-                sReceiveFrame.mLength = len;
-                memcpy(sReceiveFrame.mPsdu, &(payload[1]), len - 2);
-                sReceiveFrame.mChannel = sReceiveCmd.channel;
-                sReceiveFrame.mPower = rssi;
-                sReceiveFrame.mLqi = crcCorr->status.corr;
-                sReceiveError = OT_ERROR_NONE;
+                receiveFrame.mLength  = len;
+                receiveFrame.mPsdu    = &(payload[1]);
+                receiveFrame.mChannel = sReceiveCmd.channel;
+                receiveFrame.mPower   = rssi;
+                receiveFrame.mLqi     = crcCorr->status.corr;
+
+                receiveError = OT_ERROR_NONE;
             }
             else
             {
-                sReceiveError = OT_ERROR_FCS;
+                receiveError = OT_ERROR_FCS;
+            }
+
+            if ((receiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK)
+            {
+                if (receiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
+                {
+                    sState = cc2652_stateReceive;
+                    cc2652RadioProcessTransmitDone(aInstance, &sTransmitFrame, &receiveFrame, receiveError);
+                }
+            }
+            else
+            {
+                cc2652RadioProcessReceiveDone(aInstance, &receiveFrame, receiveError);
             }
 
             curEntry->status = DATA_ENTRY_PENDING;
@@ -1805,8 +1847,6 @@ static void readFrame(void)
         curEntry = (rfc_dataEntryGeneral_t *)(curEntry->pNextEntry);
     }
     while (curEntry != startEntry);
-
-    return;
 }
 
 /**
@@ -1826,59 +1866,22 @@ void cc2652RadioProcess(otInstance *aInstance)
         }
     }
 
-    if (sState == cc2652_stateTransmitComplete || (sState == cc2652_stateTransmit && sTransmitError != OT_ERROR_NONE))
+    if (sState == cc2652_stateReceive
+            || sState == cc2652_stateTransmit)
     {
-        /* we are not looking for an ACK packet, or failed */
-        sState = cc2652_stateReceive;
-#if OPENTHREAD_ENABLE_DIAG
-
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitError);
-        }
-        else
-#endif /* OPENTHREAD_ENABLE_DIAG */
-        {
-            // TODO: pass received ACK frame instead of generating one.
-            otRadioFrame ackFrame;
-            uint8_t psdu[IEEE802154_ACK_LENGTH];
-
-            ackFrame.mPsdu = psdu;
-            ackFrame.mLength = IEEE802154_ACK_LENGTH;
-            ackFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
-
-            if (sReceivedAckPendingBit)
-            {
-                ackFrame.mPsdu[0] |= IEEE802154_FRAME_PENDING;
-            }
-
-            ackFrame.mPsdu[1] = 0;
-            ackFrame.mPsdu[2] = sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET];
-
-            otPlatRadioTxDone(aInstance, &sTransmitFrame, &ackFrame, sTransmitError);
-        }
+        cc2652RadioProcessReceiveQueue(aInstance);
     }
 
-    if (sState == cc2652_stateReceive || sState == cc2652_stateTransmit)
+    if (sTxCmdChainDone)
     {
-        readFrame();
-
-        if (sReceiveFrame.mLength > 0)
+        if (sState == cc2652_stateTransmit)
         {
-#if OPENTHREAD_ENABLE_DIAG
-
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
-            }
-            else
-#endif /* OPENTHREAD_ENABLE_DIAG */
-            {
-                otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
-            }
+            /* we are not looking for an ACK packet, or failed */
+            sState = cc2652_stateReceive;
+            cc2652RadioProcessTransmitDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
         }
-
-        sReceiveFrame.mLength = 0;
+        sTransmitError = OT_ERROR_NONE;
+        sTxCmdChainDone = false;
     }
 }
 
