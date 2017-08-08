@@ -54,8 +54,8 @@ _FLASH_end              = (_FLASH_start + _FLASH_size_bytes);
 _FLASH_cca_page         = (_FLASH_end - (1 * _FLASH_page_size));
 
 /*
- * Openthread NV storage goes in the settings page.
- * Openthread requires at least 2 adjacent pages, call them A and B.
+ * OpenThread NV storage goes in the settings page.
+ * OpenThread requires at least 2 adjacent pages, call them A and B.
  */
 _FLASH_settings_pageB   = (_FLASH_end - (2 * _FLASH_page_size));
 _FLASH_settings_pageA   = (_FLASH_end - (3 * _FLASH_page_size));

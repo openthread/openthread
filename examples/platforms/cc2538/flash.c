@@ -37,10 +37,10 @@
 #include <openthread/platform/alarm-milli.h>
 
 #include "platform-cc2538.h"
-#include "utils/wrap_string.h"
 #include "rom-utility.h"
 #include "utils/code_utils.h"
 #include "utils/flash.h"
+#include "utils/wrap_string.h"
 
 #define FLASH_CTRL_FCTL_BUSY   0x00000080
 
