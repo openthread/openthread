@@ -34,4 +34,12 @@
 #ifndef OPENTHREAD_CORE_GP712_CONFIG_H_
 #define OPENTHREAD_CORE_GP712_CONFIG_H_
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * The platform-specific string to insert into the OpenThread version string.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "GP712"
+
 #endif  // OPENTHREAD_CORE_GP712_CONFIG_H_

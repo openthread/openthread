@@ -47,7 +47,6 @@ configure_OPTIONS                                          = \
     --with-ncp-bus=uart                                      \
     --enable-diag                                            \
     --with-examples=cc2652                                   \
-    --with-platform-info=cc2652                              \
     MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)"            \
     $(NULL)
 

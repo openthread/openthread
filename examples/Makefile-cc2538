@@ -47,7 +47,6 @@ configure_OPTIONS               = \
     --with-ncp-bus=uart           \
     --enable-diag                 \
     --with-examples=cc2538        \
-    --with-platform-info=CC2538   \
     --enable-linker-map           \
     $(NULL)
 

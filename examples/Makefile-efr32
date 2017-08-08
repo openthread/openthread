@@ -47,7 +47,6 @@ configure_OPTIONS               = \
     --with-ncp-bus=uart           \
     --enable-diag                 \
     --with-examples=efr32         \
-    --with-platform-info=EFR32    \
     --enable-linker-map           \
     MBEDTLS_CPPFLAGS="$(EFR32_MBEDTLS_CPPFLAGS)" \
     $(NULL)

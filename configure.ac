@@ -1237,24 +1237,6 @@ AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
 
 #
-# Platform Information
-#
-
-AC_ARG_WITH(platform-info,
-    [AS_HELP_STRING([--with-platform-info=PLATFORM],
-        [Specify the platform information @<:@default=none@:>@.])],
-    [],
-    [with_platform_info=none])
-
-PLATFORM_INFO=${with_platform_info}
-
-AC_MSG_CHECKING([with platform info])
-AC_MSG_RESULT(${PLATFORM_INFO})
-
-AC_SUBST(PLATFORM_INFO)
-AC_DEFINE_UNQUOTED([PLATFORM_INFO],["${PLATFORM_INFO}"],[OpenThread platform information])
-
-#
 # Tools
 #
 

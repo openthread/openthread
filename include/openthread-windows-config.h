@@ -76,6 +76,9 @@
 #define OPENTHREAD_ENABLE_RAW_LINK_API 1
 #endif
 
+/* Define to the platform name. */
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "Windows"
+
 /* Define to 1 to enable Border Router feature. */
 #define OPENTHREAD_ENABLE_BORDER_ROUTER 1
 
@@ -102,9 +105,6 @@
 
 /* Version number of package */
 #define VERSION "0.01.00"
-
-/* Platform version information */
-#define PLATFORM_INFO "Windows"
 
 // Windows Kernel only has sprintf_s
 #ifdef _KERNEL_MODE
