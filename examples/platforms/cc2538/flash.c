@@ -26,25 +26,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 
 #include "platform-cc2538.h"
 #include "rom-utility.h"
 #include "utils/code_utils.h"
 #include "utils/flash.h"
+#include "utils/wrap_string.h"
 
 #define FLASH_CTRL_FCTL_BUSY   0x00000080
 
-enum
+#if SETTINGS_CONFIG_PAGE_SIZE != 2048
+#error FLASH page size is 2048 on this chip
+#endif
+
+#if SETTINGS_CONFIG_PAGE_NUM != 2
+#error Linker script reserves 2 pages for settings.
+#endif
+
+/* The linker script creates this external symbol */
+extern uint8_t _FLASH_settings_pageA[];
+
+/* Convert a settings offset to the physical address within the flash settings pages */
+static uint32_t flashPhysAddr(uint32_t settings_offset)
 {
-    FLASH_PAGE_SIZE = 0x800,
-};
+    uint32_t base;
+
+    base = (uint32_t)(&_FLASH_settings_pageA[0]);
+    base = base + settings_offset;
+    return base;
+}
 
 static otError romStatusToThread(int32_t aStatus)
 {
@@ -78,9 +97,7 @@ otError utilsFlashInit(void)
 
 uint32_t utilsFlashGetSize(void)
 {
-    uint32_t reg = (HWREG(FLASH_CTRL_DIECFG0) & 0x00000070) >> 4;
-
-    return reg ? (0x20000 * reg) : 0x10000;
+    return (SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM);
 }
 
 otError utilsFlashErasePage(uint32_t aAddress)
@@ -91,8 +108,9 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
     otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = OT_ERROR_INVALID_ARGS);
 
-    address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE - 1));
-    status = ROM_PageErase(address, FLASH_PAGE_SIZE);
+    address = aAddress - (aAddress & (SETTINGS_CONFIG_PAGE_SIZE - 1));
+    address = flashPhysAddr(address);
+    status = ROM_PageErase(address, SETTINGS_CONFIG_PAGE_SIZE);
     error = romStatusToThread(status);
 
 exit:
@@ -130,7 +148,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     while (size < aSize)
     {
-        status = ROM_ProgramFlash(data, aAddress + FLASH_BASE, 4);
+        status = ROM_ProgramFlash(data, flashPhysAddr(aAddress), 4);
 
         while (busy)
         {
@@ -155,8 +173,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     while (size < aSize)
     {
-        uint32_t reg = HWREG(aAddress + FLASH_BASE);
-        uint8_t *byte = (uint8_t *)&reg;
+        uint8_t *byte = (uint8_t *)flashPhysAddr(aAddress);
         uint8_t maxIndex = 4;
 
         if (size == (aSize - aSize % 4))

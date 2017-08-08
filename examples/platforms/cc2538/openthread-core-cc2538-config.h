@@ -66,4 +66,23 @@
   */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN          1
 
+/**
+ * @def SETTINGS_CONFIG_BASE_ADDRESS
+ *
+ * The actual physical address used for the cc2538 is set by the
+ * linker file, the value here is "relative to the base address" set
+ * in the linker file.
+ */
+#define SETTINGS_CONFIG_BASE_ADDRESS                           0
+
+/**
+ * @def The CC2538 linker script sets aside 2 pages.
+ */
+#define SETTINGS_CONFIG_PAGE_NUM                               2
+
+/**
+ * @def The page size of settings, 2K bytes
+ */
+#define SETTINGS_CONFIG_PAGE_SIZE                              2048
+
 #endif  // OPENTHREAD_CORE_CC2538_CONFIG_H_
