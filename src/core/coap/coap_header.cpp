@@ -77,32 +77,31 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 
     Init();
 
-    VerifyOrExit(length >= kTokenOffset, error = OT_ERROR_PARSE);
+    VerifyOrExit(kTokenOffset <= length);
     aMessage.Read(offset, kTokenOffset, mHeader.mBytes);
     mHeaderLength = kTokenOffset;
     offset += kTokenOffset;
-    length -= kTokenOffset;
 
-    VerifyOrExit(GetVersion() == 1, error = OT_ERROR_PARSE);
+    VerifyOrExit(GetVersion() == 1);
 
     tokenLength = GetTokenLength();
-    VerifyOrExit(tokenLength <= kMaxTokenLength && tokenLength <= length, error = OT_ERROR_PARSE);
+    VerifyOrExit(tokenLength <= kMaxTokenLength && (mHeaderLength + tokenLength) <= length);
     aMessage.Read(offset, tokenLength, mHeader.mBytes + mHeaderLength);
     mHeaderLength += tokenLength;
     offset += tokenLength;
-    length -= tokenLength;
 
-    while (length > 0)
+    while (mHeaderLength < length)
     {
+        VerifyOrExit(mHeaderLength + kMaxOptionHeaderSize <= kMaxHeaderLength);
+
         aMessage.Read(offset, kMaxOptionHeaderSize, mHeader.mBytes + mHeaderLength);
 
         if (mHeader.mBytes[mHeaderLength] == 0xff)
         {
             mHeaderLength += sizeof(uint8_t);
-            length -= sizeof(uint8_t);
             // RFC7252: The presence of a marker followed by a zero-length payload MUST be processed
             // as a message format error.
-            VerifyOrExit(length > 0, error = OT_ERROR_PARSE);
+            VerifyOrExit(mHeaderLength < length);
             ExitNow(error = OT_ERROR_NONE);
         }
 
@@ -115,7 +114,6 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
         optionLength = mHeader.mBytes[mHeaderLength] & 0xf;
         mHeaderLength += sizeof(uint8_t);
         offset += sizeof(uint8_t);
-        length -= sizeof(uint8_t);
 
         if (optionDelta < kOption1ByteExtension)
         {
@@ -126,15 +124,14 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
             optionDelta = kOption1ByteExtensionOffset + mHeader.mBytes[mHeaderLength];
             mHeaderLength += sizeof(uint8_t);
             offset += sizeof(uint8_t);
-            length -= sizeof(uint8_t);
         }
         else if (optionDelta == kOption2ByteExtension)
         {
             optionDelta = kOption2ByteExtensionOffset +
-                          static_cast<uint16_t>((mHeader.mBytes[mHeaderLength] << 8) | mHeader.mBytes[mHeaderLength + 1]);
+                          static_cast<uint16_t>((mHeader.mBytes[mHeaderLength] << 8) |
+                                                (mHeader.mBytes[mHeaderLength + 1]));
             mHeaderLength += sizeof(uint16_t);
             offset += sizeof(uint16_t);
-            length -= sizeof(uint16_t);
         }
         else
         {
@@ -150,15 +147,14 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
             optionLength = kOption1ByteExtensionOffset + mHeader.mBytes[mHeaderLength];
             mHeaderLength += sizeof(uint8_t);
             offset += sizeof(uint8_t);
-            length -= sizeof(uint8_t);
         }
         else if (optionLength == kOption2ByteExtension)
         {
             optionLength = kOption2ByteExtensionOffset +
-                           static_cast<uint16_t>((mHeader.mBytes[mHeaderLength] << 8) | mHeader.mBytes[mHeaderLength + 1]);
+                           static_cast<uint16_t>((mHeader.mBytes[mHeaderLength] << 8) |
+                                                 (mHeader.mBytes[mHeaderLength + 1]));
             mHeaderLength += sizeof(uint16_t);
             offset += sizeof(uint16_t);
-            length -= sizeof(uint16_t);
         }
         else
         {
@@ -174,14 +170,15 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
             firstOption = false;
         }
 
-        VerifyOrExit(optionLength <= length, error = OT_ERROR_PARSE);
+        VerifyOrExit(mHeaderLength + optionLength <= kMaxHeaderLength);
+        VerifyOrExit(mHeaderLength + optionLength <= length);
+
         aMessage.Read(offset, optionLength, mHeader.mBytes + mHeaderLength);
         mHeaderLength += static_cast<uint8_t>(optionLength);
         offset += optionLength;
-        length -= optionLength;
     }
 
-    if (length == 0)
+    if (mHeaderLength == length)
     {
         // No payload present - return success.
         error = OT_ERROR_NONE;
