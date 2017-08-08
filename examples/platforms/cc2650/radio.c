@@ -1733,7 +1733,8 @@ exit:
     return;
 }
 
-static void cc2650RadioProcessTransmitDone(otInstance *aInstance, otRadioFrame *aTransmitFrame, otRadioFrame *aAckFrame, otError aTransmitError)
+static void cc2650RadioProcessTransmitDone(otInstance *aInstance, otRadioFrame *aTransmitFrame, otRadioFrame *aAckFrame,
+                                           otError aTransmitError)
 {
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -1751,6 +1752,7 @@ static void cc2650RadioProcessTransmitDone(otInstance *aInstance, otRadioFrame *
 static void cc2650RadioProcessReceiveDone(otInstance *aInstance, otRadioFrame *aReceiveFrame, otError aReceiveError)
 {
 #if OPENTHREAD_ENABLE_DIAG
+
     if (otPlatDiagModeGet())
     {
         otPlatDiagRadioReceiveDone(aInstance, aReceiveFrame, aReceiveError);
@@ -1855,7 +1857,7 @@ void cc2650RadioProcess(otInstance *aInstance)
     }
 
     if (sState == cc2650_stateReceive
-            || sState == cc2650_stateTransmit)
+        || sState == cc2650_stateTransmit)
     {
         cc2650RadioProcessReceiveQueue(aInstance);
     }
@@ -1868,6 +1870,7 @@ void cc2650RadioProcess(otInstance *aInstance)
             sState = cc2650_stateReceive;
             cc2650RadioProcessTransmitDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
         }
+
         sTransmitError = OT_ERROR_NONE;
         sTxCmdChainDone = false;
     }
