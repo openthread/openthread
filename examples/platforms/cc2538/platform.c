@@ -31,13 +31,16 @@
  * @brief
  *   This file includes the platform-specific initializers.
  */
-
+#include <openthread/config.h>
 #include "platform-cc2538.h"
 
 otInstance *sInstance;
 
 void PlatformInit(int argc, char *argv[])
 {
+#if OPENTHREAD_ENABLE_DEBUG_UART
+    cc2538DebugUartInit();
+#endif
     cc2538AlarmInit();
     cc2538RandomInit();
     cc2538RadioInit();

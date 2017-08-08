@@ -78,6 +78,7 @@
 #endif
 
 #include "common/encoding.hpp"
+#include "utils/debug_uart.h"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -124,6 +125,9 @@ const struct Command Interpreter::sCommands[] =
     { "eui64", &Interpreter::ProcessEui64 },
 #ifdef OPENTHREAD_EXAMPLES_POSIX
     { "exit", &Interpreter::ProcessExit },
+#endif
+#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_EXAMPLES_POSIX
+    { "logfilename", &Interpreter::ProcessLogFilename },
 #endif
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
@@ -904,6 +908,27 @@ void Interpreter::ProcessExit(int argc, char *argv[])
     exit(EXIT_SUCCESS);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+}
+#endif
+
+#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_EXAMPLES_POSIX
+
+void Interpreter::ProcessLogFilename(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (argc == 1)
+    {
+        error = otPlatDebugUart_logfile(argv[0]);
+        SuccessOrExit(error);
+    }
+    else
+    {
+        error = OT_ERROR_PARSE;
+    }
+
+exit:
+    AppendResult(error);
 }
 #endif
 

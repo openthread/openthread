@@ -1500,6 +1500,31 @@ const char *otLogRegionToString(otLogRegion aRegion);
 #define _otPlatLog(aLogLevel, aRegion, aFormat, ...)                        \
     OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION(aLogLevel, aRegion, aFormat, ## __VA_ARGS__)
 
+
+/*
+ * This provides a prototype for the platform defined logging function
+ *
+ * It is not intended to be a Doxygen comment because ...
+ * it is a macro that is used to override the normal function.
+ *
+ * The macro "OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION" can be defined
+ * by three methods
+ *
+ * Method (A) via default 'openthread-core-default-config.h' as described above.
+ *
+ * Method (B) a platform specific override header that predefined the macro
+ *
+ * Method (C) on the compile command line, via a "-D" type define.
+ *
+ * In the "-D" case, there might not be a protytpe yet
+ * this just provides that missing prototype in the form required
+ *
+ */
+#if defined(OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION)
+void OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
+#endif
+
+
 #ifdef __cplusplus
 };
 #endif

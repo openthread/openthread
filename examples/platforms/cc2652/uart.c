@@ -33,11 +33,19 @@
  */
 
 #include <openthread/config.h>
+#include <openthread-core-config.h>
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <stddef.h>
 
 #include <openthread/platform/uart.h>
+#include <openthread/platform/logging.h>
 #include <openthread/types.h>
+
+#include "utils/debug_uart.h"
+#include "utils/code_utils.h"
+
 #include <utils/code_utils.h>
 
 #include <driverlib/ioc.h>
@@ -48,6 +56,8 @@
 /**
  * @note This will configure the uart for 115200 baud 8-N-1, no HW flow control
  * RX pin IOID_2 TX pin IOID_3.
+ *
+ * If the DEBUG UART is enabled, IOID_0 = debug tx, IOID_1 = debug rx
  */
 
 enum
@@ -64,29 +74,66 @@ static uint16_t       sReceiveTailIdx = 0;
 
 void UART0_intHandler(void);
 
+static void uart_power_control(uint32_t who_base, int turnon)
+{
+    uint32_t value;
+
+    if (turnon)
+    {
+        /* UART0 is in the SERIAL domain
+         * UART1 is in the PERIPH domain.
+         * See: ti/devices/cc26x2/driverlib/pcrm.h, line: 658
+         */
+        value = (who_base == UART0_BASE) ? PRCM_DOMAIN_SERIAL : PRCM_DOMAIN_PERIPH;
+        PRCMPowerDomainOn(value);
+
+        while (PRCMPowerDomainStatus(value) != PRCM_DOMAIN_POWER_ON);
+
+        value = (who_base == UART0_BASE) ? PRCM_PERIPH_UART0 : PRCM_PERIPH_UART1;
+        PRCMPeripheralRunEnable(value);
+        PRCMPeripheralSleepEnable(value);
+        PRCMPeripheralDeepSleepEnable(value);
+        PRCMLoadSet();
+
+        while (!PRCMLoadGet());
+    }
+    else
+    {
+        if (who_base == UART0_BASE)
+        {
+            PRCMPeripheralRunDisable(PRCM_PERIPH_UART0);
+            PRCMPeripheralSleepDisable(PRCM_PERIPH_UART0);
+            PRCMPeripheralDeepSleepDisable(PRCM_PERIPH_UART0);
+            PRCMLoadSet();
+            PRCMPowerDomainOff(PRCM_DOMAIN_SERIAL);
+        }
+        else
+        {
+            /* we never turn the debug uart off */
+        }
+    }
+}
+
+
 /**
  * Function documented in platform/uart.h
  */
 otError otPlatUartEnable(void)
 {
-    PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
-
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON);
-
-    PRCMPeripheralRunEnable(PRCM_PERIPH_UART0);
-    PRCMPeripheralSleepEnable(PRCM_PERIPH_UART0);
-    PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_UART0);
-    PRCMLoadSet();
-
-    while (!PRCMLoadGet());
+    uart_power_control(UART0_BASE, true);
 
     IOCPinTypeUart(UART0_BASE, IOID_2, IOID_3, IOID_UNUSED, IOID_UNUSED);
-
     UARTConfigSetExpClk(UART0_BASE, SysCtrlClockGet(), 115200,
                         UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
+
+    /* Note: UART1 could use IRQs
+     * However, for reasons of debug simplicity
+     * we do not use IRQs for the debug uart
+     */
     UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
     UARTIntRegister(UART0_BASE, UART0_intHandler);
     UARTEnable(UART0_BASE);
+
     return OT_ERROR_NONE;
 }
 
@@ -101,15 +148,8 @@ otError otPlatUartDisable(void)
     IOCPortConfigureSet(IOID_2, IOC_PORT_GPIO, IOC_STD_INPUT);
     IOCPortConfigureSet(IOID_3, IOC_PORT_GPIO, IOC_STD_INPUT);
 
-    PRCMPeripheralRunDisable(PRCM_PERIPH_UART0);
-    PRCMPeripheralSleepDisable(PRCM_PERIPH_UART0);
-    PRCMPeripheralDeepSleepDisable(PRCM_PERIPH_UART0);
-    PRCMLoadSet();
-    /**
-     * \warn this assumes that there are no other devices being used in the
-     * serial power domain
-     */
-    PRCMPowerDomainOff(PRCM_DOMAIN_SERIAL);
+    uart_power_control(UART0_BASE, false);
+
     return OT_ERROR_NONE;
 }
 
@@ -201,3 +241,94 @@ void UART0_intHandler(void)
     }
 }
 
+#if OPENTHREAD_ENABLE_DEBUG_UART
+
+/*
+ *  Documented in platform-cc2652.h
+ */
+void
+cc2652DebugUartInit(void)
+{
+    uart_power_control(UART1_BASE, true);
+    /*
+     * LaunchPad Pin29 = tx, Pin 30 = rxd
+     *
+     * The function IOCPinTypeUart() is hard coded to
+     * only support UART0 - and does not support UART1.
+     *
+     * Thus, these pins are configured using a different way.
+     */
+    IOCPortConfigureSet(IOID_0, IOC_PORT_MCU_UART1_TX, IOC_STD_INPUT);
+    IOCPortConfigureSet(IOID_1, IOC_PORT_MCU_UART1_RX, IOC_STD_INPUT);
+
+    UARTConfigSetExpClk(UART1_BASE, SysCtrlClockGet(), 115200,
+                        UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
+    UARTEnable(UART1_BASE);
+}
+
+/* This holds the last key pressed */
+static int debug_uart_ungetbuf;
+
+/*
+ * Documented in "src/core/common/debug_uart.h"
+ */
+int otPlatDebugUart_getc(void)
+{
+    int ch = -1;
+
+    if (otPlatDebugUart_kbhit())
+    {
+        /* get & clear 0x100 bit used below as flag */
+        ch = debug_uart_ungetbuf & 0x0ff;
+        debug_uart_ungetbuf = 0;
+    }
+
+    return ch;
+}
+
+/*
+ * Documented in "src/core/common/debug_uart.h"
+ */
+int otPlatDebugUart_kbhit(void)
+{
+    int r;
+
+    /* if something is in the unget buf... */
+    r = !!debug_uart_ungetbuf;
+
+    if (!r)
+    {
+        /*
+         * Driverlib code returns "-1", or "char" on something
+         * but it comes with flags in upper bits
+         */
+        r = (int)UARTCharGetNonBlocking(UART1_BASE);
+
+        if (r < 0)
+        {
+            r = 0; /* no key pressed */
+        }
+        else
+        {
+            /* key was pressed, mask flags
+             * and set 0x100 bit, to distinguish
+             * the value "0x00" from "no-key-pressed"
+             */
+            debug_uart_ungetbuf = ((r & 0x0ff) | 0x0100);
+
+            r = 1; /* key pressed */
+        }
+    }
+
+    return r;
+}
+
+/*
+ * Documented in "src/core/common/debug_uart.h"
+ */
+void otPlatDebugUart_putchar_raw(int b)
+{
+    UARTCharPut(UART1_BASE, b);
+}
+
+#endif /* OPENTHREAD_ENABLE_DEBUG_UART */

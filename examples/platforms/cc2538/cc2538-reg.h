@@ -148,19 +148,30 @@
 #define SYS_CTRL_SCGCUART_UART0                 0x00000001
 #define SYS_CTRL_DCGCUART_UART0                 0x00000001
 
+#define SYS_CTRL_RCGCUART_UART1                 0x00000002
+#define SYS_CTRL_SCGCUART_UART1                 0x00000002
+#define SYS_CTRL_DCGCUART_UART1                 0x00000002
+
 #define IOC_PA0_SEL                             0x400D4000  // Peripheral select control
 #define IOC_PA1_SEL                             0x400D4004  // Peripheral select control
+#define IOC_PA2_SEL                             0x400D4008
+#define IOC_PA3_SEL                             0x400D400C
 #define IOC_UARTRXD_UART0                       0x400D4100
+#define IOC_UARTRXD_UART1                       0x400D4108
 
 #define IOC_PA0_OVER                            0x400D4080
 #define IOC_PA1_OVER                            0x400D4084
+#define IOC_PA2_OVER                            0x400D4088
+#define IOC_PA3_OVER                            0x400D408C
 
 #define IOC_MUX_OUT_SEL_UART0_TXD               0x00000000
+#define IOC_MUX_OUT_SEL_UART1_TXD               0x00000002
 
 #define IOC_OVERRIDE_OE                         0x00000008  // PAD Config Override Output Enable
 #define IOC_OVERRIDE_DIS                        0x00000000  // PAD Config Override Disabled
 
 #define UART0_BASE                              0x4000C000
+#define UART1_BASE                              0x4000D000
 #define GPIO_A_BASE                             0x400D9000  // GPIO
 
 #define GPIO_O_DIR                              0x00000400
@@ -168,6 +179,8 @@
 
 #define GPIO_PIN_0                              0x00000001  // GPIO pin 0
 #define GPIO_PIN_1                              0x00000002  // GPIO pin 1
+#define GPIO_PIN_2                              0x00000004  // GPIO pin 2
+#define GPIO_PIN_3                              0x00000008  // GPIO pin 3
 
 #define UART_O_DR                               0x00000000  // UART data
 #define UART_O_FR                               0x00000018  // UART flag

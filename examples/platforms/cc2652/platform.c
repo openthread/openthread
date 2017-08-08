@@ -63,6 +63,9 @@ void PlatformInit(int argc, char *argv[])
          */
     }
 
+#if OPENTHREAD_ENABLE_DEBUG_UART
+    cc2652DebugUartInit();
+#endif
     cc2652AlarmInit();
     cc2652RandomInit();
     cc2652RadioInit();
@@ -79,3 +82,4 @@ void PlatformProcessDrivers(otInstance *aInstance)
     cc2652RadioProcess(aInstance);
     cc2652AlarmProcess(aInstance);
 }
+

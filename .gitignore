@@ -13,6 +13,7 @@
 *.suo
 *.trs
 *.user
+*.bak
 *~
 .deps
 .dirstamp
@@ -32,6 +33,8 @@ etc/visual-studio/BundleArtifacts
 etc/visual-studio/Generated Files
 include/openthread-config.h
 include/openthread-config.h.in
+include/openthread-config-generic.h
+include/openthread-config-generic.h.in
 include/stamp-h1
 ipch
 libtool

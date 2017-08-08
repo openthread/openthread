@@ -37,6 +37,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
 * [linkquality](#linkquality-extaddr)
+* [logfilename](#logfilename)
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
 * [mode](#mode)
@@ -1032,6 +1033,14 @@ Set the link quality on the link to a given extended address.
 > linkquality 36c1dd7a4f5201ff 3
 Done
 ```
+
+### logfilename FILENAME
+
+**Note: POSIX Platform Only, and OPENTHREAD_ENABLE_DEBUG_UART=1**
+
+Specifies filename to capture otPlatLog() messages, useful when
+debugging automated test scripts on Linux when logging disrupts
+the automated test scripts.
 
 ### masterkey
 

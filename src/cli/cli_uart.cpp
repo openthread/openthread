@@ -49,6 +49,7 @@
 #include "common/encoding.hpp"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
+#include "utils/debug_uart.h"
 
 namespace ot {
 namespace Cli {
@@ -149,6 +150,30 @@ otError Uart::ProcessCommand(void)
         mRxBuffer[--mRxLength] = '\0';
     }
 
+#if  OPENTHREAD_ENABLE_DEBUG_UART
+    /*
+     * Note this is here for this reason:
+     *
+     * TEXT input ... in a test automation script occurs
+     * rapidly and often without gaps between the command
+     * and the terminal CR
+     *
+     * In contrast as a human is typing there is a delay
+     * between the last character of a command and the
+     * terminal CR which executes a command.
+     *
+     * During that human induced delay a tasklet may be
+     * scheduled and the UART debug log becomes confusing
+     * and it is hard to determine which actually came
+     * first, the command-CR or the tasklet.
+     *
+     * Yes, while rare this does happen...
+     *
+     * Thus this is here to afirmatively LOG which
+     * CLI command is being executed now.
+     */
+    otPlatDebugUart_printf("CLI Command: %s\n", mRxBuffer);
+#endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
 
     mRxLength = 0;
@@ -215,6 +240,9 @@ void Uart::Send(void)
     if (mSendLength > 0)
     {
         otPlatUartSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
+#if OPENTHREAD_ENABLE_DEBUG_UART
+        otPlatDebugUart_write_bytes(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
+#endif
     }
 
 exit:

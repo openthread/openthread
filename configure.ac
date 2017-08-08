@@ -591,6 +591,33 @@ AC_MSG_RESULT(${enable_builtin_mbedtls})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
+# Debug UART
+#
+AC_MSG_CHECKING([whether to enable the DEBUG UART])
+AC_ARG_ENABLE(debug_uart,
+    [AS_HELP_STRING([--enable-debug-art],[Enable DEBUG UART support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_debug_uart=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_debug_uart} for --enable-debug-uart])
+            ;;
+        esac
+    ],
+    [enable_debug_uart=no])
+
+if test "$enable_debug_uart" = "yes"; then
+    OPENTHREAD_ENABLE_DEBUG_UART=1
+else
+    OPENTHREAD_ENABLE_DEBUG_UART=0
+fi
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DEBUG_UART],[${OPENTHREAD_ENABLE_DEBUG_UART}],[Define to 1 to enable the DEBUG UART feature.])
+
+#
 # Thread TMF Proxy
 #
 
@@ -1473,6 +1500,7 @@ AC_MSG_NOTICE([
   Pretty args                               : ${PRETTY_ARGS:--}
   Pretty check                              : ${PRETTY_CHECK:--}
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
+  Debug Uart                                : ${enable_debug_uart}
   OpenThread CLI support                    : ${enable_cli_app}
   OpenThread CLI-MTD support                : ${enable_cli_app_mtd}
   OpenThread CLI-FTD support                : ${enable_cli_app_ftd}

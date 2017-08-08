@@ -32,13 +32,20 @@
  *
  */
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
+
+#include <stdarg.h>
+#include <stdio.h>
 #include <stddef.h>
 
 #include <openthread/types.h>
 #include <openthread/platform/uart.h>
+#include <openthread/platform/logging.h>
 
 #include "platform-cc2538.h"
 #include "utils/code_utils.h"
+#include "utils/debug_uart.h"
 
 enum
 {
@@ -67,6 +74,28 @@ typedef struct RecvBuffer
 
 static RecvBuffer sReceive;
 
+static void enable_uart_clocks(void)
+{
+    static int uart_clocks_done = 0;
+
+    if (uart_clocks_done)
+    {
+        return;
+    }
+
+    uart_clocks_done = 1;
+
+#if OPENTHREAD_ENABLE_DEBUG_UART
+    HWREG(SYS_CTRL_RCGCUART) = (SYS_CTRL_RCGCUART_UART0 | SYS_CTRL_RCGCUART_UART1);
+    HWREG(SYS_CTRL_SCGCUART) = (SYS_CTRL_SCGCUART_UART0 | SYS_CTRL_SCGCUART_UART1);
+    HWREG(SYS_CTRL_DCGCUART) = (SYS_CTRL_DCGCUART_UART0 | SYS_CTRL_DCGCUART_UART1);
+#else
+    HWREG(SYS_CTRL_RCGCUART) = SYS_CTRL_RCGCUART_UART0;
+    HWREG(SYS_CTRL_SCGCUART) = SYS_CTRL_SCGCUART_UART0;
+    HWREG(SYS_CTRL_DCGCUART) = SYS_CTRL_DCGCUART_UART0;
+#endif
+}
+
 otError otPlatUartEnable(void)
 {
     uint32_t div;
@@ -75,9 +104,7 @@ otError otPlatUartEnable(void)
     sReceive.mTail = 0;
 
     // clock
-    HWREG(SYS_CTRL_RCGCUART) = SYS_CTRL_RCGCUART_UART0;
-    HWREG(SYS_CTRL_SCGCUART) = SYS_CTRL_SCGCUART_UART0;
-    HWREG(SYS_CTRL_DCGCUART) = SYS_CTRL_DCGCUART_UART0;
+    enable_uart_clocks();
 
     HWREG(UART0_BASE + UART_O_CC) = 0;
 
@@ -200,3 +227,85 @@ void UART0IntHandler(void)
         }
     }
 }
+
+#if OPENTHREAD_ENABLE_DEBUG_UART
+
+int otPlatDebugUart_kbhit(void)
+{
+    uint32_t v;
+
+    /* get flags */
+    v = HWREG(UART1_BASE + UART_O_FR);
+
+    /* if FIFO empty we have no data */
+    return !(v & UART_FR_RXFE);
+}
+
+int otPlatDebugUart_getc(void)
+{
+    int v = 1;
+
+    /* if nothing in fifo */
+    if (!otPlatDebugUart_kbhit())
+    {
+        return -1;
+    }
+
+    /* fetch */
+    v = (int)HWREG(UART0_BASE + UART_O_DR);
+    v = (v & 0x0ff);
+    return v;
+}
+
+void otPlatDebugUart_putchar_raw(int b)
+{
+    /* wait till not busy */
+    while (HWREG(UART1_BASE + UART_O_FR) & UART_FR_TXFF);
+
+    /* write byte */
+    HWREG(UART1_BASE + UART_O_DR) = ((uint32_t)(b & 0x0ff));
+}
+
+
+void cc2538DebugUartInit(void)
+{
+    int32_t a, b;
+
+    // clocks
+    enable_uart_clocks();
+
+    HWREG(UART1_BASE + UART_O_CC) = 0;
+
+    // UART1 - tx pin
+    // Using an RF06 Evaluation board
+    // http://www.ti.com/tool/cc2538dk
+    // PA3 => is jumper position RF1.14
+    // To use these, you will require a "flying-lead" UART adapter
+    HWREG(IOC_PA3_SEL) = IOC_MUX_OUT_SEL_UART1_TXD;
+    HWREG(IOC_PA3_OVER) = IOC_OVERRIDE_OE;
+    HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_3;
+
+    // UART1 - rx pin we don't really use but we setup anyway
+    // PA2 => is jumper position RF1.16
+    HWREG(IOC_PA2_SEL) = IOC_UARTRXD_UART1;
+    HWREG(IOC_PA2_OVER) = IOC_OVERRIDE_DIS;
+    HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_2;
+
+    HWREG(UART1_BASE + UART_O_CC) = 0;
+
+    // baud rate
+    b = (((kPlatformClock * 8) / kBaudRate) + 1) / 2;
+    a = b / 64;
+    b = b % 64;
+    HWREG(UART1_BASE + UART_O_IBRD) = a;
+    HWREG(UART1_BASE + UART_O_FBRD) = b;
+    HWREG(UART1_BASE + UART_O_LCRH) = UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE;
+
+    /* NOTE:
+     *  uart1 is not using IRQs it is tx only
+     *  and we block when writing bytes
+     */
+    HWREG(UART1_BASE + UART_O_CTL) = UART_CTL_UARTEN | UART_CTL_TXE | UART_CTL_RXE;
+}
+
+#endif

@@ -35,6 +35,7 @@
 #ifndef PLATFORM_CC2538_H_
 #define PLATFORM_CC2538_H_
 
+#include <openthread/config.h>
 #include <stdint.h>
 
 #include <openthread/types.h>
@@ -43,6 +44,11 @@
 
 // Global OpenThread instance structure
 extern otInstance *sInstance;
+
+/**
+ * Initialize the debug uart
+ */
+void cc2538DebugUartInit(void);
 
 /**
  * This function initializes the alarm service used by OpenThread.
