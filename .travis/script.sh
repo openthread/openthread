@@ -196,8 +196,16 @@ set -x
 [ $BUILD_TARGET != posix ] || {
     sh -c '$CC --version' || die
     sh -c '$CXX --version' || die
+
+    git checkout -- . || die
+    git clean -xfd || die
     ./bootstrap || die
-    make -f examples/Makefile-posix || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE make -f examples/Makefile-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
