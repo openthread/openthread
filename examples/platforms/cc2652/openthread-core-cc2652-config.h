@@ -30,6 +30,14 @@
 #define OPENTHREAD_CORE_CC2652_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * The platform-specific string to insert into the OpenThread version string.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                    "CC2652"
+
+/**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
  *
  * The base address of the pages to be used for non-volatile-settings storage.

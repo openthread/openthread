@@ -2800,7 +2800,7 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         VerifyOrExit(argc > 1, error = OT_ERROR_PARSE);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
         otJoinerStart(mInstance, argv[1], provisioningUrl,
-                      PACKAGE_NAME, PLATFORM_INFO, PACKAGE_VERSION, NULL,
+                      PACKAGE_NAME, OPENTHREAD_CONFIG_PLATFORM_INFO, PACKAGE_VERSION, NULL,
                       &Interpreter::s_HandleJoinerCallback, this);
     }
     else if (strcmp(argv[0], "stop") == 0)

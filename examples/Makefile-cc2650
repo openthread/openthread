@@ -46,7 +46,6 @@ configure_OPTIONS               = \
     --enable-ncp-app=mtd          \
     --with-ncp-bus=uart           \
     --with-examples=cc2650        \
-    --with-platform-info=cc2650   \
     --enable-linker-map           \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \
     $(NULL)

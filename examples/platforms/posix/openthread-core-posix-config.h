@@ -36,6 +36,14 @@
 #define OPENTHREAD_CORE_POSIX_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * The platform-specific string to insert into the OpenThread version string.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX"
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
  *
  * Define to 1 to enable default log output.

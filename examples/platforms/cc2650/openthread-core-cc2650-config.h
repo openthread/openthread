@@ -30,6 +30,14 @@
 #define OPENTHREAD_CORE_CC2650_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * The platform-specific string to insert into the OpenThread version string.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "CC2650"
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in buffer pool

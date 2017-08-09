@@ -47,7 +47,6 @@ configure_OPTIONS                                 = \
     --with-ncp-bus=uart                             \
     --enable-diag                                   \
     --with-examples=nrf52840                        \
-    --with-platform-info=NRF52840                   \
     --enable-linker-map                             \
     MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)

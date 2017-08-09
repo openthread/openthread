@@ -30,7 +30,6 @@
 
 TARGET        = arm-bcm2708hardfp-linux-gnueabi
 PPREFIX       = gp712
-INFO          = GP712
 #CROSS_COMPILE = $(TARGET)-
 
 AR                              = $(CROSS_COMPILE)ar
@@ -50,7 +49,6 @@ configure_OPTIONS               = \
     --enable-cli-app=ftd          \
     --enable-diag                 \
     --with-examples=$(PPREFIX)    \
-    --with-platform-info=$(INFO)  \
     $(NULL)
 
 DEFAULT_LOGGING ?= 1

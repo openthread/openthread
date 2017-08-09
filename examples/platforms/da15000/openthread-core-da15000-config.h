@@ -34,7 +34,20 @@
 #ifndef OPENTHREAD_CORE_DA15000_CONFIG_H_
 #define OPENTHREAD_CORE_DA15000_CONFIG_H_
 
-#define SETTINGS_CONFIG_BASE_ADDRESS 		(0x7B000)
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * The platform-specific string to insert into the OpenThread version string.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "DA15000"
+
+/**
+ * @def SETTINGS_CONFIG_BASE_ADDRESS
+ *
+ * The base address of the pages to be used for non-volatile-settings storage.
+ */
+#define SETTINGS_CONFIG_BASE_ADDRESS 		                (0x7B000)
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
@@ -44,28 +57,28 @@
  */
 #define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             1
 
- /**
-  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-  *
-  * Define to 1 if you want to enable software ACK timeout logic.
-  *
-  */
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+ *
+ * Define to 1 if you want to enable software ACK timeout logic.
+ *
+ */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           0
 
- /**
-  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-  *
-  * Define to 1 if you want to enable software retransmission logic.
-  *
-  */
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ *
+ * Define to 1 if you want to enable software retransmission logic.
+ *
+ */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            0
 
- /**
-  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-  *
-  * Define to 1 if you want to enable software energy scanning logic.
-  *
-  */
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+ *
+ * Define to 1 if you want to enable software energy scanning logic.
+ *
+ */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN           1
 
 #endif  // OPENTHREAD_CORE_DA15000_CONFIG_H_
