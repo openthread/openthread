@@ -79,6 +79,8 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 
 #include <openthread/openthread.h>
 
+#include "openthread-core-config.h"
+
 /**
  * Unique node ID.
  *
