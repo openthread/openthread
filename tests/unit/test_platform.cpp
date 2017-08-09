@@ -174,6 +174,45 @@ extern "C" {
         }
     }
 
+    void otPlatAlarmMicroStop(otInstance *aInstance)
+    {
+        if (g_testPlatAlarmStop)
+        {
+            g_testPlatAlarmStop(aInstance);
+        }
+        else
+        {
+            g_testPlatAlarmSet = false;
+        }
+    }
+
+    void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+    {
+        if (g_testPlatAlarmStartAt)
+        {
+            g_testPlatAlarmStartAt(aInstance, aT0, aDt);
+        }
+        else
+        {
+            g_testPlatAlarmSet = true;
+            g_testPlatAlarmNext = aT0 + aDt;
+        }
+    }
+
+    uint32_t otPlatAlarmMicroGetNow(void)
+    {
+        if (g_testPlatAlarmGetNow)
+        {
+            return g_testPlatAlarmGetNow();
+        }
+        else
+        {
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+            return (uint32_t)((tv.tv_sec * 1000000) + tv.tv_usec + 123456);
+        }
+    }
+
     //
     // Radio
     //
