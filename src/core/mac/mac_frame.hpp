@@ -388,6 +388,16 @@ public:
     otError SetDstAddr(const ExtAddress &aExtAddress);
 
     /**
+     * This method sets the Destination Address.
+     *
+     * @param[in]  aAddress  The Destination Address.
+     *
+     * @retval OT_ERROR_NONE          Successfully set the Destination Address.
+     *
+     */
+    otError SetDstAddr(const Address &aAddress);
+
+    /**
      * This method gets the Source PAN Identifier.
      *
      * @param[out]  aPanId  The Source PAN Identifier.
@@ -418,7 +428,7 @@ public:
     otError GetSrcAddr(Address &aAddress) const;
 
     /**
-     * This method gets the Source Address.
+     * This method sets the Source Address.
      *
      * @param[in]  aShortAddress  The Source Address.
      *
@@ -428,7 +438,7 @@ public:
     otError SetSrcAddr(ShortAddress aShortAddress);
 
     /**
-     * This method gets the Source Address.
+     * This method sets the Source Address.
      *
      * @param[in]  aExtAddress  The Source Address.
      *
@@ -436,6 +446,16 @@ public:
      *
      */
     otError SetSrcAddr(const ExtAddress &aExtAddress);
+
+    /**
+     * This method sets the Source Address.
+     *
+     * @param[in]  aAddress  The Source Address.
+     *
+     * @retval OT_ERROR_NONE          Successfully set the Source Address.
+     *
+     */
+    otError SetSrcAddr(const Address &aAddress);
 
     /**
      * This method gets the Security Level Identifier.
@@ -555,7 +575,6 @@ public:
      * @param[in]  aLength  The MAC Frame Length.
      *
      * @retval OT_ERROR_NONE          Successfully set the MAC Frame Length.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aLength value was invalid.
      *
      */
     otError SetLength(uint8_t aLength) { SetPsduLength(aLength); return OT_ERROR_NONE; }
