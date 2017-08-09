@@ -618,17 +618,14 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
     }
 }
 
-void platformRadioProcess(otInstance *aInstance)
+void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {
-    const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd = { sSockFd, flags, 0 };
-
-    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    if (FD_ISSET(sSockFd, aReadFdSet))
     {
         radioReceive(aInstance);
     }
 
-    if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
+    if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait && FD_ISSET(sSockFd, aWriteFdSet))
     {
         radioSendMessage(aInstance);
     }
