@@ -33,7 +33,7 @@ On node 2, open the example UDP socket and send a simple message.
 On node 1, you should see a print out similar to below:
 
 ```bash
-5 bytes from fdde:ad00:beef:0:dac3:6792:e2e:90d8: hello
+5 bytes from fdde:ad00:beef:0:dac3:6792:e2e:90d8 49153 hello
 ```
 
 ## Command List

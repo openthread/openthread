@@ -126,8 +126,9 @@ public:
      * @param[in]  aMessage      The message to send.
      * @param[in]  aMessageInfo  The message info associated with @p aMessage.
      *
-     * @retval OT_ERROR_NONE     Successfully sent the UDP message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the UDP and IPv6 headers.
+     * @retval OT_ERROR_NONE          Successfully sent the UDP message.
+     * @retval OT_ERROR_INVALID_ARGS  If no peer is specified in @p aMessageInfo or by connect().
+     * @retval OT_ERROR_NO_BUFS       Insufficient available buffer to add the UDP and IPv6 headers.
      *
      */
     otError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);

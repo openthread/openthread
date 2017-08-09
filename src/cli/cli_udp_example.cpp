@@ -74,14 +74,14 @@ otError Udp::ProcessBind(int argc, char *argv[])
     otSockAddr sockaddr;
     long value;
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
     VerifyOrExit(argc == 2, error = OT_ERROR_PARSE);
 
-    error = otIp6AddressFromString(argv[1], &sockaddr.mAddress);
+    memset(&sockaddr, 0, sizeof(sockaddr));
+
+    error = otIp6AddressFromString(argv[0], &sockaddr.mAddress);
     SuccessOrExit(error);
 
-    error = Interpreter::ParseLong(argv[2], value);
+    error = Interpreter::ParseLong(argv[1], value);
     SuccessOrExit(error);
 
     sockaddr.mPort = static_cast<uint16_t>(value);
@@ -98,14 +98,14 @@ otError Udp::ProcessConnect(int argc, char *argv[])
     otSockAddr sockaddr;
     long value;
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
     VerifyOrExit(argc == 2, error = OT_ERROR_PARSE);
 
-    error = otIp6AddressFromString(argv[1], &sockaddr.mAddress);
+    memset(&sockaddr, 0, sizeof(sockaddr));
+
+    error = otIp6AddressFromString(argv[0], &sockaddr.mAddress);
     SuccessOrExit(error);
 
-    error = Interpreter::ParseLong(argv[2], value);
+    error = Interpreter::ParseLong(argv[1], value);
     SuccessOrExit(error);
 
     sockaddr.mPort = static_cast<uint16_t>(value);
@@ -137,7 +137,7 @@ otError Udp::ProcessSend(int argc, char *argv[])
     otError error;
     otMessageInfo messageInfo;
     otMessage *message = NULL;
-    int curArg = 1;
+    int curArg = 0;
 
     memset(&messageInfo, 0, sizeof(messageInfo));
 
@@ -159,7 +159,7 @@ otError Udp::ProcessSend(int argc, char *argv[])
     message = otUdpNewMessage(mInterpreter.mInstance, true);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    error = otMessageAppend(message, argv[curArg], static_cast<uint16_t>(strlen(argv[3])));
+    error = otMessageAppend(message, argv[curArg], static_cast<uint16_t>(strlen(argv[curArg])));
     SuccessOrExit(error);
 
     error = otUdpSend(&mSocket, message, &messageInfo);
@@ -176,20 +176,17 @@ exit:
 
 otError Udp::Process(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_PARSE;
 
     for (size_t i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
-            (this->*sCommands[i].mCommand)(argc, argv);
-            ExitNow();
+            error = (this->*sCommands[i].mCommand)(argc - 1, argv + 1);
+            break;
         }
     }
 
-    error = OT_ERROR_PARSE;
-
-exit:
     return error;
 }
 
@@ -204,7 +201,7 @@ void Udp::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInf
     int length;
 
     mInterpreter.mServer->OutputFormat("%d bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage));
-    mInterpreter.mServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x: ",
+    mInterpreter.mServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x %d ",
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]),
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
@@ -212,7 +209,8 @@ void Udp::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInf
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]),
                                        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]));
+                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]),
+                                       aMessageInfo->mPeerPort);
 
     length = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
