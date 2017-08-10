@@ -616,8 +616,7 @@ void Coap::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
         // Send empty ACK if it is a CON message.
         SendAck(aResponseHeader, aMessageInfo);
 
-        // fall through
-        ;
+    // fall through
 
     case OT_COAP_TYPE_NON_CONFIRMABLE:
         // Separate response.

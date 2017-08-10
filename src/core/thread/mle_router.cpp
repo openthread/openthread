@@ -4588,7 +4588,7 @@ void MleRouter::RemoveChildren(void)
         case Neighbor::kStateValid:
             GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
 
-        // Fall-through to next case
+        // fall-through
 
         case Neighbor::kStateChildUpdateRequest:
         case Neighbor::kStateRestored:
