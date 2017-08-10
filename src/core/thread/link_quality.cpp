@@ -243,17 +243,17 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     case 0:
         threshold1 += kHysteresisThreshold;
 
-    // Intentional fall-through to next case.
+    // fall-through
 
     case 1:
         threshold2 += kHysteresisThreshold;
 
-    // Intentional fall-through to next case.
+    // fall-through
 
     case 2:
         threshold3 += kHysteresisThreshold;
 
-    // Intentional fall-through to next case.
+    // fall-through
 
     default:
         break;
