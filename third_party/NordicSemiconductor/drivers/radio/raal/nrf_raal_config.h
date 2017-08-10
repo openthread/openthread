@@ -52,7 +52,7 @@ extern "C" {
  *
  */
 #ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  100
+#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
 #endif
 
 /**

@@ -48,12 +48,12 @@ void nrf_drv_radio802154_notification_init(void)
 
 void nrf_drv_radio802154_notify_received(uint8_t * p_data, int8_t power, int8_t lqi)
 {
-    nrf_drv_radio802154_received(p_data, power, lqi);
+    nrf_drv_radio802154_received_raw(p_data, power, lqi);
 }
 
 void nrf_drv_radio802154_notify_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi)
 {
-    nrf_drv_radio802154_transmitted(p_ack, power, lqi);
+    nrf_drv_radio802154_transmitted_raw(p_ack, power, lqi);
 }
 
 void nrf_drv_radio802154_notify_busy_channel(void)
@@ -61,8 +61,13 @@ void nrf_drv_radio802154_notify_busy_channel(void)
     nrf_drv_radio802154_busy_channel();
 }
 
-void nrf_drv_radio802154_notify_energy_detected(int8_t result)
+void nrf_drv_radio802154_notify_energy_detected(uint8_t result)
 {
     nrf_drv_radio802154_energy_detected(result);
+}
+
+void nrf_drv_radio802154_notify_cca(bool is_free)
+{
+    nrf_drv_radio802154_cca_done(is_free);
 }
 

@@ -90,4 +90,14 @@ static inline uint16_t nrf_drv_radio802154_rx_duration_get(uint8_t psdu_length, 
     return result;
 }
 
+static inline uint16_t nrf_drv_radio802154_cca_duration_get(void)
+{
+    // aTurnaroundTime + CCA
+    uint16_t result = A_TURNAROUND_TIME + A_CCA_DURATION;
+
+    result *= PHY_US_PER_SYMBOL;
+
+    return result;
+}
+
 #endif /* NRF_DRV_RADIO802154_PROCEDURES_DURATION_H_ */

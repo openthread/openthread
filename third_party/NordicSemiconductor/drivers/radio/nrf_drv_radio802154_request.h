@@ -61,36 +61,47 @@ bool nrf_drv_radio802154_request_sleep(void);
 /**
  * @brief Request entering receive state.
  *
- * @param[in]  channel  Channel number used to receive data.
- *
  * @retval  true   The driver will enter receive state.
  * @retval  false  The driver cannot enter receive state due to ongoing operation.
  */
-bool nrf_drv_radio802154_request_receive(uint8_t channel);
+bool nrf_drv_radio802154_request_receive(void);
 
 /**
  * @brief Request entering transmit state.
  *
  * @param[in]  p_data   Pointer to the frame to transmit.
- * @param[in]  channel  Channel number used to transmit the frame.
- * @param[in]  power    Transmitter power used to transmit the frame.
  * @param[in]  cca      If the driver should perform CCA procedure before transmission.
  *
  * @retval  true   The driver will enter transmit state.
  * @retval  false  The driver cannot enter transmit state due to ongoing operation.
  */
-bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca);
+bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, bool cca);
 
 /**
  * @brief Request entering energy detection state.
  *
- * @param[in]  channel  Channel number used to perform energy detection procedure.
  * @param[in]  time_us  Requested duration of energy detection procedure.
  *
  * @retval  true   The driver will enter energy detection state.
  * @retval  false  The driver cannot enter energy detection state due to ongoing operation.
  */
-bool nrf_drv_radio802154_request_energy_detection(uint8_t channel, uint32_t time_us);
+bool nrf_drv_radio802154_request_energy_detection(uint32_t time_us);
+
+/**
+ * @brief Request entering CCA state.
+ *
+ * @retval  true   The driver will enter CCA state.
+ * @retval  false  The driver cannot enter CCA state due to ongoing operation.
+ */
+bool nrf_drv_radio802154_request_cca(void);
+
+/**
+ * @brief Request entering continuous carrier state.
+ *
+ * @retval  true   The driver will enter continuous carrier state.
+ * @retval  false  The driver cannot enter continuous carrier state due to ongoing operation.
+ */
+bool nrf_drv_radio802154_request_continuous_carrier(void);
 
 /**
  * @brief Request the driver to free given buffer.
@@ -98,6 +109,16 @@ bool nrf_drv_radio802154_request_energy_detection(uint8_t channel, uint32_t time
  * @param[in]  p_data  Pointer to the buffer to free.
  */
 void nrf_drv_radio802154_request_buffer_free(uint8_t * p_data);
+
+/**
+ * @brief Request the driver to update channel number used by the RADIO peripheral.
+ */
+void nrf_drv_radio802154_request_channel_update(void);
+
+/**
+ * @brief Request the driver to update CCA configuration used by the RADIO peripheral.
+ */
+void nrf_drv_radio802154_request_cca_cfg_update(void);
 
 /**
  *@}

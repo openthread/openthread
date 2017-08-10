@@ -56,6 +56,8 @@ extern "C" {
 #define FUNCTION_TRANSMIT                      0x0003UL
 #define FUNCTION_ENERGY_DETECTION              0x0004UL
 #define FUNCTION_BUFFER_FREE                   0x0005UL
+#define FUNCTION_CCA                           0x0006UL
+#define FUNCTION_CONTINUOUS_CARRIER            0x0007UL
 
 #define FUNCTION_IRQ_HANDLER                   0x0100UL
 #define FUNCTION_EVENT_FRAMESTART              0x0101UL
