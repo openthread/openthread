@@ -167,7 +167,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
         if (aIp6Header.GetNextHeader() == kProtoHopOpts)
         {
             HopByHopHeader hbh;
-            uint8_t hbhLength = 0;
+            uint16_t hbhLength = 0;
             OptionMpl mplOption;
 
             // read existing hop-by-hop option header
