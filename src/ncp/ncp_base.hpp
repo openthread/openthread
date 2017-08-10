@@ -328,6 +328,9 @@ private:
                                                 NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpBuffer);
     void HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
 
+    static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
+    void HandleRawFrame(const otRadioFrame *aFrame);
+
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
@@ -339,8 +342,6 @@ private:
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-    static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
-    void HandleRawFrame(const otRadioFrame *aFrame);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -403,6 +404,7 @@ private:
     NCP_GET_PROP_HANDLER(PHY_RX_SENSITIVITY);
     NCP_GET_PROP_HANDLER(PHY_TX_POWER);
     NCP_SET_PROP_HANDLER(PHY_TX_POWER);
+    NCP_GET_PROP_HANDLER(PHY_ENABLED);
     NCP_SET_PROP_HANDLER(PHY_CHAN);
     NCP_GET_PROP_HANDLER(PHY_CHAN);
 
@@ -437,7 +439,6 @@ private:
     NCP_INSERT_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
     NCP_REMOVE_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
 
-    NCP_GET_PROP_HANDLER(PHY_ENABLED);
     NCP_SET_PROP_HANDLER(PHY_ENABLED);
     NCP_SET_PROP_HANDLER(STREAM_RAW);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
