@@ -88,10 +88,11 @@ otError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint1
                                          otBorderRouterConfig *aConfig)
 {
     otError error = OT_ERROR_NOT_FOUND;
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
+    NetworkDataIterator iterator(aIterator);
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + iterator.GetTlvsIndex());
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
 
-    for (; cur < end; cur = cur->GetNext())
+    for (; cur < end; cur = cur->GetNext(), iterator.SetEntryIndex(0))
     {
         PrefixTlv *prefix;
         BorderRouterTlv *borderRouter;
@@ -109,11 +110,12 @@ otError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint1
             continue;
         }
 
-        for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
+        for (uint8_t i = iterator.GetEntryIndex(); i < borderRouter->GetNumEntries(); i++)
         {
             if (aRloc16 == Mac::kShortAddrBroadcast || borderRouter->GetEntry(i)->GetRloc() == aRloc16)
             {
                 borderRouterEntry = borderRouter->GetEntry(i);
+                iterator.SetEntryIndex(i + 1);
                 break;
             }
         }
@@ -136,7 +138,7 @@ otError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint1
         aConfig->mStable = cur->IsStable();
         aConfig->mRloc16 = borderRouterEntry->GetRloc();
 
-        *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
+        iterator.SetTlvsIndex(static_cast<uint8_t>(reinterpret_cast<uint8_t *>(cur) - mTlvs));
 
         ExitNow(error = OT_ERROR_NONE);
     }
@@ -154,10 +156,11 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint
                                           otExternalRouteConfig *aConfig)
 {
     otError error = OT_ERROR_NOT_FOUND;
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
+    NetworkDataIterator iterator(aIterator);
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + iterator.GetTlvsIndex());
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
 
-    for (; cur < end; cur = cur->GetNext())
+    for (; cur < end; cur = cur->GetNext(), iterator.SetEntryIndex(0))
     {
         PrefixTlv *prefix;
         HasRouteTlv *hasRoute;
@@ -175,11 +178,12 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint
             continue;
         }
 
-        for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
+        for (uint8_t i = iterator.GetEntryIndex(); i < hasRoute->GetNumEntries(); i++)
         {
             if (aRloc16 == Mac::kShortAddrBroadcast || hasRoute->GetEntry(i)->GetRloc() == aRloc16)
             {
                 hasRouteEntry = hasRoute->GetEntry(i);
+                iterator.SetEntryIndex(i + 1);
                 break;
             }
         }
@@ -194,6 +198,7 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint
         aConfig->mPrefix.mLength = prefix->GetPrefixLength();
         aConfig->mPreference = hasRouteEntry->GetPreference();
         aConfig->mStable = cur->IsStable();
+        aConfig->mRloc16 = hasRouteEntry->GetRloc();
         aConfig->mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == GetNetif().GetMle().GetRloc16());
 
         *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);

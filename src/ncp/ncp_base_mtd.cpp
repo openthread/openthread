@@ -1078,12 +1078,14 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spinel_
                             SPINEL_DATATYPE_BOOL_S          // isStable
                             SPINEL_DATATYPE_UINT8_S         // Flags
                             SPINEL_DATATYPE_BOOL_S          // isLocal
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &borderRouterConfig.mPrefix,
                         64,
                         borderRouterConfig.mStable,
                         flags,
-                        false
+                        false,
+                        borderRouterConfig.mRloc16
                     ));
     }
 
@@ -1108,12 +1110,14 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spinel_
                             SPINEL_DATATYPE_BOOL_S          // isStable
                             SPINEL_DATATYPE_UINT8_S         // Flags
                             SPINEL_DATATYPE_BOOL_S          // isLocal
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &borderRouterConfig.mPrefix,
                         64,
                         borderRouterConfig.mStable,
                         flags,
-                        true
+                        true,
+                        borderRouterConfig.mRloc16
                     ));
     }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -1801,13 +1805,15 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t aHeader, spin
                             SPINEL_DATATYPE_UINT8_S         // Route Preference Flags
                             SPINEL_DATATYPE_BOOL_S          // IsLocal
                             SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &external_route_config.mPrefix.mPrefix,
                         external_route_config.mPrefix.mLength,
                         external_route_config.mStable,
                         ExternalRoutePreferenceToFlagByte(external_route_config.mPreference),
                         false,
-                        external_route_config.mNextHopIsThisDevice
+                        external_route_config.mNextHopIsThisDevice,
+                        external_route_config.mRloc16
                     ));
     }
 
@@ -1823,13 +1829,15 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t aHeader, spin
                             SPINEL_DATATYPE_UINT8_S         // Route Preference Flags
                             SPINEL_DATATYPE_BOOL_S          // IsLocal
                             SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &external_route_config.mPrefix.mPrefix,
                         external_route_config.mPrefix.mLength,
                         external_route_config.mStable,
                         ExternalRoutePreferenceToFlagByte(external_route_config.mPreference),
                         true,
-                        external_route_config.mNextHopIsThisDevice
+                        external_route_config.mNextHopIsThisDevice,
+                        external_route_config.mRloc16
                     ));
     }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER

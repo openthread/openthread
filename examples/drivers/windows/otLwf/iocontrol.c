@@ -4833,12 +4833,12 @@ otLwfIoCtl_otNextOnMeshPrefix(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
 
-    if (InBufferLength >= sizeof(BOOLEAN) + sizeof(uint8_t) &&
-        *OutBufferLength >= sizeof(uint8_t) + sizeof(otBorderRouterConfig))
+    if (InBufferLength >= sizeof(BOOLEAN) + sizeof(uint16_t) &&
+        *OutBufferLength >= sizeof(uint16_t) + sizeof(otBorderRouterConfig))
     {
         BOOLEAN aLocal = *(BOOLEAN*)InBuffer;
-        uint8_t aIterator = *(uint8_t*)(InBuffer + sizeof(BOOLEAN));
-        otBorderRouterConfig* aConfig = (otBorderRouterConfig*)((PUCHAR)OutBuffer + sizeof(uint8_t));
+        uint16_t aIterator = *(uint16_t*)(InBuffer + sizeof(BOOLEAN));
+        otBorderRouterConfig* aConfig = (otBorderRouterConfig*)((PUCHAR)OutBuffer + sizeof(uint16_t));
         if (aLocal)
         {
             status = ThreadErrorToNtstatus(
@@ -4860,7 +4860,7 @@ otLwfIoCtl_otNextOnMeshPrefix(
         *OutBufferLength = sizeof(uint8_t) + sizeof(otBorderRouterConfig);
         if (status == STATUS_SUCCESS)
         {
-            *(uint8_t*)OutBuffer = aIterator;
+            *(uint16_t*)OutBuffer = aIterator;
         }
     }
     else
