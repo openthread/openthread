@@ -57,6 +57,10 @@ extern "C" void otPlatAlarmMilliFired(otInstance *)
 {
 }
 
+extern "C" void otPlatAlarmMicroFired(otInstance *)
+{
+}
+
 extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *aFrame, otRadioFrame *aAckFrame,  otError aError)
 {
     (void)aFrame;

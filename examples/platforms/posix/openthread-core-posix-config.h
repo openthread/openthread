@@ -51,4 +51,12 @@
  */
 #define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             1
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+ *
+ * Define to 1 if you want to support microsecond timer in platform.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
+
 #endif  // OPENTHREAD_CORE_POSIX_CONFIG_H_
