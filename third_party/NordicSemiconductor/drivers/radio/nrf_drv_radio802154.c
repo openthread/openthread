@@ -43,6 +43,8 @@
 #include <string.h>
 
 #include "nrf_drv_radio802154_ack_pending_bit.h"
+#include "nrf_drv_radio802154_config.h"
+#include "nrf_drv_radio802154_const.h"
 #include "nrf_drv_radio802154_debug.h"
 #include "nrf_drv_radio802154_fsm.h"
 #include "nrf_drv_radio802154_notification.h"
@@ -55,15 +57,35 @@
 
 #include <cmsis/core_cmFunc.h>
 
+#define RAW_LENGTH_OFFSET  0
+#define RAW_PAYLOAD_OFFSET 1
+
+
+void nrf_drv_radio802154_channel_set(uint8_t channel)
+{
+    bool changed = nrf_drv_radio802154_pib_channel_get() != channel;
+
+    nrf_drv_radio802154_pib_channel_set(channel);
+
+    if (changed)
+    {
+        nrf_drv_radio802154_request_channel_update();
+    }
+}
 
 uint8_t nrf_drv_radio802154_channel_get(void)
 {
     return nrf_drv_radio802154_pib_channel_get();
 }
 
-void nrf_drv_radio802154_ack_tx_power_set(int8_t power)
+void nrf_drv_radio802154_tx_power_set(int8_t power)
 {
     nrf_drv_radio802154_pib_tx_power_set(power);
+}
+
+int8_t nrf_drv_radio802154_tx_power_get(void)
+{
+    return nrf_drv_radio802154_pib_tx_power_get();
 }
 
 void nrf_drv_radio802154_pan_id_set(const uint8_t * p_pan_id)
@@ -79,6 +101,12 @@ void nrf_drv_radio802154_extended_address_set(const uint8_t * p_extended_address
 void nrf_drv_radio802154_short_address_set(const uint8_t * p_short_address)
 {
     nrf_drv_radio802154_pib_short_address_set(p_short_address);
+}
+
+int8_t nrf_drv_radio802154_dbm_from_energy_level_calculate(uint8_t energy_level)
+{
+    // TODO: Correct this calculation after lab tests.
+    return -94 + energy_level;
 }
 
 void nrf_drv_radio802154_init(void)
@@ -99,6 +127,13 @@ void nrf_drv_radio802154_deinit(void)
     nrf_drv_radio802154_fsm_deinit();
 }
 
+#if !RADIO_INTERNAL_IRQ_HANDLING
+void nrf_drv_radio802154_irq_handler(void)
+{
+    nrf_drv_radio802154_fsm_irq_handler();
+}
+#endif // !RADIO_INTERNAL_IRQ_HANDLING
+
 nrf_drv_radio802154_state_t nrf_drv_radio802154_state_get(void)
 {
     switch (nrf_drv_radio802154_fsm_state_get())
@@ -114,13 +149,19 @@ nrf_drv_radio802154_state_t nrf_drv_radio802154_state_get(void)
     case RADIO_STATE_TX_ACK:
         return NRF_DRV_RADIO802154_STATE_RECEIVE;
 
-    case RADIO_STATE_CCA:
+    case RADIO_STATE_CCA_BEFORE_TX:
     case RADIO_STATE_TX_FRAME:
     case RADIO_STATE_RX_ACK:
         return NRF_DRV_RADIO802154_STATE_TRANSMIT;
 
     case RADIO_STATE_ED:
         return NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION;
+
+    case RADIO_STATE_CCA:
+        return NRF_DRV_RADIO802154_STATE_CCA;
+
+    case RADIO_STATE_CONTINUOUS_CARRIER:
+        return NRF_DRV_RADIO802154_STATE_CONTINUOUS_CARRIER;
     }
 
     return NRF_DRV_RADIO802154_STATE_INVALID;
@@ -154,40 +195,84 @@ bool nrf_drv_radio802154_sleep(void)
     return result;
 }
 
-void nrf_drv_radio802154_receive(uint8_t channel)
+void nrf_drv_radio802154_receive(void)
 {
     bool result;
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_RECEIVE);
 
-    result = nrf_drv_radio802154_request_receive(channel);
+    result = nrf_drv_radio802154_request_receive();
     assert(result == true);
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RECEIVE);
 }
 
-bool nrf_drv_radio802154_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca)
+bool nrf_drv_radio802154_transmit_raw(const uint8_t * p_data, bool cca)
 {
     bool result;
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_TRANSMIT);
 
-    result = nrf_drv_radio802154_request_transmit(p_data, channel, power, cca);
+    result = nrf_drv_radio802154_request_transmit(p_data, cca);
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_TRANSMIT);
     return result;
 }
 
-bool nrf_drv_radio802154_energy_detection(uint8_t channel, uint32_t time_us)
+bool nrf_drv_radio802154_transmit(const uint8_t * p_data, uint8_t length, bool cca)
+{
+#if defined ( __GNUC__ )
+
+    static uint8_t tx_buffer[RAW_PAYLOAD_OFFSET + MAX_PACKET_SIZE]
+                __attribute__ ((section ("nrf_radio_buffer.tx_buffer")));
+
+#elif defined ( __ICCARM__ )
+
+#pragma location="NRF_RADIO_BUFFER"
+    static uint8_t tx_buffer[RAW_PAYLOAD_OFFSET + MAX_PACKET_SIZE];
+
+#endif
+
+    assert(length <= MAX_PACKET_SIZE - FCS_SIZE);
+
+    tx_buffer[RAW_LENGTH_OFFSET] = length + FCS_SIZE;
+    memcpy(&tx_buffer[RAW_PAYLOAD_OFFSET], p_data, length);
+
+    return nrf_drv_radio802154_transmit_raw(tx_buffer, cca);
+}
+
+bool nrf_drv_radio802154_energy_detection(uint32_t time_us)
 {
     bool result;
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_ENERGY_DETECTION);
 
-    result = nrf_drv_radio802154_request_energy_detection(channel, time_us);
+    result = nrf_drv_radio802154_request_energy_detection(time_us);
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_ENERGY_DETECTION);
     return result;
 }
 
-void nrf_drv_radio802154_buffer_free(uint8_t * p_data)
+bool nrf_drv_radio802154_cca(void)
+{
+    bool result;
+    nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_CCA);
+
+    result = nrf_drv_radio802154_request_cca();
+
+    nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_CCA);
+    return result;
+}
+
+bool nrf_drv_radio802154_continuous_carrier(void)
+{
+    bool result;
+    nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_CONTINUOUS_CARRIER);
+
+    result = nrf_drv_radio802154_request_continuous_carrier();
+
+    nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_CONTINUOUS_CARRIER);
+    return result;
+}
+
+void nrf_drv_radio802154_buffer_free_raw(uint8_t * p_data)
 {
     rx_buffer_t * p_buffer = (rx_buffer_t *)p_data;
 
@@ -198,6 +283,11 @@ void nrf_drv_radio802154_buffer_free(uint8_t * p_data)
     nrf_drv_radio802154_request_buffer_free(p_data);
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+}
+
+void nrf_drv_radio802154_buffer_free(uint8_t * p_data)
+{
+    nrf_drv_radio802154_buffer_free_raw(p_data - RAW_PAYLOAD_OFFSET);
 }
 
 int8_t nrf_drv_radio802154_rssi_last_get(void)
@@ -246,17 +336,38 @@ void nrf_drv_radio802154_pending_bit_for_addr_reset(bool extended)
     nrf_drv_radio802154_ack_pending_bit_for_addr_reset(extended);
 }
 
+void nrf_drv_radio802154_cca_cfg_set(const nrf_drv_radio802154_cca_cfg_t * p_cca_cfg)
+{
+    nrf_drv_radio802154_pib_cca_cfg_set(p_cca_cfg);
+
+    nrf_drv_radio802154_request_cca_cfg_update();
+}
+
+void nrf_drv_radio802154_cca_cfg_get(nrf_drv_radio802154_cca_cfg_t * p_cca_cfg)
+{
+    nrf_drv_radio802154_pib_cca_cfg_get(p_cca_cfg);
+}
+
 __WEAK void nrf_drv_radio802154_rx_started(void)
 {
     // Intentionally empty
 }
 
-__WEAK void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi)
+__WEAK void nrf_drv_radio802154_received(uint8_t * p_data, uint8_t length, int8_t power, int8_t lqi)
 {
+    (void) length;
     (void) power;
     (void) lqi;
 
     nrf_drv_radio802154_buffer_free(p_data);
+}
+
+__WEAK void nrf_drv_radio802154_received_raw(uint8_t * p_data, int8_t power, int8_t lqi)
+{
+    nrf_drv_radio802154_received(p_data + RAW_PAYLOAD_OFFSET,
+                                 p_data[RAW_LENGTH_OFFSET],
+                                 power,
+                                 lqi);
 }
 
 __WEAK void nrf_drv_radio802154_tx_started(void)
@@ -264,8 +375,9 @@ __WEAK void nrf_drv_radio802154_tx_started(void)
     // Intentionally empty
 }
 
-__WEAK void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi)
+__WEAK void nrf_drv_radio802154_transmitted(uint8_t * p_ack, uint8_t length, int8_t power, int8_t lqi)
 {
+    (void) length;
     (void) power;
     (void) lqi;
 
@@ -275,12 +387,25 @@ __WEAK void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_
     }
 }
 
+__WEAK void nrf_drv_radio802154_transmitted_raw(uint8_t * p_ack, int8_t power, int8_t lqi)
+{
+    nrf_drv_radio802154_transmitted(p_ack + RAW_PAYLOAD_OFFSET,
+                                    p_ack[RAW_LENGTH_OFFSET],
+                                    power,
+                                    lqi);
+}
+
 __WEAK void nrf_drv_radio802154_busy_channel(void)
 {
     // Intentionally empty
 }
 
-__WEAK void nrf_drv_radio802154_energy_detected(int8_t result)
+__WEAK void nrf_drv_radio802154_energy_detected(uint8_t result)
 {
     (void) result;
+}
+
+__WEAK void nrf_drv_radio802154_cca_done(bool channel_free)
+{
+    (void) channel_free;
 }

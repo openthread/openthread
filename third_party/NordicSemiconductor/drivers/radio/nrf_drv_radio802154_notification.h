@@ -78,7 +78,14 @@ void nrf_drv_radio802154_notify_busy_channel(void);
  *
  * @param[in]  result  Detected energy level.
  */
-void nrf_drv_radio802154_notify_energy_detected(int8_t result);
+void nrf_drv_radio802154_notify_energy_detected(uint8_t result);
+
+/**
+ * @brief Notify next higher layer that CCA procedure ended.
+ *
+ * @param[in]  is_free  If detected that channel is free.
+ */
+void nrf_drv_radio802154_notify_cca(bool is_free);
 
 /**
  *@}

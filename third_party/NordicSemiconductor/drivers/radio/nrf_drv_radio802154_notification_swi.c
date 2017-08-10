@@ -62,8 +62,13 @@ void nrf_drv_radio802154_notify_busy_channel(void)
     nrf_drv_radio802154_swi_notify_busy_channel();
 }
 
-void nrf_drv_radio802154_notify_energy_detected(int8_t result)
+void nrf_drv_radio802154_notify_energy_detected(uint8_t result)
 {
     nrf_drv_radio802154_swi_notify_energy_detected(result);
+}
+
+void nrf_drv_radio802154_notify_cca(bool is_free)
+{
+    nrf_drv_radio802154_swi_notify_cca(is_free);
 }
 

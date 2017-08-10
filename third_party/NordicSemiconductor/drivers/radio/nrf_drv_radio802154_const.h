@@ -69,6 +69,7 @@
 #define PAN_ID_SIZE           2    ///< Size of Pan Id
 #define SHORT_ADDRESS_SIZE    2    ///< Size of Short Mac Address
 #define EXTENDED_ADDRESS_SIZE 8    ///< Size of Extended Mac Address
+#define FCS_SIZE              2    ///< Size of FCS field
 #define MAX_PACKET_SIZE       127  ///< Maximal size of radio packet
 
 

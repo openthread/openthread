@@ -48,6 +48,8 @@
 #include "hal/nrf_egu.h"
 #include "raal/nrf_raal_api.h"
 
+#include <cmsis/core_cmFunc.h>
+
 /** Size of notification queue.
  *
  * One slot for each receive buffer, one for transmission, one for busy channel and one for energy
@@ -83,6 +85,7 @@ typedef enum
     NTF_TYPE_TRANSMITTED,      ///< Frame transmitted
     NTF_TYPE_CHANNEL_BUSY,     ///< Frame transmission failure
     NTF_TYPE_ENERGY_DETECTED,  ///< Energy detection procedure ended
+    NTF_TYPE_CCA,              ///< CCA procedure ended
 } nrf_drv_radio802154_ntf_type_t;
 
 /// Notification data in the notification queue.
@@ -109,6 +112,11 @@ typedef struct
         {
             int8_t    result;             ///< Energy detection result.
         } energy_detected;                ///< Energy detection details.
+
+        struct
+        {
+            bool      result;             ///< CCA result.
+        } cca;                            ///< CCA details.
     } data;                               ///< Notification data depending on it's type.
 } nrf_drv_radio802154_ntf_data_t;
 
@@ -119,7 +127,11 @@ typedef enum
     REQ_TYPE_RECEIVE,
     REQ_TYPE_TRANSMIT,
     REQ_TYPE_ENERGY_DETECTION,
+    REQ_TYPE_CCA,
+    REQ_TYPE_CONTINUOUS_CARRIER,
     REQ_TYPE_BUFFER_FREE,
+    REQ_TYPE_CHANNEL_UPDATE,
+    REQ_TYPE_CCA_CFG_UPDATE
 } nrf_drv_radio802154_req_type_t;
 
 /// Request data in request queue.
@@ -136,24 +148,30 @@ typedef struct
         struct
         {
             bool  * p_result;             ///< Receive request result.
-            uint8_t channel;              ///< Channel to receive on.
         } receive;                        ///< Receive request details.
 
         struct
         {
             bool          * p_result;     ///< Transmit request result.
             const uint8_t * p_data;       ///< Pointer to PSDU to transmit.
-            uint8_t         channel;      ///< Channel to transmit on.
-            int8_t          power;        ///< Requested transmission power.
             bool            cca;          ///< If CCA was requested prior to transmission.
         } transmit;                       ///< Transmit request details.
 
         struct
         {
             bool   * p_result;            ///< Energy detection request result.
-            uint8_t  channel;             ///< Channel to perform energy detection on.
             uint32_t time_us;             ///< Requested time of energy detection procedure.
         } energy_detection;               ///< Energy detection request details.
+
+        struct
+        {
+            bool * p_result;              ///< CCA request result.
+        } cca;                            ///< CCA request details.
+
+        struct
+        {
+            bool * p_result;              ///< Continuous carrier request result.
+        } continuous_carrier;             ///< Continuous carrier request details.
 
         struct
         {
@@ -287,6 +305,42 @@ static bool req_queue_is_empty(void)
     return queue_is_empty(m_req_r_ptr, m_req_w_ptr);
 }
 
+/**
+ * Enter request block.
+ *
+ * This is a helper function used in all request functions to atomically
+ * find an empty slot in request queue and allow atomic slot update.
+ *
+ * @return Pointer to an empty slot in the request queue.
+ */
+static nrf_drv_radio802154_req_data_t * req_enter(void)
+{
+    __disable_irq();
+    __DSB();
+    __ISB();
+
+    assert(!req_queue_is_full());
+
+    return &m_req_queue[m_req_w_ptr];
+}
+
+/**
+ * Exit request block.
+ *
+ * This is a helper function used in all request functions to end atomic slot update
+ * and trigger SWI to process the request from the slot.
+ */
+static void req_exit(void)
+{
+    req_queue_ptr_increment(&m_req_w_ptr);
+
+    nrf_egu_task_trigger(SWI_EGU, REQ_TASK);
+
+    __enable_irq();
+    __DSB();
+    __ISB();
+}
+
 void nrf_drv_radio802154_swi_init(void)
 {
     m_ntf_r_ptr = 0;
@@ -347,7 +401,7 @@ void nrf_drv_radio802154_swi_notify_busy_channel(void)
     nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
 }
 
-void nrf_drv_radio802154_swi_notify_energy_detected(int8_t result)
+void nrf_drv_radio802154_swi_notify_energy_detected(uint8_t result)
 {
     assert(!ntf_queue_is_full());
 
@@ -355,6 +409,20 @@ void nrf_drv_radio802154_swi_notify_energy_detected(int8_t result)
 
     p_slot->type                        = NTF_TYPE_ENERGY_DETECTED;
     p_slot->data.energy_detected.result = result;
+
+    ntf_queue_ptr_increment(&m_ntf_w_ptr);
+
+    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+}
+
+void nrf_drv_radio802154_swi_notify_cca(bool channel_free)
+{
+    assert(!ntf_queue_is_full());
+
+    nrf_drv_radio802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+
+    p_slot->type            = NTF_TYPE_CCA;
+    p_slot->data.cca.result = channel_free;
 
     ntf_queue_ptr_increment(&m_ntf_w_ptr);
 
@@ -370,93 +438,93 @@ void nrf_drv_radio802154_swi_timeslot_exit(void)
 
 void nrf_drv_radio802154_swi_sleep(bool * p_result)
 {
-    nrf_drv_radio802154_critical_section_enter();
-    assert(!req_queue_is_full());
-
-    nrf_drv_radio802154_req_data_t * p_slot = &m_req_queue[m_req_w_ptr];
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
 
     p_slot->type                = REQ_TYPE_SLEEP;
     p_slot->data.sleep.p_result = p_result;
 
-    req_queue_ptr_increment(&m_req_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, REQ_TASK);
-    nrf_drv_radio802154_critical_section_exit();
+    req_exit();
 }
 
-void nrf_drv_radio802154_swi_receive(uint8_t channel, bool * p_result)
+void nrf_drv_radio802154_swi_receive(bool * p_result)
 {
-    nrf_drv_radio802154_critical_section_enter();
-    assert(!req_queue_is_full());
-
-    nrf_drv_radio802154_req_data_t * p_slot = &m_req_queue[m_req_w_ptr];
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
 
     p_slot->type                  = REQ_TYPE_RECEIVE;
-    p_slot->data.receive.channel  = channel;
     p_slot->data.receive.p_result = p_result;
 
-    req_queue_ptr_increment(&m_req_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, REQ_TASK);
-    nrf_drv_radio802154_critical_section_exit();
+    req_exit();
 }
 
-void nrf_drv_radio802154_swi_transmit(const uint8_t * p_data,
-                                      uint8_t         channel,
-                                      int8_t          power,
-                                      bool            cca,
-                                      bool          * p_result)
+void nrf_drv_radio802154_swi_transmit(const uint8_t * p_data, bool cca, bool * p_result)
 {
-    nrf_drv_radio802154_critical_section_enter();
-    assert(!req_queue_is_full());
-
-    nrf_drv_radio802154_req_data_t * p_slot = &m_req_queue[m_req_w_ptr];
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
 
     p_slot->type                   = REQ_TYPE_TRANSMIT;
     p_slot->data.transmit.p_data   = p_data;
-    p_slot->data.transmit.channel  = channel;
-    p_slot->data.transmit.power    = power;
     p_slot->data.transmit.cca      = cca;
     p_slot->data.transmit.p_result = p_result;
 
-    req_queue_ptr_increment(&m_req_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, REQ_TASK);
-    nrf_drv_radio802154_critical_section_exit();
+    req_exit();
 }
 
-void nrf_drv_radio802154_swi_energy_detection(uint8_t channel, uint32_t time_us, bool * p_result)
+void nrf_drv_radio802154_swi_energy_detection(uint32_t time_us, bool * p_result)
 {
-    nrf_drv_radio802154_critical_section_enter();
-    assert(!req_queue_is_full());
-
-    nrf_drv_radio802154_req_data_t * p_slot = &m_req_queue[m_req_w_ptr];
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
 
     p_slot->type                           = REQ_TYPE_ENERGY_DETECTION;
-    p_slot->data.energy_detection.channel  = channel;
     p_slot->data.energy_detection.time_us  = time_us;
     p_slot->data.energy_detection.p_result = p_result;
 
-    req_queue_ptr_increment(&m_req_w_ptr);
+    req_exit();
+}
 
-    nrf_egu_task_trigger(SWI_EGU, REQ_TASK);
-    nrf_drv_radio802154_critical_section_exit();
+void nrf_drv_radio802154_swi_cca(bool * p_result)
+{
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type              = REQ_TYPE_CCA;
+    p_slot->data.cca.p_result = p_result;
+
+    req_exit();
+}
+
+void nrf_drv_radio802154_swi_continuous_carrier(bool * p_result)
+{
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                             = REQ_TYPE_CONTINUOUS_CARRIER;
+    p_slot->data.continuous_carrier.p_result = p_result;
+
+    req_exit();
 }
 
 void nrf_drv_radio802154_swi_buffer_free(uint8_t * p_data)
 {
-    nrf_drv_radio802154_critical_section_enter();
-    assert(!req_queue_is_full());
-
-    nrf_drv_radio802154_req_data_t * p_slot = &m_req_queue[m_req_w_ptr];
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
 
     p_slot->type                    = REQ_TYPE_BUFFER_FREE;
     p_slot->data.buffer_free.p_data = (rx_buffer_t *)p_data;
 
-    req_queue_ptr_increment(&m_req_w_ptr);
+    req_exit();
+}
 
-    nrf_egu_task_trigger(SWI_EGU, REQ_TASK);
-    nrf_drv_radio802154_critical_section_exit();
+void nrf_drv_radio802154_swi_channel_update(void)
+{
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                    = REQ_TYPE_CHANNEL_UPDATE;
+
+    req_exit();
+}
+
+void nrf_drv_radio802154_swi_cca_cfg_update(void)
+{
+    nrf_drv_radio802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type = REQ_TYPE_CCA_CFG_UPDATE;
+
+    req_exit();
 }
 
 void SWI_IRQHandler(void)
@@ -472,15 +540,15 @@ void SWI_IRQHandler(void)
             switch (p_slot->type)
             {
                 case NTF_TYPE_RECEIVED:
-                    nrf_drv_radio802154_received(p_slot->data.received.p_psdu,
-                                                 p_slot->data.received.power,
-                                                 p_slot->data.received.lqi);
+                    nrf_drv_radio802154_received_raw(p_slot->data.received.p_psdu,
+                                                     p_slot->data.received.power,
+                                                     p_slot->data.received.lqi);
                     break;
 
                 case NTF_TYPE_TRANSMITTED:
-                    nrf_drv_radio802154_transmitted(p_slot->data.transmitted.p_psdu,
-                                                    p_slot->data.transmitted.power,
-                                                    p_slot->data.transmitted.lqi);
+                    nrf_drv_radio802154_transmitted_raw(p_slot->data.transmitted.p_psdu,
+                                                        p_slot->data.transmitted.power,
+                                                        p_slot->data.transmitted.lqi);
                     break;
 
                 case NTF_TYPE_CHANNEL_BUSY:
@@ -489,6 +557,10 @@ void SWI_IRQHandler(void)
 
                 case NTF_TYPE_ENERGY_DETECTED:
                     nrf_drv_radio802154_energy_detected(p_slot->data.energy_detected.result);
+                    break;
+
+                case NTF_TYPE_CCA:
+                    nrf_drv_radio802154_cca_done(p_slot->data.cca.result);
                     break;
 
                 default:
@@ -514,6 +586,8 @@ void SWI_IRQHandler(void)
         {
             nrf_drv_radio802154_req_data_t * p_slot = &m_req_queue[m_req_r_ptr];
 
+            nrf_drv_radio802154_critical_section_enter();
+
             switch (p_slot->type)
             {
                 case REQ_TYPE_SLEEP:
@@ -521,32 +595,47 @@ void SWI_IRQHandler(void)
                     break;
 
                 case REQ_TYPE_RECEIVE:
-                    *(p_slot->data.receive.p_result) = nrf_drv_radio802154_fsm_receive(
-                            p_slot->data.receive.channel);
+                    *(p_slot->data.receive.p_result) = nrf_drv_radio802154_fsm_receive();
                     break;
 
                 case REQ_TYPE_TRANSMIT:
                     *(p_slot->data.transmit.p_result) = nrf_drv_radio802154_fsm_transmit(
                             p_slot->data.transmit.p_data,
-                            p_slot->data.transmit.channel,
-                            p_slot->data.transmit.power,
                             p_slot->data.transmit.cca);
                     break;
 
                 case REQ_TYPE_ENERGY_DETECTION:
                     *(p_slot->data.energy_detection.p_result) =
                             nrf_drv_radio802154_fsm_energy_detection(
-                                    p_slot->data.energy_detection.channel,
                                     p_slot->data.energy_detection.time_us);
+                    break;
+
+                case REQ_TYPE_CCA:
+                    *(p_slot->data.cca.p_result) = nrf_drv_radio802154_fsm_cca();
+                    break;
+
+                case REQ_TYPE_CONTINUOUS_CARRIER:
+                    *(p_slot->data.continuous_carrier.p_result) =
+                            nrf_drv_radio802154_fsm_continuous_carrier();
                     break;
 
                 case REQ_TYPE_BUFFER_FREE:
                     nrf_drv_radio802154_fsm_notify_buffer_free(p_slot->data.buffer_free.p_data);
                     break;
 
+                case REQ_TYPE_CHANNEL_UPDATE:
+                    nrf_drv_radio802154_fsm_channel_update();
+                    break;
+
+                case REQ_TYPE_CCA_CFG_UPDATE:
+                    nrf_drv_radio802154_fsm_cca_cfg_update();
+                    break;
+
                 default:
                     assert(false);
             }
+
+            nrf_drv_radio802154_critical_section_exit();
 
             req_queue_ptr_increment(&m_req_r_ptr);
         }

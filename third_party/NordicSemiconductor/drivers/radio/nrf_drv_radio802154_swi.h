@@ -78,7 +78,14 @@ void nrf_drv_radio802154_swi_notify_busy_channel(void);
  *
  * @param[in]  result  Detected energy level.
  */
-void nrf_drv_radio802154_swi_notify_energy_detected(int8_t result);
+void nrf_drv_radio802154_swi_notify_energy_detected(uint8_t result);
+
+/**
+ * @brief Notify next higher layer that CCA procedure ended from SWI priority level.
+ *
+ * @param[in]  channel_free  If detected free channel.
+ */
+void nrf_drv_radio802154_swi_notify_cca(bool channel_free);
 
 /**
  * @brief Request discarding of the timeslot from SWI priority level.
@@ -97,34 +104,40 @@ void nrf_drv_radio802154_swi_sleep(bool * p_result);
 /**
  * @brief Request entering receive state from SWI priority.
  *
- * @param[in]   channel   Channel number used for receive procedure.
  * @param[out]  p_result  Result of entering receive state.
  */
-void nrf_drv_radio802154_swi_receive(uint8_t channel, bool * p_result);
+void nrf_drv_radio802154_swi_receive(bool * p_result);
 
 /**
  * @biref Request entering transmit state from SWI priority.
  *
  * @param[in]   p_data    Pointer to PSDU of the frame to transmit.
- * @param[in]   channel   Channel number used for requested transmission.
- * @param[in]   power     Transmitter power for requested transmission.
  * @param[in]   cca       If the driver should perform CCA procedure before transmission.
  * @param[out]  p_result  Result of entering transmit state.
  */
-void nrf_drv_radio802154_swi_transmit(const uint8_t * p_data,
-                                      uint8_t         channel,
-                                      int8_t          power,
-                                      bool            cca,
-                                      bool          * p_result);
+void nrf_drv_radio802154_swi_transmit(const uint8_t * p_data, bool cca, bool * p_result);
 
 /**
  * @brief Request entering energy detection state from SWI priority.
  *
- * @param[in]   channel   Channel number used for the energy detection procedure.
  * @param[in]   time_us   Requested duration of energy detection procedure.
  * @param[out]  p_result  Result of entering energy detection state.
  */
-void nrf_drv_radio802154_swi_energy_detection(uint8_t channel, uint32_t time_us, bool * p_result);
+void nrf_drv_radio802154_swi_energy_detection(uint32_t time_us, bool * p_result);
+
+/**
+ * @brief Request entering CCA state from SWI priority.
+ *
+ * @param[out]  p_result  Result of entering CCA state.
+ */
+void nrf_drv_radio802154_swi_cca(bool * p_result);
+
+/**
+ * @brief Request entering continuous carrier state from SWI priority.
+ *
+ * @param[out]  p_result  Result of entering continuous carrier state.
+ */
+void nrf_drv_radio802154_swi_continuous_carrier(bool * p_result);
 
 /**
  * @brief Notify FSM that given buffer is not used anymore and can be freed.
@@ -132,6 +145,16 @@ void nrf_drv_radio802154_swi_energy_detection(uint8_t channel, uint32_t time_us,
  * @param[in]  p_data  Pointer to the buffer to free.
  */
 void nrf_drv_radio802154_swi_buffer_free(uint8_t * p_data);
+
+/**
+ * @brief Notify FSM that the next higher layer requested channel change.
+ */
+void nrf_drv_radio802154_swi_channel_update(void);
+
+/**
+ * @brief Notify FSM that the next higher layer requested CCA configuration change.
+ */
+void nrf_drv_radio802154_swi_cca_cfg_update(void);
 
 /**
  *@}

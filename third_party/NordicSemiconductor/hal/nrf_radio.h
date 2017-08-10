@@ -202,6 +202,16 @@ typedef enum
 } nrf_radio_crc_includes_addr_t;
 
 /**
+ * @enum nrf_radio_ramp_up_mode_t
+ * @brief Types of radio ramp-up mode.
+ */
+typedef enum
+{
+    NRF_RADIO_RAMP_UP_MODE_DEFAULT = RADIO_MODECNF0_RU_Default,  /**< Default ramp-up mode. */
+    NRF_RADIO_RAMP_UP_MODE_FAST    = RADIO_MODECNF0_RU_Fast      /**< Fast ramp-up mode. */
+} nrf_radio_ramp_up_mode_t;
+
+/**
  * @brief Function for enabling interrupts.
  *
  * @param[in]  radio_int_mask              Mask of interrupts.
@@ -530,6 +540,17 @@ __STATIC_INLINE void nrf_radio_mhmu_search_pattern_set(uint32_t radio_mhmu_searc
 __STATIC_INLINE void nrf_radio_mhmu_pattern_mask_set(uint32_t radio_mhmu_pattern_mask)
 {
     NRF_RADIO->MHRMATCHMAS = radio_mhmu_pattern_mask;
+}
+
+/**
+ * @brief Function for setting radio ramp-up mode.
+ *
+ * @param[in]  ramp_up_mode  Radio ramp-up mode.
+ */
+__STATIC_INLINE void nrf_radio_ramp_up_mode_set(nrf_radio_ramp_up_mode_t ramp_up_mode)
+{
+    NRF_RADIO->MODECNF0 &= (~RADIO_MODECNF0_RU_Msk);
+    NRF_RADIO->MODECNF0 |= ((uint32_t) ramp_up_mode << RADIO_MODECNF0_RU_Pos);
 }
 
 /**

@@ -54,7 +54,7 @@ extern "C" {
  * RADIO CCA Mode.
  *
  */
-#define RADIO_CCA_MODE  NRF_RADIO_CCA_MODE_ED
+#define RADIO_CCA_MODE_DEFAULT  NRF_RADIO_CCA_MODE_ED
 
 /**
  * @def RADIO_CCA_ED_THRESHOLD
@@ -62,7 +62,7 @@ extern "C" {
  * RADIO Energy Detection Threshold.
  *
  */
-#define RADIO_CCA_ED_THRESHOLD  0x2D
+#define RADIO_CCA_ED_THRESHOLD_DEFAULT  0x2D
 
 /**
  * @def RADIO_CCA_CORR_THRESHOLD
@@ -70,7 +70,7 @@ extern "C" {
  * RADIO Correlator Threshold.
  *
  */
-#define RADIO_CCA_CORR_THRESHOLD  0x2D
+#define RADIO_CCA_CORR_THRESHOLD_DEFAULT  0x2D
 
 /**
  * @def RADIO_CCA_CORR_LIMIT
@@ -78,7 +78,22 @@ extern "C" {
  * RADIO Correlator limit.
  *
  */
-#define RADIO_CCA_CORR_LIMIT  0x02
+#define RADIO_CCA_CORR_LIMIT_DEFAULT  0x02
+
+/**
+ * @def RADIO_INTERNAL_IRQ_HANDLING
+ *
+ * If the driver should internally handle the RADIO IRQ.
+ * In case the driver is used in an OS the RADIO IRQ may be handled by the OS and passed to
+ * the driver @sa nrf_drv_radio802154_irq_handler(). In this case internal handling should be
+ * disabled.
+ */
+
+#if RAAL_SOFTDEVICE
+#define RADIO_INTERNAL_IRQ_HANDLING 0
+#else // RAAL_SOFTDEVICE
+#define RADIO_INTERNAL_IRQ_HANDLING 1
+#endif // RAAL_SOFTDEVICE
 
 /**
  * @def RADIO_IRQ_PRIORITY

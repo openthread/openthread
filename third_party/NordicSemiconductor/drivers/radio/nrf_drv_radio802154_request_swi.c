@@ -102,55 +102,91 @@ bool nrf_drv_radio802154_request_sleep(void)
     return result;
 }
 
-bool nrf_drv_radio802154_request_receive(uint8_t channel)
+bool nrf_drv_radio802154_request_receive(void)
 {
     bool result = false;
 
     if (active_vector_priority_is_high())
     {
         nrf_drv_radio802154_critical_section_enter();
-        result = nrf_drv_radio802154_fsm_receive(channel);
+        result = nrf_drv_radio802154_fsm_receive();
         nrf_drv_radio802154_critical_section_exit();
     }
     else
     {
-        nrf_drv_radio802154_swi_receive(channel, &result);
+        nrf_drv_radio802154_swi_receive(&result);
     }
 
     return result;
 }
 
-bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca)
+bool nrf_drv_radio802154_request_transmit(const uint8_t * p_data, bool cca)
 {
     bool result = false;
 
     if (active_vector_priority_is_high())
     {
         nrf_drv_radio802154_critical_section_enter();
-        result = nrf_drv_radio802154_fsm_transmit(p_data, channel, power, cca);
+        result = nrf_drv_radio802154_fsm_transmit(p_data, cca);
         nrf_drv_radio802154_critical_section_exit();
     }
     else
     {
-        nrf_drv_radio802154_swi_transmit(p_data, channel, power, cca, &result);
+        nrf_drv_radio802154_swi_transmit(p_data, cca, &result);
     }
 
     return result;
 }
 
-bool nrf_drv_radio802154_request_energy_detection(uint8_t channel, uint32_t time_us)
+bool nrf_drv_radio802154_request_energy_detection(uint32_t time_us)
 {
     bool result = false;
 
     if (active_vector_priority_is_high())
     {
         nrf_drv_radio802154_critical_section_enter();
-        result = nrf_drv_radio802154_fsm_energy_detection(channel, time_us);
+        result = nrf_drv_radio802154_fsm_energy_detection(time_us);
         nrf_drv_radio802154_critical_section_exit();
     }
     else
     {
-        nrf_drv_radio802154_swi_energy_detection(channel, time_us, &result);
+        nrf_drv_radio802154_swi_energy_detection(time_us, &result);
+    }
+
+    return result;
+}
+
+bool nrf_drv_radio802154_request_cca(void)
+{
+    bool result = false;
+
+    if (active_vector_priority_is_high())
+    {
+        nrf_drv_radio802154_critical_section_enter();
+        result = nrf_drv_radio802154_fsm_cca();
+        nrf_drv_radio802154_critical_section_exit();
+    }
+    else
+    {
+        nrf_drv_radio802154_swi_cca(&result);
+    }
+
+    return result;
+}
+
+bool nrf_drv_radio802154_request_continuous_carrier(void)
+{
+    bool result = false;
+
+    if (active_vector_priority_is_high())
+    {
+        nrf_drv_radio802154_critical_section_enter();
+        result = nrf_drv_radio802154_fsm_continuous_carrier();
+        nrf_drv_radio802154_critical_section_exit();
+    }
+    else
+    {
+        nrf_drv_radio802154_swi_continuous_carrier(&result);
     }
 
     return result;
@@ -169,3 +205,32 @@ void nrf_drv_radio802154_request_buffer_free(uint8_t * p_data)
         nrf_drv_radio802154_swi_buffer_free(p_data);
     }
 }
+
+void nrf_drv_radio802154_request_channel_update(void)
+{
+    if (active_vector_priority_is_high())
+    {
+        nrf_drv_radio802154_critical_section_enter();
+        nrf_drv_radio802154_fsm_channel_update();
+        nrf_drv_radio802154_critical_section_exit();
+    }
+    else
+    {
+        nrf_drv_radio802154_swi_channel_update();
+    }
+}
+
+void nrf_drv_radio802154_request_cca_cfg_update(void)
+{
+    if (active_vector_priority_is_high())
+    {
+        nrf_drv_radio802154_critical_section_enter();
+        nrf_drv_radio802154_fsm_cca_cfg_update();
+        nrf_drv_radio802154_critical_section_exit();
+    }
+    else
+    {
+        nrf_drv_radio802154_swi_cca_cfg_update();
+    }
+}
+

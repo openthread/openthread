@@ -43,6 +43,7 @@
 #include <string.h>
 
 #include <nrf_raal_api.h>
+#include <nrf_drv_radio802154.h>
 #include <nrf_drv_radio802154_debug.h>
 #include <nrf_drv_clock.h>
 #include <softdevice.h>
@@ -110,9 +111,6 @@ static volatile pending_events_t m_pending_event = PENDING_EVENT_NONE;
 
 /**@brief Defines RTC0 counter value on timeslot begin. */
 static uint32_t m_start_rtc_ticks = 0;
-
-/**@brief External Interrupt from RADIO. */
-extern void RADIO_IRQHandler(void);
 
 /**@brief Initialize timeslot internal variables. */
 static inline void timeslot_data_init(void)
@@ -382,8 +380,8 @@ static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_t
         nrf_drv_radio802154_pin_clr(PIN_DBG_TIMESLOT_ACTIVE);
         nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_ENDED);
 
-        m_pending_event             = PENDING_EVENT_NONE;
-        m_in_timeslot               = false;
+        m_pending_event = PENDING_EVENT_NONE;
+        m_in_timeslot   = false;
 
         // TODO: Change to NRF_RADIO_SIGNAL_CALLBACK_ACTION_END (KRKNWK-937)
         m_ret_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
@@ -404,12 +402,12 @@ static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_t
         // Ensure HFCLK is running before start is issued.
         assert(NRF_CLOCK->HFCLKSTAT == (CLOCK_HFCLKSTAT_SRC_Msk | CLOCK_HFCLKSTAT_STATE_Msk));
 
+        timer_start();
+
         m_start_rtc_ticks = NRF_RTC0->COUNTER;
         m_in_timeslot     = true;
-        m_alloc_iters     = 0;
-        m_timeslot_length = m_timeslot_length;
 
-        timer_start();
+        timeslot_data_init();
 
         if (m_in_critical_section)
         {
@@ -450,7 +448,7 @@ static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_t
         {
             if (!timer_is_margin_reached())
             {
-                RADIO_IRQHandler();
+                nrf_drv_radio802154_irq_handler();
             }
             else
             {
