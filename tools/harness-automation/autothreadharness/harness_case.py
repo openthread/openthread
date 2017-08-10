@@ -544,6 +544,8 @@ class HarnessCase(unittest.TestCase):
                     time.sleep(5)
 
                 button_next.click()
+                if not wait_until(lambda: self._browser.current_url.endswith('TestExecution.html'), 20):
+                    raise Exception('Failed to load TestExecution page')
             except FailError:
                 raise
             except:
