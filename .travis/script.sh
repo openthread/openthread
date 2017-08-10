@@ -48,7 +48,6 @@ set -x
         --enable-ncp-app=all              \
         --with-ncp-bus=uart               \
         --with-examples=posix             \
-        --with-platform-info=POSIX        \
         --enable-application-coap         \
         --enable-border-router            \
         --enable-cert-log                 \
@@ -222,7 +221,7 @@ set -x
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
-    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix --with-platform-info=POSIX" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {

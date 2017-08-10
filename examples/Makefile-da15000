@@ -46,7 +46,6 @@ configure_OPTIONS               = \
     --enable-ncp-app=all          \
     --with-ncp-bus=uart           \
     --with-examples=da15000       \
-    --with-platform-info=DA15000  \
     --enable-linker-map           \
     $(NULL)
 
