@@ -34,6 +34,8 @@
 */
 
 #include <stdint.h>
+#include "sdk_defs.h"
+
 //#include <tool.h>
 #define __NAKED                    __attribute__((naked))
 #define __USED                     __attribute__((used))
@@ -111,4 +113,24 @@ void __USED __NAKED __NO_RETURN __gcc_program_start(void)
     while (1);
 }
 
+uint32_t DA15000_phy_addr(uint32_t addr)
+{
+    static const uint32_t remap[] =
+    {
+        MEMORY_ROM_BASE,
+        MEMORY_OTP_BASE,
+        MEMORY_QSPIF_BASE,
+        MEMORY_SYSRAM_BASE,
+        MEMORY_QSPIF_BASE,
+        MEMORY_OTP_BASE,
+        MEMORY_CACHERAM_BASE,
+        0
+    };
 
+    if (addr >= MEMORY_REMAPPED_END)
+    {
+        return addr;
+    }
+
+    return addr + remap[REG_GETF(CRG_TOP, SYS_CTRL_REG, REMAP_ADR0)];
+}

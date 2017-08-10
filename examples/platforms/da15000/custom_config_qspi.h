@@ -91,7 +91,7 @@
 
 #define dg_configUSE_HW_TIMER0                         (1)
 
-
+#define dg_configUSE_HW_AES_HASH                       (1)
 /*************************************************************************************************\
  * OS specific config
  */
