@@ -196,6 +196,7 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
         {
             const NetworkNameTlv *tlv = static_cast<const NetworkNameTlv *>(cur);
             memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), tlv->GetLength());
+            aDataset.mNetworkName.m8[tlv->GetLength()] = '\0';
             aDataset.mIsNetworkNameSet = true;
             break;
         }

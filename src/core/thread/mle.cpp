@@ -3098,6 +3098,7 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
             aMessage.Read(offset, sizeof(networkName), &networkName);
             VerifyOrExit(networkName.IsValid(), error = OT_ERROR_PARSE);
             memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
+            result.mNetworkName.m8[networkName.GetLength()] = '\0';
             break;
 
         case MeshCoP::Tlv::kSteeringData:
