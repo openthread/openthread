@@ -323,7 +323,7 @@ typedef struct
 
 //*****************************************************************************
 /*!
- * \brief Perform SHA256 on the the input data.
+ * \brief Perform SHA256 on the input data.
  *
  * The input and output buffer can point to the same memory.
  * This is the equivalent of calling \ref SHA256_initialize(),

@@ -5450,7 +5450,7 @@
  *
  * Bit: ftdf_on_off_regmap_getGeneratorVal_e
  *
- * Event, set to '1' to indicate that the the getGeneratorVal request is completed.
+ * Event, set to '1' to indicate that the getGeneratorVal request is completed.
  * This event bit contributes to ftdf_ce[3].
  */
 #define IND_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E IND_R_FTDF_ON_OFF_REGMAP_LMAC_CONTROL_DELTA

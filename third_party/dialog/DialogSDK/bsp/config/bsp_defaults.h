@@ -2058,7 +2058,7 @@
 /**
  * \brief Stack size overhead when System View API is used
  *
- * All thread stack sizes plus the the stack of IRQ handlers will be increased by that amount
+ * All thread stack sizes plus the stack of IRQ handlers will be increased by that amount
  * to avoid stack overflow when System View is monitoring the system.
  *
  * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}

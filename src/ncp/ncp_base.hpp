@@ -206,7 +206,7 @@ protected:
      *
      * If no buffer space is available, this method should discard and clear the frame before returning an error status.
      * In case of success, the passed-in message @aMessage should be owned by outbound buffer and should be freed
-     * when either the the frame is successfully sent and removed or if the frame is discarded.
+     * when either the frame is successfully sent and removed or if the frame is discarded.
      *
      * @param[in]  aMessage         A reference to the message to be added to current frame.
      *

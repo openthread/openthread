@@ -281,7 +281,7 @@ extern uint32_t  PKABigNumCmpGetResult(void);
 //
 //! \brief Starts a big number inverse modulo operation.
 //!
-//! This function starts the the inverse modulo operation on \c bigNum
+//! This function starts the inverse modulo operation on \c bigNum
 //! using the divisor \c modulus.
 //!
 //! \param [in] bigNum is the pointer to the buffer containing the big number

@@ -57,7 +57,7 @@ namespace Crypto {
  *     | 2 bytes |  n bytes | 2 bytes |
  *     +------------------------------+
  *
- * Since block metadata is of 4-byte size, mSize and mNext are separated at the begining
+ * Since block metadata is of 4-byte size, mSize and mNext are separated at the beginning
  * and end of the block to make sure the mMemory is aligned with long.
  *
  */

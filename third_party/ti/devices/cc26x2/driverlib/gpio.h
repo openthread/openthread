@@ -172,7 +172,7 @@ GPIO_readDio( uint32_t dioNumber )
 //
 //! \brief Reads the input value for the specified DIOs.
 //!
-//! This function returns the the input value for multiple DIOs.
+//! This function returns the input value for multiple DIOs.
 //! The value returned is not shifted and hence matches the corresponding dioMask bits.
 //!
 //! \param dioMask is the bit-mask representation of the DIOs to read.

@@ -337,7 +337,7 @@
 // sampling starts when the ADC clock detects a rising edge on the trigger
 // signal. Jitter/uncertainty will be inferred in the detection if the trigger
 // signal originates from a domain that is asynchronous to the ADC clock.
-// SMPL_CYCLE_EXP  determines the the duration of sampling.
+// SMPL_CYCLE_EXP  determines the duration of sampling.
 // Conversion starts immediately after sampling ends.
 //
 // In asynchronous mode the sampling is continuous when enabled. Sampling ends

@@ -313,7 +313,7 @@ ChipInfo_GetMinorHwRev( void )
 //! How to decode the USER_ID filed is described in the Technical Reference Manual (TRM)
 //!
 //! \return
-//! Returns the the 32 bits USER_ID field
+//! Returns the 32 bits USER_ID field
 //
 //*****************************************************************************
 __STATIC_INLINE uint32_t

@@ -192,7 +192,7 @@ public:
      * `OT_ERROR_NO_BUFS`.
      *
      * In case of success, the passed-in message @p aMessage will be owned by the frame buffer instance and will be
-     * freed when either the the frame is removed or discarded. In case of failure @p aMessage remains unchanged.
+     * freed when either the frame is removed or discarded. In case of failure @p aMessage remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
      *
@@ -426,7 +426,7 @@ private:
      * -------------------------------
      *
      * `NcpFrameBuffer` internally stores a frame as a sequence of data segments. Each segment stores a portion of
-     * frame. The data segments are stored in the the main buffer `mBuffer`. `mBuffer` is utilized as a circular buffer.
+     * frame. The data segments are stored in the main buffer `mBuffer`. `mBuffer` is utilized as a circular buffer.
 
      * The content of messages (which are added using `InFrameFeedMessage()`) are not directly copied in the `mBuffer`
      * but instead they are enqueued in a message queue `mMessageQueue`.
@@ -595,7 +595,7 @@ private:
 
     uint8_t * const  mBuffer;                    // Pointer to the buffer used to store the data.
     uint8_t * const  mBufferEnd;                 // Points to after the end of buffer.
-    const uint16_t   mBufferLength;              // Length of the the buffer.
+    const uint16_t   mBufferLength;              // Length of the buffer.
 
     BufferCallback   mFrameAddedCallback;        // Callback to signal when a new frame is added
     void *           mFrameAddedContext;         // Context passed to `mFrameAddedCallback`.

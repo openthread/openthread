@@ -1138,7 +1138,7 @@ cleanup:
  * representation uses one more K_i, due to carries.
  *
  * Also, for the sake of compactness, only the seven low-order bits of x[i]
- * are used to represent K_i, and the msb of x[i] encodes the the sign (s_i in
+ * are used to represent K_i, and the msb of x[i] encodes the sign (s_i in
  * the paper): it is set if and only if if s_i == -1;
  *
  * Calling conventions:

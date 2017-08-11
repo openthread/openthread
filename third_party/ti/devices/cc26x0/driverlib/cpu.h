@@ -135,7 +135,7 @@ extern uint32_t CPUcpsie(void);
 //
 //! \brief Get the interrupt priority disable level.
 //!
-//! Use this function to get the the level of priority that will disable
+//! Use this function to get the level of priority that will disable
 //! interrupts with a lower priority level.
 //!
 //! \return Returns the value of the \b BASEPRI register.

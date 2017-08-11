@@ -4530,7 +4530,7 @@
 
 // Field:     [8] MONRDY
 //
-// Indicates whether the the software executing when the processor allocated
+// Indicates whether the software executing when the processor allocated
 // the FP stack frame was able to set the DebugMonitor exception to pending.
 // 0: DebugMonitor is disabled or priority did not permit setting
 // DEMCR.MON_PEND when the floating-point stack frame was allocated.
