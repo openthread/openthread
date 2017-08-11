@@ -302,8 +302,29 @@ OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPerio
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the IEEE 802.15.4 Short Address.
+ *
  */
 OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
+
+/**
+ * Get the Joining Permitted flag used in any subsequently transmitted IEEE 802.15.4 Beacon frames.
+ *
+ * @param[in]     aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   if the Joining Permitted flag will be set in Beacon frames.
+ * @retval FALSE  if the Joining Permitted flag will not be set in Beacon frames.
+ *
+ */
+bool otLinkGetBeaconJoinableFlag(otInstance *aInstance);
+
+/**
+ * Set the Joining Permitted flag used in any subsequently transmitted IEEE 802.15.4 Beacon frames.
+ *
+ * @param[in] aInstance      A pointer to an OpenThread instance.
+ * @param[in] aJoinableFlag  The Joining Permitted flag to use in IEEE 802.15.4 Beacon frames.
+ *
+ */
+void otLinkSetBeaconJoinableFlag(otInstance *aInstance, bool aJoinableFlag);
 
 /**
  * This function gets the address mode of MAC filter.

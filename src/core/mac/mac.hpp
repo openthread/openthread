@@ -304,6 +304,23 @@ public:
     void SetBeaconEnabled(bool aEnabled) { mBeaconsEnabled = aEnabled; }
 
     /**
+     * This method gets the Joining Permitted flag used in any subsequently transmitted IEEE 802.15.4 Beacon frames.
+     *
+     * @retval TRUE   if the Joining Permitted flag will be set in Beacon frames.
+     * @retval FALSE  if the Joining Permitted flag will not set in Beacon frames.
+     *
+     */
+    bool GetBeaconJoinableFlag(void)  { return mBeaconJoinableFlag; }
+
+    /**
+     * This method sets the Joining Permitted flag used in any subsequently transmitted IEEE 802.15.4 Beacon frames.
+     *
+     * @param[in] aJoinableFlag  The Joining Permitted flag to use in Beacon frames.
+     *
+     */
+    void SetBeaconJoinableFlag(bool aJoinableFlag)  { mBeaconJoinableFlag = aJoinableFlag; }
+
+    /**
      * This method indicates whether or not rx-on-when-idle is enabled.
      *
      * @retval TRUE   If rx-on-when-idle is enabled.
@@ -587,17 +604,6 @@ public:
      */
     void ResetCounters(void);
 
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
-    /**
-     * This method indicates if the beacon is joinable or non-joinable
-     *
-     * @retval true   Beacon is joinable.
-     * @retval false  Beacon is non-joinable.
-     *
-     */
-    bool IsBeaconJoinable(void);
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
-
     /**
      * This method returns the MAC counter.
      *
@@ -713,6 +719,8 @@ private:
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mDelaySleep              : 1;
 #endif
+
+    bool mBeaconJoinableFlag      : 1;
 
     uint8_t mBeaconSequence;
     uint8_t mDataSequence;

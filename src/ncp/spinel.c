@@ -1160,6 +1160,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MAC_DATA_POLL_PERIOD";
         break;
 
+    case SPINEL_PROP_MAC_BEACON_JOINABLE:
+        ret = "PROP_MAC_BEACON_JOINABLE";
+        break;
+
     case SPINEL_PROP_MAC_WHITELIST:
         ret = "PROP_MAC_WHITELIST";
         break;

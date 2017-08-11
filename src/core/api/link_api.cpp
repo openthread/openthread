@@ -144,6 +144,16 @@ otShortAddress otLinkGetShortAddress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMac().GetShortAddress();
 }
 
+bool otLinkGetBeaconJoinableFlag(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMac().GetBeaconJoinableFlag();
+}
+
+void otLinkSetBeaconJoinableFlag(otInstance *aInstance, bool aJoinableFlag)
+{
+    aInstance->mThreadNetif.GetMac().SetBeaconJoinableFlag(aJoinableFlag);
+}
+
 #if OPENTHREAD_ENABLE_MAC_FILTER
 
 otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance)
