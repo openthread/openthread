@@ -77,8 +77,11 @@
 #include "cli_coap.hpp"
 #endif
 
+#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_EXAMPLES_POSIX
+#include <openthread/platform/debug_uart.h>
+#endif
+
 #include "common/encoding.hpp"
-#include "utils/debug_uart.h"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

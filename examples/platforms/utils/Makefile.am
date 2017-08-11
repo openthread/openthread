@@ -37,6 +37,7 @@ libopenthread_platform_utils_a_CPPFLAGS = \
     $(NULL)
 
 libopenthread_platform_utils_a_SOURCES  = \
+    debug_uart.c                          \
     settings.cpp                          \
     $(NULL)
 

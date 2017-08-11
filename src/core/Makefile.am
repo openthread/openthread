@@ -182,7 +182,6 @@ SOURCES_COMMON                      = \
     thread/tmf_proxy.cpp              \
     thread/topology.cpp               \
     utils/child_supervision.cpp       \
-    utils/debug_uart.cpp              \
     utils/jam_detector.cpp            \
     utils/missing_strlcpy.c           \
     utils/missing_strlcat.c           \
@@ -294,7 +293,6 @@ HEADERS_COMMON                      = \
     thread/tmf_proxy.hpp              \
     thread/topology.hpp               \
     utils/child_supervision.hpp       \
-    utils/debug_uart.h                \
     utils/slaac_address.hpp           \
     utils/jam_detector.hpp            \
     utils/wrap_stdbool.h              \

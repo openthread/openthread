@@ -31,8 +31,7 @@
 
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/alarm-milli.h>
-#include <common/logging.hpp>
-#include <utils/debug_uart.h>
+#include <openthread/platform/debug_uart.h>
 
 /*
  * Implimentation note:

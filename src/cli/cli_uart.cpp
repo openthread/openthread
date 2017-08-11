@@ -49,7 +49,10 @@
 #include "common/encoding.hpp"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
-#include "utils/debug_uart.h"
+
+#if  OPENTHREAD_ENABLE_DEBUG_UART
+#include <openthread/platform/debug_uart.h>
+#endif
 
 namespace ot {
 namespace Cli {
@@ -241,6 +244,7 @@ void Uart::Send(void)
     {
         otPlatUartSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
 #if OPENTHREAD_ENABLE_DEBUG_UART
+        /* Duplicate the CLI output on the debug uart */
         otPlatDebugUart_write_bytes(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
 #endif
     }

@@ -38,6 +38,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <openthread/platform/debug_uart.h>
 #include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"

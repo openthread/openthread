@@ -45,6 +45,9 @@ ot_platform_headers                      =\
     toolchain.h                           \
     $(NULL)
 
+noinst_HEADERS               = \
+    debug_uart.h
+
 ot_platformdir = $(includedir)/openthread/platform
 dist_ot_platform_HEADERS = $(ot_platform_headers)
 

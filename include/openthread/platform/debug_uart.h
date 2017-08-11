@@ -1,5 +1,3 @@
-#if !defined( PLATFORM_DEBUG_UART_H )
-#define PLATFORM_DEBUG_UART_H
 /*
  *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
@@ -28,11 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !defined( PLATFORM_DEBUG_UART_H )
+#define PLATFORM_DEBUG_UART_H
+
+#include <openthread/platform/logging.h>
+
 /**
  * @file
- *   This file implements a very basic debug uart useful for logging
- *   messages when the primary uart is already engaged (example the NCP)
- *   and encapsulating logs is not practical.
+ *
+ * Note: This is NOT a public thread API, and this header file is *NOT*
+ * installed as part of openthread, this is an pseudo-internal
+ * debug feature usable by developers during the course of development.
+ *
+ * This implements a very basic debug uart useful for logging
+ * messages when the primary uart is already engaged (example the NCP)
+ * and encapsulating logs is not practical.
  *
  * Implimentation Notes:
  *
