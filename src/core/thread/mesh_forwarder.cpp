@@ -382,14 +382,9 @@ void MeshForwarder::ScheduleTransmissionTask(void)
             child.GetMacAddress(mMacDest);
         }
 
-        // To ensure fairness in handling of data requests from sleepy
-        // children, once a message is scheduled and prepared for indirect
-        // transmission to a child, the `mStartChildIndex` is updated to
-        // the next index after the current child. Subsequent call to
-        // `ScheduleTransmissionTask()` will begin the iteration through
-        // the children list from this index.
+        // Record current child index, and move it to next index after this indirect transmission has completed.
 
-        mStartChildIndex = nextIndex;
+        mStartChildIndex = childIndex;
 
         netif.GetMac().SendFrameRequest(mMacSender);
         ExitNow();
@@ -1565,6 +1560,15 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
         if (mSendMessage == child->GetIndirectMessage())
         {
+            // To ensure fairness in handling of data requests from sleepy
+            // children, once a message is completed for indirect transmission to a
+            // child (no matter succeed or failed), the `mStartChildIndex` is updated to
+            // the next index after the current child. Subsequent call to
+            // `ScheduleTransmissionTask()` will begin the iteration through
+            // the children list from this index.
+
+            mStartChildIndex++;
+
             if (aError == OT_ERROR_NONE)
             {
                 child->ResetIndirectTxAttempts();
