@@ -39,11 +39,13 @@ ED1 = 4
 ED2 = 5
 ED3 = 6
 
+MTDS = [ED1, ED2, ED3]
+
 class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,7):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i in MTDS))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

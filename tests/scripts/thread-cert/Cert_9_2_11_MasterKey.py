@@ -44,11 +44,13 @@ ROUTER1 = 3
 ED1 = 4
 SED1 = 5
 
+MTDS = [ED1, SED1]
+
 class Cert_9_2_11_MasterKey(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i in MTDS))
 
         self.nodes[COMMISSIONER].set_active_dataset(10, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1)
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -71,12 +73,16 @@ class Cert_9_2_11_MasterKey(unittest.TestCase):
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[ED1].set_active_dataset(10, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1)
+        self.nodes[ED1].set_channel(CHANNEL_INIT)
+        self.nodes[ED1].set_panid(PANID_INIT)
+        self.nodes[ED1].set_masterkey(KEY1)
         self.nodes[ED1].set_mode('rsn')
         self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ED1].enable_whitelist()
 
-        self.nodes[SED1].set_active_dataset(10, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1)
+        self.nodes[SED1].set_channel(CHANNEL_INIT)
+        self.nodes[SED1].set_panid(PANID_INIT)
+        self.nodes[SED1].set_masterkey(KEY1)
         self.nodes[SED1].set_mode('s')
         self.nodes[SED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[SED1].enable_whitelist()

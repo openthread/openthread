@@ -42,7 +42,7 @@ class Cert_6_1_7_EDSynchronization(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i == ED))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

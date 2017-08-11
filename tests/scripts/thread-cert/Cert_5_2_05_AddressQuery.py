@@ -40,11 +40,13 @@ REED = 5
 ED2 = 6
 ED3 = 7
 
+MTDS = [ED1, ED2, ED3]
+
 class Cert_5_2_5_AddressQuery(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,8):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i in MTDS))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
