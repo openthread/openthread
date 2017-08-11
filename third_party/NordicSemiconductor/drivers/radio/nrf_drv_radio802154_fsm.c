@@ -1617,14 +1617,14 @@ static inline void irq_handler(void)
  *
  *  This function is called when MAC layer requests transition from transmit to receive state.
  */
-static inline void tx_procedure_abort(void)
+static inline void tx_procedure_abort(radio_state_t state)
 {
     shorts_disable();
 
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
     assert(m_mutex);
 
-    state_set(RADIO_STATE_WAITING_RX_FRAME);
+    state_set(state);
 
     switch (nrf_radio_state_get())
     {
@@ -1638,8 +1638,7 @@ static inline void tx_procedure_abort(void)
             nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
     }
 
-    nrf_radio_mhmu_search_pattern_set(0);
-    nrf_radio_event_clear(NRF_RADIO_EVENT_MHRMATCH);
+    ack_matching_disable();
 
     // Clear events that could have happened in critical section due to receiving frame.
     nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
@@ -1712,6 +1711,13 @@ bool nrf_drv_radio802154_fsm_sleep(void)
         case RADIO_STATE_TX_ACK:
             break;
 
+        case RADIO_STATE_CCA_BEFORE_TX:
+        case RADIO_STATE_TX_FRAME:
+        case RADIO_STATE_RX_ACK:
+            tx_procedure_abort(RADIO_STATE_DISABLING);
+            result = true;
+            break;
+
         default:
             assert(false); // This should not happen.
     }
@@ -1749,7 +1755,7 @@ bool nrf_drv_radio802154_fsm_receive(void)
         case RADIO_STATE_CCA_BEFORE_TX:
         case RADIO_STATE_TX_FRAME:
         case RADIO_STATE_RX_ACK:
-            tx_procedure_abort();
+            tx_procedure_abort(RADIO_STATE_WAITING_RX_FRAME);
             result = true;
             break;
 
