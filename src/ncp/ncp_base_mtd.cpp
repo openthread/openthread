@@ -59,6 +59,8 @@
 namespace ot {
 namespace Ncp {
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
 static bool HasOnly1BitSet(uint32_t aValue)
 {
     return aValue != 0 && ((aValue & (aValue - 1)) == 0);
@@ -75,6 +77,8 @@ static uint8_t IndexOfMSB(uint32_t aValue)
 
     return index;
 }
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &aConfig)
 {

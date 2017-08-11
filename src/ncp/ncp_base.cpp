@@ -95,7 +95,6 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(INTERFACE_TYPE),
     NCP_GET_PROP_HANDLER_ENTRY(LAST_STATUS),
     NCP_GET_PROP_HANDLER_ENTRY(LOCK),
-    NCP_GET_PROP_HANDLER_ENTRY(PHY_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_CHAN),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_RX_SENSITIVITY),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_TX_POWER),
@@ -103,13 +102,16 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(PROTOCOL_VERSION),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_PANID),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_LADDR),
-    NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_RAW_STREAM_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_PROMISCUOUS_MODE),
     NCP_GET_PROP_HANDLER_ENTRY(NCP_VERSION),
     NCP_GET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
     NCP_GET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_LIST),
     NCP_GET_PROP_HANDLER_ENTRY(VENDOR_ID),
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    NCP_GET_PROP_HANDLER_ENTRY(PHY_ENABLED),
+    NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
+#endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     NCP_GET_PROP_HANDLER_ENTRY(MAC_DATA_POLL_PERIOD),
@@ -862,6 +864,71 @@ void NcpBase::RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDel
 }
 
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+
+// ----------------------------------------------------------------------------
+// MARK: Raw frame handling
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandleRawFrame(const otRadioFrame *aFrame, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
+}
+
+void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
+{
+    uint16_t flags = 0;
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    if (!mIsRawStreamEnabled)
+    {
+        goto exit;
+    }
+
+    SuccessOrExit(OutboundFrameBegin(header));
+
+    if (aFrame->mDidTX)
+    {
+        flags |= SPINEL_MD_FLAG_TX;
+    }
+
+    // Append frame header and frame length
+    SuccessOrExit(
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
+            header,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            aFrame->mLength
+        ));
+
+    // Append the frame contents
+    SuccessOrExit(OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
+
+    // Append metadata (rssi, etc)
+    SuccessOrExit(
+        OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_INT8_S
+            SPINEL_DATATYPE_UINT16_S
+            SPINEL_DATATYPE_STRUCT_S(  // PHY-data
+                SPINEL_DATATYPE_NULL_S // Empty for now
+            )
+            SPINEL_DATATYPE_STRUCT_S(  // Vendor-data
+                SPINEL_DATATYPE_NULL_S // Empty for now
+            ),
+            aFrame->mPower,   // TX Power
+            -128,             // Noise Floor (Currently unused)
+            flags             // Flags
+
+           // Skip PHY and Vendor data for now
+        ));
+
+    SuccessOrExit(OutboundFrameSend());
+
+exit:
+    return;
+}
+
 // ----------------------------------------------------------------------------
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
