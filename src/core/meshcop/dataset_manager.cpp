@@ -151,8 +151,8 @@ otError DatasetManager::ApplyConfiguration(void)
         {
             const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
             otNetworkName networkName;
-            memset(networkName.m8, 0, sizeof(networkName));
             memcpy(networkName.m8, name->GetNetworkName(), name->GetLength());
+            networkName.m8[name->GetLength()] = '\0';
             netif.GetMac().SetNetworkName(networkName.m8);
             break;
         }
