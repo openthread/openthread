@@ -47,7 +47,6 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <windows.h>
-#define POLL WSAPoll
 #define ssize_t int
 #include <time.h>
 #define localtime _localtime32
@@ -68,13 +67,11 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <poll.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
-#define POLL poll
 #endif
 
 #include <openthread/openthread.h>
@@ -140,10 +137,12 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 /**
  * This function performs radio driver processing.
  *
- * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in]  aWriteFdSet  A pointer to the write file descriptors.
  *
  */
-void platformRadioProcess(otInstance *aInstance);
+void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFds, const fd_set *aWriteFds);
 
 /**
  * This function initializes the random number service used by OpenThread.
