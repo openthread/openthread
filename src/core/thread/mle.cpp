@@ -280,7 +280,8 @@ otError Mle::Restore(void)
     length = sizeof(networkInfo);
     SuccessOrExit(error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
-    VerifyOrExit(length >= sizeof(networkInfo), error = OT_ERROR_NOT_FOUND);
+
+    VerifyOrExit(length >= Settings::kNetworkInfoV1Size, error = OT_ERROR_NOT_FOUND);
 
     netif.GetKeyManager().SetCurrentKeySequence(networkInfo.mKeySequence);
     netif.GetKeyManager().SetMleFrameCounter(networkInfo.mMleFrameCounter);
@@ -300,6 +301,11 @@ otError Mle::Restore(void)
     if (networkInfo.mRloc16 == Mac::kShortAddrInvalid)
     {
         ExitNow();
+    }
+
+    if (length >= Settings::kNetworkInfoV2Size)
+    {
+        netif.GetMle().SetRouterRoleEnabled(networkInfo.mRouterRoleEnabled != 0);
     }
 
     if (!IsActiveRouter(networkInfo.mRloc16))
@@ -366,6 +372,7 @@ otError Mle::Store(void)
         networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
         memcpy(networkInfo.mExtAddress.m8, netif.GetMac().GetExtAddress(), sizeof(networkInfo.mExtAddress));
         memcpy(networkInfo.mMlIid, &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], OT_IP6_IID_SIZE);
+        networkInfo.mRouterRoleEnabled = netif.GetMle().IsRouterRoleEnabled() ? 1 : 0;
 
         if (mRole == OT_DEVICE_ROLE_CHILD)
         {
