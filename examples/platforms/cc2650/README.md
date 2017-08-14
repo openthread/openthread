@@ -47,6 +47,13 @@ consult this [community help wiki article][ubuntu-wiki-virtualbox].
 [mingw]: http://www.mingw.org
 [ubuntu-wiki-virtualbox]: https://help.ubuntu.com/community/VirtualBox
 
+In a Bash terminal, follow these instructions to install the GNU toolchain and
+other dependencies.
+
+```bash
+$ cd <path-to-openthread>
+$ ./script/bootstrap
+```
 
 ## Building
 
@@ -54,7 +61,6 @@ In a Bash terminal, follow these instructions to build the cc2650 examples.
 
 ```bash
 $ cd <path-to-openthread>
-$ ./script/bootstrap
 $ ./bootstrap
 $ make -f examples/Makefile-cc2650
 ```

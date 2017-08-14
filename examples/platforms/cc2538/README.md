@@ -16,13 +16,20 @@ Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
 
+In a Bash terminal, follow these instructions to install the GNU toolchain and
+other dependencies.
+
+```bash
+$ cd <path-to-openthread>
+$ ./script/bootstrap
+```
+
 ## Building
 
 In a Bash terminal, follow these instructions to build the cc2538 examples.
 
 ```bash
 $ cd <path-to-openthread>
-$ ./script/bootstrap
 $ ./bootstrap
 $ make -f examples/Makefile-cc2538
 ```

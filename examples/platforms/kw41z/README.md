@@ -16,11 +16,18 @@ Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
 
-## Build Examples
+In a Bash terminal, follow these instructions to install the GNU toolchain and
+other dependencies.
 
 ```bash
 $ cd <path-to-openthread>
 $ ./script/bootstrap
+```
+
+## Build Examples
+
+```bash
+$ cd <path-to-openthread>
 $ ./bootstrap
 $ make -f examples/Makefile-kw41z
 ```
@@ -35,7 +42,7 @@ $ arm-none-eabi-objcopy -O binary ot-cli-ftd ot-cli-ftd.bin
 ## Flash Binaries
 
 Compiled binaries may be flashed onto the MKW41Z512 using drag-and-drop into the board's MSD Bootloader
- or the [NXP(Freescale) Test Tool][test-tool] or [JTAG interface][jtag]. 
+ or the [NXP(Freescale) Test Tool][test-tool] or [JTAG interface][jtag].
 The [NXP(Freescale) Test Tool][test-tool] provides a convenient method for flashing a MKW41Z512 via the [J-Link][jlink].
 
 [test-tool]: http://www.nxp.com/webapp/sps/download/license.jsp?colCode=TESTTOOL_SETUP

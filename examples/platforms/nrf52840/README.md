@@ -14,11 +14,18 @@ Download and install [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
 
-## Building the examples
+In a Bash terminal, follow these instructions to install the GNU toolchain and
+other dependencies.
 
 ```bash
 $ cd <path-to-openthread>
 $ ./script/bootstrap
+```
+
+## Building the examples
+
+```bash
+$ cd <path-to-openthread>
 $ ./bootstrap
 $ make -f examples/Makefile-nrf52840
 ```

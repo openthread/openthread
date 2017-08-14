@@ -4,15 +4,29 @@ This directory contains example platform drivers for the [Dialog Semiconductor D
 
 [da15000]: https://support.dialog-semiconductor.com/connectivity/product/openthread-sandbox
 
-**NOTE:** Each Thread node requires a unique EUI-64.  
+**NOTE:** Each Thread node requires a unique EUI-64.
 Please make sure all Thread nodes in your network have a unique EUI-64 by setting HARDCODED_NODE_ID in radio.c to a unique value.
 
 **NOTE:** Current version works only with DA15000 rev. BA
 
-## Build Examples (How to build and flash):
+## Toolchain
+
+Download and install the [GNU toolchain for ARM
+Cortex-M][gnu-toolchain].
+
+[gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
+
+In a Bash terminal, follow these instructions to install the GNU toolchain and
+other dependencies.
+
 ```bash
 $ cd <path-to-openthread>
 $ ./script/bootstrap
+```
+
+## Build Examples (How to build and flash):
+```bash
+$ cd <path-to-openthread>
 $ ./bootstrap
 $ make -f examples/Makefile-da15000 clean
 $ make -f examples/Makefile-da15000
@@ -69,7 +83,7 @@ Board will indicate state of device according to LED blink speed.
    Done
    ```
    Wait and see that LED started to blink with 5Hz.
-   
+
    Check node state:
    ```
    > state
@@ -99,7 +113,7 @@ Board will indicate state of device according to LED blink speed.
 
    List addresses on terminal with Leader:
 
-   ```  
+   ```
    > ipaddr
    fdde:ad00:beef:0:0:ff:fe00:4400
    fdde:ad00:beef:0:92f5:9844:67ad:a0c9
@@ -117,16 +131,16 @@ Board will indicate state of device according to LED blink speed.
 * Validation
 
    The DA15000 example has been validated by Dialog Semiconductor with commit d250105 included.
-  
+
 * Build environment
 
    The DA15000 example code and all required dependencies have been complied with gcc version 5.4.0 (20160609).
-   
-## Troubleshooting 
+
+## Troubleshooting
 * Why can’t I see the VCOM port?
-   
-   The Segger Virtual COM port can be disabled by software configuration. If you can see the Segger 
+
+   The Segger Virtual COM port can be disabled by software configuration. If you can see the Segger
    driver properly installed but the VCOM not showing up in the device manager, it’s probably disabled
    by software. To re-enable it you have to run JLinkExe and issue the command ` vcom enable`.It is
-   required to power cycle the device to apply the change. 
- 
+   required to power cycle the device to apply the change.
+
