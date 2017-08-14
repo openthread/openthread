@@ -184,6 +184,9 @@ bool nrf_drv_radio802154_sleep(void)
     case RADIO_STATE_RX_HEADER:
     case RADIO_STATE_RX_FRAME:
     case RADIO_STATE_TX_ACK:
+    case RADIO_STATE_CCA_BEFORE_TX:
+    case RADIO_STATE_TX_FRAME:
+    case RADIO_STATE_RX_ACK:
         result = nrf_drv_radio802154_request_sleep();
         break;
 
