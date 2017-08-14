@@ -81,7 +81,8 @@ OTAPI otError OTCALL otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const 
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPrefix   A pointer to an IPv6 prefix.
  *
- * @retval OT_ERROR_NONE  Successfully removed the configuration from the local network data.
+ * @retval OT_ERROR_NONE       Successfully removed the configuration from the local network data.
+ * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
  *
  * @sa otBorderRouterAddOnMeshPrefix
  * @sa otBorderRouterRegister
@@ -124,7 +125,8 @@ OTAPI otError OTCALL otBorderRouterAddRoute(otInstance *aInstance, const otExter
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPrefix   A pointer to an IPv6 prefix.
  *
- * @retval OT_ERROR_NONE  Successfully removed the configuration from the local network data.
+ * @retval OT_ERROR_NONE       Successfully removed the configuration from the local network data.
+ * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
  *
  * @sa otBorderRouterAddRoute
  * @sa otBorderRouterRegister

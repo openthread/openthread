@@ -266,7 +266,9 @@ OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
  *
- * @retval OT_ERROR_NONE  Successfully released the Router ID specified by aRouterId.
+ * @retval OT_ERROR_NONE           Successfully released the Router ID specified by aRouterId.
+ * @retval OT_ERROR_INVALID_STATE  The Router ID was not allocated.
+ *
  */
 OTAPI otError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
 

@@ -669,6 +669,11 @@ otError NcpBase::RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(uint8_t aHeader,
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otThreadReleaseRouterId(mInstance, routerId);
+
+    // `INVALID_STATE` is returned when router ID was not allocated (i.e. not in the list)
+    // in such a case, the "remove" operation can be considered successful.
+    VerifyOrExit(error != OT_ERROR_INVALID_STATE, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
+
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
