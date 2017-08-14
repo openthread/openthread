@@ -18,6 +18,7 @@ Download and install [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 ```bash
 $ cd <path-to-openthread>
+$ ./script/bootstrap
 $ ./bootstrap
 $ make -f examples/Makefile-nrf52840
 ```

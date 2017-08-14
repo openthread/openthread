@@ -44,6 +44,7 @@ In a Bash terminal, follow these instructions to build the cc2652 examples.
 
 ```bash
 $ cd <path-to-openthread>
+$ ./script/bootstrap
 $ ./bootstrap
 $ make -f examples/Makefile-cc2652
 ```

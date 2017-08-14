@@ -18,6 +18,7 @@ The build process will complain if additional packages are required.
 
 ```bash
 $ cd <path-to-openthread>
+$ ./script/bootstrap
 $ ./bootstrap
 $ CERT_LOG=1 CLI_LOGGING=1 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BORDER_ROUTER=1 make -f examples/Makefile-gp712
 ```
@@ -27,7 +28,7 @@ After a successful build, the `elf` files are found in
 
 Building a variant which interfaces via a tcp socket is also possible. Replace the uart-posix.c with uart-socket.c in the Makefile.am from examples/platforms/gp712/Makefile.am and rebuild. Now it should be possible to open a telnet to socket 9190 of the raspberry pi from a remote PC. This also easier testing with the official Thread Test Harness.
 
-## 
+##
 
 ## Interact
 
