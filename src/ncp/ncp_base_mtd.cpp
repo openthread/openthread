@@ -205,6 +205,38 @@ exit:
     return SendSetPropertyResponse(aHeader, aKey, error);
 }
 
+otError NcpBase::GetPropertyHandler_MAC_BEACON_JOINABLE(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    return SendPropertyUpdate(
+               aHeader,
+               SPINEL_CMD_PROP_VALUE_IS,
+               aKey,
+               SPINEL_DATATYPE_BOOL_S,
+               otLinkGetBeaconJoinableFlag(mInstance)
+           );
+}
+
+otError NcpBase::SetPropertyHandler_MAC_BEACON_JOINABLE(uint8_t aHeader, spinel_prop_key_t aKey,
+                                                         const uint8_t *aValuePtr, uint16_t aValueLen)
+{
+    bool joinableFlag;
+    spinel_ssize_t parsedLength;
+    otError error = OT_ERROR_NONE;
+
+    parsedLength = spinel_datatype_unpack(
+                       aValuePtr,
+                       aValueLen,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &joinableFlag
+                   );
+
+    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+
+    otLinkSetBeaconJoinableFlag(mInstance, joinableFlag);
+
+exit:
+    return SendSetPropertyResponse(aHeader, aKey, error);
+}
 
 otError NcpBase::GetPropertyHandler_MAC_EXTENDED_ADDR(uint8_t aHeader, spinel_prop_key_t aKey)
 {

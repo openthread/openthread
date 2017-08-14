@@ -684,6 +684,7 @@ typedef enum
     SPINEL_PROP_MAC_PROMISCUOUS_MODE    = SPINEL_PROP_MAC__BEGIN + 8,  ///< [C]
     SPINEL_PROP_MAC_ENERGY_SCAN_RESULT  = SPINEL_PROP_MAC__BEGIN + 9,  ///< chan,maxRssi [Cc]
     SPINEL_PROP_MAC_DATA_POLL_PERIOD    = SPINEL_PROP_MAC__BEGIN + 10, ///< pollPeriod (in ms) [L]
+    SPINEL_PROP_MAC_BEACON_JOINABLE     = SPINEL_PROP_MAC__BEGIN + 11, ///< Joinable flag used in tx beacons [b]
     SPINEL_PROP_MAC__END                = 0x40,
 
     SPINEL_PROP_MAC_EXT__BEGIN          = 0x1300,

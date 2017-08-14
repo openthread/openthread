@@ -162,6 +162,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelaySleep(false),
 #endif
+    mBeaconJoinableFlag(false),
     mBeaconSequence(static_cast<uint8_t>(otPlatRandomGet())),
     mDataSequence(static_cast<uint8_t>(otPlatRandomGet())),
     mCsmaAttempts(0),
@@ -726,7 +727,6 @@ void Mac::SendBeaconRequest(Frame &aFrame)
 
 void Mac::SendBeacon(Frame &aFrame)
 {
-    uint8_t numUnsecurePorts;
     uint8_t beaconLength;
     uint16_t fcf;
     Beacon *beacon = NULL;
@@ -750,10 +750,7 @@ void Mac::SendBeacon(Frame &aFrame)
     {
         beaconPayload->Init();
 
-        // set the Joining Permitted flag
-        GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
-
-        if (numUnsecurePorts)
+        if (mBeaconJoinableFlag)
         {
             beaconPayload->SetJoiningPermitted();
         }
@@ -1841,7 +1838,7 @@ otError Mac::HandleMacCommand(Frame &aFrame)
 
         if ((mBeaconsEnabled)
 #if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
-            && (IsBeaconJoinable())
+            && (mBeaconJoinableFlag)
 #endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
            )
         {
@@ -1915,27 +1912,6 @@ void Mac::ResetCounters(void)
 {
     memset(&mCounters, 0, sizeof(mCounters));
 }
-
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
-bool Mac::IsBeaconJoinable(void)
-{
-    uint8_t numUnsecurePorts;
-    bool joinable = false;
-
-    GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
-
-    if (numUnsecurePorts)
-    {
-        joinable = true;
-    }
-    else
-    {
-        joinable = false;
-    }
-
-    return joinable;
-}
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
 
 Mac &Mac::GetOwner(const Context &aContext)
 {

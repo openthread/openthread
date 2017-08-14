@@ -122,7 +122,7 @@ per scanned channel with following format:
 * `C`: Channel
 * `c`: RSSI (in dBm)
 
-### PROP 58: PROP_MAC_DATA_POLL_PERIOD {#prop-mac-data-poll-period
+### PROP 58: PROP_MAC_DATA_POLL_PERIOD {#prop-mac-data-poll-period}
 * Type: Read-Write
 * Packed-Encoding: `L`
 
@@ -135,6 +135,15 @@ If the value is non-zero, it specifies the maximum period between
 data poll transmissions. Note that the network stack may send data
 request transmissions more frequently when expecting a control-message
 (e.g., when waiting for an MLE Child ID Response).
+
+This property is only present on NCPs which implement 802.15.4.
+
+### PROP 59: PROP_MAC_BEACON_JOINABLE {#prop-mac-beacon-joinable}
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+This property specifies the Joining Permitted flag used in any
+subsequently transmitted IEEE 802.15.4 Beacon frames.
 
 This property is only present on NCPs which implement 802.15.4.
 
