@@ -1888,6 +1888,8 @@ void MleRouter::HandleStateUpdateTimer(void)
         }
     }
 
+    SynchronizeChildNetworkData();
+
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
 exit:
@@ -2461,7 +2463,6 @@ exit:
 otError MleRouter::HandleNetworkDataUpdateRouter(void)
 {
     static const uint8_t tlvs[] = {Tlv::kNetworkData};
-    ThreadNetif &netif = GetNetif();
     Ip6::Address destination;
     uint16_t delay;
 
@@ -2474,37 +2475,47 @@ otError MleRouter::HandleNetworkDataUpdateRouter(void)
     delay = (mRole == OT_DEVICE_ROLE_LEADER) ? 0 : (otPlatRandomGet() % kUnsolicitedDataResponseJitter);
     SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
 
+    SynchronizeChildNetworkData();
+
+exit:
+    return OT_ERROR_NONE;
+}
+
+void MleRouter::SynchronizeChildNetworkData(void)
+{
+    ThreadNetif &netif = GetNetif();
+
+    VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
+
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
         Child *child = &mChildren[i];
+        uint8_t version;
 
         if (child->GetState() != Neighbor::kStateValid || child->IsRxOnWhenIdle())
         {
             continue;
         }
 
-        memset(&destination, 0, sizeof(destination));
-        destination.mFields.m16[0] = HostSwap16(0xfe80);
-        destination.SetIid(child->GetExtAddress());
-
         if (child->IsFullNetworkData())
         {
-            if (child->GetNetworkDataVersion() != netif.GetNetworkDataLeader().GetVersion())
-            {
-                SendDataResponse(destination, tlvs, sizeof(tlvs), 0);
-            }
+            version = netif.GetNetworkDataLeader().GetVersion();
         }
         else
         {
-            if (child->GetNetworkDataVersion() != netif.GetNetworkDataLeader().GetStableVersion())
-            {
-                SendDataResponse(destination, tlvs, sizeof(tlvs), 0);
-            }
+            version = netif.GetNetworkDataLeader().GetStableVersion();
         }
+
+        if (child->GetNetworkDataVersion() == version)
+        {
+            continue;
+        }
+
+        SuccessOrExit(SendChildUpdateRequest(child));
     }
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
