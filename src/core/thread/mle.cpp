@@ -1995,7 +1995,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     const uint8_t *mleKey;
     uint32_t frameCounter;
     uint8_t messageTag[4];
-    uint16_t messageTagLength;
     uint8_t nonce[13];
     Mac::ExtAddress macAddr;
     Crypto::AesCcm aesCcm;
@@ -2046,15 +2045,14 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         mleKey = netif.GetKeyManager().GetTemporaryMleKey(keySequence);
     }
 
+    VerifyOrExit(aMessage.GetOffset() + header.GetLength() + sizeof(messageTag) <= aMessage.GetLength());
     aMessage.MoveOffset(header.GetLength() - 1);
 
-    frameCounter = header.GetFrameCounter();
-
-    messageTagLength = aMessage.Read(aMessage.GetLength() - sizeof(messageTag), sizeof(messageTag), messageTag);
-    VerifyOrExit(messageTagLength == sizeof(messageTag));
+    aMessage.Read(aMessage.GetLength() - sizeof(messageTag), sizeof(messageTag), messageTag);
     SuccessOrExit(aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
 
     aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
+    frameCounter = header.GetFrameCounter();
     GenerateNonce(macAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
 
     aesCcm.SetKey(mleKey, 16);
@@ -2082,7 +2080,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     tagLength = sizeof(tag);
     aesCcm.Finalize(tag, &tagLength);
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(messageTagLength == tagLength && memcmp(messageTag, tag, tagLength) == 0);
+    VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0);
 #endif
 
     if (keySequence > netif.GetKeyManager().GetCurrentKeySequence())
