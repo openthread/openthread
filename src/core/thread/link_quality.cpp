@@ -69,7 +69,7 @@ otError RssAverager::Add(int8_t aRss)
         aRss = 0;
     }
 
-    // Multiply the the RSS value by a precision multiple (currently -8).
+    // Multiply the RSS value by a precision multiple (currently -8).
 
     newValue = static_cast<uint16_t>(-aRss);
     newValue <<= kPrecisionBitShift;

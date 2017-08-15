@@ -38,7 +38,7 @@ protocol document.
 *   `--spi-cs-delay[=usec]`: Specify the delay after C̅S̅ assertion,
     in microseconds. Default is 20µs. Note that this may need to be
     set to zero for spi-hdlc-adapter to work with some SPI drivers.
-*   `--spi-align-allowance[=n]`: Specify the the maximum number of 0xFF
+*   `--spi-align-allowance[=n]`: Specify the maximum number of 0xFF
     bytes to clip from start of MISO frame. This makes this tool usable
     with SPI slaves which have buggy SPI blocks that prepend up to
     three 0xFF bytes to the start of MISO frame. Default value is `0`.

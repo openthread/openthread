@@ -75,7 +75,7 @@ extern "C" {
  * @param[in] aInputBufLen       Value of aInputBufLen from last call to `otPlatSpiSlavePrepareTransaction()`
  * @param[in] aTransactionLength Length of the completed transaction, in bytes.
  *
- * @returns  TRUE if after this call returns the platform should invoke the the process callback `aProcessCallback`,
+ * @returns  TRUE if after this call returns the platform should invoke the process callback `aProcessCallback`,
  *           FALSE if there is nothing to process and no need to invoke the process callback.
  */
 typedef bool (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen,

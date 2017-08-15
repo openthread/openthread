@@ -1001,7 +1001,7 @@ typedef enum
      *
      * Required capability: SPINEL_CAP_OOB_STEERING_DATA.
      *
-     * Writing to this property allows to set/update the the MLE Discovery Response steering data out of band.
+     * Writing to this property allows to set/update the MLE Discovery Response steering data out of band.
      *
      *  - All zeros to clear the steering data (indicating that there is no steering data).
      *  - All 0xFFs to set steering data/bloom filter to accept/allow all.

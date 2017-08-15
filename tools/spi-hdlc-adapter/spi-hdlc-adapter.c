@@ -1457,7 +1457,7 @@ static void print_help(void)
     "    --spi-mode[=mode] ............ Specify the SPI mode to use (0-3).\n"
     "    --spi-speed[=hertz] .......... Specify the SPI speed in hertz.\n"
     "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in µsec\n"
-    "    --spi-align-allowance[=n] .... Specify the the maximum number of FF bytes to\n"
+    "    --spi-align-allowance[=n] .... Specify the maximum number of FF bytes to\n"
     "                                   clip from start of MISO frame. Max value is 3.\n"
     "    --spi-small-packet=[n] ....... Specify the smallest packet we can receive\n"
     "                                   in a single transaction(larger packets will\n"
