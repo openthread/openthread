@@ -506,7 +506,7 @@ static inline void TSI_StartSoftwareTrigger(TSI_Type *base)
 }
 
 /*!
-* @brief Sets the the measured channel number.
+* @brief Sets the measured channel number.
 *
 * @param    base    TSI peripheral base address.
 * @param    channel Channel number 0 ... 15.

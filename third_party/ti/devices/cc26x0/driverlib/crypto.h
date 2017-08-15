@@ -386,7 +386,7 @@ CRYPTOAesCbcFinish(void)
 //! location in which the key is stored.
 //!
 //! \param bEncrypt determines whether to run encryption or not.
-//! \param ui32AuthLength is the the length of the authentication field -
+//! \param ui32AuthLength is the length of the authentication field -
 //! 0, 2, 4, 6, 8, 10, 12, 14 or 16 octets.
 //! \param pui32Nonce is a pointer to 13-byte or 12-byte Nonce (Number used once).
 //! \param pui32PlainText is a pointer to the octet string input message.
@@ -467,7 +467,7 @@ extern uint32_t CRYPTOCcmAuthEncryptResultGet(uint32_t ui32TagLength,
 //! location in which the key is stored.
 //!
 //! \param bDecrypt determines whether to run decryption or not.
-//! \param ui32AuthLength is the the length of the authentication field -
+//! \param ui32AuthLength is the length of the authentication field -
 //! 0, 2, 4, 6, 8, 10, 12, 14 or 16 octets.
 //! \param pui32Nonce is a pointer to 13-byte or 12-byte Nonce (Number used once).
 //! \param pui32CipherText is a pointer to the octet string encrypted message.
@@ -520,7 +520,7 @@ extern uint32_t CRYPTOCcmInvAuthDecryptStatus(void);
 //
 //! \brief Get the result of the CCM operation.
 //!
-//! \param ui32AuthLength is the the length of the authentication field -
+//! \param ui32AuthLength is the length of the authentication field -
 //! 0, 2, 4, 6, 8, 10, 12, 14 or 16 octets.
 //! \param pui32CipherText is a pointer to the octet string encrypted message.
 //! \param ui32CipherTextLength is the length of the encrypted message.

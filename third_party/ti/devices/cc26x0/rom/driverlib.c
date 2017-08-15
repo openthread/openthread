@@ -2275,7 +2275,7 @@ TrimForWrite(void)
 
 
     //
-    // Configure no of flash clock cycles from EXECUTEZ going low to the the
+    // Configure no of flash clock cycles from EXECUTEZ going low to the
     // verify data can be read in the program verify mode bits 7:0.
     // (FCFG1 offset 0x174 bits 23:16).
     //
