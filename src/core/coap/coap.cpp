@@ -175,7 +175,8 @@ otError Coap::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInf
     }
 
     // Set Message Id if it was not already set.
-    if (header.GetMessageId() == 0)
+    if (header.GetMessageId() == 0 &&
+        (header.GetType() == OT_COAP_TYPE_CONFIRMABLE || header.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE))
     {
         header.SetMessageId(mMessageId++);
         aMessage.Write(0, Header::kMinHeaderLength, header.GetBytes());
