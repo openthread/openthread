@@ -395,7 +395,7 @@ public:
     /**
      * This method returns the offset from the transmission time to the end of trickle interval.
      *
-     * @returns The offset from the the transmission time to the end of trickle interval.
+     * @returns The offset from the transmission time to the end of trickle interval.
      *
      */
     uint8_t GetIntervalOffset(void) const { return mIntervalOffset; }
@@ -403,7 +403,7 @@ public:
     /**
      * This method sets the offset from the transmission time to the end of trickle interval.
      *
-     * @param[in]  aIntervalOffset  The offset from the the transmission time to the end of trickle interval.
+     * @param[in]  aIntervalOffset  The offset from the transmission time to the end of trickle interval.
      *
      */
     void SetIntervalOffset(uint8_t aIntervalOffset) { mIntervalOffset = aIntervalOffset; }

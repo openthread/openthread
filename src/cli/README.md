@@ -1720,7 +1720,7 @@ Done
 
 ### macfilter rss clear
 
-Clear all the the received signal strength or received link quality settings.
+Clear all the received signal strength or received link quality settings.
 
 ```bash
 > macfilter rss clear

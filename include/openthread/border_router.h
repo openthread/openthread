@@ -44,6 +44,9 @@ extern "C" {
 /**
  * @addtogroup api-border-router
  *
+ * @brief
+ *  This module includes functions to manage local network data with the OpenThread Border Router.
+ *
  * @{
  *
  */

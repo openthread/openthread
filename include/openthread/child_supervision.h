@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the OenThread API for child supervision feature
+ *   This file includes the OpenThread API for child supervision feature
  */
 
 #ifndef OPENTHREAD_CHILD_SUPERVISION_H_

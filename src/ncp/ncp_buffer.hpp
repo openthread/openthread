@@ -192,7 +192,7 @@ public:
      * `OT_ERROR_NO_BUFS`.
      *
      * In case of success, the passed-in message @p aMessage will be owned by the frame buffer instance and will be
-     * freed when either the the frame is removed or discarded. In case of failure @p aMessage remains unchanged.
+     * freed when either the frame is removed or discarded. In case of failure @p aMessage remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
      *
