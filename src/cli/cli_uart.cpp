@@ -153,29 +153,28 @@ otError Uart::ProcessCommand(void)
         mRxBuffer[--mRxLength] = '\0';
     }
 
-#if  OPENTHREAD_ENABLE_DEBUG_UART
+#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_ENABLE_DEBUG_UART
     /*
      * Note this is here for this reason:
      *
-     * TEXT input ... in a test automation script occurs
-     * rapidly and often without gaps between the command
-     * and the terminal CR
+     * TEXT (command) input ... in a test automation script occurs
+     * rapidly and often without gaps between the command and the
+     * terminal CR
      *
-     * In contrast as a human is typing there is a delay
-     * between the last character of a command and the
-     * terminal CR which executes a command.
+     * In contrast as a human is typing there is a delay between the
+     * last character of a command and the terminal CR which executes
+     * a command.
      *
-     * During that human induced delay a tasklet may be
-     * scheduled and the UART debug log becomes confusing
-     * and it is hard to determine which actually came
-     * first, the command-CR or the tasklet.
+     * During that human induced delay a tasklet may be scheduled and
+     * the LOG becomes confusing and it is hard to determine when
+     * something happened.  Was it the command-CR or the tasklet.
      *
-     * Yes, while rare this does happen...
+     * Yes, while rare it is a race condition that is hard to debug.
      *
-     * Thus this is here to afirmatively LOG which
-     * CLI command is being executed now.
+     * Thus this is here to afirmatively LOG exactly when the CLI
+     * command is being executed.
      */
-    otPlatDebugUart_printf("CLI Command: %s\n", mRxBuffer);
+    otPlatDebugUart_printf("execute command: %s\n", mRxBuffer);
 #endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
 
@@ -267,30 +266,19 @@ void Uart::SendDoneTask(void)
     Send();
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
-#ifdef __cplusplus
-extern "C" {
-#endif
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
 {
     if (NULL == Uart::sUartServer)
     {
         return;
     }
 
-    va_list args;
-    va_start(args, aFormat);
-    Uart::sUartServer->OutputFormatV(aFormat, args);
+    Uart::sUartServer->OutputFormatV(aFormat, ap);
     Uart::sUartServer->OutputFormat("\r\n");
-    va_end(args);
 
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 }
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-#endif // OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
 
 }  // namespace Cli
 }  // namespace ot

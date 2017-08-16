@@ -36,6 +36,7 @@
 #define NCP_H_
 
 #include <openthread/types.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -200,6 +201,16 @@ void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
  *
  */
 void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
+
+/**
+ * Callback to write the OpenThread Log to the NCP Spinel Tunnel.
+ *
+ * @param[in]  aLogLevel   The log level.
+ * @param[in]  aLogRegion  The log region.
+ * @param[in]  aFormat     A pointer to the format string.
+ * @param[in]  ap          va_list matching aFormat.
+ */
+void otNcpPlatLogv( otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap );
 
 /**
  * @}

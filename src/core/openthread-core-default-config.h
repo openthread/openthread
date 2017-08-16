@@ -605,18 +605,6 @@
 #define OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION                     otPlatLog
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
- *
- * Define to 1 to enable default log output.
- *
- * When enabled OpenThread provides a default implementation for `otPlatLog()` which is tied to either NCP or CLI
- * stream writes.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
-#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             0
-#endif
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
@@ -851,5 +839,46 @@
 #ifndef OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
 #define OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS          0
 #endif
+
+
+/*
+ * @def OPENTHREAD_ENABLE_DEBUG_UART
+ *
+ * Enable the "Debug Uart" platform feature.
+ */
+#ifndef OPENTHREAD_ENABLE_DEBUG_UART
+#define OPENTHREAD_ENABLE_DEBUG_UART 0
+#endif
+
+
+/*
+ * @def OPENTHREAD_ENABLE_DEBUG_UART_LOG
+ *
+ * Define as 1 to enable LOGS to appear on the DEBUG Uart.  By
+ * default, log output goes to the application defined log
+ * output.
+ *
+ * In the CLI example, this is the CLI console.
+ * In the NCP example, it is the SPINEL debug channel.
+ *
+ * Enabling this feature, causes the otPlatLog() output
+ * to be directed to the DEBUG Uart.
+ *
+ * This makes use of a second UART on the embedded device.
+ */
+#ifndef OPENTHREAD_ENABLE_DEBUG_UART_LOG
+#define OPENTHREAD_ENABLE_DEBUG_UART_LOG 0
+#endif
+
+/*
+ * Verify debug uart dependency
+ *
+ * It is reasonable to only enable the debug uart
+ * and not enable logs to the DEBUG uart.
+ */
+#if OPENTHREAD_ENABLE_DEBUG_UART_LOG && (!OPENTHREAD_ENABLE_DEBUG_UART)
+#error OPENTHREAD_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_ENABLE_DEBUG_UART
+#endif
+
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

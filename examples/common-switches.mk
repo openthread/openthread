@@ -30,10 +30,6 @@ ifeq ($(TMF_PROXY),1)
 configure_OPTIONS              += --enable-tmf-proxy
 endif
 
-ifeq ($(DEBUG_UART),1)
-configure_OPTIONS              += --enable-debug-uart
-endif
-
 ifeq ($(BORDER_ROUTER),1)
 configure_OPTIONS              += --enable-border-router
 endif
@@ -94,6 +90,14 @@ ifeq ($(MTD_NETDIAG),1)
 configure_OPTIONS              += --enable-mtd-network-diagnostic
 endif
 
+ifeq ($(DEBUG_UART),1)
+CFlAGS += -DOPENTHREAD_ENABLE_DEBUG_UART=1
+endif
+
+ifeq ($(DEBUG_LOG_UART),1)
+CFlAGS += -DOPENTHREAD_ENABLE_DEBUG_UART_LOG=1
+endif
+
 ifeq ($(FULL_LOGS),1)
 # HINT: Add more here, or comment out ones you do not need/want
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG
@@ -111,10 +115,6 @@ LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_PLATFORM=1
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_COAP=1
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1
 LOG_FLAGS += -DOPENTHREAD_CONFIG_LOG_PREPEND_REGION=1
-endif
-
-ifeq ($(UART_LOG),1)
-LOG_FLAGS += -DOPENTHREAD_CONFIG_PLAT_LOG_FUNCTION=otPlatDebugUart_otPlatLog
 endif
 
 CFLAGS += ${LOG_FLAGS}

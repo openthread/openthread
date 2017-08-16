@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <openthread/types.h>
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/debug_uart.h>
@@ -102,23 +103,6 @@ void otPlatDebugUart_putchar(int c)
     otPlatDebugUart_putchar_raw(c);
 }
 
-OT_TOOL_WEAK
-void otPlatDebugUart_otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-    va_list ap;
-    uint32_t now;
-
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-
-    now = otPlatAlarmMilliGetNow();
-    otPlatDebugUart_printf("%3d.%03d | ", (int)(now / 1000), (int)(now % 1000));
-    va_start(ap, aFormat);
-    otPlatDebugUart_vprintf(aFormat, ap);
-    va_end(ap);
-
-    otPlatDebugUart_putchar('\n');
-}
 
 /* provide WEAK stubs for platforms that do not impliment all functions */
 OT_TOOL_WEAK
@@ -146,3 +130,23 @@ otError otPlatDebugUart_logfile(const char *filename)
     return OT_ERROR_FAILED;
 }
 
+
+#if OPENTHREAD_ENABLE_DEBUG_UART_LOG
+/* this should not be a OT_WEAK function */
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list ap;
+    uint32_t now;
+
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
+    now = otPlatAlarmMilliGetNow();
+    otPlatDebugUart_printf("%3d.%03d | ", (int)(now / 1000), (int)(now % 1000));
+    va_start(ap, aFormat);
+    otPlatDebugUart_vprintf(aFormat, ap);
+    va_end(ap);
+
+    otPlatDebugUart_putchar('\n');
+}
+#endif

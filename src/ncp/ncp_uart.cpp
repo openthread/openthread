@@ -270,19 +270,12 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
-#ifdef __cplusplus
-extern "C" {
-#endif
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
 {
     char logString[128];
     int charsWritten;
-    va_list args;
 
-    va_start(args, aFormat);
-
-    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, args)) > 0)
+    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, ap)) > 0)
     {
         if (charsWritten > static_cast<int>(sizeof(logString) - 1))
         {
@@ -292,15 +285,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
         otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(logString), charsWritten);
     }
 
-    va_end(args);
-
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 }
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-#endif // OPENTHREAD_ENABLE_CLI_LOGGING
 
 }  // namespace Ncp
 }  // namespace ot

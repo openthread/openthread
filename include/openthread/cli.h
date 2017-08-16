@@ -36,7 +36,7 @@
 #define CLI_H_
 
 #include <stdint.h>
-
+#include <stdarg.h>
 #include <openthread/types.h>
 
 #ifdef __cplusplus
@@ -92,6 +92,16 @@ void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
  *
  */
 void otCliUartInit(otInstance *aInstance);
+
+/**
+ * Callback to write the OpenThread Log to the CLI console
+ *
+ * @param[in]  aLogLevel   The log level.
+ * @param[in]  aLogRegion  The log region.
+ * @param[in]  aFormat     A pointer to the format string.
+ * @param[in]  ap          va_list matching aFormat.
+ */
+void otCliPlatLogv( otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap );
 
 /**
  * @}

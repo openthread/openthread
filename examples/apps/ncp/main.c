@@ -97,3 +97,18 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+
+/*
+ * Provide a "weak" log function the platform code can override if desired.
+ */
+
+OT_TOOL_WEAK
+void otPlatLog( otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list ap;
+
+    va_start(ap,aFormat);
+    otNcpPlatLogv( aLogLevel, aLogRegion, aFormat, ap );
+    va_end(ap);
+}

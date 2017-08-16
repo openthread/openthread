@@ -59,132 +59,132 @@
 extern "C" {
 #endif
 
-    /**
-     * Standard printf() to the debug uart with no log decoration.
-     *
-     * @param fmt[in] printf formatter text
-     *
-     * This is a debug convience function that is not intended to be
-     * used in anything other then "debug scenarios" by a developer.
-     *
-     * lf -> cr/lf mapping is automatically handled via otPlatDebugUart_putchar()
-     *
-     * @sa otPlatDebugUart_vprintf() for limitations
-     *
-     * This is a WEAK symbol that can easily be overridden as needed.
-     */
-    void otPlatDebugUart_printf(const char *fmt, ...);
+/**
+ * Standard printf() to the debug uart with no log decoration.
+ *
+ * @param fmt[in] printf formatter text
+ *
+ * This is a debug convience function that is not intended to be
+ * used in anything other then "debug scenarios" by a developer.
+ *
+ * lf -> cr/lf mapping is automatically handled via otPlatDebugUart_putchar()
+ *
+ * @sa otPlatDebugUart_vprintf() for limitations
+ *
+ * This is a WEAK symbol that can easily be overridden as needed.
+ */
+void otPlatDebugUart_printf(const char *fmt, ...);
 
-    /**
-     * Stanard vprintf() to the debug uart, with no log decoration.
-     *
-     * @param fmt[in] printf formatter text
-     * @param ap[in]  va_list value for print parameters.
-     *
-     * Implimentation limitation: this formats the text into
-     * a purposely small text buffer on the stack, thus long
-     * messages may be truncated.
-     *
-     * This is a WEAK symbol that can easily be overridden as needed.
-     *
-     * For example, some platforms might override this via a non-WEAK
-     * symbol because the platform provides a UART_vprintf() like
-     * function that can handle an arbitrary length output.
-     */
-    void otPlatDebugUart_vprintf(const char *fmt, va_list ap);
+/**
+ * Stanard vprintf() to the debug uart, with no log decoration.
+ *
+ * @param fmt[in] printf formatter text
+ * @param ap[in]  va_list value for print parameters.
+ *
+ * Implimentation limitation: this formats the text into
+ * a purposely small text buffer on the stack, thus long
+ * messages may be truncated.
+ *
+ * This is a WEAK symbol that can easily be overridden as needed.
+ *
+ * For example, some platforms might override this via a non-WEAK
+ * symbol because the platform provides a UART_vprintf() like
+ * function that can handle an arbitrary length output.
+ */
+void otPlatDebugUart_vprintf(const char *fmt, va_list ap);
 
-    /**
-     * Platform specific write single byte to Debug Uart
-     * This should not perform CR/LF mapping.
-     *
-     * This function MUST be implimented by the platform
-     *
-     * @param the_byte[in] what to transmit
-     */
-    void otPlatDebugUart_putchar_raw(int the_byte);
+/**
+ * Platform specific write single byte to Debug Uart
+ * This should not perform CR/LF mapping.
+ *
+ * This function MUST be implimented by the platform
+ *
+ * @param the_byte[in] what to transmit
+ */
+void otPlatDebugUart_putchar_raw(int the_byte);
 
-    /**
-     * Poll/test debug uart if a key has been pressed.
-     * It would be common to a stub function that returns 0.
-     *
-     * This function MUST be implimented by the platform
-     *
-     * @retval zero - nothing ready
-     * @retval nonzero - otPlatDebugUart_getc() will succeed.
-     */
-    int otPlatDebugUart_kbhit(void);
+/**
+ * Poll/test debug uart if a key has been pressed.
+ * It would be common to a stub function that returns 0.
+ *
+ * This function MUST be implimented by the platform
+ *
+ * @retval zero - nothing ready
+ * @retval nonzero - otPlatDebugUart_getc() will succeed.
+ */
+int otPlatDebugUart_kbhit(void);
 
-    /**
-     * Poll/Read a byte from the debug uart
-     *
-     * This function MUST be implimented by the platform
-     *
-     * @retval (negative) no data available, @sa otPlatDebugUart_kbhit()
-     * @retval (0x00..0x0ff) data byte value
-     *
-     */
-    int otPlatDebugUart_getc(void);
+/**
+ * Poll/Read a byte from the debug uart
+ *
+ * This function MUST be implimented by the platform
+ *
+ * @retval (negative) no data available, @sa otPlatDebugUart_kbhit()
+ * @retval (0x00..0x0ff) data byte value
+ *
+ */
+int otPlatDebugUart_getc(void);
 
-    /**
-     * Write byte to the uart, expand cr/lf as need.
-     *
-     * A WEAK default implimentation is provided
-     * that can be overridden as needed.
-     *
-     * @param the_byte[in] the byte to transmit
-     */
-    void otPlatDebugUart_putchar(int the_byte);
+/**
+ * Write byte to the uart, expand cr/lf as need.
+ *
+ * A WEAK default implimentation is provided
+ * that can be overridden as needed.
+ *
+ * @param the_byte[in] the byte to transmit
+ */
+void otPlatDebugUart_putchar(int the_byte);
 
-    /**
-     * identical to "man 3 puts" - terminates with lf
-     * Which is then mapped to cr/lf as required
-     *
-     * A WEAK default implimentation is provided
-     * that can be overridden as needed.
-     *
-     * @param s[in] the string to print with a lf at the end
-     */
-    void otPlatDebugUart_puts(const char *s);
+/**
+ * identical to "man 3 puts" - terminates with lf
+ * Which is then mapped to cr/lf as required
+ *
+ * A WEAK default implimentation is provided
+ * that can be overridden as needed.
+ *
+ * @param s[in] the string to print with a lf at the end
+ */
+void otPlatDebugUart_puts(const char *s);
 
-    /**
-     * Write N bytes to the UART, mapping cr/lf
-     *
-     * @param pBytes[in] pointer to bytes to transmit.
-     * @param nBytes[in] how many bytes to transmit.
-     */
-    void otPlatDebugUart_write_bytes(const uint8_t *pBytes, int nBytes);
+/**
+ * Write N bytes to the UART, mapping cr/lf
+ *
+ * @param pBytes[in] pointer to bytes to transmit.
+ * @param nBytes[in] how many bytes to transmit.
+ */
+void otPlatDebugUart_write_bytes(const uint8_t *pBytes, int nBytes);
 
-    /**
-     * puts() without a terminal newline.
-     * see: "man 3 puts", without a adding a terminal lf
-     *
-     * @param s[in] the string to print without a lf at the end
-     *
-     * Note, the terminal "lf" mapped to cr/lf via
-     * the function otPlatDebugUart_putchar()
-     */
-    void otPlatDebugUart_puts_no_nl(const char *s);
+/**
+ * puts() without a terminal newline.
+ * see: "man 3 puts", without a adding a terminal lf
+ *
+ * @param s[in] the string to print without a lf at the end
+ *
+ * Note, the terminal "lf" mapped to cr/lf via
+ * the function otPlatDebugUart_putchar()
+ */
+void otPlatDebugUart_puts_no_nl(const char *s);
 
-    /**
-     * Logging function when the DEBUG_UART logs are enabled.
-     *
-     * This function can be used via a compiler command line define
-     * in this form:
-     *
-     *    -DOPENTHREAD_CONFIG_PLAT_LOG_FUNCTION=otPlatDebugUart_Log
-     */
-    void otPlatDebugUart_Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
+/**
+ * Logging function when the DEBUG_UART logs are enabled.
+ *
+ * This function can be used via a compiler command line define
+ * in this form:
+ *
+ *-DOPENTHREAD_CONFIG_PLAT_LOG_FUNCTION=otPlatDebugUart_Log
+ */
+void otPlatDebugUart_Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
 
-    /**
-     * Some platforms (posix) can log to a file.
-     *
-     * @returns OT_ERROR_NONE
-     * @returns OT_ERROR_FAILED
-     *
-     * Platforms that desire this MUST provide an implimentation.
-     *
-     */
-    otError otPlatDebugUart_logfile(const char *filename);
+/**
+ * Some platforms (posix) can log to a file.
+ *
+ * @returns OT_ERROR_NONE
+ * @returns OT_ERROR_FAILED
+ *
+ * Platforms that desire this MUST provide an implimentation.
+ *
+ */
+otError otPlatDebugUart_logfile(const char *filename);
 
 #if __cplusplus
 }

@@ -34,6 +34,7 @@
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/platform.h>
+#include <openthread/platform/logging.h>
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)
@@ -96,4 +97,17 @@ int main(int argc, char *argv[])
 #endif
 
     return 0;
+}
+
+/*
+ * Provide a "weak" log function the platform code can override if desired.
+ */
+OT_TOOL_WEAK
+void otPlatLog( otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list ap;
+
+    va_start(ap,aFormat);
+    otCliPlatLogv( aLogLevel, aLogRegion, aFormat, ap );
+    va_end(ap);
 }
