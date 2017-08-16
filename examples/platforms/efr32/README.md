@@ -20,6 +20,14 @@ Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
 
+In a Bash terminal, follow these instructions to install the GNU toolchain and
+other dependencies.
+
+```bash
+$ cd <path-to-openthread>
+$ ./script/bootstrap
+```
+
 ## Build Examples
 
 1. Download and install the [Simplicity Studio][simplicity_studio].
@@ -176,7 +184,7 @@ $ make -f examples/Makefile-efr32 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_S
 ```
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
- 
+
 [CLI]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
 
 ## Verification
