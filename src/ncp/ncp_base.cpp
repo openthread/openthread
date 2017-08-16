@@ -2405,3 +2405,23 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 
     return error;
 }
+
+
+extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
+{
+    char logString[128];
+    int charsWritten;
+
+    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, ap)) > 0)
+    {
+        if (charsWritten > static_cast<int>(sizeof(logString) - 1))
+        {
+            charsWritten = static_cast<int>(sizeof(logString) - 1);
+        }
+
+        otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(logString), charsWritten);
+    }
+
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+}

@@ -270,25 +270,6 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
-extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
-{
-    char logString[128];
-    int charsWritten;
-
-    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, ap)) > 0)
-    {
-        if (charsWritten > static_cast<int>(sizeof(logString) - 1))
-        {
-            charsWritten = static_cast<int>(sizeof(logString) - 1);
-        }
-
-        otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(logString), charsWritten);
-    }
-
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-}
-
 }  // namespace Ncp
 }  // namespace ot
 
