@@ -68,22 +68,23 @@ otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset
 
     while (offset + sizeof(tlv) <= end)
     {
-        uint16_t length;
+        uint32_t length = sizeof(tlv);
 
         aMessage.Read(offset, sizeof(tlv), &tlv);
 
         if (tlv.GetLength() != kExtendedLength)
         {
-            length = sizeof(tlv) + tlv.GetLength();
+            length += tlv.GetLength();
         }
         else
         {
-            VerifyOrExit(offset + sizeof(tlv) + sizeof(length) <= end);
-            aMessage.Read(offset + sizeof(tlv), sizeof(length), &length);
-            length = sizeof(tlv) + sizeof(length) + HostSwap16(length);
+            uint16_t extLength;
+
+            VerifyOrExit(sizeof(extLength) == aMessage.Read(offset + sizeof(tlv), sizeof(extLength), &extLength));
+            length += sizeof(extLength) + HostSwap16(extLength);
         }
 
-        VerifyOrExit(length <= end - offset);
+        VerifyOrExit(offset + length <= end);
 
         if (tlv.GetType() == aType)
         {
@@ -91,7 +92,7 @@ otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset
             ExitNow(error = OT_ERROR_NONE);
         }
 
-        offset += length;
+        offset += static_cast<uint16_t>(length);
     }
 
 exit:
