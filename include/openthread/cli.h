@@ -101,7 +101,7 @@ void otCliUartInit(otInstance *aInstance);
  * @param[in]  aFormat     A pointer to the format string.
  * @param[in]  ap          va_list matching aFormat.
  */
-void otCliPlatLogv( otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap );
+void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap);
 
 /**
  * @}
