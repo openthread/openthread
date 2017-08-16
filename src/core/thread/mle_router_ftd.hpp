@@ -753,6 +753,7 @@ private:
     otError SetStateRouter(uint16_t aRloc16);
     otError SetStateLeader(uint16_t aRloc16);
     void StopLeader(void);
+    void SynchronizeChildNetworkData(void);
     otError UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild);
     void UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 
