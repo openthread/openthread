@@ -757,12 +757,12 @@ bool hw_otpc_dma_prog(const uint32_t *p_data, uint32_t cell_offset, HW_OTPC_WORD
     if (IS_SYSRAM_ADDRESS(p_data) ||
         (IS_REMAPPED_ADDRESS(p_data) && (remap_type == 0x3)))
     {
-        OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+        OTPC->OTPC_AHBADR_REG = DA15000_phy_addr((uint32_t)p_data);
 #if dg_configEXEC_MODE != MODE_IS_CACHED
     }
     else if (IS_CACHERAM_ADDRESS(p_data))
     {
-        OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+        OTPC->OTPC_AHBADR_REG = DA15000_phy_addr((uint32_t)p_data);
 #endif
     }
     else
@@ -831,12 +831,12 @@ void hw_otpc_dma_read(uint32_t *p_data, uint32_t cell_offset, HW_OTPC_WORD cell_
     if (IS_SYSRAM_ADDRESS(p_data) ||
         (IS_REMAPPED_ADDRESS(p_data) && (remap_type == 0x3)))
     {
-        OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+        OTPC->OTPC_AHBADR_REG = DA15000_phy_addr((uint32_t)p_data);
 #if dg_configEXEC_MODE != MODE_IS_CACHED
     }
     else if (IS_CACHERAM_ADDRESS(p_data))
     {
-        OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+        OTPC->OTPC_AHBADR_REG = DA15000_phy_addr((uint32_t)p_data);
 #endif
     }
     else

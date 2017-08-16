@@ -81,7 +81,7 @@ extern void SystemCoreClockUpdate (void);
  * \return physical address (for DMA, AES/HASH etc.) -- can be same or different as addr
  *
  */
-extern uint32_t black_orca_phy_addr(uint32_t addr);
+extern uint32_t DA15000_phy_addr(uint32_t addr);
 
 
 #ifdef __cplusplus
