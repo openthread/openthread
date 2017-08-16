@@ -54,6 +54,23 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
     (void)aInstance;
 }
 
+uint32_t otPlatAlarmMicroGetNow(void)
+{
+    return 0;
+}
+
+void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    (void)aInstance;
+    (void)aT0;
+    (void)aDt;
+}
+
+void otPlatAlarmMicroStop(otInstance *aInstance)
+{
+    (void)aInstance;
+}
+
 void otPlatReset(otInstance *aInstance)
 {
     (void)aInstance;

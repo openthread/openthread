@@ -76,6 +76,16 @@
 #endif  // OPENTHREAD_CONFIG_STACK_VERSION_MINOR
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * The platform-specific string to insert into the OpenThread version string.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_INFO
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "NONE"
+#endif  // OPENTHREAD_CONFIG_PLATFORM_INFO
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.

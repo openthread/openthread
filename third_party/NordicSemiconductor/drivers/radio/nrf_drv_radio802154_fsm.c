@@ -249,6 +249,16 @@ static inline void rx_buffer_in_use_set(rx_buffer_t * p_rx_buffer)
 #endif
 }
 
+/** Update CCA configuration in RADIO registers. */
+static void cca_configuration_update(void)
+{
+    nrf_drv_radio802154_cca_cfg_t cca_cfg;
+    nrf_drv_radio802154_pib_cca_cfg_get(&cca_cfg);
+    nrf_radio_cca_mode_set(cca_cfg.mode);
+    nrf_radio_cca_ed_threshold_set(cca_cfg.ed_threshold);
+    nrf_radio_cca_corr_threshold_set(cca_cfg.corr_threshold);
+    nrf_radio_cca_corr_counter_set(cca_cfg.corr_limit);
+}
 
 /***************************************************************************************************
  * @section Radio parameters calculators
@@ -263,42 +273,6 @@ static void channel_set(uint8_t channel)
     assert(channel >= 11 && channel <= 26);
 
     nrf_radio_frequency_set(5 + (5 * (channel - 11)));
-}
-
-/** Get radio channel.
- *
- * @returns  Currently set channel number.
- */
-static uint8_t channel_get(void)
-{
-    return ((nrf_radio_frequency_get() - 5) / 5) + 11;
-}
-
-/** Set transmit power.
- *
- * @param[in]  dbm  Transmit power to set [dbm].
- */
-static void tx_power_set(int8_t dbm)
-{
-    const int8_t allowed_values[] = {-40, -20, -16, -12, -8, -4, 0, 2, 3, 4, 5, 6, 7, 8, 9};
-    const int8_t highest_value    = allowed_values[(sizeof(allowed_values) / sizeof(allowed_values[0])) - 1];
-    if (dbm > highest_value)
-    {
-        dbm = highest_value;
-    }
-    else
-    {
-        for (uint32_t i = 0; i < sizeof(allowed_values) / sizeof(allowed_values[0]); i++)
-        {
-            if (dbm <= allowed_values[i])
-            {
-                dbm = allowed_values[i];
-                break;
-            }
-        }
-    }
-
-    nrf_radio_tx_power_set(dbm);
 }
 
 
@@ -402,6 +376,7 @@ static void auto_ack_abort(radio_state_t state_to_set)
 
         case NRF_RADIO_STATE_RX_DISABLE:
         case NRF_RADIO_STATE_DISABLED:
+        case NRF_RADIO_STATE_TX_DISABLE:
             // Do not trigger DISABLE task in those states to prevent double DISABLED events.
             state_set(state_to_set);
             break;
@@ -464,6 +439,7 @@ static void nrf_radio_init(void)
     nrf_radio_config_preamble_length_set(NRF_RADIO_PREAMBLE_LENGTH_32BIT_ZERO);
     nrf_radio_config_crc_included_set(true);
     nrf_radio_config_max_length_set(MAX_PACKET_SIZE);
+    nrf_radio_ramp_up_mode_set(NRF_RADIO_RAMP_UP_MODE_DEFAULT);
 
     // Configure CRC
     nrf_radio_crc_length_set(CRC_LENGTH);
@@ -471,10 +447,7 @@ static void nrf_radio_init(void)
     nrf_radio_crc_polynominal_set(CRC_POLYNOMIAL);
 
     // Configure CCA
-    nrf_radio_cca_mode_set(RADIO_CCA_MODE);
-    nrf_radio_cca_ed_threshold_set(RADIO_CCA_ED_THRESHOLD);
-    nrf_radio_cca_corr_threshold_set(RADIO_CCA_CORR_THRESHOLD);
-    nrf_radio_cca_corr_counter_set(RADIO_CCA_CORR_LIMIT);
+    cca_configuration_update();
 
     // Configure MAC Header Match Unit
     nrf_radio_mhmu_search_pattern_set(0);
@@ -483,9 +456,7 @@ static void nrf_radio_init(void)
     nrf_radio_int_enable(NRF_RADIO_INT_FRAMESTART_MASK);
     nrf_radio_int_enable(NRF_RADIO_INT_END_MASK);
     nrf_radio_int_enable(NRF_RADIO_INT_DISABLED_MASK);
-#if !RADIO_SHORT_CCAIDLE_TXEN
     nrf_radio_int_enable(NRF_RADIO_INT_CCAIDLE_MASK);
-#endif
     nrf_radio_int_enable(NRF_RADIO_INT_CCABUSY_MASK);
     nrf_radio_int_enable(NRF_RADIO_INT_READY_MASK);
     nrf_radio_int_enable(NRF_RADIO_INT_BCMATCH_MASK);
@@ -603,6 +574,19 @@ void nrf_raal_timeslot_started(void)
 
             break;
 
+        case RADIO_STATE_CCA:
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+            nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+            break;
+
+        case RADIO_STATE_SLEEP:
+            // This case may happen when sleep is requested by the next higher layer right before
+            // timeslot starts and the driver uses SWI for requests and notifications. In this case
+            // RAAL may report timeslot start event when exiting sleep request critical section.
+            // The driver is already in SLEEP state but did not request timeslot end yet - it will
+            // be requested in the next SWI handler.
+            break;
+
         default:
             assert(false);
     }
@@ -619,7 +603,7 @@ void nrf_raal_timeslot_ended(void)
 
     switch (m_state)
     {
-        case RADIO_STATE_CCA:
+        case RADIO_STATE_CCA_BEFORE_TX:
         case RADIO_STATE_TX_FRAME:
         case RADIO_STATE_RX_ACK:
             nrf_drv_radio802154_notify_busy_channel();
@@ -638,6 +622,8 @@ void nrf_raal_timeslot_ended(void)
         case RADIO_STATE_SLEEP:
         case RADIO_STATE_WAITING_TIMESLOT:
         case RADIO_STATE_ED:
+        case RADIO_STATE_CCA:
+        case RADIO_STATE_CONTINUOUS_CARRIER:
             // Intentionally empty.
             break;
 
@@ -645,7 +631,7 @@ void nrf_raal_timeslot_ended(void)
         case RADIO_STATE_RX_HEADER:
         case RADIO_STATE_RX_FRAME:
         case RADIO_STATE_TX_ACK:
-        case RADIO_STATE_CCA:
+        case RADIO_STATE_CCA_BEFORE_TX:
         case RADIO_STATE_TX_FRAME:
         case RADIO_STATE_RX_ACK:
             mutex_lock();
@@ -952,10 +938,14 @@ static inline void irq_end_state_rx_frame(void)
 /// This event is generated when the radio ends transmission of ACK frame.
 static inline void irq_end_state_tx_ack(void)
 {
-    assert(nrf_radio_shorts_get() == SHORTS_TX_ACK);
+    assert(nrf_radio_shorts_get() == SHORTS_TX_ACK ||
+           nrf_radio_shorts_get() == SHORTS_RX_FOLLOWING); // In case END is handled before READY
     shorts_disable();
 
     received_frame_notify();
+
+    // Clear event READY in case CPU was halted and event END is handled before READY.
+    nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
 
     state_set(RADIO_STATE_WAITING_RX_FRAME);
     // Receiver is enabled by shorts.
@@ -964,7 +954,7 @@ static inline void irq_end_state_tx_ack(void)
 /** This event may occur at the beginning of transmission procedure (the procedure already has
  *  disabled shorts).
  */
-static inline void irq_end_state_cca(void)
+static inline void irq_end_state_cca_before_tx(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
 }
@@ -974,6 +964,9 @@ static inline void irq_end_state_tx_frame(void)
 {
     shorts_disable();
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+
+    // Clear event READY in case CPU was halted and event END is handled before READY.
+    nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
 
     if (!ack_is_requested(mp_tx_data))
     {
@@ -1040,7 +1033,7 @@ static inline void irq_disabled_state_waiting_rx_frame(void)
     mutex_unlock();
 
     rx_buffer_in_use_set(nrf_drv_radio802154_rx_buffer_free_find());
-    tx_power_set(nrf_drv_radio802154_pib_tx_power_get());
+    nrf_radio_tx_power_set(nrf_drv_radio802154_pib_tx_power_get());
 
     // Clear this event after RXEN task in case event is triggered just before.
     nrf_radio_event_clear(NRF_RADIO_EVENT_DISABLED);
@@ -1087,7 +1080,7 @@ static inline void irq_disabled_state_tx_ack(void)
  *
  *  The radio is disabled and the drivers enables receiver in order to start CCA procedure.
  */
-static inline void irq_disabled_state_cca(void)
+static inline void irq_disabled_state_cca_before_tx(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
     assert(nrf_radio_state_get() == NRF_RADIO_STATE_DISABLED);
@@ -1137,6 +1130,29 @@ static inline void irq_disabled_state_ed(void)
     nrf_radio_task_trigger(NRF_RADIO_TASK_RXEN);
 }
 
+/** This event is generated before stand-alone CCA procedure.
+ *
+ *  The radio is disabled and the driver enables receiver in order to start CCA procedure.
+ */
+static inline void irq_disabled_state_cca(void)
+{
+    assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+    assert(nrf_radio_state_get() == NRF_RADIO_STATE_DISABLED);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_RXEN);
+}
+
+/** This event is generated before continuous-carrier procedure is started.
+ *
+ *  The radio is disabled and the driver enables transmitter in order to start emitting carrier
+ *  continuously.
+ */
+static inline void irq_disabled_state_continuous_carrier(void)
+{
+    assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+    assert(nrf_radio_state_get() == NRF_RADIO_STATE_DISABLED);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_TXEN);
+}
+
 /** This event is generated when receiver is ready to start receiving a frame.
  *
  *  Driver checks if buffer for a frame is available and starts receiver.
@@ -1172,7 +1188,7 @@ static inline void irq_ready_state_tx_ack(void)
  *
  *  The driver prepares for transmission and starts CCA procedure.
  */
-static inline void irq_ready_state_cca(void)
+static inline void irq_ready_state_cca_before_tx(void)
 {
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
     assert(nrf_radio_state_get() == NRF_RADIO_STATE_RX_IDLE);
@@ -1217,16 +1233,42 @@ static inline void irq_ready_state_ed(void)
     nrf_radio_task_trigger(NRF_RADIO_TASK_EDSTART);
 }
 
+/// This event is generated when receiver is ready to start CCA procedure.
+static inline void irq_ready_state_cca(void)
+{
+    assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+    assert(nrf_radio_state_get() == NRF_RADIO_STATE_RX_IDLE);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_CCASTART);
+}
+
+/// This event is generated when transmitter is emitting carrier continuously.
+static inline void irq_ready_state_continuous_carrier(void)
+{
+    assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+    assert(nrf_radio_state_get() == NRF_RADIO_STATE_TX_IDLE);
+}
+
 #if !RADIO_SHORT_CCAIDLE_TXEN
 /// This event is generated when CCA reports that channel is idle.
-static inline void irq_ccaidle(void)
+static inline void irq_ccaidle_state_tx_frame(void)
 {
-    assert(m_state == RADIO_STATE_TX_FRAME);
     assert(nrf_radio_shorts_get() == SHORTS_TX_FRAME);
 
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
 }
 #endif // RADIO_SHORT_CCAIDLE_TXEN
+
+/// This event is generated when CCA reports idle channel during stand-alone procedure.
+static inline void irq_ccaidle_state_cca(void)
+{
+    assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+    assert(nrf_radio_state_get() == NRF_RADIO_STATE_RX_IDLE);
+
+    nrf_drv_radio802154_notify_cca(true);
+
+    state_set(RADIO_STATE_WAITING_RX_FRAME);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+}
 
 /// This event is generated when CCA reports busy channel prior to transmission.
 static inline void irq_ccabusy_state_tx_frame(void)
@@ -1237,6 +1279,18 @@ static inline void irq_ccabusy_state_tx_frame(void)
     shorts_disable();
 
     nrf_drv_radio802154_notify_busy_channel();
+
+    state_set(RADIO_STATE_WAITING_RX_FRAME);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+}
+
+/// This event is generated when CCA reports busy channel during stand-alone procedure.
+static inline void irq_ccabusy_state_cca(void)
+{
+    assert(nrf_radio_shorts_get() == SHORTS_IDLE);
+    assert(nrf_radio_state_get() == NRF_RADIO_STATE_RX_IDLE);
+
+    nrf_drv_radio802154_notify_cca(false);
 
     state_set(RADIO_STATE_WAITING_RX_FRAME);
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
@@ -1263,13 +1317,16 @@ static inline void irq_edend(void)
     {
         nrf_drv_radio802154_notify_energy_detected(m_ed_result);
 
+        // In case channel change was requested during energy detection procedure.
+        channel_set(nrf_drv_radio802154_pib_channel_get());
+
         state_set(RADIO_STATE_WAITING_RX_FRAME);
         nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
     }
 }
 
 /// Handler of radio interrupts.
-void RADIO_IRQHandler(void)
+static inline void irq_handler(void)
 {
     nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_IRQ_HANDLER);
 
@@ -1293,7 +1350,7 @@ void RADIO_IRQHandler(void)
                 break;
 
             case RADIO_STATE_TX_ACK:
-            case RADIO_STATE_CCA: // This could happen at the beginning of transmission procedure.
+            case RADIO_STATE_CCA_BEFORE_TX: // This could happen at the beginning of transmission procedure.
             case RADIO_STATE_WAITING_TIMESLOT:
                 break;
 
@@ -1351,9 +1408,9 @@ void RADIO_IRQHandler(void)
                 irq_end_state_tx_ack();
                 break;
 
-            case RADIO_STATE_CCA: // This could happen at the beginning of transmission procedure
-                                  // (the procedure already has disabled shorts).
-                irq_end_state_cca();
+            case RADIO_STATE_CCA_BEFORE_TX: // This could happen at the beginning of transmission
+                                            // procedure (the procedure already has disabled shorts)
+                irq_end_state_cca_before_tx();
                 break;
 
             case RADIO_STATE_TX_FRAME:
@@ -1399,8 +1456,8 @@ void RADIO_IRQHandler(void)
                 irq_disabled_state_tx_ack();
                 break;
 
-            case RADIO_STATE_CCA:
-                irq_disabled_state_cca();
+            case RADIO_STATE_CCA_BEFORE_TX:
+                irq_disabled_state_cca_before_tx();
                 break;
 
             case RADIO_STATE_TX_FRAME:
@@ -1413,6 +1470,14 @@ void RADIO_IRQHandler(void)
 
             case RADIO_STATE_ED:
                 irq_disabled_state_ed();
+                break;
+
+            case RADIO_STATE_CCA:
+                irq_disabled_state_cca();
+                break;
+
+            case RADIO_STATE_CONTINUOUS_CARRIER:
+                irq_disabled_state_continuous_carrier();
                 break;
 
             case RADIO_STATE_WAITING_TIMESLOT:
@@ -1441,8 +1506,8 @@ void RADIO_IRQHandler(void)
                 irq_ready_state_tx_ack();
                 break;
 
-            case RADIO_STATE_CCA:
-                irq_ready_state_cca();
+            case RADIO_STATE_CCA_BEFORE_TX:
+                irq_ready_state_cca_before_tx();
                 break;
 
             case RADIO_STATE_TX_FRAME:
@@ -1457,6 +1522,14 @@ void RADIO_IRQHandler(void)
                 irq_ready_state_ed();
                 break;
 
+            case RADIO_STATE_CCA:
+                irq_ready_state_cca();
+                break;
+
+            case RADIO_STATE_CONTINUOUS_CARRIER:
+                irq_ready_state_continuous_carrier();
+                break;
+
             case RADIO_STATE_WAITING_TIMESLOT:
                 // Exit as soon as possible when waiting for timeslot.
                 break;
@@ -1468,17 +1541,33 @@ void RADIO_IRQHandler(void)
         nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_EVENT_READY);
     }
 
-#if !RADIO_SHORT_CCAIDLE_TXEN
     if (nrf_radio_event_get(NRF_RADIO_EVENT_CCAIDLE))
     {
         nrf_drv_radio802154_log(EVENT_TRACE_ENTER, FUNCTION_EVENT_CCAIDLE);
         nrf_radio_event_clear(NRF_RADIO_EVENT_CCAIDLE);
 
-        irq_ccaidle();
+        switch (m_state)
+        {
+            case RADIO_STATE_TX_FRAME:
+#if !RADIO_SHORT_CCAIDLE_TXEN
+                irq_ccaidle_state_tx_frame();
+#endif
+                break;
+
+            case RADIO_STATE_CCA:
+                irq_ccaidle_state_cca();
+                break;
+
+            case RADIO_STATE_WAITING_TIMESLOT:
+                // Exit as soon as possible when waiting for timeslot.
+                break;
+
+            default:
+                assert(false);
+        }
 
         nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_EVENT_CCAIDLE);
     }
-#endif
 
     if (nrf_radio_event_get(NRF_RADIO_EVENT_CCABUSY))
     {
@@ -1489,6 +1578,10 @@ void RADIO_IRQHandler(void)
         {
             case RADIO_STATE_TX_FRAME:
                 irq_ccabusy_state_tx_frame();
+                break;
+
+            case RADIO_STATE_CCA:
+                irq_ccabusy_state_cca();
                 break;
 
             case RADIO_STATE_WAITING_TIMESLOT:
@@ -1524,14 +1617,14 @@ void RADIO_IRQHandler(void)
  *
  *  This function is called when MAC layer requests transition from transmit to receive state.
  */
-static inline void tx_procedure_abort(void)
+static inline void tx_procedure_abort(radio_state_t state)
 {
     shorts_disable();
 
     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
     assert(m_mutex);
 
-    state_set(RADIO_STATE_WAITING_RX_FRAME);
+    state_set(state);
 
     switch (nrf_radio_state_get())
     {
@@ -1545,8 +1638,7 @@ static inline void tx_procedure_abort(void)
             nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
     }
 
-    nrf_radio_mhmu_search_pattern_set(0);
-    nrf_radio_event_clear(NRF_RADIO_EVENT_MHRMATCH);
+    ack_matching_disable();
 
     // Clear events that could have happened in critical section due to receiving frame.
     nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
@@ -1619,6 +1711,13 @@ bool nrf_drv_radio802154_fsm_sleep(void)
         case RADIO_STATE_TX_ACK:
             break;
 
+        case RADIO_STATE_CCA_BEFORE_TX:
+        case RADIO_STATE_TX_FRAME:
+        case RADIO_STATE_RX_ACK:
+            tx_procedure_abort(RADIO_STATE_DISABLING);
+            result = true;
+            break;
+
         default:
             assert(false); // This should not happen.
     }
@@ -1626,7 +1725,7 @@ bool nrf_drv_radio802154_fsm_sleep(void)
     return result;
 }
 
-bool nrf_drv_radio802154_fsm_receive(uint8_t channel)
+bool nrf_drv_radio802154_fsm_receive(void)
 {
     bool result = false;
 
@@ -1637,22 +1736,9 @@ bool nrf_drv_radio802154_fsm_receive(uint8_t channel)
         case RADIO_STATE_RX_FRAME:
         case RADIO_STATE_TX_ACK:
             result = true;
-
-            if (channel_get() != channel)
-            {
-                channel_set(channel);
-                nrf_drv_radio802154_pib_channel_set(channel);
-                if (mutex_lock())
-                {
-                    auto_ack_abort(RADIO_STATE_WAITING_RX_FRAME);
-                }
-            }
-
             break;
 
         case RADIO_STATE_DISABLING:
-            channel_set(channel);
-            nrf_drv_radio802154_pib_channel_set(channel);
             state_set(RADIO_STATE_WAITING_RX_FRAME);
             result = true;
             // TASK DISABLE was already triggered. Wait for event DISABLED.
@@ -1660,24 +1746,28 @@ bool nrf_drv_radio802154_fsm_receive(uint8_t channel)
 
         case RADIO_STATE_SLEEP:
             assert(mutex_lock());
-
             state_set(RADIO_STATE_WAITING_TIMESLOT);
-            nrf_drv_radio802154_pib_channel_set(channel);
-
             nrf_raal_continuous_mode_enter();
 
             result = true;
             break;
 
-        case RADIO_STATE_CCA:
+        case RADIO_STATE_CCA_BEFORE_TX:
         case RADIO_STATE_TX_FRAME:
         case RADIO_STATE_RX_ACK:
-            tx_procedure_abort();
+            tx_procedure_abort(RADIO_STATE_WAITING_RX_FRAME);
+            result = true;
+            break;
+
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+            state_set(RADIO_STATE_WAITING_RX_FRAME);
+            nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
             result = true;
             break;
 
         case RADIO_STATE_ED:
-            // Ignore receive function during energy detection procedure.
+        case RADIO_STATE_CCA:
+            // Ignore receive function during energy detection or CCA procedure.
             break;
 
         case RADIO_STATE_WAITING_TIMESLOT:
@@ -1693,7 +1783,7 @@ bool nrf_drv_radio802154_fsm_receive(uint8_t channel)
     return result;
 }
 
-bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, int8_t power, bool cca)
+bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, bool cca)
 {
     bool result = false;
     mp_tx_data  = p_data;
@@ -1705,11 +1795,9 @@ bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, i
         {
             assert(m_state == RADIO_STATE_WAITING_RX_FRAME);
 
-            channel_set(channel);
+            auto_ack_abort(cca ? RADIO_STATE_CCA_BEFORE_TX : RADIO_STATE_TX_FRAME);
 
-            auto_ack_abort(cca ? RADIO_STATE_CCA : RADIO_STATE_TX_FRAME);
-
-            tx_power_set(power);
+            nrf_radio_tx_power_set(nrf_drv_radio802154_pib_tx_power_get());
             nrf_radio_packet_ptr_set(p_data);
 
             // Clear events that could have happened in critical section due to receiving frame or RX ramp up.
@@ -1741,9 +1829,9 @@ bool nrf_drv_radio802154_fsm_transmit(const uint8_t * p_data, uint8_t channel, i
     return result;
 }
 
-bool nrf_drv_radio802154_fsm_energy_detection(uint8_t tx_channel, uint32_t time_us)
+bool nrf_drv_radio802154_fsm_energy_detection(uint32_t time_us)
 {
-    bool     result    = false;
+    bool result = false;
 
     switch (m_state)
     {
@@ -1751,7 +1839,6 @@ bool nrf_drv_radio802154_fsm_energy_detection(uint8_t tx_channel, uint32_t time_
             if (mutex_lock())
             {
                 state_set(RADIO_STATE_ED);
-                nrf_drv_radio802154_pib_channel_set(tx_channel);
                 m_ed_time_left = time_us;
                 m_ed_result    = 0;
 
@@ -1769,9 +1856,6 @@ bool nrf_drv_radio802154_fsm_energy_detection(uint8_t tx_channel, uint32_t time_
 
                 if (ed_iter_setup(time_us))
                 {
-                    nrf_drv_radio802154_pib_channel_set(tx_channel);
-                    channel_set(tx_channel);
-
                     auto_ack_abort(RADIO_STATE_ED);
 
                     assert(nrf_radio_shorts_get() == SHORTS_IDLE);
@@ -1802,6 +1886,85 @@ bool nrf_drv_radio802154_fsm_energy_detection(uint8_t tx_channel, uint32_t time_
 
         default:
             assert(false); // This should not happen.
+    }
+
+    return result;
+}
+
+bool nrf_drv_radio802154_fsm_cca(void)
+{
+    bool result = false;
+
+    switch (m_state)
+    {
+        case RADIO_STATE_SLEEP:
+            if (mutex_lock())
+            {
+                state_set(RADIO_STATE_CCA);
+
+                nrf_raal_continuous_mode_enter();
+
+                result = true;
+            }
+
+            break;
+
+        case RADIO_STATE_WAITING_RX_FRAME:
+            if (mutex_lock())
+            {
+                if (nrf_raal_timeslot_request(nrf_drv_radio802154_cca_duration_get()))
+                {
+                    auto_ack_abort(RADIO_STATE_CCA);
+
+                    // Clear events that could have happened in critical section due to receiving
+                    // frame or RX ramp up.
+                    nrf_radio_event_clear(NRF_RADIO_EVENT_FRAMESTART);
+                    nrf_radio_event_clear(NRF_RADIO_EVENT_BCMATCH);
+                    nrf_radio_event_clear(NRF_RADIO_EVENT_END);
+                    nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
+                }
+                else
+                {
+                    state_set(RADIO_STATE_CCA);
+                }
+
+                result = true;
+            }
+
+            break;
+
+        case RADIO_STATE_DISABLING:
+        case RADIO_STATE_RX_HEADER:
+        case RADIO_STATE_RX_FRAME:
+        case RADIO_STATE_TX_ACK:
+        case RADIO_STATE_WAITING_TIMESLOT:
+            break;
+
+        default:
+            assert(false); // This should not happen.
+    }
+
+    return result;
+}
+
+bool nrf_drv_radio802154_fsm_continuous_carrier(void)
+{
+    bool result = false;
+
+    if (mutex_lock())
+    {
+        assert(m_state == RADIO_STATE_WAITING_RX_FRAME ||
+               m_state == RADIO_STATE_SLEEP);
+
+        auto_ack_abort(RADIO_STATE_CONTINUOUS_CARRIER);
+
+        // Clear events that could have happened in critical section due to receiving frame or RX ramp up.
+        nrf_radio_event_clear(NRF_RADIO_EVENT_FRAMESTART);
+        nrf_radio_event_clear(NRF_RADIO_EVENT_BCMATCH);
+        nrf_radio_event_clear(NRF_RADIO_EVENT_END);
+        nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
+
+        result = true;
     }
 
     return result;
@@ -1856,4 +2019,85 @@ void nrf_drv_radio802154_fsm_notify_buffer_free(rx_buffer_t * p_buffer)
             // Don't perform any action in any other state (receiver should not be started).
             break;
     }
+}
+
+void nrf_drv_radio802154_fsm_channel_update(void)
+{
+    switch (m_state)
+    {
+        case RADIO_STATE_WAITING_RX_FRAME:
+            assert(mutex_lock());
+
+            channel_set(nrf_drv_radio802154_pib_channel_get());
+            auto_ack_abort(RADIO_STATE_WAITING_RX_FRAME);
+
+            // Clear events that could have happened in critical section due to receiving
+            // frame or RX ramp up.
+            nrf_radio_event_clear(NRF_RADIO_EVENT_FRAMESTART);
+            nrf_radio_event_clear(NRF_RADIO_EVENT_BCMATCH);
+            nrf_radio_event_clear(NRF_RADIO_EVENT_END);
+            nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
+
+            break;
+
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+            channel_set(nrf_drv_radio802154_pib_channel_get());
+            nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+            break;
+
+        case RADIO_STATE_RX_HEADER:
+        case RADIO_STATE_RX_FRAME:
+        case RADIO_STATE_TX_ACK:
+        case RADIO_STATE_CCA:
+        case RADIO_STATE_TX_FRAME:
+        case RADIO_STATE_RX_ACK:
+            channel_set(nrf_drv_radio802154_pib_channel_get());
+            break;
+
+        case RADIO_STATE_DISABLING:
+        case RADIO_STATE_SLEEP:
+        case RADIO_STATE_WAITING_TIMESLOT:
+        case RADIO_STATE_CCA_BEFORE_TX:
+        case RADIO_STATE_ED:
+            // Don't perform any action in these states (channel will be updated when receiver is
+            // enabled).
+            break;
+
+    }
+}
+
+void nrf_drv_radio802154_fsm_cca_cfg_update(void)
+{
+    switch (m_state)
+    {
+        case RADIO_STATE_WAITING_RX_FRAME:
+        case RADIO_STATE_RX_HEADER:
+        case RADIO_STATE_RX_FRAME:
+        case RADIO_STATE_TX_ACK:
+        case RADIO_STATE_CCA:
+        case RADIO_STATE_CCA_BEFORE_TX:
+        case RADIO_STATE_TX_FRAME:
+        case RADIO_STATE_RX_ACK:
+            cca_configuration_update();
+            break;
+
+        case RADIO_STATE_DISABLING:
+        case RADIO_STATE_SLEEP:
+        case RADIO_STATE_WAITING_TIMESLOT:
+        case RADIO_STATE_ED:
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+            // Don't perform any action in these states (CCA configuration will be updated when
+            // receiver is enabled).
+            break;
+
+    }
+}
+
+#if RADIO_INTERNAL_IRQ_HANDLING
+void RADIO_IRQHandler(void)
+#else // RADIO_INTERNAL_IRQ_HADLING
+void nrf_drv_radio802154_fsm_irq_handler(void)
+#endif // RADIO_INTERNAL_IRQ_HANDLING
+{
+    irq_handler();
 }

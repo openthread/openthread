@@ -182,7 +182,7 @@ public:
     /**
      * This method returns a reference to the dhcp server object.
      *
-     * @returns A reference to the the dhcp server object.
+     * @returns A reference to the dhcp server object.
      *
      */
     Dhcp6::Dhcp6Server &GetDhcp6Server(void) { return mDhcp6Server; }

@@ -47,7 +47,6 @@ configure_OPTIONS               = \
     --with-ncp-bus=uart           \
     --enable-diag                 \
     --with-examples=kw41z         \
-    --with-platform-info=KW41Z    \
     --enable-linker-map           \
     $(NULL)
 

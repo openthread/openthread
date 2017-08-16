@@ -114,6 +114,19 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
         GetSockName().mPort = static_cast<Udp *>(mTransport)->GetEphemeralPort();
     }
 
+    if (messageInfoLocal.GetPeerAddr().IsUnspecified())
+    {
+        VerifyOrExit(!GetPeerName().GetAddress().IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+
+        messageInfoLocal.SetPeerAddr(GetPeerName().GetAddress());
+    }
+
+    if (messageInfoLocal.mPeerPort == 0)
+    {
+        VerifyOrExit(GetPeerName().mPort != 0, error = OT_ERROR_INVALID_ARGS);
+        messageInfoLocal.mPeerPort = GetPeerName().mPort;
+    }
+
     udpHeader.SetSourcePort(GetSockName().mPort);
     udpHeader.SetDestinationPort(messageInfoLocal.mPeerPort);
     udpHeader.SetLength(sizeof(udpHeader) + aMessage.GetLength());

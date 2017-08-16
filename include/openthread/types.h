@@ -696,7 +696,7 @@ typedef struct otIp6Prefix
 
 #define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializer for otNetworkDataIterator.
 
-typedef uint8_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
+typedef uint16_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
 
 /**
  * This structure represents a Border Router configuration.
@@ -763,6 +763,13 @@ typedef struct otExternalRouteConfig
      * The prefix for the off-mesh route.
      */
     otIp6Prefix mPrefix;
+
+    /**
+     * The Rloc associated with the external route entry.
+     *
+     * This value is ignored when adding an external route. For any added route the device's Rloc will be used.
+     */
+    uint16_t mRloc16;
 
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4291.

@@ -35,7 +35,6 @@ enum
 {
     IEEE802154_FRAME_TYPE_MASK        = 0x7,     ///< (IEEE 802.15.4-2006) PSDU.FCF.frameType
     IEEE802154_FRAME_TYPE_ACK         = 0x2,     ///< (IEEE 802.15.4-2006) frame type: ACK
-    IEEE802154_FRAME_PENDING          = (1<<4),  ///< (IEEE 802.15.4-2006) PSDU.FCF.bFramePending
     IEEE802154_ACK_REQUEST            = (1<<5),  ///< (IEEE 802.15.4-2006) PSDU.FCF.bAR
     IEEE802154_DSN_OFFSET             = 2,       ///< (IEEE 802.15.4-2006) PSDU.sequenceNumber
     IEEE802154_MAC_MIN_BE             = 1,       ///< (IEEE 802.15.4-2006) macMinBE
@@ -156,19 +155,19 @@ typedef enum cc2652_address
  * The following are valid radio state transitions for the cc2652:
  *
  *                                    (Radio ON)
- *  +----------+  Enable()  +-------+  Receive()   +---------+   Transmit()  +----------+
- *  |          |----------->|       |------------->|         |-------------->|          |
- *  | Disabled |            | Sleep |              | Receive |               | Transmit |
- *  |          |<-----------|       |<-------------|         |<--------------|          |
- *  +----------+  Disable() |       |   Sleep()    |         |<--  Receive() +----------+
- *                          |       | (Radio OFF)  +---------+   \           | transmit
- *                          |       |                             \-----\    | complete
- *                          |       | EnergyScan() +--------+            |   V
- *                          |       |------------->|        |      +------------------+
- *                          |       |              | EdScan |      |                  |
- *                          |       |<-------------|        |      | TransmitComplete |
- *                          |       |  signal ED   |        |      |                  |
- *                          +-------+  scan done   +--------+      +------------------+
+ *  +----------+  Enable()  +-------+  Receive()   +---------+   Transmit()   +----------+
+ *  |          |----------->|       |------------->|         |--------------->|          |
+ *  | Disabled |            | Sleep |              | Receive |                | Transmit |
+ *  |          |<-----------|       |<-------------|         |<---------------|          |
+ *  +----------+  Disable() |       |   Sleep()    |         | AckFrame RX or +----------+
+ *                          |       | (Radio OFF)  +---------+ sTxCmdChainDone == true
+ *                          |       |
+ *                          |       | EnergyScan() +--------+
+ *                          |       |------------->|        |
+ *                          |       |              | EdScan |
+ *                          |       |<-------------|        |
+ *                          |       |  signal ED   |        |
+ *                          +-------+  scan done   +--------+
  *
  * These states slightly differ from the states in \ref include/platform/radio.h.
  * The additional states the phy can be in are due to the asynchronous nature
@@ -193,7 +192,6 @@ typedef enum cc2652_PhyState
     cc2652_stateReceive,
     cc2652_stateEdScan,
     cc2652_stateTransmit,
-    cc2652_stateTransmitComplete,
 } cc2652_PhyState_t;
 
 #endif /* CC2652_RADIO_H_ */

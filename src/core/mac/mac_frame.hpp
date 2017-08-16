@@ -268,7 +268,7 @@ public:
      * @retval OT_ERROR_PARSE   Failed to parse through the MAC header.
      *
      */
-    otError ValidatePsdu(void);
+    otError ValidatePsdu(void) const;
 
     /**
      * This method returns the IEEE 802.15.4 Frame Type.
@@ -276,7 +276,7 @@ public:
      * @returns The IEEE 802.15.4 Frame Type.
      *
      */
-    uint8_t GetType(void);
+    uint8_t GetType(void) const { return GetPsdu()[0] & kFcfFrameTypeMask; }
 
     /**
      * This method indicates whether or not security is enabled.
@@ -285,7 +285,7 @@ public:
      * @retval FALSE  If security is not enabled.
      *
      */
-    bool GetSecurityEnabled(void);
+    bool GetSecurityEnabled(void) const { return (GetPsdu()[0] & kFcfSecurityEnabled) != 0; }
 
     /**
      * This method indicates whether or not the Frame Pending bit is set.
@@ -294,7 +294,7 @@ public:
      * @retval FALSE  If the Frame Pending bit is not set.
      *
      */
-    bool GetFramePending(void);
+    bool GetFramePending(void) const { return (GetPsdu()[0] & kFcfFramePending) != 0; }
 
     /**
      * This method sets the Frame Pending bit.
@@ -311,7 +311,7 @@ public:
      * @retval FALSE  If the Ack Request bit is not set.
      *
      */
-    bool GetAckRequest(void);
+    bool GetAckRequest(void) const { return (GetPsdu()[0] & kFcfAckRequest) != 0; }
 
     /**
      * This method sets the Ack Request bit.
@@ -327,7 +327,7 @@ public:
      * @returns The Sequence Number value.
      *
      */
-    uint8_t GetSequence(void);
+    uint8_t GetSequence(void) const { return GetPsdu()[kSequenceIndex]; }
 
     /**
      * This method sets the Sequence Number value.
@@ -335,7 +335,7 @@ public:
      * @param[in]  aSequence  The Sequence Number value.
      *
      */
-    void SetSequence(uint8_t aSequence);
+    void SetSequence(uint8_t aSequence) { GetPsdu()[kSequenceIndex] = aSequence; }
 
     /**
      * This method gets the Destination PAN Identifier.
@@ -345,7 +345,7 @@ public:
      * @retval OT_ERROR_NONE   Successfully retrieved the Destination PAN Identifier.
      *
      */
-    otError GetDstPanId(PanId &aPanId);
+    otError GetDstPanId(PanId &aPanId) const;
 
     /**
      * This method sets the Destination PAN Identifier.
@@ -365,7 +365,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the Destination Address.
      *
      */
-    otError GetDstAddr(Address &aAddress);
+    otError GetDstAddr(Address &aAddress) const;
 
     /**
      * This method sets the Destination Address.
@@ -395,7 +395,7 @@ public:
      * @retval OT_ERROR_NONE   Successfully retrieved the Source PAN Identifier.
      *
      */
-    otError GetSrcPanId(PanId &aPanId);
+    otError GetSrcPanId(PanId &aPanId) const;
 
     /**
      * This method sets the Source PAN Identifier.
@@ -415,7 +415,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the Source Address.
      *
      */
-    otError GetSrcAddr(Address &aAddress);
+    otError GetSrcAddr(Address &aAddress) const;
 
     /**
      * This method gets the Source Address.
@@ -445,7 +445,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the Security Level Identifier.
      *
      */
-    otError GetSecurityLevel(uint8_t &aSecurityLevel);
+    otError GetSecurityLevel(uint8_t &aSecurityLevel) const;
 
     /**
      * This method gets the Key Identifier Mode.
@@ -455,7 +455,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier Mode.
      *
      */
-    otError GetKeyIdMode(uint8_t &aKeyIdMode);
+    otError GetKeyIdMode(uint8_t &aKeyIdMode) const;
 
     /**
      * This method gets the Frame Counter.
@@ -465,7 +465,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the Frame Counter.
      *
      */
-    otError GetFrameCounter(uint32_t &aFrameCounter);
+    otError GetFrameCounter(uint32_t &aFrameCounter) const;
 
     /**
      * This method sets the Frame Counter.
@@ -483,7 +483,7 @@ public:
      * @returns A pointer to the Key Source.
      *
      */
-    const uint8_t *GetKeySource(void);
+    const uint8_t *GetKeySource(void) const;
 
     /**
      * This method sets the Key Source.
@@ -501,7 +501,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier.
      *
      */
-    otError GetKeyId(uint8_t &aKeyId);
+    otError GetKeyId(uint8_t &aKeyId) const;
 
     /**
      * This method sets the Key Identifier.
@@ -521,7 +521,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the Command ID.
      *
      */
-    otError GetCommandId(uint8_t &aCommandId);
+    otError GetCommandId(uint8_t &aCommandId) const;
 
     /**
      * This method sets the Command ID.
@@ -539,7 +539,7 @@ public:
      * @returns TRUE if frame is a MAC Data Request command, FALSE otherwise.
      *
      */
-    bool IsDataRequestCommand(void);
+    bool IsDataRequestCommand(void) const;
 
     /**
      * This method returns the MAC Frame Length.
@@ -566,7 +566,7 @@ public:
      * @returns The MAC header size.
      *
      */
-    uint8_t GetHeaderLength(void);
+    uint8_t GetHeaderLength(void) const;
 
     /**
      * This method returns the MAC footer size.
@@ -574,7 +574,7 @@ public:
      * @returns The MAC footer size.
      *
      */
-    uint8_t GetFooterLength(void);
+    uint8_t GetFooterLength(void) const;
 
     /**
      * This method returns the current MAC Payload length.
@@ -582,7 +582,7 @@ public:
      * @returns The current MAC Payload length.
      *
      */
-    uint8_t GetPayloadLength(void);
+    uint8_t GetPayloadLength(void) const;
 
     /**
      * This method returns the maximum MAC Payload length for the given MAC header and footer.
@@ -590,7 +590,7 @@ public:
      * @returns The maximum MAC Payload length for the given MAC header and footer.
      *
      */
-    uint8_t GetMaxPayloadLength(void);
+    uint8_t GetMaxPayloadLength(void) const;
 
     /**
      * This method sets the MAC Payload length.
@@ -656,7 +656,6 @@ public:
      *
      */
     uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
-
 
     /**
      * This method set the maximum number of transmit attempts for frame.
@@ -725,12 +724,28 @@ public:
     uint8_t *GetPsdu(void) { return mPsdu; }
 
     /**
+     * This const method returns a pointer to the PSDU.
+     *
+     * @returns A pointer to the PSDU.
+     *
+     */
+    const uint8_t *GetPsdu(void) const { return mPsdu; }
+
+    /**
      * This method returns a pointer to the MAC Header.
      *
      * @returns A pointer to the MAC Header.
      *
      */
-    uint8_t *GetHeader(void);
+    uint8_t *GetHeader(void) { return GetPsdu(); }
+
+    /**
+     * This const method returns a pointer to the MAC Header.
+     *
+     * @returns A pointer to the MAC Header.
+     *
+     */
+    const uint8_t *GetHeader(void) const { return GetPsdu(); }
 
     /**
      * This method returns a pointer to the MAC Payload.
@@ -741,12 +756,28 @@ public:
     uint8_t *GetPayload(void);
 
     /**
+     * This const method returns a pointer to the MAC Payload.
+     *
+     * @returns A pointer to the MAC Payload.
+     *
+     */
+    const uint8_t *GetPayload(void) const;
+
+    /**
      * This method returns a pointer to the MAC Footer.
      *
      * @returns A pointer to the MAC Footer.
      *
      */
     uint8_t *GetFooter(void);
+
+    /**
+     * This const method returns a pointer to the MAC Footer.
+     *
+     * @returns A pointer to the MAC Footer.
+     *
+     */
+    const uint8_t *GetFooter(void) const;
 
     /**
      * This method returns information about the frame object as a NULL-terminated string.
@@ -757,16 +788,25 @@ public:
      * @returns A pointer to the char string buffer.
      *
      */
-    const char *ToInfoString(char *aBuf, uint16_t aSize);
+    const char *ToInfoString(char *aBuf, uint16_t aSize) const;
 
 private:
-    uint8_t *FindSequence(void);
-    uint8_t *FindDstPanId(void);
-    uint8_t *FindDstAddr(void);
-    uint8_t *FindSrcPanId(void);
-    uint8_t *FindSrcAddr(void);
-    uint8_t *FindSecurityHeader(void);
+    enum
+    {
+        kInvalidIndex = 0xff,
+        kSequenceIndex = kFcfSize,
+    };
+
+    uint16_t GetFrameControlField(void) const;
+    uint8_t FindDstPanIdIndex(void) const;
+    uint8_t FindDstAddrIndex(void) const;
+    uint8_t FindSrcPanIdIndex(void) const;
+    uint8_t FindSrcAddrIndex(void) const;
+    uint8_t FindSecurityHeaderIndex(void) const;
+    uint8_t FindPayloadIndex(void) const;
+
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
+
 } OT_TOOL_PACKED_END;
 
 OT_TOOL_PACKED_BEGIN
@@ -806,7 +846,7 @@ public:
      * @retval A pointer to the beacon payload address.
      *
      */
-    uint8_t *GetPayload() { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+    uint8_t *GetPayload(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
 
 private:
     uint16_t mSuperframeSpec;

@@ -39,6 +39,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "nrf_drv_radio802154.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -146,6 +148,20 @@ void nrf_drv_radio802154_pib_short_address_set(const uint8_t * p_short_address);
  *          address.
  */
 bool nrf_drv_radio802154_pib_dest_addr_matches(const uint8_t * p_psdu);
+
+/**
+ * @brief Set radio CCA mode and threshold.
+ *
+ * @param[in] p_cca_cfg A pointer to the CCA configuration structure. Only fields relevant to selected mode are updated.
+ */
+void nrf_drv_radio802154_pib_cca_cfg_set(const nrf_drv_radio802154_cca_cfg_t * p_cca_cfg);
+
+/**
+ * @brief Get current radio CCA configuration.
+ *
+ * @param[out] p_cca_cfg A pointer to the structure for current CCA configuration.
+ */
+void nrf_drv_radio802154_pib_cca_cfg_get(nrf_drv_radio802154_cca_cfg_t * p_cca_cfg);
 
 #ifdef __cplusplus
 }

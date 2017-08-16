@@ -88,6 +88,8 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 static otRadioFrame sAckFrame;
 
+static int8_t       sDefaultTxPower;
+
 static uint32_t     sEnergyDetectionTime;
 static uint8_t      sEnergyDetectionChannel;
 static int8_t       sEnergyDetected;
@@ -316,7 +318,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     (void) aInstance;
 
-    nrf_drv_radio802154_receive(aChannel);
+    nrf_drv_radio802154_channel_set(aChannel);
+    nrf_drv_radio802154_tx_power_set(sDefaultTxPower);
+    nrf_drv_radio802154_receive();
     clearPendingEvents();
 
     return OT_ERROR_NONE;
@@ -328,7 +332,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     aFrame->mPsdu[-1] = aFrame->mLength;
 
-    if (nrf_drv_radio802154_transmit(&aFrame->mPsdu[-1], aFrame->mChannel, aFrame->mPower, true))
+    nrf_drv_radio802154_channel_set(aFrame->mChannel);
+    nrf_drv_radio802154_tx_power_set(aFrame->mPower);
+
+    if (nrf_drv_radio802154_transmit_raw(&aFrame->mPsdu[-1], true))
     {
         clearPendingEvents();
         otPlatRadioTxStarted(aInstance, aFrame);
@@ -485,7 +492,9 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
     clearPendingEvents();
 
-    if (nrf_drv_radio802154_energy_detection(aScanChannel, sEnergyDetectionTime))
+    nrf_drv_radio802154_channel_set(aScanChannel);
+
+    if (nrf_drv_radio802154_energy_detection(sEnergyDetectionTime))
     {
         resetPendingEvent(kPendingEventEnergyDetectionStart);
     }
@@ -501,7 +510,8 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
 
-    nrf_drv_radio802154_ack_tx_power_set(aPower);
+    sDefaultTxPower = aPower;
+    nrf_drv_radio802154_tx_power_set(aPower);
 }
 
 void nrf5RadioProcess(otInstance *aInstance)
@@ -524,13 +534,16 @@ void nrf5RadioProcess(otInstance *aInstance)
 
             uint8_t *bufferAddress = &sReceivedFrames[i].mPsdu[-1];
             sReceivedFrames[i].mPsdu = NULL;
-            nrf_drv_radio802154_buffer_free(bufferAddress);
+            nrf_drv_radio802154_buffer_free_raw(bufferAddress);
         }
     }
 
     if (isPendingEventSet(kPendingEventTransmit))
     {
-        if (nrf_drv_radio802154_transmit(sTransmitPsdu, sTransmitFrame.mChannel, sTransmitFrame.mPower, true))
+        nrf_drv_radio802154_channel_set(sTransmitFrame.mChannel);
+        nrf_drv_radio802154_tx_power_set(sTransmitFrame.mPower);
+
+        if (nrf_drv_radio802154_transmit_raw(sTransmitPsdu, true))
         {
             resetPendingEvent(kPendingEventTransmit);
             otPlatRadioTxStarted(aInstance, &sTransmitFrame);
@@ -554,7 +567,7 @@ void nrf5RadioProcess(otInstance *aInstance)
 
         if (sAckFrame.mPsdu != NULL)
         {
-            nrf_drv_radio802154_buffer_free(sAckFrame.mPsdu - 1);
+            nrf_drv_radio802154_buffer_free_raw(sAckFrame.mPsdu - 1);
             sAckFrame.mPsdu = NULL;
         }
 
@@ -595,20 +608,22 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventEnergyDetectionStart))
     {
-        if (nrf_drv_radio802154_energy_detection(sEnergyDetectionChannel, sEnergyDetectionTime))
+        nrf_drv_radio802154_channel_set(sEnergyDetectionChannel);
+
+        if (nrf_drv_radio802154_energy_detection(sEnergyDetectionTime))
         {
             resetPendingEvent(kPendingEventEnergyDetectionStart);
         }
     }
 }
 
-void nrf_drv_radio802154_received(uint8_t *p_data, int8_t power, int8_t lqi)
+void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
 {
     otRadioFrame *receivedFrame = NULL;
 
     if (isPendingEventSet(kPendingEventTransmit))
     {
-        nrf_drv_radio802154_buffer_free(p_data);
+        nrf_drv_radio802154_buffer_free_raw(p_data);
 
         return;
     }
@@ -638,7 +653,7 @@ void nrf_drv_radio802154_received(uint8_t *p_data, int8_t power, int8_t lqi)
 #endif
 }
 
-void nrf_drv_radio802154_transmitted(uint8_t *aAckPsdu, int8_t aPower, int8_t aLqi)
+void nrf_drv_radio802154_transmitted_raw(uint8_t *aAckPsdu, int8_t aPower, int8_t aLqi)
 {
     if (aAckPsdu == NULL)
     {
@@ -661,10 +676,9 @@ void nrf_drv_radio802154_busy_channel(void)
     setPendingEvent(kPendingEventChannelAccessFailure);
 }
 
-void nrf_drv_radio802154_energy_detected(int8_t result)
+void nrf_drv_radio802154_energy_detected(uint8_t result)
 {
-    // TODO: Correct RSSI calculation after lab tests.
-    sEnergyDetected = 94 - result;
+    sEnergyDetected = nrf_drv_radio802154_dbm_from_energy_level_calculate(result);
 
     setPendingEvent(kPendingEventEnergyDetected);
 }

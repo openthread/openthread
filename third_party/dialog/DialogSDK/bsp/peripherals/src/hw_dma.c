@@ -216,8 +216,8 @@ void hw_dma_channel_initialization(DMA_setup *channel_setup)
     }
 
 #endif
-    src_address = black_orca_phy_addr(channel_setup->src_address);
-    dest_address = black_orca_phy_addr(channel_setup->dest_address);
+    src_address = DA15000_phy_addr(channel_setup->src_address);
+    dest_address = DA15000_phy_addr(channel_setup->dest_address);
 
     // Set source address registers
     *dma_x_a_start_low_reg = (src_address & 0xffff);
@@ -257,7 +257,7 @@ void hw_dma_channel_initialization(DMA_setup *channel_setup)
 void hw_dma_channel_update_source(HW_DMA_CHANNEL channel, void *addr, uint16_t length,
                                   hw_dma_transfer_cb cb)
 {
-    uint32_t phy_addr = black_orca_phy_addr((uint32_t) addr);
+    uint32_t phy_addr = DA15000_phy_addr((uint32_t) addr);
 
     dma_callbacks_user_data[channel].callback = cb;
 
@@ -286,7 +286,7 @@ void hw_dma_channel_update_source(HW_DMA_CHANNEL channel, void *addr, uint16_t l
 void hw_dma_channel_update_destination(HW_DMA_CHANNEL channel, void *addr, uint16_t length,
                                        hw_dma_transfer_cb cb)
 {
-    uint32_t phy_addr = black_orca_phy_addr((uint32_t) addr);
+    uint32_t phy_addr = DA15000_phy_addr((uint32_t) addr);
 
     dma_callbacks_user_data[channel].callback = cb;
 

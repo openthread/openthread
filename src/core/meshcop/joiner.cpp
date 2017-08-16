@@ -435,7 +435,13 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     netif.GetKeyManager().SetCurrentKeySequence(networkKeySeq.GetNetworkKeySequence());
     netif.GetMle().SetMeshLocalPrefix(meshLocalPrefix.GetMeshLocalPrefix());
     netif.GetMac().SetExtendedPanId(extendedPanId.GetExtendedPanId());
-    netif.GetMac().SetNetworkName(networkName.GetNetworkName());
+
+    {
+        otNetworkName name;
+        memcpy(name.m8, networkName.GetNetworkName(), networkName.GetLength());
+        name.m8[networkName.GetLength()] = '\0';
+        netif.GetMac().SetNetworkName(name.m8);
+    }
 
     otLogInfoMeshCoP(GetInstance(), "join success!");
 

@@ -47,8 +47,10 @@ void PlatformInit(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
+#if !SOFTDEVICE_PRESENT
     // Enable I-code cache
     NRF_NVMC->ICACHECNF = NVMC_ICACHECNF_CACHEEN_Enabled;
+#endif
 
     nrf_drv_clock_init();
 

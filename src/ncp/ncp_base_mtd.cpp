@@ -59,6 +59,8 @@
 namespace ot {
 namespace Ncp {
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
 static bool HasOnly1BitSet(uint32_t aValue)
 {
     return aValue != 0 && ((aValue & (aValue - 1)) == 0);
@@ -75,6 +77,8 @@ static uint8_t IndexOfMSB(uint32_t aValue)
 
     return index;
 }
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &aConfig)
 {
@@ -1078,12 +1082,14 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spinel_
                             SPINEL_DATATYPE_BOOL_S          // isStable
                             SPINEL_DATATYPE_UINT8_S         // Flags
                             SPINEL_DATATYPE_BOOL_S          // isLocal
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &borderRouterConfig.mPrefix,
                         64,
                         borderRouterConfig.mStable,
                         flags,
-                        false
+                        false,
+                        borderRouterConfig.mRloc16
                     ));
     }
 
@@ -1108,12 +1114,14 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spinel_
                             SPINEL_DATATYPE_BOOL_S          // isStable
                             SPINEL_DATATYPE_UINT8_S         // Flags
                             SPINEL_DATATYPE_BOOL_S          // isLocal
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &borderRouterConfig.mPrefix,
                         64,
                         borderRouterConfig.mStable,
                         flags,
-                        true
+                        true,
+                        borderRouterConfig.mRloc16
                     ));
     }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -1219,6 +1227,10 @@ otError NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spin
     ip6Prefix.mPrefix = *addrPtr;
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &ip6Prefix);
+
+    // If prefix was not on the list, "remove" command is successful,
+    // and we respond with a `SPINEL_STATUS_OK` status.
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
 
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
@@ -1565,6 +1577,11 @@ otError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t aHeader, spine
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otIp6RemoveUnicastAddress(mInstance, addrPtr);
+
+    // If address was not on the list, "remove" command is successful,
+    // and we respond with a `SPINEL_STATUS_OK` status.
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
+
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -1678,6 +1695,9 @@ otError NcpBase::InsertPropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHea
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otIp6SubscribeMulticastAddress(mInstance, addrPtr);
+
+    VerifyOrExit(error != OT_ERROR_ALREADY, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
+
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -1718,6 +1738,11 @@ otError NcpBase::RemovePropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(uint8_t aHea
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otIp6UnsubscribeMulticastAddress(mInstance, addrPtr);
+
+    // If the address was not on the list, "remove" command is successful,
+    // and we respond with a `SPINEL_STATUS_OK` status.
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
+
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -1801,13 +1826,15 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t aHeader, spin
                             SPINEL_DATATYPE_UINT8_S         // Route Preference Flags
                             SPINEL_DATATYPE_BOOL_S          // IsLocal
                             SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &external_route_config.mPrefix.mPrefix,
                         external_route_config.mPrefix.mLength,
                         external_route_config.mStable,
                         ExternalRoutePreferenceToFlagByte(external_route_config.mPreference),
                         false,
-                        external_route_config.mNextHopIsThisDevice
+                        external_route_config.mNextHopIsThisDevice,
+                        external_route_config.mRloc16
                     ));
     }
 
@@ -1823,13 +1850,15 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t aHeader, spin
                             SPINEL_DATATYPE_UINT8_S         // Route Preference Flags
                             SPINEL_DATATYPE_BOOL_S          // IsLocal
                             SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
+                            SPINEL_DATATYPE_UINT16_S        // RLOC16
                         ),
                         &external_route_config.mPrefix.mPrefix,
                         external_route_config.mPrefix.mLength,
                         external_route_config.mStable,
                         ExternalRoutePreferenceToFlagByte(external_route_config.mPreference),
                         true,
-                        external_route_config.mNextHopIsThisDevice
+                        external_route_config.mNextHopIsThisDevice,
+                        external_route_config.mRloc16
                     ));
     }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -1950,6 +1979,11 @@ otError NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t aHeader, s
     ip6Prefix.mPrefix = *addrPtr;
 
     error = otBorderRouterRemoveRoute(mInstance, &ip6Prefix);
+
+    // If the route prefix was not on the list, "remove" command is successful,
+    // and we respond with a `SPINEL_STATUS_OK` status.
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
+
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -3401,6 +3435,11 @@ otError NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t aHeader, s
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otIp6RemoveUnsecurePort(mInstance, port);
+
+    // If unsecure port was not on the list, "remove" command is successful,
+    // and we respond with a `SPINEL_STATUS_OK` status.
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
+
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -3442,6 +3481,8 @@ otError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t aHeader, spinel_pro
 
     error = otLinkFilterRemoveAddress(mInstance, extAddress);
 
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
+
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(
@@ -3480,6 +3521,8 @@ otError NcpBase::RemovePropertyHandler_MAC_BLACKLIST(uint8_t aHeader, spinel_pro
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
     error = otLinkFilterRemoveAddress(mInstance, extAddress);
+
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
 
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
@@ -3522,6 +3565,8 @@ otError NcpBase::RemovePropertyHandler_MAC_FIXED_RSS(uint8_t aHeader, spinel_pro
     }
 
     error = otLinkFilterRemoveRssIn(mInstance, extAddress);
+
+    VerifyOrExit(error != OT_ERROR_NOT_FOUND, error = SendLastStatus(aHeader, SPINEL_STATUS_OK));
 
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 

@@ -214,69 +214,6 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
     );
 }
 
-// ----------------------------------------------------------------------------
-// MARK: Raw frame handling
-// ----------------------------------------------------------------------------
-
-void NcpBase::HandleRawFrame(const otRadioFrame *aFrame, void *aContext)
-{
-    static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
-}
-
-void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
-{
-    uint16_t flags = 0;
-    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-
-    if (!mIsRawStreamEnabled)
-    {
-        goto exit;
-    }
-
-    SuccessOrExit(OutboundFrameBegin(header));
-
-    if (aFrame->mDidTX)
-    {
-        flags |= SPINEL_MD_FLAG_TX;
-    }
-
-    // Append frame header and frame length
-    SuccessOrExit(
-        OutboundFrameFeedPacked(
-            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
-            header,
-            SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_STREAM_RAW,
-            aFrame->mLength
-        ));
-
-    // Append the frame contents
-    SuccessOrExit(OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
-
-    // Append metadata (rssi, etc)
-    SuccessOrExit(
-        OutboundFrameFeedPacked(
-            SPINEL_DATATYPE_INT8_S
-            SPINEL_DATATYPE_INT8_S
-            SPINEL_DATATYPE_UINT16_S
-            SPINEL_DATATYPE_STRUCT_S(  // PHY-data
-                SPINEL_DATATYPE_NULL_S // Empty for now
-            )
-            SPINEL_DATATYPE_STRUCT_S(  // Vendor-data
-                SPINEL_DATATYPE_NULL_S // Empty for now
-            ),
-            aFrame->mPower,   // TX Power
-            -128,             // Noise Floor (Currently unused)
-            flags             // Flags
-
-           // Skip PHY and Vendor data for now
-        ));
-
-    SuccessOrExit(OutboundFrameSend());
-
-exit:
-    return;
-}
 
 otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey,
                                                           const uint8_t *aValuePtr, uint16_t aValueLen)

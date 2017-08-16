@@ -72,6 +72,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] =
 #endif
     { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_JOIN_FAILURE,        false },         // 19
     { SPINEL_PROP_MAC_SCAN_STATE,                        SPINEL_STATUS_OK,                  false },         // 20
+    { SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE,          SPINEL_STATUS_OK,                  true  },         // 21
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const

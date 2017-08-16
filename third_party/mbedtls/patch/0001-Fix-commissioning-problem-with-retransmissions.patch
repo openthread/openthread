@@ -1,7 +1,7 @@
-diff --git a/third_party/mbedtls/repo/library/ssl_tls.c b/third_party/mbedtls/repo/library/ssl_tls.c
+diff --git a/third_party/mbedtls/repo.patched/library/ssl_tls.c b/third_party/mbedtls/repo.patched/library/ssl_tls.c
 index 84a04ae..2153c80 100644
---- a/third_party/mbedtls/repo/library/ssl_tls.c
-+++ b/third_party/mbedtls/repo/library/ssl_tls.c
+--- a/third_party/mbedtls/repo.patched/library/ssl_tls.c
++++ b/third_party/mbedtls/repo.patched/library/ssl_tls.c
 @@ -3608,6 +3608,24 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
                                          "expected %d, received %d",
                                          ssl->in_epoch, rec_epoch ) );

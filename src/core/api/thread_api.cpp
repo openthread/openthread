@@ -382,10 +382,7 @@ const char *otGetVersionString(void)
     static
 #endif
     const char sVersion[] =
-        PACKAGE_NAME "/" PACKAGE_VERSION
-#ifdef  PLATFORM_INFO
-        "; " PLATFORM_INFO
-#endif
+        PACKAGE_NAME "/" PACKAGE_VERSION "; " OPENTHREAD_CONFIG_PLATFORM_INFO
 #if defined(__DATE__)
         "; " __DATE__ " " __TIME__
 #endif

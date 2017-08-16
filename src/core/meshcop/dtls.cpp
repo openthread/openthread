@@ -488,6 +488,7 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
 {
     Dtls *pThis = static_cast<Dtls *>(ctx);
     OT_UNUSED_VARIABLE(pThis);
+    OT_UNUSED_VARIABLE(str);
 
     switch (level)
     {

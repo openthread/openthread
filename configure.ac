@@ -582,8 +582,8 @@ AC_ARG_ENABLE(builtin-mbedtls,
 
 if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo.patched/include"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo.patched/include/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 fi
 AC_MSG_CHECKING([whether mbed TLS should be enabled])
@@ -1235,24 +1235,6 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z], [test "${OPENTHREAD_EXAMPLES}" = "kw
 
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
-
-#
-# Platform Information
-#
-
-AC_ARG_WITH(platform-info,
-    [AS_HELP_STRING([--with-platform-info=PLATFORM],
-        [Specify the platform information @<:@default=none@:>@.])],
-    [],
-    [with_platform_info=none])
-
-PLATFORM_INFO=${with_platform_info}
-
-AC_MSG_CHECKING([with platform info])
-AC_MSG_RESULT(${PLATFORM_INFO})
-
-AC_SUBST(PLATFORM_INFO)
-AC_DEFINE_UNQUOTED([PLATFORM_INFO],["${PLATFORM_INFO}"],[OpenThread platform information])
 
 #
 # Tools

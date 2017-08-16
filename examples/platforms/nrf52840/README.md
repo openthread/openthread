@@ -14,6 +14,14 @@ Download and install [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
 
+In a Bash terminal, follow these instructions to install the GNU toolchain and
+other dependencies.
+
+```bash
+$ cd <path-to-openthread>
+$ ./script/bootstrap
+```
+
 ## Building the examples
 
 ```bash

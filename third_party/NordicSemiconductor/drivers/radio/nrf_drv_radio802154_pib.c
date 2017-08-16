@@ -36,23 +36,26 @@
 
 #include "nrf_drv_radio802154_pib.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
+#include "nrf_drv_radio802154_config.h"
 #include "nrf_drv_radio802154_const.h"
 
 #define BROADCAST_ADDRESS    ((uint8_t [SHORT_ADDRESS_SIZE]) {0xff, 0xff}) ///< Broadcast Short Address
 
 typedef struct
 {
-    int8_t  tx_power;                                 ///< Transmit power.
-    uint8_t pan_id[PAN_ID_SIZE];                      ///< Pan Id of this node.
-    uint8_t short_addr[SHORT_ADDRESS_SIZE];           ///< Short Address of this node.
-    uint8_t extended_addr[EXTENDED_ADDRESS_SIZE];     ///< Extended Address of this node.
-    bool    promiscuous                          :1;  ///< Indicating if radio is in promiscuous mode.
-    bool    auto_ack                             :1;  ///< Indicating if auto ACK procedure is enabled.
-    uint8_t channel                              :5;  ///< Channel on which the node receives messages.
+    int8_t                        tx_power;                                ///< Transmit power.
+    uint8_t                       pan_id[PAN_ID_SIZE];                     ///< Pan Id of this node.
+    uint8_t                       short_addr[SHORT_ADDRESS_SIZE];          ///< Short Address of this node.
+    uint8_t                       extended_addr[EXTENDED_ADDRESS_SIZE];    ///< Extended Address of this node.
+    nrf_drv_radio802154_cca_cfg_t cca;                                     ///< CCA mode and thresholds.
+    bool                          promiscuous                          :1; ///< Indicating if radio is in promiscuous mode.
+    bool                          auto_ack                             :1; ///< Indicating if auto ACK procedure is enabled.
+    uint8_t                       channel                              :5; ///< Channel on which the node receives messages.
 } nrf_drv_radio802154_pib_data_t;
 
 static nrf_drv_radio802154_pib_data_t m_data;  ///< Buffer containing PIB data.
@@ -67,6 +70,11 @@ void nrf_drv_radio802154_pib_init(void)
     m_data.short_addr[0] = 0xfe;
     m_data.short_addr[1] = 0xff;
     memset(m_data.extended_addr, 0, sizeof(m_data.extended_addr));
+
+    m_data.cca.mode           = RADIO_CCA_MODE_DEFAULT;
+    m_data.cca.ed_threshold   = RADIO_CCA_ED_THRESHOLD_DEFAULT;
+    m_data.cca.corr_threshold = RADIO_CCA_CORR_THRESHOLD_DEFAULT;
+    m_data.cca.corr_limit     = RADIO_CCA_CORR_LIMIT_DEFAULT;
 }
 
 bool nrf_drv_radio802154_pib_promiscuous_get(void)
@@ -106,6 +114,24 @@ int8_t nrf_drv_radio802154_pib_tx_power_get(void)
 
 void nrf_drv_radio802154_pib_tx_power_set(int8_t dbm)
 {
+    const int8_t allowed_values[] = {-40, -20, -16, -12, -8, -4, 0, 2, 3, 4, 5, 6, 7, 8, 9};
+    const int8_t highest_value    = allowed_values[(sizeof(allowed_values) / sizeof(allowed_values[0])) - 1];
+    if (dbm > highest_value)
+    {
+        dbm = highest_value;
+    }
+    else
+    {
+        for (uint32_t i = 0; i < sizeof(allowed_values) / sizeof(allowed_values[0]); i++)
+        {
+            if (dbm <= allowed_values[i])
+            {
+                dbm = allowed_values[i];
+                break;
+            }
+        }
+    }
+
     m_data.tx_power = dbm;
 }
 
@@ -171,4 +197,34 @@ bool nrf_drv_radio802154_pib_dest_addr_matches(const uint8_t * p_psdu)
     }
 
     return true;
+}
+
+void nrf_drv_radio802154_pib_cca_cfg_set(const nrf_drv_radio802154_cca_cfg_t * p_cca_cfg)
+{
+    switch (p_cca_cfg->mode)
+    {
+        case NRF_RADIO_CCA_MODE_ED:
+            m_data.cca.mode         = p_cca_cfg->mode;
+            m_data.cca.ed_threshold = p_cca_cfg->ed_threshold;
+            break;
+
+        case NRF_RADIO_CCA_MODE_CARRIER:
+            m_data.cca.mode           = p_cca_cfg->mode;
+            m_data.cca.corr_threshold = p_cca_cfg->corr_threshold;
+            m_data.cca.corr_limit     = p_cca_cfg->corr_limit;
+            break;
+
+        case NRF_RADIO_CCA_MODE_CARRIER_AND_ED:
+        case NRF_RADIO_CCA_MODE_CARRIER_OR_ED:
+            memcpy(&m_data.cca, p_cca_cfg, sizeof(m_data.cca));
+            break;
+
+        default:
+            assert(false);
+    }
+}
+
+void nrf_drv_radio802154_pib_cca_cfg_get(nrf_drv_radio802154_cca_cfg_t * p_cca_cfg)
+{
+    memcpy(p_cca_cfg, &m_data.cca, sizeof(m_data.cca));
 }

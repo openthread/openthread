@@ -74,10 +74,6 @@ COMMON_LDADD                                                        = \
 endif # OPENTHREAD_ENABLE_NCP
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-AM_CPPFLAGS                                                        += \
-    -I$(top_srcdir)/third_party/mbedtls/repo/include                  \
-    $(NULL)
-
 COMMON_LDADD                                                       += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
     $(NULL)

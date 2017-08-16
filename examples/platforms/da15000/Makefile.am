@@ -33,6 +33,8 @@ lib_LIBRARIES                                                                   
 libopenthread_da15000_a_CPPFLAGS                                                        = \
     -I$(top_srcdir)/include                                                               \
     -I$(top_srcdir)/examples/platforms                                                    \
+    -I$(top_srcdir)/examples/platforms/da15000                                            \
+    -I$(top_srcdir)/examples/platforms/da15000/crypto                                     \
     -I$(top_srcdir)/src/core                                                              \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/include                              \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include                  \
@@ -42,6 +44,7 @@ libopenthread_da15000_a_CPPFLAGS                                                
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/config                               \
     -I$(top_srcdir)/third_party/dialog/DialogSDK                                          \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/src                      \
+    -I$(top_srcdir)/third_party/mbedtls/repo.patched/include                              \
     -include$(top_srcdir)/examples/platforms/da15000/custom_config_qspi.h                 \
     -Wno-unknown-pragmas                                                                  \
     -Wno-sign-compare                                                                     \
@@ -52,6 +55,7 @@ libopenthread_da15000_a_CPPFLAGS                                                
     -Wno-unused-variable                                                                  \
     -Wno-missing-field-initializers                                                       \
     -fno-strict-aliasing                                                                  \
+    $(MBEDTLS_CPPFLAGS)                                                                   \
     $(NULL)
 
 PLATFORM_SOURCES                                                                        = \
@@ -68,6 +72,7 @@ PLATFORM_SOURCES                                                                
     startup-gcc.c                                                                         \
     clock.c                                                                               \
     misc.c                                                                                \
+    crypto/aes_alt.c                                                                      \
     $(NULL)
 
 DIALOG_SOURCES                                                                          = \
@@ -82,6 +87,8 @@ DIALOG_SOURCES                                                                  
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_watchdog.c         \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/sys_tcs.c             \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_uart.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_aes_hash.c         \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_crypto.c           \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_otpc.c             \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_fem_sky66112-11.c  \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_dma.c              \

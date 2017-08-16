@@ -39,6 +39,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "nrf_drv_radio802154_config.h"
+#include "hal/nrf_radio.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,7 +56,20 @@ typedef enum
     NRF_DRV_RADIO802154_STATE_RECEIVE,
     NRF_DRV_RADIO802154_STATE_TRANSMIT,
     NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION,
+    NRF_DRV_RADIO802154_STATE_CCA,
+    NRF_DRV_RADIO802154_STATE_CONTINUOUS_CARRIER,
 } nrf_drv_radio802154_state_t;
+
+/**
+ * @brief Structure for configuring CCA.
+ */
+typedef struct
+{
+    nrf_radio_cca_mode_t mode;           ///< CCA mode.
+    uint8_t              ed_threshold;   ///< CCA Energy Busy Threshold. Not used in NRF_RADIO_CCA_MODE_CARRIER.
+    uint8_t              corr_threshold; ///< CCA Correlator Busy Threshold. Not used in NRF_RADIO_CCA_MODE_ED.
+    uint8_t              corr_limit;     ///< Limit of occurrences above CCA Correlator Busy Threshold. Not used in NRF_RADIO_CCA_MODE_ED.
+} nrf_drv_radio802154_cca_cfg_t;
 
 /**
  * @brief Initialize 802.15.4 driver.
@@ -71,17 +87,50 @@ void nrf_drv_radio802154_init(void);
  */
 void nrf_drv_radio802154_deinit(void);
 
+#if !RADIO_INTERNAL_IRQ_HANDLING
+/**
+ * @brief Handle interrupt request from the RADIO peripheral.
+ *
+ * @note When RADIO_INTERNAL_IRQ_HANDLING is enabled the driver internally handles the RADIO IRQ
+ *       and this function shall not be called.
+ *
+ * This function is intended to be used in Operating System environment when the OS handles IRQ
+ * and indirectly passes it to the driver or with RAAL implementation that indirectly passes radio
+ * IRQ handler to the driver (i.e. SoftDevice).
+ */
+void nrf_drv_radio802154_irq_handler(void);
+#endif // !RADIO_INTERNAL_IRQ_HANDLING
+
+/**
+ * @brief Set channel on which the radio shall operate right now.
+ *
+ * @param[in]  channel  Channel number (11-26).
+ */
+void nrf_drv_radio802154_channel_set(uint8_t channel);
+
 /**
  * @brief Get channel on which the radio operates right now.
+ *
+ * @returns  Channel number (11-26).
  */
 uint8_t nrf_drv_radio802154_channel_get(void);
 
 /**
- * @brief Set transmit power used for ACK frames.
+ * @brief Set transmit power.
+ *
+ * @note The driver recalculates requested value to the nearest value accepted by the hardware.
+ *       The calculation result is rounded up.
  *
  * @param[in]  power  Transmit power [dBm].
  */
-void nrf_drv_radio802154_ack_tx_power_set(int8_t power);
+void nrf_drv_radio802154_tx_power_set(int8_t power);
+
+/**
+ * @brief Get currently set transmit power.
+ *
+ * @return Currently used transmit power [dBm].
+ */
+int8_t nrf_drv_radio802154_tx_power_get(void);
 
 /**
  * @section Setting addresses and Pan Id of this device.
@@ -114,19 +163,18 @@ void nrf_drv_radio802154_extended_address_set(const uint8_t *p_extended_address)
  */
 void nrf_drv_radio802154_short_address_set(const uint8_t *p_short_address);
 
+/**
+ * @brief  Calculate dBm from energy level received during energy detection procedure.
+ *
+ * @param[in]  energy_level  Energy level passed by @sa nrf_drv_radio802154_energy_detected
+ *
+ * @return  Result of energy detection procedure in dBm.
+ */
+int8_t nrf_drv_radio802154_dbm_from_energy_level_calculate(uint8_t energy_level);
+
 
 /**
  * @section Functions to request FSM transitions and check current state.
- *
- *          receive()       transmit()
- *          -------->       -------->
- *     Sleep         Receive         Transmit
- *          <-------- |  /|\<--------
- *           sleep()  |   |   receive() / transmitted() / busy_channel()
- *                    |   |
- * energy_detection() |   | energy_detected()
- *                   \|/  |
- *               Energy detection
  */
 
 /**
@@ -153,35 +201,82 @@ bool nrf_drv_radio802154_sleep(void);
  *
  * In Receive state radio receives frames and automatically sends ACK frames when appropriate.
  * Received frame is reported to higher layer by nrf_radio802154_received() call.
- *
- * @param[in]  channel  Channel number on which radio will receive.
  */
-void nrf_drv_radio802154_receive(uint8_t channel);
+void nrf_drv_radio802154_receive(void);
 
 /**
  * @brief Change radio state to Transmit.
  *
- * @note This function should be called in Receive state. In other states transmission will be
+ * @note This function should be called in Receive state. In other states transmission will not be
  *       scheduled.
+ * @note If the CPU was halted or interrupted during performing this function
+ *       @sa nrf_drv_radio802154_transmitted() or @sa nrf_drv_radio802154_busy_channel() may be
+ *       called before nrf_drv_radio802154_transmit_raw() returns result.
+ * @note This function is implemented in zero-copy fashion. It passes given buffer pointer to
+ *       the RADIO peripheral.
  *
  * In Transmit state radio transmits given frame. If requested it waits for ACK frame.
- * Radio driver wait infinitely for ACK frame. Higher layer is responsible to call
- * nrf_radio802154_receive() after ACK timeout.
- * Transmission result is reported to higher layer by nrf_radio802154_transmitted() or
- * nrf_radio802154_busy_channel() calls.
+ * Radio driver waits infinitely for ACK frame. Higher layer is responsible to call
+ * @sa nrf_radio802154_receive() after ACK timeout.
+ * Transmission result is reported to higher layer by @sa nrf_radio802154_transmitted() or
+ * @sa nrf_radio802154_busy_channel() calls.
+ *
+ * p_data
+ * v
+ * +-----+-----------------------------------------------------------+------------+
+ * | PHR | MAC Header and payload                                    | FCS        |
+ * +-----+-----------------------------------------------------------+------------+
+ *       |                                                                        |
+ *       | <---------------------------- PHR -----------------------------------> |
  *
  * @param[in]  p_data   Pointer to array containing data to transmit. First byte should contain
- *                      frame length and following bytes should contain data. CRC is computed
- *                      automatically by radio hardware and can contain any bytes.
- * @param[in]  channel  Channel number on which radio will transmit given frame.
- * @param[in]  power    Transmission power [dBm]. Given value is rounded up to nearest permitted
- *                      value.
+ *                      frame length (including PHR and FCS). Following bytes should contain data.
+ *                      CRC is computed automatically by radio hardware and because of that FCS
+ *                      field can contain any bytes.
  * @param[in]  cca      If the driver should perform CCA procedure before transmission.
  *
  * @return  true   If the transmission procedure was scheduled.
  * @return  false  If the driver could not schedule the transmission procedure.
  */
-bool nrf_drv_radio802154_transmit(const uint8_t *p_data, uint8_t channel, int8_t power, bool cca);
+bool nrf_drv_radio802154_transmit_raw(const uint8_t *p_data, bool cca);
+
+/**
+ * @brief Change radio state to Transmit.
+ *
+ * @note This function should be called in Receive state. In other states transmission will not be
+ *       scheduled.
+ * @note If the CPU was halted or interrupted during performing this function
+ *       @sa nrf_drv_radio802154_transmitted() or @sa nrf_drv_radio802154_busy_channel() may be
+ *       called before nrf_drv_radio802154_transmit() returns result.
+ * @note This function makes copy of given buffer. There is an internal buffer maintained by this
+ *       function. It is used to make a frame copy. To prevent unnecessary memory consumption and
+ *       to perform zero-copy transmission @sa nrf_drv_radio802154_transmit_raw() function should
+ *       be used instead of this.
+ *
+ * In Transmit state radio transmits given frame. If requested, it waits for ACK frame.
+ * Radio driver waits infinitely for ACK frame. Higher layer is responsible to call
+ * @sa nrf_radio802154_receive() after ACK timeout.
+ * Transmission result is reported to higher layer by @sa nrf_radio802154_transmitted() or
+ * @sa nrf_radio802154_busy_channel() calls.
+ *
+ *       p_data
+ *       v
+ * +-----+-----------------------------------------------------------+------------+
+ * | PHR | MAC Header and payload                                    | FCS        |
+ * +-----+-----------------------------------------------------------+------------+
+ *       |                                                           |
+ *       | <------------------ length -----------------------------> |
+ *
+ * @param[in]  p_data   Pointer to array containing payload of a data to transmit. The array
+ *                      should exclude PHR or FCS fields of 802.15.4 frame.
+ * @param[in]  length   Length of given frame. This value shall exclude PHR and FCS fields from
+ *                      the given frame (exact size of buffer pointed by @p p_data).
+ * @param[in]  cca      If the driver should perform CCA procedure before transmission.
+ *
+ * @return  true   If the transmission procedure was scheduled.
+ * @return  false  If the driver could not schedule the transmission procedure.
+ */
+bool nrf_drv_radio802154_transmit(const uint8_t * p_data, uint8_t length, bool cca);
 
 /**
  * @brief Change radio state to Energy Detection.
@@ -191,16 +286,43 @@ bool nrf_drv_radio802154_transmit(const uint8_t *p_data, uint8_t channel, int8_t
  *       called before nrf_drv_radio802154_energy_detection() returns result.
  *
  * In Energy Detection state radio detects maximum energy for given time. Result of the detection
- * is reported to the higher layer by nrf_drv_radio802154_energy_detected() call.
+ * is reported to the higher layer by @sa nrf_drv_radio802154_energy_detected() call.
  *
- * @param[in]  channel  Channel number on which radio will detect energy.
  * @param[in]  time_us  Duration of energy detection procedure. Given value is rounded up to
  *                      multiplication of 8s (128 us).
  *
  * @return  true   If the energy detection procedure was scheduled.
  * @return  false  If the driver could not schedule the energy detection procedure.
  */
-bool nrf_drv_radio802154_energy_detection(uint8_t channel, uint32_t time_us);
+bool nrf_drv_radio802154_energy_detection(uint32_t time_us);
+
+/**
+ * @brief Change radio state to CCA.
+ * @note This function should be called in Receive state or Sleep state.
+ * @note If this function is called in Sleep state nrf_drv_radio802154_cca_done() may be
+ *       called before nrf_drv_radio802154_cca() returns result.
+ *
+ * In CCA state radio verifies if channel is clear. Result of verification is reported to the higher
+ * layer by @sa nrf_drv_radio802154_cca_done() call.
+ *
+ * @return  true   If the CCA procedure was scheduled.
+ * @return  false  If the driver could not schedule the CCA procedure.
+ */
+bool nrf_drv_radio802154_cca(void);
+
+/**
+ * @brief Change radio state to CONTINUOUS_CARRIER.
+ * @note This function should be called in Receive or Sleep state.
+ * @note When radio is emitting continuous carrier it blocks all transmissions on selected channel.
+ *       This function should be called only during radio tests. It should not be used during
+ *       normal device operation.
+ * @note This function works correctly only with a single-phy arbiter. It should not be used with
+ *       any other arbiter.
+ *
+ * @return  true   If the continuous carrier procedure was scheduled.
+ * @return  false  If the driver could not schedule the continuous carrier procedure.
+ */
+bool nrf_drv_radio802154_continuous_carrier(void);
 
 
 /**
@@ -220,16 +342,53 @@ extern void nrf_drv_radio802154_rx_started(void);
  * @brief Notify that frame was received.
  *
  * @note Buffer pointed by the p_data pointer is not modified by the radio driver (and can't
- *       be used to receive a frame) until nrf_drv_radio802154_buffer_free() function is called.
+ *       be used to receive a frame) until nrf_drv_radio802154_buffer_free_raw() function is called.
  * @note Buffer pointed by the p_data pointer may be modified by the function handler (and other
- *       modules) until nrf_drv_radio802154_buffer_free() function is called.
+ *       modules) until @sa nrf_drv_radio802154_buffer_free_raw() function is called.
+ * @note The next higher layer should handle @sa nrf_drv_radio802154_received_raw() or @sa
+ *       nrf_drv_radio802154_received() function. It should not handle both.
  *
- * @param[in]  p_data  Pointer to buffer containing received data. First byte in the buffer is
- *                     length of the frame and following bytes is the frame itself (after PHR).
+ * p_data
+ * v
+ * +-----+-----------------------------------------------------------+------------+
+ * | PHR | MAC Header and payload                                    | FCS        |
+ * +-----+-----------------------------------------------------------+------------+
+ *       |                                                                        |
+ *       | <---------------------------- PHR -----------------------------------> |
+ *
+ * @param[in]  p_data  Pointer to the buffer containing received data (PHR + PSDU). First byte in
+ *                     the buffer is length of the frame (PHR) and following bytes is the frame
+ *                     itself (PSDU). Length byte (PHR) includes FCS. FCS is already verified by
+ *                     the hardware and may be modified by the hardware.
  * @param[in]  power   RSSI of received frame.
  * @param[in]  lqi     LQI of received frame.
  */
-extern void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi);
+extern void nrf_drv_radio802154_received_raw(uint8_t * p_data, int8_t power, int8_t lqi);
+
+/**
+ * @brief Notify that frame was received.
+ *
+ * @note Buffer pointed by the p_data pointer is not modified by the radio driver (and can't
+ *       be used to receive a frame) until nrf_drv_radio802154_buffer_free() function is called.
+ * @note Buffer pointed by the p_data pointer may be modified by the function handler (and other
+ *       modules) until @sa nrf_drv_radio802154_buffer_free() function is called.
+ * @note The next higher layer should handle @sa nrf_drv_radio802154_received_raw() or @sa
+ *       nrf_drv_radio802154_received() function. It should not handle both.
+ *
+ *       p_data
+ *       v
+ * +-----+-----------------------------------------------------------+------------+
+ * | PHR | MAC Header and payload                                    | FCS        |
+ * +-----+-----------------------------------------------------------+------------+
+ *       |                                                           |
+ *       | <------------------ length -----------------------------> |
+ *
+ * @param[in]  p_data  Pointer to the buffer containing payload of received frame (PSDU without FCS).
+ * @param[in]  length  Length of received payload.
+ * @param[in]  power   RSSI of received frame.
+ * @param[in]  lqi     LQI of received frame.
+ */
+extern void nrf_drv_radio802154_received(uint8_t * p_data, uint8_t length, int8_t power, int8_t lqi);
 
 /**
  * @brief Notify that transmitting frame has started.
@@ -246,18 +405,46 @@ extern void nrf_drv_radio802154_tx_started(void);
  * @note If ACK was requested for transmitted frame this function is called after proper ACK is
  *       received. If ACK was not requested this function is called just after transmission is
  *       ended.
- * @note Buffer pointed by the p_ack pointer is not modified by the radio driver (and can't
- *       be used to receive a frame) until nrf_drv_radio802154_buffer_free() function is called.
- * @note Buffer pointed by the p_ack pointer may be modified by the function handler (and other
- *       modules) until nrf_drv_radio802154_buffer_free() function is called.
+ * @note Buffer pointed by the @p p_ack pointer is not modified by the radio driver (and can't
+ *       be used to receive a frame) until @sa nrf_drv_radio802154_buffer_free_raw() function is
+ *       called.
+ * @note Buffer pointed by the @p p_ack pointer may be modified by the function handler (and other
+ *       modules) until @sa nrf_drv_radio802154_buffer_free_raw() function is called.
+ * @note The next higher layer should handle @sa nrf_drv_radio802154_transmitted_raw() or @sa
+ *       nrf_drv_radio802154_transmitted() function. It should not handle both.
  *
  * @param[in]  p_ack  Pointer to received ACK buffer. Fist byte in the buffer is length of the
- *                    frame and following bytes are the ACK frame itself (after PHR).
+ *                    frame (PHR) and following bytes are the ACK frame itself (PSDU). Length byte
+ *                    (PHR) includes FCS. FCS is already verified by the hardware and may be
+ *                    modified by the hardware.
  *                    If ACK was not requested @p p_ack is set to NULL.
  * @param[in]  power  RSSI of received frame or 0 if ACK was not requested.
  * @param[in]  lqi    LQI of received frame or 0 if ACK was not requested.
  */
-extern void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi);
+extern void nrf_drv_radio802154_transmitted_raw(uint8_t * p_ack, int8_t power, int8_t lqi);
+
+/**
+ * @brief Notify that frame was transmitted.
+ *
+ * @note If ACK was requested for transmitted frame this function is called after proper ACK is
+ *       received. If ACK was not requested this function is called just after transmission is
+ *       ended.
+ * @note Buffer pointed by the @p p_ack pointer is not modified by the radio driver (and can't
+ *       be used to receive a frame) until @sa nrf_drv_radio802154_buffer_free() function is
+ *       called.
+ * @note Buffer pointed by the @p p_ack pointer may be modified by the function handler (and other
+ *       modules) until @sa nrf_drv_radio802154_buffer_free() function is called.
+ * @note The next higher layer should handle @sa nrf_drv_radio802154_transmitted() or @sa
+ *       nrf_drv_radio802154_transmitted() function. It should not handle both.
+ *
+ * @param[in]  p_ack   Pointer to buffer containing received ACK payload (PHR excluding FCS).
+  *                    If ACK was not requested @p p_ack is set to NULL.
+ * @param[in]  length  Length of received ACK payload.
+ * @param[in]  power   RSSI of received frame or 0 if ACK was not requested.
+ * @param[in]  lqi     LQI of received frame or 0 if ACK was not requested.
+ */
+extern void nrf_drv_radio802154_transmitted(uint8_t * p_ack, uint8_t length, int8_t power, int8_t lqi);
+
 
 /**
  * @brief Notify that frame was not transmitted due to busy channel.
@@ -269,9 +456,20 @@ extern void nrf_drv_radio802154_busy_channel(void);
 /**
  * @brief Notify that Energy Detection procedure finished.
  *
+ * @note This function passes EnergyLevel defined in 802.15.4-2006 specification:
+ *       0x00 - 0xff proportional to detected energy level (dBm above receiver sensitivity). To
+ *       calculate result in dBm use @sa nrf_drv_radio802154_dbm_from_energy_level_calculate().
+ *
  * @param[in]  result  Maximum energy detected during Energy Detection procedure.
  */
-extern void nrf_drv_radio802154_energy_detected(int8_t result);
+extern void nrf_drv_radio802154_energy_detected(uint8_t result);
+
+/**
+ * @brief Notify that CCA procedure has finished.
+ *
+ * @param[in]  channel_free  Indication if channel is free.
+ */
+extern void nrf_drv_radio802154_cca_done(bool channel_free);
 
 
 /**
@@ -282,6 +480,24 @@ extern void nrf_drv_radio802154_energy_detected(int8_t result);
  * @brief Notify driver that buffer containing received frame is not used anymore.
  *
  * @note The buffer pointed by the @p p_data pointer may be modified by this function.
+ * @note Use this function with buffers provided by @sa nrf_drv_radio802154_received_raw() and
+ *       @sa nrf_drv_radio802154_transmitted_raw(). To free buffers provided by @sa
+ *       nrf_drv_radio802154_received() or @sa nrf_drv_radio802154_transmitted() use
+ *       @sa nrf_drv_radio802154_buffer_free().
+ *
+ * @param[in]  p_data  A pointer to the buffer containing received data that is no more needed by
+ *                     the higher layer.
+ */
+void nrf_drv_radio802154_buffer_free_raw(uint8_t * p_data);
+
+/**
+ * @brief Notify driver that buffer containing received frame is not used anymore.
+ *
+ * @note The buffer pointed by the @p p_data pointer may be modified by this function.
+ * @note Use this function with buffers provided by @sa nrf_drv_radio802154_received() and
+ *       @sa nrf_drv_radio802154_transmitted(). To free buffers provided by @sa
+ *       nrf_drv_radio802154_received_raw() or @sa nrf_drv_radio802154_transmitted_raw() use
+ *       @sa nrf_drv_radio802154_buffer_free_raw().
  *
  * @param[in]  p_data  A pointer to the buffer containing received data that is no more needed by
  *                     the higher layer.
@@ -419,6 +635,24 @@ bool nrf_drv_radio802154_pending_bit_for_addr_clear(const uint8_t *p_addr, bool 
  * @param[in]  extended  If function should remove all Exnteded MAC Adresses of all Short Addresses.
  */
 void nrf_drv_radio802154_pending_bit_for_addr_reset(bool extended);
+
+/**
+ * @section CCA configuration management.
+ */
+
+/**
+ * @brief Configure radio CCA mode and threshold.
+ *
+ * @param[in] p_cca_cfg A pointer to the CCA configuration structure. Only fields relevant to selected mode are updated.
+ */
+void nrf_drv_radio802154_cca_cfg_set(const nrf_drv_radio802154_cca_cfg_t * p_cca_cfg);
+
+/**
+ * @brief Get current radio CCA configuration
+ *
+ * @param[out] p_cca_cfg A pointer to the structure for current CCA configuration.
+ */
+void nrf_drv_radio802154_cca_cfg_get(nrf_drv_radio802154_cca_cfg_t * p_cca_cfg);
 
 #ifdef __cplusplus
 }
