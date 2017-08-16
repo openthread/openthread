@@ -104,11 +104,11 @@ int main(int argc, char *argv[])
  */
 
 OT_TOOL_WEAK
-void otPlatLog( otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     va_list ap;
 
-    va_start(ap,aFormat);
-    otNcpPlatLogv( aLogLevel, aLogRegion, aFormat, ap );
+    va_start(ap, aFormat);
+    otNcpPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
     va_end(ap);
 }
