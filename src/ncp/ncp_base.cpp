@@ -1543,7 +1543,11 @@ otError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t aHeader, spinel_prop_key
                SPINEL_CMD_PROP_VALUE_IS,
                aKey,
                SPINEL_DATATYPE_BOOL_S,
+#if OPENTHREAD_ENABLE_RAW_LINK_API
                otLinkRawIsEnabled(mInstance)
+#else
+               false
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
            );
 }
 
