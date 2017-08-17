@@ -248,6 +248,8 @@ static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOu
 
     int32_t temperature = nrf5TempGet();
 
+    // Measurement resolution is 0.25 degrees Celsius
+    // Convert the temperature measurement to a decimal value, in degrees Celsius
     snprintf(aOutput, aOutputMaxLen, "%" PRId32 ".%02" PRId32 "\r\n", temperature / 4, 25 * (temperature % 4));
 
     exit:

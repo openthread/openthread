@@ -74,7 +74,7 @@ Set listen state.
 Default: listen disabled.
 
 ### diag temp
-Get temperature from internal temperature sensor.
+Get temperature from internal temperature sensor, in degrees Celsius.
 
 ### diag transmit
 Get messages count and interval between them that will be transmitted after `diag transmit start`.
