@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 /*
  * Provide a "weak" log function the platform code can override if desired.
  */
-
+#if !OPENTHREAD_ENABLE_DEBUG_UART_LOG
 OT_TOOL_WEAK
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
@@ -112,3 +112,4 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     otNcpPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
     va_end(ap);
 }
+#endif

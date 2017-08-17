@@ -51,6 +51,7 @@
     offset += (unsigned int)charsWritten;                                                   \
     otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
+#if !OPENTHREAD_ENABLE_DEBUG_UART_LOG
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     char logString[512];
@@ -79,3 +80,4 @@ exit:
     (void)aLogRegion;
 }
 
+#endif
