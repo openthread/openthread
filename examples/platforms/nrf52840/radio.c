@@ -621,13 +621,6 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
 {
     otRadioFrame *receivedFrame = NULL;
 
-    if (isPendingEventSet(kPendingEventTransmit))
-    {
-        nrf_drv_radio802154_buffer_free_raw(p_data);
-
-        return;
-    }
-
     for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu == NULL)
