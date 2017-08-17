@@ -95,6 +95,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(INTERFACE_TYPE),
     NCP_GET_PROP_HANDLER_ENTRY(LAST_STATUS),
     NCP_GET_PROP_HANDLER_ENTRY(LOCK),
+    NCP_GET_PROP_HANDLER_ENTRY(PHY_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_CHAN),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_RX_SENSITIVITY),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_TX_POWER),
@@ -102,17 +103,13 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(PROTOCOL_VERSION),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_PANID),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_LADDR),
+    NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_RAW_STREAM_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_PROMISCUOUS_MODE),
     NCP_GET_PROP_HANDLER_ENTRY(NCP_VERSION),
     NCP_GET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
     NCP_GET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_LIST),
     NCP_GET_PROP_HANDLER_ENTRY(VENDOR_ID),
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    NCP_GET_PROP_HANDLER_ENTRY(PHY_ENABLED),
-    NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
-#endif
-
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     NCP_GET_PROP_HANDLER_ENTRY(MAC_DATA_POLL_PERIOD),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_EXTENDED_ADDR),
@@ -1539,6 +1536,17 @@ exit:
 // MARK: Individual Property Getters and Setters
 // ----------------------------------------------------------------------------
 
+otError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    return SendPropertyUpdate(
+               aHeader,
+               SPINEL_CMD_PROP_VALUE_IS,
+               aKey,
+               SPINEL_DATATYPE_BOOL_S,
+               otLinkRawIsEnabled(mInstance)
+           );
+}
+
 otError NcpBase::GetPropertyHandler_PHY_CHAN(uint8_t aHeader, spinel_prop_key_t aKey)
 {
     return SendPropertyUpdate(
@@ -1705,6 +1713,17 @@ otError NcpBase::SetPropertyHandler_MAC_15_4_LADDR(uint8_t aHeader, spinel_prop_
 
 exit:
     return SendSetPropertyResponse(aHeader, aKey, error);
+}
+
+otError NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t aHeader, spinel_prop_key_t aKey)
+{
+    return SendPropertyUpdate(
+               aHeader,
+               SPINEL_CMD_PROP_VALUE_IS,
+               aKey,
+               SPINEL_DATATYPE_UINT16_S,
+               otLinkGetShortAddress(mInstance)
+           );
 }
 
 otError NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey)
