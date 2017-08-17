@@ -58,6 +58,7 @@
 
 #define RSSI_TABLE_SIZE                 8
 #define EUI64_TABLE_SIZE                8
+#define RADIO_FRAMES_BUFFER_SIZE        8
 
 enum
 {
@@ -69,18 +70,22 @@ static uint8_t       eui64[EUI64_TABLE_SIZE] = {0};
 
 static otInstance   *sThreadInstance;
 static otRadioState  sRadioState             = OT_RADIO_STATE_DISABLED;
-static otRadioFrame  sReceiveFrame;
-static otRadioFrame  sReceiveFrameAck;
+static otRadioFrame  sReceiveFrame[RADIO_FRAMES_BUFFER_SIZE];
+static otRadioFrame *sReceiveFrameAck;
 static otRadioFrame  sTransmitFrame;
 static otError       sTransmitStatus;
+static bool          sAckFrame               = false;
 static bool          sRadioPromiscuous       = false;
 static bool          sRssiInit               = true;
+static bool          sTransmitDoneFrame      = false;
+static bool          sDropFrame              = false;
 static uint8_t       sChannel                = DEFAULT_CHANNEL;
 static uint8_t       sRssiCtr                = 0;
+static uint8_t       sReadFrame              = 0;
+static uint8_t       sWriteFrame             = 0;
 static uint32_t      sSleepInitDelay         = 0;
 
-static uint8_t       sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE];
-static uint8_t       sReceivePsduAck[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t       sReceivePsdu[RADIO_FRAMES_BUFFER_SIZE][OT_RADIO_FRAME_MAX_SIZE];
 static uint8_t       sRssiTable[RSSI_TABLE_SIZE];
 static uint8_t       sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 
@@ -113,6 +118,7 @@ static void da15000OtpRead(void)
 
 void da15000RadioInit(void)
 {
+    uint16_t ptr;
     /* Wake up power domains */
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);
 
@@ -134,8 +140,11 @@ void da15000RadioInit(void)
 
     sChannel               = DEFAULT_CHANNEL;
     sTransmitFrame.mPsdu   = sTransmitPsdu;
-    sReceiveFrame.mPsdu    = sReceivePsdu;
-    sReceiveFrameAck.mPsdu = sReceivePsduAck;
+
+    for (ptr = 0; ptr != RADIO_FRAMES_BUFFER_SIZE; ptr++)
+    {
+        sReceiveFrame[ptr].mPsdu = &sReceivePsdu[ptr][0];
+    }
 
     otLogInfoPlat(sInstance, "Radio initialized", NULL);
 }
@@ -177,7 +186,6 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    uint8_t maxRetries;
     uint8_t modeCCA;
 
     otError error = OT_ERROR_NONE;
@@ -188,8 +196,6 @@ otError otPlatRadioEnable(otInstance *aInstance)
     sEnableRX = 1;
     FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
     FTDF_setValue(FTDF_PIB_CURRENT_CHANNEL, &sChannel);
-    maxRetries = 0;
-    FTDF_setValue(FTDF_PIB_MAX_FRAME_RETRIES, &maxRetries);
     modeCCA = FTDF_CCA_MODE_2;
     FTDF_setValue(FTDF_PIB_CCA_MODE, &modeCCA);
 
@@ -463,7 +469,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     {
         for (uint8_t i = 0; i < RSSI_TABLE_SIZE; i++)
         {
-            sRssiTable[i] = sReceiveFrame.mLqi;
+            sRssiTable[i] = sReceiveFrame[sWriteFrame].mLqi;
         }
 
         sRssiInit = false;
@@ -471,7 +477,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     else
     {
         ASSERT_ERROR(sRssiCtr < RSSI_TABLE_SIZE);
-        sRssiTable[sRssiCtr] = sReceiveFrame.mLqi;
+        sRssiTable[sRssiCtr] = sReceiveFrame[sWriteFrame].mLqi;
         sRssiCtr++;
 
         if (sRssiCtr >= RSSI_TABLE_SIZE)
@@ -496,7 +502,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
 
-    return OT_RADIO_CAPS_ACK_TIMEOUT;
+    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -537,66 +543,95 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 void da15000RadioProcess(otInstance *aInstance)
 {
     (void)aInstance;
-    uint32_t ftdfCe = *FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CE);
 
-    FTDF_confirmLmacInterrupt();
+    FTDF_FrameHeader frameHeader;
 
-    if (ftdfCe & FTDF_MSK_RX_CE)
+    if (sReadFrame != sWriteFrame)
     {
-        FTDF_processRxEvent();
+        FTDF_getFrameHeader(sReceiveFrame[sReadFrame].mPsdu, &frameHeader);
+
+        otLogDebgPlat(sInstance, "Radio received: %d bytes", sReceiveFrame[sReadFrame].mLength);
+
+        if (frameHeader.frameType == FTDF_ACKNOWLEDGEMENT_FRAME)
+        {
+            sReceiveFrameAck = &sReceiveFrame[sReadFrame];
+            sAckFrame = true;
+        }
+
+        otPlatRadioReceiveDone(sThreadInstance, &sReceiveFrame[sReadFrame], OT_ERROR_NONE);
+
+        sReadFrame = (sReadFrame + 1) % RADIO_FRAMES_BUFFER_SIZE;
+        sDropFrame = false;
     }
 
-    if (ftdfCe & FTDF_MSK_TX_CE)
+    if (sTransmitDoneFrame)
     {
-        FTDF_processTxEvent();
+        switch (sTransmitStatus)
+        {
+        case OT_ERROR_NONE:
+            otLogDebgPlat(sInstance, "Radio transmit SUCCESSFUL", NULL);
+            break;
+
+        case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+            otLogDebgPlat(sInstance, "Radio transmit CHANNEL_ACCESS_FAILURE", NULL);
+            break;
+
+        case OT_ERROR_NO_ACK:
+            otLogDebgPlat(sInstance, "Radio transmit NO_ACK", NULL);
+            break;
+
+        default:
+            otLogDebgPlat(sInstance, "Radio transmit ABORT", NULL);
+            break;
+        }
+
+        FTDF_getFrameHeader(sTransmitFrame.mPsdu, &frameHeader);
+
+        if ((frameHeader.options & FTDF_OPT_ACK_REQUESTED) == 0 || sTransmitStatus != OT_ERROR_NONE)
+        {
+            otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, NULL, sTransmitStatus);
+        }
+        else
+        {
+            otEXPECT(sAckFrame);
+            otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, sReceiveFrameAck, sTransmitStatus);
+            sAckFrame = false;
+        }
+
+        sTransmitDoneFrame = false;
+
+        otLogDebgPlat(sInstance, "Radio state: OT_RADIO_STATE_RECEIVE", NULL);
+        sRadioState = OT_RADIO_STATE_RECEIVE;
     }
 
-    volatile uint32_t *ftdfCm = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CM);
-    *ftdfCm = FTDF_MSK_TX_CE | FTDF_MSK_RX_CE | FTDF_MSK_SYMBOL_TMR_CE;
+exit:
+    return;
 }
 
 void FTDF_sendFrameTransparentConfirm(void *handle, FTDF_Bitmap32 status)
 {
     (void)handle;
 
-    FTDF_FrameHeader frameHeader;
-
     switch (status)
     {
     case FTDF_TRANSPARENT_SEND_SUCCESSFUL:
         sTransmitStatus = OT_ERROR_NONE;
-        otLogDebgPlat(sInstance, "Radio transmit SUCCESSFUL", NULL);
         break;
 
     case FTDF_TRANSPARENT_CSMACA_FAILURE:
         sTransmitStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-        otLogDebgPlat(sInstance, "Radio transmit CHANNEL_ACCESS_FAILURE", NULL);
         break;
 
     case FTDF_TRANSPARENT_NO_ACK:
         sTransmitStatus = OT_ERROR_NO_ACK;
-        otLogDebgPlat(sInstance, "Radio transmit NO_ACK", NULL);
         break;
 
     default:
         sTransmitStatus = OT_ERROR_ABORT;
-        otLogDebgPlat(sInstance, "Radio transmit ABORT", NULL);
         break;
     }
 
-    otLogDebgPlat(sInstance, "Radio state: OT_RADIO_STATE_RECEIVE", NULL);
-    sRadioState = OT_RADIO_STATE_RECEIVE;
-
-    FTDF_getFrameHeader(sTransmitFrame.mPsdu, &frameHeader);
-
-    if ((frameHeader.options & FTDF_OPT_ACK_REQUESTED) == 0 || sTransmitStatus != OT_ERROR_NONE)
-    {
-        otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, NULL, sTransmitStatus);
-    }
-    else
-    {
-        otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, &sReceiveFrameAck, sTransmitStatus);
-    }
+    sTransmitDoneFrame = true;
 }
 
 void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
@@ -604,55 +639,26 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
                               FTDF_Bitmap32   status,
                               FTDF_LinkQuality lqi)
 {
-    FTDF_FrameHeader frameHeader;
-
     otEXPECT(frameLength <= OT_RADIO_FRAME_MAX_SIZE);
 
-    otEXPECT(sRadioState != OT_RADIO_STATE_DISABLED)
+    otEXPECT(sRadioState != OT_RADIO_STATE_DISABLED);
 
-    otLogDebgPlat(sInstance, "Radio state: OT_RADIO_STATE_RECEIVE", NULL);
-    sRadioState = OT_RADIO_STATE_RECEIVE;
+    otEXPECT(!sDropFrame);
 
     if (status == FTDF_TRANSPARENT_RCV_SUCCESSFUL)
     {
-        FTDF_getFrameHeader(frame, &frameHeader);
+        sReceiveFrame[sWriteFrame].mChannel   = sChannel;
+        sReceiveFrame[sWriteFrame].mLength    = frameLength;
+        sReceiveFrame[sWriteFrame].mLqi       = lqi;
+        sReceiveFrame[sWriteFrame].mPower     = otPlatRadioGetRssi(sThreadInstance);
+        memcpy(sReceiveFrame[sWriteFrame].mPsdu, frame, frameLength);
 
-        otLogDebgPlat(sInstance, "Radio received: %d bytes", frameLength);
+        sWriteFrame = (sWriteFrame + 1) % RADIO_FRAMES_BUFFER_SIZE;
 
-        if (frameHeader.frameType != FTDF_ACKNOWLEDGEMENT_FRAME)
+        if (sWriteFrame == sReadFrame)
         {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-            // Timestamp
-            sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-            sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
-#endif
-            sReceiveFrame.mChannel   = sChannel;
-            sReceiveFrame.mLength    = frameLength;
-            sReceiveFrame.mLqi       = lqi;
-            sReceiveFrame.mPower     = otPlatRadioGetRssi(sThreadInstance);
-            memcpy(sReceiveFrame.mPsdu, frame, frameLength);
-
-            otPlatRadioReceiveDone(sThreadInstance, &sReceiveFrame, OT_ERROR_NONE);
+            sDropFrame = true;
         }
-        else
-        {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-            // Timestamp
-            sReceiveFrameAck.mMsec = otPlatAlarmMilliGetNow();
-            sReceiveFrameAck.mUsec = 0;  // Don't support microsecond timer for now.
-#endif
-            sReceiveFrameAck.mChannel   = sChannel;
-            sReceiveFrameAck.mLength    = frameLength;
-            sReceiveFrameAck.mLqi       = lqi;
-            sReceiveFrameAck.mPower     = otPlatRadioGetRssi(sThreadInstance);
-            memcpy(sReceiveFrameAck.mPsdu, frame, frameLength);
-
-            otPlatRadioReceiveDone(sThreadInstance, &sReceiveFrameAck, OT_ERROR_NONE);
-        }
-    }
-    else
-    {
-        otPlatRadioReceiveDone(sThreadInstance, NULL, OT_ERROR_ABORT);
     }
 
 exit:
@@ -664,3 +670,4 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     (void)aInstance;
     return DA15000_RECEIVE_SENSITIVITY;
 }
+
