@@ -371,6 +371,10 @@ private:
     void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
+#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+    otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand, const uint8_t *aArgPtr, uint16_t aArgLen);
+#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+
     NCP_COMMAND_HANDLER(NOOP);
     NCP_COMMAND_HANDLER(RESET);
     NCP_COMMAND_HANDLER(PROP_VALUE_GET);

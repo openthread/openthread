@@ -1000,22 +1000,30 @@ otError NcpBase::HandleCommand(uint8_t aHeader, unsigned int aCommand, const uin
         SPINEL_HEADER_GET_IID(aHeader) == 0,
         error = SendLastStatus(aHeader, SPINEL_STATUS_INVALID_INTERFACE)
     );
-
-    for (i = 0; i < sizeof(mCommandHandlerTable) / sizeof(mCommandHandlerTable[0]); i++)
+#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+    if (aCommand >= SPINEL_CMD_VENDOR__BEGIN && aCommand <= SPINEL_CMD_VENDOR__END)
     {
-        if (mCommandHandlerTable[i].mCommand == aCommand)
-        {
-            break;
-        }
-    }
-
-    if (i < sizeof(mCommandHandlerTable) / sizeof(mCommandHandlerTable[0]))
-    {
-        error = (this->*mCommandHandlerTable[i].mHandler)(aHeader, aCommand, aArgPtr, aArgLen);
+        error = VendorCommandHandler(aHeader, aCommand, aArgPtr, aArgLen);
     }
     else
+#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
     {
-        error = SendLastStatus(aHeader, SPINEL_STATUS_INVALID_COMMAND);
+        for (i = 0; i < sizeof(mCommandHandlerTable) / sizeof(mCommandHandlerTable[0]); i++)
+        {
+            if (mCommandHandlerTable[i].mCommand == aCommand)
+            {
+                break;
+            }
+        }
+
+        if (i < sizeof(mCommandHandlerTable) / sizeof(mCommandHandlerTable[0]))
+        {
+            error = (this->*mCommandHandlerTable[i].mHandler)(aHeader, aCommand, aArgPtr, aArgLen);
+        }
+        else
+        {
+            error = SendLastStatus(aHeader, SPINEL_STATUS_INVALID_COMMAND);
+        }
     }
 
 exit:
