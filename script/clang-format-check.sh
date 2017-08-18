@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,17 +28,16 @@
 #
 
 #
-# astye does not return a non-zero exit code.  This wrapper exists with a
-# non-zero exit code if there is any output from astyle.
+# clang-format does not return a non-zero exit code.  This wrapper
+# exits with a non-zero exit code if clang-format outputs any
+# replacements.
 #
 
 die() {
-	echo " *** ERROR: " $*
-	exit 1
+    echo " *** ERROR: " $*
+    exit 1
 }
 
 set -x
 
-[ -z "`$@`" ] || {
-    [ "$3" != "--dry-run" ] || die
-}
+[ -z "`clang-format -style=file -output-replacements-xml $@ | grep \"<replacement \"`" ] || die
