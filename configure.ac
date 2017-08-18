@@ -357,10 +357,10 @@ fi
 # Code style
 #
 
-AC_SUBST(PRETTY, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts"])
-AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts --dry-run"])
+AC_SUBST(PRETTY, ["clang-format"])
+AC_SUBST(PRETTY_ARGS, ["-style=file -i"])
+AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/script/clang-format-check.sh"])
+AC_SUBST(PRETTY_CHECK_ARGS, [""])
 
 #
 # Tests

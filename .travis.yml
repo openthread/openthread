@@ -61,7 +61,13 @@ matrix:
       compiler: gcc
     - env: BUILD_TARGET="pretty-check"
       os: linux
-    - env: BUILD_TARGET="scan-build" CC=clang-5.0 CXX=clang++-5.0
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+    - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
       os: linux
       addons:
         apt:
