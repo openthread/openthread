@@ -1001,7 +1001,7 @@ otError NcpBase::HandleCommand(uint8_t aHeader, unsigned int aCommand, const uin
         error = SendLastStatus(aHeader, SPINEL_STATUS_INVALID_INTERFACE)
     );
 #if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
-    if (aCommand >= SPINEL_CMD_VENDOR__BEGIN && aCommand <= SPINEL_CMD_VENDOR__END)
+    if (aCommand >= SPINEL_CMD_VENDOR__BEGIN && aCommand < SPINEL_CMD_VENDOR__END)
     {
         error = VendorCommandHandler(aHeader, aCommand, aArgPtr, aArgLen);
     }
