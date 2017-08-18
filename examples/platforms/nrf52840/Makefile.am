@@ -62,6 +62,7 @@ PLATFORM_SOURCES                                                                
     platform-nrf5.h                                                                                          \
     radio.c                                                                                                  \
     random.c                                                                                                 \
+    temp.c                                                                                                   \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
