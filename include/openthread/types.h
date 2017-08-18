@@ -1028,8 +1028,8 @@ typedef struct otNetifAddress
  */
 typedef struct otNetifMulticastAddress
 {
-    otIp6Address                    mAddress;   ///< The IPv6 multicast address.
-    struct otNetifMulticastAddress *mNext;      ///< A pointer to the next network interface multicast address.
+    otIp6Address                          mAddress;   ///< The IPv6 multicast address.
+    const struct otNetifMulticastAddress *mNext;      ///< A pointer to the next network interface multicast address.
 } otNetifMulticastAddress;
 
 /**
