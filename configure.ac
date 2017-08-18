@@ -1482,6 +1482,5 @@ AC_MSG_NOTICE([
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
-  OpenThread platform information           : ${PLATFORM_INFO}
 
 ])
