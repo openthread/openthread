@@ -839,7 +839,7 @@
 #define OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE                  0
 #endif
 
-/*
+/**
  * @def OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
  *
  * Define as 1 to stay awake between fragments while transmitting a large packet,
@@ -860,8 +860,7 @@
 #define OPENTHREAD_ENABLE_DEBUG_UART                            0
 #endif
 
-
-/*
+/**
  * @def OPENTHREAD_ENABLE_DEBUG_UART_LOG
  *
  * Define as 1 to enable LOGS to appear on the DEBUG Uart.  By
