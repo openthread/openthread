@@ -153,7 +153,7 @@ otError Uart::ProcessCommand(void)
         mRxBuffer[--mRxLength] = '\0';
     }
 
-#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_ENABLE_DEBUG_UART
+#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_ENABLE_DEBUG_UART_LOG
     /*
      * Note this is here for this reason:
      *
