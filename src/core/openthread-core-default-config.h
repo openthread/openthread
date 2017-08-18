@@ -857,7 +857,7 @@
  * Enable the "Debug Uart" platform feature.
  */
 #ifndef OPENTHREAD_ENABLE_DEBUG_UART
-#define OPENTHREAD_ENABLE_DEBUG_UART 0
+#define OPENTHREAD_ENABLE_DEBUG_UART                            0
 #endif
 
 
@@ -877,7 +877,7 @@
  * This makes use of a second UART on the embedded device.
  */
 #ifndef OPENTHREAD_ENABLE_DEBUG_UART_LOG
-#define OPENTHREAD_ENABLE_DEBUG_UART_LOG 0
+#define OPENTHREAD_ENABLE_DEBUG_UART_LOG                        0
 #endif
 
 /*
