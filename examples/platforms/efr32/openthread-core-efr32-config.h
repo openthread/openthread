@@ -36,20 +36,21 @@
 #define OPENTHREAD_CORE_EFR32_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
+ *
+ * The efr32 platform provides an otPlatLog() function.
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                         "EFR32"
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
- *
- * Define to 1 to enable default log output.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT            1
 
 /*
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT

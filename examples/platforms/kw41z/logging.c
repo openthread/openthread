@@ -36,6 +36,7 @@
 #include "fsl_device_registers.h"
 
 #include <openthread/config.h>
+#include <openthread-core-config.h>
 
 #include "openthread/platform/logging.h"
 #if OPENTHREAD_ENABLE_CLI_LOGGING
@@ -49,6 +50,7 @@
 #include <cli/cli-uart.h>
 #endif
 
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT ==  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
 #if OPENTHREAD_ENABLE_CLI_LOGGING
@@ -62,3 +64,4 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     (void)aFormat;
 #endif // OPENTHREAD_ENABLE_CLI_LOGGING
 }
+#endif

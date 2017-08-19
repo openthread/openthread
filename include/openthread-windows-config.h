@@ -37,7 +37,7 @@
 #define OPENTHREAD_ENABLE_MULTIPLE_INSTANCES 1
 
 /* Define to 1 if you want to enable default log output. */
-#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT 1
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS
 
 /* Define to 1 to enable the commissioner role. */
 #define OPENTHREAD_ENABLE_COMMISSIONER 1

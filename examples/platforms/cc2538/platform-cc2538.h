@@ -36,6 +36,7 @@
 #define PLATFORM_CC2538_H_
 
 #include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <stdint.h>
 
 #include <openthread/types.h>

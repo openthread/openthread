@@ -50,7 +50,7 @@
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
 
-#if  OPENTHREAD_ENABLE_DEBUG_UART
+#if  OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #include <openthread/platform/debug_uart.h>
 #endif
 
@@ -153,7 +153,7 @@ otError Uart::ProcessCommand(void)
         mRxBuffer[--mRxLength] = '\0';
     }
 
-#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_ENABLE_DEBUG_UART_LOG
+#if  OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
     /*
      * Note this is here for this reason:
      *
@@ -167,14 +167,18 @@ otError Uart::ProcessCommand(void)
      *
      * During that human induced delay a tasklet may be scheduled and
      * the LOG becomes confusing and it is hard to determine when
-     * something happened.  Was it the command-CR or the tasklet.
+     * something happened.  Which happened first? the command-CR or
+     * the tasklet.
      *
      * Yes, while rare it is a race condition that is hard to debug.
      *
      * Thus this is here to afirmatively LOG exactly when the CLI
      * command is being executed.
      */
-    otPlatDebugUart_printf("execute command: %s\n", mRxBuffer);
+#if (OPENTHRAED_CONFIG_LOG_OUTPUT==OPENTHRAED_CONFIG_LOG_OUTPUT_DEBUG_UART)
+    otPlatDebugUart_kbhit();
+#endif
+    otPlatLog(OT_LOG_LEVEL_INFO, OT_LOG_REGION_CLI, "execute command: %s", mRxBuffer);
 #endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
 
@@ -241,11 +245,11 @@ void Uart::Send(void)
 
     if (mSendLength > 0)
     {
-        otPlatUartSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
-#if OPENTHREAD_ENABLE_DEBUG_UART
-        /* Duplicate the CLI output on the debug uart */
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+        /* duplicate the output to the debug uart */
         otPlatDebugUart_write_bytes(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
 #endif
+        otPlatUartSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
     }
 
 exit:

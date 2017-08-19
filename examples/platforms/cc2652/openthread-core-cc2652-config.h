@@ -60,13 +60,5 @@
  */
 #define SETTINGS_CONFIG_PAGE_NUM                           (2)
 
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
- *
- * Define to 1 to enable default log output.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT        1
-
 #endif /* OPENTHREAD_CORE_CC2650_CONFIG_H_ */
 

@@ -1036,7 +1036,8 @@ Done
 
 ### logfilename FILENAME
 
-**Note: POSIX Platform Only, and OPENTHREAD_ENABLE_DEBUG_UART=1**
+- Note: POSIX Platform Only, ie: `OPENTHREAD_EXAMPLES_POSIX`
+- Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
 
 Specifies filename to capture otPlatLog() messages, useful when
 debugging automated test scripts on Linux when logging disrupts

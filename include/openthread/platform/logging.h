@@ -57,8 +57,8 @@ extern "C" {
 /**
  * Log levels.
  *
- * Implimentation note: These exist as #defines so that embedded code
- * can remove code via #if/#else/#endif constructs act compile time.
+ * Implimentation note: These exist as defines (not enums) so that
+ * embedded code can remove code at compile time via if/else/endif
  */
 
 #define OT_LOG_LEVEL_NONE  0  ///< None
@@ -86,7 +86,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
  * @param[in]  aLogLevel   The log level.
  * @param[in]  aLogRegion  The log region.
  * @param[in]  aFormat     A pointer to the format string.
- * @param[in]  va_list     matching information for aFormat
+ * @param[in]  ap          va_list matching information for aFormat
  *
  */
 void otPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap);

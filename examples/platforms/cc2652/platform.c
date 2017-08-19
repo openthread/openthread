@@ -63,7 +63,7 @@ void PlatformInit(int argc, char *argv[])
          */
     }
 
-#if OPENTHREAD_ENABLE_DEBUG_UART
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
     cc2652DebugUartInit();
 #endif
     cc2652AlarmInit();

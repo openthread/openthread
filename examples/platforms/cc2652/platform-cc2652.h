@@ -29,6 +29,8 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <stdint.h>
 #include "openthread/types.h"
 

@@ -241,7 +241,7 @@ void UART0_intHandler(void)
     }
 }
 
-#if OPENTHREAD_ENABLE_DEBUG_UART
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 
 /*
  *  Documented in platform-cc2652.h
@@ -331,4 +331,4 @@ void otPlatDebugUart_putchar_raw(int b)
     UARTCharPut(UART1_BASE, b);
 }
 
-#endif /* OPENTHREAD_ENABLE_DEBUG_UART */
+#endif /* OPENTHREAD_CONFIG_ENABLE_DEBUG_UART */

@@ -44,12 +44,14 @@
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX"
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
- * Define to 1 to enable default log output.
+ * Specify where the log output should go.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             1
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

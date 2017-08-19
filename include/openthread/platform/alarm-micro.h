@@ -71,7 +71,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance);
 /**
  * Get the current time.
  *
- * @param[out]  aNow  The current time in microseconds.
+ * @returns  The current time in microseconds.
  *
  */
 uint32_t otPlatAlarmMicroGetNow(void);

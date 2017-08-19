@@ -77,7 +77,7 @@
 #include "cli_coap.hpp"
 #endif
 
-#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
 #include <openthread/platform/debug_uart.h>
 #endif
 
@@ -129,7 +129,7 @@ const struct Command Interpreter::sCommands[] =
 #ifdef OPENTHREAD_EXAMPLES_POSIX
     { "exit", &Interpreter::ProcessExit },
 #endif
-#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
     { "logfilename", &Interpreter::ProcessLogFilename },
 #endif
     { "extaddr", &Interpreter::ProcessExtAddress },
@@ -914,7 +914,7 @@ void Interpreter::ProcessExit(int argc, char *argv[])
 }
 #endif
 
-#if  OPENTHREAD_ENABLE_DEBUG_UART && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
 
 void Interpreter::ProcessLogFilename(int argc, char *argv[])
 {

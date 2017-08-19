@@ -31,8 +31,30 @@
  *   This file includes the platform-specific initializers.
  *
  */
-
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <openthread/platform/logging.h>
+/*
+ * Part 1: The openthread "config header files" above.
+ *
+ * The GNU Autoconf system defines a macro: "PACKAGE"
+ * Which is the name of the *software* package.
+ *
+ * Part 2: The Nordic chip/bsp specific header files (below).
+ *
+ * The Nordic BSP uses the PACKAGE as structure member variable that
+ * specifies the 'chip-package', see, this file:
+ * third_party/NordicSemiconductor/device/nrf52840.h
+ *
+ * However ...
+ *
+ * Part 3: (Below) we required the #define OPENTHREAD_CONFIG_LOG_OUTPUT
+ * which is provided by the openthread "config header files"
+ *
+ * Thus, to solve this problem we "undef PACKAGE" here.
+ * also see "logging.c" in this directory
+ */
+#undef PACKAGE
 
 #include <device/nrf.h>
 #include <drivers/clock/nrf_drv_clock.h>
@@ -54,7 +76,7 @@ void PlatformInit(int argc, char *argv[])
 
     nrf_drv_clock_init();
 
-#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
     nrf5LogInit();
 #endif
     nrf5AlarmInit();
@@ -73,7 +95,7 @@ void PlatformDeinit(void)
     nrf5UartDeinit();
     nrf5RandomDeinit();
     nrf5AlarmDeinit();
-#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
     nrf5LogDeinit();
 #endif
 }

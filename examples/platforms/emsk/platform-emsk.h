@@ -35,6 +35,8 @@
 #ifndef PLATFORM_EMSK_H_
 #define PLATFORM_EMSK_H_
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "openthread/types.h"

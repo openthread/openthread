@@ -31,12 +31,16 @@
 * Platform abstraction for the logging
 *
 */
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <openthread/platform/logging.h>
 
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT ==  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     (void)aLogLevel;
     (void)aLogRegion;
     (void)aFormat;
 }
+#endif
 

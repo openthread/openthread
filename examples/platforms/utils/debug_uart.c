@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 #include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -130,9 +131,8 @@ otError otPlatDebugUart_logfile(const char *filename)
     return OT_ERROR_FAILED;
 }
 
-
-#if OPENTHREAD_ENABLE_DEBUG_UART_LOG
-/* this should not be a OT_WEAK function */
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
+/* this should not be a WEAK function */
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     va_list ap;

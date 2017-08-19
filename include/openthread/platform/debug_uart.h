@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined( PLATFORM_DEBUG_UART_H )
-#define PLATFORM_DEBUG_UART_H
+#if !defined( OPENTHREAD_PLATFORM_DEBUG_UART_H )
+#define OPENTHREAD_PLATFORM_DEBUG_UART_H
 
 #include <openthread/platform/logging.h>
 
@@ -60,9 +60,15 @@ extern "C" {
 #endif
 
     /**
+     * @addtogroup internal-debug-api
+     *
+     * @{
+     */
+
+    /**
      * Standard printf() to the debug uart with no log decoration.
      *
-     * @param fmt[in] printf formatter text
+     * @param[in]   fmt   printf formatter text
      *
      * This is a debug convience function that is not intended to be
      * used in anything other then "debug scenarios" by a developer.
@@ -78,8 +84,8 @@ extern "C" {
     /**
      * Stanard vprintf() to the debug uart, with no log decoration.
      *
-     * @param fmt[in] printf formatter text
-     * @param ap[in]  va_list value for print parameters.
+     * @param[in]   fmt   printf formatter text
+     * @param[in]   ap    va_list value for print parameters.
      *
      * Implimentation limitation: this formats the text into
      * a purposely small text buffer on the stack, thus long
@@ -99,7 +105,7 @@ extern "C" {
      *
      * This function MUST be implimented by the platform
      *
-     * @param the_byte[in] what to transmit
+     * @param[in] the_byte   what to transmit
      */
     void otPlatDebugUart_putchar_raw(int the_byte);
 
@@ -131,7 +137,7 @@ extern "C" {
      * A WEAK default implimentation is provided
      * that can be overridden as needed.
      *
-     * @param the_byte[in] the byte to transmit
+     * @param[in] the_byte   the byte to transmit
      */
     void otPlatDebugUart_putchar(int the_byte);
 
@@ -142,15 +148,15 @@ extern "C" {
      * A WEAK default implimentation is provided
      * that can be overridden as needed.
      *
-     * @param s[in] the string to print with a lf at the end
+     * @param[in]   s   the string to print with a lf at the end
      */
     void otPlatDebugUart_puts(const char *s);
 
     /**
      * Write N bytes to the UART, mapping cr/lf
      *
-     * @param pBytes[in] pointer to bytes to transmit.
-     * @param nBytes[in] how many bytes to transmit.
+     * @param[in]  pBytes   pointer to bytes to transmit.
+     * @param[in]  nBytes   how many bytes to transmit.
      */
     void otPlatDebugUart_write_bytes(const uint8_t *pBytes, int nBytes);
 
@@ -158,22 +164,12 @@ extern "C" {
      * puts() without a terminal newline.
      * see: "man 3 puts", without a adding a terminal lf
      *
-     * @param s[in] the string to print without a lf at the end
+     * @param[in]  s       the string to print without a lf at the end
      *
      * Note, the terminal "lf" mapped to cr/lf via
      * the function otPlatDebugUart_putchar()
      */
     void otPlatDebugUart_puts_no_nl(const char *s);
-
-    /**
-     * Logging function when the DEBUG_UART logs are enabled.
-     *
-     * This function can be used via a compiler command line define
-     * in this form:
-     *
-     *-DOPENTHREAD_CONFIG_PLAT_LOG_FUNCTION=otPlatDebugUart_Log
-     */
-    void otPlatDebugUart_Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
 
     /**
      * Some platforms (posix) can log to a file.
@@ -186,9 +182,14 @@ extern "C" {
      */
     otError otPlatDebugUart_logfile(const char *filename);
 
+    /**
+     * @}
+     *
+     */
+
 #if __cplusplus
-}
+} // extern "C"
 #endif
 
-#endif
+#endif // OPENTHREAD_PLATFORM_DEBUG_UART_H
 

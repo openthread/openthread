@@ -1098,9 +1098,11 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
 /**
  * Log levels.
  *
- * Implimentation note: Log Levels are done as defines so that they
- * may be used on the embedded system side as compile time defines
- * and thus tested with #if/#else/#endif constructs.
+ * Implimentation note: Log Levels are defines so that embedded
+ * implimentations can elimiate code at compile time via if/else/endif
+ * See openthread/platform/logging.h for details.
+ *
+ * @sa OT_LOG_LEVEL_NONE and related macros.
  */
 typedef uint8_t otLogLevel;
 
@@ -1123,6 +1125,7 @@ typedef enum otLogRegion
     OT_LOG_REGION_NET_DIAG = 11, ///< Network Diagnostic
     OT_LOG_REGION_PLATFORM = 12, ///< Platform
     OT_LOG_REGION_COAP     = 13, ///< CoAP
+    OT_LOG_REGION_CLI      = 14, ///< Cli
 } otLogRegion;
 
 

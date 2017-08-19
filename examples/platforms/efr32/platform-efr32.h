@@ -35,6 +35,8 @@
 #ifndef PLATFORM_EFR32_H_
 #define PLATFORM_EFR32_H_
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include "em_device.h"
 #include "em_system.h"
 #include "core_cm4.h"

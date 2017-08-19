@@ -43,14 +43,6 @@
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                        "CC2538"
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
- *
- * Define to 1 to enable default log output.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT            1
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
  *
  * Define to 1 if you want to enable software ACK timeout logic.
