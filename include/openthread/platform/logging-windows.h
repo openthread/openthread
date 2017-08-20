@@ -64,6 +64,7 @@
         WPP_DEFINE_BIT(OT_NDIAG)            /* 0x00020000 */    \
         WPP_DEFINE_BIT(OT_COAP)             /* 0x00040000 */    \
         WPP_DEFINE_BIT(API_DEFAULT)         /* 0x00080000 */    \
+        WPP_DEFINE_BIT(OT_CLI)              /* 0x00100000 */    \
         )
 
 #define WPP_LEVEL_FLAGS_LOGGER(lvl,flag)                        WPP_FLAG_LOGGER(flag)
@@ -467,6 +468,34 @@
 // begin_wpp config
 // USEPREFIX (otLogDebgCoap, "[%p]COAP%!SPACE!", &CTX);
 // otLogDebgCoap{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(CTX, MSG, ...);
+// end_wpp
+
+// ==CLI==
+
+// begin_wpp config
+// USEPREFIX (otLogCritCli, "[%p]COAP%!SPACE!", &CTX);
+// otLogCritCli{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_COAP}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogWarnCli, "[%p]COAP%!SPACE!", &CTX);
+// otLogWarnCli{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_COAP}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogInfoCli, "[%p]COAP%!SPACE!", &CTX);
+// otLogInfoCli{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogInfoCliErr, "[%p]COAP%!SPACE!", &CTX);
+// otLogInfoCliErr{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, EXP, MSG, ...);
+// USESUFFIX(otLogInfoCliErr, ", %!otError!", EXP);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogDebgCli, "[%p]COAP%!SPACE!", &CTX);
+// otLogDebgCli{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(CTX, MSG, ...);
 // end_wpp
 
 // ==FUNC==
