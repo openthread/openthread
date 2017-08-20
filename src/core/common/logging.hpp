@@ -196,7 +196,7 @@ extern "C" {
 #define otLogInfoApi(aInstance, aFormat, ...)
 #define otLogDebgApi(aInstance, aFormat, ...)
 #endif
-    
+
 /**
  * @def otLogCritMeshCoP
  *
@@ -909,7 +909,7 @@ extern "C" {
 #define otLogInfoPlat(aInstance, aFormat, ...)
 #define otLogDebgPlat(aInstance, aFormat, ...)
 #endif
-    
+
 #endif // WINDOWS_LOGGING
 
 /**
