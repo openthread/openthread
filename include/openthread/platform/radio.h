@@ -38,6 +38,7 @@
 
 #include <stdint.h>
 
+#include <openthread/config.h>
 #include <openthread/types.h>
 
 #ifdef __cplusplus
