@@ -49,6 +49,7 @@
 #include "common/encoding.hpp"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
+#include "common/logging.hpp"
 
 #if  OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #include <openthread/platform/debug_uart.h>
@@ -175,7 +176,11 @@ otError Uart::ProcessCommand(void)
      * Thus this is here to afirmatively LOG exactly when the CLI
      * command is being executed.
      */
-    otLogInfoCli( mInstance,  "execute command: %s", mRxBuffer);
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    /* TODO: how exactly do we get the instance here? */
+#else
+    otLogInfoCli( otGetInstance(),  "execute command: %s", mRxBuffer);
+#endif
 #endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
 
