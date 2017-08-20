@@ -48,11 +48,14 @@
  *
  * However ...
  *
- * Part 3: (Below) we required the #define OPENTHREAD_CONFIG_LOG_OUTPUT
- * which is provided by the openthread "config header files"
+ * Certian header files change the size of data structures depending
+ * upon what is enabled, or not enabled - thus - if the include files
+ * are in the wrong order, either the DEFAULT value is used, or an
+ * override value is used.
+ *
+ * The net result is certian structure sizes are inconsistant.
  *
  * Thus, to solve this problem we "undef PACKAGE" here.
- * also see: "platform.c" in this directory
  */
 #undef PACKAGE
 

@@ -31,9 +31,9 @@
  *   This file includes the platform-specific initializers.
  *
  */
+
 #include <openthread/config.h>
 #include <openthread-core-config.h>
-#include <openthread/platform/logging.h>
 /*
  * Part 1: The openthread "config header files" above.
  *
@@ -48,13 +48,19 @@
  *
  * However ...
  *
- * Part 3: (Below) we required the #define OPENTHREAD_CONFIG_LOG_OUTPUT
- * which is provided by the openthread "config header files"
+ * Certian header files change the size of data structures depending
+ * upon what is enabled, or not enabled - thus - if the include files
+ * are in the wrong order, either the DEFAULT value is used, or an
+ * override value is used.
+ *
+ * The net result is certian structure sizes are inconsistant.
  *
  * Thus, to solve this problem we "undef PACKAGE" here.
- * also see "logging.c" in this directory
+ * also see: "platform.c" in this directory
  */
 #undef PACKAGE
+
+#include <openthread/platform/logging.h>
 
 #include <device/nrf.h>
 #include <drivers/clock/nrf_drv_clock.h>
