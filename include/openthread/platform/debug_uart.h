@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined( OPENTHREAD_PLATFORM_DEBUG_UART_H )
+#ifndef OPENTHREAD_PLATFORM_DEBUG_UART_H
 #define OPENTHREAD_PLATFORM_DEBUG_UART_H
 
 #include <openthread/platform/logging.h>
