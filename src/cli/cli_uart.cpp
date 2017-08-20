@@ -175,7 +175,7 @@ otError Uart::ProcessCommand(void)
      * Thus this is here to afirmatively LOG exactly when the CLI
      * command is being executed.
      */
-    otPlatLog(OT_LOG_LEVEL_INFO, OT_LOG_REGION_CLI, "execute command: %s", mRxBuffer);
+    otLogInfoCli( mInstance,  "execute command: %s", mRxBuffer);
 #endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
 

@@ -566,6 +566,16 @@
 #endif  // OPENTHREAD_CONFIG_LOG_PLATFORM
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_CLI
+ *
+ * Define to enable CLI logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_CLI
+#define OPENTHREAD_CONFIG_LOG_CLI                               1
+#endif  // OPENTHREAD_CONFIG_LOG_CLI
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_COAP
  *
  * Define to enable COAP logging.
