@@ -660,6 +660,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             mServer->OutputFormat("    TxOther: %d\r\n", counters->mTxOther);
             mServer->OutputFormat("    TxRetry: %d\r\n", counters->mTxRetry);
             mServer->OutputFormat("    TxErrCca: %d\r\n", counters->mTxErrCca);
+            mServer->OutputFormat("    TxErrBusyChannel: %d\r\n", counters->mTxErrBusyChannel);
             mServer->OutputFormat("RxTotal: %d\r\n", counters->mRxTotal);
             mServer->OutputFormat("    RxUnicast: %d\r\n", counters->mRxUnicast);
             mServer->OutputFormat("    RxBroadcast: %d\r\n", counters->mRxBroadcast);
