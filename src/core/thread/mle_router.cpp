@@ -1610,7 +1610,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     }
     while (update);
 
-#if 1
+#if (OPENTHREAD_CONFIG_LOG_MLE && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG))
 
     for (uint8_t i = 0; i <= kMaxRouterId; i++)
     {
