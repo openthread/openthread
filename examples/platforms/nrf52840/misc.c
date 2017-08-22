@@ -29,30 +29,6 @@
 #include <openthread/config.h>
 #include <openthread-core-config.h>
 #include <openthread/platform/misc.h>
-/*
- * Part 1: The openthread "config header files" above.
- *
- * The GNU Autoconf system defines a macro: "PACKAGE"
- * Which is the name of the *software* package.
- *
- * Part 2: The Nordic chip/bsp specific header files (below).
- *
- * The Nordic BSP uses the PACKAGE as structure member variable that
- * specifies the 'chip-package', see, this file:
- * third_party/NordicSemiconductor/device/nrf52840.h
- *
- * However ...
- *
- * Certian header files change the size of data structures depending
- * upon what is enabled, or not enabled - thus - if the include files
- * are in the wrong order, either the DEFAULT value is used, or an
- * override value is used.
- *
- * The net result is certian structure sizes are inconsistant.
- *
- * Thus, to solve this problem we "undef PACKAGE" here.
- */
-#undef PACKAGE
 
 #include <device/nrf.h>
 
