@@ -97,9 +97,13 @@ otError DataPollManager::SendDataPoll(void)
     MeshForwarder &meshForwarder = GetMeshForwarder();
     otError error;
     Message *message;
+    Neighbor *parent;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!meshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+
+    parent = meshForwarder.GetNetif().GetMle().GetParent();
+    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 

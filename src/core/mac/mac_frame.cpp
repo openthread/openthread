@@ -418,6 +418,28 @@ otError Frame::SetDstAddr(const ExtAddress &aExtAddress)
     return OT_ERROR_NONE;
 }
 
+otError Frame::SetDstAddr(const Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    switch (aAddress.mLength)
+    {
+    case sizeof(ShortAddress):
+        error = SetDstAddr(aAddress.mShortAddress);
+        break;
+
+    case sizeof(ExtAddress):
+        error = SetDstAddr(aAddress.mExtAddress);
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
+
+    return error;
+}
+
 uint8_t Frame::FindSrcPanIdIndex(void) const
 {
     uint8_t index = 0;
@@ -565,6 +587,28 @@ otError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
     }
 
     return OT_ERROR_NONE;
+}
+
+otError Frame::SetSrcAddr(const Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    switch (aAddress.mLength)
+    {
+    case sizeof(ShortAddress):
+        error = SetSrcAddr(aAddress.mShortAddress);
+        break;
+
+    case sizeof(ExtAddress):
+        error = SetSrcAddr(aAddress.mExtAddress);
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
+
+    return error;
 }
 
 uint8_t Frame::FindSecurityHeaderIndex(void) const
