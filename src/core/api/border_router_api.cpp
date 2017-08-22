@@ -47,7 +47,7 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 
     VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    aInstance->mThreadNetif.GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
+    error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
 
 exit:
     return error;
