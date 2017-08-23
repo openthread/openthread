@@ -1061,9 +1061,9 @@ otError Mle::AppendLeaderData(Message &aMessage)
 
 void Mle::FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly)
 {
-    uint8_t length = 255; // sizeof( NetworkDataTlv::mNetworkData )
+    uint8_t length = sizeof( NetworkDataTlv ) - sizeof( Tlv ); // sizeof( NetworkDataTlv::mNetworkData )
 
-    // Ignore result code, 255 bytes must be enough
+    // Ignore result code, provided buffer must be enough
     GetNetif().GetNetworkDataLeader().GetNetworkData(aStableOnly, aTlv.GetNetworkData(), length);
     aTlv.SetLength(length);
 }
