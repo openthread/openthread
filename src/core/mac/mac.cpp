@@ -1155,15 +1155,12 @@ otError Mac::RadioSleep(void)
 
 #endif
 
-    SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
+    error = otPlatRadioSleep(&GetInstance());
+    VerifyOrExit(error != OT_ERROR_NONE);
+
+    otLogWarnMac(GetInstance(), "otPlatRadioSleep() failed with error %s", otThreadErrorToString(error));
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMac(GetInstance(), "otPlatRadioSleep() failed with error %s", otThreadErrorToString(error));
-    }
-
     return error;
 }
 
