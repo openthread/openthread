@@ -392,6 +392,12 @@ class FragmentHeader
 {
 public:
     /**
+     * This constructor initializes the Fragment Header.
+     *
+     */
+    FragmentHeader(void) { mDispatchSize = HostSwap16(kDispatch); mTag = 0; mOffset = 0; }
+
+    /**
      * This method initializes the Fragment Header.
      *
      */
