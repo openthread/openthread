@@ -327,7 +327,9 @@ otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
                     if (rvalRoute == NULL ||
                         entry->GetPreference() > rvalRoute->GetPreference() ||
                         (entry->GetPreference() == rvalRoute->GetPreference() &&
-                         netif.GetMle().GetCost(entry->GetRloc()) < netif.GetMle().GetCost(rvalRoute->GetRloc())))
+                         (entry->GetRloc() == netif.GetMle().GetRloc16() ||
+                          (rvalRoute->GetRloc() != netif.GetMle().GetRloc16() &&
+                           netif.GetMle().GetCost(entry->GetRloc()) < netif.GetMle().GetCost(rvalRoute->GetRloc())))))
                     {
                         rvalRoute = entry;
                         rval_plen = static_cast<uint8_t>(plen);
