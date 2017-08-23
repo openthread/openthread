@@ -189,7 +189,10 @@ class Message(object):
                 contains_tlv = True
                 break
 
-        print("MleMessage doesn't contain optional TLV: {}".format(tlv_class_type))
+        if contains_tlv == True:
+            print("MleMessage contains optional TLV: {}".format(tlv_class_type))
+        else:
+            print("MleMessage doesn't contain optional TLV: {}".format(tlv_class_type))
 
     def get_coap_message_tlv(self, tlv_class_type):
         if self.type != MessageType.COAP:
