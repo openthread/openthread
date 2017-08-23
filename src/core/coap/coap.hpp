@@ -443,10 +443,11 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif    A reference to the Netif object.
+     * @param[in]  aNetif                   A reference to the Netif object.
+     * @param[in]  aRetransmissionHandler   An optional pointer to the retransmission handler, used by CoapSecure.
      *
      */
-    Coap(ThreadNetif &aNetif);
+    Coap(ThreadNetif &aNetif, Timer::Handler aRetransmissionHandler = &Coap::HandleRetransmissionTimer);
 
     /**
      * This method starts the CoAP service.
@@ -647,6 +648,12 @@ public:
 
 protected:
     /**
+     * Retransmission timer handler.
+     *
+     */
+    void HandleRetransmissionTimer(void);
+
+    /**
      * This method send a message.
      *
      * @param[in]  aMessage      A reference to the message to send.
@@ -688,8 +695,8 @@ private:
     otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
                              const Ip6::MessageInfo &aMessageInfo);
+
     static void HandleRetransmissionTimer(Timer &aTimer);
-    void HandleRetransmissionTimer(void);
 
     static Coap &GetOwner(const Context &aContext);
 
