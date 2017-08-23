@@ -51,7 +51,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt                                               \
     $(NULL)
 
-PLATFORM_SOURCES                                                                                           = \
+PLATFORM_COMMON_SOURCES                                                                                    = \
     alarm.c                                                                                                  \
     flash.c                                                                                                  \
     logging.c                                                                                                \
@@ -96,9 +96,17 @@ SOFTDEVICE_CPPFLAGS                                                             
     -DRAAL_SOFTDEVICE=1                                                                                      \
     $(NULL)
 
+PLATFORM_DIAG_SOURCES                                                                                      = \
+    diag.c                                                                                                   \
+    $(NULL)
+
+PLATFORM_SOURCES                                                                                           = \
+    $(PLATFORM_COMMON_SOURCES)                                                                               \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_DIAG
 PLATFORM_SOURCES                                                                                          += \
-    diag.c                                                                                                   \
+    $(PLATFORM_DIAG_SOURCES)                                                                                 \
     $(NULL)
 endif
 
@@ -218,7 +226,8 @@ noinst_HEADERS                                                                  
     $(NULL)
 
 PRETTY_FILES                                                                                               = \
-    $(PLATFORM_SOURCES)                                                                                      \
+    $(PLATFORM_COMMON_SOURCES)                                                                               \
+    $(PLATFORM_DIAG_SOURCES)                                                                                 \
     $(NULL)
 
 Dash                                                                                                       = -

@@ -252,8 +252,8 @@ static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOu
     // Convert the temperature measurement to a decimal value, in degrees Celsius
     snprintf(aOutput, aOutputMaxLen, "%" PRId32 ".%02" PRId32 "\r\n", temperature / 4, 25 * (temperature % 4));
 
-    exit:
-        appendErrorResult(error, aOutput, aOutputMaxLen);
+exit:
+    appendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
 static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
