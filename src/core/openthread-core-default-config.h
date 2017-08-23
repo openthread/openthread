@@ -899,15 +899,15 @@
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT Select the DEFAULT log output method.
  */
 #if !defined(OPENTHREAD_CONFIG_LOG_OUTPUT)
-#define OPENTHREAD_CONFIG_LOG_OUTPUT    OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
+#define OPENTHREAD_CONFIG_LOG_OUTPUT    OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 #endif
 
 /** Log output goes to the bit bucket (disabled) */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_NONE                       0
 /** Log output goes to the debug uart */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART                 1
-/** Log output goes to the "application stream" (cli console, ncp spinel) */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_APP_STREAM                 2
+/** Log output goes to the "application" provides otPlatLog() */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_APP                        2
 /** Log output goes to POSIX and WIN32 logging schemes */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS                    3
 /** Log output is handled by a platform defined function */
