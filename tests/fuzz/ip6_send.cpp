@@ -38,31 +38,26 @@
 
 #include "common/code_utils.hpp"
 
-static otInstance *sInstance;
+extern "C" void FuzzerPlatformInit(void);
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
+
+    otInstance *sInstance;
+    otMessage *message = NULL;
+    otError error = OT_ERROR_NONE;
+    bool isSecure;
+
+    VerifyOrExit(size > 0);
+
+    FuzzerPlatformInit();
 
     sInstance = otInstanceInitSingle();
     otLinkSetPanId(sInstance, panId);
     otIp6SetEnabled(sInstance, true);
     otThreadSetEnabled(sInstance, true);
     otThreadBecomeLeader(sInstance);
-
-    (void)argc;
-    (void)argv;
-
-    return 0;
-}
-
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
-{
-    otMessage *message = NULL;
-    otError error = OT_ERROR_NONE;
-    bool isSecure;
-
-    VerifyOrExit(size > 0);
 
     isSecure = (data[0] & 0x1) != 0;
 

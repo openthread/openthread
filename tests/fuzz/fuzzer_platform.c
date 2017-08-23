@@ -37,6 +37,11 @@
 
 static uint32_t sRandomState = 1;
 
+void FuzzerPlatformInit(void)
+{
+    sRandomState = 1;
+}
+
 uint32_t otPlatAlarmMilliGetNow(void)
 {
     return 0;

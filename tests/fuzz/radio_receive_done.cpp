@@ -39,30 +39,25 @@
 
 #include "common/code_utils.hpp"
 
-static otInstance *sInstance;
+extern "C" void FuzzerPlatformInit(void);
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
+
+    otInstance *sInstance;
+    otRadioFrame frame;
+    uint8_t *buf;
+
+    VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
+
+    FuzzerPlatformInit();
 
     sInstance = otInstanceInitSingle();
     otLinkSetPanId(sInstance, panId);
     otIp6SetEnabled(sInstance, true);
     otThreadSetEnabled(sInstance, true);
     otThreadBecomeLeader(sInstance);
-
-    (void)argc;
-    (void)argv;
-
-    return 0;
-}
-
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
-{
-    otRadioFrame frame;
-    uint8_t *buf;
-
-    VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
 
     buf = static_cast<uint8_t *>(malloc(size));
 
