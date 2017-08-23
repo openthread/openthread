@@ -2839,11 +2839,13 @@ otError MleRouter::SendChildUpdateRequest(Child *aChild)
     SuccessOrExit(error = AppendNetworkData(*message, !aChild->IsFullNetworkData()));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
-    SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
 
-    aChild->GenerateChallenge();
-
-    SuccessOrExit(error = AppendChallenge(*message, aChild->GetChallenge(), aChild->GetChallengeSize()));
+    if (aChild->GetState() != Neighbor::kStateValid)
+    {
+        SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
+        aChild->GenerateChallenge();
+        SuccessOrExit(error = AppendChallenge(*message, aChild->GetChallenge(), aChild->GetChallengeSize()));
+    }
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
