@@ -50,14 +50,6 @@
 #define SETTINGS_CONFIG_BASE_ADDRESS 		                (0x7B000)
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
- *
- * Define to 1 to enable default log output.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             1
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
  *
  * Define to 1 if you want to enable software ACK timeout logic.
@@ -80,5 +72,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN           1
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
+ *
+ * The DA15000 platform provides an otPlatLog() function.
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHERAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif
 
 #endif  // OPENTHREAD_CORE_DA15000_CONFIG_H_

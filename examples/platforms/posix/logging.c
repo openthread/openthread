@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include "platform-posix.h"
 
 #include <ctype.h>
@@ -51,6 +53,8 @@
     offset += (unsigned int)charsWritten;                                                   \
     otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
+
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS) || (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     char logString[512];
@@ -79,3 +83,4 @@ exit:
     (void)aLogRegion;
 }
 
+#endif

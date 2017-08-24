@@ -35,6 +35,23 @@
 #ifndef OPENTHREAD_CORE_NRF52840_CONFIG_H_
 #define OPENTHREAD_CORE_NRF52840_CONFIG_H_
 
+/*
+ * The GNU Autoconf system defines a PACKAGE macro which is the name
+ * of the software package. This name collides with PACKAGE field in
+ * the nRF52 Factory Information Configuration Registers (FICR)
+ * structure.
+ */
+#undef PACKAGE
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
+ *
+ * The nrf52840 platform provides an otPlatLog() function.
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHERAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif
+
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *

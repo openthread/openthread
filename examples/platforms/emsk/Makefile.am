@@ -68,6 +68,7 @@ COMMONCPPFLAGS                                                                  
 PLATFORM_SOURCES                                                                                  = \
     alarm.c                                                                                         \
     flash.c                                                                                         \
+    logging.c                                                                                       \
     misc.c                                                                                          \
     platform.c                                                                                      \
     radio.c                                                                                         \

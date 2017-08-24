@@ -38,6 +38,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <openthread/platform/debug_uart.h>
 #include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"
@@ -285,3 +286,49 @@ void platformUartProcess(void)
         }
     }
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART && (OPENTHREAD_CONFIG_LOG_OUTPUT==OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
+
+static FILE *posix_logfile;
+
+otError otPlatDebugUart_logfile(const char *filename)
+{
+    posix_logfile = fopen(filename, "wt");
+
+    return posix_logfile ? OT_ERROR_NONE : OT_ERROR_FAILED;
+}
+
+void otPlatDebugUart_putchar_raw(int c)
+{
+    FILE *fp;
+
+    /* note: log file will have a mix of cr/lf and
+     * in some/many cases duplicate cr because in
+     * some cases the log function {ie: Mbed} already
+     * includes the CR or LF... but other log functions
+     * do not include cr/lf and expect it appened
+     */
+    fp = posix_logfile;
+
+    if (fp != NULL)
+    {
+        /* log is lost ... until a file is setup */
+        fputc(c, fp);
+        /* we could "fflush" but will not */
+    }
+}
+
+int otPlatDebugUart_kbhit(void)
+{
+    /* not supported */
+    return 0;
+}
+
+int otPlatDebugUart_getc(void)
+{
+    /* not supported */
+    return -1;
+}
+
+#endif
+

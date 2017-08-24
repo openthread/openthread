@@ -91,6 +91,27 @@ extern "C" {
  *
  */
 
+/**
+ * @def OT_TOOL_WEAK
+ *
+ * Compiler-specific weak symbol modifier.
+ *
+ */
+
+/**
+ * @def OT_CALL
+ *
+ * Compiler-specific function modifier, ie: Win DLL support
+ *
+ */
+
+/**
+ * @def OT_CDECL
+ *
+ * Compiler-specific function modifier, ie: Win DLL support
+ *
+ */
+
 // =========== TOOLCHAIN SELECTION : START ===========
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM) || defined(__TI_ARM__)

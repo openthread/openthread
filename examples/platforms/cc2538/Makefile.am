@@ -44,6 +44,7 @@ libopenthread_cc2538_a_SOURCES            = \
     radio.c                                 \
     random.c                                \
     startup-gcc.c                           \
+    logging.c                               \
     uart.c                                  \
     $(NULL)
 

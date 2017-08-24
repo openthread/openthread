@@ -413,6 +413,16 @@ const char *otThreadErrorToString(otError aError)
     return retval;
 }
 
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
+/* this provides a stub, incase something uses the function */
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+    OT_UNUSED_VARIABLE(aFormat);
+}
+#endif
+
 #ifdef __cplusplus
 };
 #endif

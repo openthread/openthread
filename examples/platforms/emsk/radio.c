@@ -31,6 +31,8 @@
  *   This file implements the OpenThread platform abstraction for radio communication.
  *
  */
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 
 #include "openthread/types.h"
 
@@ -246,7 +248,8 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *address)
 {
     (void)aInstance;
-    mrf24j40_set_eui(address->m8);
+    /* cast to remove const, FIXME: perhaps the bsp library should be updated? */
+    mrf24j40_set_eui((uint8_t *)(address->m8));
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)

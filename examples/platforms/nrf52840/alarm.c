@@ -32,6 +32,9 @@
  *
  */
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>

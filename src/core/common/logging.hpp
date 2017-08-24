@@ -739,6 +739,63 @@ extern "C" {
 #define otLogCertMeshCoP(aInstance, aFormat, ...)
 #endif
 
+/**
+ * @def otLogCritCli
+ *
+ * This method generates a log with level critical for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnCli
+ *
+ * This method generates a log with level warning for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoCli
+ *
+ * This method generates a log with level info for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgCli
+ *
+ * This method generates a log with level debug for the CoAP region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_CLI == 1
+#define otLogCritCli(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#define otLogWarnCli(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#define otLogInfoCli(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#define otLogInfoCliErr(aInstance, aError, aFormat, ...)                \
+    otLogInfo(&aInstance, OT_LOG_REGION_COAP, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogDebgCli(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_COAP, aFormat, ## __VA_ARGS__)
+#else
+#define otLogCritCli(aInstance, aFormat, ...)
+#define otLogWarnCli(aInstance, aFormat, ...)
+#define otLogInfoCli(aInstance, aFormat, ...)
+#define otLogInfoCliErr(aInstance, aError, aFormat, ...)
+#define otLogDebgCli(aInstance, aFormat, ...)
+#endif
 
 /**
  * @def otLogCritCoap

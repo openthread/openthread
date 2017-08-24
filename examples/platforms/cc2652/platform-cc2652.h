@@ -29,6 +29,8 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <stdint.h>
 #include "openthread/types.h"
 
@@ -38,6 +40,11 @@ extern "C" {
 
 // Global OpenThread instance structure
 extern otInstance *sInstance;
+
+/**
+ * Initialize the debug uart
+ */
+void cc2652DebugUartInit(void);
 
 /**
  * This method initializes the alarm service used by OpenThread.

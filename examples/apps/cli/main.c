@@ -27,13 +27,14 @@
  */
 
 #include <openthread/config.h>
-
+#include <openthread-core-config.h>
 #include <assert.h>
 
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/platform.h>
+#include <openthread/platform/logging.h>
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)
@@ -97,3 +98,20 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+/*
+ * Provide, if required an "otPlatLog()" function
+ */
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+    OT_UNUSED_VARIABLE(aFormat);
+
+    va_list ap;
+    va_start(ap, aFormat);
+    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
+    va_end(ap);
+}
+#endif

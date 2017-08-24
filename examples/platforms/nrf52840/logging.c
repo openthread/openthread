@@ -32,6 +32,9 @@
  *
  */
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -45,7 +48,7 @@
 #include <openthread/config.h>
 #include <openthread/types.h>
 
-#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 #include <segger_rtt/SEGGER_RTT.h>
 
 #if (LOG_RTT_COLOR_ENABLE == 1)
@@ -174,4 +177,4 @@ exit:
     return;
 }
 
-#endif // (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
+#endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

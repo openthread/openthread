@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include "platform_qorvo.h"
 
 #include <ctype.h>
@@ -50,6 +52,8 @@
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                              \
     offset += (unsigned int)charsWritten;                                                   \
     otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
+
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT ==  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 
 int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
 {
@@ -105,3 +109,4 @@ exit:
     (void)aLogRegion;
 }
 
+#endif

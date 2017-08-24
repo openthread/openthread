@@ -29,6 +29,8 @@
 #ifndef PLATFORM_DA15000_H_
 #define PLATFORM_DA15000_H_
 
+#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <openthread/types.h>
 
 /**
