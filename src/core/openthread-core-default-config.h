@@ -888,11 +888,18 @@
  *
  * Selects if, and where the LOG output goes to.
  *
- * There are several options available, by default there is NO log.
+ * There are several options available
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
+ * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART
  * - and others
- * This is effectively an ENUM so it can be #if/#else/#endif tested
+ *
+ * Note:
+ *
+ * 1) Because the default is: OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+ *    The platform is expected to provide at least a stub for `otPlatLog()`
+ *
+ * 2) This is effectively an ENUM so it can be if/else/endif at compile time.
  */
 
 /**
