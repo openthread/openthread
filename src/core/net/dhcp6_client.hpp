@@ -182,7 +182,7 @@ public:
     /**
      * This method update addresses that shall be automatically created using DHCP.
      *
-     * @param[in]     aInstance     A pointer to openThread instance.
+     * @param[in]     aInstance     A pointer to OpenThread instance.
      * @param[inout]  aAddresses    A pointer to an array containing addresses created by this module.
      * @param[in]     aNumAddresses The number of elements in aAddresses array.
      * @param[in]     aContext      A pointer to IID creator-specific context data.

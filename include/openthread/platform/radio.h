@@ -327,7 +327,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
  * Remove an extended address from the source address match table.
  *
  * @param[in]  aInstance    The OpenThread instance structure.
- * @param[in]  aExtAddress  The extended address to be removed stoerd in little-endian byte order.
+ * @param[in]  aExtAddress  The extended address to be removed stored in little-endian byte order.
  *
  * @retval OT_ERROR_NONE        Successfully removed the extended address from the source match table.
  * @retval OT_ERROR_NO_ADDRESS  The extended address is not in source address match table.

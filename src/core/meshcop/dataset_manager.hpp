@@ -131,7 +131,7 @@ protected:
      *
      */
     DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
-                   TimerMilli::Handler aTimerHander);
+                   TimerMilli::Handler aTimerHandler);
 
     /**
      * This method restores the Operational Dataset from non-volatile memory.
