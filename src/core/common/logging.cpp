@@ -418,7 +418,7 @@ const char *otThreadErrorToString(otError aError)
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogregion);
+    OT_UNUSED_VARIABLE(aLogRegion);
     OT_UNUSED_VARIABLE(aFormat);
 }
 #endif
