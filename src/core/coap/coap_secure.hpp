@@ -214,6 +214,8 @@ private:
     static void HandleUdpTransmit(Tasklet &aTasklet);
     void HandleUdpTransmit(void);
 
+    static void HandleRetransmissionTimer(Timer &aTimer);
+
     static CoapSecure &GetOwner(const Context &aContext);
 
     Ip6::MessageInfo mPeerAddress;

@@ -48,7 +48,7 @@ namespace ot {
 namespace Coap {
 
 CoapSecure::CoapSecure(ThreadNetif &aNetif):
-    Coap(aNetif),
+    Coap(aNetif, &CoapSecure::HandleRetransmissionTimer),
     mConnectedCallback(NULL),
     mConnectedContext(NULL),
     mTransportCallback(NULL),
@@ -318,6 +318,11 @@ CoapSecure &CoapSecure::GetOwner(const Context &aContext)
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return coap;
+}
+
+void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).Coap::HandleRetransmissionTimer();
 }
 
 }  // namespace Coap

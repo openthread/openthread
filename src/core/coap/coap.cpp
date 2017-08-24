@@ -49,10 +49,10 @@
 namespace ot {
 namespace Coap {
 
-Coap::Coap(ThreadNetif &aNetif):
+Coap::Coap(ThreadNetif &aNetif, Timer::Handler aRetransmissionHandler):
     ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
-    mRetransmissionTimer(aNetif.GetInstance(), &Coap::HandleRetransmissionTimer, this),
+    mRetransmissionTimer(aNetif.GetInstance(), aRetransmissionHandler, this),
     mResources(NULL),
     mContext(NULL),
     mInterceptor(NULL),
