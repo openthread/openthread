@@ -114,8 +114,12 @@ public:
      * @param[out]    aData        A pointer to the data buffer.
      * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
      *                             On exit, number of copied bytes.
+     *
+     * @retval OT_ERROR_NONE       Successfully copied full Thread Network Data.
+     * @retval OT_ERROR_NO_BUFS    Not enough space to fully copy Thread Network Data.
+     *
      */
-    void GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength);
+    otError GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength);
 
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.

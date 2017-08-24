@@ -66,9 +66,12 @@ void NetworkData::Clear(void)
     mLength = 0;
 }
 
-void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength)
+otError NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength)
 {
+    otError error = OT_ERROR_NONE;
+
     assert(aData != NULL);
+    VerifyOrExit(aDataLength >= mLength, error = OT_ERROR_NO_BUFS);
 
     memcpy(aData, mTlvs, mLength);
     aDataLength = mLength;
@@ -77,6 +80,9 @@ void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLen
     {
         RemoveTemporaryData(aData, aDataLength);
     }
+
+exit:
+    return error;
 }
 
 otError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig)
