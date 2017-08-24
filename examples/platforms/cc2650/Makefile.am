@@ -45,6 +45,7 @@ libopenthread_cc2650_a_SOURCES                        = \
     alarm.c                                             \
     flash.c                                             \
     misc.c                                              \
+    logging.c                                           \
     platform.c                                          \
     radio.c                                             \
     random.c                                            \
