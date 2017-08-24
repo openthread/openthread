@@ -72,7 +72,7 @@ public:
     /**
      * This function update addresses that shall be automatically created using SLAAC.
      *
-     * @param[in]     aInstance     A pointer to openThread instance.
+     * @param[in]     aInstance     A pointer to OpenThread instance.
      * @param[inout]  aAddresses    A pointer to an array containing addresses created by this module.
      * @param[in]     aNumAddresses The number of elements in aAddresses array.
      * @param[in]     aIidCreator   A pointer to function that will be used to create IID for IPv6 addresses.

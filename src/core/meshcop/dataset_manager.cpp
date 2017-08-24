@@ -62,11 +62,11 @@ namespace ot {
 namespace MeshCoP {
 
 DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
-                               const char *aUriGet, Timer::Handler aTimerHander):
+                               const char *aUriGet, Timer::Handler aTimerHandler):
     ThreadNetifLocator(aThreadNetif),
     mLocal(aThreadNetif.GetInstance(), aType),
     mNetwork(aType),
-    mTimer(aThreadNetif.GetInstance(), aTimerHander, this),
+    mTimer(aThreadNetif.GetInstance(), aTimerHandler, this),
     mUriSet(aUriSet),
     mUriGet(aUriGet)
 {
