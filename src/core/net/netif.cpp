@@ -43,13 +43,60 @@
 namespace ot {
 namespace Ip6 {
 
+/*
+ * Certain fixed multicast addresses are defined as a set of chained (linked-list) constant `otNetifMulticastAddress`
+ * entries:
+ *
+ * LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAll -> RealmLocalAll -> RealmLocalAllMplForwarders -> NULL
+ *
+ * All or a portion of the chain is appended to the end of `mMulticastAddresses` linked-list. If the interface is
+ * subscribed to all-routers multicast addresses (using `SubscribeAllRoutersMulticast()`) then all the five entries
+ * are appended. Otherwise only the last three are appended.
+ *
+ */
+
+// "ff03::fc"
+const otNetifMulticastAddress Netif::kRealmLocalAllMplForwardersMulticastAddress =
+{
+    {{{ 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc }}},
+    NULL
+};
+
+// "ff03::01"
+const otNetifMulticastAddress Netif::kRealmLocalAllNodesMulticastAddress =
+{
+    {{{ 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}},
+    &Netif::kRealmLocalAllMplForwardersMulticastAddress
+};
+
+// "ff02::01"
+const otNetifMulticastAddress Netif::kLinkLocalAllNodesMulticastAddress =
+{
+    {{{ 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}},
+    &Netif::kRealmLocalAllNodesMulticastAddress
+};
+
+// "ff03:02"
+const otNetifMulticastAddress Netif::kRealmLocalAllRoutersMulticastAddress =
+{
+    {{{ 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 }}},
+    &Netif::kLinkLocalAllNodesMulticastAddress
+};
+
+// "ff02:02"
+const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress =
+{
+    {{{ 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 }}},
+    &Netif::kRealmLocalAllRoutersMulticastAddress
+};
+
+
 Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
     Ip6Locator(aIp6),
     mCallbacks(NULL),
     mUnicastAddresses(NULL),
     mMulticastAddresses(NULL),
     mInterfaceId(aInterfaceId),
-    mAllRoutersSubscribed(false),
     mMulticastPromiscuous(false),
     mStateChangedTask(aIp6.GetInstance(), &Netif::HandleStateChangedTask, this),
     mNext(NULL),
@@ -66,6 +113,9 @@ Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
         // To mark the address as unused/available, set the `mNext` to point back to itself.
         mExtMulticastAddresses[i].mNext = &mExtMulticastAddresses[i];
     }
+
+    mMulticastAddresses = static_cast<NetifMulticastAddress *>(
+                              const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
 }
 
 otError Netif::RegisterCallback(NetifCallback &aCallback)
@@ -120,16 +170,6 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 {
     bool rval = false;
 
-    if (aAddress.IsLinkLocalAllNodesMulticast() || aAddress.IsRealmLocalAllNodesMulticast() ||
-        aAddress.IsRealmLocalAllMplForwarders())
-    {
-        ExitNow(rval = true);
-    }
-    else if (aAddress.IsLinkLocalAllRoutersMulticast() || aAddress.IsRealmLocalAllRoutersMulticast())
-    {
-        ExitNow(rval = mAllRoutersSubscribed);
-    }
-
     for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
     {
         if (memcmp(&cur->mAddress, &aAddress, sizeof(cur->mAddress)) == 0)
@@ -141,6 +181,71 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 exit:
     return rval;
 }
+
+otError Netif::SubscribeAllRoutersMulticast(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (mMulticastAddresses == &kLinkLocalAllNodesMulticastAddress)
+    {
+        mMulticastAddresses = static_cast<NetifMulticastAddress *>(
+                                  const_cast<otNetifMulticastAddress *>(&kLinkLocalAllRoutersMulticastAddress));
+    }
+    else
+    {
+        for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
+        {
+            if (cur == &kLinkLocalAllRoutersMulticastAddress)
+            {
+                ExitNow(error = OT_ERROR_ALREADY);
+            }
+
+            if (cur->mNext == &kLinkLocalAllNodesMulticastAddress)
+            {
+                cur->mNext = &kLinkLocalAllRoutersMulticastAddress;
+                break;
+            }
+        }
+    }
+
+    SetStateChangedFlags(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+
+exit:
+    return error;
+}
+
+otError Netif::UnsubscribeAllRoutersMulticast(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (mMulticastAddresses == &kLinkLocalAllRoutersMulticastAddress)
+    {
+        mMulticastAddresses = static_cast<NetifMulticastAddress *>(
+                                  const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
+        ExitNow();
+    }
+
+    for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
+    {
+        if (cur->mNext == &kLinkLocalAllRoutersMulticastAddress)
+        {
+            cur->mNext = &kLinkLocalAllNodesMulticastAddress;
+            ExitNow();
+        }
+    }
+
+    error = OT_ERROR_NOT_FOUND;
+
+exit:
+
+    if (error != OT_ERROR_NOT_FOUND)
+    {
+        SetStateChangedFlags(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+    }
+
+    return error;
+}
+
 
 otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 {
