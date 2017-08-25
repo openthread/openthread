@@ -37,6 +37,8 @@
 
 #include "platform-nrf5.h"
 
+#include <hal/nrf_gpio.h>
+
 #include <openthread/cli.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -239,6 +241,76 @@ exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
+static void processGpio(otInstance *aInstance, int argc, char *argv[],
+                        char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(argv);
+
+    long pinnum;
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
+
+    if (argc == 1)
+    {
+        uint32_t value;
+
+        otEXPECT_ACTION(argc == 1, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(argv[0], &pinnum);
+        otEXPECT(error == OT_ERROR_NONE);
+
+        value = nrf_gpio_pin_read(pinnum);
+
+        snprintf(aOutput, aOutputMaxLen, "gpio %d = %d\r\n",
+                 (int)pinnum, (int)value);
+    }
+    else if (strcmp(argv[0], "set") == 0)
+    {
+        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(argv[1], &pinnum);
+        otEXPECT(error == OT_ERROR_NONE);
+
+        nrf_gpio_pin_set(pinnum);
+
+        snprintf(aOutput, aOutputMaxLen, "gpio %d = 1\r\n", (int)pinnum);
+    }
+    else if (strcmp(argv[0], "clr") == 0)
+    {
+        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(argv[1], &pinnum);
+        otEXPECT(error == OT_ERROR_NONE);
+
+        nrf_gpio_pin_clear(pinnum);
+
+        snprintf(aOutput, aOutputMaxLen, "gpio %d = 0\r\n", (int)pinnum);
+    }
+    else if (strcmp(argv[0], "out") == 0)
+    {
+        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(argv[1], &pinnum);
+        otEXPECT(error == OT_ERROR_NONE);
+
+        nrf_gpio_cfg_output(pinnum);
+
+        snprintf(aOutput, aOutputMaxLen, "gpio %d: out\r\n", (int)pinnum);
+    }
+    else if (strcmp(argv[0], "in") == 0)
+    {
+        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(argv[1], &pinnum);
+        otEXPECT(error == OT_ERROR_NONE);
+
+        nrf_gpio_cfg_input(pinnum, NRF_GPIO_PIN_NOPULL);
+
+        snprintf(aOutput, aOutputMaxLen, "gpio %d: in no pull\r\n", (int)pinnum);
+    }
+
+exit:
+    appendErrorResult(error, aOutput, aOutputMaxLen);
+}
+
+
 static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -299,6 +371,7 @@ const struct PlatformDiagCommand sCommands[] =
     { "listen", &processListen },
     { "transmit", &processTransmit },
     { "id", &processID },
+    { "gpio", &processGpio },
     { "temp", &processTemp },
     { "ccathreshold", &processCcaThreshold }
 };

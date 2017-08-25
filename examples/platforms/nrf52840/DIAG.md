@@ -8,6 +8,7 @@ New commands allow for more accurate low level radio testing.
  * [diag ccathreshold](#diag-ccathreshold)
  * [diag id](#diag-id)
  * [diag listen](#diag-listen)
+ * [diag gpio](#diag-gpio)
  * [diag temp](#diag-temp)
  * [diag transmit](#diag-transmit)
 
@@ -72,6 +73,41 @@ Set listen state.
 `1` enable listen state.
 
 Default: listen disabled.
+
+### diag gpio \<pinnum\>
+Return the current value of the gpio.
+```bash
+> diag gpio 47
+gpio 47 = 0
+```
+
+### diag gpio out \<pinnum\>
+Sets the given gpio to output mode.
+```bash
+> diag gpio out 47
+gpio 47: out
+```
+
+### diag gpio in \<pinnum\>
+Sets the given gpio to input, no pull mode.
+```bash
+> diag gpio in 47
+gpio 47: in no pull
+```
+
+### diag gpio set \<pinnum\>
+Sets the given output gpio to high.
+```bash
+> diag gpio set 47
+gpio 47 = 1
+```
+
+### diag gpio clr \<pinnum\>
+Sets the given output gpio to low.
+```bash
+> diag gpio clr 47
+gpio 47 = 0
+```
 
 ### diag temp
 Get temperature from internal temperature sensor, in degrees Celsius.
