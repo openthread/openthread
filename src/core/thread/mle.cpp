@@ -1286,8 +1286,7 @@ void Mle::HandleParentRequestTimer(void)
         break;
 
     case kParentSynchronize:
-        mParentRequestState = kParentIdle;
-        BecomeChild(kAttachAny);
+        SendChildUpdateRequest();
         break;
 
     case kParentRequestStart:
