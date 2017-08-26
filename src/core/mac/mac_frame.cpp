@@ -172,122 +172,11 @@ uint16_t Frame::GetFrameControlField(void) const
 
 otError Frame::ValidatePsdu(void) const
 {
-    otError error = OT_ERROR_PARSE;
-    uint8_t offset = kFcfSize + kDsnSize;
-    uint8_t footerLength = kFcsSize;
-    uint16_t fcf;
+    otError error = OT_ERROR_NONE;
+    uint8_t offset = FindPayloadIndex();
 
-    VerifyOrExit((offset + footerLength) <= GetPsduLength());
-
-    fcf = GetFrameControlField();
-
-    // Destination PAN + Address
-    switch (fcf & kFcfDstAddrMask)
-    {
-    case kFcfDstAddrNone:
-        break;
-
-    case kFcfDstAddrShort:
-        offset += sizeof(PanId) + sizeof(ShortAddress);
-        break;
-
-    case kFcfDstAddrExt:
-        offset += sizeof(PanId) + sizeof(ExtAddress);
-        break;
-
-    default:
-        goto exit;
-    }
-
-    // Source PAN + Address
-    switch (fcf & kFcfSrcAddrMask)
-    {
-    case kFcfSrcAddrNone:
-        break;
-
-    case kFcfSrcAddrShort:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            offset += sizeof(PanId);
-        }
-
-        offset += sizeof(ShortAddress);
-        break;
-
-    case kFcfSrcAddrExt:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            offset += sizeof(PanId);
-        }
-
-        offset += sizeof(ExtAddress);
-        break;
-
-    default:
-        goto exit;
-    }
-
-    VerifyOrExit((offset + footerLength) <= GetPsduLength());
-
-    // Security Header
-    if (fcf & kFcfSecurityEnabled)
-    {
-        uint8_t secControl = GetPsdu()[offset];
-
-        offset += kSecurityControlSize + kFrameCounterSize;
-
-        switch (secControl & kKeyIdModeMask)
-        {
-        case kKeyIdMode0:
-            offset += kKeySourceSizeMode0;
-            break;
-
-        case kKeyIdMode1:
-            offset += kKeySourceSizeMode1 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode2:
-            offset += kKeySourceSizeMode2 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode3:
-            offset += kKeySourceSizeMode3 + kKeyIndexSize;
-            break;
-        }
-
-        switch (secControl & kSecLevelMask)
-        {
-        case kSecNone:
-        case kSecEnc:
-            footerLength += kMic0Size;
-            break;
-
-        case kSecMic32:
-        case kSecEncMic32:
-            footerLength += kMic32Size;
-            break;
-
-        case kSecMic64:
-        case kSecEncMic64:
-            footerLength += kMic64Size;
-            break;
-
-        case kSecMic128:
-        case kSecEncMic128:
-            footerLength += kMic128Size;
-            break;
-        }
-    }
-
-    // Command ID
-    if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
-    {
-        offset += kCommandIdSize;
-    }
-
-    VerifyOrExit((offset + footerLength) <= GetPsduLength());
-
-    error = OT_ERROR_NONE;
+    VerifyOrExit(offset != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit((offset + GetFooterLength()) <= GetPsduLength(), error = OT_ERROR_PARSE);
 
 exit:
     return error;
@@ -913,6 +802,8 @@ uint8_t Frame::FindPayloadIndex(void) const
     // Sequence Number
     index += kDsnSize;
 
+    VerifyOrExit((index + kFcsSize) <= GetPsduLength(), index = kInvalidIndex);
+
     // Destination PAN + Address
     switch (fcf & kFcfDstAddrMask)
     {
@@ -958,6 +849,8 @@ uint8_t Frame::FindPayloadIndex(void) const
     default:
         ExitNow(index = kInvalidIndex);
     }
+
+    VerifyOrExit((index + kFcsSize) <= GetPsduLength(), index = kInvalidIndex);
 
     // Security Control + Frame Counter + Key Identifier
     if ((fcf & kFcfSecurityEnabled) != 0)
