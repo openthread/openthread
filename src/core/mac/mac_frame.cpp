@@ -794,8 +794,7 @@ otError Frame::SetPayloadLength(uint8_t aLength)
 uint8_t Frame::FindPayloadIndex(void) const
 {
     uint8_t index = 0;
-    uint16_t fcf = GetFrameControlField();
-    uint8_t securityControl;
+    uint16_t fcf;
 
     // Frame Control
     index += kFcfSize;
@@ -803,6 +802,8 @@ uint8_t Frame::FindPayloadIndex(void) const
     index += kDsnSize;
 
     VerifyOrExit((index + kFcsSize) <= GetPsduLength(), index = kInvalidIndex);
+
+    fcf = GetFrameControlField();
 
     // Destination PAN + Address
     switch (fcf & kFcfDstAddrMask)
@@ -855,7 +856,7 @@ uint8_t Frame::FindPayloadIndex(void) const
     // Security Control + Frame Counter + Key Identifier
     if ((fcf & kFcfSecurityEnabled) != 0)
     {
-        securityControl = *(GetPsdu() + index);
+        uint8_t securityControl = *(GetPsdu() + index);
 
         index += kSecurityControlSize + kFrameCounterSize;
 
