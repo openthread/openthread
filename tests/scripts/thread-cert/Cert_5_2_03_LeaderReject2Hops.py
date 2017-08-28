@@ -31,61 +31,103 @@ import time
 import unittest
 
 import node
+import mle
+import network_layer
+import config
 
-LEADER = 1
-ROUTER = 2
-DUT = 33
+DUT_LEADER = 1
+ROUTER_1 = 2
+ROUTER_31 = 32
+ROUTER_32 = 33
+SNIFFER = 34
 
 class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
 
-        self.nodes[LEADER] = node.Node(LEADER)
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_upgrade_threshold(32)
-        self.nodes[LEADER].set_router_downgrade_threshold(33)
+        self.nodes[DUT_LEADER] = node.Node(DUT_LEADER)
+        self.nodes[DUT_LEADER].set_panid(0xface)
+        self.nodes[DUT_LEADER].set_mode('rsdn')
+        self.nodes[DUT_LEADER].enable_whitelist()
+        self.nodes[DUT_LEADER].set_router_upgrade_threshold(32)
+        self.nodes[DUT_LEADER].set_router_downgrade_threshold(33)
 
-        for i in range(2,33):
+        for i in range(2, 33):
             self.nodes[i] = node.Node(i)
             self.nodes[i].set_panid(0xface)
             self.nodes[i].set_mode('rsdn')
-            self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
-            self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
+            self.nodes[i].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
+            self.nodes[DUT_LEADER].add_whitelist(self.nodes[i].get_addr64())
             self.nodes[i].enable_whitelist()
             self.nodes[i].set_router_upgrade_threshold(33)
             self.nodes[i].set_router_downgrade_threshold(33)
             self.nodes[i].set_router_selection_jitter(1)
 
-        self.nodes[DUT] = node.Node(DUT)
-        self.nodes[DUT].set_panid(0xface)
-        self.nodes[DUT].set_mode('rsdn')
-        self.nodes[DUT].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[ROUTER].add_whitelist(self.nodes[DUT].get_addr64())
-        self.nodes[DUT].enable_whitelist()
-        self.nodes[DUT].set_router_upgrade_threshold(33)
-        self.nodes[DUT].set_router_downgrade_threshold(33)
-        self.nodes[DUT].set_router_selection_jitter(1)
+        self.nodes[ROUTER_32] = node.Node(ROUTER_32)
+        self.nodes[ROUTER_32].set_panid(0xface)
+        self.nodes[ROUTER_32].set_mode('rsdn')
+        self.nodes[ROUTER_32].add_whitelist(self.nodes[ROUTER_1].get_addr64())
+        self.nodes[ROUTER_1].add_whitelist(self.nodes[ROUTER_32].get_addr64())
+        self.nodes[ROUTER_32].enable_whitelist()
+        self.nodes[ROUTER_32].set_router_upgrade_threshold(33)
+        self.nodes[ROUTER_32].set_router_downgrade_threshold(33)
+        self.nodes[ROUTER_32].set_router_selection_jitter(1)
+
+        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
+        self.sniffer.start()
 
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
     def test(self):
-        self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
-        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        # 1
+        self.nodes[DUT_LEADER].start()
+        self.nodes[DUT_LEADER].set_state('leader')
+        self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
-        for i in range(2, 33):
+        for i in range(2, 32):
             self.nodes[i].start()
             time.sleep(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        self.nodes[DUT].start()
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+
+        # 2
+        self.nodes[ROUTER_31].start()
         time.sleep(5)
-        self.assertEqual(self.nodes[DUT].get_state(), 'child')
+        self.assertEqual(self.nodes[ROUTER_31].get_state(), 'router')
+
+        # 3 - DUT_LEADER
+        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_coap_message('2.04')
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg.assertCoapMessageContainsTlv(network_layer.RouterMask)
+        msg.assertCoapMessageContainsTlv(network_layer.Rloc16)
+
+        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
+        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
+
+        # 4 - DUT_LEADER
+        msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
+        msg.assertAssignedRouterQuantity(32)
+
+        # 5 - Router_32
+        self.nodes[ROUTER_32].start()
+        time.sleep(5)
+
+        # 6 - DUT_LEADER
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_coap_message('2.04')
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+
+        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
+        self.assertEqual(network_layer.StatusValues.NO_ADDRESS_AVAILABLE, status_tlv.status)
 
 if __name__ == '__main__':
     unittest.main()
