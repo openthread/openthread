@@ -76,6 +76,14 @@ Default: listen disabled.
 
 ### diag gpio \<pinnum\>
 Return the current value of the gpio.
+
+Note: \<pinnum\> is an integer that combines port and pin into a single,
+contiguous number space as follows:
+```
+   pinnum = (port * 32) + pin
+```
+See also the NRF_GPIO_PIN_MAP macro.
+
 ```bash
 > diag gpio 47
 gpio 47 = 0

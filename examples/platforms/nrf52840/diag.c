@@ -256,7 +256,6 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
     {
         uint32_t value;
 
-        otEXPECT_ACTION(argc == 1, error = OT_ERROR_INVALID_ARGS);
         error = parseLong(argv[0], &pinnum);
         otEXPECT(error == OT_ERROR_NONE);
 
@@ -304,6 +303,18 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
         nrf_gpio_cfg_input(pinnum, NRF_GPIO_PIN_NOPULL);
 
         snprintf(aOutput, aOutputMaxLen, "gpio %d: in no pull\r\n", (int)pinnum);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+        snprintf(aOutput, aOutputMaxLen,
+                 "Error: Illegal arguments\r\n"
+                 "Usage:\r\n"
+                 "   gpio <pinnum>\r\n"
+                 "   gpio out <pinnum>\r\n"
+                 "   gpio in <pinnum>\r\n"
+                 "   gpio set <out pinnum>\r\n"
+                 "   gpio clr <out pinnum>\r\n");
     }
 
 exit:
