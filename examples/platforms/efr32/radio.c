@@ -209,7 +209,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
                   aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
                   aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
-    RAIL_IEEE802154_SetLongAddress(aAddress->m8);
+    RAIL_IEEE802154_SetLongAddress((uint8_t *)aAddress->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
@@ -613,7 +613,7 @@ void RAILCb_IEEE802154_DataRequestCommand(RAIL_IEEE802154_Address_t *aAddress)
     if (sIsSrcMatchEnabled)
     {
         if ((aAddress->length == RAIL_IEEE802154_LongAddress &&
-             findSrcMatchExtEntry(aAddress->longAddress) >= 0) ||
+             findSrcMatchExtEntry((otExtAddress *)aAddress->longAddress) >= 0) ||
             (aAddress->length == RAIL_IEEE802154_ShortAddress &&
              findSrcMatchShortEntry(aAddress->shortAddress) >= 0))
         {
