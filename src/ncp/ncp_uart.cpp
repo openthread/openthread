@@ -137,7 +137,7 @@ void NcpUart::EncodeAndSendToUart(void)
 {
     uint16_t len;
 
-    while (!mTxFrameBuffer.IsEmpty())
+    while (!mTxFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
     {
         switch (mState)
         {
@@ -159,7 +159,7 @@ void NcpUart::EncodeAndSendToUart(void)
             {
                 mByte = mTxFrameBuffer.OutFrameReadByte();
 
-            case kEncodingFrame:
+        case kEncodingFrame:
 
                 SuccessOrExit(mFrameEncoder.Encode(mByte, mUartBuffer));
             }
