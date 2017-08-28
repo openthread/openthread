@@ -53,6 +53,9 @@ RESUME_SCRIPT_PATH = '%appdata%\\Microsoft\\Windows\\Start Menu\\Programs\\' \
                      'Startup\\continue_harness.bat'
 
 class SimpleTestResult(unittest.TestResult):
+
+    executions = 0
+
     def __init__(self, path, auto_reboot_args=None):
         """Record test results in json file
 
@@ -66,6 +69,7 @@ class SimpleTestResult(unittest.TestResult):
         self.result = json.load(open(self.path, 'r'))
         self.log_handler = None
         self.started = None
+        SimpleTestResult.executions += 1
         logger.info('Initial state is %s', json.dumps(self.result, indent=2))
 
     def startTest(self, test):
@@ -98,7 +102,8 @@ class SimpleTestResult(unittest.TestResult):
             'started': self.started,
             'stopped': time.strftime('%Y-%m-%dT%H:%M:%S'),
             'passed': passed,
-            'error': error
+            'error': error,
+            'executions': SimpleTestResult.executions
         }
         if self.auto_reboot_args:
             os.system('del "%s"' % RESUME_SCRIPT_PATH)
@@ -279,6 +284,7 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
         return
 
     suite.run(result)
+    return result
 
 def main():
     parser = argparse.ArgumentParser(description='Thread harness test case runner')
@@ -309,6 +315,8 @@ def main():
                         help='file to store and read current status')
     parser.add_argument('--pattern', '-p', metavar='PATTERN', type=str,
                         help='file name pattern, default to "*.py"', default='*.py')
+    parser.add_argument('--rerun-fails', '-r', type=int, default=0,
+                        help='number of times to rerun failed test cases')
     parser.add_argument('--max-devices', '-u', type=int, default=0,
                         help='max golden devices allowed')
 
@@ -328,8 +336,21 @@ def main():
 
     if args.pop('list_devices', False):
         list_devices(**args)
-    else:
-        discover(**args)
+        return
+
+    rerun_fails = args.pop('rerun_fails')
+    result = discover(**args)
+
+    if rerun_fails > 0:
+        for i in range(rerun_fails):
+            failed_names = {name for name in result.result if result.result[name]['passed'] == False}
+            if not failed_names: break
+            logger.info('Rerunning failed test cases')
+            logger.info('Rerun #{}:'.format(i+1))
+            result = discover(
+                names=failed_names, pattern=args['pattern'], skip='', result_file=args['result_file'],
+                auto_reboot=args['auto_reboot']
+            )
 
 if __name__ == '__main__':
     main()
