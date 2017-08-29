@@ -159,7 +159,7 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         self.assertEqual(self.nodes[ED].get_channel(), CHANNEL_INIT)
         self.assertEqual(self.nodes[SED].get_channel(), CHANNEL_INIT)
 
-        time.sleep(5)
+        time.sleep(10)
 
         self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[ED].get_panid(), COMMISSIONER_PENDING_PANID)
