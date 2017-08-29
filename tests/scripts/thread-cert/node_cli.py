@@ -38,7 +38,7 @@ class otCli:
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
 
-        mode = is_mtd and 'mtd' or 'ftd'
+        mode = os.environ.get('USE_MTD') is '1' and is_mtd and 'mtd' or 'ftd'
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
