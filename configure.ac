@@ -1078,7 +1078,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APP
 #
 
 AC_ARG_ENABLE(raw_link_api,
-    [AS_HELP_STRING([--enable-raw-link-api],[Enable raw link-layer API support @<:@default=yes@:>@.])],
+    [AS_HELP_STRING([--enable-raw-link-api],[Enable raw link-layer API support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -1091,7 +1091,7 @@ AC_ARG_ENABLE(raw_link_api,
             ;;
         esac
     ],
-    [enable_raw_link_api=yes])
+    [enable_raw_link_api=no])
 
 if test "$enable_raw_link_api" = "yes"; then
     OPENTHREAD_ENABLE_RAW_LINK_API=1
