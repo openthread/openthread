@@ -69,7 +69,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mAnsi(0),
     mJoinerRouterIsSpecific(false),
     mJoinerRouterChannel(0),
-    mJoinerRouterLqi(0),
+    mJoinerRouterRssi(0),
     mJoinerRouterPanId(0),
     mJoinerUdpPort(0),
     mVendorName(NULL),
@@ -121,7 +121,7 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     SuccessOrExit(error);
 
     mJoinerRouterPanId = Mac::kPanIdBroadcast;
-    mJoinerRouterLqi = 0;
+    mJoinerRouterRssi = 0;
     mJoinerRouterIsSpecific = false;
     SuccessOrExit(error = netif.GetMle().Discover(0, netif.GetMac().GetPanId(), true, false, HandleDiscoverResult,
                                                   this));
@@ -204,14 +204,14 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         if (steeringData.DoesAllowAny())
         {
             VerifyOrExit(!mJoinerRouterIsSpecific);
-            VerifyOrExit(aResult->mLqi > mJoinerRouterLqi);
+            VerifyOrExit(aResult->mRssi > mJoinerRouterRssi);
         }
         else if (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
                  steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
         {
             if (mJoinerRouterIsSpecific)
             {
-                VerifyOrExit(aResult->mLqi > mJoinerRouterLqi);
+                VerifyOrExit(aResult->mRssi > mJoinerRouterRssi);
             }
 
             mJoinerRouterIsSpecific = true;
@@ -225,7 +225,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         mJoinerUdpPort = aResult->mJoinerUdpPort;
         mJoinerRouterPanId = aResult->mPanId;
         mJoinerRouterChannel = aResult->mChannel;
-        mJoinerRouterLqi = aResult->mLqi;
+        mJoinerRouterRssi = aResult->mRssi;
         memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
     }
     else if (mJoinerRouterPanId != Mac::kPanIdBroadcast)

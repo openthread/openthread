@@ -142,7 +142,7 @@ private:
 
     bool mJoinerRouterIsSpecific;
     uint8_t mJoinerRouterChannel;
-    uint8_t mJoinerRouterLqi;
+    uint8_t mJoinerRouterRssi;
     uint16_t mJoinerRouterPanId;
     uint16_t mJoinerUdpPort;
     Mac::ExtAddress mJoinerRouter;
