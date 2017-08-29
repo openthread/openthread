@@ -991,8 +991,6 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
 
     mMacTimer.Stop();
 
-    mCounters.mTxTotal++;
-
     txFrame->GetDstAddr(addr);
 
     if (aError == OT_ERROR_NONE && txFrame->GetAckRequest() && aAckFrame != NULL)
@@ -1007,17 +1005,6 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
         {
             neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetPower());
         }
-    }
-
-    if (addr.mShortAddress == kShortAddrBroadcast)
-    {
-        // Broadcast frame
-        mCounters.mTxBroadcast++;
-    }
-    else
-    {
-        // Unicast frame
-        mCounters.mTxUnicast++;
     }
 
     if (aError == OT_ERROR_ABORT)
@@ -1171,8 +1158,6 @@ void Mac::HandleMacTimer(Timer &aTimer)
 
 void Mac::HandleMacTimer(void)
 {
-    Address addr;
-
     switch (mOperation)
     {
     case kOperationActiveScan:
@@ -1200,21 +1185,6 @@ void Mac::HandleMacTimer(void)
 
     case kOperationTransmitData:
         otLogDebgMac(GetInstance(), "Ack timer fired");
-        mCounters.mTxTotal++;
-
-        mTxFrame->GetDstAddr(addr);
-
-        if (addr.mShortAddress == kShortAddrBroadcast)
-        {
-            // Broadcast frame
-            mCounters.mTxBroadcast++;
-        }
-        else
-        {
-            // Unicast Frame
-            mCounters.mTxUnicast++;
-        }
-
         SentFrame(OT_ERROR_NO_ACK);
         break;
 
@@ -1263,6 +1233,7 @@ void Mac::SentFrame(otError aError)
 {
     Frame &sendFrame(*mTxFrame);
     Sender *sender;
+    Address addr;
 
     mTransmitAttempts++;
 
@@ -1301,6 +1272,26 @@ void Mac::SentFrame(otError aError)
 
     mTransmitAttempts = 0;
     mCsmaAttempts = 0;
+
+    mCounters.mTxTotal++;
+
+    if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
+    {
+        mCounters.mTxErrBusyChannel++;
+    }
+
+    mTxFrame->GetDstAddr(addr);
+
+    if (addr.mShortAddress == kShortAddrBroadcast)
+    {
+        // Broadcast frame
+        mCounters.mTxBroadcast++;
+    }
+    else
+    {
+        // Unicast Frame
+        mCounters.mTxUnicast++;
+    }
 
     if (sendFrame.GetAckRequest())
     {
