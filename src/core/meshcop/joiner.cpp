@@ -213,6 +213,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
             {
                 VerifyOrExit(aResult->mLqi > mJoinerRouterLqi);
             }
+
             mJoinerRouterIsSpecific = true;
         }
         else
