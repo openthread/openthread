@@ -118,9 +118,8 @@ As part of the cleanup process, you should also run `make pretty-check` to ensur
 
 ```bash
 ./bootstrap
-./configure --enable-ftd --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix
+./configure
 make pretty-check
-
 ```
 
 Make sure to include any code format changes in your commits.
