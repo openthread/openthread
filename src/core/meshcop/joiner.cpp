@@ -205,6 +205,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         {
             VerifyOrExit(!mJoinerRouterIsSpecific);
             VerifyOrExit(aResult->mLqi > mJoinerRouterLqi);
+            mJoinerRouterIsSpecific = false;
         }
         else if (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
                  steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
@@ -220,7 +221,6 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
             ExitNow();
         }
 
-        mJoinerRouterIsSpecific = !steeringData.DoesAllowAny();
         mJoinerUdpPort = aResult->mJoinerUdpPort;
         mJoinerRouterPanId = aResult->mPanId;
         mJoinerRouterChannel = aResult->mChannel;
