@@ -67,7 +67,9 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mContext(NULL),
     mCcitt(0),
     mAnsi(0),
+    mJoinerRouterIsSpecific(false),
     mJoinerRouterChannel(0),
+    mJoinerRouterRssi(0),
     mJoinerRouterPanId(0),
     mJoinerUdpPort(0),
     mVendorName(NULL),
@@ -119,6 +121,8 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     SuccessOrExit(error);
 
     mJoinerRouterPanId = Mac::kPanIdBroadcast;
+    mJoinerRouterRssi = 0;
+    mJoinerRouterIsSpecific = false;
     SuccessOrExit(error = netif.GetMle().Discover(0, netif.GetMac().GetPanId(), true, false, HandleDiscoverResult,
                                                   this));
 
@@ -197,19 +201,32 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         steeringData.SetLength(aResult->mSteeringData.mLength);
         memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
 
-        if (steeringData.DoesAllowAny() ||
-            (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
-             steeringData.GetBit(mAnsi % steeringData.GetNumBits())))
+        if (steeringData.DoesAllowAny())
         {
-            mJoinerUdpPort = aResult->mJoinerUdpPort;
-            mJoinerRouterPanId = aResult->mPanId;
-            mJoinerRouterChannel = aResult->mChannel;
-            memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
+            VerifyOrExit(!mJoinerRouterIsSpecific);
+            VerifyOrExit(aResult->mRssi > mJoinerRouterRssi);
+        }
+        else if (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
+                 steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
+        {
+            if (mJoinerRouterIsSpecific)
+            {
+                VerifyOrExit(aResult->mRssi > mJoinerRouterRssi);
+            }
+
+            mJoinerRouterIsSpecific = true;
         }
         else
         {
             otLogDebgMeshCoP(GetInstance(), "Steering data does not include this device");
+            ExitNow();
         }
+
+        mJoinerUdpPort = aResult->mJoinerUdpPort;
+        mJoinerRouterPanId = aResult->mPanId;
+        mJoinerRouterChannel = aResult->mChannel;
+        mJoinerRouterRssi = aResult->mRssi;
+        memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
     }
     else if (mJoinerRouterPanId != Mac::kPanIdBroadcast)
     {
