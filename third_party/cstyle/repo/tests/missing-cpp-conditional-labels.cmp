@@ -1,0 +1,120 @@
+missing-cpp-conditional-labels.cpp:105:2: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 100, which is more than 1 line(s) away
+#else
+-^
+missing-cpp-conditional-labels.cpp:110:2: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 100, which is more than 1 line(s) away
+#endif
+-^
+missing-cpp-conditional-labels.cpp:117:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 112, which is more than 1 line(s) away
+# else
+--^
+missing-cpp-conditional-labels.cpp:122:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 112, which is more than 1 line(s) away
+# endif
+--^
+missing-cpp-conditional-labels.cpp:129:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 124, which is more than 1 line(s) away
+ #else
+--^
+missing-cpp-conditional-labels.cpp:134:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 124, which is more than 1 line(s) away
+ #endif
+--^
+missing-cpp-conditional-labels.cpp:141:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 136, which is more than 1 line(s) away
+#	else
+--^
+missing-cpp-conditional-labels.cpp:146:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 136, which is more than 1 line(s) away
+#	endif
+--^
+missing-cpp-conditional-labels.cpp:153:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 148, which is more than 1 line(s) away
+	#else
+--^
+missing-cpp-conditional-labels.cpp:158:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 148, which is more than 1 line(s) away
+	#endif
+--^
+missing-cpp-conditional-labels.cpp:165:2: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 160, which is more than 1 line(s) away
+#else
+-^
+missing-cpp-conditional-labels.cpp:170:2: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 160, which is more than 1 line(s) away
+#endif
+-^
+missing-cpp-conditional-labels.cpp:177:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 172, which is more than 1 line(s) away
+# else
+--^
+missing-cpp-conditional-labels.cpp:182:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 172, which is more than 1 line(s) away
+# endif
+--^
+missing-cpp-conditional-labels.cpp:189:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 184, which is more than 1 line(s) away
+ #else
+--^
+missing-cpp-conditional-labels.cpp:194:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 184, which is more than 1 line(s) away
+ #endif
+--^
+missing-cpp-conditional-labels.cpp:201:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 196, which is more than 1 line(s) away
+#	else
+--^
+missing-cpp-conditional-labels.cpp:206:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 196, which is more than 1 line(s) away
+#	endif
+--^
+missing-cpp-conditional-labels.cpp:213:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 208, which is more than 1 line(s) away
+	#else
+--^
+missing-cpp-conditional-labels.cpp:218:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 208, which is more than 1 line(s) away
+	#endif
+--^
+missing-cpp-conditional-labels.cpp:232:2: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 222, which is more than 1 line(s) away
+#else
+-^
+missing-cpp-conditional-labels.cpp:237:2: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 222, which is more than 1 line(s) away
+#endif
+-^
+missing-cpp-conditional-labels.cpp:249:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 239, which is more than 1 line(s) away
+# else
+--^
+missing-cpp-conditional-labels.cpp:254:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 239, which is more than 1 line(s) away
+# endif
+--^
+missing-cpp-conditional-labels.cpp:266:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 256, which is more than 1 line(s) away
+ #else
+--^
+missing-cpp-conditional-labels.cpp:271:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 256, which is more than 1 line(s) away
+ #endif
+--^
+missing-cpp-conditional-labels.cpp:283:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 273, which is more than 1 line(s) away
+#	else
+--^
+missing-cpp-conditional-labels.cpp:288:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 273, which is more than 1 line(s) away
+#	endif
+--^
+missing-cpp-conditional-labels.cpp:300:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 290, which is more than 1 line(s) away
+	#else
+--^
+missing-cpp-conditional-labels.cpp:305:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 290, which is more than 1 line(s) away
+	#endif
+--^
+missing-cpp-conditional-labels.cpp:317:2: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 307, which is more than 1 line(s) away
+#else
+-^
+missing-cpp-conditional-labels.cpp:322:2: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 307, which is more than 1 line(s) away
+#endif
+-^
+missing-cpp-conditional-labels.cpp:334:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 324, which is more than 1 line(s) away
+# else
+--^
+missing-cpp-conditional-labels.cpp:339:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 324, which is more than 1 line(s) away
+# endif
+--^
+missing-cpp-conditional-labels.cpp:351:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 341, which is more than 1 line(s) away
+ #else
+--^
+missing-cpp-conditional-labels.cpp:356:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 341, which is more than 1 line(s) away
+ #endif
+--^
+missing-cpp-conditional-labels.cpp:368:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 358, which is more than 1 line(s) away
+#	else
+--^
+missing-cpp-conditional-labels.cpp:373:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 358, which is more than 1 line(s) away
+#	endif
+--^
+missing-cpp-conditional-labels.cpp:385:3: warning: Missing preprocessor conditional comment label for 'else' matching 'if' at line 375, which is more than 1 line(s) away
+	#else
+--^
+missing-cpp-conditional-labels.cpp:390:3: warning: Missing preprocessor conditional comment label for 'endif' matching 'if' at line 375, which is more than 1 line(s) away
+	#endif
+--^

@@ -1,0 +1,9 @@
+missing-space-after-comma.cpp:34:26: warning: missing space after comma
+static int array_1[] = {0,1,2,3,4,5};	// These should generate a violation
+-------------------------^
+missing-space-after-comma.cpp:46:19: warning: missing space after comma
+    for (int i = 0,j = 0; i < m && j < n; i++,j++) {
+------------------^
+missing-space-after-comma.cpp:54:26: warning: missing space after comma
+    test_2(void) : m_a(0),m_b(0) { return; }
+-------------------------^

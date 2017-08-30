@@ -1,0 +1,924 @@
+implicit-void-declaration.cpp:8:1: warning: implicit void declaration
+void free_function_test_1();
+^
+implicit-void-declaration.cpp:9:1: warning: implicit void declaration
+void free_function_test_2 ();
+^
+implicit-void-declaration.cpp:10:1: warning: implicit void declaration
+void  free_function_test_3();
+^
+implicit-void-declaration.cpp:11:1: warning: implicit void declaration
+void   free_function_test_4  ();
+^
+implicit-void-declaration.cpp:12:1: warning: implicit void declaration
+void free_function_test_5 () ;
+^
+implicit-void-declaration.cpp:13:1: warning: implicit void declaration
+void  free_function_test_6() ;
+^
+implicit-void-declaration.cpp:14:1: warning: implicit void declaration
+void   free_function_test_7  ()  ;
+^
+implicit-void-declaration.cpp:17:1: warning: implicit void declaration
+void	free_function_test_8();
+^
+implicit-void-declaration.cpp:18:1: warning: implicit void declaration
+void	free_function_test_9	();
+^
+implicit-void-declaration.cpp:19:1: warning: implicit void declaration
+void		free_function_test_10();
+^
+implicit-void-declaration.cpp:20:1: warning: implicit void declaration
+void			free_function_test_11		();
+^
+implicit-void-declaration.cpp:21:1: warning: implicit void declaration
+void	free_function_test_12	()	;
+^
+implicit-void-declaration.cpp:22:1: warning: implicit void declaration
+void		free_function_test_13()	;
+^
+implicit-void-declaration.cpp:23:1: warning: implicit void declaration
+void			free_function_test_14		()		;
+^
+implicit-void-declaration.cpp:26:1: warning: implicit void declaration
+extern void free_function_test_15();
+^
+implicit-void-declaration.cpp:27:1: warning: implicit void declaration
+extern void free_function_test_16 ();
+^
+implicit-void-declaration.cpp:28:1: warning: implicit void declaration
+extern void  free_function_test_17();
+^
+implicit-void-declaration.cpp:29:1: warning: implicit void declaration
+extern void   free_function_test_18  ();
+^
+implicit-void-declaration.cpp:30:1: warning: implicit void declaration
+extern void free_function_test_19 () ;
+^
+implicit-void-declaration.cpp:31:1: warning: implicit void declaration
+extern void  free_function_test_20() ;
+^
+implicit-void-declaration.cpp:32:1: warning: implicit void declaration
+extern void   free_function_test_21  ()  ;
+^
+implicit-void-declaration.cpp:35:1: warning: implicit void declaration
+extern	void	free_function_test_22();
+^
+implicit-void-declaration.cpp:36:1: warning: implicit void declaration
+extern	void	free_function_test_23	();
+^
+implicit-void-declaration.cpp:37:1: warning: implicit void declaration
+extern	void		free_function_test_24();
+^
+implicit-void-declaration.cpp:38:1: warning: implicit void declaration
+extern	void			free_function_test_25		();
+^
+implicit-void-declaration.cpp:39:1: warning: implicit void declaration
+extern	void	free_function_test_26	()	;
+^
+implicit-void-declaration.cpp:40:1: warning: implicit void declaration
+extern	void		free_function_test_27()	;
+^
+implicit-void-declaration.cpp:41:1: warning: implicit void declaration
+extern	void			free_function_test_28		()		;
+^
+implicit-void-declaration.cpp:44:1: warning: implicit void declaration
+static void free_function_test_29();
+^
+implicit-void-declaration.cpp:45:1: warning: implicit void declaration
+static void free_function_test_30 ();
+^
+implicit-void-declaration.cpp:46:1: warning: implicit void declaration
+static void  free_function_test_31();
+^
+implicit-void-declaration.cpp:47:1: warning: implicit void declaration
+static void   free_function_test_32  ();
+^
+implicit-void-declaration.cpp:48:1: warning: implicit void declaration
+static void free_function_test_33 () ;
+^
+implicit-void-declaration.cpp:49:1: warning: implicit void declaration
+static void  free_function_test_34() ;
+^
+implicit-void-declaration.cpp:50:1: warning: implicit void declaration
+static void   free_function_test_35  ()  ;
+^
+implicit-void-declaration.cpp:53:1: warning: implicit void declaration
+static	void	free_function_test_36();
+^
+implicit-void-declaration.cpp:54:1: warning: implicit void declaration
+static	void	free_function_test_37	();
+^
+implicit-void-declaration.cpp:55:1: warning: implicit void declaration
+static	void		free_function_test_38();
+^
+implicit-void-declaration.cpp:56:1: warning: implicit void declaration
+static	void			free_function_test_39		();
+^
+implicit-void-declaration.cpp:57:1: warning: implicit void declaration
+static	void	free_function_test_40	()	;
+^
+implicit-void-declaration.cpp:58:1: warning: implicit void declaration
+static	void		free_function_test_41()	;
+^
+implicit-void-declaration.cpp:59:1: warning: implicit void declaration
+static	void			free_function_test_42		()		;
+^
+implicit-void-declaration.cpp:64:1: warning: implicit void declaration
+const char * free_function_test_43();
+^
+implicit-void-declaration.cpp:65:1: warning: implicit void declaration
+const char * free_function_test_44 ();
+^
+implicit-void-declaration.cpp:66:1: warning: implicit void declaration
+const char *  free_function_test_45();
+^
+implicit-void-declaration.cpp:67:1: warning: implicit void declaration
+const char *   free_function_test_46  ();
+^
+implicit-void-declaration.cpp:68:1: warning: implicit void declaration
+const char * free_function_test_47 () ;
+^
+implicit-void-declaration.cpp:69:1: warning: implicit void declaration
+const char *  free_function_test_48() ;
+^
+implicit-void-declaration.cpp:70:1: warning: implicit void declaration
+const char *   free_function_test_49  ()  ;
+^
+implicit-void-declaration.cpp:73:1: warning: implicit void declaration
+const char *	free_function_test_50();
+^
+implicit-void-declaration.cpp:74:1: warning: implicit void declaration
+const char *	free_function_test_51	();
+^
+implicit-void-declaration.cpp:75:1: warning: implicit void declaration
+const char *		free_function_test_52();
+^
+implicit-void-declaration.cpp:76:1: warning: implicit void declaration
+const char *			free_function_test_53		();
+^
+implicit-void-declaration.cpp:77:1: warning: implicit void declaration
+const char *	free_function_test_54	()	;
+^
+implicit-void-declaration.cpp:78:1: warning: implicit void declaration
+const char *		free_function_test_55()	;
+^
+implicit-void-declaration.cpp:79:1: warning: implicit void declaration
+const char *			free_function_test_56		()		;
+^
+implicit-void-declaration.cpp:82:1: warning: implicit void declaration
+extern const char * free_function_test_57();
+^
+implicit-void-declaration.cpp:83:1: warning: implicit void declaration
+extern const char * free_function_test_58 ();
+^
+implicit-void-declaration.cpp:84:1: warning: implicit void declaration
+extern const char *  free_function_test_59();
+^
+implicit-void-declaration.cpp:85:1: warning: implicit void declaration
+extern const char *   free_function_test_60  ();
+^
+implicit-void-declaration.cpp:86:1: warning: implicit void declaration
+extern const char * free_function_test_61 () ;
+^
+implicit-void-declaration.cpp:87:1: warning: implicit void declaration
+extern const char *  free_function_test_62() ;
+^
+implicit-void-declaration.cpp:88:1: warning: implicit void declaration
+extern const char *   free_function_test_63  ()  ;
+^
+implicit-void-declaration.cpp:91:1: warning: implicit void declaration
+extern	const char *	free_function_test_64();
+^
+implicit-void-declaration.cpp:92:1: warning: implicit void declaration
+extern	const char *	free_function_test_65	();
+^
+implicit-void-declaration.cpp:93:1: warning: implicit void declaration
+extern	const char *		free_function_test_66();
+^
+implicit-void-declaration.cpp:94:1: warning: implicit void declaration
+extern	const char *			free_function_test_67		();
+^
+implicit-void-declaration.cpp:95:1: warning: implicit void declaration
+extern	const char *	free_function_test_68	()	;
+^
+implicit-void-declaration.cpp:96:1: warning: implicit void declaration
+extern	const char *		free_function_test_69()	;
+^
+implicit-void-declaration.cpp:97:1: warning: implicit void declaration
+extern	const char *			free_function_test_70		()		;
+^
+implicit-void-declaration.cpp:100:1: warning: implicit void declaration
+static const char * free_function_test_71();
+^
+implicit-void-declaration.cpp:101:1: warning: implicit void declaration
+static const char * free_function_test_72 ();
+^
+implicit-void-declaration.cpp:102:1: warning: implicit void declaration
+static const char *  free_function_test_73();
+^
+implicit-void-declaration.cpp:103:1: warning: implicit void declaration
+static const char *   free_function_test_74  ();
+^
+implicit-void-declaration.cpp:104:1: warning: implicit void declaration
+static const char * free_function_test_75 () ;
+^
+implicit-void-declaration.cpp:105:1: warning: implicit void declaration
+static const char *  free_function_test_76() ;
+^
+implicit-void-declaration.cpp:106:1: warning: implicit void declaration
+static const char *   free_function_test_77  ()  ;
+^
+implicit-void-declaration.cpp:109:1: warning: implicit void declaration
+static	const char *	free_function_test_78();
+^
+implicit-void-declaration.cpp:110:1: warning: implicit void declaration
+static	const char *	free_function_test_79	();
+^
+implicit-void-declaration.cpp:111:1: warning: implicit void declaration
+static	const char *		free_function_test_80();
+^
+implicit-void-declaration.cpp:112:1: warning: implicit void declaration
+static	const char *			free_function_test_81		();
+^
+implicit-void-declaration.cpp:113:1: warning: implicit void declaration
+static	const char *	free_function_test_82	()	;
+^
+implicit-void-declaration.cpp:114:1: warning: implicit void declaration
+static	const char *		free_function_test_83()	;
+^
+implicit-void-declaration.cpp:115:1: warning: implicit void declaration
+static	const char *			free_function_test_84		()		;
+^
+implicit-void-declaration.cpp:120:1: warning: implicit void declaration
+const uint32_t & free_function_test_85();
+^
+implicit-void-declaration.cpp:121:1: warning: implicit void declaration
+const uint32_t & free_function_test_86 ();
+^
+implicit-void-declaration.cpp:122:1: warning: implicit void declaration
+const uint32_t &  free_function_test_87();
+^
+implicit-void-declaration.cpp:123:1: warning: implicit void declaration
+const uint32_t &   free_function_test_88  ();
+^
+implicit-void-declaration.cpp:124:1: warning: implicit void declaration
+const uint32_t & free_function_test_89 () ;
+^
+implicit-void-declaration.cpp:125:1: warning: implicit void declaration
+const uint32_t &  free_function_test_90() ;
+^
+implicit-void-declaration.cpp:126:1: warning: implicit void declaration
+const uint32_t &   free_function_test_91  ()  ;
+^
+implicit-void-declaration.cpp:129:1: warning: implicit void declaration
+const uint32_t &	free_function_test_92();
+^
+implicit-void-declaration.cpp:130:1: warning: implicit void declaration
+const uint32_t &	free_function_test_93	();
+^
+implicit-void-declaration.cpp:131:1: warning: implicit void declaration
+const uint32_t &		free_function_test_94();
+^
+implicit-void-declaration.cpp:132:1: warning: implicit void declaration
+const uint32_t &			free_function_test_95		();
+^
+implicit-void-declaration.cpp:133:1: warning: implicit void declaration
+const uint32_t &	free_function_test_96	()	;
+^
+implicit-void-declaration.cpp:134:1: warning: implicit void declaration
+const uint32_t &		free_function_test_97()	;
+^
+implicit-void-declaration.cpp:135:1: warning: implicit void declaration
+const uint32_t &			free_function_test_98		()		;
+^
+implicit-void-declaration.cpp:138:1: warning: implicit void declaration
+extern const uint32_t & free_function_test_99();
+^
+implicit-void-declaration.cpp:139:1: warning: implicit void declaration
+extern const uint32_t & free_function_test_100 ();
+^
+implicit-void-declaration.cpp:140:1: warning: implicit void declaration
+extern const uint32_t &  free_function_test_101();
+^
+implicit-void-declaration.cpp:141:1: warning: implicit void declaration
+extern const uint32_t &   free_function_test_102  ();
+^
+implicit-void-declaration.cpp:142:1: warning: implicit void declaration
+extern const uint32_t & free_function_test_103 () ;
+^
+implicit-void-declaration.cpp:143:1: warning: implicit void declaration
+extern const uint32_t &  free_function_test_104() ;
+^
+implicit-void-declaration.cpp:144:1: warning: implicit void declaration
+extern const uint32_t &   free_function_test_105  ()  ;
+^
+implicit-void-declaration.cpp:147:1: warning: implicit void declaration
+extern	const uint32_t &	free_function_test_106();
+^
+implicit-void-declaration.cpp:148:1: warning: implicit void declaration
+extern	const uint32_t &	free_function_test_107	();
+^
+implicit-void-declaration.cpp:149:1: warning: implicit void declaration
+extern	const uint32_t &		free_function_test_108();
+^
+implicit-void-declaration.cpp:150:1: warning: implicit void declaration
+extern	const uint32_t &			free_function_test_109		();
+^
+implicit-void-declaration.cpp:151:1: warning: implicit void declaration
+extern	const uint32_t &	free_function_test_110	()	;
+^
+implicit-void-declaration.cpp:152:1: warning: implicit void declaration
+extern	const uint32_t &		free_function_test_111()	;
+^
+implicit-void-declaration.cpp:153:1: warning: implicit void declaration
+extern	const uint32_t &			free_function_test_112		()		;
+^
+implicit-void-declaration.cpp:156:1: warning: implicit void declaration
+static const uint32_t & free_function_test_113();
+^
+implicit-void-declaration.cpp:157:1: warning: implicit void declaration
+static const uint32_t & free_function_test_114 ();
+^
+implicit-void-declaration.cpp:158:1: warning: implicit void declaration
+static const uint32_t &  free_function_test_115();
+^
+implicit-void-declaration.cpp:159:1: warning: implicit void declaration
+static const uint32_t &   free_function_test_116  ();
+^
+implicit-void-declaration.cpp:160:1: warning: implicit void declaration
+static const uint32_t & free_function_test_117 () ;
+^
+implicit-void-declaration.cpp:161:1: warning: implicit void declaration
+static const uint32_t &  free_function_test_118() ;
+^
+implicit-void-declaration.cpp:162:1: warning: implicit void declaration
+static const uint32_t &   free_function_test_119  ()  ;
+^
+implicit-void-declaration.cpp:165:1: warning: implicit void declaration
+static	const uint32_t &	free_function_test_120();
+^
+implicit-void-declaration.cpp:166:1: warning: implicit void declaration
+static	const uint32_t &	free_function_test_121	();
+^
+implicit-void-declaration.cpp:167:1: warning: implicit void declaration
+static	const uint32_t &		free_function_test_122();
+^
+implicit-void-declaration.cpp:168:1: warning: implicit void declaration
+static	const uint32_t &			free_function_test_123		();
+^
+implicit-void-declaration.cpp:169:1: warning: implicit void declaration
+static	const uint32_t &	free_function_test_124	()	;
+^
+implicit-void-declaration.cpp:170:1: warning: implicit void declaration
+static	const uint32_t &		free_function_test_125()	;
+^
+implicit-void-declaration.cpp:171:1: warning: implicit void declaration
+static	const uint32_t &			free_function_test_126		()		;
+^
+implicit-void-declaration.cpp:178:1: warning: implicit void declaration
+    void method_test_1();
+^
+implicit-void-declaration.cpp:179:1: warning: implicit void declaration
+    void method_test_2 ();
+^
+implicit-void-declaration.cpp:180:1: warning: implicit void declaration
+    void  method_test_3();
+^
+implicit-void-declaration.cpp:181:1: warning: implicit void declaration
+    void   method_test_4  ();
+^
+implicit-void-declaration.cpp:182:1: warning: implicit void declaration
+    void method_test_5 () ;
+^
+implicit-void-declaration.cpp:183:1: warning: implicit void declaration
+    void  method_test_6() ;
+^
+implicit-void-declaration.cpp:184:1: warning: implicit void declaration
+    void   method_test_7  ()  ;
+^
+implicit-void-declaration.cpp:187:1: warning: implicit void declaration
+    void	method_test_8();
+^
+implicit-void-declaration.cpp:188:1: warning: implicit void declaration
+    void	method_test_9	();
+^
+implicit-void-declaration.cpp:189:1: warning: implicit void declaration
+    void		method_test_10();
+^
+implicit-void-declaration.cpp:190:1: warning: implicit void declaration
+    void			method_test_11		();
+^
+implicit-void-declaration.cpp:191:1: warning: implicit void declaration
+    void	method_test_12	()	;
+^
+implicit-void-declaration.cpp:192:1: warning: implicit void declaration
+    void		method_test_13()	;
+^
+implicit-void-declaration.cpp:193:1: warning: implicit void declaration
+    void			method_test_14		()		;
+^
+implicit-void-declaration.cpp:196:1: warning: implicit void declaration
+    void method_test_15() const;
+^
+implicit-void-declaration.cpp:197:1: warning: implicit void declaration
+    void method_test_16 () const;
+^
+implicit-void-declaration.cpp:198:1: warning: implicit void declaration
+    void  method_test_17() const;
+^
+implicit-void-declaration.cpp:199:1: warning: implicit void declaration
+    void   method_test_18  () const;
+^
+implicit-void-declaration.cpp:200:1: warning: implicit void declaration
+    void method_test_19 ()  const;
+^
+implicit-void-declaration.cpp:201:1: warning: implicit void declaration
+    void  method_test_20()  const;
+^
+implicit-void-declaration.cpp:202:1: warning: implicit void declaration
+    void   method_test_21  ()   const;
+^
+implicit-void-declaration.cpp:205:1: warning: implicit void declaration
+    void	method_test_22()	const;
+^
+implicit-void-declaration.cpp:206:1: warning: implicit void declaration
+    void	method_test_23	()	const;
+^
+implicit-void-declaration.cpp:207:1: warning: implicit void declaration
+    void		method_test_24()	const;
+^
+implicit-void-declaration.cpp:208:1: warning: implicit void declaration
+    void			method_test_25		()	const;
+^
+implicit-void-declaration.cpp:209:1: warning: implicit void declaration
+    void	method_test_26	()	const	;
+^
+implicit-void-declaration.cpp:210:1: warning: implicit void declaration
+    void		method_test_27()	const	;
+^
+implicit-void-declaration.cpp:211:1: warning: implicit void declaration
+    void			method_test_28		()		const		;
+^
+implicit-void-declaration.cpp:214:1: warning: implicit void declaration
+    void method_test_29() volatile;
+^
+implicit-void-declaration.cpp:215:1: warning: implicit void declaration
+    void method_test_30 () volatile;
+^
+implicit-void-declaration.cpp:216:1: warning: implicit void declaration
+    void  method_test_31() volatile;
+^
+implicit-void-declaration.cpp:217:1: warning: implicit void declaration
+    void   method_test_32  () volatile;
+^
+implicit-void-declaration.cpp:218:1: warning: implicit void declaration
+    void method_test_33 ()  volatile;
+^
+implicit-void-declaration.cpp:219:1: warning: implicit void declaration
+    void  method_test_34()  volatile;
+^
+implicit-void-declaration.cpp:220:1: warning: implicit void declaration
+    void   method_test_35  ()   volatile;
+^
+implicit-void-declaration.cpp:223:1: warning: implicit void declaration
+    void	method_test_36()	volatile;
+^
+implicit-void-declaration.cpp:224:1: warning: implicit void declaration
+    void	method_test_37	()	volatile;
+^
+implicit-void-declaration.cpp:225:1: warning: implicit void declaration
+    void		method_test_38()	volatile;
+^
+implicit-void-declaration.cpp:226:1: warning: implicit void declaration
+    void			method_test_39		()	volatile;
+^
+implicit-void-declaration.cpp:227:1: warning: implicit void declaration
+    void	method_test_40	()	volatile	;
+^
+implicit-void-declaration.cpp:228:1: warning: implicit void declaration
+    void		method_test_41()	volatile	;
+^
+implicit-void-declaration.cpp:229:1: warning: implicit void declaration
+    void			method_test_42		()		volatile		;
+^
+implicit-void-declaration.cpp:232:1: warning: implicit void declaration
+    void method_test_43() const volatile;
+^
+implicit-void-declaration.cpp:233:1: warning: implicit void declaration
+    void method_test_44 () const volatile;
+^
+implicit-void-declaration.cpp:234:1: warning: implicit void declaration
+    void  method_test_45() const volatile;
+^
+implicit-void-declaration.cpp:235:1: warning: implicit void declaration
+    void   method_test_46  () const volatile;
+^
+implicit-void-declaration.cpp:236:1: warning: implicit void declaration
+    void method_test_47 ()  const volatile;
+^
+implicit-void-declaration.cpp:237:1: warning: implicit void declaration
+    void  method_test_48()  const volatile;
+^
+implicit-void-declaration.cpp:238:1: warning: implicit void declaration
+    void   method_test_49  ()   const volatile;
+^
+implicit-void-declaration.cpp:241:1: warning: implicit void declaration
+    void	method_test_50()	const volatile;
+^
+implicit-void-declaration.cpp:242:1: warning: implicit void declaration
+    void	method_test_51	()	const volatile;
+^
+implicit-void-declaration.cpp:243:1: warning: implicit void declaration
+    void		method_test_52()	const volatile;
+^
+implicit-void-declaration.cpp:244:1: warning: implicit void declaration
+    void			method_test_53		()	const volatile;
+^
+implicit-void-declaration.cpp:245:1: warning: implicit void declaration
+    void	method_test_54	()	const volatile	;
+^
+implicit-void-declaration.cpp:246:1: warning: implicit void declaration
+    void		method_test_55()	const volatile	;
+^
+implicit-void-declaration.cpp:247:1: warning: implicit void declaration
+    void			method_test_56		()		const volatile		;
+^
+implicit-void-declaration.cpp:252:1: warning: implicit void declaration
+    static void method_test_57();
+^
+implicit-void-declaration.cpp:253:1: warning: implicit void declaration
+    static void method_test_58 ();
+^
+implicit-void-declaration.cpp:254:1: warning: implicit void declaration
+    static void  method_test_59();
+^
+implicit-void-declaration.cpp:255:1: warning: implicit void declaration
+    static void   method_test_60  ();
+^
+implicit-void-declaration.cpp:256:1: warning: implicit void declaration
+    static void method_test_61 () ;
+^
+implicit-void-declaration.cpp:257:1: warning: implicit void declaration
+    static void  method_test_62() ;
+^
+implicit-void-declaration.cpp:258:1: warning: implicit void declaration
+    static void   method_test_63  ()  ;
+^
+implicit-void-declaration.cpp:261:1: warning: implicit void declaration
+    static void	method_test_64();
+^
+implicit-void-declaration.cpp:262:1: warning: implicit void declaration
+    static void	method_test_65	();
+^
+implicit-void-declaration.cpp:263:1: warning: implicit void declaration
+    static void		method_test_66();
+^
+implicit-void-declaration.cpp:264:1: warning: implicit void declaration
+    static void			method_test_67		();
+^
+implicit-void-declaration.cpp:265:1: warning: implicit void declaration
+    static void	method_test_68	()	;
+^
+implicit-void-declaration.cpp:266:1: warning: implicit void declaration
+    static void		method_test_69()	;
+^
+implicit-void-declaration.cpp:267:1: warning: implicit void declaration
+    static void			method_test_70		()		;
+^
+implicit-void-declaration.cpp:272:1: warning: implicit void declaration
+    virtual void method_test_113();
+^
+implicit-void-declaration.cpp:273:1: warning: implicit void declaration
+    virtual void method_test_114 ();
+^
+implicit-void-declaration.cpp:274:1: warning: implicit void declaration
+    virtual void  method_test_115();
+^
+implicit-void-declaration.cpp:275:1: warning: implicit void declaration
+    virtual void   method_test_116  ();
+^
+implicit-void-declaration.cpp:276:1: warning: implicit void declaration
+    virtual void method_test_117 () ;
+^
+implicit-void-declaration.cpp:277:1: warning: implicit void declaration
+    virtual void  method_test_118() ;
+^
+implicit-void-declaration.cpp:278:1: warning: implicit void declaration
+    virtual void   method_test_119  ()  ;
+^
+implicit-void-declaration.cpp:281:1: warning: implicit void declaration
+    virtual void	method_test_120();
+^
+implicit-void-declaration.cpp:282:1: warning: implicit void declaration
+    virtual void	method_test_121	();
+^
+implicit-void-declaration.cpp:283:1: warning: implicit void declaration
+    virtual void		method_test_122();
+^
+implicit-void-declaration.cpp:284:1: warning: implicit void declaration
+    virtual void			method_test_123		();
+^
+implicit-void-declaration.cpp:285:1: warning: implicit void declaration
+    virtual void	method_test_124	()	;
+^
+implicit-void-declaration.cpp:286:1: warning: implicit void declaration
+    virtual void		method_test_125()	;
+^
+implicit-void-declaration.cpp:287:1: warning: implicit void declaration
+    virtual void			method_test_126		()		;
+^
+implicit-void-declaration.cpp:290:1: warning: implicit void declaration
+    virtual void method_test_127() const;
+^
+implicit-void-declaration.cpp:291:1: warning: implicit void declaration
+    virtual void method_test_128 () const;
+^
+implicit-void-declaration.cpp:292:1: warning: implicit void declaration
+    virtual void  method_test_129() const;
+^
+implicit-void-declaration.cpp:293:1: warning: implicit void declaration
+    virtual void   method_test_130  () const;
+^
+implicit-void-declaration.cpp:294:1: warning: implicit void declaration
+    virtual void method_test_131 ()  const;
+^
+implicit-void-declaration.cpp:295:1: warning: implicit void declaration
+    virtual void  method_test_132()  const;
+^
+implicit-void-declaration.cpp:296:1: warning: implicit void declaration
+    virtual void   method_test_133  ()   const;
+^
+implicit-void-declaration.cpp:299:1: warning: implicit void declaration
+    virtual void	method_test_134()	const;
+^
+implicit-void-declaration.cpp:300:1: warning: implicit void declaration
+    virtual void	method_test_135	()	const;
+^
+implicit-void-declaration.cpp:301:1: warning: implicit void declaration
+    virtual void		method_test_136()	const;
+^
+implicit-void-declaration.cpp:302:1: warning: implicit void declaration
+    virtual void			method_test_137		()	const;
+^
+implicit-void-declaration.cpp:303:1: warning: implicit void declaration
+    virtual void	method_test_138	()	const	;
+^
+implicit-void-declaration.cpp:304:1: warning: implicit void declaration
+    virtual void		method_test_139()	const	;
+^
+implicit-void-declaration.cpp:305:1: warning: implicit void declaration
+    virtual void			method_test_140		()		const		;
+^
+implicit-void-declaration.cpp:308:1: warning: implicit void declaration
+    virtual void method_test_141() volatile;
+^
+implicit-void-declaration.cpp:309:1: warning: implicit void declaration
+    virtual void method_test_142 () volatile;
+^
+implicit-void-declaration.cpp:310:1: warning: implicit void declaration
+    virtual void  method_test_143() volatile;
+^
+implicit-void-declaration.cpp:311:1: warning: implicit void declaration
+    virtual void   method_test_144  () volatile;
+^
+implicit-void-declaration.cpp:312:1: warning: implicit void declaration
+    virtual void method_test_145 ()  volatile;
+^
+implicit-void-declaration.cpp:313:1: warning: implicit void declaration
+    virtual void  method_test_146()  volatile;
+^
+implicit-void-declaration.cpp:314:1: warning: implicit void declaration
+    virtual void   method_test_147  ()   volatile;
+^
+implicit-void-declaration.cpp:317:1: warning: implicit void declaration
+    virtual void	method_test_148()	volatile;
+^
+implicit-void-declaration.cpp:318:1: warning: implicit void declaration
+    virtual void	method_test_149	()	volatile;
+^
+implicit-void-declaration.cpp:319:1: warning: implicit void declaration
+    virtual void		method_test_150()	volatile;
+^
+implicit-void-declaration.cpp:320:1: warning: implicit void declaration
+    virtual void			method_test_151		()	volatile;
+^
+implicit-void-declaration.cpp:321:1: warning: implicit void declaration
+    virtual void	method_test_152	()	volatile	;
+^
+implicit-void-declaration.cpp:322:1: warning: implicit void declaration
+    virtual void		method_test_153()	volatile	;
+^
+implicit-void-declaration.cpp:323:1: warning: implicit void declaration
+    virtual void			method_test_154		()		volatile		;
+^
+implicit-void-declaration.cpp:326:1: warning: implicit void declaration
+    virtual void method_test_155() const volatile;
+^
+implicit-void-declaration.cpp:327:1: warning: implicit void declaration
+    virtual void method_test_156 () const volatile;
+^
+implicit-void-declaration.cpp:328:1: warning: implicit void declaration
+    virtual void  method_test_157() const volatile;
+^
+implicit-void-declaration.cpp:329:1: warning: implicit void declaration
+    virtual void   method_test_158  () const volatile;
+^
+implicit-void-declaration.cpp:330:1: warning: implicit void declaration
+    virtual void method_test_159 ()  const volatile;
+^
+implicit-void-declaration.cpp:331:1: warning: implicit void declaration
+    virtual void  method_test_160()  const volatile;
+^
+implicit-void-declaration.cpp:332:1: warning: implicit void declaration
+    virtual void   method_test_161  ()   const volatile;
+^
+implicit-void-declaration.cpp:335:1: warning: implicit void declaration
+    virtual void	method_test_162()	const volatile;
+^
+implicit-void-declaration.cpp:336:1: warning: implicit void declaration
+    virtual void	method_test_163	()	const volatile;
+^
+implicit-void-declaration.cpp:337:1: warning: implicit void declaration
+    virtual void		method_test_164()	const volatile;
+^
+implicit-void-declaration.cpp:338:1: warning: implicit void declaration
+    virtual void			method_test_165		()	const volatile;
+^
+implicit-void-declaration.cpp:339:1: warning: implicit void declaration
+    virtual void	method_test_166	()	const volatile	;
+^
+implicit-void-declaration.cpp:340:1: warning: implicit void declaration
+    virtual void		method_test_167()	const volatile	;
+^
+implicit-void-declaration.cpp:341:1: warning: implicit void declaration
+    virtual void			method_test_168		()		const volatile		;
+^
+implicit-void-declaration.cpp:346:1: warning: implicit void declaration
+    virtual void method_test_169() = 0;
+^
+implicit-void-declaration.cpp:347:1: warning: implicit void declaration
+    virtual void method_test_170 () = 0;
+^
+implicit-void-declaration.cpp:348:1: warning: implicit void declaration
+    virtual void  method_test_171() = 0;
+^
+implicit-void-declaration.cpp:349:1: warning: implicit void declaration
+    virtual void   method_test_172  () = 0;
+^
+implicit-void-declaration.cpp:350:1: warning: implicit void declaration
+    virtual void method_test_173 ()  = 0;
+^
+implicit-void-declaration.cpp:351:1: warning: implicit void declaration
+    virtual void  method_test_174()  = 0;
+^
+implicit-void-declaration.cpp:352:1: warning: implicit void declaration
+    virtual void   method_test_175  ()   = 0;
+^
+implicit-void-declaration.cpp:355:1: warning: implicit void declaration
+    virtual void	method_test_176() = 0;
+^
+implicit-void-declaration.cpp:356:1: warning: implicit void declaration
+    virtual void	method_test_177	() = 0;
+^
+implicit-void-declaration.cpp:357:1: warning: implicit void declaration
+    virtual void		method_test_178() = 0;
+^
+implicit-void-declaration.cpp:358:1: warning: implicit void declaration
+    virtual void			method_test_179		() = 0;
+^
+implicit-void-declaration.cpp:359:1: warning: implicit void declaration
+    virtual void	method_test_180	()	 = 0;
+^
+implicit-void-declaration.cpp:360:1: warning: implicit void declaration
+    virtual void		method_test_181()	 = 0;
+^
+implicit-void-declaration.cpp:361:1: warning: implicit void declaration
+    virtual void			method_test_182		()		 = 0;
+^
+implicit-void-declaration.cpp:364:1: warning: implicit void declaration
+    virtual void method_test_183() const = 0;
+^
+implicit-void-declaration.cpp:365:1: warning: implicit void declaration
+    virtual void method_test_184 () const = 0;
+^
+implicit-void-declaration.cpp:366:1: warning: implicit void declaration
+    virtual void  method_test_185() const = 0;
+^
+implicit-void-declaration.cpp:367:1: warning: implicit void declaration
+    virtual void   method_test_186  () const = 0;
+^
+implicit-void-declaration.cpp:368:1: warning: implicit void declaration
+    virtual void method_test_187 ()  const = 0;
+^
+implicit-void-declaration.cpp:369:1: warning: implicit void declaration
+    virtual void  method_test_188()  const = 0;
+^
+implicit-void-declaration.cpp:370:1: warning: implicit void declaration
+    virtual void   method_test_189  ()   const = 0;
+^
+implicit-void-declaration.cpp:373:1: warning: implicit void declaration
+    virtual void	method_test_190()	const = 0;
+^
+implicit-void-declaration.cpp:374:1: warning: implicit void declaration
+    virtual void	method_test_191	()	const = 0;
+^
+implicit-void-declaration.cpp:375:1: warning: implicit void declaration
+    virtual void		method_test_192()	const = 0;
+^
+implicit-void-declaration.cpp:376:1: warning: implicit void declaration
+    virtual void			method_test_193		()	const = 0;
+^
+implicit-void-declaration.cpp:377:1: warning: implicit void declaration
+    virtual void	method_test_194	()	const	 = 0;
+^
+implicit-void-declaration.cpp:378:1: warning: implicit void declaration
+    virtual void		method_test_195()	const	 = 0;
+^
+implicit-void-declaration.cpp:379:1: warning: implicit void declaration
+    virtual void			method_test_196		()		const		 = 0;
+^
+implicit-void-declaration.cpp:382:1: warning: implicit void declaration
+    virtual void method_test_197() volatile = 0;
+^
+implicit-void-declaration.cpp:383:1: warning: implicit void declaration
+    virtual void method_test_198 () volatile = 0;
+^
+implicit-void-declaration.cpp:384:1: warning: implicit void declaration
+    virtual void  method_test_199() volatile = 0;
+^
+implicit-void-declaration.cpp:385:1: warning: implicit void declaration
+    virtual void   method_test_200  () volatile = 0;
+^
+implicit-void-declaration.cpp:386:1: warning: implicit void declaration
+    virtual void method_test_201 ()  volatile = 0;
+^
+implicit-void-declaration.cpp:387:1: warning: implicit void declaration
+    virtual void  method_test_202()  volatile = 0;
+^
+implicit-void-declaration.cpp:388:1: warning: implicit void declaration
+    virtual void   method_test_203  ()   volatile = 0;
+^
+implicit-void-declaration.cpp:391:1: warning: implicit void declaration
+    virtual void	method_test_204()	volatile = 0;
+^
+implicit-void-declaration.cpp:392:1: warning: implicit void declaration
+    virtual void	method_test_205	()	volatile = 0;
+^
+implicit-void-declaration.cpp:393:1: warning: implicit void declaration
+    virtual void		method_test_206()	volatile = 0;
+^
+implicit-void-declaration.cpp:394:1: warning: implicit void declaration
+    virtual void			method_test_207		()	volatile = 0;
+^
+implicit-void-declaration.cpp:395:1: warning: implicit void declaration
+    virtual void	method_test_208	()	volatile	 = 0;
+^
+implicit-void-declaration.cpp:396:1: warning: implicit void declaration
+    virtual void		method_test_209()	volatile	 = 0;
+^
+implicit-void-declaration.cpp:397:1: warning: implicit void declaration
+    virtual void			method_test_210		()		volatile		 = 0;
+^
+implicit-void-declaration.cpp:400:1: warning: implicit void declaration
+    virtual void method_test_211() const volatile = 0;
+^
+implicit-void-declaration.cpp:401:1: warning: implicit void declaration
+    virtual void method_test_212 () const volatile = 0;
+^
+implicit-void-declaration.cpp:402:1: warning: implicit void declaration
+    virtual void  method_test_213() const volatile = 0;
+^
+implicit-void-declaration.cpp:403:1: warning: implicit void declaration
+    virtual void   method_test_214  () const volatile = 0;
+^
+implicit-void-declaration.cpp:404:1: warning: implicit void declaration
+    virtual void method_test_215 ()  const volatile = 0;
+^
+implicit-void-declaration.cpp:405:1: warning: implicit void declaration
+    virtual void  method_test_216()  const volatile = 0;
+^
+implicit-void-declaration.cpp:406:1: warning: implicit void declaration
+    virtual void   method_test_217  ()   const volatile = 0;
+^
+implicit-void-declaration.cpp:409:1: warning: implicit void declaration
+    virtual void	method_test_218()	const volatile = 0;
+^
+implicit-void-declaration.cpp:410:1: warning: implicit void declaration
+    virtual void	method_test_219	()	const volatile = 0;
+^
+implicit-void-declaration.cpp:411:1: warning: implicit void declaration
+    virtual void		method_test_220()	const volatile = 0;
+^
+implicit-void-declaration.cpp:412:1: warning: implicit void declaration
+    virtual void			method_test_221		()	const volatile = 0;
+^
+implicit-void-declaration.cpp:413:1: warning: implicit void declaration
+    virtual void	method_test_222	()	const volatile	 = 0;
+^
+implicit-void-declaration.cpp:414:1: warning: implicit void declaration
+    virtual void		method_test_223()	const volatile	 = 0;
+^
+implicit-void-declaration.cpp:415:1: warning: implicit void declaration
+    virtual void			method_test_224		()		const volatile		 = 0;
+^

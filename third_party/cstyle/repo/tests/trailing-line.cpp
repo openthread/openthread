@@ -1,0 +1,5 @@
+void TrailingLine(void)
+{
+	return;
+}
+

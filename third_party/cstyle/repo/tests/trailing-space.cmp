@@ -1,0 +1,21 @@
+trailing-space.cpp:1:41: warning: white space at end of a non-blank line
+// This comment includes trailing space. 
+----------------------------------------^
+trailing-space.cpp:4:27: warning: white space at end of a non-blank line
+ * This multi-line comment	
+--------------------------^
+trailing-space.cpp:5:28: warning: white space at end of a non-blank line
+ * includes trailing space.	
+---------------------------^
+trailing-space.cpp:8:24: warning: white space at end of a non-blank line
+int TrailingSpace(void) 
+-----------------------^
+trailing-space.cpp:9:2: warning: white space at end of a non-blank line
+{ 
+-^
+trailing-space.cpp:10:14: warning: white space at end of a non-blank line
+    return 0; 
+-------------^
+trailing-space.cpp:11:2: warning: white space at end of a non-blank line
+} 
+-^

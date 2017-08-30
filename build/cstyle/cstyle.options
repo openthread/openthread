@@ -1,0 +1,23 @@
+-v
+--copyright='^( \*|\/\*|\/\/)    Copyright (\(c\) )*\d{4,}(-\d{4,})* The nlfaultinjection Authors\.'
+--cpp-lines-between-conditionals=20
+--line-length=132
+--tab-size=4
+-Werror
+-Winterpolated-space
+-Wtrailing-line
+-Wblank-trailing-space
+-Wtrailing-space
+-Wmissing-cpp-conditional-labels
+-Wcpp-constant-conditionals
+-Wmissing-copyright
+-Wmissing-newline-at-eof
+-Wmissing-space-after-comma
+-Wmissing-space-after-else-if
+-Wmissing-space-after-for
+-Wmissing-space-after-if
+-Wmissing-space-after-operator
+-Wmissing-space-after-semicolon
+-Wmissing-space-after-switch
+-Wmissing-space-after-while
+-Wmissing-space-around-braces

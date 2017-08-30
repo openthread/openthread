@@ -1,0 +1,36 @@
+cpp-directive-leading-space.cpp:19:1: warning: leading space before preprocessor directive
+ #if CPP_DIRECTIVE_LEADING_SPACE
+^
+cpp-directive-leading-space.cpp:21:1: warning: leading space before preprocessor directive
+ #endif
+^
+cpp-directive-leading-space.cpp:23:1: warning: leading space before preprocessor directive
+	#if CPP_DIRECTIVE_LEADING_SPACE
+^
+cpp-directive-leading-space.cpp:25:1: warning: leading space before preprocessor directive
+	#endif
+^
+cpp-directive-leading-space.cpp:27:1: warning: leading space before preprocessor directive
+ 	#if CPP_DIRECTIVE_LEADING_SPACE
+^
+cpp-directive-leading-space.cpp:29:1: warning: leading space before preprocessor directive
+ 	#endif
+^
+cpp-directive-leading-space.cpp:31:1: warning: leading space before preprocessor directive
+	 #if CPP_DIRECTIVE_LEADING_SPACE
+^
+cpp-directive-leading-space.cpp:33:1: warning: leading space before preprocessor directive
+	 #endif
+^
+cpp-directive-leading-space.cpp:35:1: warning: leading space before preprocessor directive
+ 	 #if CPP_DIRECTIVE_LEADING_SPACE
+^
+cpp-directive-leading-space.cpp:37:1: warning: leading space before preprocessor directive
+ 	 #endif
+^
+cpp-directive-leading-space.cpp:39:1: warning: leading space before preprocessor directive
+	 	#if CPP_DIRECTIVE_LEADING_SPACE
+^
+cpp-directive-leading-space.cpp:41:1: warning: leading space before preprocessor directive
+	 	#endif
+^

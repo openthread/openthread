@@ -1,0 +1,72 @@
+space-around-unary-operators.cpp:9:7: warning: space around unary operator '++'
+    a ++;
+------^
+space-around-unary-operators.cpp:10:5: warning: space around unary operator '++'
+    ++ a;
+----^
+space-around-unary-operators.cpp:17:9: warning: space around unary operator '++'
+    (a) ++;
+--------^
+space-around-unary-operators.cpp:18:5: warning: space around unary operator '++'
+    ++ (a);
+----^
+space-around-unary-operators.cpp:23:30: warning: space around unary operator '++'
+    for (int a = 0; a < n; a ++)
+-----------------------------^
+space-around-unary-operators.cpp:28:28: warning: space around unary operator '++'
+    for (int a = 0; a < n; ++ a)
+---------------------------^
+space-around-unary-operators.cpp:36:32: warning: space around unary operator '++'
+    for (int a = 0; a < n; (a) ++)
+-------------------------------^
+space-around-unary-operators.cpp:41:28: warning: space around unary operator '++'
+    for (int a = 0; a < n; ++ (a))
+---------------------------^
+space-around-unary-operators.cpp:51:7: warning: space around unary operator '--'
+    a --;
+------^
+space-around-unary-operators.cpp:53:5: warning: space around unary operator '--'
+    -- a;
+----^
+space-around-unary-operators.cpp:60:9: warning: space around unary operator '--'
+    (a) --;
+--------^
+space-around-unary-operators.cpp:62:5: warning: space around unary operator '--'
+    -- (a);
+----^
+space-around-unary-operators.cpp:67:30: warning: space around unary operator '--'
+    for (int a = 0; a < n; a --)
+-----------------------------^
+space-around-unary-operators.cpp:72:28: warning: space around unary operator '--'
+    for (int a = 0; a < n; -- a)
+---------------------------^
+space-around-unary-operators.cpp:80:32: warning: space around unary operator '--'
+    for (int a = 0; a < n; (a) --)
+-------------------------------^
+space-around-unary-operators.cpp:85:28: warning: space around unary operator '--'
+    for (int a = 0; a < n; -- (a))
+---------------------------^
+space-around-unary-operators.cpp:96:9: warning: space around unary operator '~'
+    b = ~ a;
+--------^
+space-around-unary-operators.cpp:98:12: warning: space around unary operator '~'
+    return ~ b;
+-----------^
+space-around-unary-operators.cpp:106:9: warning: space around unary operator '~'
+    b = ~ (a);
+--------^
+space-around-unary-operators.cpp:108:12: warning: space around unary operator '~'
+    return ~ (b);
+-----------^
+space-around-unary-operators.cpp:117:9: warning: space around unary operator '!'
+    b = ! a;
+--------^
+space-around-unary-operators.cpp:119:12: warning: space around unary operator '!'
+    return ! b;
+-----------^
+space-around-unary-operators.cpp:127:9: warning: space around unary operator '!'
+    b = ! (a);
+--------^
+space-around-unary-operators.cpp:129:12: warning: space around unary operator '!'
+    return ! (b);
+-----------^

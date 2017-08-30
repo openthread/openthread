@@ -1,0 +1,12 @@
+blank-trailing-space.cpp:2:1: warning: white space at end of a blank line
+	
+^
+blank-trailing-space.cpp:7:1: warning: white space at end of a blank line
+  
+^
+blank-trailing-space.cpp:12:1: warning: white space at end of a blank line
+  
+^
+blank-trailing-space.cpp:13:1: warning: white space at end of a blank line
+		
+^

@@ -1,0 +1,120 @@
+missing-space-after-operator.cpp:7:22: warning: missing space after 'operator' keyword
+extern void *operatornew(size_t);
+---------------------^
+missing-space-after-operator.cpp:8:21: warning: missing space after 'operator' keyword
+extern void operatordelete(void *);
+--------------------^
+missing-space-after-operator.cpp:10:20: warning: missing space after 'operator' keyword
+extern int operator+(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:11:20: warning: missing space after 'operator' keyword
+extern int operator-(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:12:20: warning: missing space after 'operator' keyword
+extern int operator*(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:13:20: warning: missing space after 'operator' keyword
+extern int operator/(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:14:20: warning: missing space after 'operator' keyword
+extern int operator%(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:15:20: warning: missing space after 'operator' keyword
+extern int operator^(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:16:20: warning: missing space after 'operator' keyword
+extern int operator&(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:17:20: warning: missing space after 'operator' keyword
+extern int operator|(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:19:20: warning: missing space after 'operator' keyword
+extern int operator&&(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:20:20: warning: missing space after 'operator' keyword
+extern int operator||(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:22:20: warning: missing space after 'operator' keyword
+extern int operator~(test_5 a);
+-------------------^
+missing-space-after-operator.cpp:23:20: warning: missing space after 'operator' keyword
+extern int operator!(test_5 a);
+-------------------^
+missing-space-after-operator.cpp:25:20: warning: missing space after 'operator' keyword
+extern int operator<(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:26:20: warning: missing space after 'operator' keyword
+extern int operator>(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:27:20: warning: missing space after 'operator' keyword
+extern int operator==(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:28:20: warning: missing space after 'operator' keyword
+extern int operator!=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:29:20: warning: missing space after 'operator' keyword
+extern int operator<=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:30:20: warning: missing space after 'operator' keyword
+extern int operator>=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:32:20: warning: missing space after 'operator' keyword
+extern int operator+=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:33:20: warning: missing space after 'operator' keyword
+extern int operator-=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:34:20: warning: missing space after 'operator' keyword
+extern int operator*=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:35:20: warning: missing space after 'operator' keyword
+extern int operator/=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:36:20: warning: missing space after 'operator' keyword
+extern int operator%=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:37:20: warning: missing space after 'operator' keyword
+extern int operator^=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:38:20: warning: missing space after 'operator' keyword
+extern int operator&=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:39:20: warning: missing space after 'operator' keyword
+extern int operator|=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:40:20: warning: missing space after 'operator' keyword
+extern int operator<<(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:41:20: warning: missing space after 'operator' keyword
+extern int operator>>(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:42:20: warning: missing space after 'operator' keyword
+extern int operator>>=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:43:20: warning: missing space after 'operator' keyword
+extern int operator<<=(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:45:20: warning: missing space after 'operator' keyword
+extern int operator++(test_5 a);
+-------------------^
+missing-space-after-operator.cpp:46:20: warning: missing space after 'operator' keyword
+extern int operator--(test_5 a);
+-------------------^
+missing-space-after-operator.cpp:48:20: warning: missing space after 'operator' keyword
+extern int operator,(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:49:20: warning: missing space after 'operator' keyword
+extern int operator->*(test_5 a, test_5 b);
+-------------------^
+missing-space-after-operator.cpp:53:17: warning: missing space after 'operator' keyword
+    int operator=(test_5 a);
+----------------^
+missing-space-after-operator.cpp:54:21: warning: missing space after 'operator' keyword
+    test_5 &operator->(void);
+--------------------^
+missing-space-after-operator.cpp:55:17: warning: missing space after 'operator' keyword
+    int operator()(int a);
+----------------^
+missing-space-after-operator.cpp:56:17: warning: missing space after 'operator' keyword
+    int operator[](size_t a);
+----------------^

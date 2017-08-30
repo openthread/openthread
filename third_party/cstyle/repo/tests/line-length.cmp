@@ -1,0 +1,6 @@
+line-length.cpp:3:1: warning: line > 80 characters
+// This	line	is	more	than	80	characters	long	through	the	use	of	tabs.
+^
+line-length.cpp:5:1: warning: line > 80 characters
+// This line, all by itself without any tabs, is more than eighty characters long.
+^

@@ -1,0 +1,9 @@
+missing-space-after-semicolon.cpp:3:44: warning: missing space after semicolon
+namespace a { namespace b { namespace c { };};};
+-------------------------------------------^
+missing-space-after-semicolon.cpp:11:19: warning: missing space after semicolon
+    for (int i = 0;i < m;i++)
+------------------^
+missing-space-after-semicolon.cpp:16:10: warning: missing space after semicolon
+    foo();foo();foo();
+---------^
