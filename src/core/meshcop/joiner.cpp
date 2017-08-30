@@ -288,6 +288,8 @@ otError Joiner::TryNextJoin()
 
 	if(joinerRouter->mPriority > 0)
 	{
+		joinerRouter->mPriority = 0;
+
 		netif.GetMac().SetPanId(joinerRouter->mPanId);
 		netif.GetMac().SetChannel(joinerRouter->mChannel);
 		netif.GetIp6Filter().AddUnsecurePort(netif.GetCoapSecure().GetPort());
