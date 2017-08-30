@@ -1,0 +1,12 @@
+missing-space-after-if.cpp:5:7: warning: missing space after 'if' keyword
+    if(aArgument % 2 != 0) foo();
+------^
+missing-space-after-if.cpp:10:7: warning: missing space after 'if' keyword
+    if(aArgument % 2 != 0) { foo(); }
+------^
+missing-space-after-if.cpp:15:7: warning: missing space after 'if' keyword
+    if(aArgument % 2 != 0) {
+------^
+missing-space-after-if.cpp:22:7: warning: missing space after 'if' keyword
+    if(aArgument % 2 != 0)
+------^

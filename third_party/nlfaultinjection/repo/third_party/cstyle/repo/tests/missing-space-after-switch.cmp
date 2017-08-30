@@ -1,0 +1,9 @@
+missing-space-after-switch.cpp:5:11: warning: missing space after 'switch' keyword
+    switch(aArgument) {
+----------^
+missing-space-after-switch.cpp:24:11: warning: missing space after 'switch' keyword
+    switch(aArgument)
+----------^
+missing-space-after-switch.cpp:44:11: warning: missing space after 'switch' keyword
+    switch(aArgument) { case 0: describe("The value is zero"); break;
+----------^

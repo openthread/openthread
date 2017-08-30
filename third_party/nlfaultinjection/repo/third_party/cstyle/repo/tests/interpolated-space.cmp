@@ -1,0 +1,9 @@
+interpolated-space.cpp:3:3: warning: tabs between spaces
+  	  // This line contains spaces-tabs-spaces, which is not OK.
+--^
+interpolated-space.cpp:5:2: warning: spaces between tabs
+	  	 // This line contains tabs-spaces-tabs, which is not OK.
+-^
+interpolated-space.cpp:5:4: warning: tabs between spaces
+	  	 // This line contains tabs-spaces-tabs, which is not OK.
+---^

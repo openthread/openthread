@@ -1,0 +1,24 @@
+missing-space-after-while.cpp:5:24: warning: missing space after 'while' keyword
+    do { foo(); } while(true);
+-----------------------^
+missing-space-after-while.cpp:12:12: warning: missing space after 'while' keyword
+    } while(true);
+-----------^
+missing-space-after-while.cpp:21:10: warning: missing space after 'while' keyword
+    while(true);
+---------^
+missing-space-after-while.cpp:26:20: warning: missing space after 'while' keyword
+    do foo(); while(true);
+-------------------^
+missing-space-after-while.cpp:31:10: warning: missing space after 'while' keyword
+    while(true) { foo(); }
+---------^
+missing-space-after-while.cpp:36:10: warning: missing space after 'while' keyword
+    while(true) {
+---------^
+missing-space-after-while.cpp:43:10: warning: missing space after 'while' keyword
+    while(true)
+---------^
+missing-space-after-while.cpp:51:10: warning: missing space after 'while' keyword
+    while(true) foo();
+---------^

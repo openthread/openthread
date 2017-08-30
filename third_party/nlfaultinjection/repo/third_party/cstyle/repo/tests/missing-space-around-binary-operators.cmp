@@ -1,0 +1,993 @@
+missing-space-around-binary-operators.cpp:17:6: warning: missing space around binary operator '='
+    a=1;
+-----^
+missing-space-around-binary-operators.cpp:18:6: warning: missing space around binary operator '='
+    b=1;
+-----^
+missing-space-around-binary-operators.cpp:19:6: warning: missing space around binary operator '='
+    c=1;
+-----^
+missing-space-around-binary-operators.cpp:23:11: warning: missing space around binary operator '+'
+    c = (a+b);
+----------^
+missing-space-around-binary-operators.cpp:24:11: warning: missing space around binary operator '*'
+    c = (a*b);
+----------^
+missing-space-around-binary-operators.cpp:25:11: warning: missing space around binary operator '-'
+    c = (a-b);
+----------^
+missing-space-around-binary-operators.cpp:26:11: warning: missing space around binary operator '/'
+    c = (a/b);
+----------^
+missing-space-around-binary-operators.cpp:27:11: warning: missing space around binary operator '%'
+    c = (a%b);
+----------^
+missing-space-around-binary-operators.cpp:31:11: warning: missing space around binary operator '&'
+    c = (a&b);
+----------^
+missing-space-around-binary-operators.cpp:32:11: warning: missing space around binary operator '|'
+    c = (a|b);
+----------^
+missing-space-around-binary-operators.cpp:33:11: warning: missing space around binary operator '^'
+    c = (a^b);
+----------^
+missing-space-around-binary-operators.cpp:37:11: warning: missing space around binary operator '<<'
+    c = (a<<b);
+----------^
+missing-space-around-binary-operators.cpp:38:11: warning: missing space around binary operator '>>'
+    c = (a>>b);
+----------^
+missing-space-around-binary-operators.cpp:42:6: warning: missing space around binary operator '+='
+    c+=a;
+-----^
+missing-space-around-binary-operators.cpp:43:6: warning: missing space around binary operator '*='
+    c*=a;
+-----^
+missing-space-around-binary-operators.cpp:44:6: warning: missing space around binary operator '-='
+    c-=a;
+-----^
+missing-space-around-binary-operators.cpp:45:6: warning: missing space around binary operator '/='
+    c/=a;
+-----^
+missing-space-around-binary-operators.cpp:46:6: warning: missing space around binary operator '%='
+    c%=a;
+-----^
+missing-space-around-binary-operators.cpp:47:6: warning: missing space around binary operator '&='
+    c&=a;
+-----^
+missing-space-around-binary-operators.cpp:48:6: warning: missing space around binary operator '|='
+    c|=a;
+-----^
+missing-space-around-binary-operators.cpp:49:6: warning: missing space around binary operator '^='
+    c^=a;
+-----^
+missing-space-around-binary-operators.cpp:50:6: warning: missing space around binary operator '<<'
+    c<<=a;
+-----^
+missing-space-around-binary-operators.cpp:51:6: warning: missing space around binary operator '>>'
+    c>>=a;
+-----^
+missing-space-around-binary-operators.cpp:55:16: warning: missing space around binary operator '&&'
+    result = (a&&b);
+---------------^
+missing-space-around-binary-operators.cpp:56:16: warning: missing space around binary operator '||'
+    result = (a||b);
+---------------^
+missing-space-around-binary-operators.cpp:60:16: warning: missing space around binary operator '=='
+    result = (a==b);
+---------------^
+missing-space-around-binary-operators.cpp:61:16: warning: missing space around binary operator '!='
+    result = (a!=b);
+---------------^
+missing-space-around-binary-operators.cpp:62:16: warning: missing space around binary operator '<='
+    result = (a<=b);
+---------------^
+missing-space-around-binary-operators.cpp:63:16: warning: missing space around binary operator '>='
+    result = (a>=b);
+---------------^
+missing-space-around-binary-operators.cpp:64:16: warning: missing space around binary operator '<'
+    result = (a<b);
+---------------^
+missing-space-around-binary-operators.cpp:65:16: warning: missing space around binary operator '>'
+    result = (a>b);
+---------------^
+missing-space-around-binary-operators.cpp:80:7: warning: missing space around binary operator '='
+    a =1;
+------^
+missing-space-around-binary-operators.cpp:81:7: warning: missing space around binary operator '='
+    b =1;
+------^
+missing-space-around-binary-operators.cpp:82:7: warning: missing space around binary operator '='
+    c =1;
+------^
+missing-space-around-binary-operators.cpp:86:12: warning: missing space around binary operator '+'
+    c = (a +b);
+-----------^
+missing-space-around-binary-operators.cpp:87:12: warning: missing space around binary operator '*'
+    c = (a *b);
+-----------^
+missing-space-around-binary-operators.cpp:88:12: warning: missing space around binary operator '-'
+    c = (a -b);
+-----------^
+missing-space-around-binary-operators.cpp:89:12: warning: missing space around binary operator '/'
+    c = (a /b);
+-----------^
+missing-space-around-binary-operators.cpp:90:12: warning: missing space around binary operator '%'
+    c = (a %b);
+-----------^
+missing-space-around-binary-operators.cpp:94:12: warning: missing space around binary operator '&'
+    c = (a &b);
+-----------^
+missing-space-around-binary-operators.cpp:95:12: warning: missing space around binary operator '|'
+    c = (a |b);
+-----------^
+missing-space-around-binary-operators.cpp:96:12: warning: missing space around binary operator '^'
+    c = (a ^b);
+-----------^
+missing-space-around-binary-operators.cpp:100:12: warning: missing space around binary operator '<<'
+    c = (a <<b);
+-----------^
+missing-space-around-binary-operators.cpp:101:12: warning: missing space around binary operator '>>'
+    c = (a >>b);
+-----------^
+missing-space-around-binary-operators.cpp:105:7: warning: missing space around binary operator '+='
+    c +=a;
+------^
+missing-space-around-binary-operators.cpp:106:7: warning: missing space around binary operator '*='
+    c *=a;
+------^
+missing-space-around-binary-operators.cpp:107:7: warning: missing space around binary operator '-='
+    c -=a;
+------^
+missing-space-around-binary-operators.cpp:108:7: warning: missing space around binary operator '/='
+    c /=a;
+------^
+missing-space-around-binary-operators.cpp:109:7: warning: missing space around binary operator '%='
+    c %=a;
+------^
+missing-space-around-binary-operators.cpp:110:7: warning: missing space around binary operator '&='
+    c &=a;
+------^
+missing-space-around-binary-operators.cpp:111:7: warning: missing space around binary operator '|='
+    c |=a;
+------^
+missing-space-around-binary-operators.cpp:112:7: warning: missing space around binary operator '^='
+    c ^=a;
+------^
+missing-space-around-binary-operators.cpp:113:8: warning: missing space around binary operator '<='
+    c <<=a;
+-------^
+missing-space-around-binary-operators.cpp:114:8: warning: missing space around binary operator '>='
+    c >>=a;
+-------^
+missing-space-around-binary-operators.cpp:118:17: warning: missing space around binary operator '&&'
+    result = (a &&b);
+----------------^
+missing-space-around-binary-operators.cpp:119:17: warning: missing space around binary operator '||'
+    result = (a ||b);
+----------------^
+missing-space-around-binary-operators.cpp:123:17: warning: missing space around binary operator '=='
+    result = (a ==b);
+----------------^
+missing-space-around-binary-operators.cpp:124:17: warning: missing space around binary operator '!='
+    result = (a !=b);
+----------------^
+missing-space-around-binary-operators.cpp:125:17: warning: missing space around binary operator '<='
+    result = (a <=b);
+----------------^
+missing-space-around-binary-operators.cpp:126:17: warning: missing space around binary operator '>='
+    result = (a >=b);
+----------------^
+missing-space-around-binary-operators.cpp:127:17: warning: missing space around binary operator '<'
+    result = (a <b);
+----------------^
+missing-space-around-binary-operators.cpp:128:17: warning: missing space around binary operator '>'
+    result = (a >b);
+----------------^
+missing-space-around-binary-operators.cpp:143:8: warning: missing space around binary operator '='
+    a  =1;
+-------^
+missing-space-around-binary-operators.cpp:144:8: warning: missing space around binary operator '='
+    b  =1;
+-------^
+missing-space-around-binary-operators.cpp:145:8: warning: missing space around binary operator '='
+    c  =1;
+-------^
+missing-space-around-binary-operators.cpp:149:13: warning: missing space around binary operator '+'
+    c = (a  +b);
+------------^
+missing-space-around-binary-operators.cpp:150:13: warning: missing space around binary operator '*'
+    c = (a  *b);
+------------^
+missing-space-around-binary-operators.cpp:151:13: warning: missing space around binary operator '-'
+    c = (a  -b);
+------------^
+missing-space-around-binary-operators.cpp:152:13: warning: missing space around binary operator '/'
+    c = (a  /b);
+------------^
+missing-space-around-binary-operators.cpp:153:13: warning: missing space around binary operator '%'
+    c = (a  %b);
+------------^
+missing-space-around-binary-operators.cpp:157:13: warning: missing space around binary operator '&'
+    c = (a  &b);
+------------^
+missing-space-around-binary-operators.cpp:158:13: warning: missing space around binary operator '|'
+    c = (a  |b);
+------------^
+missing-space-around-binary-operators.cpp:159:13: warning: missing space around binary operator '^'
+    c = (a  ^b);
+------------^
+missing-space-around-binary-operators.cpp:163:13: warning: missing space around binary operator '<<'
+    c = (a  <<b);
+------------^
+missing-space-around-binary-operators.cpp:164:13: warning: missing space around binary operator '>>'
+    c = (a  >>b);
+------------^
+missing-space-around-binary-operators.cpp:168:8: warning: missing space around binary operator '+='
+    c  +=a;
+-------^
+missing-space-around-binary-operators.cpp:169:8: warning: missing space around binary operator '*='
+    c  *=a;
+-------^
+missing-space-around-binary-operators.cpp:170:8: warning: missing space around binary operator '-='
+    c  -=a;
+-------^
+missing-space-around-binary-operators.cpp:171:8: warning: missing space around binary operator '/='
+    c  /=a;
+-------^
+missing-space-around-binary-operators.cpp:172:8: warning: missing space around binary operator '%='
+    c  %=a;
+-------^
+missing-space-around-binary-operators.cpp:173:8: warning: missing space around binary operator '&='
+    c  &=a;
+-------^
+missing-space-around-binary-operators.cpp:174:8: warning: missing space around binary operator '|='
+    c  |=a;
+-------^
+missing-space-around-binary-operators.cpp:175:8: warning: missing space around binary operator '^='
+    c  ^=a;
+-------^
+missing-space-around-binary-operators.cpp:176:9: warning: missing space around binary operator '<='
+    c  <<=a;
+--------^
+missing-space-around-binary-operators.cpp:177:9: warning: missing space around binary operator '>='
+    c  >>=a;
+--------^
+missing-space-around-binary-operators.cpp:181:18: warning: missing space around binary operator '&&'
+    result = (a  &&b);
+-----------------^
+missing-space-around-binary-operators.cpp:182:18: warning: missing space around binary operator '||'
+    result = (a  ||b);
+-----------------^
+missing-space-around-binary-operators.cpp:186:18: warning: missing space around binary operator '=='
+    result = (a  ==b);
+-----------------^
+missing-space-around-binary-operators.cpp:187:18: warning: missing space around binary operator '!='
+    result = (a  !=b);
+-----------------^
+missing-space-around-binary-operators.cpp:188:18: warning: missing space around binary operator '<='
+    result = (a  <=b);
+-----------------^
+missing-space-around-binary-operators.cpp:189:18: warning: missing space around binary operator '>='
+    result = (a  >=b);
+-----------------^
+missing-space-around-binary-operators.cpp:190:18: warning: missing space around binary operator '<'
+    result = (a  <b);
+-----------------^
+missing-space-around-binary-operators.cpp:191:18: warning: missing space around binary operator '>'
+    result = (a  >b);
+-----------------^
+missing-space-around-binary-operators.cpp:206:6: warning: missing space around binary operator '='
+    a= 1;
+-----^
+missing-space-around-binary-operators.cpp:207:6: warning: missing space around binary operator '='
+    b= 1;
+-----^
+missing-space-around-binary-operators.cpp:208:6: warning: missing space around binary operator '='
+    c= 1;
+-----^
+missing-space-around-binary-operators.cpp:212:11: warning: missing space around binary operator '+'
+    c = (a+ b);
+----------^
+missing-space-around-binary-operators.cpp:213:11: warning: missing space around binary operator '*'
+    c = (a* b);
+----------^
+missing-space-around-binary-operators.cpp:214:11: warning: missing space around binary operator '-'
+    c = (a- b);
+----------^
+missing-space-around-binary-operators.cpp:215:11: warning: missing space around binary operator '/'
+    c = (a/ b);
+----------^
+missing-space-around-binary-operators.cpp:216:11: warning: missing space around binary operator '%'
+    c = (a% b);
+----------^
+missing-space-around-binary-operators.cpp:220:11: warning: missing space around binary operator '&'
+    c = (a& b);
+----------^
+missing-space-around-binary-operators.cpp:221:11: warning: missing space around binary operator '|'
+    c = (a| b);
+----------^
+missing-space-around-binary-operators.cpp:222:11: warning: missing space around binary operator '^'
+    c = (a^ b);
+----------^
+missing-space-around-binary-operators.cpp:226:11: warning: missing space around binary operator '<<'
+    c = (a<< b);
+----------^
+missing-space-around-binary-operators.cpp:227:11: warning: missing space around binary operator '>>'
+    c = (a>> b);
+----------^
+missing-space-around-binary-operators.cpp:231:6: warning: missing space around binary operator '+='
+    c+= a;
+-----^
+missing-space-around-binary-operators.cpp:232:6: warning: missing space around binary operator '*='
+    c*= a;
+-----^
+missing-space-around-binary-operators.cpp:233:6: warning: missing space around binary operator '-='
+    c-= a;
+-----^
+missing-space-around-binary-operators.cpp:234:6: warning: missing space around binary operator '/='
+    c/= a;
+-----^
+missing-space-around-binary-operators.cpp:235:6: warning: missing space around binary operator '%='
+    c%= a;
+-----^
+missing-space-around-binary-operators.cpp:236:6: warning: missing space around binary operator '&='
+    c&= a;
+-----^
+missing-space-around-binary-operators.cpp:237:6: warning: missing space around binary operator '|='
+    c|= a;
+-----^
+missing-space-around-binary-operators.cpp:238:6: warning: missing space around binary operator '^='
+    c^= a;
+-----^
+missing-space-around-binary-operators.cpp:239:6: warning: missing space around binary operator '<<'
+    c<<= a;
+-----^
+missing-space-around-binary-operators.cpp:240:6: warning: missing space around binary operator '>>'
+    c>>= a;
+-----^
+missing-space-around-binary-operators.cpp:244:16: warning: missing space around binary operator '&&'
+    result = (a&& b);
+---------------^
+missing-space-around-binary-operators.cpp:245:16: warning: missing space around binary operator '||'
+    result = (a|| b);
+---------------^
+missing-space-around-binary-operators.cpp:249:16: warning: missing space around binary operator '=='
+    result = (a== b);
+---------------^
+missing-space-around-binary-operators.cpp:250:16: warning: missing space around binary operator '!='
+    result = (a!= b);
+---------------^
+missing-space-around-binary-operators.cpp:251:16: warning: missing space around binary operator '<='
+    result = (a<= b);
+---------------^
+missing-space-around-binary-operators.cpp:252:16: warning: missing space around binary operator '>='
+    result = (a>= b);
+---------------^
+missing-space-around-binary-operators.cpp:253:16: warning: missing space around binary operator '<'
+    result = (a< b);
+---------------^
+missing-space-around-binary-operators.cpp:254:16: warning: missing space around binary operator '>'
+    result = (a> b);
+---------------^
+missing-space-around-binary-operators.cpp:269:6: warning: missing space around binary operator '='
+    a=  1;
+-----^
+missing-space-around-binary-operators.cpp:270:6: warning: missing space around binary operator '='
+    b=  1;
+-----^
+missing-space-around-binary-operators.cpp:271:6: warning: missing space around binary operator '='
+    c=  1;
+-----^
+missing-space-around-binary-operators.cpp:275:11: warning: missing space around binary operator '+'
+    c = (a+  b);
+----------^
+missing-space-around-binary-operators.cpp:276:11: warning: missing space around binary operator '*'
+    c = (a*  b);
+----------^
+missing-space-around-binary-operators.cpp:277:11: warning: missing space around binary operator '-'
+    c = (a-  b);
+----------^
+missing-space-around-binary-operators.cpp:278:11: warning: missing space around binary operator '/'
+    c = (a/  b);
+----------^
+missing-space-around-binary-operators.cpp:279:11: warning: missing space around binary operator '%'
+    c = (a%  b);
+----------^
+missing-space-around-binary-operators.cpp:283:11: warning: missing space around binary operator '&'
+    c = (a&  b);
+----------^
+missing-space-around-binary-operators.cpp:284:11: warning: missing space around binary operator '|'
+    c = (a|  b);
+----------^
+missing-space-around-binary-operators.cpp:285:11: warning: missing space around binary operator '^'
+    c = (a^  b);
+----------^
+missing-space-around-binary-operators.cpp:289:11: warning: missing space around binary operator '<<'
+    c = (a<<  b);
+----------^
+missing-space-around-binary-operators.cpp:290:11: warning: missing space around binary operator '>>'
+    c = (a>>  b);
+----------^
+missing-space-around-binary-operators.cpp:294:6: warning: missing space around binary operator '+='
+    c+=  a;
+-----^
+missing-space-around-binary-operators.cpp:295:6: warning: missing space around binary operator '*='
+    c*=  a;
+-----^
+missing-space-around-binary-operators.cpp:296:6: warning: missing space around binary operator '-='
+    c-=  a;
+-----^
+missing-space-around-binary-operators.cpp:297:6: warning: missing space around binary operator '/='
+    c/=  a;
+-----^
+missing-space-around-binary-operators.cpp:298:6: warning: missing space around binary operator '%='
+    c%=  a;
+-----^
+missing-space-around-binary-operators.cpp:299:6: warning: missing space around binary operator '&='
+    c&=  a;
+-----^
+missing-space-around-binary-operators.cpp:300:6: warning: missing space around binary operator '|='
+    c|=  a;
+-----^
+missing-space-around-binary-operators.cpp:301:6: warning: missing space around binary operator '^='
+    c^=  a;
+-----^
+missing-space-around-binary-operators.cpp:302:6: warning: missing space around binary operator '<<'
+    c<<=  a;
+-----^
+missing-space-around-binary-operators.cpp:303:6: warning: missing space around binary operator '>>'
+    c>>=  a;
+-----^
+missing-space-around-binary-operators.cpp:307:16: warning: missing space around binary operator '&&'
+    result = (a&&  b);
+---------------^
+missing-space-around-binary-operators.cpp:308:16: warning: missing space around binary operator '||'
+    result = (a||  b);
+---------------^
+missing-space-around-binary-operators.cpp:312:16: warning: missing space around binary operator '=='
+    result = (a==  b);
+---------------^
+missing-space-around-binary-operators.cpp:313:16: warning: missing space around binary operator '!='
+    result = (a!=  b);
+---------------^
+missing-space-around-binary-operators.cpp:314:16: warning: missing space around binary operator '<='
+    result = (a<=  b);
+---------------^
+missing-space-around-binary-operators.cpp:315:16: warning: missing space around binary operator '>='
+    result = (a>=  b);
+---------------^
+missing-space-around-binary-operators.cpp:316:16: warning: missing space around binary operator '<'
+    result = (a<  b);
+---------------^
+missing-space-around-binary-operators.cpp:317:16: warning: missing space around binary operator '>'
+    result = (a>  b);
+---------------^
+missing-space-around-binary-operators.cpp:332:7: warning: missing space around binary operator '='
+    a	=1;
+------^
+missing-space-around-binary-operators.cpp:333:7: warning: missing space around binary operator '='
+    b	=1;
+------^
+missing-space-around-binary-operators.cpp:334:7: warning: missing space around binary operator '='
+    c	=1;
+------^
+missing-space-around-binary-operators.cpp:338:12: warning: missing space around binary operator '+'
+    c = (a	+b);
+-----------^
+missing-space-around-binary-operators.cpp:339:12: warning: missing space around binary operator '*'
+    c = (a	*b);
+-----------^
+missing-space-around-binary-operators.cpp:340:12: warning: missing space around binary operator '-'
+    c = (a	-b);
+-----------^
+missing-space-around-binary-operators.cpp:341:12: warning: missing space around binary operator '/'
+    c = (a	/b);
+-----------^
+missing-space-around-binary-operators.cpp:342:12: warning: missing space around binary operator '%'
+    c = (a	%b);
+-----------^
+missing-space-around-binary-operators.cpp:346:12: warning: missing space around binary operator '&'
+    c = (a	&b);
+-----------^
+missing-space-around-binary-operators.cpp:347:12: warning: missing space around binary operator '|'
+    c = (a	|b);
+-----------^
+missing-space-around-binary-operators.cpp:348:12: warning: missing space around binary operator '^'
+    c = (a	^b);
+-----------^
+missing-space-around-binary-operators.cpp:352:12: warning: missing space around binary operator '<<'
+    c = (a	<<b);
+-----------^
+missing-space-around-binary-operators.cpp:353:12: warning: missing space around binary operator '>>'
+    c = (a	>>b);
+-----------^
+missing-space-around-binary-operators.cpp:357:7: warning: missing space around binary operator '+='
+    c	+=a;
+------^
+missing-space-around-binary-operators.cpp:358:7: warning: missing space around binary operator '*='
+    c	*=a;
+------^
+missing-space-around-binary-operators.cpp:359:7: warning: missing space around binary operator '-='
+    c	-=a;
+------^
+missing-space-around-binary-operators.cpp:360:7: warning: missing space around binary operator '/='
+    c	/=a;
+------^
+missing-space-around-binary-operators.cpp:361:7: warning: missing space around binary operator '%='
+    c	%=a;
+------^
+missing-space-around-binary-operators.cpp:362:7: warning: missing space around binary operator '&='
+    c	&=a;
+------^
+missing-space-around-binary-operators.cpp:363:7: warning: missing space around binary operator '|='
+    c	|=a;
+------^
+missing-space-around-binary-operators.cpp:364:7: warning: missing space around binary operator '^='
+    c	^=a;
+------^
+missing-space-around-binary-operators.cpp:365:8: warning: missing space around binary operator '<='
+    c	<<=a;
+-------^
+missing-space-around-binary-operators.cpp:366:8: warning: missing space around binary operator '>='
+    c	>>=a;
+-------^
+missing-space-around-binary-operators.cpp:370:17: warning: missing space around binary operator '&&'
+    result = (a	&&b);
+----------------^
+missing-space-around-binary-operators.cpp:371:17: warning: missing space around binary operator '||'
+    result = (a	||b);
+----------------^
+missing-space-around-binary-operators.cpp:375:17: warning: missing space around binary operator '=='
+    result = (a	==b);
+----------------^
+missing-space-around-binary-operators.cpp:376:17: warning: missing space around binary operator '!='
+    result = (a	!=b);
+----------------^
+missing-space-around-binary-operators.cpp:377:17: warning: missing space around binary operator '<='
+    result = (a	<=b);
+----------------^
+missing-space-around-binary-operators.cpp:378:17: warning: missing space around binary operator '>='
+    result = (a	>=b);
+----------------^
+missing-space-around-binary-operators.cpp:379:17: warning: missing space around binary operator '<'
+    result = (a	<b);
+----------------^
+missing-space-around-binary-operators.cpp:380:17: warning: missing space around binary operator '>'
+    result = (a	>b);
+----------------^
+missing-space-around-binary-operators.cpp:395:8: warning: missing space around binary operator '='
+    a		=1;
+-------^
+missing-space-around-binary-operators.cpp:396:8: warning: missing space around binary operator '='
+    b		=1;
+-------^
+missing-space-around-binary-operators.cpp:397:8: warning: missing space around binary operator '='
+    c		=1;
+-------^
+missing-space-around-binary-operators.cpp:401:13: warning: missing space around binary operator '+'
+    c = (a		+b);
+------------^
+missing-space-around-binary-operators.cpp:402:13: warning: missing space around binary operator '*'
+    c = (a		*b);
+------------^
+missing-space-around-binary-operators.cpp:403:13: warning: missing space around binary operator '-'
+    c = (a		-b);
+------------^
+missing-space-around-binary-operators.cpp:404:13: warning: missing space around binary operator '/'
+    c = (a		/b);
+------------^
+missing-space-around-binary-operators.cpp:405:13: warning: missing space around binary operator '%'
+    c = (a		%b);
+------------^
+missing-space-around-binary-operators.cpp:409:13: warning: missing space around binary operator '&'
+    c = (a		&b);
+------------^
+missing-space-around-binary-operators.cpp:410:13: warning: missing space around binary operator '|'
+    c = (a		|b);
+------------^
+missing-space-around-binary-operators.cpp:411:13: warning: missing space around binary operator '^'
+    c = (a		^b);
+------------^
+missing-space-around-binary-operators.cpp:415:13: warning: missing space around binary operator '<<'
+    c = (a		<<b);
+------------^
+missing-space-around-binary-operators.cpp:416:13: warning: missing space around binary operator '>>'
+    c = (a		>>b);
+------------^
+missing-space-around-binary-operators.cpp:420:8: warning: missing space around binary operator '+='
+    c		+=a;
+-------^
+missing-space-around-binary-operators.cpp:421:8: warning: missing space around binary operator '*='
+    c		*=a;
+-------^
+missing-space-around-binary-operators.cpp:422:8: warning: missing space around binary operator '-='
+    c		-=a;
+-------^
+missing-space-around-binary-operators.cpp:423:8: warning: missing space around binary operator '/='
+    c		/=a;
+-------^
+missing-space-around-binary-operators.cpp:424:8: warning: missing space around binary operator '%='
+    c		%=a;
+-------^
+missing-space-around-binary-operators.cpp:425:8: warning: missing space around binary operator '&='
+    c		&=a;
+-------^
+missing-space-around-binary-operators.cpp:426:8: warning: missing space around binary operator '|='
+    c		|=a;
+-------^
+missing-space-around-binary-operators.cpp:427:8: warning: missing space around binary operator '^='
+    c		^=a;
+-------^
+missing-space-around-binary-operators.cpp:428:9: warning: missing space around binary operator '<='
+    c		<<=a;
+--------^
+missing-space-around-binary-operators.cpp:429:9: warning: missing space around binary operator '>='
+    c		>>=a;
+--------^
+missing-space-around-binary-operators.cpp:433:18: warning: missing space around binary operator '&&'
+    result = (a		&&b);
+-----------------^
+missing-space-around-binary-operators.cpp:434:18: warning: missing space around binary operator '||'
+    result = (a		||b);
+-----------------^
+missing-space-around-binary-operators.cpp:438:18: warning: missing space around binary operator '=='
+    result = (a		==b);
+-----------------^
+missing-space-around-binary-operators.cpp:439:18: warning: missing space around binary operator '!='
+    result = (a		!=b);
+-----------------^
+missing-space-around-binary-operators.cpp:440:18: warning: missing space around binary operator '<='
+    result = (a		<=b);
+-----------------^
+missing-space-around-binary-operators.cpp:441:18: warning: missing space around binary operator '>='
+    result = (a		>=b);
+-----------------^
+missing-space-around-binary-operators.cpp:442:18: warning: missing space around binary operator '<'
+    result = (a		<b);
+-----------------^
+missing-space-around-binary-operators.cpp:443:18: warning: missing space around binary operator '>'
+    result = (a		>b);
+-----------------^
+missing-space-around-binary-operators.cpp:458:6: warning: missing space around binary operator '='
+    a=	1;
+-----^
+missing-space-around-binary-operators.cpp:459:6: warning: missing space around binary operator '='
+    b=	1;
+-----^
+missing-space-around-binary-operators.cpp:460:6: warning: missing space around binary operator '='
+    c=	1;
+-----^
+missing-space-around-binary-operators.cpp:464:11: warning: missing space around binary operator '+'
+    c = (a+	b);
+----------^
+missing-space-around-binary-operators.cpp:465:11: warning: missing space around binary operator '*'
+    c = (a*	b);
+----------^
+missing-space-around-binary-operators.cpp:466:11: warning: missing space around binary operator '-'
+    c = (a-	b);
+----------^
+missing-space-around-binary-operators.cpp:467:11: warning: missing space around binary operator '/'
+    c = (a/	b);
+----------^
+missing-space-around-binary-operators.cpp:468:11: warning: missing space around binary operator '%'
+    c = (a%	b);
+----------^
+missing-space-around-binary-operators.cpp:472:11: warning: missing space around binary operator '&'
+    c = (a&	b);
+----------^
+missing-space-around-binary-operators.cpp:473:11: warning: missing space around binary operator '|'
+    c = (a|	b);
+----------^
+missing-space-around-binary-operators.cpp:474:11: warning: missing space around binary operator '^'
+    c = (a^	b);
+----------^
+missing-space-around-binary-operators.cpp:478:11: warning: missing space around binary operator '<<'
+    c = (a<<	b);
+----------^
+missing-space-around-binary-operators.cpp:479:11: warning: missing space around binary operator '>>'
+    c = (a>>	b);
+----------^
+missing-space-around-binary-operators.cpp:483:6: warning: missing space around binary operator '+='
+    c+=	a;
+-----^
+missing-space-around-binary-operators.cpp:484:6: warning: missing space around binary operator '*='
+    c*=	a;
+-----^
+missing-space-around-binary-operators.cpp:485:6: warning: missing space around binary operator '-='
+    c-=	a;
+-----^
+missing-space-around-binary-operators.cpp:486:6: warning: missing space around binary operator '/='
+    c/=	a;
+-----^
+missing-space-around-binary-operators.cpp:487:6: warning: missing space around binary operator '%='
+    c%=	a;
+-----^
+missing-space-around-binary-operators.cpp:488:6: warning: missing space around binary operator '&='
+    c&=	a;
+-----^
+missing-space-around-binary-operators.cpp:489:6: warning: missing space around binary operator '|='
+    c|=	a;
+-----^
+missing-space-around-binary-operators.cpp:490:6: warning: missing space around binary operator '^='
+    c^=	a;
+-----^
+missing-space-around-binary-operators.cpp:491:6: warning: missing space around binary operator '<<'
+    c<<=	a;
+-----^
+missing-space-around-binary-operators.cpp:492:6: warning: missing space around binary operator '>>'
+    c>>=	a;
+-----^
+missing-space-around-binary-operators.cpp:496:16: warning: missing space around binary operator '&&'
+    result = (a&&	b);
+---------------^
+missing-space-around-binary-operators.cpp:497:16: warning: missing space around binary operator '||'
+    result = (a||	b);
+---------------^
+missing-space-around-binary-operators.cpp:501:16: warning: missing space around binary operator '=='
+    result = (a==	b);
+---------------^
+missing-space-around-binary-operators.cpp:502:16: warning: missing space around binary operator '!='
+    result = (a!=	b);
+---------------^
+missing-space-around-binary-operators.cpp:503:16: warning: missing space around binary operator '<='
+    result = (a<=	b);
+---------------^
+missing-space-around-binary-operators.cpp:504:16: warning: missing space around binary operator '>='
+    result = (a>=	b);
+---------------^
+missing-space-around-binary-operators.cpp:505:16: warning: missing space around binary operator '<'
+    result = (a<	b);
+---------------^
+missing-space-around-binary-operators.cpp:506:16: warning: missing space around binary operator '>'
+    result = (a>	b);
+---------------^
+missing-space-around-binary-operators.cpp:521:6: warning: missing space around binary operator '='
+    a=		1;
+-----^
+missing-space-around-binary-operators.cpp:522:6: warning: missing space around binary operator '='
+    b=		1;
+-----^
+missing-space-around-binary-operators.cpp:523:6: warning: missing space around binary operator '='
+    c=		1;
+-----^
+missing-space-around-binary-operators.cpp:527:11: warning: missing space around binary operator '+'
+    c = (a+		b);
+----------^
+missing-space-around-binary-operators.cpp:528:11: warning: missing space around binary operator '*'
+    c = (a*		b);
+----------^
+missing-space-around-binary-operators.cpp:529:11: warning: missing space around binary operator '-'
+    c = (a-		b);
+----------^
+missing-space-around-binary-operators.cpp:530:11: warning: missing space around binary operator '/'
+    c = (a/		b);
+----------^
+missing-space-around-binary-operators.cpp:531:11: warning: missing space around binary operator '%'
+    c = (a%		b);
+----------^
+missing-space-around-binary-operators.cpp:535:11: warning: missing space around binary operator '&'
+    c = (a&		b);
+----------^
+missing-space-around-binary-operators.cpp:536:11: warning: missing space around binary operator '|'
+    c = (a|		b);
+----------^
+missing-space-around-binary-operators.cpp:537:11: warning: missing space around binary operator '^'
+    c = (a^		b);
+----------^
+missing-space-around-binary-operators.cpp:541:11: warning: missing space around binary operator '<<'
+    c = (a<<		b);
+----------^
+missing-space-around-binary-operators.cpp:542:11: warning: missing space around binary operator '>>'
+    c = (a>>		b);
+----------^
+missing-space-around-binary-operators.cpp:546:6: warning: missing space around binary operator '+='
+    c+=		a;
+-----^
+missing-space-around-binary-operators.cpp:547:6: warning: missing space around binary operator '*='
+    c*=		a;
+-----^
+missing-space-around-binary-operators.cpp:548:6: warning: missing space around binary operator '-='
+    c-=		a;
+-----^
+missing-space-around-binary-operators.cpp:549:6: warning: missing space around binary operator '/='
+    c/=		a;
+-----^
+missing-space-around-binary-operators.cpp:550:6: warning: missing space around binary operator '%='
+    c%=		a;
+-----^
+missing-space-around-binary-operators.cpp:551:6: warning: missing space around binary operator '&='
+    c&=		a;
+-----^
+missing-space-around-binary-operators.cpp:552:6: warning: missing space around binary operator '|='
+    c|=		a;
+-----^
+missing-space-around-binary-operators.cpp:553:6: warning: missing space around binary operator '^='
+    c^=		a;
+-----^
+missing-space-around-binary-operators.cpp:554:6: warning: missing space around binary operator '<<'
+    c<<=		a;
+-----^
+missing-space-around-binary-operators.cpp:555:6: warning: missing space around binary operator '>>'
+    c>>=		a;
+-----^
+missing-space-around-binary-operators.cpp:559:16: warning: missing space around binary operator '&&'
+    result = (a&&		b);
+---------------^
+missing-space-around-binary-operators.cpp:560:16: warning: missing space around binary operator '||'
+    result = (a||		b);
+---------------^
+missing-space-around-binary-operators.cpp:564:16: warning: missing space around binary operator '=='
+    result = (a==		b);
+---------------^
+missing-space-around-binary-operators.cpp:565:16: warning: missing space around binary operator '!='
+    result = (a!=		b);
+---------------^
+missing-space-around-binary-operators.cpp:566:16: warning: missing space around binary operator '<='
+    result = (a<=		b);
+---------------^
+missing-space-around-binary-operators.cpp:567:16: warning: missing space around binary operator '>='
+    result = (a>=		b);
+---------------^
+missing-space-around-binary-operators.cpp:568:16: warning: missing space around binary operator '<'
+    result = (a<		b);
+---------------^
+missing-space-around-binary-operators.cpp:569:16: warning: missing space around binary operator '>'
+    result = (a>		b);
+---------------^
+missing-space-around-binary-operators.cpp:584:6: warning: missing space around binary operator '='
+    a=(1);
+-----^
+missing-space-around-binary-operators.cpp:585:6: warning: missing space around binary operator '='
+    b=(1);
+-----^
+missing-space-around-binary-operators.cpp:586:6: warning: missing space around binary operator '='
+    c=(1);
+-----^
+missing-space-around-binary-operators.cpp:590:13: warning: missing space around binary operator '+'
+    c = ((a)+(b));
+------------^
+missing-space-around-binary-operators.cpp:591:13: warning: missing space around binary operator '*'
+    c = ((a)*(b));
+------------^
+missing-space-around-binary-operators.cpp:592:13: warning: missing space around binary operator '-'
+    c = ((a)-(b));
+------------^
+missing-space-around-binary-operators.cpp:593:13: warning: missing space around binary operator '/'
+    c = ((a)/(b));
+------------^
+missing-space-around-binary-operators.cpp:594:13: warning: missing space around binary operator '%'
+    c = ((a)%(b));
+------------^
+missing-space-around-binary-operators.cpp:598:13: warning: missing space around binary operator '&'
+    c = ((a)&(b));
+------------^
+missing-space-around-binary-operators.cpp:599:13: warning: missing space around binary operator '|'
+    c = ((a)|(b));
+------------^
+missing-space-around-binary-operators.cpp:600:13: warning: missing space around binary operator '^'
+    c = ((a)^(b));
+------------^
+missing-space-around-binary-operators.cpp:604:13: warning: missing space around binary operator '<<'
+    c = ((a)<<(b));
+------------^
+missing-space-around-binary-operators.cpp:605:13: warning: missing space around binary operator '>>'
+    c = ((a)>>(b));
+------------^
+missing-space-around-binary-operators.cpp:609:6: warning: missing space around binary operator '+='
+    c+=(a);
+-----^
+missing-space-around-binary-operators.cpp:610:6: warning: missing space around binary operator '*='
+    c*=(a);
+-----^
+missing-space-around-binary-operators.cpp:611:6: warning: missing space around binary operator '-='
+    c-=(a);
+-----^
+missing-space-around-binary-operators.cpp:612:6: warning: missing space around binary operator '/='
+    c/=(a);
+-----^
+missing-space-around-binary-operators.cpp:613:6: warning: missing space around binary operator '%='
+    c%=(a);
+-----^
+missing-space-around-binary-operators.cpp:614:6: warning: missing space around binary operator '&='
+    c&=(a);
+-----^
+missing-space-around-binary-operators.cpp:615:6: warning: missing space around binary operator '|='
+    c|=(a);
+-----^
+missing-space-around-binary-operators.cpp:616:6: warning: missing space around binary operator '^='
+    c^=(a);
+-----^
+missing-space-around-binary-operators.cpp:617:6: warning: missing space around binary operator '<<'
+    c<<=(a);
+-----^
+missing-space-around-binary-operators.cpp:618:6: warning: missing space around binary operator '>>'
+    c>>=(a);
+-----^
+missing-space-around-binary-operators.cpp:622:18: warning: missing space around binary operator '&&'
+    result = ((a)&&(b));
+-----------------^
+missing-space-around-binary-operators.cpp:623:18: warning: missing space around binary operator '||'
+    result = ((a)||(b));
+-----------------^
+missing-space-around-binary-operators.cpp:627:18: warning: missing space around binary operator '=='
+    result = ((a)==(b));
+-----------------^
+missing-space-around-binary-operators.cpp:628:18: warning: missing space around binary operator '!='
+    result = ((a)!=(b));
+-----------------^
+missing-space-around-binary-operators.cpp:629:18: warning: missing space around binary operator '<='
+    result = ((a)<=(b));
+-----------------^
+missing-space-around-binary-operators.cpp:630:18: warning: missing space around binary operator '>='
+    result = ((a)>=(b));
+-----------------^
+missing-space-around-binary-operators.cpp:631:18: warning: missing space around binary operator '<'
+    result = ((a)<(b));
+-----------------^
+missing-space-around-binary-operators.cpp:632:18: warning: missing space around binary operator '>'
+    result = ((a)>(b));
+-----------------^
+missing-space-around-binary-operators.cpp:637:26: warning: missing space around binary operator '='
+extern int test_7_1(int a=5);
+-------------------------^
+missing-space-around-binary-operators.cpp:638:30: warning: missing space around binary operator '+'
+extern int test_7_2(int a = 5+2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:639:30: warning: missing space around binary operator '-'
+extern int test_7_3(int a = 5-2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:640:30: warning: missing space around binary operator '*'
+extern int test_7_4(int a = 5*2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:641:30: warning: missing space around binary operator '/'
+extern int test_7_5(int a = 5/2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:642:30: warning: missing space around binary operator '%'
+extern int test_7_6(int a = 5%2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:643:30: warning: missing space around binary operator '&'
+extern int test_7_7(int a = 5&2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:644:30: warning: missing space around binary operator '|'
+extern int test_7_8(int a = 5|2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:645:30: warning: missing space around binary operator '^'
+extern int test_7_9(int a = 5^2);
+-----------------------------^
+missing-space-around-binary-operators.cpp:646:32: warning: missing space around binary operator '&&'
+extern int test_7_10(bool a = 5&&2);
+-------------------------------^
+missing-space-around-binary-operators.cpp:647:32: warning: missing space around binary operator '||'
+extern int test_7_11(bool a = 5||2);
+-------------------------------^
+missing-space-around-binary-operators.cpp:648:31: warning: missing space around binary operator '|'
+extern int test_7_12(int a = 5|2);
+------------------------------^
+missing-space-around-binary-operators.cpp:649:31: warning: missing space around binary operator '^'
+extern int test_7_13(int a = 5^2);
+------------------------------^
+missing-space-around-binary-operators.cpp:650:31: warning: missing space around binary operator '<<'
+extern int test_7_14(int a = 5<<2);
+------------------------------^
+missing-space-around-binary-operators.cpp:651:31: warning: missing space around binary operator '>>'
+extern int test_7_15(int a = 5>>2);
+------------------------------^
+missing-space-around-binary-operators.cpp:652:32: warning: missing space around binary operator '=='
+extern int test_7_16(bool a = 5==2);
+-------------------------------^
+missing-space-around-binary-operators.cpp:653:32: warning: missing space around binary operator '!='
+extern int test_7_17(bool a = 5!=2);
+-------------------------------^
+missing-space-around-binary-operators.cpp:654:32: warning: missing space around binary operator '<'
+extern int test_7_18(bool a = 5<2);
+-------------------------------^
+missing-space-around-binary-operators.cpp:655:32: warning: missing space around binary operator '>'
+extern int test_7_19(bool a = 5>2);
+-------------------------------^
+missing-space-around-binary-operators.cpp:656:32: warning: missing space around binary operator '>='
+extern int test_7_20(bool a = 5>=2);
+-------------------------------^
+missing-space-around-binary-operators.cpp:657:32: warning: missing space around binary operator '<='
+extern int test_7_21(bool a = 5<=2);
+-------------------------------^

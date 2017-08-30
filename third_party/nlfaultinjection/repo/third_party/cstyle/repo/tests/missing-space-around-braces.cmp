@@ -1,0 +1,126 @@
+missing-space-around-braces.mm:10:35: warning: missing space around opening brace
+static const uint8_t sOctets_1[] = {0x01, 0x02 };
+----------------------------------^
+missing-space-around-braces.mm:11:34: warning: missing space around opening brace
+static const uint8_t sOctets_2[] ={0x01, 0x02 };
+---------------------------------^
+missing-space-around-braces.mm:12:34: warning: missing space around opening brace
+static const uint8_t sOctets_3[] ={ 0x01, 0x02 };
+---------------------------------^
+missing-space-around-braces.mm:13:35: warning: missing space around opening brace
+static const uint8_t sOctets_4[] =	{0x01, 0x02	};
+----------------------------------^
+missing-space-around-braces.mm:14:34: warning: missing space around opening brace
+static const uint8_t sOctets_5[] ={0x01, 0x02	};
+---------------------------------^
+missing-space-around-braces.mm:15:34: warning: missing space around opening brace
+static const uint8_t sOctets_6[] ={	0x01, 0x02	};
+---------------------------------^
+missing-space-around-braces.mm:19:47: warning: missing space around closing brace
+static const uint8_t sOctets_7[] = { 0x01, 0x02};
+----------------------------------------------^
+missing-space-around-braces.mm:20:47: warning: missing space around closing brace
+static const uint8_t sOctets_8[] =	{	0x01, 0x02};
+----------------------------------------------^
+missing-space-around-braces.mm:24:14: warning: missing space around opening brace
+class class_1 {};
+-------------^
+missing-space-around-braces.mm:26:13: warning: missing space around opening brace
+class class_2{ };
+------------^
+missing-space-around-braces.mm:28:13: warning: missing space around opening brace
+class class_3{
+------------^
+missing-space-around-braces.mm:33:16: warning: missing space around opening brace
+struct struct_1 {};
+---------------^
+missing-space-around-braces.mm:35:15: warning: missing space around opening brace
+struct struct_2{ };
+--------------^
+missing-space-around-braces.mm:37:15: warning: missing space around opening brace
+struct struct_3{
+--------------^
+missing-space-around-braces.mm:42:12: warning: missing space around opening brace
+enum enum_1 {};
+-----------^
+missing-space-around-braces.mm:44:11: warning: missing space around opening brace
+enum enum_2{ };
+----------^
+missing-space-around-braces.mm:46:11: warning: missing space around opening brace
+enum enum_3{
+----------^
+missing-space-around-braces.mm:51:21: warning: missing space around opening brace
+namespace namespace_1{};
+--------------------^
+missing-space-around-braces.mm:53:21: warning: missing space around opening brace
+namespace namespace_1{
+--------------------^
+missing-space-around-braces.mm:56:21: warning: missing space around opening brace
+namespace namespace_1{namespace namespace_2{};};
+--------------------^
+missing-space-around-braces.mm:58:21: warning: missing space around opening brace
+namespace namespace_1{
+--------------------^
+missing-space-around-braces.mm:60:21: warning: missing space around opening brace
+namespace namespace_2{};
+--------------------^
+missing-space-around-braces.mm:65:28: warning: missing space around opening brace
+static int test_func_1(void){return 0; }
+---------------------------^
+missing-space-around-braces.mm:66:28: warning: missing space around opening brace
+static int test_func_2(void){ return 0;}
+---------------------------^
+missing-space-around-braces.mm:67:36: warning: missing space around opening brace
+static inline bool test_func_3(void){
+-----------------------------------^
+missing-space-around-braces.mm:70:17: warning: missing space around closing brace
+    return false;}
+----------------^
+missing-space-around-braces.mm:72:1: warning: missing space around opening brace
+{int a;
+^
+missing-space-around-braces.mm:89:4: warning: missing space around opening brace
+    {{{ 0, true }, true }, {{ 1, false}, true }};
+---^
+missing-space-around-braces.mm:98:13: warning: missing space around opening brace
+    if (true){a = a + 1;}
+------------^
+missing-space-around-braces.mm:100:14: warning: missing space around opening brace
+    if (false){
+-------------^
+missing-space-around-braces.mm:106:9: warning: missing space around opening brace
+    }else{
+--------^
+missing-space-around-braces.mm:107:18: warning: missing space around closing brace
+        a = a - 1;}
+-----------------^
+missing-space-around-braces.mm:111:21: warning: missing space around opening brace
+    }else if (a == 2){
+--------------------^
+missing-space-around-braces.mm:115:17: warning: missing space around opening brace
+    while (a > 0){
+----------------^
+missing-space-around-braces.mm:116:15: warning: missing space around closing brace
+        a -= 1;}
+--------------^
+missing-space-around-braces.mm:118:6: warning: missing space around opening brace
+    do{ a += 1; }while (a < 0);
+-----^
+missing-space-around-braces.mm:120:27: warning: missing space around opening brace
+    for (i = 0; i < a; i++){
+--------------------------^
+missing-space-around-braces.mm:121:12: warning: missing space around closing brace
+        a--;}
+-----------^
+missing-space-around-braces.mm:123:14: warning: missing space around opening brace
+    switch (a){case 0: a += 1;}
+-------------^
+missing-space-around-braces.mm:125:14: warning: missing space around opening brace
+    switch (a){
+-------------^
+missing-space-around-braces.mm:131:14: warning: missing space around opening brace
+    switch (a){
+-------------^
+missing-space-around-braces.mm:133:19: warning: missing space around closing brace
+    case 1: a -= 1;}
+------------------^

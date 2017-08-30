@@ -1,0 +1,60 @@
+cpp-constant-conditionals.cpp:1:5: warning: constant numeric preprocessor expression
+#if 1
+----^
+cpp-constant-conditionals.cpp:8:6: warning: constant numeric preprocessor expression
+# if 1
+-----^
+cpp-constant-conditionals.cpp:15:6: warning: constant numeric preprocessor expression
+ #if 1
+-----^
+cpp-constant-conditionals.cpp:22:7: warning: constant numeric preprocessor expression
+ # if 1
+------^
+cpp-constant-conditionals.cpp:29:6: warning: constant numeric preprocessor expression
+#if (1)
+-----^
+cpp-constant-conditionals.cpp:36:7: warning: constant numeric preprocessor expression
+#if ((1))
+------^
+cpp-constant-conditionals.cpp:43:8: warning: constant numeric preprocessor expression
+#if ( (1))
+-------^
+cpp-constant-conditionals.cpp:50:8: warning: constant numeric preprocessor expression
+#if ( (1) )
+-------^
+cpp-constant-conditionals.cpp:57:9: warning: constant numeric preprocessor expression
+#if ( ( 1) )
+--------^
+cpp-constant-conditionals.cpp:64:9: warning: constant numeric preprocessor expression
+#if ( ( 1 ) )
+--------^
+cpp-constant-conditionals.cpp:71:5: warning: constant numeric preprocessor expression
+#if 0
+----^
+cpp-constant-conditionals.cpp:78:6: warning: constant numeric preprocessor expression
+# if 0
+-----^
+cpp-constant-conditionals.cpp:85:6: warning: constant numeric preprocessor expression
+ #if 0
+-----^
+cpp-constant-conditionals.cpp:92:7: warning: constant numeric preprocessor expression
+ # if 0
+------^
+cpp-constant-conditionals.cpp:99:6: warning: constant numeric preprocessor expression
+#if (0)
+-----^
+cpp-constant-conditionals.cpp:106:7: warning: constant numeric preprocessor expression
+#if ((0))
+------^
+cpp-constant-conditionals.cpp:113:8: warning: constant numeric preprocessor expression
+#if ( (0))
+-------^
+cpp-constant-conditionals.cpp:120:8: warning: constant numeric preprocessor expression
+#if ( (0) )
+-------^
+cpp-constant-conditionals.cpp:127:9: warning: constant numeric preprocessor expression
+#if ( ( 0) )
+--------^
+cpp-constant-conditionals.cpp:134:9: warning: constant numeric preprocessor expression
+#if ( ( 0 ) )
+--------^

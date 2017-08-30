@@ -1,0 +1,12 @@
+missing-space-after-else-if.cpp:6:42: warning: missing space after 'else if' keyword
+    if(aArgument % 2 != 0) foo(); else if(aArgument == 0) bar();
+-----------------------------------------^
+missing-space-after-else-if.cpp:11:46: warning: missing space after 'else if' keyword
+    if(aArgument % 2 != 0) { foo(); } else if(aArgument == 0) { bar(); }
+---------------------------------------------^
+missing-space-after-else-if.cpp:18:14: warning: missing space after 'else if' keyword
+    } else if(aArgument == 0) {
+-------------^
+missing-space-after-else-if.cpp:29:12: warning: missing space after 'else if' keyword
+    else if(aArgument == 0)
+-----------^
