@@ -111,15 +111,15 @@ private:
     {
         kConfigExtAddressDelay = 100,  ///< milliseconds
         kTimeout               = 4000, ///< milliseconds
-        kSpecificPriorityBonus = UINT8_MAX,
+        kSpecificPriorityBonus = (1 << 9),
     };
 
     struct JoinerRouter
     {
     	int16_t mPriority;
-		uint8_t mChannel;
 		uint16_t mPanId;
 		uint16_t mJoinerUdpPort;
+		uint8_t mChannel;
 		Mac::ExtAddress mExtAddr;
     };
 
