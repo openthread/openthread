@@ -213,14 +213,15 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         steeringData.SetLength(aResult->mSteeringData.mLength);
         memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
 
+        joinerRouter.mPriority = 0x7F;
         if (steeringData.DoesAllowAny())
         {
-        	joinerRouter.mPriority = aResult->mRssi;
+        	joinerRouter.mPriority += aResult->mRssi;
         }
         else if (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
                  steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
         {
-        	joinerRouter.mPriority = (int16_t) aResult->mRssi + kSpecificPriorityBonus;
+        	joinerRouter.mPriority += (int16_t) aResult->mRssi + kSpecificPriorityBonus;
         }
         else
         {
