@@ -168,11 +168,12 @@ void Joiner::Close(void)
 
 void Joiner::Complete(otError aError)
 {
+    ThreadNetif &netif = GetNetif();
     mState = OT_JOINER_STATE_IDLE;
     otError error = OT_ERROR_NOT_FOUND;
     GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
 
-    GetNetif().GetCoapSecure().Stop();
+    netif.GetCoapSecure().Disconnect();
 
     if(aError != OT_ERROR_NONE && aError != OT_ERROR_NOT_FOUND)
     {
@@ -181,6 +182,7 @@ void Joiner::Complete(otError aError)
 
     if (error == OT_ERROR_NOT_FOUND && mCallback)
     {
+    	netif.GetCoapSecure().Stop();
         otJoinerCallback callback = mCallback;
         mCallback = NULL;
         callback(aError, mContext);
