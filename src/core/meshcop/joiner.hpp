@@ -111,6 +111,16 @@ private:
     {
         kConfigExtAddressDelay = 100,  ///< milliseconds
         kTimeout               = 4000, ///< milliseconds
+        kSpecificPriorityBonus = UINT8_MAX,
+    };
+
+    struct JoinerRouter
+    {
+    	int16_t mPriority;
+		uint8_t mChannel;
+		uint16_t mPanId;
+		uint16_t mJoinerUdpPort;
+		Mac::ExtAddress mExtAddr;
     };
 
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
@@ -121,6 +131,9 @@ private:
 
     void Close(void);
     void Complete(otError aError);
+
+    void AddJoinerRouter(JoinerRouter &aJoinerRouter);
+    otError TryNextJoin();
 
     static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
     void HandleSecureCoapClientConnect(bool aConnected);
@@ -146,12 +159,7 @@ private:
     uint16_t mCcitt;
     uint16_t mAnsi;
 
-    bool mJoinerRouterIsSpecific;
-    uint8_t mJoinerRouterChannel;
-    int8_t mJoinerRouterRssi;
-    uint16_t mJoinerRouterPanId;
-    uint16_t mJoinerUdpPort;
-    Mac::ExtAddress mJoinerRouter;
+    JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES];
 
     const char *mVendorName;
     const char *mVendorModel;
