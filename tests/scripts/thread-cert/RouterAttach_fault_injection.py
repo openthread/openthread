@@ -99,7 +99,7 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
 
 
         if nodeid:
-            print "Fault injection: " + str(fault_config)
+            print "Fault injection: " + str(nodeid) + " " + str(fault_config)
             self.nodes[nodeid].fi_configure(fault_config)
 
         self.nodes[LEADER].start()

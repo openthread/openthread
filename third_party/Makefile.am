@@ -59,10 +59,12 @@ SUBDIRS                                 += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
+if OPENTHREAD_ENABLE_FAULT_INJECTION
 if OPENTHREAD_WITH_NLFAULTINJECTION_INTERNAL
 SUBDIRS                                    += \
     nlfaultinjection/repo                     \
     $(NULL)
 endif # OPENTHREAD_WITH_NLFAULTINJECTION_INTERNAL
+endif # OPENTHREAD_ENABLE_FAULT_INJECTION
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

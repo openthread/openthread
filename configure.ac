@@ -403,41 +403,6 @@ NL_ENABLE_TESTS([yes])
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
 #
-# Nlfaultinjection
-#
-
-# TODO: make this optional
-NL_WITH_REQUIRED_INTERNAL_PACKAGE(
-    [Nlfaultinjection],
-    [NLFAULTINJECTION],
-    [nlfaultinjection],
-    [-lnlfaultinjection],
-    [
-        # At this point, the internal nlfaultinjection package will be neither
-        # configured nor built, so the normal checks we undertake for an
-        # external package cannot be run here. Simply set the appropriate
-        # variables and trust all will be well.
-
-        NLFAULTINJECTION_CPPFLAGS="-I\${abs_top_srcdir}/third_party/nlfaultinjection/repo/include"
-        NLFAULTINJECTION_LDFLAGS="-L${ac_pwd}/third_party/nlfaultinjection/repo/src"
-        NLFAULTINJECTION_LIBS="-lnlfaultinjection"
-    ],
-    [
-        # Check for required nlfaultinjection headers.
-
-        AC_LANG_PUSH([C++])
-        AC_CHECK_HEADERS([nlfaultinjection.hpp],
-        [],
-        [
-            AC_MSG_ERROR(The nlfaultinjection header "$ac_header" is required but cannot be found.)
-        ])
-        AC_LANG_POP([C++])
-    ]
-)
-
-AM_CONDITIONAL([OPENTHREAD_WITH_NLFAULTINJECTION_INTERNAL], [test "${nl_with_nlfaultinjection}" = "internal"])
-
-#
 # CLI Library
 #
 AC_ARG_ENABLE(cli-app,
@@ -1374,11 +1339,45 @@ AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 # At minimum, the following packages are optional, depending on
 # configuration:
 #
-#   * TBD
+#   * nlfaultinjection
 #
 AC_MSG_NOTICE([checking required package dependencies])
 
-# NL_WITH_PACKAGE(...)
+#
+# Nlfaultinjection
+#
+
+# TODO: make this optional
+NL_WITH_OPTIONAL_INTERNAL_PACKAGE(
+    [Nlfaultinjection],
+    [NLFAULTINJECTION],
+    [nlfaultinjection],
+    [-lnlfaultinjection],
+    [
+        # At this point, the internal nlfaultinjection package will be neither
+        # configured nor built, so the normal checks we undertake for an
+        # external package cannot be run here. Simply set the appropriate
+        # variables and trust all will be well.
+
+        NLFAULTINJECTION_CPPFLAGS="-I\${abs_top_srcdir}/third_party/nlfaultinjection/repo/include"
+        NLFAULTINJECTION_LDFLAGS="-L${ac_pwd}/third_party/nlfaultinjection/repo/src"
+        NLFAULTINJECTION_LIBS="-lnlfaultinjection"
+    ],
+    [
+        # Check for required nlfaultinjection headers.
+
+        AC_LANG_PUSH([C++])
+        AC_CHECK_HEADERS([nlfaultinjection.hpp],
+        [],
+        [
+            AC_MSG_ERROR(The nlfaultinjection header "$ac_header" is required but cannot be found.)
+        ])
+        AC_LANG_POP([C++])
+    ]
+)
+
+AM_CONDITIONAL([OPENTHREAD_WITH_NLFAULTINJECTION_INTERNAL], [test "${nl_with_nlfaultinjection}" = "internal"])
+
 
 #
 # Check for headers
@@ -1446,13 +1445,17 @@ LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
 
 # Add any nlfaultinjection CPPFLAGS, LDFLAGS, and LIBS
 
-CPPFLAGS="${CPPFLAGS} ${NLFAULTINJECTION_CPPFLAGS}"
-LDFLAGS="${LDFLAGS} ${NLFAULTINJECTION_LDFLAGS}"
-LIBS="${LIBS} ${NLFAULTINJECTION_LIBS}"
+if test "$enable_fault_injection" = "yes"; then
+    CPPFLAGS="${CPPFLAGS} ${NLFAULTINJECTION_CPPFLAGS}"
+    LDFLAGS="${LDFLAGS} ${NLFAULTINJECTION_LDFLAGS}"
+    LIBS="${LIBS} ${NLFAULTINJECTION_LIBS}"
 
-if test "${nl_with_nlfaultinjection}" = "internal"; then
-AC_CONFIG_SUBDIRS([third_party/nlfaultinjection/repo])
+    if test "${nl_with_nlfaultinjection}" = "internal"; then
+        AC_CONFIG_SUBDIRS([third_party/nlfaultinjection/repo])
+    fi
+
 fi
+
 
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of an -Werror issues by

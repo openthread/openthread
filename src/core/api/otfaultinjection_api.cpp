@@ -32,6 +32,8 @@
  */
 #include <openthread/config.h>
 
+#if OPENTHREAD_ENABLE_FAULT_INJECTION
+
 #include <openthread/otfaultinjection.h>
 
 #include <common/otfaultinjection.hpp>
@@ -56,3 +58,4 @@ bool otFIParseFaultInjectionStr(char *inStr)
                                                       sFaultMgrTable, 
                                                       sizeof(sFaultMgrTable)/sizeof(sFaultMgrTable[0]));
 }
+#endif // OPENTHREAD_ENABLE_FAULT_INJECTION

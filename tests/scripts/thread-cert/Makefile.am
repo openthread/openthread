@@ -151,6 +151,15 @@ check_PROGRAMS                                                     = \
     $(NULL)
 
 check_SCRIPTS                                                      = \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_FAULT_INJECTION
+check_SCRIPTS                                                     += \
+	RouterAttach_fault_injection.py                                  \
+    $(NULL)
+endif
+
+check_SCRIPTS                                                     += \
     test_coap.py                                                     \
     test_common.py                                                   \
     test_crypto.py                                                   \
@@ -161,7 +170,6 @@ check_SCRIPTS                                                      = \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     Cert_5_2_02_LeaderReject1Hop.py                                  \
-	RouterAttach_fault_injection.py                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \
@@ -285,5 +293,11 @@ XFAIL_NCP_TESTS                                                    = \
     $(NULL)
 
 XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),$(XFAIL_NCP_TESTS))
+
+if OPENTHREAD_ENABLE_FAULT_INJECTION
+XFAIL_TESTS                                                       += \
+	RouterAttach_fault_injection.py                                  \
+	$(NULL)
+endif
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
