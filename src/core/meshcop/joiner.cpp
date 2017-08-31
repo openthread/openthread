@@ -218,7 +218,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
             ExitNow();
         }
 
-        joinerRouter.mPriority = aResult->mRssi + 0x80;
+        joinerRouter.mPriority = (uint16_t)((int16_t) aResult->mRssi + 0x80);
 
         if (!steeringData.DoesAllowAny())
         {
