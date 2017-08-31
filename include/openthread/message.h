@@ -156,7 +156,7 @@ bool otMessageIsLinkSecurityEnabled(otMessage *aMessage);
  *
  * @param[in]  aMessage  A pointer to a message buffer.
  * @param[in]  aEnabled  If `true`, the message is forced to use direct transmission. If `false`, the
- *						 message follows the normal procedure.
+ *                       message follows the normal procedure.
  *
  */
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
