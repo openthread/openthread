@@ -158,7 +158,7 @@ typedef enum otRadioState
  * Get the factory-assigned IEEE EUI-64 for this interface.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
- * @param[out] aIeeeEui64  A pointer to where the factory-assigned IEEE EUI-64 will be placed.
+ * @param[out] aIeeeEui64  A pointer to the factory-assigned IEEE EUI-64.
  *
  */
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
@@ -387,7 +387,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aFrame     A pointer to the frame that will be transmitted.
+ * @param[in] aFrame     A pointer to the transmitted frame.
  *
  * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
  * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.

@@ -164,8 +164,8 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 channel
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -191,7 +191,7 @@ OTAPI const otExtAddress *OTCALL otLinkGetExtendedAddress(otInstance *aInstance)
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
  *
- * This function will only succeed when Thread protocols are disabled.
+ * This function succeedsm only when Thread protocols are disabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address.
@@ -257,8 +257,8 @@ OTAPI otPanId OTCALL otLinkGetPanId(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 PAN ID.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function also invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
