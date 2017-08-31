@@ -45,19 +45,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance *sInstance;
+    otInstance *instance = NULL;
     otRadioFrame frame;
-    uint8_t *buf;
+    uint8_t *buf = NULL;
 
     VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
 
     FuzzerPlatformInit();
 
-    sInstance = otInstanceInitSingle();
-    otLinkSetPanId(sInstance, panId);
-    otIp6SetEnabled(sInstance, true);
-    otThreadSetEnabled(sInstance, true);
-    otThreadBecomeLeader(sInstance);
+    instance = otInstanceInitSingle();
+    otLinkSetPanId(instance, panId);
+    otIp6SetEnabled(instance, true);
+    otThreadSetEnabled(instance, true);
+    otThreadBecomeLeader(instance);
 
     buf = static_cast<uint8_t *>(malloc(size));
 
@@ -68,10 +68,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     memcpy(buf, data, frame.mLength);
 
-    otPlatRadioReceiveDone(sInstance, &frame, OT_ERROR_NONE);
-
-    free(buf);
+    otPlatRadioReceiveDone(instance, &frame, OT_ERROR_NONE);
 
 exit:
+
+    if (buf != NULL)
+    {
+        free(buf);
+    }
+
+    if (instance != NULL)
+    {
+        otInstanceFinalize(instance);
+    }
+
     return 0;
 }
