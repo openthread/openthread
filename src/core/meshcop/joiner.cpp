@@ -118,11 +118,7 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     error = netif.GetCoapSecure().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
     SuccessOrExit(error);
 
-    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES; i++)
-    {
-        mJoinerRouters[i].mPriority = 0;
-        mJoinerRouters[i].mPanId = Mac::kPanIdBroadcast;
-    }
+    memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
 
     SuccessOrExit(error = netif.GetMle().Discover(0, netif.GetMac().GetPanId(), true, false, HandleDiscoverResult,
                                                   this));
@@ -215,21 +211,17 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         steeringData.SetLength(aResult->mSteeringData.mLength);
         memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
 
-        joinerRouter.mPriority = 0x7F;
-
-        if (steeringData.DoesAllowAny())
-        {
-            joinerRouter.mPriority += aResult->mRssi;
-        }
-        else if (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
-                 steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
-        {
-            joinerRouter.mPriority += (int16_t) aResult->mRssi + kSpecificPriorityBonus;
-        }
-        else
+        if (!steeringData.GetBit(mCcitt % steeringData.GetNumBits()) ||
+            !steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
         {
             otLogDebgMeshCoP(GetInstance(), "Steering data does not include this device");
             ExitNow();
+        }
+
+        joinerRouter.mPriority = aResult->mRssi + 0x80;
+        if (!steeringData.DoesAllowAny())
+        {
+            joinerRouter.mPriority += kSpecificPriorityBonus;
         }
 
         joinerRouter.mJoinerUdpPort = aResult->mJoinerUdpPort;
