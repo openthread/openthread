@@ -219,6 +219,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         }
 
         joinerRouter.mPriority = aResult->mRssi + 0x80;
+
         if (!steeringData.DoesAllowAny())
         {
             joinerRouter.mPriority += kSpecificPriorityBonus;
