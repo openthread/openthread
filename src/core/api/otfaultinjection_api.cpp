@@ -28,40 +28,31 @@
 
 /**
  * @file
- *   This file includes posix compile-time configuration constants
- *   for OpenThread.
+ *   This file implements the OpenThread fault injection API.
  */
+#include <openthread/config.h>
 
-#ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
-#define OPENTHREAD_CORE_POSIX_CONFIG_H_
+#include <openthread/otfaultinjection.h>
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX"
+#include <common/otfaultinjection.hpp>
 
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Specify where the log output should go.
- *
- */
-#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS
-#endif
 
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
- *
- * Define to 1 if you want to support microsecond timer in platform.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
+using namespace ot;
 
-// TODO: Don't commit this!!!!
-#define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_DEBG
+static nl::FaultInjection::GetManagerFn sFaultMgrTable[] = {
+    ot::FaultInjection::GetManager
+};
 
-#endif  // OPENTHREAD_CORE_POSIX_CONFIG_H_
+int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCallsToFail)
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    return mgr.FailAtFault(id, numCallsToSkip, numCallsToFail);
+}
+
+bool otFIParseFaultInjectionStr(char *inStr)
+{
+    return nl::FaultInjection::ParseFaultInjectionStr(inStr, 
+                                                      sFaultMgrTable, 
+                                                      sizeof(sFaultMgrTable)/sizeof(sFaultMgrTable[0]));
+}

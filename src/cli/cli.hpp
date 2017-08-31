@@ -204,6 +204,10 @@ private:
     void ProcessExtAddress(int argc, char *argv[]);
     void ProcessExtPanId(int argc, char *argv[]);
     void ProcessFactoryReset(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_FAULT_INJECTION
+    void ProcessFIPrintCounters(int argc, char *argv[]);
+    void ProcessFIConfigure(int argc, char *argv[]);
+#endif
     void ProcessHashMacAddress(int argc, char *argv[]);
     void ProcessIfconfig(int argc, char *argv[]);
     void ProcessIpAddr(int argc, char *argv[]);

@@ -320,6 +320,27 @@ class otCli:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def fi_configure(self, fault_config):
+        cmd = 'ficonfigure ' + fault_config
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def fi_print_counters(self):
+        cmd = 'fiprintcounters'
+        counters = {}
+        self.send_command(cmd)
+        header = 'FaultInjection counters:\r\n'
+        done = 'End of FaultInjection counters\r\n'
+        while True:
+            i = self.pexpect.expect(['(\S+): (\S+)\r\n', header, done])
+            if i == 0:
+                counter = self.pexpect.match.groups()[0].decode("utf-8")
+                value = int(self.pexpect.match.groups()[1].decode("utf-8"))
+                counters[counter] = value
+            elif i == 2:
+                break
+        return counters
+
     def get_timeout(self):
         self.send_command('childtimeout')
         i = self.pexpect.expect('(\d+)\r\n')

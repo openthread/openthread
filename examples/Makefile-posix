@@ -110,6 +110,7 @@ configure_OPTIONS                   = \
     --enable-mtd-network-diagnostic   \
     --enable-raw-link-api             \
     --enable-tmf-proxy                \
+	--enable-fault-injection          \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

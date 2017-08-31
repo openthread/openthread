@@ -107,6 +107,7 @@ SOURCES_COMMON                      = \
     api/link_raw_api.cpp              \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
+	api/otfaultinjection_api.cpp      \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
@@ -119,6 +120,7 @@ SOURCES_COMMON                      = \
     common/logging.cpp                \
     common/locator.cpp                \
     common/message.cpp                \
+	common/otfaultinjection.cpp       \
     common/tasklet.cpp                \
     common/timer.cpp                  \
     common/tlvs.cpp                   \
@@ -215,6 +217,7 @@ HEADERS_COMMON                      = \
     common/message.hpp                \
     common/settings.hpp               \
     common/new.hpp                    \
+	common/otfaultinjection.hpp       \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     common/tlvs.hpp                   \

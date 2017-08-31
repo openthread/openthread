@@ -40,6 +40,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
+#include "common/otfaultinjection.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -103,6 +104,9 @@ void MessagePool::Free(Message *aMessage)
 Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
+
+    OT_FAULT_INJECT(kFault_AllocBuffer, 
+                    otLogInfoMem(GetInstance(), "No available message buffer"); return NULL);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 

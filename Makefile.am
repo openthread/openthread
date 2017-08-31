@@ -48,9 +48,9 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     $(NULL)
 
 SUBDIRS                             = \
+    third_party                       \
     include                           \
     src                               \
-    third_party                       \
     examples                          \
     tests                             \
     tools                             \

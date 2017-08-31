@@ -166,6 +166,12 @@ class Node:
     def set_state(self, state):
         self.interface.set_state(state)
 
+    def fi_configure(self, fault_config):
+        self.interface.fi_configure(fault_config)
+
+    def fi_print_counters(self):
+        return self.interface.fi_print_counters()
+
     def get_timeout(self):
         return self.interface.get_timeout()
 

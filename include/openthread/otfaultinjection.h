@@ -28,40 +28,48 @@
 
 /**
  * @file
- *   This file includes posix compile-time configuration constants
- *   for OpenThread.
+ * @brief
+ *  This file defines the top-level OpenThread APIs related to fault injection
  */
 
-#ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
-#define OPENTHREAD_CORE_POSIX_CONFIG_H_
+#ifndef OPENTHREAD_FAULT_INJECTION_H_
+#define OPENTHREAD_FAULT_INJECTION_H_
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX"
+#include <openthread/types.h>
 
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Specify where the log output should go.
- *
- */
-#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+ * @addtogroup api-message
  *
- * Define to 1 if you want to support microsecond timer in platform.
+ * @brief
+ *   This module includes functions that control OpenThread's fault injection Manager
+ *
+ * @{
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
 
-// TODO: Don't commit this!!!!
-#define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_DEBG
+typedef enum
+{   
+    kFault_AllocBuffer,                /**< Fail the allocation of a Buffer */
+    kFault_NumItems,
+} otFaultId;
 
-#endif  // OPENTHREAD_CORE_POSIX_CONFIG_H_
+
+int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCallsToFail);
+
+bool otFIParseFaultInjectionStr(char *inStr);
+
+
+/**
+ * @}
+ *
+ */
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // OPENTHREAD_FAULT_INJECTION_H_

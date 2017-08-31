@@ -31,6 +31,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 LOG_DRIVER=$(abs_top_srcdir)/third_party/openthread-test-driver/test-driver
 
 EXTRA_DIST                                                         = \
+    RouterAttach_fault_injection.py                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \
@@ -160,6 +161,7 @@ check_SCRIPTS                                                      = \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     Cert_5_2_02_LeaderReject1Hop.py                                  \
+	RouterAttach_fault_injection.py                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \

@@ -39,6 +39,11 @@
 #include <assert.h>
 #endif
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+#include <inttypes.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils/wrap_string.h"
@@ -82,6 +87,9 @@
 #endif
 
 #include "common/encoding.hpp"
+
+#include "common/otfaultinjection.hpp"
+#include "openthread/otfaultinjection.h"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -135,6 +143,10 @@ const struct Command Interpreter::sCommands[] =
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
     { "factoryreset", &Interpreter::ProcessFactoryReset },
+#if OPENTHREAD_ENABLE_FAULT_INJECTION
+    { "fiprintcounters", &Interpreter::ProcessFIPrintCounters },
+    { "ficonfigure", &Interpreter::ProcessFIConfigure },
+#endif
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
 #ifdef OTDLL
@@ -965,6 +977,35 @@ void Interpreter::ProcessFactoryReset(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 }
+
+#if OPENTHREAD_ENABLE_FAULT_INJECTION
+void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+    nl::FaultInjection::Identifier faultId;
+
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    mServer->OutputFormat("FaultInjection counters:\r\n");
+	for (faultId = 0; faultId < mgr.GetNumFaults(); faultId++)
+	{   
+		mServer->OutputFormat("%s_%s: %" PRIu32 "\r\n", mgr.GetName(), mgr.GetFaultNames()[faultId],
+				mgr.GetFaultRecords()[faultId].mNumTimesChecked);
+	}
+    mServer->OutputFormat("End of FaultInjection counters\r\n");
+}
+
+void Interpreter::ProcessFIConfigure(int argc, char *argv[])
+{
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+	otFIParseFaultInjectionStr(argv[0]);
+
+    mServer->OutputFormat("Done\r\n");
+}
+#endif
 
 void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
 {
