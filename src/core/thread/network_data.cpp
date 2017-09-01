@@ -104,6 +104,8 @@ otError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint1
         BorderRouterTlv *borderRouter;
         BorderRouterEntry *borderRouterEntry = NULL;
 
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
             continue;
@@ -171,6 +173,8 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint
         PrefixTlv *prefix;
         HasRouteTlv *hasRoute;
         HasRouteEntry *hasRouteEntry = NULL;
+
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -438,6 +442,8 @@ BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+
         if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter)
         {
             ExitNow(rval = reinterpret_cast<BorderRouterTlv *>(cur));
@@ -458,6 +464,8 @@ BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix, bool aStable)
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+
         if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter &&
             cur->IsStable() == aStable)
         {
@@ -479,6 +487,8 @@ HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+
         if (cur->GetType() == NetworkDataTlv::kTypeHasRoute)
         {
             ExitNow(rval = reinterpret_cast<HasRouteTlv *>(cur));
@@ -499,6 +509,8 @@ HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix, bool aStable)
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+
         if (cur->GetType() == NetworkDataTlv::kTypeHasRoute &&
             cur->IsStable() == aStable)
         {
@@ -520,6 +532,8 @@ ContextTlv *NetworkData::FindContext(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+
         if (cur->GetType() == NetworkDataTlv::kTypeContext)
         {
             ExitNow(rval = reinterpret_cast<ContextTlv *>(cur));
@@ -545,6 +559,8 @@ PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
             compare = reinterpret_cast<PrefixTlv *>(cur);
@@ -559,6 +575,7 @@ PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
         cur = cur->GetNext();
     }
 
+exit:
     return NULL;
 }
 

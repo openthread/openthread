@@ -414,8 +414,9 @@ exit:
     }
 }
 
-void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength)
+otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
+    otError error = OT_ERROR_NONE;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
     NetworkDataTlv *subCur;
@@ -428,14 +429,21 @@ void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTl
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
             prefix = static_cast<PrefixTlv *>(cur);
             subCur = prefix->GetSubTlvs();
             subEnd = prefix->GetNext();
 
+            VerifyOrExit(subEnd <= end, error = OT_ERROR_PARSE);
+
             while (subCur < subEnd)
             {
+                VerifyOrExit(subCur + sizeof(NetworkDataTlv) <= subEnd && subCur->GetNext() <= subEnd,
+                             error = OT_ERROR_PARSE);
+
                 switch (subCur->GetType())
                 {
                 case NetworkDataTlv::kTypeBorderRouter:
@@ -495,7 +503,7 @@ void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTl
     }
 
 exit:
-    return;
+    return error;
 }
 
 bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
@@ -507,6 +515,8 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
             PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
@@ -583,7 +593,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     }
     else
     {
-        RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength);
+        SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength));
         SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength));
 
         mVersion++;
@@ -602,11 +612,14 @@ exit:
 
 otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
 {
+    otError error = OT_ERROR_NONE;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
@@ -623,16 +636,20 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
 
     otDumpDebgNetData(GetInstance(), "add done", mTlvs, mLength);
 
-    return OT_ERROR_NONE;
+exit:
+    return error;
 }
 
 otError Leader::AddPrefix(PrefixTlv &aPrefix)
 {
+    otError error = OT_ERROR_NONE;
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
     NetworkDataTlv *end = aPrefix.GetNext();
 
     while (cur < end)
     {
+        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
@@ -650,7 +667,8 @@ otError Leader::AddPrefix(PrefixTlv &aPrefix)
         cur = cur->GetNext();
     }
 
-    return OT_ERROR_NONE;
+exit:
+    return error;
 }
 
 otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
