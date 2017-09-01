@@ -753,13 +753,16 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+ * @def OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
  *
- * Define to 1 if you want to enable beacon response for joinable networks.
+ * Define to 1 to enable IEEE 802.15.4 Beacons when joining is enabled.
+ *
+ * @note When this feature is enabled, the device will transmit IEEE 802.15.4 Beacons in response to IEEE 802.15.4
+ * Beacon Requests even while the device is not router capable and detached.
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
-#define OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE         0
+#ifndef OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
+#define OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE       0
 #endif
 
 /**
