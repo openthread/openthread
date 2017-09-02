@@ -2007,10 +2007,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t command;
     Neighbor *neighbor;
 
+    VerifyOrExit(aMessageInfo.GetLinkInfo() != NULL);
+
     length = aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
     VerifyOrExit(header.IsValid() && header.GetLength() <= length);
-
-    assert(aMessageInfo.GetLinkInfo() != NULL);
 
     if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
