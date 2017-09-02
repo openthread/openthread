@@ -43,6 +43,10 @@ LDADD_COMMON                                                           = \
 LDFLAGS_COMMON                                                         = \
     $(NULL)
 
+LIBTOOLFLAGS_COMMON                                                    = \
+    --preserve-dup-deps                                                  \
+    $(NULL)
+
 SOURCES_COMMON                                                         = \
     main.c                                                               \
     $(NULL)
@@ -173,10 +177,15 @@ ot_ncp_ftd_LDADD                                                       = \
     $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(NULL)
 
 ot_ncp_ftd_LDFLAGS                                                     = \
     $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_ncp_ftd_LIBTOOLFLAGS                                                = \
+    $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
 ot_ncp_ftd_SOURCES                                                     = \
@@ -197,10 +206,15 @@ ot_ncp_mtd_LDADD                                                       = \
     $(top_builddir)/src/ncp/libopenthread-ncp-mtd.a                      \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
+    $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(NULL)
 
 ot_ncp_mtd_LDFLAGS                                                     = \
     $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_ncp_mtd_LIBTOOLFLAGS                                                = \
+    $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
 ot_ncp_mtd_SOURCES                                                     = \

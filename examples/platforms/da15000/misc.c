@@ -26,10 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/types.h>
+#include <openthread/config.h>
 
+#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 
+#include "hw_cpm.h"
 #include "sdk_defs.h"
 
 void otPlatReset(otInstance *aInstance)

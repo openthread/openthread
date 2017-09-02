@@ -62,7 +62,7 @@ namespace MeshCoP {
 
 Joiner::Joiner(ThreadNetif &aNetif):
     ThreadNetifLocator(aNetif),
-    mState(kStateIdle),
+    mState(OT_JOINER_STATE_IDLE),
     mCallback(NULL),
     mContext(NULL),
     mCcitt(0),
@@ -94,7 +94,9 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
 
     otLogFuncEntry();
 
-    VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
+    VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
+
+    GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
 
     // use extended address based on factory-assigned IEEE EUI-64
     netif.GetMac().GetHashMacAddress(&extAddress);
@@ -132,7 +134,7 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     mVendorData = aVendorData;
     mCallback = aCallback;
     mContext = aContext;
-    mState = kStateDiscover;
+    mState = OT_JOINER_STATE_DISCOVER;
 
 exit:
     otLogFuncExitErr(error);
@@ -149,6 +151,11 @@ otError Joiner::Stop(void)
     return OT_ERROR_NONE;
 }
 
+otJoinerState Joiner::GetState(void) const
+{
+    return mState;
+}
+
 void Joiner::Close(void)
 {
     ThreadNetif &netif = GetNetif();
@@ -162,7 +169,8 @@ void Joiner::Close(void)
 
 void Joiner::Complete(otError aError)
 {
-    mState = kStateIdle;
+    mState = OT_JOINER_STATE_IDLE;
+    GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
 
     GetNetif().GetCoapSecure().Stop();
 
@@ -242,7 +250,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
         netif.GetCoapSecure().Connect(messageInfo, Joiner::HandleSecureCoapClientConnect, this);
-        mState = kStateConnect;
+        mState = OT_JOINER_STATE_CONNECT;
     }
     else
     {
@@ -263,10 +271,10 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected)
 {
     switch (mState)
     {
-    case kStateConnect:
+    case OT_JOINER_STATE_CONNECT:
         if (aConnected)
         {
-            mState = kStateConnected;
+            mState = OT_JOINER_STATE_CONNECTED;
             SendJoinerFinalize();
             mTimer.Start(kTimeout);
         }
@@ -377,7 +385,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
 
     otLogFuncEntry();
 
-    VerifyOrExit(mState == kStateConnected &&
+    VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED &&
                  aResult == OT_ERROR_NONE &&
                  aHeader->GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT &&
                  aHeader->GetCode() == OT_COAP_CODE_CHANGED);
@@ -385,7 +393,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid());
 
-    mState = kStateEntrust;
+    mState = OT_JOINER_STATE_ENTRUST;
     mTimer.Start(kTimeout);
 
     otLogInfoMeshCoP(GetInstance(), "received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
@@ -423,7 +431,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     otLogFuncEntry();
 
-    VerifyOrExit(mState == kStateEntrust &&
+    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST &&
                  aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
                  aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
@@ -498,7 +506,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, responseInfo));
 
-    mState = kStateJoined;
+    mState = OT_JOINER_STATE_JOINED;
 
     otLogInfoArp(GetInstance(), "Sent Joiner Entrust response");
 
@@ -527,18 +535,18 @@ void Joiner::HandleTimer(void)
 
     switch (mState)
     {
-    case kStateIdle:
-    case kStateDiscover:
-    case kStateConnect:
+    case OT_JOINER_STATE_IDLE:
+    case OT_JOINER_STATE_DISCOVER:
+    case OT_JOINER_STATE_CONNECT:
         assert(false);
         break;
 
-    case kStateConnected:
-    case kStateEntrust:
+    case OT_JOINER_STATE_CONNECTED:
+    case OT_JOINER_STATE_ENTRUST:
         error = OT_ERROR_RESPONSE_TIMEOUT;
         break;
 
-    case kStateJoined:
+    case OT_JOINER_STATE_JOINED:
         Mac::ExtAddress extAddress;
 
         netif.GetMac().GenerateExtAddress(&extAddress);

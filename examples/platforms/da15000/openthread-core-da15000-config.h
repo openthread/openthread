@@ -79,7 +79,15 @@
  * The DA15000 platform provides an otPlatLog() function.
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHERAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+ *
+ * The maximum number of state-changed callback handlers (set using `otSetStateChangedCallback()`).
+ *
+ */
+#define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS              3
 
 #endif  // OPENTHREAD_CORE_DA15000_CONFIG_H_

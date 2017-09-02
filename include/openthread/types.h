@@ -685,6 +685,8 @@ enum
     OT_CHANGED_THREAD_CHILD_REMOVED         = 1 << 11,  ///< Child was removed
     OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED    = 1 << 12,  ///< Subscribed to a IPv6 multicast address
     OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED  = 1 << 13,  ///< Unsubscribed from a IPv6 multicast address
+    OT_CHANGED_COMMISSIONER_STATE           = 1 << 14,  ///< Commissioner state changed
+    OT_CHANGED_JOINER_STATE                 = 1 << 15,  ///< Joiner state changed
 };
 
 /**
