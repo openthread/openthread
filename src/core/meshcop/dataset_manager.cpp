@@ -464,6 +464,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
 
     // check mesh local prefix
     if (Tlv::GetTlv(aMessage, Tlv::kMeshLocalPrefix, sizeof(meshLocalPrefix), meshLocalPrefix) == OT_ERROR_NONE &&
+        meshLocalPrefix.IsValid() &&
         memcmp(meshLocalPrefix.GetMeshLocalPrefix(), netif.GetMle().GetMeshLocalPrefix(),
                meshLocalPrefix.GetLength()))
     {
@@ -472,6 +473,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
 
     // check network master key
     if (Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey) == OT_ERROR_NONE &&
+        masterKey.IsValid() &&
         memcmp(&masterKey.GetNetworkMasterKey(), &netif.GetKeyManager().GetMasterKey(), OT_MASTER_KEY_SIZE))
     {
         doesAffectConnectivity = true;
