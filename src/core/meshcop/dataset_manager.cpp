@@ -373,6 +373,25 @@ void DatasetManager::Get(const Coap::Header &aHeader, const Message &aMessage,
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
+    // MGMT_PENDING_GET.rsp would always include DelayTimer TLV (Specification Section 8.7.5.4)
+    if (length != 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0)
+    {
+        uint8_t i;
+
+        for (i = 0; i < length; i++)
+        {
+            if (tlvs[i] == Tlv::kDelayTimer)
+            {
+                break;
+            }
+        }
+
+        if (i == length)
+        {
+            tlvs[length++] = Tlv::kDelayTimer;
+        }
+    }
+
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
