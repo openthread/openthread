@@ -143,7 +143,7 @@ otError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint1
         aConfig->mConfigure = borderRouterEntry->IsConfigure();
         aConfig->mDefaultRoute = borderRouterEntry->IsDefaultRoute();
         aConfig->mOnMesh = borderRouterEntry->IsOnMesh();
-        aConfig->mStable = cur->IsStable();
+        aConfig->mStable = borderRouter->IsStable();
         aConfig->mRloc16 = borderRouterEntry->GetRloc();
 
         iterator.SetTlvsIndex(static_cast<uint8_t>(reinterpret_cast<uint8_t *>(cur) - mTlvs));
@@ -207,7 +207,7 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint
         memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), BitVectorBytes(prefix->GetPrefixLength()));
         aConfig->mPrefix.mLength = prefix->GetPrefixLength();
         aConfig->mPreference = hasRouteEntry->GetPreference();
-        aConfig->mStable = cur->IsStable();
+        aConfig->mStable = hasRoute->IsStable();
         aConfig->mRloc16 = hasRouteEntry->GetRloc();
         aConfig->mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == GetNetif().GetMle().GetRloc16());
 

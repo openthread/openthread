@@ -447,7 +447,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
                 switch (subCur->GetType())
                 {
                 case NetworkDataTlv::kTypeBorderRouter:
-                    borderRouter = FindBorderRouter(*prefix);
+                    borderRouter = static_cast<BorderRouterTlv *>(subCur);
 
                     for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
                     {
@@ -467,7 +467,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
                     break;
 
                 case NetworkDataTlv::kTypeHasRoute:
-                    hasRoute = FindHasRoute(*prefix);
+                    hasRoute = static_cast<HasRouteTlv *>(subCur);
 
                     for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
                     {
