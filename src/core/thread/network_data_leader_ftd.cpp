@@ -175,6 +175,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
         OT_ERROR_NONE)
     {
+        VerifyOrExit(networkData.IsValid());
         RegisterNetworkData(HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]),
                             networkData.GetTlvs(), networkData.GetLength());
     }
@@ -617,12 +618,12 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-            AddPrefix(*static_cast<PrefixTlv *>(cur));
+            SuccessOrExit(error = AddPrefix(*static_cast<PrefixTlv *>(cur)));
             otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
             break;
 
@@ -647,16 +648,16 @@ otError Leader::AddPrefix(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            AddHasRoute(aPrefix, *static_cast<HasRouteTlv *>(cur));
+            SuccessOrExit(error = AddHasRoute(aPrefix, *static_cast<HasRouteTlv *>(cur)));
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            AddBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur));
+            SuccessOrExit(error = AddBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur)));
             break;
 
         default:
@@ -673,10 +674,32 @@ exit:
 otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
 {
     otError error = OT_ERROR_NONE;
-    PrefixTlv *dstPrefix;
-    HasRouteTlv *dstHasRoute;
+    PrefixTlv *dstPrefix = NULL;
+    HasRouteTlv *dstHasRoute = NULL;
+    uint16_t appendLength = 0;
 
-    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) == NULL)
+    VerifyOrExit(aHasRoute.GetNumEntries() > 0, error = OT_ERROR_PARSE);
+
+    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) != NULL)
+    {
+        dstHasRoute = FindHasRoute(*dstPrefix, aHasRoute.IsStable());
+    }
+
+    if (dstPrefix == NULL)
+    {
+        appendLength += sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength());
+    }
+
+    if (dstHasRoute == NULL)
+    {
+        appendLength += sizeof(HasRouteTlv);
+    }
+
+    appendLength += sizeof(HasRouteEntry);
+
+    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+
+    if (dstPrefix == NULL)
     {
         dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
         Insert(reinterpret_cast<uint8_t *>(dstPrefix), sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
@@ -688,7 +711,7 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
         dstPrefix->SetStable();
     }
 
-    if ((dstHasRoute = FindHasRoute(*dstPrefix, aHasRoute.IsStable())) == NULL)
+    if (dstHasRoute == NULL)
     {
         dstHasRoute = static_cast<HasRouteTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstHasRoute), sizeof(HasRouteTlv));
@@ -707,29 +730,60 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
     memcpy(dstHasRoute->GetEntry(dstHasRoute->GetNumEntries() - 1), aHasRoute.GetEntry(0),
            sizeof(HasRouteEntry));
 
+exit:
     return error;
 }
 
 otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter)
 {
     otError error = OT_ERROR_NONE;
-    PrefixTlv *dstPrefix;
-    ContextTlv *dstContext;
-    BorderRouterTlv *dstBorderRouter;
-    int contextId;
+    PrefixTlv *dstPrefix = NULL;
+    ContextTlv *dstContext = NULL;
+    BorderRouterTlv *dstBorderRouter = NULL;
+    int contextId = -1;
+    uint16_t appendLength = 0;
 
-    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) == NULL)
+    VerifyOrExit(aBorderRouter.GetNumEntries() > 0, error = OT_ERROR_PARSE);
+
+    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) != NULL)
+    {
+        dstContext = FindContext(*dstPrefix);
+        dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable());
+    }
+
+    if (dstPrefix == NULL)
+    {
+        appendLength += sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength());
+    }
+
+    if (dstContext == NULL)
+    {
+        appendLength += sizeof(ContextTlv);
+    }
+
+    if (dstBorderRouter == NULL)
+    {
+        appendLength += sizeof(BorderRouterTlv);
+    }
+
+    appendLength += sizeof(BorderRouterEntry);
+
+    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+
+    if (dstContext == NULL)
+    {
+        contextId = AllocateContext();
+        VerifyOrExit(contextId >= 0, error = OT_ERROR_NO_BUFS);
+    }
+
+    if (dstPrefix == NULL)
     {
         dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
         Insert(reinterpret_cast<uint8_t *>(dstPrefix), sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
-    if ((dstContext = FindContext(*dstPrefix)) != NULL)
-    {
-        dstContext->SetCompress();
-    }
-    else if ((contextId = AllocateContext()) >= 0)
+    if (dstContext == NULL)
     {
         dstContext = static_cast<ContextTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
@@ -740,11 +794,10 @@ otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRout
         dstContext->SetContextLength(aPrefix.GetPrefixLength());
     }
 
-    VerifyOrExit(dstContext != NULL, error = OT_ERROR_NO_BUFS);
+    dstContext->SetCompress();
     mContextLastUsed[dstContext->GetContextId() - kMinContextId] = 0;
 
-
-    if ((dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable())) == NULL)
+    if (dstBorderRouter == NULL)
     {
         dstBorderRouter = static_cast<BorderRouterTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstBorderRouter), sizeof(BorderRouterTlv));
