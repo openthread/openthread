@@ -341,6 +341,11 @@ class otCli:
                 break
         return counters
 
+    def fi_reset_counters(self):
+        cmd = 'firesetcounters'
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
     def get_timeout(self):
         self.send_command('childtimeout')
         i = self.pexpect.expect('(\d+)\r\n')

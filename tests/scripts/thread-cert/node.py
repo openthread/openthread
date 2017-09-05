@@ -172,6 +172,9 @@ class Node:
     def fi_print_counters(self):
         return self.interface.fi_print_counters()
 
+    def fi_reset_counters(self):
+        self.interface.fi_reset_counters()
+
     def get_timeout(self):
         return self.interface.get_timeout()
 

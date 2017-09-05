@@ -145,6 +145,7 @@ const struct Command Interpreter::sCommands[] =
     { "factoryreset", &Interpreter::ProcessFactoryReset },
 #if OPENTHREAD_ENABLE_FAULT_INJECTION
     { "fiprintcounters", &Interpreter::ProcessFIPrintCounters },
+    { "firesetcounters", &Interpreter::ProcessFIResetCounters },
     { "ficonfigure", &Interpreter::ProcessFIConfigure },
 #endif
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
@@ -994,6 +995,18 @@ void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
 				mgr.GetFaultRecords()[faultId].mNumTimesChecked);
 	}
     mServer->OutputFormat("End of FaultInjection counters\r\n");
+}
+
+void Interpreter::ProcessFIResetCounters(int argc, char *argv[])
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    mgr.ResetFaultCounters();
+
+    mServer->OutputFormat("Done\r\n");
 }
 
 void Interpreter::ProcessFIConfigure(int argc, char *argv[])
