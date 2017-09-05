@@ -199,24 +199,33 @@ void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMes
 void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t offset = aMessage.GetOffset();
-    uint8_t length = static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset());
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
     uint8_t tlvs[NetworkData::kMaxSize];
-    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kAccept;
+    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kReject;
     bool hasSessionId = false;
     bool hasValidTlv = false;
     uint16_t sessionId = 0;
 
-    VerifyOrExit(GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER, state = MeshCoP::StateTlv::kReject);
+    MeshCoP::Tlv *cur;
+    MeshCoP::Tlv *end;
+
+    VerifyOrExit(length <= sizeof(tlvs));
+    VerifyOrExit(GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER);
 
     aMessage.Read(offset, length, tlvs);
 
     // Session Id and Border Router Locator MUST NOT be set, but accept including unexpected or
     // unknown TLV as long as there is at least one valid TLV.
-    for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
-         cur < reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
-         cur = cur->GetNext())
+    cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
+    end = reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
+
+    while (cur < end)
     {
-        MeshCoP::Tlv::Type type = cur->GetType();
+        MeshCoP::Tlv::Type type;
+
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+
+        type = cur->GetType();
 
         if (type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData)
         {
@@ -224,7 +233,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
         }
         else if (type == MeshCoP::Tlv::kBorderAgentLocator)
         {
-            ExitNow(state = MeshCoP::StateTlv::kReject);
+            ExitNow();
         }
         else if (type == MeshCoP::Tlv::kCommissionerSessionId)
         {
@@ -235,13 +244,15 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
         {
             // do nothing for unexpected or unknown TLV
         }
+
+        cur = cur->GetNext();
     }
 
     // verify whether or not commissioner session id TLV is included
-    VerifyOrExit(hasSessionId, state = MeshCoP::StateTlv::kReject);
+    VerifyOrExit(hasSessionId);
 
     // verify whether or not MGMT_COMM_SET.req includes at least one valid TLV
-    VerifyOrExit(hasValidTlv, state = MeshCoP::StateTlv::kReject);
+    VerifyOrExit(hasValidTlv);
 
     // Find Commissioning Data TLV
     for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs);
@@ -251,26 +262,28 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
         if (netDataTlv->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
             // Iterate over MeshCoP TLVs and extract desired data
-            for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue());
+            for (cur = reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue());
                  cur < reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue() + netDataTlv->GetLength());
                  cur = cur->GetNext())
             {
                 if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
                 {
                     VerifyOrExit(sessionId ==
-                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
-                                 state = MeshCoP::StateTlv::kReject);
+                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId());
                 }
                 else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
                 {
-                    memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetLength() + sizeof(MeshCoP::Tlv));
-                    length += (cur->GetLength() + sizeof(MeshCoP::Tlv));
+                    VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
+                    memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
+                    length += cur->GetSize();
                 }
             }
         }
     }
 
-    SetCommissioningData(tlvs, length);
+    SetCommissioningData(tlvs, static_cast<uint8_t>(length));
+
+    state = MeshCoP::StateTlv::kAccept;
 
 exit:
 
