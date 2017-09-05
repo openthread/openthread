@@ -1336,6 +1336,7 @@ private:
     enum
     {
         kMleMessagePriority = Message::kPriorityHigh,
+        kMleHopLimit        = 255,
     };
 
     void GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
