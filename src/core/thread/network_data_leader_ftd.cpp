@@ -429,7 +429,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
@@ -441,8 +441,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
 
             while (subCur < subEnd)
             {
-                VerifyOrExit(subCur + sizeof(NetworkDataTlv) <= subEnd && subCur->GetNext() <= subEnd,
-                             error = OT_ERROR_PARSE);
+                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
 
                 switch (subCur->GetType())
                 {
@@ -515,7 +514,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
 
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
@@ -618,7 +617,7 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
 
         switch (cur->GetType())
         {
@@ -648,7 +647,7 @@ otError Leader::AddPrefix(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
 
         switch (cur->GetType())
         {
