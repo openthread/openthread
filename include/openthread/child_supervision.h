@@ -35,7 +35,6 @@
 #ifndef OPENTHREAD_CHILD_SUPERVISION_H_
 #define OPENTHREAD_CHILD_SUPERVISION_H_
 
-#include <openthread/config.h>
 
 #include "openthread/types.h"
 
@@ -43,13 +42,14 @@
 extern "C" {
 #endif
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
-
 /**
  * @addtogroup api-child-supervision
  *
  * @brief
  *   This module includes functions for child supervision feature.
+ *
+ *   The functions in this module are available when child supervision feature (`OPENTHREAD_ENABLE_CHILD_SUPERVISION`)
+ *   is enabled.
  *
  * @{
  *
@@ -104,8 +104,6 @@ void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
  * @}
  *
  */
-
-#endif  // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 #ifdef __cplusplus
 }  // extern "C"

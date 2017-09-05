@@ -35,8 +35,6 @@
 #ifndef OPENTHREAD_DNS_H_
 #define OPENTHREAD_DNS_H_
 
-#include <openthread/config.h>
-
 #include <openthread/message.h>
 #include <openthread/types.h>
 
@@ -90,9 +88,10 @@ typedef struct otDnsQuery
 typedef void (*otDnsResponseHandler)(void *aContext, const char *aHostname, otIp6Address *aAddress,
                                      uint32_t aTtl, otError aResult);
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
 /**
  * This function sends a DNS query for AAAA (IPv6) record.
+ *
+ * This function is available only if feature `OPENTHREAD_ENABLE_DNS_CLIENT` is enabled.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aQuery      A pointer to specify DNS query parameters.
@@ -102,7 +101,6 @@ typedef void (*otDnsResponseHandler)(void *aContext, const char *aHostname, otIp
  */
 otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler,
                          void *aContext);
-#endif
 
 /**
  * @}
