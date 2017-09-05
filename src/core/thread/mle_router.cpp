@@ -3519,7 +3519,13 @@ otError MleRouter::RestoreChildren(void)
                                                 reinterpret_cast<uint8_t *>(&childInfo), &length));
         VerifyOrExit(length >= sizeof(childInfo), error = OT_ERROR_PARSE);
 
-        VerifyOrExit((child = NewChild()) != NULL, error = OT_ERROR_NO_BUFS);
+        child = FindChild(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));
+
+        if (child == NULL)
+        {
+            VerifyOrExit((child = NewChild()) != NULL, error = OT_ERROR_NO_BUFS);
+        }
+
         memset(child, 0, sizeof(*child));
 
         child->SetExtAddress(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));
