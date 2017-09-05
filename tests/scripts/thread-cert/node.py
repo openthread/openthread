@@ -175,6 +175,9 @@ class Node:
     def fi_reset_counters(self):
         self.interface.fi_reset_counters()
 
+    def fi_reset_configuration(self):
+        self.interface.fi_reset_configuration()
+
     def get_timeout(self):
         return self.interface.get_timeout()
 

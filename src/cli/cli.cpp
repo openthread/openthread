@@ -147,6 +147,7 @@ const struct Command Interpreter::sCommands[] =
     { "fiprintcounters", &Interpreter::ProcessFIPrintCounters },
     { "firesetcounters", &Interpreter::ProcessFIResetCounters },
     { "ficonfigure", &Interpreter::ProcessFIConfigure },
+    { "firesetconfiguration", &Interpreter::ProcessFIResetConfiguration },
 #endif
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
@@ -1015,6 +1016,18 @@ void Interpreter::ProcessFIConfigure(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argv);
 
 	otFIParseFaultInjectionStr(argv[0]);
+
+    mServer->OutputFormat("Done\r\n");
+}
+
+void Interpreter::ProcessFIResetConfiguration(int argc, char *argv[])
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    mgr.ResetFaultConfigurations();
 
     mServer->OutputFormat("Done\r\n");
 }

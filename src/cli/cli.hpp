@@ -208,6 +208,7 @@ private:
     void ProcessFIPrintCounters(int argc, char *argv[]);
     void ProcessFIResetCounters(int argc, char *argv[]);
     void ProcessFIConfigure(int argc, char *argv[]);
+    void ProcessFIResetConfiguration(int argc, char *argv[]);
 #endif
     void ProcessHashMacAddress(int argc, char *argv[]);
     void ProcessIfconfig(int argc, char *argv[]);

@@ -346,6 +346,11 @@ class otCli:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def fi_reset_configuration(self):
+        cmd = 'firesetconfiguration'
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
     def get_timeout(self):
         self.send_command('childtimeout')
         i = self.pexpect.expect('(\d+)\r\n')
