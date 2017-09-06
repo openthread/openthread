@@ -30,6 +30,12 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
 [ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
 
+# Who supports OpenThread?
+
+Led by Nest, the following companies are contributing to the ongoing development of OpenThread:
+
+<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="150px"></a><a href="http://www.dialog-semiconductor.com/"><img src="doc/images/ot-contrib-dialog.png" alt="Dialog" width="150px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="150px"></a><a href="https://nest.com/"><img src="doc/images/ot-contrib-nest.png" alt="Nest" width="150px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="150px"></a><a href="http://www.nxp.com/"><img src="doc/images/ot-contrib-nxp.png" alt="NXP" width="150px"></a><a href="https://www.qorvo.com/"><img src="doc/images/ot-contrib-qorvo.png" alt="Qorvo" width="150px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="150px"></a><a href="https://www.synopsys.com/"><img src="doc/images/ot-contrib-synopsys.png" alt="Synopsys" width="150px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="150px"></a>
+
 # Getting started
 
 All end-user documentation and guides are located at [openthread.io](https://openthread.io). If you're looking to do things like...
@@ -39,6 +45,7 @@ All end-user documentation and guides are located at [openthread.io](https://ope
 * Learn how to build and configure a Thread network
 * Port OpenThread to a new platform
 * Build an application on top of OpenThread
+* Certify a product using OpenThread
 
 ...then [openthread.io](https://openthread.io) is the place for you.
 
