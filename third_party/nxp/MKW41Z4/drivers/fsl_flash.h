@@ -1156,7 +1156,7 @@ status_t FLASH_SetFlexramFunction(flash_config_t *config, flash_flexram_function
  */
 
 /*!
- * @brief Configures the Swap function or checks the the swap state of the Flash module.
+ * @brief Configures the Swap function or checks the swap state of the Flash module.
  *
  * @param config A pointer to the storage for the driver runtime state.
  * @param address Address used to configure the flash Swap function.
