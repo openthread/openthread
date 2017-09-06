@@ -35,6 +35,7 @@ if sys.platform != 'win32':
 else:
     import node_api
 import unittest
+import config
 
 class Node:
     def __init__(self, nodeid, is_mtd=False):
@@ -142,7 +143,7 @@ class Node:
     def get_panid(self):
         return self.interface.get_panid()
 
-    def set_panid(self, panid):
+    def set_panid(self, panid = config.PANID):
         self.interface.set_panid(panid)
 
     def get_partition_id(self):
@@ -186,6 +187,9 @@ class Node:
 
     def get_addrs(self):
         return self.interface.get_addrs()
+
+    def get_ip6_address(self, address_type):
+        return self.interface.get_ip6_address(address_type)
 
     def get_context_reuse_delay(self):
         return self.interface.get_context_reuse_delay()

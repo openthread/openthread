@@ -26,6 +26,8 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import os
+from enum import Enum
 
 import coap
 import ipv6
@@ -37,9 +39,21 @@ import network_data
 import network_layer
 import sniffer
 
+MESH_LOCAL_PREFIX = 'fdde:ad00:beef::/64'
+MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fdde:ad00:beef:(0){0,4}:'
+ROUTING_LOCATOR = '64/:0:ff:fe00:/16'
+ROUTING_LOCATOR_REGEX_PATTERN = '.*:(0)?:0{0,2}ff:fe00:\w{1,4}$'
+LINK_LOCAL = 'fe80:/112'
+LINK_LOCAL_REGEX_PATTERN = '^fe80:.*'
+ALOC_FLAG_REGEX_PATTERN = '.*:fc..$'
+
 DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
 
+ADDRESS_TYPE = Enum('ADDRESS_TYPE', ('LINK_LOCAL', 'GLOBAL', 'RLOC', 'ALOC', 'ML_EID'))
+
+SNIFFER_ID = int(os.getenv('SNIFFER_ID', 34))
+PANID = 0xface
 
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
@@ -279,7 +293,7 @@ def create_default_lowpan_decompressor(context_manager):
 
 def create_default_thread_context_manager():
     context_manager = lowpan.ContextManager()
-    context_manager[0] = lowpan.Context("fd00:0db8::/64")
+    context_manager[0] = lowpan.Context(MESH_LOCAL_PREFIX)
 
     return context_manager
 
@@ -300,5 +314,5 @@ def create_default_thread_message_factory(master_key=DEFAULT_MASTER_KEY):
     return message.MessageFactory(lowpan_parser=lowpan_parser)
 
 
-def create_default_thread_sniffer(nodeid):
+def create_default_thread_sniffer(nodeid=SNIFFER_ID):
     return sniffer.Sniffer(nodeid, create_default_thread_message_factory())
