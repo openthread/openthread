@@ -484,7 +484,7 @@ public:
      * @retval TRUE  the TLV appears to be well-formed.
      *
      */
-    bool IsValid(void) const { return true; }
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns a pointer to the Network Data TLVs.
