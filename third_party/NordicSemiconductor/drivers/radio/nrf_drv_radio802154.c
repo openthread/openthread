@@ -57,6 +57,10 @@
 
 #include <cmsis/core_cmFunc.h>
 
+#if ENABLE_FEM
+#include "fem/nrf_fem_control_api.h"
+#endif
+
 #define RAW_LENGTH_OFFSET  0
 #define RAW_PAYLOAD_OFFSET 1
 
@@ -133,6 +137,18 @@ void nrf_drv_radio802154_irq_handler(void)
     nrf_drv_radio802154_fsm_irq_handler();
 }
 #endif // !RADIO_INTERNAL_IRQ_HANDLING
+
+#if ENABLE_FEM
+void nrf_drv_radio802154_fem_control_cfg_set(const nrf_drv_radio802154_fem_control_cfg_t * p_cfg)
+{
+    nrf_fem_control_cfg_set(p_cfg);
+}
+
+void nrf_drv_radio802154_fem_control_cfg_get(nrf_drv_radio802154_fem_control_cfg_t * p_cfg)
+{
+    nrf_fem_control_cfg_get(p_cfg);
+}
+#endif
 
 nrf_drv_radio802154_state_t nrf_drv_radio802154_state_get(void)
 {
@@ -297,6 +313,41 @@ int8_t nrf_drv_radio802154_rssi_last_get(void)
 {
     uint8_t minus_dbm = nrf_radio_rssi_sample_get();
     return - (int8_t)minus_dbm;
+}
+
+int8_t nrf_drv_radio802154_rssi_corrected_get(int8_t rssi, int8_t temp)
+{
+    if (temp <= -30)
+    {
+        return rssi + 3;
+    }
+
+    if (temp <= -10)
+    {
+        return rssi + 2;
+    }
+
+    if (temp <= 10)
+    {
+        return rssi + 1;
+    }
+
+    if (temp <= 30)
+    {
+        return rssi;
+    }
+
+    if (temp <= 50)
+    {
+        return rssi - 1;
+    }
+
+    if (temp <= 70)
+    {
+        return rssi - 2;
+    }
+
+    return rssi - 3;
 }
 
 bool nrf_drv_radio802154_promiscuous_get(void)

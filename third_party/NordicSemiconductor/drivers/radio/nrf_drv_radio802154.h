@@ -42,6 +42,10 @@
 #include "nrf_drv_radio802154_config.h"
 #include "hal/nrf_radio.h"
 
+#if ENABLE_FEM
+#include "fem/nrf_fem_control_api.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -131,6 +135,54 @@ void nrf_drv_radio802154_tx_power_set(int8_t power);
  * @return Currently used transmit power [dBm].
  */
 int8_t nrf_drv_radio802154_tx_power_get(void);
+
+/**
+ * @section Front-end module management.
+ */
+
+#if ENABLE_FEM
+
+typedef nrf_fem_control_cfg_t nrf_drv_radio802154_fem_control_cfg_t;
+
+#define NRF_DRV_RADIO802154_FEM_DEFAULT_SETTINGS                                                   \
+    ((nrf_drv_radio802154_fem_control_cfg_t) {                                                     \
+        .pa_cfg = {                                                                                \
+                .enable      = 1,                                                                  \
+                .active_high = 1,                                                                  \
+                .gpio_pin    = NRF_FEM_CONTROL_DEFAULT_PA_PIN,                                     \
+        },                                                                                         \
+        .lna_cfg = {                                                                               \
+                .enable      = 1,                                                                  \
+                .active_high = 1,                                                                  \
+                .gpio_pin    = NRF_FEM_CONTROL_DEFAULT_LNA_PIN,                                    \
+        },                                                                                         \
+        .ppi_ch_id_clr = NRF_FEM_CONTROL_DEFAULT_CLR_PPI_CHANNEL,                                  \
+        .ppi_ch_id_set = NRF_FEM_CONTROL_DEFAULT_SET_PPI_CHANNEL,                                  \
+        .radio_ppi_grp = NRF_FEM_CONTROL_DEFAULT_TIMER_MATCH_PPI_GROUP,                            \
+        .timer_ppi_grp = NRF_FEM_CONTROL_DEFAULT_RADIO_DISABLED_PPI_GROUP,                         \
+        .gpiote_ch_id  = NRF_FEM_CONTROL_DEFAULT_GPIOTE_CHANNEL,                                   \
+    })
+
+/**
+ * @brief Set PA & LNA GPIO toggle configuration.
+ *
+ * @note This function shall not be called when radio is in use.
+ *
+ * @param[in] p_cfg A pointer to the PA & LNA GPIO toggle configuration.
+ *
+ */
+void nrf_drv_radio802154_fem_control_cfg_set(const nrf_drv_radio802154_fem_control_cfg_t * p_cfg);
+
+/**
+ * @brief Get PA & LNA GPIO toggle configuration.
+ *
+ * @param[out] p_cfg A pointer to the structure for the PA & LNA GPIO toggle configuration.
+ *
+ */
+void nrf_drv_radio802154_fem_control_cfg_get(nrf_drv_radio802154_fem_control_cfg_t * p_cfg);
+
+#endif // ENABLE_FEM
+
 
 /**
  * @section Setting addresses and Pan Id of this device.
@@ -525,6 +577,16 @@ void nrf_drv_radio802154_rssi_measure(void);
  * @returns RSSI measurement result [dBm].
  */
 int8_t nrf_drv_radio802154_rssi_last_get(void);
+
+/**
+ * @brief Adjust given RSSI measurement using a temperature correction factor.
+ *
+ * @param[in]  rssi  Measured RSSI value [dBm].
+ * @param[in]  temp  Temperature value when RSSI sample took place [C].
+ *
+ * @returns RSSI [dBm] corrected by a temperature factor (Errata 153).
+ */
+int8_t nrf_drv_radio802154_rssi_corrected_get(int8_t rssi, int8_t temp);
 
 
 /**

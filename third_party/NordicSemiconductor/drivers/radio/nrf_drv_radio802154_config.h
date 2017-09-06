@@ -142,7 +142,7 @@ extern "C" {
  * Priority of software interrupt used to call notification from 802.15.4 driver.
  *
  */
-#define RADIO_NOTIFICATION_SWI_PRIORITY 6
+#define RADIO_NOTIFICATION_SWI_PRIORITY 5
 
 /**
  *@}
