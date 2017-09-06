@@ -1,39 +1,19 @@
-/* Copyright (c) 2016, Nordic Semiconductor ASA
- * All rights reserved.
+/* Copyright (c) 2015 Nordic Semiconductor. All Rights Reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * The information contained herein is property of Nordic Semiconductor ASA.
+ * Terms and conditions of usage are described in detail in NORDIC
+ * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
  *
- *   1. Redistributions of source code must retain the above copyright notice, this
- *      list of conditions and the following disclaimer.
- *
- *   2. Redistributions in binary form must reproduce the above copyright notice,
- *      this list of conditions and the following disclaimer in the documentation
- *      and/or other materials provided with the distribution.
- *
- *   3. Neither the name of Nordic Semiconductor ASA nor the names of its
- *      contributors may be used to endorse or promote products derived from
- *      this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Licensees are granted free, non-transferable use of the information. NO
+ * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
+ * the file.
  *
  */
-
 #ifndef NRF_GPIO_H__
 #define NRF_GPIO_H__
 
 #include "nrf.h"
 #include "nrf_peripherals.h"
-#include "nrf_assert.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -452,7 +432,7 @@ __STATIC_INLINE void nrf_gpio_pin_latch_clear(uint32_t pin_number);
  */
 __STATIC_INLINE NRF_GPIO_Type * nrf_gpio_pin_port_decode(uint32_t * p_pin)
 {
-    ASSERT(*p_pin < NUMBER_OF_PINS);
+    //ASSERT(*p_pin < NUMBER_OF_PINS);
 #if (GPIO_COUNT == 1)
     // The oldest definition case
     return NRF_GPIO;
@@ -732,7 +712,7 @@ __STATIC_INLINE void nrf_gpio_ports_read(uint32_t start_port, uint32_t length, u
 {
     NRF_GPIO_Type * gpio_regs[GPIO_COUNT] = GPIO_REG_LIST;
 
-    ASSERT(start_port + length <= GPIO_COUNT);
+    //ASSERT(start_port + length <= GPIO_COUNT);
     uint32_t i;
 
     for (i = start_port; i < (start_port + length); i++)
