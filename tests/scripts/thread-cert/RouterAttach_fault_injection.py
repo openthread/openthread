@@ -37,7 +37,6 @@ import node
 
 LEADER = 1
 ROUTER = 2
-SNIFFER = 3
 
 
 class Cert_5_1_01_RouterAttach(unittest.TestCase):
@@ -58,13 +57,7 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         self.nodes[ROUTER].enable_whitelist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
-        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
-        self.sniffer.start()
-
     def __tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
@@ -96,8 +89,6 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
                 self.__tearDown()
 
     def __test_body(self, nodeid=None, fault_config=None):
-
-
         if nodeid:
             print "Fault injection: " + str(nodeid) + " " + str(fault_config)
             self.nodes[nodeid].fi_configure(fault_config)

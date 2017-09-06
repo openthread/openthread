@@ -118,16 +118,6 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
         }
     }
 
-    //if (charWritten < charAvailable)
-    //{   
-    //    retval = snprintf(tmpstr + charWritten, charAvailable - charWritten, "\n");
-    //    if (retval < 0)
-    //    {   
-    //        goto error_exit;
-    //    }
-    //    charWritten += retval;
-    //}
-
 	otLogCritFI(ot::GetInstance(), "%s", tmpstr);
 
     if (charWritten >= charAvailable)
