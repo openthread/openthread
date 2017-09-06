@@ -650,7 +650,7 @@ typedef struct otLinkModeConfig
     bool mRxOnWhenIdle : 1;
 
     /**
-     * 1, if the sender will use IEEE 802.15.4 to secure all data requests.  0, otherwise.
+     * 1, if the sender uses IEEE 802.15.4 to secure all data requests.  0, otherwise.
      */
     bool mSecureDataRequests : 1;
 
@@ -771,7 +771,7 @@ typedef struct otExternalRouteConfig
     /**
      * The Rloc associated with the external route entry.
      *
-     * This value is ignored when adding an external route. For any added route the device's Rloc will be used.
+     * This value is ignored when adding an external route. For any added route, the device's Rloc is used.
      */
     uint16_t mRloc16;
 

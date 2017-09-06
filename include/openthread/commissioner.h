@@ -275,7 +275,7 @@ OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *aInstance);
  * @param[in]  aPassPhrase   The commissioning passphrase.
  * @param[in]  aNetworkName  The network name for PSKc computation.
  * @param[in]  aExtPanId     The extended pan id for PSKc computation.
- * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
+ * @param[out] aPSKc         A pointer to the generated PSKc.
  *
  * @retval OT_ERROR_NONE          Successfully generate PSKc.
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.

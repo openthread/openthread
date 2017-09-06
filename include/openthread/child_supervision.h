@@ -60,7 +60,7 @@ extern "C" {
  *
  * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
  * within the supervision interval. If there is no transmission to the child within the supervision interval,
- * OpenThread will enqueue and send a supervision message (a data message with empty payload) to the child.
+ * OpenThread enqueues and sends a supervision message (a data message with empty payload) to the child.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *

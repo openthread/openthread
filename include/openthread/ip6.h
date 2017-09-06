@@ -80,7 +80,7 @@ OTAPI bool OTCALL otIp6IsEnabled(otInstance *aInstance);
 /**
  * Add a Network Interface Address to the Thread interface.
  *
- * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
+ * The passed-in instance @p aAddress is copied by the Thread interface. The Thread interface only
  * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
