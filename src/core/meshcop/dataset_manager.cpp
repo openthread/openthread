@@ -1112,7 +1112,15 @@ void PendingDatasetBase::StartDelayTimer(void)
 
     if ((delayTimer = static_cast<DelayTimerTlv *>(mNetwork.Get(Tlv::kDelayTimer))) != NULL)
     {
-        mDelayTimer.StartAt(mNetwork.GetUpdateTime(), delayTimer->GetDelayTimer());
+        uint32_t delay = delayTimer->GetDelayTimer();
+
+        // the Timer implementation does not support the full 32 bit range
+        if (delay > Timer::kMaxDt)
+        {
+            delay = Timer::kMaxDt;
+        }
+
+        mDelayTimer.StartAt(mNetwork.GetUpdateTime(), delay);
         otLogInfoMeshCoP(GetInstance(), "delay timer started");
     }
 }
@@ -1124,11 +1132,30 @@ void PendingDatasetBase::HandleDelayTimer(Timer &aTimer)
 
 void PendingDatasetBase::HandleDelayTimer(void)
 {
+    DelayTimerTlv *delayTimer;
+
+    // if the Delay Timer value is larger than what our Timer implementation can handle, we have to compute
+    // the remainder and wait some more.
+    if ((delayTimer = static_cast<DelayTimerTlv *>(mNetwork.Get(Tlv::kDelayTimer))) != NULL)
+    {
+        uint32_t elapsed = mDelayTimer.GetFireTime() - mNetwork.GetUpdateTime();
+        uint32_t delay = delayTimer->GetDelayTimer();
+
+        if (elapsed < delay)
+        {
+            mDelayTimer.StartAt(mDelayTimer.GetFireTime(), delay - elapsed);
+            ExitNow();
+        }
+    }
+
     otLogInfoMeshCoP(GetInstance(), "pending delay timer expired");
 
     GetNetif().GetActiveDataset().Set(mNetwork);
 
     Clear();
+
+exit:
+    return;
 }
 
 void PendingDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
