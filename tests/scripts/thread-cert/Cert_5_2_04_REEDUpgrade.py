@@ -31,23 +31,32 @@ import time
 import unittest
 
 import node
+import mle
+import network_layer
+import config
 
 LEADER = 1
 ROUTER = 16
-REED = 17
+DUT_REED = 17
 ED = 18
+SNIFFER = 19
+MESH_LOCAL_PREFIX = 'fdde:ad00:beef:0:'
+ROUTING_LACATOR = ':0:ff:fe00'
+REED_ADVERTISEMENT_INTERVAL = 570
+REED_ADVERTISEMENT_MAX_JITTER = 60
+ROUTER_SELECTION_JITTER = 1
 
 class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
-        for i in range(1,19):
+        for i in range(1, 19):
             self.nodes[i] = node.Node(i)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].enable_whitelist()
 
-        for i in range(2,17):
+        for i in range(2, 17):
             self.nodes[i].set_panid(0xface)
             self.nodes[i].set_mode('rsdn')
             self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
@@ -55,24 +64,32 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
             self.nodes[i].enable_whitelist()
             self.nodes[i].set_router_selection_jitter(1)
 
-        self.nodes[REED].set_panid(0xface)
-        self.nodes[REED].set_mode('rsdn')
-        self.nodes[REED].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[ROUTER].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[REED].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[REED].enable_whitelist()
+        self.nodes[DUT_REED].set_panid(0xface)
+        self.nodes[DUT_REED].set_mode('rsdn')
+        self.nodes[DUT_REED].add_whitelist(self.nodes[ROUTER].get_addr64())
+        self.nodes[ROUTER].add_whitelist(self.nodes[DUT_REED].get_addr64())
+        self.nodes[DUT_REED].add_whitelist(self.nodes[ED].get_addr64())
+        self.nodes[DUT_REED].enable_whitelist()
+        self.nodes[DUT_REED].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsdn')
-        self.nodes[ED].add_whitelist(self.nodes[REED].get_addr64())
+        self.nodes[ED].add_whitelist(self.nodes[DUT_REED].get_addr64())
         self.nodes[ED].enable_whitelist()
 
+        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
+        self.sniffer.start()
+
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
     def test(self):
+        # 1 Ensure topology is formed correctly without the DUT_REED.
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
@@ -82,14 +99,79 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
             time.sleep(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        self.nodes[REED].start()
+        # 2 DUT_REED: Attach to ROUTER, 2-hops from the Leader.
+        self.nodes[DUT_REED].start()
         time.sleep(5)
-        self.assertEqual(self.nodes[REED].get_state(), 'child')
+        time.sleep(ROUTER_SELECTION_JITTER)
 
+        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+
+        # The DUT_REED must not send a coap message here.
+        msg = reed_messages.does_not_contain_coap_message()
+        assert msg is True, "Error: The REED sent an Address Solicit Request"
+
+        # 3 DUT_REED: Verify MLE Advertisement.
+        msg = reed_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress('ff02::1')
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageDoesNotContainTlv(mle.Route64)
+
+        # 4 Wait for DUT_REED to send the second packet.
+        time.sleep(REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER)
+
+        # 5 DUT_REED: Verify the second MLE Advertisement.
+        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        msg = reed_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        # 6 ED
         self.nodes[ED].start()
         time.sleep(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
-        self.assertEqual(self.nodes[REED].get_state(), 'router')
+
+        # 7 DUT_REED: Verify MLE Parent Response.
+        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        msg = reed_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg.assertSentToNode(self.nodes[ED])
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        msg.assertMleMessageContainsTlv(mle.Response)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.LinkMargin)
+        msg.assertMleMessageContainsTlv(mle.Connectivity)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        # 8 DUT_REED: Verify Address Solicit Request.
+        msg = reed_messages.next_coap_message('0.02')
+        msg.assertCoapMessageRequestUriPath('/a/as')
+        msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg.assertCoapMessageContainsOptionalTlv(network_layer.Rloc16)
+
+        # 9 DUT_REED: Verify Multicast Link Request.
+        msg = reed_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
+        msg.assertSentToDestinationAddress('ff02::2')
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        msg.assertMleMessageContainsTlv(mle.TlvRequest)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        # 10 DUT_REED: Verify MLE Child ID Response.
+        msg = reed_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg.assertSentToNode(self.nodes[ED])
+        msg.assertMleMessageContainsTlv(mle.Address16)
+
+        # 11 Verify connectivity by sending an ICMPv6 Echo Request to the Leader.
+        mleid = None
+        for addr in self.nodes[LEADER].get_addrs():
+            if addr.find(MESH_LOCAL_PREFIX) != -1 and addr.find(ROUTING_LACATOR) == -1:
+                mleid = addr
+                break
+
+        self.assertTrue(self.nodes[ED].ping(mleid))
 
 if __name__ == '__main__':
     unittest.main()
