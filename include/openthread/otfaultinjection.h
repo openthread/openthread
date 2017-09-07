@@ -54,6 +54,7 @@ extern "C" {
 typedef enum
 {   
     kFault_AllocBuffer,                /**< Fail the allocation of a Buffer */
+    kFault_DropRadioRx,                /**< Drop radio frames in input */
     kFault_NumItems,
 } otFaultId;
 

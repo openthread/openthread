@@ -46,6 +46,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/logging.hpp"
+#include "common/otfaultinjection.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
@@ -1509,6 +1510,8 @@ exit:
 
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
+    OT_FAULT_INJECT(kFault_DropRadioRx, aError = OT_ERROR_FAILED);
+
     otLogFuncEntryMsg("%!otError!", aError);
     VerifyOrExit(otInstanceIsInitialized(aInstance));
 
