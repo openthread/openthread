@@ -192,12 +192,12 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
-    JoinerRouter joinerRouter;
-
     otLogFuncEntry();
 
     if (aResult != NULL)
     {
+        JoinerRouter joinerRouter;
+
         otLogFuncEntryMsg("aResult = %llX", HostSwap64(*reinterpret_cast<uint64_t *>(&aResult->mExtAddress)));
 
         // Joining is disabled if the Steering Data is not included
@@ -218,7 +218,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
             ExitNow();
         }
 
-        joinerRouter.mPriority = (uint16_t)((int16_t) aResult->mRssi + 0x80);
+        joinerRouter.mPriority = static_cast<uint16_t>(aResult->mRssi) + 0x80;
 
         if (!steeringData.DoesAllowAny())
         {
@@ -249,7 +249,7 @@ void Joiner::AddJoinerRouter(JoinerRouter &aJoinerRouter)
 {
     JoinerRouter *joinerRouter = &mJoinerRouters[0];
 
-    //Find the lowest priority
+    // Find the lowest priority
     for (size_t i = 1; i < OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES; i++)
     {
         if (mJoinerRouters[i].mPriority < joinerRouter->mPriority)
@@ -274,7 +274,6 @@ otError Joiner::TryNextJoin()
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NOT_FOUND;
     JoinerRouter *joinerRouter = &mJoinerRouters[0];
-    Ip6::MessageInfo messageInfo;
 
     for (size_t i = 1; i < OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES; i++)
     {
@@ -286,6 +285,8 @@ otError Joiner::TryNextJoin()
 
     if (joinerRouter->mPriority > 0)
     {
+        Ip6::MessageInfo messageInfo;
+
         joinerRouter->mPriority = 0;
 
         netif.GetMac().SetPanId(joinerRouter->mPanId);

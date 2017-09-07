@@ -116,11 +116,11 @@ private:
 
     struct JoinerRouter
     {
+        Mac::ExtAddress mExtAddr;
         uint16_t mPriority;
         uint16_t mPanId;
         uint16_t mJoinerUdpPort;
         uint8_t mChannel;
-        Mac::ExtAddress mExtAddr;
     };
 
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
