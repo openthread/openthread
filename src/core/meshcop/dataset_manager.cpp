@@ -376,7 +376,7 @@ void DatasetManager::Get(const Coap::Header &aHeader, const Message &aMessage,
     // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
     if (length != 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0)
     {
-        uint8_t i;
+        uint16_t i;
 
         for (i = 0; i < length; i++)
         {
@@ -386,7 +386,7 @@ void DatasetManager::Get(const Coap::Header &aHeader, const Message &aMessage,
             }
         }
 
-        if (i == length)
+        if (i == length && (i + 1u) <= sizeof(tlvs))
         {
             tlvs[length++] = Tlv::kDelayTimer;
         }
