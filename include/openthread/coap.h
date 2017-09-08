@@ -35,8 +35,6 @@
 #ifndef OPENTHREAD_COAP_H_
 #define OPENTHREAD_COAP_H_
 
-#include <openthread/config.h>
-
 #include <stdint.h>
 
 #include <openthread/message.h>
@@ -51,6 +49,9 @@ extern "C" {
  *
  * @brief
  *   This module includes functions that control CoAP communication.
+ *
+ *   The functions in this module are available when application-coap feature (`OPENTHREAD_ENABLE_APPLICATION_COAP`) is
+ *   enabled.
  *
  * @{
  *
@@ -228,7 +229,6 @@ typedef struct otCoapResource
     struct otCoapResource *mNext;   ///< The next CoAP resource in the list
 } otCoapResource;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
 /**
  * This function initializes the CoAP header.
  *
@@ -538,7 +538,6 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
  *
  */
 otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 /**
  * @}

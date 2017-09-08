@@ -38,7 +38,6 @@
 
 #include <stdint.h>
 
-#include <openthread/config.h>
 #include <openthread/types.h>
 
 #ifdef __cplusplus
@@ -108,10 +107,20 @@ typedef struct otRadioFrame
     bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
     bool     mDidTX: 1;         ///< Set to true if this frame sent from the radio. Ignored by radio driver.
     bool     mIsARetx: 1;       ///< Set to true if this frame is a retransmission. Should be ignored by radio driver.
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    uint32_t mMsec;             ///< The timestamp when the frame was received (milliseconds).
-    uint16_t mUsec;             ///< The timestamp when the frame was received (microseconds, the offset to mMsec).
-#endif
+
+    /**
+     * The timestamp when the frame was received (milliseconds).
+     * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
+     *
+     */
+    uint32_t mMsec;
+
+    /**
+     * The timestamp when the frame was received (microseconds, the offset to mMsec).
+     * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
+     *
+     */
+    uint16_t mUsec;
 } otRadioFrame;
 
 /**

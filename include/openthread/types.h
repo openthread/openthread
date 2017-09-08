@@ -35,8 +35,6 @@
 #ifndef OPENTHREAD_TYPES_H_
 #define OPENTHREAD_TYPES_H_
 
-#include <openthread/config.h>
-
 #include <stdint.h>
 #include <stdbool.h>
 #ifdef OTDLL
