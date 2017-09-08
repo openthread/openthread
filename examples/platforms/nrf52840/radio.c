@@ -44,9 +44,10 @@
 
 #include <common/code_utils.hpp>
 #include <platform-config.h>
-#include <openthread/platform/logging.h>
-#include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/platform.h>
+#include <openthread/platform/radio.h>
 
 #include "platform-nrf5.h"
 
@@ -140,6 +141,8 @@ static void setPendingEvent(RadioPendingEvents aEvent)
         pendingEvents |= bitToSet;
     }
     while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
+
+    PlatformEventSignalPending();
 }
 
 static void resetPendingEvent(RadioPendingEvents aEvent)
