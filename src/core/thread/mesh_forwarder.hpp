@@ -254,6 +254,8 @@ private:
 
     otError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                               const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+    void UpdateRoutes(uint8_t *aFrame, uint8_t aFrameLength,
+                      const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
 
     otError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
