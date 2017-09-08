@@ -354,19 +354,38 @@ protected:
 private:
     enum
     {
-        kDataResubmitDelay = 300000,  ///< DATA_RESUBMIT_DELAY (miliseconds)
+        kDataResubmitDelay = 300000,  ///< DATA_RESUBMIT_DELAY (milliseconds)
     };
 
     class NetworkDataIterator
     {
+    private:
+        enum
+        {
+            kTlvPoistion    = 0,
+            kSubTlvPosition = 1,
+            kEntryPosition  = 2,
+        };
+
     public:
         NetworkDataIterator(otNetworkDataIterator *aIterator):
             mIteratorBuffer(reinterpret_cast<uint8_t *>(aIterator)) { }
 
-        uint8_t GetTlvsIndex(void) const { return mIteratorBuffer[0]; }
-        uint8_t GetEntryIndex(void) const { return mIteratorBuffer[1]; }
-        void SetTlvsIndex(uint8_t aIndex) { mIteratorBuffer[0] = aIndex; }
-        void SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[1] = aIndex; }
+        uint8_t GetTlvOffset(void) const         { return mIteratorBuffer[kTlvPoistion];       }
+        uint8_t GetSubTlvOffset(void) const      { return mIteratorBuffer[kSubTlvPosition];    }
+        uint8_t GetEntryIndex(void) const        { return mIteratorBuffer[kEntryPosition];     }
+        void    SetTlvOffset(uint8_t aOffset)    { mIteratorBuffer[kTlvPoistion] = aOffset;    }
+        void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
+        void    SetEntryIndex(uint8_t aIndex)    { mIteratorBuffer[kEntryPosition]  = aIndex;  }
+
+        void SaveTlvOffset(const NetworkDataTlv *aTlv, const uint8_t *aTlvs) {
+            SetTlvOffset(static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(aTlv) - aTlvs));
+        }
+
+        void SaveSubTlvOffset(const NetworkDataTlv *aSubTlv, const NetworkDataTlv *aSubTlvs) {
+            SetSubTlvOffset(static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(aSubTlv) -
+                                                 reinterpret_cast<const uint8_t *>(aSubTlvs)));
+        }
 
     private:
         uint8_t *mIteratorBuffer;
