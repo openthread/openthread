@@ -60,6 +60,7 @@ openthread_headers                      = \
     dhcp6_client.h                        \
     dhcp6_server.h                        \
     dns.h                                 \
+    encoding.h                            \
     icmp6.h                               \
     instance.h                            \
     ip6.h                                 \

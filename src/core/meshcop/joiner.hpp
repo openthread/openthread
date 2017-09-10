@@ -67,6 +67,7 @@ public:
      * This method starts the Joiner service.
      *
      * @param[in]  aPSKd             A pointer to the PSKd.
+     * @param[in]  aPSKdLength       A length of the PSKd.
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
      * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
      * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
@@ -78,7 +79,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully started the Joiner service.
      *
      */
-    otError Start(const char *aPSKd, const char *aProvisioningUrl,
+    otError Start(const uint8_t *aPSKd, uint32_t aPSKdLength, const char *aProvisioningUrl,
                   const char *aVendorName, const char *aVendorModel,
                   const char *aVendorSwVersion, const char *aVendorData,
                   otJoinerCallback aCallback, void *aContext);

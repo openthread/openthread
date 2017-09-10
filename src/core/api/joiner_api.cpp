@@ -39,7 +39,8 @@
 
 using namespace ot;
 
-otError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+otError otJoinerStart(otInstance *aInstance, const uint8_t *aPSKd, uint32_t aPSKdLength,
+                      const char *aProvisioningUrl,
                       const char *aVendorName, const char *aVendorModel,
                       const char *aVendorSwVersion, const char *aVendorData,
                       otJoinerCallback aCallback, void *aContext)
@@ -47,12 +48,13 @@ otError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aPro
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_ENABLE_JOINER
-    error = aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl,
+    error = aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aPSKdLength, aProvisioningUrl,
                                                       aVendorName, aVendorModel, aVendorSwVersion, aVendorData,
                                                       aCallback, aContext);
 #else  // OPENTHREAD_ENABLE_JOINER
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPSKd);
+    OT_UNUSED_VARIABLE(aPSKdLength);
     OT_UNUSED_VARIABLE(aProvisioningUrl);
     OT_UNUSED_VARIABLE(aVendorName);
     OT_UNUSED_VARIABLE(aVendorModel);

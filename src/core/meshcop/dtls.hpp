@@ -60,7 +60,7 @@ class Dtls: public ThreadNetifLocator
 public:
     enum
     {
-        kPskMaxLength = 32,
+        kPskMaxLength = 20,
         kApplicationDataMaxLength = 128,
     };
 

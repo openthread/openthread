@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,8 @@
 
 #include <limits.h>
 #include "utils/wrap_stdint.h"
+
+#include <openthread/types.h>
 
 namespace ot {
 namespace Encoding {
@@ -232,6 +234,31 @@ inline void WriteUint32(uint32_t aValue, uint8_t *aBuffer)
 }
 
 }  // namespace LittleEndian
+
+namespace Thread32 {
+
+/**
+ * This functions encodes binary input data into base32-thread string.
+ *
+ * @param[in]     aInput         The input binary data.
+ * @param[in]     aInputLength   The length of the input data.
+ * @param[out]    aOutput        The point to the output buffer.
+ * @param[in,out] aOutputLength  The length of the output buffer (in) and data (out).
+ *
+ */
+otError Encode(const uint8_t *aInput, uint32_t aInputLength, char *aOutput, uint32_t &aOutputLength);
+
+/**
+ * This functions decodes base32-thread encoded string into binary data.
+ *
+ * @param[in]     aInput         The input base32-thread encoded string.
+ * @param[out]    aOutput        The pointer to the output buffer.
+ * @param[in,out] aOutputLength  The length of the output buffer (in) and data (out).
+ *
+ */
+otError Decode(const char *aInput, uint8_t *aOutput, uint32_t &aOutputLength);
+
+}  // namespace Thread32
 }  // namespace Encoding
 }  // namespace ot
 

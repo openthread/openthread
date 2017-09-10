@@ -93,13 +93,14 @@ public:
      *
      * @param[in]  aExtAddress      A pointer to the Joiner's extended address or NULL for any Joiner.
      * @param[in]  aPSKd            A pointer to the PSKd.
+     * @param[in]  aPSKdLength      A length of the PSKd.
      * @param[in]  aTimeout         A time after which a Joiner is automatically removed, in seconds.
      *
      * @retval OT_ERROR_NONE     Successfully added the Joiner.
      * @retval OT_ERROR_NO_BUFS  No buffers available to add the Joiner.
      *
      */
-    otError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout);
+    otError AddJoiner(const Mac::ExtAddress *aExtAddress, const uint8_t *aPSKd, uint32_t aPSKdLength, uint32_t aTimeout);
 
     /**
      * This method removes a Joiner entry.
@@ -266,7 +267,8 @@ private:
     {
         Mac::ExtAddress mExtAddress;
         uint32_t mExpirationTime;
-        char mPsk[Dtls::kPskMaxLength + 1];
+        uint8_t mPsk[Dtls::kPskMaxLength];
+        uint8_t mPskLength;
         bool mValid : 1;
         bool mAny : 1;
     };

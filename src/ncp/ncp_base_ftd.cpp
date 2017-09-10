@@ -471,7 +471,9 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_pr
     otError error = OT_ERROR_NONE;
     spinel_status_t spinelError = SPINEL_STATUS_OK;
     otExtAddress *extAddress = NULL;
-    const char *aPSKd = NULL;
+    const char *psk = NULL; // base32-thread encoded PSK
+    uint8_t pskd[OT_PSKD_MAX_SIZE]; // binary PSKd
+    uint32_t length = sizeof(pskd);
     uint32_t joinerTimeout = 0;
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, spinelError =  SPINEL_STATUS_INVALID_STATE);
@@ -484,7 +486,7 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_pr
                            SPINEL_DATATYPE_UINT32_S   // Timeout
                            SPINEL_DATATYPE_EUI64_S    // Extended address
                        ),
-                       &aPSKd,
+                       &psk,
                        &joinerTimeout,
                        &extAddress
                    );
@@ -498,7 +500,7 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_pr
                               SPINEL_DATATYPE_UTF8_S     // PSK
                               SPINEL_DATATYPE_UINT32_S   // Timeout
                            ),
-                           &aPSKd,
+                           &psk,
                            &joinerTimeout
                        );
         extAddress = NULL;
@@ -506,7 +508,10 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_pr
 
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
 
-    error = otCommissionerAddJoiner(mInstance, extAddress, aPSKd, joinerTimeout);
+    error = ot::Encoding::Thread32::Decode(psk, pskd, length);
+    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+
+    error = otCommissionerAddJoiner(mInstance, extAddress, pskd, length, joinerTimeout);
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
 
     error = SendPropertyUpdate(

@@ -98,6 +98,7 @@ SOURCES_COMMON                      = \
     api/dhcp6_api.cpp                 \
     api/dhcp6_api.cpp                 \
     api/dns_api.cpp                   \
+    api/encoding_api.cpp              \
     api/icmp6_api.cpp                 \
     api/instance_api.cpp              \
     api/ip6_api.cpp                   \
@@ -116,6 +117,7 @@ SOURCES_COMMON                      = \
     coap/coap_header.cpp              \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
+    common/encoding.cpp               \
     common/logging.cpp                \
     common/locator.cpp                \
     common/message.cpp                \

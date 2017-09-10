@@ -2564,6 +2564,8 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
         if (strcmp(argv[1], "add") == 0)
         {
+            uint8_t pskd[OT_PSKD_MAX_SIZE];
+            uint32_t length = sizeof(pskd);
             VerifyOrExit(argc > 3, error = OT_ERROR_PARSE);
             // Timeout parameter is optional - if not specified, use default value.
             unsigned long timeout = kDefaultJoinerTimeout;
@@ -2573,7 +2575,8 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
                 SuccessOrExit(error = ParseUnsignedLong(argv[4], timeout));
             }
 
-            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, argv[3], static_cast<uint32_t>(timeout)));
+            SuccessOrExit(error = ot::Encoding::Thread32::Decode(argv[3], pskd, length));
+            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, pskd, length, static_cast<uint32_t>(timeout)));
         }
         else if (strcmp(argv[1], "remove") == 0)
         {
@@ -2820,6 +2823,8 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 void Interpreter::ProcessJoiner(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t length = sizeof(pskd);
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
@@ -2828,7 +2833,8 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = OT_ERROR_PARSE);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl,
+        SuccessOrExit(error = ot::Encoding::Thread32::Decode(argv[1], pskd, length));
+        otJoinerStart(mInstance, pskd, length, provisioningUrl,
                       PACKAGE_NAME, OPENTHREAD_CONFIG_PLATFORM_INFO, PACKAGE_VERSION, NULL,
                       &Interpreter::s_HandleJoinerCallback, this);
     }

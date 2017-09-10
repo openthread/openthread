@@ -204,14 +204,15 @@ void Commissioner::ClearJoiners(void)
     otLogFuncExit();
 }
 
-otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout)
+otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const uint8_t *aPSKd, uint32_t aPSKdLength,
+                                uint32_t aTimeout)
 {
     otError error = OT_ERROR_NO_BUFS;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
-    VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
+    otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0));
+    VerifyOrExit(aPSKdLength <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
     RemoveJoiner(aExtAddress, 0);  // remove imediately
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
@@ -231,7 +232,8 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *
             mJoiners[i].mAny = true;
         }
 
-        (void)strlcpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk));
+        memcpy(mJoiners[i].mPsk, aPSKd, aPSKdLength);
+        mJoiners[i].mPskLength = static_cast<uint8_t>(aPSKdLength);
         mJoiners[i].mValid = true;
         mJoiners[i].mExpirationTime = TimerMilli::GetNow() + TimerMilli::SecToMsec(aTimeout);
 
@@ -817,8 +819,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
             if (mJoiners[i].mAny || !memcmp(&mJoiners[i].mExtAddress, mJoinerIid, sizeof(mJoiners[i].mExtAddress)))
             {
 
-                error = netif.GetCoapSecure().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
-                                                     static_cast<uint8_t>(strlen(mJoiners[i].mPsk)));
+                error = netif.GetCoapSecure().SetPsk(mJoiners[i].mPsk, mJoiners[i].mPskLength);
                 SuccessOrExit(error);
                 otLogInfoMeshCoP(GetInstance(), "found joiner, starting new session");
                 enableJoiner = true;
