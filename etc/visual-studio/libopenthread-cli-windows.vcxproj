@@ -59,6 +59,8 @@
     <ClCompile Include="..\..\src\cli\cli_dataset.cpp" />
     <ClCompile Include="..\..\src\cli\cli_instance.cpp" />
     <ClCompile Include="..\..\src\cli\cli_uart.cpp" />
+    <ClCompile Include="..\..\src\core\api\encoding_api.cpp" />
+    <ClCompile Include="..\..\src\core\common\encoding.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

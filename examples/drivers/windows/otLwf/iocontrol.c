@@ -5323,6 +5323,9 @@ otLwfIoCtl_otJoinerStart(
     )
 {
     NTSTATUS status = STATUS_SUCCESS;
+    otError error;
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t pskdLength = sizeof(pskd);
 
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
@@ -5349,10 +5352,17 @@ otLwfIoCtl_otJoinerStart(
             strcpy_s(pFilter->otVendorSwVersion, sizeof(pFilter->otVendorSwVersion), aConfig->VendorSwVersion);
             strcpy_s(pFilter->otVendorData, sizeof(pFilter->otVendorData), aConfig->VendorData);
 
+            error = otBase32Decode(aConfig->PSKd, pskd, &pskdLength);
+            if (error != OT_ERROR_NONE)
+            {
+                return ThreadErrorToNtstatus(error);
+            }
+
             status = ThreadErrorToNtstatus(
                 otJoinerStart(
                     pFilter->otCtx,
-                    aConfig->PSKd,
+                    pskd,
+                    pskdLength,
                     aConfig->ProvisioningUrl,
                     pFilter->otVendorName,
                     pFilter->otVendorModel,
@@ -5691,6 +5701,9 @@ otLwfIoCtl_otCommissionerAddJoiner(
     )
 {
     NTSTATUS status = STATUS_SUCCESS;
+    otError error;
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t pskdLength = sizeof(pskd);
 
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
@@ -5706,11 +5719,17 @@ otLwfIoCtl_otCommissionerAddJoiner(
             char *aPSKd = (char*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress));
             uint32_t aTimeout = *(uint32_t*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress) + aPSKdBufferLength);
 
+            error = otBase32Decode(aPSKd, pskd, &pskdLength);
+            if (error != OT_ERROR_NONE)
+            {
+                return ThreadErrorToNtstatus(error);
+            }
+
             // Ensure aPSKd is NULL terminated in the buffer
-            if (strnlen(aPSKd, aPSKdBufferLength) < aPSKdBufferLength)
+            if (pskdLength < aPSKdBufferLength)
             {
                 status = ThreadErrorToNtstatus(otCommissionerAddJoiner(
-                    pFilter->otCtx, aExtAddress, aPSKd, aTimeout));
+                    pFilter->otCtx, aExtAddress, pskd, pskdLength, aTimeout));
             }
         }
     }

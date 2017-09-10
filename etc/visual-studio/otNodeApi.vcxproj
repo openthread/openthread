@@ -67,6 +67,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\examples\drivers\windows\otNodeApi\dllmain.cpp" />
     <ClCompile Include="..\..\examples\drivers\windows\otNodeApi\otNodeApi.cpp" />
+    <ClCompile Include="..\..\src\core\api\encoding_api.cpp" />
+    <ClCompile Include="..\..\src\core\common\encoding.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="otApi.vcxproj">

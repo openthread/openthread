@@ -3633,13 +3633,13 @@ OTCALL
 otCommissionerAddJoiner(
     _In_ otInstance *aInstance, 
     const otExtAddress *aExtAddress, 
-    const char *aPSKd,
+    const uint8_t *aPSKd,
+    uint32_t aPSKdLength,
     uint32_t aTimeout
     )
 {
     if (aInstance == nullptr || aPSKd == nullptr) return OT_ERROR_INVALID_ARGS;
 
-    size_t aPSKdLength = strnlen(aPSKd, OPENTHREAD_PSK_MAX_LENGTH + 1);
     if (aPSKdLength > OPENTHREAD_PSK_MAX_LENGTH)
     {
         return OT_ERROR_INVALID_ARGS;
@@ -3856,7 +3856,8 @@ otError
 OTCALL
 otJoinerStart(
     _In_ otInstance *aInstance,
-    _Null_terminated_ const char *aPSKd,
+    const uint8_t *aPSKd,
+    uint32_t aPSKdLength,
     _Null_terminated_ const char *aProvisioningUrl,
     _Null_terminated_ const char *aVendorName,
     _Null_terminated_ const char *aVendorModel,
@@ -3870,7 +3871,6 @@ otJoinerStart(
 
     otCommissionConfig config = {0};
 
-    size_t aPSKdLength = strlen(aPSKd);
     size_t aProvisioningUrlLength = aProvisioningUrl == nullptr ? 0 : strlen(aProvisioningUrl);
     size_t aVendorNameLength = aVendorName == nullptr ? 0 : strlen(aVendorName);
     size_t aVendorModelLength = aVendorModel == nullptr ? 0 : strlen(aVendorModel);

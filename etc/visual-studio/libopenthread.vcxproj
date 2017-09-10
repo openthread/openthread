@@ -61,6 +61,7 @@
     <ClCompile Include="..\..\src\core\api\dataset_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dataset_ftd_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\encoding_api.cpp" />
     <ClCompile Include="..\..\src\core\api\icmp6_api.cpp" />
     <ClCompile Include="..\..\src\core\api\ip6_api.cpp" />
     <ClCompile Include="..\..\src\core\api\instance_api.cpp" />
@@ -77,6 +78,7 @@
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
+    <ClCompile Include="..\..\src\core\common\encoding.cpp" />
     <ClCompile Include="..\..\src\core\common\locator.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />

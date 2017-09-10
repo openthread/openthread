@@ -64,6 +64,7 @@ RtlCopyBufferToMdl(
 #include <openthread/openthread.h>
 #include <openthread/border_router.h>
 #include <openthread/dataset_ftd.h>
+#include <openthread/encoding.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/icmp6.h>
 #include <openthread/ip6.h>

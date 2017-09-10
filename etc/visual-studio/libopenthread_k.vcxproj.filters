@@ -87,6 +87,9 @@
     <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\encoding_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\icmp6_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
@@ -128,6 +131,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp">
       <Filter>Source Files\coap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\common\encoding.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\locator.cpp">
       <Filter>Source Files\common</Filter>
