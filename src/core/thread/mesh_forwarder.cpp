@@ -1859,6 +1859,8 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     meshDest.mLength = sizeof(meshDest.mShortAddress);
     meshDest.mShortAddress = meshHeader.GetDestination();
 
+    UpdateRoutes(aFrame, aFrameLength, meshSource, meshDest);
+
     if (meshDest.mShortAddress == netif.GetMac().GetShortAddress())
     {
         aFrame += meshHeader.GetHeaderLength();
@@ -1918,6 +1920,48 @@ exit:
             message->Free();
         }
     }
+}
+
+void MeshForwarder::UpdateRoutes(uint8_t *aFrame, uint8_t aFrameLength,
+                                 const Mac::Address &aMeshSource, const Mac::Address &aMeshDest)
+{
+    ThreadNetif &netif = GetNetif();
+    Lowpan::MeshHeader meshHeader;
+    Ip6::Header ip6Header;
+    Neighbor *neighbor;
+
+    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE);
+
+    // skip mesh header
+    aFrame += meshHeader.GetHeaderLength();
+    aFrameLength -= meshHeader.GetHeaderLength();
+
+    // skip fragment header
+    if (aFrameLength >= 1 &&
+        reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    {
+        VerifyOrExit(sizeof(Lowpan::FragmentHeader) <= aFrameLength);
+        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0);
+
+        aFrame += reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
+        aFrameLength -= reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
+    }
+
+    // only process IPv6 packets
+    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame));
+
+    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0);
+
+    neighbor = netif.GetMle().GetNeighbor(ip6Header.GetSource());
+    VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
+
+    if (Mle::Mle::GetRouterId(meshHeader.GetSource()) != Mle::Mle::GetRouterId(GetNetif().GetMac().GetShortAddress()))
+    {
+        netif.GetMle().RemoveNeighbor(*neighbor);
+    }
+
+exit:
+    return;
 }
 
 otError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
