@@ -6,9 +6,9 @@ New commands allow for more accurate low level radio testing.
 
 ### New commands
  * [diag ccathreshold](#diag-ccathreshold)
+ * [diag gpio](#diag-gpio)
  * [diag id](#diag-id)
  * [diag listen](#diag-listen)
- * [diag gpio](#diag-gpio)
  * [diag temp](#diag-temp)
  * [diag transmit](#diag-transmit)
 
@@ -53,26 +53,8 @@ Value range 0 to 255.
 
 Default: `45`.
 
-### diag id
-Get board ID.
-
-### diag id \<id\>
-Set board ID.
-
-Value range 0 to 32767.
-
-Default: `-1`.
-
-### diag listen
-Get listen state.
-
-### diag listen \<listen\>
-Set listen state.
-
-`0` disable listen state.<br />
-`1` enable listen state.
-
-Default: listen disabled.
+### diag gpio
+Set of commands for managing gpio pins.
 
 ### diag gpio \<pinnum\>
 Return the current value of the gpio.
@@ -82,7 +64,7 @@ contiguous number space as follows:
 ```
    pinnum = (port * 32) + pin
 ```
-See also the NRF_GPIO_PIN_MAP macro.
+See also the [`NRF_GPIO_PIN_MAP`](../../../third_party/NordicSemiconductor/hal/nrf_gpio.h) macro.
 
 ```bash
 > diag gpio 47
@@ -116,6 +98,27 @@ Sets the given output gpio to low.
 > diag gpio clr 47
 gpio 47 = 0
 ```
+
+### diag id
+Get board ID.
+
+### diag id \<id\>
+Set board ID.
+
+Value range 0 to 32767.
+
+Default: `-1`.
+
+### diag listen
+Get listen state.
+
+### diag listen \<listen\>
+Set listen state.
+
+`0` disable listen state.<br />
+`1` enable listen state.
+
+Default: listen disabled.
 
 ### diag temp
 Get temperature from internal temperature sensor, in degrees Celsius.

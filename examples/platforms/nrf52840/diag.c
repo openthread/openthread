@@ -245,7 +245,6 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
                         char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(argv);
 
     long pinnum;
     otError error = OT_ERROR_NONE;
@@ -307,14 +306,6 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
     else
     {
         error = OT_ERROR_INVALID_ARGS;
-        snprintf(aOutput, aOutputMaxLen,
-                 "Error: Illegal arguments\r\n"
-                 "Usage:\r\n"
-                 "   gpio <pinnum>\r\n"
-                 "   gpio out <pinnum>\r\n"
-                 "   gpio in <pinnum>\r\n"
-                 "   gpio set <out pinnum>\r\n"
-                 "   gpio clr <out pinnum>\r\n");
     }
 
 exit:
@@ -379,12 +370,12 @@ exit:
 
 const struct PlatformDiagCommand sCommands[] =
 {
-    { "listen", &processListen },
-    { "transmit", &processTransmit },
-    { "id", &processID },
-    { "gpio", &processGpio },
-    { "temp", &processTemp },
     { "ccathreshold", &processCcaThreshold }
+    { "gpio", &processGpio },
+    { "id", &processID },
+    { "listen", &processListen },
+    { "temp", &processTemp },
+    { "transmit", &processTransmit },
 };
 
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
