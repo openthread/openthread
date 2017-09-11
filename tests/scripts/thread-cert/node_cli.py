@@ -33,30 +33,33 @@ import time
 import pexpect
 
 class otCli:
-    def __init__(self, nodeid):
+    def __init__(self, nodeid, is_mtd):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
 
+        mode = os.environ.get('USE_MTD') is '1' and is_mtd and 'mtd' or 'ftd'
+
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
         elif self.node_type == 'ncp-sim':
-            self.__init_ncp_sim(nodeid)
+            # TODO use mode after ncp-mtd is available.
+            self.__init_ncp_sim(nodeid, 'ftd')
         else:
-            self.__init_sim(nodeid)
+            self.__init_sim(nodeid, mode)
 
         if self.verbose:
             self.pexpect.logfile_read = sys.stdout
 
-    def __init_sim(self, nodeid):
+    def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
         if "OT_CLI_PATH" in os.environ.keys():
             cmd = os.environ['OT_CLI_PATH']
         elif "top_builddir" in os.environ.keys():
             srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/cli/ot-cli-ftd' % srcdir
+            cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         else:
-            cmd = './ot-cli-ftd'
+            cmd = './ot-cli-%s' % mode
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
@@ -66,13 +69,13 @@ class otCli:
         time.sleep(0.2)
 
 
-    def __init_ncp_sim(self, nodeid):
+    def __init_ncp_sim(self, nodeid, mode):
         """ Initialize an NCP simulation node. """
         if "top_builddir" in os.environ.keys():
             builddir = os.environ['top_builddir']
-            cmd = 'spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-ftd -n' % (builddir)
+            cmd = 'spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-%s -n' % (builddir, mode)
         else:
-            cmd = './ot-ncp-ftd'
+            cmd = './ot-ncp-%s' % mode
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 

@@ -2260,12 +2260,26 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
 
     otLogInfoMle(GetInstance(), "Received advertisement from %04x", sourceAddress.GetRloc16());
 
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
+
     if (mRole != OT_DEVICE_ROLE_DETACHED)
     {
-        SuccessOrExit(error = netif.GetMle().HandleAdvertisement(aMessage, aMessageInfo));
+        if (mDeviceMode & ModeTlv::kModeFFD)
+        {
+            SuccessOrExit(error = netif.GetMle().HandleAdvertisement(aMessage, aMessageInfo));
+        }
+        else
+        {
+            // Remove stale parent.
+            if (GetNeighbor(macAddr) == static_cast<Neighbor *>(&mParent) &&
+                mParent.GetRloc16() != sourceAddress.GetRloc16())
+            {
+                BecomeDetached();
+                mParent.GetLinkInfo().Clear();
+                mParent.SetState(Neighbor::kStateInvalid);
+            }
+        }
     }
-
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     isNeighbor = false;
 

@@ -37,9 +37,9 @@ else:
 import unittest
 
 class Node:
-    def __init__(self, nodeid):
+    def __init__(self, nodeid, is_mtd=False):
         if sys.platform != 'win32':
-            self.interface = node_cli.otCli(nodeid)
+            self.interface = node_cli.otCli(nodeid, is_mtd)
         else:
             self.interface = node_api.otApi(nodeid)
 
@@ -67,7 +67,7 @@ class Node:
 
     def thread_stop(self):
         self.interface.thread_stop()
-            
+
     def commissioner_start(self):
         self.interface.commissioner_start()
 

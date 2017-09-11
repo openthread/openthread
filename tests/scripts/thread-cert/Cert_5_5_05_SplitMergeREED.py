@@ -49,7 +49,7 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         self.nodes[LEADER].set_mode('rsdn')
         for i in range(ROUTER2, ROUTER15+1):
             self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
-        self.nodes[LEADER].enable_whitelist()            
+        self.nodes[LEADER].enable_whitelist()
 
         for i in range(ROUTER2, ROUTER15+1):
             self.nodes[i].set_panid(0xface)

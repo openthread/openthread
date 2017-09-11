@@ -40,7 +40,7 @@ class Cert_6_3_1_OrphanReattach(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i == ED))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

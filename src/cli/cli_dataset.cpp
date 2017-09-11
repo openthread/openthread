@@ -194,7 +194,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
 otError Dataset::Process(otInstance *aInstance, int argc, char *argv[], Server &aServer)
 {
-    otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_PARSE;
 
     sServer = &aServer;
 

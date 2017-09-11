@@ -261,6 +261,11 @@ set -x
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
 }
 
+[ $BUILD_TARGET != posix-mtd ] || {
+    ./bootstrap || die
+    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
+}
+
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
     make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix" || die
