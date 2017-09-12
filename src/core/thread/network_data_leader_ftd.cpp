@@ -519,8 +519,7 @@ exit:
     return error;
 }
 
-bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
-                             uint8_t aTlvsBaseLength)
+bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength)
 {
     bool rval = false;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
@@ -534,8 +533,8 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
         {
             PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
             ContextTlv *context = FindContext(*prefix);
-            BorderRouterTlv *borderRouter = FindBorderRouter(*prefix);
-            HasRouteTlv *hasRoute = FindHasRoute(*prefix);
+            BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, true);
+            HasRouteTlv *hasRoute = FindHasRoute(*prefix, true);
 
             if (cur->IsStable() && (!context || borderRouter))
             {
@@ -549,7 +548,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
 
                 if (borderRouter)
                 {
-                    BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase);
+                    BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
 
                     if (!borderRouterBase || memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
                     {
@@ -559,7 +558,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
 
                 if (hasRoute)
                 {
-                    HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase);
+                    HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase, true);
 
                     if (!hasRouteBase || (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
                     {
@@ -573,7 +572,6 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aRloc16);
     return rval;
 }
 
@@ -588,8 +586,8 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
 
     if (rlocIn)
     {
-        if (IsStableUpdated(aRloc16, aTlvs, aTlvsLength, mTlvs, mLength) ||
-            IsStableUpdated(aRloc16, mTlvs, mLength, aTlvs, aTlvsLength))
+        if (IsStableUpdated(aTlvs, aTlvsLength, mTlvs, mLength) ||
+            IsStableUpdated(mTlvs, mLength, aTlvs, aTlvsLength))
         {
             stableUpdated = true;
         }
