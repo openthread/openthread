@@ -47,7 +47,15 @@
  *
  * The base address of the pages to be used for non-volatile-settings storage.
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS 		                (0x7B000)
+#define SETTINGS_CONFIG_BASE_ADDRESS 		                0x7B000
+
+/**
+ * @def SETTINGS_CONFIG_PAGE_SIZE
+ *
+ * The page size of settings.
+ *
+ */
+#define SETTINGS_CONFIG_PAGE_SIZE                               0x1000
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT

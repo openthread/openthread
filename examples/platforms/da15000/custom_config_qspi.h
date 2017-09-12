@@ -82,8 +82,6 @@
 
 #define dg_configUSE_SW_CURSOR                         (1)
 
-#define dg_configCACHEABLE_QSPI_AREA_LEN               NVMS_PARAM_PART_start
-
 #define dg_configFEM_DLG_REF_BOARD                     (1)
 #define dg_configPOWER_1V8P                            (1)
 
@@ -109,17 +107,12 @@
 #define FTDF_LITE
 
 #define dg_configFLASH_ADAPTER                         (0)
+#define dg_configUART_SOFTWARE_FIFO                    (1)
+#define dg_configUART2_SOFTWARE_FIFO_SIZE              (256)
 #define dg_configNVMS_ADAPTER                          (0)
 #define dg_configNVMS_VES                              (0)
 #define dg_configUSE_WDOG                              (0)
 /* Include bsp default values */
 #include "bsp_defaults.h"
-
-
-/*************************************************************************************************\
- * Open Thread specific config
- */
-
-#define SETTINGS_CONFIG_BASE_ADDRESS                   (0x7B000)
 
 #endif /* CUSTOM_CONFIG_QSPI_H_ */

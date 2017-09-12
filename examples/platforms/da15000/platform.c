@@ -61,38 +61,12 @@ static int  sMsCounter;
 
 static otInstance *sInstance = NULL;
 
-void ClkInit(void)
-{
-    NVIC_ClearPendingIRQ(XTAL16RDY_IRQn);
-    NVIC_EnableIRQ(XTAL16RDY_IRQn);                 // Activate XTAL16 Ready IRQ
-    hw_cpm_set_divn(false);                         // External crystal is 16MHz
-    hw_cpm_enable_rc32k();
-    hw_cpm_lp_set_rc32k();
-    hw_cpm_set_xtal16m_settling_time(dg_configXTAL16_SETTLE_TIME_RC32K);
-    hw_cpm_enable_xtal16m();                        // Enable XTAL16M
-    hw_cpm_configure_xtal32k_pins();                // Configure XTAL32K pins
-    hw_cpm_configure_xtal32k();                     // Configure XTAL32K
-    hw_cpm_enable_xtal32k();                        // Enable XTAL32K
-    hw_watchdog_unfreeze();                         // Start watchdog
-
-    while (!hw_cpm_is_xtal16m_started());           // Block until XTAL16M starts
-
-    hw_watchdog_freeze();                           // Stop watchdog
-    hw_cpm_set_recharge_period((uint16_t)dg_configSET_RECHARGE_PERIOD);
-    hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M);
-    hw_cpm_set_hclk_div(0);
-    hw_cpm_set_pclk_div(0);
-    hw_otpc_init();
-    hw_otpc_set_speed(HW_OTPC_SYS_CLK_FREQ_16);
-}
-
 /*
  * Example function. Blink LED according to node state
  * Leader       - 5Hz
  * Router       - 2Hz
  * Child        - 0.5Hz
  */
-
 void ExampleProcess(otInstance *aInstance)
 {
     static int    aliveLEDcounter = 0;
@@ -156,8 +130,6 @@ void ExampleProcess(otInstance *aInstance)
 
 void PlatformInit(int argc, char *argv[])
 {
-    // Initialize System Clock
-    ClkInit();
     // Initialize Random number generator
     da15000RandomInit();
     // Initialize Alarm
