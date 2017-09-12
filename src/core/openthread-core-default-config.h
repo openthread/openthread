@@ -851,6 +851,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+ *
+ * Define as 1 for a child to inform its previous parent when it attaches to a new parent.
+ *
+ * If this feature is enabled, when a device attaches to a new parent, it will send an IP message (with empty payload
+ * and mesh-local IP address as the source address) to its previous parent.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#define OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH    0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
  *
  * Define as 1 to enable peek/poke functionality on NCP.
@@ -872,7 +885,6 @@
 #ifndef OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
 #define OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS          0
 #endif
-
 
 /*
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
