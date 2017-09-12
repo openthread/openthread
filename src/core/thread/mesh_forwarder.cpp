@@ -237,6 +237,55 @@ void MeshForwarder::UpdateIndirectMessages(void)
     }
 }
 
+otError MeshForwarder::EvictIndirectMessage(void)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+
+    for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
+    {
+        if (!message->IsChildPending())
+        {
+            continue;
+        }
+
+        RemoveMessage(*message);
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
+exit:
+    return error;
+}
+
+void MeshForwarder::RemoveMessage(Message &aMessage)
+{
+    Child *children;
+    uint8_t numChildren;
+
+    children = GetNetif().GetMle().GetChildren(&numChildren);
+
+    for (uint8_t i = 0; i < numChildren; i++)
+    {
+        if (aMessage.GetChildMask(i))
+        {
+            aMessage.ClearChildMask(i);
+            mSourceMatchController.DecrementMessageCount(children[i]);
+
+            if (children[i].GetIndirectMessage() == &aMessage)
+            {
+                children[i].SetIndirectMessage(NULL);
+            }
+        }
+    }
+
+    if (mSendMessage == &aMessage)
+    {
+        mSendMessage = NULL;
+    }
+
+    mSendQueue.Dequeue(aMessage);
+    aMessage.Free();
+}
+
 void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 {
     ThreadNetif &netif = GetNetif();

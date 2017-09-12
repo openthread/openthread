@@ -37,6 +37,7 @@
 
 #include "message.hpp"
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
@@ -69,6 +70,8 @@ MessagePool::MessagePool(otInstance &aInstance) :
 Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
 {
     Message *message = NULL;
+
+    SuccessOrExit(ReclaimBuffers(1));
 
     VerifyOrExit((message = static_cast<Message *>(NewBuffer())) != NULL);
 
@@ -146,18 +149,18 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
 
 otError MessagePool::ReclaimBuffers(int aNumBuffers)
 {
-    uint16_t numFreeBuffers;
+    while (aNumBuffers > GetFreeBufferCount())
+    {
+        MeshForwarder &meshForwarder = GetInstance().mThreadNetif.GetMeshForwarder();
+        SuccessOrExit(meshForwarder.EvictIndirectMessage());
+    }
 
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    numFreeBuffers = otPlatMessagePoolNumFreeBuffers(&GetInstance());
-#else
-    numFreeBuffers = mNumFreeBuffers;
-#endif
+exit:
 
-    //First comparison is to get around issues with comparing
-    //signed and unsigned numbers, if aNumBuffers is negative then
-    //the second comparison wont be attempted.
-    if (aNumBuffers < 0 || aNumBuffers <= numFreeBuffers)
+    // First comparison is to get around issues with comparing
+    // signed and unsigned numbers, if aNumBuffers is negative then
+    // the second comparison wont be attempted.
+    if (aNumBuffers < 0 || aNumBuffers <= GetFreeBufferCount())
     {
         return OT_ERROR_NONE;
     }
