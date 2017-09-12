@@ -89,3 +89,8 @@ void PlatformProcessDrivers(otInstance *aInstance)
     nrf5RadioProcess(aInstance);
     nrf5UartProcess();
 }
+
+__WEAK void PlatformEventSignalPending(void)
+{
+    // Intentionally empty
+}
