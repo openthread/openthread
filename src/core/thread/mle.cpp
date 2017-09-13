@@ -3298,20 +3298,19 @@ otError Mle::InformPreviousParent(void)
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
     SuccessOrExit(error = netif.GetIp6().SendDatagram(*message, messageInfo, Ip6::kProtoNone));
-    message = NULL;
 
     otLogInfoMle(GetInstance(), "Sending message to inform previous parent 0x%04x", mPreviousParentRloc);
 
 exit:
 
-    if (message != NULL)
-    {
-        message->Free();
-    }
-
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMle(GetInstance(), "Failed to inform previous parent, error:%s", otThreadErrorToString(error));
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 
     return error;
