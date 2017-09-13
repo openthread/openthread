@@ -696,9 +696,9 @@ typedef struct otIp6Prefix
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
 
-#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializer for otNetworkDataIterator.
+#define OT_NETWORK_DATA_ITERATOR_INIT  0    ///< Initializer for otNetworkDataIterator.
 
-typedef uint16_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
+typedef uint32_t otNetworkDataIterator;     ///< Used to iterate through Network Data information.
 
 /**
  * This structure represents a Border Router configuration.
