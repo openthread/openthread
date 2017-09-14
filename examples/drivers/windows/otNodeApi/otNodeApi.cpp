@@ -1012,14 +1012,16 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerJoinerAdd(otNode* aNode, const char *
     const uint32_t kDefaultJoinerTimeout = 120;
 
     otError error;
+    // XXX: string PSKd is interpreted as binary PSKd (#2185)
     uint8_t pskd[OT_PSKD_MAX_SIZE];
-    uint32_t pskdLength = sizeof(pskd);
-    
-    error = otBase32Decode(aPSKd, pskd, &pskdLength);
-    if (error != OT_ERROR_NONE)
+    uint32_t pskdLength = strlen(aPSKd);
+
+    if (pskdLength > OT_PSKD_MAX_SIZE)
     {
-        return error;
+        return OT_ERROR_INVALID_ARGS;
     }
+
+    memcpy(pskd, aPSKd, pskdLength);
 
     if (strcmp(aExtAddr, "*") == 0)
     {
@@ -1055,14 +1057,16 @@ OTNODEAPI int32_t OTCALL otNodeJoinerStart(otNode* aNode, const char *aPSKd, con
     printf("%d: joiner start %s %s\r\n", aNode->mId, aPSKd, aProvisioningUrl);
 
     otError error;
+    // XXX: string PSKd is interpreted as a binary PSKd (#2185)
     uint8_t pskd[OT_PSKD_MAX_SIZE];
-    uint32_t pskdLength = sizeof(pskd);
+    uint32_t pskdLength = strlen(aPSKd);
 
-    error = otBase32Decode(aPSKd, pskd, &pskdLength);
-    if (error != OT_ERROR_NONE)
+    if (pskdLength > OT_PSKD_MAX_SIZE)
     {
-        return error;
+        return OT_ERROR_INVALID_ARGS;
     }
+
+    memcpy(pskd, aPSKd, pskdLength);
 
     // TODO: handle the joiner completion callback
     error = otJoinerStart(aNode->mInstance, pskd, pskdLength, aProvisioningUrl, NULL, NULL, NULL, NULL, NULL, NULL);

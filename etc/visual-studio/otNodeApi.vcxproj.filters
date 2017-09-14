@@ -21,12 +21,6 @@
     <ClCompile Include="..\..\examples\drivers\windows\otNodeApi\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\api\encoding_api.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\common\encoding.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\drivers\windows\otNodeApi\precomp.h">
