@@ -284,6 +284,7 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
     }
 
     mSendQueue.Dequeue(aMessage);
+    LogIp6Message(kMessageEvict, aMessage, NULL, OT_ERROR_NO_BUFS);
     aMessage.Free();
 }
 
@@ -2435,6 +2436,10 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageReassemblyDrop:
         actionText = "Dropping (reassembly timeout)";
+        break;
+
+    case kMessageEvict:
+        actionText = "Evicting";
         break;
 
     default:
