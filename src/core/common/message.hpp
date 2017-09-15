@@ -97,7 +97,7 @@ struct MessageInfo
     uint16_t         mLength;            ///< Number of bytes within the message.
     uint16_t         mOffset;            ///< A byte offset within the message.
     uint16_t         mDatagramTag;       ///< The datagram tag used for 6LoWPAN fragmentation.
-    RssAverager      mRssAverager;       ///< The averager maininting the received signal strength (RSS) average.
+    RssAverager      mRssAverager;       ///< The averager maintaining the received signal strength (RSS) average.
 
     uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this.
     uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
