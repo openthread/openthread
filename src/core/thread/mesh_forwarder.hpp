@@ -174,6 +174,15 @@ public:
     void RemoveMessages(Child &aChild, uint8_t aSubType);
 
     /**
+     * This method evicts the first indirect message in the indirect send queue.
+     *
+     * @retval OT_ERROR_NONE       Successfully evicted an indirect message.
+     * @retval OT_ERROR_NOT_FOUND  No indirect messages available to evict.
+     *
+     */
+    otError EvictIndirectMessage(void);
+
+    /**
      * This method returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
@@ -281,6 +290,7 @@ private:
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo,
                            const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
+    void RemoveMessage(Message &aMessage);
 
     static void HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);
