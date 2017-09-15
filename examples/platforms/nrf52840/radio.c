@@ -70,6 +70,7 @@ enum
 
 static bool sDisabled;
 
+static otError      sReceiveError = OT_ERROR_NONE;
 static otRadioFrame sReceivedFrames[RADIO_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 
@@ -100,6 +101,7 @@ typedef enum
     kPendingEventFrameTransmitted,     // Transmitted frame and received ACK (if requested).
     kPendingEventChannelAccessFailure, // Failed to transmit frame (channel busy).
     kPendingEventInvalidAck,           // Failed to transmit frame (received invalid ACK).
+    kPendingEventReceiveFailed,        // Failed to receive a valid frame.
     kPendingEventEnergyDetectionStart, // Requested to start Energy Detection procedure.
     kPendingEventEnergyDetected,       // Energy Detection finished.
 } RadioPendingEvents;
@@ -111,6 +113,8 @@ static void dataInit(void)
     sDisabled = true;
 
     sTransmitFrame.mPsdu = sTransmitPsdu + 1;
+
+    sReceiveError = OT_ERROR_NONE;
 
     for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
     {
@@ -611,6 +615,23 @@ void nrf5RadioProcess(otInstance *aInstance)
         resetPendingEvent(kPendingEventInvalidAck);
     }
 
+    if (isPendingEventSet(kPendingEventReceiveFailed))
+    {
+#if OPENTHREAD_ENABLE_DIAG
+
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioReceiveDone(aInstance, NULL, sReceiveError);
+        }
+        else
+#endif
+        {
+            otPlatRadioReceiveDone(aInstance, NULL, sReceiveError);
+        }
+
+        resetPendingEvent(kPendingEventReceiveFailed);
+    }
+
     if (isPendingEventSet(kPendingEventEnergyDetected))
     {
         otPlatRadioEnergyScanDone(aInstance, sEnergyDetected);
@@ -664,6 +685,34 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
     receivedFrame->mMsec    = timestamp / US_PER_MS;
     receivedFrame->mUsec    = timestamp - receivedFrame->mMsec * US_PER_MS;
 #endif
+}
+
+void nrf_drv_radio802154_receive_failed(nrf_drv_radio802154_rx_error_t error)
+{
+    switch (error)
+    {
+    case NRF_DRV_RADIO802154_RX_ERROR_INVALID_FRAME:
+        sReceiveError = OT_ERROR_NO_FRAME_RECEIVED;
+        break;
+
+    case NRF_DRV_RADIO802154_RX_ERROR_INVALID_FCS:
+        sReceiveError = OT_ERROR_FCS;
+        break;
+
+    case NRF_DRV_RADIO802154_RX_ERROR_INVALID_DEST_ADDR:
+        sReceiveError = OT_ERROR_DESTINATION_ADDRESS_FILTERED;
+        break;
+
+    case NRF_DRV_RADIO802154_RX_ERROR_RUNTIME:
+    case NRF_DRV_RADIO802154_RX_ERROR_TIMESLOT_ENDED:
+        sReceiveError = OT_ERROR_FAILED;
+        break;
+
+    default:
+        assert(false);
+    }
+
+    setPendingEvent(kPendingEventReceiveFailed);
 }
 
 void nrf_drv_radio802154_transmitted_raw(uint8_t *aAckPsdu, int8_t aPower, int8_t aLqi)
