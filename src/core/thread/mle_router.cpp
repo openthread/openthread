@@ -712,6 +712,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
             // source is a router
             neighbor = GetRouter(GetRouterId(rloc16));
             VerifyOrExit(neighbor != NULL, error = OT_ERROR_PARSE);
+            VerifyOrExit(neighbor->GetState() != Neighbor::kStateLinkRequest, error = OT_ERROR_ALREADY);
 
             if (neighbor->GetState() != Neighbor::kStateValid)
             {
@@ -1433,7 +1434,8 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
                 }
             }
         }
-        else if ((mDeviceMode & ModeTlv::kModeFFD) && (router->GetState() != Neighbor::kStateValid))
+        else if ((mDeviceMode & ModeTlv::kModeFFD) && (router->GetState() != Neighbor::kStateValid) &&
+                 (router->GetState() != Neighbor::kStateLinkRequest))
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
@@ -1480,7 +1482,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         }
 
         // Send link request if no link to router
-        if (router->GetState() != Neighbor::kStateValid)
+        if ((router->GetState() != Neighbor::kStateValid) && (router->GetState() != Neighbor::kStateLinkRequest))
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
@@ -1861,6 +1863,13 @@ void MleRouter::HandleStateUpdateTimer(void)
         if (mRouters[i].GetState() == Neighbor::kStateValid)
         {
             if ((TimerMilli::GetNow() - mRouters[i].GetLastHeard()) >= TimerMilli::SecToMsec(kMaxNeighborAge))
+            {
+                RemoveNeighbor(mRouters[i]);
+            }
+        }
+        else if (mRouters[i].GetState() == Neighbor::kStateLinkRequest)
+        {
+            if ((TimerMilli::GetNow() - mRouters[i].GetLastHeard()) >= kMaxLinkRequestTimeout)
             {
                 RemoveNeighbor(mRouters[i]);
             }
