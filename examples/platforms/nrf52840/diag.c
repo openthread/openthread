@@ -261,7 +261,7 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
         value = nrf_gpio_pin_read(pinnum);
 
         snprintf(aOutput, aOutputMaxLen, "gpio %d = %d\r\n",
-                 (int)pinnum, (int)value);
+                 (uint8_t)pinnum, (uint8_t)value);
     }
     else if (strcmp(argv[0], "set") == 0)
     {
@@ -271,7 +271,7 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
 
         nrf_gpio_pin_set(pinnum);
 
-        snprintf(aOutput, aOutputMaxLen, "gpio %d = 1\r\n", (int)pinnum);
+        snprintf(aOutput, aOutputMaxLen, "gpio %d = 1\r\n", (uint8_t)pinnum);
     }
     else if (strcmp(argv[0], "clr") == 0)
     {
@@ -281,7 +281,7 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
 
         nrf_gpio_pin_clear(pinnum);
 
-        snprintf(aOutput, aOutputMaxLen, "gpio %d = 0\r\n", (int)pinnum);
+        snprintf(aOutput, aOutputMaxLen, "gpio %d = 0\r\n", (uint8_t)pinnum);
     }
     else if (strcmp(argv[0], "out") == 0)
     {
@@ -291,7 +291,7 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
 
         nrf_gpio_cfg_output(pinnum);
 
-        snprintf(aOutput, aOutputMaxLen, "gpio %d: out\r\n", (int)pinnum);
+        snprintf(aOutput, aOutputMaxLen, "gpio %d: out\r\n", (uint8_t)pinnum);
     }
     else if (strcmp(argv[0], "in") == 0)
     {
@@ -301,7 +301,8 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[],
 
         nrf_gpio_cfg_input(pinnum, NRF_GPIO_PIN_NOPULL);
 
-        snprintf(aOutput, aOutputMaxLen, "gpio %d: in no pull\r\n", (int)pinnum);
+        snprintf(aOutput, aOutputMaxLen, "gpio %d: in no pull\r\n",
+                 (uint8_t)pinnum);
     }
     else
     {
@@ -370,7 +371,7 @@ exit:
 
 const struct PlatformDiagCommand sCommands[] =
 {
-    { "ccathreshold", &processCcaThreshold }
+    { "ccathreshold", &processCcaThreshold },
     { "gpio", &processGpio },
     { "id", &processID },
     { "listen", &processListen },
