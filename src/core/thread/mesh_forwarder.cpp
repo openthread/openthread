@@ -176,6 +176,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             }
             else
             {
+                LogIp6Message(kMessageDrop, *cur, NULL, aError);
                 cur->Free();
             }
         }
@@ -663,6 +664,7 @@ Message *MeshForwarder::GetDirectTransmission(void)
         case OT_ERROR_DROP:
         case OT_ERROR_NO_BUFS:
             mSendQueue.Dequeue(*curMessage);
+            LogIp6Message(kMessageDrop, *curMessage, NULL, error);
             curMessage->Free();
             continue;
 
@@ -2194,7 +2196,7 @@ void MeshForwarder::ClearReassemblyList(void)
         next = message->GetNext();
         mReassemblyList.Dequeue(*message);
 
-        LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_NO_FRAME_RECEIVED);
+        LogIp6Message(kMessageReassemblyDrop, *message, NULL, OT_ERROR_NO_FRAME_RECEIVED);
         mIpCounters.mRxFailure++;
 
         message->Free();
@@ -2224,7 +2226,7 @@ void MeshForwarder::HandleReassemblyTimer(void)
         {
             mReassemblyList.Dequeue(*message);
 
-            LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
+            LogIp6Message(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
             mIpCounters.mRxFailure++;
 
             message->Free();
@@ -2429,7 +2431,10 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageDrop:
         actionText = "Dropping";
-        shouldLogRss = true;
+        break;
+
+    case kMessageReassemblyDrop:
+        actionText = "Dropping (reassembly timeout)";
         break;
 
     default:

@@ -258,7 +258,8 @@ private:
         kMessageReceive,                 ///< Indicates that the message was received.
         kMessageTransmit,                ///< Indicates that the message was sent.
         kMessagePrepareIndirect,         ///< Indicates that the message is being prepared for indirect tx.
-        kMessageDrop,                    ///< Indicates that the message is being dropped from reassembly list.
+        kMessageDrop,                    ///< Indicates that the outbound message is being dropped (e.g., dst unknown).
+        kMessageReassemblyDrop,          ///< Indicates that the message is being dropped from reassembly list.
     };
 
     otError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
