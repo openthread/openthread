@@ -101,6 +101,15 @@ public:
     void Remove(uint8_t aRouterId);
 
     /**
+     * This method updates an existing cache entry for the EID, if one exists.
+     *
+     * @param[in]  aEid     A reference to the EID.
+     * @param[in]  aRloc16  The RLOC16 corresponding to @p aEid.
+     *
+     */
+    void UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+
+    /**
      * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.
      *
      * @param[in]   aEid     A reference to the EID.
@@ -128,6 +137,11 @@ private:
         kAddressQueryTimeout           = OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT, // in seconds
         kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
         kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY, // in seconds
+    };
+
+    enum
+    {
+        kLastTransactionTimeInvalid = 0xffffffff,  ///< Used when entry is populated using forwarded data message.
     };
 
     struct Cache
