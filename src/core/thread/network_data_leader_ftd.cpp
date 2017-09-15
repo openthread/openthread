@@ -237,8 +237,11 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
         }
         else if (type == MeshCoP::Tlv::kCommissionerSessionId)
         {
+            MeshCoP::CommissionerSessionIdTlv *tlv = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur);
+
+            VerifyOrExit(tlv->IsValid());
+            sessionId = tlv->GetCommissionerSessionId();
             hasSessionId = true;
-            sessionId = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId();
         }
         else
         {
