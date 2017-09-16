@@ -39,8 +39,8 @@ namespace ot {
 namespace Encoding {
 namespace Thread32 {
 
-const char PADDING_BYTE = '=';
 const uint8_t INVALID_BYTE = 0xff;
+
 const char ENCODE_TABLE[32] =
 {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
@@ -87,7 +87,7 @@ otError Encode(const uint8_t *aInput, uint32_t aInputLength, char *aOutput, uint
 {
     uint32_t bits = 0;
     uint32_t remainingBits = 0;
-    uint32_t requiredLength = (aInputLength + 4) / 5 * 8 + 1; // + 1 for null-terminator
+    uint32_t requiredLength = (aInputLength * 8 + 4) / 5 + 1; // +1 for null-terminator
 
     if (aOutputLength < requiredLength)
     {
@@ -115,11 +115,6 @@ otError Encode(const uint8_t *aInput, uint32_t aInputLength, char *aOutput, uint
         aOutput[aOutputLength++] = ENCODE_TABLE[bits << (5 - remainingBits)];
     }
 
-    while (aOutputLength < requiredLength - 1)
-    {
-        aOutput[aOutputLength++] = PADDING_BYTE;
-    }
-
     aOutput[aOutputLength++] = '\0';
 
     return OT_ERROR_NONE;
@@ -129,37 +124,12 @@ otError Decode(const char *aInput, uint8_t *aOutput, uint32_t &aOutputLength)
 {
     uint32_t inputLength = static_cast<uint32_t>(strlen(aInput));
     uint32_t outputLength;
-    uint32_t paddingBytes;
     uint8_t value;
     uint32_t bits;
     uint32_t remainingBits;
 
-    // Input check
-    if (inputLength % 8 != 0)
-    {
-        return OT_ERROR_INVALID_ARGS;
-    }
-
-    // Padding check
-    paddingBytes = 0;
-
-    for (uint32_t i = 0; i < inputLength; i++)
-    {
-        if (aInput[inputLength - 1 - i] != PADDING_BYTE)
-        {
-            break;
-        }
-
-        paddingBytes++;
-    }
-
-    if (paddingBytes > 7)
-    {
-        return OT_ERROR_INVALID_ARGS;
-    }
-
     // Output check
-    outputLength = (inputLength - paddingBytes) * 5 / 8;
+    outputLength = inputLength * 5 / 8;
 
     if (aOutputLength < outputLength)
     {
@@ -173,7 +143,7 @@ otError Decode(const char *aInput, uint8_t *aOutput, uint32_t &aOutputLength)
     bits = 0;
     remainingBits = 0;
 
-    for (uint32_t i = 0; i < inputLength - paddingBytes; i++)
+    for (uint32_t i = 0; i < inputLength; i++)
     {
         value = DECODE_TABLE[static_cast<uint8_t>(aInput[i])];
 
@@ -193,8 +163,8 @@ otError Decode(const char *aInput, uint8_t *aOutput, uint32_t &aOutputLength)
         }
     }
 
-    // remainingBits should always be zero-filled
-    if (bits != 0)
+    // bit-padding should be zero filled and contain no redundant (extra) input symbols
+    if (remainingBits >= 5 || bits != 0)
     {
         return OT_ERROR_INVALID_ARGS;
     }
