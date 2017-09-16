@@ -442,6 +442,40 @@
 #endif  // OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
+ *
+ * Selects if, and where the LOG output goes to.
+ *
+ * There are several options available
+ * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
+ * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+ * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART
+ * - and others
+ *
+ * Note:
+ *
+ * 1) Because the default is: OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+ *    The platform is expected to provide at least a stub for `otPlatLog()`
+ *
+ * 2) This is effectively an ENUM so it can be if/else/endif at compile time.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT
+#define OPENTHREAD_CONFIG_LOG_OUTPUT    OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif
+
+/** Log output goes to the bit bucket (disabled) */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_NONE                       0
+/** Log output goes to the debug uart - requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART to be enabled */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART                 1
+/** Log output goes to the "application" provided otPlatLog() in NCP and CLI code */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_APP                        2
+/** Log output goes to POSIX and WIN32 logging schemes */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS                    3
+/** Log output is handled by a platform defined function */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED           4
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level (used at compile time).
@@ -628,13 +662,12 @@
 /**
  * @def OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
  *
- * Defines the name of function/macro used for logging inside OpenThread, by default is set to `otPlatLog()`.
+ * Defines the name of function/macro used for logging inside OpenThread, by default it is set to `otPlatLog()`.
  *
  */
 #ifndef OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
 #define OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION                     otPlatLog
 #endif
-
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
@@ -907,53 +940,5 @@
 #ifndef OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #define OPENTHREAD_CONFIG_ENABLE_DEBUG_UART                     0
 #endif
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Selects if, and where the LOG output goes to.
- *
- * There are several options available
- * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
- * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
- * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART
- * - and others
- *
- * Note:
- *
- * 1) Because the default is: OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
- *    The platform is expected to provide at least a stub for `otPlatLog()`
- *
- * 2) This is effectively an ENUM so it can be if/else/endif at compile time.
- */
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT Select the DEFAULT log output method.
- */
-#if !defined(OPENTHREAD_CONFIG_LOG_OUTPUT)
-#define OPENTHREAD_CONFIG_LOG_OUTPUT    OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-#endif
-
-/** Log output goes to the bit bucket (disabled) */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_NONE                       0
-/** Log output goes to the debug uart */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART                 1
-/** Log output goes to the "application" provides otPlatLog() */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_APP                        2
-/** Log output goes to POSIX and WIN32 logging schemes */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS                    3
-/** Log output is handled by a platform defined function */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED           4
-
-/*
- * Verify debug uart dependency
- *
- * It is reasonable to only enable the debug uart
- * and not enable logs to the DEBUG uart.
- */
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && (!OPENTHREAD_CONFIG_ENABLE_DEBUG_UART)
-#error OPENTHREAD_CONFIG_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
-#endif
-
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
