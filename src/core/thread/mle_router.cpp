@@ -1175,23 +1175,8 @@ bool MleRouter::IsSingleton(void)
 {
     bool rval = true;
 
-    switch (mRole)
+    if (IsAttached() && ((mDeviceMode & ModeTlv::kModeFFD) != 0))
     {
-    case OT_DEVICE_ROLE_DISABLED:
-    case OT_DEVICE_ROLE_DETACHED:
-        ExitNow(rval = true);
-        break;
-
-    case OT_DEVICE_ROLE_CHILD:
-        ExitNow(rval = ((mDeviceMode & ModeTlv::kModeFFD) == 0));
-        break;
-
-    case OT_DEVICE_ROLE_ROUTER:
-        ExitNow(rval = false);
-        break;
-
-    case OT_DEVICE_ROLE_LEADER:
-
         // not a singleton if any other routers exist
         for (int i = 0; i <= kMaxRouterId; i++)
         {
@@ -1200,17 +1185,6 @@ bool MleRouter::IsSingleton(void)
                 ExitNow(rval = false);
             }
         }
-
-        // not a singleton if any children are REEDs
-        for (int i = 0; i < mMaxChildrenAllowed; i++)
-        {
-            if (mChildren[i].GetState() == Neighbor::kStateValid && mChildren[i].IsFullThreadDevice())
-            {
-                ExitNow(rval = false);
-            }
-        }
-
-        break;
     }
 
 exit:
