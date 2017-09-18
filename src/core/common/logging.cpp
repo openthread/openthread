@@ -39,6 +39,15 @@
 
 #include <openthread/openthread.h>
 
+/*
+ * Verify debug uart dependency.
+ *
+ * It is reasonable to only enable the debug uart and not enable logs to the DEBUG uart.
+ */
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && (!OPENTHREAD_CONFIG_ENABLE_DEBUG_UART)
+#error OPENTHREAD_CONFIG_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+#endif
+
 #ifndef WINDOWS_LOGGING
 #define otLogDump(aFormat, ...)                                             \
     _otDynamicLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
