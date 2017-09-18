@@ -125,9 +125,9 @@ private:
      */
     enum
     {
-        kAddressQueryTimeout = 3,             ///< ADDRESS_QUERY_TIMEOUT (seconds)
-        kAddressQueryInitialRetryDelay = 15,  ///< ADDRESS_QUERY_INITIAL_RETRY_DELAY (seconds)
-        kAddressQueryMaxRetryDelay = 28800,   ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
+        kAddressQueryTimeout           = OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT, // in seconds
+        kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
+        kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY, // in seconds
     };
 
     struct Cache

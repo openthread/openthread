@@ -196,6 +196,42 @@
 #endif  // OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
 
 /**
+ * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT
+ *
+ * The timeout value (in seconds) waiting for a address notification response after sending an address query.
+ *
+ * Default: 3 seconds
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT
+#define OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT                 3
+#endif // OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT
+
+/**
+ * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY
+ *
+ * Initial retry delay for address query (in seconds)
+ *
+ * Default: 15 seconds
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY
+#define OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY     15
+#endif // OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY
+
+/**
+ * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY
+ *
+ * Maximum retry delay for address query (in seconds).
+ *
+ * Default: 28800 seconds (480 minutes or 8 hours)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY
+#define OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY         28800
+#endif // OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY
+
+/**
  * @def OPENTHREAD_CONFIG_MAX_CHILDREN
  *
  * The maximum number of children.
