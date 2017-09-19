@@ -35,22 +35,22 @@
  * @file
  *
  * Note: This is NOT a public thread API, and this header file is *NOT*
- * installed as part of openthread, this is an pseudo-internal
+ * installed as part of OpenThread, this is an pseudo-internal
  * debug feature usable by developers during the course of development.
  *
  * This implements a very basic debug uart useful for logging
  * messages when the primary uart is already engaged (example the NCP)
  * and encapsulating logs is not practical.
  *
- * Implimentation Notes:
+ * Implementation Notes:
  *
- * Only 3 functions are required to be implimented by the platform.
+ * Only 3 functions are required to be implemented by the platform.
  * see/search for the word MUST in the comments below.
  *
  * The other functions (without MUST in the comment) are WEAK symbols
  * that can optionally be overridden by the platform or the application.
  *
- * many of the other functions are simply convience functions to
+ * Many of the other functions are simply convenience functions to
  * aid a developer during their normal course of work and are not
  * intended to be present, or used in production system.
  */
@@ -70,7 +70,7 @@ extern "C" {
      *
      * @param[in]   fmt   printf formatter text
      *
-     * This is a debug convience function that is not intended to be
+     * This is a debug convenience function that is not intended to be
      * used in anything other then "debug scenarios" by a developer.
      *
      * lf -> cr/lf mapping is automatically handled via otPlatDebugUart_putchar()
@@ -82,12 +82,12 @@ extern "C" {
     void otPlatDebugUart_printf(const char *fmt, ...);
 
     /**
-     * Stanard vprintf() to the debug uart, with no log decoration.
+     * Standard vprintf() to the debug uart, with no log decoration.
      *
      * @param[in]   fmt   printf formatter text
      * @param[in]   ap    va_list value for print parameters.
      *
-     * Implimentation limitation: this formats the text into
+     * Implementation limitation: this formats the text into
      * a purposely small text buffer on the stack, thus long
      * messages may be truncated.
      *
@@ -103,7 +103,7 @@ extern "C" {
      * Platform specific write single byte to Debug Uart
      * This should not perform CR/LF mapping.
      *
-     * This function MUST be implimented by the platform
+     * This function MUST be implemented by the platform
      *
      * @param[in] the_byte   what to transmit
      */
@@ -113,7 +113,7 @@ extern "C" {
      * Poll/test debug uart if a key has been pressed.
      * It would be common to a stub function that returns 0.
      *
-     * This function MUST be implimented by the platform
+     * This function MUST be implemented by the platform
      *
      * @retval zero - nothing ready
      * @retval nonzero - otPlatDebugUart_getc() will succeed.
@@ -123,7 +123,7 @@ extern "C" {
     /**
      * Poll/Read a byte from the debug uart
      *
-     * This function MUST be implimented by the platform
+     * This function MUST be implemented by the platform
      *
      * @retval (negative) no data available, @sa otPlatDebugUart_kbhit()
      * @retval (0x00..0x0ff) data byte value
@@ -134,7 +134,7 @@ extern "C" {
     /**
      * Write byte to the uart, expand cr/lf as need.
      *
-     * A WEAK default implimentation is provided
+     * A WEAK default implementation is provided
      * that can be overridden as needed.
      *
      * @param[in] the_byte   the byte to transmit
@@ -145,7 +145,7 @@ extern "C" {
      * identical to "man 3 puts" - terminates with lf
      * Which is then mapped to cr/lf as required
      *
-     * A WEAK default implimentation is provided
+     * A WEAK default implementation is provided
      * that can be overridden as needed.
      *
      * @param[in]   s   the string to print with a lf at the end
@@ -177,7 +177,7 @@ extern "C" {
      * @returns OT_ERROR_NONE
      * @returns OT_ERROR_FAILED
      *
-     * Platforms that desire this MUST provide an implimentation.
+     * Platforms that desire this MUST provide an implementation.
      *
      */
     otError otPlatDebugUart_logfile(const char *filename);

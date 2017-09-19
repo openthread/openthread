@@ -160,8 +160,8 @@ OTAPI const uint8_t *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 Extended PAN ID.
  *
- * This function may only be called while Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function can only be called while Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
@@ -178,7 +178,7 @@ OTAPI otError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const uint8
  * This function returns a pointer to the Leader's RLOC.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[out]  aLeaderRloc  A pointer to where the Leader's RLOC will be written.
+ * @param[out]  aLeaderRloc  A pointer to the Leader's RLOC.
  *
  * @retval OT_ERROR_NONE          The Leader's RLOC was successfully written to @p aLeaderRloc.
  * @retval OT_ERROR_INVALID_ARGS  @p aLeaderRloc was NULL.
@@ -224,8 +224,8 @@ OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
 /**
  * Set the thrMasterKey.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
@@ -262,8 +262,8 @@ OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
 /**
  * This function sets the Mesh Local Prefix.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
@@ -300,8 +300,8 @@ OTAPI const char *OTCALL otThreadGetNetworkName(otInstance *aInstance);
 /**
  * Set the Thread Network Name.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
@@ -383,7 +383,7 @@ OTAPI otError OTCALL otThreadBecomeChild(otInstance *aInstance);
  * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[inout]  aIterator  A pointer to the iterator context. To get the first neighbor entry
                              it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
- * @param[out]    aInfo      A pointer to where the neighbor information will be placed.
+ * @param[out]    aInfo      A pointer to the neighbor information.
  *
  * @retval OT_ERROR_NONE         Successfully found the next neighbor entry in table.
  * @retval OT_ERROR_NOT_FOUND     No subsequent neighbor entry exists in the table.

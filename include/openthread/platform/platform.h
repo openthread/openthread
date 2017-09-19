@@ -61,6 +61,12 @@ void PlatformDeinit(void);
  */
 void PlatformProcessDrivers(otInstance *aInstance);
 
+/**
+ * This function is called whenever platform drivers needs processing.
+ *
+ */
+extern void PlatformEventSignalPending(void);
+
 #ifdef __cplusplus
 }  // end of extern "C"
 #endif

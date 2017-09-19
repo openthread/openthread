@@ -56,7 +56,7 @@ class SimpleTestResult(unittest.TestResult):
 
     executions = 0
 
-    def __init__(self, path, auto_reboot_args=None):
+    def __init__(self, path, auto_reboot_args=None, keep_explorer=False):
         """Record test results in json file
 
         Args:
@@ -69,6 +69,7 @@ class SimpleTestResult(unittest.TestResult):
         self.result = json.load(open(self.path, 'r'))
         self.log_handler = None
         self.started = None
+        self.keep_explorer = keep_explorer
         SimpleTestResult.executions += 1
         logger.info('Initial state is %s', json.dumps(self.result, indent=2))
 
@@ -118,7 +119,8 @@ class SimpleTestResult(unittest.TestResult):
         time.sleep(2)
 
         # close explorers
-        os.system('taskkill /f /im explorer.exe && start explorer.exe')
+        if not self.keep_explorer:
+            os.system('taskkill /f /im explorer.exe && start explorer.exe')
 
     def addSuccess(self, test):
         logger.info('case[%s] pass', test.__class__.__name__)
@@ -164,7 +166,7 @@ def list_devices(names=None, continue_from=None, **kwargs):
 
 def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=None, name_greps=None,
              manual_reset=False, delete_history=False, max_devices=0,
-             continue_from=None, result_file='./result.json', auto_reboot=False):
+             continue_from=None, result_file='./result.json', auto_reboot=False, keep_explorer=False):
     """Discover all test cases and skip those passed
 
     Args:
@@ -276,7 +278,7 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
         settings.PDU_CONTROLLER_OPEN_PARAMS = {}
         settings.PDU_CONTROLLER_REBOOT_PARAMS = {}
 
-    result = SimpleTestResult(result_file, auto_reboot_args)
+    result = SimpleTestResult(result_file, auto_reboot_args, keep_explorer)
     for case in suite:
         logger.info(case.__class__.__name__)
 
@@ -298,6 +300,8 @@ def main():
                         help='first case to test')
     parser.add_argument('--delete-history', '-d', action='store_true', default=False,
                         help='clear history on startup')
+    parser.add_argument('--keep-explorer', '-e', action='store_true', default=False,
+                        help='do not restart explorer.exe at the end')
     parser.add_argument('--name-greps', '-g', action='append', default=None,
                         help='grep case by names')
     parser.add_argument('--list-file', '-i', type=str, default=None,
@@ -349,7 +353,7 @@ def main():
             logger.info('Rerun #{}:'.format(i+1))
             result = discover(
                 names=failed_names, pattern=args['pattern'], skip='', result_file=args['result_file'],
-                auto_reboot=args['auto_reboot']
+                auto_reboot=args['auto_reboot'], keep_explorer=args['keep_explorer']
             )
 
 if __name__ == '__main__':

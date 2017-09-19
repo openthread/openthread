@@ -116,3 +116,20 @@ Example parameters for the 'APC_PDU_CONTROLLER':
 Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
     {'boards_serial_numbers': ('12345123', ...)}
 """
+
+SHIELD_CONTROLLER_TYPE = None
+"""str: Type of connected RF Shield controller.
+
+Keep this None if no RF Shield controller available.
+
+Types of supported RF Shield controllers:
+    - None - when no RF Shield controller connected
+    - 'RF_SWITCH' - when RF Switch connected
+"""
+
+SHIELD_CONTROLLER_PARAMS = None
+"""dict: Parameters passed to the "__init__" method of RF Shield controller.
+
+Example parameters for the 'RF_SWITCH':
+    {'channel': 200, 'port': 'COM50'}
+"""

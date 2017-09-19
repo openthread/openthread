@@ -128,6 +128,7 @@ otError Commissioner::Stop(void)
     GetNetif().GetCoapSecure().Stop();
 
     mState = OT_COMMISSIONER_STATE_DISABLED;
+    GetNetif().SetStateChangedFlags(OT_CHANGED_COMMISSIONER_STATE);
     RemoveCoapResources();
     mTransmitAttempts = 0;
 
@@ -670,6 +671,8 @@ exit:
             mTimer.Start(TimerMilli::SecToMsec(kPetitionRetryDelay));
         }
     }
+
+    GetNetif().SetStateChangedFlags(OT_CHANGED_COMMISSIONER_STATE);
 
     otLogFuncExit();
 }

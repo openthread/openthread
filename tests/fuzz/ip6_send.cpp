@@ -44,7 +44,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance *sInstance;
+    otInstance *instance = NULL;
     otMessage *message = NULL;
     otError error = OT_ERROR_NONE;
     bool isSecure;
@@ -53,23 +53,35 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     FuzzerPlatformInit();
 
-    sInstance = otInstanceInitSingle();
-    otLinkSetPanId(sInstance, panId);
-    otIp6SetEnabled(sInstance, true);
-    otThreadSetEnabled(sInstance, true);
-    otThreadBecomeLeader(sInstance);
+    instance = otInstanceInitSingle();
+    otLinkSetPanId(instance, panId);
+    otIp6SetEnabled(instance, true);
+    otThreadSetEnabled(instance, true);
+    otThreadBecomeLeader(instance);
 
     isSecure = (data[0] & 0x1) != 0;
 
-    message = otIp6NewMessage(sInstance, isSecure);
+    message = otIp6NewMessage(instance, isSecure);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = otMessageAppend(message, data + 1, static_cast<uint16_t>(size - 1));
     SuccessOrExit(error);
 
-    error = otIp6Send(sInstance, message);
-    SuccessOrExit(error);
+    error = otIp6Send(instance, message);
+
+    message = NULL;
 
 exit:
+
+    if (message != NULL)
+    {
+        otMessageFree(message);
+    }
+
+    if (instance != NULL)
+    {
+        otInstanceFinalize(instance);
+    }
+
     return 0;
 }

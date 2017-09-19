@@ -128,6 +128,8 @@ typedef struct {
     va_list obj;
 } va_list_obj;
 
+#define SPINEL_MAX_PACK_LENGTH         32767
+
 // ----------------------------------------------------------------------------
 // MARK: -
 
@@ -246,6 +248,9 @@ static spinel_ssize_t
 spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t data_len, const char *pack_format, va_list_obj *args)
 {
     spinel_ssize_t ret = 0;
+
+    // Buffer length sanity check
+    require_action(data_len <= SPINEL_MAX_PACK_LENGTH, bail, (ret = -1, errno = EINVAL));
 
     for (; *pack_format != 0; pack_format = spinel_next_packed_datatype(pack_format))
     {
@@ -425,9 +430,18 @@ spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t d
 
         case SPINEL_DATATYPE_UTF8_C:
         {
-            size_t len = strnlen((const char *)data_ptr, data_len) + 1;
+            size_t len;
 
-            require_action((len <= data_len) || (data_ptr[data_len - 1] != 0), bail, (ret = -1, errno = EOVERFLOW));
+            // Make sure we have at least one byte.
+            require_action(data_len > 0, bail, (ret = -1, errno = EOVERFLOW));
+
+            // Add 1 for zero termination. If not zero terminated,
+            // len will then be data_len+1, which we will detect
+            // in the next check.
+            len = strnlen((const char *)data_ptr, data_len) + 1;
+
+            // Verify that the string is zero terminated.
+            require_action(len <= data_len, bail, (ret = -1, errno = EOVERFLOW));
 
             if (in_place)
             {
@@ -629,6 +643,9 @@ static spinel_ssize_t
 spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char *pack_format, va_list_obj *args)
 {
     spinel_ssize_t ret = 0;
+
+    // Buffer length sanity check
+    require_action(data_len_max <= SPINEL_MAX_PACK_LENGTH, bail, (ret = -1, errno = EINVAL));
 
     for (; *pack_format != 0; pack_format = spinel_next_packed_datatype(pack_format))
     {
@@ -2028,6 +2045,27 @@ main(void)
         printf("error:%d: len != 30; (%d)\n", __LINE__, (int)len);
         goto bail;
     }
+
+    {
+        const char *str = NULL;
+
+        // Length ends right before the string.
+        len = spinel_datatype_unpack(buffer, 8, "CiiLU", NULL, NULL, NULL, NULL, &str);
+
+        if (len != -1)
+        {
+            printf("error:%d: len != -1; (%d)\n", __LINE__, (int)len);
+            goto bail;
+        }
+
+        if (str != NULL)
+        {
+            printf("error:%d: str != NULL\n", __LINE__);
+            goto bail;
+        }
+    }
+
+    len = 30;
 
     {
         uint8_t c = 0;

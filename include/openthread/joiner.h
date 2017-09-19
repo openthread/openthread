@@ -53,6 +53,20 @@ extern "C" {
  */
 
 /**
+ * This enumeration defines the Joiner State.
+ *
+ */
+typedef enum otJoinerState
+{
+    OT_JOINER_STATE_IDLE      = 0,
+    OT_JOINER_STATE_DISCOVER  = 1,
+    OT_JOINER_STATE_CONNECT   = 2,
+    OT_JOINER_STATE_CONNECTED = 3,
+    OT_JOINER_STATE_ENTRUST   = 4,
+    OT_JOINER_STATE_JOINED    = 5,
+} otJoinerState;
+
+/**
  * This function pointer is called to notify the completion of a join operation.
  *
  * @param[in]  aError    OT_ERROR_NONE if the join process succeeded.
@@ -93,6 +107,21 @@ OTAPI otError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, con
  *
  */
 OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
+
+/**
+ * This function returns the Joiner State.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval OT_JOINER_STATE_IDLE
+ * @retval OT_JOINER_STATE_DISCOVER
+ * @retval OT_JOINER_STATE_CONNECT
+ * @retval OT_JOINER_STATE_CONNECTED
+ * @retval OT_JOINER_STATE_ENTRUST
+ * @retval OT_JOINER_STATE_JOINED
+ *
+ */
+OTAPI otJoinerState OTCALL otJoinerGetState(otInstance *aInstance);
 
 /**
  * @}

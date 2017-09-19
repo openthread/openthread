@@ -205,6 +205,48 @@ set -x
     git clean -xfd || die
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ./configure                             \
+        --enable-ncp-app=all                \
+        --with-ncp-bus=spi                  \
+        --with-examples=posix               \
+        --enable-diag                       \
+        --enable-legacy                     \
+        --enable-jam-detection              \
+        --enable-child-supervision          \
+        --enable-border-router              \
+        --enable-mac-filter                 \
+        --disable-docs                      \
+        --disable-test || die
+    make -j 8 || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ./configure                             \
+        --enable-cli-app=mtd                \
+        --with-ncp-bus=spi                  \
+        --with-examples=posix               \
+        --enable-legacy                     \
+        --enable-child-supervision          \
+        --enable-border-router              \
+        --enable-mac-filter                 \
+        --disable-docs                      \
+        --disable-test || die
+    make -j 8 || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ./configure                             \
+        --enable-cli-app=all                \
+        --enable-ncp-app=all                \
+        --with-ncp-bus=uart                 \
+        --with-examples=posix || die
+    make -j 8 || die
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
@@ -217,6 +259,11 @@ set -x
 [ $BUILD_TARGET != posix-32-bit ] || {
     ./bootstrap || die
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
+}
+
+[ $BUILD_TARGET != posix-mtd ] || {
+    ./bootstrap || die
+    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {

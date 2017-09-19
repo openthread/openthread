@@ -47,6 +47,7 @@ from autothreadharness.harness_controller import HarnessController
 from autothreadharness.helpers import HistoryHelper
 from autothreadharness.open_thread_controller import OpenThreadController
 from autothreadharness.pdu_controller_factory import PduControllerFactory
+from autothreadharness.rf_shield_controller import get_rf_shield_controller
 
 logger = logging.getLogger(__name__)
 
@@ -280,6 +281,18 @@ class HarnessCase(unittest.TestCase):
         self._browser.close()
         self._browser = None
 
+    def _init_rf_shield(self):
+        if getattr(settings, 'SHIELD_CONTROLLER_TYPE', None) and getattr(settings, 'SHIELD_CONTROLLER_PARAMS', None):
+            self.rf_shield = get_rf_shield_controller(
+                shield_type=settings.SHIELD_CONTROLLER_TYPE,
+                params=settings.SHIELD_CONTROLLER_PARAMS
+            )
+        else:
+            self.rf_shield = None
+
+    def _destroy_rf_shield(self):
+        self.rf_shield = None
+
     def setUp(self):
         """Prepare to run test case.
 
@@ -306,6 +319,7 @@ class HarnessCase(unittest.TestCase):
         self._init_harness()
         self._init_devices()
         self._init_dut()
+        self._init_rf_shield()
 
     def tearDown(self):
         """Clean up after each case.
@@ -319,6 +333,7 @@ class HarnessCase(unittest.TestCase):
         self._destroy_harness()
         self._destroy_browser()
         self._destroy_dut()
+        self._destroy_rf_shield()
 
     def _setup_page(self):
         """Do sniffer settings and general settings
@@ -791,14 +806,22 @@ class HarnessCase(unittest.TestCase):
             inp.send_keys(ml64)
 
         elif title.startswith('Shield Devices') or title.startswith('Sheild DUT'):
-            if self.dut and settings.SHIELD_SIMULATION:
+            if self.rf_shield:
+                logger.info('Shielding devices')
+                with self.rf_shield:
+                    self.rf_shield.shield()
+            elif self.dut and settings.SHIELD_SIMULATION:
                 self.dut.channel = (self.channel == THREAD_CHANNEL_MAX
                                     and THREAD_CHANNEL_MIN) or (self.channel + 1)
             else:
                 raw_input('Shield DUT and press enter to continue..')
 
         elif title.startswith('Unshield Devices') or title.startswith('Bring DUT Back to network'):
-            if self.dut and settings.SHIELD_SIMULATION:
+            if self.rf_shield:
+                logger.info('Unshielding devices')
+                with self.rf_shield:
+                    self.rf_shield.unshield()
+            elif self.dut and settings.SHIELD_SIMULATION:
                 self.dut.channel = self.channel
             else:
                 raw_input('Bring DUT and press enter to continue..')

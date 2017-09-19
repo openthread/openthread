@@ -1049,6 +1049,7 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spinel_
 {
     otError error = OT_ERROR_NONE;
     otBorderRouterConfig borderRouterConfig;
+    otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT;
     uint8_t flags;
 
     mDisableStreamWrite = true;
@@ -1063,15 +1064,8 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spinel_
                 ));
 
     // Fill from non-local network data first
-    for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
+    while (otNetDataGetNextOnMeshPrefix(mInstance, &iter, &borderRouterConfig) == OT_ERROR_NONE)
     {
-        error = otNetDataGetNextOnMeshPrefix(mInstance, &iter, &borderRouterConfig);
-
-        if (error != OT_ERROR_NONE)
-        {
-            break;
-        }
-
         flags = BorderRouterConfigToFlagByte(borderRouterConfig);
 
         SuccessOrExit(
@@ -1094,16 +1088,12 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t aHeader, spinel_
     }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
+
+    iter = OT_NETWORK_DATA_ITERATOR_INIT;
+
     // Fill from local network data last
-    for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
+    while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iter, &borderRouterConfig) == OT_ERROR_NONE)
     {
-        error = otBorderRouterGetNextOnMeshPrefix(mInstance, &iter, &borderRouterConfig);
-
-        if (error != OT_ERROR_NONE)
-        {
-            break;
-        }
-
         flags = BorderRouterConfigToFlagByte(borderRouterConfig);
 
         SuccessOrExit(
@@ -1839,6 +1829,9 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t aHeader, spin
     }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
+
+    iter = OT_NETWORK_DATA_ITERATOR_INIT;
+
     while (otBorderRouterGetNextRoute(mInstance, &iter, &external_route_config) == OT_ERROR_NONE)
     {
         SuccessOrExit(

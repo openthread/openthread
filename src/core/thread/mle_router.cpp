@@ -712,6 +712,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
             // source is a router
             neighbor = GetRouter(GetRouterId(rloc16));
             VerifyOrExit(neighbor != NULL, error = OT_ERROR_PARSE);
+            VerifyOrExit(neighbor->GetState() != Neighbor::kStateLinkRequest, error = OT_ERROR_ALREADY);
 
             if (neighbor->GetState() != Neighbor::kStateValid)
             {
@@ -1174,23 +1175,8 @@ bool MleRouter::IsSingleton(void)
 {
     bool rval = true;
 
-    switch (mRole)
+    if (IsAttached() && ((mDeviceMode & ModeTlv::kModeFFD) != 0))
     {
-    case OT_DEVICE_ROLE_DISABLED:
-    case OT_DEVICE_ROLE_DETACHED:
-        ExitNow(rval = true);
-        break;
-
-    case OT_DEVICE_ROLE_CHILD:
-        ExitNow(rval = ((mDeviceMode & ModeTlv::kModeFFD) == 0));
-        break;
-
-    case OT_DEVICE_ROLE_ROUTER:
-        ExitNow(rval = false);
-        break;
-
-    case OT_DEVICE_ROLE_LEADER:
-
         // not a singleton if any other routers exist
         for (int i = 0; i <= kMaxRouterId; i++)
         {
@@ -1199,17 +1185,6 @@ bool MleRouter::IsSingleton(void)
                 ExitNow(rval = false);
             }
         }
-
-        // not a singleton if any children are REEDs
-        for (int i = 0; i < mMaxChildrenAllowed; i++)
-        {
-            if (mChildren[i].GetState() == Neighbor::kStateValid && mChildren[i].IsFullThreadDevice())
-            {
-                ExitNow(rval = false);
-            }
-        }
-
-        break;
     }
 
 exit:
@@ -1433,7 +1408,8 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
                 }
             }
         }
-        else if ((mDeviceMode & ModeTlv::kModeFFD) && (router->GetState() != Neighbor::kStateValid))
+        else if ((mDeviceMode & ModeTlv::kModeFFD) && (router->GetState() != Neighbor::kStateValid) &&
+                 (router->GetState() != Neighbor::kStateLinkRequest))
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
@@ -1480,7 +1456,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         }
 
         // Send link request if no link to router
-        if (router->GetState() != Neighbor::kStateValid)
+        if ((router->GetState() != Neighbor::kStateValid) && (router->GetState() != Neighbor::kStateLinkRequest))
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
@@ -1861,6 +1837,13 @@ void MleRouter::HandleStateUpdateTimer(void)
         if (mRouters[i].GetState() == Neighbor::kStateValid)
         {
             if ((TimerMilli::GetNow() - mRouters[i].GetLastHeard()) >= TimerMilli::SecToMsec(kMaxNeighborAge))
+            {
+                RemoveNeighbor(mRouters[i]);
+            }
+        }
+        else if (mRouters[i].GetState() == Neighbor::kStateLinkRequest)
+        {
+            if ((TimerMilli::GetNow() - mRouters[i].GetLastHeard()) >= kMaxLinkRequestTimeout)
             {
                 RemoveNeighbor(mRouters[i]);
             }
@@ -3519,7 +3502,13 @@ otError MleRouter::RestoreChildren(void)
                                                 reinterpret_cast<uint8_t *>(&childInfo), &length));
         VerifyOrExit(length >= sizeof(childInfo), error = OT_ERROR_PARSE);
 
-        VerifyOrExit((child = NewChild()) != NULL, error = OT_ERROR_NO_BUFS);
+        child = FindChild(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));
+
+        if (child == NULL)
+        {
+            VerifyOrExit((child = NewChild()) != NULL, error = OT_ERROR_NO_BUFS);
+        }
+
         memset(child, 0, sizeof(*child));
 
         child->SetExtAddress(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));

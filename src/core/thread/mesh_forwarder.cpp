@@ -176,6 +176,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             }
             else
             {
+                LogIp6Message(kMessageDrop, *cur, NULL, aError);
                 cur->Free();
             }
         }
@@ -235,6 +236,56 @@ void MeshForwarder::UpdateIndirectMessages(void)
 
         ClearChildIndirectMessages(*child);
     }
+}
+
+otError MeshForwarder::EvictIndirectMessage(void)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+
+    for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
+    {
+        if (!message->IsChildPending())
+        {
+            continue;
+        }
+
+        RemoveMessage(*message);
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
+exit:
+    return error;
+}
+
+void MeshForwarder::RemoveMessage(Message &aMessage)
+{
+    Child *children;
+    uint8_t numChildren;
+
+    children = GetNetif().GetMle().GetChildren(&numChildren);
+
+    for (uint8_t i = 0; i < numChildren; i++)
+    {
+        if (aMessage.GetChildMask(i))
+        {
+            aMessage.ClearChildMask(i);
+            mSourceMatchController.DecrementMessageCount(children[i]);
+
+            if (children[i].GetIndirectMessage() == &aMessage)
+            {
+                children[i].SetIndirectMessage(NULL);
+            }
+        }
+    }
+
+    if (mSendMessage == &aMessage)
+    {
+        mSendMessage = NULL;
+    }
+
+    mSendQueue.Dequeue(aMessage);
+    LogIp6Message(kMessageEvict, aMessage, NULL, OT_ERROR_NO_BUFS);
+    aMessage.Free();
 }
 
 void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
@@ -614,6 +665,7 @@ Message *MeshForwarder::GetDirectTransmission(void)
         case OT_ERROR_DROP:
         case OT_ERROR_NO_BUFS:
             mSendQueue.Dequeue(*curMessage);
+            LogIp6Message(kMessageDrop, *curMessage, NULL, error);
             curMessage->Free();
             continue;
 
@@ -1859,6 +1911,8 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     meshDest.mLength = sizeof(meshDest.mShortAddress);
     meshDest.mShortAddress = meshHeader.GetDestination();
 
+    UpdateRoutes(aFrame, aFrameLength, meshSource, meshDest);
+
     if (meshDest.mShortAddress == netif.GetMac().GetShortAddress())
     {
         aFrame += meshHeader.GetHeaderLength();
@@ -1918,6 +1972,48 @@ exit:
             message->Free();
         }
     }
+}
+
+void MeshForwarder::UpdateRoutes(uint8_t *aFrame, uint8_t aFrameLength,
+                                 const Mac::Address &aMeshSource, const Mac::Address &aMeshDest)
+{
+    ThreadNetif &netif = GetNetif();
+    Lowpan::MeshHeader meshHeader;
+    Ip6::Header ip6Header;
+    Neighbor *neighbor;
+
+    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE);
+
+    // skip mesh header
+    aFrame += meshHeader.GetHeaderLength();
+    aFrameLength -= meshHeader.GetHeaderLength();
+
+    // skip fragment header
+    if (aFrameLength >= 1 &&
+        reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    {
+        VerifyOrExit(sizeof(Lowpan::FragmentHeader) <= aFrameLength);
+        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0);
+
+        aFrame += reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
+        aFrameLength -= reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
+    }
+
+    // only process IPv6 packets
+    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame));
+
+    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0);
+
+    neighbor = netif.GetMle().GetNeighbor(ip6Header.GetSource());
+    VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
+
+    if (Mle::Mle::GetRouterId(meshHeader.GetSource()) != Mle::Mle::GetRouterId(GetNetif().GetMac().GetShortAddress()))
+    {
+        netif.GetMle().RemoveNeighbor(*neighbor);
+    }
+
+exit:
+    return;
 }
 
 otError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
@@ -2101,7 +2197,7 @@ void MeshForwarder::ClearReassemblyList(void)
         next = message->GetNext();
         mReassemblyList.Dequeue(*message);
 
-        LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_NO_FRAME_RECEIVED);
+        LogIp6Message(kMessageReassemblyDrop, *message, NULL, OT_ERROR_NO_FRAME_RECEIVED);
         mIpCounters.mRxFailure++;
 
         message->Free();
@@ -2131,7 +2227,7 @@ void MeshForwarder::HandleReassemblyTimer(void)
         {
             mReassemblyList.Dequeue(*message);
 
-            LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
+            LogIp6Message(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
             mIpCounters.mRxFailure++;
 
             message->Free();
@@ -2336,7 +2432,14 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageDrop:
         actionText = "Dropping";
-        shouldLogRss = true;
+        break;
+
+    case kMessageReassemblyDrop:
+        actionText = "Dropping (reassembly timeout)";
+        break;
+
+    case kMessageEvict:
+        actionText = "Evicting";
         break;
 
     default:

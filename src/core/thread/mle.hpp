@@ -1336,6 +1336,7 @@ private:
     enum
     {
         kMleMessagePriority = Message::kPriorityHigh,
+        kMleHopLimit        = 255,
     };
 
     void GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -1369,6 +1370,10 @@ private:
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
+
+#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+    otError InformPreviousParent(void);
+#endif
 
     static Mle &GetOwner(const Context &aContext);
 
@@ -1405,6 +1410,10 @@ private:
     void *mDiscoverContext;
     bool mIsDiscoverInProgress;
     bool mEnableEui64Filtering;
+
+#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+    uint16_t mPreviousParentRloc;
+#endif
 
     uint8_t mAnnounceChannel;
     uint8_t mPreviousChannel;

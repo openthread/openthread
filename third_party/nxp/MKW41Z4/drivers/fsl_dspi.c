@@ -1115,7 +1115,7 @@ void DSPI_MasterTransferHandleIRQ(SPI_Type *base, dspi_master_handle_t *handle)
                 if (handle->rxData)
                 {
                     /* For the last word received, if there is an extra byte due to the odd transfer
-                    * byte count, only save the the last byte and discard the upper byte
+                    * byte count, only save the last byte and discard the upper byte
                     */
                     if (handle->remainingReceiveByteCount == 1)
                     {

@@ -1830,10 +1830,10 @@ otError Mac::HandleMacCommand(Frame &aFrame)
         mCounters.mRxBeaconRequest++;
         otLogInfoMac(GetInstance(), "Received Beacon Request");
 
-        if ((mBeaconsEnabled)
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
-            && (IsBeaconJoinable())
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+        if (mBeaconsEnabled
+#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
+            || IsBeaconJoinable()
+#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
            )
         {
             StartOperation(kOperationTransmitBeacon);
@@ -1907,7 +1907,7 @@ void Mac::ResetCounters(void)
     memset(&mCounters, 0, sizeof(mCounters));
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
 bool Mac::IsBeaconJoinable(void)
 {
     uint8_t numUnsecurePorts;
@@ -1926,7 +1926,7 @@ bool Mac::IsBeaconJoinable(void)
 
     return joinable;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_IF_JOINABLE
+#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
 
 Mac &Mac::GetOwner(const Context &aContext)
 {

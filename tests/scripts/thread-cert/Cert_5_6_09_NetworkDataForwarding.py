@@ -38,11 +38,13 @@ ROUTER2 = 3
 ED = 4
 SED = 5
 
+MTDS = [ED, SED]
+
 class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i in MTDS))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

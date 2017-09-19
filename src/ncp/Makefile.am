@@ -29,7 +29,6 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                        = \
-    PROTOCOL.md                                     \
     $(NULL)
 
 # Pull in the sources that comprise the OpenThread NCP library.

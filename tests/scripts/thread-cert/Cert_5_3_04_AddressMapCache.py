@@ -40,11 +40,13 @@ ED3 = 5
 ED4 = 6
 ED5 = 7
 
+MTDS = [SED1, ED2, ED3, ED4, ED5]
+
 class Cert_5_3_4_AddressMapCache(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,8):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i in MTDS))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

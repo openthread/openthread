@@ -50,7 +50,7 @@ class Cert_9_2_12_Announce(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i == MED))
 
         self.nodes[LEADER1].set_active_dataset(DATASET1_TIMESTAMP, channel=DATASET1_CHANNEL, panid=DATASET1_PANID)
         self.nodes[LEADER1].set_mode('rsdn')
@@ -78,7 +78,8 @@ class Cert_9_2_12_Announce(unittest.TestCase):
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
-        self.nodes[MED].set_active_dataset(DATASET2_TIMESTAMP, channel=DATASET2_CHANNEL, panid=DATASET2_PANID)
+        self.nodes[MED].set_channel(DATASET2_CHANNEL)
+        self.nodes[MED].set_panid(DATASET2_PANID)
         self.nodes[MED].set_mode('rsn')
         self.nodes[MED].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[MED].enable_whitelist()

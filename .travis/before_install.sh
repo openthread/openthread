@@ -39,7 +39,7 @@ cd /tmp || die
 [ $TRAVIS_OS_NAME != linux ] || {
     sudo apt-get update || die
 
-    [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-ncp ] || {
+    [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp ] || {
         pip install --upgrade pip || die
         pip install --user -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
         [ $BUILD_TARGET != posix-ncp ] || {
@@ -85,7 +85,7 @@ cd /tmp || die
         arc-elf32-gcc --version || die
     }
 
-    [ $BUILD_TARGET != posix-32-bit ] || {
+    [ $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-mtd ] || {
         sudo apt-get install g++-multilib || die
     }
 

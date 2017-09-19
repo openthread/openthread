@@ -373,6 +373,25 @@ void DatasetManager::Get(const Coap::Header &aHeader, const Message &aMessage,
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
+    // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
+    if (length != 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0)
+    {
+        uint16_t i;
+
+        for (i = 0; i < length; i++)
+        {
+            if (tlvs[i] == Tlv::kDelayTimer)
+            {
+                break;
+            }
+        }
+
+        if (i == length && (i + 1u) <= sizeof(tlvs))
+        {
+            tlvs[length++] = Tlv::kDelayTimer;
+        }
+    }
+
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
@@ -464,6 +483,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
 
     // check mesh local prefix
     if (Tlv::GetTlv(aMessage, Tlv::kMeshLocalPrefix, sizeof(meshLocalPrefix), meshLocalPrefix) == OT_ERROR_NONE &&
+        meshLocalPrefix.IsValid() &&
         memcmp(meshLocalPrefix.GetMeshLocalPrefix(), netif.GetMle().GetMeshLocalPrefix(),
                meshLocalPrefix.GetLength()))
     {
@@ -472,6 +492,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
 
     // check network master key
     if (Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey) == OT_ERROR_NONE &&
+        masterKey.IsValid() &&
         memcmp(&masterKey.GetNetworkMasterKey(), &netif.GetKeyManager().GetMasterKey(), OT_MASTER_KEY_SIZE))
     {
         doesAffectConnectivity = true;
@@ -1110,7 +1131,15 @@ void PendingDatasetBase::StartDelayTimer(void)
 
     if ((delayTimer = static_cast<DelayTimerTlv *>(mNetwork.Get(Tlv::kDelayTimer))) != NULL)
     {
-        mDelayTimer.StartAt(mNetwork.GetUpdateTime(), delayTimer->GetDelayTimer());
+        uint32_t delay = delayTimer->GetDelayTimer();
+
+        // the Timer implementation does not support the full 32 bit range
+        if (delay > Timer::kMaxDt)
+        {
+            delay = Timer::kMaxDt;
+        }
+
+        mDelayTimer.StartAt(mNetwork.GetUpdateTime(), delay);
         otLogInfoMeshCoP(GetInstance(), "delay timer started");
     }
 }
@@ -1122,11 +1151,30 @@ void PendingDatasetBase::HandleDelayTimer(Timer &aTimer)
 
 void PendingDatasetBase::HandleDelayTimer(void)
 {
+    DelayTimerTlv *delayTimer;
+
+    // if the Delay Timer value is larger than what our Timer implementation can handle, we have to compute
+    // the remainder and wait some more.
+    if ((delayTimer = static_cast<DelayTimerTlv *>(mNetwork.Get(Tlv::kDelayTimer))) != NULL)
+    {
+        uint32_t elapsed = mDelayTimer.GetFireTime() - mNetwork.GetUpdateTime();
+        uint32_t delay = delayTimer->GetDelayTimer();
+
+        if (elapsed < delay)
+        {
+            mDelayTimer.StartAt(mDelayTimer.GetFireTime(), delay - elapsed);
+            ExitNow();
+        }
+    }
+
     otLogInfoMeshCoP(GetInstance(), "pending delay timer expired");
 
     GetNetif().GetActiveDataset().Set(mNetwork);
 
     Clear();
+
+exit:
+    return;
 }
 
 void PendingDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
