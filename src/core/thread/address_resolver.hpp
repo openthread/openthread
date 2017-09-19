@@ -150,9 +150,18 @@ private:
         State             mState;
     };
 
+    enum InvalidationReason
+    {
+        kReasonRemovingRouterId,
+        kReasonReceivedIcmpDstUnreachNoRoute,
+        kReasonEvictingForNewEntry,
+    };
+
+    static const char *ConvertInvalidationReasonToString(InvalidationReason aReason);
+
     Cache *NewCacheEntry(void);
     void MarkCacheEntryAsUsed(Cache &aEntry);
-    void InvalidateCacheEntry(Cache &aEntry);
+    void InvalidateCacheEntry(Cache &aEntry, InvalidationReason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
     otError SendAddressError(const ThreadTargetTlv &aTarget, const ThreadMeshLocalEidTlv &aEid,
