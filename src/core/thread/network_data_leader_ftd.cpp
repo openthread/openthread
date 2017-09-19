@@ -451,6 +451,8 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
             prefix = static_cast<PrefixTlv *>(cur);
+            VerifyOrExit(prefix->IsValid(), error = OT_ERROR_PARSE);
+
             subCur = prefix->GetSubTlvs();
             subEnd = prefix->GetNext();
 
@@ -657,8 +659,12 @@ exit:
 otError Leader::AddPrefix(PrefixTlv &aPrefix)
 {
     otError error = OT_ERROR_NONE;
-    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end = aPrefix.GetNext();
+    NetworkDataTlv *cur;
+    NetworkDataTlv *end;
+
+    VerifyOrExit(aPrefix.IsValid(), error = OT_ERROR_PARSE);
+    cur = aPrefix.GetSubTlvs();
+    end = aPrefix.GetNext();
 
     while (cur < end)
     {
