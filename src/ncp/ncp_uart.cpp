@@ -137,7 +137,6 @@ void NcpUart::EncodeAndSendToUart(Tasklet &aTasklet)
 void NcpUart::EncodeAndSendToUart(void)
 {
     uint16_t len;
-    bool sendImmediate = false;
     bool prevHostPowerState;
 
     while (!mTxFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
