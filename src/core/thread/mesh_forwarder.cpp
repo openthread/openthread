@@ -2483,8 +2483,8 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
         (aError == OT_ERROR_NONE) ? "" : ", error:",
         (aError == OT_ERROR_NONE) ? "" : otThreadErrorToString(aError),
         priorityText,
-        shouldLogRss ? "" : ", rss:",
-        shouldLogRss ? "" : aMessage.GetRssAverager().ToString(rssString, sizeof(rssString))
+        shouldLogRss ? ", rss:" : "",
+        shouldLogRss ? aMessage.GetRssAverager().ToString(rssString, sizeof(rssString)) : ""
     );
 
     if (shouldLogSrcDstAddresses)
