@@ -94,7 +94,7 @@ struct Command
 class Interpreter
 {
     friend class Coap;
-    friend class Udp;
+    friend class UdpExample;
 
 public:
 
@@ -392,7 +392,7 @@ private:
     char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
 
-    Udp mUdp;
+    UdpExample mUdp;
 
 #endif
 
