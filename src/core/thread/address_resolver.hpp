@@ -117,6 +117,7 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
      * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query.
+     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to send Address Query.
      *
      */
     otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);

@@ -273,13 +273,13 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
     switch (entry->mState)
     {
     case Cache::kStateInvalid:
+        SuccessOrExit(error = SendAddressQuery(aEid));
         entry->mTarget = aEid;
         entry->mRloc16 = Mac::kShortAddrInvalid;
         entry->mTimeout = kAddressQueryTimeout;
         entry->mFailures = 0;
         entry->mRetryTimeout = kAddressQueryInitialRetryDelay;
         entry->mState = Cache::kStateQuery;
-        SendAddressQuery(aEid);
         error = OT_ERROR_ADDRESS_QUERY;
         break;
 
@@ -290,8 +290,8 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
         }
         else if (entry->mTimeout == 0 && entry->mRetryTimeout == 0)
         {
+            SuccessOrExit(error = SendAddressQuery(aEid));
             entry->mTimeout = kAddressQueryTimeout;
-            SendAddressQuery(aEid);
             error = OT_ERROR_ADDRESS_QUERY;
         }
         else
