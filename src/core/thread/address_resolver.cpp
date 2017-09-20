@@ -206,6 +206,46 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
     OT_UNUSED_VARIABLE(aReason);
 }
 
+void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
+        {
+            continue;
+        }
+
+        if (mCache[i].mRloc16 != aRloc16)
+        {
+            char stringBuffer[Ip6::Address::kIp6AddressStringSize];
+
+            // not updating the age here is intentional because this cache entry is not actually being used
+            mCache[i].mRloc16 = aRloc16;
+
+            if (mCache[i].mState != Cache::kStateCached)
+            {
+                mCache[i].mRetryTimeout = 0;
+                mCache[i].mLastTransactionTime = static_cast<uint32_t>(kLastTransactionTimeInvalid);
+                mCache[i].mTimeout = 0;
+                mCache[i].mFailures = 0;
+                mCache[i].mState = Cache::kStateCached;
+
+                GetNetif().GetMeshForwarder().HandleResolved(aEid, OT_ERROR_NONE);
+            }
+
+            otLogInfoArp(GetInstance(), "Cache entry updated (snoop): %s, 0x%04x",
+                         aEid.ToString(stringBuffer, sizeof(stringBuffer)), aRloc16);
+
+            OT_UNUSED_VARIABLE(stringBuffer);
+        }
+
+        ExitNow();
+    }
+
+exit:
+    return;
+}
+
 otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
 {
     otError error = OT_ERROR_NONE;
@@ -215,7 +255,7 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
     {
         if (mCache[i].mState != Cache::kStateInvalid)
         {
-            if (memcmp(&mCache[i].mTarget, &aEid, sizeof(mCache[i].mTarget)) == 0)
+            if (mCache[i].mTarget == aEid)
             {
                 entry = &mCache[i];
                 break;
@@ -375,15 +415,18 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
             break;
 
         case Cache::kStateCached:
-            if (memcmp(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid)) != 0)
+            if (mCache[i].mLastTransactionTime != kLastTransactionTimeInvalid)
             {
-                SendAddressError(targetTlv, mlIidTlv, NULL);
-                ExitNow();
-            }
+                if (memcmp(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid)) != 0)
+                {
+                    SendAddressError(targetTlv, mlIidTlv, NULL);
+                    ExitNow();
+                }
 
-            if (lastTransactionTime >= mCache[i].mLastTransactionTime)
-            {
-                ExitNow();
+                if (lastTransactionTime >= mCache[i].mLastTransactionTime)
+                {
+                    ExitNow();
+                }
             }
 
         // fall through
@@ -398,8 +441,8 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
             mCache[i].mState = Cache::kStateCached;
             MarkCacheEntryAsUsed(mCache[i]);
 
-            otLogInfoArp(GetInstance(), "Cache entry updated: %s, 0x%04x, lastTrans:%d", stringBuffer,
-                         rloc16Tlv.GetRloc16(), lastTransactionTime);
+            otLogInfoArp(GetInstance(), "Cache entry updated (notification): %s, 0x%04x, lastTrans:%d",
+                         stringBuffer, rloc16Tlv.GetRloc16(), lastTransactionTime);
 
             if (netif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
             {
@@ -757,8 +800,7 @@ void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInf
 
     for (int i = 0; i < kCacheEntries; i++)
     {
-        if (mCache[i].mState != Cache::kStateInvalid &&
-            memcmp(&mCache[i].mTarget, &ip6Header.GetDestination(), sizeof(mCache[i].mTarget)) == 0)
+        if (mCache[i].mState != Cache::kStateInvalid && mCache[i].mTarget == ip6Header.GetDestination())
         {
             InvalidateCacheEntry(mCache[i], kReasonReceivedIcmpDstUnreachNoRoute);
             break;
