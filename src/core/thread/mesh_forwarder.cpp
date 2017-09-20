@@ -443,8 +443,8 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
     if ((mSendMessage = GetDirectTransmission()) != NULL)
     {
-        netif.GetMac().SendFrameRequest(mMacSender);
         mSendMessageMaxMacTxAttempts = Mac::kDirectFrameMacTxAttempts;
+        netif.GetMac().SendFrameRequest(mMacSender);
         ExitNow();
     }
 
