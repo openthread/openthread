@@ -51,6 +51,7 @@ DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
 
 ADDRESS_TYPE = Enum('ADDRESS_TYPE', ('LINK_LOCAL', 'GLOBAL', 'RLOC', 'ALOC', 'ML_EID'))
+RSSI = {'LINK_QULITY_0': -100, 'LINK_QULITY_1': -95, 'LINK_QULITY_2': -85, 'LINK_QULITY_3': -65}
 
 SNIFFER_ID = int(os.getenv('SNIFFER_ID', 34))
 PANID = 0xface
@@ -203,6 +204,7 @@ def create_default_uri_path_based_payload_factories():
     return {
         "/a/as": network_layer_tlvs_factory,
         "/a/aq": network_layer_tlvs_factory,
+        "/a/ar": network_layer_tlvs_factory,
         "/a/an": network_layer_tlvs_factory
     }
 

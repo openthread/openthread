@@ -121,6 +121,7 @@ EXTRA_DIST                                                         = \
     Cert_9_2_17_Orphan.py                                            \
     Cert_9_2_18_RollBackActiveTimestamp.py                           \
     coap.py                                                          \
+    command.py                                                       \
     common.py                                                        \
     config.py                                                        \
     ipv6.py                                                          \
