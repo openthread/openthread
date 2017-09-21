@@ -534,6 +534,7 @@ NcpBase *NcpBase::sNcpInstance = NULL;
 NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
+    mHostPowerStateInProgress(false),
     mLastStatus(SPINEL_STATUS_OK),
     mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS),
     mChannelMask(OT_RADIO_SUPPORTED_CHANNELS),
@@ -545,7 +546,6 @@ NcpBase::NcpBase(otInstance *aInstance):
     mThreadChangedFlags(0),
     mChangedPropsSet(),
     mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),
-    mHostPowerStateInProgress(false),
     mHostPowerReplyFrameTag(NcpFrameBuffer::kInvalidTag),
     mHostPowerStateHeader(0),
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE

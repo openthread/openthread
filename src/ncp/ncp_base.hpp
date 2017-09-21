@@ -639,6 +639,7 @@ protected:
     static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData);
     otInstance *mInstance;
     NcpFrameBuffer  mTxFrameBuffer;
+    bool mHostPowerStateInProgress;
 
 private:
     enum
@@ -669,7 +670,6 @@ private:
     uint32_t mChangedFlags;
     bool mShouldSignalEndOfScan;
     spinel_host_power_state_t mHostPowerState;
-    bool mHostPowerStateInProgress;
     NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
     uint8_t mHostPowerStateHeader;
 
