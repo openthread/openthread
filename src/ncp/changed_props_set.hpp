@@ -33,6 +33,8 @@
 #ifndef CHANGED_PROPS_SET_HPP_
 #define CHANGED_PROPS_SET_HPP_
 
+#include <stddef.h>
+
 #include <openthread/types.h>
 
 #include "spinel.h"
