@@ -407,6 +407,11 @@ __WEAK void nrf_drv_radio802154_rx_started(void)
     // Intentionally empty
 }
 
+__WEAK void nrf_drv_radio802154_tx_ack_started(void)
+{
+    // Intentionally empty
+}
+
 __WEAK void nrf_drv_radio802154_received(uint8_t * p_data, uint8_t length, int8_t power, int8_t lqi)
 {
     (void) length;
@@ -424,7 +429,17 @@ __WEAK void nrf_drv_radio802154_received_raw(uint8_t * p_data, int8_t power, int
                                  lqi);
 }
 
+__WEAK void nrf_drv_radio802154_receive_failed(nrf_drv_radio802154_rx_error_t error)
+{
+    (void) error;
+}
+
 __WEAK void nrf_drv_radio802154_tx_started(void)
+{
+    // Intentionally empty
+}
+
+__WEAK void nrf_drv_radio802154_rx_ack_started(void)
 {
     // Intentionally empty
 }
@@ -449,9 +464,9 @@ __WEAK void nrf_drv_radio802154_transmitted_raw(uint8_t * p_ack, int8_t power, i
                                     lqi);
 }
 
-__WEAK void nrf_drv_radio802154_busy_channel(void)
+__WEAK void nrf_drv_radio802154_transmit_failed(nrf_drv_radio802154_tx_error_t error)
 {
-    // Intentionally empty
+    (void) error;
 }
 
 __WEAK void nrf_drv_radio802154_energy_detected(uint8_t result)
