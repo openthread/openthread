@@ -142,6 +142,14 @@ public:
     uint8_t GetActiveRouterCount(void) const;
 
     /**
+      * This method returns the number of active neighbor routers.
+      *
+      * @returns The number of active neighbor routers.
+      *
+      */
+    uint8_t GetActiveNeighborRouterCount(void) const;
+
+    /**
      * This method returns the time in seconds since the last Router ID Sequence update.
      *
      * @returns The time in seconds since the last Router ID Sequence update.

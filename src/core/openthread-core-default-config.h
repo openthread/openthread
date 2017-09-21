@@ -975,4 +975,17 @@
 #define OPENTHREAD_CONFIG_ENABLE_DEBUG_UART                     0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
+ *
+ * Define as 1 to enable dynamic MPL interval feature.
+ *
+ * If this feature is enabled, the MPL forward interval will be adjusted dynamically according to
+ * the network scale, which helps to reduce multicast latency.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
+#define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL           0
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
