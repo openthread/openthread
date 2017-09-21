@@ -2273,7 +2273,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::
         uint8_t tlv;
         TlvRequestIterator iterator =  TLVREQUESTTLV_ITERATOR_INIT;
 
-        VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= (Child::kMaxRequestTlvs - tlvslength),
+        VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= (kMaxResponseTlvs - tlvslength),
                      error = OT_ERROR_PARSE);
 
         while (tlvRequest.GetNextTlv(iterator, tlv) == OT_ERROR_NONE)
