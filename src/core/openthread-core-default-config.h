@@ -506,10 +506,8 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART                 1
 /** Log output goes to the "application" provided otPlatLog() in NCP and CLI code */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_APP                        2
-/** Log output goes to POSIX and WIN32 logging schemes */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS                    3
 /** Log output is handled by a platform defined function */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED           4
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED           3
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
