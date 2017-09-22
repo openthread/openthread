@@ -31,9 +31,11 @@ import time
 import unittest
 
 import node
+import config
+import command
 
 LEADER = 1
-ROUTER1 = 2
+DUT_ROUTER1 = 2
 
 class Cert_5_3_1_LinkLocal(unittest.TestCase):
     def setUp(self):
@@ -43,14 +45,10 @@ class Cert_5_3_1_LinkLocal(unittest.TestCase):
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
 
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
+        self.nodes[DUT_ROUTER1].set_panid(0xface)
+        self.nodes[DUT_ROUTER1].set_mode('rsdn')
+        self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -58,25 +56,30 @@ class Cert_5_3_1_LinkLocal(unittest.TestCase):
         del self.nodes
 
     def test(self):
+        # 1
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[ROUTER1].start()
+        self.nodes[DUT_ROUTER1].start()
         time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+        self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
-        addrs = self.nodes[ROUTER1].get_addrs()
-        for addr in addrs:
-            if addr[0:4] == 'fe80':
-                self.assertTrue(self.nodes[LEADER].ping(addr, size=256))
-                self.assertTrue(self.nodes[LEADER].ping(addr))
+        # 2 & 3
+        link_local = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
+        self.assertTrue(self.nodes[LEADER].ping(link_local, size=256))
+        self.assertTrue(self.nodes[LEADER].ping(link_local))
 
+        # 4 & 5
         self.assertTrue(self.nodes[LEADER].ping('ff02::1', size=256))
         self.assertTrue(self.nodes[LEADER].ping('ff02::1'))
 
+        # 6 & 7
         self.assertTrue(self.nodes[LEADER].ping('ff02::2', size=256))
         self.assertTrue(self.nodes[LEADER].ping('ff02::2'))
+
+        # 8
+        self.assertTrue(self.nodes[LEADER].ping(config.LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS))
 
 if __name__ == '__main__':
     unittest.main()
