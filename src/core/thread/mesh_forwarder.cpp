@@ -2442,6 +2442,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageReassemblyDrop:
         actionText = "Dropping (reassembly timeout)";
+        shouldLogRss = true;
         break;
 
     case kMessageEvict:
