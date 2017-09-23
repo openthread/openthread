@@ -512,7 +512,6 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_CTL_CODE(168, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
 
-#define OPENTHREAD_PSK_MAX_LENGTH                20
 #define OPENTHREAD_PROV_URL_MAX_LENGTH           64
 #define OPENTHREAD_VENDOR_NAME_MAX_LENGTH        32
 #define OPENTHREAD_VENDOR_MODEL_MAX_LENGTH       32
@@ -520,12 +519,13 @@ typedef enum _OTLWF_NOTIF_TYPE
 #define OPENTHREAD_VENDOR_DATA_MAX_LENGTH        64
 typedef struct otCommissionConfig
 {
-    char PSKd[OPENTHREAD_PSK_MAX_LENGTH + 1];
-    char ProvisioningUrl[OPENTHREAD_PROV_URL_MAX_LENGTH + 1];
-    char VendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
-    char VendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
-    char VendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
-    char VendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
+    uint8_t PSKdLength;
+    uint8_t PSKd[OT_PSKD_MAX_SIZE];
+    char    ProvisioningUrl[OPENTHREAD_PROV_URL_MAX_LENGTH + 1];
+    char    VendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
+    char    VendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
+    char    VendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
+    char    VendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
 } otCommissionConfig;
 
 #define IOCTL_OTLWF_OT_JOINER_START \
@@ -592,13 +592,19 @@ typedef struct otCommissionConfig
     // uint8_t - aCount
     // uint8_t[aCount] - aTlvTypes
 
+typedef struct otAddJoinerConfig
+{
+    uint8_t         ExtAddressValid;
+    otExtAddress    ExtAddress;
+    uint8_t         PSKdLength;
+    uint8_t         PSKd[OT_PSKD_MAX_SIZE];
+    uint32_t        Timeout;
+} otAddJoinerConfig;
+
 #define IOCTL_OTLWF_OT_COMMISIONER_ADD_JOINER \
     OTLWF_CTL_CODE(180, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
-    // uint8_t - aExtAddressValid
-    // otExtAddress - aExtAddress (optional)
-    // char[OPENTHREAD_PSK_MAX_LENGTH + 1] - aPSKd
-    // uint32_t - aTimeout
+    // otAddJoinerConfig - aConfig
 
 #define IOCTL_OTLWF_OT_COMMISIONER_REMOVE_JOINER \
     OTLWF_CTL_CODE(181, METHOD_BUFFERED, FILE_WRITE_DATA)

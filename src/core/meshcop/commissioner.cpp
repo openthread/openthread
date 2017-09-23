@@ -204,7 +204,7 @@ void Commissioner::ClearJoiners(void)
     otLogFuncExit();
 }
 
-otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const uint8_t *aPSKd, uint32_t aPSKdLength,
+otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const uint8_t *aPSKd, uint8_t aPSKdLength,
                                 uint32_t aTimeout)
 {
     otError error = OT_ERROR_NO_BUFS;
@@ -212,7 +212,8 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const uint8_
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
     otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0));
-    VerifyOrExit(aPSKdLength <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPSKdLength >= OT_PSKD_MIN_SIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPSKdLength <= OT_PSKD_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
     RemoveJoiner(aExtAddress, 0);  // remove imediately
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)

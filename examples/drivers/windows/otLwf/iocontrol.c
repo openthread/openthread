@@ -5322,10 +5322,7 @@ otLwfIoCtl_otJoinerStart(
     _Inout_ PULONG          OutBufferLength
     )
 {
-    NTSTATUS status = STATUS_SUCCESS;
-    otError error;
-    uint8_t pskd[OT_PSKD_MAX_SIZE];
-    uint32_t pskdLength = sizeof(pskd);
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
 
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
@@ -5336,7 +5333,7 @@ otLwfIoCtl_otJoinerStart(
 
 #define IsNotNullTerminated(buf) (strnlen(buf, sizeof(buf)) == sizeof(buf))
 
-        if (IsNotNullTerminated(aConfig->PSKd) ||
+        if (aConfig->PSKdLength < OT_PSKD_MIN_SIZE || aConfig->PSKdLength > OT_PSKD_MAX_SIZE ||
             IsNotNullTerminated(aConfig->ProvisioningUrl) ||
             IsNotNullTerminated(aConfig->VendorName) ||
             IsNotNullTerminated(aConfig->VendorModel) ||
@@ -5352,17 +5349,11 @@ otLwfIoCtl_otJoinerStart(
             strcpy_s(pFilter->otVendorSwVersion, sizeof(pFilter->otVendorSwVersion), aConfig->VendorSwVersion);
             strcpy_s(pFilter->otVendorData, sizeof(pFilter->otVendorData), aConfig->VendorData);
 
-            error = otBase32Decode(aConfig->PSKd, pskd, &pskdLength);
-            if (error != OT_ERROR_NONE)
-            {
-                return ThreadErrorToNtstatus(error);
-            }
-
             status = ThreadErrorToNtstatus(
                 otJoinerStart(
                     pFilter->otCtx,
-                    pskd,
-                    pskdLength,
+                    aConfig->PSKd,
+                    aConfig->PSKdLength,
                     aConfig->ProvisioningUrl,
                     pFilter->otVendorName,
                     pFilter->otVendorModel,
@@ -5700,39 +5691,27 @@ otLwfIoCtl_otCommissionerAddJoiner(
     _Inout_ PULONG          OutBufferLength
     )
 {
-    NTSTATUS status = STATUS_SUCCESS;
-    otError error;
-    uint8_t pskd[OT_PSKD_MAX_SIZE];
-    uint32_t pskdLength = sizeof(pskd);
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
 
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
 
-    if (InBufferLength >= sizeof(uint8_t) + sizeof(otExtAddress))
+    if (InBufferLength != sizeof(otAddJoinerConfig))
     {
-        const ULONG aPSKdBufferLength = InBufferLength - sizeof(uint8_t) - sizeof(otExtAddress) - sizeof(uint32_t);
-
-        if (aPSKdBufferLength <= OPENTHREAD_PSK_MAX_LENGTH + 1)
-        {
-            uint8_t aExtAddressValid = *(uint8_t*)InBuffer;
-            const otExtAddress *aExtAddress = aExtAddressValid == 0 ? NULL : (otExtAddress*)(InBuffer + sizeof(uint8_t));
-            char *aPSKd = (char*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress));
-            uint32_t aTimeout = *(uint32_t*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress) + aPSKdBufferLength);
-
-            error = otBase32Decode(aPSKd, pskd, &pskdLength);
-            if (error != OT_ERROR_NONE)
-            {
-                return ThreadErrorToNtstatus(error);
-            }
-
-            // Ensure aPSKd is NULL terminated in the buffer
-            if (pskdLength < aPSKdBufferLength)
-            {
-                status = ThreadErrorToNtstatus(otCommissionerAddJoiner(
-                    pFilter->otCtx, aExtAddress, pskd, pskdLength, aTimeout));
-            }
-        }
+        return STATUS_INVALID_PARAMETER;
     }
+
+    otAddJoinerConfig *aConfig = (otAddJoinerConfig *)InBuffer;
+
+    if (aConfig->PSKdLength < OT_PSKD_MIN_SIZE || aConfig->PSKdLength > OT_PSKD_MAX_SIZE)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    const otExtAddress *aExtAddress = aConfig->ExtAddressValid ? &aConfig->ExtAddress : NULL;
+
+    status = ThreadErrorToNtstatus(otCommissionerAddJoiner(
+        pFilter->otCtx, aExtAddress, aConfig->PSKd, aConfig->PSKdLength, aConfig->Timeout));
 
     return status;
 }

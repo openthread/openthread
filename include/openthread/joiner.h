@@ -96,7 +96,7 @@ typedef void (OTCALL *otJoinerCallback)(otError aError, void *aContext);
  * @retval OT_ERROR_INVALID_ARGS  @p aPSKd or @p aProvisioningUrl is invalid.
  *
  */
-OTAPI otError OTCALL otJoinerStart(otInstance *aInstance, const uint8_t *aPSKd, uint32_t aPSKdLength,
+OTAPI otError OTCALL otJoinerStart(otInstance *aInstance, const uint8_t *aPSKd, uint8_t aPSKdLength,
                                    const char *aProvisioningUrl,
                                    const char *aVendorName, const char *aVendorModel,
                                    const char *aVendorSwVersion, const char *aVendorData,

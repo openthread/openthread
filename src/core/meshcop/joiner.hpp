@@ -79,7 +79,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully started the Joiner service.
      *
      */
-    otError Start(const uint8_t *aPSKd, uint32_t aPSKdLength, const char *aProvisioningUrl,
+    otError Start(const uint8_t *aPSKd, uint8_t aPSKdLength, const char *aProvisioningUrl,
                   const char *aVendorName, const char *aVendorModel,
                   const char *aVendorSwVersion, const char *aVendorData,
                   otJoinerCallback aCallback, void *aContext);

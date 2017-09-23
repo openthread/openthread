@@ -82,7 +82,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     aNetif.GetCoap().AddResource(mJoinerEntrust);
 }
 
-otError Joiner::Start(const uint8_t *aPSKd, uint32_t aPSKdLength, const char *aProvisioningUrl,
+otError Joiner::Start(const uint8_t *aPSKd, uint8_t aPSKdLength, const char *aProvisioningUrl,
                       const char *aVendorName, const char *aVendorModel, const char *aVendorSwVersion,
                       const char *aVendorData, otJoinerCallback aCallback, void *aContext)
 {
@@ -95,7 +95,8 @@ otError Joiner::Start(const uint8_t *aPSKd, uint32_t aPSKdLength, const char *aP
     otLogFuncEntry();
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
-    VerifyOrExit(aPSKdLength <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPSKdLength >= OT_PSKD_MIN_SIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPSKdLength <= OT_PSKD_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
 
     GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
 
@@ -116,7 +117,7 @@ otError Joiner::Start(const uint8_t *aPSKd, uint32_t aPSKdLength, const char *aP
     error = netif.GetCoapSecure().Start(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
     SuccessOrExit(error);
 
-    error = netif.GetCoapSecure().GetDtls().SetPsk(aPSKd, static_cast<uint8_t>(aPSKdLength));
+    error = netif.GetCoapSecure().GetDtls().SetPsk(aPSKd, aPSKdLength);
     SuccessOrExit(error);
 
     error = netif.GetCoapSecure().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);

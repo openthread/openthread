@@ -101,7 +101,7 @@ OTAPI otError OTCALL otCommissionerStop(otInstance *aInstance);
  *
  */
 OTAPI otError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
-                                             const uint8_t *aPSKd, uint32_t aPSKdLength, uint32_t aTimeout);
+                                             const uint8_t *aPSKd, uint8_t aPSKdLength, uint32_t aTimeout);
 
 /**
  * This function removes a Joiner entry.

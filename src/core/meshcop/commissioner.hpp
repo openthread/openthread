@@ -100,7 +100,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  No buffers available to add the Joiner.
      *
      */
-    otError AddJoiner(const Mac::ExtAddress *aExtAddress, const uint8_t *aPSKd, uint32_t aPSKdLength, uint32_t aTimeout);
+    otError AddJoiner(const Mac::ExtAddress *aExtAddress, const uint8_t *aPSKd, uint8_t aPSKdLength, uint32_t aTimeout);
 
     /**
      * This method removes a Joiner entry.
@@ -267,7 +267,7 @@ private:
     {
         Mac::ExtAddress mExtAddress;
         uint32_t mExpirationTime;
-        uint8_t mPsk[Dtls::kPskMaxLength];
+        uint8_t mPsk[OT_PSKD_MAX_SIZE];
         uint8_t mPskLength;
         bool mValid : 1;
         bool mAny : 1;

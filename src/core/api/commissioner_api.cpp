@@ -66,7 +66,7 @@ otError otCommissionerStop(otInstance *aInstance)
 }
 
 otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
-                                const uint8_t *aPSKd, uint32_t aPSKdLength, uint32_t aTimeout)
+                                const uint8_t *aPSKd, uint8_t aPSKdLength, uint32_t aTimeout)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
