@@ -195,8 +195,15 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *tlv = static_cast<const NetworkNameTlv *>(cur);
-            memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), tlv->GetLength());
-            aDataset.mNetworkName.m8[tlv->GetLength()] = '\0';
+            uint8_t length = tlv->GetLength();
+
+            if (length > sizeof(aDataset.mNetworkName) - 1)
+            {
+                length = sizeof(aDataset.mNetworkName) - 1;
+            }
+
+            memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), length);
+            aDataset.mNetworkName.m8[length] = '\0';
             aDataset.mIsNetworkNameSet = true;
             break;
         }
