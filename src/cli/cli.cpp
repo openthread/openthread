@@ -246,6 +246,8 @@ Interpreter::Interpreter(otInstance *aInstance):
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     mCoap(*this),
 #endif
+    mUserCommands(NULL),
+    mUserCommandsLength(0),
     mServer(NULL),
 #ifdef OTDLL
     mApiInstance(otApiInit()),
@@ -376,6 +378,11 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         mServer->OutputFormat("%s\r\n", sCommands[i].mName);
+    }
+
+    for (unsigned int i = 0; i < mUserCommandsLength; i++)
+    {
+        mServer->OutputFormat("%s\r\n", mUserCommands[i].mName);
     }
 
     OT_UNUSED_VARIABLE(argc);
@@ -3261,6 +3268,15 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         }
     }
 
+    for (i = 0; i < mUserCommandsLength; i++)
+    {
+        if (strcmp(cmd, mUserCommands[i].mName) == 0)
+        {
+            mUserCommands[i].mCommand(argc, argv);
+            break;
+        }
+    }
+
     // Error prompt for unsupported commands
     if (i == sizeof(sCommands) / sizeof(sCommands[0]))
     {
@@ -3377,6 +3393,12 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
     mServer->OutputFormat("\r\n");
 }
 #endif
+
+void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
+{
+    mUserCommands = aCommands;
+    mUserCommandsLength = aLength;
+}
 
 Interpreter &Interpreter::GetOwner(const Context &aContext)
 {

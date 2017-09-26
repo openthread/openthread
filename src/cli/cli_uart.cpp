@@ -67,8 +67,32 @@ static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
-    Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
+    Uart::sUartServer = new (&sCliUartRaw) Uart(aInstance);
 }
+
+extern "C" void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
+{
+    Uart::sUartServer->GetInterpreter().SetUserCommands(aUserCommands, aLength);
+}
+
+extern "C" void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    Uart::sUartServer->GetInterpreter().OutputBytes(aBytes, aLength);
+}
+
+extern "C" void otCliUartOutputFormat(const char *aFmt, ...)
+{
+    va_list aAp;
+    va_start(aAp, aFmt);
+    Uart::sUartServer->OutputFormatV(aFmt, aAp);
+    va_end(aAp);
+}
+
+extern "C" void otCliUartAppendResult(otError aError)
+{
+    Uart::sUartServer->GetInterpreter().AppendResult(aError);
+}
+
 
 Uart::Uart(otInstance *aInstance):
     mInterpreter(aInstance)
