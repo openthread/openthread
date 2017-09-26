@@ -589,11 +589,13 @@ void da15000RadioProcess(otInstance *aInstance)
 
         if ((frameHeader.options & FTDF_OPT_ACK_REQUESTED) == 0 || sTransmitStatus != OT_ERROR_NONE)
         {
+            sRadioState = OT_RADIO_STATE_RECEIVE;
             otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, NULL, sTransmitStatus);
         }
         else
         {
             otEXPECT(sAckFrame);
+            sRadioState = OT_RADIO_STATE_RECEIVE;
             otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, sReceiveFrameAck, sTransmitStatus);
             sAckFrame = false;
         }
@@ -601,7 +603,6 @@ void da15000RadioProcess(otInstance *aInstance)
         sTransmitDoneFrame = false;
 
         otLogDebgPlat(sInstance, "Radio state: OT_RADIO_STATE_RECEIVE", NULL);
-        sRadioState = OT_RADIO_STATE_RECEIVE;
     }
 
 exit:
@@ -647,6 +648,11 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
 
     if (status == FTDF_TRANSPARENT_RCV_SUCCESSFUL)
     {
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+        // Timestamp
+        sReceiveFrameAck.mMsec = otPlatAlarmMilliGetNow();
+        sReceiveFrameAck.mUsec = 0;  // Don't support microsecond timer for now.
+#endif
         sReceiveFrame[sWriteFrame].mChannel   = sChannel;
         sReceiveFrame[sWriteFrame].mLength    = frameLength;
         sReceiveFrame[sWriteFrame].mLqi       = lqi;

@@ -28,10 +28,7 @@
 
 /**
  * @file
- *   This file implements a pseudo-random number generator.
- *
- * @warning
- *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
+ *   This file implements true random number generator.
  */
 
 #include <string.h>
@@ -42,64 +39,90 @@
 #include "hw_trng.h"
 #include "sdk_defs.h"
 
-#define HW_TRNG_RAM             (0x40040000)
+#define RANDOM_SIZE_OF_BUFFER         32
 
-static uint32_t sState = 1;
-static uint32_t sSeed;
+static uint32_t sRandomNumbers[RANDOM_SIZE_OF_BUFFER];
+static uint8_t sRandomNextNumberIndex = 0;
+static bool sRandomGeneratorStarted = false;
 
-int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
+static void RandomCallback(void)
 {
-    uint32_t            randword;
-    unsigned char       *pbuf           = outEntropy;
-    const size_t        req_words       = inSize >> 2;
-    const unsigned char *pbuf_end       = outEntropy + inSize;
-    const unsigned char *preq_words_end = (unsigned char *)(((uint32_t *)outEntropy) + req_words);
-    ptrdiff_t           remainder_bytes = pbuf_end - preq_words_end;
+    hw_trng_get_numbers(sRandomNumbers, RANDOM_SIZE_OF_BUFFER);
+    sRandomNextNumberIndex = 0;
+    hw_trng_stop();
+    hw_trng_disable_clk();
+    hw_trng_disable_interrupt();
+    sRandomGeneratorStarted = false;
+}
 
-    hw_trng_enable(NULL);
-
-    for (pbuf = outEntropy; pbuf < preq_words_end; pbuf += 4)
-    {
-        /* Wait for a random word to become available in the TRNG FIFO. */
-        while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0);
-
-        randword = *((volatile uint32_t *)HW_TRNG_RAM);
-        memcpy(pbuf, &randword, 4);
-    }
-
-    if (remainder_bytes)
-    {
-        while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0);
-
-        randword = *((volatile uint32_t *)HW_TRNG_RAM);
-        memcpy(pbuf, &randword, remainder_bytes);
-    }
-
-    hw_trng_disable();
-
-    return 0;
+static void StartGenerator(void)
+{
+    hw_trng_enable(RandomCallback);
+    sRandomGeneratorStarted = true;
 }
 
 void da15000RandomInit(void)
 {
-    zhal_get_entropy((uint8_t *)&sSeed, sizeof(sSeed));
-    sState = sSeed;
+    StartGenerator();
 }
 
 uint32_t otPlatRandomGet(void)
 {
-    uint32_t mlcg;
-    zhal_get_entropy((uint8_t *)&mlcg, sizeof(mlcg));
-    return mlcg;
+    uint32_t randomNumber;
+    bool randomGet = false;
+
+    do
+    {
+        GLOBAL_INT_DISABLE();
+
+        if (sRandomNextNumberIndex < RANDOM_SIZE_OF_BUFFER)
+        {
+            randomNumber = sRandomNumbers[sRandomNextNumberIndex++];
+            randomGet = true;
+
+            if (sRandomNextNumberIndex == RANDOM_SIZE_OF_BUFFER)
+            {
+                StartGenerator();
+            }
+        }
+        else if (hw_trng_get_fifo_level() > 0)
+        {
+            randomNumber = hw_trng_get_number();
+            randomGet = true;
+        }
+        else if (!sRandomGeneratorStarted)
+        {
+            StartGenerator();
+        }
+
+        GLOBAL_INT_RESTORE();
+    }
+    while (!randomGet);
+
+    return randomNumber;
 }
 
 otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
+    uint32_t randomNumber;
 
-    for (uint16_t length = 0; length < aOutputLength; length++)
+    while (aOutputLength)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        randomNumber = otPlatRandomGet();
+
+        if (aOutputLength < 4)
+        {
+            memcpy(aOutput, &randomNumber, aOutputLength);
+            aOutputLength = 0;
+        }
+        else
+        {
+            memcpy(aOutput, &randomNumber, 4);
+            aOutputLength -= 4;
+            aOutput += 4;
+        }
     }
 
     return OT_ERROR_NONE;
 }
+

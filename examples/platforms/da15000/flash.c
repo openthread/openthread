@@ -27,43 +27,36 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 
-#include "hw_qspi.h"
 #include "qspi_automode.h"
 
-#define FLASH_SECTOR_SIZE             0x1000
-#define FLASH_BUFFER_SIZE             0x2000
+#define FLASH_BUFFER_SIZE 0x2000
+#define FLASH_SECTOR_SIZE 0x1000
+#define FLASH_PAGE_SIZE   0x0100
 
-#define W25Q_READ_STATUS_REGISTER1   0x05
+/*
+ * In case that user tries to write data to flash passing as source QSPI mapped flash address
+ * data must be first copied to RAM as during write QSPI controller can't read flash.
+ * To achieve this, small on stack buffer will be used to copy data to RAM first.
+ * This define specifies how much stack can be used for this purpose.
+ */
+#define ON_STACK_BUFFER_SIZE 16
 
-/* Erase/Write in progress */
-#define W25Q_STATUS1_BUSY_BIT        0
-#define W25Q_STATUS1_BUSY_MASK       (1 << W25Q_STATUS1_BUSY_BIT)
-
-static uint32_t sWaitStatusTimeout;
-
-QSPI_SECTION static  uint8_t qspi_get_erase_status(void)
+otError utilsFlashInit(void)
 {
-    QSPIC->QSPIC_CHCKERASE_REG = 0;
-    return HW_QSPIC_REG_GETF(ERASECTRL, ERS_STATE);
+    return OT_ERROR_NONE;
 }
 
-volatile bool  DisableErase = false;
+uint32_t utilsFlashGetSize(void)
+{
+    return (uint32_t)FLASH_BUFFER_SIZE;
+}
 
-// Erase QSPI memory section as non-blocking function. Remember to check utilsFlashStatusWait before write or read!!
 otError utilsFlashErasePage(uint32_t aAddress)
 {
+    uint32_t flash_offset = aAddress & ~(FLASH_SECTOR_SIZE - 1);
 
-    uint32_t flash_offset = (aAddress) & ~(FLASH_SECTOR_SIZE - 1);
-
-    if (DisableErase)
-    {
-        return OT_ERROR_NONE;
-    }
-
-    qspi_automode_init();
     qspi_automode_erase_flash_sector(flash_offset);
 
     CACHE->CACHE_CTRL1_REG = CACHE_CACHE_CTRL1_REG_CACHE_FLUSH_Msk;
@@ -71,62 +64,84 @@ otError utilsFlashErasePage(uint32_t aAddress)
     return OT_ERROR_NONE;
 }
 
-
-uint32_t utilsFlashGetSize(void)
-{
-
-    return (uint32_t)FLASH_BUFFER_SIZE;
-}
-
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
+    (void)aTimeout;
 
-    sWaitStatusTimeout = otPlatAlarmMilliGetNow();
-
-    while (qspi_get_erase_status()  && ((otPlatAlarmMilliGetNow() - sWaitStatusTimeout) < aTimeout));
-
-    if (qspi_get_erase_status())
-    {
-        return OT_ERROR_BUSY;
-    }
-    else
-    {
-        return OT_ERROR_NONE;
-    }
+    return OT_ERROR_NONE;
 }
 
-otError utilsFlashInit(void)
+static inline bool FlashQspiAddress(const void *aBuf)
 {
-    qspi_automode_flash_power_up();
+    if (((uint32_t) aBuf >= MEMORY_QSPIF_BASE) && ((uint32_t) aBuf < MEMORY_QSPIF_END))
+    {
+        return true;
+    }
 
-    if (utilsFlashStatusWait(1000) == OT_ERROR_BUSY)
-    {
-        return OT_ERROR_FAILED;
-    }
-    else
-    {
-        return OT_ERROR_NONE;
-    }
+    return ((uint32_t) aBuf >= MEMORY_REMAPPED_BASE) && ((uint32_t) aBuf < MEMORY_REMAPPED_END)
+           && (REG_GETF(CRG_TOP, SYS_CTRL_REG, REMAP_ADR0) == 2);
 }
 
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+static size_t FlashWriteFromQspi(uint32_t aAddress, const uint8_t *aQspiBuf, size_t aSize)
 {
-
-    size_t offset = 0;
     size_t written;
+    size_t offset = 0;
+    uint8_t buf[ON_STACK_BUFFER_SIZE];
 
+    /*
+     * qspi_automode_write_flash_page can't write data if source address points to QSPI mapped
+     * memory. To write data from QSPI flash, it will be first copied to small on stack
+     * buffer. This buffer can be accessed when QSPI controller is working in manual mode.
+     */
     while (offset < aSize)
     {
-        written = qspi_automode_write_flash_page(aAddress + offset, aData + offset,
-                                                 aSize - offset);
+        size_t chunk = sizeof(buf) > aSize - offset ? aSize - offset : sizeof(buf);
+        memcpy(buf, aQspiBuf + offset, chunk);
+
+        written = qspi_automode_write_flash_page(aAddress + offset, buf, chunk);
         offset += written;
     }
 
     return offset;
 }
 
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    memcpy(aData, (void *)(MEMORY_QSPIF_BASE + aAddress), aSize);
+    size_t written;
+    size_t offset = 0;
+    bool buf_from_flash = FlashQspiAddress(aData);
+
+    while (offset < aSize)
+    {
+        /*
+         * If buf is QSPI Flash memory, use function that will copy source data to RAM
+         * first.
+         */
+        if (buf_from_flash)
+        {
+            written = FlashWriteFromQspi(aAddress + offset, aData + offset,
+                                         aSize - offset);
+        }
+        else
+        {
+            /*
+             * Try write everything, lower driver will reduce this value to accommodate
+             * page boundary and and maximum write size limitation
+             */
+            written = qspi_automode_write_flash_page(aAddress + offset, aData + offset,
+                                                     aSize - offset);
+        }
+
+        offset += written;
+    }
+
+    CACHE->CACHE_CTRL1_REG = CACHE_CACHE_CTRL1_REG_CACHE_FLUSH_Msk;
+
     return aSize;
 }
+
+uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+{
+    return qspi_automode_read(aAddress, aData, aSize);;
+}
+

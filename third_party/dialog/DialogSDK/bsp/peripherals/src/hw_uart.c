@@ -531,7 +531,7 @@ static void hw_uart_copy_dma_rx_to_user_buffer(HW_UART_ID uart)
     UART_Data *ud = &uart_data[UARTIX(uart)];
 
     uint16_t cur_idx;
-    uint16_t to_copy;
+    uint16_t to_copy = 0;
     hw_uart_rx_callback cb;
 
     ud->rx_dma_active = false;
@@ -1179,12 +1179,19 @@ void hw_uart_init_ex(HW_UART_ID uart, const uart_config_ex *uart_init)
      */
     hw_uart_transmit_fifo_empty(uart);
 
-
     if (uart == HW_UART1)
     {
         // there is no FIFO for UART0 as yet
         ud->rx_fifo_on = 0;
         ud->tx_fifo_on = 0;
+#if dg_configUART_SOFTWARE_FIFO
+        ud->rx_soft_fifo = uart1_sw_fifo;
+        ud->rx_soft_fifo_size = dg_configUART1_SOFTWARE_FIFO_SIZE;
+#endif
+#if dg_configUART_RX_CIRCULAR_DMA
+        ud->rx_dma_buf = uart1_rx_dma_buf;
+        ud->rx_dma_buf_size = dg_configUART1_RX_CIRCULAR_DMA_BUF_SIZE;
+#endif
         hw_uart_disable_fifo(uart);
     }
     else
@@ -1193,6 +1200,14 @@ void hw_uart_init_ex(HW_UART_ID uart, const uart_config_ex *uart_init)
         {
             ud->rx_fifo_on = 1;
             ud->tx_fifo_on = 1;
+#if dg_configUART_SOFTWARE_FIFO
+            ud->rx_soft_fifo = uart2_sw_fifo;
+            ud->rx_soft_fifo_size = dg_configUART2_SOFTWARE_FIFO_SIZE;
+#endif
+#if dg_configUART_RX_CIRCULAR_DMA
+            ud->rx_dma_buf = uart2_rx_dma_buf;
+            ud->rx_dma_buf_size = dg_configUART2_RX_CIRCULAR_DMA_BUF_SIZE;
+#endif
             hw_uart_enable_fifo(uart);
             ud->rx_fifo_level = uart_init->rx_fifo_tr_lvl;
             hw_uart_rx_fifo_tr_lvl_setf(uart, uart_init->rx_fifo_tr_lvl);
