@@ -43,7 +43,6 @@
 #include <openthread/cli.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>
-
 #include "cli/cli.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
@@ -67,7 +66,7 @@ static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
-    Uart::sUartServer = new (&sCliUartRaw) Uart(aInstance);
+    Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
 }
 
 extern "C" void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
