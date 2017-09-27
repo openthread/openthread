@@ -1272,6 +1272,21 @@ uint8_t MleRouter::GetActiveRouterCount(void) const
     return rval;
 }
 
+uint8_t MleRouter::GetActiveNeighborRouterCount(void) const
+{
+    uint8_t rval = 0;
+
+    for (int i = 0; i <= kMaxRouterId; i++)
+    {
+        if (mRouters[i].GetState() == Neighbor::kStateValid)
+        {
+            rval++;
+        }
+    }
+
+    return rval;
+}
+
 otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &netif = GetNetif();

@@ -56,6 +56,7 @@ public:
     otError BecomeLeader(void) { return OT_ERROR_NOT_CAPABLE; }
 
     uint8_t GetActiveRouterCount(void) const { return 0; }
+    uint8_t GetActiveNeighborRouterCount(void) const { return 0; }
 
     uint32_t GetLeaderAge(void) const { return 0; }
 
