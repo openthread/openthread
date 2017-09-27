@@ -76,6 +76,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mFixedLeaderPartitionId(0),
     mRouterRoleEnabled(true),
     mIsRouterRestoringChildren(false),
+    mAddressSolicitPending(false),
     mPreviousPartitionId(0),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0),
@@ -3856,7 +3857,9 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     ThreadRloc16Tlv rlocTlv;
     ThreadStatusTlv statusTlv;
     Ip6::MessageInfo messageInfo;
-    Message *message;
+    Message *message = NULL;
+
+    VerifyOrExit(mAddressSolicitPending == false);
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -3886,6 +3889,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo,
                                                       &MleRouter::HandleAddressSolicitResponse, this));
+    mAddressSolicitPending = true;
 
     otLogInfoMle(GetInstance(), "Sent address solicit to %04x", HostSwap16(messageInfo.GetPeerAddr().mFields.m16[7]));
 
@@ -3953,7 +3957,6 @@ void MleRouter::HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHead
 void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage,
                                              const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
-    OT_UNUSED_VARIABLE(aResult);
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     ThreadStatusTlv statusTlv;
@@ -3962,6 +3965,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     uint8_t routerId;
     Router *router;
     bool old;
+
+    mAddressSolicitPending = false;
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader != NULL && aMessage != NULL);
 
