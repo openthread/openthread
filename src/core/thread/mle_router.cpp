@@ -1793,8 +1793,13 @@ void MleRouter::HandleStateUpdateTimer(void)
         break;
 
     case OT_DEVICE_ROLE_DETACHED:
-        BecomeDetached();
-        ExitNow();
+        if (mChallengeTimeout == 0)
+        {
+            BecomeDetached();
+            ExitNow();
+        }
+
+        break;
 
     case OT_DEVICE_ROLE_CHILD:
         if (routerStateUpdate)
