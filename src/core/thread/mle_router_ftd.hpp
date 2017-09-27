@@ -750,8 +750,8 @@ private:
     otError SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor,
                            const TlvRequestTlv &aTlvRequest, const ChallengeTlv &aChallenge);
     otError SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest);
-    otError SendChildIdResponse(Child *aChild);
-    otError SendChildUpdateRequest(Child *aChild);
+    otError SendChildIdResponse(Child &aChild);
+    otError SendChildUpdateRequest(Child &aChild);
     otError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                     const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
     otError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
@@ -782,7 +782,7 @@ private:
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
-    void SetChildStateToValid(Child *aChild);
+    void SetChildStateToValid(Child &aChild);
     bool HasChildren(void);
     void RemoveChildren(void);
     bool HasMinDowngradeNeighborRouters(void);
