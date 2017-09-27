@@ -668,7 +668,6 @@ private:
     ChangedPropsSet mChangedPropsSet;
 
     uint32_t mChangedFlags;
-    bool mShouldSignalEndOfScan;
     spinel_host_power_state_t mHostPowerState;
     NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
     uint8_t mHostPowerStateHeader;
