@@ -161,8 +161,8 @@ public:
     /**
      * Write a number of bytes to the CLI console as a hex string.
      *
-     * @param[in]  aFmt   A pointer to the format string.
-     * @param[in]  ...    A matching list of arguments.
+     * @param[in]  aBytes   A pointer to data which should be printed.
+     * @param[in]  aLength  aBytes length.
      */
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
 

@@ -3268,19 +3268,23 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         }
     }
 
-    for (i = 0; i < mUserCommandsLength; i++)
-    {
-        if (strcmp(cmd, mUserCommands[i].mName) == 0)
-        {
-            mUserCommands[i].mCommand(argc, argv);
-            break;
-        }
-    }
-
-    // Error prompt for unsupported commands
+    // Check user defined commands if built-in command
+    // has not been found
     if (i == sizeof(sCommands) / sizeof(sCommands[0]))
     {
-        AppendResult(OT_ERROR_PARSE);
+        for (i = 0; i < mUserCommandsLength; i++)
+        {
+            if (strcmp(cmd, mUserCommands[i].mName) == 0)
+            {
+                mUserCommands[i].mCommand(argc, argv);
+                break;
+            }
+        }
+
+        if (i == mUserCommandsLength)
+        {
+            AppendResult(OT_ERROR_PARSE);
+        }
     }
 
 exit:

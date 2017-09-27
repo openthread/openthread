@@ -93,7 +93,6 @@ extern "C" void otCliUartAppendResult(otError aError)
     Uart::sUartServer->GetInterpreter().AppendResult(aError);
 }
 
-
 Uart::Uart(otInstance *aInstance):
     mInterpreter(aInstance)
 {
