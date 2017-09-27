@@ -162,7 +162,7 @@ public:
      * Write a number of bytes to the CLI console as a hex string.
      *
      * @param[in]  aBytes   A pointer to data which should be printed.
-     * @param[in]  aLength  aBytes length.
+     * @param[in]  aLength  @p aBytes length.
      */
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
 
@@ -170,7 +170,7 @@ public:
      * Set a user command table.
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.
-     * @param[in]  aLength        aUserCommands length.
+     * @param[in]  aLength        @p aUserCommands length.
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
 

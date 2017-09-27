@@ -107,7 +107,7 @@ void otCliUartInit(otInstance *aInstance);
  * Set a user command table.
  *
  * @param[in]  aUserCommands  A pointer to an array with user commands.
- * @param[in]  aLength        aUserCommands length.
+ * @param[in]  aLength        @p aUserCommands length.
  */
 void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
 
@@ -115,7 +115,7 @@ void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength
  * Write a number of bytes to the CLI console as a hex string.
  *
  * @param[in]  aBytes   A pointer to data which should be printed.
- * @param[in]  aLength  aBytes length.
+ * @param[in]  aLength  @p aBytes length.
  */
 void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
