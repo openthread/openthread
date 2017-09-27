@@ -71,6 +71,7 @@ void NcpFrameBuffer::Clear(void)
     mWriteFrameTag = kInvalidTag;
 
     // Read (OutFrame) related variables
+    mReadDirection = kForward;
     mReadState = kReadStateNotActive;
     mReadFrameLength = kUnknownFrameLength;
 
