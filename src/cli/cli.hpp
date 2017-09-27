@@ -41,6 +41,7 @@
 #include <openthread/openthread.h>
 #include <openthread/ip6.h>
 #include <openthread/udp.h>
+#include <openthread/cli.h>
 
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
@@ -150,6 +151,29 @@ public:
      */
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
 
+    /**
+     * Write error code the CLI console
+     *
+     * @param[in]  aError Error code value.
+     */
+    void AppendResult(otError error) const;
+
+    /**
+     * Write a number of bytes to the CLI console as a hex string.
+     *
+     * @param[in]  aBytes   A pointer to data which should be printed.
+     * @param[in]  aLength  @p aBytes length.
+     */
+    void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
+
+    /**
+     * Set a user command table.
+     *
+     * @param[in]  aUserCommands  A pointer to an array with user commands.
+     * @param[in]  aLength        @p aUserCommands length.
+     */
+    void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
+
 private:
     enum
     {
@@ -158,8 +182,6 @@ private:
         kDefaultJoinerTimeout = 120,    ///< Default timeout for Joiners, in seconds.
     };
 
-    void AppendResult(otError error) const;
-    void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
 
     void ProcessHelp(int argc, char *argv[]);
     void ProcessAutoStart(int argc, char *argv[]);
@@ -354,6 +376,8 @@ private:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
     static const struct Command sCommands[];
+    const otCliCommand *mUserCommands;
+    uint8_t mUserCommandsLength;
 
     Server *mServer;
 
