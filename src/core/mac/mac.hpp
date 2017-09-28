@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    void HandleReceivedFrame(Frame &frame) { mReceiveFrameHandler(*this, frame); }
+    void HandleReceivedFrame(Frame &aFrame) { mReceiveFrameHandler(*this, aFrame); }
 
     void HandleDataPollTimeout(void) {
         if (mPollTimeoutHandler != NULL) {
@@ -198,8 +198,8 @@ public:
     }
 
 private:
-    otError HandleFrameRequest(Frame &frame) { return mFrameRequestHandler(*this, frame); }
-    void HandleSentFrame(Frame &frame, otError error) { mSentFrameHandler(*this, frame, error); }
+    otError HandleFrameRequest(Frame &aFrame) { return mFrameRequestHandler(*this, aFrame); }
+    void HandleSentFrame(Frame &aFrame, otError aError) { mSentFrameHandler(*this, aFrame, aError); }
 
     FrameRequestHandler mFrameRequestHandler;
     SentFrameHandler mSentFrameHandler;

@@ -209,8 +209,8 @@ public:
     }
 
 private:
-    void HandleReceiveMessage(Message &message, const MessageInfo &messageInfo, const IcmpHeader &icmp6Header) {
-        mReceiveCallback(mContext, &message, &messageInfo, &icmp6Header);
+    void HandleReceiveMessage(Message &aMessage, const MessageInfo &aMessageInfo, const IcmpHeader &aIcmp6Header) {
+        mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
     }
 
     IcmpHandler *GetNext(void) { return static_cast<IcmpHandler *>(mNext); }
