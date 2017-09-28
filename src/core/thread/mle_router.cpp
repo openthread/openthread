@@ -1905,6 +1905,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             timeout = TimerMilli::SecToMsec(mChildren[i].GetTimeout());
             break;
 
+        case Neighbor::kStateParentResponse:
         case Neighbor::kStateLinkRequest:
             assert(false);
             break;
@@ -4162,6 +4163,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
             SendChildIdResponse(mChildren[i]);
             break;
 
+        case Neighbor::kStateParentResponse:
         case Neighbor::kStateLinkRequest:
             assert(false);
             break;

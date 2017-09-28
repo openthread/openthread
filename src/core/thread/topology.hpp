@@ -62,6 +62,7 @@ public:
         kStateInvalid,                   ///< Neighbor link is invalid
         kStateRestored,                  ///< Neighbor is restored from non-volatile memory
         kStateParentRequest,             ///< Received an MLE Parent Request message
+        kStateParentResponse,            ///< Received an MLE Parent Response message
         kStateChildIdRequest,            ///< Received an MLE Child ID Request message
         kStateLinkRequest,               ///< Sent an MLE Link Request message
         kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message (trying to restore the child)
