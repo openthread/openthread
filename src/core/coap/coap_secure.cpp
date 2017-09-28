@@ -170,6 +170,7 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
+        mPeerAddress.SetInterfaceId(aMessageInfo.GetInterfaceId());
 
         if (netif.IsUnicastAddress(aMessageInfo.GetSockAddr()))
         {
@@ -178,7 +179,8 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 
         mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
-        netif.GetDtls().Start(false, HandleDtlsConnected, HandleDtlsReceive, HandleDtlsSend, this);
+        netif.GetDtls().Start(false, &CoapSecure::HandleDtlsConnected,
+                              &CoapSecure::HandleDtlsReceive, CoapSecure::HandleDtlsSend, this);
     }
     else
     {
