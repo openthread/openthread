@@ -1,8 +1,22 @@
-diff --git a/third_party/mbedtls/repo/library/ssl_tls.c b/third_party/mbedtls/repo/library/ssl_tls.c
-index 84a04ae..72e4684 100644
---- a/third_party/mbedtls/repo/library/ssl_tls.c
-+++ b/third_party/mbedtls/repo/library/ssl_tls.c
-@@ -3070,6 +3070,23 @@ static int ssl_reassemble_dtls_handshake( mbedtls_ssl_context *ssl )
+diff --git a/third_party/mbedtls/repo.patched/library/ssl_tls.c b/third_party/mbedtls/repo.patched/library/ssl_tls.c
+index 84a04ae..b983646 100644
+--- a/third_party/mbedtls/repo.patched/library/ssl_tls.c
++++ b/third_party/mbedtls/repo.patched/library/ssl_tls.c
+@@ -53,6 +53,13 @@
+ #include "mbedtls/oid.h"
+ #endif
+ 
++#ifndef MBEDTLS_SLOW_CPU
++#define MBEDTLS_SLOW_CPU 0
++#endif //ndef MBEDTLS_SLOW_CPU
++#ifndef MBEDTLS_COMPUTATION_UNTILL_SEQ_NR
++#define MBEDTLS_COMPUTATION_UNTILL_SEQ_NR 6
++#endif //ndef MBEDTLS_COMPUTATION_UNTILL_SEQ_NR
++
+ /* Implementation that should never be optimized out by the compiler */
+ static void mbedtls_zeroize( void *v, size_t n ) {
+     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
+@@ -3070,6 +3077,16 @@ static int ssl_reassemble_dtls_handshake( mbedtls_ssl_context *ssl )
  }
  #endif /* MBEDTLS_SSL_PROTO_DTLS */
  
@@ -16,17 +30,10 @@ index 84a04ae..72e4684 100644
 +            ( (uint64_t) buf[5]       ) );
 +}
 +
-+#ifndef OT_DTLS_SLOW_CPU
-+#define OT_DTLS_SLOW_CPU 1
-+#endif //ndef OT_DTLS_SLOW_CPU
-+#ifndef OT_DTLS_COMPUTATION_UNTILL_SEQ_NR
-+#define OT_DTLS_COMPUTATION_UNTILL_SEQ_NR 6
-+#endif //ndef OT_DTLS_COMPUTATION_UNTILL_SEQ_NR
-+
  int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context *ssl )
  {
      if( ssl->in_msglen < mbedtls_ssl_hs_hdr_len( ssl ) )
-@@ -3101,8 +3118,22 @@ int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context *ssl )
+@@ -3101,8 +3118,19 @@ int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context *ssl )
              /* Retransmit only on last message from previous flight, to avoid
               * too many retransmissions.
               * Besides, No sane server ever retransmits HelloVerifyRequest */
@@ -36,30 +43,19 @@ index 84a04ae..72e4684 100644
 +            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dtls seq %d", (uint32_t) (rec_seqnum&0xFFFFFFFF)));
 +            if( (recv_msg_seq == ssl->handshake->in_flight_start_seq - 1) 
 +                && (ssl->in_msg[0] != MBEDTLS_SSL_HS_HELLO_VERIFY_REQUEST) 
-+#if OT_DTLS_SLOW_CPU == 1
++#if MBEDTLS_SLOW_CPU == 1
 +                /* if the crypto calculations take longer then the timeout
 +                 * then don't reply to retransmissions that are currently in the rx queue.
 +                 * Since the calculation time is deterministic, we know how many messages
 +                 * from the queue need to be skipped; i.e. -> we don't trigger
 +                 * retransmits on them */
-+                && (ssl->in_msg[0] != MBEDTLS_SSL_HS_SERVER_HELLO)
-+                && (ssl->in_msg[0] != MBEDTLS_SSL_HS_SERVER_KEY_EXCHANGE)
-+                && (ssl->in_msg[0] != MBEDTLS_SSL_HS_SERVER_HELLO_DONE)
-+                && (rec_seqnum     >  OT_DTLS_COMPUTATION_UNTILL_SEQ_NR)
++                && (rec_seqnum     >  MBEDTLS_COMPUTATION_UNTILL_SEQ_NR)
 +#endif
 +                )
              {
                  MBEDTLS_SSL_DEBUG_MSG( 2, ( "received message from last flight, "
                                      "message_seq = %d, start_of_flight = %d",
-@@ -3122,7 +3153,6 @@ int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context *ssl )
-                                     recv_msg_seq,
-                                     ssl->handshake->in_msg_seq ) );
-             }
--
-             return( MBEDTLS_ERR_SSL_WANT_READ );
-         }
-         /* Wait until message completion to increment in_msg_seq */
-@@ -3191,16 +3221,6 @@ static void ssl_dtls_replay_reset( mbedtls_ssl_context *ssl )
+@@ -3191,16 +3219,6 @@ static void ssl_dtls_replay_reset( mbedtls_ssl_context *ssl )
      ssl->in_window = 0;
  }
  
@@ -76,7 +72,7 @@ index 84a04ae..72e4684 100644
  /*
   * Return 0 if sequence number is acceptable, -1 otherwise
   */
-@@ -3608,6 +3628,24 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
+@@ -3608,6 +3626,24 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
                                          "expected %d, received %d",
                                          ssl->in_epoch, rec_epoch ) );
  
@@ -101,7 +97,7 @@ index 84a04ae..72e4684 100644
  #if defined(MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE) && defined(MBEDTLS_SSL_SRV_C)
              /*
               * Check for an epoch 0 ClientHello. We can't use in_msg here to
-@@ -3737,7 +3775,8 @@ int mbedtls_ssl_read_record( mbedtls_ssl_context *ssl )
+@@ -3737,7 +3773,8 @@ int mbedtls_ssl_read_record( mbedtls_ssl_context *ssl )
  
          ret = mbedtls_ssl_handle_message_type( ssl );
  
