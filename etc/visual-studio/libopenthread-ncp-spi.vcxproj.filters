@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\src\ncp\spinel.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\ncp\spinel_encoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\ncp\ncp_spi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -54,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ncp\spinel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ncp\spinel_encoder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
