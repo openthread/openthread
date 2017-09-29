@@ -37,6 +37,8 @@
 #include <openthread/platform/radio.h>
 #include <openthread/types.h>
 
+#include "openthread-core-config.h"
+
 namespace ot {
 
 /**
@@ -302,10 +304,10 @@ private:
     {
         // Constants for obtaining link quality from link margin:
 
-        kThreshold3             = 20,   // Link margin threshold for quality 3 link.
-        kThreshold2             = 10,   // Link margin threshold for quality 2 link.
-        kThreshold1             = 2,    // Link margin threshold for quality 1 link.
-        kHysteresisThreshold    = 2,    // Link margin hysteresis threshold.
+        kThreshold3          = OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_3,   // Threshold for quality 3 link.
+        kThreshold2          = OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_2,   // Threshold for quality 2 link.
+        kThreshold1          = OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_1,   // Threshold for quality 1 link.
+        kHysteresisThreshold = OPENTHREAD_CONFIG_LINK_MARGIN_HYSTERESIS_THRESHOLD,
 
         // constants for test:
 
