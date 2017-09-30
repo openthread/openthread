@@ -237,7 +237,7 @@ exit:
     return error;
 }
 
-otError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress)
+otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error;
 

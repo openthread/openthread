@@ -67,6 +67,7 @@
     <ClCompile Include="..\..\src\ncp\ncp_buffer.cpp" />
     <ClCompile Include="..\..\src\ncp\ncp_uart.cpp" />
     <ClCompile Include="..\..\src\ncp\spinel.c" />
+    <ClCompile Include="..\..\src\ncp\spinel_decoder.cpp" />
     <ClCompile Include="..\..\src\ncp\spinel_encoder.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +77,7 @@
     <ClInclude Include="..\..\src\ncp\ncp_buffer.hpp" />
     <ClInclude Include="..\..\src\ncp\ncp_uart.hpp" />
     <ClInclude Include="..\..\src\ncp\spinel.h" />
+    <ClInclude Include="..\..\src\ncp\spinel_decoder.hpp" />
     <ClInclude Include="..\..\src\ncp\spinel_encoder.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
