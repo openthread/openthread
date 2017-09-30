@@ -164,12 +164,12 @@ otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
     return OT_ERROR_NONE;
 }
 
-otError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Address &destination, uint8_t *prefixMatch)
+otError ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch)
 {
     otError error;
     uint16_t rloc;
 
-    SuccessOrExit(error = mNetworkDataLeader.RouteLookup(source, destination, prefixMatch, &rloc));
+    SuccessOrExit(error = mNetworkDataLeader.RouteLookup(aSource, aDestination, aPrefixMatch, &rloc));
 
     if (rloc == mMleRouter.GetRloc16())
     {

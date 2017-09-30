@@ -232,7 +232,7 @@ protected:
 private:
     otError RemoveCommissioningData(void);
 
-    otError ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &destination,
+    otError ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination,
                                 uint8_t *aPrefixMatch, uint16_t *aRloc16);
     otError DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16);
 };

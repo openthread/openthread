@@ -314,7 +314,7 @@
 /**
  * @def OPENTHREAD_CONFIG_JOINER_UDP_PORT
  *
- * The MPL cache entry lifetime in seconds.
+ * The default Joiner UDP port.
  *
  */
 #ifndef OPENTHREAD_CONFIG_JOINER_UDP_PORT

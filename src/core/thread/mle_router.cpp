@@ -1975,7 +1975,7 @@ exit:
     return;
 }
 
-otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challenge, bool aRoutersOnlyRequest)
+otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest)
 {
     otError error = OT_ERROR_NONE;
     Ip6::Address destination;
@@ -1990,7 +1990,7 @@ otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challen
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
     SuccessOrExit(error = AppendMleFrameCounter(*message));
-    SuccessOrExit(error = AppendResponse(*message, challenge.GetChallenge(), challenge.GetLength()));
+    SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetLength()));
 
     aChild->GenerateChallenge();
 
@@ -3138,16 +3138,16 @@ Child *MleRouter::GetChild(const Mac::Address &aAddress)
     return NULL;
 }
 
-uint8_t MleRouter::GetChildIndex(const Child &child)
+uint8_t MleRouter::GetChildIndex(const Child &aChild)
 {
-    return static_cast<uint8_t>(&child - mChildren);
+    return static_cast<uint8_t>(&aChild - mChildren);
 }
 
-Child *MleRouter::GetChildren(uint8_t *numChildren)
+Child *MleRouter::GetChildren(uint8_t *aNumChildren)
 {
-    if (numChildren != NULL)
+    if (aNumChildren != NULL)
     {
-        *numChildren = mMaxChildrenAllowed;
+        *aNumChildren = mMaxChildrenAllowed;
     }
 
     return mChildren;
@@ -4514,15 +4514,15 @@ exit:
     return error;
 }
 
-void MleRouter::FillRouteTlv(RouteTlv &tlv)
+void MleRouter::FillRouteTlv(RouteTlv &aTlv)
 {
 
     uint8_t routeCount = 0;
     uint8_t linkCost;
     uint8_t cost;
 
-    tlv.SetRouterIdSequence(mRouterIdSequence);
-    tlv.ClearRouterIdMask();
+    aTlv.SetRouterIdSequence(mRouterIdSequence);
+    aTlv.ClearRouterIdMask();
 
     for (uint8_t i = 0; i <= kMaxRouterId; i++)
     {
@@ -4531,13 +4531,13 @@ void MleRouter::FillRouteTlv(RouteTlv &tlv)
             continue;
         }
 
-        tlv.SetRouterId(i);
+        aTlv.SetRouterId(i);
 
         if (i == mRouterId)
         {
-            tlv.SetLinkQualityIn(routeCount, 0);
-            tlv.SetLinkQualityOut(routeCount, 0);
-            tlv.SetRouteCost(routeCount, 1);
+            aTlv.SetLinkQualityIn(routeCount, 0);
+            aTlv.SetLinkQualityOut(routeCount, 0);
+            aTlv.SetRouteCost(routeCount, 1);
         }
         else
         {
@@ -4562,15 +4562,15 @@ void MleRouter::FillRouteTlv(RouteTlv &tlv)
                 cost = 0;
             }
 
-            tlv.SetRouteCost(routeCount, cost);
-            tlv.SetLinkQualityOut(routeCount, mRouters[i].GetLinkQualityOut());
-            tlv.SetLinkQualityIn(routeCount, mRouters[i].GetLinkInfo().GetLinkQuality());
+            aTlv.SetRouteCost(routeCount, cost);
+            aTlv.SetLinkQualityOut(routeCount, mRouters[i].GetLinkQualityOut());
+            aTlv.SetLinkQualityIn(routeCount, mRouters[i].GetLinkInfo().GetLinkQuality());
         }
 
         routeCount++;
     }
 
-    tlv.SetRouteDataLength(routeCount);
+    aTlv.SetRouteDataLength(routeCount);
 }
 
 otError MleRouter::AppendRoute(Message &aMessage)
