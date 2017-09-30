@@ -68,8 +68,8 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mSendHandler(NULL),
     mContext(NULL),
     mClient(false),
-    mMessageSubType(0),
-    mMessageDefaultSubType(0)
+    mMessageSubType(Message::kSubTypeNone),
+    mMessageDefaultSubType(Message::kSubTypeNone)
 {
     memset(mPsk, 0, sizeof(mPsk));
     memset(&mEntropy, 0, sizeof(mEntropy));
@@ -93,7 +93,7 @@ otError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHan
     mContext = aContext;
     mClient = aClient;
     mReceiveMessage = NULL;
-    mMessageSubType = 0;
+    mMessageSubType = Message::kSubTypeNone;
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
