@@ -193,11 +193,11 @@ private:
     };
 
     int CompressExtensionHeader(Message &aMessage, uint8_t *aBuf, uint8_t &aNextHeader);
-    int CompressSourceIid(const Mac::Address &aMacaddr, const Ip6::Address &ipaddr, const Context &aContext,
+    int CompressSourceIid(const Mac::Address &aMacAddr, const Ip6::Address &aIpAddr, const Context &aContext,
                           uint16_t &aHcCtl, uint8_t *aBuf);
-    int CompressDestinationIid(const Mac::Address &aMacaddr, const Ip6::Address &aIpaddr, const Context &aContext,
-                               uint16_t &hcCtl, uint8_t *aBuf);
-    int CompressMulticast(const Ip6::Address &aIpaddr, uint16_t &aHcCtl, uint8_t *aBuf);
+    int CompressDestinationIid(const Mac::Address &aMacAddr, const Ip6::Address &aIpAddr, const Context &aContext,
+                               uint16_t &aHcCtl, uint8_t *aBuf);
+    int CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uint8_t *aBuf);
     int CompressUdp(Message &aMessage, uint8_t *aBuf);
 
     int DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
