@@ -31,32 +31,38 @@ import os
 import sys
 import time
 import pexpect
+import re
+
+import config
 
 class otCli:
-    def __init__(self, nodeid):
+    def __init__(self, nodeid, is_mtd):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
 
+        mode = os.environ.get('USE_MTD') is '1' and is_mtd and 'mtd' or 'ftd'
+
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
         elif self.node_type == 'ncp-sim':
-            self.__init_ncp_sim(nodeid)
+            # TODO use mode after ncp-mtd is available.
+            self.__init_ncp_sim(nodeid, 'ftd')
         else:
-            self.__init_sim(nodeid)
+            self.__init_sim(nodeid, mode)
 
         if self.verbose:
             self.pexpect.logfile_read = sys.stdout
 
-    def __init_sim(self, nodeid):
+    def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
         if "OT_CLI_PATH" in os.environ.keys():
             cmd = os.environ['OT_CLI_PATH']
         elif "top_builddir" in os.environ.keys():
             srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/cli/ot-cli-ftd' % srcdir
+            cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         else:
-            cmd = './ot-cli-ftd'
+            cmd = './ot-cli-%s' % mode
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
@@ -66,13 +72,13 @@ class otCli:
         time.sleep(0.2)
 
 
-    def __init_ncp_sim(self, nodeid):
+    def __init_ncp_sim(self, nodeid, mode):
         """ Initialize an NCP simulation node. """
         if "top_builddir" in os.environ.keys():
             builddir = os.environ['top_builddir']
-            cmd = 'spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-ftd -n' % (builddir)
+            cmd = 'spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-%s -n' % (builddir, mode)
         else:
-            cmd = './ot-ncp-ftd'
+            cmd = './ot-ncp-%s' % mode
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
@@ -80,7 +86,7 @@ class otCli:
         time.sleep(0.2)
         self.pexpect.expect('spinel-cli >')
         self.debug(int(os.getenv('DEBUG', '0')))
- 
+
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
         import fdpexpect
@@ -95,7 +101,7 @@ class otCli:
             self.pexpect.close(force=True)
 
     def send_command(self, cmd):
-        print ("%d: %s" % (self.nodeid, cmd))
+        print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.sendline(cmd)
 
     def get_commands(self):
@@ -133,7 +139,7 @@ class otCli:
     def thread_stop(self):
         self.send_command('thread stop')
         self.pexpect.expect('Done')
-            
+
     def commissioner_start(self):
         cmd = 'commissioner start'
         self.send_command(cmd)
@@ -368,6 +374,67 @@ class otCli:
                 break
 
         return addrs
+
+    def __getLinkLocalAddress(self):
+        for ip6Addr in self.get_addrs():
+            if re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I):
+                return ip6Addr
+
+        return None
+
+    def __getGlobalAddress(self):
+        global_address = []
+        for ip6Addr in self.get_addrs():
+            if (not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I)) and \
+                    (not re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)) and \
+                    (not re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)):
+                global_address.append(ip6Addr)
+
+        return global_address
+
+    def __getRloc(self):
+        for ip6Addr in self.get_addrs():
+            if re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and \
+                    re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I) and \
+                    not(re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)):
+                return ip6Addr
+        return None
+
+    def __getAloc(self):
+        aloc = []
+        for ip6Addr in self.get_addrs():
+            if re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and \
+                    re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I) and \
+                    re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I):
+                aloc.append(ip6Addr)
+
+        return aloc
+
+    def __getMleid(self):
+        for ip6Addr in self.get_addrs():
+            if re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and \
+                    not(re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)):
+                return ip6Addr
+
+        return None
+
+    def get_ip6_address(self, address_type):
+        """Get specific type of IPv6 address configured on thread device.
+
+        Args:
+            address_type: the config.ADDRESS_TYPE type of IPv6 address.
+
+        Returns:
+            IPv6 address string.
+        """
+        switcher = {
+                config.ADDRESS_TYPE.LINK_LOCAL: self.__getLinkLocalAddress(),
+                config.ADDRESS_TYPE.GLOBAL: self.__getGlobalAddress(),
+                config.ADDRESS_TYPE.RLOC: self.__getRloc(),
+                config.ADDRESS_TYPE.ALOC: self.__getAloc(),
+                config.ADDRESS_TYPE.ML_EID: self.__getMleid()
+                }
+        return switcher.get(address_type, None)
 
     def get_context_reuse_delay(self):
         self.send_command('contextreusedelay')

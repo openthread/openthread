@@ -146,7 +146,7 @@ void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled);
 /**
  * This function registers a handler to provide received ICMPv6 messages.
  *
- * @note A handler structure @p aHandler has to be stored in persistant (static) memory.
+ * @note A handler structure @p aHandler has to be stored in persistent (static) memory.
  *       OpenThread does not make a copy of handler structure.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

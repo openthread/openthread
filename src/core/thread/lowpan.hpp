@@ -192,17 +192,17 @@ private:
         kUdpPortMask        = 3 << 0,
     };
 
-    int CompressExtensionHeader(Message &message, uint8_t *aBuf, uint8_t &nextHeader);
-    int CompressSourceIid(const Mac::Address &macaddr, const Ip6::Address &ipaddr, const Context &aContext,
-                          uint16_t &hcCtl, uint8_t *aBuf);
-    int CompressDestinationIid(const Mac::Address &macaddr, const Ip6::Address &ipaddr, const Context &aContext,
-                               uint16_t &hcCtl, uint8_t *aBuf);
-    int CompressMulticast(const Ip6::Address &ipaddr, uint16_t &hcCtl, uint8_t *aBuf);
-    int CompressUdp(Message &message, uint8_t *aBuf);
+    int CompressExtensionHeader(Message &aMessage, uint8_t *aBuf, uint8_t &aNextHeader);
+    int CompressSourceIid(const Mac::Address &aMacAddr, const Ip6::Address &aIpAddr, const Context &aContext,
+                          uint16_t &aHcCtl, uint8_t *aBuf);
+    int CompressDestinationIid(const Mac::Address &aMacAddr, const Ip6::Address &aIpAddr, const Context &aContext,
+                               uint16_t &aHcCtl, uint8_t *aBuf);
+    int CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uint8_t *aBuf);
+    int CompressUdp(Message &aMessage, uint8_t *aBuf);
 
-    int DecompressExtensionHeader(Message &message, const uint8_t *aBuf, uint16_t aBufLength);
-    int DecompressUdpHeader(Message &message, const uint8_t *aBuf, uint16_t aBufLength, uint16_t datagramLength);
-    otError DispatchToNextHeader(uint8_t dispatch, Ip6::IpProto &nextHeader);
+    int DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
+    int DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
+    otError DispatchToNextHeader(uint8_t aDispatch, Ip6::IpProto &aNextHeader);
 
     static otError CopyContext(const Context &aContext, Ip6::Address &aAddress);
     static otError ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);

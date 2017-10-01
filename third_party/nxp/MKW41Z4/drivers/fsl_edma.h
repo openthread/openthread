@@ -706,7 +706,7 @@ static inline void EDMA_TriggerChannelStart(DMA_Type *base, uint32_t channel)
  * @brief Gets the remaining major loop count from the eDMA current channel TCD.
  *
  * This function checks the TCD (Task Control Descriptor) status for a specified
- * eDMA channel and returns the the number of major loop count that has not finished.
+ * eDMA channel and returns the number of major loop count that has not finished.
  *
  * @param base eDMA peripheral base address.
  * @param channel eDMA channel number.

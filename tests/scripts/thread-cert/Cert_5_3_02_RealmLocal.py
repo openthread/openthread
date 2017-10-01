@@ -41,7 +41,7 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,5):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i == SED1))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

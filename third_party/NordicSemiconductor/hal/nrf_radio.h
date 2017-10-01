@@ -594,6 +594,16 @@ __STATIC_INLINE void nrf_radio_ifs_set(uint32_t radio_ifs)
 }
 
 /**
+ * @brief Function for getting Inter Frame Spacing
+ *
+ * @return Current Inter Frame Spacing
+ */
+__STATIC_INLINE uint32_t nrf_radio_ifs_get(void)
+{
+    return NRF_RADIO->TIFS & RADIO_TIFS_TIFS_Msk;
+}
+
+/**
  * @brief Function for setting Bit counter compare.
  *
  * @param[in]  radio_bcc                    Bit counter compare [bits].

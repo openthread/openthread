@@ -36,10 +36,8 @@
 #include <openthread/platform/debug_uart.h>
 
 /*
- * Implimentation note:
- *   These are all "weak" so that
- *   a platform may if it chooses
- *   override the instance.
+ * Implementation note:
+ *   These are all "weak" so that a platform may if it chooses  override the instance.
  */
 
 OT_TOOL_WEAK
@@ -105,7 +103,7 @@ void otPlatDebugUart_putchar(int c)
 }
 
 
-/* provide WEAK stubs for platforms that do not impliment all functions */
+/* provide WEAK stubs for platforms that do not implement all functions */
 OT_TOOL_WEAK
 void otPlatDebugUart_putchar_raw(int c)
 {

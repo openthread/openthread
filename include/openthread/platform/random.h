@@ -56,7 +56,7 @@ extern "C" {
 /**
  * Get a 32-bit random value.
  *
- * This function may be implemented using a psuedo-random number generator.
+ * This function may be implemented using a pseudo-random number generator.
  *
  * @returns A 32-bit random value.
  *

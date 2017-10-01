@@ -40,7 +40,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1, 13):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i >= 3))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

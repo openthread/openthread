@@ -48,7 +48,7 @@ namespace Ip6 {
 void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval)
 {
     // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = otPlatRandomGet() % aInterval;
+    uint8_t t = aInterval == 0 ? aInterval : otPlatRandomGet() % aInterval;
 
     // Set transmission time at the beginning of the next interval.
     SetTransmissionTime(aCurrentTime + GetIntervalOffset() + t);
@@ -171,6 +171,14 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     uint32_t nextTransmissionTime;
     uint8_t hopLimit = 0;
 
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
+    // adjust the first MPL forward interval dynamically according to the network scale
+    uint8_t interval = (kDataMessageInterval / Mle::kMaxRouters) *
+                       GetInstance().mThreadNetif.GetMle().GetActiveNeighborRouterCount();
+#else
+    uint8_t interval = kDataMessageInterval;
+#endif
+
     VerifyOrExit(GetTimerExpirations() > 0);
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -184,7 +192,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     messageMetadata.SetSeedId(aSeedId);
     messageMetadata.SetSequence(aSequence);
     messageMetadata.SetTransmissionCount(aIsOutbound ? 1 : 0);
-    messageMetadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
+    messageMetadata.GenerateNextTransmissionTime(now, interval);
 
     // Append the message with MplBufferedMessageMetadata and add it to the queue.
     SuccessOrExit(error = messageMetadata.AppendTo(*messageCopy));

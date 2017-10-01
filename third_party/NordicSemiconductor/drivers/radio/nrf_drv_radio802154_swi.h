@@ -34,6 +34,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "nrf_drv_radio802154.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,6 +62,13 @@ void nrf_drv_radio802154_swi_init(void);
 void nrf_drv_radio802154_swi_notify_received(uint8_t * p_data, int8_t power, int8_t lqi);
 
 /**
+ * @brief Notify next higher layer that reception of a frame failed.
+ *
+ * @param[in]  error  An error code that indicates reason of the failure.
+ */
+void nrf_drv_radio802154_swi_notify_receive_failed(nrf_drv_radio802154_rx_error_t error);
+
+/**
  * @brief Notify next higher layer that a frame was transmitted from SWI priority level.
  *
  * @param[in]  p_ack  Pointer to buffer containing PSDU of ACK frame. NULL if ACK was not requested.
@@ -70,8 +79,10 @@ void nrf_drv_radio802154_swi_notify_transmitted(uint8_t * p_data, int8_t power, 
 
 /**
  * @brief Notify next higher layer that a frame was not transmitted from SWI priority level.
+ *
+ * @param[in]  error  Reason of the transmission failure.
  */
-void nrf_drv_radio802154_swi_notify_busy_channel(void);
+void nrf_drv_radio802154_swi_notify_transmit_failed(nrf_drv_radio802154_tx_error_t error);
 
 /**
  * @brief Notify next higher layer that energy detection procedure ended from SWI priority level.

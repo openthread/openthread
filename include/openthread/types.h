@@ -35,8 +35,6 @@
 #ifndef OPENTHREAD_TYPES_H_
 #define OPENTHREAD_TYPES_H_
 
-#include <openthread/config.h>
-
 #include <stdint.h>
 #include <stdbool.h>
 #ifdef OTDLL
@@ -655,7 +653,7 @@ typedef struct otLinkModeConfig
     bool mRxOnWhenIdle : 1;
 
     /**
-     * 1, if the sender will use IEEE 802.15.4 to secure all data requests.  0, otherwise.
+     * 1, if the sender uses IEEE 802.15.4 to secure all data requests.  0, otherwise.
      */
     bool mSecureDataRequests : 1;
 
@@ -703,9 +701,9 @@ typedef struct otIp6Prefix
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
 
-#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializer for otNetworkDataIterator.
+#define OT_NETWORK_DATA_ITERATOR_INIT  0    ///< Initializer for otNetworkDataIterator.
 
-typedef uint16_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
+typedef uint32_t otNetworkDataIterator;     ///< Used to iterate through Network Data information.
 
 /**
  * This structure represents a Border Router configuration.
@@ -776,7 +774,7 @@ typedef struct otExternalRouteConfig
     /**
      * The Rloc associated with the external route entry.
      *
-     * This value is ignored when adding an external route. For any added route the device's Rloc will be used.
+     * This value is ignored when adding an external route. For any added route, the device's Rloc is used.
      */
     uint16_t mRloc16;
 
@@ -1108,9 +1106,8 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
 /**
  * Log levels.
  *
- * Implimentation note: Log Levels are defines so that embedded
- * implimentations can elimiate code at compile time via if/else/endif
- * See openthread/platform/logging.h for details.
+ * Implementation note: Log Levels are defines so that embedded implementations can eliminate code at compile time via
+ * #if/#else/#endif. See `openthread/platform/logging.h` for details.
  *
  * @sa OT_LOG_LEVEL_NONE and related macros.
  */
@@ -1135,7 +1132,7 @@ typedef enum otLogRegion
     OT_LOG_REGION_NET_DIAG = 11, ///< Network Diagnostic
     OT_LOG_REGION_PLATFORM = 12, ///< Platform
     OT_LOG_REGION_COAP     = 13, ///< CoAP
-    OT_LOG_REGION_CLI      = 14, ///< Cli
+    OT_LOG_REGION_CLI      = 14, ///< CLI
 } otLogRegion;
 
 

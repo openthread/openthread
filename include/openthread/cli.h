@@ -44,6 +44,16 @@ extern "C" {
 #endif
 
 /**
+ * This structure represents a CLI command.
+ *
+ */
+typedef struct otCliCommand
+{
+    const char *mName;                         ///< A pointer to the command string.
+    void (*mCommand)(int argc, char *argv[]);  ///< A function pointer to process the command.
+} otCliCommand;
+
+/**
  * @addtogroup api-cli
  *
  * @brief
@@ -92,6 +102,37 @@ void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
  *
  */
 void otCliUartInit(otInstance *aInstance);
+
+/**
+ * Set a user command table.
+ *
+ * @param[in]  aUserCommands  A pointer to an array with user commands.
+ * @param[in]  aLength        @p aUserCommands length.
+ */
+void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
+
+/**
+ * Write a number of bytes to the CLI console as a hex string.
+ *
+ * @param[in]  aBytes   A pointer to data which should be printed.
+ * @param[in]  aLength  @p aBytes length.
+ */
+void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength);
+
+/**
+ * Write formatted string the CLI console
+ *
+ * @param[in]  aFmt   A pointer to the format string.
+ * @param[in]  ...    A matching list of arguments.
+ */
+void otCliUartOutputFormat(const char *aFmt, ...);
+
+/**
+ * Write error code the CLI console
+ *
+ * @param[in]  aError Error code value.
+ */
+void otCliUartAppendResult(otError aError);
 
 /**
  * Callback to write the OpenThread Log to the CLI console

@@ -246,6 +246,8 @@ Interpreter::Interpreter(otInstance *aInstance):
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     mCoap(*this),
 #endif
+    mUserCommands(NULL),
+    mUserCommandsLength(0),
     mServer(NULL),
 #ifdef OTDLL
     mApiInstance(otApiInit()),
@@ -376,6 +378,11 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         mServer->OutputFormat("%s\r\n", sCommands[i].mName);
+    }
+
+    for (unsigned int i = 0; i < mUserCommandsLength; i++)
+    {
+        mServer->OutputFormat("%s\r\n", mUserCommands[i].mName);
     }
 
     OT_UNUSED_VARIABLE(argc);
@@ -2949,11 +2956,6 @@ void Interpreter::ProcessMacFilter(int argc, char *argv[])
         }
     }
 
-    if (error != OT_ERROR_NONE)
-    {
-        otThreadErrorToString(error);
-    }
-
     AppendResult(error);
 }
 
@@ -3298,10 +3300,23 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         }
     }
 
-    // Error prompt for unsupported commands
+    // Check user defined commands if built-in command
+    // has not been found
     if (i == sizeof(sCommands) / sizeof(sCommands[0]))
     {
-        AppendResult(OT_ERROR_PARSE);
+        for (i = 0; i < mUserCommandsLength; i++)
+        {
+            if (strcmp(cmd, mUserCommands[i].mName) == 0)
+            {
+                mUserCommands[i].mCommand(argc, argv);
+                break;
+            }
+        }
+
+        if (i == mUserCommandsLength)
+        {
+            AppendResult(OT_ERROR_PARSE);
+        }
     }
 
 exit:
@@ -3414,6 +3429,12 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
     mServer->OutputFormat("\r\n");
 }
 #endif
+
+void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
+{
+    mUserCommands = aCommands;
+    mUserCommandsLength = aLength;
+}
 
 Interpreter &Interpreter::GetOwner(const Context &aContext)
 {

@@ -175,6 +175,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
         OT_ERROR_NONE)
     {
+        VerifyOrExit(networkData.IsValid());
         RegisterNetworkData(HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]),
                             networkData.GetTlvs(), networkData.GetLength());
     }
@@ -198,24 +199,33 @@ void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMes
 void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t offset = aMessage.GetOffset();
-    uint8_t length = static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset());
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
     uint8_t tlvs[NetworkData::kMaxSize];
-    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kAccept;
+    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kReject;
     bool hasSessionId = false;
     bool hasValidTlv = false;
     uint16_t sessionId = 0;
 
-    VerifyOrExit(GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER, state = MeshCoP::StateTlv::kReject);
+    MeshCoP::Tlv *cur;
+    MeshCoP::Tlv *end;
+
+    VerifyOrExit(length <= sizeof(tlvs));
+    VerifyOrExit(GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER);
 
     aMessage.Read(offset, length, tlvs);
 
     // Session Id and Border Router Locator MUST NOT be set, but accept including unexpected or
     // unknown TLV as long as there is at least one valid TLV.
-    for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
-         cur < reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
-         cur = cur->GetNext())
+    cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
+    end = reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
+
+    while (cur < end)
     {
-        MeshCoP::Tlv::Type type = cur->GetType();
+        MeshCoP::Tlv::Type type;
+
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+
+        type = cur->GetType();
 
         if (type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData)
         {
@@ -223,24 +233,29 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
         }
         else if (type == MeshCoP::Tlv::kBorderAgentLocator)
         {
-            ExitNow(state = MeshCoP::StateTlv::kReject);
+            ExitNow();
         }
         else if (type == MeshCoP::Tlv::kCommissionerSessionId)
         {
+            MeshCoP::CommissionerSessionIdTlv *tlv = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur);
+
+            VerifyOrExit(tlv->IsValid());
+            sessionId = tlv->GetCommissionerSessionId();
             hasSessionId = true;
-            sessionId = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId();
         }
         else
         {
             // do nothing for unexpected or unknown TLV
         }
+
+        cur = cur->GetNext();
     }
 
     // verify whether or not commissioner session id TLV is included
-    VerifyOrExit(hasSessionId, state = MeshCoP::StateTlv::kReject);
+    VerifyOrExit(hasSessionId);
 
     // verify whether or not MGMT_COMM_SET.req includes at least one valid TLV
-    VerifyOrExit(hasValidTlv, state = MeshCoP::StateTlv::kReject);
+    VerifyOrExit(hasValidTlv);
 
     // Find Commissioning Data TLV
     for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs);
@@ -250,26 +265,28 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
         if (netDataTlv->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
             // Iterate over MeshCoP TLVs and extract desired data
-            for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue());
+            for (cur = reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue());
                  cur < reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue() + netDataTlv->GetLength());
                  cur = cur->GetNext())
             {
                 if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
                 {
                     VerifyOrExit(sessionId ==
-                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
-                                 state = MeshCoP::StateTlv::kReject);
+                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId());
                 }
                 else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
                 {
-                    memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetLength() + sizeof(MeshCoP::Tlv));
-                    length += (cur->GetLength() + sizeof(MeshCoP::Tlv));
+                    VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
+                    memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
+                    length += cur->GetSize();
                 }
             }
         }
     }
 
-    SetCommissioningData(tlvs, length);
+    SetCommissioningData(tlvs, static_cast<uint8_t>(length));
+
+    state = MeshCoP::StateTlv::kAccept;
 
 exit:
 
@@ -429,11 +446,13 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
             prefix = static_cast<PrefixTlv *>(cur);
+            VerifyOrExit(prefix->IsValid(), error = OT_ERROR_PARSE);
+
             subCur = prefix->GetSubTlvs();
             subEnd = prefix->GetNext();
 
@@ -441,13 +460,12 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
 
             while (subCur < subEnd)
             {
-                VerifyOrExit(subCur + sizeof(NetworkDataTlv) <= subEnd && subCur->GetNext() <= subEnd,
-                             error = OT_ERROR_PARSE);
+                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
 
                 switch (subCur->GetType())
                 {
                 case NetworkDataTlv::kTypeBorderRouter:
-                    borderRouter = FindBorderRouter(*prefix);
+                    borderRouter = static_cast<BorderRouterTlv *>(subCur);
 
                     for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
                     {
@@ -467,7 +485,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
                     break;
 
                 case NetworkDataTlv::kTypeHasRoute:
-                    hasRoute = FindHasRoute(*prefix);
+                    hasRoute = static_cast<HasRouteTlv *>(subCur);
 
                     for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
                     {
@@ -506,8 +524,7 @@ exit:
     return error;
 }
 
-bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
-                             uint8_t aTlvsBaseLength)
+bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength)
 {
     bool rval = false;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
@@ -515,14 +532,14 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
 
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
             PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
             ContextTlv *context = FindContext(*prefix);
-            BorderRouterTlv *borderRouter = FindBorderRouter(*prefix);
-            HasRouteTlv *hasRoute = FindHasRoute(*prefix);
+            BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, true);
+            HasRouteTlv *hasRoute = FindHasRoute(*prefix, true);
 
             if (cur->IsStable() && (!context || borderRouter))
             {
@@ -536,7 +553,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
 
                 if (borderRouter)
                 {
-                    BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase);
+                    BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
 
                     if (!borderRouterBase || memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
                     {
@@ -546,7 +563,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
 
                 if (hasRoute)
                 {
-                    HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase);
+                    HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase, true);
 
                     if (!hasRouteBase || (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
                     {
@@ -560,7 +577,6 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aRloc16);
     return rval;
 }
 
@@ -575,8 +591,8 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
 
     if (rlocIn)
     {
-        if (IsStableUpdated(aRloc16, aTlvs, aTlvsLength, mTlvs, mLength) ||
-            IsStableUpdated(aRloc16, mTlvs, mLength, aTlvs, aTlvsLength))
+        if (IsStableUpdated(aTlvs, aTlvsLength, mTlvs, mLength) ||
+            IsStableUpdated(mTlvs, mLength, aTlvs, aTlvsLength))
         {
             stableUpdated = true;
         }
@@ -618,12 +634,12 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-            AddPrefix(*static_cast<PrefixTlv *>(cur));
+            SuccessOrExit(error = AddPrefix(*static_cast<PrefixTlv *>(cur)));
             otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
             break;
 
@@ -643,21 +659,25 @@ exit:
 otError Leader::AddPrefix(PrefixTlv &aPrefix)
 {
     otError error = OT_ERROR_NONE;
-    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end = aPrefix.GetNext();
+    NetworkDataTlv *cur;
+    NetworkDataTlv *end;
+
+    VerifyOrExit(aPrefix.IsValid(), error = OT_ERROR_PARSE);
+    cur = aPrefix.GetSubTlvs();
+    end = aPrefix.GetNext();
 
     while (cur < end)
     {
-        VerifyOrExit(cur + sizeof(NetworkDataTlv) <= end && cur->GetNext() <= end, error = OT_ERROR_NONE);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            AddHasRoute(aPrefix, *static_cast<HasRouteTlv *>(cur));
+            SuccessOrExit(error = AddHasRoute(aPrefix, *static_cast<HasRouteTlv *>(cur)));
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            AddBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur));
+            SuccessOrExit(error = AddBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur)));
             break;
 
         default:
@@ -674,10 +694,32 @@ exit:
 otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
 {
     otError error = OT_ERROR_NONE;
-    PrefixTlv *dstPrefix;
-    HasRouteTlv *dstHasRoute;
+    PrefixTlv *dstPrefix = NULL;
+    HasRouteTlv *dstHasRoute = NULL;
+    uint16_t appendLength = 0;
 
-    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) == NULL)
+    VerifyOrExit(aHasRoute.GetNumEntries() > 0, error = OT_ERROR_PARSE);
+
+    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) != NULL)
+    {
+        dstHasRoute = FindHasRoute(*dstPrefix, aHasRoute.IsStable());
+    }
+
+    if (dstPrefix == NULL)
+    {
+        appendLength += sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength());
+    }
+
+    if (dstHasRoute == NULL)
+    {
+        appendLength += sizeof(HasRouteTlv);
+    }
+
+    appendLength += sizeof(HasRouteEntry);
+
+    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+
+    if (dstPrefix == NULL)
     {
         dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
         Insert(reinterpret_cast<uint8_t *>(dstPrefix), sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
@@ -689,7 +731,7 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
         dstPrefix->SetStable();
     }
 
-    if ((dstHasRoute = FindHasRoute(*dstPrefix, aHasRoute.IsStable())) == NULL)
+    if (dstHasRoute == NULL)
     {
         dstHasRoute = static_cast<HasRouteTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstHasRoute), sizeof(HasRouteTlv));
@@ -708,29 +750,60 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
     memcpy(dstHasRoute->GetEntry(dstHasRoute->GetNumEntries() - 1), aHasRoute.GetEntry(0),
            sizeof(HasRouteEntry));
 
+exit:
     return error;
 }
 
 otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter)
 {
     otError error = OT_ERROR_NONE;
-    PrefixTlv *dstPrefix;
-    ContextTlv *dstContext;
-    BorderRouterTlv *dstBorderRouter;
-    int contextId;
+    PrefixTlv *dstPrefix = NULL;
+    ContextTlv *dstContext = NULL;
+    BorderRouterTlv *dstBorderRouter = NULL;
+    int contextId = -1;
+    uint16_t appendLength = 0;
 
-    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) == NULL)
+    VerifyOrExit(aBorderRouter.GetNumEntries() > 0, error = OT_ERROR_PARSE);
+
+    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) != NULL)
+    {
+        dstContext = FindContext(*dstPrefix);
+        dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable());
+    }
+
+    if (dstPrefix == NULL)
+    {
+        appendLength += sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength());
+    }
+
+    if (dstContext == NULL)
+    {
+        appendLength += sizeof(ContextTlv);
+    }
+
+    if (dstBorderRouter == NULL)
+    {
+        appendLength += sizeof(BorderRouterTlv);
+    }
+
+    appendLength += sizeof(BorderRouterEntry);
+
+    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+
+    if (dstContext == NULL)
+    {
+        contextId = AllocateContext();
+        VerifyOrExit(contextId >= 0, error = OT_ERROR_NO_BUFS);
+    }
+
+    if (dstPrefix == NULL)
     {
         dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
         Insert(reinterpret_cast<uint8_t *>(dstPrefix), sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
-    if ((dstContext = FindContext(*dstPrefix)) != NULL)
-    {
-        dstContext->SetCompress();
-    }
-    else if ((contextId = AllocateContext()) >= 0)
+    if (dstContext == NULL)
     {
         dstContext = static_cast<ContextTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
@@ -741,11 +814,10 @@ otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRout
         dstContext->SetContextLength(aPrefix.GetPrefixLength());
     }
 
-    VerifyOrExit(dstContext != NULL, error = OT_ERROR_NO_BUFS);
+    dstContext->SetCompress();
     mContextLastUsed[dstContext->GetContextId() - kMinContextId] = 0;
 
-
-    if ((dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable())) == NULL)
+    if (dstBorderRouter == NULL)
     {
         dstBorderRouter = static_cast<BorderRouterTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstBorderRouter), sizeof(BorderRouterTlv));

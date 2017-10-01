@@ -67,11 +67,6 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mContext(NULL),
     mCcitt(0),
     mAnsi(0),
-    mJoinerRouterIsSpecific(false),
-    mJoinerRouterChannel(0),
-    mJoinerRouterRssi(0),
-    mJoinerRouterPanId(0),
-    mJoinerUdpPort(0),
     mVendorName(NULL),
     mVendorModel(NULL),
     mVendorSwVersion(NULL),
@@ -79,6 +74,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mTimer(aNetif.GetInstance(), &Joiner::HandleTimer, this),
     mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
+    memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
     aNetif.GetCoap().AddResource(mJoinerEntrust);
 }
 
@@ -123,9 +119,8 @@ otError Joiner::Start(const uint8_t *aPSKd, uint8_t aPSKdLength, const char *aPr
     error = netif.GetCoapSecure().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
     SuccessOrExit(error);
 
-    mJoinerRouterPanId = Mac::kPanIdBroadcast;
-    mJoinerRouterRssi = 0;
-    mJoinerRouterIsSpecific = false;
+    memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
+
     SuccessOrExit(error = netif.GetMle().Discover(0, netif.GetMac().GetPanId(), true, false, HandleDiscoverResult,
                                                   this));
 
@@ -170,13 +165,21 @@ void Joiner::Close(void)
 
 void Joiner::Complete(otError aError)
 {
+    ThreadNetif &netif = GetNetif();
     mState = OT_JOINER_STATE_IDLE;
+    otError error = OT_ERROR_NOT_FOUND;
     GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
 
-    GetNetif().GetCoapSecure().Stop();
+    netif.GetCoapSecure().Disconnect();
 
-    if (mCallback)
+    if (aError != OT_ERROR_NONE && aError != OT_ERROR_NOT_FOUND)
     {
+        error = TryNextJoin();
+    }
+
+    if (error == OT_ERROR_NOT_FOUND && mCallback)
+    {
+        netif.GetCoapSecure().Stop();
         otJoinerCallback callback = mCallback;
         mCallback = NULL;
         callback(aError, mContext);
@@ -190,13 +193,12 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
-    ThreadNetif &netif = GetNetif();
-    Ip6::MessageInfo messageInfo;
-
     otLogFuncEntry();
 
     if (aResult != NULL)
     {
+        JoinerRouter joinerRouter;
+
         otLogFuncEntryMsg("aResult = %llX", HostSwap64(*reinterpret_cast<uint64_t *>(&aResult->mExtAddress)));
 
         // Joining is disabled if the Steering Data is not included
@@ -210,57 +212,103 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         steeringData.SetLength(aResult->mSteeringData.mLength);
         memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
 
-        if (steeringData.DoesAllowAny())
-        {
-            VerifyOrExit(!mJoinerRouterIsSpecific);
-            VerifyOrExit(aResult->mRssi > mJoinerRouterRssi);
-        }
-        else if (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
-                 steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
-        {
-            if (mJoinerRouterIsSpecific)
-            {
-                VerifyOrExit(aResult->mRssi > mJoinerRouterRssi);
-            }
-
-            mJoinerRouterIsSpecific = true;
-        }
-        else
+        if (!steeringData.GetBit(mCcitt % steeringData.GetNumBits()) ||
+            !steeringData.GetBit(mAnsi % steeringData.GetNumBits()))
         {
             otLogDebgMeshCoP(GetInstance(), "Steering data does not include this device");
             ExitNow();
         }
 
-        mJoinerUdpPort = aResult->mJoinerUdpPort;
-        mJoinerRouterPanId = aResult->mPanId;
-        mJoinerRouterChannel = aResult->mChannel;
-        mJoinerRouterRssi = aResult->mRssi;
-        memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
-    }
-    else if (mJoinerRouterPanId != Mac::kPanIdBroadcast)
-    {
-        otLogFuncEntryMsg("aResult = NULL");
+        joinerRouter.mPriority = static_cast<uint16_t>(aResult->mRssi) + 0x80;
 
-        netif.GetMac().SetPanId(mJoinerRouterPanId);
-        netif.GetMac().SetChannel(mJoinerRouterChannel);
-        netif.GetIp6Filter().AddUnsecurePort(netif.GetCoapSecure().GetPort());
+        if (!steeringData.DoesAllowAny())
+        {
+            joinerRouter.mPriority += kSpecificPriorityBonus;
+        }
 
-        messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
-        messageInfo.GetPeerAddr().SetIid(mJoinerRouter);
-        messageInfo.mPeerPort = mJoinerUdpPort;
-        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
-
-        netif.GetCoapSecure().Connect(messageInfo, Joiner::HandleSecureCoapClientConnect, this);
-        mState = OT_JOINER_STATE_CONNECT;
+        joinerRouter.mJoinerUdpPort = aResult->mJoinerUdpPort;
+        joinerRouter.mPanId = aResult->mPanId;
+        joinerRouter.mChannel = aResult->mChannel;
+        memcpy(joinerRouter.mExtAddr.m8, &aResult->mExtAddress, sizeof(joinerRouter.mExtAddr));
+        AddJoinerRouter(joinerRouter);
     }
     else
     {
-        otLogDebgMeshCoP(GetInstance(), "No joinable network found");
-        Complete(OT_ERROR_NOT_FOUND);
+        otError error = TryNextJoin();
+
+        if (error != OT_ERROR_NONE)
+        {
+            Complete(error);
+        }
     }
 
 exit:
     otLogFuncExit();
+}
+
+void Joiner::AddJoinerRouter(JoinerRouter &aJoinerRouter)
+{
+    JoinerRouter *joinerRouter = &mJoinerRouters[0];
+
+    // Find the lowest priority
+    for (size_t i = 1; i < OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES; i++)
+    {
+        if (mJoinerRouters[i].mPriority < joinerRouter->mPriority)
+        {
+            joinerRouter = &mJoinerRouters[i];
+        }
+
+        if (joinerRouter->mPriority == 0)
+        {
+            break;
+        }
+    }
+
+    if (aJoinerRouter.mPriority > joinerRouter->mPriority)
+    {
+        memcpy(joinerRouter, &aJoinerRouter, sizeof(aJoinerRouter));
+    }
+}
+
+otError Joiner::TryNextJoin()
+{
+    ThreadNetif &netif = GetNetif();
+    otError error = OT_ERROR_NOT_FOUND;
+    JoinerRouter *joinerRouter = &mJoinerRouters[0];
+
+    for (size_t i = 1; i < OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES; i++)
+    {
+        if (mJoinerRouters[i].mPriority > joinerRouter->mPriority)
+        {
+            joinerRouter = &mJoinerRouters[i];
+        }
+    }
+
+    if (joinerRouter->mPriority > 0)
+    {
+        Ip6::MessageInfo messageInfo;
+
+        joinerRouter->mPriority = 0;
+
+        netif.GetMac().SetPanId(joinerRouter->mPanId);
+        netif.GetMac().SetChannel(joinerRouter->mChannel);
+        netif.GetIp6Filter().AddUnsecurePort(netif.GetCoapSecure().GetPort());
+
+        messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
+        messageInfo.GetPeerAddr().SetIid(joinerRouter->mExtAddr);
+        messageInfo.mPeerPort = joinerRouter->mJoinerUdpPort;
+        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+
+        netif.GetCoapSecure().Connect(messageInfo, Joiner::HandleSecureCoapClientConnect, this);
+        mState = OT_JOINER_STATE_CONNECT;
+        error = OT_ERROR_NONE;
+    }
+    else
+    {
+        otLogDebgMeshCoP(GetInstance(), "No joinable networks remaining to try");
+    }
+
+    return error;
 }
 
 void Joiner::HandleSecureCoapClientConnect(bool aConnected, void *aContext)

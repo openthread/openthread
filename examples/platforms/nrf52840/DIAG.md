@@ -6,6 +6,7 @@ New commands allow for more accurate low level radio testing.
 
 ### New commands
  * [diag ccathreshold](#diag-ccathreshold)
+ * [diag gpio](#diag-gpio)
  * [diag id](#diag-id)
  * [diag listen](#diag-listen)
  * [diag temp](#diag-temp)
@@ -51,6 +52,52 @@ Set CCA threshold.
 Value range 0 to 255.
 
 Default: `45`.
+
+### diag gpio
+Set of commands for managing gpio pins.
+
+### diag gpio \<pinnum\>
+Return the current value of the gpio.
+
+Note: \<pinnum\> is an integer that combines port and pin into a single,
+contiguous number space as follows:
+```
+   pinnum = (port * 32) + pin
+```
+See also the [`NRF_GPIO_PIN_MAP`](../../../third_party/NordicSemiconductor/hal/nrf_gpio.h) macro.
+
+```bash
+> diag gpio 47
+gpio 47 = 0
+```
+
+### diag gpio out \<pinnum\>
+Sets the given gpio to output mode.
+```bash
+> diag gpio out 47
+gpio 47: out
+```
+
+### diag gpio in \<pinnum\>
+Sets the given gpio to input, no pull mode.
+```bash
+> diag gpio in 47
+gpio 47: in no pull
+```
+
+### diag gpio set \<pinnum\>
+Sets the given output gpio to high.
+```bash
+> diag gpio set 47
+gpio 47 = 1
+```
+
+### diag gpio clr \<pinnum\>
+Sets the given output gpio to low.
+```bash
+> diag gpio clr 47
+gpio 47 = 0
+```
 
 ### diag id
 Get board ID.

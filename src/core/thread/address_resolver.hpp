@@ -101,6 +101,15 @@ public:
     void Remove(uint8_t aRouterId);
 
     /**
+     * This method updates an existing cache entry for the EID, if one exists.
+     *
+     * @param[in]  aEid     A reference to the EID.
+     * @param[in]  aRloc16  The RLOC16 corresponding to @p aEid.
+     *
+     */
+    void UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+
+    /**
      * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.
      *
      * @param[in]   aEid     A reference to the EID.
@@ -108,6 +117,7 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
      * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query.
+     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to send Address Query.
      *
      */
     otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
@@ -125,9 +135,14 @@ private:
      */
     enum
     {
-        kAddressQueryTimeout = 3,             ///< ADDRESS_QUERY_TIMEOUT (seconds)
-        kAddressQueryInitialRetryDelay = 15,  ///< ADDRESS_QUERY_INITIAL_RETRY_DELAY (seconds)
-        kAddressQueryMaxRetryDelay = 28800,   ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
+        kAddressQueryTimeout           = OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT, // in seconds
+        kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
+        kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY, // in seconds
+    };
+
+    enum
+    {
+        kLastTransactionTimeInvalid = 0xffffffff,  ///< Used when entry is populated using forwarded data message.
     };
 
     struct Cache
@@ -150,9 +165,18 @@ private:
         State             mState;
     };
 
+    enum InvalidationReason
+    {
+        kReasonRemovingRouterId,
+        kReasonReceivedIcmpDstUnreachNoRoute,
+        kReasonEvictingForNewEntry,
+    };
+
+    static const char *ConvertInvalidationReasonToString(InvalidationReason aReason);
+
     Cache *NewCacheEntry(void);
     void MarkCacheEntryAsUsed(Cache &aEntry);
-    void InvalidateCacheEntry(Cache &aEntry);
+    void InvalidateCacheEntry(Cache &aEntry, InvalidationReason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
     otError SendAddressError(const ThreadTargetTlv &aTarget, const ThreadMeshLocalEidTlv &aEid,

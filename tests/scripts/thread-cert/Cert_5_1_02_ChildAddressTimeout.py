@@ -40,13 +40,14 @@ ED = 3
 SED = 4
 SNIFFER = 5
 
+MTDS = [ED, SED]
 
 class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
 
     def setUp(self):
         self.nodes = {}
         for i in range(1, 5):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i in MTDS))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

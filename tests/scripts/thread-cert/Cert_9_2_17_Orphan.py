@@ -45,7 +45,7 @@ class Cert_9_2_17_Orphan(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i == ED1))
 
         self.nodes[LEADER1].set_active_dataset(10, channel=CHANNEL1, panid=PANID_INIT, channel_mask=CHANNEL_MASK)
         self.nodes[LEADER1].set_mode('rsdn')
@@ -58,8 +58,9 @@ class Cert_9_2_17_Orphan(unittest.TestCase):
         self.nodes[LEADER2].enable_whitelist()
         self.nodes[LEADER2].set_router_selection_jitter(1)
 
-        self.nodes[ED1].set_active_dataset(10, channel=CHANNEL1, panid=PANID_INIT, channel_mask=CHANNEL_MASK)
+        self.nodes[ED1].set_channel(CHANNEL1)
         self.nodes[ED1].set_mode('rsn')
+        self.nodes[ED1].set_panid(PANID_INIT)
         self.nodes[ED1].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ED1].enable_whitelist()
         self.nodes[ED1].set_timeout(3)

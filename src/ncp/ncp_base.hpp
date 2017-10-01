@@ -47,6 +47,7 @@
 #include "changed_props_set.hpp"
 #include "common/tasklet.hpp"
 #include "ncp/ncp_buffer.hpp"
+#include "ncp/spinel_encoder.hpp"
 
 #include "spinel.h"
 
@@ -63,10 +64,7 @@ namespace Ncp {
 
 
 #define NCP_GET_PROP_HANDLER(name)                            \
-            otError GetPropertyHandler_##name(                \
-                        uint8_t aHeader,                      \
-                        spinel_prop_key_t aKey                \
-                    )
+            otError GetPropertyHandler_##name(void)
 
 #define NCP_SET_PROP_HANDLER(name)                            \
             otError SetPropertyHandler_##name(                \
@@ -78,16 +76,12 @@ namespace Ncp {
 
 #define NCP_INSERT_PROP_HANDLER(name)                         \
             otError InsertPropertyHandler_##name(             \
-                        uint8_t aHeader,                      \
-                        spinel_prop_key_t aKey,               \
                         const uint8_t *aValuePtr,             \
                         uint16_t aValueLen                    \
                     )
 
 #define NCP_REMOVE_PROP_HANDLER(name)                         \
             otError RemovePropertyHandler_##name(             \
-                        uint8_t aHeader,                      \
-                        spinel_prop_key_t aKey,               \
                         const uint8_t *aValuePtr,             \
                         uint16_t aValueLen                    \
                     )
@@ -175,59 +169,6 @@ public:
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-protected:
-    /**
-     * This method is called to start a new outbound frame.
-     *
-     * param[in] aHeader           The spinel header byte
-     *
-     * @retval OT_ERROR_NONE       Successfully started a new frame.
-     * @retval OT_ERROR_NO_BUFS    Insufficient buffer space available to start a new frame.
-     *
-     */
-    otError OutboundFrameBegin(uint8_t aHeader);
-
-    /**
-     * This method adds data to the current outbound frame being written.
-     *
-     * If no buffer space is available, this method should discard and clear the frame before returning an error status.
-     *
-     * @param[in]  aDataBuffer        A pointer to data buffer.
-     * @param[in]  aDataBufferLength  The length of the data buffer.
-     *
-     * @retval OT_ERROR_NONE       Successfully added new data to the frame.
-     * @retval OT_ERROR_NO_BUFS    Insufficient buffer space available to add data.
-     *
-     */
-    otError OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
-
-    /**
-     * This method adds a message to the current outbound frame being written.
-     *
-     * If no buffer space is available, this method should discard and clear the frame before returning an error status.
-     * In case of success, the passed-in message @aMessage should be owned by outbound buffer and should be freed
-     * when either the frame is successfully sent and removed or if the frame is discarded.
-     *
-     * @param[in]  aMessage         A reference to the message to be added to current frame.
-     *
-     * @retval OT_ERROR_NONE     Successfully added the message to the frame.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to add message.
-     *
-     */
-    otError OutboundFrameFeedMessage(otMessage *aMessage);
-
-    /**
-     * This method finalizes and sends the current outbound frame
-     *
-     * If no buffer space is available, this method should discard and clear the frame
-     * before returning an error status.
-     *
-     * @retval OT_ERROR_NONE     Successfully added the message to the frame.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to add message.
-     *
-     */
-    otError OutboundFrameEnd(void);
-
     /**
      * This method is called by the framer whenever a framing error is detected.
      */
@@ -252,7 +193,9 @@ private:
     typedef otError(NcpBase::*CommandHandlerType)(uint8_t aHeader, unsigned int aCommand, const uint8_t *aArgPtr,
                                                   uint16_t aArgLen);
 
-    typedef otError(NcpBase::*GetPropertyHandlerType)(uint8_t aHeader, spinel_prop_key_t aKey);
+    typedef otError(NcpBase::*GetPropertyHandlerType)(void);
+
+    typedef otError(NcpBase::*InsertRemovePropertyHandlerType)(const uint8_t *aValuePtr, uint16_t aValueLen);
 
     typedef otError(NcpBase::*SetPropertyHandlerType)(uint8_t aHeader, spinel_prop_key_t aKey,
                                                       const uint8_t *aValuePtr, uint16_t aValueLen);
@@ -278,23 +221,16 @@ private:
     struct InsertPropertyHandlerEntry
     {
         spinel_prop_key_t mPropKey;
-        SetPropertyHandlerType mHandler;
+        InsertRemovePropertyHandlerType mHandler;
     };
 
     struct RemovePropertyHandlerEntry
     {
         spinel_prop_key_t mPropKey;
-        SetPropertyHandlerType mHandler;
+        InsertRemovePropertyHandlerType mHandler;
     };
 
-    otError OutboundFrameSend(void);
-
     NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
-
-    otError OutboundFrameFeedPacked(const char *aPackFormat, ...);
-
-    otError OutboundFrameFeedVPacked(const char *aPackFormat, va_list aArgs);
-
 
     otError HandleCommand(uint8_t aHeader, unsigned int aCommand, const uint8_t *aArgPtr, uint16_t aArgLen);
 
@@ -311,14 +247,6 @@ private:
 
 
     otError SendLastStatus(uint8_t aHeader, spinel_status_t aLastStatus);
-
-    otError SendPropertyUpdate(uint8_t aHeader, uint8_t aCommand, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                               uint16_t aValueLen);
-
-    otError SendPropertyUpdate(uint8_t aHeader, uint8_t aCommand, spinel_prop_key_t aKey, otMessage *message);
-
-    otError SendPropertyUpdate(uint8_t aHeader, uint8_t aCommand, spinel_prop_key_t aKey, const char *format, ...);
-
     otError SendSetPropertyResponse(uint8_t aHeader, spinel_prop_key_t aKey, otError aError);
 
     static void UpdateChangedProps(Tasklet &aTasklet);
@@ -363,7 +291,7 @@ private:
     static void SendDoneTask(void *aContext);
     void SendDoneTask(void);
 
-    otError GetPropertyHandler_ChannelMaskHelper(uint8_t aHeader, spinel_prop_key_t aKey, uint32_t channel_mask);
+    otError GetPropertyHandler_ChannelMaskHelper(uint32_t channel_mask);
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
@@ -536,9 +464,52 @@ private:
 #endif
     NCP_GET_PROP_HANDLER(STREAM_NET);
     NCP_SET_PROP_HANDLER(STREAM_NET);
-    NCP_GET_PROP_HANDLER(MAC_CNTR);
-    NCP_GET_PROP_HANDLER(NCP_CNTR);
-    NCP_GET_PROP_HANDLER(IP_CNTR);
+
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_ACK_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_ACKED);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_NO_ACK_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_DATA);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_DATA_POLL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_BEACON);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_BEACON_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_OTHER);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_RETRY);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_UNICAST);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_BROADCAST);
+    NCP_GET_PROP_HANDLER(CNTR_TX_ERR_CCA);
+    NCP_GET_PROP_HANDLER(CNTR_TX_ERR_ABORT);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_DATA);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_DATA_POLL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_BEACON);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_BEACON_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_OTHER);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_FILT_WL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_FILT_DA);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_UNICAST);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_BROADCAST);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_EMPTY);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_UKWN_NBR);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_NVLD_SADDR);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_SECURITY);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_BAD_FCS);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_OTHER);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_DUP);
+    NCP_GET_PROP_HANDLER(CNTR_TX_IP_SEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_IP_INSEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_IP_DROPPED);
+    NCP_GET_PROP_HANDLER(CNTR_RX_IP_SEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_IP_INSEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_IP_DROPPED);
+    NCP_GET_PROP_HANDLER(CNTR_TX_SPINEL_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_SPINEL_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_SPINEL_OUT_OF_ORDER_TID);
+    NCP_GET_PROP_HANDLER(CNTR_RX_SPINEL_ERR);
+    NCP_GET_PROP_HANDLER(CNTR_IP_TX_SUCCESS);
+    NCP_GET_PROP_HANDLER(CNTR_IP_RX_SUCCESS);
+    NCP_GET_PROP_HANDLER(CNTR_IP_TX_FAILURE);
+    NCP_GET_PROP_HANDLER(CNTR_IP_RX_FAILURE);
     NCP_GET_PROP_HANDLER(MSG_BUFFER_COUNTERS);
 #if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_GET_PROP_HANDLER(MAC_WHITELIST_ENABLED);
@@ -639,6 +610,8 @@ protected:
     static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData);
     otInstance *mInstance;
     NcpFrameBuffer  mTxFrameBuffer;
+    SpinelEncoder mEncoder;
+    bool mHostPowerStateInProgress;
 
 private:
     enum
@@ -667,9 +640,7 @@ private:
     ChangedPropsSet mChangedPropsSet;
 
     uint32_t mChangedFlags;
-    bool mShouldSignalEndOfScan;
     spinel_host_power_state_t mHostPowerState;
-    bool mHostPowerStateInProgress;
     NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
     uint8_t mHostPowerStateHeader;
 

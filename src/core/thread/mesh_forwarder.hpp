@@ -174,6 +174,15 @@ public:
     void RemoveMessages(Child &aChild, uint8_t aSubType);
 
     /**
+     * This method evicts the first indirect message in the indirect send queue.
+     *
+     * @retval OT_ERROR_NONE       Successfully evicted an indirect message.
+     * @retval OT_ERROR_NOT_FOUND  No indirect messages available to evict.
+     *
+     */
+    otError EvictIndirectMessage(void);
+
+    /**
      * This method returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
@@ -249,11 +258,15 @@ private:
         kMessageReceive,                 ///< Indicates that the message was received.
         kMessageTransmit,                ///< Indicates that the message was sent.
         kMessagePrepareIndirect,         ///< Indicates that the message is being prepared for indirect tx.
-        kMessageDrop,                    ///< Indicates that the message is being dropped from reassembly list.
+        kMessageDrop,                    ///< Indicates that the outbound message is being dropped (e.g., dst unknown).
+        kMessageReassemblyDrop,          ///< Indicates that the message is being dropped from reassembly list.
+        kMessageEvict,                   ///< Indicates that the message was evicted.
     };
 
     otError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                               const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+    void UpdateRoutes(uint8_t *aFrame, uint8_t aFrameLength,
+                      const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
 
     otError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
@@ -279,6 +292,7 @@ private:
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo,
                            const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
+    void RemoveMessage(Message &aMessage);
 
     static void HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);

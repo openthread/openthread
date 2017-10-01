@@ -38,11 +38,13 @@ ED2 = 3
 ED3 = 4
 ED4 = 5
 
+MTDS = [ED1, ED2, ED3, ED4]
+
 class Cert_5_3_8_ChildAddressSet(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, (i in MTDS))
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')

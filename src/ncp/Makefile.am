@@ -29,7 +29,6 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                        = \
-    PROTOCOL.md                                     \
     $(NULL)
 
 # Pull in the sources that comprise the OpenThread NCP library.
@@ -72,6 +71,8 @@ COMMON_SOURCES                                    = \
     ncp_buffer.hpp                                  \
     spinel.c                                        \
     spinel.h                                        \
+    spinel_encoder.hpp                              \
+    spinel_encoder.cpp                              \
     spinel_platform.h                               \
     ncp_spi.cpp                                     \
     ncp_spi.hpp                                     \

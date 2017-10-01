@@ -562,7 +562,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return ((GetLength() != 0) && (GetLength() <= sizeof(*this) - sizeof(Tlv))); }
 
     /**
      * This method sets all bits in the Bloom Filter to zero.

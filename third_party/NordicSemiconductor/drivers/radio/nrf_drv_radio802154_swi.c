@@ -82,8 +82,9 @@
 typedef enum
 {
     NTF_TYPE_RECEIVED,         ///< Frame received
+    NTF_TYPE_RECEIVE_FAILED,   ///< Frame reception failed
     NTF_TYPE_TRANSMITTED,      ///< Frame transmitted
-    NTF_TYPE_CHANNEL_BUSY,     ///< Frame transmission failure
+    NTF_TYPE_TRANSMIT_FAILED,     ///< Frame transmission failure
     NTF_TYPE_ENERGY_DETECTED,  ///< Energy detection procedure ended
     NTF_TYPE_CCA,              ///< CCA procedure ended
 } nrf_drv_radio802154_ntf_type_t;
@@ -96,28 +97,38 @@ typedef struct
     {
         struct
         {
-            uint8_t * p_psdu;             ///< Pointer to received frame PSDU.
-            int8_t    power;              ///< RSSI of received frame.
-            int8_t    lqi;                ///< LQI of received frame.
-        } received;                       ///< Received frame details.
+            uint8_t                      * p_psdu;  ///< Pointer to received frame PSDU.
+            int8_t                         power;   ///< RSSI of received frame.
+            int8_t                         lqi;     ///< LQI of received frame.
+        } received;                                 ///< Received frame details.
 
         struct
         {
-            uint8_t * p_psdu;             ///< Pointer to received ACK PSDU or NULL.
-            int8_t    power;              ///< RSSI of received ACK or 0.
-            int8_t    lqi;                ///< LQI of received ACK or 0.
-        } transmitted;                    ///< Transmitted frame details.
+            uint8_t                      * p_psdu;  ///< Pointer to received ACK PSDU or NULL.
+            int8_t                         power;   ///< RSSI of received ACK or 0.
+            int8_t                         lqi;     ///< LQI of received ACK or 0.
+        } transmitted;                              ///< Transmitted frame details.
 
         struct
         {
-            int8_t    result;             ///< Energy detection result.
-        } energy_detected;                ///< Energy detection details.
+            nrf_drv_radio802154_tx_error_t error;   ///< An error code that indicates reason of the failure.
+        } transmit_failed;
 
         struct
         {
-            bool      result;             ///< CCA result.
-        } cca;                            ///< CCA details.
-    } data;                               ///< Notification data depending on it's type.
+            nrf_drv_radio802154_rx_error_t error;   ///< An error code that indicates reason of the failure.
+        } receive_failed;
+
+        struct
+        {
+            int8_t                         result;  ///< Energy detection result.
+        } energy_detected;                          ///< Energy detection details.
+
+        struct
+        {
+            bool                           result;  ///< CCA result.
+        } cca;                                      ///< CCA details.
+    } data;                                         ///< Notification data depending on it's type.
 } nrf_drv_radio802154_ntf_data_t;
 
 /// Type of requests in request queue.
@@ -372,6 +383,20 @@ void nrf_drv_radio802154_swi_notify_received(uint8_t * p_data, int8_t power, int
     nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
 }
 
+void nrf_drv_radio802154_swi_notify_receive_failed(nrf_drv_radio802154_rx_error_t error)
+{
+    assert(!ntf_queue_is_full());
+
+    nrf_drv_radio802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+
+    p_slot->type                      = NTF_TYPE_RECEIVE_FAILED;
+    p_slot->data.receive_failed.error = error;
+
+    ntf_queue_ptr_increment(&m_ntf_w_ptr);
+
+    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+}
+
 void nrf_drv_radio802154_swi_notify_transmitted(uint8_t * p_data, int8_t power, int8_t lqi)
 {
     assert(!ntf_queue_is_full());
@@ -388,13 +413,14 @@ void nrf_drv_radio802154_swi_notify_transmitted(uint8_t * p_data, int8_t power, 
     nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
 }
 
-void nrf_drv_radio802154_swi_notify_busy_channel(void)
+void nrf_drv_radio802154_swi_notify_transmit_failed(nrf_drv_radio802154_tx_error_t error)
 {
     assert(!ntf_queue_is_full());
 
     nrf_drv_radio802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
 
-    p_slot->type = NTF_TYPE_CHANNEL_BUSY;
+    p_slot->type                       = NTF_TYPE_TRANSMIT_FAILED;
+    p_slot->data.transmit_failed.error = error;
 
     ntf_queue_ptr_increment(&m_ntf_w_ptr);
 
@@ -545,14 +571,18 @@ void SWI_IRQHandler(void)
                                                      p_slot->data.received.lqi);
                     break;
 
+                case NTF_TYPE_RECEIVE_FAILED:
+                    nrf_drv_radio802154_receive_failed(p_slot->data.receive_failed.error);
+                    break;
+
                 case NTF_TYPE_TRANSMITTED:
                     nrf_drv_radio802154_transmitted_raw(p_slot->data.transmitted.p_psdu,
                                                         p_slot->data.transmitted.power,
                                                         p_slot->data.transmitted.lqi);
                     break;
 
-                case NTF_TYPE_CHANNEL_BUSY:
-                    nrf_drv_radio802154_busy_channel();
+                case NTF_TYPE_TRANSMIT_FAILED:
+                    nrf_drv_radio802154_transmit_failed(p_slot->data.transmit_failed.error);
                     break;
 
                 case NTF_TYPE_ENERGY_DETECTED:

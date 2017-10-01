@@ -46,7 +46,7 @@ class Interpreter;
  * This class implements a CLI-based UDP example.
  *
  */
-class Udp
+class UdpExample
 {
 public:
     /**
@@ -55,7 +55,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    Udp(Interpreter &aInterpreter): mInterpreter(aInterpreter) { }
+    UdpExample(Interpreter &aInterpreter): mInterpreter(aInterpreter) { }
 
     /**
      * This method interprets a list of CLI arguments.
@@ -70,7 +70,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError(Udp::*mCommand)(int argc, char *argv[]);
+        otError(UdpExample::*mCommand)(int argc, char *argv[]);
     };
 
     otError ProcessHelp(int argc, char *argv[]);
