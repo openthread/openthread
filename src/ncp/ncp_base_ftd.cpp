@@ -471,10 +471,8 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_pr
     otError error = OT_ERROR_NONE;
     spinel_status_t spinelError = SPINEL_STATUS_OK;
     otExtAddress *extAddress = NULL;
-    const char *psk = NULL; // base32-thread encoded PSK
-    size_t length;
-    uint8_t pskd[OT_PSKD_MAX_SIZE]; // binary PSKd
-    uint32_t pskdLength = sizeof(pskd);
+    const uint8_t *pskd = NULL;
+    uint32_t pskdLength = 0;
     uint32_t joinerTimeout = 0;
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, spinelError =  SPINEL_STATUS_INVALID_STATE);
@@ -483,11 +481,12 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_pr
                        aValuePtr,
                        aValueLen,
                        (
-                           SPINEL_DATATYPE_UTF8_S     // PSK
-                           SPINEL_DATATYPE_UINT32_S   // Timeout
-                           SPINEL_DATATYPE_EUI64_S    // Extended address
+                           SPINEL_DATATYPE_DATA_WLEN_S  // PSK
+                           SPINEL_DATATYPE_UINT32_S     // Timeout
+                           SPINEL_DATATYPE_EUI64_S      // Extended address
                        ),
-                       &psk,
+                       &pskd,
+                       &pskdLength,
                        &joinerTimeout,
                        &extAddress
                    );
@@ -498,33 +497,17 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t aHeader, spinel_pr
                            aValuePtr,
                            aValueLen,
                            (
-                              SPINEL_DATATYPE_UTF8_S     // PSK
-                              SPINEL_DATATYPE_UINT32_S   // Timeout
+                              SPINEL_DATATYPE_DATA_WLEN_S   // PSK
+                              SPINEL_DATATYPE_UINT32_S      // Timeout
                            ),
-                           &psk,
+                           &pskd,
+                           &pskdLength,
                            &joinerTimeout
                        );
         extAddress = NULL;
     }
 
     VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
-
-    length = strlen(psk);
-
-    // XXX: third argument is interpreted as a binary PSKd (#2185)
-    VerifyOrExit(length >= OT_PSKD_MIN_SIZE, spinelError = SPINEL_STATUS_INVALID_ARGUMENT);
-    VerifyOrExit(length <= OT_PSKD_MAX_SIZE, spinelError = SPINEL_STATUS_INVALID_ARGUMENT);
-    memcpy(pskd, psk, length);
-    pskdLength = static_cast<uint32_t>(length);
-
-    // TODO: interpret third argument as a Joiner Credential
-/*
-    VerifyOrExit(length >= OT_JOINER_CREDENTIAL_MIN_LENGTH, spinelError = SPINEL_STATUS_INVALID_ARGUMENT);
-    VerifyOrExit(length <= OT_JOINER_CREDENTIAL_MAX_LENGTH, spinelError = SPINEL_STATUS_INVALID_ARGUMENT);
-
-    error = otBase32Decode(psk, pskd, &length);
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-*/
 
     error = otCommissionerAddJoiner(mInstance, extAddress, pskd, static_cast<uint8_t>(pskdLength), joinerTimeout);
     VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
