@@ -60,7 +60,7 @@ class Dtls: public ThreadNetifLocator
 public:
     enum
     {
-        kPskMaxLength = 20,
+        kPskMaxLength = 20, // XXX: RFC4279 requires this to be 64 octets long, but 20 is enough as long as DTLS is used only by meshcop
         kApplicationDataMaxLength = 128,
     };
 
