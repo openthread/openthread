@@ -807,6 +807,77 @@ typedef enum otRoutePreference
 } otRoutePreference;
 
 /**
+ * This structure represents a Server configuration.
+ */
+typedef struct otServerConfig
+{
+    enum
+    {
+        /**
+         * Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
+         */
+        kMaxServerDataSize = 255,
+    };
+
+    /**
+     * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
+     */
+    bool mStable : 1;
+
+    /**
+     * Length of server data.
+     */
+    uint8_t mServerDataLength;
+
+    /**
+     * Server data bytes
+     */
+    uint8_t mServerData[ kMaxServerDataSize ];
+
+    /**
+     * The Server Rloc.
+     */
+    uint16_t mRloc16;
+} otServerConfig;
+
+/**
+ * This structure represents a Service configuration. It is suitable only for local network data representation,
+ * as it contains only 1 server config structure (to avoid excessive memory consumption).
+ */
+typedef struct otServiceConfig
+{
+    enum
+    {
+        /**
+         * Maximum size of Service Data in bytes.
+         */
+        kMaxServiceDataSize = 255,
+    };
+
+    /**
+     * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
+     */
+    bool mStable : 1;
+
+    /**
+     * IANA Enterprise Number.
+     */
+    uint32_t mEnterpriseNumber;
+
+    /**
+     * Length of service data.
+     */
+    uint8_t mServiceDataLength;
+
+    /**
+     * Service data bytes
+     */
+    uint8_t mServiceData[ kMaxServiceDataSize ];
+
+    otServerConfig mServerConfig;
+} otServiceConfig;
+
+/**
  * Used to indicate no fixed received signal strength was set
  */
 #define OT_MAC_FILTER_FIXED_RSS_DISABLED       127
