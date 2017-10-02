@@ -75,6 +75,8 @@ PLATFORM_COMMON_SOURCES                                                         
     radio.c                                                                                                  \
     random.c                                                                                                 \
     temp.c                                                                                                   \
+    uart.c                                                                                                   \
+    usb-cdc-uart.c                                                                                           \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
@@ -124,18 +126,6 @@ PLATFORM_SOURCES                                                                
     $(NULL)
 endif
 
-if OPENTHREAD_SERIAL_TRANSPORT_UART
-PLATFORM_SOURCES                                                                                          += \
-    uart.c                                                                                                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_SERIAL_TRANSPORT_USB
-PLATFORM_SOURCES                                                                                          += \
-    usb-cdc-uart.c                                                                                           \
-    $(NULL)
-endif
-
 NORDICSEMI_SOURCES                                                                                         = \
     @top_builddir@/third_party/NordicSemiconductor/hal/nrf_nvmc.c                                            \
     @top_builddir@/third_party/NordicSemiconductor/device/system_nrf52840.c                                  \
@@ -164,10 +154,6 @@ libopenthread_nrf52840_a_SOURCES                                                
     @top_builddir@/third_party/NordicSemiconductor/dependencies/app_util_platform.c                          \
     @top_builddir@/third_party/NordicSemiconductor/drivers/common/nrf_drv_common.c                           \
     @top_builddir@/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.c                             \
-    $(NULL)
-
-if OPENTHREAD_SERIAL_TRANSPORT_USB
-libopenthread_nrf52840_a_SOURCES                                                                          += \
     @top_builddir@/third_party/NordicSemiconductor/drivers/power/nrf_drv_power.c                             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/systick/nrf_drv_systick.c                         \
     @top_builddir@/third_party/NordicSemiconductor/drivers/usbd/nrf_drv_usbd.c                               \
@@ -177,7 +163,6 @@ libopenthread_nrf52840_a_SOURCES                                                
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.c                      \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.c            \
     $(NULL)
-endif
 
 libopenthread_nrf52840_sdk_a_CPPFLAGS                                                                      = \
     $(COMMONCPPFLAGS)                                                                                        \

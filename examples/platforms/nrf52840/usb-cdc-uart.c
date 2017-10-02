@@ -53,6 +53,8 @@
 #include "libraries/usb/app_usbd.h"
 #include "libraries/usb/class/cdc/acm/app_usbd_cdc_acm.h"
 
+#if (USB_CDC_AS_SERIAL_TRANSPORT == 1)
+
 static void cdcAcmUserEventHandler(app_usbd_class_inst_t const *aInstance,
                                    app_usbd_cdc_acm_user_event_t aEvent);
 
@@ -75,11 +77,12 @@ static void cdcAcmUserEventHandler(app_usbd_class_inst_t const *aInstance,
 
 static const uint8_t sCdcAcmClassDescriptors[] =
 {
-    APP_USBD_CDC_ACM_DEFAULT_DESC(CDC_ACM_COMM_INTERFACE,
-                                  CDC_ACM_COMM_EPIN,
-                                  CDC_ACM_DATA_INTERFACE,
-                                  CDC_ACM_DATA_EPIN,
-                                  CDC_ACM_DATA_EPOUT)
+    APP_USBD_CDC_ACM_DEFAULT_DESC(
+        CDC_ACM_COMM_INTERFACE,
+        CDC_ACM_COMM_EPIN,
+        CDC_ACM_DATA_INTERFACE,
+        CDC_ACM_DATA_EPIN,
+        CDC_ACM_DATA_EPOUT)
 };
 
 APP_USBD_CDC_ACM_GLOBAL_DEF(sAppCdcAcm,
@@ -130,26 +133,26 @@ static void cdcAcmUserEventHandler(app_usbd_class_inst_t const *aCdcAcmInstance,
 
     switch (aEvent)
     {
-        case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
-            // Setup first transfer.
-            (void)app_usbd_cdc_acm_read(&sAppCdcAcm, sRxBuffer, sizeof(sRxBuffer));
-            break;
+    case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
+        // Setup first transfer.
+        (void)app_usbd_cdc_acm_read(&sAppCdcAcm, sRxBuffer, sizeof(sRxBuffer));
+        break;
 
-        case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
-            break;
+    case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
+        break;
 
-        case APP_USBD_CDC_ACM_USER_EVT_TX_DONE:
-            sUsbState.mTransferDone = true;
-            break;
+    case APP_USBD_CDC_ACM_USER_EVT_TX_DONE:
+        sUsbState.mTransferDone = true;
+        break;
 
-        case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
-            sUsbState.mReceiveDone = true;
-            // Get amount of data received.
-            sUsbState.mReceivedDataSize = app_usbd_cdc_acm_rx_size(cdcAcmClass);
-            break;
+    case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
+        sUsbState.mReceiveDone = true;
+        // Get amount of data received.
+        sUsbState.mReceivedDataSize = app_usbd_cdc_acm_rx_size(cdcAcmClass);
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -157,12 +160,12 @@ static void usbdUserEventHandler(app_usbd_event_type_t aEvent)
 {
     switch (aEvent)
     {
-        case APP_USBD_EVT_STOPPED:
-            app_usbd_disable();
-            break;
+    case APP_USBD_EVT_STOPPED:
+        app_usbd_disable();
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -170,29 +173,30 @@ static void powerUsbEventHandler(nrf_drv_power_usb_evt_t aEvent)
 {
     switch (aEvent)
     {
-        case NRF_DRV_POWER_USB_EVT_DETECTED:
-            // Workaround for missing port open event.
-            sAppCdcAcm.specific.p_data->ctx.line_state = 0;
+    case NRF_DRV_POWER_USB_EVT_DETECTED:
+        // Workaround for missing port open event.
+        sAppCdcAcm.specific.p_data->ctx.line_state = 0;
 
-            sUsbState.mConnected = true;
-            break;
+        sUsbState.mConnected = true;
+        break;
 
-        case NRF_DRV_POWER_USB_EVT_REMOVED:
-            sUsbState.mConnected = false;
-            break;
+    case NRF_DRV_POWER_USB_EVT_REMOVED:
+        sUsbState.mConnected = false;
+        break;
 
-        case NRF_DRV_POWER_USB_EVT_READY:
-            sUsbState.mReady = true;
-            break;
+    case NRF_DRV_POWER_USB_EVT_READY:
+        sUsbState.mReady = true;
+        break;
 
-        default:
-            assert(false);
+    default:
+        assert(false);
     }
 }
 
 static bool isPortOpened(void)
 {
     uint32_t value;
+
     if (app_usbd_cdc_acm_line_state_get(&sAppCdcAcm, APP_USBD_CDC_ACM_LINE_STATE_DTR, &value) == NRF_SUCCESS)
     {
         return value;
@@ -364,3 +368,5 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
     return OT_ERROR_NONE;
 }
+
+#endif // USB_CDC_AS_SERIAL_TRANSPORT == 1

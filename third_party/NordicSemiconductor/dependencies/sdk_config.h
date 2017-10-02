@@ -10,9 +10,16 @@
 //==========================================================
 // <e> APP_USBD_ENABLED - app_usbd - USB Device library
 //==========================================================
+#if (USB_CDC_AS_SERIAL_TRANSPORT == 1)
 #ifndef APP_USBD_ENABLED
 #define APP_USBD_ENABLED 1
 #endif
+#else  // USB_CDC_AS_SERIAL_TRANSPORT == 1
+#ifndef APP_USBD_ENABLED
+#define APP_USBD_ENABLED 0
+#endif
+#endif // USB_CDC_AS_SERIAL_TRANSPORT == 1
+
 // <s> APP_USBD_VID - Vendor ID
 
 // <i> Vendor ID ordered from USB IF: http://www.usb.org/developers/vendor/
@@ -71,49 +78,6 @@
 #ifndef APP_USBD_CONFIG_LOG_ENABLED
 #define APP_USBD_CONFIG_LOG_ENABLED 0
 #endif
-// <o> APP_USBD_CONFIG_LOG_LEVEL  - Default Severity level
-
-// <0=> Off
-// <1=> Error
-// <2=> Warning
-// <3=> Info
-// <4=> Debug
-
-#ifndef APP_USBD_CONFIG_LOG_LEVEL
-#define APP_USBD_CONFIG_LOG_LEVEL 3
-#endif
-
-// <o> APP_USBD_CONFIG_INFO_COLOR  - ANSI escape code prefix.
-
-// <0=> Default
-// <1=> Black
-// <2=> Red
-// <3=> Green
-// <4=> Yellow
-// <5=> Blue
-// <6=> Magenta
-// <7=> Cyan
-// <8=> White
-
-#ifndef APP_USBD_CONFIG_INFO_COLOR
-#define APP_USBD_CONFIG_INFO_COLOR 0
-#endif
-
-// <o> APP_USBD_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
-
-// <0=> Default
-// <1=> Black
-// <2=> Red
-// <3=> Green
-// <4=> Yellow
-// <5=> Blue
-// <6=> Magenta
-// <7=> Cyan
-// <8=> White
-
-#ifndef APP_USBD_CONFIG_DEBUG_COLOR
-#define APP_USBD_CONFIG_DEBUG_COLOR 0
-#endif
 
 // </e>
 
@@ -164,15 +128,15 @@
 // <e> POWER_ENABLED - nrf_drv_power - POWER peripheral driver
 //==========================================================
 
-#if OPENTHREAD_SERIAL_TRANSPORT_USB
+#if (USB_CDC_AS_SERIAL_TRANSPORT == 1)
 #ifndef POWER_ENABLED
 #define POWER_ENABLED 1
 #endif
-#else  // OPENTHREAD_SERIAL_TRANSPORT_USB
+#else  // USB_CDC_AS_SERIAL_TRANSPORT == 1
 #ifndef POWER_ENABLED
 #define POWER_ENABLED 0
 #endif
-#endif // OPENTHREAD_SERIAL_TRANSPORT_USB
+#endif // USB_CDC_AS_SERIAL_TRANSPORT == 1
 
 // <o> POWER_CONFIG_IRQ_PRIORITY  - Interrupt priority
 
@@ -213,16 +177,27 @@
 
 // <q> SYSTICK_ENABLED  - nrf_drv_systick - SysTick driver
 
-
+#if (USB_CDC_AS_SERIAL_TRANSPORT == 1)
 #ifndef SYSTICK_ENABLED
 #define SYSTICK_ENABLED 1
 #endif
+#else  // USB_CDC_AS_SERIAL_TRANSPORT == 1
+#ifndef SYSTICK_ENABLED
+#define SYSTICK_ENABLED 0
+#endif
+#endif // USB_CDC_AS_SERIAL_TRANSPORT == 1
 
 // <e> USBD_ENABLED - nrf_drv_usbd - USB driver
 //==========================================================
+#if (USB_CDC_AS_SERIAL_TRANSPORT == 1)
 #ifndef USBD_ENABLED
 #define USBD_ENABLED 1
 #endif
+#else  // USB_CDC_AS_SERIAL_TRANSPORT == 1
+#ifndef USBD_ENABLED
+#define USBD_ENABLED 0
+#endif
+#endif // USB_CDC_AS_SERIAL_TRANSPORT == 1
 // <o> USBD_CONFIG_IRQ_PRIORITY  - Interrupt priority
 
 
@@ -272,160 +247,8 @@
 #ifndef NRF_LOG_ENABLED
 #define NRF_LOG_ENABLED 0
 #endif
-// <e> NRF_LOG_USES_COLORS - If enabled then ANSI escape code for colors is prefixed to every string
-//==========================================================
-#ifndef NRF_LOG_USES_COLORS
-#define NRF_LOG_USES_COLORS 0
-#endif
-// <o> NRF_LOG_COLOR_DEFAULT  - ANSI escape code prefix.
-
-// <0=> Default
-// <1=> Black
-// <2=> Red
-// <3=> Green
-// <4=> Yellow
-// <5=> Blue
-// <6=> Magenta
-// <7=> Cyan
-// <8=> White
-
-#ifndef NRF_LOG_COLOR_DEFAULT
-#define NRF_LOG_COLOR_DEFAULT 0
-#endif
-
-// <o> NRF_LOG_ERROR_COLOR  - ANSI escape code prefix.
-
-// <0=> Default
-// <1=> Black
-// <2=> Red
-// <3=> Green
-// <4=> Yellow
-// <5=> Blue
-// <6=> Magenta
-// <7=> Cyan
-// <8=> White
-
-#ifndef NRF_LOG_ERROR_COLOR
-#define NRF_LOG_ERROR_COLOR 0
-#endif
-
-// <o> NRF_LOG_WARNING_COLOR  - ANSI escape code prefix.
-
-// <0=> Default
-// <1=> Black
-// <2=> Red
-// <3=> Green
-// <4=> Yellow
-// <5=> Blue
-// <6=> Magenta
-// <7=> Cyan
-// <8=> White
-
-#ifndef NRF_LOG_WARNING_COLOR
-#define NRF_LOG_WARNING_COLOR 0
-#endif
 
 // </e>
-
-// <o> NRF_LOG_DEFAULT_LEVEL  - Default Severity level
-
-// <0=> Off
-// <1=> Error
-// <2=> Warning
-// <3=> Info
-// <4=> Debug
-
-#ifndef NRF_LOG_DEFAULT_LEVEL
-#define NRF_LOG_DEFAULT_LEVEL 3
-#endif
-
-// <q> NRF_LOG_DEFERRED  - Enable deffered logger.
-
-
-// <i> Log data is buffered and can be processed in idle.
-
-#ifndef NRF_LOG_DEFERRED
-#define NRF_LOG_DEFERRED 1
-#endif
-
-// <o> NRF_LOG_BUFSIZE  - Size of the buffer for storing logs (in bytes).
-
-
-// <i> Must be power of 2 and multiple of 4.
-// <i> If NRF_LOG_DEFERRED = 0 then buffer size can be reduced to minimum.
-// <128=> 128
-// <256=> 256
-// <512=> 512
-// <1024=> 1024
-// <2048=> 2048
-// <4096=> 4096
-// <8192=> 8192
-// <16384=> 16384
-
-#ifndef NRF_LOG_BUFSIZE
-#define NRF_LOG_BUFSIZE 1024
-#endif
-
-// <q> NRF_LOG_ALLOW_OVERFLOW  - Configures behavior when circular buffer is full.
-
-
-// <i> If set then oldest logs are overwritten. Otherwise a
-// <i> marker is injected informing about overflow.
-
-#ifndef NRF_LOG_ALLOW_OVERFLOW
-#define NRF_LOG_ALLOW_OVERFLOW 1
-#endif
-
-// <q> NRF_LOG_USES_TIMESTAMP  - Enable timestamping
-
-
-// <i> Function for getting the timestamp is provided by the user
-
-#ifndef NRF_LOG_USES_TIMESTAMP
-#define NRF_LOG_USES_TIMESTAMP 0
-#endif
-
-// <q> NRF_LOG_FILTERS_ENABLED  - Enable dynamic filtering of logs.
-
-
-#ifndef NRF_LOG_FILTERS_ENABLED
-#define NRF_LOG_FILTERS_ENABLED 0
-#endif
-
-// <q> NRF_LOG_CLI_CMDS  - Enable CLI commands for the module.
-
-
-#ifndef NRF_LOG_CLI_CMDS
-#define NRF_LOG_CLI_CMDS 0
-#endif
-
-// <h> Log message pool - Configuration of log message pool
-
-//==========================================================
-// <o> NRF_LOG_MSGPOOL_ELEMENT_SIZE - Size of a single element in the pool of memory objects.
-// <i> If a small value is set, then performance of logs processing
-// <i> is degraded because data is fragmented. Bigger value impacts
-// <i> RAM memory utilization. The size is set to fit a message with
-// <i> a timestamp and up to 2 arguments in a single memory object.
-
-#ifndef NRF_LOG_MSGPOOL_ELEMENT_SIZE
-#define NRF_LOG_MSGPOOL_ELEMENT_SIZE 20
-#endif
-
-// <o> NRF_LOG_MSGPOOL_ELEMENT_COUNT - Number of elements in the pool of memory objects
-// <i> If a small value is set, then it may lead to a deadlock
-// <i> in certain cases if backend has high latency and holds
-// <i> multiple messages for long time. Bigger value impacts
-// <i> RAM memory usage.
-
-#ifndef NRF_LOG_MSGPOOL_ELEMENT_COUNT
-#define NRF_LOG_MSGPOOL_ELEMENT_COUNT 8
-#endif
-
 // </h>
-//==========================================================
-
-// </e>
-
 
 #endif //SDK_CONFIG_H
