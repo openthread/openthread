@@ -57,8 +57,6 @@
 
 #define RTC_FREQUENCY       32768ULL
 
-#define CEIL_DIV(A, B)      (((A) + (B) - 1ULL) / (B))
-
 #define US_PER_MS           1000ULL
 #define US_PER_S            1000000ULL
 #define US_PER_TICK         CEIL_DIV(US_PER_S, RTC_FREQUENCY)
