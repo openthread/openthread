@@ -4,8 +4,12 @@
 #include <openthread/config.h>
 #undef PACKAGE
 
+#if defined(__GNUC__)
+
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+
+#endif
 
 //==========================================================
 // <e> APP_USBD_ENABLED - app_usbd - USB Device library

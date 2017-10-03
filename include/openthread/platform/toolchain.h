@@ -233,6 +233,8 @@ extern "C" {
 
 #if defined(__ICCARM__)
 
+#include <stddef.h>
+
 #define OT_UNUSED_VARIABLE(VARIABLE)    \
     do                                  \
     {                                   \
