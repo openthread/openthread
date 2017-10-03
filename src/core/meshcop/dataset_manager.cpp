@@ -925,7 +925,7 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
                 continue;
             }
 
-            if ((tlv = mNetwork.Get(static_cast<const Tlv::Type>(aTlvs[index]))) != NULL)
+            if ((tlv = mNetwork.Get(static_cast<Tlv::Type>(aTlvs[index]))) != NULL)
             {
                 SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
             }
