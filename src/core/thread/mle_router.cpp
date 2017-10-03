@@ -2406,6 +2406,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
     TimeoutTlv timeout;
     AddressRegistrationTlv address;
     ResponseTlv response;
+    StatusTlv status;
     LinkFrameCounterTlv linkFrameCounter;
     MleFrameCounterTlv mleFrameCounter;
     LeaderDataTlv leaderData;
@@ -2443,6 +2444,18 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
         VerifyOrExit(response.IsValid() &&
                      memcmp(response.GetResponse(), child->GetChallenge(), child->GetChallengeSize()) == 0,
                      error = OT_ERROR_SECURITY);
+    }
+
+    // Status
+    if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(status.IsValid(), error = OT_ERROR_PARSE);
+
+        if (status.GetStatus() == StatusTlv::kError)
+        {
+            RemoveStoredChild(child->GetRloc16());
+            ExitNow();
+        }
     }
 
     // Link-Layer Frame Counter

@@ -2844,6 +2844,7 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
     LeaderDataTlv leaderData;
     NetworkDataTlv networkData;
     ChallengeTlv challenge;
+    StatusTlv status;
     TlvRequestTlv tlvRequest;
     uint8_t tlvs[kMaxResponseTlvs] = {};
     uint8_t numTlvs = 0;
@@ -2858,6 +2859,18 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
 
     // Leader Data, Network Data, Active Timestamp, Pending Timestamp
     SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
+
+    // Status
+    if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(status.IsValid(), error = OT_ERROR_PARSE);
+
+        if (status.GetStatus() == StatusTlv::kError)
+        {
+            BecomeDetached();
+            ExitNow();
+        }
+    }
 
     // TLV Request
     if (Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest) == OT_ERROR_NONE)
