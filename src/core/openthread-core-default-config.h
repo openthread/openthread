@@ -478,6 +478,54 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_1
+ *
+ * The link margin threshold used for link quality 1 in dB.
+ *
+ * Default (per Thread specification): 2 dB.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_1
+#define OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_1               2
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_2
+ *
+ * The link margin threshold used for link quality 2 in dB.
+ *
+ * Default (per Thread specification): 10 dB.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_2
+#define OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_2               10
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_3
+ *
+ * The link margin threshold used for link quality 3 in dB.
+ *
+ * Default (per Thread specification): 20 dB.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_3
+#define OPENTHREAD_CONFIG_LINK_MARGIN_THRESHOLD_3               20
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LINK_MARGIN_HYSTERESIS_THRESHOLD
+ *
+ * The link margin hysteresis threshold for converting link margin to link quality in dB.
+ *
+ * Default (per Thread specification): 2 dB.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LINK_MARGIN_HYSTERESIS_THRESHOLD
+#define OPENTHREAD_CONFIG_LINK_MARGIN_HYSTERESIS_THRESHOLD      2
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
  * Selects if, and where the LOG output goes to.
