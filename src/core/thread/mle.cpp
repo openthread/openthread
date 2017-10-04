@@ -79,6 +79,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentLinkQuality2(0),
     mParentLinkQuality1(0),
     mChildUpdateAttempts(0),
+    mParentLinkMargin(0),
     mParentIsSingleton(false),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mTimeout(kMleEndDeviceTimeout),
@@ -2523,7 +2524,8 @@ exit:
     return error;
 }
 
-bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv)
+bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin,
+                         ConnectivityTlv &aConnectivityTlv)
 {
     bool rval = false;
 
@@ -2560,6 +2562,8 @@ bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv
     {
         ExitNow(rval = (aConnectivityTlv.GetLinkQuality1() > mParentLinkQuality1));
     }
+
+    rval = (aLinkMargin > mParentLinkMargin);
 
 exit:
     return rval;
@@ -2664,7 +2668,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
         VerifyOrExit(compare >= 0);
 
         // only consider better parents if the partitions are the same
-        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress.GetRloc16(), linkQuality, connectivity));
+        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress.GetRloc16(), linkQuality, linkMargin, connectivity));
     }
 
     // Link Frame Counter
@@ -2707,6 +2711,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentLeaderCost = connectivity.GetLeaderCost();
     mParentLeaderData = leaderData;
     mParentIsSingleton = connectivity.GetActiveRouters() <= 1;
+    mParentLinkMargin = linkMargin;
 
 exit:
 
