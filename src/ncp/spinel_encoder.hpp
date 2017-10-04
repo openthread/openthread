@@ -508,8 +508,11 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * In case of success, the passed-in message @p aMessage will be owned by the frame buffer instance and will be
-     * freed when either the the frame is removed or discarded. In case of failure @p aMessage remains unchanged.
+     * The ownership of the passed-in message @p aMessage changes to underlying `NcpFrameBuffer` ONLY when the entire
+     * frame is successfully finished (i.e., with a successful call to `EndFrame()` for the current frame being written),
+     * and in this case the `otMessage` instance will be freed once the frame is removed from the `NcpFrameBuffer`.
+     * However, if the frame gets discarded before it is finished (e.g., running out of buffer space), the  `otMessage`
+     * instance remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
      *

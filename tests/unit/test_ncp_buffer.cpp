@@ -574,6 +574,10 @@ void TestNcpFrameBuffer(void)
         WriteTestFrame1(ncpBuffer,
                         frame1IsHighPriority ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
 
+        // Note that message will not be freed by the NCP buffer since the frame associated with it was discarded and
+        // not yet finished/ended.
+        otMessageFree(message);
+
         VerifyAndRemoveFrame3(ncpBuffer);
 
         // Start reading few bytes from the frame
