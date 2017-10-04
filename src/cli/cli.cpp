@@ -162,6 +162,9 @@ const struct Command Interpreter::sCommands[] =
 #endif
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
+#if OPENTHREAD_FTD
+    { "neighbor", &Interpreter::ProcessNeighbor },
+#endif
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
 #endif
@@ -1406,6 +1409,64 @@ void Interpreter::ProcessMode(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_FTD
+void Interpreter::ProcessNeighbor(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+    otNeighborInfo neighborInfo;
+    bool isTable = false;
+    otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+
+    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
+    {
+        if (isTable)
+        {
+            mServer->OutputFormat("| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|S|D|N| Extended MAC     |\r\n");
+            mServer->OutputFormat("+------+--------+-----+----------+-----------+-+-+-+-+------------------+\r\n");
+        }
+
+        while (otThreadGetNextNeighborInfo(mInstance, &iterator, &neighborInfo) == OT_ERROR_NONE)
+        {
+            if (isTable)
+            {
+                mServer->OutputFormat("| %3c  ", neighborInfo.mIsChild ? 'C' : 'R');
+                mServer->OutputFormat("| 0x%04x ", neighborInfo.mRloc16);
+                mServer->OutputFormat("| %3d ", neighborInfo.mAge);
+                mServer->OutputFormat("| %8d ", neighborInfo.mAverageRssi);
+                mServer->OutputFormat("| %9d ", neighborInfo.mLastRssi);
+                mServer->OutputFormat("|%1d", neighborInfo.mRxOnWhenIdle);
+                mServer->OutputFormat("|%1d", neighborInfo.mSecureDataRequest);
+                mServer->OutputFormat("|%1d", neighborInfo.mFullFunction);
+                mServer->OutputFormat("|%1d", neighborInfo.mFullNetworkData);
+                mServer->OutputFormat("| ");
+
+                for (size_t j = 0; j < sizeof(neighborInfo.mExtAddress); j++)
+                {
+                    mServer->OutputFormat("%02x", neighborInfo.mExtAddress.m8[j]);
+                }
+
+                mServer->OutputFormat(" |\r\n");
+            }
+            else
+            {
+                mServer->OutputFormat("0x%04x ", neighborInfo.mRloc16);
+            }
+        }
+
+        mServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        error = OT_ERROR_PARSE;
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
