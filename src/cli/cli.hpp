@@ -252,6 +252,9 @@ private:
     void ProcessLinkQuality(int argc, char *argv[]);
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
+#if OPENTHREAD_FTD
+    void ProcessNeighbor(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     void ProcessNetworkDataRegister(int argc, char *argv[]);
 #endif
