@@ -810,6 +810,18 @@ class MessageQueue : public otMessageQueue
     friend class PriorityQueue;
 
 public:
+
+    /**
+     * This enumeration represents a position (head or tail) in the queue. This is used to specify where a new message
+     * should be added in the queue.
+     *
+     */
+    enum QueuePosition
+    {
+        kQueuePositionHead,    ///< Indicates the head (front) of the list.
+        kQueuePositionTail,    ///< Indicates the tail (end) of the list.
+    };
+
     /**
      * This constructor initializes the message queue.
      *
@@ -833,7 +845,19 @@ public:
      * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
      *
      */
-    otError Enqueue(Message &aMessage);
+    otError Enqueue(Message &aMessage) { return Enqueue(aMessage, kQueuePositionTail); }
+
+    /**
+     * This method adds a message at a given position (head/tail) of the list.
+     *
+     * @param[in]  aMessage  The message to add.
+     * @param[in]  aPosition The position (head or tail) where to add the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully added the message to the list.
+     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
+     *
+     */
+    otError Enqueue(Message &aMessage, QueuePosition aPosition);
 
     /**
      * This method removes a message from the list.
@@ -874,13 +898,23 @@ private:
     void SetTail(Message *aMessage) { mData = aMessage; }
 
     /**
-     * This method adds a message to a list.
+     * This method adds a message to the end of the list.
      *
      * @param[in]  aListId   The list to add @p aMessage to.
      * @param[in]  aMessage  The message to add to @p aListId.
      *
      */
-    void AddToList(uint8_t aListId, Message &aMessage);
+    void AddToList(uint8_t aListId, Message &aMessage) { AddToList(aListId, aMessage, kQueuePositionTail); }
+
+    /**
+     * This method adds a message at a give position (head or tail) of the list.
+     *
+     * @param[in]  aListId   The list to add @p aMessage to.
+     * @param[in]  aMessage  The message to add to @p aListId.
+     * @param[in]  aPosition The position where to add the message.
+     *
+     */
+    void AddToList(uint8_t aListId, Message &aMessage, QueuePosition aPosition);
 
     /**
      * This method removes a message from a list.
