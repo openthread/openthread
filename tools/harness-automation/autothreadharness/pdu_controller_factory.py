@@ -36,6 +36,8 @@ class PduControllerFactory(object):
             return pdu_controller.NordicBoardPduController()
         elif _type == 'APC_PDU_CONTROLLER':
             return pdu_controller.ApcPduController()
+        elif _type == 'IP_POWER_SOCKET_PDU_CONTROLLER':
+            return pdu_controller.IpPowerSocketPduController()
         elif _type == 'MANUAL_PDU_CONTROLLER':
             return pdu_controller.ManualPduController()
         else:
