@@ -66,10 +66,17 @@ configure_OPTIONS               = \
     --enable-radio-only           \
     --enable-linker-map           \
     --with-examples=samr21        \
+    MBEDTLS_CPPFLAGS="$(SAMR21_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
+
+SAMR21_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
+SAMR21_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"samr21-mbedtls-config.h\"'
+SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/samr21/crypto
+SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
+SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-samr21-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/samr21/
