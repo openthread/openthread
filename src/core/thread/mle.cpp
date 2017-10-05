@@ -70,8 +70,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mReattachState(kReattachStop),
     mParentRequestTimer(aThreadNetif.GetInstance(), &Mle::HandleParentRequestTimer, this),
     mDelayedResponseTimer(aThreadNetif.GetInstance(), &Mle::HandleDelayedResponseTimer, this),
-    mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
+    mLastPartitionRouterIdSequence(0),
+    mLastPartitionIdTimeout(0),
     mParentLeaderCost(0),
     mParentRequestMode(kAttachAny),
     mParentPriority(0),
@@ -257,7 +258,6 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     netif.GetNetworkDataLocal().Clear();
 #endif
     netif.GetNetworkDataLeader().Clear();
-    memset(&mLeaderData, 0, sizeof(mLeaderData));
 
     if (aClearNetworkDatasets)
     {
@@ -547,8 +547,6 @@ otError Mle::BecomeChild(AttachMode aMode)
     if (aMode == kAttachAny)
     {
         mParent.SetState(Neighbor::kStateInvalid);
-        mLastPartitionId = netif.GetMle().GetPreviousPartitionId();
-        mLastPartitionRouterIdSequence = netif.GetMle().GetRouterIdSequence();
     }
 
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
@@ -818,6 +816,9 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
 {
     if (mLeaderData.GetPartitionId() != aPartitionId)
     {
+        mLastPartitionId = mLeaderData.GetPartitionId();
+        mLastPartitionRouterIdSequence = GetNetif().GetMle().GetRouterIdSequence();
+        mLastPartitionIdTimeout = GetNetif().GetMle().GetNetworkIdTimeout();
         GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_PARTITION_ID);
     }
 

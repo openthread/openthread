@@ -1343,10 +1343,11 @@ protected:
     };
     ReattachState mReattachState;
 
-    TimerMilli mParentRequestTimer;    ///< The timer for driving the Parent Request process.
-    TimerMilli mDelayedResponseTimer;  ///< The timer to delay MLE responses.
-    uint8_t mLastPartitionRouterIdSequence;
-    uint32_t mLastPartitionId;
+    TimerMilli mParentRequestTimer;          ///< The timer for driving the Parent Request process.
+    TimerMilli mDelayedResponseTimer;        ///< The timer to delay MLE responses.
+    uint32_t mLastPartitionId;               ///< The partition ID of the previous Thread partition
+    uint8_t mLastPartitionRouterIdSequence;  ///< The router ID sequence from the previous Thread partition
+    uint8_t mLastPartitionIdTimeout;         ///< The time remaining to avoid the previous Thread partition
 
     uint8_t mParentLeaderCost;
 
