@@ -441,6 +441,8 @@ void Interpreter::ProcessBufferInfo(int argc, char *argv[])
     mServer->OutputFormat("arp: %d %d\r\n", bufferInfo.mArpMessages, bufferInfo.mArpBuffers);
     mServer->OutputFormat("coap: %d %d\r\n", bufferInfo.mCoapMessages, bufferInfo.mCoapBuffers);
     mServer->OutputFormat("coap secure: %d %d\r\n", bufferInfo.mCoapSecureMessages, bufferInfo.mCoapSecureBuffers);
+    mServer->OutputFormat("application coap: %d %d\r\n", bufferInfo.mApplicationCoapMessages,
+                          bufferInfo.mApplicationCoapBuffers);
 
     AppendResult(OT_ERROR_NONE);
 }

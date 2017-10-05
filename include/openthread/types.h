@@ -1007,6 +1007,8 @@ typedef struct otBufferInfo
     uint16_t mCoapBuffers;            ///< The number of buffers in the CoAP send queue.
     uint16_t mCoapSecureMessages;     ///< The number of messages in the CoAP secure send queue.
     uint16_t mCoapSecureBuffers;      ///< The number of buffers in the CoAP secure send queue.
+    uint16_t mApplicationCoapMessages;///< The number of messages in the application CoAP send queue.
+    uint16_t mApplicationCoapBuffers; ///< The number of buffers in the application CoAP send queue.
 } otBufferInfo;
 
 /**
