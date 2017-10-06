@@ -434,6 +434,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     mRole = OT_DEVICE_ROLE_ROUTER;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
+    mChildUpdateRequestTimer.Stop();
     ResetAdvertiseInterval();
 
     netif.SubscribeAllRoutersMulticast();
@@ -471,6 +472,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     mRole = OT_DEVICE_ROLE_LEADER;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
+    mChildUpdateRequestTimer.Stop();
     ResetAdvertiseInterval();
     AddLeaderAloc();
 
