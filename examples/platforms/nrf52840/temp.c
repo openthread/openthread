@@ -35,25 +35,39 @@
 
 #include "platform-nrf5.h"
 
+#if SOFTDEVICE_PRESENT
+#include "softdevice.h"
+#endif
+
+#if !SOFTDEVICE_PRESENT
 __STATIC_INLINE void dataReadyEventClear(void)
 {
     NRF_TEMP->EVENTS_DATARDY = 0;
     volatile uint32_t dummy = NRF_TEMP->EVENTS_DATARDY;
     (void)dummy;
 }
+#endif
 
 void nrf5TempInit(void)
 {
+#if !SOFTDEVICE_PRESENT
     nrf_temp_init();
+#endif
 }
 
 void nrf5TempDeinit(void)
 {
+#if !SOFTDEVICE_PRESENT
     NRF_TEMP->TASKS_STOP = 1;
+#endif
 }
 
 int32_t nrf5TempGet(void)
 {
+#if SOFTDEVICE_PRESENT
+    int32_t temperature;
+    (void) sd_temp_get(&temperature);
+#else
     NRF_TEMP->TASKS_START = 1;
 
     while (NRF_TEMP->EVENTS_DATARDY == 0)
@@ -66,6 +80,7 @@ int32_t nrf5TempGet(void)
     int32_t temperature = nrf_temp_read();
 
     NRF_TEMP->TASKS_STOP = 1;
+#endif
 
     return temperature;
 }
