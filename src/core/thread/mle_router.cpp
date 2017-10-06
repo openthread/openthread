@@ -1339,7 +1339,9 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         otLogInfoMle(GetInstance(), "Different partition (peer:%d, local:%d)",
                      leaderData.GetPartitionId(), mLeaderData.GetPartitionId());
 
-        if (partitionId == mLastPartitionId && (mDeviceMode & ModeTlv::kModeFFD))
+        if ((mDeviceMode & ModeTlv::kModeFFD) &&
+            (mLastPartitionIdTimeout > 0) &&
+            (partitionId == mLastPartitionId))
         {
             VerifyOrExit((static_cast<int8_t>(route.GetRouterIdSequence() - mLastPartitionRouterIdSequence) > 0),
                          error = OT_ERROR_DROP);
@@ -1774,6 +1776,11 @@ void MleRouter::HandleStateUpdateTimer(void)
     if (mChallengeTimeout > 0)
     {
         mChallengeTimeout--;
+    }
+
+    if (mLastPartitionIdTimeout > 0)
+    {
+        mLastPartitionIdTimeout--;
     }
 
     if (mRouterSelectionJitterTimeout > 0)
