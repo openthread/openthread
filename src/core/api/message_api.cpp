@@ -188,5 +188,8 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aInstance->mApplicationCoap.GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mApplicationCoapMessages += messages;
     aBufferInfo->mApplicationCoapBuffers += buffers;
+#else
+    aBufferInfo->mApplicationCoapMessages = 0;
+    aBufferInfo->mApplicationCoapBuffers = 0;
 #endif
 }
