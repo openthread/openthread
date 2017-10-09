@@ -2454,6 +2454,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
         if (status.GetStatus() == StatusTlv::kError)
         {
             RemoveStoredChild(child->GetRloc16());
+            child->SetState(Neighbor::kStateInvalid);
             ExitNow();
         }
     }

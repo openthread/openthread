@@ -2840,6 +2840,7 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
     static const uint8_t kMaxResponseTlvs = 5;
 
     otError error = OT_ERROR_NONE;
+    Mac::ExtAddress srcAddr;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
     NetworkDataTlv networkData;
@@ -2864,6 +2865,10 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
     if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
     {
         VerifyOrExit(status.IsValid(), error = OT_ERROR_PARSE);
+
+        aMessageInfo.GetPeerAddr().ToExtAddress(srcAddr);
+        VerifyOrExit((memcmp(&mParent.GetExtAddress(), &srcAddr, sizeof(srcAddr)) == 0),
+                     error = OT_ERROR_DROP);
 
         if (status.GetStatus() == StatusTlv::kError)
         {
