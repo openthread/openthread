@@ -2846,10 +2846,12 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
     static const uint8_t kMaxResponseTlvs = 5;
 
     otError error = OT_ERROR_NONE;
+    Mac::ExtAddress srcAddr;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
     NetworkDataTlv networkData;
     ChallengeTlv challenge;
+    StatusTlv status;
     TlvRequestTlv tlvRequest;
     uint8_t tlvs[kMaxResponseTlvs] = {};
     uint8_t numTlvs = 0;
@@ -2864,6 +2866,22 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
 
     // Leader Data, Network Data, Active Timestamp, Pending Timestamp
     SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
+
+    // Status
+    if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(status.IsValid(), error = OT_ERROR_PARSE);
+
+        aMessageInfo.GetPeerAddr().ToExtAddress(srcAddr);
+        VerifyOrExit((memcmp(&mParent.GetExtAddress(), &srcAddr, sizeof(srcAddr)) == 0),
+                     error = OT_ERROR_DROP);
+
+        if (status.GetStatus() == StatusTlv::kError)
+        {
+            BecomeDetached();
+            ExitNow();
+        }
+    }
 
     // TLV Request
     if (Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest) == OT_ERROR_NONE)
