@@ -34,6 +34,8 @@
 #ifndef SETTINGS_HPP_
 #define SETTINGS_HPP_
 
+#include "openthread-core-config.h"
+
 #include "thread/mle.hpp"
 
 namespace ot {

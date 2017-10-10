@@ -33,7 +33,7 @@
 
 #define WPP_NAME "ip6_api.tmh"
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/ip6.h>
 

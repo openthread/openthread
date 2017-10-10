@@ -34,6 +34,8 @@
 #ifndef MLE_HPP_
 #define MLE_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/openthread.h>
 
 #include "common/encoding.hpp"

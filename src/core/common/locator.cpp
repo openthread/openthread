@@ -33,8 +33,6 @@
 
 #define WPP_NAME "locator.tmh"
 
-#include <openthread/config.h>
-
 #include "locator.hpp"
 
 #include "openthread-instance.h"

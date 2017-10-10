@@ -34,7 +34,8 @@
 #ifndef CONTEXT_HPP_
 #define CONTEXT_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
+
 #include <openthread/platform/toolchain.h>
 
 #include "openthread-core-config.h"

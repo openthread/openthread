@@ -34,6 +34,8 @@
 #ifndef OT_MBEDTLS_HPP_
 #define OT_MBEDTLS_HPP_
 
+#include "openthread-core-config.h"
+
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 namespace ot {

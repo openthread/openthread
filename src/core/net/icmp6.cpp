@@ -33,8 +33,6 @@
 
 #define WPP_NAME "icmp6.tmh"
 
-#include <openthread/config.h>
-
 #include "icmp6.hpp"
 
 #include "utils/wrap_string.h"

@@ -31,8 +31,6 @@
  *   This file implements CRC16 computations.
  */
 
-#include <openthread/config.h>
-
 #include "crc16.hpp"
 
 namespace ot {

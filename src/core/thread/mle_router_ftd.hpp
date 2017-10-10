@@ -31,8 +31,10 @@
  *   This file includes definitions for MLE functionality required by the Thread Router and Leader roles.
  */
 
-#ifndef MLE_ROUTER_HPP_
-#define MLE_ROUTER_HPP_
+#ifndef MLE_ROUTER_FTD_HPP_
+#define MLE_ROUTER_FTD_HPP_
+
+#include "openthread-core-config.h"
 
 #include "utils/wrap_string.h"
 
@@ -848,4 +850,4 @@ private:
 
 }  // namespace ot
 
-#endif  // MLE_ROUTER_HPP_
+#endif  // MLE_ROUTER_FTD_HPP_

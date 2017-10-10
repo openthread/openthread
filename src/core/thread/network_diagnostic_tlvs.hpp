@@ -34,6 +34,8 @@
 #ifndef NETWORK_DIAGNOSTIC_TLVS_HPP_
 #define NETWORK_DIAGNOSTIC_TLVS_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_string.h"
 
 #include <openthread/types.h>

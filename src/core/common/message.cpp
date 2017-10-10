@@ -33,8 +33,6 @@
 
 #define WPP_NAME "message.tmh"
 
-#include <openthread/config.h>
-
 #include "message.hpp"
 
 #include "openthread-instance.h"

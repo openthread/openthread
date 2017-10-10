@@ -31,8 +31,6 @@
  *   This file implements the CLI interpreter.
  */
 
-#include <openthread/config.h>
-
 #include "cli.hpp"
 
 #ifdef OTDLL

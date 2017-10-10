@@ -31,8 +31,6 @@
  *   This file implements UDP/IPv6 sockets.
  */
 
-#include <openthread/config.h>
-
 #include "udp6.hpp"
 
 #include <stdio.h>

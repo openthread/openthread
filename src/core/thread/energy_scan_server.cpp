@@ -32,7 +32,6 @@
  */
 
 #define WPP_NAME "energy_scan_server.tmh"
-#include <openthread/config.h>
 
 #include "energy_scan_server.hpp"
 

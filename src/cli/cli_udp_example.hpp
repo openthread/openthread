@@ -34,6 +34,8 @@
 #ifndef CLI_UDP_EXAMPLE_HPP_
 #define CLI_UDP_EXAMPLE_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/udp.h>
 #include <openthread/types.h>
 

@@ -34,6 +34,8 @@
 #ifndef CLI_SERVER_HPP_
 #define CLI_SERVER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 namespace ot {

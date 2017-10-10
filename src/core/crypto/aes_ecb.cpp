@@ -31,8 +31,6 @@
  *   This file implements AES-ECB.
  */
 
-#include <openthread/config.h>
-
 #include "aes_ecb.hpp"
 
 namespace ot {

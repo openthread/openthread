@@ -32,8 +32,6 @@
  *
  */
 
-#include <openthread/config.h>
-
 #include "dataset.hpp"
 
 #include <stdio.h>

@@ -30,7 +30,6 @@
  * @file
  *   This file implements IPv6 network interfaces.
  */
-#include <openthread/config.h>
 
 #include "netif.hpp"
 

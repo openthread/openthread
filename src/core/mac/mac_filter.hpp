@@ -34,6 +34,8 @@
 #ifndef MAC_FILTER_HPP_
 #define MAC_FILTER_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdint.h"
 
 #include <openthread/types.h>

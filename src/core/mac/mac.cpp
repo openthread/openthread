@@ -33,8 +33,6 @@
 
 #define WPP_NAME "mac.tmh"
 
-#include <openthread/config.h>
-
 #include "mac.hpp"
 
 #include "utils/wrap_string.h"

@@ -34,9 +34,10 @@
 #ifndef PANID_QUERY_CLIENT_HPP_
 #define PANID_QUERY_CLIENT_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/commissioner.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"

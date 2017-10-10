@@ -29,6 +29,8 @@
 #ifndef COAP_HPP_
 #define COAP_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/coap.h>
 
 #include "coap/coap_header.hpp"

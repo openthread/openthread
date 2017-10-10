@@ -34,6 +34,8 @@
 #ifndef MAC_FRAME_HPP_
 #define MAC_FRAME_HPP_
 
+#include "openthread-core-config.h"
+
 #include <limits.h>
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_string.h"
@@ -41,7 +43,6 @@
 #include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
-#include "openthread-core-config.h"
 #include "common/encoding.hpp"
 
 namespace ot {

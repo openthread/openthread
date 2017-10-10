@@ -33,7 +33,7 @@
 #ifndef NCP_BASE_HPP_
 #define NCP_BASE_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include <openthread/ip6.h>

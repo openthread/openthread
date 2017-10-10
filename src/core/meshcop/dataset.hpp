@@ -35,6 +35,8 @@
 #ifndef MESHCOP_DATASET_HPP_
 #define MESHCOP_DATASET_HPP_
 
+#include "openthread-core-config.h"
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "meshcop/meshcop_tlvs.hpp"

@@ -34,9 +34,10 @@
 #ifndef ADDRESS_RESOLVER_HPP_
 #define ADDRESS_RESOLVER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"

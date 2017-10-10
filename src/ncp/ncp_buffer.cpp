@@ -30,9 +30,8 @@
  *   This file implements NCP frame buffer class.
  */
 
-#include <openthread/config.h>
-
 #include "ncp_buffer.hpp"
+
 #include "utils/wrap_string.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"

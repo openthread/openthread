@@ -31,8 +31,6 @@
  *   This file implements the Thread IPv6 global addresses configuration utilities.
  */
 
-#include <openthread/config.h>
-
 #include "slaac_address.hpp"
 
 #include "utils/wrap_string.h"

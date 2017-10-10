@@ -31,7 +31,8 @@
  *   This file implements the OpenThread UDP API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
+
 #include <openthread/udp.h>
 
 #include "openthread-instance.h"

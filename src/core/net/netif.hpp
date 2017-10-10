@@ -34,6 +34,8 @@
 #ifndef NET_NETIF_HPP_
 #define NET_NETIF_HPP_
 
+#include "openthread-core-config.h"
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/tasklet.hpp"

@@ -31,8 +31,6 @@
  *   This file implements MPL.
  */
 
-#include <openthread/config.h>
-
 #include "ip6_mpl.hpp"
 
 #include <openthread/platform/random.h>

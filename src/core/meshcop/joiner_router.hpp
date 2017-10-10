@@ -34,6 +34,8 @@
 #ifndef JOINER_ROUTER_HPP_
 #define JOINER_ROUTER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 #include "coap/coap.hpp"

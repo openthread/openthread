@@ -35,11 +35,10 @@
 #ifndef OT_HEAP_HPP_
 #define OT_HEAP_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <stddef.h>
 
-#include "openthread-core-config.h"
 #include "utils/wrap_stdint.h"
 
 namespace ot {

@@ -34,9 +34,10 @@
 #ifndef SOURCE_MATCH_CONTROLLER_HPP_
 #define SOURCE_MATCH_CONTROLLER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
 #include "common/locator.hpp"
 #include "thread/topology.hpp"
 

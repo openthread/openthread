@@ -34,6 +34,8 @@
 #ifndef NETWORK_DATA_HPP_
 #define NETWORK_DATA_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 #include "coap/coap.hpp"

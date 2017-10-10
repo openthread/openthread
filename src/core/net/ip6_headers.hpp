@@ -34,6 +34,8 @@
 #ifndef IP6_HEADERS_HPP_
 #define IP6_HEADERS_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stddef.h>
 
 #include <openthread/types.h>

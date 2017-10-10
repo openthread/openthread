@@ -33,8 +33,6 @@
 
 #define WPP_NAME "network_diagnostic.tmh"
 
-#include <openthread/config.h>
-
 #include "network_diagnostic.hpp"
 
 #include <openthread/platform/random.h>

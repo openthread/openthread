@@ -31,8 +31,6 @@
  *   This file implements IP6 header processing.
  */
 
-#include <openthread/config.h>
-
 #include "ip6_headers.hpp"
 
 #include "net/ip6.hpp"

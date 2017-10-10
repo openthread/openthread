@@ -34,6 +34,8 @@
 #ifndef IP6_FILTER_HPP_
 #define IP6_FILTER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/openthread.h>
 
 #include "common/message.hpp"

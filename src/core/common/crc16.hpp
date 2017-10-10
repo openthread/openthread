@@ -34,6 +34,8 @@
 #ifndef CRC16_HPP_
 #define CRC16_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdint.h"
 
 namespace ot {

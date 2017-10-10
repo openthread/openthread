@@ -34,7 +34,7 @@
 #ifndef LOGGING_HPP_
 #define LOGGING_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -43,8 +43,6 @@
 #include <openthread/instance.h>
 #include <openthread/types.h>
 #include <openthread/platform/logging.h>
-
-#include "openthread-core-config.h"
 
 #ifdef WINDOWS_LOGGING
 #ifdef _KERNEL_MODE

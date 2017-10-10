@@ -30,8 +30,6 @@
  *   This file implements raw link required Spinel interface to the OpenThread stack.
  */
 
-#include <openthread/config.h>
-
 #include "ncp_base.hpp"
 
 #include <stdlib.h>

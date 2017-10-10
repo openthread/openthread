@@ -33,7 +33,6 @@
 
 #include "cli_udp_example.hpp"
 
-#include <openthread/config.h>
 #include <openthread/message.h>
 #include <openthread/udp.h>
 

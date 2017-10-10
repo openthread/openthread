@@ -31,8 +31,6 @@
  *   This file implements the trickle timer logic.
  */
 
-#include <openthread/config.h>
-
 #include "trickle_timer.hpp"
 
 #include <openthread/platform/random.h>

@@ -31,8 +31,6 @@
  *   This file implements IPv6 datagram filtering.
  */
 
-#include <openthread/config.h>
-
 #include "ip6_filter.hpp"
 
 #include <stdio.h>

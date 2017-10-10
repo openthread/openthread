@@ -25,8 +25,6 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-
 #include "utils/wrap_string.h"
 
 size_t missing_strnlen(const char *s, size_t maxlen)

@@ -35,11 +35,9 @@
 #ifndef SINGLE_OPENTHREAD_INSTANCE_H_
 #define SINGLE_OPENTHREAD_INSTANCE_H_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/types.h>
-
-#include "openthread-core-config.h"
 
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES

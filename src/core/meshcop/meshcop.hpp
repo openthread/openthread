@@ -35,6 +35,8 @@
 #ifndef MESHCOP_HPP_
 #define MESHCOP_HPP_
 
+#include "openthread-core-config.h"
+
 #include "coap/coap.hpp"
 #include "common/message.hpp"
 
