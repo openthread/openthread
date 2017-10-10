@@ -32,6 +32,7 @@ EXTRA_DIST                              = \
     dialog                                \
     nxp                                   \
     nlbuild-autotools                     \
+    nlfaultinjection/repo                 \
     openthread-test-driver                \
     NordicSemiconductor                   \
     synopsys                              \
@@ -47,7 +48,6 @@ endif
 
 DIST_SUBDIRS                            = \
     mbedtls                               \
-    nlfaultinjection/repo                 \
     $(NULL)
 
 SUBDIRS = \
