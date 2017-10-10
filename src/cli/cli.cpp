@@ -1003,7 +1003,7 @@ void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
 
     mServer->OutputFormat("FaultInjection counters:\r\n");
 	for (faultId = 0; faultId < mgr.GetNumFaults(); faultId++)
-	{   
+	{
 		mServer->OutputFormat("%s_%s: %" PRIu32 "\r\n", mgr.GetName(), mgr.GetFaultNames()[faultId],
 				mgr.GetFaultRecords()[faultId].mNumTimesChecked);
 	}

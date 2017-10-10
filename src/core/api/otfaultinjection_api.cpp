@@ -54,8 +54,8 @@ int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCalls
 
 bool otFIParseFaultInjectionStr(char *inStr)
 {
-    return nl::FaultInjection::ParseFaultInjectionStr(inStr, 
-                                                      sFaultMgrTable, 
+    return nl::FaultInjection::ParseFaultInjectionStr(inStr,
+                                                      sFaultMgrTable,
                                                       sizeof(sFaultMgrTable)/sizeof(sFaultMgrTable[0]));
 }
 #endif // OPENTHREAD_ENABLE_FAULT_INJECTION

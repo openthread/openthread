@@ -71,7 +71,7 @@ static nl::FaultInjection::GlobalContext sFaultInjectionGlobalContext = {
 static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
                                     nl::FaultInjection::Identifier aId,
                                     nl::FaultInjection::Record *aFaultRecord)
-{    
+{
     static char tmpstr[300];
     size_t charAvailable = sizeof(tmpstr);
     size_t charWritten = 0;
@@ -80,38 +80,38 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
 
     tmpstr[0] = 0;
 
-    retval = snprintf(tmpstr, charAvailable, 
+    retval = snprintf(tmpstr, charAvailable,
                            "Injecting fault %s_%s, instance: %" PRIu32 "; %s",
                            aManager->GetName(), aManager->GetFaultNames()[aId],
                            aFaultRecord->mNumTimesChecked, aFaultRecord->mReboot ? "reboot" : "");
     if (retval < 0)
-    {   
+    {
         goto error_exit;
     }
     charWritten += retval;
 
     if (numargs)
-    {   
+    {
         uint16_t i;
         if (charWritten < charAvailable)
-        {   
+        {
             retval = snprintf(tmpstr + charWritten, charAvailable - charWritten,
                                     " with %" PRIu16 " args:", numargs);
             if (retval < 0)
-            {   
+            {
                 goto error_exit;
             }
             charWritten += retval;
         }
 
         for (i = 0; i < numargs; i++)
-        {   
+        {
             if (charWritten < charAvailable)
-            {   
+            {
                 retval = snprintf(tmpstr + charWritten, charAvailable - charWritten,
                                         " %" PRId32, aFaultRecord->mArguments[i]);
                 if (retval < 0)
-                {   
+                {
                     goto error_exit;
                 }
                 charWritten += retval;
@@ -122,7 +122,7 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
 	otLogCritFI(ot::GetInstance(), "%s", tmpstr);
 
     if (charWritten >= charAvailable)
-    {   
+    {
         otLogCritFI(ot::GetInstance(), "String overflow!");
     }
     return;
