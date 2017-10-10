@@ -41,6 +41,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
 * [mode](#mode)
+* [neighbor](#neighbor-list)
 * [netdataregister](#netdataregister)
 * [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 * [networkidtimeout](#networkidtimeout)
@@ -1088,6 +1089,30 @@ Set the Thread Device Mode value.
 
 ```bash
 > mode rsdn
+Done
+```
+
+### neighbor list
+
+List RLOC16 of neighbors.
+
+```bash
+> neighbor list
+0xcc01 0xc800 0xf000
+Done
+```
+
+### neighbor table
+
+Print table of neighbors.
+
+```bash
+> neighbor table
+| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|S|D|N| Extended MAC     |
++------+--------+-----+----------+-----------+-+-+-+-+------------------+
+|   C  | 0xcc01 |  96 |      -46 |       -46 |1|1|1|1| 1eb9ba8a6522636b |
+|   R  | 0xc800 |   2 |      -29 |       -29 |1|0|1|1| 9a91556102c39ddb |
+|   R  | 0xf000 |   3 |      -28 |       -28 |1|0|1|1| 0ad7ed6beaa6016d |
 Done
 ```
 

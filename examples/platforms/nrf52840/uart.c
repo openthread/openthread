@@ -49,6 +49,8 @@
 #include <hal/nrf_gpio.h>
 #include "platform-nrf5.h"
 
+#if (USB_CDC_AS_SERIAL_TRANSPORT == 0)
+
 /**
  *  UART TX buffer variables.
  */
@@ -287,6 +289,8 @@ void UARTE0_UART0_IRQHandler(void)
         }
     }
 }
+
+#endif // USB_CDC_AS_SERIAL_TRANSPORT == 0
 
 /**
  * The UART driver weak functions definition.

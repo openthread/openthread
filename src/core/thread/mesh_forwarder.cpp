@@ -443,8 +443,8 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
     if ((mSendMessage = GetDirectTransmission()) != NULL)
     {
-        netif.GetMac().SendFrameRequest(mMacSender);
         mSendMessageMaxMacTxAttempts = Mac::kDirectFrameMacTxAttempts;
+        netif.GetMac().SendFrameRequest(mMacSender);
         ExitNow();
     }
 
@@ -1911,7 +1911,9 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     meshDest.mLength = sizeof(meshDest.mShortAddress);
     meshDest.mShortAddress = meshHeader.GetDestination();
 
+#if OPENTHREAD_FTD
     UpdateRoutes(aFrame, aFrameLength, meshSource, meshDest);
+#endif // OPENTHREAD_FTD
 
     if (meshDest.mShortAddress == netif.GetMac().GetShortAddress())
     {
@@ -1974,6 +1976,7 @@ exit:
     }
 }
 
+#if OPENTHREAD_FTD
 void MeshForwarder::UpdateRoutes(uint8_t *aFrame, uint8_t aFrameLength,
                                  const Mac::Address &aMeshSource, const Mac::Address &aMeshDest)
 {
@@ -2007,6 +2010,8 @@ void MeshForwarder::UpdateRoutes(uint8_t *aFrame, uint8_t aFrameLength,
     neighbor = netif.GetMle().GetNeighbor(ip6Header.GetSource());
     VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
 
+    netif.GetAddressResolver().UpdateCacheEntry(ip6Header.GetSource(), meshHeader.GetSource());
+
     if (Mle::Mle::GetRouterId(meshHeader.GetSource()) != Mle::Mle::GetRouterId(GetNetif().GetMac().GetShortAddress()))
     {
         netif.GetMle().RemoveNeighbor(*neighbor);
@@ -2015,6 +2020,7 @@ void MeshForwarder::UpdateRoutes(uint8_t *aFrame, uint8_t aFrameLength,
 exit:
     return;
 }
+#endif // OPENTHREAD_FTD
 
 otError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                                          const Mac::Address &aMeshSource, const Mac::Address &aMeshDest)
@@ -2332,7 +2338,8 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const otTh
 
     mScheduleTransmissionTask.Post();
 
-    otLogInfoMac(GetInstance(), "Rx data poll, src:0x%04x, qed_msgs:%d", child->GetRloc16(), indirectMsgCount);
+    otLogInfoMac(GetInstance(), "Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount,
+                 aLinkInfo.mRss);
 
 exit:
     return;
@@ -2436,6 +2443,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageReassemblyDrop:
         actionText = "Dropping (reassembly timeout)";
+        shouldLogRss = true;
         break;
 
     case kMessageEvict:
@@ -2483,8 +2491,8 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
         (aError == OT_ERROR_NONE) ? "" : ", error:",
         (aError == OT_ERROR_NONE) ? "" : otThreadErrorToString(aError),
         priorityText,
-        shouldLogRss ? "" : ", rss:",
-        shouldLogRss ? "" : aMessage.GetRssAverager().ToString(rssString, sizeof(rssString))
+        shouldLogRss ? ", rss:" : "",
+        shouldLogRss ? aMessage.GetRssAverager().ToString(rssString, sizeof(rssString)) : ""
     );
 
     if (shouldLogSrcDstAddresses)

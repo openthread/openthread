@@ -46,6 +46,7 @@ namespace ot {
 
 namespace Cli {
 
+#ifdef OTDLL
 void Interpreter::CacheInstances()
 {
     if (mApiInstance)
@@ -118,6 +119,7 @@ void Interpreter::ProcessInstance(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif
 
 }  // namespace Cli
 }  // namespace ot

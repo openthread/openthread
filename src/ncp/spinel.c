@@ -75,6 +75,14 @@
 #define EINVAL 1
 #endif
 
+// IAR's errno.h apparently doesn't define ENOMEM.
+#ifndef ENOMEM
+// There is no real good choice for what to set
+// errno to in this case, so we just pick the
+// value '1' somewhat arbitrarily.
+#define ENOMEM 1
+#endif
+
 #ifdef _KERNEL_MODE
 #define va_copy(destination, source) ((destination) = (source))
 #undef errno

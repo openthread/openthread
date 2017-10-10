@@ -114,6 +114,7 @@ private:
     UartTxState     mState;
     uint8_t         mByte;
     uint8_t         mRxBuffer[kRxBufferSize];
+    bool            mUartSendImmediate;
     Tasklet         mUartSendTask;
 };
 

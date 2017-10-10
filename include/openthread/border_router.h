@@ -156,7 +156,7 @@ otError otBorderRouterGetNextRoute(otInstance *aInstance, otNetworkDataIterator 
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * retval OT_ERROR_NONE  Successfully queued a Server Data Request message for delivery.
+ * @retval OT_ERROR_NONE  Successfully queued a Server Data Request message for delivery.
  *
  * @sa otBorderRouterAddOnMeshPrefix
  * @sa otBorderRouterRemoveOnMeshPrefix

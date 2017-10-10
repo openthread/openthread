@@ -85,6 +85,10 @@ else
 COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 endif
 
+ifeq ($(USB),1)
+COMMONCFLAGS += -DUSB_CDC_AS_SERIAL_TRANSPORT=1
+endif
+
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(target_CPPFLAGS)            \

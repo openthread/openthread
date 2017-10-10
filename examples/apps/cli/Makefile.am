@@ -118,7 +118,7 @@ LDADD_COMMON                                                          += \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
+    -T $(top_srcdir)/third_party/dialog/DialogSDK/bsp/ldfile/da15000.ld  \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_DA15000
 

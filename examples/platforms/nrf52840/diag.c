@@ -320,11 +320,12 @@ static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOu
     OT_UNUSED_VARIABLE(argv);
 
     otError error = OT_ERROR_NONE;
+    int32_t temperature;
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(argc == 0, error = OT_ERROR_INVALID_ARGS);
 
-    int32_t temperature = nrf5TempGet();
+    temperature = nrf5TempGet();
 
     // Measurement resolution is 0.25 degrees Celsius
     // Convert the temperature measurement to a decimal value, in degrees Celsius

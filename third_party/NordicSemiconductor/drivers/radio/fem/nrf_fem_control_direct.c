@@ -60,7 +60,7 @@ void nrf_fem_control_timer_stop(void)
 
 void nrf_fem_control_timer_set(uint32_t target)
 {
-    nrf_timer_cc_write(NRF_TIMER0, TIMER_CC_FEM, target);
+    nrf_timer_cc_write(NRF_TIMER0, (nrf_timer_cc_channel_t)TIMER_CC_FEM, target);
 }
 
 uint32_t nrf_fem_control_timer_time_get(void)

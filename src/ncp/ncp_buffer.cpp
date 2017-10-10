@@ -71,6 +71,7 @@ void NcpFrameBuffer::Clear(void)
     mWriteFrameTag = kInvalidTag;
 
     // Read (OutFrame) related variables
+    mReadDirection = kForward;
     mReadState = kReadStateNotActive;
     mReadFrameLength = kUnknownFrameLength;
 
@@ -211,8 +212,8 @@ uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr, Direction aDirection)
     return value;
 }
 
-// Writes a byte at the write tail, discards the frame if buffer gets full.
-otError NcpFrameBuffer::InFrameFeedByte(uint8_t aByte)
+// Appends a byte at the write tail and updates the tail, discards the frame if buffer gets full.
+otError NcpFrameBuffer::InFrameAppend(uint8_t aByte)
 {
     otError error = OT_ERROR_NONE;
     uint8_t *newTail;
@@ -254,7 +255,7 @@ otError NcpFrameBuffer::InFrameBeginSegment(void)
     // Reserve space for the segment header.
     for (uint16_t i = kSegmentHeaderSize; i; i--)
     {
-        SuccessOrExit(error = InFrameFeedByte(0));
+        SuccessOrExit(error = InFrameAppend(0));
     }
 
     // Write the flags at the segment head.
@@ -344,6 +345,21 @@ otError NcpFrameBuffer::InFrameBegin(Priority aPriority)
     return OT_ERROR_NONE;
 }
 
+otError NcpFrameBuffer::InFrameFeedByte(uint8_t aByte)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
+
+    // Begin a new segment (if we are not in middle of segment already).
+    SuccessOrExit(error = InFrameBeginSegment());
+
+    error = InFrameAppend(aByte);
+
+exit:
+    return error;
+}
+
 otError NcpFrameBuffer::InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
 {
     otError error = OT_ERROR_NONE;
@@ -356,7 +372,7 @@ otError NcpFrameBuffer::InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDa
     // Write the data buffer
     while (aDataBufferLength--)
     {
-        SuccessOrExit(error = InFrameFeedByte(*aDataBuffer++));
+        SuccessOrExit(error = InFrameAppend(*aDataBuffer++));
     }
 
 exit:
@@ -383,11 +399,14 @@ exit:
     return error;
 }
 
-otError NcpFrameBuffer::InFrameGetPosition(WritePosition &aPosition) const
+otError NcpFrameBuffer::InFrameGetPosition(WritePosition &aPosition)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
+
+    // Begin a new segment (if we are not in middle of segment already).
+    SuccessOrExit(error = InFrameBeginSegment());
 
     aPosition.mPosition = mWriteSegmentTail;
     aPosition.mSegmentHead = mWriteSegmentHead;

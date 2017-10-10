@@ -65,12 +65,7 @@ PLATFORM_SOURCES                                                                
     platform.c                                                                            \
     radio.c                                                                               \
     random.c                                                                              \
-    vector.c                                                                              \
-    cstartup.c                                                                            \
     uart.c                                                                                \
-    cortex-m_cstartup.c                                                                   \
-    startup-gcc.c                                                                         \
-    clock.c                                                                               \
     misc.c                                                                                \
     crypto/aes_alt.c                                                                      \
     $(NULL)
@@ -79,6 +74,7 @@ DIALOG_SOURCES                                                                  
     @top_builddir@/third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c            \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_qspi.c             \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_timer0.c           \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_gpadc.c            \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_gpio.c             \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_cpm.c              \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_trng.c             \
@@ -92,6 +88,10 @@ DIALOG_SOURCES                                                                  
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_otpc.c             \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_fem_sky66112-11.c  \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_dma.c              \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/startup/config.c                      \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/startup/startup_ARMCM0.S              \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/startup/system_ARMCM0.c               \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/startup/vector_table.S                \
     @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/common.c              \
     @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/power.c               \
     @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/data.c                \

@@ -45,17 +45,17 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Cli {
 
-const struct Udp::Command Udp::sCommands[] =
+const struct UdpExample::Command UdpExample::sCommands[] =
 {
-    { "help", &Udp::ProcessHelp },
-    { "bind", &Udp::ProcessBind },
-    { "close", &Udp::ProcessClose },
-    { "connect", &Udp::ProcessConnect },
-    { "open", &Udp::ProcessOpen },
-    { "send", &Udp::ProcessSend }
+    { "help", &UdpExample::ProcessHelp },
+    { "bind", &UdpExample::ProcessBind },
+    { "close", &UdpExample::ProcessClose },
+    { "connect", &UdpExample::ProcessConnect },
+    { "open", &UdpExample::ProcessOpen },
+    { "send", &UdpExample::ProcessSend }
 };
 
-otError Udp::ProcessHelp(int argc, char *argv[])
+otError UdpExample::ProcessHelp(int argc, char *argv[])
 {
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
@@ -68,7 +68,7 @@ otError Udp::ProcessHelp(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
-otError Udp::ProcessBind(int argc, char *argv[])
+otError UdpExample::ProcessBind(int argc, char *argv[])
 {
     otError error;
     otSockAddr sockaddr;
@@ -92,7 +92,7 @@ exit:
     return error;
 }
 
-otError Udp::ProcessConnect(int argc, char *argv[])
+otError UdpExample::ProcessConnect(int argc, char *argv[])
 {
     otError error;
     otSockAddr sockaddr;
@@ -116,7 +116,7 @@ exit:
     return error;
 }
 
-otError Udp::ProcessClose(int argc, char *argv[])
+otError UdpExample::ProcessClose(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
@@ -124,7 +124,7 @@ otError Udp::ProcessClose(int argc, char *argv[])
     return otUdpClose(&mSocket);
 }
 
-otError Udp::ProcessOpen(int argc, char *argv[])
+otError UdpExample::ProcessOpen(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
@@ -132,7 +132,7 @@ otError Udp::ProcessOpen(int argc, char *argv[])
     return otUdpOpen(mInterpreter.mInstance, &mSocket, HandleUdpReceive, this);
 }
 
-otError Udp::ProcessSend(int argc, char *argv[])
+otError UdpExample::ProcessSend(int argc, char *argv[])
 {
     otError error;
     otMessageInfo messageInfo;
@@ -174,7 +174,7 @@ exit:
     return error;
 }
 
-otError Udp::Process(int argc, char *argv[])
+otError UdpExample::Process(int argc, char *argv[])
 {
     otError error = OT_ERROR_PARSE;
 
@@ -190,12 +190,12 @@ otError Udp::Process(int argc, char *argv[])
     return error;
 }
 
-void Udp::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void UdpExample::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Udp *>(aContext)->HandleUdpReceive(aMessage, aMessageInfo);
+    static_cast<UdpExample *>(aContext)->HandleUdpReceive(aMessage, aMessageInfo);
 }
 
-void Udp::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     uint8_t buf[1500];
     int length;

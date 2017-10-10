@@ -99,6 +99,7 @@ NcpUart::NcpUart(otInstance *aInstance):
     mUartBuffer(),
     mState(kStartingFrame),
     mByte(0),
+    mUartSendImmediate(false),
     mUartSendTask(*aInstance, EncodeAndSendToUart, this)
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
@@ -136,6 +137,7 @@ void NcpUart::EncodeAndSendToUart(Tasklet &aTasklet)
 void NcpUart::EncodeAndSendToUart(void)
 {
     uint16_t len;
+    bool prevHostPowerState;
 
     while (!mTxFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
     {
@@ -164,7 +166,21 @@ void NcpUart::EncodeAndSendToUart(void)
                 SuccessOrExit(mFrameEncoder.Encode(mByte, mUartBuffer));
             }
 
+            // track the change of mHostPowerStateInProgress by the 
+            // call to OutFrameRemove.
+            prevHostPowerState = mHostPowerStateInProgress;
+
             mTxFrameBuffer.OutFrameRemove();
+
+            if (prevHostPowerState && !mHostPowerStateInProgress)
+            {
+                // If mHostPowerStateInProgress transitioned from true -> false
+                // in the call to OutFrameRemove, then the frame should be sent
+                // out the UART without attempting to push any new frames into
+                // the mUartBuffer. This is necessary to avoid prematurely calling
+                // otPlatWakeHost.
+                mUartSendImmediate = true;
+            }
 
             mState = kFinalizingFrame;
 
@@ -175,6 +191,13 @@ void NcpUart::EncodeAndSendToUart(void)
             SuccessOrExit(mFrameEncoder.Finalize(mUartBuffer));
 
             mState = kStartingFrame;
+
+            if (mUartSendImmediate)
+            {
+                // clear state and break;
+                mUartSendImmediate = false;
+                break;
+            }
         }
     }
 

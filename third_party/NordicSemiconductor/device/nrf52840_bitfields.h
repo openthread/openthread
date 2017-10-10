@@ -1,32 +1,43 @@
-/* Copyright (c) 2016, Nordic Semiconductor ASA
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *   * Redistributions of source code must retain the above copyright notice, this
- *     list of conditions and the following disclaimer.
- *
- *   * Redistributions in binary form must reproduce the above copyright notice,
- *     this list of conditions and the following disclaimer in the documentation
- *     and/or other materials provided with the distribution.
- *
- *   * Neither the name of Nordic Semiconductor ASA nor the names of its
- *     contributors may be used to endorse or promote products derived from
- *     this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
+/*
+
+Copyright (c) 2010 - 2017, Nordic Semiconductor ASA
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form, except as embedded into a Nordic
+   Semiconductor ASA integrated circuit in a product or a software update for
+   such product, must reproduce the above copyright notice, this list of
+   conditions and the following disclaimer in the documentation and/or other
+   materials provided with the distribution.
+
+3. Neither the name of Nordic Semiconductor ASA nor the names of its
+   contributors may be used to endorse or promote products derived from this
+   software without specific prior written permission.
+
+4. This software, with or without modification, must only be used with a
+   Nordic Semiconductor ASA integrated circuit.
+
+5. Any software provided in binary form under this license must not be reverse
+   engineered, decompiled, modified and/or disassembled.
+
+THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
 
 #ifndef __NRF52840_BITS_H
 #define __NRF52840_BITS_H
@@ -131,15 +142,6 @@
 
 /* Peripheral: ACL */
 /* Description: Access control lists */
-
-/* Register: ACL_DISABLEINDEBUG */
-/* Description: Disable all ACL protection mechanisms for regions while in debug mode */
-
-/* Bit 0 : Disable the protection mechanism for regions while in debug mode. */
-#define ACL_DISABLEINDEBUG_DISABLEINDEBUG_Pos (0UL) /*!< Position of DISABLEINDEBUG field. */
-#define ACL_DISABLEINDEBUG_DISABLEINDEBUG_Msk (0x1UL << ACL_DISABLEINDEBUG_DISABLEINDEBUG_Pos) /*!< Bit mask of DISABLEINDEBUG field. */
-#define ACL_DISABLEINDEBUG_DISABLEINDEBUG_Enabled (0UL) /*!< ACL is enabled in debug mode */
-#define ACL_DISABLEINDEBUG_DISABLEINDEBUG_Disabled (1UL) /*!< ACL is disabled in debug mode */
 
 /* Register: ACL_ACL_ADDR */
 /* Description: Description cluster[0]:  Configure the word-aligned start address of region 0 to protect */
@@ -255,8 +257,8 @@
 /* Bit 24 : Packet length configuration */
 #define CCM_MODE_LENGTH_Pos (24UL) /*!< Position of LENGTH field. */
 #define CCM_MODE_LENGTH_Msk (0x1UL << CCM_MODE_LENGTH_Pos) /*!< Bit mask of LENGTH field. */
-#define CCM_MODE_LENGTH_Default (0UL) /*!< Default length. Effective length of LENGTH field in encrypted/decrypted packet is 5 bits. A key-stream for packets up to 27 bytes will be generated. */
-#define CCM_MODE_LENGTH_Extended (1UL) /*!< Extended length. Effective length of LENGTH field in encrypted/decrypted packet is 8 bits. A key-stream for packets up to MAXPACKETSIZE bytes will be generated. */
+#define CCM_MODE_LENGTH_Default (0UL) /*!< Default length. Effective length of LENGTH field in encrypted/decrypted packet is 5 bits. A key-stream for packet payloads up to 27 bytes will be generated. */
+#define CCM_MODE_LENGTH_Extended (1UL) /*!< Extended length. Effective length of LENGTH field in encrypted/decrypted packet is 8 bits. A key-stream for packet payloads up to MAXPACKETSIZE bytes will be generated. */
 
 /* Bits 17..16 : Radio data rate that the CCM shall run synchronous with */
 #define CCM_MODE_DATARATE_Pos (16UL) /*!< Position of DATARATE field. */
@@ -303,7 +305,7 @@
 /* Register: CCM_MAXPACKETSIZE */
 /* Description: Length of key-stream generated when MODE.LENGTH = Extended. */
 
-/* Bits 7..0 : Length of key-stream generated when MODE.LENGTH = Extended. This value must be greater or equal to the subsequent packet to be encrypted/decrypted. */
+/* Bits 7..0 : Length of key-stream generated when MODE.LENGTH = Extended. This value must be greater or equal to the subsequent packet payload to be encrypted/decrypted. */
 #define CCM_MAXPACKETSIZE_MAXPACKETSIZE_Pos (0UL) /*!< Position of MAXPACKETSIZE field. */
 #define CCM_MAXPACKETSIZE_MAXPACKETSIZE_Msk (0xFFUL << CCM_MAXPACKETSIZE_MAXPACKETSIZE_Pos) /*!< Bit mask of MAXPACKETSIZE field. */
 
@@ -432,7 +434,6 @@
 #define CLOCK_LFCLKSTAT_SRC_RC (0UL) /*!< 32.768 kHz RC oscillator */
 #define CLOCK_LFCLKSTAT_SRC_Xtal (1UL) /*!< 32.768 kHz crystal oscillator */
 #define CLOCK_LFCLKSTAT_SRC_Synth (2UL) /*!< 32.768 kHz synthesized from HFCLK */
-#define CLOCK_LFCLKSTAT_SRC_LFULP (3UL) /*!< 32.768 kHz ultra low power RC oscillator */
 
 /* Register: CLOCK_LFCLKSRCCOPY */
 /* Description: Copy of LFCLKSRC register, set when LFCLKSTART task was triggered */
@@ -443,7 +444,6 @@
 #define CLOCK_LFCLKSRCCOPY_SRC_RC (0UL) /*!< 32.768 kHz RC oscillator */
 #define CLOCK_LFCLKSRCCOPY_SRC_Xtal (1UL) /*!< 32.768 kHz crystal oscillator */
 #define CLOCK_LFCLKSRCCOPY_SRC_Synth (2UL) /*!< 32.768 kHz synthesized from HFCLK */
-#define CLOCK_LFCLKSRCCOPY_SRC_LFULP (3UL) /*!< 32.768 kHz ultra low power RC oscillator */
 
 /* Register: CLOCK_LFCLKSRC */
 /* Description: Clock source for the LFCLK */
@@ -466,7 +466,13 @@
 #define CLOCK_LFCLKSRC_SRC_RC (0UL) /*!< 32.768 kHz RC oscillator */
 #define CLOCK_LFCLKSRC_SRC_Xtal (1UL) /*!< 32.768 kHz crystal oscillator */
 #define CLOCK_LFCLKSRC_SRC_Synth (2UL) /*!< 32.768 kHz synthesized from HFCLK */
-#define CLOCK_LFCLKSRC_SRC_LFULP (3UL) /*!< 32.768 kHz ultra low power RC oscillator */
+
+/* Register: CLOCK_HFXODEBOUNCE */
+/* Description: HFXO debounce time. The HFXO is started by triggering the TASKS_HFCLKSTART task. */
+
+/* Bits 7..0 : HFXO debounce time. Debounce time = HFXODEBOUNCE * 16 us. */
+#define CLOCK_HFXODEBOUNCE_HFXODEBOUNCE_Pos (0UL) /*!< Position of HFXODEBOUNCE field. */
+#define CLOCK_HFXODEBOUNCE_HFXODEBOUNCE_Msk (0xFFUL << CLOCK_HFXODEBOUNCE_HFXODEBOUNCE_Pos) /*!< Bit mask of HFXODEBOUNCE field. */
 
 /* Register: CLOCK_CTIV */
 /* Description: Calibration timer interval */
@@ -478,12 +484,12 @@
 /* Register: CLOCK_TRACECONFIG */
 /* Description: Clocking options for the Trace Port debug interface */
 
-/* Bits 17..16 : Pin multiplexing of trace signals. */
+/* Bits 17..16 : Pin multiplexing of trace signals. See pin assignment chapter for more details. */
 #define CLOCK_TRACECONFIG_TRACEMUX_Pos (16UL) /*!< Position of TRACEMUX field. */
 #define CLOCK_TRACECONFIG_TRACEMUX_Msk (0x3UL << CLOCK_TRACECONFIG_TRACEMUX_Pos) /*!< Bit mask of TRACEMUX field. */
-#define CLOCK_TRACECONFIG_TRACEMUX_GPIO (0UL) /*!< GPIOs multiplexed onto all trace-pins */
-#define CLOCK_TRACECONFIG_TRACEMUX_Serial (1UL) /*!< SWO multiplexed onto P0.18, GPIO multiplexed onto other trace pins */
-#define CLOCK_TRACECONFIG_TRACEMUX_Parallel (2UL) /*!< TRACECLK and TRACEDATA multiplexed onto P0.20, P0.18, P0.16, P0.15 and P0.14. */
+#define CLOCK_TRACECONFIG_TRACEMUX_GPIO (0UL) /*!< No trace signals routed to pins. All pins can be used as regular GPIOs. */
+#define CLOCK_TRACECONFIG_TRACEMUX_Serial (1UL) /*!< SWO trace signal routed to pin. Remaining pins can be used as regular GPIOs. */
+#define CLOCK_TRACECONFIG_TRACEMUX_Parallel (2UL) /*!< All trace signals (TRACECLK and TRACEDATA[n]) routed to pins. */
 
 /* Bits 1..0 : Speed of Trace Port clock. Note that the TRACECLK pin will output this clock divided by two. */
 #define CLOCK_TRACECONFIG_TRACEPORTSPEED_Pos (0UL) /*!< Position of TRACEPORTSPEED field. */
@@ -492,6 +498,21 @@
 #define CLOCK_TRACECONFIG_TRACEPORTSPEED_16MHz (1UL) /*!< 16 MHz Trace Port clock (TRACECLK = 8 MHz) */
 #define CLOCK_TRACECONFIG_TRACEPORTSPEED_8MHz (2UL) /*!< 8 MHz Trace Port clock (TRACECLK = 4 MHz) */
 #define CLOCK_TRACECONFIG_TRACEPORTSPEED_4MHz (3UL) /*!< 4 MHz Trace Port clock (TRACECLK = 2 MHz) */
+
+/* Register: CLOCK_LFRCMODE */
+/* Description: LFRC mode configuration */
+
+/* Bit 16 : Active LFRC mode. This field is read only. */
+#define CLOCK_LFRCMODE_STATUS_Pos (16UL) /*!< Position of STATUS field. */
+#define CLOCK_LFRCMODE_STATUS_Msk (0x1UL << CLOCK_LFRCMODE_STATUS_Pos) /*!< Bit mask of STATUS field. */
+#define CLOCK_LFRCMODE_STATUS_Normal (0UL) /*!< Normal mode */
+#define CLOCK_LFRCMODE_STATUS_ULP (1UL) /*!< Ultra-low power mode (ULP) */
+
+/* Bit 0 : Set LFRC mode */
+#define CLOCK_LFRCMODE_MODE_Pos (0UL) /*!< Position of MODE field. */
+#define CLOCK_LFRCMODE_MODE_Msk (0x1UL << CLOCK_LFRCMODE_MODE_Pos) /*!< Bit mask of MODE field. */
+#define CLOCK_LFRCMODE_MODE_Normal (0UL) /*!< Normal mode */
+#define CLOCK_LFRCMODE_MODE_ULP (1UL) /*!< Ultra-low power mode (ULP) */
 
 
 /* Peripheral: COMP */
@@ -662,7 +683,7 @@
 #define COMP_REFSEL_REFSEL_Int1V8 (1UL) /*!< VREF = internal 1.8 V reference (VDD &gt;= VREF + 0.2 V) */
 #define COMP_REFSEL_REFSEL_Int2V4 (2UL) /*!< VREF = internal 2.4 V reference (VDD &gt;= VREF + 0.2 V) */
 #define COMP_REFSEL_REFSEL_VDD (4UL) /*!< VREF = VDD */
-#define COMP_REFSEL_REFSEL_ARef (7UL) /*!< VREF = AREF (VDD &gt;= VREF &gt;= AREFMIN) */
+#define COMP_REFSEL_REFSEL_ARef (5UL) /*!< VREF = AREF (VDD &gt;= VREF &gt;= AREFMIN) */
 
 /* Register: COMP_EXTREFSEL */
 /* Description: External reference select */
@@ -1113,7 +1134,7 @@
 
 
 /* Peripheral: FICR */
-/* Description: Factory Information Configuration Registers */
+/* Description: Factory information configuration registers */
 
 /* Register: FICR_CODEPAGESIZE */
 /* Description: Code memory page size */
@@ -1176,7 +1197,7 @@
 #define FICR_INFO_PART_PART_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_INFO_VARIANT */
-/* Description: Part variant (hardware version and production configuration). */
+/* Description: Part variant (hardware version and production configuration) */
 
 /* Bits 31..0 : Part variant (hardware version and production configuration). Encoded as ASCII. */
 #define FICR_INFO_VARIANT_VARIANT_Pos (0UL) /*!< Position of VARIANT field. */
@@ -1225,126 +1246,126 @@
 #define FICR_INFO_FLASH_FLASH_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_TEMP_A0 */
-/* Description: Slope definition A0. */
+/* Description: Slope definition A0 */
 
 /* Bits 11..0 : A (slope definition) register. */
 #define FICR_TEMP_A0_A_Pos (0UL) /*!< Position of A field. */
 #define FICR_TEMP_A0_A_Msk (0xFFFUL << FICR_TEMP_A0_A_Pos) /*!< Bit mask of A field. */
 
 /* Register: FICR_TEMP_A1 */
-/* Description: Slope definition A1. */
+/* Description: Slope definition A1 */
 
 /* Bits 11..0 : A (slope definition) register. */
 #define FICR_TEMP_A1_A_Pos (0UL) /*!< Position of A field. */
 #define FICR_TEMP_A1_A_Msk (0xFFFUL << FICR_TEMP_A1_A_Pos) /*!< Bit mask of A field. */
 
 /* Register: FICR_TEMP_A2 */
-/* Description: Slope definition A2. */
+/* Description: Slope definition A2 */
 
 /* Bits 11..0 : A (slope definition) register. */
 #define FICR_TEMP_A2_A_Pos (0UL) /*!< Position of A field. */
 #define FICR_TEMP_A2_A_Msk (0xFFFUL << FICR_TEMP_A2_A_Pos) /*!< Bit mask of A field. */
 
 /* Register: FICR_TEMP_A3 */
-/* Description: Slope definition A3. */
+/* Description: Slope definition A3 */
 
 /* Bits 11..0 : A (slope definition) register. */
 #define FICR_TEMP_A3_A_Pos (0UL) /*!< Position of A field. */
 #define FICR_TEMP_A3_A_Msk (0xFFFUL << FICR_TEMP_A3_A_Pos) /*!< Bit mask of A field. */
 
 /* Register: FICR_TEMP_A4 */
-/* Description: Slope definition A4. */
+/* Description: Slope definition A4 */
 
 /* Bits 11..0 : A (slope definition) register. */
 #define FICR_TEMP_A4_A_Pos (0UL) /*!< Position of A field. */
 #define FICR_TEMP_A4_A_Msk (0xFFFUL << FICR_TEMP_A4_A_Pos) /*!< Bit mask of A field. */
 
 /* Register: FICR_TEMP_A5 */
-/* Description: Slope definition A5. */
+/* Description: Slope definition A5 */
 
 /* Bits 11..0 : A (slope definition) register. */
 #define FICR_TEMP_A5_A_Pos (0UL) /*!< Position of A field. */
 #define FICR_TEMP_A5_A_Msk (0xFFFUL << FICR_TEMP_A5_A_Pos) /*!< Bit mask of A field. */
 
 /* Register: FICR_TEMP_B0 */
-/* Description: y-intercept B0. */
+/* Description: Y-intercept B0 */
 
 /* Bits 13..0 : B (y-intercept) */
 #define FICR_TEMP_B0_B_Pos (0UL) /*!< Position of B field. */
 #define FICR_TEMP_B0_B_Msk (0x3FFFUL << FICR_TEMP_B0_B_Pos) /*!< Bit mask of B field. */
 
 /* Register: FICR_TEMP_B1 */
-/* Description: y-intercept B1. */
+/* Description: Y-intercept B1 */
 
 /* Bits 13..0 : B (y-intercept) */
 #define FICR_TEMP_B1_B_Pos (0UL) /*!< Position of B field. */
 #define FICR_TEMP_B1_B_Msk (0x3FFFUL << FICR_TEMP_B1_B_Pos) /*!< Bit mask of B field. */
 
 /* Register: FICR_TEMP_B2 */
-/* Description: y-intercept B2. */
+/* Description: Y-intercept B2 */
 
 /* Bits 13..0 : B (y-intercept) */
 #define FICR_TEMP_B2_B_Pos (0UL) /*!< Position of B field. */
 #define FICR_TEMP_B2_B_Msk (0x3FFFUL << FICR_TEMP_B2_B_Pos) /*!< Bit mask of B field. */
 
 /* Register: FICR_TEMP_B3 */
-/* Description: y-intercept B3. */
+/* Description: Y-intercept B3 */
 
 /* Bits 13..0 : B (y-intercept) */
 #define FICR_TEMP_B3_B_Pos (0UL) /*!< Position of B field. */
 #define FICR_TEMP_B3_B_Msk (0x3FFFUL << FICR_TEMP_B3_B_Pos) /*!< Bit mask of B field. */
 
 /* Register: FICR_TEMP_B4 */
-/* Description: y-intercept B4. */
+/* Description: Y-intercept B4 */
 
 /* Bits 13..0 : B (y-intercept) */
 #define FICR_TEMP_B4_B_Pos (0UL) /*!< Position of B field. */
 #define FICR_TEMP_B4_B_Msk (0x3FFFUL << FICR_TEMP_B4_B_Pos) /*!< Bit mask of B field. */
 
 /* Register: FICR_TEMP_B5 */
-/* Description: y-intercept B5. */
+/* Description: Y-intercept B5 */
 
 /* Bits 13..0 : B (y-intercept) */
 #define FICR_TEMP_B5_B_Pos (0UL) /*!< Position of B field. */
 #define FICR_TEMP_B5_B_Msk (0x3FFFUL << FICR_TEMP_B5_B_Pos) /*!< Bit mask of B field. */
 
 /* Register: FICR_TEMP_T0 */
-/* Description: Segment end T0. */
+/* Description: Segment end T0 */
 
-/* Bits 7..0 : T (segment end)register. */
+/* Bits 7..0 : T (segment end) register */
 #define FICR_TEMP_T0_T_Pos (0UL) /*!< Position of T field. */
 #define FICR_TEMP_T0_T_Msk (0xFFUL << FICR_TEMP_T0_T_Pos) /*!< Bit mask of T field. */
 
 /* Register: FICR_TEMP_T1 */
-/* Description: Segment end T1. */
+/* Description: Segment end T1 */
 
-/* Bits 7..0 : T (segment end)register. */
+/* Bits 7..0 : T (segment end) register */
 #define FICR_TEMP_T1_T_Pos (0UL) /*!< Position of T field. */
 #define FICR_TEMP_T1_T_Msk (0xFFUL << FICR_TEMP_T1_T_Pos) /*!< Bit mask of T field. */
 
 /* Register: FICR_TEMP_T2 */
-/* Description: Segment end T2. */
+/* Description: Segment end T2 */
 
-/* Bits 7..0 : T (segment end)register. */
+/* Bits 7..0 : T (segment end) register */
 #define FICR_TEMP_T2_T_Pos (0UL) /*!< Position of T field. */
 #define FICR_TEMP_T2_T_Msk (0xFFUL << FICR_TEMP_T2_T_Pos) /*!< Bit mask of T field. */
 
 /* Register: FICR_TEMP_T3 */
-/* Description: Segment end T3. */
+/* Description: Segment end T3 */
 
-/* Bits 7..0 : T (segment end)register. */
+/* Bits 7..0 : T (segment end) register */
 #define FICR_TEMP_T3_T_Pos (0UL) /*!< Position of T field. */
 #define FICR_TEMP_T3_T_Msk (0xFFUL << FICR_TEMP_T3_T_Pos) /*!< Bit mask of T field. */
 
 /* Register: FICR_TEMP_T4 */
-/* Description: Segment end T4. */
+/* Description: Segment end T4 */
 
-/* Bits 7..0 : T (segment end)register. */
+/* Bits 7..0 : T (segment end) register */
 #define FICR_TEMP_T4_T_Pos (0UL) /*!< Position of T field. */
 #define FICR_TEMP_T4_T_Msk (0xFFUL << FICR_TEMP_T4_T_Pos) /*!< Bit mask of T field. */
 
 /* Register: FICR_NFC_TAGHEADER0 */
-/* Description: Default header for NFC Tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 3 */
 #define FICR_NFC_TAGHEADER0_UD3_Pos (24UL) /*!< Position of UD3 field. */
@@ -1363,7 +1384,7 @@
 #define FICR_NFC_TAGHEADER0_MFGID_Msk (0xFFUL << FICR_NFC_TAGHEADER0_MFGID_Pos) /*!< Bit mask of MFGID field. */
 
 /* Register: FICR_NFC_TAGHEADER1 */
-/* Description: Default header for NFC Tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 7 */
 #define FICR_NFC_TAGHEADER1_UD7_Pos (24UL) /*!< Position of UD7 field. */
@@ -1382,7 +1403,7 @@
 #define FICR_NFC_TAGHEADER1_UD4_Msk (0xFFUL << FICR_NFC_TAGHEADER1_UD4_Pos) /*!< Bit mask of UD4 field. */
 
 /* Register: FICR_NFC_TAGHEADER2 */
-/* Description: Default header for NFC Tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 11 */
 #define FICR_NFC_TAGHEADER2_UD11_Pos (24UL) /*!< Position of UD11 field. */
@@ -1401,7 +1422,7 @@
 #define FICR_NFC_TAGHEADER2_UD8_Msk (0xFFUL << FICR_NFC_TAGHEADER2_UD8_Pos) /*!< Bit mask of UD8 field. */
 
 /* Register: FICR_NFC_TAGHEADER3 */
-/* Description: Default header for NFC Tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 15 */
 #define FICR_NFC_TAGHEADER3_UD15_Pos (24UL) /*!< Position of UD15 field. */
@@ -1572,9 +1593,9 @@
 #define GPIOTE_CONFIG_POLARITY_HiToLo (2UL) /*!< Task mode: Clear pin from OUT[n] task. Event mode: Generate IN[n] event when falling edge on pin. */
 #define GPIOTE_CONFIG_POLARITY_Toggle (3UL) /*!< Task mode: Toggle pin from OUT[n]. Event mode: Generate IN[n] when any change on pin. */
 
-/* Bits 14..13 : Port number */
+/* Bit 13 : Port number */
 #define GPIOTE_CONFIG_PORT_Pos (13UL) /*!< Position of PORT field. */
-#define GPIOTE_CONFIG_PORT_Msk (0x3UL << GPIOTE_CONFIG_PORT_Pos) /*!< Bit mask of PORT field. */
+#define GPIOTE_CONFIG_PORT_Msk (0x1UL << GPIOTE_CONFIG_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 12..8 : GPIO number associated with SET[n], CLR[n] and OUT[n] tasks and IN[n] event */
 #define GPIOTE_CONFIG_PSEL_Pos (8UL) /*!< Position of PSEL field. */
@@ -1814,9 +1835,9 @@
 #define I2S_PSEL_MCK_CONNECT_Connected (0UL) /*!< Connect */
 #define I2S_PSEL_MCK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 9..8 : Port number */
+/* Bit 8 : Port number */
 #define I2S_PSEL_MCK_PORT_Pos (8UL) /*!< Position of PORT field. */
-#define I2S_PSEL_MCK_PORT_Msk (0x3UL << I2S_PSEL_MCK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define I2S_PSEL_MCK_PORT_Msk (0x1UL << I2S_PSEL_MCK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define I2S_PSEL_MCK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -1831,9 +1852,9 @@
 #define I2S_PSEL_SCK_CONNECT_Connected (0UL) /*!< Connect */
 #define I2S_PSEL_SCK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 9..8 : Port number */
+/* Bit 8 : Port number */
 #define I2S_PSEL_SCK_PORT_Pos (8UL) /*!< Position of PORT field. */
-#define I2S_PSEL_SCK_PORT_Msk (0x3UL << I2S_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define I2S_PSEL_SCK_PORT_Msk (0x1UL << I2S_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define I2S_PSEL_SCK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -1848,9 +1869,9 @@
 #define I2S_PSEL_LRCK_CONNECT_Connected (0UL) /*!< Connect */
 #define I2S_PSEL_LRCK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 9..8 : Port number */
+/* Bit 8 : Port number */
 #define I2S_PSEL_LRCK_PORT_Pos (8UL) /*!< Position of PORT field. */
-#define I2S_PSEL_LRCK_PORT_Msk (0x3UL << I2S_PSEL_LRCK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define I2S_PSEL_LRCK_PORT_Msk (0x1UL << I2S_PSEL_LRCK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define I2S_PSEL_LRCK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -1865,9 +1886,9 @@
 #define I2S_PSEL_SDIN_CONNECT_Connected (0UL) /*!< Connect */
 #define I2S_PSEL_SDIN_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 9..8 : Port number */
+/* Bit 8 : Port number */
 #define I2S_PSEL_SDIN_PORT_Pos (8UL) /*!< Position of PORT field. */
-#define I2S_PSEL_SDIN_PORT_Msk (0x3UL << I2S_PSEL_SDIN_PORT_Pos) /*!< Bit mask of PORT field. */
+#define I2S_PSEL_SDIN_PORT_Msk (0x1UL << I2S_PSEL_SDIN_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define I2S_PSEL_SDIN_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -1882,9 +1903,9 @@
 #define I2S_PSEL_SDOUT_CONNECT_Connected (0UL) /*!< Connect */
 #define I2S_PSEL_SDOUT_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 9..8 : Port number */
+/* Bit 8 : Port number */
 #define I2S_PSEL_SDOUT_PORT_Pos (8UL) /*!< Position of PORT field. */
-#define I2S_PSEL_SDOUT_PORT_Msk (0x3UL << I2S_PSEL_SDOUT_PORT_Pos) /*!< Bit mask of PORT field. */
+#define I2S_PSEL_SDOUT_PORT_Msk (0x1UL << I2S_PSEL_SDOUT_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define I2S_PSEL_SDOUT_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -3837,9 +3858,9 @@
 /* Register: NFCT_FRAMEDELAYMAX */
 /* Description: Maximum frame delay */
 
-/* Bits 15..0 : Maximum frame delay in number of 13.56 MHz clocks */
+/* Bits 19..0 : Maximum frame delay in number of 13.56 MHz clocks */
 #define NFCT_FRAMEDELAYMAX_FRAMEDELAYMAX_Pos (0UL) /*!< Position of FRAMEDELAYMAX field. */
-#define NFCT_FRAMEDELAYMAX_FRAMEDELAYMAX_Msk (0xFFFFUL << NFCT_FRAMEDELAYMAX_FRAMEDELAYMAX_Pos) /*!< Bit mask of FRAMEDELAYMAX field. */
+#define NFCT_FRAMEDELAYMAX_FRAMEDELAYMAX_Msk (0xFFFFFUL << NFCT_FRAMEDELAYMAX_FRAMEDELAYMAX_Pos) /*!< Bit mask of FRAMEDELAYMAX field. */
 
 /* Register: NFCT_FRAMEDELAYMODE */
 /* Description: Configuration register for the Frame Delay Timer */
@@ -4016,7 +4037,7 @@
 #define NFCT_SENSRES_RFU5_Pos (5UL) /*!< Position of RFU5 field. */
 #define NFCT_SENSRES_RFU5_Msk (0x1UL << NFCT_SENSRES_RFU5_Pos) /*!< Bit mask of RFU5 field. */
 
-/* Bits 4..0 : Bit frame SDD as defined by the b5:b1 of byte 1 in SENS_RES response in the <i>NFC Forum, NFC Digital Protocol Technical Specification</i> */
+/* Bits 4..0 : Bit frame SDD as defined by the b5:b1 of byte 1 in SENS_RES response in the NFC Forum, NFC Digital Protocol Technical Specification */
 #define NFCT_SENSRES_BITFRAMESDD_Pos (0UL) /*!< Position of BITFRAMESDD field. */
 #define NFCT_SENSRES_BITFRAMESDD_Msk (0x1FUL << NFCT_SENSRES_BITFRAMESDD_Pos) /*!< Bit mask of BITFRAMESDD field. */
 #define NFCT_SENSRES_BITFRAMESDD_SDD00000 (0UL) /*!< SDD pattern 00000 */
@@ -4069,20 +4090,20 @@
 #define NVMC_CONFIG_WEN_Pos (0UL) /*!< Position of WEN field. */
 #define NVMC_CONFIG_WEN_Msk (0x3UL << NVMC_CONFIG_WEN_Pos) /*!< Bit mask of WEN field. */
 #define NVMC_CONFIG_WEN_Ren (0UL) /*!< Read only access */
-#define NVMC_CONFIG_WEN_Wen (1UL) /*!< Write Enabled */
+#define NVMC_CONFIG_WEN_Wen (1UL) /*!< Write enabled */
 #define NVMC_CONFIG_WEN_Een (2UL) /*!< Erase enabled */
 
 /* Register: NVMC_ERASEPAGE */
-/* Description: Register for erasing a page in Code area */
+/* Description: Register for erasing a page in code area */
 
-/* Bits 31..0 : Register for starting erase of a page in Code area */
+/* Bits 31..0 : Register for starting erase of a page in code area */
 #define NVMC_ERASEPAGE_ERASEPAGE_Pos (0UL) /*!< Position of ERASEPAGE field. */
 #define NVMC_ERASEPAGE_ERASEPAGE_Msk (0xFFFFFFFFUL << NVMC_ERASEPAGE_ERASEPAGE_Pos) /*!< Bit mask of ERASEPAGE field. */
 
 /* Register: NVMC_ERASEPCR1 */
-/* Description: Deprecated register -  Register for erasing a page in Code area. Equivalent to ERASEPAGE. */
+/* Description: Deprecated register -  Register for erasing a page in code area. Equivalent to ERASEPAGE. */
 
-/* Bits 31..0 : Register for erasing a page in Code area. Equivalent to ERASEPAGE. */
+/* Bits 31..0 : Register for erasing a page in code area. Equivalent to ERASEPAGE. */
 #define NVMC_ERASEPCR1_ERASEPCR1_Pos (0UL) /*!< Position of ERASEPCR1 field. */
 #define NVMC_ERASEPCR1_ERASEPCR1_Msk (0xFFFFFFFFUL << NVMC_ERASEPCR1_ERASEPCR1_Pos) /*!< Bit mask of ERASEPCR1 field. */
 
@@ -4096,23 +4117,23 @@
 #define NVMC_ERASEALL_ERASEALL_Erase (1UL) /*!< Start chip erase */
 
 /* Register: NVMC_ERASEPCR0 */
-/* Description: Deprecated register -  Register for erasing a page in Code area. Equivalent to ERASEPAGE. */
+/* Description: Deprecated register -  Register for erasing a page in code area. Equivalent to ERASEPAGE. */
 
-/* Bits 31..0 : Register for starting erase of a page in Code area. Equivalent to ERASEPAGE. */
+/* Bits 31..0 : Register for starting erase of a page in code area. Equivalent to ERASEPAGE. */
 #define NVMC_ERASEPCR0_ERASEPCR0_Pos (0UL) /*!< Position of ERASEPCR0 field. */
 #define NVMC_ERASEPCR0_ERASEPCR0_Msk (0xFFFFFFFFUL << NVMC_ERASEPCR0_ERASEPCR0_Pos) /*!< Bit mask of ERASEPCR0 field. */
 
 /* Register: NVMC_ERASEUICR */
-/* Description: Register for erasing User Information Configuration Registers */
+/* Description: Register for erasing user information configuration registers */
 
-/* Bit 0 : Register starting erase of all User Information Configuration Registers. Note that the erase must be enabled using CONFIG.WEN before the UICR can be erased. */
+/* Bit 0 : Register starting erase of all user information configuration registers. Note that the erase must be enabled using CONFIG.WEN before the UICR can be erased. */
 #define NVMC_ERASEUICR_ERASEUICR_Pos (0UL) /*!< Position of ERASEUICR field. */
 #define NVMC_ERASEUICR_ERASEUICR_Msk (0x1UL << NVMC_ERASEUICR_ERASEUICR_Pos) /*!< Bit mask of ERASEUICR field. */
 #define NVMC_ERASEUICR_ERASEUICR_NoOperation (0UL) /*!< No operation */
 #define NVMC_ERASEUICR_ERASEUICR_Erase (1UL) /*!< Start erase of UICR */
 
 /* Register: NVMC_ICACHECNF */
-/* Description: I-Code cache configuration register. */
+/* Description: I-code cache configuration register. */
 
 /* Bit 8 : Cache profiling enable */
 #define NVMC_ICACHECNF_CACHEPROFEN_Pos (8UL) /*!< Position of CACHEPROFEN field. */
@@ -4127,14 +4148,14 @@
 #define NVMC_ICACHECNF_CACHEEN_Enabled (1UL) /*!< Enable cache */
 
 /* Register: NVMC_IHIT */
-/* Description: I-Code cache hit counter. */
+/* Description: I-code cache hit counter. */
 
 /* Bits 31..0 : Number of cache hits */
 #define NVMC_IHIT_HITS_Pos (0UL) /*!< Position of HITS field. */
 #define NVMC_IHIT_HITS_Msk (0xFFFFFFFFUL << NVMC_IHIT_HITS_Pos) /*!< Bit mask of HITS field. */
 
 /* Register: NVMC_IMISS */
-/* Description: I-Code cache miss counter. */
+/* Description: I-code cache miss counter. */
 
 /* Bits 31..0 : Number of cache misses */
 #define NVMC_IMISS_MISSES_Pos (0UL) /*!< Position of MISSES field. */
@@ -6030,9 +6051,9 @@
 #define PDM_PSEL_CLK_CONNECT_Connected (0UL) /*!< Connect */
 #define PDM_PSEL_CLK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define PDM_PSEL_CLK_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define PDM_PSEL_CLK_PORT_Msk (0x3UL << PDM_PSEL_CLK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define PDM_PSEL_CLK_PORT_Msk (0x1UL << PDM_PSEL_CLK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define PDM_PSEL_CLK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -6047,9 +6068,9 @@
 #define PDM_PSEL_DIN_CONNECT_Connected (0UL) /*!< Connect */
 #define PDM_PSEL_DIN_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define PDM_PSEL_DIN_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define PDM_PSEL_DIN_PORT_Msk (0x3UL << PDM_PSEL_DIN_PORT_Pos) /*!< Bit mask of PORT field. */
+#define PDM_PSEL_DIN_PORT_Msk (0x1UL << PDM_PSEL_DIN_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define PDM_PSEL_DIN_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -6273,7 +6294,7 @@
 /* Register: POWER_POFCON */
 /* Description: Power failure comparator configuration */
 
-/* Bits 11..8 : Power failure comparator threshold setting for voltage supply on VDDH */
+/* Bits 11..8 : Power failure comparator threshold setting for high voltage mode (supply connected to VDDH only). This setting does not apply for normal voltage mode (supply connected to both VDD and VDDH). */
 #define POWER_POFCON_THRESHOLDVDDH_Pos (8UL) /*!< Position of THRESHOLDVDDH field. */
 #define POWER_POFCON_THRESHOLDVDDH_Msk (0xFUL << POWER_POFCON_THRESHOLDVDDH_Pos) /*!< Bit mask of THRESHOLDVDDH field. */
 #define POWER_POFCON_THRESHOLDVDDH_V27 (0UL) /*!< Set threshold to 2.7 V */
@@ -6293,7 +6314,7 @@
 #define POWER_POFCON_THRESHOLDVDDH_V41 (14UL) /*!< Set threshold to 4.1 V */
 #define POWER_POFCON_THRESHOLDVDDH_V42 (15UL) /*!< Set threshold to 4.2 V */
 
-/* Bits 4..1 : Power failure comparator threshold setting */
+/* Bits 4..1 : Power failure comparator threshold setting. This setting applies both for normal voltage mode (supply connected to both VDD and VDDH) and high voltage mode (supply connected to VDDH only). */
 #define POWER_POFCON_THRESHOLD_Pos (1UL) /*!< Position of THRESHOLD field. */
 #define POWER_POFCON_THRESHOLD_Msk (0xFUL << POWER_POFCON_THRESHOLD_Pos) /*!< Bit mask of THRESHOLD field. */
 #define POWER_POFCON_THRESHOLD_V17 (4UL) /*!< Set threshold to 1.7 V */
@@ -7998,24 +8019,24 @@
 #define PWM_LOOP_CNT_Disabled (0UL) /*!< Looping disabled (stop at the end of the sequence) */
 
 /* Register: PWM_SEQ_PTR */
-/* Description: Description cluster[0]:  Beginning address in Data RAM of sequence A */
+/* Description: Description cluster[0]:  Beginning address in Data RAM of this sequence */
 
-/* Bits 31..0 : Beginning address in Data RAM of sequence A */
+/* Bits 31..0 : Beginning address in Data RAM of this sequence */
 #define PWM_SEQ_PTR_PTR_Pos (0UL) /*!< Position of PTR field. */
 #define PWM_SEQ_PTR_PTR_Msk (0xFFFFFFFFUL << PWM_SEQ_PTR_PTR_Pos) /*!< Bit mask of PTR field. */
 
 /* Register: PWM_SEQ_CNT */
-/* Description: Description cluster[0]:  Amount of values (duty cycles) in sequence A */
+/* Description: Description cluster[0]:  Amount of values (duty cycles) in this sequence */
 
-/* Bits 14..0 : Amount of values (duty cycles) in sequence A */
+/* Bits 14..0 : Amount of values (duty cycles) in this sequence */
 #define PWM_SEQ_CNT_CNT_Pos (0UL) /*!< Position of CNT field. */
 #define PWM_SEQ_CNT_CNT_Msk (0x7FFFUL << PWM_SEQ_CNT_CNT_Pos) /*!< Bit mask of CNT field. */
 #define PWM_SEQ_CNT_CNT_Disabled (0UL) /*!< Sequence is disabled, and shall not be started as it is empty */
 
 /* Register: PWM_SEQ_REFRESH */
-/* Description: Description cluster[0]:  Amount of additional PWM periods between samples loaded to compare register (load every CNT+1 PWM periods) */
+/* Description: Description cluster[0]:  Amount of additional PWM periods between samples loaded into compare register */
 
-/* Bits 23..0 : Amount of additional PWM periods between samples loaded to compare register (load every CNT+1 PWM periods) */
+/* Bits 23..0 : Amount of additional PWM periods between samples loaded into compare register (load every REFRESH.CNT+1 PWM periods) */
 #define PWM_SEQ_REFRESH_CNT_Pos (0UL) /*!< Position of CNT field. */
 #define PWM_SEQ_REFRESH_CNT_Msk (0xFFFFFFUL << PWM_SEQ_REFRESH_CNT_Pos) /*!< Bit mask of CNT field. */
 #define PWM_SEQ_REFRESH_CNT_Continuous (0UL) /*!< Update every PWM period */
@@ -8036,9 +8057,9 @@
 #define PWM_PSEL_OUT_CONNECT_Connected (0UL) /*!< Connect */
 #define PWM_PSEL_OUT_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 9..8 : Port number */
-#define PWM_PSEL_OUT_PORT_Pos (8UL) /*!< Position of PORT field. */
-#define PWM_PSEL_OUT_PORT_Msk (0x3UL << PWM_PSEL_OUT_PORT_Pos) /*!< Bit mask of PORT field. */
+/* Bit 5 : Port number */
+#define PWM_PSEL_OUT_PORT_Pos (5UL) /*!< Position of PORT field. */
+#define PWM_PSEL_OUT_PORT_Msk (0x1UL << PWM_PSEL_OUT_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define PWM_PSEL_OUT_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8251,9 +8272,9 @@
 #define QDEC_PSEL_LED_CONNECT_Connected (0UL) /*!< Connect */
 #define QDEC_PSEL_LED_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QDEC_PSEL_LED_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QDEC_PSEL_LED_PORT_Msk (0x3UL << QDEC_PSEL_LED_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QDEC_PSEL_LED_PORT_Msk (0x1UL << QDEC_PSEL_LED_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QDEC_PSEL_LED_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8268,9 +8289,9 @@
 #define QDEC_PSEL_A_CONNECT_Connected (0UL) /*!< Connect */
 #define QDEC_PSEL_A_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QDEC_PSEL_A_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QDEC_PSEL_A_PORT_Msk (0x3UL << QDEC_PSEL_A_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QDEC_PSEL_A_PORT_Msk (0x1UL << QDEC_PSEL_A_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QDEC_PSEL_A_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8285,9 +8306,9 @@
 #define QDEC_PSEL_B_CONNECT_Connected (0UL) /*!< Connect */
 #define QDEC_PSEL_B_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QDEC_PSEL_B_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QDEC_PSEL_B_PORT_Msk (0x3UL << QDEC_PSEL_B_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QDEC_PSEL_B_PORT_Msk (0x1UL << QDEC_PSEL_B_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QDEC_PSEL_B_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8433,9 +8454,9 @@
 #define QSPI_PSEL_SCK_CONNECT_Connected (0UL) /*!< Connect */
 #define QSPI_PSEL_SCK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QSPI_PSEL_SCK_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QSPI_PSEL_SCK_PORT_Msk (0x3UL << QSPI_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QSPI_PSEL_SCK_PORT_Msk (0x1UL << QSPI_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QSPI_PSEL_SCK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8450,9 +8471,9 @@
 #define QSPI_PSEL_CSN_CONNECT_Connected (0UL) /*!< Connect */
 #define QSPI_PSEL_CSN_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QSPI_PSEL_CSN_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QSPI_PSEL_CSN_PORT_Msk (0x3UL << QSPI_PSEL_CSN_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QSPI_PSEL_CSN_PORT_Msk (0x1UL << QSPI_PSEL_CSN_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QSPI_PSEL_CSN_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8467,9 +8488,9 @@
 #define QSPI_PSEL_IO0_CONNECT_Connected (0UL) /*!< Connect */
 #define QSPI_PSEL_IO0_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QSPI_PSEL_IO0_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QSPI_PSEL_IO0_PORT_Msk (0x3UL << QSPI_PSEL_IO0_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QSPI_PSEL_IO0_PORT_Msk (0x1UL << QSPI_PSEL_IO0_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QSPI_PSEL_IO0_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8484,9 +8505,9 @@
 #define QSPI_PSEL_IO1_CONNECT_Connected (0UL) /*!< Connect */
 #define QSPI_PSEL_IO1_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QSPI_PSEL_IO1_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QSPI_PSEL_IO1_PORT_Msk (0x3UL << QSPI_PSEL_IO1_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QSPI_PSEL_IO1_PORT_Msk (0x1UL << QSPI_PSEL_IO1_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QSPI_PSEL_IO1_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8501,9 +8522,9 @@
 #define QSPI_PSEL_IO2_CONNECT_Connected (0UL) /*!< Connect */
 #define QSPI_PSEL_IO2_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QSPI_PSEL_IO2_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QSPI_PSEL_IO2_PORT_Msk (0x3UL << QSPI_PSEL_IO2_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QSPI_PSEL_IO2_PORT_Msk (0x1UL << QSPI_PSEL_IO2_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QSPI_PSEL_IO2_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8518,9 +8539,9 @@
 #define QSPI_PSEL_IO3_CONNECT_Connected (0UL) /*!< Connect */
 #define QSPI_PSEL_IO3_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define QSPI_PSEL_IO3_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define QSPI_PSEL_IO3_PORT_Msk (0x3UL << QSPI_PSEL_IO3_PORT_Pos) /*!< Bit mask of PORT field. */
+#define QSPI_PSEL_IO3_PORT_Msk (0x1UL << QSPI_PSEL_IO3_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define QSPI_PSEL_IO3_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -8535,6 +8556,12 @@
 
 /* Register: QSPI_IFCONFIG0 */
 /* Description: Interface configuration. */
+
+/* Bit 12 : Page size for commands PP, PP2O, PP4O and PP4IO. */
+#define QSPI_IFCONFIG0_PPSIZE_Pos (12UL) /*!< Position of PPSIZE field. */
+#define QSPI_IFCONFIG0_PPSIZE_Msk (0x1UL << QSPI_IFCONFIG0_PPSIZE_Pos) /*!< Bit mask of PPSIZE field. */
+#define QSPI_IFCONFIG0_PPSIZE_256Bytes (0UL) /*!< 256 bytes. */
+#define QSPI_IFCONFIG0_PPSIZE_512Bytes (1UL) /*!< 512 bytes. */
 
 /* Bit 7 : Enable deep power-down mode (DPM) feature. */
 #define QSPI_IFCONFIG0_DPMENABLE_Pos (7UL) /*!< Position of DPMENABLE field. */
@@ -8575,8 +8602,8 @@
 /* Bit 25 : Select SPI mode. */
 #define QSPI_IFCONFIG1_SPIMODE_Pos (25UL) /*!< Position of SPIMODE field. */
 #define QSPI_IFCONFIG1_SPIMODE_Msk (0x1UL << QSPI_IFCONFIG1_SPIMODE_Pos) /*!< Bit mask of SPIMODE field. */
-#define QSPI_IFCONFIG1_SPIMODE_MODE0 (0UL) /*!< Mode 0: Data are captured on the clock's rising edge and data is output on a falling edge. Base level of clock is 0 (CPOL=0, CPHA=0). */
-#define QSPI_IFCONFIG1_SPIMODE_MODE3 (1UL) /*!< Mode 3: Data are captured on the clock's falling edge and data is output on a rising edge. Base level of clock is 1 (CPOL=1, CPHA=1). */
+#define QSPI_IFCONFIG1_SPIMODE_MODE0 (0UL) /*!< Mode 0: Data are captured on the clock rising edge and data is output on a falling edge. Base level of clock is 0 (CPOL=0, CPHA=0). */
+#define QSPI_IFCONFIG1_SPIMODE_MODE3 (1UL) /*!< Mode 3: Data are captured on the clock falling edge and data is output on a rising edge. Base level of clock is 1 (CPOL=1, CPHA=1). */
 
 /* Bit 24 : Enter/exit deep power-down mode (DPM) for external flash memory. */
 #define QSPI_IFCONFIG1_DPMEN_Pos (24UL) /*!< Position of DPMEN field. */
@@ -8591,7 +8618,7 @@
 /* Register: QSPI_STATUS */
 /* Description: Status register. */
 
-/* Bits 31..24 : Value of external flash devices Status Register. When the external flash has two bytes status register this field includes the value of the low byte. */
+/* Bits 31..24 : Value of external flash device Status Register. When the external flash has two bytes status register this field includes the value of the low byte. */
 #define QSPI_STATUS_SREG_Pos (24UL) /*!< Position of SREG field. */
 #define QSPI_STATUS_SREG_Msk (0xFFUL << QSPI_STATUS_SREG_Pos) /*!< Bit mask of SREG field. */
 
@@ -8655,6 +8682,17 @@
 
 /* Register: QSPI_CINSTRCONF */
 /* Description: Custom instruction configuration register. */
+
+/* Bit 17 : Stop (finalize) long frame transaction */
+#define QSPI_CINSTRCONF_LFSTOP_Pos (17UL) /*!< Position of LFSTOP field. */
+#define QSPI_CINSTRCONF_LFSTOP_Msk (0x1UL << QSPI_CINSTRCONF_LFSTOP_Pos) /*!< Bit mask of LFSTOP field. */
+#define QSPI_CINSTRCONF_LFSTOP_Stop (1UL) /*!< Stop */
+
+/* Bit 16 : Enable long frame mode. When enabled, a custom instruction transaction has to be ended by writing the LFSTOP field. */
+#define QSPI_CINSTRCONF_LFEN_Pos (16UL) /*!< Position of LFEN field. */
+#define QSPI_CINSTRCONF_LFEN_Msk (0x1UL << QSPI_CINSTRCONF_LFEN_Pos) /*!< Bit mask of LFEN field. */
+#define QSPI_CINSTRCONF_LFEN_Disable (0UL) /*!< Long frame mode disabled */
+#define QSPI_CINSTRCONF_LFEN_Enable (1UL) /*!< Long frame mode enabled */
 
 /* Bit 15 : Send WREN (write enable opcode 0x06) before instruction. */
 #define QSPI_CINSTRCONF_WREN_Pos (15UL) /*!< Position of WREN field. */
@@ -8744,6 +8782,18 @@
 
 /* Register: RADIO_SHORTS */
 /* Description: Shortcut register */
+
+/* Bit 21 : Shortcut between PHYEND event and START task */
+#define RADIO_SHORTS_PHYEND_START_Pos (21UL) /*!< Position of PHYEND_START field. */
+#define RADIO_SHORTS_PHYEND_START_Msk (0x1UL << RADIO_SHORTS_PHYEND_START_Pos) /*!< Bit mask of PHYEND_START field. */
+#define RADIO_SHORTS_PHYEND_START_Disabled (0UL) /*!< Disable shortcut */
+#define RADIO_SHORTS_PHYEND_START_Enabled (1UL) /*!< Enable shortcut */
+
+/* Bit 20 : Shortcut between PHYEND event and DISABLE task */
+#define RADIO_SHORTS_PHYEND_DISABLE_Pos (20UL) /*!< Position of PHYEND_DISABLE field. */
+#define RADIO_SHORTS_PHYEND_DISABLE_Msk (0x1UL << RADIO_SHORTS_PHYEND_DISABLE_Pos) /*!< Bit mask of PHYEND_DISABLE field. */
+#define RADIO_SHORTS_PHYEND_DISABLE_Disabled (0UL) /*!< Disable shortcut */
+#define RADIO_SHORTS_PHYEND_DISABLE_Enabled (1UL) /*!< Enable shortcut */
 
 /* Bit 19 : Shortcut between RXREADY event and START task */
 #define RADIO_SHORTS_RXREADY_START_Pos (19UL) /*!< Position of RXREADY_START field. */
@@ -8849,6 +8899,13 @@
 
 /* Register: RADIO_INTENSET */
 /* Description: Enable interrupt */
+
+/* Bit 27 : Write '1' to Enable interrupt for PHYEND event */
+#define RADIO_INTENSET_PHYEND_Pos (27UL) /*!< Position of PHYEND field. */
+#define RADIO_INTENSET_PHYEND_Msk (0x1UL << RADIO_INTENSET_PHYEND_Pos) /*!< Bit mask of PHYEND field. */
+#define RADIO_INTENSET_PHYEND_Disabled (0UL) /*!< Read: Disabled */
+#define RADIO_INTENSET_PHYEND_Enabled (1UL) /*!< Read: Enabled */
+#define RADIO_INTENSET_PHYEND_Set (1UL) /*!< Enable */
 
 /* Bit 23 : Write '1' to Enable interrupt for MHRMATCH event */
 #define RADIO_INTENSET_MHRMATCH_Pos (23UL) /*!< Position of MHRMATCH field. */
@@ -8999,6 +9056,13 @@
 
 /* Register: RADIO_INTENCLR */
 /* Description: Disable interrupt */
+
+/* Bit 27 : Write '1' to Disable interrupt for PHYEND event */
+#define RADIO_INTENCLR_PHYEND_Pos (27UL) /*!< Position of PHYEND field. */
+#define RADIO_INTENCLR_PHYEND_Msk (0x1UL << RADIO_INTENCLR_PHYEND_Pos) /*!< Bit mask of PHYEND field. */
+#define RADIO_INTENCLR_PHYEND_Disabled (0UL) /*!< Read: Disabled */
+#define RADIO_INTENCLR_PHYEND_Enabled (1UL) /*!< Read: Enabled */
+#define RADIO_INTENCLR_PHYEND_Clear (1UL) /*!< Disable */
 
 /* Bit 23 : Write '1' to Disable interrupt for MHRMATCH event */
 #define RADIO_INTENCLR_MHRMATCH_Pos (23UL) /*!< Position of MHRMATCH field. */
@@ -9177,6 +9241,21 @@
 #define RADIO_DAI_DAI_Pos (0UL) /*!< Position of DAI field. */
 #define RADIO_DAI_DAI_Msk (0x7UL << RADIO_DAI_DAI_Pos) /*!< Bit mask of DAI field. */
 
+/* Register: RADIO_PDUSTAT */
+/* Description: Payload status */
+
+/* Bits 2..1 : Status on what rate packet is received with in Long Range */
+#define RADIO_PDUSTAT_CISTAT_Pos (1UL) /*!< Position of CISTAT field. */
+#define RADIO_PDUSTAT_CISTAT_Msk (0x3UL << RADIO_PDUSTAT_CISTAT_Pos) /*!< Bit mask of CISTAT field. */
+#define RADIO_PDUSTAT_CISTAT_LR125kbit (0UL) /*!< Frame is received at 125kbps */
+#define RADIO_PDUSTAT_CISTAT_LR500kbit (1UL) /*!< Frame is received at 500kbps */
+
+/* Bit 0 : Status on payload length vs. PCNF1.MAXLEN */
+#define RADIO_PDUSTAT_PDUSTAT_Pos (0UL) /*!< Position of PDUSTAT field. */
+#define RADIO_PDUSTAT_PDUSTAT_Msk (0x1UL << RADIO_PDUSTAT_PDUSTAT_Pos) /*!< Bit mask of PDUSTAT field. */
+#define RADIO_PDUSTAT_PDUSTAT_LessThan (0UL) /*!< Payload less than PCNF1.MAXLEN */
+#define RADIO_PDUSTAT_PDUSTAT_GreaterThan (1UL) /*!< Payload greater than PCNF1.MAXLEN */
+
 /* Register: RADIO_PACKETPTR */
 /* Description: Packet pointer */
 
@@ -9211,7 +9290,6 @@
 #define RADIO_TXPOWER_TXPOWER_Pos6dBm (0x6UL) /*!< +6 dBm */
 #define RADIO_TXPOWER_TXPOWER_Pos7dBm (0x7UL) /*!< +7 dBm */
 #define RADIO_TXPOWER_TXPOWER_Pos8dBm (0x8UL) /*!< +8 dBm */
-#define RADIO_TXPOWER_TXPOWER_Pos9dBm (0x9UL) /*!< +9 dBm */
 #define RADIO_TXPOWER_TXPOWER_Neg30dBm (0xD8UL) /*!< Deprecated enumerator -  -40 dBm */
 #define RADIO_TXPOWER_TXPOWER_Neg40dBm (0xD8UL) /*!< -40 dBm */
 #define RADIO_TXPOWER_TXPOWER_Neg20dBm (0xECUL) /*!< -20 dBm */
@@ -9607,7 +9685,7 @@
 /* Register: RADIO_SFD */
 /* Description: IEEE 802.15.4 Start of Frame Delimiter */
 
-/* Bits 7..0 : IEEE 802.15.4 Start of Frame Delimiter */
+/* Bits 7..0 : IEEE 802.15.4 Start of Frame Delimiter. Note, the least significant 4-bits of the SFD cannot all be zeros. */
 #define RADIO_SFD_SFD_Pos (0UL) /*!< Position of SFD field. */
 #define RADIO_SFD_SFD_Msk (0xFFUL << RADIO_SFD_SFD_Pos) /*!< Bit mask of SFD field. */
 
@@ -10438,7 +10516,7 @@
 #define SAADC_CH_PSELP_PSELP_AnalogInput6 (7UL) /*!< AIN6 */
 #define SAADC_CH_PSELP_PSELP_AnalogInput7 (8UL) /*!< AIN7 */
 #define SAADC_CH_PSELP_PSELP_VDD (9UL) /*!< VDD */
-#define SAADC_CH_PSELP_PSELP_VDDHDIV5 (0x11UL) /*!< VDDH/5 */
+#define SAADC_CH_PSELP_PSELP_VDDHDIV5 (0x0DUL) /*!< VDDH/5 */
 
 /* Register: SAADC_CH_PSELN */
 /* Description: Description cluster[0]:  Input negative pin selection for CH[0] */
@@ -10456,7 +10534,7 @@
 #define SAADC_CH_PSELN_PSELN_AnalogInput6 (7UL) /*!< AIN6 */
 #define SAADC_CH_PSELN_PSELN_AnalogInput7 (8UL) /*!< AIN7 */
 #define SAADC_CH_PSELN_PSELN_VDD (9UL) /*!< VDD */
-#define SAADC_CH_PSELN_PSELN_VDDHDIV5 (0x11UL) /*!< VDDH/5 */
+#define SAADC_CH_PSELN_PSELN_VDDHDIV5 (0x0DUL) /*!< VDDH/5 */
 
 /* Register: SAADC_CH_CONFIG */
 /* Description: Description cluster[0]:  Input configuration for CH[0] */
@@ -10631,9 +10709,9 @@
 #define SPI_PSEL_SCK_CONNECT_Connected (0UL) /*!< Connect */
 #define SPI_PSEL_SCK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPI_PSEL_SCK_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPI_PSEL_SCK_PORT_Msk (0x3UL << SPI_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPI_PSEL_SCK_PORT_Msk (0x1UL << SPI_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPI_PSEL_SCK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -10648,9 +10726,9 @@
 #define SPI_PSEL_MOSI_CONNECT_Connected (0UL) /*!< Connect */
 #define SPI_PSEL_MOSI_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPI_PSEL_MOSI_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPI_PSEL_MOSI_PORT_Msk (0x3UL << SPI_PSEL_MOSI_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPI_PSEL_MOSI_PORT_Msk (0x1UL << SPI_PSEL_MOSI_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPI_PSEL_MOSI_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -10665,9 +10743,9 @@
 #define SPI_PSEL_MISO_CONNECT_Connected (0UL) /*!< Connect */
 #define SPI_PSEL_MISO_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPI_PSEL_MISO_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPI_PSEL_MISO_PORT_Msk (0x3UL << SPI_PSEL_MISO_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPI_PSEL_MISO_PORT_Msk (0x1UL << SPI_PSEL_MISO_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPI_PSEL_MISO_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -10844,9 +10922,9 @@
 #define SPIM_PSEL_SCK_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIM_PSEL_SCK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIM_PSEL_SCK_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIM_PSEL_SCK_PORT_Msk (0x3UL << SPIM_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIM_PSEL_SCK_PORT_Msk (0x1UL << SPIM_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIM_PSEL_SCK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -10861,9 +10939,9 @@
 #define SPIM_PSEL_MOSI_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIM_PSEL_MOSI_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIM_PSEL_MOSI_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIM_PSEL_MOSI_PORT_Msk (0x3UL << SPIM_PSEL_MOSI_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIM_PSEL_MOSI_PORT_Msk (0x1UL << SPIM_PSEL_MOSI_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIM_PSEL_MOSI_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -10878,9 +10956,9 @@
 #define SPIM_PSEL_MISO_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIM_PSEL_MISO_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIM_PSEL_MISO_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIM_PSEL_MISO_PORT_Msk (0x3UL << SPIM_PSEL_MISO_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIM_PSEL_MISO_PORT_Msk (0x1UL << SPIM_PSEL_MISO_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIM_PSEL_MISO_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -10895,9 +10973,9 @@
 #define SPIM_PSEL_CSN_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIM_PSEL_CSN_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIM_PSEL_CSN_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIM_PSEL_CSN_PORT_Msk (0x3UL << SPIM_PSEL_CSN_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIM_PSEL_CSN_PORT_Msk (0x1UL << SPIM_PSEL_CSN_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIM_PSEL_CSN_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -11128,9 +11206,9 @@
 #define SPIS_PSEL_SCK_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIS_PSEL_SCK_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIS_PSEL_SCK_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIS_PSEL_SCK_PORT_Msk (0x3UL << SPIS_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIS_PSEL_SCK_PORT_Msk (0x1UL << SPIS_PSEL_SCK_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIS_PSEL_SCK_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -11145,9 +11223,9 @@
 #define SPIS_PSEL_MISO_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIS_PSEL_MISO_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIS_PSEL_MISO_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIS_PSEL_MISO_PORT_Msk (0x3UL << SPIS_PSEL_MISO_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIS_PSEL_MISO_PORT_Msk (0x1UL << SPIS_PSEL_MISO_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIS_PSEL_MISO_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -11162,9 +11240,9 @@
 #define SPIS_PSEL_MOSI_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIS_PSEL_MOSI_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIS_PSEL_MOSI_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIS_PSEL_MOSI_PORT_Msk (0x3UL << SPIS_PSEL_MOSI_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIS_PSEL_MOSI_PORT_Msk (0x1UL << SPIS_PSEL_MOSI_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIS_PSEL_MOSI_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -11179,9 +11257,9 @@
 #define SPIS_PSEL_CSN_CONNECT_Connected (0UL) /*!< Connect */
 #define SPIS_PSEL_CSN_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define SPIS_PSEL_CSN_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define SPIS_PSEL_CSN_PORT_Msk (0x3UL << SPIS_PSEL_CSN_PORT_Pos) /*!< Bit mask of PORT field. */
+#define SPIS_PSEL_CSN_PORT_Msk (0x1UL << SPIS_PSEL_CSN_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define SPIS_PSEL_CSN_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -11775,9 +11853,9 @@
 #define TWI_PSEL_SCL_CONNECT_Connected (0UL) /*!< Connect */
 #define TWI_PSEL_SCL_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define TWI_PSEL_SCL_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define TWI_PSEL_SCL_PORT_Msk (0x3UL << TWI_PSEL_SCL_PORT_Pos) /*!< Bit mask of PORT field. */
+#define TWI_PSEL_SCL_PORT_Msk (0x1UL << TWI_PSEL_SCL_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define TWI_PSEL_SCL_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -11792,9 +11870,9 @@
 #define TWI_PSEL_SDA_CONNECT_Connected (0UL) /*!< Connect */
 #define TWI_PSEL_SDA_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define TWI_PSEL_SDA_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define TWI_PSEL_SDA_PORT_Msk (0x3UL << TWI_PSEL_SDA_PORT_Pos) /*!< Bit mask of PORT field. */
+#define TWI_PSEL_SDA_PORT_Msk (0x1UL << TWI_PSEL_SDA_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define TWI_PSEL_SDA_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12056,9 +12134,9 @@
 #define TWIM_PSEL_SCL_CONNECT_Connected (0UL) /*!< Connect */
 #define TWIM_PSEL_SCL_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define TWIM_PSEL_SCL_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define TWIM_PSEL_SCL_PORT_Msk (0x3UL << TWIM_PSEL_SCL_PORT_Pos) /*!< Bit mask of PORT field. */
+#define TWIM_PSEL_SCL_PORT_Msk (0x1UL << TWIM_PSEL_SCL_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define TWIM_PSEL_SCL_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12073,9 +12151,9 @@
 #define TWIM_PSEL_SDA_CONNECT_Connected (0UL) /*!< Connect */
 #define TWIM_PSEL_SDA_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define TWIM_PSEL_SDA_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define TWIM_PSEL_SDA_PORT_Msk (0x3UL << TWIM_PSEL_SDA_PORT_Pos) /*!< Bit mask of PORT field. */
+#define TWIM_PSEL_SDA_PORT_Msk (0x1UL << TWIM_PSEL_SDA_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define TWIM_PSEL_SDA_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12352,9 +12430,9 @@
 #define TWIS_PSEL_SCL_CONNECT_Connected (0UL) /*!< Connect */
 #define TWIS_PSEL_SCL_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define TWIS_PSEL_SCL_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define TWIS_PSEL_SCL_PORT_Msk (0x3UL << TWIS_PSEL_SCL_PORT_Pos) /*!< Bit mask of PORT field. */
+#define TWIS_PSEL_SCL_PORT_Msk (0x1UL << TWIS_PSEL_SCL_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define TWIS_PSEL_SCL_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12369,9 +12447,9 @@
 #define TWIS_PSEL_SDA_CONNECT_Connected (0UL) /*!< Connect */
 #define TWIS_PSEL_SDA_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define TWIS_PSEL_SDA_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define TWIS_PSEL_SDA_PORT_Msk (0x3UL << TWIS_PSEL_SDA_PORT_Pos) /*!< Bit mask of PORT field. */
+#define TWIS_PSEL_SDA_PORT_Msk (0x1UL << TWIS_PSEL_SDA_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define TWIS_PSEL_SDA_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12602,9 +12680,9 @@
 #define UART_PSEL_RTS_CONNECT_Connected (0UL) /*!< Connect */
 #define UART_PSEL_RTS_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UART_PSEL_RTS_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UART_PSEL_RTS_PORT_Msk (0x3UL << UART_PSEL_RTS_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UART_PSEL_RTS_PORT_Msk (0x1UL << UART_PSEL_RTS_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UART_PSEL_RTS_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12619,9 +12697,9 @@
 #define UART_PSEL_TXD_CONNECT_Connected (0UL) /*!< Connect */
 #define UART_PSEL_TXD_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UART_PSEL_TXD_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UART_PSEL_TXD_PORT_Msk (0x3UL << UART_PSEL_TXD_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UART_PSEL_TXD_PORT_Msk (0x1UL << UART_PSEL_TXD_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UART_PSEL_TXD_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12636,9 +12714,9 @@
 #define UART_PSEL_CTS_CONNECT_Connected (0UL) /*!< Connect */
 #define UART_PSEL_CTS_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UART_PSEL_CTS_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UART_PSEL_CTS_PORT_Msk (0x3UL << UART_PSEL_CTS_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UART_PSEL_CTS_PORT_Msk (0x1UL << UART_PSEL_CTS_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UART_PSEL_CTS_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -12653,9 +12731,9 @@
 #define UART_PSEL_RXD_CONNECT_Connected (0UL) /*!< Connect */
 #define UART_PSEL_RXD_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UART_PSEL_RXD_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UART_PSEL_RXD_PORT_Msk (0x3UL << UART_PSEL_RXD_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UART_PSEL_RXD_PORT_Msk (0x1UL << UART_PSEL_RXD_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UART_PSEL_RXD_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -13008,9 +13086,9 @@
 #define UARTE_PSEL_RTS_CONNECT_Connected (0UL) /*!< Connect */
 #define UARTE_PSEL_RTS_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UARTE_PSEL_RTS_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UARTE_PSEL_RTS_PORT_Msk (0x3UL << UARTE_PSEL_RTS_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UARTE_PSEL_RTS_PORT_Msk (0x1UL << UARTE_PSEL_RTS_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UARTE_PSEL_RTS_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -13025,9 +13103,9 @@
 #define UARTE_PSEL_TXD_CONNECT_Connected (0UL) /*!< Connect */
 #define UARTE_PSEL_TXD_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UARTE_PSEL_TXD_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UARTE_PSEL_TXD_PORT_Msk (0x3UL << UARTE_PSEL_TXD_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UARTE_PSEL_TXD_PORT_Msk (0x1UL << UARTE_PSEL_TXD_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UARTE_PSEL_TXD_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -13042,9 +13120,9 @@
 #define UARTE_PSEL_CTS_CONNECT_Connected (0UL) /*!< Connect */
 #define UARTE_PSEL_CTS_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UARTE_PSEL_CTS_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UARTE_PSEL_CTS_PORT_Msk (0x3UL << UARTE_PSEL_CTS_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UARTE_PSEL_CTS_PORT_Msk (0x1UL << UARTE_PSEL_CTS_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UARTE_PSEL_CTS_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -13059,9 +13137,9 @@
 #define UARTE_PSEL_RXD_CONNECT_Connected (0UL) /*!< Connect */
 #define UARTE_PSEL_RXD_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number */
+/* Bit 5 : Port number */
 #define UARTE_PSEL_RXD_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UARTE_PSEL_RXD_PORT_Msk (0x3UL << UARTE_PSEL_RXD_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UARTE_PSEL_RXD_PORT_Msk (0x1UL << UARTE_PSEL_RXD_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number */
 #define UARTE_PSEL_RXD_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -13157,7 +13235,7 @@
 
 
 /* Peripheral: UICR */
-/* Description: User Information Configuration Registers */
+/* Description: User information configuration registers */
 
 /* Register: UICR_NRFFW */
 /* Description: Description collection[0]:  Reserved for Nordic firmware design */
@@ -13189,9 +13267,9 @@
 #define UICR_PSELRESET_CONNECT_Connected (0UL) /*!< Connect */
 #define UICR_PSELRESET_CONNECT_Disconnected (1UL) /*!< Disconnect */
 
-/* Bits 6..5 : Port number onto which nRESET is exposed */
+/* Bit 5 : Port number onto which nRESET is exposed */
 #define UICR_PSELRESET_PORT_Pos (5UL) /*!< Position of PORT field. */
-#define UICR_PSELRESET_PORT_Msk (0x3UL << UICR_PSELRESET_PORT_Pos) /*!< Bit mask of PORT field. */
+#define UICR_PSELRESET_PORT_Msk (0x1UL << UICR_PSELRESET_PORT_Pos) /*!< Bit mask of PORT field. */
 
 /* Bits 4..0 : Pin number of PORT onto which nRESET is exposed */
 #define UICR_PSELRESET_PIN_Pos (0UL) /*!< Position of PIN field. */
@@ -13200,7 +13278,7 @@
 /* Register: UICR_APPROTECT */
 /* Description: Access port protection */
 
-/* Bits 7..0 : Enable or disable Access Port protection. */
+/* Bits 7..0 : Enable or disable access port protection. */
 #define UICR_APPROTECT_PALL_Pos (0UL) /*!< Position of PALL field. */
 #define UICR_APPROTECT_PALL_Msk (0xFFUL << UICR_APPROTECT_PALL_Pos) /*!< Bit mask of PALL field. */
 #define UICR_APPROTECT_PALL_Enabled (0x00UL) /*!< Enable */
@@ -13215,17 +13293,32 @@
 #define UICR_NFCPINS_PROTECT_Disabled (0UL) /*!< Operation as GPIO pins. Same protection as normal GPIO pins */
 #define UICR_NFCPINS_PROTECT_NFC (1UL) /*!< Operation as NFC antenna pins. Configures the protection for NFC operation */
 
-/* Register: UICR_EXTSUPPLY */
-/* Description: Enable external circuitry to be supplied from VDD pin. Applicable in 'High voltage mode' only. */
+/* Register: UICR_DEBUGCTRL */
+/* Description: Processor debug control */
 
-/* Bit 0 : Enable external circuitry to be supplied from VDD pin (output of REG0 stage). */
+/* Bits 15..8 : Configure CPU flash patch and breakpoint (FPB) unit behavior */
+#define UICR_DEBUGCTRL_CPUFPBEN_Pos (8UL) /*!< Position of CPUFPBEN field. */
+#define UICR_DEBUGCTRL_CPUFPBEN_Msk (0xFFUL << UICR_DEBUGCTRL_CPUFPBEN_Pos) /*!< Bit mask of CPUFPBEN field. */
+#define UICR_DEBUGCTRL_CPUFPBEN_Disabled (0x00UL) /*!< Disable CPU FPB unit. Writes into the FPB registers will be ignored. */
+#define UICR_DEBUGCTRL_CPUFPBEN_Enabled (0xFFUL) /*!< Enable CPU FPB unit (default behavior) */
+
+/* Bits 7..0 : Configure CPU non-intrusive debug features */
+#define UICR_DEBUGCTRL_CPUNIDEN_Pos (0UL) /*!< Position of CPUNIDEN field. */
+#define UICR_DEBUGCTRL_CPUNIDEN_Msk (0xFFUL << UICR_DEBUGCTRL_CPUNIDEN_Pos) /*!< Bit mask of CPUNIDEN field. */
+#define UICR_DEBUGCTRL_CPUNIDEN_Disabled (0x00UL) /*!< Disable CPU ITM and ETM functionality */
+#define UICR_DEBUGCTRL_CPUNIDEN_Enabled (0xFFUL) /*!< Enable CPU ITM and ETM functionality (default behavior) */
+
+/* Register: UICR_EXTSUPPLY */
+/* Description: Enable external circuitry to be supplied from VDD pin. Applicable in high voltage mode only. */
+
+/* Bit 0 : Enable external circuitry to be supplied from VDD pin (output of REG0 stage) */
 #define UICR_EXTSUPPLY_EXTSUPPLY_Pos (0UL) /*!< Position of EXTSUPPLY field. */
 #define UICR_EXTSUPPLY_EXTSUPPLY_Msk (0x1UL << UICR_EXTSUPPLY_EXTSUPPLY_Pos) /*!< Bit mask of EXTSUPPLY field. */
-#define UICR_EXTSUPPLY_EXTSUPPLY_Disabled (0UL) /*!< No current can be drawn from the VDD pin. */
-#define UICR_EXTSUPPLY_EXTSUPPLY_Enabled (1UL) /*!< It is allowed to supply external circuitry from the VDD pin. */
+#define UICR_EXTSUPPLY_EXTSUPPLY_Disabled (0UL) /*!< No current can be drawn from the VDD pin */
+#define UICR_EXTSUPPLY_EXTSUPPLY_Enabled (1UL) /*!< It is allowed to supply external circuitry from the VDD pin */
 
 /* Register: UICR_REGOUT0 */
-/* Description: GPIO reference voltage / external output supply voltage in 'High voltage mode'. */
+/* Description: GPIO reference voltage / external output supply voltage in high voltage mode */
 
 /* Bits 2..0 : Output voltage from of REG0 regulator stage. The maximum output voltage from this stage is given as VDDH - VEXDIF. */
 #define UICR_REGOUT0_VOUT_Pos (0UL) /*!< Position of VOUT field. */
@@ -14369,6 +14462,15 @@
 /* Bits 10..0 : Returns the current value of the start of frame counter */
 #define USBD_FRAMECNTR_FRAMECNTR_Pos (0UL) /*!< Position of FRAMECNTR field. */
 #define USBD_FRAMECNTR_FRAMECNTR_Msk (0x7FFUL << USBD_FRAMECNTR_FRAMECNTR_Pos) /*!< Bit mask of FRAMECNTR field. */
+
+/* Register: USBD_LOWPOWER */
+/* Description: First silicon only: Controls USBD peripheral low-power mode during USB suspend */
+
+/* Bit 0 : Controls USBD peripheral low-power mode during USB suspend */
+#define USBD_LOWPOWER_LOWPOWER_Pos (0UL) /*!< Position of LOWPOWER field. */
+#define USBD_LOWPOWER_LOWPOWER_Msk (0x1UL << USBD_LOWPOWER_LOWPOWER_Pos) /*!< Bit mask of LOWPOWER field. */
+#define USBD_LOWPOWER_LOWPOWER_ForceNormal (0UL) /*!< Software must write this value to exit low power mode and before performing a remote wake-up */
+#define USBD_LOWPOWER_LOWPOWER_LowPower (1UL) /*!< Software must write this value to enter low power mode after DMA and software have finished interacting with the USB peripheral */
 
 /* Register: USBD_ISOINCONFIG */
 /* Description: Controls the response of the ISO IN endpoint to an IN token when no data is ready to be sent */

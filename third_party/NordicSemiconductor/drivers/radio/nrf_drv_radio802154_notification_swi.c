@@ -39,6 +39,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "nrf_drv_radio802154.h"
 #include "nrf_drv_radio802154_swi.h"
 #include "raal/nrf_raal_api.h"
 
@@ -52,14 +53,19 @@ void nrf_drv_radio802154_notify_received(uint8_t * p_data, int8_t power, int8_t 
     nrf_drv_radio802154_swi_notify_received(p_data, power, lqi);
 }
 
+void nrf_drv_radio802154_notify_receive_failed(nrf_drv_radio802154_rx_error_t error)
+{
+    nrf_drv_radio802154_swi_notify_receive_failed(error);
+}
+
 void nrf_drv_radio802154_notify_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi)
 {
     nrf_drv_radio802154_swi_notify_transmitted(p_ack, power, lqi);
 }
 
-void nrf_drv_radio802154_notify_busy_channel(void)
+void nrf_drv_radio802154_notify_transmit_failed(nrf_drv_radio802154_tx_error_t error)
 {
-    nrf_drv_radio802154_swi_notify_busy_channel();
+    nrf_drv_radio802154_swi_notify_transmit_failed(error);
 }
 
 void nrf_drv_radio802154_notify_energy_detected(uint8_t result)

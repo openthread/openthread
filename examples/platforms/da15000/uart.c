@@ -28,99 +28,88 @@
 
 #include <openthread/config.h>
 
-#include <assert.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 #include <openthread/platform/uart.h>
-
-#include "common/code_utils.hpp"
 
 #include "hw_gpio.h"
 #include "hw_uart.h"
 #include "platform-da15000.h"
 
-static int sInFd;
-static int sOutFd;
-void UartBuffClear(void);
+static bool sUartWriteDone = false;
+static bool sUartReadDone  = false;
+static uint8_t sUartBuf;
+
+static void UartSignalWrite(void *p, uint16_t transferred)
+{
+    if (transferred)
+    {
+        sUartWriteDone = true;
+    }
+}
+
+static void UartSignalRead(void *p, uint16_t transferred)
+{
+    if (transferred)
+    {
+        sUartReadDone = true;
+    }
+}
 
 otError otPlatUartEnable(void)
 {
-    otError error = OT_ERROR_NONE;
-    uart_config uart_init =
+    uart_config_ex uart_init =
     {
-        .baud_rate = HW_UART_BAUDRATE_57600,
+        .baud_rate = HW_UART_BAUDRATE_115200,
         .data      = HW_UART_DATABITS_8,
-        .stop      = HW_UART_STOPBITS_1,
         .parity    = HW_UART_PARITY_NONE,
-        .use_dma   = 0,
+        .stop      = HW_UART_STOPBITS_1,
+        .auto_flow_control = 0,
         .use_fifo  = 1,
-        .rx_dma_channel = HW_DMA_CHANNEL_0,
-        .tx_dma_channel = HW_DMA_CHANNEL_1,
+        .use_dma   = 1,
+        .tx_fifo_tr_lvl = 0,
+        .rx_fifo_tr_lvl = 0,
+        .tx_dma_channel = HW_DMA_CHANNEL_3,
+        .rx_dma_channel = HW_DMA_CHANNEL_2,
     };
 
-    hw_uart_init(CONFIG_RETARGET_UART, &uart_init);
+    hw_uart_init_ex(HW_UART2, &uart_init);
+
     hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_3,
-                             HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART_TX);
+                             HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART2_TX);
     hw_gpio_set_pin_function(HW_GPIO_PORT_2, HW_GPIO_PIN_3,
-                             HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART_RX);
+                             HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART2_RX);
     hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT,
                              HW_GPIO_FUNC_GPIO);
-    UartBuffClear();
 
-    return error;
+    hw_uart_receive(HW_UART2, &sUartBuf, 1, UartSignalRead, NULL);
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatUartDisable(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    close(sInFd);
-    close(sOutFd);
-
-    return error;
+    return OT_ERROR_NONE;
 }
-
 
 void da15000UartProcess(void)
 {
-    uint8_t aBuf;
-
-    // Wait until received data are available
-    if (hw_uart_read_buf_empty(HW_UART1))
+    if (sUartReadDone)
     {
-        return;
+        otPlatUartReceived(&sUartBuf, 1);
+        sUartReadDone = false;
+        hw_uart_receive(HW_UART2, &sUartBuf, 1, UartSignalRead, NULL);
     }
 
-    // Read element from the receive FIFO
-    aBuf = UBA(HW_UART1)->UART2_RBR_THR_DLL_REG;
-    otPlatUartReceived(&aBuf, 1);
-}
-
-
-void UartBuffClear(void)
-{
-
-    volatile uint8_t aBuf;
-
-    while (hw_uart_read_buf_empty(HW_UART1) == 0)
+    if (sUartWriteDone)
     {
-        aBuf += UBA(HW_UART1)->UART2_RBR_THR_DLL_REG;
+        sUartWriteDone = false;
+        otPlatUartSendDone();
     }
-
-
 }
-
 
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    otError error = OT_ERROR_NONE;
-    hw_uart_write_buffer(HW_UART1, aBuf, aBufLength);
+    hw_uart_send(HW_UART2, aBuf, aBufLength, UartSignalWrite, NULL);
 
-    otPlatUartSendDone();
-    return error;
+    return OT_ERROR_NONE;
 }
-
-
 
