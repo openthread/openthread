@@ -1687,6 +1687,8 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     LogMleMessage("Receive Parent Request", aMessageInfo.GetPeerAddr());
 
+    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_INVALID_STATE);
+
     // A Router MUST NOT send an MLE Parent Response if:
 
     // 1. It has no available Child capacity (if Max Child Count minus
@@ -2132,6 +2134,8 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     uint8_t numTlvs;
 
     LogMleMessage("Receive Child ID Request", aMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_INVALID_STATE);
 
     // only process message when operating as a child, router, or leader
     VerifyOrExit(mRole >= OT_DEVICE_ROLE_CHILD, error = OT_ERROR_INVALID_STATE);
