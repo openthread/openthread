@@ -821,8 +821,9 @@ private:
     uint8_t mRouterDowngradeThreshold;
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
-    bool mRouterRoleEnabled;
-    bool mIsRouterRestoringChildren;
+    bool mRouterRoleEnabled : 1;
+    bool mIsRouterRestoringChildren : 1;
+    bool mAddressSolicitPending : 1;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
