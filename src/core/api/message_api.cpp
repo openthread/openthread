@@ -152,6 +152,8 @@ exit:
 
 void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 {
+    uint16_t messages, buffers;
+
     aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
 
     aBufferInfo->mFreeBuffers = aInstance->mMessagePool.GetFreeBufferCount();
@@ -176,4 +178,18 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 
     aInstance->mThreadNetif.GetCoap().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages,
                                                                    aBufferInfo->mCoapBuffers);
+    aInstance->mThreadNetif.GetCoap().GetCachedResponses().GetInfo(messages, buffers);
+    aBufferInfo->mCoapMessages += messages;
+    aBufferInfo->mCoapBuffers += buffers;
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    aInstance->mApplicationCoap.GetRequestMessages().GetInfo(aBufferInfo->mApplicationCoapMessages,
+                                                             aBufferInfo->mApplicationCoapBuffers);
+    aInstance->mApplicationCoap.GetCachedResponses().GetInfo(messages, buffers);
+    aBufferInfo->mApplicationCoapMessages += messages;
+    aBufferInfo->mApplicationCoapBuffers += buffers;
+#else
+    aBufferInfo->mApplicationCoapMessages = 0;
+    aBufferInfo->mApplicationCoapBuffers = 0;
+#endif
 }
