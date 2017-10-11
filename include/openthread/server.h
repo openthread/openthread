@@ -60,7 +60,7 @@ extern "C" {
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-OTAPI otError OTCALL otServerGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData,
+OTAPI otError OTCALL otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData,
                                               uint8_t *aDataLength);
 
 /**
@@ -81,8 +81,10 @@ OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceCo
 /**
  * Remove a service configuration from the local network data.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPrefix   A pointer to an IPv6 prefix.
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[in]  aEnterpriseNumber  Enterprise Number of the service entry to be deleted.
+ * @param[in]  aServiceData       A pointer to an Service Data to look for during deletion.
+ * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
  *
  * @retval OT_ERROR_NONE       Successfully removed the configuration from the local network data.
  * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
@@ -90,7 +92,7 @@ OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceCo
  * @sa otServerAddService
  * @sa otServerRegister
  */
-OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance, const otIp6Prefix *aPrefix);
+OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance, uint32_t aEnterpriseNumber, uint8_t *aServiceData, uint8_t aServiceDataLength);
 
 /**
  * This function gets the next service in the local Network Data.

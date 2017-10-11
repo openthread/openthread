@@ -151,6 +151,64 @@ exit:
     return error;
 }
 
+otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
+                   bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength )
+{
+    otError error = OT_ERROR_NONE;
+    ServiceTlv *serviceTlv;
+    ServerTlv *serverTlv;
+
+    RemoveService( aEnterpriseNumber, aServiceData, aServiceDataLength );
+
+    serviceTlv = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
+    Insert(reinterpret_cast<uint8_t *>(serviceTlv),
+           sizeof(ServiceTlv) + sizeof(uint8_t)/*mServiceDataLength*/
+           + ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) + aServiceDataLength
+           + aServerDataLength + sizeof(ServerTlv));
+
+    serviceTlv->Init();
+    serviceTlv->SetEnterpriseNumber( aEnterpriseNumber );
+    serviceTlv->SetServiceID( 0 );
+    serviceTlv->SetServiceData( aServiceData, aServiceDataLength );
+    serviceTlv->SetLength( 2 + aServiceDataLength + ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) +
+                                   aServerDataLength + sizeof(ServerTlv) );
+
+    serverTlv = reinterpret_cast<ServerTlv *>( serviceTlv->GetSubTlvs() );
+    serverTlv->Init();
+
+    // According to Thread spec 1.1.1, section 5.18.6 Service TLV:
+    // "The Stable flag is set if any of the included sub-TLVs have their Stable flag set."
+    // The meaning also seems to be 'if and only if'.
+    if( aServerStable ) {
+        serviceTlv->SetStable();
+        serverTlv->SetStable();
+    }
+
+    serverTlv->SetServer16( GetNetif().GetMle().GetRloc16() );
+    serverTlv->SetServerData( aServerData, aServerDataLength );
+
+    ClearResubmitDelayTimer();
+
+    otDumpDebgNetData(GetInstance(), "add service done", mTlvs, mLength);
+
+//exit:
+    return error;
+}
+
+otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+{
+    otError error = OT_ERROR_NONE;
+    ServiceTlv *tlv;
+
+    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL, error = OT_ERROR_NOT_FOUND);
+    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
+    ClearResubmitDelayTimer();
+
+    exit:
+    otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
+    return error;
+}
+
 otError Local::UpdateRloc(void)
 {
     for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
@@ -161,6 +219,10 @@ otError Local::UpdateRloc(void)
         {
         case NetworkDataTlv::kTypePrefix:
             UpdateRloc(*static_cast<PrefixTlv *>(cur));
+            break;
+
+        case NetworkDataTlv::kTypeService:
+            UpdateRloc(*static_cast<ServiceTlv *>(cur));
             break;
 
         default:
@@ -211,6 +273,31 @@ otError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
     return OT_ERROR_NONE;
 }
 
+otError Local::UpdateRloc(ServiceTlv &aService)
+{
+    for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
+    {
+        switch (cur->GetType())
+        {
+            case NetworkDataTlv::kTypeServer:
+                UpdateRloc(*static_cast<ServerTlv *>(cur));
+                break;
+
+            default:
+                assert(false);
+                break;
+        }
+    }
+
+    return OT_ERROR_NONE;
+}
+
+otError Local::UpdateRloc(ServerTlv &aServer)
+{
+    aServer.SetServer16(GetNetif().GetMle().GetRloc16());
+    return OT_ERROR_NONE;
+}
+
 bool Local::IsOnMeshPrefixConsistent(void)
 {
     ThreadNetif &netif = GetNetif();
@@ -225,6 +312,14 @@ bool Local::IsExternalRouteConsistent(void)
 
     return (netif.GetNetworkDataLeader().ContainsExternalRoutes(*this, netif.GetMle().GetRloc16()) &&
             ContainsExternalRoutes(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
+}
+
+bool Local::IsServiceConsistent(void)
+{
+    ThreadNetif &netif = GetNetif();
+
+    return (netif.GetNetworkDataLeader().ContainsServices(*this, netif.GetMle().GetRloc16()) &&
+            ContainsServices(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
 }
 
 otError Local::SendServerDataNotification(void)
@@ -249,7 +344,7 @@ otError Local::SendServerDataNotification(void)
 
     UpdateRloc();
 
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), ClearResubmitDelayTimer());
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() || !IsServiceConsistent(), ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {

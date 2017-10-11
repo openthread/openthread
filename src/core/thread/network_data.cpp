@@ -234,6 +234,77 @@ exit:
     return error;
 }
 
+otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
+{
+    return GetNextService(aIterator, Mac::kShortAddrBroadcast, aConfig);
+}
+
+otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, uint16_t aRloc16,
+                                          otServiceConfig *aConfig)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+    NetworkDataIterator iterator(aIterator);
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + iterator.GetTlvOffset());
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext(), iterator.SetSubTlvOffset(0))
+    {
+        ServiceTlv *service;
+        NetworkDataTlv *subCur;
+        NetworkDataTlv *subEnd;
+
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+
+        if (cur->GetType() != NetworkDataTlv::kTypeService)
+        {
+            continue;
+        }
+
+        service = static_cast<ServiceTlv *>(cur);
+
+        subCur = reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(service->GetSubTlvs())
+                                                    + iterator.GetSubTlvOffset());
+        subEnd = cur->GetNext();
+
+        for (; subCur < subEnd; subCur = subCur->GetNext())
+        {
+            ServerTlv *server;
+
+            VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+
+            if (subCur->GetType() != NetworkDataTlv::kTypeServer)
+            {
+                continue;
+            }
+
+            server = static_cast<ServerTlv *>(subCur);
+
+            if ((aRloc16 == Mac::kShortAddrBroadcast) || (server->GetServer16() == aRloc16))
+            {
+                memset(aConfig, 0, sizeof(*aConfig));
+
+                aConfig->mEnterpriseNumber = service->GetEnterpriseNumber();
+                aConfig->mServiceDataLength = service->GetServiceDataLength();
+
+                memcpy(&aConfig->mServiceData, service->GetServiceData(), service->GetServiceDataLength());
+
+                aConfig->mServerConfig.mStable = server->IsStable();
+                aConfig->mServerConfig.mServerDataLength = server->GetServerDataLength();
+                memcpy(&aConfig->mServerConfig.mServerData, server->GetServerData(), server->GetServerDataLength());
+                aConfig->mServerConfig.mRloc16 = server->GetServer16();
+
+                iterator.SaveTlvOffset(cur, mTlvs);
+                iterator.SaveSubTlvOffset(subCur, service->GetSubTlvs());
+
+                ExitNow(error = OT_ERROR_NONE);
+            }
+        }
+    }
+
+exit:
+    return error;
+}
+
 bool NetworkData::ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16)
 {
     otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -291,6 +362,36 @@ bool NetworkData::ContainsExternalRoutes(NetworkData &aCompare, uint16_t aRloc16
     }
 
 exit:
+    return rval;
+}
+
+bool NetworkData::ContainsServices(NetworkData &aCompare, uint16_t aRloc16)
+{
+    otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otServiceConfig outerConfig;
+    bool rval = true;
+
+    while (aCompare.GetNextService(&outerIterator, aRloc16, &outerConfig) == OT_ERROR_NONE)
+    {
+        otNetworkDataIterator innerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        otServiceConfig innerConfig;
+        otError error;
+
+        while ((error = GetNextService(&innerIterator, aRloc16, &innerConfig)) == OT_ERROR_NONE)
+        {
+            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            {
+                break;
+            }
+        }
+
+        if (error != OT_ERROR_NONE)
+        {
+            ExitNow(rval = false);
+        }
+    }
+
+    exit:
     return rval;
 }
 
@@ -620,6 +721,39 @@ int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLen
     }
 
     return (rval >= aLength) ? rval : -1;
+}
+
+ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+{
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, mTlvs, mLength);
+}
+
+ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength, uint8_t *aTlvs, uint8_t aTlvsLength)
+{
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    ServiceTlv *compare;
+
+    while (cur < end)
+    {
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+
+        if (cur->GetType() == NetworkDataTlv::kTypeService)
+        {
+            compare = reinterpret_cast<ServiceTlv *>(cur);
+
+            if ((compare->GetEnterpriseNumber() == aEnterpriseNumber) && (compare->GetServiceDataLength() == aServiceDataLength)
+                && (memcmp(compare->GetServiceData(), aServiceData, aServiceDataLength) == 0))
+            {
+                return compare;
+            }
+        }
+
+        cur = cur->GetNext();
+    }
+
+exit:
+    return NULL;
 }
 
 otError NetworkData::Insert(uint8_t *aStart, uint8_t aLength)

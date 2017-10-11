@@ -841,8 +841,7 @@ typedef struct otServerConfig
 } otServerConfig;
 
 /**
- * This structure represents a Service configuration. It is suitable only for local network data representation,
- * as it contains only 1 server config structure (to avoid excessive memory consumption).
+ * This structure represents a Service configuration.
  */
 typedef struct otServiceConfig
 {
@@ -853,11 +852,6 @@ typedef struct otServiceConfig
          */
         kMaxServiceDataSize = 255,
     };
-
-    /**
-     * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
-     */
-    bool mStable : 1;
 
     /**
      * IANA Enterprise Number.
