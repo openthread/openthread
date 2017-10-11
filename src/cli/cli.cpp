@@ -995,18 +995,24 @@ void Interpreter::ProcessFactoryReset(int argc, char *argv[])
 #if OPENTHREAD_ENABLE_FAULT_INJECTION
 void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
 {
-    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
-    nl::FaultInjection::Identifier faultId;
+    int id;
+    const char *mgrName = otFIGetManagerName();
+    const char *faultName = NULL;
+    uint32_t faultCounter = 0;
 
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
     mServer->OutputFormat("FaultInjection counters:\r\n");
 
-    for (faultId = 0; faultId < mgr.GetNumFaults(); faultId++)
+    for (id = 0; id < kFault_NumFaultIds; id++)
     {
-        mServer->OutputFormat("%s_%s: %" PRIu32 "\r\n", mgr.GetName(), mgr.GetFaultNames()[faultId],
-                              mgr.GetFaultRecords()[faultId].mNumTimesChecked);
+        otFaultId faultId = (otFaultId)id;
+        (void)otFIGetFaultCounterValue(faultId, &faultCounter);
+
+        faultName = otFIGetFaultName(faultId);
+
+        mServer->OutputFormat("%s_%s: %" PRIu32 "\r\n", mgrName, faultName, faultCounter);
     }
 
     mServer->OutputFormat("End of FaultInjection counters\r\n");
@@ -1014,12 +1020,10 @@ void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
 
 void Interpreter::ProcessFIResetCounters(int argc, char *argv[])
 {
-    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
-
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    mgr.ResetFaultCounters();
+    otFIResetCounters();
 
     mServer->OutputFormat("Done\r\n");
 }
@@ -1036,12 +1040,10 @@ void Interpreter::ProcessFIConfigure(int argc, char *argv[])
 
 void Interpreter::ProcessFIResetConfiguration(int argc, char *argv[])
 {
-    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
-
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    mgr.ResetFaultConfigurations();
+    otFIResetConfiguration();
 
     mServer->OutputFormat("Done\r\n");
 }

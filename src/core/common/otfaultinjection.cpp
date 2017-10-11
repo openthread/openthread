@@ -49,7 +49,7 @@
 namespace ot {
 namespace FaultInjection {
 
-static nl::FaultInjection::Record sFaultRecordArray[kFault_NumItems];
+static nl::FaultInjection::Record sFaultRecordArray[kFault_NumFaultIds];
 static class nl::FaultInjection::Manager sOTFaultInMgr;
 static const char *sManagerName = "OpenThread";
 static const char *sFaultNames[] =
@@ -152,7 +152,7 @@ nl::FaultInjection::Manager &GetManager(void)
     {
         nl::FaultInjection::SetGlobalContext(&sFaultInjectionGlobalContext);
 
-        sOTFaultInMgr.Init(kFault_NumItems,
+        sOTFaultInMgr.Init(kFault_NumFaultIds,
                            sFaultRecordArray,
                            sManagerName,
                            sFaultNames);

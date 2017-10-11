@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-message
+ * @addtogroup api-faultinjection
  *
  * @brief
  *   This module includes functions that control OpenThread's fault injection Manager
@@ -53,16 +53,77 @@ extern "C" {
 
 typedef enum
 {
-    kFault_AllocBuffer,                /**< Fail the allocation of a Buffer */
-    kFault_DropRadioRx,                /**< Drop radio frames in input */
-    kFault_NumItems,
+    kFault_AllocBuffer,        /**< Fail the allocation of a Buffer */
+    kFault_DropRadioRx,        /**< Drop radio frames in input */
+    kFault_NumFaultIds,
 } otFaultId;
 
 
+/**
+ * Configure a fault to trigger a given number of times, at some point in the future.
+ *
+ * @param[in]   id              The fault id.
+ * @param[in]   numCallsToSkip  The number of instances of the fault that should be skipped.
+ *                              before injecting the first failure.
+ * @param[in]   numCallsToFail  The number of times the fault should be injected.
+ *
+ * @retval      0               Successfully configured the fault.
+ * @retval      EINVAL          The fault id is out of range.
+ */
 int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCallsToFail);
 
+/**
+ * Parse an nlfaultinjection configuration string to apply it to OpenThread's
+ * faultinjection Manager.
+ *
+ * @param[in]   inStr           The configuration string. An example of a valid string that
+ *                              enables two faults is "OpenThread_AllocBuffer_f5_s1:OpenThread_DropRadioRx_f1_s3"
+ *                              The format of a single fault configuration is
+ *                              "OpenThread_<faultName>_{f<numTimesToFail>[_s<numTimesToSkip>],p<randomFailurePercentage>}[_a<integer>]...".
+ *                              All faults in the string must be in the scope of the OpenThread fault injection Manager.
+ *
+ * @retval true                 Successfully configured all faults.
+ * @retval false                Parsing failed. If the string contains more.
+ *                              than one fault, the configuration might have been partially applied.
+ */
 bool otFIParseFaultInjectionStr(char *inStr);
 
+/**
+ * Reset the fault injection counters.
+ */
+void otFIResetCounters(void);
+
+/**
+ * Reset the fault injection configuration.
+ */
+void otFIResetConfiguration(void);
+
+/**
+ * Return the name of OpenThread's fault injection Manager.
+ *
+ * @return The string "OpenThread"
+ */
+const char *otFIGetManagerName(void);
+
+/**
+ * Return the name of a faultId.
+ *
+ * @param[in]   id  The otFaultId.
+ *
+ * @return      The string containing the name of the fault. NULL if id is out of range.
+ */
+const char *otFIGetFaultName(otFaultId id);
+
+/**
+ * Return the number of times a fault id was evaluated for injection.
+ *
+ * @param[in]   id     The otFaultId.
+ * @param[out]  value  A pointer to a uinsigned integer in which to store the value.
+ *
+ * @retval      0      Success
+ * @retval      EINVAL If id is out of range.
+ */
+int otFIGetFaultCounterValue(otFaultId id, uint32_t *value);
 
 /**
  * @}

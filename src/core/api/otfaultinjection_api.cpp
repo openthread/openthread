@@ -53,10 +53,57 @@ int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCalls
     return mgr.FailAtFault(id, numCallsToSkip, numCallsToFail);
 }
 
+const char *otFIGetManagerName(void)
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    return mgr.GetName();
+}
+
+const char *otFIGetFaultName(otFaultId id)
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    if (id >= mgr.GetNumFaults())
+    {
+        return NULL;
+    }
+
+    return mgr.GetFaultNames()[id];
+}
+
+int otFIGetFaultCounterValue(otFaultId id, uint32_t *value)
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    if (id >= mgr.GetNumFaults())
+    {
+        return EINVAL;
+    }
+
+    *value = mgr.GetFaultRecords()[id].mNumTimesChecked;
+
+    return 0;
+}
+
 bool otFIParseFaultInjectionStr(char *inStr)
 {
     return nl::FaultInjection::ParseFaultInjectionStr(inStr,
                                                       sFaultMgrTable,
                                                       sizeof(sFaultMgrTable) / sizeof(sFaultMgrTable[0]));
+}
+
+void otFIResetCounters(void)
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    mgr.ResetFaultCounters();
+}
+
+void otFIResetConfiguration(void)
+{
+    nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
+
+    mgr.ResetFaultConfigurations();
 }
 #endif // OPENTHREAD_ENABLE_FAULT_INJECTION
