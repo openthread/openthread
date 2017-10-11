@@ -158,7 +158,8 @@ if OPENTHREAD_ENABLE_FAULT_INJECTION
 check_SCRIPTS                                                     += \
 	RouterAttach_fault_injection.py                                  \
     $(NULL)
-endif
+
+else # OPENTHREAD_ENABLE_FAULT_INJECTION
 
 check_SCRIPTS                                                     += \
     test_coap.py                                                     \
@@ -259,6 +260,8 @@ check_SCRIPTS                                                     += \
     Cert_9_2_17_Orphan.py                                            \
     Cert_9_2_18_RollBackActiveTimestamp.py                           \
     $(NULL)
+
+endif # OPENTHREAD_ENABLE_FAULT_INJECTION
 
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
