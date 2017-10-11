@@ -38,8 +38,23 @@ import node
 LEADER = 1
 ROUTER = 2
 
+def wait_for_output(testcase, get_output, desired, timeout=10):
+    time_to_sleep = 0.1
+    start_secs = time.time()
+    elapsed = 0
+    while elapsed < timeout :
+        current = get_output()
+        if current == desired:
+            break
+        time.sleep(time_to_sleep)
+        time_to_sleep *= 2
+        elapsed = time.time() - start_secs 
 
-class Cert_5_1_01_RouterAttach(unittest.TestCase):
+    print str(get_output) + " == " + str(desired) + " elapsed = " + str(time.time() - start_secs) 
+    testcase.assertEqual(current, desired)
+
+
+class RouterAttach_fault_injection(unittest.TestCase):
 
     def __setUp(self):
         self.nodes = {}
@@ -95,12 +110,10 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
 
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
-        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
-        time.sleep(4)
+        wait_for_output(self, self.nodes[LEADER].get_state, 'leader', 4)
 
         self.nodes[ROUTER].start()
-        time.sleep(7)
-        self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
+        wait_for_output(self, self.nodes[ROUTER].get_state, 'router', 7)
 
 if __name__ == '__main__':
     unittest.main()
