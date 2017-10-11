@@ -152,13 +152,13 @@ exit:
 }
 
 otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
-                   bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength )
+                          bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength)
 {
     otError error = OT_ERROR_NONE;
     ServiceTlv *serviceTlv;
     ServerTlv *serverTlv;
 
-    RemoveService( aEnterpriseNumber, aServiceData, aServiceDataLength );
+    RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
 
     serviceTlv = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
     Insert(reinterpret_cast<uint8_t *>(serviceTlv),
@@ -167,25 +167,27 @@ otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceDat
            + aServerDataLength + sizeof(ServerTlv));
 
     serviceTlv->Init();
-    serviceTlv->SetEnterpriseNumber( aEnterpriseNumber );
-    serviceTlv->SetServiceID( 0 );
-    serviceTlv->SetServiceData( aServiceData, aServiceDataLength );
-    serviceTlv->SetLength( 2 + aServiceDataLength + ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) +
-                                   aServerDataLength + sizeof(ServerTlv) );
+    serviceTlv->SetEnterpriseNumber(aEnterpriseNumber);
+    serviceTlv->SetServiceID(0);
+    serviceTlv->SetServiceData(aServiceData, aServiceDataLength);
+    serviceTlv->SetLength(2 + aServiceDataLength + ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(
+                                                        uint32_t)) +
+                          aServerDataLength + sizeof(ServerTlv));
 
-    serverTlv = reinterpret_cast<ServerTlv *>( serviceTlv->GetSubTlvs() );
+    serverTlv = reinterpret_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
     serverTlv->Init();
 
     // According to Thread spec 1.1.1, section 5.18.6 Service TLV:
     // "The Stable flag is set if any of the included sub-TLVs have their Stable flag set."
     // The meaning also seems to be 'if and only if'.
-    if( aServerStable ) {
+    if (aServerStable)
+    {
         serviceTlv->SetStable();
         serverTlv->SetStable();
     }
 
-    serverTlv->SetServer16( GetNetif().GetMle().GetRloc16() );
-    serverTlv->SetServerData( aServerData, aServerDataLength );
+    serverTlv->SetServer16(GetNetif().GetMle().GetRloc16());
+    serverTlv->SetServerData(aServerData, aServerDataLength);
 
     ClearResubmitDelayTimer();
 
@@ -200,11 +202,12 @@ otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aService
     otError error = OT_ERROR_NONE;
     ServiceTlv *tlv;
 
-    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
+                 error = OT_ERROR_NOT_FOUND);
     Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
     ClearResubmitDelayTimer();
 
-    exit:
+exit:
     otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
     return error;
 }
@@ -279,13 +282,13 @@ otError Local::UpdateRloc(ServiceTlv &aService)
     {
         switch (cur->GetType())
         {
-            case NetworkDataTlv::kTypeServer:
-                UpdateRloc(*static_cast<ServerTlv *>(cur));
-                break;
+        case NetworkDataTlv::kTypeServer:
+            UpdateRloc(*static_cast<ServerTlv *>(cur));
+            break;
 
-            default:
-                assert(false);
-                break;
+        default:
+            assert(false);
+            break;
         }
     }
 
@@ -344,7 +347,8 @@ otError Local::SendServerDataNotification(void)
 
     UpdateRloc();
 
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() || !IsServiceConsistent(), ClearResubmitDelayTimer());
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() ||
+                 !IsServiceConsistent(), ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {

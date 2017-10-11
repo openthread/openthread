@@ -56,12 +56,13 @@ exit:
 otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().AddService(
-            aConfig->mEnterpriseNumber, &aConfig->mServiceData[0], aConfig->mServiceDataLength,
-            aConfig->mServerConfig.mStable, &aConfig->mServerConfig.mServerData[0], aConfig->mServerConfig.mServerDataLength
-    );
+               aConfig->mEnterpriseNumber, &aConfig->mServiceData[0], aConfig->mServiceDataLength,
+               aConfig->mServerConfig.mStable, &aConfig->mServerConfig.mServerData[0], aConfig->mServerConfig.mServerDataLength
+           );
 }
 
-otError otServerRemoveService(otInstance *aInstance, uint32_t aEnterpriseNumber, uint8_t *aServiceData, uint8_t aServiceDataLength)
+otError otServerRemoveService(otInstance *aInstance, uint32_t aEnterpriseNumber, uint8_t *aServiceData,
+                              uint8_t aServiceDataLength)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
 }

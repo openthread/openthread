@@ -240,7 +240,7 @@ otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceC
 }
 
 otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, uint16_t aRloc16,
-                                          otServiceConfig *aConfig)
+                                    otServiceConfig *aConfig)
 {
     otError error = OT_ERROR_NOT_FOUND;
     NetworkDataIterator iterator(aIterator);
@@ -391,7 +391,7 @@ bool NetworkData::ContainsServices(NetworkData &aCompare, uint16_t aRloc16)
         }
     }
 
-    exit:
+exit:
     return rval;
 }
 
@@ -723,12 +723,14 @@ int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLen
     return (rval >= aLength) ? rval : -1;
 }
 
-ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData,
+                                     uint8_t aServiceDataLength)
 {
     return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, mTlvs, mLength);
 }
 
-ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength, uint8_t *aTlvs, uint8_t aTlvsLength)
+ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData,
+                                     uint8_t aServiceDataLength, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);

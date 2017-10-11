@@ -138,7 +138,7 @@ public:
      *
      */
     otError AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
-                       bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength );
+                       bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength);
 
     /**
      * This method removes a Service entry from the Thread Network local data.

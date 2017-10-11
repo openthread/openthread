@@ -710,7 +710,7 @@ public:
      * This method initializes the TLV.
      * Initial length is set to 2, to hold S_service_data_length field.
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeService); SetLength(2); mTResSId = kTMask; SetServiceDataLength( 0 ); }
+    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeService); SetLength(2); mTResSId = kTMask; SetServiceDataLength(0); }
 
     /**
      * This method gets Service Data length.
@@ -726,7 +726,7 @@ public:
      *
      * @param aServiceDataLength desired length of the Service Data field in bytes.
      */
-    void SetServiceDataLength( uint8_t aServiceDataLength ) {
+    void SetServiceDataLength(uint8_t aServiceDataLength) {
         *GetServiceDataLengthLocation() = aServiceDataLength;
     }
 
@@ -746,9 +746,9 @@ public:
      * @param aServiceDataLength length of the provided service data in bytes
      */
     void SetServiceData(const uint8_t *aServiceData, uint8_t aServiceDataLength) {
-        SetServiceDataLength( aServiceDataLength );
+        SetServiceDataLength(aServiceDataLength);
 
-        memcpy( GetServiceData(), aServiceData, aServiceDataLength );
+        memcpy(GetServiceData(), aServiceData, aServiceDataLength);
     }
 
     /**
@@ -757,11 +757,12 @@ public:
      * @returns Enterprise Number
      */
     uint32_t GetEnterpriseNumber(void) {
-        if( IsThreadEnterprise() ) {
+        if (IsThreadEnterprise()) {
             return THREAD_ENTERPRISE_NUMBER;
-        } else {
+        }
+        else {
             // This memory access most likely will not be aligned to 4 bytes
-            return HostSwap32( *reinterpret_cast<uint32_t *>( GetEnterpriseNumberLocation() ) );
+            return HostSwap32(*reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()));
         }
     };
 
@@ -784,13 +785,14 @@ public:
      * @param [in] aEnterpriseNumber Enterprise Number
      */
     void SetEnterpriseNumber(uint32_t aEnterpriseNumber) {
-        if( aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER ) {
+        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) {
             mTResSId |= kTMask;
-        } else {
+        }
+        else {
             mTResSId &= ~kTMask;
 
             // This memory access most likely will not be aligned to 4 bytes
-            *reinterpret_cast<uint32_t *>( GetEnterpriseNumberLocation() ) = HostSwap32( aEnterpriseNumber );
+            *reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()) = HostSwap32(aEnterpriseNumber);
         }
     };
 
@@ -831,7 +833,7 @@ public:
      */
     void SetSubTlvsLength(uint8_t aLength) {
         SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))
-               + sizeof(uint8_t)/* mServiceDataLength */ + GetServiceDataLength() + aLength);
+                  + sizeof(uint8_t)/* mServiceDataLength */ + GetServiceDataLength() + aLength);
     }
 
     /**
@@ -841,7 +843,7 @@ public:
      *
      */
     NetworkDataTlv *GetSubTlvs(void) {
-        return reinterpret_cast<NetworkDataTlv *>( GetServiceDataLengthLocation() + sizeof(uint8_t) + GetServiceDataLength() );
+        return reinterpret_cast<NetworkDataTlv *>(GetServiceDataLengthLocation() + sizeof(uint8_t) + GetServiceDataLength());
     }
 
 private:
@@ -862,7 +864,7 @@ private:
      * @returns pointer to enterprise number location
      */
     uint8_t *GetEnterpriseNumberLocation(void) {
-        return &mTResSId + sizeof( mTResSId );
+        return &mTResSId + sizeof(mTResSId);
     }
 
     enum
@@ -922,8 +924,8 @@ public:
      * @param aServerDataLength length of the provided server data in bytes
      */
     void SetServerData(const uint8_t *aServerData, uint8_t aServerDataLength) {
-        SetLength( sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
-        memcpy( GetServerData(), aServerData, aServerDataLength );
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
+        memcpy(GetServerData(), aServerData, aServerDataLength);
     }
 
     /**

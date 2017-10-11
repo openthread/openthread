@@ -198,7 +198,7 @@ public:
      *
      */
     otError GetNextService(otNetworkDataIterator *aIterator, uint16_t aRloc16,
-                                 otServiceConfig *aConfig);
+                           otServiceConfig *aConfig);
 
     /**
      * This method indicates whether or not the Thread Network Data contains all of the on mesh prefix information
