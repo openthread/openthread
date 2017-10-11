@@ -394,6 +394,17 @@ protected:
     void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
 
     /**
+     * This method strips non-stable Sub-TLVs from a Service TLV.
+     *
+     * @param[inout]  aData        A pointer to the Network Data to modify.
+     * @param[inout]  aDataLength  On entry, the size of the Network Data in bytes.  On exit, the size of the
+     *                             resulting Network Data in bytes.
+     * @param[inout]  aService     A reference to the Service TLV to modify.
+     *
+     */
+    void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService);
+
+    /**
      * This method computes the number of IPv6 Prefix bits that match.
      *
      * @param[in]  a        A pointer to the first IPv6 Prefix.

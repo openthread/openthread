@@ -806,19 +806,24 @@ typedef enum otRoutePreference
     OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
 
+enum
+{
+    /**
+     * Maximum size of Service Data in bytes.
+     */
+    kMaxServiceDataSize = 255,
+
+    /**
+     * Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
+     */
+    kMaxServerDataSize = 255,
+};
+
 /**
  * This structure represents a Server configuration.
  */
 typedef struct otServerConfig
 {
-    enum
-    {
-        /**
-         * Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
-         */
-        kMaxServerDataSize = 255,
-    };
-
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
@@ -845,14 +850,6 @@ typedef struct otServerConfig
  */
 typedef struct otServiceConfig
 {
-    enum
-    {
-        /**
-         * Maximum size of Service Data in bytes.
-         */
-        kMaxServiceDataSize = 255,
-    };
-
     /**
      * IANA Enterprise Number.
      */
