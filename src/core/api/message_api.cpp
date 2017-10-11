@@ -123,6 +123,13 @@ otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
     return queue->Enqueue(*message);
 }
 
+otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Enqueue(*message, MessageQueue::kQueuePositionHead);
+}
+
 otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
