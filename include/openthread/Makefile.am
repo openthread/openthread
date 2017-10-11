@@ -71,6 +71,7 @@ openthread_headers                      = \
     ncp.h                                 \
     netdata.h                             \
     openthread.h                          \
+    server.h                              \
     tasklet.h                             \
     thread.h                              \
     thread_ftd.h                          \
