@@ -52,7 +52,8 @@ namespace FaultInjection {
 static nl::FaultInjection::Record sFaultRecordArray[kFault_NumItems];
 static class nl::FaultInjection::Manager sOTFaultInMgr;
 static const char *sManagerName = "OpenThread";
-static const char *sFaultNames[] = {
+static const char *sFaultNames[] =
+{
     "AllocBuffer",
     "DropRadioRx",
 };
@@ -61,7 +62,8 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
                                     nl::FaultInjection::Identifier aId,
                                     nl::FaultInjection::Record *aFaultRecord);
 
-static nl::FaultInjection::GlobalContext sFaultInjectionGlobalContext = {
+static nl::FaultInjection::GlobalContext sFaultInjectionGlobalContext =
+{
     {
         NULL, // reboot callback
         PostInjectionCallbackFn
@@ -81,26 +83,31 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
     tmpstr[0] = 0;
 
     retval = snprintf(tmpstr, charAvailable,
-                           "Injecting fault %s_%s, instance: %" PRIu32 "; %s",
-                           aManager->GetName(), aManager->GetFaultNames()[aId],
-                           aFaultRecord->mNumTimesChecked, aFaultRecord->mReboot ? "reboot" : "");
+                      "Injecting fault %s_%s, instance: %" PRIu32 "; %s",
+                      aManager->GetName(), aManager->GetFaultNames()[aId],
+                      aFaultRecord->mNumTimesChecked, aFaultRecord->mReboot ? "reboot" : "");
+
     if (retval < 0)
     {
         goto error_exit;
     }
+
     charWritten += retval;
 
     if (numargs)
     {
         uint16_t i;
+
         if (charWritten < charAvailable)
         {
             retval = snprintf(tmpstr + charWritten, charAvailable - charWritten,
-                                    " with %" PRIu16 " args:", numargs);
+                              " with %" PRIu16 " args:", numargs);
+
             if (retval < 0)
             {
                 goto error_exit;
             }
+
             charWritten += retval;
         }
 
@@ -109,22 +116,25 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
             if (charWritten < charAvailable)
             {
                 retval = snprintf(tmpstr + charWritten, charAvailable - charWritten,
-                                        " %" PRId32, aFaultRecord->mArguments[i]);
+                                  " %" PRId32, aFaultRecord->mArguments[i]);
+
                 if (retval < 0)
                 {
                     goto error_exit;
                 }
+
                 charWritten += retval;
             }
         }
     }
 
-	otLogCritFI(ot::GetInstance(), "%s", tmpstr);
+    otLogCritFI(ot::GetInstance(), "%s", tmpstr);
 
     if (charWritten >= charAvailable)
     {
         otLogCritFI(ot::GetInstance(), "String overflow!");
     }
+
     return;
 
 error_exit:
@@ -140,12 +150,12 @@ nl::FaultInjection::Manager &GetManager(void)
 {
     if (0 == sOTFaultInMgr.GetNumFaults())
     {
-		nl::FaultInjection::SetGlobalContext(&sFaultInjectionGlobalContext);
+        nl::FaultInjection::SetGlobalContext(&sFaultInjectionGlobalContext);
 
         sOTFaultInMgr.Init(kFault_NumItems,
-                              sFaultRecordArray,
-                              sManagerName,
-                              sFaultNames);
+                           sFaultRecordArray,
+                           sManagerName,
+                           sFaultNames);
     }
 
     return sOTFaultInMgr;

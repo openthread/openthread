@@ -41,7 +41,8 @@
 
 using namespace ot;
 
-static nl::FaultInjection::GetManagerFn sFaultMgrTable[] = {
+static nl::FaultInjection::GetManagerFn sFaultMgrTable[] =
+{
     ot::FaultInjection::GetManager
 };
 
@@ -56,6 +57,6 @@ bool otFIParseFaultInjectionStr(char *inStr)
 {
     return nl::FaultInjection::ParseFaultInjectionStr(inStr,
                                                       sFaultMgrTable,
-                                                      sizeof(sFaultMgrTable)/sizeof(sFaultMgrTable[0]));
+                                                      sizeof(sFaultMgrTable) / sizeof(sFaultMgrTable[0]));
 }
 #endif // OPENTHREAD_ENABLE_FAULT_INJECTION

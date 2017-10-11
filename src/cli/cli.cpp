@@ -1002,11 +1002,13 @@ void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argv);
 
     mServer->OutputFormat("FaultInjection counters:\r\n");
-	for (faultId = 0; faultId < mgr.GetNumFaults(); faultId++)
-	{
-		mServer->OutputFormat("%s_%s: %" PRIu32 "\r\n", mgr.GetName(), mgr.GetFaultNames()[faultId],
-				mgr.GetFaultRecords()[faultId].mNumTimesChecked);
-	}
+
+    for (faultId = 0; faultId < mgr.GetNumFaults(); faultId++)
+    {
+        mServer->OutputFormat("%s_%s: %" PRIu32 "\r\n", mgr.GetName(), mgr.GetFaultNames()[faultId],
+                              mgr.GetFaultRecords()[faultId].mNumTimesChecked);
+    }
+
     mServer->OutputFormat("End of FaultInjection counters\r\n");
 }
 
@@ -1027,7 +1029,7 @@ void Interpreter::ProcessFIConfigure(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-	otFIParseFaultInjectionStr(argv[0]);
+    otFIParseFaultInjectionStr(argv[0]);
 
     mServer->OutputFormat("Done\r\n");
 }

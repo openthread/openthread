@@ -108,7 +108,7 @@ Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
 
-    OT_FAULT_INJECT(kFault_AllocBuffer, 
+    OT_FAULT_INJECT(kFault_AllocBuffer,
                     otLogInfoMem(GetInstance(), "No available message buffer"); return NULL);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
