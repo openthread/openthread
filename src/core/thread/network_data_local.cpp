@@ -157,23 +157,21 @@ otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceDat
     otError error = OT_ERROR_NONE;
     ServiceTlv *serviceTlv;
     ServerTlv *serverTlv;
+    uint8_t serviceTlvLength = (sizeof(ServiceTlv) - sizeof(NetworkDataTlv)) + aServiceDataLength +
+                               sizeof(uint8_t)/*mServiceDataLength*/ +
+                               ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) +
+                               aServerDataLength + sizeof(ServerTlv);
 
     RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
 
     serviceTlv = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(serviceTlv),
-           sizeof(ServiceTlv) + sizeof(uint8_t)/*mServiceDataLength*/
-           + ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) + aServiceDataLength
-           + aServerDataLength + sizeof(ServerTlv));
+    Insert(reinterpret_cast<uint8_t *>(serviceTlv), serviceTlvLength + sizeof(NetworkDataTlv));
 
     serviceTlv->Init();
     serviceTlv->SetEnterpriseNumber(aEnterpriseNumber);
     serviceTlv->SetServiceID(0);
     serviceTlv->SetServiceData(aServiceData, aServiceDataLength);
-    serviceTlv->SetLength((sizeof(ServiceTlv) - sizeof(NetworkDataTlv)) + aServiceDataLength +
-                          sizeof(uint8_t)/*mServiceDataLength*/ +
-                          ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) +
-                          aServerDataLength + sizeof(ServerTlv));
+    serviceTlv->SetLength(serviceTlvLength);
 
     serverTlv = reinterpret_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
     serverTlv->Init();

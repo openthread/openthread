@@ -379,7 +379,14 @@ bool NetworkData::ContainsServices(NetworkData &aCompare, uint16_t aRloc16)
 
         while ((error = GetNextService(&innerIterator, aRloc16, &innerConfig)) == OT_ERROR_NONE)
         {
-            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            if ((outerConfig.mEnterpriseNumber == innerConfig.mEnterpriseNumber) &&
+                (outerConfig.mServiceDataLength == innerConfig.mServiceDataLength)
+                && (memcmp(outerConfig.mServiceData, innerConfig.mServiceData, outerConfig.mServiceDataLength) == 0) &&
+                (outerConfig.mServerConfig.mStable == innerConfig.mServerConfig.mStable)
+                && (outerConfig.mServerConfig.mServerDataLength == innerConfig.mServerConfig.mServerDataLength) &&
+                (memcmp(outerConfig.mServerConfig.mServerData, innerConfig.mServerConfig.mServerData,
+                        outerConfig.mServerConfig.mServerDataLength) == 0)
+                && (outerConfig.mServerConfig.mRloc16 == innerConfig.mServerConfig.mRloc16))
             {
                 break;
             }

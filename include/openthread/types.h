@@ -811,12 +811,12 @@ enum
     /**
      * Maximum size of Service Data in bytes.
      */
-    kMaxServiceDataSize = 255,
+    kMaxServiceDataSize = 252,
 
     /**
      * Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
      */
-    kMaxServerDataSize = 255,
+    kMaxServerDataSize = 248,
 };
 
 /**

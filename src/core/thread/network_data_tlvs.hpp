@@ -764,7 +764,7 @@ public:
             // This memory access most likely will not be aligned to 4 bytes
             return HostSwap32(*reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()));
         }
-    };
+    }
 
     /**
      * This method returns the T flag. It is set when Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER.
@@ -773,7 +773,7 @@ public:
      */
     bool IsThreadEnterprise(void) const {
         return (mTResSId & kTMask) != 0;
-    };
+    }
 
     /**
      * This method sets Enterprise Number and updates the T flag.
@@ -794,7 +794,7 @@ public:
             // This memory access most likely will not be aligned to 4 bytes
             *reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()) = HostSwap32(aEnterpriseNumber);
         }
-    };
+    }
 
     /**
      * This method returns Service ID. It is in range 0x00-0x0f.
@@ -803,7 +803,7 @@ public:
      */
     uint8_t GetServiceID(void) const {
         return (mTResSId & kSIdMask) >> kSIdOffset;
-    };
+    }
 
     /**
      * This method sets Service ID.
@@ -812,7 +812,7 @@ public:
      */
     void SetServiceID(uint8_t aServiceID) {
         mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceID << kSIdOffset));
-    };
+    }
 
     /**
      * This method returns the Sub-TLVs length in bytes.
@@ -890,7 +890,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeServer); SetLength(2); }
+    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeServer); SetLength(sizeof(*this) - sizeof(NetworkDataTlv)); }
 
     /**
      * This method returns the S_server_16 value.
@@ -907,13 +907,12 @@ public:
      */
     void SetServer16(uint16_t aServer16) { mServer16 = HostSwap16(aServer16); }
 
-
     /**
      * This method returns a pointer to the Server Data.
      *
      * @returns A pointer to the Server Data.
      */
-    uint8_t *GetServerData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+    const uint8_t *GetServerData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
 
     /**
      * This method sets Server Data to the given values.
@@ -925,7 +924,7 @@ public:
      */
     void SetServerData(const uint8_t *aServerData, uint8_t aServerDataLength) {
         SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
-        memcpy(GetServerData(), aServerData, aServerDataLength);
+        memcpy(reinterpret_cast<uint8_t *>(this) + sizeof(*this), aServerData, aServerDataLength);
     }
 
     /**
