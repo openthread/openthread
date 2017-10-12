@@ -189,6 +189,17 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mCoapMessages += messages;
     aBufferInfo->mCoapBuffers += buffers;
 
+#if OPENTHREAD_ENABLE_DTLS
+    aInstance->mThreadNetif.GetCoapSecure().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
+                                                                         aBufferInfo->mCoapSecureBuffers);
+    aInstance->mThreadNetif.GetCoapSecure().GetCachedResponses().GetInfo(messages, buffers);
+    aBufferInfo->mCoapSecureMessages += messages;
+    aBufferInfo->mCoapSecureBuffers += buffers;
+#else
+    aBufferInfo->mCoapSecureMessages = 0;
+    aBufferInfo->mCoapSecureBuffers = 0;
+#endif
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     aInstance->mApplicationCoap.GetRequestMessages().GetInfo(aBufferInfo->mApplicationCoapMessages,
                                                              aBufferInfo->mApplicationCoapBuffers);
