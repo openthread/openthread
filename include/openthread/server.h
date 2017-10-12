@@ -61,7 +61,7 @@ extern "C" {
  *                             On exit, number of copied bytes.
  */
 OTAPI otError OTCALL otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData,
-                                              uint8_t *aDataLength);
+                                             uint8_t *aDataLength);
 
 /**
  * Add a service configuration to the local network data.
@@ -92,7 +92,8 @@ OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceCo
  * @sa otServerAddService
  * @sa otServerRegister
  */
-OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance, uint32_t aEnterpriseNumber, uint8_t *aServiceData, uint8_t aServiceDataLength);
+OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance, uint32_t aEnterpriseNumber, uint8_t *aServiceData,
+                                           uint8_t aServiceDataLength);
 
 /**
  * This function gets the next service in the local Network Data.
@@ -107,7 +108,7 @@ OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance, uint32_t aEnte
  *
  */
 OTAPI otError OTCALL otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                                                       otServiceConfig *aConfig);
+                                            otServiceConfig *aConfig);
 
 /**
  * Immediately register the local network data with the Leader.
