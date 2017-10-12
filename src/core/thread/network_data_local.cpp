@@ -170,7 +170,7 @@ otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceDat
     serviceTlv->SetEnterpriseNumber(aEnterpriseNumber);
     serviceTlv->SetServiceID(0);
     serviceTlv->SetServiceData(aServiceData, aServiceDataLength);
-    serviceTlv->SetLength((sizeof(ServiceTlv)-sizeof(NetworkDataTlv)) + aServiceDataLength +
+    serviceTlv->SetLength((sizeof(ServiceTlv) - sizeof(NetworkDataTlv)) + aServiceDataLength +
                           sizeof(uint8_t)/*mServiceDataLength*/ +
                           ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) +
                           aServerDataLength + sizeof(ServerTlv));
