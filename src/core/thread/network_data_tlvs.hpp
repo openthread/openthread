@@ -772,7 +772,7 @@ public:
      * @returns Flag whether Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER
      */
     bool IsThreadEnterprise(void) const {
-        return (mTResSId & kTMask);
+        return (mTResSId & kTMask) != 0;
     };
 
     /**

@@ -837,7 +837,7 @@ typedef struct otServerConfig
     /**
      * Server data bytes
      */
-    uint8_t mServerData[ kMaxServerDataSize ];
+    uint8_t mServerData[kMaxServerDataSize];
 
     /**
      * The Server Rloc.
@@ -863,7 +863,7 @@ typedef struct otServiceConfig
     /**
      * Service data bytes
      */
-    uint8_t mServiceData[ kMaxServiceDataSize ];
+    uint8_t mServiceData[kMaxServiceDataSize];
 
     otServerConfig mServerConfig;
 } otServiceConfig;
