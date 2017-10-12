@@ -117,7 +117,6 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, c
     SuccessOrExit(error = message->Append(aTlvTypes, aCount));
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
@@ -488,7 +487,6 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
     VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     messageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
@@ -584,7 +582,6 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     SuccessOrExit(error = message->Append(aTlvTypes, aCount));
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
