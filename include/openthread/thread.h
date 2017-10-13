@@ -512,7 +512,7 @@ void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDia
 /**
  * Send a Network Diagnostic Get request.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aDestination   A pointer to destination address.
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
  * @param[in]  aCount         Number of types in aTlvTypes

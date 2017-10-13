@@ -88,7 +88,7 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, c
 {
     ThreadNetif &netif = GetNetif();
     otError error;
-    Message *message;
+    Message *message = NULL;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
     otCoapResponseHandler handler = NULL;
@@ -114,7 +114,15 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, c
 
     VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Append(aTlvTypes, aCount));
+    if (aCount > 0)
+    {
+        TypeListTlv tlv;
+        tlv.Init();
+        tlv.SetLength(aCount);
+
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(aTlvTypes, aCount));
+    }
 
     messageInfo.SetPeerAddr(aDestination);
     messageInfo.SetPeerPort(kCoapUdpPort);
@@ -278,7 +286,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
     {
         VerifyOrExit(aRequest.Read(offset, sizeof(type), &type) == sizeof(type), error = OT_ERROR_DROP);
 
-        otLogInfoNetDiag(GetInstance(), "Received diagnostic get type %d", type);
+        otLogInfoNetDiag(GetInstance(), "Type %d", type);
 
         switch (type)
         {
@@ -377,21 +385,16 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
 
         case NetworkDiagnosticTlv::kBatteryLevel:
         {
-            // TODO Need more api from driver
-            BatteryLevelTlv tlv;
-            tlv.Init();
-            tlv.SetBatteryLevel(100);
-            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            // Thread 1.1.1 Specification Section 10.11.4.2:
+            // Omitted if the battery level is not measured, is unknown or the device does not
+            // operate on battery power.
             break;
         }
 
         case NetworkDiagnosticTlv::kSupplyVoltage:
         {
-            // TODO Need more api from driver
-            SupplyVoltageTlv tlv;
-            tlv.Init();
-            tlv.SetSupplyVoltage(0);
-            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            // Thread 1.1.1 Specification Section 10.11.4.3:
+            // Omitted if the battery level is not measured, is unknown.
             break;
         }
 
@@ -492,6 +495,12 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
+    if (message->GetLength() == header.GetLength())
+    {
+        // Remove Payload Marker if payload is actually empty.
+        message->SetLength(header.GetLength() - 1);
+    }
+
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo, NULL, this));
 
     otLogInfoNetDiag(GetInstance(), "Sent diagnostic get answer");
@@ -564,7 +573,7 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
 {
     ThreadNetif &netif = GetNetif();
     otError error;
-    Message *message;
+    Message *message = NULL;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
 
@@ -579,7 +588,15 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
 
     VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = message->Append(aTlvTypes, aCount));
+    if (aCount > 0)
+    {
+        TypeListTlv tlv;
+        tlv.Init();
+        tlv.SetLength(aCount);
+
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(aTlvTypes, aCount));
+    }
 
     messageInfo.SetPeerAddr(aDestination);
     messageInfo.SetPeerPort(kCoapUdpPort);
