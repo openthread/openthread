@@ -268,11 +268,11 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
     // check AddressFilter.
     if (mAddressMode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST)
     {
-        VerifyOrExit(entry != NULL && entry->mFiltered, error = OT_ERROR_WHITELIST_FILTERED);
+        VerifyOrExit(entry != NULL && entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
     }
     else if (mAddressMode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST)
     {
-        VerifyOrExit(entry == NULL || !entry->mFiltered, error = OT_ERROR_BLACKLIST_FILTERED);
+        VerifyOrExit(entry == NULL || !entry->mFiltered, error = OT_ERROR_ADDRESS_FILTERED);
     }
 
     // not override the default RssIn setting if no specific RssIn on the Extended Address.

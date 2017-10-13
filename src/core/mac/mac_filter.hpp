@@ -197,8 +197,7 @@ public:
      * @param[out] aRss         A reference to where the received signal strength to be placed.
      *
      * @retval OT_ERROR_NONE                Successfully applied the filter rules on @p aExtAddress.
-     * @retval OT_ERROR_WHITELIST_FILTERED  Whitelist is enabled and @p aExtAddress is not in the whitelist
-     * @retval OT_ERROR_BLACKLIST_FILTERED  Blacklist is enabled and @p aExtAddress is in the blacklist
+     * @retval OT_ERROR_ADDRESS_FILTERED    Address filter (whitelist or blacklist) is enabled and @p aExtAddress is filtered.
      *
      */
     otError Apply(const ExtAddress &aExtAddress, int8_t &aRss);

@@ -427,7 +427,7 @@ RxTotal: 2
     RxBeacon: 0
     RxBeaconRequest: 0
     RxOther: 0
-    RxWhitelistFiltered: 0
+    RxAddressFiltered: 0
     RxDestAddrFiltered: 0
     RxDuplicated: 0
     RxErrNoFrame: 0

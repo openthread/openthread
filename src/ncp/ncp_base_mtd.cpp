@@ -1443,7 +1443,7 @@ otError NcpBase::GetPropertyHandler_CNTR_RX_PKT_OTHER(void)
 
 otError NcpBase::GetPropertyHandler_CNTR_RX_PKT_FILT_WL(void)
 {
-    return mEncoder.WriteUint32(otLinkGetCounters(mInstance)->mRxWhitelistFiltered);
+    return mEncoder.WriteUint32(otLinkGetCounters(mInstance)->mRxAddressFiltered);
 }
 
 otError NcpBase::GetPropertyHandler_CNTR_RX_PKT_FILT_DA(void)
