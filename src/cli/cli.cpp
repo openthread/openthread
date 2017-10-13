@@ -688,7 +688,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             mServer->OutputFormat("    RxBeacon: %d\r\n", counters->mRxBeacon);
             mServer->OutputFormat("    RxBeaconRequest: %d\r\n", counters->mRxBeaconRequest);
             mServer->OutputFormat("    RxOther: %d\r\n", counters->mRxOther);
-            mServer->OutputFormat("    RxWhitelistFiltered: %d\r\n", counters->mRxWhitelistFiltered);
+            mServer->OutputFormat("    RxAddressFiltered: %d\r\n", counters->mRxAddressFiltered);
             mServer->OutputFormat("    RxDestAddrFiltered: %d\r\n", counters->mRxDestAddrFiltered);
             mServer->OutputFormat("    RxDuplicated: %d\r\n", counters->mRxDuplicated);
             mServer->OutputFormat("    RxErrNoFrame: %d\r\n", counters->mRxErrNoFrame);
