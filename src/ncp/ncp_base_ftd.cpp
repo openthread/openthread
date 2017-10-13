@@ -369,7 +369,8 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(const uint8_t *aValuePtr, 
     spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
     otExtAddress *extAddress = NULL;
-    const char *aPSKd = NULL;
+    const uint8_t *pskd = NULL;
+    uint32_t pskdLength = 0;
     uint32_t joinerTimeout = 0;
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
@@ -378,11 +379,12 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(const uint8_t *aValuePtr, 
                        aValuePtr,
                        aValueLen,
                        (
-                           SPINEL_DATATYPE_UTF8_S     // PSK
-                           SPINEL_DATATYPE_UINT32_S   // Timeout
-                           SPINEL_DATATYPE_EUI64_S    // Extended address
+                           SPINEL_DATATYPE_DATA_WLEN_S  // PSK
+                           SPINEL_DATATYPE_UINT32_S     // Timeout
+                           SPINEL_DATATYPE_EUI64_S      // Extended address
                        ),
-                       &aPSKd,
+                       &pskd,
+                       &pskdLength,
                        &joinerTimeout,
                        &extAddress
                    );
@@ -393,10 +395,11 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(const uint8_t *aValuePtr, 
                            aValuePtr,
                            aValueLen,
                            (
-                              SPINEL_DATATYPE_UTF8_S     // PSK
-                              SPINEL_DATATYPE_UINT32_S   // Timeout
+                              SPINEL_DATATYPE_DATA_WLEN_S   // PSK
+                              SPINEL_DATATYPE_UINT32_S      // Timeout
                            ),
-                           &aPSKd,
+                           &pskd,
+                           &pskdLength,
                            &joinerTimeout
                        );
         extAddress = NULL;
@@ -404,7 +407,7 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(const uint8_t *aValuePtr, 
 
     VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
 
-    error = otCommissionerAddJoiner(mInstance, extAddress, aPSKd, joinerTimeout);
+    error = otCommissionerAddJoiner(mInstance, extAddress, pskd, static_cast<uint8_t>(pskdLength), joinerTimeout);
 
 exit:
     return error;

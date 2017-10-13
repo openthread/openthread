@@ -18,6 +18,9 @@
     <ClCompile Include="..\..\tests\unit\test_aes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\tests\unit\test_base32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\tests\unit\test_fuzz.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -2634,6 +2634,9 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
         if (strcmp(argv[1], "add") == 0)
         {
+            size_t length;
+            uint8_t pskd[OT_PSKD_MAX_SIZE];
+            uint32_t pskdLength = sizeof(pskd);
             VerifyOrExit(argc > 3, error = OT_ERROR_PARSE);
             // Timeout parameter is optional - if not specified, use default value.
             unsigned long timeout = kDefaultJoinerTimeout;
@@ -2643,7 +2646,23 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
                 SuccessOrExit(error = ParseUnsignedLong(argv[4], timeout));
             }
 
-            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, argv[3], static_cast<uint32_t>(timeout)));
+            length = strlen(argv[3]);
+
+            // XXX: third argument is interpreted as a binary PSKd (#2185)
+            VerifyOrExit(length >= OT_PSKD_MIN_SIZE, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(length <= OT_PSKD_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(pskd, argv[3], length);
+            pskdLength = static_cast<uint32_t>(length);
+
+            // TODO: interpret third argument as a Joiner Credential
+            /*
+                        VerifyOrExit(length >= OT_JOINER_CREDENTIAL_MIN_LENGTH, error = OT_ERROR_INVALID_ARGS);
+                        VerifyOrExit(length <= OT_JOINER_CREDENTIAL_MAX_LENGTH, error = OT_ERROR_INVALID_ARGS);
+                        SuccessOrExit(error = otBase32Decode(argv[3], pskd, &pskdLength));
+            */
+
+            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, pskd, static_cast<uint8_t>(pskdLength),
+                                                          static_cast<uint32_t>(timeout)));
         }
         else if (strcmp(argv[1], "remove") == 0)
         {
@@ -2890,6 +2909,9 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 void Interpreter::ProcessJoiner(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
+    size_t length;
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t pskdLength = sizeof(pskd);
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
@@ -2898,7 +2920,22 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = OT_ERROR_PARSE);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl,
+
+        length = strlen(argv[1]);
+
+        // XXX: first argument is interpreted as a binary PSKd (#2185)
+        VerifyOrExit(length >= OT_PSKD_MIN_SIZE, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(length <= OT_PSKD_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+        memcpy(pskd, argv[1], length);
+        pskdLength = static_cast<uint32_t>(length);
+
+        // TODO: interpret first argument as a Joiner Credential
+        /*
+                VerifyOrExit(length >= OT_JOINER_CREDENTIAL_MIN_LENGTH, error = OT_ERROR_INVALID_ARGS);
+                VerifyOrExit(length <= OT_JOINER_CREDENTIAL_MAX_LENGTH, error = OT_ERROR_INVALID_ARGS);
+                SuccessOrExit(error = otBase32Decode(argv[1], pskd, &pskdLength));
+        */
+        otJoinerStart(mInstance, pskd, static_cast<uint8_t>(pskdLength), provisioningUrl,
                       PACKAGE_NAME, OPENTHREAD_CONFIG_PLATFORM_INFO, PACKAGE_VERSION, NULL,
                       &Interpreter::s_HandleJoinerCallback, this);
     }

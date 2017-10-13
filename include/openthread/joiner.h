@@ -83,6 +83,7 @@ typedef void (OTCALL *otJoinerCallback)(otError aError, void *aContext);
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPSKd             A pointer to the PSKd.
+ * @param[in]  aPSKdLength       A length of the PSKd.
  * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
  * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
  * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
@@ -95,7 +96,8 @@ typedef void (OTCALL *otJoinerCallback)(otError aError, void *aContext);
  * @retval OT_ERROR_INVALID_ARGS  @p aPSKd or @p aProvisioningUrl is invalid.
  *
  */
-OTAPI otError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+OTAPI otError OTCALL otJoinerStart(otInstance *aInstance, const uint8_t *aPSKd, uint8_t aPSKdLength,
+                                   const char *aProvisioningUrl,
                                    const char *aVendorName, const char *aVendorModel,
                                    const char *aVendorSwVersion, const char *aVendorData,
                                    otJoinerCallback aCallback, void *aContext);

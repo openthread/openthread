@@ -5322,7 +5322,7 @@ otLwfIoCtl_otJoinerStart(
     _Inout_ PULONG          OutBufferLength
     )
 {
-    NTSTATUS status = STATUS_SUCCESS;
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
 
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
@@ -5333,7 +5333,7 @@ otLwfIoCtl_otJoinerStart(
 
 #define IsNotNullTerminated(buf) (strnlen(buf, sizeof(buf)) == sizeof(buf))
 
-        if (IsNotNullTerminated(aConfig->PSKd) ||
+        if (aConfig->PSKdLength < OT_PSKD_MIN_SIZE || aConfig->PSKdLength > OT_PSKD_MAX_SIZE ||
             IsNotNullTerminated(aConfig->ProvisioningUrl) ||
             IsNotNullTerminated(aConfig->VendorName) ||
             IsNotNullTerminated(aConfig->VendorModel) ||
@@ -5353,6 +5353,7 @@ otLwfIoCtl_otJoinerStart(
                 otJoinerStart(
                     pFilter->otCtx,
                     aConfig->PSKd,
+                    aConfig->PSKdLength,
                     aConfig->ProvisioningUrl,
                     pFilter->otVendorName,
                     pFilter->otVendorModel,
@@ -5690,30 +5691,27 @@ otLwfIoCtl_otCommissionerAddJoiner(
     _Inout_ PULONG          OutBufferLength
     )
 {
-    NTSTATUS status = STATUS_SUCCESS;
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
 
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
 
-    if (InBufferLength >= sizeof(uint8_t) + sizeof(otExtAddress))
+    if (InBufferLength != sizeof(otAddJoinerConfig))
     {
-        const ULONG aPSKdBufferLength = InBufferLength - sizeof(uint8_t) - sizeof(otExtAddress) - sizeof(uint32_t);
-
-        if (aPSKdBufferLength <= OPENTHREAD_PSK_MAX_LENGTH + 1)
-        {
-            uint8_t aExtAddressValid = *(uint8_t*)InBuffer;
-            const otExtAddress *aExtAddress = aExtAddressValid == 0 ? NULL : (otExtAddress*)(InBuffer + sizeof(uint8_t));
-            char *aPSKd = (char*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress));
-            uint32_t aTimeout = *(uint32_t*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress) + aPSKdBufferLength);
-
-            // Ensure aPSKd is NULL terminated in the buffer
-            if (strnlen(aPSKd, aPSKdBufferLength) < aPSKdBufferLength)
-            {
-                status = ThreadErrorToNtstatus(otCommissionerAddJoiner(
-                    pFilter->otCtx, aExtAddress, aPSKd, aTimeout));
-            }
-        }
+        return STATUS_INVALID_PARAMETER;
     }
+
+    otAddJoinerConfig *aConfig = (otAddJoinerConfig *)InBuffer;
+
+    if (aConfig->PSKdLength < OT_PSKD_MIN_SIZE || aConfig->PSKdLength > OT_PSKD_MAX_SIZE)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    const otExtAddress *aExtAddress = aConfig->ExtAddressValid ? &aConfig->ExtAddress : NULL;
+
+    status = ThreadErrorToNtstatus(otCommissionerAddJoiner(
+        pFilter->otCtx, aExtAddress, aConfig->PSKd, aConfig->PSKdLength, aConfig->Timeout));
 
     return status;
 }

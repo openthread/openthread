@@ -3633,28 +3633,37 @@ OTCALL
 otCommissionerAddJoiner(
     _In_ otInstance *aInstance, 
     const otExtAddress *aExtAddress, 
-    const char *aPSKd,
+    const uint8_t *aPSKd,
+    uint8_t aPSKdLength,
     uint32_t aTimeout
     )
 {
     if (aInstance == nullptr || aPSKd == nullptr) return OT_ERROR_INVALID_ARGS;
 
-    size_t aPSKdLength = strnlen(aPSKd, OPENTHREAD_PSK_MAX_LENGTH + 1);
-    if (aPSKdLength > OPENTHREAD_PSK_MAX_LENGTH)
+    if (aPSKdLength < OT_PSKD_MIN_SIZE || aPSKdLength > OT_PSKD_MAX_SIZE)
     {
         return OT_ERROR_INVALID_ARGS;
     }
 
     uint8_t aExtAddressValid = aExtAddress ? 1 : 0;
     
-    const ULONG BufferLength = sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + (ULONG)aPSKdLength + 1 + sizeof(aTimeout);
-    BYTE Buffer[sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + OPENTHREAD_PSK_MAX_LENGTH + 1 + sizeof(aTimeout)] = {0};
+    const ULONG BufferLength = sizeof(GUID) + sizeof(otAddJoinerConfig);
+    BYTE Buffer[sizeof(GUID) + sizeof(otAddJoinerConfig)] = {0};
+
+    otAddJoinerConfig *aConfig = (otAddJoinerConfig *)(Buffer + sizeof(GUID));
+
     memcpy_s(Buffer, sizeof(Buffer), &aInstance->InterfaceGuid, sizeof(GUID));
-    memcpy_s(Buffer + sizeof(GUID), sizeof(Buffer) - sizeof(GUID), &aExtAddressValid, sizeof(aExtAddressValid));
+
+    aConfig->ExtAddressValid = aExtAddressValid;
     if (aExtAddressValid)
-        memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), sizeof(Buffer) - sizeof(GUID) - sizeof(uint8_t), aExtAddress, sizeof(otExtAddress));
-    memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress), sizeof(Buffer) - sizeof(GUID) - sizeof(uint8_t) - sizeof(otExtAddress), aPSKd, aPSKdLength);
-    memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + aPSKdLength + 1, sizeof(Buffer) - sizeof(GUID) - sizeof(uint8_t) - sizeof(otExtAddress) - aPSKdLength - 1, &aTimeout, sizeof(aTimeout));
+    {
+        memcpy_s(&aConfig->ExtAddress, sizeof(aConfig->ExtAddress), aExtAddress, sizeof(otExtAddress));
+    }
+
+    aConfig->PSKdLength = aPSKdLength;
+    memcpy_s(aConfig->PSKd, sizeof(aConfig->PSKd), aPSKd, aPSKdLength);
+
+    aConfig->Timeout = aTimeout;
     
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_COMMISIONER_ADD_JOINER, Buffer, BufferLength, nullptr, 0));
 }
@@ -3856,7 +3865,8 @@ otError
 OTCALL
 otJoinerStart(
     _In_ otInstance *aInstance,
-    _Null_terminated_ const char *aPSKd,
+    const uint8_t *aPSKd,
+    uint8_t aPSKdLength,
     _Null_terminated_ const char *aProvisioningUrl,
     _Null_terminated_ const char *aVendorName,
     _Null_terminated_ const char *aVendorModel,
@@ -3870,14 +3880,13 @@ otJoinerStart(
 
     otCommissionConfig config = {0};
 
-    size_t aPSKdLength = strlen(aPSKd);
     size_t aProvisioningUrlLength = aProvisioningUrl == nullptr ? 0 : strlen(aProvisioningUrl);
     size_t aVendorNameLength = aVendorName == nullptr ? 0 : strlen(aVendorName);
     size_t aVendorModelLength = aVendorModel == nullptr ? 0 : strlen(aVendorModel);
     size_t aVendorSwVersionLength = aVendorSwVersion == nullptr ? 0 : strlen(aVendorSwVersion);
     size_t aVendorDataLength = aVendorData == nullptr ? 0 : strlen(aVendorData);
 
-    if (aPSKdLength > OPENTHREAD_PSK_MAX_LENGTH ||
+    if (aPSKdLength < OT_PSKD_MIN_SIZE || aPSKdLength > OT_PSKD_MAX_SIZE ||
         aProvisioningUrlLength > OPENTHREAD_PROV_URL_MAX_LENGTH ||
         aVendorNameLength > OPENTHREAD_VENDOR_NAME_MAX_LENGTH ||
         aVendorModelLength > OPENTHREAD_VENDOR_MODEL_MAX_LENGTH ||
@@ -3887,6 +3896,7 @@ otJoinerStart(
         return OT_ERROR_INVALID_ARGS;
     }
 
+    config.PSKdLength = aPSKdLength;
     memcpy_s(config.PSKd, sizeof(config.PSKd), aPSKd, aPSKdLength);
     memcpy_s(config.ProvisioningUrl, sizeof(config.ProvisioningUrl), aProvisioningUrl, aProvisioningUrlLength);
     memcpy_s(config.VendorName, sizeof(config.VendorName), aVendorName, aVendorNameLength);

@@ -89,6 +89,7 @@ OTAPI otError OTCALL otCommissionerStop(otInstance *aInstance);
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aExtAddress           A pointer to the Joiner's extended address or NULL for any Joiner.
  * @param[in]  aPSKd                 A pointer to the PSKd.
+ * @param[in]  aPSKdLength           A length of the PSKd.
  * @param[in]  aTimeout              A time after which a Joiner is automatically removed, in seconds.
  *
  * @retval OT_ERROR_NONE          Successfully added the Joiner.
@@ -100,7 +101,7 @@ OTAPI otError OTCALL otCommissionerStop(otInstance *aInstance);
  *
  */
 OTAPI otError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
-                                             const char *aPSKd, uint32_t aTimeout);
+                                             const uint8_t *aPSKd, uint8_t aPSKdLength, uint32_t aTimeout);
 
 /**
  * This function removes a Joiner entry.

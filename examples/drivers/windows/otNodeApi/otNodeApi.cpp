@@ -1012,10 +1012,38 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerJoinerAdd(otNode* aNode, const char *
     const uint32_t kDefaultJoinerTimeout = 120;
 
     otError error;
-    
+    // XXX: string PSKd is interpreted as binary PSKd (#2185)
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t pskdLength = strlen(aPSKd);
+
+    if (pskdLength < OT_PSKD_MIN_SIZE || pskdLength > OT_PSKD_MAX_SIZE)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    memcpy(pskd, aPSKd, pskdLength);
+
+    // TODO: aPSKd should be handled as a Joiner Credential
+/*
+    uint32_t jcLength = strlen(aPSKd);
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t pskdLength = sizeof(pskd);
+
+    if (jcLength < OT_JOINER_CREDENTIAL_MIN_LENGTH || jcLength > OT_JOINER_CREDENTIAL_MAX_LENGTH)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    error = otBase32Decode(aPSKd, pskd, &pskdLength);
+    if (error != OT_ERROR_NONE)
+    {
+        return error;
+    }
+*/
+
     if (strcmp(aExtAddr, "*") == 0)
     {
-        error = otCommissionerAddJoiner(aNode->mInstance, nullptr, aPSKd, kDefaultJoinerTimeout);
+        error = otCommissionerAddJoiner(aNode->mInstance, nullptr, pskd, static_cast<uint8_t>(pskdLength), kDefaultJoinerTimeout);
     }
     else
     {
@@ -1023,7 +1051,7 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerJoinerAdd(otNode* aNode, const char *
         if (Hex2Bin(aExtAddr, extAddr.m8, sizeof(extAddr)) != sizeof(extAddr))
             return OT_ERROR_PARSE;
 
-        error = otCommissionerAddJoiner(aNode->mInstance, &extAddr, aPSKd, kDefaultJoinerTimeout);
+        error = otCommissionerAddJoiner(aNode->mInstance, &extAddr, pskd, static_cast<uint8_t>(pskdLength), kDefaultJoinerTimeout);
     }
     
     otLogFuncExit();
@@ -1046,9 +1074,40 @@ OTNODEAPI int32_t OTCALL otNodeJoinerStart(otNode* aNode, const char *aPSKd, con
     otLogFuncEntryMsg("[%d] %s %s", aNode->mId, aPSKd, aProvisioningUrl);
     printf("%d: joiner start %s %s\r\n", aNode->mId, aPSKd, aProvisioningUrl);
 
+    otError error;
+
+    // XXX: string PSKd is interpreted as a binary PSKd (#2185)
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t pskdLength = strlen(aPSKd);
+
+    if (pskdLength < OT_PSKD_MIN_SIZE || pskdLength > OT_PSKD_MAX_SIZE)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    memcpy(pskd, aPSKd, pskdLength);
+
+    // TODO: aPSKd should be handled as a Joiner Credential
+/*
+    uint32_t jcLength = strlen(aPSKd);
+    uint8_t pskd[OT_PSKD_MAX_SIZE];
+    uint32_t pskdLength = sizeof(pskd);
+
+    if (jcLength < OT_JOINER_CREDENTIAL_MIN_LENGTH || jcLength > OT_JOINER_CREDENTIAL_MAX_LENGTH)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    error = otBase32Decode(aPSKd, pskd, &pskdLength);
+    if (error != OT_ERROR_NONE)
+    {
+        return error;
+    }
+*/
+
     // TODO: handle the joiner completion callback
-    auto error = otJoinerStart(aNode->mInstance, aPSKd, aProvisioningUrl, NULL, NULL, NULL, NULL, NULL, NULL);
-    
+    error = otJoinerStart(aNode->mInstance, pskd, static_cast<uint8_t>(pskdLength), aProvisioningUrl, NULL, NULL, NULL, NULL, NULL, NULL);
+
     otLogFuncExit();
     return error;
 }

@@ -249,12 +249,12 @@ The stable leader network data.
 ### PROP 5391: PROP_THREAD_JOINERS {#prop-thread-joiners}
 
 * Type: Insert/Remove Only (optionally Read-Write)
-* Packed-Encoding: `A(t(ULE))`
+* Packed-Encoding: `A(t(dLE))`
 * Required capability: `CAP_THREAD_COMMISSIONER`
 
 Data per item is:
 
-* `U`: PSKd
+* `d`: PSKd
 * `L`: Timeout in seconds
 * `E`: Extended/long address (optional)
 

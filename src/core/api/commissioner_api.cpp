@@ -65,18 +65,19 @@ otError otCommissionerStop(otInstance *aInstance)
     return error;
 }
 
-otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress, const char *aPSKd,
-                                uint32_t aTimeout)
+otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
+                                const uint8_t *aPSKd, uint8_t aPSKdLength, uint32_t aTimeout)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress), aPSKd,
-                                                                aTimeout);
+    error = aInstance->mThreadNetif.GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress),
+                                                                aPSKd, aPSKdLength, aTimeout);
 #else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aExtAddress);
     OT_UNUSED_VARIABLE(aPSKd);
+    OT_UNUSED_VARIABLE(aPSKdLength);
     OT_UNUSED_VARIABLE(aTimeout);
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 

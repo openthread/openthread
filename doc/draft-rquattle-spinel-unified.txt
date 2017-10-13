@@ -3008,12 +3008,12 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
 7.2.31.  PROP 5391: PROP_THREAD_JOINERS
 
    o  Type: Insert/Remove Only (optionally Read-Write)
-   o  Packed-Encoding: "A(t(ULE))"
+   o  Packed-Encoding: "A(t(dLE))"
    o  Required capability: "CAP_THREAD_COMMISSIONER"
 
    Data per item is:
 
-   o  "U": PSKd
+   o  "d": PSKd
    o  "L": Timeout in seconds
    o  "E": Extended/long address (optional)
 
