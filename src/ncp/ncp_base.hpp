@@ -219,6 +219,9 @@ private:
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
     void HandleDatagramFromStack(otMessage *aMessage);
 
+    otError SendQueuedDatagramMessages(void);
+    otError SendDatagramMessage(otMessage *aMessage);
+
     static void HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext);
     void HandleActiveScanResult(otActiveScanResult *aResult);
 
@@ -649,6 +652,8 @@ private:
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+    otMessageQueue mMessageQueue;
+
     uint32_t mInboundSecureIpFrameCounter;     // Number of secure inbound data/IP frames.
     uint32_t mInboundInsecureIpFrameCounter;   // Number of insecure inbound data/IP frames.
     uint32_t mOutboundSecureIpFrameCounter;    // Number of secure outbound data/IP frames.

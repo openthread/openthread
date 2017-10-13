@@ -2550,57 +2550,75 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage, void *aContext)
 
 void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
 {
+    VerifyOrExit(aMessage != NULL);
+
+    SuccessOrExit(otMessageQueueEnqueue(&mMessageQueue, aMessage));
+    SuccessOrExit(SendQueuedDatagramMessages());
+
+exit:
+    // If the queued message can not be sent now (out of buffer),
+    // it will be sent once spinel buffer becomes available from
+    // `HandleFrameRemovedFromNcpBuffer()` callback.
+
+    return;
+}
+
+otError NcpBase::SendDatagramMessage(otMessage *aMessage)
+{
     otError error = OT_ERROR_NONE;
     uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
     bool isSecure = otMessageIsLinkSecurityEnabled(aMessage);
-    uint16_t length = otMessageGetLength(aMessage);
+    spinel_prop_key_t propKey = isSecure ? SPINEL_PROP_STREAM_NET : SPINEL_PROP_STREAM_NET_INSECURE;
 
-    SuccessOrExit(error = mEncoder.BeginFrame(
-                              header,
-                              SPINEL_CMD_PROP_VALUE_IS,
-                              isSecure ? SPINEL_PROP_STREAM_NET : SPINEL_PROP_STREAM_NET_INSECURE
-                          ));
-
-    SuccessOrExit(error = mEncoder.WriteUint16(length));
+    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, propKey));
+    SuccessOrExit(error = mEncoder.WriteUint16(otMessageGetLength(aMessage)));
     SuccessOrExit(error = mEncoder.WriteMessage(aMessage));
-
-    // Set the `aMessage` pointer to NULL to indicate that it does
-    // not need to be freed at the exit. The `aMessage` is now owned
-    // by the OutboundFrame and will be freed when the frame is either
-    // successfully sent and then removed, or if the frame gets
-    // discarded.
-    aMessage = NULL;
 
     // Append any metadata (rssi, lqi, channel, etc) here!
 
     SuccessOrExit(error = mEncoder.EndFrame());
 
-exit:
-
-    if (aMessage != NULL)
+    if (isSecure)
     {
-        otMessageFree(aMessage);
-    }
-
-    if (error != OT_ERROR_NONE)
-    {
-        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_DROPPED);
-        mUpdateChangedPropsTask.Post();
-        mDroppedOutboundIpFrameCounter++;
+        mOutboundSecureIpFrameCounter++;
     }
     else
     {
-        if (isSecure)
-        {
-            mOutboundSecureIpFrameCounter++;
-        }
-        else
-        {
-            mOutboundInsecureIpFrameCounter++;
-        }
+        mOutboundInsecureIpFrameCounter++;
     }
+
+exit:
+    return error;
 }
 
+otError NcpBase::SendQueuedDatagramMessages(void)
+{
+    otError error = OT_ERROR_NONE;
+    otMessage *message;
+
+    while ((message = otMessageQueueGetHead(&mMessageQueue)) != NULL)
+    {
+        // Since an `otMessage` instance can be in one queue at a time,
+        // it is first dequeued from `mMessageQueue` before attempting
+        // to include it in a spinel frame by calling `SendDatagramMessage()`
+        // If forming of the spinel frame fails, the message is enqueued
+        // back at the front of `mMessageQueue`.
+
+        otMessageQueueDequeue(&mMessageQueue, message);
+
+        error = SendDatagramMessage(message);
+
+        if (error != OT_ERROR_NONE)
+        {
+            otMessageQueueEnqueueAtHead(&mMessageQueue, message);
+        }
+
+        SuccessOrExit(error);
+    }
+
+exit:
+    return error;
+}
 
 // ----------------------------------------------------------------------------
 // MARK: Property/Status Changed
@@ -2701,7 +2719,6 @@ void NcpBase::ProcessThreadChangedFlags(void)
 exit:
     return;
 }
-
 
 }  // namespace Ncp
 }  // namespace ot

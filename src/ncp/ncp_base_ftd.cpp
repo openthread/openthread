@@ -470,16 +470,15 @@ void NcpBase::HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint1
     SuccessOrExit(error = mEncoder.WriteUint16(length));
     SuccessOrExit(error = mEncoder.WriteMessage(aMessage));
 
-    // Set the `aMessage` pointer to NULL to indicate that it does
-    // not need to be freed at the exit. The `aMessage` is now owned
-    // by the outbound frame and will be freed when the frame is either
-    // successfully sent and then removed, or if the frame gets
-    // discarded.
-    aMessage = NULL;
-
     SuccessOrExit(error = mEncoder.WriteUint16(aLocator));
     SuccessOrExit(error = mEncoder.WriteUint16(aPort));
     SuccessOrExit(error = mEncoder.EndFrame());
+
+    // The `aMessage` is owned by the outbound frame and NCP buffer
+    // after frame was finished/ended successfully. It will be freed
+    // when the frame is successfully sent and removed.
+
+    aMessage = NULL;
 
 exit:
 

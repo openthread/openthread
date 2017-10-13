@@ -554,6 +554,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mTxFrameBuffer.SetFrameRemovedCallback(&NcpBase::HandleFrameRemovedFromNcpBuffer, this);
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+    otMessageQueueInit(&mMessageQueue);
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
@@ -710,6 +711,10 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag
             mHostPowerStateInProgress = true;
         }
     }
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    SuccessOrExit(SendQueuedDatagramMessages());
+#endif
 
     UpdateChangedProps();
 
