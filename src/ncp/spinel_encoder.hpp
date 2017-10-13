@@ -571,7 +571,7 @@ public:
      * This method opens a struct in the current input frame.
      *
      * After a successful call to this method, all the subsequent `Write<SomeType>()` methods add the field/value to
-     * the current open struct until the struct is closed using `CloseStruct()` method. Structs can be nested. Up to
+     * the current open struct until the struct is closed using `CloseStruct()` method. Structures can be nested. Up to
      * `kMaxNestedStructs` nested structs can be opened at the same time.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
@@ -580,7 +580,7 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * @retval OT_ERROR_NONE            Successfully added the message to the frame.
+     * @retval OT_ERROR_NONE            Successfully opened the struct.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to open the struct.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame or if we reached
      *                                  the maximum number of nested open structures.
@@ -597,7 +597,7 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * @retval OT_ERROR_NONE            Successfully added the message to the frame.
+     * @retval OT_ERROR_NONE            Successfully closed the most recently opened struct.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to open the struct.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame or if there is no
      *                                  open struct to close
@@ -623,7 +623,7 @@ public:
      * The saved position must belong to the same input frame saved earlier with `SavePosition()`. This method cannot
      * be used if the input frame has an added `otMessage`.
      *
-     * @retval OT_ERROR_NONE            Successfully reset the write position of current input frame..
+     * @retval OT_ERROR_NONE            Successfully reset the write position of current input frame.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
      * @retval OT_ERROR_INVALID_ARGS    The saved position is not valid (does not belong to same input frame), or
      *                                  the input frame has an added `otMessage`.

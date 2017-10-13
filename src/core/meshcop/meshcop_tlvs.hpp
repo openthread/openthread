@@ -646,7 +646,7 @@ public:
      * @param[in]  aExtAddress  Extended address
      *
      */
-    void ComputeBloomFilter(otExtAddress *aExtAddress);
+    void ComputeBloomFilter(const otExtAddress *aExtAddress);
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

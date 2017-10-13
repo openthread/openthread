@@ -52,7 +52,7 @@ bool SteeringDataTlv::IsCleared(void) const
     return rval;
 }
 
-void SteeringDataTlv::ComputeBloomFilter(otExtAddress *aExtAddress)
+void SteeringDataTlv::ComputeBloomFilter(const otExtAddress *aExtAddress)
 {
     Crc16 ccitt(Crc16::kCcitt);
     Crc16 ansi(Crc16::kAnsi);

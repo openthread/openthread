@@ -97,6 +97,7 @@ check_PROGRAMS                                                      = \
     test-strlcat                                                      \
     test-strlcpy                                                      \
     test-strnlen                                                      \
+    test-spinel-decoder                                               \
     test-spinel-encoder                                               \
     test-timer                                                        \
     test-toolchain                                                    \
@@ -186,6 +187,9 @@ test_strlcpy_SOURCES         = test_strlcpy.c
 
 test_strnlen_LDADD           = $(COMMON_LDADD)
 test_strnlen_SOURCES         = test_strnlen.c
+
+test_spinel_decoder_LDADD    = $(COMMON_LDADD)
+test_spinel_decoder_SOURCES  = test_platform.cpp test_spinel_decoder.cpp
 
 test_spinel_encoder_LDADD    = $(COMMON_LDADD)
 test_spinel_encoder_SOURCES  = test_platform.cpp test_spinel_encoder.cpp
