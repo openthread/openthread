@@ -26,6 +26,10 @@ OpenThread test scripts use the CLI to execute test cases.
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
 * [factoryreset](#factoryreset)
+* [fiprintcounters](#fiprintcounters)
+* [ficonfigure](#ficonfigure)
+* [firesetcounters](#firesetcounters)
+* [firesetconfiguration](#firesetconfiguration)
 * [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
@@ -764,6 +768,50 @@ Delete all stored settings, and signal a platform reset.
 
 ```bash
 > factoryreset
+```
+
+### fiprintcounters
+Print the fault injection counters.
+
+```bash
+> fiprintcounters
+FaultInjection counters:
+OpenThread_AllocBuffer: 29
+OpenThread_DropRadioRx: 6
+End of FaultInjection counters
+```
+
+### ficonfigure \<configuration-string\>
+Configure fault injection passing a string.
+The string is a list of fault configurations separated by ":".
+To enable a fault a given number of times, use the following format:
+* OpenThread_\<faultname\>_s\<number-of-instances-to-skip\>_f\<number-of-instances-to-fail\>
+
+To enable a fault with a probability between 1 and 100, use the following format:
+* OpenThread_\<faultname\>_p\<probability\>
+
+To make the node crash instead of injecting the fault, use the following format:
+* OpenThread_\<faultname\>_s\<number-of-instances-to-skip\>_f1_r
+
+```bash
+> ficonfigure OpenThread_DropRadioRx_s0_f1
+Done
+```
+
+### firesetcounters
+Reset the fault injection counters
+
+```bash
+> firesetcounters
+Done
+```
+
+### firesetconfiguration
+Reset the fault injection configuration
+
+```bash
+> firesetconfiguration
+Done
 ```
 
 ### hashmacaddr
