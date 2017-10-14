@@ -54,16 +54,16 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class Joiner: public ThreadNetifLocator
+class Joiner: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the Joiner object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Joiner(ThreadNetif &aThreadNetif);
+    Joiner(otInstance &aInstance);
 
     /**
      * This method starts the Joiner service.

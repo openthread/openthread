@@ -49,8 +49,8 @@
 namespace ot {
 namespace NetworkData {
 
-NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
-    ThreadNetifLocator(aThreadNetif),
+NetworkData::NetworkData(otInstance &aInstance, bool aLocal):
+    InstanceLocator(aInstance),
     mLocal(aLocal),
     mLastAttemptWait(false),
     mLastAttempt(0)

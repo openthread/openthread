@@ -47,8 +47,8 @@ static const uint8_t kThreadString[] =
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-KeyManager::KeyManager(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
+KeyManager::KeyManager(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mKeySequence(0),
     mMacFrameCounter(0),
     mMleFrameCounter(0),
@@ -58,7 +58,7 @@ KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mKeyRotationTime(kDefaultKeyRotationTime),
     mKeySwitchGuardTime(kDefaultKeySwitchGuardTime),
     mKeySwitchGuardEnabled(false),
-    mKeyRotationTimer(aThreadNetif.GetInstance(), &KeyManager::HandleKeyRotationTimer, this),
+    mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this),
     mKekFrameCounter(0),
     mSecurityPolicyFlags(0xff)
 {

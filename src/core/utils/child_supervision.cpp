@@ -48,9 +48,9 @@ namespace Utils {
 
 #if OPENTHREAD_FTD
 
-ChildSupervisor::ChildSupervisor(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetInstance(), &ChildSupervisor::HandleTimer, this),
+ChildSupervisor::ChildSupervisor(otInstance &aInstance) :
+    InstanceLocator(aInstance),
+    mTimer(aInstance, &ChildSupervisor::HandleTimer, this),
     mSupervisionInterval(kDefaultSupervisionInterval)
 {
 }
@@ -178,9 +178,9 @@ ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
 
 #endif // #if OPENTHREAD_FTD
 
-SupervisionListener::SupervisionListener(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
-    mTimer(aThreadNetif.GetInstance(), &SupervisionListener::HandleTimer, this),
+SupervisionListener::SupervisionListener(otInstance &aInstance) :
+    InstanceLocator(aInstance),
+    mTimer(aInstance, &SupervisionListener::HandleTimer, this),
     mTimeout(0)
 {
     SetTimeout(kDefaultTimeout);

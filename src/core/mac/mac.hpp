@@ -211,16 +211,16 @@ private:
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
-class Mac: public ThreadNetifLocator
+class Mac: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the MAC object.
      *
-     * @param[in]  aThreadNetif  A reference to the network interface using this MAC.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    explicit Mac(ThreadNetif &aThreadNetif);
+    explicit Mac(otInstance &aInstance);
 
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.

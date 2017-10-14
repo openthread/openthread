@@ -430,7 +430,7 @@ private:
  * This class implements the common base for CoAP client and server.
  *
  */
-class CoapBase: public ThreadNetifLocator
+class CoapBase: public InstanceLocator
 {
     friend class ResponsesQueue;
 
@@ -651,12 +651,12 @@ protected:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif                         A reference to the Netif object.
+     * @param[in]  aInstance                      A reference to the OpenThread instance.
      * @param[in]  aRetransmissionTimerHandler    A timer handler provided by sub-class for `mRetranmissionTimer`.
      * @param[in]  aResponsesQueueTimerHandler    A timer handler provided by sub-class for `mReponsesQueue` timer.
      *
      */
-    CoapBase(ThreadNetif &aNetif, Timer::Handler aRetransmissionTimerHandler,
+    CoapBase(otInstance &aInstance, Timer::Handler aRetransmissionTimerHandler,
              Timer::Handler aResponsesQueueTimerHandler);
 
     /**
@@ -744,10 +744,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif     A reference to the Netif object.
+     * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    Coap(ThreadNetif &aNetif);
+    Coap(otInstance &aInstance);
 
 private:
     static Coap &GetOwner(const Context &aContext);
@@ -767,7 +767,7 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif     A reference to the otInstance
+     * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
     ApplicationCoap(otInstance &aInstance);

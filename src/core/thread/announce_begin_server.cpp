@@ -50,16 +50,16 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
 
-AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+AnnounceBeginServer::AnnounceBeginServer(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mChannelMask(0),
     mPeriod(0),
     mCount(0),
     mChannel(0),
-    mTimer(aThreadNetif.GetInstance(), &AnnounceBeginServer::HandleTimer, this),
+    mTimer(aInstance, &AnnounceBeginServer::HandleTimer, this),
     mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
-    aThreadNetif.GetCoap().AddResource(mAnnounceBegin);
+    GetNetif().GetCoap().AddResource(mAnnounceBegin);
 }
 
 otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)

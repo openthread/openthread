@@ -222,16 +222,16 @@ private:
  * This class implements ICMPv6.
  *
  */
-class Icmp: public Ip6Locator
+class Icmp: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance A reference to the OpenThread instance.
      *
      */
-    Icmp(Ip6 &aIp6);
+    Icmp(otInstance &aInstance);
 
     /**
      * This method returns a new ICMP message with sufficient header space reserved.

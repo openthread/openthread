@@ -46,8 +46,8 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Lowpan {
 
-Lowpan::Lowpan(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif)
+Lowpan::Lowpan(otInstance &aInstance):
+    InstanceLocator(aInstance)
 {
 }
 

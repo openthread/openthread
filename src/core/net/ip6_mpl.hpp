@@ -430,16 +430,16 @@ private:
  * This class implements MPL message processing.
  *
  */
-class Mpl: public Ip6Locator
+class Mpl: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the MPL object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    Mpl(Ip6 &aIp6);
+    Mpl(otInstance &aInstance);
 
     /**
      * This method initializes the MPL option.

@@ -45,14 +45,14 @@
 namespace ot {
 namespace Coap {
 
-CoapSecure::CoapSecure(ThreadNetif &aNetif):
-    CoapBase(aNetif, &CoapSecure::HandleRetransmissionTimer, &CoapSecure::HandleResponsesQueueTimer),
+CoapSecure::CoapSecure(otInstance &aInstance):
+    CoapBase(aInstance, &CoapSecure::HandleRetransmissionTimer, &CoapSecure::HandleResponsesQueueTimer),
     mConnectedCallback(NULL),
     mConnectedContext(NULL),
     mTransportCallback(NULL),
     mTransportContext(NULL),
     mTransmitMessage(NULL),
-    mTransmitTask(aNetif.GetInstance(), &CoapSecure::HandleUdpTransmit, this)
+    mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
 {
 }
 

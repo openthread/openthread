@@ -86,16 +86,16 @@ namespace Utils {
  * This class implements a child supervisor.
  *
  */
-class ChildSupervisor: public ThreadNetifLocator
+class ChildSupervisor: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit ChildSupervisor(ThreadNetif &aThreadNetif);
+    explicit ChildSupervisor(otInstance &aInstance);
 
     /**
      * This method starts the child supervision process on parent.
@@ -168,7 +168,7 @@ private:
 class ChildSupervisor
 {
 public:
-    explicit ChildSupervisor(ThreadNetif &) { }
+    explicit ChildSupervisor(otInstance &) { }
     void Start(void) { }
     void Stop(void) { }
     void SetSupervisionInterval(uint16_t) { }
@@ -185,16 +185,16 @@ public:
  * This class implements a child supervision listener.
  *
  */
-class SupervisionListener: public ThreadNetifLocator
+class SupervisionListener: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit SupervisionListener(ThreadNetif &aThreadNetif);
+    explicit SupervisionListener(otInstance &aInstance);
 
     /**
      * This method starts the supervision listener operation.
@@ -260,7 +260,7 @@ private:
 class SupervisionListener
 {
 public:
-    SupervisionListener(ThreadNetif &) { }
+    SupervisionListener(otInstance &) { }
     void Start(void) { }
     void Stop(void) { }
     void SetTimeout(uint16_t) { }

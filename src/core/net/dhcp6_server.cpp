@@ -51,9 +51,9 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 namespace Dhcp6 {
 
-Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
-    mSocket(aThreadNetif.GetIp6().mUdp)
+Dhcp6Server::Dhcp6Server(otInstance &aInstance):
+    InstanceLocator(aInstance),
+    mSocket(GetNetif().GetIp6().mUdp)
 {
     for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
     {

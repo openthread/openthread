@@ -49,14 +49,14 @@
 
 namespace ot {
 
-PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+PanIdQueryServer::PanIdQueryServer(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mChannelMask(0),
     mPanId(Mac::kPanIdBroadcast),
-    mTimer(aThreadNetif.GetInstance(), &PanIdQueryServer::HandleTimer, this),
+    mTimer(aInstance, &PanIdQueryServer::HandleTimer, this),
     mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
-    aThreadNetif.GetCoap().AddResource(mPanIdQuery);
+    GetNetif().GetCoap().AddResource(mPanIdQuery);
 }
 
 void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

@@ -60,16 +60,16 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Commissioner::Commissioner(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
-    mAnnounceBegin(aThreadNetif),
-    mEnergyScan(aThreadNetif),
-    mPanIdQuery(aThreadNetif),
+Commissioner::Commissioner(otInstance &aInstance):
+    InstanceLocator(aInstance),
+    mAnnounceBegin(aInstance),
+    mEnergyScan(aInstance),
+    mPanIdQuery(aInstance),
     mState(OT_COMMISSIONER_STATE_DISABLED),
     mJoinerPort(0),
     mJoinerRloc(0),
-    mJoinerExpirationTimer(aThreadNetif.GetInstance(), HandleJoinerExpirationTimer, this),
-    mTimer(aThreadNetif.GetInstance(), HandleTimer, this),
+    mJoinerExpirationTimer(aInstance, HandleJoinerExpirationTimer, this),
+    mTimer(aInstance, HandleTimer, this),
     mSessionId(0),
     mTransmitAttempts(0),
     mRelayReceive(OT_URI_PATH_RELAY_RX, &Commissioner::HandleRelayReceive, this),

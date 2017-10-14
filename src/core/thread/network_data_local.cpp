@@ -44,8 +44,8 @@
 namespace ot {
 namespace NetworkData {
 
-Local::Local(ThreadNetif &aThreadNetif):
-    NetworkData(aThreadNetif, true),
+Local::Local(otInstance &aInstance):
+    NetworkData(aInstance, true),
     mOldRloc(Mac::kShortAddrInvalid)
 {
 }

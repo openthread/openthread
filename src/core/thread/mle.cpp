@@ -60,15 +60,15 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Mle {
 
-Mle::Mle(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+Mle::Mle(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mRetrieveNewNetworkData(false),
     mRole(OT_DEVICE_ROLE_DISABLED),
     mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest),
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
-    mParentRequestTimer(aThreadNetif.GetInstance(), &Mle::HandleParentRequestTimer, this),
-    mDelayedResponseTimer(aThreadNetif.GetInstance(), &Mle::HandleDelayedResponseTimer, this),
+    mParentRequestTimer(aInstance, &Mle::HandleParentRequestTimer, this),
+    mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this),
     mLastPartitionId(0),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionIdTimeout(0),
@@ -81,9 +81,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mChildUpdateAttempts(0),
     mParentLinkMargin(0),
     mParentIsSingleton(false),
-    mSocket(aThreadNetif.GetIp6().mUdp),
+    mSocket(aInstance.mThreadNetif.GetIp6().mUdp),
     mTimeout(kMleEndDeviceTimeout),
-    mSendChildUpdateRequest(aThreadNetif.GetInstance(), &Mle::HandleSendChildUpdateRequest, this),
+    mSendChildUpdateRequest(aInstance, &Mle::HandleSendChildUpdateRequest, this),
     mDiscoverHandler(NULL),
     mDiscoverContext(NULL),
     mIsDiscoverInProgress(false),
@@ -111,11 +111,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     // link-local 64
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
-    mLinkLocal64.GetAddress().SetIid(*aThreadNetif.GetMac().GetExtAddress());
+    mLinkLocal64.GetAddress().SetIid(*GetNetif().GetMac().GetExtAddress());
     mLinkLocal64.mPrefixLength = 64;
     mLinkLocal64.mPreferred = true;
     mLinkLocal64.mValid = true;
-    aThreadNetif.AddUnicastAddress(mLinkLocal64);
+    GetNetif().AddUnicastAddress(mLinkLocal64);
 
     // Leader Aloc
     mLeaderAloc.mPrefixLength = 128;
@@ -126,7 +126,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     // initialize Mesh Local Prefix
     meshLocalPrefix[0] = 0xfd;
-    memcpy(meshLocalPrefix + 1, aThreadNetif.GetMac().GetExtendedPanId(), 5);
+    memcpy(meshLocalPrefix + 1, GetNetif().GetMac().GetExtendedPanId(), 5);
     meshLocalPrefix[6] = 0x00;
     meshLocalPrefix[7] = 0x00;
 
@@ -154,7 +154,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.mRloc = true;
 
     // Store RLOC address reference in MPL module.
-    aThreadNetif.GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
+    GetNetif().GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
 
     // link-local all thread nodes
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
@@ -172,7 +172,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
 
     mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
-    aThreadNetif.RegisterCallback(mNetifCallback);
+    GetNetif().RegisterCallback(mNetifCallback);
 }
 
 otError Mle::Enable(void)

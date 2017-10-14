@@ -47,14 +47,14 @@ namespace ot {
  * This class implements handling Announce Begin Requests.
  *
  */
-class AnnounceBeginClient: public ThreadNetifLocator
+class AnnounceBeginClient: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    AnnounceBeginClient(ThreadNetif &aThreadNetif);
+    AnnounceBeginClient(otInstance &aInstance);
 
     /**
      * This method sends a Announce Begin message.

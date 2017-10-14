@@ -70,10 +70,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif  A reference to the network interface that the secure CoAP agent is bound to.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    CoapSecure(ThreadNetif &aNetif);
+    CoapSecure(otInstance &aInstance);
 
     /**
      * This method starts the secure CoAP agent.

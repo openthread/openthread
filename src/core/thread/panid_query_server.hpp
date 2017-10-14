@@ -56,14 +56,14 @@ class ThreadTargetTlv;
  * This class implements handling PANID Query Requests.
  *
  */
-class PanIdQueryServer: public ThreadNetifLocator
+class PanIdQueryServer: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    PanIdQueryServer(ThreadNetif &aThreadNetif);
+    PanIdQueryServer(otInstance &aInstance);
 
 private:
     enum
