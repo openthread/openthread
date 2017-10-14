@@ -102,16 +102,16 @@ private:
     otIp6Prefix mIp6Prefix;                  ///< prefix
 } OT_TOOL_PACKED_END;
 
-class Dhcp6Server: public ThreadNetifLocator
+class Dhcp6Server: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Dhcp6Server(ThreadNetif &aThreadNetif);
+    explicit Dhcp6Server(otInstance &aInstance);
 
     /**
      * This method updates DHCP Agents and DHCP Alocs.

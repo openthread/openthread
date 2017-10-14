@@ -51,8 +51,8 @@
 
 namespace ot {
 
-AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif)
+AnnounceBeginClient::AnnounceBeginClient(otInstance &aInstance):
+    InstanceLocator(aInstance)
 {
 }
 

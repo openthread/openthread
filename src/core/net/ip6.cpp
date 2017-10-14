@@ -52,10 +52,10 @@ namespace Ip6 {
 
 Ip6::Ip6(otInstance &aInstance):
     InstanceLocator(aInstance),
-    mRoutes(*this),
-    mIcmp(*this),
-    mUdp(*this),
-    mMpl(*this),
+    mRoutes(aInstance),
+    mIcmp(aInstance),
+    mUdp(aInstance),
+    mMpl(aInstance),
     mForwardingEnabled(false),
     mSendQueueTask(aInstance, HandleSendQueue, this),
     mReceiveIp6DatagramCallback(NULL),

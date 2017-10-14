@@ -59,7 +59,7 @@ namespace ot {
  *
  */
 
-class DataPollManager: public MeshForwarderLocator
+class DataPollManager: public InstanceLocator
 {
 public:
     enum
@@ -71,10 +71,10 @@ public:
     /**
      * This constructor initializes the data poll manager object.
      *
-     * @param[in]  aMeshForwarder  A reference to the Mesh Forwarder.
+     * @param[in]  aInstance   A reference to the OpenThread instance.
      *
      */
-    explicit DataPollManager(MeshForwarder &aMeshForwarder);
+    explicit DataPollManager(otInstance &aInstance);
 
     /**
      * This method instructs the data poll manager to start sending periodic data polls.

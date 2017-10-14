@@ -46,7 +46,7 @@ class ThreadNetif;
 
 namespace Utils {
 
-class JamDetector: public ThreadNetifLocator
+class JamDetector: public InstanceLocator
 {
 public:
 
@@ -62,10 +62,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit JamDetector(ThreadNetif &aThreadNetif);
+    explicit JamDetector(otInstance &aInstance);
 
     /**
      * Start the jamming detection.

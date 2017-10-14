@@ -56,12 +56,12 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
+MeshForwarder::MeshForwarder(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
-    mDiscoverTimer(aThreadNetif.GetInstance(), &MeshForwarder::HandleDiscoverTimer, this),
-    mReassemblyTimer(aThreadNetif.GetInstance(), &MeshForwarder::HandleReassemblyTimer, this),
+    mDiscoverTimer(aInstance, &MeshForwarder::HandleDiscoverTimer, this),
+    mReassemblyTimer(aInstance, &MeshForwarder::HandleReassemblyTimer, this),
     mMessageNextOffset(0),
     mSendMessageFrameCounter(0),
     mSendMessage(NULL),
@@ -74,18 +74,18 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMeshDest(Mac::kShortAddrInvalid),
     mAddMeshHeader(false),
     mSendBusy(false),
-    mScheduleTransmissionTask(aThreadNetif.GetInstance(), ScheduleTransmissionTask, this),
+    mScheduleTransmissionTask(aInstance, ScheduleTransmissionTask, this),
     mEnabled(false),
     mScanChannels(0),
     mScanChannel(0),
     mRestoreChannel(0),
     mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
-    mDataPollManager(*this),
-    mSourceMatchController(*this)
+    mDataPollManager(aInstance),
+    mSourceMatchController(aInstance)
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
-    aThreadNetif.GetMac().RegisterReceiver(mMacReceiver);
+    GetNetif().GetMac().RegisterReceiver(mMacReceiver);
     mMacSource.mLength = 0;
     mMacDest.mLength = 0;
 

@@ -449,16 +449,16 @@ private:
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
-class Mle: public ThreadNetifLocator
+class Mle: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the MLE object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Mle(ThreadNetif &aThreadNetif);
+    explicit Mle(otInstance &aInstance);
 
     /**
      * This method enables MLE.

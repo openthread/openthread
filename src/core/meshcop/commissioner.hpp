@@ -56,16 +56,16 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class Commissioner: public ThreadNetifLocator
+class Commissioner: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the Commissioner object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Commissioner(ThreadNetif &aThreadNetif);
+    Commissioner(otInstance &aInstance);
 
     /**
      * This method starts the Commissioner service.

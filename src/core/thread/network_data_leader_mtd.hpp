@@ -47,7 +47,7 @@ namespace NetworkData {
 class Leader: public LeaderBase
 {
 public:
-    explicit Leader(ThreadNetif &aThreadNetif) : LeaderBase(aThreadNetif) { }
+    explicit Leader(otInstance &aInstance) : LeaderBase(aInstance) { }
 
     void Start(void) { }
     void Stop(void) { }

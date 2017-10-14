@@ -108,14 +108,4 @@ typedef struct otInstance
 
 } otInstance;
 
-static inline otInstance *otInstanceFromIp6(ot::Ip6::Ip6 *aIp6)
-{
-    return (otInstance *)CONTAINING_RECORD(aIp6, otInstance, mIp6);
-}
-
-static inline otInstance *otInstanceFromThreadNetif(ot::ThreadNetif *aThreadNetif)
-{
-    return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
-}
-
 #endif  // OPENTHREADINSTANCE_H_

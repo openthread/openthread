@@ -49,8 +49,8 @@
 
 namespace ot {
 
-EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+EnergyScanServer::EnergyScanServer(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mChannelMask(0),
     mChannelMaskCurrent(0),
     mPeriod(0),
@@ -58,13 +58,13 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mCount(0),
     mActive(false),
     mScanResultsLength(0),
-    mTimer(aThreadNetif.GetInstance(), &EnergyScanServer::HandleTimer, this),
+    mTimer(aInstance, &EnergyScanServer::HandleTimer, this),
     mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
     mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
-    aThreadNetif.RegisterCallback(mNetifCallback);
+    GetNetif().RegisterCallback(mNetifCallback);
 
-    aThreadNetif.GetCoap().AddResource(mEnergyScan);
+    GetNetif().GetCoap().AddResource(mEnergyScan);
 }
 
 void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

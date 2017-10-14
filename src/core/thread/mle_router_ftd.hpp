@@ -79,10 +79,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit MleRouter(ThreadNetif &aThreadNetif);
+    explicit MleRouter(otInstance &aInstance);
 
     /**
      * This method indicates whether or not the Router Role is enabled.

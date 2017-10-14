@@ -56,14 +56,14 @@ class ThreadTargetTlv;
  * This class implements handling Energy Scan Requests.
  *
  */
-class EnergyScanServer: public ThreadNetifLocator
+class EnergyScanServer: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    EnergyScanServer(ThreadNetif &aThreadNetif);
+    EnergyScanServer(otInstance &aInstance);
 
 private:
     enum
