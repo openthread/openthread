@@ -130,13 +130,17 @@ otError Leader::SetContextIdReuseDelay(uint32_t aDelay)
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16)
 {
+    return RemoveBorderRouter(aRloc16, true);
+}
+void Leader::RemoveBorderRouter(uint16_t aRloc16, bool aOnlyRouter)
+{
     bool rlocIn = false;
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
     VerifyOrExit(rlocIn);
 
-    RemoveRloc(aRloc16);
+    RemoveRloc(aRloc16, aOnlyRouter);
     mVersion++;
 
     if (rlocStable)
@@ -169,7 +173,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == OT_ERROR_NONE)
     {
         VerifyOrExit(rloc16.IsValid());
-        RemoveBorderRouter(rloc16.GetRloc16());
+        RemoveBorderRouter(rloc16.GetRloc16(), false);
     }
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
@@ -443,12 +447,16 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
     HasRouteTlv *hasRoute;
     BorderRouterEntry *borderRouterEntry;
     HasRouteEntry *hasRouteEntry;
+    ServiceTlv *service;
+    ServerTlv *server;
 
     while (cur < end)
     {
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
-        if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+        switch (cur->GetType())
+        {
+        case NetworkDataTlv::kTypePrefix:
         {
             prefix = static_cast<PrefixTlv *>(cur);
             VerifyOrExit(prefix->IsValid(), error = OT_ERROR_PARSE);
@@ -516,6 +524,56 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
                 subCur = subCur->GetNext();
             }
         }
+        break;
+
+        case NetworkDataTlv::kTypeService:
+        {
+            service = static_cast<ServiceTlv *>(cur);
+
+            subCur = service->GetSubTlvs();
+            subEnd = service->GetNext();
+
+            VerifyOrExit(subEnd <= end, error = OT_ERROR_PARSE);
+
+            while (subCur < subEnd)
+            {
+                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+
+                switch (subCur->GetType())
+                {
+                case NetworkDataTlv::kTypeServer:
+                    server = static_cast<ServerTlv *>(subCur);
+
+                    if (server->GetServer16() == aRloc16)
+                    {
+                        aIn = true;
+
+                        if (server->IsStable())
+                        {
+                            aStable = true;
+                        }
+                    }
+
+                    break;
+
+                default:
+                    break;
+                }
+
+                if (aIn && aStable)
+                {
+                    ExitNow();
+                }
+
+                subCur = subCur->GetNext();
+            }
+
+            break;
+        }
+
+        default:
+            break;
+        }
 
         cur = cur->GetNext();
     }
@@ -529,12 +587,15 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
     bool rval = false;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    ServiceTlv *service;
 
     while (cur < end)
     {
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
 
-        if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+        switch (cur->GetType())
+        {
+        case NetworkDataTlv::kTypePrefix:
         {
             PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
             ContextTlv *context = FindContext(*prefix);
@@ -555,7 +616,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                 {
                     BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
 
-                    if (!borderRouterBase || memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
+                    if (!borderRouterBase ||
+                        memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
                     {
                         ExitNow(rval = true);
                     }
@@ -571,6 +633,80 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                     }
                 }
             }
+
+            break;
+        }
+
+        case NetworkDataTlv::kTypeService:
+            service = static_cast<ServiceTlv *>(cur);
+
+            if (cur->IsStable())
+            {
+                NetworkDataTlv *curInner;
+                NetworkDataTlv *endInner;
+
+                ServiceTlv *serviceBase = FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
+                                                      service->GetServiceDataLength(),
+                                                      aTlvsBase, aTlvsBaseLength);
+
+                if (!serviceBase || !serviceBase->IsStable() || (service->GetServiceID() != serviceBase->GetServiceID()))
+                {
+                    ExitNow(rval = true);
+                }
+
+                curInner = service->GetSubTlvs();
+                endInner = service->GetNext();
+
+                while (curInner <= endInner)
+                {
+                    if (curInner->IsStable())
+                    {
+                        switch (curInner->GetType())
+                        {
+                        case NetworkDataTlv::kTypeServer:
+                        {
+                            bool foundInBase = false;
+                            ServerTlv *server = reinterpret_cast<ServerTlv *>(curInner);
+
+                            NetworkDataTlv *curServerBase = service->GetSubTlvs();
+                            NetworkDataTlv *endServerBase = service->GetNext();
+
+                            while (curServerBase <= endServerBase)
+                            {
+                                ServerTlv *serverBase = reinterpret_cast<ServerTlv *>(curServerBase);
+
+                                if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16())
+                                    && (server->GetServerDataLength() == serverBase->GetServerDataLength())
+                                    && (memcmp(server->GetServerData(), serverBase->GetServerData(), server->GetServerDataLength()) == 0))
+                                {
+                                    foundInBase = true;
+                                    break;
+                                }
+
+                                curServerBase = curServerBase->GetNext();
+                            }
+
+                            if (!foundInBase)
+                            {
+                                ExitNow(rval = true);
+                            }
+
+                            break;
+                        }
+
+                        default:
+                            break;
+                        }
+
+                        curInner = curInner->GetNext();
+                    }
+                }
+            }
+
+            break;
+
+        default:
+            break;
         }
 
         cur = cur->GetNext();
@@ -643,6 +779,11 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
             otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
             break;
 
+        case NetworkDataTlv::kTypeService:
+            SuccessOrExit(error = AddService(*static_cast<ServiceTlv *>(cur)));
+            otDumpDebgNetData(GetInstance(), "add service done", mTlvs, mLength);
+            break;
+
         default:
             break;
         }
@@ -678,6 +819,36 @@ otError Leader::AddPrefix(PrefixTlv &aPrefix)
 
         case NetworkDataTlv::kTypeBorderRouter:
             SuccessOrExit(error = AddBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur)));
+            break;
+
+        default:
+            break;
+        }
+
+        cur = cur->GetNext();
+    }
+
+exit:
+    return error;
+}
+
+otError Leader::AddService(ServiceTlv &aService)
+{
+    otError error = OT_ERROR_NONE;
+    NetworkDataTlv *cur;
+    NetworkDataTlv *end;
+
+    cur = aService.GetSubTlvs();
+    end = aService.GetNext();
+
+    while (cur < end)
+    {
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+
+        switch (cur->GetType())
+        {
+        case NetworkDataTlv::kTypeServer:
+            SuccessOrExit(error = AddServer(aService, *static_cast<ServerTlv *>(cur)));
             break;
 
         default:
@@ -749,6 +920,56 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
     dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(HasRouteEntry));
     memcpy(dstHasRoute->GetEntry(dstHasRoute->GetNumEntries() - 1), aHasRoute.GetEntry(0),
            sizeof(HasRouteEntry));
+
+exit:
+    return error;
+}
+
+otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer)
+{
+    otError error = OT_ERROR_NONE;
+    ServiceTlv *dstService = NULL;
+    ServerTlv *dstServer = NULL;
+    uint16_t appendLength = 0;
+    uint8_t serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t)/*mServiceDataLength*/ +
+                                  ServiceTlv::GetEnterpriseNumberFieldLength(aService.GetEnterpriseNumber()) +
+                                  aService.GetServiceDataLength();
+
+    dstService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
+
+    if (dstService == NULL)
+    {
+        appendLength += serviceInsertLength;
+    }
+
+    appendLength += sizeof(ServerTlv) + aServer.GetServerDataLength();
+
+    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+
+    if (dstService == NULL)
+    {
+        dstService = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
+        Insert(reinterpret_cast<uint8_t *>(dstService), serviceInsertLength);
+        dstService->Init();
+        dstService->SetEnterpriseNumber(aService.GetEnterpriseNumber());
+        dstService->SetServiceData(aService.GetServiceData(), aService.GetServiceDataLength());
+        dstService->SetLength(serviceInsertLength - sizeof(NetworkDataTlv));
+    }
+
+    dstServer = reinterpret_cast<ServerTlv *>(dstService->GetNext());
+
+    Insert(reinterpret_cast<uint8_t *>(dstServer), sizeof(ServerTlv) + aServer.GetServerDataLength());
+    dstServer->Init();
+    dstServer->SetServer16(aServer.GetServer16());
+    dstServer->SetServerData(aServer.GetServerData(), aServer.GetServerDataLength());
+
+    if (aServer.IsStable())
+    {
+        dstService->SetStable();
+        dstServer->SetStable();
+    }
+
+    dstService->SetLength(dstService->GetLength() + sizeof(ServerTlv) + aServer.GetServerDataLength());
 
 exit:
     return error;
@@ -890,9 +1111,15 @@ exit:
 
 otError Leader::RemoveRloc(uint16_t aRloc16)
 {
+    return RemoveRloc(aRloc16, false);
+}
+
+otError Leader::RemoveRloc(uint16_t aRloc16, bool aOnlyRouter)
+{
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
     NetworkDataTlv *end;
     PrefixTlv *prefix;
+    ServiceTlv *service;
 
     while (1)
     {
@@ -917,6 +1144,25 @@ otError Leader::RemoveRloc(uint16_t aRloc16)
             }
 
             otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
+            break;
+        }
+
+        case NetworkDataTlv::kTypeService:
+        {
+            if (!aOnlyRouter)
+            {
+                service = static_cast<ServiceTlv *>(cur);
+                RemoveRloc(*service, aRloc16);
+
+                if (service->GetSubTlvsLength() == 0)
+                {
+                    Remove(reinterpret_cast<uint8_t *>(service), sizeof(NetworkDataTlv) + service->GetLength());
+                    continue;
+                }
+
+                otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
+            }
+
             break;
         }
 
@@ -1001,6 +1247,47 @@ otError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
             context->SetCompress();
             mContextLastUsed[context->GetContextId() - kMinContextId] = 0;
         }
+    }
+
+    return OT_ERROR_NONE;
+}
+
+otError Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16)
+{
+    NetworkDataTlv *cur = service.GetSubTlvs();
+    NetworkDataTlv *end;
+    ServerTlv *server;
+    uint8_t removeLength;
+
+    while (1)
+    {
+        end = service.GetNext();
+
+        if (cur >= end)
+        {
+            break;
+        }
+
+        switch (cur->GetType())
+        {
+        case NetworkDataTlv::kTypeServer:
+            server = static_cast<ServerTlv *>(cur);
+
+            if (server->GetServer16() == aRloc16)
+            {
+                removeLength = sizeof(ServerTlv) + server->GetServerDataLength();
+                service.SetSubTlvsLength(service.GetSubTlvsLength() - removeLength);
+                Remove(reinterpret_cast<uint8_t *>(cur), removeLength);
+                continue;
+            }
+
+            break;
+
+        default:
+            break;
+        }
+
+        cur = cur->GetNext();
     }
 
     return OT_ERROR_NONE;

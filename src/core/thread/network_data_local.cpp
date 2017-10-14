@@ -159,7 +159,7 @@ otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceDat
     ServerTlv *serverTlv;
     uint8_t serviceTlvLength = (sizeof(ServiceTlv) - sizeof(NetworkDataTlv)) + aServiceDataLength +
                                sizeof(uint8_t)/*mServiceDataLength*/ +
-                               ((aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) ? 0 : sizeof(uint32_t)) +
+                               ServiceTlv::GetEnterpriseNumberFieldLength(aEnterpriseNumber) +
                                aServerDataLength + sizeof(ServerTlv);
 
     RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);

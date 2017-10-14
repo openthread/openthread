@@ -156,6 +156,8 @@ private:
     otError AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter);
     otError AddNetworkData(uint8_t *aTlv, uint8_t aTlvLength);
     otError AddPrefix(PrefixTlv &aTlv);
+    otError AddServer(ServiceTlv &aService, ServerTlv &aServer);
+    otError AddService(ServiceTlv &aTlv);
 
     int AllocateContext(void);
     otError FreeContext(uint8_t aContextId);
@@ -164,9 +166,12 @@ private:
     otError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
 
     otError RemoveCommissioningData(void);
+    void RemoveBorderRouter(uint16_t aRloc16, bool aOnlyRouter);
 
     otError RemoveRloc(uint16_t aRloc16);
+    otError RemoveRloc(uint16_t aRloc16, bool aOnlyRouter);
     otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16);
+    otError RemoveRloc(ServiceTlv &service, uint16_t aRloc16);
     otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16);
     otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16);
 

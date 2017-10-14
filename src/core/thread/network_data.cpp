@@ -293,8 +293,16 @@ otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, uint16_t a
                 memcpy(&aConfig->mServerConfig.mServerData, server->GetServerData(), server->GetServerDataLength());
                 aConfig->mServerConfig.mRloc16 = server->GetServer16();
 
-                iterator.SaveTlvOffset(cur, mTlvs);
-                iterator.SaveSubTlvOffset(subCur, service->GetSubTlvs());
+                if (subCur->GetNext() >= cur->GetNext())
+                {
+                    iterator.SaveTlvOffset(cur->GetNext(), mTlvs);
+                    iterator.SetSubTlvOffset(0);
+                }
+                else
+                {
+                    iterator.SaveTlvOffset(cur, mTlvs);
+                    iterator.SaveSubTlvOffset(subCur->GetNext(), service->GetSubTlvs());
+                }
 
                 ExitNow(error = OT_ERROR_NONE);
             }

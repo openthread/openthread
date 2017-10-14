@@ -797,6 +797,20 @@ public:
     }
 
     /**
+     * This method returns length of the S_enterprise_number TLV field in bytes, for given Enterprise Number.
+     *
+     * @returns length of the S_enterprise_number field in bytes
+     */
+    static uint8_t GetEnterpriseNumberFieldLength(uint32_t aEnterpriseNumber) {
+        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) {
+            return 0;
+        }
+        else {
+            return (sizeof(aEnterpriseNumber));
+        }
+    }
+
+    /**
      * This method returns Service ID. It is in range 0x00-0x0f.
      *
      * @returns Service ID
