@@ -706,6 +706,12 @@ OT_TOOL_PACKED_BEGIN
 class ServiceTlv: public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kMinId = 0,
+        kMaxId = 0x0f
+    };
+
     /**
      * This method initializes the TLV.
      * Initial length is set to 2, to hold S_service_data_length field.

@@ -154,10 +154,11 @@ private:
 
     otError AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute);
     otError AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter);
-    otError AddNetworkData(uint8_t *aTlv, uint8_t aTlvLength);
+    otError AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
     otError AddPrefix(PrefixTlv &aTlv);
-    otError AddServer(ServiceTlv &aService, ServerTlv &aServer);
-    otError AddService(ServiceTlv &aTlv);
+    otError AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
+    otError AddService(ServiceTlv &aTlv, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
+    ServiceTlv *FindServiceById(uint8_t aServiceId);
 
     int AllocateContext(void);
     otError FreeContext(uint8_t aContextId);

@@ -722,6 +722,8 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     bool rlocIn = false;
     bool rlocStable = false;
     bool stableUpdated = false;
+    uint8_t oldTlvs[ NetworkData::kMaxSize ];
+    uint8_t oldTlvsLength = NetworkData::kMaxSize;
 
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
@@ -733,8 +735,11 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
             stableUpdated = true;
         }
 
+        // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID
+        SuccessOrExit(error = GetNetworkData(false, oldTlvs, oldTlvsLength));
+
         SuccessOrExit(error = RemoveRloc(aRloc16));
-        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength));
+        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, oldTlvsLength));
 
         mVersion++;
 
@@ -746,7 +751,9 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     else
     {
         SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength));
-        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength));
+
+        // No old data to be preserved, lets avoid memcpy() & FindService calls.
+        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, 0));
 
         mVersion++;
 
@@ -762,7 +769,7 @@ exit:
     return error;
 }
 
-otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
+otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
     otError error = OT_ERROR_NONE;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
@@ -780,7 +787,7 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
             break;
 
         case NetworkDataTlv::kTypeService:
-            SuccessOrExit(error = AddService(*static_cast<ServiceTlv *>(cur)));
+            SuccessOrExit(error = AddService(*static_cast<ServiceTlv *>(cur), aOldTlvs, aOldTlvsLength));
             otDumpDebgNetData(GetInstance(), "add service done", mTlvs, mLength);
             break;
 
@@ -832,7 +839,7 @@ exit:
     return error;
 }
 
-otError Leader::AddService(ServiceTlv &aService)
+otError Leader::AddService(ServiceTlv &aService, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
     otError error = OT_ERROR_NONE;
     NetworkDataTlv *cur;
@@ -848,7 +855,7 @@ otError Leader::AddService(ServiceTlv &aService)
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeServer:
-            SuccessOrExit(error = AddServer(aService, *static_cast<ServerTlv *>(cur)));
+            SuccessOrExit(error = AddServer(aService, *static_cast<ServerTlv *>(cur), aOldTlvs, aOldTlvsLength));
             break;
 
         default:
@@ -925,12 +932,14 @@ exit:
     return error;
 }
 
-otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer)
+otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
     otError error = OT_ERROR_NONE;
     ServiceTlv *dstService = NULL;
+    ServiceTlv *oldService = NULL;
     ServerTlv *dstServer = NULL;
     uint16_t appendLength = 0;
+    uint8_t serviceID;
     uint8_t serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t)/*mServiceDataLength*/ +
                                   ServiceTlv::GetEnterpriseNumberFieldLength(aService.GetEnterpriseNumber()) +
                                   aService.GetServiceDataLength();
@@ -948,9 +957,43 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer)
 
     if (dstService == NULL)
     {
+        // Try to preserve old Service ID, if existing
+        oldService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength(),
+                                 aOldTlvs, aOldTlvsLength);
+
+        if (oldService != NULL)
+        {
+            // The same service is not found in current data, but was in old data. So, it had to be just removed by RemoveRloc()
+            // Lets use the same ServiceID
+            serviceID = oldService->GetServiceID();
+        }
+        else
+        {
+            uint8_t i;
+
+            // This seems like completely new service. Lets try to find new ServiceID for it. If all are taken, error out.
+            // Since we call FindServiceById() on mTlv, we need to execute this before Insert() call, otherwise we'll find
+            // uninitialized service as well.
+            for (i = ServiceTlv::kMinId; i <= ServiceTlv::kMaxId; i++)
+            {
+                otLogInfoNetData(GetInstance(), "Looking for Service ID = %d", i);
+
+                if (FindServiceById(i) == NULL)
+                {
+                    serviceID = i;
+                    break;
+                }
+            }
+
+            otLogInfoNetData(GetInstance(), "Allocated Service ID = %d", i);
+
+            VerifyOrExit(i <= ServiceTlv::kMaxId, error = OT_ERROR_NO_BUFS);
+        }
+
         dstService = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
         Insert(reinterpret_cast<uint8_t *>(dstService), serviceInsertLength);
         dstService->Init();
+        dstService->SetServiceID(serviceID);
         dstService->SetEnterpriseNumber(aService.GetEnterpriseNumber());
         dstService->SetServiceData(aService.GetServiceData(), aService.GetServiceDataLength());
         dstService->SetLength(serviceInsertLength - sizeof(NetworkDataTlv));
@@ -973,6 +1016,33 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer)
 
 exit:
     return error;
+}
+
+ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
+{
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    ServiceTlv *compare = NULL;
+
+    while (cur < end)
+    {
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+
+        if (cur->GetType() == NetworkDataTlv::kTypeService)
+        {
+            compare = reinterpret_cast<ServiceTlv *>(cur);
+
+            if (compare->GetServiceID() == aServiceId)
+            {
+                return compare;
+            }
+        }
+
+        cur = cur->GetNext();
+    }
+
+exit:
+    return NULL;
 }
 
 otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter)
