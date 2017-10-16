@@ -939,7 +939,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
     ServiceTlv *oldService = NULL;
     ServerTlv *dstServer = NULL;
     uint16_t appendLength = 0;
-    uint8_t serviceID;
+    uint8_t serviceID = 0;
     uint8_t serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t)/*mServiceDataLength*/ +
                                   ServiceTlv::GetEnterpriseNumberFieldLength(aService.GetEnterpriseNumber()) +
                                   aService.GetServiceDataLength();
