@@ -976,8 +976,6 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
             // uninitialized service as well.
             for (i = ServiceTlv::kMinId; i <= ServiceTlv::kMaxId; i++)
             {
-                otLogInfoNetData(GetInstance(), "Looking for Service ID = %d", i);
-
                 if (FindServiceById(i) == NULL)
                 {
                     serviceID = i;
