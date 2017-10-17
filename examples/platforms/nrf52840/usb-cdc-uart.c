@@ -97,17 +97,17 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(sAppCdcAcm,
 // Rx buffer length must by multiple of NRF_DRV_USBD_EPSIZE.
 static char sRxBuffer[NRF_DRV_USBD_EPSIZE * ((UART_RX_BUFFER_SIZE + NRF_DRV_USBD_EPSIZE - 1) / NRF_DRV_USBD_EPSIZE)];
 
-static volatile struct
+static struct
 {
     const uint8_t *mTxBuffer;
     uint16_t       mTxSize;
     size_t         mReceivedDataSize;
     bool           mUartEnabled;
     bool           mLastConnectionStatus;
-    bool           mConnected;
-    bool           mReady;
-    bool           mTransferDone;
-    bool           mReceiveDone;
+    volatile bool  mConnected;
+    volatile bool  mReady;
+    volatile bool  mTransferDone;
+    volatile bool  mReceiveDone;
 } sUsbState;
 
 uint16_t gExternSerialNumber[SERIAL_NUMBER_STRING_SIZE + 1];
@@ -211,7 +211,9 @@ static bool isPortOpened(void)
 
 static void processConnection(void)
 {
-    if (sUsbState.mLastConnectionStatus != (sUsbState.mUartEnabled && sUsbState.mConnected))
+    bool connectionStatus = sUsbState.mUartEnabled && sUsbState.mConnected;
+
+    if (sUsbState.mLastConnectionStatus != connectionStatus)
     {
         sUsbState.mLastConnectionStatus = sUsbState.mUartEnabled && sUsbState.mConnected;
 
