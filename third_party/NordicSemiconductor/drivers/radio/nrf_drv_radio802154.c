@@ -238,17 +238,7 @@ bool nrf_drv_radio802154_transmit_raw(const uint8_t * p_data, bool cca)
 
 bool nrf_drv_radio802154_transmit(const uint8_t * p_data, uint8_t length, bool cca)
 {
-#if defined ( __GNUC__ )
-
-    static uint8_t tx_buffer[RAW_PAYLOAD_OFFSET + MAX_PACKET_SIZE]
-                __attribute__ ((section ("nrf_radio_buffer.tx_buffer")));
-
-#elif defined ( __ICCARM__ )
-
-#pragma location="NRF_RADIO_BUFFER"
     static uint8_t tx_buffer[RAW_PAYLOAD_OFFSET + MAX_PACKET_SIZE];
-
-#endif
 
     assert(length <= MAX_PACKET_SIZE - FCS_SIZE);
 
