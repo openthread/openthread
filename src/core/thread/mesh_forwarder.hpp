@@ -293,6 +293,7 @@ private:
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo,
                            const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
+    otError RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void RemoveMessage(Message &aMessage);
 
     static void HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
