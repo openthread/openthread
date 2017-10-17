@@ -69,6 +69,16 @@ extern "C" {
 #endif /* _WIN32 */
 
 /**
+ * @addtogroup api-types
+ *
+ * @brief
+ *   This module includes API types
+ *
+ * @{
+ *
+ */
+
+/**
  * This type represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
@@ -1127,6 +1137,10 @@ typedef enum otLogRegion
     OT_LOG_REGION_CLI      = 14, ///< CLI
 } otLogRegion;
 
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -57,7 +57,7 @@ extern "C" {
 /**
  * Log levels.
  *
- * Implimentation note: These exist as defines (not enums) so that
+ * Implementation note: These exist as defines (not enums) so that
  * embedded code can remove code at compile time via if/else/endif
  */
 
