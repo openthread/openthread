@@ -73,18 +73,7 @@ static bool sDisabled;
 static otError      sReceiveError = OT_ERROR_NONE;
 static otRadioFrame sReceivedFrames[RADIO_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
-
-#if defined ( __GNUC__ )
-
-static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1]
-__attribute__((section("nrf_radio_buffer.sTransmiPsdu")));
-
-#elif defined ( __ICCARM__ )
-
-#pragma location="NRF_RADIO_BUFFER"
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
-
-#endif
 
 static otRadioFrame sAckFrame;
 

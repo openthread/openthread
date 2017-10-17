@@ -90,13 +90,6 @@ SECTIONS
 
     __etext = .;
 
-    nrf_radio_buffer (NOLOAD):
-    {
-        __nrf_radio_buffer_start__ = .;
-        *(nrf_radio_buffer*)
-        __nrf_radio_buffer_end__ = .;
-    } > RAM
-
     .data : AT (__etext)
     {
         __data_start__ = .;

@@ -192,7 +192,7 @@ bool nrf_drv_radio802154_ack_pending_bit_should_be_set(const uint8_t * p_psdu)
 
     if (0 == (p_psdu[PAN_ID_COMPR_OFFSET] & PAN_ID_COMPR_MASK))
     {
-        p_src_addr += 2;
+        p_src_addr += PAN_ID_SIZE;
     }
 
     switch (p_psdu[SRC_ADDR_TYPE_OFFSET] & SRC_ADDR_TYPE_MASK)

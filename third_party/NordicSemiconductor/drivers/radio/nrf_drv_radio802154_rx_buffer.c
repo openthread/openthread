@@ -44,18 +44,7 @@
 #error Not enough rx buffers in the 802.15.4 radio driver.
 #endif
 
-#if defined ( __GNUC__ )
-
-/// Receive buffer (EasyDMA cannot address whole RAM. Place buffer in the special section.)
-rx_buffer_t nrf_drv_radio802154_rx_buffers[RADIO_RX_BUFFERS]
-                __attribute__ ((section ("nrf_radio_buffer.nrf_drv_radio802154_rx_buffers")));
-
-#elif defined ( __ICCARM__ )
-
-#pragma location="NRF_RADIO_BUFFER"
-static rx_buffer_t nrf_drv_radio802154_rx_buffers[RADIO_RX_BUFFERS];
-
-#endif
+rx_buffer_t nrf_drv_radio802154_rx_buffers[RADIO_RX_BUFFERS]; ///< Receive buffers.
 
 void nrf_drv_radio802154_rx_buffer_init(void)
 {

@@ -53,39 +53,36 @@ extern "C" {
 /**
  * @brief States of the driver.
  */
-typedef enum
-{
-    NRF_DRV_RADIO802154_STATE_INVALID,
-    NRF_DRV_RADIO802154_STATE_SLEEP,
-    NRF_DRV_RADIO802154_STATE_RECEIVE,
-    NRF_DRV_RADIO802154_STATE_TRANSMIT,
-    NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION,
-    NRF_DRV_RADIO802154_STATE_CCA,
-    NRF_DRV_RADIO802154_STATE_CONTINUOUS_CARRIER,
-} nrf_drv_radio802154_state_t;
+typedef uint8_t nrf_drv_radio802154_state_t;
+
+#define NRF_DRV_RADIO802154_STATE_INVALID              0x01 /**< Radio in an invalid state. */
+#define NRF_DRV_RADIO802154_STATE_SLEEP                0x02 /**< Radio in Sleep state. */
+#define NRF_DRV_RADIO802154_STATE_RECEIVE              0x03 /**< Radio in Receive state. */
+#define NRF_DRV_RADIO802154_STATE_TRANSMIT             0x04 /**< Radio in Transmit state. */
+#define NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION     0x05 /**< Radio in Energy Detection state. */
+#define NRF_DRV_RADIO802154_STATE_CCA                  0x06 /**< Radio in CCA state. */
+#define NRF_DRV_RADIO802154_STATE_CONTINUOUS_CARRIER   0x07 /**< Radio in Continuous Carrier state. */
 
 /**
- * Errors reported during frame transmission.
+ * @brief Errors reported during frame transmission.
  */
-typedef enum
-{
-    NRF_DRV_RADIO802154_TX_ERROR_BUSY_CHANNEL,    /**< CCA reported busy channel prior to transmission. */
-    NRF_DRV_RADIO802154_TX_ERROR_INVALID_ACK,     /**< Received ACK frame is other than expected. */
-    NRF_DRV_RADIO802154_TX_ERROR_NO_MEM,          /**< No receive buffer are available to receive an ACK. */
-    NRF_DRV_RADIO802154_TX_ERROR_TIMESLOT_ENDED,  /**< Radio timeslot ended during transmission procedure. */
-} nrf_drv_radio802154_tx_error_t;
+typedef uint8_t nrf_drv_radio802154_tx_error_t;
+
+#define NRF_DRV_RADIO802154_TX_ERROR_BUSY_CHANNEL      0x01 /**< CCA reported busy channel prior to transmission. */
+#define NRF_DRV_RADIO802154_TX_ERROR_INVALID_ACK       0x02 /**< Received ACK frame is other than expected. */
+#define NRF_DRV_RADIO802154_TX_ERROR_NO_MEM            0x03 /**< No receive buffer are available to receive an ACK. */
+#define NRF_DRV_RADIO802154_TX_ERROR_TIMESLOT_ENDED    0x04 /**< Radio timeslot ended during transmission procedure. */
 
 /**
  * @brief Possible errors during frame reception.
  */
-typedef enum
-{
-    NRF_DRV_RADIO802154_RX_ERROR_INVALID_FRAME,     /**< Received a malformed frame */
-    NRF_DRV_RADIO802154_RX_ERROR_INVALID_FCS,       /**< Received a frame with invalid checksum. */
-    NRF_DRV_RADIO802154_RX_ERROR_INVALID_DEST_ADDR, /**< Received a frame with mismatched destination address. */
-    NRF_DRV_RADIO802154_RX_ERROR_RUNTIME,           /**< A runtime error occured (e.g. CPU was hold for too long.) */
-    NRF_DRV_RADIO802154_RX_ERROR_TIMESLOT_ENDED,    /**< Radio timeslot ended during frame reception. */
-} nrf_drv_radio802154_rx_error_t;
+typedef uint8_t nrf_drv_radio802154_rx_error_t;
+
+#define NRF_DRV_RADIO802154_RX_ERROR_INVALID_FRAME     0x01 /**< Received a malformed frame */
+#define NRF_DRV_RADIO802154_RX_ERROR_INVALID_FCS       0x02 /**< Received a frame with invalid checksum. */
+#define NRF_DRV_RADIO802154_RX_ERROR_INVALID_DEST_ADDR 0x03 /**< Received a frame with mismatched destination address. */
+#define NRF_DRV_RADIO802154_RX_ERROR_RUNTIME           0x04 /**< A runtime error occured (e.g. CPU was hold for too long.) */
+#define NRF_DRV_RADIO802154_RX_ERROR_TIMESLOT_ENDED    0x05 /**< Radio timeslot ended during frame reception. */
 
 /**
  * @brief Structure for configuring CCA.
