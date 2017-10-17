@@ -34,6 +34,8 @@
 #ifndef CODE_UTILS_HPP_
 #define CODE_UTILS_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdbool.h"
 
 // Calculates the aligned variable size.

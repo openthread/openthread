@@ -34,6 +34,8 @@
 #ifndef OPENTHREAD_CORE_CONFIG_H_
 #define OPENTHREAD_CORE_CONFIG_H_
 
+#include <openthread/config.h>
+
 #define OPENTHREAD_CORE_CONFIG_H_IN
 
 #ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE

@@ -31,8 +31,6 @@
  *   This file implements the local Thread Network Data.
  */
 
-#include <openthread/config.h>
-
 #include "network_data_local.hpp"
 
 #include "common/debug.hpp"

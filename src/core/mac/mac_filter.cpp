@@ -31,8 +31,6 @@
  *   This file implements Filter IEEE 802.15.4 frame filtering based on MAC address.
  */
 
-#include <openthread/config.h>
-
 #include "mac_filter.hpp"
 
 #include "openthread/types.h"

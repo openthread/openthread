@@ -33,8 +33,6 @@
 
 #define WPP_NAME "mesh_forwarder.tmh"
 
-#include <openthread/config.h>
-
 #include "mesh_forwarder.hpp"
 
 #include <openthread/platform/random.h>

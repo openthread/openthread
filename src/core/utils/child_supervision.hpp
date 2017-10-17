@@ -35,9 +35,8 @@
 #ifndef CHILD_SUPERVISION_HPP_
 #define CHILD_SUPERVISION_HPP_
 
-#include <openthread/config.h>
-
 #include "openthread-core-config.h"
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"

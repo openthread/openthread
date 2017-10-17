@@ -33,8 +33,6 @@
 
 #define WPP_NAME "src_match_controller.tmh"
 
-#include <openthread/config.h>
-
 #include "src_match_controller.hpp"
 
 #include "common/code_utils.hpp"

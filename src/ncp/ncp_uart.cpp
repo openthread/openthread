@@ -30,8 +30,6 @@
  *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
-#include <openthread/config.h>
-
 #include "ncp_uart.hpp"
 
 #include <stdio.h>
@@ -166,7 +164,7 @@ void NcpUart::EncodeAndSendToUart(void)
                 SuccessOrExit(mFrameEncoder.Encode(mByte, mUartBuffer));
             }
 
-            // track the change of mHostPowerStateInProgress by the 
+            // track the change of mHostPowerStateInProgress by the
             // call to OutFrameRemove.
             prevHostPowerState = mHostPowerStateInProgress;
 

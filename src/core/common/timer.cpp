@@ -33,8 +33,6 @@
 
 #define WPP_NAME "timer.tmh"
 
-#include <openthread/config.h>
-
 #include "timer.hpp"
 
 #include "openthread-instance.h"

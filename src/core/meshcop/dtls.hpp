@@ -34,6 +34,8 @@
 #ifndef DTLS_HPP_
 #define DTLS_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 #include <mbedtls/ssl.h>

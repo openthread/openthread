@@ -34,6 +34,8 @@
 #ifndef ICMP6_HPP_
 #define ICMP6_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/icmp6.h>
 
 #include "common/encoding.hpp"

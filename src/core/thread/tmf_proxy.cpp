@@ -33,8 +33,6 @@
 
 #define WPP_NAME "tmf_proxy.tmh"
 
-#include <openthread/config.h>
-
 #include "tmf_proxy.hpp"
 
 #include <openthread/types.h>

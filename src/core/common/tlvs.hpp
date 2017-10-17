@@ -34,6 +34,8 @@
 #ifndef TLVS_HPP_
 #define TLVS_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_string.h"
 
 #include <openthread/types.h>

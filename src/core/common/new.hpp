@@ -34,6 +34,8 @@
 #ifndef NEW_HPP_
 #define NEW_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stddef.h>
 
 #include <openthread/platform/toolchain.h>

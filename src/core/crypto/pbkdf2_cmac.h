@@ -35,6 +35,8 @@
 #ifndef PBKDF2_CMAC_H_
 #define PBKDF2_CMAC_H_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdbool.h"
 #include "utils/wrap_stdint.h"
 

@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Border Router API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 

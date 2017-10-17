@@ -34,6 +34,8 @@
 #ifndef TASKLET_HPP_
 #define TASKLET_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdio.h>
 
 #include <openthread/tasklet.h>

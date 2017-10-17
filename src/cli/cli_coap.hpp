@@ -34,6 +34,10 @@
 #ifndef CLI_COAP_HPP_
 #define CLI_COAP_HPP_
 
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+
 #include <openthread/types.h>
 
 #include "coap/coap_header.hpp"
@@ -95,5 +99,7 @@ private:
 
 }  // namespace Cli
 }  // namespace ot
+
+#endif  // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #endif  // CLI_COAP_HPP_

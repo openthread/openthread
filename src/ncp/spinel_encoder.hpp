@@ -33,7 +33,7 @@
 #ifndef SPINEL_ENCODER_HPP_
 #define SPINEL_ENCODER_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/message.h>
 #include <openthread/ncp.h>

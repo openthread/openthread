@@ -34,6 +34,8 @@
 #ifndef CLI_DATASET_HPP_
 #define CLI_DATASET_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdarg.h>
 
 #include "cli/cli_server.hpp"

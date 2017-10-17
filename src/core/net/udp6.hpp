@@ -34,6 +34,8 @@
 #ifndef UDP6_HPP_
 #define UDP6_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/udp.h>
 
 #include "common/locator.hpp"

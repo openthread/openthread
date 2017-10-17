@@ -34,7 +34,7 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_string.h"
@@ -42,7 +42,6 @@
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 
-#include "openthread-core-config.h"
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "mac/mac_frame.hpp"

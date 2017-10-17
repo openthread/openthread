@@ -34,9 +34,10 @@
 #ifndef MAC_HPP_
 #define MAC_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/platform/radio.h>
 
-#include "openthread-core-config.h"
 #include "common/context.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"

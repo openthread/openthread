@@ -34,9 +34,10 @@
 #ifndef COMMISSIONER_HPP_
 #define COMMISSIONER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/commissioner.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/locator.hpp"

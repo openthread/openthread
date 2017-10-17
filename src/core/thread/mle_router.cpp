@@ -34,8 +34,6 @@
 
 #define WPP_NAME "mle_router.tmh"
 
-#include <openthread/config.h>
-
 #include "mle_router.hpp"
 
 #include <openthread/platform/random.h>

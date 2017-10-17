@@ -34,6 +34,8 @@
 #ifndef AES_ECB_HPP_
 #define AES_ECB_HPP_
 
+#include "openthread-core-config.h"
+
 #include <mbedtls/aes.h>
 
 namespace ot {

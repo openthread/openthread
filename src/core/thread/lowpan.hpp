@@ -34,6 +34,8 @@
 #ifndef LOWPAN_HPP_
 #define LOWPAN_HPP_
 
+#include "openthread-core-config.h"
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"

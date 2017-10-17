@@ -34,9 +34,10 @@
 #ifndef MESH_FORWARDER_HPP_
 #define MESH_FORWARDER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "mac/mac.hpp"

@@ -34,6 +34,8 @@
  *   This file includes definitions for manipulating IPv6 routing tables.
  */
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 #include "common/locator.hpp"

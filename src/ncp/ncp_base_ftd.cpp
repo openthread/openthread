@@ -30,7 +30,6 @@
  *   This file implements full thread device specified Spinel interface to the OpenThread stack.
  */
 
-#include <openthread/config.h>
 #include "ncp_base.hpp"
 
 #include <openthread/diag.h>

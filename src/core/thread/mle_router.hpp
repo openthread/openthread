@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef MLE_ROUTER_HPP_
+#define MLE_ROUTER_HPP_
+
 #if OPENTHREAD_MTD
 #include "mle_router_mtd.hpp"
 #elif OPENTHREAD_FTD
@@ -34,3 +37,4 @@
 #error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
 
+#endif // MLE_ROUTER_HPP_

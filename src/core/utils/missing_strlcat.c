@@ -25,7 +25,7 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include "utils/wrap_string.h"
 

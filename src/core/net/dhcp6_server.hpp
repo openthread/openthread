@@ -34,6 +34,8 @@
 #ifndef DHCP6_SERVER_HPP_
 #define DHCP6_SERVER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 #include "common/locator.hpp"

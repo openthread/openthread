@@ -34,11 +34,10 @@
 #ifndef LOCATOR_HPP_
 #define LOCATOR_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
 #include "openthread-single-instance.h"
 
 namespace ot {

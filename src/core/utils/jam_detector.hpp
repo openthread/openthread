@@ -34,7 +34,7 @@
 #ifndef JAM_DETECTOR_HPP_
 #define JAM_DETECTOR_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"

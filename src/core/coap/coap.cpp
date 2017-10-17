@@ -28,8 +28,6 @@
 
 #define WPP_NAME "coap.tmh"
 
-#include <openthread/config.h>
-
 #include "coap.hpp"
 
 #include <openthread/platform/random.h>

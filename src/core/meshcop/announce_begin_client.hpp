@@ -35,6 +35,7 @@
 #define ANNOUNCE_BEGIN_CLIENT_HPP_
 
 #include "openthread-core-config.h"
+
 #include "common/locator.hpp"
 #include "coap/coap.hpp"
 #include "net/ip6_address.hpp"

@@ -34,9 +34,10 @@
 #ifndef TMF_PROXY_HPP_
 #define TMF_PROXY_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/tmf_proxy.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 
 namespace ot {

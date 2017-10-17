@@ -34,6 +34,8 @@
 #ifndef THREAD_TLVS_HPP_
 #define THREAD_TLVS_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 #include "common/encoding.hpp"

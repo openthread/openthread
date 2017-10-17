@@ -29,6 +29,8 @@
 #ifndef DNS_CLIENT_HPP_
 #define DNS_CLIENT_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/dns.h>
 #include <openthread/types.h>
 
