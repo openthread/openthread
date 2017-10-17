@@ -167,7 +167,7 @@ private:
     otError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
 
     otError RemoveCommissioningData(void);
-    void RemoveBorderRouter(uint16_t aRloc16, bool aOnlyRouter);
+    void RemoveRlocData(uint16_t aRloc16, bool aOnlyRouter);
 
     otError RemoveRloc(uint16_t aRloc16);
     otError RemoveRloc(uint16_t aRloc16, bool aOnlyRouter);

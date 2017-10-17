@@ -130,9 +130,9 @@ otError Leader::SetContextIdReuseDelay(uint32_t aDelay)
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16)
 {
-    return RemoveBorderRouter(aRloc16, true);
+    return RemoveRlocData(aRloc16, true);
 }
-void Leader::RemoveBorderRouter(uint16_t aRloc16, bool aOnlyRouter)
+void Leader::RemoveRlocData(uint16_t aRloc16, bool aOnlyRouter)
 {
     bool rlocIn = false;
     bool rlocStable = false;
@@ -173,7 +173,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == OT_ERROR_NONE)
     {
         VerifyOrExit(rloc16.IsValid());
-        RemoveBorderRouter(rloc16.GetRloc16(), false);
+        RemoveRlocData(rloc16.GetRloc16(), false);
     }
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
@@ -649,7 +649,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                                                       service->GetServiceDataLength(),
                                                       aTlvsBase, aTlvsBaseLength);
 
-                if (!serviceBase || !serviceBase->IsStable() || (service->GetServiceID() != serviceBase->GetServiceID()))
+                if (!serviceBase || !serviceBase->IsStable())
                 {
                     ExitNow(rval = true);
                 }
@@ -722,7 +722,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     bool rlocIn = false;
     bool rlocStable = false;
     bool stableUpdated = false;
-    uint8_t oldTlvs[ NetworkData::kMaxSize ];
+    uint8_t oldTlvs[NetworkData::kMaxSize];
     uint8_t oldTlvsLength = NetworkData::kMaxSize;
 
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);

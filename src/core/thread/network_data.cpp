@@ -393,8 +393,7 @@ bool NetworkData::ContainsServices(NetworkData &aCompare, uint16_t aRloc16)
                 (outerConfig.mServerConfig.mStable == innerConfig.mServerConfig.mStable)
                 && (outerConfig.mServerConfig.mServerDataLength == innerConfig.mServerConfig.mServerDataLength) &&
                 (memcmp(outerConfig.mServerConfig.mServerData, innerConfig.mServerConfig.mServerData,
-                        outerConfig.mServerConfig.mServerDataLength) == 0)
-                && (outerConfig.mServerConfig.mRloc16 == innerConfig.mServerConfig.mRloc16))
+                        outerConfig.mServerConfig.mServerDataLength) == 0))
             {
                 break;
             }
