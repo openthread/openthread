@@ -35,6 +35,8 @@
 #if !defined(WRAP_STRING_H)
 #define WRAP_STRING_H
 
+#include "openthread-core-config.h"
+
 /* system provided string.h */
 #include <string.h>
 
