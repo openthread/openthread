@@ -124,6 +124,16 @@ enum AlocAllocation
 };
 
 /**
+ * Service IDs
+ *
+ */
+enum ServiceID
+{
+    kServiceMinId = 0x00,  ///< Minimal Service ID.
+    kServiceMaxId = 0x0f,  ///< Maximal Service ID.
+};
+
+/**
  * This class implements MLE Header generation and parsing.
  *
  */
@@ -796,6 +806,18 @@ public:
     otError GetLeaderAloc(Ip6::Address &aAddress) const;
 
     /**
+     * This method retrieves the Service ALOC for given Service ID.
+     *
+     * @param[in]   aServiceID Service ID to get ALOC for.
+     * @param[out]  aAddress   A reference to the Service ALOC.
+     *
+     * @retval OT_ERROR_NONE      Successfully retrieved the Service ALOC.
+     * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+     *
+     */
+    otError GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
+
+    /**
      * This method adds Leader's ALOC to its Thread interface.
      *
      * @retval OT_ERROR_NONE            Successfully added the Leader's ALOC.
@@ -1382,6 +1404,12 @@ private:
                         ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
 
+    /**
+     * This method scans for network data from the leader and updates ip addresses assigned to this
+     * interface to make sure that all Service ALOCs (0xfc10-0xfc1f) are properly set.
+     */
+    void UpdateServiceAlocs(void);
+
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     otError InformPreviousParent(void);
 #endif
@@ -1432,6 +1460,8 @@ private:
     uint16_t mPreviousPanId;
 
     Ip6::NetifUnicastAddress mLeaderAloc;
+
+    Ip6::NetifUnicastAddress mServiceAlocs[kAloc16ServiceEnd - kAloc16ServiceStart];
 
     Ip6::NetifUnicastAddress mLinkLocal64;
     Ip6::NetifUnicastAddress mMeshLocal64;

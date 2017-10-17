@@ -240,6 +240,19 @@ public:
     bool ContainsServices(NetworkData &aCompare, uint16_t aRloc16);
 
     /**
+     * This method indicates whether or not the Thread Network Data contain the service with given Service ID
+     * associated with @p aRloc16.
+     *
+     * @param[in]  aServiceID The Service ID to search for.
+     * @param[in]  aRloc16    The RLOC16 to consider.
+     *
+     * @returns TRUE if this object contains the service with given ID associated with @p aRloc16,
+     *          FALSE otherwise.
+     *
+     */
+    bool ContainsService(uint8_t aServiceId, uint16_t aRloc16);
+
+    /**
      * This method cancels the data resubmit delay timer.
      *
      */

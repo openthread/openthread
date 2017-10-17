@@ -409,6 +409,57 @@ exit:
     return rval;
 }
 
+bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16)
+{
+    bool rval = false;
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext())
+    {
+        ServiceTlv *service;
+        NetworkDataTlv *subCur;
+        NetworkDataTlv *subEnd;
+
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+
+        if (cur->GetType() != NetworkDataTlv::kTypeService)
+        {
+            continue;
+        }
+
+        service = static_cast<ServiceTlv *>(cur);
+
+        if (service->GetServiceID() == aServiceId)
+        {
+            subCur = reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(service->GetSubTlvs()));
+            subEnd = cur->GetNext();
+
+            for (; subCur < subEnd; subCur = subCur->GetNext())
+            {
+                ServerTlv *server;
+
+                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd);
+
+                if (subCur->GetType() != NetworkDataTlv::kTypeServer)
+                {
+                    continue;
+                }
+
+                server = static_cast<ServerTlv *>(subCur);
+
+                if (server->GetServer16() == aRloc16)
+                {
+                    ExitNow(rval = true);
+                }
+            }
+        }
+    }
+
+exit:
+    return rval;
+}
+
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aData);

@@ -974,7 +974,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
             // This seems like completely new service. Lets try to find new ServiceID for it. If all are taken, error out.
             // Since we call FindServiceById() on mTlv, we need to execute this before Insert() call, otherwise we'll find
             // uninitialized service as well.
-            for (i = ServiceTlv::kMinId; i <= ServiceTlv::kMaxId; i++)
+            for (i = Mle::kServiceMinId; i <= Mle::kServiceMaxId; i++)
             {
                 if (FindServiceById(i) == NULL)
                 {
@@ -985,7 +985,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
 
             otLogInfoNetData(GetInstance(), "Allocated Service ID = %d", i);
 
-            VerifyOrExit(i <= ServiceTlv::kMaxId, error = OT_ERROR_NO_BUFS);
+            VerifyOrExit(i <= Mle::kServiceMaxId, error = OT_ERROR_NO_BUFS);
         }
 
         dstService = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);

@@ -96,6 +96,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mPreviousPanId(Mac::kPanIdBroadcast)
 {
     uint8_t meshLocalPrefix[8];
+    uint8_t serviceId = 0;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
@@ -123,6 +124,18 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLeaderAloc.mValid = true;
     mLeaderAloc.mScopeOverride = Ip6::Address::kRealmLocalScope;
     mLeaderAloc.mScopeOverrideValid = true;
+
+    // Service Alocs
+    for (serviceId = kServiceMinId; serviceId <= kServiceMaxId; ++serviceId)
+    {
+        memset(&mServiceAlocs[serviceId], 0, sizeof(mServiceAlocs[serviceId]));
+
+        mServiceAlocs[serviceId].mPrefixLength = 128;
+        mServiceAlocs[serviceId].mPreferred = true;
+        mServiceAlocs[serviceId].mValid = true;
+        mServiceAlocs[serviceId].mScopeOverride = Ip6::Address::kRealmLocalScope;
+        mServiceAlocs[serviceId].mScopeOverrideValid = true;
+    }
 
     // initialize Mesh Local Prefix
     meshLocalPrefix[0] = 0xfd;
@@ -868,6 +881,22 @@ exit:
     return error;
 }
 
+otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
+
+    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
+    aAddress.mFields.m16[4] = HostSwap16(0x0000);
+    aAddress.mFields.m16[5] = HostSwap16(0x00ff);
+    aAddress.mFields.m16[6] = HostSwap16(0xfe00);
+    aAddress.mFields.m16[7] = HostSwap16(kAloc16ServiceStart + static_cast<uint16_t>(aServiceId));
+
+exit:
+    return error;
+}
+
 otError Mle::AddLeaderAloc(void)
 {
     otError error = OT_ERROR_NONE;
@@ -1265,12 +1294,42 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
         netif.GetNetworkDataLocal().SendServerDataNotification();
+
+        this->UpdateServiceAlocs();
 #endif
     }
 
     if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER))
     {
         Store();
+    }
+
+exit:
+    return;
+}
+
+void Mle::UpdateServiceAlocs(void)
+{
+    ThreadNetif &netif = GetNetif();
+    uint16_t rloc = GetRloc16();
+    uint8_t serviceId = 0;
+    NetworkData::Leader &leaderData = netif.GetNetworkDataLeader();
+
+    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
+
+    for (serviceId = kServiceMinId; serviceId <= kServiceMaxId; ++serviceId)
+    {
+        // It seems that we need to re-initialize the address here, as mesh local might be not known yet.
+        SuccessOrExit(GetServiceAloc(serviceId, mServiceAlocs[serviceId].GetAddress()));
+
+        if (leaderData.ContainsService(serviceId, rloc))
+        {
+            netif.AddUnicastAddress(mServiceAlocs[serviceId]);
+        }
+        else
+        {
+            netif.RemoveUnicastAddress(mServiceAlocs[serviceId]);
+        }
     }
 
 exit:
