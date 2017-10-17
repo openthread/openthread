@@ -896,7 +896,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
             }
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
-            else if ((aloc16 & Mle::kAloc16DhcpAgentMask) != 0)
+            else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
             {
                 uint16_t agentRloc16;
                 uint8_t routerId;
