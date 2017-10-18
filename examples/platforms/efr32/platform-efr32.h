@@ -37,6 +37,7 @@
 
 #include <openthread/config.h>
 #include <openthread-core-config.h>
+#include "application_properties.h"
 #include "em_device.h"
 #include "em_system.h"
 #include "core_cm4.h"
@@ -95,5 +96,7 @@ void efr32MiscInit(void);
  *
  */
 void efr32RandomInit(void);
+
+extern const ApplicationProperties_t applicationProperties;
 
 #endif  // PLATFORM_EFR32_H_

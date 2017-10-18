@@ -32,22 +32,22 @@
  *   This file includes the platform-specific initializers.
  */
 
+#include <openthread/platform/uart.h>
 #include <string.h>
 
-#include <openthread/platform/uart.h>
-
-#include "common/logging.hpp"
-
-#include "pa.h"
-#include "pti.h"
+#include "application_properties.h"
+#include "bg_version.h"
 #include "bsp.h"
-#include "em_emu.h"
-#include "em_cmu.h"
+#include "common/logging.hpp"
 #include "em_chip.h"
+#include "em_cmu.h"
+#include "em_emu.h"
+#include "openthread-core-efr32-config.h"
+#include "pa.h"
 #include "platform-efr32.h"
+#include "pti.h"
 #include "rail.h"
 #include "rail_ieee802154.h"
-#include "openthread-core-efr32-config.h"
 
 otInstance *sInstance;
 
@@ -148,3 +148,28 @@ void HAL_Init(void)
 {
     halInitChipSpecific();
 }
+
+__attribute__((used))
+__attribute__ ((section(".application_properties")))
+const ApplicationProperties_t applicationProperties = {
+  // @brief Magic value indicating that this is an ApplicationProperties_t struct.
+  // Must equal @ref APPLICATION_PROPERTIES_MAGIC
+  .magic = APPLICATION_PROPERTIES_MAGIC,
+  // Version number of this struct
+  .structVersion = APPLICATION_PROPERTIES_VERSION,
+  // Type of signature this application is signed with
+  .signatureType = APPLICATION_SIGNATURE_NONE,
+  // Location of the signature. Typically a pointer to the end of the application
+  .signatureLocation = 0,
+  // Information about the application
+  .app = {
+    // Bitfield representing type of application, e.g. @ref APPLICATION_TYPE_BLUETOOTH_APP
+    .type = APPLICATION_TYPE_THREAD,
+    // Version number for this application
+    .version = 0,
+    // Capabilities of this application
+    .capabilities = (BG_VERSION_MAJOR << 24) | (BG_VERSION_MINOR << 16) | (BG_VERSION_PATCH << 8),
+    // Unique ID (e.g. UUID or GUID) for the product this application is built for
+    .productId = {0},
+  },
+};
