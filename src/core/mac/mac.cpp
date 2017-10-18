@@ -200,10 +200,12 @@ otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveSc
     SuccessOrExit(error = Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext));
 
 exit:
+
     if (OT_ERROR_NONE != error)
     {
         mActiveScanHandler = NULL;
     }
+
     return error;
 }
 
@@ -215,6 +217,7 @@ otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergySc
     SuccessOrExit(error = Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext));
 
 exit:
+
     if (OT_ERROR_NONE != error)
     {
         mEnergyScanHandler = NULL;
