@@ -375,6 +375,16 @@ class otCli:
 
         return addrs
 
+    def add_service(self, enterpriseNumber, serviceData, serverData):
+        cmd = 'service add ' + enterpriseNumber + ' ' + serviceData+ ' '  + serverData
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def remove_service(self, enterpriseNumber, serviceData):
+        cmd = 'service remove ' + enterpriseNumber + ' ' + serviceData
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
     def __getLinkLocalAddress(self):
         for ip6Addr in self.get_addrs():
             if re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I):

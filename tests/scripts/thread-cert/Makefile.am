@@ -143,6 +143,7 @@ EXTRA_DIST                                                         = \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     $(NULL)
@@ -158,6 +159,7 @@ check_SCRIPTS                                                      = \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     Cert_5_2_02_LeaderReject1Hop.py                                  \
