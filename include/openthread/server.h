@@ -41,6 +41,7 @@
 extern "C" {
 #endif
 
+#ifndef OTDLL
 /**
  * @addtogroup api-server
  *
@@ -126,6 +127,8 @@ OTAPI otError OTCALL otServerRegister(otInstance *aInstance);
  * @}
  *
  */
+
+#endif // OTDLL
 
 #ifdef __cplusplus
 }  // extern "C"
