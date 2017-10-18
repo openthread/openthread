@@ -657,7 +657,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                 curInner = service->GetSubTlvs();
                 endInner = service->GetNext();
 
-                while (curInner <= endInner)
+                while (curInner < endInner)
                 {
                     if (curInner->IsStable())
                     {
@@ -697,9 +697,9 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                         default:
                             break;
                         }
-
-                        curInner = curInner->GetNext();
                     }
+
+                    curInner = curInner->GetNext();
                 }
             }
 

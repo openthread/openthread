@@ -96,7 +96,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mPreviousPanId(Mac::kPanIdBroadcast)
 {
     uint8_t meshLocalPrefix[8];
-    uint8_t serviceId = 0;
+    int i = 0;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
@@ -126,15 +126,16 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLeaderAloc.mScopeOverrideValid = true;
 
     // Service Alocs
-    for (serviceId = kServiceMinId; serviceId <= kServiceMaxId; ++serviceId)
+    for (i = 0; i < static_cast<int>(sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0])); i++)
     {
-        memset(&mServiceAlocs[serviceId], 0, sizeof(mServiceAlocs[serviceId]));
+        memset(&mServiceAlocs[i], 0, sizeof(mServiceAlocs[i]));
 
-        mServiceAlocs[serviceId].mPrefixLength = 128;
-        mServiceAlocs[serviceId].mPreferred = true;
-        mServiceAlocs[serviceId].mValid = true;
-        mServiceAlocs[serviceId].mScopeOverride = Ip6::Address::kRealmLocalScope;
-        mServiceAlocs[serviceId].mScopeOverrideValid = true;
+        mServiceAlocs[i].mPrefixLength = 128;
+        mServiceAlocs[i].mPreferred = true;
+        mServiceAlocs[i].mValid = true;
+        mServiceAlocs[i].mScopeOverride = Ip6::Address::kRealmLocalScope;
+        mServiceAlocs[i].mScopeOverrideValid = true;
+        mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
     }
 
     // initialize Mesh Local Prefix
@@ -144,7 +145,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     meshLocalPrefix[7] = 0x00;
 
     // mesh-local 64
-    for (int i = OT_IP6_PREFIX_SIZE; i < OT_IP6_ADDRESS_SIZE; i++)
+    for (i = OT_IP6_PREFIX_SIZE; i < OT_IP6_ADDRESS_SIZE; i++)
     {
         mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
@@ -891,7 +892,7 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.mFields.m16[7] = HostSwap16(kAloc16ServiceStart + static_cast<uint16_t>(aServiceId));
+    aAddress.mFields.m16[7] = HostSwap16(GetServiceAlocFromId(aServiceId));
 
 exit:
     return error;
@@ -1312,23 +1313,56 @@ void Mle::UpdateServiceAlocs(void)
 {
     ThreadNetif &netif = GetNetif();
     uint16_t rloc = GetRloc16();
+    uint16_t serviceAloc = 0;
     uint8_t serviceId = 0;
+    int i = 0;
     NetworkData::Leader &leaderData = netif.GetNetworkDataLeader();
+    otNetworkDataIterator serviceIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    int serviceAlocsLength = sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]);
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
 
-    for (serviceId = kServiceMinId; serviceId <= kServiceMaxId; ++serviceId)
+    // First remove all alocs which are no longer necessary, to free up space in mServiceAlocs
+    for (i = 0; i < serviceAlocsLength; i++)
     {
-        // It seems that we need to re-initialize the address here, as mesh local might be not known yet.
-        SuccessOrExit(GetServiceAloc(serviceId, mServiceAlocs[serviceId].GetAddress()));
+        serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
 
-        if (leaderData.ContainsService(serviceId, rloc))
+        if ((serviceAloc != Mac::kShortAddrInvalid) &&
+            (!leaderData.ContainsService(Mle::GetServiceIdFromAloc(serviceAloc), rloc)))
         {
-            netif.AddUnicastAddress(mServiceAlocs[serviceId]);
+            netif.RemoveUnicastAddress(mServiceAlocs[i]);
+            mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
         }
-        else
+    }
+
+    // Now add any missing service alocs which should be there, if there is enough space in mServiceAlocs
+    while (leaderData.GetNextServiceId(&serviceIterator, rloc, &serviceId) == OT_ERROR_NONE)
+    {
+        for (i = 0; i < serviceAlocsLength; i++)
         {
-            netif.RemoveUnicastAddress(mServiceAlocs[serviceId]);
+            serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
+
+            if ((serviceAloc != Mac::kShortAddrInvalid) && (Mle::GetServiceIdFromAloc(serviceAloc) == serviceId))
+            {
+                break;
+            }
+        }
+
+        if (i >= serviceAlocsLength)
+        {
+            // Service Aloc is not there, but it should be. Lets add it into first empty space
+            for (i = 0; i < serviceAlocsLength; i++)
+            {
+                serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
+
+                if (serviceAloc == Mac::kShortAddrInvalid)
+                {
+                    SuccessOrExit(GetServiceAloc(serviceId, mServiceAlocs[i].GetAddress()));
+                    netif.AddUnicastAddress(mServiceAlocs[i]);
+                    break;
+                }
+            }
+
         }
     }
 

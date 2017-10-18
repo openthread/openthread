@@ -867,6 +867,26 @@ public:
     static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
     /**
+     * This method returns the Service ID corresponding to an Service ALOC16.
+     *
+     * @param[in]  aAloc16  The Servicer ALOC16 value.
+     *
+     * @returns The Service ID corresponding to given ALOC16.
+     *
+     */
+    static uint8_t GetServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
+
+    /**
+     * This method returns the Service Aloc corresponding to an Service ID.
+     *
+     * @param[in]  aAloc16  The Servicer ID value.
+     *
+     * @returns The Service ALOC16 corresponding to given ID.
+     *
+     */
+    static uint16_t GetServiceAlocFromId(uint8_t aServiceId) { return static_cast<uint16_t>(aServiceId + kAloc16ServiceStart); }
+
+    /**
      * This method returns the RLOC16 of a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID value.
@@ -1461,7 +1481,7 @@ private:
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
-    Ip6::NetifUnicastAddress mServiceAlocs[kAloc16ServiceEnd - kAloc16ServiceStart];
+    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE];
 
     Ip6::NetifUnicastAddress mLinkLocal64;
     Ip6::NetifUnicastAddress mMeshLocal64;

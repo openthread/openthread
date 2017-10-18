@@ -313,6 +313,69 @@ exit:
     return error;
 }
 
+otError NetworkData::GetNextServiceId(otNetworkDataIterator *aIterator, uint16_t aRloc16, uint8_t *aServiceId)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+    NetworkDataIterator iterator(aIterator);
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + iterator.GetTlvOffset());
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext(), iterator.SetSubTlvOffset(0))
+    {
+        ServiceTlv *service;
+        NetworkDataTlv *subCur;
+        NetworkDataTlv *subEnd;
+
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+
+        if (cur->GetType() != NetworkDataTlv::kTypeService)
+        {
+            continue;
+        }
+
+        service = static_cast<ServiceTlv *>(cur);
+
+        subCur = reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(service->GetSubTlvs())
+                                                    + iterator.GetSubTlvOffset());
+        subEnd = cur->GetNext();
+
+        for (; subCur < subEnd; subCur = subCur->GetNext())
+        {
+            ServerTlv *server;
+
+            VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+
+            if (subCur->GetType() != NetworkDataTlv::kTypeServer)
+            {
+                continue;
+            }
+
+            server = static_cast<ServerTlv *>(subCur);
+
+            if ((aRloc16 == Mac::kShortAddrBroadcast) || (server->GetServer16() == aRloc16))
+            {
+                *aServiceId = service->GetServiceID();
+
+                if (subCur->GetNext() >= cur->GetNext())
+                {
+                    iterator.SaveTlvOffset(cur->GetNext(), mTlvs);
+                    iterator.SetSubTlvOffset(0);
+                }
+                else
+                {
+                    iterator.SaveTlvOffset(cur, mTlvs);
+                    iterator.SaveSubTlvOffset(subCur->GetNext(), service->GetSubTlvs());
+                }
+
+                ExitNow(error = OT_ERROR_NONE);
+            }
+        }
+    }
+
+exit:
+    return error;
+}
+
 bool NetworkData::ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16)
 {
     otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -659,7 +722,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
             case NetworkDataTlv::kTypeServer:
             {
                 server = reinterpret_cast<ServerTlv *>(cur);
-                server->SetServer16(static_cast<uint16_t>(Mle::kAloc16ServiceStart) + static_cast<uint16_t>(aService.GetServiceID()));
+                server->SetServer16(Mle::Mle::GetServiceAlocFromId(aService.GetServiceID()));
                 break;
             }
 

@@ -201,6 +201,20 @@ public:
                            otServiceConfig *aConfig);
 
     /**
+     * This method provides the next service ID in the Thread Network Data for a given RLOC16.
+     *
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[in]     aRloc16    The RLOC16 value.
+     * @param[out]    aServiceID A pointer to where the service ID will be placed.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next service.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
+     *
+     */
+    otError GetNextServiceId(otNetworkDataIterator *aIterator, uint16_t aRloc16,
+                             uint8_t *aServiceId);
+
+    /**
      * This method indicates whether or not the Thread Network Data contains all of the on mesh prefix information
      * in @p aCompare associated with @p aRloc16.
      *
