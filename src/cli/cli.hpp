@@ -249,7 +249,6 @@ private:
     void ProcessLeaderPartitionId(int argc, char *argv[]);
     void ProcessLeaderWeight(int argc, char *argv[]);
 #endif
-    void ProcessLinkQuality(int argc, char *argv[]);
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
 #if OPENTHREAD_FTD
@@ -257,6 +256,8 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     void ProcessNetworkDataRegister(int argc, char *argv[]);
+    void ProcessNetworkDataShow(int argc, char *argv[]);
+    void ProcessService(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     void ProcessNetworkDiagnostic(int argc, char *argv[]);
