@@ -62,6 +62,9 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3                    \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/bootloader/api                             \
+    -I$(EFR32MG_SDK_SRCDIR)/protocol/bluetooth_2.4/ble_stack/inc/soc            \
     -Wno-unused-parameter                                                       \
     $(NULL)
 
