@@ -142,6 +142,15 @@ public:
      */
     otError SendServerDataNotification(uint16_t aRloc16);
 
+    /**
+     * This method scans network data for given service ID and returns pointer to the respective TLV, if present.
+     *
+     * @param aServiceId Service ID to look for.
+     * @return Pointer to the Service TLV for given Service ID, or NULL if not present.
+     *
+     */
+    ServiceTlv *FindServiceById(uint8_t aServiceId);
+
 private:
     static void HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                  const otMessageInfo *aMessageInfo);
@@ -158,7 +167,6 @@ private:
     otError AddPrefix(PrefixTlv &aTlv);
     otError AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
     otError AddService(ServiceTlv &aTlv, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
-    ServiceTlv *FindServiceById(uint8_t aServiceId);
 
     int AllocateContext(void);
     otError FreeContext(uint8_t aContextId);
