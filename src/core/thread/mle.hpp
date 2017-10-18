@@ -1120,17 +1120,6 @@ protected:
     otError AppendPendingTimestamp(Message &aMessage);
 
     /**
-     * This method appends a Thread Discovery TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the Thread Discovery TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
-     *
-     */
-    otError AppendDiscovery(Message &aMessage);
-
-    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshSource  The RLOC16 of the source.
