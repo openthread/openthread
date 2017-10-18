@@ -427,14 +427,20 @@ class otCli:
         Returns:
             IPv6 address string.
         """
-        switcher = {
-                config.ADDRESS_TYPE.LINK_LOCAL: self.__getLinkLocalAddress(),
-                config.ADDRESS_TYPE.GLOBAL: self.__getGlobalAddress(),
-                config.ADDRESS_TYPE.RLOC: self.__getRloc(),
-                config.ADDRESS_TYPE.ALOC: self.__getAloc(),
-                config.ADDRESS_TYPE.ML_EID: self.__getMleid()
-                }
-        return switcher.get(address_type, None)
+        if address_type == config.ADDRESS_TYPE.LINK_LOCAL:
+            return self.__getLinkLocalAddress()
+        elif address_type == config.ADDRESS_TYPE.GLOBAL:
+            return self.__getGlobalAddress()
+        elif address_type == config.ADDRESS_TYPE.RLOC:
+            return self.__getRloc()
+        elif address_type == config.ADDRESS_TYPE.ALOC:
+            return self.__getAloc()
+        elif address_type == config.ADDRESS_TYPE.ML_EID:
+            return self.__getMleid()
+        else:
+            return None
+
+        return None
 
     def get_context_reuse_delay(self):
         self.send_command('contextreusedelay')
@@ -623,7 +629,6 @@ class otCli:
     def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
                               panid=None, master_key=None, mesh_local=None, network_name=None):
         cmd = 'dataset mgmtsetcommand pending '
-
         if pending_timestamp != None:
             cmd += 'pendingtimestamp %d ' % pending_timestamp
 
