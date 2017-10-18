@@ -1787,7 +1787,7 @@ before taking effect.
 
 ### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
 
-Add an IPv6 address to the Thread interface.
+Add service to the Network Data.
 
 ```bash
 > service add 44970 foo bar
@@ -1803,7 +1803,7 @@ Done
 
 ### service remove \<enterpriseNumber\> \<serviceData\>
 
-Remove service registration from Network Data.
+Remove service from Network Data.
 
 ```bash
 > service remove 44970 foo
