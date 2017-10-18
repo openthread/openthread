@@ -35,6 +35,8 @@
 #ifndef MESHCOP_TIMESTAMP_HPP_
 #define MESHCOP_TIMESTAMP_HPP_
 
+#include "openthread-core-config.h"
+
 #include <string.h>
 
 #include <openthread/platform/toolchain.h>

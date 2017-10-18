@@ -34,6 +34,8 @@
 #ifndef LINK_QUALITY_HPP_
 #define LINK_QUALITY_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/platform/radio.h>
 #include <openthread/types.h>
 

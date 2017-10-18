@@ -34,9 +34,10 @@
 #ifndef MESH_FORWARDER_HPP_
 #define MESH_FORWARDER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "mac/mac.hpp"
@@ -292,6 +293,7 @@ private:
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo,
                            const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
+    otError RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void RemoveMessage(Message &aMessage);
 
     static void HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);

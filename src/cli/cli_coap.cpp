@@ -31,11 +31,9 @@
  *   This file implements a simple CLI for the CoAP service.
  */
 
-#include <openthread/config.h>
+#include "cli_coap.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-
-#include "cli_coap.hpp"
 
 #include <ctype.h>
 

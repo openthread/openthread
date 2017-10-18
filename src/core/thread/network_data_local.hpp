@@ -34,6 +34,8 @@
 #ifndef NETWORK_DATA_LOCAL_HPP_
 #define NETWORK_DATA_LOCAL_HPP_
 
+#include "openthread-core-config.h"
+
 #include "thread/network_data.hpp"
 
 namespace ot {

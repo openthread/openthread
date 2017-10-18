@@ -31,14 +31,13 @@
  *   This file implements the diagnostics module.
  */
 
-#include <openthread/config.h>
+#include "diag_process.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <openthread/instance.h>
 
-#include "diag_process.hpp"
 #include "common/code_utils.hpp"
 #include "utils/wrap_string.h"
 

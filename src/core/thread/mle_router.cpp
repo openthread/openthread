@@ -34,8 +34,6 @@
 
 #define WPP_NAME "mle_router.tmh"
 
-#include <openthread/config.h>
-
 #include "mle_router.hpp"
 
 #include <openthread/platform/random.h>
@@ -2636,7 +2634,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-otError MleRouter::SetSteeringData(otExtAddress *aExtAddress)
+otError MleRouter::SetSteeringData(const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
     uint8_t nullExtAddr[OT_EXT_ADDRESS_SIZE];

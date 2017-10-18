@@ -31,9 +31,6 @@
  *   This file implements Thread security material generation.
  */
 
-
-#include <openthread/config.h>
-
 #include "key_manager.hpp"
 
 #include "openthread-instance.h"

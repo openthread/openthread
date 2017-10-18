@@ -33,6 +33,13 @@ import re
 import telnetlib
 import time
 
+try:
+    # python 2
+    from urllib2 import HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, build_opener
+except ImportError:
+    # python 3
+    from urllib.request import HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, build_opener
+
 logger = logging.getLogger(__name__)
 
 
@@ -179,6 +186,38 @@ class NordicBoardPduController(PduController):
 
     def close(self):
         pass
+
+
+class IpPowerSocketPduController(PduController):
+
+    def open(self, **params):
+        self._base_url = 'http://{}/outs.cgi?out'.format(params['ip'])
+        password_manager = HTTPPasswordMgrWithDefaultRealm()
+        password_manager.add_password(None, self._base_url, params['user'], params['pass'])
+        authentication_handler = HTTPBasicAuthHandler(password_manager)
+        self._opener = build_opener(authentication_handler)
+
+    def reboot(self, **params):
+        logger.info('Executing power cycle')
+        for socket in params['sockets']:
+            self._turn_off(socket)
+            time.sleep(2)
+            self._turn_on(socket)
+            time.sleep(2)
+
+    def _change_state(self, socket, state):
+        self._opener.open('{}{}={}'.format(self._base_url, socket, state))
+
+    def _turn_off(self, socket):
+        self._change_state(socket, 1)
+
+    def _turn_on(self, socket):
+        self._change_state(socket, 0)
+
+    def close(self):
+        self._base_url = None
+        self._opener = None
+
 
 class ManualPduController(PduController):
 

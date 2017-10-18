@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-
 #include "dns_client.hpp"
 
 #include "utils/wrap_string.h"

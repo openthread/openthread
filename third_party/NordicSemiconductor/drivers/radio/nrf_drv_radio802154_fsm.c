@@ -108,22 +108,10 @@ static rx_buffer_t * mp_current_rx_buffer;
 static rx_buffer_t * const mp_current_rx_buffer = &nrf_drv_radio802154_rx_buffers[0];
 #endif
 
-#if defined ( __GNUC__ )
-
-/// Ack frame buffer (EasyDMA cannot address whole RAM. Place buffer in the special section.)
-static uint8_t m_ack_psdu[ACK_LENGTH + 1]
-                __attribute__ ((section ("nrf_radio_buffer.m_ack_psdu")));
-
-#elif defined ( __ICCARM__ )
-
-#pragma location="NRF_RADIO_BUFFER"
-static uint8_t m_ack_psdu[ACK_LENGTH + 1];
-
-#endif
-
-static const uint8_t * mp_tx_data;      ///< Pointer to data to transmit.
-static uint32_t        m_ed_time_left;  ///< Remaining time of current energy detection procedure [us].
-static uint8_t         m_ed_result;     ///< Result of current energy detection procedure.
+static uint8_t         m_ack_psdu[ACK_LENGTH + 1]; ///< Ack frame buffer.
+static const uint8_t * mp_tx_data;                 ///< Pointer to data to transmit.
+static uint32_t        m_ed_time_left;             ///< Remaining time of current energy detection procedure [us].
+static uint8_t         m_ed_result;                ///< Result of current energy detection procedure.
 
 static volatile radio_state_t m_state = RADIO_STATE_SLEEP;  ///< State of the radio driver
 

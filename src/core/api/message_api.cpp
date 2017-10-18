@@ -30,7 +30,8 @@
  * @file
  *   This file implements the OpenThread Message API.
  */
-#include <openthread/config.h>
+
+#include "openthread-core-config.h"
 
 #include <openthread/message.h>
 
@@ -123,6 +124,13 @@ otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
     return queue->Enqueue(*message);
 }
 
+otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Enqueue(*message, MessageQueue::kQueuePositionHead);
+}
+
 otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
@@ -181,6 +189,17 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aInstance->mThreadNetif.GetCoap().GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mCoapMessages += messages;
     aBufferInfo->mCoapBuffers += buffers;
+
+#if OPENTHREAD_ENABLE_DTLS
+    aInstance->mThreadNetif.GetCoapSecure().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
+                                                                         aBufferInfo->mCoapSecureBuffers);
+    aInstance->mThreadNetif.GetCoapSecure().GetCachedResponses().GetInfo(messages, buffers);
+    aBufferInfo->mCoapSecureMessages += messages;
+    aBufferInfo->mCoapSecureBuffers += buffers;
+#else
+    aBufferInfo->mCoapSecureMessages = 0;
+    aBufferInfo->mCoapSecureBuffers = 0;
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     aInstance->mApplicationCoap.GetRequestMessages().GetInfo(aBufferInfo->mApplicationCoapMessages,

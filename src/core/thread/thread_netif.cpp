@@ -32,8 +32,6 @@
  *   This file implements the Thread network interface.
  */
 
-#include <openthread/config.h>
-
 #include "thread_netif.hpp"
 
 #include "openthread-instance.h"

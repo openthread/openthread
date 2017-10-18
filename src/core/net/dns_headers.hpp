@@ -34,6 +34,8 @@
 #ifndef DNS_HEADER_HPP_
 #define DNS_HEADER_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_string.h"
 
 #include <openthread/types.h>

@@ -30,7 +30,6 @@
  *   This file implements full thread device specified Spinel interface to the OpenThread stack.
  */
 
-#include <openthread/config.h>
 #include "ncp_base.hpp"
 
 #include <openthread/diag.h>
@@ -113,26 +112,17 @@ otError NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(void)
     return mEncoder.WriteBool(otThreadIsRouterRoleEnabled(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                               const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(void)
 {
     bool enabled;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_BOOL_S,
-                       &enabled
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
     otThreadSetRouterRoleEnabled(mInstance, enabled);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_NET_PSKC(void)
@@ -140,28 +130,20 @@ otError NcpBase::GetPropertyHandler_NET_PSKC(void)
     return mEncoder.WriteData(otThreadGetPSKc(mInstance), sizeof(spinel_net_pskc_t));
 }
 
-otError NcpBase::SetPropertyHandler_NET_PSKC(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                                             uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_NET_PSKC(void)
 {
     const uint8_t *ptr = NULL;
-    spinel_size_t len;
-    spinel_ssize_t parsedLength;
+    uint16_t len;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_DATA_S,
-                       &ptr,
-                       &len
-                   );
+    SuccessOrExit(error = mDecoder.ReadData(ptr, len));
 
-    VerifyOrExit((parsedLength > 0) && (len == sizeof(spinel_net_pskc_t)), error = OT_ERROR_PARSE);
+    VerifyOrExit(len == sizeof(spinel_net_pskc_t), error = OT_ERROR_PARSE);
 
     error = otThreadSetPSKc(mInstance, ptr);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_THREAD_CHILD_COUNT_MAX(void)
@@ -169,26 +151,17 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_COUNT_MAX(void)
     return mEncoder.WriteUint8(otThreadGetMaxAllowedChildren(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_CHILD_COUNT_MAX(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                           const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_CHILD_COUNT_MAX(void)
 {
     uint8_t maxChildren = 0;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &maxChildren
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint8(maxChildren));
 
     error = otThreadSetMaxAllowedChildren(mInstance, maxChildren);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(void)
@@ -196,26 +169,17 @@ otError NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(void)
     return mEncoder.WriteUint8(otThreadGetRouterUpgradeThreshold(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                    const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(void)
 {
     uint8_t threshold = 0;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &threshold
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint8(threshold));
 
     otThreadSetRouterUpgradeThreshold(mInstance, threshold);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(void)
@@ -223,26 +187,17 @@ otError NcpBase::GetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(void)
     return mEncoder.WriteUint8(otThreadGetRouterDowngradeThreshold(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                      const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(void)
 {
     uint8_t threshold = 0;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &threshold
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint8(threshold));
 
     otThreadSetRouterDowngradeThreshold(mInstance, threshold);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(void)
@@ -250,26 +205,17 @@ otError NcpBase::GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(void)
     return mEncoder.WriteUint8(otThreadGetRouterSelectionJitter(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                   const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(void)
 {
     uint8_t jitter = 0;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &jitter
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint8(jitter));
 
     otThreadSetRouterSelectionJitter(mInstance, jitter);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(void)
@@ -277,26 +223,17 @@ otError NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(void)
     return mEncoder.WriteUint32(otThreadGetContextIdReuseDelay(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                               const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(void)
 {
     uint32_t delay = 0;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT32_S,
-                       &delay
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint32(delay));
 
     otThreadSetContextIdReuseDelay(mInstance, delay);
 
  exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 otError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(void)
@@ -304,26 +241,17 @@ otError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(void)
     return mEncoder.WriteUint8(otThreadGetNetworkIdTimeout(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                              const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(void)
 {
     uint8_t timeout = 0;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &timeout
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint8(timeout));
 
     otThreadSetNetworkIdTimeout(mInstance, timeout);
 
  exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
@@ -332,22 +260,12 @@ otError NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(void)
     return mEncoder.WriteBool(otCommissionerGetState(mInstance) == OT_COMMISSIONER_STATE_ACTIVE);
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                const uint8_t *aValuePtr,
-                                                                uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader)
 {
     bool enabled = false;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_BOOL_S,
-                       &enabled
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
     if (enabled == false)
     {
@@ -359,50 +277,26 @@ otError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader,
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aKey);
-
     return SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
 }
 
-otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
 {
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
-    otExtAddress *extAddress = NULL;
+    const otExtAddress *extAddress = NULL;
     const char *aPSKd = NULL;
     uint32_t joinerTimeout = 0;
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       (
-                           SPINEL_DATATYPE_UTF8_S     // PSK
-                           SPINEL_DATATYPE_UINT32_S   // Timeout
-                           SPINEL_DATATYPE_EUI64_S    // Extended address
-                       ),
-                       &aPSKd,
-                       &joinerTimeout,
-                       &extAddress
-                   );
+    SuccessOrExit(error = mDecoder.ReadUtf8(aPSKd));
+    SuccessOrExit(error = mDecoder.ReadUint32(joinerTimeout));
 
-    if (parsedLength <= 0)
+    if (mDecoder.ReadEui64(extAddress) != OT_ERROR_NONE)
     {
-        parsedLength = spinel_datatype_unpack(
-                           aValuePtr,
-                           aValueLen,
-                           (
-                              SPINEL_DATATYPE_UTF8_S     // PSK
-                              SPINEL_DATATYPE_UINT32_S   // Timeout
-                           ),
-                           &aPSKd,
-                           &joinerTimeout
-                       );
         extAddress = NULL;
     }
 
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
 
     error = otCommissionerAddJoiner(mInstance, extAddress, aPSKd, joinerTimeout);
 
@@ -412,136 +306,74 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER
 
-otError NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                               const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(void)
 {
     uint8_t weight;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &weight
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint8(weight));
 
     otThreadSetLocalLeaderWeight(mInstance, weight);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-otError NcpBase::SetPropertyHandler_THREAD_STEERING_DATA(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_STEERING_DATA(void)
 {
-    otExtAddress *extAddress;
-    spinel_ssize_t parsedLength;
+    const otExtAddress *extAddress;
     otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_EUI64_S,
-                       &extAddress
-                   );
+    SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
-    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
-
-    error = otThreadSetSteeringData(mInstance, extAddress);
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+    SuccessOrExit(error = otThreadSetSteeringData(mInstance, extAddress));
 
     // Note that there is no get handler for this property
-
-    SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, aKey));
-    SuccessOrExit(error = mEncoder.WriteEui64(*extAddress));
-    SuccessOrExit(error = mEncoder.EndFrame());
+    // so the response becomes `VALUE_IS` echo of the
+    // received content.
 
 exit:
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
-
     return error;
 }
 #endif // #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
-otError NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                         const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT(void)
 {
     uint32_t timeout = 0;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT32_S,
-                       &timeout
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint32(timeout));
 
     otThreadSetChildTimeout(mInstance, timeout);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
-}
-
-otError NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                               const uint8_t *aValuePtr, uint16_t aValueLen)
-{
-    uint8_t routerId = 0;
-    spinel_ssize_t parsedLength;
-    otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
-
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &routerId
-                   );
-
-    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
-
-    error = otThreadSetPreferredRouterId(mInstance, routerId);
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-
-    // Note that there is no get handler for this property.
-
-    SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, aKey));
-    SuccessOrExit(error = mEncoder.WriteUint8(routerId));
-    SuccessOrExit(error = mEncoder.EndFrame());
-
-exit:
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
-
     return error;
 }
 
-otError NcpBase::RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(void)
 {
-    spinel_ssize_t parsedLength;
+    uint8_t routerId = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(routerId));
+
+    SuccessOrExit(error = otThreadSetPreferredRouterId(mInstance, routerId));
+
+    // Note that there is no get handler for this property
+    // so the response becomes `VALUE_IS` echo of the
+    // received content.
+
+exit:
+    return error;
+}
+
+otError NcpBase::RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(void)
+{
     otError error = OT_ERROR_NONE;
     uint8_t routerId;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &routerId
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadUint8(routerId));
 
     error = otThreadReleaseRouterId(mInstance, routerId);
 
@@ -563,37 +395,22 @@ otError NcpBase::GetPropertyHandler_THREAD_TMF_PROXY_ENABLED(void)
     return mEncoder.WriteBool(otTmfProxyIsEnabled(mInstance));
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_TMF_PROXY_STREAM(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                           const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_TMF_PROXY_STREAM(void)
 {
     const uint8_t *framePtr = NULL;
-    unsigned int frameLen = 0;
+    uint16_t frameLen = 0;
     uint16_t locator;
     uint16_t port;
     otMessage *message;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
     // THREAD_TMF_PROXY_STREAM requires layer 2 security.
     message = otIp6NewMessage(mInstance, true);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       (
-                           SPINEL_DATATYPE_DATA_WLEN_S  // Frame data
-                           SPINEL_DATATYPE_UINT16_S     // Locator
-                           SPINEL_DATATYPE_UINT16_S     // Port
-                       ),
-                       &framePtr,
-                       &frameLen,
-                       &locator,
-                       &port
-                   );
-
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
+    SuccessOrExit(error = mDecoder.ReadUint16(locator));
+    SuccessOrExit(error = mDecoder.ReadUint16(port));
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
 
@@ -610,40 +427,15 @@ exit:
         otMessageFree(message);
     }
 
-    if (error == OT_ERROR_NONE)
-    {
-        if (SPINEL_HEADER_GET_TID(aHeader) != 0)
-        {
-            // Only send a successful status update if
-            // there was a transaction id in the aHeader.
-            error = SendLastStatus(aHeader, SPINEL_STATUS_OK);
-        }
-    }
-    else
-    {
-        error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
-    }
-
-    OT_UNUSED_VARIABLE(aKey);
-
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_THREAD_TMF_PROXY_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                             const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_THREAD_TMF_PROXY_ENABLED(void)
 {
     bool enabled;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_BOOL_S,
-                       &enabled
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
     if (enabled)
     {
@@ -655,7 +447,7 @@ otError NcpBase::SetPropertyHandler_THREAD_TMF_PROXY_ENABLED(uint8_t aHeader, sp
     }
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
 void NcpBase::HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext)
@@ -677,16 +469,15 @@ void NcpBase::HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint1
     SuccessOrExit(error = mEncoder.WriteUint16(length));
     SuccessOrExit(error = mEncoder.WriteMessage(aMessage));
 
-    // Set the `aMessage` pointer to NULL to indicate that it does
-    // not need to be freed at the exit. The `aMessage` is now owned
-    // by the outbound frame and will be freed when the frame is either
-    // successfully sent and then removed, or if the frame gets
-    // discarded.
-    aMessage = NULL;
-
     SuccessOrExit(error = mEncoder.WriteUint16(aLocator));
     SuccessOrExit(error = mEncoder.WriteUint16(aPort));
     SuccessOrExit(error = mEncoder.EndFrame());
+
+    // The `aMessage` is owned by the outbound frame and NCP buffer
+    // after frame was finished/ended successfully. It will be freed
+    // when the frame is successfully sent and removed.
+
+    aMessage = NULL;
 
 exit:
 

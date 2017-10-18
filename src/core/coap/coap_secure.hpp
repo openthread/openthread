@@ -29,6 +29,8 @@
 #ifndef COAP_SECURE_HPP_
 #define COAP_SECURE_HPP_
 
+#include "openthread-core-config.h"
+
 #include "coap/coap.hpp"
 #include "meshcop/dtls.hpp"
 

@@ -31,8 +31,6 @@
  *   This file implements SHA-256.
  */
 
-#include <openthread/config.h>
-
 #include "sha256.hpp"
 
 namespace ot {

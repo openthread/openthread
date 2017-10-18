@@ -34,6 +34,8 @@
 #ifndef MLE_CONSTANTS_HPP_
 #define MLE_CONSTANTS_HPP_
 
+#include "openthread-core-config.h"
+
 namespace ot {
 namespace Mle {
 

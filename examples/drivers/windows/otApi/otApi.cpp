@@ -3510,8 +3510,8 @@ otThreadErrorToString(
         retval = "InvalidSourceAddress";
         break;
 
-    case OT_ERROR_WHITELIST_FILTERED:
-        retval = "WhitelistFiltered";
+    case OT_ERROR_ADDRESS_FILTERED:
+        retval = "AddressFiltered";
         break;
 
     case OT_ERROR_DESTINATION_ADDRESS_FILTERED:
@@ -3524,10 +3524,6 @@ otThreadErrorToString(
 
     case OT_ERROR_ALREADY:
         retval = "Already";
-        break;
-
-    case OT_ERROR_BLACKLIST_FILTERED:
-        retval = "BlacklistFiltered";
         break;
 
     case OT_ERROR_IP6_ADDRESS_CREATION_FAILURE:

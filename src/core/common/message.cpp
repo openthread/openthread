@@ -33,8 +33,6 @@
 
 #define WPP_NAME "message.tmh"
 
-#include <openthread/config.h>
-
 #include "message.hpp"
 
 #include "openthread-instance.h"
@@ -815,29 +813,32 @@ MessageQueue::MessageQueue(void)
     SetTail(NULL);
 }
 
-void MessageQueue::AddToList(uint8_t aList, Message &aMessage)
+void MessageQueue::AddToList(uint8_t aList, Message &aMessage, QueuePosition aPosition)
 {
-    Message *head;
-
     assert((aMessage.Next(aList) == NULL) && (aMessage.Prev(aList) == NULL));
 
     if (GetTail() == NULL)
     {
         aMessage.Next(aList) = &aMessage;
         aMessage.Prev(aList) = &aMessage;
+
+        SetTail(&aMessage);
     }
     else
     {
-        head = GetTail()->Next(aList);
+        Message *head = GetTail()->Next(aList);
 
         aMessage.Next(aList) = head;
         aMessage.Prev(aList) = GetTail();
 
         head->Prev(aList) = &aMessage;
         GetTail()->Next(aList) = &aMessage;
-    }
 
-    SetTail(&aMessage);
+        if (aPosition == kQueuePositionTail)
+        {
+            SetTail(&aMessage);
+        }
+    }
 }
 
 void MessageQueue::RemoveFromList(uint8_t aList, Message &aMessage)
@@ -866,7 +867,7 @@ Message *MessageQueue::GetHead(void) const
     return (GetTail() == NULL) ? NULL : GetTail()->Next(MessageInfo::kListInterface);
 }
 
-otError MessageQueue::Enqueue(Message &aMessage)
+otError MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
 {
     otError error = OT_ERROR_NONE;
 
@@ -874,7 +875,9 @@ otError MessageQueue::Enqueue(Message &aMessage)
 
     aMessage.SetMessageQueue(this);
 
-    AddToList(MessageInfo::kListInterface, aMessage);
+    AddToList(MessageInfo::kListInterface, aMessage, aPosition);
+
+    // Any new message is always added to the end of the `AllMessageQueue` list.
     aMessage.GetMessagePool()->GetAllMessagesQueue()->AddToList(MessageInfo::kListAll, aMessage);
 
 exit:

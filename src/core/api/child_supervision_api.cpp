@@ -31,6 +31,7 @@
  *   This file implements the OpenThread child supervision API.
  */
 
+#include "openthread-core-config.h"
 #include "openthread/child_supervision.h"
 
 #include "openthread-instance.h"

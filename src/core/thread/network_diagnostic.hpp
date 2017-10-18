@@ -34,9 +34,10 @@
 #ifndef NETWORK_DIAGNOSTIC_HPP_
 #define NETWORK_DIAGNOSTIC_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/udp6.hpp"

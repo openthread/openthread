@@ -34,6 +34,8 @@
 #ifndef NETWORK_DATA_TLVS_HPP_
 #define NETWORK_DATA_TLVS_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_string.h"
 
 #include "common/encoding.hpp"

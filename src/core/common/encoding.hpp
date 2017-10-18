@@ -34,6 +34,8 @@
 #ifndef ENCODING_HPP_
 #define ENCODING_HPP_
 
+#include "openthread-core-config.h"
+
 #include <limits.h>
 #include "utils/wrap_stdint.h"
 

@@ -28,8 +28,6 @@
 
 #define WPP_NAME "coap_secure.tmh"
 
-#include <openthread/config.h>
-
 #include "coap_secure.hpp"
 
 #include "common/logging.hpp"

@@ -57,6 +57,8 @@ extern "C" {
  *
  * @{
  *
+ * @defgroup api-types Types
+ *
  * @defgroup api-execution Execution
  *
  * @{

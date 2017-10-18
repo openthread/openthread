@@ -34,9 +34,10 @@
 #ifndef TOPOLOGY_HPP_
 #define TOPOLOGY_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/platform/random.h>
 
-#include "openthread-core-config.h"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"

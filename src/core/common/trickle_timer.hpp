@@ -34,6 +34,8 @@
 #ifndef TRICKLE_TIMER_HPP_
 #define TRICKLE_TIMER_HPP_
 
+#include "openthread-core-config.h"
+
 #include "common/context.hpp"
 #include "common/timer.hpp"
 

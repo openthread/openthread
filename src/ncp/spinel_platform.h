@@ -49,7 +49,7 @@
  *
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <stdarg.h>
 #include "utils/wrap_stdbool.h"

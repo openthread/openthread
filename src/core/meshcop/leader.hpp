@@ -34,6 +34,8 @@
 #ifndef MESHCOP_LEADER_HPP_
 #define MESHCOP_LEADER_HPP_
 
+#include "openthread-core-config.h"
+
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"

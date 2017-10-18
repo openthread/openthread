@@ -377,6 +377,14 @@ class MessagesSet(object):
 
         return message
 
+    def contains_icmp_message(self):
+        for m in self.messages:
+            if m.type == MessageType.ICMP:
+                return True
+
+        return False
+
+
     def contains_mle_message(self, command_type):
         for m in self.messages:
             if m.type != MessageType.MLE:

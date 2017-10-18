@@ -34,6 +34,8 @@
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdint.h"
 
 #include <mbedtls/sha256.h>

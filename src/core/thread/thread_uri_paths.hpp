@@ -34,6 +34,8 @@
 #ifndef THREAD_URIS_HPP_
 #define THREAD_URIS_HPP_
 
+#include "openthread-core-config.h"
+
 namespace ot {
 
 /**

@@ -31,121 +31,136 @@ import time
 import unittest
 
 import node
+import config
+import command
 
-BR = 1
-LEADER = 2
-ROUTER2 = 3
+LEADER = 1
+ROUTER1 = 2
+DUT_ROUTER2 = 3
 ROUTER3 = 4
-ED2 = 5
+MED1 = 5
+MED1_TIMEOUT = 3
 
 class Cert_5_3_3_AddressQuery(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i == ED2))
+            self.nodes[i] = node.Node(i, (i == MED1))
 
-        self.nodes[LEADER].set_panid(0xface)
+        self.nodes[LEADER].set_panid()
         self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[BR].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[LEADER].enable_whitelist()
 
-        self.nodes[BR].set_panid(0xface)
-        self.nodes[BR].set_mode('rsdn')
-        self.nodes[BR].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[BR].enable_whitelist()
-        self.nodes[BR].set_router_selection_jitter(1)
+        self.nodes[ROUTER1].set_panid()
+        self.nodes[ROUTER1].set_mode('rsdn')
+        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ED2].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
+        self.nodes[DUT_ROUTER2].set_panid()
+        self.nodes[DUT_ROUTER2].set_mode('rsdn')
+        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[ROUTER3].get_addr64())
+        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[MED1].get_addr64())
+        self.nodes[DUT_ROUTER2].enable_whitelist()
+        self.nodes[DUT_ROUTER2].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER3].set_panid(0xface)
+        self.nodes[ROUTER3].set_panid()
         self.nodes[ROUTER3].set_mode('rsdn')
         self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[ROUTER3].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
         self.nodes[ROUTER3].enable_whitelist()
         self.nodes[ROUTER3].set_router_selection_jitter(1)
 
-        self.nodes[ED2].set_panid(0xface)
-        self.nodes[ED2].set_mode('rsn')
-        self.nodes[ED2].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ED2].set_timeout(3)
-        self.nodes[ED2].enable_whitelist()
+        self.nodes[MED1].set_panid()
+        self.nodes[MED1].set_mode('rsn')
+        self.nodes[MED1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
+        self.nodes[MED1].set_timeout(MED1_TIMEOUT)
+        self.nodes[MED1].enable_whitelist()
+
+        self.sniffer = config.create_default_thread_sniffer()
+        self.sniffer.start()
 
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
     def test(self):
+        # 1
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[BR].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[BR].get_state(), 'router')
-
-        self.nodes[BR].add_prefix('2001:2:0:3::/64', 'paros')
-        self.nodes[BR].add_prefix('2001:2:0:4::/64', 'paros')
-        self.nodes[BR].register_netdata()
-
-        self.nodes[ROUTER2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
-
+        self.nodes[ROUTER1].start()
+        self.nodes[DUT_ROUTER2].start()
         self.nodes[ROUTER3].start()
+        self.nodes[MED1].start()
         time.sleep(5)
+
+        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+        self.assertEqual(self.nodes[DUT_ROUTER2].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
+        self.assertEqual(self.nodes[MED1].get_state(), 'child')
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
 
-        self.nodes[ED2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED2].get_state(), 'child')
+        # 2
+        router3_mleid = self.nodes[ROUTER3].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        self.assertTrue(self.nodes[MED1].ping(router3_mleid))
 
-        addrs = self.nodes[ROUTER3].get_addrs()
-        for addr in addrs:
-            if addr[0:4] != 'fe80':
-                self.assertTrue(self.nodes[ED2].ping(addr))
-                time.sleep(1)
+        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        msg = dut_messages.next_coap_message('0.02', '/a/aq')
+        command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
-        addrs = self.nodes[ED2].get_addrs()
-        for addr in addrs:
-            if addr[0:4] != 'fe80':
-                self.assertTrue(self.nodes[LEADER].ping(addr))
-                time.sleep(1)
+        # 3
+        med1_mleid = self.nodes[MED1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        self.assertTrue(self.nodes[ROUTER1].ping(med1_mleid))
 
-        addrs = self.nodes[BR].get_addrs()
-        for addr in addrs:
-            if addr[0:4] != 'fe80':
-                self.assertTrue(self.nodes[ED2].ping(addr))
-                time.sleep(1)
+        # Verify DUT_ROUTER2 responded with an Address Notification.
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        msg = dut_messages.next_coap_message('0.02', '/a/an')
+        command.check_address_notification(msg, self.nodes[DUT_ROUTER2], self.nodes[ROUTER1])
 
-        addrs = self.nodes[ROUTER3].get_addrs()
-        for addr in addrs:
-            if addr[0:4] != 'fe80':
-                self.assertTrue(self.nodes[ED2].ping(addr))
-                time.sleep(1)
+        # 4
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        self.assertTrue(self.nodes[MED1].ping(router3_mleid))
 
-        addrs = self.nodes[ROUTER3].get_addrs()
+        # Verify DUT_ROUTER2 didn't send an Address Query Request.
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        msg = dut_messages.next_coap_message('0.02', '/a/aq', False)
+        assert msg is None, "The Address Query Request is not expected."
+
+        # 5
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
         self.nodes[ROUTER3].stop()
-        time.sleep(140)
 
-        for addr in addrs:
-            if addr[0:4] != 'fe80':
-                self.assertFalse(self.nodes[ED2].ping(addr))
+        # Wait for the Leader to expire its Router ID.
+        # MAX_NEIGHBOR_AGE + INFINITE_COST_TIMEOUT + ID_REUSE_DELAY + propagation time + transmission time ~ 550s.
+        time.sleep(550)
+        self.assertFalse(self.nodes[MED1].ping(router3_mleid))
 
-        addrs = self.nodes[ED2].get_addrs()
-        self.nodes[ED2].stop()
-        time.sleep(10)
-        for addr in addrs:
-            if addr[0:4] != 'fe80':
-                self.assertFalse(self.nodes[BR].ping(addr))
+        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        msg = dut_messages.next_coap_message('0.02', '/a/aq')
+        command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+
+        # 6
+        self.nodes[MED1].stop()
+        time.sleep(MED1_TIMEOUT)
+        self.assertFalse(self.nodes[ROUTER1].ping(med1_mleid))
+        self.assertFalse(self.nodes[ROUTER1].ping(med1_mleid))
+
+        # Verify DUT_ROUTER2 didn't respond with an Address Notification.
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        msg = dut_messages.next_coap_message('0.02', '/a/an', False)
+        assert msg is None, "The Address Notification is not expected."
 
 if __name__ == '__main__':
     unittest.main()

@@ -31,9 +31,7 @@
  *   This file implements the PAN ID Query Server.
  */
 
-
 #define WPP_NAME "panid_query_server.tmh"
-#include <openthread/config.h>
 
 #include "panid_query_server.hpp"
 

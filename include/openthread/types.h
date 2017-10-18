@@ -69,6 +69,16 @@ extern "C" {
 #endif /* _WIN32 */
 
 /**
+ * @addtogroup api-types
+ *
+ * @brief
+ *   This module includes API types
+ *
+ * @{
+ *
+ */
+
+/**
  * This type represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
@@ -203,9 +213,9 @@ typedef enum otError
     OT_ERROR_INVALID_SOURCE_ADDRESS = 20,
 
     /**
-     * Received a frame filtered by the whitelist.
+     * Received a frame filtered by the address filter (whitelisted or blacklisted).
      */
-    OT_ERROR_WHITELIST_FILTERED = 21,
+    OT_ERROR_ADDRESS_FILTERED = 21,
 
     /**
      * Received a frame filtered by the destination address check.
@@ -221,11 +231,6 @@ typedef enum otError
      * The operation is already in progress.
      */
     OT_ERROR_ALREADY = 24,
-
-    /**
-     * Received a frame filtered by the blacklist.
-     */
-    OT_ERROR_BLACKLIST_FILTERED = 25,
 
     /**
      * The creation of IPv6 address failed.
@@ -278,11 +283,9 @@ typedef enum otError
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
 
 /**
- * Concatenated List of Type Identifiers of Other Diagnostics TLVs Used to Request or Reset Multiple Diagnostic Values.
+ * Maximum Number of Network Diagnostic TLV Types to Request or Reset.
  */
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE          18
-
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   19  ///< Maximum Number of Other Network Diagnostic TLV Types
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   19
 
 /**
  * @struct otMasterKey
@@ -962,7 +965,7 @@ typedef struct otMacCounters
     uint32_t mRxBeacon;               ///< The number of received beacon.
     uint32_t mRxBeaconRequest;        ///< The number of received beacon request.
     uint32_t mRxOther;                ///< The number of received other types of frames.
-    uint32_t mRxWhitelistFiltered;    ///< The number of received packets filtered by whitelist.
+    uint32_t mRxAddressFiltered;      ///< The number of received packets filtered by address filter (whitelist or blacklist).
     uint32_t mRxDestAddrFiltered;     ///< The number of received packets filtered by destination check.
     uint32_t mRxDuplicated;           ///< The number of received duplicated packets.
     uint32_t mRxErrNoFrame;           ///< The number of received packets that do not contain contents.
@@ -1132,6 +1135,10 @@ typedef enum otLogRegion
     OT_LOG_REGION_CLI      = 14, ///< CLI
 } otLogRegion;
 
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

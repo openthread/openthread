@@ -34,6 +34,8 @@
 #ifndef DHCP6_HPP_
 #define DHCP6_HPP_
 
+#include "openthread-core-config.h"
+
 #include "common/message.hpp"
 #include "net/udp6.hpp"
 

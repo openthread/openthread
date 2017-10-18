@@ -31,8 +31,6 @@
  *   This file implements the child supervision feature.
  */
 
-#include <openthread/config.h>
-
 #include "child_supervision.hpp"
 
 #include <openthread/openthread.h>

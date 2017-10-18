@@ -33,7 +33,8 @@
 #ifndef NCP_FRAME_BUFFER_HPP_
 #define NCP_FRAME_BUFFER_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
+
 #include <openthread/message.h>
 #include <openthread/types.h>
 
@@ -209,8 +210,11 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * In case of success, the passed-in message @p aMessage will be owned by the frame buffer instance and will be
-     * freed when either the frame is removed or discarded. In case of failure @p aMessage remains unchanged.
+     * The ownership of the passed-in message @p aMessage changes to `NcpFrameBuffer` ONLY when the entire frame is
+     * successfully finished (i.e., with a successful call to `InFrameEnd()` for the current input frame), and in this
+     * case the `otMessage` instance will be freed once the frame is removed (using `OutFrameRemove()`) from NCP buffer.
+     * However, if the input frame gets discarded before it is finished (e.g., running out of buffer space), the
+     * `otMessage` instance remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
      *

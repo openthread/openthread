@@ -35,6 +35,8 @@
 #ifndef MESHCOP_TLVS_HPP_
 #define MESHCOP_TLVS_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_string.h"
 
 #include <openthread/types.h>
@@ -646,7 +648,7 @@ public:
      * @param[in]  aExtAddress  Extended address
      *
      */
-    void ComputeBloomFilter(otExtAddress *aExtAddress);
+    void ComputeBloomFilter(const otExtAddress *aExtAddress);
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

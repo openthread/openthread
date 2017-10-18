@@ -30,9 +30,8 @@
  *   This file implements NCP frame buffer class.
  */
 
-#include <openthread/config.h>
-
 #include "ncp_buffer.hpp"
+
 #include "utils/wrap_string.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -90,7 +89,10 @@ void NcpFrameBuffer::Clear(void)
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
-        otMessageFree(message);
+
+        // Note that messages associated with current (unfinished) input frame
+        // are not yet owned by the `NcpFrameBuffer` and therefore should not
+        // be freed.
     }
 
     for (uint8_t priority = 0; priority < kNumPrios; priority++)
@@ -304,11 +306,13 @@ void NcpFrameBuffer::InFrameDiscard(void)
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
 
-    // Free any messages associated with current frame.
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
-        otMessageFree(message);
+
+        // Note that messages associated with current (unfinished) input frame
+        // being discarded, are not yet owned by the `NcpFrameBuffer` and
+        // therefore should not be freed.
     }
 
     mWriteDirection = kUnknown;

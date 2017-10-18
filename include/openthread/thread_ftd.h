@@ -195,7 +195,7 @@ OTAPI otError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJ
  * @retval  OT_ERROR_DISABLED_FEATURE  Feature is disabled, not capable of setting steering data out of band.
  *
  */
-otError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress);
+otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.

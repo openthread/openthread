@@ -34,6 +34,8 @@
 #ifndef MLE_HPP_
 #define MLE_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/openthread.h>
 
 #include "common/encoding.hpp"
@@ -112,7 +114,7 @@ enum AlocAllocation
     kAloc16Leader                       = 0xfc00,
     kAloc16DhcpAgentStart               = 0xfc01,
     kAloc16DhcpAgentEnd                 = 0xfc0f,
-    kAloc16DhcpAgentMask                = 0x03ff,
+    kAloc16DhcpAgentMask                = 0x000f,
     kAloc16ServiceStart                 = 0xfc10,
     kAloc16ServiceEnd                   = 0xfc2f,
     kAloc16CommissionerStart            = 0xfc30,
@@ -1116,17 +1118,6 @@ protected:
      *
      */
     otError AppendPendingTimestamp(Message &aMessage);
-
-    /**
-     * This method appends a Thread Discovery TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the Thread Discovery TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
-     *
-     */
-    otError AppendDiscovery(Message &aMessage);
 
     /**
      * This method checks if the destination is reachable.

@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Link Raw API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/platform/random.h>
 

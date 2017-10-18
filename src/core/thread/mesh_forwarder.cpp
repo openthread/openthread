@@ -33,8 +33,6 @@
 
 #define WPP_NAME "mesh_forwarder.tmh"
 
-#include <openthread/config.h>
-
 #include "mesh_forwarder.hpp"
 
 #include <openthread/platform/random.h>
@@ -257,6 +255,25 @@ exit:
     return error;
 }
 
+otError MeshForwarder::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t childIndex = GetNetif().GetMle().GetChildIndex(aChild);
+
+    VerifyOrExit(aMessage.GetChildMask(childIndex) == true, error = OT_ERROR_NOT_FOUND);
+
+    aMessage.ClearChildMask(childIndex);
+    mSourceMatchController.DecrementMessageCount(aChild);
+
+    if (aChild.GetIndirectMessage() == &aMessage)
+    {
+        aChild.SetIndirectMessage(NULL);
+    }
+
+exit:
+    return error;
+}
+
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
     Child *children;
@@ -266,16 +283,7 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
 
     for (uint8_t i = 0; i < numChildren; i++)
     {
-        if (aMessage.GetChildMask(i))
-        {
-            aMessage.ClearChildMask(i);
-            mSourceMatchController.DecrementMessageCount(children[i]);
-
-            if (children[i].GetIndirectMessage() == &aMessage)
-            {
-                children[i].SetIndirectMessage(NULL);
-            }
-        }
+        IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, children[i]));
     }
 
     if (mSendMessage == &aMessage)
@@ -295,8 +303,6 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 
     for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
     {
-        uint8_t childIndex = netif.GetMle().GetChildIndex(aChild);
-
         nextMessage = message->GetNext();
 
         if ((aSubType != Message::kSubTypeNone) && (aSubType != message->GetSubType()))
@@ -304,12 +310,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
             continue;
         }
 
-        if (message->GetChildMask(childIndex))
-        {
-            message->ClearChildMask(childIndex);
-            mSourceMatchController.DecrementMessageCount(aChild);
-        }
-        else
+        if (RemoveMessageFromSleepyChild(*message, aChild) != OT_ERROR_NONE)
         {
             switch (message->GetType())
             {
@@ -342,9 +343,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
             }
 
             default:
-            {
                 break;
-            }
             }
         }
 
@@ -898,7 +897,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
             }
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
-            else if ((aloc16 & Mle::kAloc16DhcpAgentMask) != 0)
+            else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
             {
                 uint16_t agentRloc16;
                 uint8_t routerId;

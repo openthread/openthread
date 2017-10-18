@@ -34,6 +34,8 @@
 #ifndef TIMER_HPP_
 #define TIMER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stddef.h>
 #include "utils/wrap_stdint.h"
 

@@ -33,7 +33,7 @@
 #ifndef SPINEL_ENCODER_HPP_
 #define SPINEL_ENCODER_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/message.h>
 #include <openthread/ncp.h>
@@ -508,8 +508,11 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * In case of success, the passed-in message @p aMessage will be owned by the frame buffer instance and will be
-     * freed when either the the frame is removed or discarded. In case of failure @p aMessage remains unchanged.
+     * The ownership of the passed-in message @p aMessage changes to underlying `NcpFrameBuffer` ONLY when the entire
+     * frame is successfully finished (i.e., with a successful call to `EndFrame()` for the current frame being written),
+     * and in this case the `otMessage` instance will be freed once the frame is removed from the `NcpFrameBuffer`.
+     * However, if the frame gets discarded before it is finished (e.g., running out of buffer space), the  `otMessage`
+     * instance remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
      *
@@ -571,7 +574,7 @@ public:
      * This method opens a struct in the current input frame.
      *
      * After a successful call to this method, all the subsequent `Write<SomeType>()` methods add the field/value to
-     * the current open struct until the struct is closed using `CloseStruct()` method. Structs can be nested. Up to
+     * the current open struct until the struct is closed using `CloseStruct()` method. Structures can be nested. Up to
      * `kMaxNestedStructs` nested structs can be opened at the same time.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
@@ -580,7 +583,7 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * @retval OT_ERROR_NONE            Successfully added the message to the frame.
+     * @retval OT_ERROR_NONE            Successfully opened the struct.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to open the struct.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame or if we reached
      *                                  the maximum number of nested open structures.
@@ -597,7 +600,7 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * @retval OT_ERROR_NONE            Successfully added the message to the frame.
+     * @retval OT_ERROR_NONE            Successfully closed the most recently opened struct.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to open the struct.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame or if there is no
      *                                  open struct to close
@@ -623,7 +626,7 @@ public:
      * The saved position must belong to the same input frame saved earlier with `SavePosition()`. This method cannot
      * be used if the input frame has an added `otMessage`.
      *
-     * @retval OT_ERROR_NONE            Successfully reset the write position of current input frame..
+     * @retval OT_ERROR_NONE            Successfully reset the write position of current input frame.
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
      * @retval OT_ERROR_INVALID_ARGS    The saved position is not valid (does not belong to same input frame), or
      *                                  the input frame has an added `otMessage`.
