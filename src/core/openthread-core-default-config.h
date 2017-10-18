@@ -282,6 +282,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE
+ *
+ * The maximum number of supported Service ALOCs registrations per device.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE
+#define OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE                  1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
  * The 6LoWPAN fragment reassembly timeout in seconds.
