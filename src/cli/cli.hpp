@@ -256,8 +256,10 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     void ProcessNetworkDataRegister(int argc, char *argv[]);
+#ifndef OTDLL
     void ProcessNetworkDataShow(int argc, char *argv[]);
     void ProcessService(int argc, char *argv[]);
+#endif
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     void ProcessNetworkDiagnostic(int argc, char *argv[]);

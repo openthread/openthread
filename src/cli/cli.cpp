@@ -54,7 +54,9 @@
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 #include <openthread/border_router.h>
+#ifndef OTDLL
 #include <openthread/server.h>
+#endif
 #endif
 
 #ifndef OTDLL
@@ -166,8 +168,10 @@ const struct Command Interpreter::sCommands[] =
 #endif
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
+#ifndef OTDLL
     { "netdatashow", &Interpreter::ProcessNetworkDataShow },
     { "service", &Interpreter::ProcessService },
+#endif
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
@@ -1472,6 +1476,7 @@ exit:
 #endif
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
+#ifndef OTDLL
 void Interpreter::ProcessNetworkDataShow(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -1528,6 +1533,7 @@ void Interpreter::ProcessService(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif
 
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
