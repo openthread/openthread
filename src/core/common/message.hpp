@@ -782,7 +782,7 @@ private:
     /**
      * This method sets the number of reserved header bytes.
      *
-     * @pram[in]  aReservedHeader  The number of header bytes to reserve.
+     * @param[in] aReservedHeader  The number of header bytes to reserve.
      *
      */
     void SetReserved(uint16_t aReservedHeader) { mBuffer.mHead.mInfo.mReserved = aReservedHeader; }
