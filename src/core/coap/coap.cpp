@@ -32,6 +32,7 @@
 
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
@@ -47,34 +48,35 @@
 namespace ot {
 namespace Coap {
 
-Coap::Coap(ThreadNetif &aNetif, Timer::Handler aRetransmissionHandler):
+CoapBase::CoapBase(ThreadNetif &aNetif, Timer::Handler aRetransmissionTimerHandler,
+                   Timer::Handler aResponsesQueueTimerHandler):
     ThreadNetifLocator(aNetif),
     mSocket(aNetif.GetIp6().mUdp),
-    mRetransmissionTimer(aNetif.GetInstance(), aRetransmissionHandler, this),
+    mRetransmissionTimer(aNetif.GetInstance(), aRetransmissionTimerHandler, this),
     mResources(NULL),
     mContext(NULL),
     mInterceptor(NULL),
-    mResponsesQueue(aNetif),
+    mResponsesQueue(aNetif.GetInstance(), aResponsesQueueTimerHandler, this),
     mDefaultHandler(NULL),
     mDefaultHandlerContext(NULL)
 {
     mMessageId = static_cast<uint16_t>(otPlatRandomGet());
 }
 
-otError Coap::Start(uint16_t aPort)
+otError CoapBase::Start(uint16_t aPort)
 {
     otError error;
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = aPort;
 
-    SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(&CoapBase::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
 exit:
     return error;
 }
 
-otError Coap::Stop(void)
+otError CoapBase::Stop(void)
 {
     Message *message = mPendingRequests.GetHead();
     Message *messageToRemove;
@@ -95,7 +97,7 @@ otError Coap::Stop(void)
     return mSocket.Close();
 }
 
-otError Coap::AddResource(Resource &aResource)
+otError CoapBase::AddResource(Resource &aResource)
 {
     otError error = OT_ERROR_NONE;
 
@@ -111,7 +113,7 @@ exit:
     return error;
 }
 
-void Coap::RemoveResource(Resource &aResource)
+void CoapBase::RemoveResource(Resource &aResource)
 {
     if (mResources == &aResource)
     {
@@ -133,13 +135,13 @@ exit:
     aResource.mNext = NULL;
 }
 
-void Coap::SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext)
+void CoapBase::SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext)
 {
     mDefaultHandler = aHandler;
     mDefaultHandlerContext = aContext;
 }
 
-Message *Coap::NewMessage(const Header &aHeader, uint8_t aPriority)
+Message *CoapBase::NewMessage(const Header &aHeader, uint8_t aPriority)
 {
     Message *message = NULL;
 
@@ -155,8 +157,8 @@ exit:
     return message;
 }
 
-otError Coap::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                          otCoapResponseHandler aHandler, void *aContext)
+otError CoapBase::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                              otCoapResponseHandler aHandler, void *aContext)
 {
     otError error;
     Header header;
@@ -210,13 +212,13 @@ exit:
     return error;
 }
 
-otError Coap::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError CoapBase::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return mSocket.SendTo(aMessage, aMessageInfo);
 }
 
-otError Coap::SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
-                               const Ip6::MessageInfo &aMessageInfo)
+otError CoapBase::SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
+                                   const Ip6::MessageInfo &aMessageInfo)
 {
     otError error = OT_ERROR_NONE;
     Header responseHeader;
@@ -241,8 +243,8 @@ exit:
     return error;
 }
 
-otError Coap::SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader,
-                                 const Ip6::MessageInfo &aMessageInfo)
+otError CoapBase::SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader,
+                                     const Ip6::MessageInfo &aMessageInfo)
 {
     otError error = OT_ERROR_NONE;
     Header responseHeader;
@@ -286,23 +288,7 @@ exit:
     return error;
 }
 
-Coap &Coap::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Coap &coap = *static_cast<Coap *>(aContext.GetContext());
-#else
-    Coap &coap = otGetThreadNetif().GetCoap();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return coap;
-}
-
-void Coap::HandleRetransmissionTimer(Timer &aTimer)
-{
-    GetOwner(aTimer).HandleRetransmissionTimer();
-}
-
-void Coap::HandleRetransmissionTimer(void)
+void CoapBase::HandleRetransmissionTimer(void)
 {
     uint32_t now = TimerMilli::GetNow();
     uint32_t nextDelta = 0xffffffff;
@@ -364,9 +350,9 @@ void Coap::HandleRetransmissionTimer(void)
     }
 }
 
-void Coap::FinalizeCoapTransaction(Message &aRequest, const CoapMetadata &aCoapMetadata,
-                                   Header *aResponseHeader, Message *aResponse,
-                                   const Ip6::MessageInfo *aMessageInfo, otError aResult)
+void CoapBase::FinalizeCoapTransaction(Message &aRequest, const CoapMetadata &aCoapMetadata,
+                                       Header *aResponseHeader, Message *aResponse,
+                                       const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
     DequeueMessage(aRequest);
 
@@ -377,7 +363,7 @@ void Coap::FinalizeCoapTransaction(Message &aRequest, const CoapMetadata &aCoapM
     }
 }
 
-otError Coap::AbortTransaction(otCoapResponseHandler aHandler, void *aContext)
+otError CoapBase::AbortTransaction(otCoapResponseHandler aHandler, void *aContext)
 {
     otError error = OT_ERROR_NOT_FOUND;
     Message *message;
@@ -398,8 +384,8 @@ otError Coap::AbortTransaction(otCoapResponseHandler aHandler, void *aContext)
 }
 
 
-Message *Coap::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
-                                     const CoapMetadata &aCoapMetadata)
+Message *CoapBase::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
+                                         const CoapMetadata &aCoapMetadata)
 {
     otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
@@ -441,7 +427,7 @@ exit:
     return messageCopy;
 }
 
-void Coap::DequeueMessage(Message &aMessage)
+void CoapBase::DequeueMessage(Message &aMessage)
 {
     mPendingRequests.Dequeue(aMessage);
 
@@ -458,7 +444,7 @@ void Coap::DequeueMessage(Message &aMessage)
     // the timer would just shoot earlier and then it'd be setup again.
 }
 
-otError Coap::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError error;
     Message *messageCopy = NULL;
@@ -480,8 +466,8 @@ exit:
     return error;
 }
 
-Message *Coap::FindRelatedRequest(const Header &aResponseHeader, const Ip6::MessageInfo &aMessageInfo,
-                                  Header &aRequestHeader, CoapMetadata &aCoapMetadata)
+Message *CoapBase::FindRelatedRequest(const Header &aResponseHeader, const Ip6::MessageInfo &aMessageInfo,
+                                      Header &aRequestHeader, CoapMetadata &aCoapMetadata)
 {
     Message *message = mPendingRequests.GetHead();
 
@@ -527,13 +513,13 @@ exit:
     return message;
 }
 
-void Coap::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void CoapBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     static_cast<Coap *>(aContext)->Receive(*static_cast<Message *>(aMessage),
                                            *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Coap::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapBase::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError error;
     Header header;
@@ -557,8 +543,8 @@ exit:
     }
 }
 
-void Coap::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo)
+void CoapBase::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
+                                       const Ip6::MessageInfo &aMessageInfo)
 {
     Header requestHeader;
     CoapMetadata coapMetadata;
@@ -636,7 +622,7 @@ exit:
     }
 }
 
-void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapBase::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     char uriPath[Resource::kMaxReceivedUriPath] = "";
     char *curUriPath = uriPath;
@@ -758,8 +744,9 @@ CoapMetadata::CoapMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageIn
     mConfirmable = aConfirmable;
 }
 
-ResponsesQueue::ResponsesQueue(ThreadNetif &aNetif):
-    mTimer(aNetif.GetInstance(), &ResponsesQueue::HandleTimer, this)
+ResponsesQueue::ResponsesQueue(otInstance &aInstance, Timer::Handler aHandler, void *aContext):
+    mQueue(),
+    mTimer(aInstance, aHandler, aContext)
 {
 }
 
@@ -896,22 +883,6 @@ void ResponsesQueue::DequeueAllResponses(void)
     }
 }
 
-ResponsesQueue &ResponsesQueue::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    ResponsesQueue &queue = *static_cast<ResponsesQueue *>(aContext.GetContext());
-#else
-    ResponsesQueue &queue = otGetThreadNetif().GetCoap().mResponsesQueue;
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return queue;
-}
-
-void ResponsesQueue::HandleTimer(Timer &aTimer)
-{
-    GetOwner(aTimer).HandleTimer();
-}
-
 void ResponsesQueue::HandleTimer(void)
 {
     Message               *message;
@@ -939,6 +910,63 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 
     return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
 }
+
+Coap::Coap(ThreadNetif &aNetif):
+    CoapBase(aNetif, &Coap::HandleRetransmissionTimer, &Coap::HandleResponsesQueueTimer)
+{
+}
+
+Coap &Coap::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Coap &coap = *static_cast<Coap *>(aContext.GetContext());
+#else
+    Coap &coap = otGetThreadNetif().GetCoap();
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return coap;
+}
+
+void Coap::HandleRetransmissionTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+}
+
+void Coap::HandleResponsesQueueTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
+}
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+
+ApplicationCoap::ApplicationCoap(otInstance &aInstance):
+    CoapBase(aInstance.mThreadNetif, &ApplicationCoap::HandleRetransmissionTimer,
+             &ApplicationCoap::HandleResponsesQueueTimer)
+{
+}
+
+ApplicationCoap &ApplicationCoap::GetOwner(const Context &aContext)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    ApplicationCoap &coap = *static_cast<ApplicationCoap *>(aContext.GetContext());
+#else
+    ApplicationCoap &coap = otGetInstance()->mApplicationCoap;
+    OT_UNUSED_VARIABLE(aContext);
+#endif
+    return coap;
+}
+
+void ApplicationCoap::HandleRetransmissionTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+}
+
+void ApplicationCoap::HandleResponsesQueueTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
+}
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 }  // namespace Coap
 }  // namespace ot

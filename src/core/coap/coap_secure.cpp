@@ -46,7 +46,7 @@ namespace ot {
 namespace Coap {
 
 CoapSecure::CoapSecure(ThreadNetif &aNetif):
-    Coap(aNetif, &CoapSecure::HandleRetransmissionTimer),
+    CoapBase(aNetif, &CoapSecure::HandleRetransmissionTimer, &CoapSecure::HandleResponsesQueueTimer),
     mConnectedCallback(NULL),
     mConnectedContext(NULL),
     mTransportCallback(NULL),
@@ -66,7 +66,7 @@ otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aCo
     // to transmit/receive messages, so do not open it in that case.
     if (mTransportCallback == NULL)
     {
-        error = Coap::Start(aPort);
+        error = CoapBase::Start(aPort);
     }
 
     return error;
@@ -88,7 +88,7 @@ otError CoapSecure::Stop(void)
     mTransportCallback = NULL;
     mTransportContext = NULL;
 
-    return Coap::Stop();
+    return CoapBase::Stop();
 }
 
 otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext)
@@ -134,7 +134,7 @@ otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandle
 
     VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
 
-    error = Coap::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
+    error = CoapBase::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
 
 exit:
     otLogFuncExitErr(error);
@@ -144,7 +144,7 @@ exit:
 otError CoapSecure::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                 otCoapResponseHandler aHandler, void *aContext)
 {
-    return Coap::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
+    return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
 
 otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -222,7 +222,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
     VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
-    Coap::Receive(*message, mPeerAddress);
+    CoapBase::Receive(*message, mPeerAddress);
 
 exit:
 
@@ -322,7 +322,12 @@ CoapSecure &CoapSecure::GetOwner(const Context &aContext)
 
 void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).Coap::HandleRetransmissionTimer();
+    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+}
+
+void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
 }
 
 }  // namespace Coap

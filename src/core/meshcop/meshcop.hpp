@@ -52,7 +52,7 @@ enum
  * This function create Message for MeshCoP
  *
  */
-inline Message *NewMeshCoPMessage(Coap::Coap &aCoap, const Coap::Header &aHeader)
+inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHeader)
 {
     return aCoap.NewMessage(aHeader, kMeshCoPMessagePriority);
 }

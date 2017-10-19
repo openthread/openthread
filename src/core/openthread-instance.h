@@ -95,7 +95,7 @@ typedef struct otInstance
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    ot::Coap::Coap mApplicationCoap;
+    ot::Coap::ApplicationCoap mApplicationCoap;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
