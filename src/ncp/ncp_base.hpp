@@ -639,7 +639,6 @@ private:
     uint32_t mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
 
-    uint32_t mChangedFlags;
     spinel_host_power_state_t mHostPowerState;
     NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
     uint8_t mHostPowerStateHeader;
