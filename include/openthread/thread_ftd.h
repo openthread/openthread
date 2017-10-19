@@ -466,6 +466,46 @@ OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
 OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
 /**
+ * This enumeration defines the constants used in `otThreadChildTableCallback` to indicate whether a child is added or
+ * removed.
+ *
+ */
+typedef enum otThreadChildTableEvent
+{
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,        ///< A child is being added.
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED,      ///< A child is being removed.
+} otThreadChildTableEvent;
+
+/**
+ * This function pointer is called to notify that a child is being added to or removed from child table.
+ *
+ * @param[in]  aEvent      A event flag indicating whether a child is being added or removed.
+ * @param[in]  aChildInfo  A pointer to child information structure.
+ *
+ */
+typedef void (*otThreadChildTableCallback)(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
+
+/**
+ * This function gets the child table callback function.
+ *
+ * @returns  The callback function pointer.
+ *
+ */
+otThreadChildTableCallback otThreadGetChildTableCallback(otInstance *aInstance);
+
+/**
+ * This function sets the child table callback function.
+ *
+ * The provided callback (if non-NULL) will be invoked when a child entry is being added/removed to/from the child
+ * table. Subsequent calls to this method will overwrite the previous callback. Note that this callback in invoked
+ * while the child table is being updated and always before the `otStateChangedCallback`.
+ *
+ * @param[in] aCallback                  A pointer to callback handler function.
+ *
+ */
+void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCallback aCallback);
+
+/**
  * @}
  *
  */

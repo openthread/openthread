@@ -65,6 +65,7 @@ MleRouter::MleRouter(otInstance &aInstance):
     mRouterIdSequence(0),
     mRouterIdSequenceLastUpdated(0),
     mMaxChildrenAllowed(kMaxChildren),
+    mChildTableChangedCallback(NULL),
     mChallengeTimeout(0),
     mNextChildId(kMaxChildId),
     mNetworkIdTimeout(kNetworkIdTimeout),
@@ -3228,9 +3229,9 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     case OT_DEVICE_ROLE_LEADER:
         if (aNeighbor.IsStateValidOrRestoring() && !IsActiveRouter(aNeighbor.GetRloc16()))
         {
+            SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, static_cast<Child &>(aNeighbor));
             aNeighbor.SetState(Neighbor::kStateInvalid);
             netif.GetMeshForwarder().UpdateIndirectMessages();
-            netif.SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
             netif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.GetRloc16());
             RemoveStoredChild(aNeighbor.GetRloc16());
         }
@@ -4701,8 +4702,8 @@ void MleRouter::SetChildStateToValid(Child &aChild)
     VerifyOrExit(aChild.GetState() != Neighbor::kStateValid);
 
     aChild.SetState(Neighbor::kStateValid);
-    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_ADDED);
     StoreChild(aChild.GetRloc16());
+    SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED, aChild);
 
 exit:
     return;
@@ -4732,7 +4733,7 @@ void MleRouter::RemoveChildren(void)
         switch (mChildren[i].GetState())
         {
         case Neighbor::kStateValid:
-            GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
+            SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, mChildren[i]);
 
         // fall-through
 
@@ -4855,6 +4856,31 @@ otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const
 
 exit:
     return error;
+}
+
+void MleRouter::SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild)
+{
+    if (mChildTableChangedCallback != NULL)
+    {
+        otChildInfo childInfo;
+        otError error;
+
+        error = GetChildInfo(aChild, childInfo);
+        assert(error == OT_ERROR_NONE);
+
+        mChildTableChangedCallback(aEvent, &childInfo);
+    }
+
+    switch (aEvent)
+    {
+    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED:
+        GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_ADDED);
+        break;
+
+    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED:
+        GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
+        break;
+    }
 }
 
 }  // namespace Mle

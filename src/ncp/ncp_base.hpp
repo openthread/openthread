@@ -40,6 +40,9 @@
 #else
 #include <openthread/platform/radio.h>
 #endif
+#if OPENTHREAD_FTD
+#include <openthread/thread_ftd.h>
+#endif
 #include <openthread/message.h>
 #include <openthread/ncp.h>
 #include <openthread/types.h>
@@ -216,6 +219,11 @@ private:
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void ProcessThreadChangedFlags(void);
 
+#if OPENTHREAD_FTD
+    static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
+    void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+#endif
+
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
     void HandleDatagramFromStack(otMessage *aMessage);
 
@@ -235,6 +243,11 @@ private:
     void SendDoneTask(void);
 
     otError GetPropertyHandler_ChannelMaskHelper(uint32_t channel_mask);
+
+#if OPENTHREAD_FTD
+    otError EncodeChildInfo(const otChildInfo &aChildInfo);
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
@@ -658,6 +671,7 @@ private:
     bool mRequireJoinExistingNetwork;
     bool mIsRawStreamEnabled;
     bool mDisableStreamWrite;
+    bool mShouldEmitChildTableUpdate;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     uint8_t mCurTransmitTID;
