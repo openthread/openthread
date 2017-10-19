@@ -529,6 +529,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
         break;
 
 #if OPENTHREAD_ENABLE_SERVICE
+
         case NetworkDataTlv::kTypeService:
         {
             service = static_cast<ServiceTlv *>(cur);
@@ -573,6 +574,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
 
             break;
         }
+
 #endif
 
         default:
@@ -644,6 +646,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
         }
 
 #if OPENTHREAD_ENABLE_SERVICE
+
         case NetworkDataTlv::kTypeService:
             service = static_cast<ServiceTlv *>(cur);
 
@@ -795,6 +798,7 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOl
             break;
 
 #if OPENTHREAD_ENABLE_SERVICE
+
         case NetworkDataTlv::kTypeService:
             SuccessOrExit(error = AddService(*static_cast<ServiceTlv *>(cur), aOldTlvs, aOldTlvsLength));
             otDumpDebgNetData(GetInstance(), "add service done", mTlvs, mLength);
@@ -1237,6 +1241,7 @@ otError Leader::RemoveRloc(uint16_t aRloc16, bool aOnlyRouter)
         }
 
 #if OPENTHREAD_ENABLE_SERVICE
+
         case NetworkDataTlv::kTypeService:
         {
             if (!aOnlyRouter)
@@ -1255,6 +1260,7 @@ otError Leader::RemoveRloc(uint16_t aRloc16, bool aOnlyRouter)
 
             break;
         }
+
 #endif
 
         default:

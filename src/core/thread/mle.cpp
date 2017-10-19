@@ -126,6 +126,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLeaderAloc.mScopeOverrideValid = true;
 
 #if OPENTHREAD_ENABLE_SERVICE
+
     // Service Alocs
     for (i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
     {
@@ -138,6 +139,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
         mServiceAlocs[i].mScopeOverrideValid = true;
         mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
     }
+
 #endif
 
     // initialize Mesh Local Prefix

@@ -570,6 +570,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
         }
 
 #if OPENTHREAD_ENABLE_SERVICE
+
         case NetworkDataTlv::kTypeService:
         {
             service = reinterpret_cast<ServiceTlv *>(cur);
@@ -588,6 +589,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
             otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
             break;
         }
+
 #endif
 
         default:

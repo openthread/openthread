@@ -226,6 +226,7 @@ otError Local::UpdateRloc(void)
             break;
 
 #if OPENTHREAD_ENABLE_SERVICE
+
         case NetworkDataTlv::kTypeService:
             UpdateRloc(*static_cast<ServiceTlv *>(cur));
             break;
@@ -358,7 +359,7 @@ otError Local::SendServerDataNotification(void)
 #if OPENTHREAD_ENABLE_SERVICE
                  || !IsServiceConsistent()
 #endif
-    , ClearResubmitDelayTimer());
+                 , ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {

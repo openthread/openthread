@@ -976,6 +976,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
                     ExitNow(error = OT_ERROR_DROP);
                 }
             }
+
 #endif
             else
             {
