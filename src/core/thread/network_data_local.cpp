@@ -355,11 +355,12 @@ otError Local::SendServerDataNotification(void)
 
     UpdateRloc();
 
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent()
 #if OPENTHREAD_ENABLE_SERVICE
-                 || !IsServiceConsistent()
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() ||
+                 !IsServiceConsistent(), ClearResubmitDelayTimer());
+#else
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), ClearResubmitDelayTimer());
 #endif
-                 , ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {
