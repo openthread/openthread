@@ -537,12 +537,13 @@ private:
 
     static Mpl &GetOwner(const Context &aContext);
 
-    TimerMilli mSeedSetTimer;
-    TimerMilli mRetransmissionTimer;
-
     uint8_t mTimerExpirations;
     uint8_t mSequence;
     uint16_t mSeedId;
+
+    TimerMilli mSeedSetTimer;
+    TimerMilli mRetransmissionTimer;
+
     const Address *mMatchingAddress;
 
     MplSeedEntry mSeedSet[kNumSeedEntries];

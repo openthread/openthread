@@ -204,8 +204,8 @@ protected:
      */
     void HandleTimer(void);
 
-    DatasetLocal mLocal;
     Dataset mNetwork;
+    DatasetLocal mLocal;
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

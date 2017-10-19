@@ -226,9 +226,9 @@ private:
 
     static Dhcp6Client &GetOwner(const Context &aContext);
 
-    TrickleTimer mTrickleTimer;
-
     Ip6::UdpSocket mSocket;
+
+    TrickleTimer mTrickleTimer;
 
     uint8_t mTransactionId[kTransactionIdSize];
     uint32_t mStartTime;

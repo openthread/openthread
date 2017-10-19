@@ -50,8 +50,8 @@ namespace Utils {
 
 ChildSupervisor::ChildSupervisor(otInstance &aInstance) :
     InstanceLocator(aInstance),
-    mTimer(aInstance, &ChildSupervisor::HandleTimer, this),
-    mSupervisionInterval(kDefaultSupervisionInterval)
+    mSupervisionInterval(kDefaultSupervisionInterval),
+    mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
 {
 }
 
@@ -180,8 +180,8 @@ ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
 
 SupervisionListener::SupervisionListener(otInstance &aInstance) :
     InstanceLocator(aInstance),
-    mTimer(aInstance, &SupervisionListener::HandleTimer, this),
-    mTimeout(0)
+    mTimeout(0),
+    mTimer(aInstance, &SupervisionListener::HandleTimer, this)
 {
     SetTimeout(kDefaultTimeout);
 }

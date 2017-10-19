@@ -222,10 +222,11 @@ private:
     static DataPollManager &GetOwner(Context &aContext);
     uint32_t GetDefaultPollPeriod(void) const;
 
-    TimerMilli  mTimer;
     uint32_t    mTimerStartTime;
     uint32_t    mExternalPollPeriod;
     uint32_t    mPollPeriod;
+
+    TimerMilli  mTimer;
 
     bool        mEnabled: 1;               //< Indicates whether data polling is enabled/started.
     bool        mAttachMode: 1;            //< Indicates whether in attach mode (to use attach poll period).

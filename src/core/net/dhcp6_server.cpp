@@ -53,7 +53,7 @@ namespace Dhcp6 {
 
 Dhcp6Server::Dhcp6Server(otInstance &aInstance):
     InstanceLocator(aInstance),
-    mSocket(GetNetif().GetIp6().mUdp)
+    mSocket(GetNetif().GetIp6().GetUdp())
 {
     for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
     {

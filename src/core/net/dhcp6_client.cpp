@@ -58,8 +58,8 @@ namespace Dhcp6 {
 
 Dhcp6Client::Dhcp6Client(otInstance &aInstance) :
     InstanceLocator(aInstance),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
     mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this),
-    mSocket(aInstance.mThreadNetif.GetIp6().mUdp),
     mStartTime(0),
     mAddresses(NULL),
     mNumAddresses(0)

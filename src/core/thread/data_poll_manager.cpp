@@ -51,10 +51,10 @@ namespace ot {
 
 DataPollManager::DataPollManager(otInstance &aInstance):
     InstanceLocator(aInstance),
-    mTimer(aInstance, &DataPollManager::HandlePollTimer, this),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
     mPollPeriod(0),
+    mTimer(aInstance, &DataPollManager::HandlePollTimer, this),
     mEnabled(false),
     mAttachMode(false),
     mRetxMode(false),

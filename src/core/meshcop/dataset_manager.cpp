@@ -62,8 +62,8 @@ namespace MeshCoP {
 DatasetManager::DatasetManager(otInstance &aInstance, const Tlv::Type aType, const char *aUriSet,
                                const char *aUriGet, Timer::Handler aTimerHandler):
     InstanceLocator(aInstance),
-    mLocal(aInstance, aType),
     mNetwork(aType),
+    mLocal(aInstance, aType),
     mTimer(aInstance, aTimerHandler, this),
     mUriSet(aUriSet),
     mUriGet(aUriGet)
