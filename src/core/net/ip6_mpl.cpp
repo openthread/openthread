@@ -55,11 +55,11 @@ void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentT
 
 Mpl::Mpl(otInstance &aInstance):
     InstanceLocator(aInstance),
-    mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this),
-    mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this),
     mTimerExpirations(0),
     mSequence(0),
     mSeedId(0),
+    mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this),
+    mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this),
     mMatchingAddress(NULL)
 {
     memset(mSeedSet, 0, sizeof(mSeedSet));
@@ -373,7 +373,7 @@ Mpl &Mpl::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Mpl &mpl = *static_cast<Mpl *>(aContext.GetContext());
 #else
-    Mpl &mpl = otGetIp6().mMpl;
+    Mpl &mpl = otGetIp6().GetMpl();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return mpl;

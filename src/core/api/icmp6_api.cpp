@@ -41,23 +41,23 @@ using namespace ot;
 
 bool otIcmp6IsEchoEnabled(otInstance *aInstance)
 {
-    return aInstance->mIp6.mIcmp.IsEchoEnabled();
+    return aInstance->mIp6.GetIcmp().IsEchoEnabled();
 }
 
 void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled)
 {
-    aInstance->mIp6.mIcmp.SetEchoEnabled(aEnabled);
+    aInstance->mIp6.GetIcmp().SetEchoEnabled(aEnabled);
 }
 
 otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
 {
-    return aInstance->mIp6.mIcmp.RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
+    return aInstance->mIp6.GetIcmp().RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
 }
 
 otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
                                const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
 {
-    return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),
-                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                 aIdentifier);
+    return aInstance->mIp6.GetIcmp().SendEchoRequest(*static_cast<Message *>(aMessage),
+                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                     aIdentifier);
 }

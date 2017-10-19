@@ -159,8 +159,8 @@ private:
     void HandleTimer(void);
     static ChildSupervisor &GetOwner(const Context &aContext);
 
-    TimerMilli   mTimer;
     uint16_t     mSupervisionInterval;
+    TimerMilli   mTimer;
 };
 
 #else  // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
@@ -251,8 +251,8 @@ private:
     void HandleTimer(void);
     static SupervisionListener &GetOwner(const Context &aContext);
 
-    TimerMilli mTimer;
     uint16_t mTimeout;
+    TimerMilli mTimer;
 };
 
 #else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION

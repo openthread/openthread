@@ -70,7 +70,7 @@ AddressResolver::AddressResolver(otInstance &aInstance) :
     GetNetif().GetCoap().AddResource(mAddressQuery);
     GetNetif().GetCoap().AddResource(mAddressNotification);
 
-    GetNetif().GetIp6().mIcmp.RegisterHandler(mIcmpHandler);
+    GetNetif().GetIp6().GetIcmp().RegisterHandler(mIcmpHandler);
 }
 
 void AddressResolver::Clear()

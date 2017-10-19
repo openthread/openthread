@@ -51,7 +51,7 @@ namespace Coap {
 CoapBase::CoapBase(otInstance &aInstance, Timer::Handler aRetransmissionTimerHandler,
                    Timer::Handler aResponsesQueueTimerHandler):
     InstanceLocator(aInstance),
-    mSocket(aInstance.mThreadNetif.GetIp6().mUdp),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
     mRetransmissionTimer(aInstance, aRetransmissionTimerHandler, this),
     mResources(NULL),
     mContext(NULL),

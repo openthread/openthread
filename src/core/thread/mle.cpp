@@ -81,7 +81,7 @@ Mle::Mle(otInstance &aInstance) :
     mChildUpdateAttempts(0),
     mParentLinkMargin(0),
     mParentIsSingleton(false),
-    mSocket(aInstance.mThreadNetif.GetIp6().mUdp),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
     mTimeout(kMleEndDeviceTimeout),
     mSendChildUpdateRequest(aInstance, &Mle::HandleSendChildUpdateRequest, this),
     mDiscoverHandler(NULL),
@@ -154,7 +154,7 @@ Mle::Mle(otInstance &aInstance) :
     mMeshLocal16.mRloc = true;
 
     // Store RLOC address reference in MPL module.
-    GetNetif().GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
+    GetNetif().GetIp6().GetMpl().SetMatchingAddress(mMeshLocal16.GetAddress());
 
     // link-local all thread nodes
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
@@ -583,7 +583,7 @@ otError Mle::SetStateDetached(void)
     netif.GetMac().SetBeaconEnabled(false);
     netif.GetMle().HandleDetachStart();
     netif.GetIp6().SetForwardingEnabled(false);
-    netif.GetIp6().mMpl.SetTimerExpirations(0);
+    netif.GetIp6().GetMpl().SetTimerExpirations(0);
 
     otLogInfoMle(GetInstance(), "Role -> Detached");
     return OT_ERROR_NONE;
@@ -624,7 +624,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     netif.GetNetworkDataLocal().ClearResubmitDelayTimer();
 #endif
     netif.GetIp6().SetForwardingEnabled(false);
-    netif.GetIp6().mMpl.SetTimerExpirations(kMplChildDataMessageTimerExpirations);
+    netif.GetIp6().GetMpl().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
 
     // Once the Thread device receives the new Active Commissioning Dataset, the device MUST
     // transmit its own Announce messages on the channel it was on prior to the attachment.
@@ -801,7 +801,7 @@ otError Mle::SetRloc16(uint16_t aRloc16)
     }
 
     netif.GetMac().SetShortAddress(aRloc16);
-    netif.GetIp6().mMpl.SetSeedId(aRloc16);
+    netif.GetIp6().GetMpl().SetSeedId(aRloc16);
 
     return OT_ERROR_NONE;
 }
@@ -3291,9 +3291,9 @@ otError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::He
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    netif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
-                                   Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
-                                   messageInfo, aIp6Header);
+    netif.GetIp6().GetIcmp().SendError(Ip6::IcmpHeader::kTypeDstUnreach,
+                                       Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                       messageInfo, aIp6Header);
 
 exit:
     return error;

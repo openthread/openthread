@@ -62,9 +62,6 @@ namespace MeshCoP {
 
 Commissioner::Commissioner(otInstance &aInstance):
     InstanceLocator(aInstance),
-    mAnnounceBegin(aInstance),
-    mEnergyScan(aInstance),
-    mPanIdQuery(aInstance),
     mState(OT_COMMISSIONER_STATE_DISABLED),
     mJoinerPort(0),
     mJoinerRloc(0),
@@ -74,7 +71,10 @@ Commissioner::Commissioner(otInstance &aInstance):
     mTransmitAttempts(0),
     mRelayReceive(OT_URI_PATH_RELAY_RX, &Commissioner::HandleRelayReceive, this),
     mDatasetChanged(OT_URI_PATH_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this),
-    mJoinerFinalize(OT_URI_PATH_JOINER_FINALIZE, &Commissioner::HandleJoinerFinalize, this)
+    mJoinerFinalize(OT_URI_PATH_JOINER_FINALIZE, &Commissioner::HandleJoinerFinalize, this),
+    mAnnounceBegin(aInstance),
+    mEnergyScan(aInstance),
+    mPanIdQuery(aInstance)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
 }
