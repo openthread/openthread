@@ -35,6 +35,10 @@
 extern "C" {
 #endif
 
+#if defined(__CC_ARM)
+#pragma anon_unions
+#endif
+	
 /**
  * \brief          SHA-256 context structure
  */
@@ -50,6 +54,10 @@ typedef union
     uint8_t reserved[256];
 }
 mbedtls_sha256_context;
+
+#if defined(__CC_ARM)
+#pragma no_anon_unions
+#endif
 
 /**
  * @brief Initialize SHA-256 context

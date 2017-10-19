@@ -40,31 +40,55 @@
 
 #include "platform-nrf5.h"
 
-extern uint32_t __flash_data_start;
-extern uint32_t __flash_data_end;
-
 #define FLASH_PAGE_ADDR_MASK 0xFFFFF000
 #define FLASH_PAGE_SIZE      4096
-#define FLASH_START_ADDR     ((uint32_t)&__flash_data_start)
-#define FLASH_END_ADDR       ((uint32_t)&__flash_data_end)
+
+static uint32_t sFlashDataStart;
+static uint32_t sFlashDataEnd;
 
 static inline uint32_t mapAddress(uint32_t aAddress)
 {
-    return aAddress + FLASH_START_ADDR;
+    return aAddress + sFlashDataStart;
 }
 
 otError utilsFlashInit(void)
 {
+#if defined(__CC_ARM)
+    // Temporary solution for Keil compiler.
+    uint32_t const bootloaderAddr = NRF_UICR->NRFFW[0];
+    uint32_t const pageSize       = NRF_FICR->CODEPAGESIZE;
+    uint32_t const codeSize       = NRF_FICR->CODESIZE;
+
+    if (bootloaderAddr != 0xFFFFFFFF)
+    {
+        sFlashDataEnd = bootloaderAddr;
+    }
+    else
+    {
+        sFlashDataEnd = pageSize * codeSize;
+    }
+
+    sFlashDataStart = sFlashDataEnd - (pageSize * SETTINGS_CONFIG_PAGE_NUM);
+
+#elif defined(__GNUC__) || defined(__ICCARM__)
+    extern uint32_t __flash_data_start;
+    extern uint32_t __flash_data_end;
+
+    sFlashDataStart = (uint32_t)&__flash_data_start;
+    sFlashDataEnd   = (uint32_t)&__flash_data_end;
+
+#endif
+
     // Just ensure that the start and end addresses are page-aligned.
-    assert((FLASH_START_ADDR % FLASH_PAGE_SIZE) == 0);
-    assert((FLASH_END_ADDR % FLASH_PAGE_SIZE) == 0);
+    assert((sFlashDataStart % FLASH_PAGE_SIZE) == 0);
+    assert((sFlashDataEnd % FLASH_PAGE_SIZE) == 0);
 
     return OT_ERROR_NONE;
 }
 
 uint32_t utilsFlashGetSize(void)
 {
-    return FLASH_END_ADDR - FLASH_START_ADDR;
+    return sFlashDataEnd - sFlashDataStart;
 }
 
 otError utilsFlashErasePage(uint32_t aAddress)

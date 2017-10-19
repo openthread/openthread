@@ -416,7 +416,7 @@ typedef struct otExtAddress
 OT_TOOL_PACKED_BEGIN
 struct otIp6Address
 {
-    union
+    union OT_TOOL_PACKED_FIELD
     {
         uint8_t  m8[OT_IP6_ADDRESS_SIZE];                      ///< 8-bit fields
         uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
@@ -693,11 +693,17 @@ enum
 /**
  * This structure represents an IPv6 prefix.
  */
-typedef struct otIp6Prefix
+OT_TOOL_PACKED_BEGIN
+struct otIp6Prefix
 {
     otIp6Address  mPrefix;  ///< The IPv6 prefix.
     uint8_t       mLength;  ///< The IPv6 prefix length.
-} otIp6Prefix;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This type represents an IPv6 prefix.
+ */
+typedef struct otIp6Prefix otIp6Prefix;
 
 #define OT_NETWORK_DATA_ITERATOR_INIT  0    ///< Initializer for otNetworkDataIterator.
 

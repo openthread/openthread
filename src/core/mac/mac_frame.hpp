@@ -174,7 +174,6 @@ struct Address
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class Frame: public otRadioFrame
 {
 public:
@@ -827,7 +826,7 @@ private:
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
-} OT_TOOL_PACKED_END;
+};
 
 OT_TOOL_PACKED_BEGIN
 class Beacon

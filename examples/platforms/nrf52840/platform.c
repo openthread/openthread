@@ -94,3 +94,14 @@ __WEAK void PlatformEventSignalPending(void)
 {
     // Intentionally empty
 }
+
+#if defined(__CC_ARM)
+__WEAK void __aeabi_assert(const char *aExpr, const char *aFile, int aLine)
+{
+    (void) aExpr;
+    (void) aFile;
+    (void) aLine;
+
+    while (1);
+}
+#endif

@@ -298,6 +298,37 @@ public:
     otError ReadIp6Address(otIp6Address &aIp6Addr);
 
     /**
+     * This method decodes and reads an IPv6 prefix (IPv6 address and its length) from the frame.
+     *
+     * On success, the read position gets updated.
+     *
+     * @param[out] aIp6PrefixPtr        Reference to IPv6 prefix pointer to output the value (as `otIp6Prefix`).
+     *                                  On success, the pointer variable is updated.
+     *
+     * @retval OT_ERROR_NONE            Successfully read the value.
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
+     *
+     */
+    otError ReadIp6Prefix(const otIp6Prefix *&aIp6PrefixPtr) {
+        return ReadItem(reinterpret_cast<const uint8_t **>(&aIp6PrefixPtr),
+                        sizeof(spinel_ipv6addr_t) + sizeof(uint8_t));
+    }
+
+    /**
+     * This method decodes and reads an IPv6 prefix (IPv6 address and its length) from the frame.
+     *
+     * On success, the read position gets updated and the IP prefix is copied into the given output variable.
+     *
+     * @param[out] aIp6Prefix           Reference to IPv6 prefix variable to output the value (as `otIp6Prefix`).
+     *                                  On success, the address is copied into the output variable.
+     *
+     * @retval OT_ERROR_NONE            Successfully read the value.
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
+     *
+     */
+    otError ReadIp6Prefix(otIp6Prefix &aIp6Prefix);
+
+    /**
      * This method decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated.

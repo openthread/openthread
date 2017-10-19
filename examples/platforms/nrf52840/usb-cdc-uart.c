@@ -33,9 +33,7 @@
  */
 
 #if defined(__GNUC__)
-
 #pragma GCC diagnostic ignored "-Wpedantic"
-
 #endif
 
 #include <openthread/config.h>

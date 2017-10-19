@@ -471,11 +471,13 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     otChildInfo childInfo;
     uint8_t maxChildren;
     long value;
-    bool isTable = false;
+    bool isTable;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
-    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
+    isTable = (strcmp(argv[0], "table") == 0);
+
+    if (isTable || strcmp(argv[0], "list") == 0)
     {
         if (isTable)
         {
@@ -1415,12 +1417,14 @@ void Interpreter::ProcessNeighbor(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
     otNeighborInfo neighborInfo;
-    bool isTable = false;
+    bool isTable;
     otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
-    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
+    isTable = (strcmp(argv[0], "table") == 0);
+
+    if (isTable || strcmp(argv[0], "list") == 0)
     {
         if (isTable)
         {
@@ -2227,11 +2231,13 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     otError error = OT_ERROR_NONE;
     otRouterInfo routerInfo;
     long value;
-    bool isTable = false;
+    bool isTable;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
-    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
+    isTable = (strcmp(argv[0], "table") == 0);
+
+    if (isTable || strcmp(argv[0], "list") == 0)
     {
         if (isTable)
         {
