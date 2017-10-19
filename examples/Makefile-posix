@@ -96,6 +96,7 @@ configure_OPTIONS                   = \
     --with-examples=posix             \
     --enable-application-coap         \
     --enable-border-router            \
+    --enable-service-support          \
     --enable-cert-log                 \
     --enable-child-supervision        \
     --enable-commissioner             \

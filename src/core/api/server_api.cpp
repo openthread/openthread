@@ -33,7 +33,7 @@
 
 #include <openthread/config.h>
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_SERVICE
 
 #include <openthread/server.h>
 
@@ -85,4 +85,4 @@ otError otServerRegister(otInstance *aInstance)
     return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
 }
 
-#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif  // OPENTHREAD_ENABLE_SERVICE

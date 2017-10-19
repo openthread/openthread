@@ -922,6 +922,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
             }
 
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_ENABLE_SERVICE
             else if ((aloc16 >= Mle::kAloc16ServiceStart) && (aloc16 <= Mle::kAloc16ServiceEnd))
             {
                 uint8_t serviceId = netif.GetMle().GetServiceIdFromAloc(aloc16);
@@ -932,7 +933,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
                     NetworkData::NetworkDataTlv *cur = serviceTlv->GetSubTlvs();
                     NetworkData::NetworkDataTlv *end = serviceTlv->GetNext();
                     NetworkData::ServerTlv *server;
-                    uint8_t bestCost = 0xff;
+                    uint8_t bestCost = Mle::kMaxRouteCost;
                     uint8_t curCost = 0x00;
                     uint16_t bestDest = Mac::kShortAddrInvalid;
 
@@ -975,6 +976,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
                     ExitNow(error = OT_ERROR_DROP);
                 }
             }
+#endif
             else
             {
                 // TODO: support ALOC for Commissioner, Neighbor Discovery Agent

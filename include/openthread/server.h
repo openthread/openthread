@@ -41,7 +41,8 @@
 extern "C" {
 #endif
 
-#ifndef OTDLL
+#if OPENTHREAD_ENABLE_SERVICE
+
 /**
  * @addtogroup api-server
  *
@@ -128,7 +129,7 @@ OTAPI otError OTCALL otServerRegister(otInstance *aInstance);
  *
  */
 
-#endif // OTDLL
+#endif // OPENTHREAD_ENABLE_SERVICE
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -34,6 +34,10 @@ ifeq ($(BORDER_ROUTER),1)
 configure_OPTIONS              += --enable-border-router
 endif
 
+ifeq ($(SERVICE_SUPPORT),1)
+configure_OPTIONS              += --enable-service-support
+endif
+
 ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log
 endif

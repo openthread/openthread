@@ -39,7 +39,7 @@
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
 
 namespace ot {
 namespace NetworkData {
@@ -151,6 +151,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
                           bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength)
 {
@@ -210,6 +211,7 @@ exit:
     otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
     return error;
 }
+#endif
 
 otError Local::UpdateRloc(void)
 {
@@ -223,9 +225,11 @@ otError Local::UpdateRloc(void)
             UpdateRloc(*static_cast<PrefixTlv *>(cur));
             break;
 
+#if OPENTHREAD_ENABLE_SERVICE
         case NetworkDataTlv::kTypeService:
             UpdateRloc(*static_cast<ServiceTlv *>(cur));
             break;
+#endif
 
         default:
             assert(false);
@@ -275,6 +279,7 @@ otError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 otError Local::UpdateRloc(ServiceTlv &aService)
 {
     for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
@@ -299,6 +304,7 @@ otError Local::UpdateRloc(ServerTlv &aServer)
     aServer.SetServer16(GetNetif().GetMle().GetRloc16());
     return OT_ERROR_NONE;
 }
+#endif
 
 bool Local::IsOnMeshPrefixConsistent(void)
 {
@@ -316,6 +322,7 @@ bool Local::IsExternalRouteConsistent(void)
             ContainsExternalRoutes(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 bool Local::IsServiceConsistent(void)
 {
     ThreadNetif &netif = GetNetif();
@@ -323,6 +330,7 @@ bool Local::IsServiceConsistent(void)
     return (netif.GetNetworkDataLeader().ContainsServices(*this, netif.GetMle().GetRloc16()) &&
             ContainsServices(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
 }
+#endif
 
 otError Local::SendServerDataNotification(void)
 {
@@ -346,8 +354,11 @@ otError Local::SendServerDataNotification(void)
 
     UpdateRloc();
 
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() ||
-                 !IsServiceConsistent(), ClearResubmitDelayTimer());
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent()
+#if OPENTHREAD_ENABLE_SERVICE
+                 || !IsServiceConsistent()
+#endif
+    , ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {
@@ -364,4 +375,4 @@ exit:
 }  // namespace NetworkData
 }  // namespace ot
 
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE

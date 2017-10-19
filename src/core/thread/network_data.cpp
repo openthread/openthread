@@ -234,6 +234,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
 {
     return GetNextService(aIterator, Mac::kShortAddrBroadcast, aConfig);
@@ -375,6 +376,7 @@ otError NetworkData::GetNextServiceId(otNetworkDataIterator *aIterator, uint16_t
 exit:
     return error;
 }
+#endif
 
 bool NetworkData::ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16)
 {
@@ -436,6 +438,7 @@ exit:
     return rval;
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 bool NetworkData::ContainsServices(NetworkData &aCompare, uint16_t aRloc16)
 {
     otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -522,13 +525,16 @@ bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16)
 exit:
     return rval;
 }
+#endif
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aData);
     NetworkDataTlv *end;
     PrefixTlv *prefix;
+#if OPENTHREAD_ENABLE_SERVICE
     ServiceTlv *service;
+#endif
     uint8_t length;
     uint8_t *dst;
     uint8_t *src;
@@ -563,6 +569,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
             break;
         }
 
+#if OPENTHREAD_ENABLE_SERVICE
         case NetworkDataTlv::kTypeService:
         {
             service = reinterpret_cast<ServiceTlv *>(cur);
@@ -581,6 +588,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
             otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
             break;
         }
+#endif
 
         default:
         {
@@ -697,6 +705,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
     }
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService)
 {
     NetworkDataTlv *cur = aService.GetSubTlvs();
@@ -747,6 +756,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
         }
     }
 }
+#endif
 
 BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix)
 {
@@ -922,6 +932,7 @@ int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLen
     return (rval >= aLength) ? rval : -1;
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData,
                                      uint8_t aServiceDataLength)
 {
@@ -956,6 +967,7 @@ ServiceTlv *NetworkData::FindService(uint32_t aEnterpriseNumber, const uint8_t *
 exit:
     return NULL;
 }
+#endif
 
 otError NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
 {

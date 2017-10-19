@@ -76,7 +76,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mMac(*this),
     mMeshForwarder(*this),
     mMleRouter(*this),
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     mNetworkDataLocal(*this),
 #endif
     mNetworkDataLeader(*this),

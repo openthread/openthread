@@ -123,6 +123,7 @@ public:
      */
     otError RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
+#if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method adds a Service entry to the Thread Network local data.
      *
@@ -152,6 +153,7 @@ public:
      *
      */
     otError RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
+#endif
 
     /**
      * This method sends a Server Data Notification message to the Leader.
@@ -167,12 +169,16 @@ private:
     otError UpdateRloc(PrefixTlv &aPrefix);
     otError UpdateRloc(HasRouteTlv &aHasRoute);
     otError UpdateRloc(BorderRouterTlv &aBorderRouter);
+#if OPENTHREAD_ENABLE_SERVICE
     otError UpdateRloc(ServiceTlv &aService);
     otError UpdateRloc(ServerTlv &aService);
+#endif
 
     bool IsOnMeshPrefixConsistent(void);
     bool IsExternalRouteConsistent(void);
+#if OPENTHREAD_ENABLE_SERVICE
     bool IsServiceConsistent(void);
+#endif
 
     uint16_t mOldRloc;
 };

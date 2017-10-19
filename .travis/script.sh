@@ -50,6 +50,7 @@ set -x
         --with-examples=posix             \
         --enable-application-coap         \
         --enable-border-router            \
+        --enable-service-support          \
         --enable-cert-log                 \
         --enable-child-supervision        \
         --enable-commissioner             \
@@ -218,6 +219,7 @@ set -x
         --enable-jam-detection              \
         --enable-child-supervision          \
         --enable-border-router              \
+        --enable-service-support            \
         --enable-mac-filter                 \
         --disable-docs                      \
         --disable-test || die
@@ -233,6 +235,7 @@ set -x
         --enable-legacy                     \
         --enable-child-supervision          \
         --enable-border-router              \
+        --enable-service-support            \
         --enable-mac-filter                 \
         --disable-docs                      \
         --disable-test || die

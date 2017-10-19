@@ -54,9 +54,9 @@
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 #include <openthread/border_router.h>
-#ifndef OTDLL
-#include <openthread/server.h>
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+#include <openthread/server.h>
 #endif
 
 #ifndef OTDLL
@@ -166,12 +166,11 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_FTD
     { "neighbor", &Interpreter::ProcessNeighbor },
 #endif
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
-#ifndef OTDLL
-    { "netdatashow", &Interpreter::ProcessNetworkDataShow },
-    { "service", &Interpreter::ProcessService },
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+    { "netdatashow", &Interpreter::ProcessNetworkDataShow },
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
@@ -212,6 +211,9 @@ const struct Command Interpreter::sCommands[] =
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
 #endif
     { "scan", &Interpreter::ProcessScan },
+#if OPENTHREAD_ENABLE_SERVICE
+    { "service", &Interpreter::ProcessService },
+#endif
     { "singleton", &Interpreter::ProcessSingleton },
     { "state", &Interpreter::ProcessState },
     { "thread", &Interpreter::ProcessThread },
@@ -1418,65 +1420,64 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessNeighbor(int argc, char *argv[])
-{
-    otError error = OT_ERROR_NONE;
-    otNeighborInfo neighborInfo;
-    bool isTable = false;
-    otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
-
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
-
-    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
-    {
-        if (isTable)
+        void Interpreter::ProcessNeighbor(int argc, char *argv[])
         {
-            mServer->OutputFormat("| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|S|D|N| Extended MAC     |\r\n");
-            mServer->OutputFormat("+------+--------+-----+----------+-----------+-+-+-+-+------------------+\r\n");
-        }
+            otError error = OT_ERROR_NONE;
+            otNeighborInfo neighborInfo;
+            bool isTable = false;
+            otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
 
-        while (otThreadGetNextNeighborInfo(mInstance, &iterator, &neighborInfo) == OT_ERROR_NONE)
-        {
-            if (isTable)
+            VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+
+            if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
             {
-                mServer->OutputFormat("| %3c  ", neighborInfo.mIsChild ? 'C' : 'R');
-                mServer->OutputFormat("| 0x%04x ", neighborInfo.mRloc16);
-                mServer->OutputFormat("| %3d ", neighborInfo.mAge);
-                mServer->OutputFormat("| %8d ", neighborInfo.mAverageRssi);
-                mServer->OutputFormat("| %9d ", neighborInfo.mLastRssi);
-                mServer->OutputFormat("|%1d", neighborInfo.mRxOnWhenIdle);
-                mServer->OutputFormat("|%1d", neighborInfo.mSecureDataRequest);
-                mServer->OutputFormat("|%1d", neighborInfo.mFullFunction);
-                mServer->OutputFormat("|%1d", neighborInfo.mFullNetworkData);
-                mServer->OutputFormat("| ");
-
-                for (size_t j = 0; j < sizeof(neighborInfo.mExtAddress); j++)
+                if (isTable)
                 {
-                    mServer->OutputFormat("%02x", neighborInfo.mExtAddress.m8[j]);
+                    mServer->OutputFormat("| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|S|D|N| Extended MAC     |\r\n");
+                    mServer->OutputFormat("+------+--------+-----+----------+-----------+-+-+-+-+------------------+\r\n");
                 }
 
-                mServer->OutputFormat(" |\r\n");
+                while (otThreadGetNextNeighborInfo(mInstance, &iterator, &neighborInfo) == OT_ERROR_NONE)
+                {
+                    if (isTable)
+                    {
+                        mServer->OutputFormat("| %3c  ", neighborInfo.mIsChild ? 'C' : 'R');
+                        mServer->OutputFormat("| 0x%04x ", neighborInfo.mRloc16);
+                        mServer->OutputFormat("| %3d ", neighborInfo.mAge);
+                        mServer->OutputFormat("| %8d ", neighborInfo.mAverageRssi);
+                        mServer->OutputFormat("| %9d ", neighborInfo.mLastRssi);
+                        mServer->OutputFormat("|%1d", neighborInfo.mRxOnWhenIdle);
+                        mServer->OutputFormat("|%1d", neighborInfo.mSecureDataRequest);
+                        mServer->OutputFormat("|%1d", neighborInfo.mFullFunction);
+                        mServer->OutputFormat("|%1d", neighborInfo.mFullNetworkData);
+                        mServer->OutputFormat("| ");
+
+                        for (size_t j = 0; j < sizeof(neighborInfo.mExtAddress); j++)
+                        {
+                            mServer->OutputFormat("%02x", neighborInfo.mExtAddress.m8[j]);
+                        }
+
+                        mServer->OutputFormat(" |\r\n");
+                    }
+                    else
+                    {
+                        mServer->OutputFormat("0x%04x ", neighborInfo.mRloc16);
+                    }
+                }
+
+                mServer->OutputFormat("\r\n");
             }
             else
             {
-                mServer->OutputFormat("0x%04x ", neighborInfo.mRloc16);
+                error = OT_ERROR_PARSE;
             }
+
+            exit:
+            AppendResult(error);
         }
-
-        mServer->OutputFormat("\r\n");
-    }
-    else
-    {
-        error = OT_ERROR_PARSE;
-    }
-
-exit:
-    AppendResult(error);
-}
 #endif
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
-#ifndef OTDLL
+#if OPENTHREAD_ENABLE_SERVICE
 void Interpreter::ProcessNetworkDataShow(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -1535,17 +1536,22 @@ exit:
 }
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     SuccessOrExit(error = otBorderRouterRegister(mInstance));
+#else
+    SuccessOrExit(error = otServerRegister(mInstance));
+#endif
 
 exit:
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
-#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])

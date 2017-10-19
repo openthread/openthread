@@ -805,6 +805,7 @@ public:
      */
     otError GetLeaderAloc(Ip6::Address &aAddress) const;
 
+#if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method retrieves the Service ALOC for given Service ID.
      *
@@ -816,6 +817,7 @@ public:
      *
      */
     otError GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
+#endif
 
     /**
      * This method adds Leader's ALOC to its Thread interface.
@@ -1424,11 +1426,13 @@ private:
                         ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
 
+#if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method scans for network data from the leader and updates ip addresses assigned to this
      * interface to make sure that all Service ALOCs (0xfc10-0xfc1f) are properly set.
      */
     void UpdateServiceAlocs(void);
+#endif
 
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     otError InformPreviousParent(void);
@@ -1481,7 +1485,9 @@ private:
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
+#if OPENTHREAD_ENABLE_SERVICE
     Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE];
+#endif
 
     Ip6::NetifUnicastAddress mLinkLocal64;
     Ip6::NetifUnicastAddress mMeshLocal64;

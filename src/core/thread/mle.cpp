@@ -96,7 +96,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mPreviousPanId(Mac::kPanIdBroadcast)
 {
     uint8_t meshLocalPrefix[8];
-    int i = 0;
+    unsigned long i = 0;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
@@ -125,8 +125,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLeaderAloc.mScopeOverride = Ip6::Address::kRealmLocalScope;
     mLeaderAloc.mScopeOverrideValid = true;
 
+#if OPENTHREAD_ENABLE_SERVICE
     // Service Alocs
-    for (i = 0; i < static_cast<int>(sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0])); i++)
+    for (i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
     {
         memset(&mServiceAlocs[i], 0, sizeof(mServiceAlocs[i]));
 
@@ -137,6 +138,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
         mServiceAlocs[i].mScopeOverrideValid = true;
         mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
     }
+#endif
 
     // initialize Mesh Local Prefix
     meshLocalPrefix[0] = 0xfd;
@@ -267,7 +269,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     netif.GetKeyManager().Stop();
     SetStateDetached();
     netif.RemoveUnicastAddress(mMeshLocal16);
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     netif.GetNetworkDataLocal().Clear();
 #endif
     netif.GetNetworkDataLeader().Clear();
@@ -634,7 +636,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
         netif.GetMle().HandleChildStart(mParentRequestMode);
     }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     netif.GetNetworkDataLocal().ClearResubmitDelayTimer();
 #endif
     netif.GetIp6().SetForwardingEnabled(false);
@@ -882,6 +884,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
     otError error = OT_ERROR_NONE;
@@ -897,6 +900,7 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 exit:
     return error;
 }
+#endif
 
 otError Mle::AddLeaderAloc(void)
 {
@@ -1293,10 +1297,11 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
             mSendChildUpdateRequest.Post();
         }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
         netif.GetNetworkDataLocal().SendServerDataNotification();
-
+#if OPENTHREAD_ENABLE_SERVICE
         this->UpdateServiceAlocs();
+#endif
 #endif
     }
 
@@ -1309,6 +1314,7 @@ exit:
     return;
 }
 
+#if OPENTHREAD_ENABLE_SERVICE
 void Mle::UpdateServiceAlocs(void)
 {
     ThreadNetif &netif = GetNetif();
@@ -1369,6 +1375,7 @@ void Mle::UpdateServiceAlocs(void)
 exit:
     return;
 }
+#endif
 
 void Mle::HandleParentRequestTimer(Timer &aTimer)
 {
