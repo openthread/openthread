@@ -264,6 +264,7 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
+    test_service.py                                                  \
     Cert_5_2_05_AddressQuery.py                                      \
     Cert_5_3_09_AddressQuery.py                                      \
     Cert_8_1_01_Commissioning.py                                     \

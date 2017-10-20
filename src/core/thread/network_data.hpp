@@ -257,7 +257,7 @@ public:
     bool ContainsServices(NetworkData &aCompare, uint16_t aRloc16);
 
     /**
-     * This method indicates whether or not the Thread Network Data contain the service with given Service ID
+     * This method indicates whether or not the Thread Network Data contains the service with given Service ID
      * associated with @p aRloc16.
      *
      * @param[in]  aServiceID The Service ID to search for.
@@ -358,7 +358,7 @@ protected:
      * This method returns a pointer to a matching Service TLV.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to an Service Data.
+     * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
      *
      * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.

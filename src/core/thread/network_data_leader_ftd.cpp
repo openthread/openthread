@@ -130,17 +130,13 @@ otError Leader::SetContextIdReuseDelay(uint32_t aDelay)
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16)
 {
-    return RemoveRlocData(aRloc16, true);
-}
-void Leader::RemoveRlocData(uint16_t aRloc16, bool aOnlyRouter)
-{
     bool rlocIn = false;
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
     VerifyOrExit(rlocIn);
 
-    RemoveRloc(aRloc16, aOnlyRouter);
+    RemoveRloc(aRloc16);
     mVersion++;
 
     if (rlocStable)
@@ -173,7 +169,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == OT_ERROR_NONE)
     {
         VerifyOrExit(rloc16.IsValid());
-        RemoveRlocData(rloc16.GetRloc16(), false);
+        RemoveBorderRouter(rloc16.GetRloc16());
     }
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
@@ -1202,11 +1198,6 @@ exit:
 
 otError Leader::RemoveRloc(uint16_t aRloc16)
 {
-    return RemoveRloc(aRloc16, false);
-}
-
-otError Leader::RemoveRloc(uint16_t aRloc16, bool aOnlyRouter)
-{
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
     NetworkDataTlv *end;
     PrefixTlv *prefix;
@@ -1244,19 +1235,16 @@ otError Leader::RemoveRloc(uint16_t aRloc16, bool aOnlyRouter)
 
         case NetworkDataTlv::kTypeService:
         {
-            if (!aOnlyRouter)
+            service = static_cast<ServiceTlv *>(cur);
+            RemoveRloc(*service, aRloc16);
+
+            if (service->GetSubTlvsLength() == 0)
             {
-                service = static_cast<ServiceTlv *>(cur);
-                RemoveRloc(*service, aRloc16);
-
-                if (service->GetSubTlvsLength() == 0)
-                {
-                    Remove(reinterpret_cast<uint8_t *>(service), sizeof(NetworkDataTlv) + service->GetLength());
-                    continue;
-                }
-
-                otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
+                Remove(reinterpret_cast<uint8_t *>(service), sizeof(NetworkDataTlv) + service->GetLength());
+                continue;
             }
+
+            otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
 
             break;
         }

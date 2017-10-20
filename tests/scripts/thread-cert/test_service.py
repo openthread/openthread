@@ -131,7 +131,7 @@ class Test_Service(unittest.TestCase):
         self.assertEqual(self.hasAloc(ROUTER2, SRV_0_ID), False)
         self.assertEqual(self.hasAloc(ROUTER2, SRV_1_ID), False)
 
-        aloc0 = self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.ALOC)[ 0 ]
+        aloc0 = self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.ALOC)[0]
         self.pingFromAll(aloc0)
 
         self.nodes[LEADER].add_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA, SRV_0_SERVER_DATA)
@@ -158,7 +158,7 @@ class Test_Service(unittest.TestCase):
         self.assertEqual(self.hasAloc(ROUTER2, SRV_0_ID), False)
         self.assertEqual(self.hasAloc(ROUTER2, SRV_1_ID), True)
 
-        aloc1 = self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.ALOC)[ 0 ]
+        aloc1 = self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.ALOC)[0]
         self.pingFromAll(aloc0)
         self.pingFromAll(aloc1)
 

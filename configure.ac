@@ -1134,34 +1134,34 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_ROUTER], [test "${enable_border_router}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_ROUTER],[${OPENTHREAD_ENABLE_BORDER_ROUTER}],[Define to 1 if you want to enable Border Router])
 
 #
-# Service support
+# Service
 #
 
-AC_ARG_ENABLE(service_support,
-    [AS_HELP_STRING([--enable-service-support],[Enable Service support @<:@default=no@:>@.])],
+AC_ARG_ENABLE(service,
+    [AS_HELP_STRING([--enable-service],[Enable Service @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_service_support=${enableval}
+            enable_service=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_service_support} for --enable-service-support])
+            AC_MSG_ERROR([Invalid value ${enable_service} for --enable-service])
             ;;
         esac
     ],
-    [enable_service_support=no])
+    [enable_service=no])
 
-if test "$enable_service_support" = "yes"; then
+if test "$enable_service" = "yes"; then
     OPENTHREAD_ENABLE_SERVICE=1
 else
     OPENTHREAD_ENABLE_SERVICE=0
 fi
 
 AC_SUBST(OPENTHREAD_ENABLE_SERVICE)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service_support}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service support])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service])
 
 #
 # Linker Map Output
@@ -1544,7 +1544,7 @@ AC_MSG_NOTICE([
   OpenThread Application CoAP support       : ${enable_application_coap}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Border Router support          : ${enable_border_router}
-  OpenThread Service support                : ${enable_service_support}
+  OpenThread Service support                : ${enable_service}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
 
 ])

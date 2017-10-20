@@ -179,10 +179,8 @@ private:
     otError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
 
     otError RemoveCommissioningData(void);
-    void RemoveRlocData(uint16_t aRloc16, bool aOnlyRouter);
 
     otError RemoveRloc(uint16_t aRloc16);
-    otError RemoveRloc(uint16_t aRloc16, bool aOnlyRouter);
     otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16);
 #if OPENTHREAD_ENABLE_SERVICE
     otError RemoveRloc(ServiceTlv &service, uint16_t aRloc16);

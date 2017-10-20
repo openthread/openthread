@@ -869,7 +869,7 @@ public:
     static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
     /**
-     * This method returns the Service ID corresponding to an Service ALOC16.
+     * This method returns the Service ID corresponding to a Service ALOC16.
      *
      * @param[in]  aAloc16  The Servicer ALOC16 value.
      *
@@ -879,7 +879,7 @@ public:
     static uint8_t GetServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
     /**
-     * This method returns the Service Aloc corresponding to an Service ID.
+     * This method returns the Service Aloc corresponding to a Service ID.
      *
      * @param[in]  aAloc16  The Servicer ID value.
      *
