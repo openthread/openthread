@@ -36,6 +36,12 @@ void otPlatReset(otInstance *aInstance)
     mrf24j40_hard_reset();
 }
 
+void otPlatRebootBootloader(otInstance *aInstance)
+{
+    (void)aInstance;
+    // TODO: Write me!
+}
+
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;

@@ -37,6 +37,8 @@
 #include "platform-efr32.h"
 #include "em_rmu.h"
 
+#include "btl_interface.h"
+
 static uint32_t sResetCause;
 
 void efr32MiscInit(void)
@@ -51,6 +53,23 @@ void efr32MiscInit(void)
 void otPlatReset(otInstance *aInstance)
 {
     (void)aInstance;
+    NVIC_SystemReset();
+}
+
+void otPlatRebootBootloader(otInstance *aInstance)
+{
+    (void)aInstance;
+
+    // Clear resetcause
+    RMU->CMD = RMU_CMD_RCCLR;
+
+    // Set reset reason to bootloader entry
+    BootloaderResetCause_t* resetCause = (BootloaderResetCause_t*) (RAM_MEM_BASE);
+    resetCause->reason = BOOTLOADER_RESET_REASON_BOOTLOAD;
+    resetCause->signature = BOOTLOADER_RESET_SIGNATURE_VALID;
+
+    // Trigger a software system reset
+    RMU->CTRL = (RMU->CTRL & ~_RMU_CTRL_SYSRMODE_MASK) | RMU_CTRL_SYSRMODE_FULL;
     NVIC_SystemReset();
 }
 

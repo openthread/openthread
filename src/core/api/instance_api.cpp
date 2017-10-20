@@ -245,6 +245,11 @@ void otInstanceReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+void otInstanceRebootBootloader(otInstance *aInstance)
+{
+    otPlatRebootBootloader(aInstance);
+}
+
 void otInstanceFactoryReset(otInstance *aInstance)
 {
     otPlatSettingsWipe(aInstance);

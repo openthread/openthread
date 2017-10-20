@@ -912,6 +912,10 @@ otError NcpBase::HandleCommand(uint8_t aHeader, unsigned int aCommand)
         error = CommandHandler_RESET(aHeader);
         break;
 
+    case SPINEL_CMD_REBOOT_BOOTLOADER:
+        error = CommandHandler_REBOOT_BOOTLOADER(aHeader);
+        break;
+
     case SPINEL_CMD_PROP_VALUE_GET:
     case SPINEL_CMD_PROP_VALUE_SET:
     case SPINEL_CMD_PROP_VALUE_INSERT:
@@ -1252,6 +1256,16 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
         mUpdateChangedPropsTask.Post();
     }
+
+    return error;
+}
+
+otError NcpBase::CommandHandler_REBOOT_BOOTLOADER(uint8_t aHeader)
+{
+    otError error = OT_ERROR_NONE;
+
+    otInstanceRebootBootloader(mInstance);
+    error = CommandHandler_RESET(aHeader);
 
     return error;
 }

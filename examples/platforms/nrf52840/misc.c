@@ -76,6 +76,12 @@ void otPlatReset(otInstance *aInstance)
     NVIC_SystemReset();
 }
 
+void otPlatRebootBootloader(otInstance *aInstance)
+{
+    (void)aInstance;
+    // TODO: Write me!
+}
+
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;

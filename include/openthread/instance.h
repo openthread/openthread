@@ -265,6 +265,15 @@ OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChan
 OTAPI void OTCALL otInstanceReset(otInstance *aInstance);
 
 /**
+ * This method triggers a reset into the bootloader
+ *
+ * Triggers a reboot into the bootloader
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ */
+OTAPI void OTCALL otInstanceRebootBootloader(otInstance *aInstance);
+
+/**
  * This method deletes all the settings stored on non-volatile memory, and then triggers platform reset.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

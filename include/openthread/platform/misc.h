@@ -62,6 +62,14 @@ extern "C" {
 void otPlatReset(otInstance *aInstance);
 
 /**
+ * This function performs a software reset and holds in the bootloader, if supported.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ */
+void otPlatRebootBootloader(otInstance *aInstance);
+
+/**
  * Enumeration of possible reset reason codes.
  *
  * These are in the same order as the Spinel reset reason codes.

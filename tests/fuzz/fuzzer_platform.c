@@ -81,6 +81,11 @@ void otPlatReset(otInstance *aInstance)
     (void)aInstance;
 }
 
+void otPlatRebootBootloader(otInstance *aInstance)
+{
+    (void)aInstance;
+}
+
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;

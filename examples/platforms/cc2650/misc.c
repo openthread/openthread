@@ -42,6 +42,15 @@ void otPlatReset(otInstance *aInstance)
 /**
  * Function documented in platform/misc.h
  */
+void otPlatRebootBootloader(otInstance *aInstance)
+{
+    (void)aInstance;
+    // TODO: Write me!
+}
+
+/**
+ * Function documented in platform/misc.h
+ */
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;

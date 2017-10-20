@@ -248,6 +248,8 @@ private:
 
     otError CommandHandler_NOOP(uint8_t aHeader);
     otError CommandHandler_RESET(uint8_t aHeader);
+    otError CommandHandler_REBOOT_BOOTLOADER(uint8_t aHeader);
+
     // Combined command handler for `VALUE_GET`, `VALUE_SET`, `VALUE_INSERT` and `VALUE_REMOVE`.
     otError CommandHandler_PROP_VALUE_update(uint8_t aHeader, unsigned int aCommand);
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
