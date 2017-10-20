@@ -1260,10 +1260,6 @@ otError Leader::RemoveRloc(uint16_t aRloc16)
 
     otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
 
-#if !OPENTHREAD_ENABLE_SERVICE
-    OT_UNUSED_VARIABLE(aOnlyRouter);
-#endif
-
     return OT_ERROR_NONE;
 }
 
