@@ -175,6 +175,7 @@ check_SCRIPTS                                                      = \
     Cert_5_1_12_NewRouterNeighborSync.py                             \
     Cert_5_1_13_RouterReset.py                                       \
     Cert_5_2_01_BecomeActiveRouter.py                                \
+    Cert_5_2_05_AddressQuery.py                                      \
     Cert_5_2_06_RouterDowngrade.py                                   \
     Cert_5_2_07_REEDSynchronization.py                               \
     Cert_5_2_04_REEDUpgrade.py                                       \
