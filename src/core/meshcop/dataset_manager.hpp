@@ -184,7 +184,7 @@ protected:
      *
      * @param[in]  aHeader       The CoAP header.
      * @param[in]  aMessage      The CoAP message buffer.
-     * @parma[in]  aMessageInfo  The message info.
+     * @param[in]  aMessageInfo  The message info.
      *
      */
     void Get(const Coap::Header &aHeader, const Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
@@ -225,7 +225,7 @@ public:
     /**
      * This method sends a MGMT_SET request to the Leader.
      *
-     * @parma[in]  aDataset  The Operational Datset.
+     * @param[in]  aDataset  The Operational Datset.
      * @param[in]  aTlvs     Any additional raw TLVs to include.
      * @param[in]  aLength   Number of bytes in @p aTlvs.
      *
@@ -239,7 +239,7 @@ public:
      *
      * @param[in]  aTlvTypes  The list of TLV types to request.
      * @param[in]  aLength    Number of bytes in @p aTlvTypes.
-     * @parma[in]  aAddress   The IPv6 destination address for the MGMT_GET request.
+     * @param[in]  aAddress   The IPv6 destination address for the MGMT_GET request.
      *
      * @retval OT_ERROR_NONE on success.
      *
@@ -250,7 +250,7 @@ protected:
     /**
      * This method sets the Operational Dataset in non-volatile memory.
      *
-     * @parma[in]  aDataset  The Operational Dataset.
+     * @param[in]  aDataset  The Operational Dataset.
      *
      */
     otError Set(const otOperationalDataset &aDataset);
@@ -260,7 +260,7 @@ protected:
      *
      * @param[in]  aHeader       The CoAP header.
      * @param[in]  aMessage      The CoAP message buffer.
-     * @parma[in]  aMessageInfo  The message info.
+     * @param[in]  aMessageInfo  The message info.
      *
      * @retval OT_ERROR_NONE  The MGMT_SET request message was handled successfully.
      * @retval OT_ERROR_DROP  The MGMT_SET request message was dropped.
@@ -314,7 +314,7 @@ public:
     /**
      * This method sets the Operational Dataset in non-volatile memory.
      *
-     * @parma[in]  aDataset  The Operational Dataset.
+     * @param[in]  aDataset  The Operational Dataset.
      *
      */
     otError Set(const otOperationalDataset &aDataset);
@@ -407,7 +407,7 @@ public:
      *
      * This method also starts the Delay Timer.
      *
-     * @parma[in]  aDataset  The Operational Dataset.
+     * @param[in]  aDataset  The Operational Dataset.
      *
      */
     otError Set(const otOperationalDataset &aDataset);
