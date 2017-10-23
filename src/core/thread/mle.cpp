@@ -758,6 +758,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     netif.UnsubscribeMulticast(mRealmLocalAllThreadNodes);
 
 #if OPENTHREAD_ENABLE_SERVICE
+
     for (uint8_t i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
     {
         if (HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]) != Mac::kShortAddrInvalid)
@@ -766,6 +767,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
             mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
         }
     }
+
 #endif
 
     memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8);
