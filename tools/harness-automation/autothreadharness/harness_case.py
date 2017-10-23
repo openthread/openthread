@@ -162,6 +162,7 @@ class HarnessCase(unittest.TestCase):
         self._hc = None
         self.result_dir = '%s\\%s' % (settings.OUTPUT_PATH, self.__class__.__name__)
         self.history = HistoryHelper()
+        self.add_all_devices = False
 
         super(HarnessCase, self).__init__(*args, **kwargs)
 
@@ -485,10 +486,11 @@ class HarnessCase(unittest.TestCase):
         if len(devices) < golden_devices_required:
             raise GoldenDeviceNotEnoughError()
 
+
         # add golden devices
-        while golden_devices_required:
+        number_of_devices_to_add = len(devices) if self.add_all_devices else golden_devices_required
+        for i in range(number_of_devices_to_add):
             self._add_device(*devices.pop())
-            golden_devices_required = golden_devices_required - 1
 
         # add DUT
         if settings.DUT_DEVICE:
@@ -511,7 +513,7 @@ class HarnessCase(unittest.TestCase):
                 self._connect_devices()
                 button_next = browser.find_element_by_id('nextBtn')
                 if not wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
-                                  times=(30 + 4 * self.golden_devices_required)):
+                                  times=(30 + 4 * number_of_devices_to_add)):
                     bad_ones = []
                     selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
                     for selected_hw in selected_hw_set:
