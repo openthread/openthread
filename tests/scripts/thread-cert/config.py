@@ -59,6 +59,9 @@ RSSI = {'LINK_QULITY_0': -100, 'LINK_QULITY_1': -95, 'LINK_QULITY_2': -85, 'LINK
 SNIFFER_ID = int(os.getenv('SNIFFER_ID', 34))
 PANID = 0xface
 
+MAX_NEIGHBOR_AGE = 100
+INFINITE_COST_TIMEOUT = 90
+
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
         network_data.TlvType.HAS_ROUTE: network_data.HasRouteFactory(

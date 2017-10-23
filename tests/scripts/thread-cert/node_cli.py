@@ -192,6 +192,10 @@ class otCli:
         self.pexpect.expect('Done')
         return addr16
 
+    def get_router_id(self):
+        rloc16 = self.get_addr16()
+        return (rloc16 >> 10)
+
     def get_addr64(self):
         self.send_command('extaddr')
         i = self.pexpect.expect('([0-9a-fA-F]{16})')

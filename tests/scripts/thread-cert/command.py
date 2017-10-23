@@ -79,3 +79,28 @@ def check_icmp_path(sniffer, path, nodes, icmp_type = ipv6.ICMP_ECHO_REQUEST):
             return True
 
     return False
+
+def check_id_set(command_msg, router_id):
+    """Check the command_msg's Route64 tlv to verify the id set include router.
+    """
+    tlv = command_msg.assertMleMessageContainsTlv(mle.Route64)
+    return ((tlv.router_id_mask >> (63 - router_id)) & 1)
+
+def get_routing_cost(command_msg, router_id):
+    """Check the command_msg's Route64 tlv to get the routing cost to router.
+    """
+    tlv = command_msg.assertMleMessageContainsTlv(mle.Route64)
+
+    # Get router's mask pos
+    # Turn the number into binary string. Need to consider the preceding 0 omitted during conversion.
+    router_id_mask_str = bin(tlv.router_id_mask).replace('0b','')
+    prefix_len = 64 - len(router_id_mask_str)
+    routing_entry_pos = 0
+
+    for i in range(0, router_id - prefix_len):
+        if router_id_mask_str[i] == '1':
+            routing_entry_pos += 1
+
+    assert router_id_mask_str[router_id - prefix_len] == '1', "Error: The router isn't in the topology"
+
+    return tlv.link_quality_and_route_data[routing_entry_pos].route
