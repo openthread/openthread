@@ -757,6 +757,17 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     netif.UnsubscribeMulticast(mLinkLocalAllThreadNodes);
     netif.UnsubscribeMulticast(mRealmLocalAllThreadNodes);
 
+#if OPENTHREAD_ENABLE_SERVICE
+    for (uint8_t i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
+    {
+        if (HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]) != Mac::kShortAddrInvalid)
+        {
+            netif.RemoveUnicastAddress(mServiceAlocs[i]);
+            mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
+        }
+    }
+#endif
+
     memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8);
     memcpy(mMeshLocal16.GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
 
@@ -782,6 +793,10 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
         netif.RemoveUnicastAddress(mLeaderAloc);
         AddLeaderAloc();
     }
+
+#if OPENTHREAD_ENABLE_SERVICE
+    UpdateServiceAlocs();
+#endif
 
     // Changing the prefix also causes the mesh local address to be different.
     netif.SetStateChangedFlags(OT_CHANGED_THREAD_ML_ADDR);
