@@ -227,18 +227,6 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadIp6Prefix(otIp6Prefix &aIp6Prefix)
-{
-    otError error = OT_ERROR_NONE;
-    const otIp6Prefix *ipv6PrefixPtr;
-
-    SuccessOrExit(error = ReadIp6Prefix(ipv6PrefixPtr));
-    aIp6Prefix = *ipv6PrefixPtr;
-
-exit:
-    return error;
-}
-
 otError SpinelDecoder::ReadEui64(spinel_eui64_t &aEui64)
 {
     otError error = OT_ERROR_NONE;

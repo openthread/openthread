@@ -756,15 +756,18 @@ otError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(void)
     otBorderRouterConfig borderRouterConfig;
     bool stable = false;
     uint8_t flags = 0;
+    uint8_t prefixLength;
 
     memset(&borderRouterConfig, 0, sizeof(otBorderRouterConfig));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = mDecoder.ReadIp6Prefix(borderRouterConfig.mPrefix));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(borderRouterConfig.mPrefix.mPrefix));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
     SuccessOrExit(error = mDecoder.ReadBool(stable));
     SuccessOrExit(error = mDecoder.ReadUint8(flags));
 
+    borderRouterConfig.mPrefix.mLength = prefixLength;
     borderRouterConfig.mStable = stable;
     borderRouterConfig.mPreference =
         ((flags & SPINEL_NET_FLAG_PREFERENCE_MASK) >> SPINEL_NET_FLAG_PREFERENCE_OFFSET);
@@ -785,12 +788,16 @@ otError NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(void)
 {
     otError error = OT_ERROR_NONE;
     otIp6Prefix ip6Prefix;
+    uint8_t prefixLength;
 
     memset(&ip6Prefix, 0, sizeof(otIp6Prefix));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = mDecoder.ReadIp6Prefix(ip6Prefix));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Prefix.mPrefix));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
+
+    ip6Prefix.mLength = prefixLength;
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &ip6Prefix);
 
@@ -1129,15 +1136,18 @@ otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(void)
     otExternalRouteConfig routeConfig;
     bool stable = false;
     uint8_t flags = 0;
+    uint8_t prefixLength;
 
     memset(&routeConfig, 0, sizeof(otExternalRouteConfig));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = mDecoder.ReadIp6Prefix(routeConfig.mPrefix));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(routeConfig.mPrefix.mPrefix));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
     SuccessOrExit(error = mDecoder.ReadBool(stable));
     SuccessOrExit(error = mDecoder.ReadUint8(flags));
 
+    routeConfig.mPrefix.mLength = prefixLength;
     routeConfig.mStable = stable;
     routeConfig.mPreference = FlagByteToExternalRoutePreference(flags);
 
@@ -1151,12 +1161,16 @@ otError NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES(void)
 {
     otError error = OT_ERROR_NONE;
     otIp6Prefix ip6Prefix;
+    uint8_t prefixLength;
 
     memset(&ip6Prefix, 0, sizeof(otIp6Prefix));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = mDecoder.ReadIp6Prefix(ip6Prefix));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Prefix.mPrefix));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
+
+    ip6Prefix.mLength = prefixLength;
 
     error = otBorderRouterRemoveRoute(mInstance, &ip6Prefix);
 
