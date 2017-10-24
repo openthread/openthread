@@ -73,6 +73,8 @@ libopenthread_samr21_a_CPPFLAGS                                                 
     -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/reset                                        \
     -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/reset/reset_sam_d_r_h                        \
     -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom                                              \
+    -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/i2c                                          \
+    -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/i2c/i2c_sam0                                 \
     -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/spi                                          \
     -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/usart                                        \
     -I$(top_srcdir)/third_party/microchip/sam0/utils                                                       \
@@ -126,6 +128,7 @@ nodist_libopenthread_samr21_a_SOURCES                                           
     @top_builddir@/third_party/microchip/sam0/drivers/system/pinmux/pinmux.c                               \
     @top_builddir@/third_party/microchip/sam0/drivers/sercom/sercom.c                                      \
     @top_builddir@/third_party/microchip/sam0/drivers/sercom/sercom_interrupt.c                            \
+    @top_builddir@/third_party/microchip/sam0/drivers/sercom/i2c/i2c_sam0/i2c_master.c                     \
     @top_builddir@/third_party/microchip/sam0/drivers/sercom/spi/spi.c                                     \
     @top_builddir@/third_party/microchip/sam0/drivers/sercom/usart/usart.c                                 \
     @top_builddir@/third_party/microchip/sam0/drivers/sercom/usart/usart_interrupt.c                       \

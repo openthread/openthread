@@ -35,8 +35,12 @@
 #ifndef USER_ROW_H_
 #define USER_ROW_H_
 
+// The SAM R21 provides a user readable Non-Volatile Memory (NVM) space
+// referred to as the user row in the data sheet.
+// The base address for the application is 0x804008.
 #define SAMR21_USER_ROW 0x804008
 
+// User row structure
 OT_TOOL_PACKED_BEGIN
 struct samr21UserRow
 {

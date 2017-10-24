@@ -387,13 +387,7 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void)aInstance;
-
-#ifdef CONF_IEEE_ADDRESS
-    *((uint64_t *)aIeeeEui64) = CONF_IEEE_ADDRESS;
-#else
-    memcpy(aIeeeEui64, sUserRow->mMacAddress, OT_EXT_ADDRESS_SIZE);
-#endif
+    samr21GetIeeeEui64(aInstance, aIeeeEui64);
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)

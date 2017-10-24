@@ -38,13 +38,9 @@
 #include <stdint.h>
 
 #include "openthread/types.h"
-#include "user_row.h"
 
 // Global OpenThread instance structure
 extern otInstance *sInstance;
-
-// Global samr21UserRow structure
-extern samr21UserRow *sUserRow;
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -97,5 +93,11 @@ void samr21RandomInit(void);
  *
  */
 void samr21UartProcess(void);
+
+/**
+ * This function returns platform IEEE EUI-64.
+ *
+ */
+void samr21GetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 
 #endif  // PLATFORM_SAMR21_H_
