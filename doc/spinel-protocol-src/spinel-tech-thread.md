@@ -335,3 +335,20 @@ Response messages.
 * All zeros to clear the steering data (indicating no steering data).
 * All 0xFFs to set the steering data (bloom filter) to accept/allow all.
 * A specific EUI64 which is then added to steering data/bloom filter.
+
+### PROP 5399: SPINEL_PROP_THREAD_ROUTER_TABLE {#prop-thread-router-table}
+
+* Type: Read-Only
+* Packed-Encoding: `A(t(ESCCCCCCb)`
+
+Data per item is:
+
+*  `E`: IEEE 802.15.4 Extended Address
+*  `S`: RLOC16
+*  `C`: Router ID
+*  `C`: Next hop to router
+*  `C`: Path cost to router
+*  `C`: Link Quality In
+*  `C`: Link Quality Out
+*  `C`: Age (seconds since last heard)
+*  `b`: Link established with Router ID or not.

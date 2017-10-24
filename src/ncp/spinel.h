@@ -1010,6 +1010,24 @@ typedef enum
      */
     SPINEL_PROP_THREAD_STEERING_DATA    = SPINEL_PROP_THREAD_EXT__BEGIN + 22,
 
+    /// Thread Router Table.
+    /** Format: `A(t(ESCCCCCCb)`.
+     *
+     * Data per item is:
+     *
+     *  `E`: IEEE 802.15.4 Extended Address
+     *  `S`: RLOC16
+     *  `C`: Router ID
+     *  `C`: Next hop to router
+     *  `C`: Path cost to router
+     *  `C`: Link Quality In
+     *  `C`: Link Quality Out
+     *  `C`: Age (seconds since last heard)
+     *  `b`: Link established with Router ID or not.
+     *
+     */
+    SPINEL_PROP_THREAD_ROUTER_TABLE     = SPINEL_PROP_THREAD_EXT__BEGIN + 23,
+
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN             = 0x60,

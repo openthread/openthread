@@ -372,8 +372,19 @@ OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t 
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Router ID Sequence.
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
+
+/**
+ * The function returns the maximum allowed router ID
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The maximum allowed router ID.
+ *
+ */
+uint8_t otThreadGetMaxRouterId(otInstance *aInstance);
 
 /**
  * The function retains diagnostic information for a given Thread Router.
@@ -381,6 +392,10 @@ OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
  * @param[out]  aRouterInfo  A pointer to where the router information is placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the router info for given id.
+ * @retval OT_ERROR_NOT_FOUND     No router entry with the given id.
+ * @retval OT_ERROR_INVALID_ARGS  @p aRouterInfo is NULL.
  *
  */
 OTAPI otError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
