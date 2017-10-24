@@ -1330,9 +1330,9 @@ otError NcpBase::CommandHandler_POKE(uint8_t aHeader)
     const uint8_t *dataPtr = NULL;
     uint16_t dataLen;
 
-    SuccessOrExit(error = mDecoder.ReadUint32(address));
-    SuccessOrExit(error = mDecoder.ReadUint16(count));
-    SuccessOrExit(error = mDecoder.ReadData(dataPtr, dataLen));
+    SuccessOrExit(parseError = mDecoder.ReadUint32(address));
+    SuccessOrExit(parseError = mDecoder.ReadUint16(count));
+    SuccessOrExit(parseError = mDecoder.ReadData(dataPtr, dataLen));
 
     VerifyOrExit(count != 0, parseError = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(count <= dataLen, parseError = OT_ERROR_INVALID_ARGS);
