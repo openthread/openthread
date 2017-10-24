@@ -469,7 +469,6 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
     otChildInfo childInfo;
-    uint8_t maxChildren;
     long value;
     bool isTable = false;
 
@@ -483,11 +482,11 @@ void Interpreter::ProcessChild(int argc, char *argv[])
             mServer->OutputFormat("+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+\r\n");
         }
 
-        maxChildren = otThreadGetMaxAllowedChildren(mInstance);
-
-        for (uint8_t i = 0; i < maxChildren ; i++)
+        // For certifcation: here intentionally not limits the upperbound for the index,
+        // giving the chance to exit from below default case as OpenThread THCI expects
+        // the content of "child list" and the result "Done" in seperate lines.
+        for (uint8_t i = 0; ; i++)
         {
-
             switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
             {
             case OT_ERROR_NONE:
@@ -530,8 +529,6 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 }
             }
         }
-
-        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
