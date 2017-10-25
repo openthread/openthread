@@ -97,7 +97,6 @@ void ChildSupervisor::SendMessage(Child &aChild)
 {
     ThreadNetif &netif = GetNetif();
     Message *message = NULL;
-    otError error = OT_ERROR_NONE;
     uint8_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
@@ -111,9 +110,9 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // `ChildSupervisor::GetDestination(message)`.
 
     childIndex = netif.GetMle().GetChildIndex(aChild);
-    SuccessOrExit(error = message->Append(&childIndex, sizeof(childIndex)));
+    SuccessOrExit(message->Append(&childIndex, sizeof(childIndex)));
 
-    SuccessOrExit(error = netif.SendMessage(*message));
+    SuccessOrExit(netif.SendMessage(*message));
     message = NULL;
 
     otLogInfoMle(GetInstance(), "Sending supervision message to child 0x%04x", aChild.GetRloc16());

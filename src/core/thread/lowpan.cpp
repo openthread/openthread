@@ -1178,7 +1178,7 @@ otError FragmentHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
     otError error = OT_ERROR_PARSE;
 
     VerifyOrExit(aFrameLength >= sizeof(mDispatchSize) + sizeof(mTag));
-    memcpy(&mDispatchSize, aFrame, sizeof(mDispatchSize) + sizeof(mTag));
+    memcpy(reinterpret_cast<uint8_t *>(&mDispatchSize), aFrame, sizeof(mDispatchSize) + sizeof(mTag));
     aFrame += sizeof(mDispatchSize) + sizeof(mTag);
     aFrameLength -= sizeof(mDispatchSize) + sizeof(mTag);
 

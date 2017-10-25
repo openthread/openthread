@@ -428,7 +428,7 @@ otError Dhcp6Server::SendReply(otIp6Address &aDst, uint8_t *aTransactionId, Clie
     SuccessOrExit(error = AppendRapidCommit(*message));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(&messageInfo.GetPeerAddr().mFields.m8, &aDst, sizeof(otIp6Address));
+    memcpy(messageInfo.GetPeerAddr().mFields.m8, &aDst, sizeof(otIp6Address));
     messageInfo.mPeerPort = kDhcpClientPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 

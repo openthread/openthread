@@ -246,6 +246,18 @@ extern "C" {
     CODE                                \
     _Pragma("diag_default=Pe111")
 
+#elif defined(__CC_ARM)
+
+#include <stddef.h>
+
+#define OT_UNUSED_VARIABLE(VARIABLE)    \
+    do                                  \
+    {                                   \
+        if (&VARIABLE == NULL) {}       \
+    } while (false)
+
+#define OT_UNREACHABLE_CODE(CODE)  CODE
+
 #else
 
 #define OT_UNUSED_VARIABLE(VARIABLE)    \

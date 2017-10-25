@@ -68,7 +68,7 @@ public:
      * @returns The number of bytes placed in the output queue.
      *
      */
-    int Output(const char *aBuf, uint16_t aBufLength);
+    virtual int Output(const char *aBuf, uint16_t aBufLength);
 
     /**
      * This method delivers formatted output to the client.
@@ -79,7 +79,7 @@ public:
      * @returns The number of bytes placed in the output queue.
      *
      */
-    int OutputFormat(const char *fmt, ...);
+    virtual int OutputFormat(const char *fmt, ...);
 
     /**
      * This method sets a callback that is called when console has some output.

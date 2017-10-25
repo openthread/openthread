@@ -378,11 +378,11 @@ private:
 
     uint8_t  mDispatchHopsLeft;
     uint8_t  mDeepHopsLeft;
-    struct
+    struct OT_TOOL_PACKED_FIELD
     {
         uint16_t mSource;
         uint16_t mDestination;
-    } mAddress OT_TOOL_PACKED_FIELD;
+    } mAddress;
 } OT_TOOL_PACKED_END;
 
 /**
