@@ -115,10 +115,12 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     // check if write page command is required
     if ((aAddress) & (NVMCTRL_PAGE_SIZE - 1))
     {
-        otEXPECT_ACTION(nvm_execute_command(NVM_COMMAND_WRITE_PAGE,
-                                            aAddress & (~(NVMCTRL_PAGE_SIZE - 1)),
-                                            0) == STATUS_OK,
-                        rval = 0);
+        enum status_code status;
+
+        status = nvm_execute_command(NVM_COMMAND_WRITE_PAGE,
+                                     aAddress & (~(NVMCTRL_PAGE_SIZE - 1)), 0);
+
+        otEXPECT_ACTION(status == STATUS_OK, rval = 0);
     }
 
 exit:

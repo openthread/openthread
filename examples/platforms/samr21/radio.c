@@ -67,9 +67,25 @@ static uint32_t     sScanStartTime;
 static uint16_t     sScanDuration;
 static bool         sStartScan      = false;
 
-static int8_t         sTxPowerTable[] = { 4, 4, 3, 3, 3, 2, 1, 0,
-                                          -1, -2, -3, -4, -6, -8, -12, -17
-                                        };
+static int8_t       sTxPowerTable[] =
+{
+    4,
+    4,
+    3,
+    3,
+    3,
+    2,
+    1,
+    0,
+    -1,
+    -2,
+    -3,
+    -4,
+    -6,
+    -8,
+    -12,
+    -17
+};
 
 /*******************************************************************************
  * Static
@@ -302,7 +318,7 @@ void samr21RadioInit(void)
     sTransmitFrame.mPsdu   = sTransmitPsdu;
 
     sReceiveFrame.mLength = 0;
-    sReceiveFrame.mPsdu = NULL;
+    sReceiveFrame.mPsdu   = NULL;
 
     PHY_Init();
 }
