@@ -47,6 +47,11 @@ enum
     IEEE802154_FCS_SIZE        = 2
 };
 
+enum
+{
+    SAMR21_RECEIVE_SENSITIVITY = -99  // dBm
+};
+
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 
@@ -623,5 +628,5 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     (void)aInstance;
 
-    return -100;
+    return SAMR21_RECEIVE_SENSITIVITY;
 }
