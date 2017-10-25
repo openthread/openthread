@@ -56,8 +56,8 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace NetworkData {
 
-LeaderBase::LeaderBase(ThreadNetif &aThreadNetif):
-    NetworkData(aThreadNetif, false)
+LeaderBase::LeaderBase(otInstance &aInstance):
+    NetworkData(aInstance, false)
 {
     Reset();
 }

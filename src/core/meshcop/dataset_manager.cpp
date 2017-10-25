@@ -59,12 +59,12 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
+DatasetManager::DatasetManager(otInstance &aInstance, const Tlv::Type aType, const char *aUriSet,
                                const char *aUriGet, Timer::Handler aTimerHandler):
-    ThreadNetifLocator(aThreadNetif),
-    mLocal(aThreadNetif.GetInstance(), aType),
+    InstanceLocator(aInstance),
     mNetwork(aType),
-    mTimer(aThreadNetif.GetInstance(), aTimerHandler, this),
+    mLocal(aInstance, aType),
+    mTimer(aInstance, aTimerHandler, this),
     mUriSet(aUriSet),
     mUriGet(aUriGet)
 {
@@ -959,12 +959,12 @@ static ActiveDatasetBase &GetActiveDatasetOwner(const Context &aContext)
     return activeDataset;
 }
 
-ActiveDatasetBase::ActiveDatasetBase(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, Tlv::kActiveTimestamp, OT_URI_PATH_ACTIVE_SET, OT_URI_PATH_ACTIVE_GET,
+ActiveDatasetBase::ActiveDatasetBase(otInstance &aInstance):
+    DatasetManager(aInstance, Tlv::kActiveTimestamp, OT_URI_PATH_ACTIVE_SET, OT_URI_PATH_ACTIVE_GET,
                    &ActiveDatasetBase::HandleTimer),
     mResourceGet(OT_URI_PATH_ACTIVE_GET, &ActiveDatasetBase::HandleGet, this)
 {
-    aThreadNetif.GetCoap().AddResource(mResourceGet);
+    GetNetif().GetCoap().AddResource(mResourceGet);
 }
 
 otError ActiveDatasetBase::Restore(void)
@@ -1057,13 +1057,13 @@ static PendingDatasetBase &GetPendingDatasetOwner(const Context &aContext)
     return pendingDataset;
 }
 
-PendingDatasetBase::PendingDatasetBase(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OT_URI_PATH_PENDING_SET, OT_URI_PATH_PENDING_GET,
+PendingDatasetBase::PendingDatasetBase(otInstance &aInstance):
+    DatasetManager(aInstance, Tlv::kPendingTimestamp, OT_URI_PATH_PENDING_SET, OT_URI_PATH_PENDING_GET,
                    &PendingDatasetBase::HandleTimer),
-    mDelayTimer(aThreadNetif.GetInstance(), &PendingDatasetBase::HandleDelayTimer, this),
+    mDelayTimer(aInstance, &PendingDatasetBase::HandleDelayTimer, this),
     mResourceGet(OT_URI_PATH_PENDING_GET, &PendingDatasetBase::HandleGet, this)
 {
-    aThreadNetif.GetCoap().AddResource(mResourceGet);
+    GetNetif().GetCoap().AddResource(mResourceGet);
 }
 
 otError PendingDatasetBase::Restore(void)

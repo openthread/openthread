@@ -101,10 +101,10 @@ public:
     /**
      * This constructor initializes the Thread network interface.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    ThreadNetif(Ip6::Ip6 &aIp6);
+    ThreadNetif(otInstance &aInstance);
 
     /**
      * This method enables the Thread network interface.

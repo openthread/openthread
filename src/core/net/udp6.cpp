@@ -138,8 +138,8 @@ exit:
     return error;
 }
 
-Udp::Udp(Ip6 &aIp6):
-    Ip6Locator(aIp6),
+Udp::Udp(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mEphemeralPort(kDynamicPortMin),
     mSockets(NULL)
 {

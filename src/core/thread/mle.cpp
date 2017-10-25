@@ -60,15 +60,15 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Mle {
 
-Mle::Mle(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+Mle::Mle(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mRetrieveNewNetworkData(false),
     mRole(OT_DEVICE_ROLE_DISABLED),
     mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest),
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
-    mParentRequestTimer(aThreadNetif.GetInstance(), &Mle::HandleParentRequestTimer, this),
-    mDelayedResponseTimer(aThreadNetif.GetInstance(), &Mle::HandleDelayedResponseTimer, this),
+    mParentRequestTimer(aInstance, &Mle::HandleParentRequestTimer, this),
+    mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this),
     mLastPartitionId(0),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionIdTimeout(0),
@@ -81,9 +81,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mChildUpdateAttempts(0),
     mParentLinkMargin(0),
     mParentIsSingleton(false),
-    mSocket(aThreadNetif.GetIp6().mUdp),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
     mTimeout(kMleEndDeviceTimeout),
-    mSendChildUpdateRequest(aThreadNetif.GetInstance(), &Mle::HandleSendChildUpdateRequest, this),
+    mSendChildUpdateRequest(aInstance, &Mle::HandleSendChildUpdateRequest, this),
     mDiscoverHandler(NULL),
     mDiscoverContext(NULL),
     mIsDiscoverInProgress(false),
@@ -112,11 +112,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     // link-local 64
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
-    mLinkLocal64.GetAddress().SetIid(*aThreadNetif.GetMac().GetExtAddress());
+    mLinkLocal64.GetAddress().SetIid(*GetNetif().GetMac().GetExtAddress());
     mLinkLocal64.mPrefixLength = 64;
     mLinkLocal64.mPreferred = true;
     mLinkLocal64.mValid = true;
-    aThreadNetif.AddUnicastAddress(mLinkLocal64);
+    GetNetif().AddUnicastAddress(mLinkLocal64);
 
     // Leader Aloc
     mLeaderAloc.mPrefixLength = 128;
@@ -144,7 +144,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     // initialize Mesh Local Prefix
     meshLocalPrefix[0] = 0xfd;
-    memcpy(meshLocalPrefix + 1, aThreadNetif.GetMac().GetExtendedPanId(), 5);
+    memcpy(meshLocalPrefix + 1, GetNetif().GetMac().GetExtendedPanId(), 5);
     meshLocalPrefix[6] = 0x00;
     meshLocalPrefix[7] = 0x00;
 
@@ -172,7 +172,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.mRloc = true;
 
     // Store RLOC address reference in MPL module.
-    aThreadNetif.GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
+    GetNetif().GetIp6().GetMpl().SetMatchingAddress(mMeshLocal16.GetAddress());
 
     // link-local all thread nodes
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
@@ -190,7 +190,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
 
     mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
-    aThreadNetif.RegisterCallback(mNetifCallback);
+    GetNetif().RegisterCallback(mNetifCallback);
 }
 
 otError Mle::Enable(void)
@@ -601,7 +601,7 @@ otError Mle::SetStateDetached(void)
     netif.GetMac().SetBeaconEnabled(false);
     netif.GetMle().HandleDetachStart();
     netif.GetIp6().SetForwardingEnabled(false);
-    netif.GetIp6().mMpl.SetTimerExpirations(0);
+    netif.GetIp6().GetMpl().SetTimerExpirations(0);
 
     otLogInfoMle(GetInstance(), "Role -> Detached");
     return OT_ERROR_NONE;
@@ -642,7 +642,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     netif.GetNetworkDataLocal().ClearResubmitDelayTimer();
 #endif
     netif.GetIp6().SetForwardingEnabled(false);
-    netif.GetIp6().mMpl.SetTimerExpirations(kMplChildDataMessageTimerExpirations);
+    netif.GetIp6().GetMpl().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
 
     // Once the Thread device receives the new Active Commissioning Dataset, the device MUST
     // transmit its own Announce messages on the channel it was on prior to the attachment.
@@ -833,7 +833,7 @@ otError Mle::SetRloc16(uint16_t aRloc16)
     }
 
     netif.GetMac().SetShortAddress(aRloc16);
-    netif.GetIp6().mMpl.SetSeedId(aRloc16);
+    netif.GetIp6().GetMpl().SetSeedId(aRloc16);
 
     return OT_ERROR_NONE;
 }
@@ -3407,9 +3407,9 @@ otError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::He
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    netif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
-                                   Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
-                                   messageInfo, aIp6Header);
+    netif.GetIp6().GetIcmp().SendError(Ip6::IcmpHeader::kTypeDstUnreach,
+                                       Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                       messageInfo, aIp6Header);
 
 exit:
     return error;

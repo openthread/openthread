@@ -55,7 +55,7 @@ namespace ot {
  * @{
  */
 
-class KeyManager: public ThreadNetifLocator
+class KeyManager: public InstanceLocator
 {
 public:
     enum
@@ -66,10 +66,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit KeyManager(ThreadNetif &aThreadNetif);
+    explicit KeyManager(otInstance &aInstance);
 
     /**
      * This method starts KeyManager rotation timer and sets guard timer to initial value.

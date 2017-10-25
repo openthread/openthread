@@ -142,8 +142,8 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[ROUTER3].stop()
 
         # Wait for the Leader to expire its Router ID.
-        # MAX_NEIGHBOR_AGE + INFINITE_COST_TIMEOUT + ID_REUSE_DELAY + propagation time + transmission time ~ 550s.
-        time.sleep(550)
+        # MAX_NEIGHBOR_AGE + INFINITE_COST_TIMEOUT + ID_REUSE_DELAY + propagation time + transmission time ~ 580s.
+        time.sleep(580)
         self.assertFalse(self.nodes[MED1].ping(router3_mleid))
 
         # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.

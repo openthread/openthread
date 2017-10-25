@@ -117,8 +117,8 @@ otError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().mAnnounceBegin.SendRequest(aChannelMask, aCount, aPeriod,
-                                                                                 *static_cast<const Ip6::Address *>(aAddress));
+    error = aInstance->mThreadNetif.GetCommissioner().GetAnnounceBeginClient().SendRequest(
+                aChannelMask, aCount, aPeriod, *static_cast<const Ip6::Address *>(aAddress));
 #else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannelMask);
@@ -137,9 +137,9 @@ otError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, u
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().mEnergyScan.SendQuery(aChannelMask, aCount, aPeriod, aScanDuration,
-                                                                            *static_cast<const Ip6::Address *>(aAddress),
-                                                                            aCallback, aContext);
+    error = aInstance->mThreadNetif.GetCommissioner().GetEnergyScanClient().SendQuery(
+                aChannelMask, aCount, aPeriod, aScanDuration, *static_cast<const Ip6::Address *>(aAddress),
+                aCallback, aContext);
 #else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannelMask);
@@ -161,7 +161,7 @@ otError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().mPanIdQuery.SendQuery(
+    error = aInstance->mThreadNetif.GetCommissioner().GetPanIdQueryClient().SendQuery(
                 aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
 #else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     OT_UNUSED_VARIABLE(aInstance);

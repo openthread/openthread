@@ -35,7 +35,7 @@
 #ifndef SOFTDEVICE_H_
 #define SOFTDEVICE_H_
 
-#if defined ( __GNUC__ )
+#if defined(__GNUC__)
     _Pragma("GCC diagnostic push")
     _Pragma("GCC diagnostic ignored \"-Wreturn-type\"")
     _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
@@ -47,7 +47,7 @@
 #include <nrf_soc.h>
 #include <nrf_nvic.h>
 
-#if defined ( __GNUC__ )
+#if defined(__GNUC__)
     _Pragma("GCC diagnostic pop")
 #endif
 

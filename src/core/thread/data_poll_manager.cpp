@@ -49,12 +49,12 @@
 
 namespace ot {
 
-DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
-    MeshForwarderLocator(aMeshForwarder),
-    mTimer(aMeshForwarder.GetInstance(), &DataPollManager::HandlePollTimer, this),
+DataPollManager::DataPollManager(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
     mPollPeriod(0),
+    mTimer(aInstance, &DataPollManager::HandlePollTimer, this),
     mEnabled(false),
     mAttachMode(false),
     mRetxMode(false),
@@ -70,7 +70,7 @@ otError DataPollManager::StartPolling(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit((GetMeshForwarder().GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0,
+    VerifyOrExit((GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0,
                  error = OT_ERROR_INVALID_STATE);
 
     mEnabled = true;
@@ -94,20 +94,20 @@ void DataPollManager::StopPolling(void)
 
 otError DataPollManager::SendDataPoll(void)
 {
-    MeshForwarder &meshForwarder = GetMeshForwarder();
+    ThreadNetif &netif = GetNetif();
     otError error;
     Message *message;
     Neighbor *parent;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!meshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!netif.GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
-    parent = meshForwarder.GetNetif().GetMle().GetParent();
+    parent = netif.GetMle().GetParent();
     VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
-    for (message = meshForwarder.GetSendQueue().GetHead(); message; message = message->GetNext())
+    for (message = netif.GetMeshForwarder().GetSendQueue().GetHead(); message; message = message->GetNext())
     {
         VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
     }
@@ -115,7 +115,7 @@ otError DataPollManager::SendDataPoll(void)
     message = GetInstance().mMessagePool.New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    error = meshForwarder.SendMessage(*message);
+    error = netif.GetMeshForwarder().SendMessage(*message);
 
     if (error != OT_ERROR_NONE)
     {
@@ -426,7 +426,7 @@ DataPollManager &DataPollManager::GetOwner(Context &aContext)
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const
 {
-    return TimerMilli::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
+    return TimerMilli::SecToMsec(GetNetif().GetMle().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 

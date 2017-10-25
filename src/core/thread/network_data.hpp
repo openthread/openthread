@@ -86,7 +86,7 @@ namespace NetworkData {
  * This class implements Network Data processing.
  *
  */
-class NetworkData: public ThreadNetifLocator
+class NetworkData: public InstanceLocator
 {
 public:
     enum
@@ -97,11 +97,11 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      * @param[in]  aLocal        TRUE if this represents local network data, FALSE otherwise.
      *
      */
-    NetworkData(ThreadNetif &aThreadNetif, bool aLocal);
+    NetworkData(otInstance &aInstance, bool aLocal);
 
     /**
      * This method clears the network data.

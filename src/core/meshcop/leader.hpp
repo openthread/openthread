@@ -61,16 +61,16 @@ public:
     SteeringDataTlv mSteeringData;
 } OT_TOOL_PACKED_END;
 
-class Leader: public ThreadNetifLocator
+class Leader: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the Leader object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Leader(ThreadNetif &aThreadNetif);
+    Leader(otInstance &aInstance);
 
     /**
      * This method sends a MGMT_DATASET_CHANGED message to commissioner.

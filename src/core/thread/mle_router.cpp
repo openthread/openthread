@@ -56,10 +56,10 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Mle {
 
-MleRouter::MleRouter(ThreadNetif &aThreadNetif):
-    Mle(aThreadNetif),
-    mAdvertiseTimer(aThreadNetif.GetInstance(), &MleRouter::HandleAdvertiseTimer, NULL, this),
-    mStateUpdateTimer(aThreadNetif.GetInstance(), &MleRouter::HandleStateUpdateTimer, this),
+MleRouter::MleRouter(otInstance &aInstance):
+    Mle(aInstance),
+    mAdvertiseTimer(aInstance, &MleRouter::HandleAdvertiseTimer, NULL, this),
+    mStateUpdateTimer(aInstance, &MleRouter::HandleStateUpdateTimer, this),
     mAddressSolicit(OT_URI_PATH_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
     mAddressRelease(OT_URI_PATH_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
     mRouterIdSequence(0),
@@ -441,7 +441,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     netif.GetNetworkDataLeader().Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     netif.GetIp6().SetForwardingEnabled(true);
-    netif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
+    netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
 
     for (int i = 0; i < mMaxChildrenAllowed; i++)
@@ -485,7 +485,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     netif.GetCoap().AddResource(mAddressSolicit);
     netif.GetCoap().AddResource(mAddressRelease);
     netif.GetIp6().SetForwardingEnabled(true);
-    netif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
+    netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
 
     for (int i = 0; i < mMaxChildrenAllowed; i++)
@@ -3920,9 +3920,9 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    netif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
-                                   Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
-                                   messageInfo, aIp6Header);
+    netif.GetIp6().GetIcmp().SendError(Ip6::IcmpHeader::kTypeDstUnreach,
+                                       Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                       messageInfo, aIp6Header);
 
     return OT_ERROR_DROP;
 }

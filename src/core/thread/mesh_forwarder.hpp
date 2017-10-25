@@ -71,16 +71,16 @@ class MleRouter;
  * This class implements mesh forwarding within Thread.
  *
  */
-class MeshForwarder: public ThreadNetifLocator
+class MeshForwarder: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit MeshForwarder(ThreadNetif &aThreadNetif);
+    explicit MeshForwarder(otInstance &aInstance);
 
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.

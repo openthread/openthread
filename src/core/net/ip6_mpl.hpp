@@ -430,16 +430,16 @@ private:
  * This class implements MPL message processing.
  *
  */
-class Mpl: public Ip6Locator
+class Mpl: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the MPL object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    Mpl(Ip6 &aIp6);
+    Mpl(otInstance &aInstance);
 
     /**
      * This method initializes the MPL option.
@@ -537,12 +537,13 @@ private:
 
     static Mpl &GetOwner(const Context &aContext);
 
-    TimerMilli mSeedSetTimer;
-    TimerMilli mRetransmissionTimer;
-
     uint8_t mTimerExpirations;
     uint8_t mSequence;
     uint16_t mSeedId;
+
+    TimerMilli mSeedSetTimer;
+    TimerMilli mRetransmissionTimer;
+
     const Address *mMatchingAddress;
 
     MplSeedEntry mSeedSet[kNumSeedEntries];

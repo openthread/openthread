@@ -70,10 +70,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif  A reference to the network interface that the secure CoAP agent is bound to.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    CoapSecure(ThreadNetif &aNetif);
+    CoapSecure(otInstance &aInstance);
 
     /**
      * This method starts the secure CoAP agent.
@@ -199,7 +199,7 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

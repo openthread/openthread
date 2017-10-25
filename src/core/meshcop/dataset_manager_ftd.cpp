@@ -60,8 +60,8 @@
 namespace ot {
 namespace MeshCoP {
 
-ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
-    ActiveDatasetBase(aThreadNetif),
+ActiveDataset::ActiveDataset(otInstance &aInstance):
+    ActiveDatasetBase(aInstance),
     mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 {
 }
@@ -207,8 +207,8 @@ exit:
     return;
 }
 
-PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
-    PendingDatasetBase(aThreadNetif),
+PendingDataset::PendingDataset(otInstance &aInstance):
+    PendingDatasetBase(aInstance),
     mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
 {
 }

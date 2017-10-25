@@ -478,13 +478,14 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
     otChildInfo childInfo;
-    uint8_t maxChildren;
     long value;
-    bool isTable = false;
+    bool isTable;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
-    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
+    isTable = (strcmp(argv[0], "table") == 0);
+
+    if (isTable || strcmp(argv[0], "list") == 0)
     {
         if (isTable)
         {
@@ -492,11 +493,11 @@ void Interpreter::ProcessChild(int argc, char *argv[])
             mServer->OutputFormat("+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+\r\n");
         }
 
-        maxChildren = otThreadGetMaxAllowedChildren(mInstance);
-
-        for (uint8_t i = 0; i < maxChildren ; i++)
+        // For certifcation: here intentionally not limits the upperbound for the index,
+        // giving the chance to exit from below default case as OpenThread THCI expects
+        // the content of "child list" and the result "Done" in seperate lines.
+        for (uint8_t i = 0; ; i++)
         {
-
             switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
             {
             case OT_ERROR_NONE:
@@ -539,8 +540,6 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 }
             }
         }
-
-        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
@@ -1424,12 +1423,14 @@ void Interpreter::ProcessNeighbor(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
     otNeighborInfo neighborInfo;
-    bool isTable = false;
+    bool isTable;
     otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
-    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
+    isTable = (strcmp(argv[0], "table") == 0);
+
+    if (isTable || strcmp(argv[0], "list") == 0)
     {
         if (isTable)
         {
@@ -2299,11 +2300,13 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     otError error = OT_ERROR_NONE;
     otRouterInfo routerInfo;
     long value;
-    bool isTable = false;
+    bool isTable;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
-    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
+    isTable = (strcmp(argv[0], "table") == 0);
+
+    if (isTable || strcmp(argv[0], "list") == 0)
     {
         if (isTable)
         {

@@ -70,10 +70,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit LeaderBase(ThreadNetif &aThreadNetif);
+    explicit LeaderBase(otInstance &aInstance);
 
     /**
      * This method reset the Thread Network Data.

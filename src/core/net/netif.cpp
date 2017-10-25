@@ -90,14 +90,14 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress =
 };
 
 
-Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
-    Ip6Locator(aIp6),
+Netif::Netif(otInstance &aInstance, int8_t aInterfaceId):
+    InstanceLocator(aInstance),
     mCallbacks(NULL),
     mUnicastAddresses(NULL),
     mMulticastAddresses(NULL),
     mInterfaceId(aInterfaceId),
     mMulticastPromiscuous(false),
-    mStateChangedTask(aIp6.GetInstance(), &Netif::HandleStateChangedTask, this),
+    mStateChangedTask(aInstance, &Netif::HandleStateChangedTask, this),
     mNext(NULL),
     mStateChangedFlags(0)
 {

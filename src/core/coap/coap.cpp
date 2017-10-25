@@ -48,15 +48,15 @@
 namespace ot {
 namespace Coap {
 
-CoapBase::CoapBase(ThreadNetif &aNetif, Timer::Handler aRetransmissionTimerHandler,
+CoapBase::CoapBase(otInstance &aInstance, Timer::Handler aRetransmissionTimerHandler,
                    Timer::Handler aResponsesQueueTimerHandler):
-    ThreadNetifLocator(aNetif),
-    mSocket(aNetif.GetIp6().mUdp),
-    mRetransmissionTimer(aNetif.GetInstance(), aRetransmissionTimerHandler, this),
+    InstanceLocator(aInstance),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mRetransmissionTimer(aInstance, aRetransmissionTimerHandler, this),
     mResources(NULL),
     mContext(NULL),
     mInterceptor(NULL),
-    mResponsesQueue(aNetif.GetInstance(), aResponsesQueueTimerHandler, this),
+    mResponsesQueue(aInstance, aResponsesQueueTimerHandler, this),
     mDefaultHandler(NULL),
     mDefaultHandlerContext(NULL)
 {
@@ -911,8 +911,8 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
     return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
 }
 
-Coap::Coap(ThreadNetif &aNetif):
-    CoapBase(aNetif, &Coap::HandleRetransmissionTimer, &Coap::HandleResponsesQueueTimer)
+Coap::Coap(otInstance &aInstance):
+    CoapBase(aInstance, &Coap::HandleRetransmissionTimer, &Coap::HandleResponsesQueueTimer)
 {
 }
 
@@ -940,8 +940,7 @@ void Coap::HandleResponsesQueueTimer(Timer &aTimer)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
 ApplicationCoap::ApplicationCoap(otInstance &aInstance):
-    CoapBase(aInstance.mThreadNetif, &ApplicationCoap::HandleRetransmissionTimer,
-             &ApplicationCoap::HandleResponsesQueueTimer)
+    CoapBase(aInstance, &ApplicationCoap::HandleRetransmissionTimer, &ApplicationCoap::HandleResponsesQueueTimer)
 {
 }
 

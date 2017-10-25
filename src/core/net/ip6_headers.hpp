@@ -115,7 +115,7 @@ enum
 OT_TOOL_PACKED_BEGIN
 struct HeaderPoD
 {
-    union
+    union OT_TOOL_PACKED_FIELD
     {
         uint8_t   m8[kVersionClassFlowSize / sizeof(uint8_t)];
         uint16_t  m16[kVersionClassFlowSize / sizeof(uint16_t)];

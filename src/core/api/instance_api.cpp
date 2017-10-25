@@ -87,7 +87,7 @@ otInstance::otInstance(void) :
     mTimerMicroScheduler(*this),
 #endif
     mIp6(*this),
-    mThreadNetif(mIp6),
+    mThreadNetif(*this),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     mLinkRaw(*this),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API

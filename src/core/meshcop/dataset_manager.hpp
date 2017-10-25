@@ -54,7 +54,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class DatasetManager: public ThreadNetifLocator
+class DatasetManager: public InstanceLocator
 {
 public:
     /**
@@ -125,14 +125,14 @@ protected:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif   A reference to the Thread network interface.
+     * @param[in]  aInstance      A reference to the OpenThread instance.
      * @param[in]  aType          Identifies Active or Pending Operational Dataset.
      * @param[in]  aUriSet        The URI-PATH for setting the Operational Dataset.
      * @param[in]  aUriGet        The URI-PATH for getting the Operational Dataset.
      * @param[in]  aTimerHandler  The registration timer handler.
      *
      */
-    DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
+    DatasetManager(otInstance &aInstance, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
                    TimerMilli::Handler aTimerHandler);
 
     /**
@@ -204,8 +204,8 @@ protected:
      */
     void HandleTimer(void);
 
-    DatasetLocal mLocal;
     Dataset mNetwork;
+    DatasetLocal mLocal;
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -279,10 +279,10 @@ public:
     /**
      * Constructor.
      *
-     * @param[in]  aThreadNetif  The Thread network interface.
+     * @param[in]  aInstance      A reference to the OpenThread instance.
      *
      */
-    ActiveDatasetBase(ThreadNetif &aThreadNetif);
+    ActiveDatasetBase(otInstance &aInstance);
 
     /**
      * This method restores the Active Operational Dataset from non-volatile memory.
@@ -364,7 +364,7 @@ public:
      * @param[in]  The Thread network interface.
      *
      */
-    PendingDatasetBase(ThreadNetif &aThreadNetif);
+    PendingDatasetBase(otInstance &aInstance);
 
     /**
      * This method restores the Operational Dataset from non-volatile memory.

@@ -211,16 +211,16 @@ private:
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
-class Mac: public ThreadNetifLocator
+class Mac: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the MAC object.
      *
-     * @param[in]  aThreadNetif  A reference to the network interface using this MAC.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    explicit Mac(ThreadNetif &aThreadNetif);
+    explicit Mac(otInstance &aInstance);
 
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -682,6 +682,19 @@ private:
 
     static const char *OperationToString(Operation aOperation);
 
+    Operation mOperation;
+
+    bool mPendingActiveScan       : 1;
+    bool mPendingEnergyScan       : 1;
+    bool mPendingTransmitBeacon   : 1;
+    bool mPendingTransmitData     : 1;
+    bool mPendingWaitingForData   : 1;
+    bool mRxOnWhenIdle            : 1;
+    bool mBeaconsEnabled          : 1;
+#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+    bool mDelaySleep              : 1;
+#endif
+
     TimerMilli mMacTimer;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     TimerMicro mBackoffTimer;
@@ -701,19 +714,6 @@ private:
 
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
-
-    Operation mOperation;
-
-    bool mPendingActiveScan       : 1;
-    bool mPendingEnergyScan       : 1;
-    bool mPendingTransmitBeacon   : 1;
-    bool mPendingTransmitData     : 1;
-    bool mPendingWaitingForData   : 1;
-    bool mRxOnWhenIdle            : 1;
-    bool mBeaconsEnabled          : 1;
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
-    bool mDelaySleep              : 1;
-#endif
 
     uint8_t mBeaconSequence;
     uint8_t mDataSequence;

@@ -149,12 +149,12 @@ typedef enum {
 #define __FPU_PRESENT                  1            /*!< FPU present or not                                                    */
 /** @} */ /* End of group Configuration_of_CMSIS */
 
-#if defined ( __GNUC__ )
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 #include "core_cm4.h"                               /*!< Cortex-M4 processor and core peripherals                              */
-#if defined ( __GNUC__ )
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
 
