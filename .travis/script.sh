@@ -220,8 +220,8 @@ set -x
         --enable-jam-detection              \
         --enable-legacy                     \
         --enable-mac-filter                 \
-        --disable-docs                      \
         --enable-service                    \
+        --disable-docs                      \
         --disable-test || die
     make -j 8 || die
 

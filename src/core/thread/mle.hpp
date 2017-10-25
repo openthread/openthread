@@ -1486,7 +1486,7 @@ private:
     Ip6::NetifUnicastAddress mLeaderAloc;
 
 #if OPENTHREAD_ENABLE_SERVICE
-    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE];
+    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_MAX_SERVER_ALOCS];
 #endif
 
     Ip6::NetifUnicastAddress mLinkLocal64;

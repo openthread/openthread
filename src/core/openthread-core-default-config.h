@@ -282,13 +282,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE
+ * @def OPENTHREAD_CONFIG_MAX_SERVER_ALOCS
  *
- * The maximum number of supported Service ALOCs registrations per device.
+ * The maximum number of supported Service ALOCs registrations for this device.
  *
  */
-#ifndef OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE
-#define OPENTHREAD_CONFIG_SRV_ALOCS_PER_DEVICE                  1
+#ifndef OPENTHREAD_CONFIG_MAX_SERVER_ALOCS
+#define OPENTHREAD_CONFIG_MAX_SERVER_ALOCS                      1
 #endif
 
 /**

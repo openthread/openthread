@@ -1482,7 +1482,7 @@ void Interpreter::ProcessNetworkDataShow(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
     uint8_t data[255];
-    uint8_t len = 255;
+    uint8_t len = sizeof(data);
 
     SuccessOrExit(error = otNetDataGet(mInstance, false, data, &len));
 
