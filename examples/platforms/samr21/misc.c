@@ -53,29 +53,37 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     /** The system was last reset by a software reset */
     case SYSTEM_RESET_CAUSE_SOFTWARE:
         reason = OT_PLAT_RESET_REASON_SOFTWARE;
+        break;
 
     /** The system was last reset by the watchdog timer */
     case SYSTEM_RESET_CAUSE_WDT:
         reason = OT_PLAT_RESET_REASON_WATCHDOG;
+        break;
 
     /** The system was last reset because the external reset
         line was pulled low */
     case SYSTEM_RESET_CAUSE_EXTERNAL_RESET:
         reason = OT_PLAT_RESET_REASON_EXTERNAL;
+        break;
 
     /** The system was last reset by the BOD33 */
     case SYSTEM_RESET_CAUSE_BOD33:
 
+    // no break: same reason as below
+
     /** The system was last reset by the BOD12 */
     case SYSTEM_RESET_CAUSE_BOD12:
         reason = OT_PLAT_RESET_REASON_FAULT;
+        break;
 
     /** The system was last reset by the POR (Power on reset) */
     case SYSTEM_RESET_CAUSE_POR:
         reason = OT_PLAT_RESET_REASON_POWER_ON;
+        break;
 
     default:
         reason = OT_PLAT_RESET_REASON_UNKNOWN;
+        break;
     }
 
     return reason;
