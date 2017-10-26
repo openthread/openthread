@@ -122,10 +122,13 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         # 3
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER2].register_netdata()
+        # Wait for ROUTER2 to configure slaac address.
+        time.sleep(25)
 
         self.nodes[MED1].add_ipaddr('2001:2:0:1::1')
         self.nodes[SED1].add_ipaddr('2001:2:0:1::1')
-        time.sleep(5)
+        # Wait for MED1/SED1 to configure slaac address.
+        time.sleep(10)
         self.sniffer.get_messages_sent_by(DUT_LEADER)
 
         # 4
