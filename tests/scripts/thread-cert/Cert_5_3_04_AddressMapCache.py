@@ -113,26 +113,27 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         # 2
         for ED in [ED1, ED2, ED3, ED4]:
             ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-            self.nodes[SED1].ping(ed_mleid)
+            self.assertTrue(self.nodes[SED1].ping(ed_mleid))
+            time.sleep(5)
 
-            # verify DUT_ROUTER1 generated an Address Query Request to find each node's RLOC.
+            # Verify DUT_ROUTER1 generated an Address Query Request to find each node's RLOC.
             dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq')
             command.check_address_query(msg, self.nodes[DUT_ROUTER1], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 3 & 4
         # This method flushes the message queue so calling this method again will return only the newly logged messages.
-        time.sleep(5)
         dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
 
         for ED in [ED1, ED2, ED3, ED4]:
             ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
             self.assertTrue(self.nodes[SED1].ping(ed_mleid))
+            time.sleep(5)
 
             # Verify DUT_ROUTER1 didn't generate an Address Query Request.
             dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq', False)
-            assert msg is None, "Error: The DUT sent an Address Query Request"
+            assert msg is None, "Error: The DUT sent an unexpected Address Query Request"
 
 if __name__ == '__main__':
     unittest.main()
