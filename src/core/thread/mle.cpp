@@ -794,7 +794,8 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
         netif.RemoveUnicastAddress(mLeaderAloc);
-        AddLeaderAloc();
+        memcpy(mLeaderAloc.GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
+        netif.AddUnicastAddress(mLeaderAloc);
     }
 
     // Changing the prefix also causes the mesh local address to be different.
