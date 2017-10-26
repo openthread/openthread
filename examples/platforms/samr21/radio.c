@@ -163,20 +163,19 @@ static void setTxPower(uint8_t aPower)
     {
         uint8_t i;
 
-        for (i = 0; i < sizeof(sTxPowerTable); i++)
+        for (i = 0; i < (sizeof(sTxPowerTable) / sizeof(*sTxPowerTable) - 1); i++)
         {
             if (aPower >= sTxPowerTable[i])
             {
-                i++;
                 break;
             }
         }
 
-        otLogDebgPlat(sInstance, "Radio set tx power: %d, %d", aPower, i - 1);
+        otLogDebgPlat(sInstance, "Radio set tx power: %d, %d", aPower, i);
 
         radioTrxOff();
 
-        PHY_SetTxPower(i - 1);
+        PHY_SetTxPower(i);
 
         radioRestore();
 
