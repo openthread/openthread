@@ -26,10 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-ifeq ($(TMF_PROXY),1)
-configure_OPTIONS              += --enable-tmf-proxy
-endif
-
 ifeq ($(BORDER_ROUTER),1)
 configure_OPTIONS              += --enable-border-router
 endif
@@ -88,6 +84,14 @@ endif
 
 ifeq ($(MTD_NETDIAG),1)
 configure_OPTIONS              += --enable-mtd-network-diagnostic
+endif
+
+ifeq ($(SERVICE),1)
+configure_OPTIONS              += --enable-service
+endif
+
+ifeq ($(TMF_PROXY),1)
+configure_OPTIONS              += --enable-tmf-proxy
 endif
 
 ifeq ($(DEBUG_UART),1)

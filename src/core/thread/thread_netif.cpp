@@ -76,7 +76,7 @@ ThreadNetif::ThreadNetif(otInstance &aInstance):
     mMac(aInstance),
     mMeshForwarder(aInstance),
     mMleRouter(aInstance),
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     mNetworkDataLocal(aInstance),
 #endif
     mNetworkDataLeader(aInstance),

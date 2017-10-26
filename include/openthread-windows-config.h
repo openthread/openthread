@@ -82,6 +82,9 @@
 /* Define to 1 to enable Border Router feature. */
 #define OPENTHREAD_ENABLE_BORDER_ROUTER 1
 
+/* Define to 1 to enable Service feature. */
+#define OPENTHREAD_ENABLE_SERVICE 0
+
 /* Name of package */
 #define PACKAGE "openthread"
 

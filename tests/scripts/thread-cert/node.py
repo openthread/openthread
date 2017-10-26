@@ -188,6 +188,12 @@ class Node:
     def get_addrs(self):
         return self.interface.get_addrs()
 
+    def add_service(self, enterpriseNumber, serviceData, serverData):
+        self.interface.add_service(enterpriseNumber, serviceData, serverData)
+
+    def remove_service(self, enterpriseNumber, serviceData):
+        self.interface.remove_service(enterpriseNumber, serviceData)
+
     def get_ip6_address(self, address_type):
         return self.interface.get_ip6_address(address_type)
 

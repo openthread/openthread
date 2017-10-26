@@ -812,6 +812,68 @@ typedef enum otRoutePreference
     OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
 
+enum
+{
+    /**
+     * Maximum size of Service Data in bytes.
+     */
+    kMaxServiceDataSize = 252,
+
+    /**
+     * Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
+     */
+    kMaxServerDataSize = 248,
+};
+
+/**
+ * This structure represents a Server configuration.
+ */
+typedef struct otServerConfig
+{
+    /**
+     * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
+     */
+    bool mStable : 1;
+
+    /**
+     * Length of server data.
+     */
+    uint8_t mServerDataLength;
+
+    /**
+     * Server data bytes
+     */
+    uint8_t mServerData[kMaxServerDataSize];
+
+    /**
+     * The Server Rloc.
+     */
+    uint16_t mRloc16;
+} otServerConfig;
+
+/**
+ * This structure represents a Service configuration.
+ */
+typedef struct otServiceConfig
+{
+    /**
+     * IANA Enterprise Number.
+     */
+    uint32_t mEnterpriseNumber;
+
+    /**
+     * Length of service data.
+     */
+    uint8_t mServiceDataLength;
+
+    /**
+     * Service data bytes
+     */
+    uint8_t mServiceData[kMaxServiceDataSize];
+
+    otServerConfig mServerConfig;
+} otServiceConfig;
+
 /**
  * Used to indicate no fixed received signal strength was set
  */

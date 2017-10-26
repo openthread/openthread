@@ -55,6 +55,9 @@
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 #include <openthread/border_router.h>
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+#include <openthread/server.h>
+#endif
 
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
@@ -163,8 +166,11 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_FTD
     { "neighbor", &Interpreter::ProcessNeighbor },
 #endif
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
+#endif
+#if OPENTHREAD_ENABLE_SERVICE
+    { "netdatashow", &Interpreter::ProcessNetworkDataShow },
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
@@ -205,6 +211,9 @@ const struct Command Interpreter::sCommands[] =
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
 #endif
     { "scan", &Interpreter::ProcessScan },
+#if OPENTHREAD_ENABLE_SERVICE
+    { "service", &Interpreter::ProcessService },
+#endif
     { "singleton", &Interpreter::ProcessSingleton },
     { "state", &Interpreter::ProcessState },
     { "thread", &Interpreter::ProcessThread },
@@ -1469,18 +1478,81 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
-void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
+#if OPENTHREAD_ENABLE_SERVICE
+void Interpreter::ProcessNetworkDataShow(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    SuccessOrExit(error = otBorderRouterRegister(mInstance));
+    uint8_t data[255];
+    uint8_t len = sizeof(data);
+
+    SuccessOrExit(error = otNetDataGet(mInstance, false, data, &len));
+
+    this->OutputBytes(data, static_cast<uint8_t>(len));
+    mServer->OutputFormat("\r\n");
 
 exit:
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
-#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
+
+void Interpreter::ProcessService(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+
+    if (strcmp(argv[0], "add") == 0)
+    {
+        otServiceConfig cfg;
+        long enterpriseNumber = 0;
+
+        VerifyOrExit(argc > 3, error = OT_ERROR_PARSE);
+
+        SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
+
+        cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[2]));
+        memcpy(cfg.mServiceData, argv[2], cfg.mServiceDataLength);
+        cfg.mEnterpriseNumber = static_cast<uint32_t>(enterpriseNumber);
+        cfg.mServerConfig.mStable = true;
+        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(strlen(argv[3]));
+        memcpy(cfg.mServerConfig.mServerData, argv[3], cfg.mServerConfig.mServerDataLength);
+
+        SuccessOrExit(error = otServerAddService(mInstance, &cfg));
+    }
+    else if (strcmp(argv[0], "remove") == 0)
+    {
+        long enterpriseNumber = 0;
+
+        VerifyOrExit(argc > 2, error = OT_ERROR_PARSE);
+
+        SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
+
+        SuccessOrExit(error = otServerRemoveService(mInstance, static_cast<uint32_t>(enterpriseNumber),
+                                                    reinterpret_cast<uint8_t *>(argv[2]), static_cast<uint8_t>(strlen(argv[2]))));
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif
+
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+    SuccessOrExit(error = otBorderRouterRegister(mInstance));
+#else
+    SuccessOrExit(error = otServerRegister(mInstance));
+#endif
+
+exit:
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+    AppendResult(error);
+}
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])

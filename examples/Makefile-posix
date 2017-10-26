@@ -90,14 +90,11 @@ TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild
 # accordingly.
 
 configure_OPTIONS                   = \
-    --enable-cli-app=all              \
-    --enable-ncp-app=all              \
-    --with-ncp-bus=uart               \
-    --with-examples=posix             \
     --enable-application-coap         \
     --enable-border-router            \
     --enable-cert-log                 \
     --enable-child-supervision        \
+    --enable-cli-app=all              \
     --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
@@ -108,8 +105,12 @@ configure_OPTIONS                   = \
     --enable-legacy                   \
     --enable-mac-filter               \
     --enable-mtd-network-diagnostic   \
+    --enable-ncp-app=all              \
     --enable-raw-link-api             \
+    --enable-service                  \
     --enable-tmf-proxy                \
+    --with-examples=posix             \
+    --with-ncp-bus=uart               \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

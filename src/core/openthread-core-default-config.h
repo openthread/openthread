@@ -282,6 +282,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_SERVER_ALOCS
+ *
+ * The maximum number of supported Service ALOCs registrations for this device.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_SERVER_ALOCS
+#define OPENTHREAD_CONFIG_MAX_SERVER_ALOCS                      1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
  * The 6LoWPAN fragment reassembly timeout in seconds.

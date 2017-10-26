@@ -310,9 +310,11 @@ private:
     void ScheduleTransmissionTask(void);
     static void HandleDataPollTimeout(Mac::Receiver &aReceiver);
 
-    otError AddPendingSrcMatchEntries(void);
-    otError AddSrcMatchEntry(Child &aChild);
-    void ClearSrcMatchEntry(Child &aChild);
+#if OPENTHREAD_FTD
+#if OPENTHREAD_ENABLE_SERVICE
+    otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
+#endif // OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_FTD
 
     static MeshForwarder &GetOwner(const Context &aContext);
 

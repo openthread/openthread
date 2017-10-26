@@ -43,6 +43,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [mode](#mode)
 * [neighbor](#neighbor-list)
 * [netdataregister](#netdataregister)
+* [netdatashow](#netdatashow)
 * [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
@@ -69,6 +70,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [txpowermax](#txpowermax)
 * [version](#version)
 * [diag](#diag)
+* [service](#service)
 
 ## OpenThread Command Details
 
@@ -1125,6 +1127,16 @@ Register local network data with Thread Leader.
 Done
 ```
 
+### netdatashow
+
+Show Thread Leader network data.
+
+```bash
+> netdatashow
+08040b020000
+Done
+```
+
 ### networkdiagnostic get \<addr\> \<type\> ..
 
 Send network diagnostic request to retrieve tlv of \<type\>s.
@@ -1766,5 +1778,36 @@ Done
 
 Diagnostics module is enabled only when building OpenThread with --enable-diag option.
 Go [diagnostics module][1] for more information.
+
+### service
+
+Module for controlling service registration in Network Data.
+Each change in service registration must be sent to leader by `netdataregister` command
+before taking effect.
+
+### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
+
+Add service to the Network Data.
+
+```bash
+> service add 44970 foo bar
+Done
+> ipaddr
+fdde:ad00:beef:0:0:ff:fe00:fc10
+fdde:ad00:beef:0:0:ff:fe00:fc00
+fdde:ad00:beef:0:0:ff:fe00:7c00
+fe80:0:0:0:1486:2f57:3c:6e10
+fdde:ad00:beef:0:8ca4:19ed:217a:eff9
+Done
+```
+
+### service remove \<enterpriseNumber\> \<serviceData\>
+
+Remove service from Network Data.
+
+```bash
+> service remove 44970 foo
+Done
+```
 
 [1]:../diag/README.md
