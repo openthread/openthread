@@ -489,24 +489,6 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
     otLogFuncExit();
 }
 
-void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
-{
-    Crypto::Sha256 sha256;
-    uint8_t buf[Crypto::Sha256::kHashSize];
-
-    otLogFuncEntry();
-
-    otPlatRadioGetIeeeEui64(&GetInstance(), buf);
-    sha256.Start();
-    sha256.Update(buf, OT_EXT_ADDRESS_SIZE);
-    sha256.Finish(buf);
-
-    memcpy(aHashMacAddress->m8, buf, OT_EXT_ADDRESS_SIZE);
-    aHashMacAddress->SetLocal(true);
-
-    otLogFuncExitMsg("%llX", HostSwap64(*reinterpret_cast<uint64_t *>(aHashMacAddress)));
-}
-
 otError Mac::SetShortAddress(ShortAddress aShortAddress)
 {
     otLogFuncEntryMsg("%d", aShortAddress);

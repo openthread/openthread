@@ -381,7 +381,7 @@ exit:
 otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
 {
     otError error = OT_ERROR_NONE;
-    const otExtAddress *extAddress = NULL;
+    const otExtAddress *eui64 = NULL;
     const char *aPSKd = NULL;
     uint32_t joinerTimeout = 0;
 
@@ -390,13 +390,13 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
     SuccessOrExit(error = mDecoder.ReadUtf8(aPSKd));
     SuccessOrExit(error = mDecoder.ReadUint32(joinerTimeout));
 
-    if (mDecoder.ReadEui64(extAddress) != OT_ERROR_NONE)
+    if (mDecoder.ReadEui64(eui64) != OT_ERROR_NONE)
     {
-        extAddress = NULL;
+        eui64 = NULL;
     }
 
 
-    error = otCommissionerAddJoiner(mInstance, extAddress, aPSKd, joinerTimeout);
+    error = otCommissionerAddJoiner(mInstance, eui64, aPSKd, joinerTimeout);
 
 exit:
     return error;

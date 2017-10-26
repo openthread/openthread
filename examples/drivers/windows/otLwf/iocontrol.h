@@ -202,7 +202,7 @@ DECL_IOCTL_FUNC(otCommissionerStop);
 DECL_IOCTL_FUNC(otJoinerStart);
 DECL_IOCTL_FUNC(otJoinerStop);
 DECL_IOCTL_FUNC(otFactoryAssignedIeeeEui64);
-DECL_IOCTL_FUNC(otHashMacAddress);
+DECL_IOCTL_FUNC(otJoinerId);
 DECL_IOCTL_FUNC_WITH_TUN2(otRouterDowngradeThreshold);
 DECL_IOCTL_FUNC(otCommissionerPanIdQuery);
 DECL_IOCTL_FUNC(otCommissionerEnergyScan);

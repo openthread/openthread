@@ -756,7 +756,7 @@ class OpenThread(IThci):
             if bType == MacType.FactoryMac:
                 macAddr64 = self.__sendCommand('eui64')[0]
             elif bType == MacType.HashMac:
-                macAddr64 = self.__sendCommand('hashmacaddr')[0]
+                macAddr64 = self.__sendCommand('joinerid')[0]
             else:
                 macAddr64 = self.__sendCommand('extaddr')[0]
         print macAddr64
@@ -1964,16 +1964,21 @@ class OpenThread(IThci):
             False: fail to add Joiner's steering data
         """
         print '%s call scanJoiner' % self.port
-        if xEUI == '*':
-            JoinerHashMac = '*'
-        else:
-            JoinerAddr = ModuleHelper.CalculateHashMac(xEUI)
-            JoinerHashMac = hex(int(JoinerAddr)).rstrip("L").lstrip("0x")
 
         # long timeout value to avoid automatic joiner removal (in seconds)
         timeout = 500
 
-        cmd = 'commissioner joiner add %s %s %s' % (JoinerHashMac, strPSKd, str(timeout))
+        if not isinstance(xEUI, str):
+            eui64 = self.__convertLongToString(xEUI)
+
+            # prepend 0 at the beginning
+            if len(eui64) < 16:
+                eui64 = eui64.zfill(16)
+                print eui64
+        else:
+            eui64 = xEUI
+
+        cmd = 'commissioner joiner add %s %s %s' % (eui64, strPSKd, str(timeout))
         print cmd
         if self.__sendCommand(cmd)[0] == 'Done':
             if self.logThreadStatus == self.logStatus['stop']:

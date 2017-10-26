@@ -88,11 +88,6 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
     otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
 }
 
-void otLinkGetJoinerId(otInstance *aInstance, otExtAddress *aHashMacAddress)
-{
-    aInstance->mThreadNetif.GetMac().GetHashMacAddress(static_cast<Mac::ExtAddress *>(aHashMacAddress));
-}
-
 int8_t otLinkGetMaxTransmitPower(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().GetMaxTransmitPower();

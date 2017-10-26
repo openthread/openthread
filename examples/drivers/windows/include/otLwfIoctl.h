@@ -542,7 +542,7 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // otExtAddress - aEui64
 
-#define IOCTL_OTLWF_OT_HASH_MAC_ADDRESS \
+#define IOCTL_OTLWF_OT_JOINER_ID \
     OTLWF_CTL_CODE(172, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
     // otExtAddress - aEui64

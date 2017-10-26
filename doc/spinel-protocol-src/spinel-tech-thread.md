@@ -256,7 +256,7 @@ Data per item is:
 
 * `U`: PSKd
 * `L`: Timeout in seconds
-* `E`: Extended/long address (optional)
+* `E`: IEEE EUI-64 (optional)
 
 Passess Pre-Shared Key for the Device to the NCP in the commissioning process.
 When the Extended address is ommited all Devices which provided a valid PSKd

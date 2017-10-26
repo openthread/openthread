@@ -116,7 +116,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_JOINER_START",                REF_IOCTL_FUNC(otJoinerStart) },
     { "IOCTL_OTLWF_OT_JOINER_STOP",                 REF_IOCTL_FUNC(otJoinerStop) },
     { "IOCTL_OTLWF_OT_FACTORY_EUI64",               REF_IOCTL_FUNC(otFactoryAssignedIeeeEui64) },
-    { "IOCTL_OTLWF_OT_HASH_MAC_ADDRESS",            REF_IOCTL_FUNC(otHashMacAddress) },
+    { "IOCTL_OTLWF_OT_JOINER_ID",                   REF_IOCTL_FUNC(otJoinerId) },
     { "IOCTL_OTLWF_OT_ROUTER_DOWNGRADE_THRESHOLD",  REF_IOCTL_FUNC_WITH_TUN(otRouterDowngradeThreshold) },
     { "IOCTL_OTLWF_OT_COMMISSIONER_PANID_QUERY",    REF_IOCTL_FUNC(otCommissionerPanIdQuery) },
     { "IOCTL_OTLWF_OT_COMMISSIONER_ENERGY_SCAN",    REF_IOCTL_FUNC(otCommissionerEnergyScan) },
@@ -1374,7 +1374,7 @@ otLwfIoCtl_otFactoryAssignedIeeeEui64(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfIoCtl_otHashMacAddress(
+otLwfIoCtl_otJoinerId(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
             PUCHAR          InBuffer,
@@ -1391,9 +1391,8 @@ otLwfIoCtl_otHashMacAddress(
 
     if (*OutBufferLength >= sizeof(otExtAddress))
     {
-        otLinkGetJoinerId(pFilter->otCtx, (otExtAddress*)OutBuffer);
+        status = ThreadErrorToNtstatus(otJoinerGetId(pFilter->otCtx, (otExtAddress*)OutBuffer));
         *OutBufferLength = sizeof(otExtAddress);
-        status = STATUS_SUCCESS;
     }
     else
     {
