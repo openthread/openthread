@@ -39,7 +39,9 @@
 #include <openthread/platform/radio.h>
 
 #include "platform-samr21.h"
+
 #include "common/logging.hpp"
+#include "utils/code_utils.h"
 
 enum
 {
@@ -470,16 +472,17 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     otLogDebgPlat(sInstance, "Radio sleep");
 
-    otError error = OT_ERROR_INVALID_STATE;
+    otError error = OT_ERROR_NONE;
 
-    if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
-    {
-        radioSleep();
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP ||
+                    sState == OT_RADIO_STATE_RECEIVE,
+                    error = OT_ERROR_INVALID_STATE);
 
-        sState = OT_RADIO_STATE_SLEEP;
+    radioSleep();
 
-        error = OT_ERROR_NONE;
-    }
+    sState = OT_RADIO_STATE_SLEEP;
+
+exit:
 
     return error;
 }
@@ -490,18 +493,18 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     otLogDebgPlat(sInstance, "Radio receive, channel: %d", aChannel);
 
-    otError error = OT_ERROR_INVALID_STATE;
+    otError error = OT_ERROR_NONE;
 
-    if (sState != OT_RADIO_STATE_DISABLED)
-    {
-        setChannel(aChannel);
+    otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED,
+                    error = OT_ERROR_INVALID_STATE);
 
-        radioRxEnable();
+    setChannel(aChannel);
 
-        sState = OT_RADIO_STATE_RECEIVE;
+    radioRxEnable();
 
-        error = OT_ERROR_NONE;
-    }
+    sState = OT_RADIO_STATE_RECEIVE;
+
+exit:
 
     return error;
 }
@@ -512,26 +515,26 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     otLogDebgPlat(sInstance, "Radio transmit");
 
-    otError error = OT_ERROR_INVALID_STATE;
+    otError error = OT_ERROR_NONE;
 
-    if (sState == OT_RADIO_STATE_RECEIVE)
-    {
-        uint8_t frame[OT_RADIO_FRAME_MAX_SIZE + 1];
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE,
+                    error = OT_ERROR_INVALID_STATE);
 
-        setChannel(aFrame->mChannel);
-        setTxPower(aFrame->mPower);
+    uint8_t frame[OT_RADIO_FRAME_MAX_SIZE + 1];
 
-        frame[0] = aFrame->mLength - IEEE802154_FCS_SIZE;
-        memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
+    setChannel(aFrame->mChannel);
+    setTxPower(aFrame->mPower);
 
-        PHY_DataReq(frame);
+    frame[0] = aFrame->mLength - IEEE802154_FCS_SIZE;
+    memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
 
-        otPlatRadioTxStarted(aInstance, aFrame);
+    PHY_DataReq(frame);
 
-        sState = OT_RADIO_STATE_TRANSMIT;
+    otPlatRadioTxStarted(aInstance, aFrame);
 
-        error = OT_ERROR_NONE;
-    }
+    sState = OT_RADIO_STATE_TRANSMIT;
+
+exit:
 
     return error;
 }
