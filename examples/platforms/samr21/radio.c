@@ -295,19 +295,23 @@ void PHY_DataInd(PHY_DataInd_t *ind)
 
 void PHY_DataConf(uint8_t status)
 {
-    sTxStatus = OT_ERROR_ABORT;
-
-    if (status == PHY_STATUS_SUCCESS)
+    switch (status)
     {
+    case PHY_STATUS_SUCCESS:
         sTxStatus = OT_ERROR_NONE;
-    }
-    else if (status == PHY_STATUS_CHANNEL_ACCESS_FAILURE)
-    {
+        break;
+
+    case PHY_STATUS_CHANNEL_ACCESS_FAILURE:
         sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-    }
-    else if (status == PHY_STATUS_NO_ACK)
-    {
+        break;
+
+    case PHY_STATUS_NO_ACK:
         sTxStatus = OT_ERROR_NO_ACK;
+        break;
+
+    default:
+        sTxStatus = OT_ERROR_ABORT;
+        break;
     }
 
     sTxDone = true;
