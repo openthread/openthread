@@ -48,6 +48,7 @@
 #include <openthread/types.h>
 
 #include "changed_props_set.hpp"
+#include "common/instance.hpp"
 #include "common/tasklet.hpp"
 #include "ncp/ncp_buffer.hpp"
 #include "ncp/spinel_decoder.hpp"
@@ -73,7 +74,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpBase(otInstance *aInstance);
+    NcpBase(Instance *aInstance);
 
     /**
      * This static method returns the pointer to the single NCP instance.
@@ -622,7 +623,7 @@ protected:
     static NcpBase *sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
     static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData);
-    otInstance *mInstance;
+    Instance *mInstance;
     NcpFrameBuffer  mTxFrameBuffer;
     SpinelEncoder mEncoder;
     SpinelDecoder mDecoder;

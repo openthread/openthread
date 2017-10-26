@@ -38,10 +38,10 @@
 #include <mbedtls/debug.h>
 #include <openthread/platform/radio.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
@@ -52,7 +52,7 @@
 namespace ot {
 namespace MeshCoP {
 
-Dtls::Dtls(otInstance &aInstance):
+Dtls::Dtls(Instance &aInstance):
     InstanceLocator(aInstance),
     mPskLength(0),
     mStarted(false),
@@ -520,7 +520,7 @@ Dtls &Dtls::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Dtls &dtls = *static_cast<Dtls *>(aContext.GetContext());
 #else
-    Dtls &dtls = otGetThreadNetif().GetDtls();
+    Dtls &dtls = Instance::Get().GetThreadNetif().GetDtls();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return dtls;

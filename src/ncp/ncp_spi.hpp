@@ -49,7 +49,7 @@ public:
      * @param[in]  aInstance  A pointer to the OpenThread instance structure.
      *
      */
-    NcpSpi(otInstance *aInstance);
+    NcpSpi(Instance *aInstance);
 
 private:
     enum

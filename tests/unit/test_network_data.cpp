@@ -28,7 +28,7 @@
 
 #include <openthread/config.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 #include "thread/network_data_local.hpp"
 
 #include "test_platform.h"
@@ -39,7 +39,7 @@ namespace ot {
 class TestNetworkData: public NetworkData::NetworkData
 {
 public:
-    TestNetworkData(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength):
+    TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength):
         NetworkData::NetworkData(*aInstance, false) {
         memcpy(mTlvs, aTlvs, aTlvsLength);
         mLength = aTlvsLength;
@@ -72,7 +72,7 @@ bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otE
 
 void TestNetworkDataIterator(void)
 {
-    otInstance *instance;
+    ot::Instance *instance;
     otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
 

@@ -37,10 +37,10 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -49,7 +49,7 @@
 
 namespace ot {
 
-PanIdQueryServer::PanIdQueryServer(otInstance &aInstance) :
+PanIdQueryServer::PanIdQueryServer(Instance &aInstance) :
     InstanceLocator(aInstance),
     mChannelMask(0),
     mPanId(Mac::kPanIdBroadcast),
@@ -178,7 +178,7 @@ PanIdQueryServer &PanIdQueryServer::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     PanIdQueryServer &server = *static_cast<PanIdQueryServer *>(aContext.GetContext());
 #else
-    PanIdQueryServer &server = otGetThreadNetif().GetPanIdQueryServer();
+    PanIdQueryServer &server = Instance::Get().GetThreadNetif().GetPanIdQueryServer();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return server;

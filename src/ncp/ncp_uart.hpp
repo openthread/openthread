@@ -52,7 +52,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpUart(otInstance *aInstance);
+    NcpUart(Instance *aInstance);
 
     /**
      * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.

@@ -36,7 +36,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-otInstance *sInstance;
+ot::Instance *sInstance;
 Ip6::Ip6 *sIp6;
 ThreadNetif *sThreadNetif;
 Lowpan::Lowpan *sLowpan;
@@ -176,7 +176,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aCompress)
     {
-        VerifyOrQuit((message = sInstance->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         aVector.GetUncompressedStream(*message);
@@ -211,7 +211,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aDecompress)
     {
-        VerifyOrQuit((message = sInstance->mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         int decompressedBytes = sLowpan->Decompress(*message, aVector.mMacSource, aVector.mMacDestination,
@@ -1866,8 +1866,8 @@ void TestLowpanIphc(void)
 
     VerifyOrQuit(sInstance != NULL, "NULL instance");
 
-    sIp6 = &sInstance->mIp6;
-    sThreadNetif = &sInstance->mThreadNetif;
+    sIp6 = &sInstance->GetIp6();
+    sThreadNetif = &sInstance->GetThreadNetif();
     sLowpan = &sThreadNetif->GetLowpan();
 
     Init();

@@ -35,7 +35,7 @@
 
 #include <openthread/joiner.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
@@ -45,11 +45,11 @@ otError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aPro
                       otJoinerCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
-
 #if OPENTHREAD_ENABLE_JOINER
-    error = aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl,
-                                                      aVendorName, aVendorModel, aVendorSwVersion, aVendorData,
-                                                      aCallback, aContext);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetJoiner().Start(aPSKd, aProvisioningUrl, aVendorName, aVendorModel,
+                                                        aVendorSwVersion, aVendorData, aCallback, aContext);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPSKd);
@@ -70,7 +70,9 @@ otError otJoinerStop(otInstance *aInstance)
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_ENABLE_JOINER
-    error = aInstance->mThreadNetif.GetJoiner().Stop();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetJoiner().Stop();
 #else
     OT_UNUSED_VARIABLE(aInstance);
 #endif
@@ -83,7 +85,9 @@ otJoinerState otJoinerGetState(otInstance *aInstance)
     otJoinerState state = OT_JOINER_STATE_IDLE;
 
 #if OPENTHREAD_ENABLE_JOINER
-    state = aInstance->mThreadNetif.GetJoiner().GetState();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    state = instance.GetThreadNetif().GetJoiner().GetState();
 #else
     OT_UNUSED_VARIABLE(aInstance);
 #endif
@@ -96,7 +100,9 @@ otError otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId)
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_ENABLE_JOINER
-    aInstance->mThreadNetif.GetJoiner().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetJoiner().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));
     error = OT_ERROR_NONE;
 #else
     OT_UNUSED_VARIABLE(aInstance);

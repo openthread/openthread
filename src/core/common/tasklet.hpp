@@ -82,7 +82,7 @@ public:
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Tasklet(otInstance &aInstance, Handler aHandler, void *aContext);
+    Tasklet(Instance &aInstance, Handler aHandler, void *aContext);
 
     /**
      * This method puts the tasklet on the run queue.

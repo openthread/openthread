@@ -111,7 +111,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Dhcp6Server(otInstance &aInstance);
+    explicit Dhcp6Server(Instance &aInstance);
 
     /**
      * This method updates DHCP Agents and DHCP Alocs.

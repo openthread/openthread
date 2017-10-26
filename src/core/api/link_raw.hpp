@@ -55,7 +55,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    LinkRaw(otInstance &aInstance);
+    LinkRaw(Instance &aInstance);
 
     /**
      * This method returns true if the raw link-layer is enabled.

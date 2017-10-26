@@ -95,7 +95,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit ChildSupervisor(otInstance &aInstance);
+    explicit ChildSupervisor(Instance &aInstance);
 
     /**
      * This method starts the child supervision process on parent.
@@ -194,7 +194,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit SupervisionListener(otInstance &aInstance);
+    explicit SupervisionListener(Instance &aInstance);
 
     /**
      * This method starts the supervision listener operation.

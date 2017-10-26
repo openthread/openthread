@@ -39,10 +39,10 @@
 #include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
@@ -60,7 +60,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Mle {
 
-Mle::Mle(otInstance &aInstance) :
+Mle::Mle(Instance &aInstance) :
     InstanceLocator(aInstance),
     mRetrieveNewNetworkData(false),
     mRole(OT_DEVICE_ROLE_DISABLED),
@@ -82,7 +82,7 @@ Mle::Mle(otInstance &aInstance) :
     mChildUpdateAttempts(0),
     mParentLinkMargin(0),
     mParentIsSingleton(false),
-    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
     mTimeout(kMleEndDeviceTimeout),
     mSendChildUpdateRequest(aInstance, &Mle::HandleSendChildUpdateRequest, this),
     mDiscoverHandler(NULL),
@@ -3438,7 +3438,7 @@ Mle &Mle::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Mle &mle = *static_cast<Mle *>(aContext.GetContext());
 #else
-    Mle &mle = otGetInstance()->mThreadNetif.GetMle();
+    Mle &mle = Instance::Get().GetThreadNetif().GetMle();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return mle;

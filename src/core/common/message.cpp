@@ -35,15 +35,15 @@
 
 #include "message.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
 
-MessagePool::MessagePool(otInstance &aInstance) :
+MessagePool::MessagePool(Instance &aInstance) :
     InstanceLocator(aInstance),
     mAllQueue()
 {
@@ -149,7 +149,7 @@ otError MessagePool::ReclaimBuffers(int aNumBuffers)
 {
     while (aNumBuffers > GetFreeBufferCount())
     {
-        MeshForwarder &meshForwarder = GetInstance().mThreadNetif.GetMeshForwarder();
+        MeshForwarder &meshForwarder = GetInstance().GetThreadNetif().GetMeshForwarder();
         SuccessOrExit(meshForwarder.EvictIndirectMessage());
     }
 
@@ -167,6 +167,13 @@ exit:
         return OT_ERROR_NO_BUFS;
     }
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+uint16_t MessagePool::GetFreeBufferCount(void) const
+{
+    return otPlatMessagePoolNumFreeBuffers(&GetInstance());
+}
+#endif
 
 Message *MessagePool::Iterator::Next(void) const
 {

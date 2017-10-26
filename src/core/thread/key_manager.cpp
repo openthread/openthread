@@ -33,8 +33,8 @@
 
 #include "key_manager.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "thread/mle_router.hpp"
@@ -47,7 +47,7 @@ static const uint8_t kThreadString[] =
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-KeyManager::KeyManager(otInstance &aInstance):
+KeyManager::KeyManager(Instance &aInstance):
     InstanceLocator(aInstance),
     mKeySequence(0),
     mMacFrameCounter(0),
@@ -275,7 +275,7 @@ KeyManager &KeyManager::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     KeyManager &keyManager = *static_cast<KeyManager *>(aContext.GetContext());
 #else
-    KeyManager &keyManager = otGetThreadNetif().GetKeyManager();
+    KeyManager &keyManager = Instance::Get().GetThreadNetif().GetKeyManager();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return keyManager;

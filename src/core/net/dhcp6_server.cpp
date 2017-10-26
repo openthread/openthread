@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
@@ -51,7 +52,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 namespace Dhcp6 {
 
-Dhcp6Server::Dhcp6Server(otInstance &aInstance):
+Dhcp6Server::Dhcp6Server(Instance &aInstance):
     InstanceLocator(aInstance),
     mSocket(GetNetif().GetIp6().GetUdp())
 {

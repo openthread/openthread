@@ -73,7 +73,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    explicit AddressResolver(otInstance &aInstance);
+    explicit AddressResolver(Instance &aInstance);
 
     /**
      * This method clears the EID-to-RLOC cache.

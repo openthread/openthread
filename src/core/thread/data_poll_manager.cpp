@@ -37,8 +37,8 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
@@ -49,7 +49,7 @@
 
 namespace ot {
 
-DataPollManager::DataPollManager(otInstance &aInstance):
+DataPollManager::DataPollManager(Instance &aInstance):
     InstanceLocator(aInstance),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
@@ -112,7 +112,7 @@ otError DataPollManager::SendDataPoll(void)
         VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
     }
 
-    message = GetInstance().mMessagePool.New(Message::kTypeMacDataPoll, 0);
+    message = GetInstance().GetMessagePool().New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = netif.GetMeshForwarder().SendMessage(*message);
@@ -418,7 +418,7 @@ DataPollManager &DataPollManager::GetOwner(Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     DataPollManager &manager = *static_cast<DataPollManager *>(aContext.GetContext());
 #else
-    DataPollManager &manager = otGetMeshForwarder().GetDataPollManager();
+    DataPollManager &manager = Instance::Get().GetThreadNetif().GetMeshForwarder().GetDataPollManager();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return manager;

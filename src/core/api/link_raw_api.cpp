@@ -35,21 +35,24 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+
+using namespace ot;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
 otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(!aInstance->mThreadNetif.IsUp(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!instance.GetThreadNetif().IsUp(), error = OT_ERROR_INVALID_STATE);
 
     otLogInfoPlat(aInstance, "LinkRaw Enabled=%d", aEnabled ? 1 : 0);
 
-    aInstance->mLinkRaw.SetEnabled(aEnabled);
+    instance.GetLinkRaw().SetEnabled(aEnabled);
 
 exit:
     return error;
@@ -57,14 +60,17 @@ exit:
 
 bool otLinkRawIsEnabled(otInstance *aInstance)
 {
-    return aInstance->mLinkRaw.IsEnabled();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetLinkRaw().IsEnabled();
 }
 
 otError otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioSetPanId(aInstance, aPanId);
 
@@ -75,9 +81,10 @@ exit:
 otError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
     otExtAddress address;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     for (size_t i = 0; i < sizeof(address); i++)
     {
@@ -93,8 +100,9 @@ exit:
 otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioSetShortAddress(aInstance, aShortAddress);
 
@@ -110,8 +118,9 @@ bool otLinkRawGetPromiscuous(otInstance *aInstance)
 otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otLogInfoPlat(aInstance, "LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
 
@@ -124,8 +133,9 @@ exit:
 otError otLinkRawSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otLogInfoPlat(aInstance, "LinkRaw Sleep");
 
@@ -137,15 +147,18 @@ exit:
 
 otError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawReceiveDone aCallback)
 {
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
     otLogInfoPlat(aInstance, "LinkRaw Recv (Channel %d)", aChannel);
-    return aInstance->mLinkRaw.Receive(aChannel, aCallback);
+    return instance.GetLinkRaw().Receive(aChannel, aCallback);
 }
 
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
     otRadioFrame *buffer = NULL;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled());
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled());
 
     buffer = otPlatRadioGetTransmitBuffer(aInstance);
 
@@ -155,8 +168,10 @@ exit:
 
 otError otLinkRawTransmit(otInstance *aInstance, otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 {
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
     otLogInfoPlat(aInstance, "LinkRaw Transmit (%d bytes on channel %d)", aFrame->mLength, aFrame->mChannel);
-    return aInstance->mLinkRaw.Transmit(aFrame, aCallback);
+    return instance.GetLinkRaw().Transmit(aFrame, aCallback);
 }
 
 int8_t otLinkRawGetRssi(otInstance *aInstance)
@@ -166,20 +181,25 @@ int8_t otLinkRawGetRssi(otInstance *aInstance)
 
 otRadioCaps otLinkRawGetCaps(otInstance *aInstance)
 {
-    return aInstance->mLinkRaw.GetCaps();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetLinkRaw().GetCaps();
 }
 
 otError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration,
                             otLinkRawEnergyScanDone aCallback)
 {
-    return aInstance->mLinkRaw.EnergyScan(aScanChannel, aScanDuration, aCallback);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetLinkRaw().EnergyScan(aScanChannel, aScanDuration, aCallback);
 }
 
 otError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioEnableSrcMatch(aInstance, aEnable);
 
@@ -190,8 +210,9 @@ exit:
 otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioAddSrcMatchShortEntry(aInstance, aShortAddress);
 
@@ -202,8 +223,9 @@ exit:
 otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioAddSrcMatchExtEntry(aInstance, aExtAddress);
 
@@ -214,8 +236,9 @@ exit:
 otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioClearSrcMatchShortEntry(aInstance, aShortAddress);
 
@@ -226,8 +249,9 @@ exit:
 otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioClearSrcMatchExtEntry(aInstance, aExtAddress);
 
@@ -238,8 +262,9 @@ exit:
 otError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioClearSrcMatchShortEntries(aInstance);
 
@@ -250,8 +275,9 @@ exit:
 otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioClearSrcMatchExtEntries(aInstance);
 
@@ -261,7 +287,7 @@ exit:
 
 namespace ot {
 
-LinkRaw::LinkRaw(otInstance &aInstance):
+LinkRaw::LinkRaw(Instance &aInstance):
     mInstance(aInstance),
     mEnabled(false),
     mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
@@ -607,7 +633,7 @@ LinkRaw &LinkRaw::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     LinkRaw &link = *static_cast<LinkRaw *>(aContext.GetContext());
 #else
-    LinkRaw &link = otGetInstance()->mLinkRaw;
+    LinkRaw &link = Instance::Get().GetLinkRaw();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return link;

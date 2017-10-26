@@ -123,7 +123,7 @@ public:
      * @param[in]  aInstance   A reference to the otInstance object.
      *
      */
-    Ip6(otInstance &aInstance);
+    Ip6(Instance &aInstance);
 
     /**
      * This method sends an IPv6 datagram.

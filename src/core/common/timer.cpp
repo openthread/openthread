@@ -35,9 +35,9 @@
 
 #include "timer.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
@@ -87,7 +87,7 @@ void TimerMilli::Stop(void)
 
 TimerMilliScheduler &TimerMilli::GetTimerMilliScheduler(void) const
 {
-    return GetInstance().mTimerMilliScheduler;
+    return GetInstance().GetTimerMilliScheduler();
 }
 
 void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
@@ -213,10 +213,12 @@ bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
 
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     otLogFuncEntry();
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    aInstance->mTimerMilliScheduler.ProcessTimers();
+    instance->GetTimerMilliScheduler().ProcessTimers();
 
 exit:
     otLogFuncExit();
@@ -244,15 +246,17 @@ void TimerMicro::Stop(void)
 
 TimerMicroScheduler &TimerMicro::GetTimerMicroScheduler(void) const
 {
-    return GetInstance().mTimerMicroScheduler;
+    return GetInstance().GetTimerMicroScheduler();
 }
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     otLogFuncEntry();
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    aInstance->mTimerMicroScheduler.ProcessTimers();
+    instance->GetTimerMicroScheduler().ProcessTimers();
 
 exit:
     otLogFuncExit();

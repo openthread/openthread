@@ -116,6 +116,7 @@ SOURCES_COMMON                      = \
     coap/coap_header.cpp              \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
+    common/instance.cpp               \
     common/logging.cpp                \
     common/locator.cpp                \
     common/message.cpp                \
@@ -200,8 +201,6 @@ libopenthread_ftd_a_SOURCES         = \
 HEADERS_COMMON                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
-    openthread-instance.h             \
-    openthread-single-instance.h      \
     api/link_raw.hpp                  \
     coap/coap.hpp                     \
     coap/coap_header.hpp              \
@@ -211,6 +210,7 @@ HEADERS_COMMON                      = \
     common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
+    common/instance.hpp               \
     common/locator.hpp                \
     common/logging.hpp                \
     common/message.hpp                \

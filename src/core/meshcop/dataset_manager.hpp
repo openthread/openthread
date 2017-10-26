@@ -132,7 +132,7 @@ protected:
      * @param[in]  aTimerHandler  The registration timer handler.
      *
      */
-    DatasetManager(otInstance &aInstance, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
+    DatasetManager(Instance &aInstance, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
                    TimerMilli::Handler aTimerHandler);
 
     /**
@@ -282,7 +282,7 @@ public:
      * @param[in]  aInstance      A reference to the OpenThread instance.
      *
      */
-    ActiveDatasetBase(otInstance &aInstance);
+    ActiveDatasetBase(Instance &aInstance);
 
     /**
      * This method restores the Active Operational Dataset from non-volatile memory.
@@ -364,7 +364,7 @@ public:
      * @param[in]  The Thread network interface.
      *
      */
-    PendingDatasetBase(otInstance &aInstance);
+    PendingDatasetBase(Instance &aInstance);
 
     /**
      * This method restores the Operational Dataset from non-volatile memory.

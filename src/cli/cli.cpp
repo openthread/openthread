@@ -66,7 +66,6 @@
 #include <openthread/icmp6.h>
 #include <openthread/platform/uart.h>
 
-#include "openthread-instance.h"
 #include "common/new.hpp"
 #include "net/ip6.hpp"
 #endif
@@ -252,7 +251,7 @@ typedef otPtr<const otNetifAddress> otNetifAddressPtr;
 typedef otPtr<const uint8_t> otBufferPtr;
 typedef otPtr<const char> otStringPtr;
 
-Interpreter::Interpreter(otInstance *aInstance):
+Interpreter::Interpreter(Instance *aInstance):
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     mCoap(*this),
 #endif

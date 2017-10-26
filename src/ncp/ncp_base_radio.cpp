@@ -43,9 +43,9 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API

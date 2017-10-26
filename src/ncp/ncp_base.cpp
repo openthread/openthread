@@ -44,9 +44,9 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 
@@ -498,7 +498,7 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason aReason)
 
 NcpBase *NcpBase::sNcpInstance = NULL;
 
-NcpBase::NcpBase(otInstance *aInstance):
+NcpBase::NcpBase(Instance *aInstance):
     mInstance(aInstance),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mEncoder(mTxFrameBuffer),

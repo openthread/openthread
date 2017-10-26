@@ -36,6 +36,7 @@
 #include <stdio.h>
 
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp.hpp"
 #include "net/udp6.hpp"

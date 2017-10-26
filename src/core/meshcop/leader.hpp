@@ -70,7 +70,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Leader(otInstance &aInstance);
+    Leader(Instance &aInstance);
 
     /**
      * This method sends a MGMT_DATASET_CHANGED message to commissioner.

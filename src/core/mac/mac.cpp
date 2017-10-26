@@ -39,10 +39,10 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
@@ -136,7 +136,7 @@ void Mac::StartCsmaBackoff(void)
     }
 }
 
-Mac::Mac(otInstance &aInstance):
+Mac::Mac(Instance &aInstance):
     InstanceLocator(aInstance),
     mOperation(kOperationIdle),
     mPendingActiveScan(false),
@@ -335,18 +335,20 @@ void Mac::StartEnergyScan(void)
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRaw.IsEnabled())
+    if (instance->GetLinkRaw().IsEnabled())
     {
-        aInstance->mLinkRaw.InvokeEnergyScanDone(aEnergyScanMaxRssi);
+        instance->GetLinkRaw().InvokeEnergyScanDone(aEnergyScanMaxRssi);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
+        instance->GetThreadNetif().GetMac().EnergyScanDone(aEnergyScanMaxRssi);
     }
 
 exit:
@@ -935,9 +937,11 @@ exit:
 
 extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     otLogFuncEntry();
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
-    aInstance->mThreadNetif.GetMac().TransmitStartedTask(aFrame);
+    VerifyOrExit(instance->IsInitialized());
+    instance->GetThreadNetif().GetMac().TransmitStartedTask(aFrame);
 exit:
     otLogFuncExit();
 }
@@ -956,19 +960,21 @@ void Mac::TransmitStartedTask(otRadioFrame *aFrame)
 extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame,
                                   otError aError)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     otLogFuncEntryMsg("%!otError!", aError);
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
+    VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRaw.IsEnabled())
+    if (instance->GetLinkRaw().IsEnabled())
     {
-        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, aAckFrame, aError);
+        instance->GetLinkRaw().InvokeTransmitDone(aFrame, aAckFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
+        instance->GetThreadNetif().GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
     }
 
 exit:
@@ -1040,9 +1046,9 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
 
     default:
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-        if (GetInstance().mLinkRaw.IsEnabled())
+        if (GetInstance().GetLinkRaw().IsEnabled())
         {
-            GetInstance().mLinkRaw.InvokeTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
+            GetInstance().GetLinkRaw().InvokeTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
         }
         else
 #endif
@@ -1501,19 +1507,21 @@ exit:
 
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     otLogFuncEntryMsg("%!otError!", aError);
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
+    VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRaw.IsEnabled())
+    if (instance->GetLinkRaw().IsEnabled())
     {
-        aInstance->mLinkRaw.InvokeReceiveDone(aFrame, aError);
+        instance->GetLinkRaw().InvokeReceiveDone(aFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+        instance->GetThreadNetif().GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
     }
 
 exit:
@@ -1896,6 +1904,11 @@ void Mac::ResetCounters(void)
     memset(&mCounters, 0, sizeof(mCounters));
 }
 
+int8_t Mac::GetNoiseFloor(void)
+{
+    return otPlatRadioGetReceiveSensitivity(&GetInstance());
+}
+
 #if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
 bool Mac::IsBeaconJoinable(void)
 {
@@ -1922,7 +1935,7 @@ Mac &Mac::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Mac &mac = *static_cast<Mac *>(aContext.GetContext());
 #else
-    Mac &mac = otGetInstance()->mThreadNetif.GetMac();
+    Mac &mac = Instance::Get().GetThreadNetif().GetMac();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return mac;

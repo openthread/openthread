@@ -93,7 +93,7 @@ public:
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Timer(otInstance &aInstance, Handler aHandler, void *aContext):
+    Timer(Instance &aInstance, Handler aHandler, void *aContext):
         InstanceLocator(aInstance),
         Context(aContext),
         mHandler(aHandler),
@@ -153,7 +153,7 @@ public:
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    TimerMilli(otInstance &aInstance, Handler aHandler, void *aContext):
+    TimerMilli(Instance &aInstance, Handler aHandler, void *aContext):
         Timer(aInstance, aHandler, aContext) {
     }
 
@@ -243,7 +243,7 @@ protected:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerScheduler(otInstance &aInstance):
+    TimerScheduler(Instance &aInstance):
         InstanceLocator(aInstance),
         mHead(NULL) {
     }
@@ -313,7 +313,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMilliScheduler(otInstance &aInstance):
+    TimerMilliScheduler(Instance &aInstance):
         TimerScheduler(aInstance) {
     }
 
@@ -361,7 +361,7 @@ public:
      * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    TimerMicro(otInstance &aInstance, Handler aHandler, void *aContext):
+    TimerMicro(Instance &aInstance, Handler aHandler, void *aContext):
         Timer(aInstance, aHandler, aContext) {
     }
 
@@ -421,7 +421,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMicroScheduler(otInstance &aInstance):
+    TimerMicroScheduler(Instance &aInstance):
         TimerScheduler(aInstance) {
     }
 

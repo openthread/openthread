@@ -72,7 +72,7 @@ public:
      * @param[in]  aNetif  A reference to the Thread network interface.
      *
      */
-    Dtls(otInstance &aInstance);
+    Dtls(Instance &aInstance);
 
     /**
      * This function pointer is called when a connection is established or torn down.

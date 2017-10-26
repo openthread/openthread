@@ -44,6 +44,7 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
@@ -58,7 +59,7 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Joiner::Joiner(otInstance &aInstance):
+Joiner::Joiner(Instance &aInstance):
     InstanceLocator(aInstance),
     mState(OT_JOINER_STATE_IDLE),
     mCallback(NULL),
@@ -618,7 +619,7 @@ Joiner &Joiner::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Joiner &joiner = *static_cast<Joiner *>(aContext.GetContext());
 #else
-    Joiner &joiner = otGetThreadNetif().GetJoiner();
+    Joiner &joiner = Instance::Get().GetThreadNetif().GetJoiner();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return joiner;

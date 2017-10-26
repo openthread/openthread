@@ -40,11 +40,11 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
@@ -61,7 +61,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace NetworkData {
 
-Leader::Leader(otInstance &aInstance):
+Leader::Leader(Instance &aInstance):
     LeaderBase(aInstance),
     mTimer(aInstance, &Leader::HandleTimer, this),
     mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this),
@@ -1551,7 +1551,7 @@ Leader &Leader::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Leader &leader = *static_cast<Leader *>(aContext.GetContext());
 #else
-    Leader &leader = otGetThreadNetif().GetNetworkDataLeader();
+    Leader &leader = Instance::Get().GetThreadNetif().GetNetworkDataLeader();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return leader;

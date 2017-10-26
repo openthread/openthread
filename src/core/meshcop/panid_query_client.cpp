@@ -40,6 +40,7 @@
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -50,7 +51,7 @@
 
 namespace ot {
 
-PanIdQueryClient::PanIdQueryClient(otInstance &aInstance) :
+PanIdQueryClient::PanIdQueryClient(Instance &aInstance) :
     InstanceLocator(aInstance),
     mCallback(NULL),
     mContext(NULL),
