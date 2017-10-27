@@ -1451,99 +1451,76 @@ void Mle::HandleParentRequestTimer(void)
             SendChildIdRequest();
             mParentRequestState = kChildIdRequest;
             mParentRequestTimer.Start(kParentRequestChildTimeout);
-        }
-        else
-        {
-            ResetParentCandidate();
-
-            if (mReattachState == kReattachActive)
-            {
-                if (netif.GetPendingDataset().Restore() == OT_ERROR_NONE)
-                {
-                    netif.GetPendingDataset().ApplyConfiguration();
-                    mReattachState = kReattachPending;
-                    mParentRequestState = kParentRequestStart;
-                    mParentRequestTimer.Start(kParentRequestRouterTimeout);
-                }
-                else
-                {
-                    mReattachState = kReattachStop;
-                }
-            }
-            else if (mReattachState == kReattachPending)
-            {
-                mReattachState = kReattachStop;
-                netif.GetActiveDataset().Restore();
-            }
-
-            if (mReattachState == kReattachStop)
-            {
-                switch (mParentRequestMode)
-                {
-                case kAttachAny:
-                    if (mPreviousPanId != Mac::kPanIdBroadcast)
-                    {
-                        netif.GetMac().SetChannel(mPreviousChannel);
-                        netif.GetMac().SetPanId(mPreviousPanId);
-                        mPreviousPanId = Mac::kPanIdBroadcast;
-                        BecomeDetached();
-                    }
-                    else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
-                    {
-                        SendOrphanAnnounce();
-                        BecomeDetached();
-                    }
-                    else if (netif.GetMle().BecomeLeader() != OT_ERROR_NONE)
-                    {
-                        mParentRequestState = kParentIdle;
-                        BecomeDetached();
-                    }
-
-                    break;
-
-                case kAttachSame1:
-                    mParentRequestState = kParentIdle;
-                    BecomeChild(kAttachSame2);
-                    break;
-
-                case kAttachSame2:
-                    mParentRequestState = kParentIdle;
-                    BecomeChild(kAttachAny);
-                    break;
-
-                case kAttachBetter:
-                    mParentRequestState = kParentIdle;
-
-                    if (mRole == OT_DEVICE_ROLE_CHILD)
-                    {
-                        // Restart keep-alive timer as it was disturbed by attachment procedure.
-                        mParentRequestTimer.Start(0);
-                    }
-
-                    break;
-                }
-            }
+            break;
         }
 
-        break;
+    // fall through
 
     case kChildIdRequest:
         mParentRequestState = kParentIdle;
         ResetParentCandidate();
 
-        if ((mParentRequestMode == kAttachBetter) ||
-            (mRole == OT_DEVICE_ROLE_ROUTER) ||
-            (mRole == OT_DEVICE_ROLE_LEADER))
+        if (mReattachState == kReattachActive)
         {
-            if (mRole == OT_DEVICE_ROLE_CHILD)
+            if (netif.GetPendingDataset().Restore() == OT_ERROR_NONE)
             {
-                // Restart keep-alive timer as it was disturbed by attachment procedure.
-                mParentRequestTimer.Start(0);
+                netif.GetPendingDataset().ApplyConfiguration();
+                mReattachState = kReattachPending;
+                mParentRequestState = kParentRequestStart;
+                mParentRequestTimer.Start(kParentRequestRouterTimeout);
+            }
+            else
+            {
+                mReattachState = kReattachStop;
             }
         }
-        else
+        else if (mReattachState == kReattachPending)
         {
-            BecomeDetached();
+            mReattachState = kReattachStop;
+            netif.GetActiveDataset().Restore();
+        }
+
+        if (mReattachState == kReattachStop)
+        {
+            switch (mParentRequestMode)
+            {
+            case kAttachAny:
+                if (mPreviousPanId != Mac::kPanIdBroadcast)
+                {
+                    netif.GetMac().SetChannel(mPreviousChannel);
+                    netif.GetMac().SetPanId(mPreviousPanId);
+                    mPreviousPanId = Mac::kPanIdBroadcast;
+                    BecomeDetached();
+                }
+                else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
+                {
+                    SendOrphanAnnounce();
+                    BecomeDetached();
+                }
+                else if (netif.GetMle().BecomeLeader() != OT_ERROR_NONE)
+                {
+                    BecomeDetached();
+                }
+
+                break;
+
+            case kAttachSame1:
+                BecomeChild(kAttachSame2);
+                break;
+
+            case kAttachSame2:
+                BecomeChild(kAttachAny);
+                break;
+
+            case kAttachBetter:
+                if (mRole == OT_DEVICE_ROLE_CHILD)
+                {
+                    // Restart keep-alive timer as it was disturbed by attachment procedure.
+                    mParentRequestTimer.Start(0);
+                }
+
+                break;
+            }
         }
 
         break;
