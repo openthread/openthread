@@ -79,6 +79,12 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != arm-gcc63 ] || {
+        sudo apt-get install lib32z1 || die
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-6-2017-q2-update/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
+
         wget https://github.com/foss-for-synopsys-dwc-arc-processors/toolchain/releases/download/arc-2017.03-rc2/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install.tar.gz || die
         tar xzf arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install.tar.gz
         export PATH=/tmp/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install/bin:$PATH || die
