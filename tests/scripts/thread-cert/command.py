@@ -10,7 +10,10 @@ def check_address_query(command_msg, source_node, destination_address):
     command_msg.assertCoapMessageContainsTlv(network_layer.TargetEid)
 
     source_rloc = source_node.get_ip6_address(config.ADDRESS_TYPE.RLOC)
-    assert ipv6.ip_address(source_rloc) == command_msg.ipv6_packet.ipv6_header.source_address, "Error: The IPv6 source address is not the RLOC of the originator."
+    assert ipv6.ip_address(source_rloc) == command_msg.ipv6_packet.ipv6_header.source_address, \
+            "Error: The IPv6 source address is not the RLOC of the originator. The source node's rloc is: " \
+            + str(ipv6.ip_address(source_rloc)) + ", but the source_rloc in command msg is: " \
+            + str(command_msg.ipv6_packet.ipv6_header.source_address)
 
     assert ipv6.ip_address(destination_address.decode('utf-8')) == command_msg.ipv6_packet.ipv6_header.destination_address, "Error: The IPv6 destination address is not expected."
 

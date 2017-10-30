@@ -86,13 +86,14 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
 
         # 3 DUT_ROUTER1:
         time.sleep(10)
+        self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'child')
+
         # Verify it sent a Parent Request and Child ID Request.
         dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
         dut_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         dut_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 
         # Verify it sent an Address Release Message to the Leader when it attached as a child.
-        self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'child')
         msg = dut_messages.next_coap_message('0.02')
         command.check_address_release(msg, self.nodes[LEADER])
 
