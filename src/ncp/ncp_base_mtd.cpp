@@ -2707,7 +2707,26 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
         if (mThreadChangedFlags & threadFlag)
         {
-            mChangedPropsSet.AddProperty(kFlags[i].mPropKey);
+            spinel_prop_key_t propKey = kFlags[i].mPropKey;
+            bool shouldAddProperty = true;
+
+            // Child table changes are reported using the `HandleChildAdded()` and
+            // `HandleChildRemoved()` callbacks emitting spinel `VALUE_INSERTED` and
+            // `VALUE_REMOVED` async spinel frames. If the spinel frames could not be
+            // added (e.g., out of NCP buffer) from the above callbacks, the flag
+            // `mShouldEmitChildTableUpdate` is set to `true` so that the entire
+            // child table is emitted as an unsolicited `VALUE_IS` update.
+
+            if (propKey == SPINEL_PROP_THREAD_CHILD_TABLE)
+            {
+                shouldAddProperty = mShouldEmitChildTableUpdate;
+                mShouldEmitChildTableUpdate = false;
+            }
+
+            if (shouldAddProperty)
+            {
+                mChangedPropsSet.AddProperty(propKey);
+            }
 
             if (threadFlag == OT_CHANGED_THREAD_NETDATA)
             {
