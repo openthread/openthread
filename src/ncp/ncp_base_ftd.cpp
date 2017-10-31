@@ -107,6 +107,40 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_THREAD_ROUTER_TABLE(void)
+{
+    otError error = OT_ERROR_NONE;
+    otRouterInfo routerInfo;
+    uint8_t maxRouterId;
+
+    maxRouterId = otThreadGetMaxRouterId(mInstance);
+
+    for (uint8_t routerId = 0; routerId <= maxRouterId; routerId++)
+    {
+        if ((otThreadGetRouterInfo(mInstance, routerId, &routerInfo) != OT_ERROR_NONE) || !routerInfo.mAllocated)
+        {
+            continue;
+        }
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteEui64(routerInfo.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint16(routerInfo.mRloc16));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mRouterId));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mNextHop));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mPathCost));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mLinkQualityIn));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mLinkQualityOut));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mAge));
+        SuccessOrExit(error = mEncoder.WriteBool(routerInfo.mLinkEstablished));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
 otError NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(void)
 {
     return mEncoder.WriteBool(otThreadIsRouterRoleEnabled(mInstance));

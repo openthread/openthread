@@ -1421,6 +1421,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_STEERING_DATA";
         break;
 
+    case SPINEL_PROP_THREAD_ROUTER_TABLE:
+        ret = "PROP_THREAD_ROUTER_TABLE";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;

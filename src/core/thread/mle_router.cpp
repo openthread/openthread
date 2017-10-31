@@ -3773,7 +3773,7 @@ otError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo)
     }
 
     router = GetRouter(routerId);
-    VerifyOrExit(router != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(router != NULL, error = OT_ERROR_NOT_FOUND);
 
     memcpy(&aRouterInfo.mExtAddress, &router->GetExtAddress(), sizeof(aRouterInfo.mExtAddress));
 

@@ -583,6 +583,9 @@ public:
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
      * @param[out]  aRouterInfo  The router information.
      *
+     * @retval OT_ERROR_NONE          Successfully retrieved the router info for given id.
+     * @retval OT_ERROR_NOT_FOUND     No router entry with the given id.
+     *
      */
     otError GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo);
 
