@@ -71,11 +71,11 @@ otError utilsFlashInit(void)
     sFlashDataStart = sFlashDataEnd - (pageSize * SETTINGS_CONFIG_PAGE_NUM);
 
 #elif defined(__GNUC__) || defined(__ICCARM__)
-    extern uint32_t __flash_data_start;
-    extern uint32_t __flash_data_end;
+    extern uint32_t __start_ot_flash_data;
+    extern uint32_t __stop_ot_flash_data;
 
-    sFlashDataStart = (uint32_t)&__flash_data_start;
-    sFlashDataEnd   = (uint32_t)&__flash_data_end;
+    sFlashDataStart = (uint32_t)&__start_ot_flash_data;
+    sFlashDataEnd   = (uint32_t)&__stop_ot_flash_data;
 
 #endif
 
