@@ -151,11 +151,11 @@ SECTIONS
         KEEP(*(.stack*))
     } > RAM
 
-    __flash_data_end = (ORIGIN(FLASH) + LENGTH(FLASH));
-    __flash_data_start = (__flash_data_end - (FLASH_PAGE_SIZE * FLASH_DATA_PAGES_USED));
+    __stop_ot_flash_data = (ORIGIN(FLASH) + LENGTH(FLASH));
+    __start_ot_flash_data = (__stop_ot_flash_data - (FLASH_PAGE_SIZE * FLASH_DATA_PAGES_USED));
 
     /* Assure that code does not overlap flash data area.*/
-    ASSERT((__flash_data_start >= __etext + SIZEOF(.data)), "Error: Code overlaps flash data area.")
+    ASSERT((__start_ot_flash_data >= __etext + SIZEOF(.data)), "Error: Code overlaps flash data area.")
 
     /* Set stack top to end of RAM, and stack limit move down by
      * size of stack_dummy section */
