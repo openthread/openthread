@@ -289,4 +289,14 @@ otError otThreadSetParentPriority(otInstance *aInstance, const int8_t aParentPri
     return aInstance->mThreadNetif.GetMle().SetAssignParentPriority(aParentPriority);
 }
 
+otThreadChildTableCallback otThreadGetChildTableCallback(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMle().GetChildTableChangedCallback();
+}
+
+void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCallback aCallback)
+{
+    aInstance->mThreadNetif.GetMle().SetChildTableChangedCallback(aCallback);
+}
+
 #endif // OPENTHREAD_FTD

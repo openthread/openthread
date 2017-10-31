@@ -38,6 +38,8 @@
 
 #include "utils/wrap_string.h"
 
+#include <openthread/thread_ftd.h>
+
 #include "coap/coap.hpp"
 #include "coap/coap_header.hpp"
 #include "common/timer.hpp"
@@ -709,6 +711,25 @@ public:
      */
     otError GetMaxChildTimeout(uint32_t &aTimeout) const;
 
+    /**
+     * This method sets the "child table changed" callback function.
+     *
+     * The provided callback (if non-NULL) will be invoked when a child entry is being added/remove to/from the child
+     * table. Subsequent calls to this method will overwrite the previous callback.
+     *
+     * @param[in] aCallback    A pointer to callback handler function.
+     *
+     */
+    void SetChildTableChangedCallback(otThreadChildTableCallback aCallback) { mChildTableChangedCallback = aCallback; }
+
+    /**
+     * This method gets the "child table changed" callback function.
+     *
+     * @returns  The callback function pointer.
+     *
+     */
+    otThreadChildTableCallback GetChildTableChangedCallback(void) const { return mChildTableChangedCallback; }
+
 private:
     enum
     {
@@ -804,6 +825,8 @@ private:
     static void HandleStateUpdateTimer(Timer &aTimer);
     void HandleStateUpdateTimer(void);
 
+    void SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild);
+
     static MleRouter &GetOwner(const Context &aContext);
 
     TrickleTimer mAdvertiseTimer;
@@ -817,6 +840,8 @@ private:
     Router mRouters[kMaxRouterId + 1];
     uint8_t mMaxChildrenAllowed;
     Child mChildren[kMaxChildren];
+
+    otThreadChildTableCallback mChildTableChangedCallback;
 
     uint8_t mChallengeTimeout;
     uint8_t mChallenge[8];
