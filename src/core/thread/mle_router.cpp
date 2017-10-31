@@ -4506,7 +4506,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
     AddressRegistrationEntry entry;
     Lowpan::Context context;
     uint8_t length = 0;
-    uint8_t startOffset = static_cast<uint8_t>(aMessage.GetLength());
+    uint16_t startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
