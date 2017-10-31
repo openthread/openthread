@@ -38,8 +38,8 @@
 #if OPENTHREAD_FTD
 
 #include <openthread/thread_ftd.h>
-#include "openthread-core-config.h"
 #include "openthread-instance.h"
+#include "thread/mle_constants.hpp"
 
 using namespace ot;
 
@@ -212,6 +212,12 @@ exit:
 uint8_t otThreadGetRouterIdSequence(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRouterIdSequence();
+}
+
+uint8_t otThreadGetMaxRouterId(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return Mle::kMaxRouterId;
 }
 
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
