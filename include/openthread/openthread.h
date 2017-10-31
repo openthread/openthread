@@ -102,6 +102,7 @@ extern "C" {
  * @defgroup api-joiner         Joiner
  * @defgroup api-thread-router  Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
+ * @defgroup api-server         Server
  * @defgroup api-tmf-proxy      TMF Proxy
  *
  * @}
