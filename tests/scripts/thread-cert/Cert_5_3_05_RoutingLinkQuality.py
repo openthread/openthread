@@ -91,7 +91,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
 
         for router in range(DUT_ROUTER1, ROUTER3 + 1):
             self.nodes[router].start()
-        time.sleep(5)
+        time.sleep(10)
 
         for router in range(DUT_ROUTER1, ROUTER3 + 1):
             self.assertEqual(self.nodes[router].get_state(), 'router')
@@ -99,7 +99,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         # 2 & 3
         leader_rloc = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)
 
-        # Verify the ICMPv6 Echo Request take the least cost path.
+        # Verify the ICMPv6 Echo Request took the least cost path.
         self.assertTrue(self.nodes[ROUTER3].ping(leader_rloc))
         path = [ROUTER3, DUT_ROUTER1, LEADER]
         command.check_icmp_path(self.sniffer, path, self.nodes)
@@ -109,7 +109,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), config.RSSI['LINK_QULITY_1'])
         time.sleep(70)
 
-        # Verify the ICMPv6 Echo Request take the longer path because it cost less.
+        # Verify the ICMPv6 Echo Request took the longer path because it cost less.
         self.assertTrue(self.nodes[ROUTER3].ping(leader_rloc))
         path = [ROUTER3, DUT_ROUTER1, ROUTER2, LEADER]
         command.check_icmp_path(self.sniffer, path, self.nodes)
@@ -119,7 +119,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), config.RSSI['LINK_QULITY_2'])
         time.sleep(70)
 
-        # Verify sending to a direct neighbor when have two paths with the same cost.
+        # Verify the direct neighbor would be prioritized when there are two paths with the same cost.
         self.assertTrue(self.nodes[ROUTER3].ping(leader_rloc))
         path = [ROUTER3, DUT_ROUTER1, LEADER]
         command.check_icmp_path(self.sniffer, path, self.nodes)
@@ -129,7 +129,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), config.RSSI['LINK_QULITY_0'])
         time.sleep(70)
 
-        # Verify the ICMPv6 Echo Request take the least cost path.
+        # Verify the ICMPv6 Echo Request took the longer path.
         leader_rloc = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)
         self.assertTrue(self.nodes[ROUTER3].ping(leader_rloc))
         path = [ROUTER3, DUT_ROUTER1, ROUTER2, LEADER]
