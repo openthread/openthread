@@ -172,6 +172,39 @@ exit:
     return error;
 }
 
+otError SpinelDecoder::ReadUint64(uint64_t &aUint64)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mIndex + sizeof(uint64_t) <= mEnd, error = OT_ERROR_PARSE);
+
+    aUint64 = ((static_cast<uint64_t>(mFrame[mIndex + 0]) << 0) |
+               (static_cast<uint64_t>(mFrame[mIndex + 1]) << 8) |
+               (static_cast<uint64_t>(mFrame[mIndex + 2]) << 16) |
+               (static_cast<uint64_t>(mFrame[mIndex + 3]) << 24) |
+               (static_cast<uint64_t>(mFrame[mIndex + 4]) << 32) |
+               (static_cast<uint64_t>(mFrame[mIndex + 5]) << 40) |
+               (static_cast<uint64_t>(mFrame[mIndex + 6]) << 48) |
+               (static_cast<uint64_t>(mFrame[mIndex + 7]) << 56));
+
+    mIndex += sizeof(uint64_t);
+
+exit:
+    return error;
+}
+
+otError SpinelDecoder::ReadInt64(int64_t &aInt64)
+{
+    otError error = OT_ERROR_NONE;
+    uint64_t u64;
+
+    SuccessOrExit(error = ReadUint64(u64));
+    aInt64 = static_cast<int64_t>(u64);
+
+exit:
+    return error;
+}
+
 otError SpinelDecoder::ReadUintPacked(unsigned int &aUint)
 {
     otError error = OT_ERROR_NONE;

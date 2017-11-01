@@ -279,6 +279,42 @@ public:
     otError WriteInt32(int32_t aInt32) { return WriteUint32(static_cast<uint32_t>(aInt32)); }
 
     /**
+     * This method encodes and writes a `uint64_t` value to current input frame.
+     *
+     * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
+     * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
+     *
+     * If no buffer space is available, this method will discard and clear the current input frame and return the
+     * error status `OT_ERROR_NO_BUFS`.
+     *
+     * @param[in]  aUint64              The value to add to input frame.
+     *
+     * @retval OT_ERROR_NONE            Successfully added given value to the frame.
+     * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
+     * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
+     *
+     */
+    otError WriteUint64(uint64_t aUint64);
+
+    /**
+     * This method encodes and writes an `int64_t` value to current input frame.
+     *
+     * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
+     * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
+     *
+     * If no buffer space is available, this method will discard and clear the current input frame and return the
+     * error status `OT_ERROR_NO_BUFS`.
+     *
+     * @param[in]  aInt64               The value to add to input frame.
+     *
+     * @retval OT_ERROR_NONE            Successfully added given value to the frame.
+     * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the value.
+     * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
+     *
+     */
+    otError WriteInt64(int64_t aInt64) { return WriteUint64(static_cast<uint64_t>(aInt64)); }
+
+    /**
      * This method encodes (using spinel packed integer format) and writes a value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this

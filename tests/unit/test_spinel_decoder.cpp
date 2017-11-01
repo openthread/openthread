@@ -101,7 +101,8 @@ void TestSpinelDecoder(void)
     const int16_t        kInt16     = -567;
     const uint32_t       kUint32    = 0xdeadbeef;
     const int32_t        kInt32     = -123455678L;
-
+    const uint64_t       kUint64    = 0xfe10dc32ba549876ULL;
+    const int64_t        kInt64     = -9197712039090021561LL;
 
     const unsigned int   kUint_1    = 9;
     const unsigned int   kUint_2    = 0xa3;
@@ -136,6 +137,8 @@ void TestSpinelDecoder(void)
     int16_t i16;
     uint32_t u32;
     int32_t i32;
+    uint64_t u64;
+    int64_t i64;
     unsigned int u_1, u_2, u_3, u_4;
     const spinel_ipv6addr_t *ip6Addr;
     const spinel_eui48_t *eui48;
@@ -164,6 +167,8 @@ void TestSpinelDecoder(void)
                        SPINEL_DATATYPE_INT16_S
                        SPINEL_DATATYPE_UINT32_S
                        SPINEL_DATATYPE_INT32_S
+                       SPINEL_DATATYPE_UINT64_S
+                       SPINEL_DATATYPE_INT64_S
                        SPINEL_DATATYPE_UINT_PACKED_S
                        SPINEL_DATATYPE_UINT_PACKED_S
                        SPINEL_DATATYPE_UINT_PACKED_S
@@ -184,6 +189,8 @@ void TestSpinelDecoder(void)
                    kInt16,
                    kUint32,
                    kInt32,
+                   kUint64,
+                   kInt64,
                    kUint_1,
                    kUint_2,
                    kUint_3,
@@ -216,6 +223,8 @@ void TestSpinelDecoder(void)
     SuccessOrQuit(decoder.ReadInt16(i16),                                         "ReadInt16() failed.");
     SuccessOrQuit(decoder.ReadUint32(u32),                                        "ReadUint32() failed.");
     SuccessOrQuit(decoder.ReadInt32(i32),                                         "ReadUint32() failed.");
+    SuccessOrQuit(decoder.ReadUint64(u64),                                        "ReadUint64() failed.");
+    SuccessOrQuit(decoder.ReadInt64(i64),                                         "ReadUint64() failed.");
 
     // Check the state
     VerifyOrQuit(decoder.GetReadLength() != 0,                                    "GetReadLength() failed.");
@@ -224,6 +233,7 @@ void TestSpinelDecoder(void)
     VerifyOrQuit(decoder.IsAllRead() == false,                                    "IsAllRead() failed.");
 
     SuccessOrQuit(decoder.ReadUintPacked(u_1),                                    "ReadUintPacked() failed.");
+
     SuccessOrQuit(decoder.ReadUintPacked(u_2),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_3),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_4),                                    "ReadUintPacked() failed.");
@@ -246,7 +256,9 @@ void TestSpinelDecoder(void)
     VerifyOrQuit(u16 == kUint16,                                                  "ReadUint16() parse failed.");
     VerifyOrQuit(i16 == kInt16,                                                   "ReadInt16() parse failed.");
     VerifyOrQuit(u32 == kUint32,                                                  "ReadUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32,                                                   "ReadUint32() parse failed.");
+    VerifyOrQuit(i32 == kInt32,                                                   "ReadInt32() parse failed.");
+    VerifyOrQuit(u64 == kUint64,                                                  "ReadUint64() parse failed.");
+    VerifyOrQuit(i64 == kInt64,                                                   "ReadInt64() parse failed.");
     VerifyOrQuit(u_1 == kUint_1,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_2 == kUint_2,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_3 == kUint_3,                                                  "ReadUintPacked() parse failed.");
@@ -292,6 +304,8 @@ void TestSpinelDecoder(void)
     // Save position
     decoder.SavePosition();
 
+    SuccessOrQuit(decoder.ReadUint64(u64),                                        "ReadUint64() failed.");
+    SuccessOrQuit(decoder.ReadInt64(i64),                                         "ReadUint64() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_1),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_2),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_3),                                    "ReadUintPacked() failed.");
@@ -306,6 +320,8 @@ void TestSpinelDecoder(void)
     VerifyOrQuit(i16 == kInt16,                                                   "ReadInt16() parse failed.");
     VerifyOrQuit(u32 == kUint32,                                                  "ReadUint32() parse failed.");
     VerifyOrQuit(i32 == kInt32,                                                   "ReadUint32() parse failed.");
+    VerifyOrQuit(u64 == kUint64,                                                  "ReadUint64() parse failed.");
+    VerifyOrQuit(i64 == kInt64,                                                   "ReadInt64() parse failed.");
     VerifyOrQuit(u_1 == kUint_1,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_2 == kUint_2,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_3 == kUint_3,                                                  "ReadUintPacked() parse failed.");
@@ -314,12 +330,16 @@ void TestSpinelDecoder(void)
 
     SuccessOrQuit(decoder.ResetToSaved(),                                         "ResetToSaved() failed");
 
+    SuccessOrQuit(decoder.ReadUint64(u64),                                        "ReadUint64() failed.");
+    SuccessOrQuit(decoder.ReadInt64(i64),                                         "ReadUint64() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_1),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_2),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_3),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_4),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadIp6Address(ip6Addr),                                "ReadIp6Addr() failed.");
 
+    VerifyOrQuit(u64 == kUint64,                                                  "ReadUint64() parse failed.");
+    VerifyOrQuit(i64 == kInt64,                                                   "ReadInt64() parse failed.");
     VerifyOrQuit(u_1 == kUint_1,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_2 == kUint_2,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_3 == kUint_3,                                                  "ReadUintPacked() parse failed.");
@@ -329,12 +349,16 @@ void TestSpinelDecoder(void)
     // Go back to save position again.
     SuccessOrQuit(decoder.ResetToSaved(),                                         "ResetToSaved() failed");
 
+    SuccessOrQuit(decoder.ReadUint64(u64),                                        "ReadUint64() failed.");
+    SuccessOrQuit(decoder.ReadInt64(i64),                                         "ReadUint64() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_1),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_2),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_3),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadUintPacked(u_4),                                    "ReadUintPacked() failed.");
     SuccessOrQuit(decoder.ReadIp6Address(ip6Addr),                                "ReadIp6Addr() failed.");
 
+    VerifyOrQuit(u64 == kUint64,                                                  "ReadUint64() parse failed.");
+    VerifyOrQuit(i64 == kInt64,                                                   "ReadInt64() parse failed.");
     VerifyOrQuit(u_1 == kUint_1,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_2 == kUint_2,                                                  "ReadUintPacked() parse failed.");
     VerifyOrQuit(u_3 == kUint_3,                                                  "ReadUintPacked() parse failed.");

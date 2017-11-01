@@ -117,6 +117,8 @@ void TestSpinelEncoder(void)
     const int16_t        kInt16     = -567;
     const uint32_t       kUint32    = 0xdeadbeef;
     const int32_t        kInt32     = -123455678L;
+    const uint64_t       kUint64    = 0xfe10dc32ba549876ULL;
+    const int64_t        kInt64     = -9197712039090021561LL;
     const unsigned int   kUint_1    = 9;
     const unsigned int   kUint_2    = 0xa3;
     const unsigned int   kUint_3    = 0x8765;
@@ -149,6 +151,8 @@ void TestSpinelEncoder(void)
     int16_t i16;
     uint32_t u32;
     int32_t i32;
+    uint64_t u64;
+    int64_t i64;
     unsigned int u_1, u_2, u_3, u_4;
     spinel_ipv6addr_t *ip6Addr;
     spinel_eui48_t *eui48;
@@ -172,6 +176,8 @@ void TestSpinelEncoder(void)
     SuccessOrQuit(encoder.WriteInt16(kInt16),                                     "WriteInt16() failed.");
     SuccessOrQuit(encoder.WriteUint32(kUint32),                                   "WriteUint32() failed.");
     SuccessOrQuit(encoder.WriteInt32(kInt32),                                     "WriteUint32() failed.");
+    SuccessOrQuit(encoder.WriteUint64(kUint64),                                   "WriteUint64() failed.");
+    SuccessOrQuit(encoder.WriteInt64(kInt64),                                     "WriteUint64() failed.");
     SuccessOrQuit(encoder.WriteUintPacked(kUint_1),                               "WriteUintPacked() failed.");
     SuccessOrQuit(encoder.WriteUintPacked(kUint_2),                               "WriteUintPacked() failed.");
     SuccessOrQuit(encoder.WriteUintPacked(kUint_3),                               "WriteUintPacked() failed.");
@@ -200,6 +206,8 @@ void TestSpinelEncoder(void)
                         SPINEL_DATATYPE_INT16_S
                         SPINEL_DATATYPE_UINT32_S
                         SPINEL_DATATYPE_INT32_S
+                        SPINEL_DATATYPE_UINT64_S
+                        SPINEL_DATATYPE_INT64_S
                         SPINEL_DATATYPE_UINT_PACKED_S
                         SPINEL_DATATYPE_UINT_PACKED_S
                         SPINEL_DATATYPE_UINT_PACKED_S
@@ -219,6 +227,8 @@ void TestSpinelEncoder(void)
                     &i16,
                     &u32,
                     &i32,
+                    &u64,
+                    &i64,
                     &u_1,
                     &u_2,
                     &u_3,
@@ -241,6 +251,8 @@ void TestSpinelEncoder(void)
     VerifyOrQuit(i16 == kInt16,                                                   "WriteInt16() parse failed.");
     VerifyOrQuit(u32 == kUint32,                                                  "WriteUint32() parse failed.");
     VerifyOrQuit(i32 == kInt32,                                                   "WriteUint32() parse failed.");
+    VerifyOrQuit(u64 == kUint64,                                                  "WriteUint64() parse failed.");
+    VerifyOrQuit(i64 == kInt64,                                                   "WriteUint64() parse failed.");
     VerifyOrQuit(u_1 == kUint_1,                                                  "WriteUintPacked() parse failed.");
     VerifyOrQuit(u_2 == kUint_2,                                                  "WriteUintPacked() parse failed.");
     VerifyOrQuit(u_3 == kUint_3,                                                  "WriteUintPacked() parse failed.");
