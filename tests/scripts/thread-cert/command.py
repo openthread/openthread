@@ -60,3 +60,22 @@ def check_link_accept(command_msg, destination_node):
 
     destination_link_local = destination_node.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
     assert ipv6.ip_address(destination_link_local) == command_msg.ipv6_packet.ipv6_header.destination_address, "Error: The destination is unexpected"
+
+def check_icmp_path(sniffer, path, nodes, icmp_type = ipv6.ICMP_ECHO_REQUEST):
+    """Verify icmp message is forwarded along the path.
+    """
+    len_path = len(path)
+
+    # Verify icmp message is forwarded to the next node of the path.
+    for i in range(0, len_path):
+        node_msg = sniffer.get_messages_sent_by(path[i])
+        node_icmp_msg = node_msg.get_icmp_message(icmp_type)
+
+        if i < len_path - 1:
+            next_node = nodes[path[i + 1]]
+            next_node_rloc16 = next_node.get_addr16()
+            assert next_node_rloc16 == node_icmp_msg.mac_header.dest_address.rloc, "Error: The path is unexpected."
+        else:
+            return True
+
+    return False

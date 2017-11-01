@@ -384,6 +384,15 @@ class MessagesSet(object):
 
         return False
 
+    def get_icmp_message(self, icmp_type):
+        for m in self.messages:
+            if m.type != MessageType.ICMP:
+                continue
+
+            if m.icmp.header.type == icmp_type:
+                return m
+
+        return None
 
     def contains_mle_message(self, command_type):
         for m in self.messages:
