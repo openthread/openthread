@@ -1407,6 +1407,8 @@ enum
     SPINEL_DATATYPE_INT16_C             = 's',
     SPINEL_DATATYPE_UINT32_C            = 'L',
     SPINEL_DATATYPE_INT32_C             = 'l',
+    SPINEL_DATATYPE_UINT64_C            = 'X',
+    SPINEL_DATATYPE_INT64_C             = 'x',
     SPINEL_DATATYPE_UINT_PACKED_C       = 'i',
     SPINEL_DATATYPE_IPv6ADDR_C          = '6',
     SPINEL_DATATYPE_EUI64_C             = 'E',
@@ -1429,6 +1431,8 @@ typedef char spinel_datatype_t;
 #define SPINEL_DATATYPE_INT16_S         "s"
 #define SPINEL_DATATYPE_UINT32_S        "L"
 #define SPINEL_DATATYPE_INT32_S         "l"
+#define SPINEL_DATATYPE_UINT64_S        "X"
+#define SPINEL_DATATYPE_INT64_S         "x"
 #define SPINEL_DATATYPE_UINT_PACKED_S   "i"
 #define SPINEL_DATATYPE_IPv6ADDR_S      "6"
 #define SPINEL_DATATYPE_EUI64_S         "E"
