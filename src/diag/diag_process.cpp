@@ -375,7 +375,6 @@ void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError 
         sStats.received_packets++;
     }
     otPlatDiagRadioReceived(aInstance, aFrame, aError);
-    otPlatRadioReceive(aInstance, sChannel);
 
 exit:
     return;
