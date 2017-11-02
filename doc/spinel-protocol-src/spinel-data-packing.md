@@ -42,6 +42,8 @@ Char | Name                | Description
  `s` | DATATYPE_INT16       | Signed 16-bit integer.
  `L` | DATATYPE_UINT32      | Unsigned 32-bit integer.
  `l` | DATATYPE_INT32       | Signed 32-bit integer.
+ `X` | DATATYPE_UINT64      | Unsigned 64-bit integer.
+ `x` | DATATYPE_INT64       | Signed 64-bit integer.
  `i` | DATATYPE_UINT_PACKED | Packed Unsigned Integer. See (#packed-unsigned-integer).
  `6` | DATATYPE_IPv6ADDR    | IPv6 Address. (Big-endian)
  `E` | DATATYPE_EUI64       | EUI-64 Address. (Big-endian)

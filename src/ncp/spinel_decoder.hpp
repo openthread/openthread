@@ -209,6 +209,32 @@ public:
     otError ReadUint32(uint32_t &aUint32);
 
     /**
+     * This method decodes and reads an `int64_t` value form the frame.
+     *
+     * On success, the read position gets updated.
+     *
+     * @param[out] aInt64               Reference to variable to output the read value.
+     *
+     * @retval OT_ERROR_NONE            Successfully read the value.
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
+     *
+     */
+    otError ReadInt64(int64_t &aInt64);
+
+    /**
+     * This method decodes and reads an `uint64_t` value form the frame.
+     *
+     * On success, the read position gets updated.
+     *
+     * @param[out] aUint64              Reference to variable to output the read value.
+     *
+     * @retval OT_ERROR_NONE            Successfully read the value.
+     * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
+     *
+     */
+    otError ReadUint64(uint64_t &aUint64);
+
+    /**
      * This method decodes (using spinel packed integer format) and reads an unsigned integer value form the frame.
      *
      * On success, the read position gets updated.
