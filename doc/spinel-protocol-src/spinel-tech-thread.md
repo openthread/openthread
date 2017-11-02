@@ -352,3 +352,164 @@ Data per item is:
 *  `C`: Link Quality Out
 *  `C`: Age (seconds since last heard)
 *  `b`: Link established with Router ID or not.
+
+### PROP 5400: SPINEL_PROP_THREAD_ACTIVE_DATASET (#prop-thread-active-dataset)
+
+  * Type: Read-Write
+  * Packing-Encoding: `A(t(iD))`
+
+This property provides access to current Thread Active Operational Dataset.
+A Thread device maintains the Operational Dataset that it has stored locally
+and the one currently in use by the partition to which it is attached. This
+property corresponds to the locally stored Dataset on the device.
+
+Operational Dataset consists of a set of supported properties (e.g., channel,
+master key, network name, PAN id, etc). Note that not all supported properties
+may be present (have a value) in a Dataset.
+
+The Dataset value is encoded as an array of structures containing pairs of
+property key (as `i`) followed by the property value (as `D`). The property
+value must follow the format associated with the corresponding spinel
+property.
+
+On write, any unknown/unsupported property keys must be ignored.
+
+The following properties can be included in a Dataset list:
+
+*   SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP
+*   SPINEL_PROP_PHY_CHAN
+*   SPINEL_PROP_PHY_CHAN_SUPPORTED (Channel Mask Page 0)
+*   SPINEL_PROP_NET_MASTER_KEY
+*   SPINEL_PROP_NET_NETWORK_NAME
+*   SPINEL_PROP_NET_XPANID
+*   SPINEL_PROP_MAC_15_4_PANID
+*   SPINEL_PROP_IPV6_ML_PREFIX
+*   SPINEL_PROP_NET_PSKC
+*   SPINEL_PROP_DATASET_SECURITY_POLICY
+
+### PROP 5401: SPINEL_PROP_THREAD_PENDING_DATASET (#prop-thread-pending-dataset)
+
+  * Type: Read-Write
+  * Packing-Encoding: `A(t(iD))`
+
+This property provide access to current Thread Pending Operational Dataset
+locally stored on the device.
+
+The formatting of this property follows the same rules as in
+SPINEL_PROP_THREAD_ACTIVE_DATASET.
+
+In addition supported properties in SPINEL_PROP_THREAD_ACTIVE_DATASET, the
+following properties can also be included in the Pending Dataset:
+
+*   SPINEL_PROP_DATASET_PENDING_TIMESTAMP
+*   SPINEL_PROP_DATASET_DELAY_TIMER
+
+### PROP 5402: SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET (#prop-thread-mgmt-active-dataset)
+
+  * Type: Write only
+  * Packing-Encoding: `A(t(iD))`
+
+The formatting of this property follows the same rules as in
+SPINEL_PROP_THREAD_ACTIVE_DATASET.
+
+This is write-only property. When written, it triggers a MGMT_ACTIVE_SET meshcop
+command to be sent to the leader with the given Dataset. The spinel frame response
+should be a `LAST_STATUS` with the status of the transmission of MGMT_ACTIVE_SET
+command.
+
+In addition to supported properties in SPINEL_PROP_THREAD_ACTIVE_DATASET, the
+following property can be included in the Dataset (to allow for custom raw
+TLVs):
+
+*    SPINEL_PROP_DATASET_RAW_TLVS
+
+### PROP 5403: SPINEL_PROP_THREAD_MGMT_PENDING_DATASET (#prop-thread-mgmt-pending-dataset)
+
+  * Type: Write only
+  * Packing-Encoding: `A(t(iD))`
+
+This property is similar to SPINEL_PROP_THREAD_PENDING_DATASET and follows the
+same format and rules.
+
+In addition to supported properties in SPINEL_PROP_THREAD_PENDING_DATASET, the
+following property can be included the Dataset (to allow for custom raw TLVs to
+be provided):
+
+*    SPINEL_PROP_DATASET_RAW_TLVS
+
+### PROP 5404: SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP (#prop-dataset-active-timestamps)
+
+  * Type: No direct read or write
+  * Packing-Encoding: `X`
+
+This property represents the Active Timestamp field in a Thread Operational
+Dataset.
+
+This can only be included in one of the Dataset related properties below:
+
+*   SPINEL_PROP_THREAD_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+
+### PROP 5405: SPINEL_PROP_DATASET_PENDING_TIMESTAMP (#prop-dataset-pending-timestamps)
+
+  * Type: No direct read or write
+  * Packing-Encoding: `X`
+
+This property represents the Pending Timestamp field in a Thread Operational
+Dataset.
+
+It can only be included in one of the Pending Dataset properties:
+
+*   SPINEL_PROP_THREAD_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+
+
+### PROP 5406: SPINEL_PROP_DATASET_DELAY_TIMER (#prop-dataset-delay-timer)
+
+  * Type: No direct read or write
+  * Packing-Encoding: `L`
+
+This property represents the Delay Timer field in a Thread Operational Dataset.
+Delay timer (in ms) specifies the time renaming until Thread devices overwrite
+the value in the Active Operational Dataset with the corresponding values in the
+Pending Operational Dataset.
+
+It can only be included in one of the Pending Dataset properties:
+
+*   SPINEL_PROP_THREAD_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+
+### PROP 5407: SPINEL_PROP_DATASET_SECURITY_POLICY (#prop-dataset-security-policy)
+
+  * Type: No direct read or write
+  * Packing-Encoding: `SC`
+
+This property represents the Security Policy field in a Thread Operational
+Dataset.
+
+The content is:
+
+*   `S` : Key Rotation Time (in units of hour)
+*   `C` : Security Policy Flags (as specified in Thread 1.1 Section 8.10.1.15)
+
+It can only be included in one of the Dataset related properties below:
+
+*   SPINEL_PROP_THREAD_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+
+### PROP 5408: SPINEL_PROP_DATASET_RAW_TLVS (#prop-dataset-raw-tlvs)
+
+  * Type: No direct read or write
+  * Packing-Encoding: `D`
+
+This property defines extra raw TLVs that can be added to an Operational
+DataSet.
+
+It can only be included in one of the following Dataset properties:
+
+*   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
