@@ -33,10 +33,8 @@ $ ./script/bootstrap
 2. Unzip it to <path-to-openthread>/third_party/microchip folder
 
 ```bash
-$ unzip asf-standalone-archive-3.35.1.54.zip
-$ mkdir <path-to-openthread>/third_party/microchip
-$ cd xdk-asf-3.35.1
-$ cp -rf * <path-to-openthread>/third_party/microchip/
+$ unzip asf-standalone-archive-3.35.1.54.zip 
+$ cp xdk-asf-3.35.1 -rf  <path-to-openthread>/third_party/microchip/asf
 ```
 3. SAM R21 Xplained Pro board doesn't have IEEE extended address assigned. It should be
 assigned before build. In this example IEEE address is assigned by setting 

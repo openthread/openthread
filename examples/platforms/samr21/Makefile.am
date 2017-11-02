@@ -39,116 +39,117 @@ override CXXFLAGS                            := $(filter-out -pedantic-errors,$(
 SAMR21_BOARD=SAMR21_XPLAINED_PRO
 SAMR21_CPU=__SAMR21G18A__
 
-libopenthread_samr21_a_CPPFLAGS                                                                          = \
-    -D ARM_MATH_CM0PLUS=true                                                                               \
-    -D BOARD=$(SAMR21_BOARD)                                                                               \
-    -D $(SAMR21_CPU)                                                                                       \
-    -D PHY_AT86RF233                                                                                       \
-    -D SAL_TYPE=AT86RF2xx                                                                                  \
-    -D USART_CALLBACK_MODE=true                                                                            \
-    -D EXTINT_CALLBACK_MODE=true                                                                           \
-    -D SPI_CALLBACK_MODE=false                                                                             \
-    -D CYCLE_MODE                                                                                          \
-    -I$(top_srcdir)/include                                                                                \
-    -I$(top_srcdir)/examples/platforms                                                                     \
-    -I$(top_srcdir)/src/core                                                                               \
-    -I$(top_srcdir)/third_party/microchip/common/boards                                                    \
-    -I$(top_srcdir)/third_party/microchip/common/utils                                                     \
-    -I$(top_srcdir)/third_party/microchip/common2/services/delay                                           \
-    -I$(top_srcdir)/third_party/microchip/common2/services/delay/sam0                                      \
-    -I$(top_srcdir)/third_party/microchip/sam0/boards                                                      \
-    -I$(top_srcdir)/third_party/microchip/sam0/boards/samr21_xplained_pro                                  \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/extint                                              \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/extint/extint_sam_d_r_h                             \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/nvm                                                 \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/port                                                \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system                                              \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/clock                                        \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/clock/clock_samd21_r21_da_ha1                \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/interrupt                                    \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/interrupt/system_interrupt_samr21            \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/pinmux                                       \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/power                                        \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/power/power_sam_d_r_h                        \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/reset                                        \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/system/reset/reset_sam_d_r_h                        \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom                                              \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/i2c                                          \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/i2c/i2c_sam0                                 \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/spi                                          \
-    -I$(top_srcdir)/third_party/microchip/sam0/drivers/sercom/usart                                        \
-    -I$(top_srcdir)/third_party/microchip/sam0/utils                                                       \
-    -I$(top_srcdir)/third_party/microchip/sam0/utils/cmsis/samr21/include                                  \
-    -I$(top_srcdir)/third_party/microchip/sam0/utils/cmsis/samr21/source                                   \
-    -I$(top_srcdir)/third_party/microchip/sam0/utils/header_files                                          \
-    -I$(top_srcdir)/third_party/microchip/sam0/utils/preprocessor                                          \
-    -I$(top_srcdir)/third_party/microchip/thirdparty/CMSIS/Include                                         \
-    -I$(top_srcdir)/third_party/microchip/thirdparty/wireless/avr2130_lwmesh/source/phy/at86rf233/inc      \
-    -I$(top_srcdir)/third_party/microchip/thirdparty/wireless/services/sal/inc                             \
-    -I$(top_srcdir)/third_party/microchip/thirdparty/wireless/services/trx_access                          \
-    -I$(top_srcdir)/third_party/microchip/thirdparty/wireless/services/trx_access/module_config            \
-    -Werror                                                                                                \
-    -Wno-unused-parameter                                                                                  \
-    -Wno-implicit-function-declaration                                                                     \
-    -fno-strict-aliasing                                                                                   \
+libopenthread_samr21_a_CPPFLAGS                                                                              = \
+    -D ARM_MATH_CM0PLUS=true                                                                                   \
+    -D BOARD=$(SAMR21_BOARD)                                                                                   \
+    -D $(SAMR21_CPU)                                                                                           \
+    -D PHY_AT86RF233                                                                                           \
+    -D SAL_TYPE=AT86RF2xx                                                                                      \
+    -D USART_CALLBACK_MODE=true                                                                                \
+    -D EXTINT_CALLBACK_MODE=true                                                                               \
+    -D SPI_CALLBACK_MODE=false                                                                                 \
+    -D CYCLE_MODE                                                                                              \
+    -I$(top_srcdir)/include                                                                                    \
+    -I$(top_srcdir)/examples/platforms                                                                         \
+    -I$(top_srcdir)/src/core                                                                                   \
+    -I$(top_srcdir)/third_party/microchip/include                                                              \
+    -I$(top_srcdir)/third_party/microchip/asf/common/boards                                                    \
+    -I$(top_srcdir)/third_party/microchip/asf/common/utils                                                     \
+    -I$(top_srcdir)/third_party/microchip/asf/common2/services/delay                                           \
+    -I$(top_srcdir)/third_party/microchip/asf/common2/services/delay/sam0                                      \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/boards                                                      \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/boards/samr21_xplained_pro                                  \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/extint                                              \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/extint/extint_sam_d_r_h                             \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/nvm                                                 \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/port                                                \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system                                              \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/clock                                        \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/clock/clock_samd21_r21_da_ha1                \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/interrupt                                    \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/interrupt/system_interrupt_samr21            \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/pinmux                                       \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/power                                        \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/power/power_sam_d_r_h                        \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/reset                                        \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/system/reset/reset_sam_d_r_h                        \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom                                              \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/i2c                                          \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/i2c/i2c_sam0                                 \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/spi                                          \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/usart                                        \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/utils                                                       \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/cmsis/samr21/include                                  \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/cmsis/samr21/source                                   \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/header_files                                          \
+    -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/preprocessor                                          \
+    -I$(top_srcdir)/third_party/microchip/asf/thirdparty/CMSIS/Include                                         \
+    -I$(top_srcdir)/third_party/microchip/asf/thirdparty/wireless/avr2130_lwmesh/source/phy/at86rf233/inc      \
+    -I$(top_srcdir)/third_party/microchip/asf/thirdparty/wireless/services/sal/inc                             \
+    -I$(top_srcdir)/third_party/microchip/asf/thirdparty/wireless/services/trx_access                          \
+    -I$(top_srcdir)/third_party/microchip/asf/thirdparty/wireless/services/trx_access/module_config            \
+    -Werror                                                                                                    \
+    -Wno-unused-parameter                                                                                      \
+    -Wno-implicit-function-declaration                                                                         \
+    -fno-strict-aliasing                                                                                       \
     $(NULL)
 
-PLATFORM_SOURCES                                                                                         = \
-    alarm.c                                                                                                \
-    cxx_helpers.c                                                                                          \
-    flash.c                                                                                                \
-    logging.c                                                                                              \
-    misc.c                                                                                                 \
-    platform.c                                                                                             \
-    radio.c                                                                                                \
-    random.c                                                                                               \
-    uart.c                                                                                                 \
+PLATFORM_SOURCES                                                                                             = \
+    alarm.c                                                                                                    \
+    cxx_helpers.c                                                                                              \
+    flash.c                                                                                                    \
+    logging.c                                                                                                  \
+    misc.c                                                                                                     \
+    platform.c                                                                                                 \
+    radio.c                                                                                                    \
+    random.c                                                                                                   \
+    uart.c                                                                                                     \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
-PLATFORM_SOURCES                                                                                        += \
-    diag.c                                                                                                 \
+PLATFORM_SOURCES                                                                                            += \
+    diag.c                                                                                                     \
     $(NULL)
 endif
 
-libopenthread_samr21_a_SOURCES                                                                           = \
-    $(PLATFORM_SOURCES)                                                                                    \
+libopenthread_samr21_a_SOURCES                                                                               = \
+    $(PLATFORM_SOURCES)                                                                                        \
     $(NULL)
 
-nodist_libopenthread_samr21_a_SOURCES                                                                    = \
-    @top_builddir@/third_party/microchip/common/utils/interrupt/interrupt_sam_nvic.c                       \
-    @top_builddir@/third_party/microchip/common2/services/delay/sam0/cycle_counter.c                       \
-    @top_builddir@/third_party/microchip/sam0/drivers/extint/extint_callback.c                             \
-    @top_builddir@/third_party/microchip/sam0/drivers/extint/extint_sam_d_r_h/extint.c                     \
-    @top_builddir@/third_party/microchip/sam0/drivers/nvm/nvm.c                                            \
-    @top_builddir@/third_party/microchip/sam0/drivers/port/port.c                                          \
-    @top_builddir@/third_party/microchip/sam0/drivers/system/clock/clock_samd21_r21_da_ha1/clock.c         \
-    @top_builddir@/third_party/microchip/sam0/drivers/system/clock/clock_samd21_r21_da_ha1/gclk.c          \
-    @top_builddir@/third_party/microchip/sam0/drivers/system/interrupt/system_interrupt.c                  \
-    @top_builddir@/third_party/microchip/sam0/drivers/system/pinmux/pinmux.c                               \
-    @top_builddir@/third_party/microchip/sam0/drivers/sercom/sercom.c                                      \
-    @top_builddir@/third_party/microchip/sam0/drivers/sercom/sercom_interrupt.c                            \
-    @top_builddir@/third_party/microchip/sam0/drivers/sercom/i2c/i2c_sam0/i2c_master.c                     \
-    @top_builddir@/third_party/microchip/sam0/drivers/sercom/spi/spi.c                                     \
-    @top_builddir@/third_party/microchip/sam0/drivers/sercom/usart/usart.c                                 \
-    @top_builddir@/third_party/microchip/sam0/drivers/sercom/usart/usart_interrupt.c                       \
-    @top_builddir@/third_party/microchip/sam0/utils/cmsis/samr21/source/gcc/startup_samr21.c               \
-    @top_builddir@/third_party/microchip/sam0/utils/cmsis/samr21/source/system_samr21.c                    \
-    @top_builddir@/third_party/microchip/sam0/utils/syscalls/gcc/syscalls.c                                \
-    @top_builddir@/third_party/microchip/thirdparty/wireless/avr2130_lwmesh/source/phy/at86rf233/src/phy.c \
-    @top_builddir@/third_party/microchip/thirdparty/wireless/services/sal/at86rf2xx/src/sal.c              \
-    @top_builddir@/third_party/microchip/thirdparty/wireless/services/trx_access/trx_access.c              \
+nodist_libopenthread_samr21_a_SOURCES                                                                        = \
+    @top_builddir@/third_party/microchip/asf/common/utils/interrupt/interrupt_sam_nvic.c                       \
+    @top_builddir@/third_party/microchip/asf/common2/services/delay/sam0/cycle_counter.c                       \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/extint/extint_callback.c                             \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/extint/extint_sam_d_r_h/extint.c                     \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/nvm/nvm.c                                            \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/port/port.c                                          \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/system/clock/clock_samd21_r21_da_ha1/clock.c         \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/system/clock/clock_samd21_r21_da_ha1/gclk.c          \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/system/interrupt/system_interrupt.c                  \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/system/pinmux/pinmux.c                               \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/sercom/sercom.c                                      \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/sercom/sercom_interrupt.c                            \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/sercom/i2c/i2c_sam0/i2c_master.c                     \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/sercom/spi/spi.c                                     \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/sercom/usart/usart.c                                 \
+    @top_builddir@/third_party/microchip/asf/sam0/drivers/sercom/usart/usart_interrupt.c                       \
+    @top_builddir@/third_party/microchip/asf/sam0/utils/cmsis/samr21/source/gcc/startup_samr21.c               \
+    @top_builddir@/third_party/microchip/asf/sam0/utils/cmsis/samr21/source/system_samr21.c                    \
+    @top_builddir@/third_party/microchip/asf/sam0/utils/syscalls/gcc/syscalls.c                                \
+    @top_builddir@/third_party/microchip/asf/thirdparty/wireless/avr2130_lwmesh/source/phy/at86rf233/src/phy.c \
+    @top_builddir@/third_party/microchip/asf/thirdparty/wireless/services/sal/at86rf2xx/src/sal.c              \
+    @top_builddir@/third_party/microchip/asf/thirdparty/wireless/services/trx_access/trx_access.c              \
     $(NULL)
 
-noinst_HEADERS                                                                                           = \
+noinst_HEADERS                                                                                               = \
     $(NULL)
 
-PRETTY_FILES                                                                                             = \
-    $(PLATFORM_SOURCES)                                                                                    \
+PRETTY_FILES                                                                                                 = \
+    $(PLATFORM_SOURCES)                                                                                        \
     $(NULL)
 
-Dash                                                                                                     = -
-libopenthread_samr21_a_LIBADD                                                                            = \
+Dash                                                                                                         = -
+libopenthread_samr21_a_LIBADD                                                                                = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

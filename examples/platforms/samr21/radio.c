@@ -33,6 +33,7 @@
  */
 
 #include "asf.h"
+#include "phy.h"
 
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>

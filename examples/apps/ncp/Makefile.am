@@ -169,7 +169,7 @@ LDADD_COMMON                                                          += \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/samr21/samr21x18a.ld             \
+    -T $(top_srcdir)/third_party/microchip/include/samr21x18a.ld         \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_SAMR21
 
