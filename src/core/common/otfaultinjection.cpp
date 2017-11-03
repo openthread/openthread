@@ -57,7 +57,7 @@ static const char *sManagerName = "OpenThread";
 static const char *sFaultNames[] =
 {
     "AllocBuffer",
-    "DropRadioRx",
+    "RadioRxDrop",
 };
 
 static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
