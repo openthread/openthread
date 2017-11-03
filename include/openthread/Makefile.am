@@ -71,7 +71,7 @@ openthread_headers                      = \
     ncp.h                                 \
     netdata.h                             \
     openthread.h                          \
-	otfaultinjection.h                    \
+    otfaultinjection.h                    \
     tasklet.h                             \
     thread.h                              \
     thread_ftd.h                          \

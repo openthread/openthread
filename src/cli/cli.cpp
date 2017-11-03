@@ -1003,7 +1003,7 @@ void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
 
     mServer->OutputFormat("FaultInjection counters:\r\n");
 
-    for (id = 0; id < kFault_NumFaultIds; id++)
+    for (id = 0; id < OT_FAULT_ID_NUM_FAULT_IDS; id++)
     {
         otFaultId faultId = (otFaultId)id;
         (void)otFIGetFaultCounterValue(faultId, &faultCounter);

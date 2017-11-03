@@ -1508,7 +1508,7 @@ exit:
 
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    OT_FAULT_INJECT(kFault_DropRadioRx, aError = OT_ERROR_FAILED);
+    OT_FAULT_INJECT(OT_FAULT_ID_RADIO_RX_DROP, aError = OT_ERROR_FAILED);
 
     otLogFuncEntryMsg("%!otError!", aError);
     VerifyOrExit(otInstanceIsInitialized(aInstance));

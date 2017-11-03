@@ -46,11 +46,29 @@ static nl::FaultInjection::GetManagerFn sFaultMgrTable[] =
     ot::FaultInjection::GetManager
 };
 
-int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCallsToFail)
+otError otFIFailAtFault(otFaultId aId, uint32_t aNumCallsToSkip, uint32_t aNumCallsToFail)
 {
+    int retval;
+    otError otRetval;
+
     nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
 
-    return mgr.FailAtFault(id, numCallsToSkip, numCallsToFail);
+    retval =  mgr.FailAtFault(aId, aNumCallsToSkip, aNumCallsToFail);
+
+    switch(retval)
+    {
+        case 0:
+            otRetval = OT_ERROR_NONE;
+            break;
+        case EINVAL:
+            otRetval = OT_ERROR_INVALID_ARGS;
+            break;
+        default:
+            otRetval = OT_ERROR_FAILED;
+            break;
+    }
+
+    return otRetval;
 }
 
 const char *otFIGetManagerName(void)
@@ -60,35 +78,35 @@ const char *otFIGetManagerName(void)
     return mgr.GetName();
 }
 
-const char *otFIGetFaultName(otFaultId id)
+const char *otFIGetFaultName(otFaultId aId)
 {
     nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
 
-    if (id >= mgr.GetNumFaults())
+    if (aId >= mgr.GetNumFaults())
     {
         return NULL;
     }
 
-    return mgr.GetFaultNames()[id];
+    return mgr.GetFaultNames()[aId];
 }
 
-int otFIGetFaultCounterValue(otFaultId id, uint32_t *value)
+int otFIGetFaultCounterValue(otFaultId aId, uint32_t *aValue)
 {
     nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
 
-    if (id >= mgr.GetNumFaults())
+    if (aId >= mgr.GetNumFaults())
     {
         return EINVAL;
     }
 
-    *value = mgr.GetFaultRecords()[id].mNumTimesChecked;
+    *aValue = mgr.GetFaultRecords()[aId].mNumTimesChecked;
 
     return 0;
 }
 
-bool otFIParseFaultInjectionStr(char *inStr)
+bool otFIParseFaultInjectionStr(char *aStr)
 {
-    return nl::FaultInjection::ParseFaultInjectionStr(inStr,
+    return nl::FaultInjection::ParseFaultInjectionStr(aStr,
                                                       sFaultMgrTable,
                                                       sizeof(sFaultMgrTable) / sizeof(sFaultMgrTable[0]));
 }

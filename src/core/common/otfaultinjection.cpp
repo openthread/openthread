@@ -35,11 +35,13 @@
 #endif
 #include <inttypes.h>
 #include <stdio.h>
-#include <string.h>
+
+#include "utils/wrap_string.h"
 
 #include "common/otfaultinjection.hpp"
 #include "common/logging.hpp"
 #include "common/locator.hpp"
+#include "common/code_utils.hpp"
 
 #if OPENTHREAD_ENABLE_FAULT_INJECTION
 
@@ -49,7 +51,7 @@
 namespace ot {
 namespace FaultInjection {
 
-static nl::FaultInjection::Record sFaultRecordArray[kFault_NumFaultIds];
+static nl::FaultInjection::Record sFaultRecordArray[OT_FAULT_ID_NUM_FAULT_IDS];
 static class nl::FaultInjection::Manager sOTFaultInMgr;
 static const char *sManagerName = "OpenThread";
 static const char *sFaultNames[] =
@@ -78,6 +80,7 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
     size_t charAvailable = sizeof(tmpstr);
     size_t charWritten = 0;
     int retval = 0;
+    bool failed = false;
     uint16_t numargs = aFaultRecord->mNumArguments;
 
     tmpstr[0] = 0;
@@ -87,10 +90,7 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
                       aManager->GetName(), aManager->GetFaultNames()[aId],
                       aFaultRecord->mNumTimesChecked, aFaultRecord->mReboot ? "reboot" : "");
 
-    if (retval < 0)
-    {
-        goto error_exit;
-    }
+    VerifyOrExit(retval >= 0, failed = true);
 
     charWritten += retval;
 
@@ -103,10 +103,7 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
             retval = snprintf(tmpstr + charWritten, charAvailable - charWritten,
                               " with %" PRIu16 " args:", numargs);
 
-            if (retval < 0)
-            {
-                goto error_exit;
-            }
+            VerifyOrExit(retval >= 0, failed = true);
 
             charWritten += retval;
         }
@@ -118,10 +115,7 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
                 retval = snprintf(tmpstr + charWritten, charAvailable - charWritten,
                                   " %" PRId32, aFaultRecord->mArguments[i]);
 
-                if (retval < 0)
-                {
-                    goto error_exit;
-                }
+                VerifyOrExit(retval >= 0, failed = true);
 
                 charWritten += retval;
             }
@@ -135,10 +129,14 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
         otLogCritFI(ot::GetInstance(), "String overflow!");
     }
 
-    return;
 
-error_exit:
-    otLogCritFI(ot::GetInstance(), "snprintf error!");
+exit:
+    if (failed)
+    {
+        otLogCritFI(ot::GetInstance(), "snprintf error!");
+    }
+
+    return;
 }
 
 
@@ -152,7 +150,7 @@ nl::FaultInjection::Manager &GetManager(void)
     {
         nl::FaultInjection::SetGlobalContext(&sFaultInjectionGlobalContext);
 
-        sOTFaultInMgr.Init(kFault_NumFaultIds,
+        sOTFaultInMgr.Init(OT_FAULT_ID_NUM_FAULT_IDS,
                            sFaultRecordArray,
                            sManagerName,
                            sFaultNames);

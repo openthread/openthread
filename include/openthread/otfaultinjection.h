@@ -51,32 +51,35 @@ extern "C" {
  *
  */
 
+/**
+ * This enumeration lists the IDs of the faults that can be injected into OpenThread.
+ */
 typedef enum
 {
-    kFault_AllocBuffer,        /**< Fail the allocation of a Buffer */
-    kFault_DropRadioRx,        /**< Drop radio frames in input */
-    kFault_NumFaultIds,
+    OT_FAULT_ID_ALLOC_BUFFER,         /**< Fail the allocation of a Buffer */
+    OT_FAULT_ID_RADIO_RX_DROP,        /**< Drop radio frames in input */
+    OT_FAULT_ID_NUM_FAULT_IDS,
 } otFaultId;
 
 
 /**
  * Configure a fault to trigger a given number of times, at some point in the future.
  *
- * @param[in]   id              The fault id.
- * @param[in]   numCallsToSkip  The number of instances of the fault that should be skipped.
- *                              before injecting the first failure.
- * @param[in]   numCallsToFail  The number of times the fault should be injected.
+ * @param[in]   aId              The fault id.
+ * @param[in]   aNumCallsToSkip  The number of instances of the fault that should be skipped
+ *                               before injecting the first failure.
+ * @param[in]   aNumCallsToFail  The number of times the fault should be injected.
  *
- * @retval      0               Successfully configured the fault.
- * @retval      EINVAL          The fault id is out of range.
+ * @retval      OT_ERROR_NONE           Successfully configured the fault.
+ * @retval      OT_ERROR_INVALID_ARGS   The fault id is out of range.
  */
-int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCallsToFail);
+otError otFIFailAtFault(otFaultId aId, uint32_t aNumCallsToSkip, uint32_t aNumCallsToFail);
 
 /**
  * Parse an nlfaultinjection configuration string to apply it to OpenThread's
  * faultinjection Manager.
  *
- * @param[in]   inStr           The configuration string. An example of a valid string that
+ * @param[in]   aStr            The configuration string. An example of a valid string that
  *                              enables two faults is "OpenThread_AllocBuffer_f5_s1:OpenThread_DropRadioRx_f1_s3"
  *                              The format of a single fault configuration is
  *                              "OpenThread_<faultName>_{f<numTimesToFail>[_s<numTimesToSkip>],p<randomFailurePercentage>}[_a<integer>]...".
@@ -86,7 +89,7 @@ int32_t otFIFailAtFault(otFaultId id, uint32_t numCallsToSkip, uint32_t numCalls
  * @retval false                Parsing failed. If the string contains more.
  *                              than one fault, the configuration might have been partially applied.
  */
-bool otFIParseFaultInjectionStr(char *inStr);
+bool otFIParseFaultInjectionStr(char *aStr);
 
 /**
  * Reset the fault injection counters.
@@ -108,22 +111,22 @@ const char *otFIGetManagerName(void);
 /**
  * Return the name of a faultId.
  *
- * @param[in]   id  The otFaultId.
+ * @param[in]   aId  The otFaultId.
  *
  * @return      The string containing the name of the fault. NULL if id is out of range.
  */
-const char *otFIGetFaultName(otFaultId id);
+const char *otFIGetFaultName(otFaultId aId);
 
 /**
  * Return the number of times a fault id was evaluated for injection.
  *
- * @param[in]   id     The otFaultId.
- * @param[out]  value  A pointer to a uinsigned integer in which to store the value.
+ * @param[in]   aId     The otFaultId.
+ * @param[out]  aValue  A pointer to a uinsigned integer in which to store the value.
  *
- * @retval      0      Success
- * @retval      EINVAL If id is out of range.
+ * @retval      0       Success
+ * @retval      EINVAL  If id is out of range.
  */
-int otFIGetFaultCounterValue(otFaultId id, uint32_t *value);
+int otFIGetFaultCounterValue(otFaultId aId, uint32_t *aValue);
 
 /**
  * @}
