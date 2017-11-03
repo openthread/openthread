@@ -53,19 +53,21 @@ otError otFIFailAtFault(otFaultId aId, uint32_t aNumCallsToSkip, uint32_t aNumCa
 
     nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
 
-    retval =  mgr.FailAtFault(aId, aNumCallsToSkip, aNumCallsToFail);
+    retval = mgr.FailAtFault(aId, aNumCallsToSkip, aNumCallsToFail);
 
-    switch(retval)
+    switch (retval)
     {
-        case 0:
-            otRetval = OT_ERROR_NONE;
-            break;
-        case EINVAL:
-            otRetval = OT_ERROR_INVALID_ARGS;
-            break;
-        default:
-            otRetval = OT_ERROR_FAILED;
-            break;
+    case 0:
+        otRetval = OT_ERROR_NONE;
+        break;
+
+    case EINVAL:
+        otRetval = OT_ERROR_INVALID_ARGS;
+        break;
+
+    default:
+        otRetval = OT_ERROR_FAILED;
+        break;
     }
 
     return otRetval;

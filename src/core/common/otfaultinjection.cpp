@@ -131,6 +131,7 @@ static void PostInjectionCallbackFn(nl::FaultInjection::Manager *aManager,
 
 
 exit:
+
     if (failed)
     {
         otLogCritFI(ot::GetInstance(), "snprintf error!");
