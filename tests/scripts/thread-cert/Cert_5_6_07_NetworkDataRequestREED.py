@@ -89,7 +89,7 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
         self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
 
-        time.sleep(10)
+        time.sleep(35)
 
         addrs = self.nodes[REED].get_addrs()
         self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
