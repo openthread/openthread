@@ -40,23 +40,14 @@
 
 namespace ot {
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
-otInstance &ThreadNetifLocator::GetInstance(void) const
+Ip6::Ip6 &InstanceLocator::GetIp6(void) const
 {
-    return *otInstanceFromThreadNetif(&GetNetif());
+    return GetInstance().mIp6;
 }
 
-otInstance &MeshForwarderLocator::GetInstance(void) const
+ThreadNetif &InstanceLocator::GetNetif(void) const
 {
-    return *otInstanceFromThreadNetif(&GetMeshForwarder().GetNetif());
+    return GetInstance().mThreadNetif;
 }
-
-otInstance &Ip6Locator::GetInstance(void) const
-{
-    return *otInstanceFromIp6(&GetIp6());
-}
-
-#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 }  // namespace ot

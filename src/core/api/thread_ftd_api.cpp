@@ -38,8 +38,8 @@
 #if OPENTHREAD_FTD
 
 #include <openthread/thread_ftd.h>
-#include "openthread-core-config.h"
 #include "openthread-instance.h"
+#include "thread/mle_constants.hpp"
 
 using namespace ot;
 
@@ -214,6 +214,12 @@ uint8_t otThreadGetRouterIdSequence(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().GetRouterIdSequence();
 }
 
+uint8_t otThreadGetMaxRouterId(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return Mle::kMaxRouterId;
+}
+
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
 {
     otError error = OT_ERROR_NONE;
@@ -281,6 +287,16 @@ int8_t otThreadGetParentPriority(otInstance *aInstance)
 otError otThreadSetParentPriority(otInstance *aInstance, const int8_t aParentPriority)
 {
     return aInstance->mThreadNetif.GetMle().SetAssignParentPriority(aParentPriority);
+}
+
+otThreadChildTableCallback otThreadGetChildTableCallback(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMle().GetChildTableChangedCallback();
+}
+
+void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCallback aCallback)
+{
+    aInstance->mThreadNetif.GetMle().SetChildTableChangedCallback(aCallback);
 }
 
 #endif // OPENTHREAD_FTD

@@ -60,15 +60,15 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Mle {
 
-Mle::Mle(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+Mle::Mle(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mRetrieveNewNetworkData(false),
     mRole(OT_DEVICE_ROLE_DISABLED),
     mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest),
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
-    mParentRequestTimer(aThreadNetif.GetInstance(), &Mle::HandleParentRequestTimer, this),
-    mDelayedResponseTimer(aThreadNetif.GetInstance(), &Mle::HandleDelayedResponseTimer, this),
+    mParentRequestTimer(aInstance, &Mle::HandleParentRequestTimer, this),
+    mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this),
     mLastPartitionId(0),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionIdTimeout(0),
@@ -81,9 +81,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mChildUpdateAttempts(0),
     mParentLinkMargin(0),
     mParentIsSingleton(false),
-    mSocket(aThreadNetif.GetIp6().mUdp),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
     mTimeout(kMleEndDeviceTimeout),
-    mSendChildUpdateRequest(aThreadNetif.GetInstance(), &Mle::HandleSendChildUpdateRequest, this),
+    mSendChildUpdateRequest(aInstance, &Mle::HandleSendChildUpdateRequest, this),
     mDiscoverHandler(NULL),
     mDiscoverContext(NULL),
     mIsDiscoverInProgress(false),
@@ -96,6 +96,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mPreviousPanId(Mac::kPanIdBroadcast)
 {
     uint8_t meshLocalPrefix[8];
+    size_t i = 0;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
@@ -111,11 +112,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     // link-local 64
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
-    mLinkLocal64.GetAddress().SetIid(*aThreadNetif.GetMac().GetExtAddress());
+    mLinkLocal64.GetAddress().SetIid(*GetNetif().GetMac().GetExtAddress());
     mLinkLocal64.mPrefixLength = 64;
     mLinkLocal64.mPreferred = true;
     mLinkLocal64.mValid = true;
-    aThreadNetif.AddUnicastAddress(mLinkLocal64);
+    GetNetif().AddUnicastAddress(mLinkLocal64);
 
     // Leader Aloc
     mLeaderAloc.mPrefixLength = 128;
@@ -124,14 +125,31 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLeaderAloc.mScopeOverride = Ip6::Address::kRealmLocalScope;
     mLeaderAloc.mScopeOverrideValid = true;
 
+#if OPENTHREAD_ENABLE_SERVICE
+
+    // Service Alocs
+    for (i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
+    {
+        memset(&mServiceAlocs[i], 0, sizeof(mServiceAlocs[i]));
+
+        mServiceAlocs[i].mPrefixLength = 128;
+        mServiceAlocs[i].mPreferred = true;
+        mServiceAlocs[i].mValid = true;
+        mServiceAlocs[i].mScopeOverride = Ip6::Address::kRealmLocalScope;
+        mServiceAlocs[i].mScopeOverrideValid = true;
+        mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
+    }
+
+#endif
+
     // initialize Mesh Local Prefix
     meshLocalPrefix[0] = 0xfd;
-    memcpy(meshLocalPrefix + 1, aThreadNetif.GetMac().GetExtendedPanId(), 5);
+    memcpy(meshLocalPrefix + 1, GetNetif().GetMac().GetExtendedPanId(), 5);
     meshLocalPrefix[6] = 0x00;
     meshLocalPrefix[7] = 0x00;
 
     // mesh-local 64
-    for (int i = OT_IP6_PREFIX_SIZE; i < OT_IP6_ADDRESS_SIZE; i++)
+    for (i = OT_IP6_PREFIX_SIZE; i < OT_IP6_ADDRESS_SIZE; i++)
     {
         mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
@@ -154,7 +172,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.mRloc = true;
 
     // Store RLOC address reference in MPL module.
-    aThreadNetif.GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
+    GetNetif().GetIp6().GetMpl().SetMatchingAddress(mMeshLocal16.GetAddress());
 
     // link-local all thread nodes
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
@@ -172,7 +190,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
 
     mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
-    aThreadNetif.RegisterCallback(mNetifCallback);
+    GetNetif().RegisterCallback(mNetifCallback);
 }
 
 otError Mle::Enable(void)
@@ -253,7 +271,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     netif.GetKeyManager().Stop();
     SetStateDetached();
     netif.RemoveUnicastAddress(mMeshLocal16);
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     netif.GetNetworkDataLocal().Clear();
 #endif
     netif.GetNetworkDataLeader().Clear();
@@ -583,7 +601,7 @@ otError Mle::SetStateDetached(void)
     netif.GetMac().SetBeaconEnabled(false);
     netif.GetMle().HandleDetachStart();
     netif.GetIp6().SetForwardingEnabled(false);
-    netif.GetIp6().mMpl.SetTimerExpirations(0);
+    netif.GetIp6().GetMpl().SetTimerExpirations(0);
 
     otLogInfoMle(GetInstance(), "Role -> Detached");
     return OT_ERROR_NONE;
@@ -620,11 +638,11 @@ otError Mle::SetStateChild(uint16_t aRloc16)
         netif.GetMle().HandleChildStart(mParentRequestMode);
     }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     netif.GetNetworkDataLocal().ClearResubmitDelayTimer();
 #endif
     netif.GetIp6().SetForwardingEnabled(false);
-    netif.GetIp6().mMpl.SetTimerExpirations(kMplChildDataMessageTimerExpirations);
+    netif.GetIp6().GetMpl().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
 
     // Once the Thread device receives the new Active Commissioning Dataset, the device MUST
     // transmit its own Announce messages on the channel it was on prior to the attachment.
@@ -742,6 +760,20 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8);
     memcpy(mMeshLocal16.GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
 
+#if OPENTHREAD_ENABLE_SERVICE
+
+    for (uint8_t i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
+    {
+        if (HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]) != Mac::kShortAddrInvalid)
+        {
+            netif.RemoveUnicastAddress(mServiceAlocs[i]);
+            memcpy(mServiceAlocs[i].GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
+            netif.AddUnicastAddress(mServiceAlocs[i]);
+        }
+    }
+
+#endif
+
     mLinkLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
     memcpy(mLinkLocalAllThreadNodes.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
 
@@ -762,7 +794,8 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
         netif.RemoveUnicastAddress(mLeaderAloc);
-        AddLeaderAloc();
+        memcpy(mLeaderAloc.GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
+        netif.AddUnicastAddress(mLeaderAloc);
     }
 
     // Changing the prefix also causes the mesh local address to be different.
@@ -801,7 +834,7 @@ otError Mle::SetRloc16(uint16_t aRloc16)
     }
 
     netif.GetMac().SetShortAddress(aRloc16);
-    netif.GetIp6().mMpl.SetSeedId(aRloc16);
+    netif.GetIp6().GetMpl().SetSeedId(aRloc16);
 
     return OT_ERROR_NONE;
 }
@@ -867,6 +900,24 @@ otError Mle::GetLeaderAloc(Ip6::Address &aAddress) const
 exit:
     return error;
 }
+
+#if OPENTHREAD_ENABLE_SERVICE
+otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
+
+    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
+    aAddress.mFields.m16[4] = HostSwap16(0x0000);
+    aAddress.mFields.m16[5] = HostSwap16(0x00ff);
+    aAddress.mFields.m16[6] = HostSwap16(0xfe00);
+    aAddress.mFields.m16[7] = HostSwap16(GetServiceAlocFromId(aServiceId));
+
+exit:
+    return error;
+}
+#endif
 
 otError Mle::AddLeaderAloc(void)
 {
@@ -1263,8 +1314,11 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
             mSendChildUpdateRequest.Post();
         }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
         netif.GetNetworkDataLocal().SendServerDataNotification();
+#if OPENTHREAD_ENABLE_SERVICE
+        this->UpdateServiceAlocs();
+#endif
 #endif
     }
 
@@ -1276,6 +1330,69 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 exit:
     return;
 }
+
+#if OPENTHREAD_ENABLE_SERVICE
+void Mle::UpdateServiceAlocs(void)
+{
+    ThreadNetif &netif = GetNetif();
+    uint16_t rloc = GetRloc16();
+    uint16_t serviceAloc = 0;
+    uint8_t serviceId = 0;
+    int i = 0;
+    NetworkData::Leader &leaderData = netif.GetNetworkDataLeader();
+    otNetworkDataIterator serviceIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    int serviceAlocsLength = sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]);
+
+    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
+
+    // First remove all alocs which are no longer necessary, to free up space in mServiceAlocs
+    for (i = 0; i < serviceAlocsLength; i++)
+    {
+        serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
+
+        if ((serviceAloc != Mac::kShortAddrInvalid) &&
+            (!leaderData.ContainsService(Mle::GetServiceIdFromAloc(serviceAloc), rloc)))
+        {
+            netif.RemoveUnicastAddress(mServiceAlocs[i]);
+            mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
+        }
+    }
+
+    // Now add any missing service alocs which should be there, if there is enough space in mServiceAlocs
+    while (leaderData.GetNextServiceId(&serviceIterator, rloc, &serviceId) == OT_ERROR_NONE)
+    {
+        for (i = 0; i < serviceAlocsLength; i++)
+        {
+            serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
+
+            if ((serviceAloc != Mac::kShortAddrInvalid) && (Mle::GetServiceIdFromAloc(serviceAloc) == serviceId))
+            {
+                break;
+            }
+        }
+
+        if (i >= serviceAlocsLength)
+        {
+            // Service Aloc is not there, but it should be. Lets add it into first empty space
+            for (i = 0; i < serviceAlocsLength; i++)
+            {
+                serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
+
+                if (serviceAloc == Mac::kShortAddrInvalid)
+                {
+                    SuccessOrExit(GetServiceAloc(serviceId, mServiceAlocs[i].GetAddress()));
+                    netif.AddUnicastAddress(mServiceAlocs[i]);
+                    break;
+                }
+            }
+
+        }
+    }
+
+exit:
+    return;
+}
+#endif
 
 void Mle::HandleParentRequestTimer(Timer &aTimer)
 {
@@ -1334,99 +1451,76 @@ void Mle::HandleParentRequestTimer(void)
             SendChildIdRequest();
             mParentRequestState = kChildIdRequest;
             mParentRequestTimer.Start(kParentRequestChildTimeout);
-        }
-        else
-        {
-            ResetParentCandidate();
-
-            if (mReattachState == kReattachActive)
-            {
-                if (netif.GetPendingDataset().Restore() == OT_ERROR_NONE)
-                {
-                    netif.GetPendingDataset().ApplyConfiguration();
-                    mReattachState = kReattachPending;
-                    mParentRequestState = kParentRequestStart;
-                    mParentRequestTimer.Start(kParentRequestRouterTimeout);
-                }
-                else
-                {
-                    mReattachState = kReattachStop;
-                }
-            }
-            else if (mReattachState == kReattachPending)
-            {
-                mReattachState = kReattachStop;
-                netif.GetActiveDataset().Restore();
-            }
-
-            if (mReattachState == kReattachStop)
-            {
-                switch (mParentRequestMode)
-                {
-                case kAttachAny:
-                    if (mPreviousPanId != Mac::kPanIdBroadcast)
-                    {
-                        netif.GetMac().SetChannel(mPreviousChannel);
-                        netif.GetMac().SetPanId(mPreviousPanId);
-                        mPreviousPanId = Mac::kPanIdBroadcast;
-                        BecomeDetached();
-                    }
-                    else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
-                    {
-                        SendOrphanAnnounce();
-                        BecomeDetached();
-                    }
-                    else if (netif.GetMle().BecomeLeader() != OT_ERROR_NONE)
-                    {
-                        mParentRequestState = kParentIdle;
-                        BecomeDetached();
-                    }
-
-                    break;
-
-                case kAttachSame1:
-                    mParentRequestState = kParentIdle;
-                    BecomeChild(kAttachSame2);
-                    break;
-
-                case kAttachSame2:
-                    mParentRequestState = kParentIdle;
-                    BecomeChild(kAttachAny);
-                    break;
-
-                case kAttachBetter:
-                    mParentRequestState = kParentIdle;
-
-                    if (mRole == OT_DEVICE_ROLE_CHILD)
-                    {
-                        // Restart keep-alive timer as it was disturbed by attachment procedure.
-                        mParentRequestTimer.Start(0);
-                    }
-
-                    break;
-                }
-            }
+            break;
         }
 
-        break;
+    // fall through
 
     case kChildIdRequest:
         mParentRequestState = kParentIdle;
         ResetParentCandidate();
 
-        if ((mParentRequestMode == kAttachBetter) ||
-            (mRole == OT_DEVICE_ROLE_ROUTER) ||
-            (mRole == OT_DEVICE_ROLE_LEADER))
+        if (mReattachState == kReattachActive)
         {
-            if (mRole == OT_DEVICE_ROLE_CHILD)
+            if (netif.GetPendingDataset().Restore() == OT_ERROR_NONE)
             {
-                // Restart keep-alive timer as it was disturbed by attachment procedure.
-                mParentRequestTimer.Start(0);
+                netif.GetPendingDataset().ApplyConfiguration();
+                mReattachState = kReattachPending;
+                mParentRequestState = kParentRequestStart;
+                mParentRequestTimer.Start(kParentRequestRouterTimeout);
+            }
+            else
+            {
+                mReattachState = kReattachStop;
             }
         }
-        else
+        else if (mReattachState == kReattachPending)
         {
-            BecomeDetached();
+            mReattachState = kReattachStop;
+            netif.GetActiveDataset().Restore();
+        }
+
+        if (mReattachState == kReattachStop)
+        {
+            switch (mParentRequestMode)
+            {
+            case kAttachAny:
+                if (mPreviousPanId != Mac::kPanIdBroadcast)
+                {
+                    netif.GetMac().SetChannel(mPreviousChannel);
+                    netif.GetMac().SetPanId(mPreviousPanId);
+                    mPreviousPanId = Mac::kPanIdBroadcast;
+                    BecomeDetached();
+                }
+                else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
+                {
+                    SendOrphanAnnounce();
+                    BecomeDetached();
+                }
+                else if (netif.GetMle().BecomeLeader() != OT_ERROR_NONE)
+                {
+                    BecomeDetached();
+                }
+
+                break;
+
+            case kAttachSame1:
+                BecomeChild(kAttachSame2);
+                break;
+
+            case kAttachSame2:
+                BecomeChild(kAttachAny);
+                break;
+
+            case kAttachBetter:
+                if (mRole == OT_DEVICE_ROLE_CHILD)
+                {
+                    // Restart keep-alive timer as it was disturbed by attachment procedure.
+                    mParentRequestTimer.Start(0);
+                }
+
+                break;
+            }
         }
 
         break;
@@ -3291,9 +3385,9 @@ otError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::He
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
 
-    netif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
-                                   Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
-                                   messageInfo, aIp6Header);
+    netif.GetIp6().GetIcmp().SendError(Ip6::IcmpHeader::kTypeDstUnreach,
+                                       Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                       messageInfo, aIp6Header);
 
 exit:
     return error;

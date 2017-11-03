@@ -48,7 +48,7 @@ namespace MeshCoP {
 class ActiveDataset: public ActiveDatasetBase
 {
 public:
-    ActiveDataset(ThreadNetif &aThreadNetif) : ActiveDatasetBase(aThreadNetif) { }
+    ActiveDataset(otInstance &aInstance) : ActiveDatasetBase(aInstance) { }
 
     otError GenerateLocal(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 };
@@ -56,7 +56,7 @@ public:
 class PendingDataset: public PendingDatasetBase
 {
 public:
-    PendingDataset(ThreadNetif &aThreadNetif) : PendingDatasetBase(aThreadNetif) { }
+    PendingDataset(otInstance &aInstance) : PendingDatasetBase(aInstance) { }
 };
 
 }  // namespace MeshCoP

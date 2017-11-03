@@ -56,7 +56,7 @@ class SimpleTestResult(unittest.TestResult):
 
     executions = 0
 
-    def __init__(self, path, auto_reboot_args=None, keep_explorer=False):
+    def __init__(self, path, auto_reboot_args=None, keep_explorer=False, add_all_devices=False):
         """Record test results in json file
 
         Args:
@@ -70,12 +70,14 @@ class SimpleTestResult(unittest.TestResult):
         self.log_handler = None
         self.started = None
         self.keep_explorer = keep_explorer
+        self.add_all_devices = add_all_devices
         SimpleTestResult.executions += 1
         logger.info('Initial state is %s', json.dumps(self.result, indent=2))
 
     def startTest(self, test):
         logger.info('\n========================================\n%s\n========================================', test.__class__.__name__)
 
+        test.add_all_devices = self.add_all_devices
         # create start up script if auto reboot enabled
         if self.auto_reboot_args:
             test.auto_reboot = True
@@ -166,7 +168,8 @@ def list_devices(names=None, continue_from=None, **kwargs):
 
 def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=None, name_greps=None,
              manual_reset=False, delete_history=False, max_devices=0,
-             continue_from=None, result_file='./result.json', auto_reboot=False, keep_explorer=False):
+             continue_from=None, result_file='./result.json', auto_reboot=False, keep_explorer=False,
+             add_all_devices=False):
     """Discover all test cases and skip those passed
 
     Args:
@@ -278,7 +281,7 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
         settings.PDU_CONTROLLER_OPEN_PARAMS = {}
         settings.PDU_CONTROLLER_REBOOT_PARAMS = {}
 
-    result = SimpleTestResult(result_file, auto_reboot_args, keep_explorer)
+    result = SimpleTestResult(result_file, auto_reboot_args, keep_explorer, add_all_devices)
     for case in suite:
         logger.info(case.__class__.__name__)
 
@@ -321,6 +324,8 @@ def main():
                         help='file name pattern, default to "*.py"', default='*.py')
     parser.add_argument('--rerun-fails', '-r', type=int, default=0,
                         help='number of times to rerun failed test cases')
+    parser.add_argument('--add-all-devices', '-t', action='store_true', default=False,
+                        help='add all devices to the test bed')
     parser.add_argument('--max-devices', '-u', type=int, default=0,
                         help='max golden devices allowed')
 
@@ -353,7 +358,8 @@ def main():
             logger.info('Rerun #{}:'.format(i+1))
             result = discover(
                 names=failed_names, pattern=args['pattern'], skip='', result_file=args['result_file'],
-                auto_reboot=args['auto_reboot'], keep_explorer=args['keep_explorer']
+                auto_reboot=args['auto_reboot'], keep_explorer=args['keep_explorer'],
+                add_all_devices=args['add_all_devices']
             )
 
 if __name__ == '__main__':

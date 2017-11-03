@@ -50,7 +50,7 @@ class MleRouter: public Mle
     friend class Mle;
 
 public:
-    explicit MleRouter(ThreadNetif &aThreadNetif) : Mle(aThreadNetif) { }
+    explicit MleRouter(otInstance &aInstance) : Mle(aInstance) { }
 
     bool IsSingleton(void) { return false; }
 

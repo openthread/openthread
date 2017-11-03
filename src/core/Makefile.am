@@ -107,6 +107,7 @@ SOURCES_COMMON                      = \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
 	api/otfaultinjection_api.cpp      \
+    api/server_api.cpp                \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \

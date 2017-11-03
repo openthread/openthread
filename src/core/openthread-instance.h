@@ -95,7 +95,7 @@ typedef struct otInstance
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    ot::Coap::Coap mApplicationCoap;
+    ot::Coap::ApplicationCoap mApplicationCoap;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
@@ -107,15 +107,5 @@ typedef struct otInstance
     otInstance(void);
 
 } otInstance;
-
-static inline otInstance *otInstanceFromIp6(ot::Ip6::Ip6 *aIp6)
-{
-    return (otInstance *)CONTAINING_RECORD(aIp6, otInstance, mIp6);
-}
-
-static inline otInstance *otInstanceFromThreadNetif(ot::ThreadNetif *aThreadNetif)
-{
-    return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
-}
 
 #endif  // OPENTHREADINSTANCE_H_

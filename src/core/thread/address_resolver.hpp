@@ -66,14 +66,14 @@ class ThreadTargetTlv;
  * This class implements the EID-to-RLOC mapping and caching.
  *
  */
-class AddressResolver: public ThreadNetifLocator
+class AddressResolver: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    explicit AddressResolver(ThreadNetif &aThreadNetif);
+    explicit AddressResolver(otInstance &aInstance);
 
     /**
      * This method clears the EID-to-RLOC cache.

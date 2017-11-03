@@ -38,6 +38,7 @@
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
 
+#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/logging.hpp"
@@ -55,10 +56,10 @@ namespace ot {
 
 namespace Dhcp6 {
 
-Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
-    mTrickleTimer(aThreadNetif.GetInstance(), &Dhcp6Client::HandleTrickleTimer, NULL, this),
-    mSocket(aThreadNetif.GetIp6().mUdp),
+Dhcp6Client::Dhcp6Client(otInstance &aInstance) :
+    InstanceLocator(aInstance),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this),
     mStartTime(0),
     mAddresses(NULL),
     mNumAddresses(0)

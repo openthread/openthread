@@ -41,8 +41,8 @@
 namespace ot {
 namespace Ip6 {
 
-Routes::Routes(Ip6 &aIp6):
-    Ip6Locator(aIp6),
+Routes::Routes(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mRoutes(NULL)
 {
 }

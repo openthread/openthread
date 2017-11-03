@@ -101,10 +101,10 @@ public:
     /**
      * This constructor initializes the Thread network interface.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    ThreadNetif(Ip6::Ip6 &aIp6);
+    ThreadNetif(otInstance &aInstance);
 
     /**
      * This method enables the Thread network interface.
@@ -254,7 +254,7 @@ public:
      */
     MeshForwarder &GetMeshForwarder(void) { return mMeshForwarder; }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     /**
      * This method returns a reference to the network data local object.
      *
@@ -262,7 +262,7 @@ public:
      *
      */
     NetworkData::Local &GetNetworkDataLocal(void) { return mNetworkDataLocal; }
-#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
 
     /**
      * This method returns a reference to the network data leader object.
@@ -442,9 +442,9 @@ private:
     Mac::Mac mMac;
     MeshForwarder mMeshForwarder;
     Mle::MleRouter mMleRouter;
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     NetworkData::Local mNetworkDataLocal;
-#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     NetworkData::Leader mNetworkDataLeader;
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;

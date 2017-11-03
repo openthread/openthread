@@ -197,6 +197,12 @@ class otApi:
     def get_addrs(self):
         return self.Api.otNodeGetAddrs(self.otNode).decode("utf-8").split("\n")
 
+    def add_service(self, enterpriseNumber, serviceData, serverData):
+        raise OSError("otServerAddService wrapper not implemented!")
+
+    def remove_service(self, enterpriseNumber, serviceData):
+        raise OSError("otServerRemoveService wrapper not implemented!")
+
     def get_context_reuse_delay(self):
         return int(self.Api.otNodeGetContextReuseDelay(self.otNode))
 

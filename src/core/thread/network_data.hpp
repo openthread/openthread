@@ -86,7 +86,7 @@ namespace NetworkData {
  * This class implements Network Data processing.
  *
  */
-class NetworkData: public ThreadNetifLocator
+class NetworkData: public InstanceLocator
 {
 public:
     enum
@@ -97,11 +97,11 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      * @param[in]  aLocal        TRUE if this represents local network data, FALSE otherwise.
      *
      */
-    NetworkData(ThreadNetif &aThreadNetif, bool aLocal);
+    NetworkData(otInstance &aInstance, bool aLocal);
 
     /**
      * This method clears the network data.
@@ -174,6 +174,48 @@ public:
     otError GetNextExternalRoute(otNetworkDataIterator *aIterator, uint16_t aRloc16,
                                  otExternalRouteConfig *aConfig);
 
+#if OPENTHREAD_ENABLE_SERVICE
+    /**
+     * This method provides the next service in the Thread Network Data.
+     *
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[out]    aConfig    A pointer to where the service information will be placed.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next service.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
+     *
+     */
+    otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig);
+
+    /**
+     * This method provides the next service in the Thread Network Data for a given RLOC16.
+     *
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[in]     aRloc16    The RLOC16 value.
+     * @param[out]    aConfig    A pointer to where the service information will be placed.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next service.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
+     *
+     */
+    otError GetNextService(otNetworkDataIterator *aIterator, uint16_t aRloc16,
+                           otServiceConfig *aConfig);
+
+    /**
+     * This method provides the next service ID in the Thread Network Data for a given RLOC16.
+     *
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[in]     aRloc16    The RLOC16 value.
+     * @param[out]    aServiceID A pointer to where the service ID will be placed.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next service.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
+     *
+     */
+    otError GetNextServiceId(otNetworkDataIterator *aIterator, uint16_t aRloc16,
+                             uint8_t *aServiceId);
+#endif
+
     /**
      * This method indicates whether or not the Thread Network Data contains all of the on mesh prefix information
      * in @p aCompare associated with @p aRloc16.
@@ -199,6 +241,34 @@ public:
      *
      */
     bool ContainsExternalRoutes(NetworkData &aCompare, uint16_t aRloc16);
+
+#if OPENTHREAD_ENABLE_SERVICE
+    /**
+     * This method indicates whether or not the Thread Network Data contains all of the service information
+     * in @p aCompare associated with @p aRloc16.
+     *
+     * @param[in]  aCompare  The Network Data to use for the query.
+     * @param[in]  aRloc16   The RLOC16 to consider.
+     *
+     * @returns TRUE if this object contains all service information in @p aCompare associated with @p aRloc16,
+     *          FALSE otherwise.
+     *
+     */
+    bool ContainsServices(NetworkData &aCompare, uint16_t aRloc16);
+
+    /**
+     * This method indicates whether or not the Thread Network Data contains the service with given Service ID
+     * associated with @p aRloc16.
+     *
+     * @param[in]  aServiceID The Service ID to search for.
+     * @param[in]  aRloc16    The RLOC16 to consider.
+     *
+     * @returns TRUE if this object contains the service with given ID associated with @p aRloc16,
+     *          FALSE otherwise.
+     *
+     */
+    bool ContainsService(uint8_t aServiceId, uint16_t aRloc16);
+#endif
 
     /**
      * This method cancels the data resubmit delay timer.
@@ -283,6 +353,35 @@ protected:
      */
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength);
 
+#if OPENTHREAD_ENABLE_SERVICE
+    /**
+     * This method returns a pointer to a matching Service TLV.
+     *
+     * @param[in]  aEnterpriseNumber  Enterprise Number.
+     * @param[in]  aServiceData       A pointer to a Service Data.
+     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     *
+     * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.
+     *
+     */
+    ServiceTlv *FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
+
+    /**
+     * This method returns a pointer to a Service TLV in a specified tlvs buffer.
+     *
+     * @param[in]  aEnterpriseNumber  Enterprise Number.
+     * @param[in]  aServiceData       A pointer to an Service Data.
+     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
+     * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
+     *
+     * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.
+     *
+     */
+    ServiceTlv *FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
+                            uint8_t *aTlvs, uint8_t aTlvsLength);
+#endif
+
     /**
      * This method inserts bytes into the Network Data.
      *
@@ -327,6 +426,19 @@ protected:
      */
     void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
 
+#if OPENTHREAD_ENABLE_SERVICE
+    /**
+     * This method strips non-stable Sub-TLVs from a Service TLV.
+     *
+     * @param[inout]  aData        A pointer to the Network Data to modify.
+     * @param[inout]  aDataLength  On entry, the size of the Network Data in bytes.  On exit, the size of the
+     *                             resulting Network Data in bytes.
+     * @param[inout]  aService     A reference to the Service TLV to modify.
+     *
+     */
+    void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService);
+#endif
+
     /**
      * This method computes the number of IPv6 Prefix bits that match.
      *
@@ -364,7 +476,7 @@ private:
     private:
         enum
         {
-            kTlvPoistion    = 0,
+            kTlvPosition    = 0,
             kSubTlvPosition = 1,
             kEntryPosition  = 2,
         };
@@ -373,10 +485,10 @@ private:
         NetworkDataIterator(otNetworkDataIterator *aIterator):
             mIteratorBuffer(reinterpret_cast<uint8_t *>(aIterator)) { }
 
-        uint8_t GetTlvOffset(void) const         { return mIteratorBuffer[kTlvPoistion];       }
+        uint8_t GetTlvOffset(void) const         { return mIteratorBuffer[kTlvPosition];       }
         uint8_t GetSubTlvOffset(void) const      { return mIteratorBuffer[kSubTlvPosition];    }
         uint8_t GetEntryIndex(void) const        { return mIteratorBuffer[kEntryPosition];     }
-        void    SetTlvOffset(uint8_t aOffset)    { mIteratorBuffer[kTlvPoistion] = aOffset;    }
+        void    SetTlvOffset(uint8_t aOffset)    { mIteratorBuffer[kTlvPosition] = aOffset;    }
         void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
         void    SetEntryIndex(uint8_t aIndex)    { mIteratorBuffer[kEntryPosition]  = aIndex;  }
 

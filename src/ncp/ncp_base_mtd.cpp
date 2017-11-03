@@ -756,16 +756,18 @@ otError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(void)
     otBorderRouterConfig borderRouterConfig;
     bool stable = false;
     uint8_t flags = 0;
+    uint8_t prefixLength;
 
     memset(&borderRouterConfig, 0, sizeof(otBorderRouterConfig));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(borderRouterConfig.mPrefix.mPrefix));
-    SuccessOrExit(error = mDecoder.ReadUint8(borderRouterConfig.mPrefix.mLength));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
     SuccessOrExit(error = mDecoder.ReadBool(stable));
     SuccessOrExit(error = mDecoder.ReadUint8(flags));
 
+    borderRouterConfig.mPrefix.mLength = prefixLength;
     borderRouterConfig.mStable = stable;
     borderRouterConfig.mPreference =
         ((flags & SPINEL_NET_FLAG_PREFERENCE_MASK) >> SPINEL_NET_FLAG_PREFERENCE_OFFSET);
@@ -786,13 +788,16 @@ otError NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(void)
 {
     otError error = OT_ERROR_NONE;
     otIp6Prefix ip6Prefix;
+    uint8_t prefixLength;
 
     memset(&ip6Prefix, 0, sizeof(otIp6Prefix));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Prefix.mPrefix));
-    SuccessOrExit(error = mDecoder.ReadUint8(ip6Prefix.mLength));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
+
+    ip6Prefix.mLength = prefixLength;
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &ip6Prefix);
 
@@ -1131,16 +1136,18 @@ otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(void)
     otExternalRouteConfig routeConfig;
     bool stable = false;
     uint8_t flags = 0;
+    uint8_t prefixLength;
 
     memset(&routeConfig, 0, sizeof(otExternalRouteConfig));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(routeConfig.mPrefix.mPrefix));
-    SuccessOrExit(error = mDecoder.ReadUint8(routeConfig.mPrefix.mLength));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
     SuccessOrExit(error = mDecoder.ReadBool(stable));
     SuccessOrExit(error = mDecoder.ReadUint8(flags));
 
+    routeConfig.mPrefix.mLength = prefixLength;
     routeConfig.mStable = stable;
     routeConfig.mPreference = FlagByteToExternalRoutePreference(flags);
 
@@ -1154,13 +1161,16 @@ otError NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES(void)
 {
     otError error = OT_ERROR_NONE;
     otIp6Prefix ip6Prefix;
+    uint8_t prefixLength;
 
     memset(&ip6Prefix, 0, sizeof(otIp6Prefix));
 
     VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Prefix.mPrefix));
-    SuccessOrExit(error = mDecoder.ReadUint8(ip6Prefix.mLength));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
+
+    ip6Prefix.mLength = prefixLength;
 
     error = otBorderRouterRemoveRoute(mInstance, &ip6Prefix);
 
@@ -2697,7 +2707,26 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
         if (mThreadChangedFlags & threadFlag)
         {
-            mChangedPropsSet.AddProperty(kFlags[i].mPropKey);
+            spinel_prop_key_t propKey = kFlags[i].mPropKey;
+            bool shouldAddProperty = true;
+
+            // Child table changes are reported using the `HandleChildAdded()` and
+            // `HandleChildRemoved()` callbacks emitting spinel `VALUE_INSERTED` and
+            // `VALUE_REMOVED` async spinel frames. If the spinel frames could not be
+            // added (e.g., out of NCP buffer) from the above callbacks, the flag
+            // `mShouldEmitChildTableUpdate` is set to `true` so that the entire
+            // child table is emitted as an unsolicited `VALUE_IS` update.
+
+            if (propKey == SPINEL_PROP_THREAD_CHILD_TABLE)
+            {
+                shouldAddProperty = mShouldEmitChildTableUpdate;
+                mShouldEmitChildTableUpdate = false;
+            }
+
+            if (shouldAddProperty)
+            {
+                mChangedPropsSet.AddProperty(propKey);
+            }
 
             if (threadFlag == OT_CHANGED_THREAD_NETDATA)
             {

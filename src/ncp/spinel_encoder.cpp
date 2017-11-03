@@ -135,6 +135,23 @@ exit:
     return error;
 }
 
+otError SpinelEncoder::WriteUint64(uint64_t aUint64)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >>  0) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >>  8) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 16) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 24) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 32) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 40) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 48) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 56) & 0xff));
+
+exit:
+    return error;
+}
+
 otError SpinelEncoder::WriteUintPacked(unsigned int aUint)
 {
     uint8_t buffer[6];

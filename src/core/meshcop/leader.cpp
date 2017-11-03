@@ -54,16 +54,16 @@
 namespace ot {
 namespace MeshCoP {
 
-Leader::Leader(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
+Leader::Leader(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this),
     mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
-    mTimer(aThreadNetif.GetInstance(), HandleTimer, this),
+    mTimer(aInstance, HandleTimer, this),
     mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal),
     mSessionId(0xffff)
 {
-    aThreadNetif.GetCoap().AddResource(mPetition);
-    aThreadNetif.GetCoap().AddResource(mKeepAlive);
+    GetNetif().GetCoap().AddResource(mPetition);
+    GetNetif().GetCoap().AddResource(mKeepAlive);
 }
 
 void Leader::HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

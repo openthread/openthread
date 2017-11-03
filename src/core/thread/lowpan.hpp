@@ -78,16 +78,16 @@ struct Context
  * This class implements LOWPAN_IPHC header compression.
  *
  */
-class Lowpan: public ThreadNetifLocator
+class Lowpan: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Lowpan(ThreadNetif &aThreadNetif);
+    explicit Lowpan(otInstance &aInstance);
 
     /**
      * This method indicates whether or not the header is a LOWPAN_IPHC header.
@@ -378,11 +378,11 @@ private:
 
     uint8_t  mDispatchHopsLeft;
     uint8_t  mDeepHopsLeft;
-    struct
+    struct OT_TOOL_PACKED_FIELD
     {
         uint16_t mSource;
         uint16_t mDestination;
-    } mAddress OT_TOOL_PACKED_FIELD;
+    } mAddress;
 } OT_TOOL_PACKED_END;
 
 /**

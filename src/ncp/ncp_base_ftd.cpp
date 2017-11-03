@@ -55,6 +55,88 @@
 namespace ot {
 namespace Ncp {
 
+otError NcpBase::EncodeChildInfo(const otChildInfo &aChildInfo)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t modeFlags;
+
+    modeFlags = LinkFlagsToFlagByte(
+                        aChildInfo.mRxOnWhenIdle,
+                        aChildInfo.mSecureDataRequest,
+                        aChildInfo.mFullFunction,
+                        aChildInfo.mFullNetworkData
+                    );
+
+    SuccessOrExit(error = mEncoder.WriteEui64(aChildInfo.mExtAddress));
+    SuccessOrExit(error = mEncoder.WriteUint16(aChildInfo.mRloc16));
+    SuccessOrExit(error = mEncoder.WriteUint32(aChildInfo.mTimeout));
+    SuccessOrExit(error = mEncoder.WriteUint32(aChildInfo.mAge));
+    SuccessOrExit(error = mEncoder.WriteUint8(aChildInfo.mNetworkDataVersion));
+    SuccessOrExit(error = mEncoder.WriteUint8(aChildInfo.mLinkQualityIn));
+    SuccessOrExit(error = mEncoder.WriteInt8(aChildInfo.mAverageRssi));
+    SuccessOrExit(error = mEncoder.WriteUint8(modeFlags));
+    SuccessOrExit(error = mEncoder.WriteInt8(aChildInfo.mLastRssi));
+
+exit:
+    return error;
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Property/Status Changed
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo)
+{
+    GetNcpInstance()->HandleChildTableChanged(aEvent, *aChildInfo);
+}
+
+void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+    unsigned int command = 0;
+
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_THREAD_CHILD_TABLE));
+
+    switch (aEvent)
+    {
+    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED:
+        command = SPINEL_CMD_PROP_VALUE_INSERTED;
+        break;
+
+    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED:
+        command = SPINEL_CMD_PROP_VALUE_REMOVED;
+        break;
+
+    default:
+        ExitNow();
+    }
+
+    SuccessOrExit(error = mEncoder.BeginFrame(header, command, SPINEL_PROP_THREAD_CHILD_TABLE));
+    SuccessOrExit(error = EncodeChildInfo(aChildInfo));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+
+    // If the frame can not be added (out of NCP buffer space), we remember
+    // to send an async `LAST_STATUS(NOMEM)` when buffer space becomes
+    // available. Also `mShouldEmitChildTableUpdate` flag is set to `true` so
+    // that the entire child table is later emitted as `VALUE_IS` spinel frame
+    // update from `ProcessThreadChangedFlags()`.
+
+    if (error != OT_ERROR_NONE)
+    {
+        mShouldEmitChildTableUpdate = true;
+
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+        mUpdateChangedPropsTask.Post();
+    }
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Individual Property Handlers
+// ----------------------------------------------------------------------------
+
 otError NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(void)
 {
     return mEncoder.WriteUint8(otThreadGetLocalLeaderWeight(mInstance));
@@ -70,7 +152,6 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(void)
     otError error = OT_ERROR_NONE;
     otChildInfo childInfo;
     uint8_t maxChildren;
-    uint8_t modeFlags;
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
@@ -81,24 +162,41 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(void)
             continue;
         }
 
-        modeFlags = LinkFlagsToFlagByte(
-                        childInfo.mRxOnWhenIdle,
-                        childInfo.mSecureDataRequest,
-                        childInfo.mFullFunction,
-                        childInfo.mFullNetworkData
-                    );
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = EncodeChildInfo(childInfo));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_THREAD_ROUTER_TABLE(void)
+{
+    otError error = OT_ERROR_NONE;
+    otRouterInfo routerInfo;
+    uint8_t maxRouterId;
+
+    maxRouterId = otThreadGetMaxRouterId(mInstance);
+
+    for (uint8_t routerId = 0; routerId <= maxRouterId; routerId++)
+    {
+        if ((otThreadGetRouterInfo(mInstance, routerId, &routerInfo) != OT_ERROR_NONE) || !routerInfo.mAllocated)
+        {
+            continue;
+        }
 
         SuccessOrExit(error = mEncoder.OpenStruct());
 
-        SuccessOrExit(error = mEncoder.WriteEui64(childInfo.mExtAddress));
-        SuccessOrExit(error = mEncoder.WriteUint16(childInfo.mRloc16));
-        SuccessOrExit(error = mEncoder.WriteUint32(childInfo.mTimeout));
-        SuccessOrExit(error = mEncoder.WriteUint32(childInfo.mAge));
-        SuccessOrExit(error = mEncoder.WriteUint8(childInfo.mNetworkDataVersion));
-        SuccessOrExit(error = mEncoder.WriteUint8(childInfo.mLinkQualityIn));
-        SuccessOrExit(error = mEncoder.WriteInt8(childInfo.mAverageRssi));
-        SuccessOrExit(error = mEncoder.WriteUint8(modeFlags));
-        SuccessOrExit(error = mEncoder.WriteInt8(childInfo.mLastRssi));
+        SuccessOrExit(error = mEncoder.WriteEui64(routerInfo.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint16(routerInfo.mRloc16));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mRouterId));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mNextHop));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mPathCost));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mLinkQualityIn));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mLinkQualityOut));
+        SuccessOrExit(error = mEncoder.WriteUint8(routerInfo.mAge));
+        SuccessOrExit(error = mEncoder.WriteBool(routerInfo.mLinkEstablished));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
     }

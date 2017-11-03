@@ -41,7 +41,7 @@ using namespace ot;
 
 otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
-    Message *message = aInstance->mIp6.mUdp.NewMessage(0);
+    Message *message = aInstance->mIp6.GetUdp().NewMessage(0);
 
     if (message)
     {
@@ -58,7 +58,7 @@ otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCal
 
     if (socket->mTransport == NULL)
     {
-        socket->mTransport = &aInstance->mIp6.mUdp;
+        socket->mTransport = &aInstance->mIp6.GetUdp();
         error = socket->Open(aCallback, aCallbackContext);
     }
 

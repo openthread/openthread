@@ -208,6 +208,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(NET_PSKC),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_LEADER_WEIGHT),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_CHILD_TABLE),
+    NCP_GET_PROP_HANDLER_ENTRY(THREAD_ROUTER_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_LOCAL_LEADER_WEIGHT),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_ROUTER_ROLE_ENABLED),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_CHILD_COUNT_MAX),
@@ -527,6 +528,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mRequireJoinExistingNetwork(false),
     mIsRawStreamEnabled(false),
     mDisableStreamWrite(false),
+    mShouldEmitChildTableUpdate(false),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     mCurTransmitTID(0),
     mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
@@ -558,6 +560,9 @@ NcpBase::NcpBase(otInstance *aInstance):
     otIp6SetReceiveFilterEnabled(mInstance, true);
     otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void *>(this));
     otIcmp6SetEchoEnabled(mInstance, false);
+#if OPENTHREAD_FTD
+    otThreadSetChildTableCallback(mInstance, &NcpBase::HandleChildTableChanged);
+#endif
 #if OPENTHREAD_ENABLE_LEGACY
     mLegacyNodeDidJoin = false;
     mLegacyHandlers = NULL;
@@ -1330,9 +1335,9 @@ otError NcpBase::CommandHandler_POKE(uint8_t aHeader)
     const uint8_t *dataPtr = NULL;
     uint16_t dataLen;
 
-    SuccessOrExit(error = mDecoder.ReadUint32(address));
-    SuccessOrExit(error = mDecoder.ReadUint16(count));
-    SuccessOrExit(error = mDecoder.ReadData(dataPtr, dataLen));
+    SuccessOrExit(parseError = mDecoder.ReadUint32(address));
+    SuccessOrExit(parseError = mDecoder.ReadUint16(count));
+    SuccessOrExit(parseError = mDecoder.ReadData(dataPtr, dataLen));
 
     VerifyOrExit(count != 0, parseError = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(count <= dataLen, parseError = OT_ERROR_INVALID_ARGS);

@@ -144,6 +144,7 @@ EXTRA_DIST                                                         = \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     $(NULL)
@@ -169,6 +170,7 @@ check_SCRIPTS                                                     += \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     Cert_5_2_02_LeaderReject1Hop.py                                  \
@@ -186,6 +188,7 @@ check_SCRIPTS                                                     += \
     Cert_5_1_12_NewRouterNeighborSync.py                             \
     Cert_5_1_13_RouterReset.py                                       \
     Cert_5_2_01_BecomeActiveRouter.py                                \
+    Cert_5_2_05_AddressQuery.py                                      \
     Cert_5_2_06_RouterDowngrade.py                                   \
     Cert_5_2_07_REEDSynchronization.py                               \
     Cert_5_2_04_REEDUpgrade.py                                       \
@@ -275,6 +278,7 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
+    test_service.py                                                  \
     Cert_5_2_05_AddressQuery.py                                      \
     Cert_5_3_09_AddressQuery.py                                      \
     Cert_8_1_01_Commissioning.py                                     \

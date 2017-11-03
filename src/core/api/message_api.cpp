@@ -178,8 +178,8 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aInstance->mThreadNetif.GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages,
                                                             aBufferInfo->mIp6Buffers);
 
-    aInstance->mThreadNetif.GetIp6().mMpl.GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
-                                                                          aBufferInfo->mMplBuffers);
+    aInstance->mThreadNetif.GetIp6().GetMpl().GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
+                                                                              aBufferInfo->mMplBuffers);
 
     aInstance->mThreadNetif.GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages,
                                                                aBufferInfo->mMleBuffers);

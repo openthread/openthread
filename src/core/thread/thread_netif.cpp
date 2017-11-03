@@ -57,58 +57,58 @@ static const otMasterKey kThreadMasterKey =
     }
 };
 
-ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
-    Netif(aIp6, OT_NETIF_INTERFACE_ID_THREAD),
-    mCoap(*this),
+ThreadNetif::ThreadNetif(otInstance &aInstance):
+    Netif(aInstance, OT_NETIF_INTERFACE_ID_THREAD),
+    mCoap(aInstance),
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    mDhcp6Client(*this),
+    mDhcp6Client(aInstance),
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
-    mDhcp6Server(*this),
+    mDhcp6Server(aInstance),
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    mDnsClient(*this),
+    mDnsClient(aInstance.mThreadNetif),
 #endif  // OPENTHREAD_ENABLE_DNS_CLIENT
-    mActiveDataset(*this),
-    mPendingDataset(*this),
-    mKeyManager(*this),
-    mLowpan(*this),
-    mMac(*this),
-    mMeshForwarder(*this),
-    mMleRouter(*this),
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
-    mNetworkDataLocal(*this),
+    mActiveDataset(aInstance),
+    mPendingDataset(aInstance),
+    mKeyManager(aInstance),
+    mLowpan(aInstance),
+    mMac(aInstance),
+    mMeshForwarder(aInstance),
+    mMleRouter(aInstance),
+#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+    mNetworkDataLocal(aInstance),
 #endif
-    mNetworkDataLeader(*this),
+    mNetworkDataLeader(aInstance),
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
-    mNetworkDiagnostic(*this),
+    mNetworkDiagnostic(aInstance),
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-    mCommissioner(*this),
+    mCommissioner(aInstance),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
-    mDtls(*this),
-    mCoapSecure(*this),
+    mDtls(aInstance),
+    mCoapSecure(aInstance),
 #endif
 #if OPENTHREAD_ENABLE_JOINER
-    mJoiner(*this),
+    mJoiner(aInstance),
 #endif  // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_ENABLE_JAM_DETECTION
-    mJamDetector(*this),
+    mJamDetector(aInstance),
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
 #if OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_TMF_PROXY
     mTmfProxy(mMleRouter.GetMeshLocal16(), mCoap),
 #endif // OPENTHREAD_ENABLE_TMF_PROXY
-    mJoinerRouter(*this),
-    mLeader(*this),
-    mAddressResolver(*this),
+    mJoinerRouter(aInstance),
+    mLeader(aInstance),
+    mAddressResolver(aInstance),
 #endif  // OPENTHREAD_FTD
-    mChildSupervisor(*this),
-    mSupervisionListener(*this),
-    mAnnounceBegin(*this),
-    mPanIdQuery(*this),
-    mEnergyScan(*this)
+    mChildSupervisor(aInstance),
+    mSupervisionListener(aInstance),
+    mAnnounceBegin(aInstance),
+    mPanIdQuery(aInstance),
+    mEnergyScan(aInstance)
 
 {
     mKeyManager.SetMasterKey(kThreadMasterKey);

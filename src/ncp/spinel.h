@@ -1010,6 +1010,24 @@ typedef enum
      */
     SPINEL_PROP_THREAD_STEERING_DATA    = SPINEL_PROP_THREAD_EXT__BEGIN + 22,
 
+    /// Thread Router Table.
+    /** Format: `A(t(ESCCCCCCb)`.
+     *
+     * Data per item is:
+     *
+     *  `E`: IEEE 802.15.4 Extended Address
+     *  `S`: RLOC16
+     *  `C`: Router ID
+     *  `C`: Next hop to router
+     *  `C`: Path cost to router
+     *  `C`: Link Quality In
+     *  `C`: Link Quality Out
+     *  `C`: Age (seconds since last heard)
+     *  `b`: Link established with Router ID or not.
+     *
+     */
+    SPINEL_PROP_THREAD_ROUTER_TABLE     = SPINEL_PROP_THREAD_EXT__BEGIN + 23,
+
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN             = 0x60,
@@ -1389,6 +1407,8 @@ enum
     SPINEL_DATATYPE_INT16_C             = 's',
     SPINEL_DATATYPE_UINT32_C            = 'L',
     SPINEL_DATATYPE_INT32_C             = 'l',
+    SPINEL_DATATYPE_UINT64_C            = 'X',
+    SPINEL_DATATYPE_INT64_C             = 'x',
     SPINEL_DATATYPE_UINT_PACKED_C       = 'i',
     SPINEL_DATATYPE_IPv6ADDR_C          = '6',
     SPINEL_DATATYPE_EUI64_C             = 'E',
@@ -1411,6 +1431,8 @@ typedef char spinel_datatype_t;
 #define SPINEL_DATATYPE_INT16_S         "s"
 #define SPINEL_DATATYPE_UINT32_S        "L"
 #define SPINEL_DATATYPE_INT32_S         "l"
+#define SPINEL_DATATYPE_UINT64_S        "X"
+#define SPINEL_DATATYPE_INT64_S         "x"
 #define SPINEL_DATATYPE_UINT_PACKED_S   "i"
 #define SPINEL_DATATYPE_IPv6ADDR_S      "6"
 #define SPINEL_DATATYPE_EUI64_S         "E"

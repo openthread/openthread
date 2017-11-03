@@ -170,16 +170,16 @@ private:
  * This class implements DHCPv6 Client.
  *
  */
-class Dhcp6Client: public ThreadNetifLocator
+class Dhcp6Client: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Dhcp6Client(ThreadNetif &aThreadNetif);
+    explicit Dhcp6Client(otInstance &aInstance);
 
     /**
      * This method update addresses that shall be automatically created using DHCP.
@@ -226,9 +226,9 @@ private:
 
     static Dhcp6Client &GetOwner(const Context &aContext);
 
-    TrickleTimer mTrickleTimer;
-
     Ip6::UdpSocket mSocket;
+
+    TrickleTimer mTrickleTimer;
 
     uint8_t mTransactionId[kTransactionIdSize];
     uint32_t mStartTime;

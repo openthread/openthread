@@ -59,8 +59,8 @@ namespace ot {
 
 namespace NetworkDiagnostic {
 
-NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+NetworkDiagnostic::NetworkDiagnostic(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mDiagnosticGetRequest(OT_URI_PATH_DIAGNOSTIC_GET_REQUEST, &NetworkDiagnostic::HandleDiagnosticGetRequest, this),
     mDiagnosticGetQuery(OT_URI_PATH_DIAGNOSTIC_GET_QUERY, &NetworkDiagnostic::HandleDiagnosticGetQuery, this),
     mDiagnosticGetAnswer(OT_URI_PATH_DIAGNOSTIC_GET_ANSWER, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this),
@@ -68,10 +68,10 @@ NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
     mReceiveDiagnosticGetCallback(NULL),
     mReceiveDiagnosticGetCallbackContext(NULL)
 {
-    aThreadNetif.GetCoap().AddResource(mDiagnosticGetRequest);
-    aThreadNetif.GetCoap().AddResource(mDiagnosticGetQuery);
-    aThreadNetif.GetCoap().AddResource(mDiagnosticGetAnswer);
-    aThreadNetif.GetCoap().AddResource(mDiagnosticReset);
+    GetNetif().GetCoap().AddResource(mDiagnosticGetRequest);
+    GetNetif().GetCoap().AddResource(mDiagnosticGetQuery);
+    GetNetif().GetCoap().AddResource(mDiagnosticGetAnswer);
+    GetNetif().GetCoap().AddResource(mDiagnosticReset);
 }
 
 void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,

@@ -86,12 +86,12 @@ struct otIcmp6Header
     uint8_t      mType;      ///< Type
     uint8_t      mCode;      ///< Code
     uint16_t     mChecksum;  ///< Checksum
-    union
+    union OT_TOOL_PACKED_FIELD
     {
         uint8_t  m8[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint8_t)];
         uint16_t m16[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint16_t)];
         uint32_t m32[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint32_t)];
-    } mData;                 ///< Message-specific data
+    } mData;  ///< Message-specific data
 } OT_TOOL_PACKED_END;
 
 /**

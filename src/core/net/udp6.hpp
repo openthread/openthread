@@ -164,7 +164,7 @@ private:
  * This class implements core UDP message handling.
  *
  */
-class Udp: public Ip6Locator
+class Udp: public InstanceLocator
 {
     friend class UdpSocket;
 
@@ -172,10 +172,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aIp6  A reference to OpenThread instance.
      *
      */
-    Udp(Ip6 &aIp6);
+    Udp(otInstance &aInstance);
 
     /**
      * This method adds a UDP socket.

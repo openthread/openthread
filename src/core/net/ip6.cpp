@@ -52,16 +52,17 @@ namespace Ip6 {
 
 Ip6::Ip6(otInstance &aInstance):
     InstanceLocator(aInstance),
-    mRoutes(*this),
-    mIcmp(*this),
-    mUdp(*this),
-    mMpl(*this),
     mForwardingEnabled(false),
-    mSendQueueTask(aInstance, HandleSendQueue, this),
+    mIsReceiveIp6FilterEnabled(false),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
-    mIsReceiveIp6FilterEnabled(false),
-    mNetifListHead(NULL)
+    mNetifListHead(NULL),
+    mSendQueue(),
+    mSendQueueTask(aInstance, HandleSendQueue, this),
+    mRoutes(aInstance),
+    mIcmp(aInstance),
+    mUdp(aInstance),
+    mMpl(aInstance)
 {
 }
 

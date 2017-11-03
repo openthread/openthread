@@ -56,16 +56,16 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class Commissioner: public ThreadNetifLocator
+class Commissioner: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the Commissioner object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Commissioner(ThreadNetif &aThreadNetif);
+    Commissioner(otInstance &aInstance);
 
     /**
      * This method starts the Commissioner service.
@@ -196,9 +196,29 @@ public:
     static otError GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
                                 uint8_t *aPSKc);
 
-    AnnounceBeginClient mAnnounceBegin;
-    EnergyScanClient mEnergyScan;
-    PanIdQueryClient mPanIdQuery;
+    /**
+     * This method returns a reference to the AnnounceBeginClient instance.
+     *
+     * @returns A reference to the AnnounceBeginClient instance.
+     *
+     */
+    AnnounceBeginClient &GetAnnounceBeginClient(void) { return mAnnounceBegin; }
+
+    /**
+     * This method returns a reference to the EnergyScanClient instance.
+     *
+     * @returns A reference to the EnergyScanClient instance.
+     *
+     */
+    EnergyScanClient &GetEnergyScanClient(void) { return mEnergyScan; }
+
+    /**
+     * This method returns a reference to the PanIdQueryClient instance.
+     *
+     * @returns A reference to the PanIdQueryClient instance.
+     *
+     */
+    PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
 
 private:
     enum
@@ -289,6 +309,10 @@ private:
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
     Coap::Resource mJoinerFinalize;
+
+    AnnounceBeginClient mAnnounceBegin;
+    EnergyScanClient mEnergyScan;
+    PanIdQueryClient mPanIdQuery;
 };
 
 }  // namespace MeshCoP

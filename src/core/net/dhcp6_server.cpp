@@ -51,9 +51,9 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 namespace Dhcp6 {
 
-Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
-    mSocket(aThreadNetif.GetIp6().mUdp)
+Dhcp6Server::Dhcp6Server(otInstance &aInstance):
+    InstanceLocator(aInstance),
+    mSocket(GetNetif().GetIp6().GetUdp())
 {
     for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
     {
@@ -428,7 +428,7 @@ otError Dhcp6Server::SendReply(otIp6Address &aDst, uint8_t *aTransactionId, Clie
     SuccessOrExit(error = AppendRapidCommit(*message));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(&messageInfo.GetPeerAddr().mFields.m8, &aDst, sizeof(otIp6Address));
+    memcpy(messageInfo.GetPeerAddr().mFields.m8, &aDst, sizeof(otIp6Address));
     messageInfo.mPeerPort = kDhcpClientPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 

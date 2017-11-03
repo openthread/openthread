@@ -40,7 +40,7 @@ class TestNetworkData: public NetworkData::NetworkData
 {
 public:
     TestNetworkData(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength):
-        NetworkData::NetworkData(aInstance->mThreadNetif, false) {
+        NetworkData::NetworkData(*aInstance, false) {
         memcpy(mTlvs, aTlvs, aTlvsLength);
         mLength = aTlvsLength;
     }

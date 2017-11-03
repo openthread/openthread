@@ -56,21 +56,21 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
-    ThreadNetifLocator(aThreadNetif),
+AddressResolver::AddressResolver(otInstance &aInstance) :
+    InstanceLocator(aInstance),
     mAddressError(OT_URI_PATH_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
     mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
     mAddressNotification(OT_URI_PATH_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
     mIcmpHandler(&AddressResolver::HandleIcmpReceive, this),
-    mTimer(aThreadNetif.GetInstance(), &AddressResolver::HandleTimer, this)
+    mTimer(aInstance, &AddressResolver::HandleTimer, this)
 {
     Clear();
 
-    aThreadNetif.GetCoap().AddResource(mAddressError);
-    aThreadNetif.GetCoap().AddResource(mAddressQuery);
-    aThreadNetif.GetCoap().AddResource(mAddressNotification);
+    GetNetif().GetCoap().AddResource(mAddressError);
+    GetNetif().GetCoap().AddResource(mAddressQuery);
+    GetNetif().GetCoap().AddResource(mAddressNotification);
 
-    aThreadNetif.GetIp6().mIcmp.RegisterHandler(mIcmpHandler);
+    GetNetif().GetIp6().GetIcmp().RegisterHandler(mIcmpHandler);
 }
 
 void AddressResolver::Clear()

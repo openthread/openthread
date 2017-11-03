@@ -58,8 +58,8 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Joiner::Joiner(ThreadNetif &aNetif):
-    ThreadNetifLocator(aNetif),
+Joiner::Joiner(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mState(OT_JOINER_STATE_IDLE),
     mCallback(NULL),
     mContext(NULL),
@@ -69,11 +69,11 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mVendorModel(NULL),
     mVendorSwVersion(NULL),
     mVendorData(NULL),
-    mTimer(aNetif.GetInstance(), &Joiner::HandleTimer, this),
+    mTimer(aInstance, &Joiner::HandleTimer, this),
     mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
-    aNetif.GetCoap().AddResource(mJoinerEntrust);
+    GetNetif().GetCoap().AddResource(mJoinerEntrust);
 }
 
 otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,

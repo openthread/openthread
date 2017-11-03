@@ -65,16 +65,16 @@ namespace ot {
  * address or an extended/long address can be added to the source address match table.
  *
  */
-class SourceMatchController: public MeshForwarderLocator
+class SourceMatchController: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aMeshForwarder   A reference to the Mesh Forwarder.
+     * @param[in]  aInstance    A reference to the OpenThread instance
      *
      */
-    explicit SourceMatchController(MeshForwarder &aMeshForwarder);
+    explicit SourceMatchController(otInstance &aInstance);
 
     /**
      * This method returns the current state of source address matching.

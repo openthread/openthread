@@ -55,19 +55,19 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
-    ThreadNetifLocator(aNetif),
-    mSocket(aNetif.GetIp6().mUdp),
+JoinerRouter::JoinerRouter(otInstance &aInstance):
+    InstanceLocator(aInstance),
+    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
     mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
-    mTimer(aNetif.GetInstance(), &JoinerRouter::HandleTimer, this),
+    mTimer(aInstance, &JoinerRouter::HandleTimer, this),
     mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false),
     mExpectJoinEntRsp(false)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    aNetif.GetCoap().AddResource(mRelayTransmit);
+    GetNetif().GetCoap().AddResource(mRelayTransmit);
     mNetifCallback.Set(HandleNetifStateChanged, this);
-    aNetif.RegisterCallback(mNetifCallback);
+    GetNetif().RegisterCallback(mNetifCallback);
 }
 
 void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags, void *aContext)

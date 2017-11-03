@@ -43,6 +43,8 @@
 
 using ot::Encoding::BigEndian::HostSwap16;
 
+#define THREAD_ENTERPRISE_NUMBER 44970
+
 namespace ot {
 namespace NetworkData {
 
@@ -81,6 +83,8 @@ public:
         kTypeBorderRouter      = 2,  ///< Border Router TLV
         kTypeContext           = 3,  ///< Context TLV
         kTypeCommissioningData = 4,  ///< Commissioning Dataset TLV
+        kTypeService           = 5,  ///< Service TLV
+        kTypeServer            = 6,  ///< Server TLV
     };
 
     /**
@@ -692,6 +696,263 @@ public:
      *
      */
     void Init(void) { NetworkDataTlv::Init(); SetType(kTypeCommissioningData); SetLength(0); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Service Data TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ServiceTlv: public NetworkDataTlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     * Initial length is set to 2, to hold S_service_data_length field.
+     */
+    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeService); SetLength(2); mTResSId = kTMask; SetServiceDataLength(0); }
+
+    /**
+     * This method gets Service Data length.
+     *
+     * @returns length of the Service Data field in bytes.
+     */
+    uint8_t GetServiceDataLength(void) {
+        return *GetServiceDataLengthLocation();
+    }
+
+    /**
+     * This method sets Service Data length.
+     *
+     * @param aServiceDataLength desired length of the Service Data field in bytes.
+     */
+    void SetServiceDataLength(uint8_t aServiceDataLength) {
+        *GetServiceDataLengthLocation() = aServiceDataLength;
+    }
+
+    /**
+     * This method returns a pointer to the Service Data.
+     *
+     * @returns A pointer to the Service Data.
+     */
+    uint8_t *GetServiceData(void) { return GetServiceDataLengthLocation() + sizeof(uint8_t); }
+
+    /**
+     * This method sets Service Data to the given values.
+     *
+     * Caller must ensure that there is enough memory allocated.
+     *
+     * @param aServiceData       pointer to the service data to use
+     * @param aServiceDataLength length of the provided service data in bytes
+     */
+    void SetServiceData(const uint8_t *aServiceData, uint8_t aServiceDataLength) {
+        SetServiceDataLength(aServiceDataLength);
+
+        memcpy(GetServiceData(), aServiceData, aServiceDataLength);
+    }
+
+    /**
+     * This method returns Enterprise Number field.
+     *
+     * @returns Enterprise Number
+     */
+    uint32_t GetEnterpriseNumber(void) {
+        if (IsThreadEnterprise()) {
+            return THREAD_ENTERPRISE_NUMBER;
+        }
+        else {
+            // This memory access most likely will not be aligned to 4 bytes
+            return HostSwap32(*reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()));
+        }
+    }
+
+    /**
+     * This method returns the T flag. It is set when Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER.
+     *
+     * @returns Flag whether Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER
+     */
+    bool IsThreadEnterprise(void) const {
+        return (mTResSId & kTMask) != 0;
+    }
+
+    /**
+     * This method sets Enterprise Number and updates the T flag.
+     *
+     * Note: this method does not preserve service data / sub-TLV fields. Changing the T flag and inserting
+     * few bytes in the middle of this TLV effectively destroys rest of the content of this TLV (and might lead to
+     * memory corruption) so modification of Enterprise Number must be done before adding any content to the TLV.
+     *
+     * @param [in] aEnterpriseNumber Enterprise Number
+     */
+    void SetEnterpriseNumber(uint32_t aEnterpriseNumber) {
+        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) {
+            mTResSId |= kTMask;
+        }
+        else {
+            mTResSId &= ~kTMask;
+
+            // This memory access most likely will not be aligned to 4 bytes
+            *reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()) = HostSwap32(aEnterpriseNumber);
+        }
+    }
+
+    /**
+     * This method returns length of the S_enterprise_number TLV field in bytes, for given Enterprise Number.
+     *
+     * @returns length of the S_enterprise_number field in bytes
+     */
+    static uint8_t GetEnterpriseNumberFieldLength(uint32_t aEnterpriseNumber) {
+        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) {
+            return 0;
+        }
+        else {
+            return (sizeof(aEnterpriseNumber));
+        }
+    }
+
+    /**
+     * This method returns Service ID. It is in range 0x00-0x0f.
+     *
+     * @returns Service ID
+     */
+    uint8_t GetServiceID(void) const {
+        return (mTResSId & kSIdMask) >> kSIdOffset;
+    }
+
+    /**
+     * This method sets Service ID.
+     *
+     * @param [in] aServiceID Service ID to be set. Expected range: 0x00-0x0f.
+     */
+    void SetServiceID(uint8_t aServiceID) {
+        mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceID << kSIdOffset));
+    }
+
+    /**
+     * This method returns the Sub-TLVs length in bytes.
+     *
+     * @returns The Sub-TLVs length in bytes.
+     *
+     */
+    uint8_t GetSubTlvsLength(void) {
+        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv)) - (IsThreadEnterprise() ? 0 : sizeof(uint32_t))
+               - sizeof(uint8_t)/* mServiceDataLength */ - GetServiceDataLength();
+    }
+
+    /**
+     * This method sets the Sub-TLVs length in bytes.
+     *
+     * @param[in]  aLength  The Sub-TLVs length in bytes.
+     *
+     */
+    void SetSubTlvsLength(uint8_t aLength) {
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))
+                  + sizeof(uint8_t)/* mServiceDataLength */ + GetServiceDataLength() + aLength);
+    }
+
+    /**
+     * This method returns a pointer to the Sub-TLVs.
+     *
+     * @returns A pointer to the Sub-TLVs.
+     *
+     */
+    NetworkDataTlv *GetSubTlvs(void) {
+        return reinterpret_cast<NetworkDataTlv *>(GetServiceDataLengthLocation() + sizeof(uint8_t) + GetServiceDataLength());
+    }
+
+private:
+    /**
+     * This method returns pointer to where mServiceDataLength would be.
+     *
+     * @returns pointer to service data length location
+     */
+    uint8_t *GetServiceDataLengthLocation(void) {
+        return GetEnterpriseNumberLocation() + (IsThreadEnterprise() ? 0 : sizeof(uint32_t));
+    }
+
+    /**
+     * This method returns pointer to where mEnterpriseNumber would be.
+     *
+     * Note: this method returns uint8_t*, not uint32_t*.
+     *
+     * @returns pointer to enterprise number location
+     */
+    uint8_t *GetEnterpriseNumberLocation(void) {
+        return &mTResSId + sizeof(mTResSId);
+    }
+
+    enum
+    {
+        kTOffset = 7,
+        kTMask = 0x1 << kTOffset,
+        kSIdOffset = 0,
+        kSIdMask = 0xf << kSIdOffset,
+    };
+
+    uint8_t mTResSId;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Server Data TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ServerTlv: public NetworkDataTlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeServer); SetLength(sizeof(*this) - sizeof(NetworkDataTlv)); }
+
+    /**
+     * This method returns the S_server_16 value.
+     *
+     * @returns The S_server_16 value.
+     */
+    uint16_t GetServer16(void) const { return HostSwap16(mServer16); }
+
+    /**
+     * This method sets the S_server_16 value.
+     *
+     * @param[in]  aServer16  The S_server_16 value.
+     *
+     */
+    void SetServer16(uint16_t aServer16) { mServer16 = HostSwap16(aServer16); }
+
+    /**
+     * This method returns a pointer to the Server Data.
+     *
+     * @returns A pointer to the Server Data.
+     */
+    const uint8_t *GetServerData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+
+    /**
+     * This method sets Server Data to the given values.
+     *
+     * Caller must ensure that there is enough memory allocated.
+     *
+     * @param aServerData       pointer to the server data to use
+     * @param aServerDataLength length of the provided server data in bytes
+     */
+    void SetServerData(const uint8_t *aServerData, uint8_t aServerDataLength) {
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
+        memcpy(reinterpret_cast<uint8_t *>(this) + sizeof(*this), aServerData, aServerDataLength);
+    }
+
+    /**
+     * This method returns the Server Data length in bytes.
+     *
+     * @returns The Server Data length in bytes.
+     *
+     */
+    uint8_t GetServerDataLength(void) const {
+        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv));
+    }
+
+private:
+    uint16_t mServer16;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -156,4 +156,12 @@
  */
 #define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS             2048
 
+/*
+ * Suppress the ARMCC warning on unreachable statement,
+ * e.g. break after assert(false) or ExitNow() macro.
+ */
+#if defined(__CC_ARM)
+    _Pragma("diag_suppress=111")
+#endif
+
 #endif  // OPENTHREAD_CORE_NRF52840_CONFIG_H_

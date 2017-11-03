@@ -96,7 +96,7 @@ OTAPI otError OTCALL otCommissionerStop(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  @p aExtAddress or @p aPSKd is invalid.
  * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
+ * @note Only use this after successfully starting the Commissioner role with otCommissionerStart().
  *
  */
 OTAPI otError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
@@ -113,7 +113,7 @@ OTAPI otError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtA
  * @retval OT_ERROR_INVALID_ARGS  @p aExtAddress is invalid.
  * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
+ * @note Only use this after successfully starting the Commissioner role with otCommissionerStart().
  *
  */
 OTAPI otError OTCALL otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aExtAddress);
@@ -143,7 +143,7 @@ OTAPI otError OTCALL otCommissionerSetProvisioningUrl(otInstance *aInstance, con
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate an Announce Begin message.
  * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
+ * @note Only use this after successfully starting the Commissioner role with otCommissionerStart().
  *
  */
 OTAPI otError OTCALL otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
@@ -178,7 +178,7 @@ typedef void (OTCALL *otCommissionerEnergyReportCallback)(uint32_t aChannelMask,
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate an Energy Scan Query message.
  * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
+ * @note Only use this after successfully starting the Commissioner role with otCommissionerStart().
  *
  */
 OTAPI otError OTCALL otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
@@ -209,7 +209,7 @@ typedef void (OTCALL *otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint
  * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate a PAN ID Query message.
  * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
+ * @note Only use this after successfully starting the Commissioner role with otCommissionerStart().
  *
  */
 OTAPI otError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,

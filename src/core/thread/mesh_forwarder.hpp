@@ -71,16 +71,16 @@ class MleRouter;
  * This class implements mesh forwarding within Thread.
  *
  */
-class MeshForwarder: public ThreadNetifLocator
+class MeshForwarder: public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit MeshForwarder(ThreadNetif &aThreadNetif);
+    explicit MeshForwarder(otInstance &aInstance);
 
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
@@ -310,9 +310,11 @@ private:
     void ScheduleTransmissionTask(void);
     static void HandleDataPollTimeout(Mac::Receiver &aReceiver);
 
-    otError AddPendingSrcMatchEntries(void);
-    otError AddSrcMatchEntry(Child &aChild);
-    void ClearSrcMatchEntry(Child &aChild);
+#if OPENTHREAD_FTD
+#if OPENTHREAD_ENABLE_SERVICE
+    otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
+#endif // OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_FTD
 
     static MeshForwarder &GetOwner(const Context &aContext);
 

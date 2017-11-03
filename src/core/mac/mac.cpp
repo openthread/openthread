@@ -137,19 +137,8 @@ void Mac::StartCsmaBackoff(void)
     }
 }
 
-Mac::Mac(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
-    mMacTimer(aThreadNetif.GetInstance(), &Mac::HandleMacTimer, this),
-    mBackoffTimer(aThreadNetif.GetInstance(), &Mac::HandleBeginTransmit, this),
-    mReceiveTimer(aThreadNetif.GetInstance(), &Mac::HandleReceiveTimer, this),
-    mShortAddress(kShortAddrInvalid),
-    mPanId(kPanIdBroadcast),
-    mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
-    mMaxTransmitPower(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER),
-    mSendHead(NULL),
-    mSendTail(NULL),
-    mReceiveHead(NULL),
-    mReceiveTail(NULL),
+Mac::Mac(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mOperation(kOperationIdle),
     mPendingActiveScan(false),
     mPendingEnergyScan(false),
@@ -161,6 +150,17 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelaySleep(false),
 #endif
+    mMacTimer(aInstance, &Mac::HandleMacTimer, this),
+    mBackoffTimer(aInstance, &Mac::HandleBeginTransmit, this),
+    mReceiveTimer(aInstance, &Mac::HandleReceiveTimer, this),
+    mShortAddress(kShortAddrInvalid),
+    mPanId(kPanIdBroadcast),
+    mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
+    mMaxTransmitPower(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER),
+    mSendHead(NULL),
+    mSendTail(NULL),
+    mReceiveHead(NULL),
+    mReceiveTail(NULL),
     mBeaconSequence(static_cast<uint8_t>(otPlatRandomGet())),
     mDataSequence(static_cast<uint8_t>(otPlatRandomGet())),
     mCsmaAttempts(0),
@@ -171,13 +171,13 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mEnergyScanCurrentMaxRssi(kInvalidRssiValue),
     mScanContext(NULL),
     mActiveScanHandler(NULL), // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
-    mEnergyScanSampleRssiTask(aThreadNetif.GetInstance(), &Mac::HandleEnergyScanSampleRssi, this),
+    mEnergyScanSampleRssiTask(aInstance, &Mac::HandleEnergyScanSampleRssi, this),
     mPcapCallback(NULL),
     mPcapCallbackContext(NULL),
 #if OPENTHREAD_ENABLE_MAC_FILTER
     mFilter(),
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
-    mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aThreadNetif.GetInstance()))),
+    mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance))),
     mKeyIdMode2FrameCounter(0)
 {
     GenerateExtAddress(&mExtAddress);
@@ -197,10 +197,16 @@ otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveSc
 {
     otError error;
 
-    SuccessOrExit(error = Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext));
     mActiveScanHandler = aHandler;
+    SuccessOrExit(error = Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext));
 
 exit:
+
+    if (OT_ERROR_NONE != error)
+    {
+        mActiveScanHandler = NULL;
+    }
+
     return error;
 }
 
@@ -208,10 +214,16 @@ otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergySc
 {
     otError error;
 
-    SuccessOrExit(error = Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext));
     mEnergyScanHandler = aHandler;
+    SuccessOrExit(error = Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext));
 
 exit:
+
+    if (OT_ERROR_NONE != error)
+    {
+        mEnergyScanHandler = NULL;
+    }
+
     return error;
 }
 

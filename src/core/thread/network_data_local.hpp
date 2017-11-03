@@ -66,7 +66,7 @@ public:
      * @param[in]  aNetif  A reference to the Thread network interface.
      *
      */
-    explicit Local(ThreadNetif &aNetif);
+    explicit Local(otInstance &aInstance);
 
     /**
      * This method adds a Border Router entry to the Thread Network Data.
@@ -123,6 +123,38 @@ public:
      */
     otError RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
+#if OPENTHREAD_ENABLE_SERVICE
+    /**
+     * This method adds a Service entry to the Thread Network local data.
+     *
+     * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV
+     * @param[in]  aServiceData       A pointer to the Service Data
+     * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
+     * @param[in]  aServerStable      The Stable flag value for Server TLV
+     * @param[in]  aServerData        A pointer to the Server Data
+     * @param[in]  aServerDataLength  The length of @p aServerData in bytes.
+     *
+     * @retval OT_ERROR_NONE     Successfully added the Service entry.
+     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Service entry.
+     *
+     */
+    otError AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
+                       bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength);
+
+    /**
+     * This method removes a Service entry from the Thread Network local data.
+     *
+     * @param[in]  aEnterpriseNumber   Enterprise Number of the service to be deleted.
+     * @param[in]  aServiceData        A pointer to the service data.
+     * @param[in]  aServiceDataLength  The length of @p aServiceData in bytes.
+     *
+     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
+     *
+     */
+    otError RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
+#endif
+
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
@@ -137,9 +169,16 @@ private:
     otError UpdateRloc(PrefixTlv &aPrefix);
     otError UpdateRloc(HasRouteTlv &aHasRoute);
     otError UpdateRloc(BorderRouterTlv &aBorderRouter);
+#if OPENTHREAD_ENABLE_SERVICE
+    otError UpdateRloc(ServiceTlv &aService);
+    otError UpdateRloc(ServerTlv &aService);
+#endif
 
     bool IsOnMeshPrefixConsistent(void);
     bool IsExternalRouteConsistent(void);
+#if OPENTHREAD_ENABLE_SERVICE
+    bool IsServiceConsistent(void);
+#endif
 
     uint16_t mOldRloc;
 };

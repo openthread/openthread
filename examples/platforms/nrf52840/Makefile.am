@@ -126,9 +126,7 @@ PLATFORM_SOURCES                                                                
     $(NULL)
 endif
 
-NORDICSEMI_SOURCES                                                                                         = \
-    @top_builddir@/third_party/NordicSemiconductor/hal/nrf_nvmc.c                                            \
-    @top_builddir@/third_party/NordicSemiconductor/device/system_nrf52840.c                                  \
+RADIO_DRIVER_SOURCES                                                                                       = \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154.c                       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_ack_pending_bit.c       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_critical_section.c      \
@@ -137,9 +135,24 @@ NORDICSEMI_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_pib.c                   \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_rx_buffer.c             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_common.c                \
-    @top_builddir@/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.c                                   \
-    @top_builddir@/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h                              \
+    $(NULL)
+
+NORDICSEMI_SOURCES                                                                                         = \
+    @top_builddir@/third_party/NordicSemiconductor/dependencies/app_util_platform.c                          \
     @top_builddir@/third_party/NordicSemiconductor/device/gcc_startup_nrf52840.S                             \
+    @top_builddir@/third_party/NordicSemiconductor/device/system_nrf52840.c                                  \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/common/nrf_drv_common.c                           \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.c                             \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/power/nrf_drv_power.c                             \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/systick/nrf_drv_systick.c                         \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/usbd/nrf_drv_usbd.c                               \
+    @top_builddir@/third_party/NordicSemiconductor/hal/nrf_nvmc.c                                            \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo.c                             \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd.c                                  \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.c                             \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.c                      \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.c            \
+    @top_builddir@/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.c                                   \
     $(NULL)
 
 libopenthread_nrf52840_a_CPPFLAGS                                                                          = \
@@ -149,19 +162,9 @@ libopenthread_nrf52840_a_CPPFLAGS                                               
 
 libopenthread_nrf52840_a_SOURCES                                                                           = \
     $(PLATFORM_SOURCES)                                                                                      \
+    $(RADIO_DRIVER_SOURCES)                                                                                  \
     $(NORDICSEMI_SOURCES)                                                                                    \
     $(SINGLEPHY_SOURCES)                                                                                     \
-    @top_builddir@/third_party/NordicSemiconductor/dependencies/app_util_platform.c                          \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/common/nrf_drv_common.c                           \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.c                             \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/power/nrf_drv_power.c                             \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/systick/nrf_drv_systick.c                         \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/usbd/nrf_drv_usbd.c                               \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo.c                             \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd.c                                  \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.c                             \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.c                      \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.c            \
     $(NULL)
 
 libopenthread_nrf52840_sdk_a_CPPFLAGS                                                                      = \
@@ -171,7 +174,7 @@ libopenthread_nrf52840_sdk_a_CPPFLAGS                                           
 
 libopenthread_nrf52840_sdk_a_SOURCES                                                                       = \
     $(PLATFORM_SOURCES)                                                                                      \
-    $(NORDICSEMI_SOURCES)                                                                                    \
+    $(RADIO_DRIVER_SOURCES)                                                                                  \
     $(SINGLEPHY_SOURCES)                                                                                     \
     $(NULL)
 
@@ -182,7 +185,7 @@ libopenthread_nrf52840_softdevice_sdk_a_CPPFLAGS                                
 
 libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                                            = \
     $(PLATFORM_SOURCES)                                                                                      \
-    $(NORDICSEMI_SOURCES)                                                                                    \
+    $(RADIO_DRIVER_SOURCES)                                                                                  \
     $(SOFTDEVICE_SOURCES)                                                                                    \
     $(NULL)
 
@@ -235,6 +238,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_rng.h                                              \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_uart.h                                             \
     $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.h                                    \
+    @top_builddir@/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_err.h                          \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gap.h                          \

@@ -62,8 +62,6 @@ void PlatformInit(int argc, char *argv[])
     HAL_Init();
     BSP_Init(BSP_INIT_BCC);
 
-    otPlatUartEnable();
-
     RAIL_Init_t railInitParams =
     {
         128, // maxPacketLength: UNUSED

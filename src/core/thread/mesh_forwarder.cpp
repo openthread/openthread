@@ -56,12 +56,12 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif),
+MeshForwarder::MeshForwarder(otInstance &aInstance):
+    InstanceLocator(aInstance),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
-    mDiscoverTimer(aThreadNetif.GetInstance(), &MeshForwarder::HandleDiscoverTimer, this),
-    mReassemblyTimer(aThreadNetif.GetInstance(), &MeshForwarder::HandleReassemblyTimer, this),
+    mDiscoverTimer(aInstance, &MeshForwarder::HandleDiscoverTimer, this),
+    mReassemblyTimer(aInstance, &MeshForwarder::HandleReassemblyTimer, this),
     mMessageNextOffset(0),
     mSendMessageFrameCounter(0),
     mSendMessage(NULL),
@@ -74,18 +74,18 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMeshDest(Mac::kShortAddrInvalid),
     mAddMeshHeader(false),
     mSendBusy(false),
-    mScheduleTransmissionTask(aThreadNetif.GetInstance(), ScheduleTransmissionTask, this),
+    mScheduleTransmissionTask(aInstance, ScheduleTransmissionTask, this),
     mEnabled(false),
     mScanChannels(0),
     mScanChannel(0),
     mRestoreChannel(0),
     mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
-    mDataPollManager(*this),
-    mSourceMatchController(*this)
+    mDataPollManager(aInstance),
+    mSourceMatchController(aInstance)
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
-    aThreadNetif.GetMac().RegisterReceiver(mMacReceiver);
+    GetNetif().GetMac().RegisterReceiver(mMacReceiver);
     mMacSource.mLength = 0;
     mMacDest.mLength = 0;
 
@@ -922,9 +922,16 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
             }
 
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_ENABLE_SERVICE
+            else if ((aloc16 >= Mle::kAloc16ServiceStart) && (aloc16 <= Mle::kAloc16ServiceEnd))
+            {
+                SuccessOrExit(error = GetDestinationRlocByServiceAloc(aloc16, mMeshDest));
+            }
+
+#endif
             else
             {
-                // TODO: support ALOC for Service, Commissioner, Neighbor Discovery Agent
+                // TODO: support ALOC for Commissioner, Neighbor Discovery Agent
                 ExitNow(error = OT_ERROR_DROP);
             }
         }
@@ -980,6 +987,69 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 exit:
     return error;
 }
+
+#if OPENTHREAD_FTD
+#if OPENTHREAD_ENABLE_SERVICE
+otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)
+{
+    otError error = OT_ERROR_NONE;
+    ThreadNetif &netif = GetNetif();
+    uint8_t serviceId = netif.GetMle().GetServiceIdFromAloc(aServiceAloc);
+    NetworkData::ServiceTlv *serviceTlv = netif.GetNetworkDataLeader().FindServiceById(serviceId);
+
+    if (serviceTlv != NULL)
+    {
+        NetworkData::NetworkDataTlv *cur = serviceTlv->GetSubTlvs();
+        NetworkData::NetworkDataTlv *end = serviceTlv->GetNext();
+        NetworkData::ServerTlv *server;
+        uint8_t bestCost = Mle::kMaxRouteCost;
+        uint8_t curCost = 0x00;
+        uint16_t bestDest = Mac::kShortAddrInvalid;
+
+        while (cur < end)
+        {
+            switch (cur->GetType())
+            {
+            case NetworkData::NetworkDataTlv::kTypeServer:
+                server = static_cast<NetworkData::ServerTlv *>(cur);
+                curCost = netif.GetMle().GetCost(server->GetServer16());
+
+                if ((bestDest == Mac::kShortAddrInvalid) || (curCost < bestCost))
+                {
+                    bestDest = server->GetServer16();
+                    bestCost = curCost;
+                }
+
+                break;
+
+            default:
+                break;
+            }
+
+            cur = cur->GetNext();
+        }
+
+        if (bestDest != Mac::kShortAddrInvalid)
+        {
+            aMeshDest = bestDest;
+        }
+        else
+        {
+            // ServiceTLV without ServerTLV? Can't forward packet anywhere.
+            ExitNow(error = OT_ERROR_DROP);
+        }
+    }
+    else
+    {
+        // Unknown service, can't forward
+        ExitNow(error = OT_ERROR_DROP);
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_FTD
 
 void MeshForwarder::SetRxOff(void)
 {
