@@ -521,7 +521,11 @@ class OpenThread(IThci):
         t_end = time.time() + durationInSeconds
         while time.time() < t_end:
             time.sleep(0.3)
-            if self.logThreadStatus == self.logStatus['paused']:
+
+            if self.logThreadStatus == self.logStatus['pauseReq']:
+                self.logThreadStatus = self.logStatus['paused']
+
+            if self.logThreadStatus != self.logStatus['running']:
                 continue
 
             try:
@@ -532,14 +536,13 @@ class OpenThread(IThci):
 
                     if "Join success" in line:
                         self.joinCommissionedStatus = self.joinStatus['succeed']
+                        break
                     elif "Join failed" in line:
                         self.joinCommissionedStatus = self.joinStatus['failed']
+                        break
 
             except Exception:
                 pass
-
-            if self.logThreadStatus == self.logStatus['pauseReq']:
-                self.logThreadStatus = self.logStatus['paused']
 
         self.logThreadStatus = self.logStatus['stop']
         return logs
