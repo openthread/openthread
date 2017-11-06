@@ -31,6 +31,7 @@ configure_OPTIONS              += --enable-border-router
 endif
 
 ifeq ($(CERT_LOG),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 configure_OPTIONS              += --enable-cert-log
 endif
 
