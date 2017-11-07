@@ -92,27 +92,27 @@ public:
     /**
      * This method adds a Joiner entry.
      *
-     * @param[in]  aExtAddress      A pointer to the Joiner's extended address or NULL for any Joiner.
-     * @param[in]  aPSKd            A pointer to the PSKd.
-     * @param[in]  aTimeout         A time after which a Joiner is automatically removed, in seconds.
+     * @param[in]  aEui64        A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aPSKd         A pointer to the PSKd.
+     * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
      * @retval OT_ERROR_NONE     Successfully added the Joiner.
      * @retval OT_ERROR_NO_BUFS  No buffers available to add the Joiner.
      *
      */
-    otError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout);
+    otError AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout);
 
     /**
      * This method removes a Joiner entry.
      *
-     * @param[in]  aExtAddress        A pointer to the Joiner's extended address or NULL for any Joiner.
-     * @param[in]  aDelay             The delay to remove Joiner (in seconds).
+     * @param[in]  aEui64          A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aDelay          The delay to remove Joiner (in seconds).
      *
      * @retval OT_ERROR_NONE       Successfully added the Joiner.
-     * @retval OT_ERROR_NOT_FOUND  The Joiner specified by @p aExtAddress was not found.
+     * @retval OT_ERROR_NOT_FOUND  The Joiner specified by @p aEui64 was not found.
      *
      */
-    otError RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay);
+    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay);
 
     /**
      * This method sets the Provisioning URL.
@@ -285,7 +285,7 @@ private:
 
     struct Joiner
     {
-        Mac::ExtAddress mExtAddress;
+        Mac::ExtAddress mJoinerId;
         uint32_t mExpirationTime;
         char mPsk[Dtls::kPskMaxLength + 1];
         bool mValid : 1;

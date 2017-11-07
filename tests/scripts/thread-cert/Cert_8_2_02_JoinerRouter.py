@@ -71,15 +71,15 @@ class Cert_8_2_02_JoinerRouter(unittest.TestCase):
 
         self.nodes[COMMISSIONER].commissioner_start()
         time.sleep(5)
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER_ROUTER].get_hashmacaddr(), 'openthread')
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_hashmacaddr(), 'openthread2')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER_ROUTER].get_eui64(), 'OPENTHREAD')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'OPENTHREAD2')
         time.sleep(5)
 
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_hashmacaddr())
+        self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_joiner_id())
         self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
 
         self.nodes[JOINER_ROUTER].interface_up()
-        self.nodes[JOINER_ROUTER].joiner_start('openthread')
+        self.nodes[JOINER_ROUTER].joiner_start('OPENTHREAD')
         time.sleep(10)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
 
@@ -89,11 +89,11 @@ class Cert_8_2_02_JoinerRouter(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_state(), 'router')
 
-        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_hashmacaddr())
+        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_joiner_id())
         self.nodes[JOINER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER].interface_up()
-        self.nodes[JOINER].joiner_start('2daerhtnepo')
+        self.nodes[JOINER].joiner_start('2DAERHTNEPO')
         time.sleep(10)
         self.assertNotEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
 

@@ -107,8 +107,11 @@ class Node:
     def get_addr64(self):
         return self.interface.get_addr64()
 
-    def get_hashmacaddr(self):
-        return self.interface.get_hashmacaddr()
+    def get_eui64(self):
+        return self.interface.get_eui64()
+
+    def get_joiner_id(self):
+        return self.interface.get_joiner_id()
 
     def get_channel(self):
         return self.interface.get_channel()

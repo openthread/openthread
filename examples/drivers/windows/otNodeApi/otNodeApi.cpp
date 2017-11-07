@@ -1146,23 +1146,6 @@ OTNODEAPI uint16_t OTCALL otNodeGetAddr16(otNode* aNode)
     return result;
 }
 
-OTNODEAPI const char* OTCALL otNodeGetHashMacAddress(otNode* aNode)
-{
-    otLogFuncEntryMsg("[%d]", aNode->mId);
-    otExtAddress aHashMacAddress = {};
-    otLinkGetJoinerId(aNode->mInstance, &aHashMacAddress);
-    char* str = (char*)malloc(18);
-    if (str != nullptr)
-    {
-        aNode->mMemoryToFree.push_back(str);
-        for (int i = 0; i < 8; i++)
-            sprintf_s(str + i * 2, 18 - (2 * i), "%02x", aHashMacAddress.m8[i]);
-        printf("%d: hashmacaddr\r\n%s\r\n", aNode->mId, str);
-    }
-    otLogFuncExit();
-    return str;
-}
-
 OTNODEAPI const char* OTCALL otNodeGetAddr64(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
@@ -1176,6 +1159,40 @@ OTNODEAPI const char* OTCALL otNodeGetAddr64(otNode* aNode)
         printf("%d: extaddr\r\n%s\r\n", aNode->mId, str);
     }
     otFreeMemory(extAddr);
+    otLogFuncExit();
+    return str;
+}
+
+OTNODEAPI const char* OTCALL otNodeGetEui64(otNode* aNode)
+{
+    otLogFuncEntryMsg("[%d]", aNode->mId);
+    otExtAddress aEui64 = {};
+    otLinkGetFactoryAssignedIeeeEui64(aNode->mInstance, &aEui64);
+    char* str = (char*)malloc(18);
+    if (str != nullptr)
+    {
+        aNode->mMemoryToFree.push_back(str);
+        for (int i = 0; i < 8; i++)
+            sprintf_s(str + i * 2, 18 - (2 * i), "%02x", aEui64.m8[i]);
+        printf("%d: eui64\r\n%s\r\n", aNode->mId, str);
+    }
+    otLogFuncExit();
+    return str;
+}
+
+OTNODEAPI const char* OTCALL otNodeGetJoinerId(otNode* aNode)
+{
+    otLogFuncEntryMsg("[%d]", aNode->mId);
+    otExtAddress aJoinerId = {};
+    otJoinerGetId(aNode->mInstance, &aJoinerId);
+    char* str = (char*)malloc(18);
+    if (str != nullptr)
+    {
+        aNode->mMemoryToFree.push_back(str);
+        for (int i = 0; i < 8; i++)
+            sprintf_s(str + i * 2, 18 - (2 * i), "%02x", aJoinerId.m8[i]);
+        printf("%d: joinerid\r\n%s\r\n", aNode->mId, str);
+    }
     otLogFuncExit();
     return str;
 }

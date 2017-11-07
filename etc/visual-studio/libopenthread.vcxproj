@@ -104,9 +104,10 @@
     <ClCompile Include="..\..\src\core\meshcop\joiner.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\meshcop.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\meshcop_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\timestamp.cpp" />
-    <ClCompile Include="..\..\src\core\meshcop\meshcop_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp" />
     <ClCompile Include="..\..\src\core\net\icmp6.cpp" />
@@ -181,9 +182,10 @@
     <ClInclude Include="..\..\src\core\meshcop\joiner.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\joiner_router.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\leader.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\meshcop.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\meshcop_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\timestamp.hpp" />
-    <ClInclude Include="..\..\src\core\meshcop\tlvs.hpp" />
     <ClInclude Include="..\..\src\core\net\icmp6.hpp" />
     <ClInclude Include="..\..\src\core\net\ip6.hpp" />
     <ClInclude Include="..\..\src\core\net\ip6_address.hpp" />

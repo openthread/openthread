@@ -211,7 +211,7 @@ public:
         uint64_t get()
         {
             uint64_t addr;
-            otLinkGetJoinerId(DeviceInstance, (otExtAddress*)&addr);
+            otJoinerGetId(DeviceInstance, (otExtAddress*)&addr);
             return addr;
         }
     }
