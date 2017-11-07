@@ -125,14 +125,14 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         # Wait for ROUTER2 to configure slaac address.
         time.sleep(25)
 
-        self.nodes[MED1].add_ipaddr('2001:2:0:1::1')
-        self.nodes[SED1].add_ipaddr('2001:2:0:1::1')
+        self.nodes[MED1].add_ipaddr('2001:2:0:1::1234')
+        self.nodes[SED1].add_ipaddr('2001:2:0:1::1234')
         # Wait for MED1/SED1 to configure slaac address.
         time.sleep(10)
         self.sniffer.get_messages_sent_by(DUT_LEADER)
 
         # 4
-        self.assertTrue(self.nodes[MED3].ping('2001:2:0:1::1'))
+        self.assertTrue(self.nodes[MED3].ping('2001:2:0:1::1234'))
 
         # Verify DUT_LEADER sent an Address Query Request to the Realm local address.
         dut_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
