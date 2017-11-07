@@ -146,9 +146,14 @@ OTNODEAPI uint16_t OTCALL otNodeGetAddr16(otNode* aNode);
 OTNODEAPI const char* OTCALL otNodeGetAddr64(otNode* aNode);
 
 /**
- * Gets the node's hash mac address
+ * Gets the node's eui-64 address
  */
-OTNODEAPI const char* OTCALL otNodeGetHashMacAddress(otNode* aNode);
+OTNODEAPI const char* OTCALL otNodeGetEui64(otNode* aNode);
+
+/**
+ * Gets the node's joiner id
+ */
+OTNODEAPI const char* OTCALL otNodeGetJoinerId(otNode* aNode);
 
 /**
  * Sets the channel for the node

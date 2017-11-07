@@ -1548,18 +1548,6 @@ otLinkGetFactoryAssignedIeeeEui64(
 }
 
 OTAPI 
-void 
-OTCALL
-otLinkGetJoinerId(
-    _In_ otInstance *aInstance, 
-    _Out_ otExtAddress *aHashMacAddress
-    )
-{
-    if (aInstance == nullptr) return;
-    (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_HASH_MAC_ADDRESS, aHashMacAddress);
-}
-
-OTAPI 
 otError 
 OTCALL
 otThreadGetLeaderRloc(
@@ -3917,6 +3905,18 @@ otJoinerStop(
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_STOP));
+}
+
+OTAPI 
+otError 
+OTCALL
+otJoinerGetId(
+    _In_ otInstance *aInstance, 
+    _Out_ otExtAddress *aJoinerId
+    )
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_ID, aJoinerId));
 }
 
 OTAPI

@@ -52,14 +52,14 @@ bool SteeringDataTlv::IsCleared(void) const
     return rval;
 }
 
-void SteeringDataTlv::ComputeBloomFilter(const otExtAddress *aExtAddress)
+void SteeringDataTlv::ComputeBloomFilter(const otExtAddress &aJoinerId)
 {
     Crc16 ccitt(Crc16::kCcitt);
     Crc16 ansi(Crc16::kAnsi);
 
     for (size_t j = 0; j < sizeof(otExtAddress); j++)
     {
-        uint8_t byte = aExtAddress->m8[j];
+        uint8_t byte = aJoinerId.m8[j];
         ccitt.Update(byte);
         ansi.Update(byte);
     }

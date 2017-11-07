@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,47 +28,27 @@
 
 /**
  * @file
- *   This file includes definitions for MeshCoP.
- *
+ *   This file implements common MeshCoP utility functions.
  */
 
-#ifndef MESHCOP_HPP_
-#define MESHCOP_HPP_
-
-#include "openthread-core-config.h"
-
-#include "coap/coap.hpp"
-#include "common/message.hpp"
+#include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
-enum
+void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 {
-    kMeshCoPMessagePriority = Message::kPriorityHigh, // The priority for MeshCoP message
-};
+    Crypto::Sha256 sha256;
+    uint8_t hash[Crypto::Sha256::kHashSize];
 
-/**
- * This function create Message for MeshCoP
- *
- */
-inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHeader)
-{
-    return aCoap.NewMessage(aHeader, kMeshCoPMessagePriority);
+    sha256.Start();
+    sha256.Update(aEui64.m8, sizeof(aEui64));
+    sha256.Finish(hash);
+
+    memcpy(&aJoinerId, hash, sizeof(aJoinerId));
+    aJoinerId.SetLocal(true);
 }
 
-/**
- * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.
- *
- * @param[in]   aEui64     The factory-assigned IEEE EUI-64.
- * @param[out]  aJoinerId  The Joiner ID.
- *
- */
-void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
-
 }  // namespace MeshCoP
-
 }  // namespace ot
-
-#endif  // MESHCOP_HPP_

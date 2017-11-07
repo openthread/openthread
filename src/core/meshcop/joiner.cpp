@@ -76,13 +76,19 @@ Joiner::Joiner(otInstance &aInstance):
     GetNetif().GetCoap().AddResource(mJoinerEntrust);
 }
 
+void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
+{
+    otPlatRadioGetIeeeEui64(&GetInstance(), aJoinerId.m8);
+    ComputeJoinerId(aJoinerId, aJoinerId);
+}
+
 otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
                       const char *aVendorName, const char *aVendorModel, const char *aVendorSwVersion,
                       const char *aVendorData, otJoinerCallback aCallback, void *aContext)
 {
     ThreadNetif &netif = GetNetif();
     otError error;
-    Mac::ExtAddress extAddress;
+    Mac::ExtAddress joinerId;
     Crc16 ccitt(Crc16::kCcitt);
     Crc16 ansi(Crc16::kAnsi);
 
@@ -93,14 +99,14 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
 
     // use extended address based on factory-assigned IEEE EUI-64
-    netif.GetMac().GetHashMacAddress(&extAddress);
-    netif.GetMac().SetExtAddress(extAddress);
+    GetJoinerId(joinerId);
+    netif.GetMac().SetExtAddress(joinerId);
     netif.GetMle().UpdateLinkLocalAddress();
 
-    for (size_t i = 0; i < sizeof(extAddress); i++)
+    for (size_t i = 0; i < sizeof(joinerId); i++)
     {
-        ccitt.Update(extAddress.m8[i]);
-        ansi.Update(extAddress.m8[i]);
+        ccitt.Update(joinerId.m8[i]);
+        ansi.Update(joinerId.m8[i]);
     }
 
     mCcitt = ccitt.Get();

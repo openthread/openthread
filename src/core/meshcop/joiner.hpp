@@ -96,8 +96,6 @@ public:
     /**
      * This function returns the Joiner State.
      *
-     * @param[in]  aInstance  A pointer to an OpenThread instance.
-     *
      * @retval OT_JOINER_STATE_IDLE
      * @retval OT_JOINER_STATE_DISCOVER
      * @retval OT_JOINER_STATE_CONNECT
@@ -107,6 +105,14 @@ public:
      *
      */
     otJoinerState GetState(void) const;
+
+    /**
+     * This method retrieves the Joiner ID.
+     *
+     * @param[out]  aJoinerId  The Joiner ID.
+     *
+     */
+    void GetJoinerId(Mac::ExtAddress &aJoinerId) const;
 
 private:
     enum

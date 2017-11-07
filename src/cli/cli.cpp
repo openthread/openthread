@@ -136,7 +136,6 @@ const struct Command Interpreter::sCommands[] =
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
     { "factoryreset", &Interpreter::ProcessFactoryReset },
-    { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
 #ifdef OTDLL
     { "instance", &Interpreter::ProcessInstance },
@@ -148,6 +147,7 @@ const struct Command Interpreter::sCommands[] =
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
+    { "joinerid", &Interpreter::ProcessJoinerId },
 #endif
 #if OPENTHREAD_FTD
     { "joinerport", &Interpreter::ProcessJoinerPort },
@@ -982,22 +982,6 @@ void Interpreter::ProcessFactoryReset(int argc, char *argv[])
     otInstanceFactoryReset(mInstance);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
-}
-
-void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
-{
-    otError error = OT_ERROR_NONE;
-    otExtAddress hashMacAddress;
-
-    VerifyOrExit(argc == 0, error = OT_ERROR_PARSE);
-
-    otLinkGetJoinerId(mInstance, &hashMacAddress);
-    OutputBytes(hashMacAddress.m8, OT_EXT_ADDRESS_SIZE);
-    mServer->OutputFormat("\r\n");
-
-exit:
-    OT_UNUSED_VARIABLE(argv);
-    AppendResult(error);
 }
 
 void Interpreter::ProcessIfconfig(int argc, char *argv[])
@@ -2981,6 +2965,22 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
     }
 
 exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessJoinerId(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+    otExtAddress joinerId;
+
+    VerifyOrExit(argc == 0, error = OT_ERROR_PARSE);
+
+    otJoinerGetId(mInstance, &joinerId);
+    OutputBytes(joinerId.m8, sizeof(joinerId));
+    mServer->OutputFormat("\r\n");
+
+exit:
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 

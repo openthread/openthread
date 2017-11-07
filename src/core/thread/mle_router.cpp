@@ -2663,7 +2663,7 @@ otError MleRouter::SetSteeringData(const otExtAddress *aExtAddress)
     else
     {
         // Set bloom filter with the extended address passed in
-        mSteeringData.ComputeBloomFilter(aExtAddress);
+        mSteeringData.ComputeBloomFilter(*aExtAddress);
     }
 
     return error;
