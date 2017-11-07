@@ -62,6 +62,8 @@ PANID = 0xface
 MAX_NEIGHBOR_AGE = 100
 INFINITE_COST_TIMEOUT = 90
 
+MAX_ADVERTISEMENT_INTERVAL = 32
+
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
         network_data.TlvType.HAS_ROUTE: network_data.HasRouteFactory(

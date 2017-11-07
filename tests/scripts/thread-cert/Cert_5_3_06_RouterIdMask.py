@@ -100,22 +100,24 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
 
         # 3 & 4
         # Verify the cost from DUT_LEADER to ROUTER2 goes to infinity in 12 mins.
-        flag_in_id_set = False
         routing_cost = 1
         for i in range(0, 24):
             time.sleep(30)
+            print("%ss" %((i + 1) * 30))
+
             leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
             msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT, False)
             if msg == None:
                 continue
 
-            flag_in_id_set = command.check_id_set(msg, router2_id)
-            routing_cost = command.get_routing_cost(msg, router2_id)
-            if not flag_in_id_set or (flag_in_id_set and routing_cost == 0):
-                break
-        self.assertTrue(flag_in_id_set and routing_cost == 0)
+            self.assertTrue(command.check_id_set(msg, router2_id))
 
-        time.sleep(config.INFINITE_COST_TIMEOUT + 32)
+            routing_cost = command.get_routing_cost(msg, router2_id)
+            if routing_cost == 0:
+                break
+        self.assertTrue(routing_cost == 0)
+
+        time.sleep(config.INFINITE_COST_TIMEOUT + config.MAX_ADVERTISEMENT_INTERVAL)
         leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
         self.assertFalse(command.check_id_set(msg, router2_id))
@@ -127,8 +129,8 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         self.nodes[ROUTER2].start()
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
-        time.sleep(64)
 
+        time.sleep(config.MAX_ADVERTISEMENT_INTERVAL)
         leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
         leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
 
@@ -139,12 +141,12 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         router1_id = self.nodes[ROUTER1].get_router_id()
         router2_id = self.nodes[ROUTER2].get_router_id()
 
-        time.sleep(config.MAX_NEIGHBOR_AGE + 32)
+        time.sleep(config.MAX_NEIGHBOR_AGE + config.MAX_ADVERTISEMENT_INTERVAL)
         leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
         self.assertEqual(command.get_routing_cost(msg, router1_id), 0)
 
-        time.sleep(config.INFINITE_COST_TIMEOUT + 32)
+        time.sleep(config.INFINITE_COST_TIMEOUT + config.MAX_ADVERTISEMENT_INTERVAL)
         leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
         self.assertFalse(command.check_id_set(msg, router1_id))

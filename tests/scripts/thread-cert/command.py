@@ -81,7 +81,7 @@ def check_icmp_path(sniffer, path, nodes, icmp_type = ipv6.ICMP_ECHO_REQUEST):
     return False
 
 def check_id_set(command_msg, router_id):
-    """Check the command_msg's Route64 tlv to verify the id set include router.
+    """Check the command_msg's Route64 tlv to verify router_id is an active router.
     """
     tlv = command_msg.assertMleMessageContainsTlv(mle.Route64)
     return ((tlv.router_id_mask >> (63 - router_id)) & 1)
@@ -101,6 +101,8 @@ def get_routing_cost(command_msg, router_id):
         if router_id_mask_str[i] == '1':
             routing_entry_pos += 1
 
-    assert router_id_mask_str[router_id - prefix_len] == '1', "Error: The router isn't in the topology"
-
+    assert router_id_mask_str[router_id - prefix_len] == '1', "Error: The router isn't in the topology. \n" \
+            + "route64 tlv is: %s. \nrouter_id is: %s. \nrouting_entry_pos is: %s. \nrouter_id_mask_str is: %s." \
+            %(tlv, router_id, routing_entry_pos, router_id_mask_str)
+ 
     return tlv.link_quality_and_route_data[routing_entry_pos].route
