@@ -51,6 +51,8 @@
 
 #if (USB_CDC_AS_SERIAL_TRANSPORT == 0)
 
+bool sUartEnabled = false;
+
 /**
  *  UART TX buffer variables.
  */
@@ -147,6 +149,23 @@ void nrf5UartProcess(void)
 
 void nrf5UartInit(void)
 {
+    // Intentionally empty.
+}
+
+void nrf5UartDeinit(void)
+{
+    if (sUartEnabled)
+    {
+        otPlatUartDisable();
+    }
+}
+
+otError otPlatUartEnable(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(sUartEnabled == false, error = OT_ERROR_ALREADY);
+
     // Set up TX and RX pins.
     nrf_gpio_pin_set(UART_PIN_TX);
     nrf_gpio_cfg_output(UART_PIN_TX);
@@ -182,10 +201,28 @@ void nrf5UartInit(void)
     NVIC_SetPriority(UART_IRQN, UART_IRQ_PRIORITY);
     NVIC_ClearPendingIRQ(UART_IRQN);
     NVIC_EnableIRQ(UART_IRQN);
+
+    // Start HFCLK
+    nrf_drv_clock_hfclk_request(NULL);
+
+    while (!nrf_drv_clock_hfclk_is_running()) {}
+
+    // Enable UART instance, and start RX on it.
+    nrf_uart_enable(UART_INSTANCE);
+    nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STARTRX);
+
+    sUartEnabled = true;
+
+exit:
+    return error;
 }
 
-void nrf5UartDeinit(void)
+otError otPlatUartDisable(void)
 {
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(sUartEnabled == true, error = OT_ERROR_ALREADY);
+
     // Disable NVIC interrupt.
     NVIC_DisableIRQ(UART_IRQN);
     NVIC_ClearPendingIRQ(UART_IRQN);
@@ -196,31 +233,17 @@ void nrf5UartDeinit(void)
 
     // Disable interrupts for RX.
     nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_RXDRDY | NRF_UART_INT_MASK_ERROR);
-}
 
-otError otPlatUartEnable(void)
-{
-    // Start HFCLK
-    nrf_drv_clock_hfclk_request(NULL);
-
-    while (!nrf_drv_clock_hfclk_is_running()) {}
-
-    // Enable UART instance, and start RX on it.
-    nrf_uart_enable(UART_INSTANCE);
-    nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STARTRX);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatUartDisable(void)
-{
     // Disable UART instance.
     nrf_uart_disable(UART_INSTANCE);
 
     // Release HF clock.
     nrf_drv_clock_hfclk_release();
 
-    return OT_ERROR_NONE;
+    sUartEnabled = false;
+
+exit:
+    return error;
 }
 
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
