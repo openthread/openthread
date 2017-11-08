@@ -77,7 +77,7 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[MED1].enable_whitelist()
 
         self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('rsn')
+        self.nodes[SED1].set_mode('s')
         self.nodes[SED1].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[SED1].enable_whitelist()
 
@@ -103,16 +103,16 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[DUT_LEADER].set_state('leader')
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
-        for DEV in range(ROUTER1, MED3 + 1):
-            self.nodes[DEV].start()
+        for i in range(ROUTER1, MED3 + 1):
+            self.nodes[i].start()
 
         time.sleep(5)
 
-        for ROUTER in [ROUTER1, ROUTER2]:
-            self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
+        for i in [ROUTER1, ROUTER2]:
+            self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        for ED in MTDS:
-            self.assertEqual(self.nodes[ED].get_state(), 'child')
+        for i in MTDS:
+            self.assertEqual(self.nodes[i].get_state(), 'child')
 
         # 2
         leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
@@ -122,17 +122,20 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         # 3
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER2].register_netdata()
-        # Wait for ROUTER2 to configure slaac address.
+
+        # Wait for SED1 to retrieve the updated network data.
         time.sleep(25)
 
         self.nodes[MED1].add_ipaddr('2001:2:0:1::1234')
         self.nodes[SED1].add_ipaddr('2001:2:0:1::1234')
-        # Wait for MED1/SED1 to configure slaac address.
-        time.sleep(10)
-        self.sniffer.get_messages_sent_by(DUT_LEADER)
+
+        time.sleep(5)
 
         # 4
-        self.assertTrue(self.nodes[MED3].ping('2001:2:0:1::1234'))
+        # Flush the message queue to avoid possible impact on follow-up verification.
+        self.sniffer.get_messages_sent_by(DUT_LEADER)
+
+        self.nodes[MED3].ping('2001:2:0:1::1234')
 
         # Verify DUT_LEADER sent an Address Query Request to the Realm local address.
         dut_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)

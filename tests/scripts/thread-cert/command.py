@@ -12,7 +12,7 @@ def check_address_query(command_msg, source_node, destination_address):
     source_rloc = source_node.get_ip6_address(config.ADDRESS_TYPE.RLOC)
     assert ipv6.ip_address(source_rloc) == command_msg.ipv6_packet.ipv6_header.source_address, \
             "Error: The IPv6 source address is not the RLOC of the originator. The source node's rloc is: " \
-            + str(ipv6.ip_address(source_rloc)) + ", but the source_rloc in command msg is: " \
+            + str(ipv6.ip_address(source_rloc)) + ", but the source_address in command msg is: " \
             + str(command_msg.ipv6_packet.ipv6_header.source_address)
 
     assert ipv6.ip_address(destination_address.decode('utf-8')) == command_msg.ipv6_packet.ipv6_header.destination_address, "Error: The IPv6 destination address is not expected."
@@ -39,9 +39,15 @@ def check_address_error_notification(command_msg, source_node, destination_addre
     command_msg.assertCoapMessageContainsTlv(network_layer.MlEid)
 
     source_rloc = source_node.get_ip6_address(config.ADDRESS_TYPE.RLOC)
-    assert ipv6.ip_address(source_rloc) == command_msg.ipv6_packet.ipv6_header.source_address, "Error: The IPv6 source address is not the RLOC of the originator."
+    assert ipv6.ip_address(source_rloc) == command_msg.ipv6_packet.ipv6_header.source_address, \
+            "Error: The IPv6 source address is not the RLOC of the originator. The source node's rloc is: " \
+            + str(ipv6.ip_address(source_rloc)) + ", but the source_address in command msg is: " \
+            + str(command_msg.ipv6_packet.ipv6_header.source_address)
 
-    assert ipv6.ip_address(destination_address.decode('utf-8')) == command_msg.ipv6_packet.ipv6_header.destination_address, "Error: The IPv6 destination address is not expected."
+    assert ipv6.ip_address(destination_address.decode('utf-8')) == command_msg.ipv6_packet.ipv6_header.destination_address, \
+            "Error: The IPv6 destination address is not expected. The destination node's rloc is: " \
+            + str(ipv6.ip_address(destination_address.decode('utf-8'))) + ", but the destination_address in command msg is: " \
+            + str(command_msg.ipv6_packet.ipv6_header.destination_address)
 
 def check_address_release(command_msg, destination_node):
     """Verify the message is a properly formatted address release destined to the given node.
