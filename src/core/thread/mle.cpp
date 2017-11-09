@@ -93,6 +93,13 @@ Mle::Mle(Instance &aInstance) :
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     mPreviousParentRloc(Mac::kShortAddrInvalid),
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+    mParentSearchIsInBackoff(false),
+    mParentSearchBackoffWasCanceled(false),
+    mParentSearchRecentlyDetached(false),
+    mParentSearchBackoffCancelTime(0),
+    mParentSearchTimer(aInstance, &Mle::HandleParentSearchTimer, this),
+#endif
     mAnnounceChannel(OT_RADIO_CHANNEL_MIN),
     mPreviousChannel(0),
     mPreviousPanId(Mac::kPanIdBroadcast)
@@ -193,6 +200,10 @@ Mle::Mle(Instance &aInstance) :
 
     mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
     GetNetif().RegisterCallback(mNetifCallback);
+
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+    StartParentSearchTimer();
+#endif
 }
 
 otError Mle::Enable(void)
@@ -516,6 +527,10 @@ otError Mle::BecomeDetached(void)
         netif.GetPendingDataset().HandleDetach();
     }
 
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+    mParentSearchRecentlyDetached = true;
+#endif
+
     SetStateDetached();
     SetRloc16(Mac::kShortAddrInvalid);
     BecomeChild(kAttachAny);
@@ -655,6 +670,10 @@ otError Mle::SetStateChild(uint16_t aRloc16)
         mPreviousPanId = Mac::kPanIdBroadcast;
         netif.GetAnnounceBeginServer().SendAnnounce(1 << mPreviousChannel);
     }
+
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+    UpdateParentSearchState();
+#endif
 
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     InformPreviousParent();
@@ -3433,6 +3452,115 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+void Mle::HandleParentSearchTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<Mle>().HandleParentSearchTimer();
+}
+
+void Mle::HandleParentSearchTimer(void)
+{
+    int8_t parentRss;
+
+    otLogInfoMle(GetInstance(), "PeriodicParentSearch: %s interval passed",
+                 mParentSearchIsInBackoff ? "Backoff" : "Check");
+
+    if (mParentSearchBackoffWasCanceled)
+    {
+        // Backoff can be canceled if the device switches to a new parent.
+        // from `UpdateParentSearchState()`. We want to limit this to happen
+        // only once within a backoff interval.
+
+        if (TimerMilli::GetNow() - mParentSearchBackoffCancelTime >= kParentSearchBackoffInterval)
+        {
+            mParentSearchBackoffWasCanceled = false;
+            otLogInfoMle(GetInstance(), "PeriodicParentSearch: Backoff cancellation is allowed on parent switch");
+        }
+    }
+
+    mParentSearchIsInBackoff = false;
+
+    VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD);
+
+    parentRss = GetParent()->GetLinkInfo().GetAverageRss();
+    otLogInfoMle(GetInstance(), "PeriodicParentSearch: Parent RSS %d", parentRss);
+    VerifyOrExit(parentRss != OT_RADIO_RSSI_INVALID);
+
+    if (parentRss < kParentSearchRssThreadhold)
+    {
+        otLogInfoMle(GetInstance(), "PeriodicParentSearch: Parent RSS less than %d, searching for new parents",
+                     kParentSearchRssThreadhold);
+        mParentSearchIsInBackoff = true;
+        BecomeChild(kAttachAny);
+    }
+
+exit:
+    StartParentSearchTimer();
+}
+
+void Mle::StartParentSearchTimer(void)
+{
+    uint32_t interval;
+
+    interval = (otPlatRandomGet() % kParentSearchJitterInterval);
+
+    if (mParentSearchIsInBackoff)
+    {
+        interval += kParentSearchBackoffInterval;
+    }
+    else
+    {
+        interval += kParentSearchCheckInterval;
+    }
+
+    mParentSearchTimer.Start(interval);
+
+    otLogInfoMle(GetInstance(), "PeriodicParentSearch: (Re)starting timer for %s interval",
+                 mParentSearchIsInBackoff ? "backoff" : "check");
+
+}
+
+void Mle::UpdateParentSearchState(void)
+{
+#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+
+    // If we are in middle of backoff and backoff was not canceled
+    // recently and we recently detached from a previous parent,
+    // then we check if the new parent is different from the previous
+    // one, and if so, we cancel the backoff mode and also remember
+    // the backoff cancel time. This way the canceling of backoff
+    // is allowed only once within a backoff window.
+    //
+    // The reason behind the canceling of the backoff is to handle
+    // the scenario where a previous parent is not available for a
+    // short duration (e.g., it is going through a software update)
+    // and the child switches to a less desirable parent. With this
+    // model the child will check for other parents sooner and have
+    // the chance to switch back to the original (and possibly
+    // preferred) parent more quickly.
+
+    if (mParentSearchIsInBackoff && !mParentSearchBackoffWasCanceled && mParentSearchRecentlyDetached)
+    {
+        if ((mPreviousParentRloc != Mac::kShortAddrInvalid)  && (mPreviousParentRloc != mParent.GetRloc16()))
+        {
+            mParentSearchIsInBackoff = false;
+            mParentSearchBackoffWasCanceled = true;
+            mParentSearchBackoffCancelTime = TimerMilli::GetNow();
+            otLogInfoMle(GetInstance(), "PeriodicParentSearch: Canceling backoff on switching to a new parent");
+        }
+    }
+
+#endif // OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+
+    mParentSearchRecentlyDetached = false;
+
+    if (!mParentSearchIsInBackoff)
+    {
+        StartParentSearchTimer();
+    }
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const
 {
