@@ -163,6 +163,16 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_KW41Z
 
+if OPENTHREAD_EXAMPLES_SAMR21
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/samr21/libopenthread-samr21.a     \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/third_party/microchip/include/samr21x18a.ld         \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_SAMR21
+
 if OPENTHREAD_ENABLE_NCP_FTD
 bin_PROGRAMS                                                          += \
     ot-ncp-ftd                                                           \
