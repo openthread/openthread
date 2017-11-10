@@ -3075,9 +3075,15 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint
                                     uint16_t aDelay)
 {
     otError error = OT_ERROR_NONE;
-    Message *message;
+    Message *message = NULL;
     Neighbor *neighbor;
     bool stableOnly;
+
+    if (mRetrieveNewNetworkData)
+    {
+        otLogInfoMle(GetInstance(), "Suppressing Data Response - waiting for new network data");
+        ExitNow();
+    }
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
