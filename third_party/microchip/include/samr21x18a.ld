@@ -53,9 +53,6 @@ MEMORY
   ram      (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00008000
 }
 
-/* The stack size used by the application. NOTE: you need to adjust according to your application. */
-STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE : DEFINED(__stack_size__) ? __stack_size__ : 0x2000;
-
 /* Section Definitions */
 SECTIONS
 {
@@ -151,14 +148,15 @@ SECTIONS
     } > ram
 
     /* stack section */
-    .stack (NOLOAD):
+    .stack_dummy (NOLOAD):
     {
-        . = ALIGN(8);
-        _sstack = .;
-        . = . + STACK_SIZE;
-        . = ALIGN(8);
-        _estack = .;
+        KEEP(*(.stack*))
     } > ram
+
+    _sstack = _ebss;
+    _estack = ORIGIN(ram) + LENGTH(ram);
+
+    ASSERT(_sstack < _estack, "region RAM overflowed with stack")
 
     . = ALIGN(4);
     _end = . ;
