@@ -104,6 +104,9 @@ class Node:
     def get_addr16(self):
         return self.interface.get_addr16()
 
+    def get_router_id(self):
+        return self.interface.get_router_id()
+
     def get_addr64(self):
         return self.interface.get_addr64()
 
