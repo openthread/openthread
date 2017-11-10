@@ -84,6 +84,7 @@ otError UdpExample::ProcessBind(int argc, char *argv[])
     SuccessOrExit(error);
 
     sockaddr.mPort = static_cast<uint16_t>(value);
+    sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
 
     error = otUdpBind(&mSocket, &sockaddr);
 
@@ -108,6 +109,7 @@ otError UdpExample::ProcessConnect(int argc, char *argv[])
     SuccessOrExit(error);
 
     sockaddr.mPort = static_cast<uint16_t>(value);
+    sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
 
     error = otUdpConnect(&mSocket, &sockaddr);
 
@@ -153,6 +155,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
         SuccessOrExit(error);
 
         messageInfo.mPeerPort = static_cast<uint16_t>(value);
+        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
     }
 
     message = otUdpNewMessage(mInterpreter.mInstance, true);
