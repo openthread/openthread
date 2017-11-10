@@ -871,6 +871,9 @@ typedef struct otServiceConfig
      */
     uint8_t mServiceData[kMaxServiceDataSize];
 
+    /**
+     * The Server configuration.
+     */
     otServerConfig mServerConfig;
 } otServiceConfig;
 
