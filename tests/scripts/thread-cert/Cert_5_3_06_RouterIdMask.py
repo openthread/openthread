@@ -92,13 +92,17 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
         router2_id = self.nodes[ROUTER2].get_router_id()
 
-        time.sleep(64)
+        # Wait DUT_LEADER to establish routing to ROUTER2 via ROUTER1's MLE advertisement.
+        time.sleep(config.MAX_ADVERTISEMENT_INTERVAL)
 
         # 2
         self.nodes[ROUTER2].reset()
         self._setUpRouter2()
 
         # 3 & 4
+        # Flush the message queue to avoid possible impact on follow-up verification.
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+
         # Verify the cost from DUT_LEADER to ROUTER2 goes to infinity in 12 mins.
         routing_cost = 1
         for i in range(0, 24):
