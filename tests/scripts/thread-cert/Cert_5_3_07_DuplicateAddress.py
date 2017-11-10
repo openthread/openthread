@@ -123,9 +123,6 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER2].register_netdata()
 
-        # Wait for SED1 to retrieve the updated network data.
-        time.sleep(25)
-
         self.nodes[MED1].add_ipaddr('2001:2:0:1::1234')
         self.nodes[SED1].add_ipaddr('2001:2:0:1::1234')
 
