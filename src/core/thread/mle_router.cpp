@@ -1935,16 +1935,18 @@ void MleRouter::HandleStateUpdateTimer(void)
 
 #else
 
-            if (age >= TimerMilli::SecToMsec(kMaxNeighborAge) &&
-                age < TimerMilli::SecToMsec(kMaxNeighborAge) + kStateUpdatePeriod)
+            if (age >= TimerMilli::SecToMsec(kMaxNeighborAge))
             {
-                otLogInfoMle(GetInstance(), "Router timeout expired");
-                SendLinkRequest(&router);
-            }
-            else if (age >= TimerMilli::SecToMsec(kMaxNeighborAge) + kMaxLinkRequestTimeout)
-            {
-                RemoveNeighbor(router);
-                continue;
+                if (age < TimerMilli::SecToMsec(kMaxNeighborAge) + kMaxTransmissionCount * kUnicastRetransmissionDelay)
+                {
+                    otLogInfoMle(GetInstance(), "Router timeout expired");
+                    SendLinkRequest(&router);
+                }
+                else
+                {
+                    RemoveNeighbor(router);
+                    continue;
+                }
             }
 
 #endif
