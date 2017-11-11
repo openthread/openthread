@@ -1089,7 +1089,7 @@ otError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Ad
 
     aIp6Addr.ToExtAddress(aMacAddr.mExtAddress);
 
-    if (memcmp(&aMacAddr.mExtAddress, netif.GetMac().GetExtAddress(), sizeof(aMacAddr.mExtAddress)) != 0)
+    if (!aIp6Addr.IsLinkLocal())
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
         aMacAddr.mShortAddress = netif.GetMac().GetShortAddress();
@@ -1108,17 +1108,6 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
         aMacAddr.mShortAddress = Mac::kShortAddrBroadcast;
-    }
-    else if (aIp6Addr.mFields.m16[0] == HostSwap16(0xfe80) &&
-             aIp6Addr.mFields.m16[1] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[2] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[3] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[4] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[5] == HostSwap16(0x00ff) &&
-             aIp6Addr.mFields.m16[6] == HostSwap16(0xfe00))
-    {
-        aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = HostSwap16(aIp6Addr.mFields.m16[7]);
     }
     else if (GetNetif().GetMle().IsRoutingLocator(aIp6Addr))
     {
