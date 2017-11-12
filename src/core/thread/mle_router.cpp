@@ -3759,6 +3759,9 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mFullFunction      = aChild.IsFullThreadDevice();
     aChildInfo.mFullNetworkData   = aChild.IsFullNetworkData();
 
+    aChildInfo.mIp6AddressesLength = Child::kMaxIp6AddressPerChild;
+    aChildInfo.mIp6Addresses       = aChild.GetIp6Addresses();
+
 exit:
     return error;
 }
