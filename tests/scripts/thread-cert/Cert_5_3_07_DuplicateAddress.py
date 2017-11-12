@@ -31,15 +31,18 @@ import time
 import unittest
 
 import node
+import command
+import config
+import mle
 
-LEADER = 1
+DUT_LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
-ED1 = 4
-ED2 = 5
-ED3 = 6
+MED1 = 4
+SED1 = 5
+MED3 = 6
 
-MTDS = [ED1, ED2, ED3]
+MTDS = [MED1, SED1, MED3]
 
 class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
     def setUp(self):
@@ -47,80 +50,101 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         for i in range(1,7):
             self.nodes[i] = node.Node(i, (i in MTDS))
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED3].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
+        self.nodes[DUT_LEADER].set_panid(0xface)
+        self.nodes[DUT_LEADER].set_mode('rsdn')
+        self.nodes[DUT_LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[DUT_LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[DUT_LEADER].add_whitelist(self.nodes[MED3].get_addr64())
+        self.nodes[DUT_LEADER].enable_whitelist()
 
         self.nodes[ROUTER1].set_panid(0xface)
         self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
+        self.nodes[ROUTER1].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
+        self.nodes[ROUTER1].add_whitelist(self.nodes[MED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ED2].get_addr64())
+        self.nodes[ROUTER2].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
+        self.nodes[ROUTER2].add_whitelist(self.nodes[SED1].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
-        self.nodes[ED1].set_panid(0xface)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED1].enable_whitelist()
+        self.nodes[MED1].set_panid(0xface)
+        self.nodes[MED1].set_mode('rsn')
+        self.nodes[MED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[MED1].enable_whitelist()
 
-        self.nodes[ED2].set_panid(0xface)
-        self.nodes[ED2].set_mode('rsn')
-        self.nodes[ED2].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ED2].enable_whitelist()
+        self.nodes[SED1].set_panid(0xface)
+        self.nodes[SED1].set_mode('s')
+        self.nodes[SED1].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[SED1].enable_whitelist()
 
-        self.nodes[ED3].set_panid(0xface)
-        self.nodes[ED3].set_mode('rsn')
-        self.nodes[ED3].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED3].enable_whitelist()
+        self.nodes[MED3].set_panid(0xface)
+        self.nodes[MED3].set_mode('rsn')
+        self.nodes[MED3].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
+        self.nodes[MED3].enable_whitelist()
+
+        self.sniffer = config.create_default_thread_sniffer()
+        self.sniffer.start()
 
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
     def test(self):
-        self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
-        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        # 1
+        self.nodes[DUT_LEADER].start()
+        self.nodes[DUT_LEADER].set_state('leader')
+        self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
-        self.nodes[ROUTER1].start()
+        for i in range(ROUTER1, MED3 + 1):
+            self.nodes[i].start()
+
         time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        self.nodes[ROUTER2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
+        for i in [ROUTER1, ROUTER2]:
+            self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        self.nodes[ED1].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED1].get_state(), 'child')
+        for i in MTDS:
+            self.assertEqual(self.nodes[i].get_state(), 'child')
 
-        self.nodes[ED2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED2].get_state(), 'child')
+        # 2
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        command.check_mle_advertisement(msg)
 
-        self.nodes[ED3].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED3].get_state(), 'child')
-
+        # 3
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER2].register_netdata()
 
-        self.nodes[ED1].add_ipaddr('2001:2:0:1::1')
-        self.nodes[ED2].add_ipaddr('2001:2:0:1::1')
+        self.nodes[MED1].add_ipaddr('2001:2:0:1::1234')
+        self.nodes[SED1].add_ipaddr('2001:2:0:1::1234')
+
         time.sleep(5)
 
-        self.assertTrue(self.nodes[ED3].ping('2001:2:0:1::1'))
+        # 4
+        # Flush the message queue to avoid possible impact on follow-up verification.
+        self.sniffer.get_messages_sent_by(DUT_LEADER)
+
+        self.nodes[MED3].ping('2001:2:0:1::1234')
+
+        # Verify DUT_LEADER sent an Address Query Request to the Realm local address.
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = dut_messages.next_coap_message('0.02', '/a/aq')
+        command.check_address_query(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+
+        # 5 & 6
+        # Verify DUT_LEADER sent an Address Error Notification to the Realm local address.
+        time.sleep(5)
+        dut_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = dut_messages.next_coap_message('0.02', '/a/ae')
+        command.check_address_error_notification(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
 if __name__ == '__main__':
     unittest.main()

@@ -12,7 +12,7 @@ def check_address_query(command_msg, source_node, destination_address):
     source_rloc = source_node.get_ip6_address(config.ADDRESS_TYPE.RLOC)
     assert ipv6.ip_address(source_rloc) == command_msg.ipv6_packet.ipv6_header.source_address, \
             "Error: The IPv6 source address is not the RLOC of the originator. The source node's rloc is: " \
-            + str(ipv6.ip_address(source_rloc)) + ", but the source_rloc in command msg is: " \
+            + str(ipv6.ip_address(source_rloc)) + ", but the source_address in command msg is: " \
             + str(command_msg.ipv6_packet.ipv6_header.source_address)
 
     assert ipv6.ip_address(destination_address.decode('utf-8')) == command_msg.ipv6_packet.ipv6_header.destination_address, "Error: The IPv6 destination address is not expected."
@@ -30,6 +30,24 @@ def check_address_notification(command_msg, source_node, destination_node):
 
     destination_rloc = destination_node.get_ip6_address(config.ADDRESS_TYPE.RLOC)
     assert ipv6.ip_address(destination_rloc) == command_msg.ipv6_packet.ipv6_header.destination_address, "Error: The IPv6 destination address is not the RLOC of the destination."
+
+def check_address_error_notification(command_msg, source_node, destination_address):
+    """Verify source_node sent a properly formatted Address Error Notification command message to destination_address.
+    """
+    command_msg.assertCoapMessageRequestUriPath('/a/ae')
+    command_msg.assertCoapMessageContainsTlv(network_layer.TargetEid)
+    command_msg.assertCoapMessageContainsTlv(network_layer.MlEid)
+
+    source_rloc = source_node.get_ip6_address(config.ADDRESS_TYPE.RLOC)
+    assert ipv6.ip_address(source_rloc) == command_msg.ipv6_packet.ipv6_header.source_address, \
+            "Error: The IPv6 source address is not the RLOC of the originator. The source node's rloc is: " \
+            + str(ipv6.ip_address(source_rloc)) + ", but the source_address in command msg is: " \
+            + str(command_msg.ipv6_packet.ipv6_header.source_address)
+
+    assert ipv6.ip_address(destination_address.decode('utf-8')) == command_msg.ipv6_packet.ipv6_header.destination_address, \
+            "Error: The IPv6 destination address is not expected. The destination node's rloc is: " \
+            + str(ipv6.ip_address(destination_address.decode('utf-8'))) + ", but the destination_address in command msg is: " \
+            + str(command_msg.ipv6_packet.ipv6_header.destination_address)
 
 def check_address_release(command_msg, destination_node):
     """Verify the message is a properly formatted address release destined to the given node.
@@ -106,3 +124,10 @@ def get_routing_cost(command_msg, router_id):
             %(tlv, router_id, routing_entry_pos, router_id_mask_str)
  
     return tlv.link_quality_and_route_data[routing_entry_pos].route
+
+def check_mle_advertisement(command_msg):
+    command_msg.assertSentWithHopLimit(255)
+    command_msg.assertSentToDestinationAddress(config.LINK_LOCAL_ALL_NODES_ADDRESS)
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+    command_msg.assertMleMessageContainsTlv(mle.Route64)
