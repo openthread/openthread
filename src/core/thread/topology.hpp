@@ -371,9 +371,20 @@ public:
     void ClearIp6Addresses(void) { memset(mIp6Address, 0, sizeof(mIp6Address)); }
 
     /**
+     * This method gets the IPv6 address array.
+     *
+     * The array contains `kMaxIp6AddressPerChild` entries. Unused address entries contain unspecified address (all
+     * zeros).
+     *
+     * @returns A pointer to the first entry of IPv6 address array.
+     *
+     */
+    const Ip6::Address *GetIp6Addresses(void) const { return mIp6Address; }
+
+    /**
      * This method gets the IPv6 address at index @p aIndex.
      *
-     * @param[in]  aIndex  The index into the IPv6 address list.
+     * @param[in]  aIndex  The index into the IPv6 address array.
      *
      * @returns A reference to the IPv6 address entry at index @p aIndex.
      *
@@ -381,15 +392,15 @@ public:
     Ip6::Address &GetIp6Address(uint8_t aIndex) { return mIp6Address[aIndex]; }
 
     /**
-     * This method searches for a given IPv6 address in the child's IPv6 address list and provides the index of the
-     * address in the list if it is found.
+     * This method searches for a given IPv6 address in the child's IPv6 address array and provides the index of the
+     * address in the array if it is found.
      *
-     * @param[in]  aAddress           The IPv6 address to search for in the IPv6 address list.
+     * @param[in]  aAddress           The IPv6 address to search for in the IPv6 address array.
      * @param[out] aIndex             Pointer to variable where the index of address is provided if address is found in
-     *                                the list. @p aIndex can be set NULL if index is not required.
+     *                                the array. @p aIndex can be set NULL if index is not required.
      *
-     * @retval OT_ERROR_NONE          Successfully found the address in IPv6 address list and updated @p aIndex.
-     * @retval OT_ERROR_NOT_FOUND     Could not find the address in the list.
+     * @retval OT_ERROR_NONE          Successfully found the address in IPv6 address array and updated @p aIndex.
+     * @retval OT_ERROR_NOT_FOUND     Could not find the address in the array.
      *
      */
     otError FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const;
@@ -397,7 +408,7 @@ public:
     /**
      * This method removes the address at index @p aIndex.
      *
-     * @param[in] aIndex   The index into the IPv6 address list.
+     * @param[in] aIndex   The index into the IPv6 address array.
      *
      */
     void RemoveIp6Address(uint8_t aIndex);

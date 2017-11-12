@@ -363,8 +363,7 @@ OTAPI otError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aC
  * @sa otGetMaxAllowedChildren
  *
  */
-OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex,
-                                                 otChildInfo *aChildInfo);
+OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
 
 /**
  * Get the current Router ID Sequence.
