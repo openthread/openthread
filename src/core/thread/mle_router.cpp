@@ -39,10 +39,10 @@
 #include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/settings.hpp"
 #include "mac/mac_frame.hpp"
@@ -56,7 +56,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Mle {
 
-MleRouter::MleRouter(otInstance &aInstance):
+MleRouter::MleRouter(Instance &aInstance):
     Mle(aInstance),
     mAdvertiseTimer(aInstance, &MleRouter::HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aInstance, &MleRouter::HandleStateUpdateTimer, this),
@@ -4845,7 +4845,7 @@ MleRouter &MleRouter::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     MleRouter &mle = *static_cast<MleRouter *>(aContext.GetContext());
 #else
-    MleRouter &mle = otGetThreadNetif().GetMle();
+    MleRouter &mle = Instance::Get().GetThreadNetif().GetMle();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return mle;

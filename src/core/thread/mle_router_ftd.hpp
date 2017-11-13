@@ -84,7 +84,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit MleRouter(otInstance &aInstance);
+    explicit MleRouter(Instance &aInstance);
 
     /**
      * This method indicates whether or not the Router Role is enabled.

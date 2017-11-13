@@ -1,0 +1,377 @@
+/*
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *  This file defines OpenThread instance class.
+ */
+
+#ifndef INSTANCE_HPP_
+#define INSTANCE_HPP_
+
+#include "openthread-core-config.h"
+
+#include "utils/wrap_stdint.h"
+#include "utils/wrap_stdbool.h"
+
+#include <openthread/types.h>
+#include <openthread/platform/logging.h>
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+#include "api/link_raw.hpp"
+#endif
+#include "common/code_utils.hpp"
+#include "coap/coap.hpp"
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#include "crypto/heap.hpp"
+#include "crypto/mbedtls.hpp"
+#endif
+#include "net/ip6.hpp"
+#include "thread/thread_netif.hpp"
+
+
+/**
+ * @addtogroup core-instance
+ *
+ * @brief
+ *   This module includes definitions for OpenThread instance.
+ *
+ * @{
+ *
+ */
+
+/**
+ * This struct represents an opaque (and empty) type corresponding to an OpenThread instance object.
+ *
+ */
+typedef struct otInstance
+{
+} otInstance;
+
+namespace ot {
+
+/**
+ * This class represents an OpenThread instance.
+ *
+ * This class contains all the components used by OpenThread.
+ *
+ */
+class Instance : public otInstance
+{
+public:
+
+#if  OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    /**
+      * This static method initializes the OpenThread instance.
+      *
+      * This function must be called before any other calls on OpenThread instance.
+      *
+      * @param[in]    aBuffer      The buffer for OpenThread to use for allocating the Instance.
+      * @param[inout] aBufferSize  On input, the size of `aBuffer`. On output, if not enough space for `Instance`, the
+                                   number of bytes required for `Instance`.
+      *
+      * @returns  A pointer to the new OpenThread instance.
+      *
+      */
+    static Instance *Init(void *aBuffer, size_t *aBufferSize);
+
+#else // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
+    /**
+     * This static method initializes the single OpenThread instance.
+     *
+     * This method initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
+     * called before any other calls to OpenThread.
+     *
+     * @returns A reference to the single OpenThread instance.
+     *
+     */
+    static Instance &InitSingle(void);
+
+    /**
+     * This static method returns a reference to the single OpenThread instance.
+     *
+     * @returns A reference to the single OpenThread instance.
+     *
+     */
+    static Instance &Get(void);
+#endif
+
+    /**
+     * This method indicates whether or not the instance is valid/initialized and not yet finalized.
+     *
+     * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
+     *
+     */
+    bool IsInitialized(void) const { return mIsInitialized; }
+
+    /**
+     * This method finalizes the OpenThread instance.
+     *
+     * This method should be called when OpenThread instance is no longer in use.
+     *
+     */
+    void Finalize(void);
+
+    /**
+     * This method registers a callback to indicate when certain configuration or state changes within OpenThread.
+     *
+     * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
+     * @param[in]  aContext   A pointer to application-specific context.
+     *
+     * @retval OT_ERROR_NONE     Added the callback to the list of callbacks and registered it with OpenThread.
+     * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
+     *
+     */
+    otError RegisterStateChangedCallback(otStateChangedCallback aCallback, void *aContext);
+
+    /**
+     * This method removes/unregisters a previously registered "state changed" callback.
+     *
+     * @param[in]  aCallback         A pointer to the callback function pointer.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
+     */
+    void RemoveStateChangedCallback(otStateChangedCallback aCallback, void *aCallbackContext);
+
+    /**
+     * This method triggers a platform reset.
+     *
+     * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that
+     * this method does not erase any persistent state/info saved in non-volatile memory.
+     *
+     */
+    void Reset(void);
+
+    /**
+     * This method deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
+     *
+     */
+    void FactoryReset(void);
+
+    /**
+     * This method erases all the OpenThread persistent info (network settings) stored in non-volatile memory.
+     *
+     * Erase is successful/allowed only if the device is in `disabled` state/role.
+     *
+     * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
+     * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
+     *
+     */
+    otError ErasePersistentInfo(void);
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    /**
+     * This method returns the current dynamic log level.
+     *
+     * @returns the currently set dynamic log level.
+     *
+     */
+    otLogLevel GetDynamicLogLevel(void) const { return mLogLevel; }
+
+    /**
+     * This method sets the dynamic log level.
+     *
+     * @param[in]  aLogLevel The dynamic log level.
+     *
+     */
+    void SetDynamicLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
+#endif
+
+    /**
+     * This method registers the active scan callback.
+     *
+     * Subsequent calls to this method will overwrite the previous callback handler.
+     *
+     * @param[in]  aCallback   A pointer to the callback function pointer.
+     * @param[in]  aContext    A pointer to application-specific context.
+     *
+     */
+    void RegisterActiveScanCallback(otHandleActiveScanResult aCallback, void *aContext);
+
+    /**
+     * This method invokes the previously registered active scan callback with a given scan result.
+     *
+     * @param[in]  aResult     A pointer to active scan result.
+     *
+     */
+    void InvokeActiveScanCallback(otActiveScanResult *aResult) const;
+
+    /**
+     * This method registers the energy scan callback.
+     *
+     * Subsequent calls to this method will overwrite the previous callback handler.
+     *
+     * @param[in]  aCallback   A pointer to the callback function pointer.
+     * @param[in]  aContext    A pointer to application-specific context.
+     *
+     */
+    void RegisterEnergyScanCallback(otHandleEnergyScanResult aCallback, void *aContext);
+
+    /**
+     * This method invokes the previously registered energy scan callback with a given result.
+     *
+     * @param[in]  aResult     A pointer to energy scan result.
+     *
+     */
+    void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
+
+    /**
+     * This method returns a reference to the tasklet scheduler object.
+     *
+     * @returns A reference to the tasklet scheduler object.
+     *
+     */
+    TaskletScheduler &GetTaskletScheduler(void) { return mTaskletScheduler; }
+
+    /**
+     * This method returns a reference to the timer milli scheduler object.
+     *
+     * @returns A reference to the timer milli scheduler object.
+     *
+     */
+    TimerMilliScheduler &GetTimerMilliScheduler(void) { return mTimerMilliScheduler; }
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    /**
+     * This method returns a reference to the timer micro scheduler object.
+     *
+     * @returns A reference to the timer micro scheduler object.
+     *
+     */
+    TimerMicroScheduler &GetTimerMicroScheduler(void) { return mTimerMicroScheduler; }
+#endif
+
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    /**
+     * This method returns a reference to the MbedTlsHeap object.
+     *
+     * @returns A reference to the MbedTlsHeap object.
+     *
+     */
+    Crypto::Heap &GetMbedTlsHeap(void) { return mMbedTlsHeap; }
+#endif
+
+    /**
+     * This method returns a reference to the Ip6 object.
+     *
+     * @returns A reference to the Ip6 object.
+     *
+     */
+    Ip6::Ip6 &GetIp6(void) { return mIp6; }
+
+    /**
+     * This method returns a reference to the Thread Netif object.
+     *
+     * @returns A reference to the Thread Netif object.
+     *
+     */
+    ThreadNetif &GetThreadNetif(void) { return mThreadNetif; }
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    /**
+     * This method returns a reference to LinkRaw object.
+     *
+     * @returns A reference to the LinkRaw object.
+     *
+     */
+    LinkRaw &GetLinkRaw(void) { return mLinkRaw; }
+#endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    /**
+     * This method returns a reference to application COAP object.
+     *
+     * @returns A reference to the application COAP object.
+     *
+     */
+    Coap::ApplicationCoap &GetApplicationCoap(void) { return mApplicationCoap; }
+#endif
+
+    /**
+     * This method returns a reference to message pool object.
+     *
+     * @returns A reference to the message pool object.
+     *
+     */
+    MessagePool &GetMessagePool(void) { return mMessagePool; }
+
+private:
+    Instance(void);
+    void AfterInit(void);
+
+    enum
+    {
+        kMaxNetifCallbacks = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS,
+    };
+
+    Ip6::NetifCallback          mNetifCallback[kMaxNetifCallbacks];
+    otHandleActiveScanResult    mActiveScanCallback;
+    void                       *mActiveScanCallbackContext;
+    otHandleEnergyScanResult    mEnergyScanCallback;
+    void                       *mEnergyScanCallbackContext;
+
+    TaskletScheduler            mTaskletScheduler;
+    TimerMilliScheduler         mTimerMilliScheduler;
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    TimerMicroScheduler         mTimerMicroScheduler;
+#endif
+
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Crypto::MbedTls             mMbedTls;
+    Crypto::Heap                mMbedTlsHeap;
+#endif
+
+    Ip6::Ip6                    mIp6;
+    ThreadNetif                 mThreadNetif;
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    LinkRaw                     mLinkRaw;
+#endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    Coap::ApplicationCoap       mApplicationCoap;
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    otLogLevel                  mLogLevel;
+#endif
+
+    MessagePool                 mMessagePool;
+    bool                        mIsInitialized;
+};
+
+/**
+ * @}
+ *
+ */
+
+}  // namespace ot
+
+#endif  // INSTANCE_HPP_

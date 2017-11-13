@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -138,7 +139,7 @@ exit:
     return error;
 }
 
-Udp::Udp(otInstance &aInstance):
+Udp::Udp(Instance &aInstance):
     InstanceLocator(aInstance),
     mEphemeralPort(kDynamicPortMin),
     mSockets(NULL)

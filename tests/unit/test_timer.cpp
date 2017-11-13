@@ -28,8 +28,8 @@
 
 #include "test_platform.h"
 
-#include "openthread-instance.h"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/timer.hpp"
 
 enum
@@ -85,7 +85,7 @@ void InitCounters(void)
 class TestTimer: public ot::TimerMilli
 {
 public:
-    TestTimer(otInstance &aInstance):
+    TestTimer(ot::Instance &aInstance):
         ot::TimerMilli(aInstance, TestTimer::HandleTimerFired, NULL),
         mFiredCounter(0)
     { }
@@ -114,7 +114,7 @@ int TestOneTimer(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
-    otInstance *instance = testInitInstance();
+    ot::Instance *instance = testInitInstance();
     TestTimer timer(*instance);
 
     // Test one Timer basic operation.
@@ -240,7 +240,7 @@ int TestTwoTimers(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
-    otInstance *instance = testInitInstance();
+    ot::Instance *instance = testInitInstance();
     TestTimer timer1(*instance);
     TestTimer timer2(*instance);
 
@@ -524,7 +524,7 @@ static void TenTimers(uint32_t aTimeShift)
         11
     };
 
-    otInstance *instance = testInitInstance();
+    ot::Instance *instance = testInitInstance();
 
     TestTimer timer0(*instance);
     TestTimer timer1(*instance);

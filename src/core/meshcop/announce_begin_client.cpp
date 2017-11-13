@@ -37,10 +37,10 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -51,7 +51,7 @@
 
 namespace ot {
 
-AnnounceBeginClient::AnnounceBeginClient(otInstance &aInstance):
+AnnounceBeginClient::AnnounceBeginClient(Instance &aInstance):
     InstanceLocator(aInstance)
 {
 }

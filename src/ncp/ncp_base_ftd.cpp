@@ -43,9 +43,9 @@
 #include <openthread/tmf_proxy.h>
 #endif
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include "meshcop/commissioner.hpp"
 #endif

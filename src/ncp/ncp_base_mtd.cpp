@@ -48,9 +48,9 @@
 #include <openthread/thread_ftd.h>
 #endif
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

@@ -32,7 +32,7 @@
 
 #include <openthread/openthread.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6_headers.hpp"
 #include "thread/lowpan.hpp"

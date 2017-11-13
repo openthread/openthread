@@ -46,6 +46,7 @@
 #include <openthread/platform/random.h>
 
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 
 #include "test_util.h"
 
@@ -89,7 +90,7 @@ extern testPlatRadioReceive             g_testPlatRadioReceive;
 extern testPlatRadioTransmit            g_testPlatRadioTransmit;
 extern testPlatRadioGetTransmitBuffer   g_testPlatRadioGetTransmitBuffer;
 
-otInstance *testInitInstance(void);
+ot::Instance *testInitInstance(void);
 void testFreeInstance(otInstance *aInstance);
 
 // Resets platform functions to defaults

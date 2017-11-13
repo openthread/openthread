@@ -36,8 +36,8 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -45,7 +45,7 @@
 namespace ot {
 namespace Utils {
 
-JamDetector::JamDetector(otInstance &aInstance) :
+JamDetector::JamDetector(Instance &aInstance) :
     InstanceLocator(aInstance),
     mHandler(NULL),
     mContext(NULL),
@@ -243,7 +243,7 @@ JamDetector &JamDetector::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     JamDetector &detector = *static_cast<JamDetector *>(aContext.GetContext());
 #else
-    JamDetector &detector = otGetThreadNetif().GetJamDetector();
+    JamDetector &detector = Instance::Get().GetThreadNetif().GetJamDetector();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return detector;

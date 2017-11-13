@@ -35,7 +35,7 @@
 
 #include <openthread/commissioner.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
@@ -44,10 +44,12 @@ otError otCommissionerStart(otInstance *aInstance)
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().Start();
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().Start();
+#else
     OT_UNUSED_VARIABLE(aInstance);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -57,10 +59,12 @@ otError otCommissionerStop(otInstance *aInstance)
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().Stop();
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().Stop();
+#else
     OT_UNUSED_VARIABLE(aInstance);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -70,15 +74,18 @@ otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui6
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
+
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aEui64), aPSKd,
-                                                                aTimeout);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aEui64), aPSKd,
+                                                                  aTimeout);
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEui64);
     OT_UNUSED_VARIABLE(aPSKd);
     OT_UNUSED_VARIABLE(aTimeout);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -88,11 +95,13 @@ otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aE
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aEui64), 0);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aEui64), 0);
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEui64);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -102,11 +111,13 @@ otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aPro
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().SetProvisioningUrl(aProvisioningUrl);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().SetProvisioningUrl(aProvisioningUrl);
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aProvisioningUrl);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -117,15 +128,17 @@ otError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().GetAnnounceBeginClient().SendRequest(
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().GetAnnounceBeginClient().SendRequest(
                 aChannelMask, aCount, aPeriod, *static_cast<const Ip6::Address *>(aAddress));
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannelMask);
     OT_UNUSED_VARIABLE(aCount);
     OT_UNUSED_VARIABLE(aPeriod);
     OT_UNUSED_VARIABLE(aAddress);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -137,10 +150,12 @@ otError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, u
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().GetEnergyScanClient().SendQuery(
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().GetEnergyScanClient().SendQuery(
                 aChannelMask, aCount, aPeriod, aScanDuration, *static_cast<const Ip6::Address *>(aAddress),
                 aCallback, aContext);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannelMask);
     OT_UNUSED_VARIABLE(aCount);
@@ -149,7 +164,7 @@ otError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, u
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aCallback);
     OT_UNUSED_VARIABLE(aContext);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -161,16 +176,18 @@ otError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().GetPanIdQueryClient().SendQuery(
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().GetPanIdQueryClient().SendQuery(
                 aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPanId);
     OT_UNUSED_VARIABLE(aChannelMask);
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aCallback);
     OT_UNUSED_VARIABLE(aContext);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -180,12 +197,14 @@ otError otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, u
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().SendMgmtCommissionerGetRequest(aTlvs, aLength);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().SendMgmtCommissionerGetRequest(aTlvs, aLength);
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aTlvs);
     OT_UNUSED_VARIABLE(aLength);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -196,13 +215,15 @@ otError otCommissionerSendMgmtSet(otInstance *aInstance, const otCommissioningDa
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aDataset);
     OT_UNUSED_VARIABLE(aTlvs);
     OT_UNUSED_VARIABLE(aLength);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }
@@ -212,10 +233,12 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
     uint16_t sessionId = 0;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    sessionId = aInstance->mThreadNetif.GetCommissioner().GetSessionId();
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    sessionId = instance.GetThreadNetif().GetCommissioner().GetSessionId();
+#else
     OT_UNUSED_VARIABLE(aInstance);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return sessionId;
 }
@@ -225,10 +248,12 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
     otCommissionerState state = OT_COMMISSIONER_STATE_DISABLED;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    state = aInstance->mThreadNetif.GetCommissioner().GetState();
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    state = instance.GetThreadNetif().GetCommissioner().GetState();
+#else
     OT_UNUSED_VARIABLE(aInstance);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return state;
 }
@@ -239,14 +264,16 @@ otError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhras
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    error = aInstance->mThreadNetif.GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
-#else  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    error = instance.GetThreadNetif().GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
+#else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPassPhrase);
     OT_UNUSED_VARIABLE(aNetworkName);
     OT_UNUSED_VARIABLE(aExtPanId);
     OT_UNUSED_VARIABLE(aPSKc);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 
     return error;
 }

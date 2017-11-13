@@ -37,6 +37,8 @@
 
 #include <openthread/openthread.h>
 
+#include "common/instance.hpp"
+
 /*
  * Verify debug uart dependency.
  *

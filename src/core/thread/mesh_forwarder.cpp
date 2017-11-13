@@ -37,10 +37,10 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
@@ -56,7 +56,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-MeshForwarder::MeshForwarder(otInstance &aInstance):
+MeshForwarder::MeshForwarder(Instance &aInstance):
     InstanceLocator(aInstance),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
@@ -2011,7 +2011,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
         meshHeader.SetHopsLeft(meshHeader.GetHopsLeft() - 1);
         meshHeader.AppendTo(aFrame);
 
-        VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kType6lowpan, 0)) != NULL,
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
@@ -2145,7 +2145,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
-        VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
         message->SetPanId(aLinkInfo.mPanId);
@@ -2324,7 +2324,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     Message *message;
     int headerLength;
 
-    VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
                  error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     message->SetPanId(aLinkInfo.mPanId);
@@ -2424,7 +2424,7 @@ MeshForwarder &MeshForwarder::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     MeshForwarder &meshForwader = *static_cast<MeshForwarder *>(aContext.GetContext());
 #else
-    MeshForwarder &meshForwader = otGetMeshForwarder();
+    MeshForwarder &meshForwader = Instance::Get().GetThreadNetif().GetMeshForwarder();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return meshForwader;

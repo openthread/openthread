@@ -40,7 +40,9 @@
 
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
+#include "common/instance.hpp"
 #include "common/tasklet.hpp"
+
 
 namespace ot {
 namespace Cli {
@@ -58,7 +60,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Uart(otInstance *aInstance);
+    Uart(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.

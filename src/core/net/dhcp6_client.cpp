@@ -38,9 +38,9 @@
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
@@ -56,9 +56,9 @@ namespace ot {
 
 namespace Dhcp6 {
 
-Dhcp6Client::Dhcp6Client(otInstance &aInstance) :
+Dhcp6Client::Dhcp6Client(Instance &aInstance) :
     InstanceLocator(aInstance),
-    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
     mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this),
     mStartTime(0),
     mAddresses(NULL),
@@ -721,7 +721,7 @@ Dhcp6Client &Dhcp6Client::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Dhcp6Client &client = *static_cast<Dhcp6Client *>(aContext.GetContext());
 #else
-    Dhcp6Client &client = otGetThreadNetif().GetDhcp6Client();
+    Dhcp6Client &client = Instance::Get().GetThreadNetif().GetDhcp6Client();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return client;

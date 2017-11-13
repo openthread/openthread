@@ -337,7 +337,7 @@ public:
      * @param[in]  aContext   A pointer to arbitrary context information (used along with timer handler).
      *
      */
-    ResponsesQueue(otInstance &aInstance, Timer::Handler aHandler, void *aContext);
+    ResponsesQueue(Instance &aInstance, Timer::Handler aHandler, void *aContext);
 
     /**
      * Add given response to the cache.
@@ -656,7 +656,7 @@ protected:
      * @param[in]  aResponsesQueueTimerHandler    A timer handler provided by sub-class for `mReponsesQueue` timer.
      *
      */
-    CoapBase(otInstance &aInstance, Timer::Handler aRetransmissionTimerHandler,
+    CoapBase(Instance &aInstance, Timer::Handler aRetransmissionTimerHandler,
              Timer::Handler aResponsesQueueTimerHandler);
 
     /**
@@ -747,7 +747,7 @@ public:
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    Coap(otInstance &aInstance);
+    Coap(Instance &aInstance);
 
 private:
     static Coap &GetOwner(const Context &aContext);
@@ -770,7 +770,7 @@ public:
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    ApplicationCoap(otInstance &aInstance);
+    ApplicationCoap(Instance &aInstance);
 
 private:
     static ApplicationCoap &GetOwner(const Context &aContext);

@@ -33,8 +33,8 @@
 #include <openthread/config.h>
 #include <openthread/openthread.h>
 
-#include "openthread-instance.h"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "utils/wrap_string.h"
 
@@ -42,7 +42,7 @@
 
 #define kNumTestMessages      5
 
-static otInstance *sInstance;
+static ot::Instance *sInstance;
 static ot::MessagePool *sMessagePool;
 
 // This function verifies the content of the message queue to match the passed in messages
@@ -87,7 +87,7 @@ void TestMessageQueue(void)
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != NULL, "Null instance");
 
-    sMessagePool = &sInstance->mMessagePool;
+    sMessagePool = &sInstance->GetMessagePool();
 
     for (int i = 0; i < kNumTestMessages; i++)
     {

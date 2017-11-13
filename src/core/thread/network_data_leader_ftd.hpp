@@ -73,7 +73,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Leader(otInstance &aInstance);
+    explicit Leader(Instance &aInstance);
 
     /**
      * This method reset the Thread Network Data.

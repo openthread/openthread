@@ -89,7 +89,7 @@ public:
      * @param[in]  aContext                 A pointer to arbitrary context information.
      *
      */
-    TrickleTimer(otInstance &aInstance,
+    TrickleTimer(Instance &aInstance,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
                  uint32_t aRedundancyConstant,
 #endif

@@ -36,20 +36,24 @@
 #include <openthread/dhcp6_client.h>
 #include <openthread/dhcp6_server.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
 void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
 {
-    aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
 }
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
 void otDhcp6ServerUpdate(otInstance *aInstance)
 {
-    aInstance->mThreadNetif.GetDhcp6Server().UpdateService();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetDhcp6Server().UpdateService();
 }
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+#endif

@@ -64,7 +64,9 @@ static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
-    Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    Uart::sUartServer = new(&sCliUartRaw) Uart(instance);
 }
 
 extern "C" void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
@@ -90,7 +92,7 @@ extern "C" void otCliUartAppendResult(otError aError)
     Uart::sUartServer->GetInterpreter().AppendResult(aError);
 }
 
-Uart::Uart(otInstance *aInstance):
+Uart::Uart(Instance *aInstance):
     mInterpreter(aInstance)
 {
     mRxLength = 0;
@@ -193,13 +195,13 @@ otError Uart::ProcessCommand(void)
      *
      * Yes, while rare it is a race condition that is hard to debug.
      *
-     * Thus this is here to afirmatively LOG exactly when the CLI
+     * Thus this is here to affirmatively LOG exactly when the CLI
      * command is being executed.
      */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     /* TODO: how exactly do we get the instance here? */
 #else
-    otLogInfoCli(otGetInstance(),  "execute command: %s", mRxBuffer);
+    otLogInfoCli(&Instance::Get(),  "execute command: %s", mRxBuffer);
 #endif
 #endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);

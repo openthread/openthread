@@ -37,17 +37,18 @@
 
 #include <openthread/border_router.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
 otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
+    error = instance.GetThreadNetif().GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
 
 exit:
     return error;
@@ -56,6 +57,7 @@ exit:
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
     uint8_t flags = 0;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     if (aConfig->mPreferred)
     {
@@ -87,24 +89,28 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
         flags |= NetworkData::BorderRouterEntry::kOnMeshFlag;
     }
 
-    return aInstance->mThreadNetif.GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                                         aConfig->mPrefix.mLength,
-                                                                         aConfig->mPreference, flags, aConfig->mStable);
+    return instance.GetThreadNetif().GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                                           aConfig->mPrefix.mLength,
+                                                                           aConfig->mPreference, flags, aConfig->mStable);
 }
 
 otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8,
+                                                                              aPrefix->mLength);
 }
 
 otError otBorderRouterGetNextOnMeshPrefix(otInstance *aInstance, otNetworkDataIterator *aIterator,
                                           otBorderRouterConfig *aConfig)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
-    error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNextOnMeshPrefix(aIterator, aConfig);
+    error = instance.GetThreadNetif().GetNetworkDataLocal().GetNextOnMeshPrefix(aIterator, aConfig);
 
 exit:
     return error;
@@ -112,25 +118,30 @@ exit:
 
 otError otBorderRouterAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                                           aConfig->mPrefix.mLength,
-                                                                           aConfig->mPreference, aConfig->mStable);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                                             aConfig->mPrefix.mLength,
+                                                                             aConfig->mPreference, aConfig->mStable);
 }
 
 otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8,
-                                                                              aPrefix->mLength);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8,
+                                                                                aPrefix->mLength);
 }
 
 otError otBorderRouterGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator,
                                    otExternalRouteConfig *aConfig)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
-    error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNextExternalRoute(aIterator, aConfig);
+    error = instance.GetThreadNetif().GetNetworkDataLocal().GetNextExternalRoute(aIterator, aConfig);
 
 exit:
     return error;
@@ -138,7 +149,9 @@ exit:
 
 otError otBorderRouterRegister(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetNetworkDataLocal().SendServerDataNotification();
 }
 
 #endif  // OPENTHREAD_ENABLE_BORDER_ROUTER

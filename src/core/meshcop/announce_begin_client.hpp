@@ -54,7 +54,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    AnnounceBeginClient(otInstance &aInstance);
+    AnnounceBeginClient(Instance &aInstance);
 
     /**
      * This method sends a Announce Begin message.

@@ -33,9 +33,9 @@
 
 #include "netif.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 
@@ -90,7 +90,7 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress =
 };
 
 
-Netif::Netif(otInstance &aInstance, int8_t aInterfaceId):
+Netif::Netif(Instance &aInstance, int8_t aInterfaceId):
     InstanceLocator(aInstance),
     mCallbacks(NULL),
     mUnicastAddresses(NULL),
@@ -581,7 +581,7 @@ Netif &Netif::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Netif &netif = *static_cast<Netif *>(aContext.GetContext());
 #else
-    Netif &netif = otGetThreadNetif();
+    Netif &netif = Instance::Get().GetThreadNetif();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return netif;

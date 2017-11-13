@@ -46,6 +46,7 @@
 #include "common/code_utils.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
@@ -59,7 +60,7 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetManager::DatasetManager(otInstance &aInstance, const Tlv::Type aType, const char *aUriSet,
+DatasetManager::DatasetManager(Instance &aInstance, const Tlv::Type aType, const char *aUriSet,
                                const char *aUriGet, Timer::Handler aTimerHandler):
     InstanceLocator(aInstance),
     mNetwork(aType),
@@ -953,13 +954,13 @@ static ActiveDatasetBase &GetActiveDatasetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     ActiveDatasetBase &activeDataset = *static_cast<ActiveDatasetBase *>(aContext.GetContext());
 #else
-    ActiveDatasetBase &activeDataset = otGetThreadNetif().GetActiveDataset();
+    ActiveDatasetBase &activeDataset = Instance::Get().GetThreadNetif().GetActiveDataset();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return activeDataset;
 }
 
-ActiveDatasetBase::ActiveDatasetBase(otInstance &aInstance):
+ActiveDatasetBase::ActiveDatasetBase(Instance &aInstance):
     DatasetManager(aInstance, Tlv::kActiveTimestamp, OT_URI_PATH_ACTIVE_SET, OT_URI_PATH_ACTIVE_GET,
                    &ActiveDatasetBase::HandleTimer),
     mResourceGet(OT_URI_PATH_ACTIVE_GET, &ActiveDatasetBase::HandleGet, this)
@@ -1051,13 +1052,13 @@ static PendingDatasetBase &GetPendingDatasetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     PendingDatasetBase &pendingDataset = *static_cast<PendingDatasetBase *>(aContext.GetContext());
 #else
-    PendingDatasetBase &pendingDataset = otGetThreadNetif().GetPendingDataset();
+    PendingDatasetBase &pendingDataset = Instance::Get().GetThreadNetif().GetPendingDataset();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return pendingDataset;
 }
 
-PendingDatasetBase::PendingDatasetBase(otInstance &aInstance):
+PendingDatasetBase::PendingDatasetBase(Instance &aInstance):
     DatasetManager(aInstance, Tlv::kPendingTimestamp, OT_URI_PATH_PENDING_SET, OT_URI_PATH_PENDING_GET,
                    &PendingDatasetBase::HandleTimer),
     mDelayTimer(aInstance, &PendingDatasetBase::HandleDelayTimer, this),

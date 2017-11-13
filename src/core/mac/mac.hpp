@@ -220,7 +220,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    explicit Mac(otInstance &aInstance);
+    explicit Mac(Instance &aInstance);
 
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -602,7 +602,7 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) { return otPlatRadioGetReceiveSensitivity(&GetInstance()); }
+    int8_t GetNoiseFloor(void);
 
     /**
      * This method indicates whether or not CSMA backoff is supported by the radio layer.

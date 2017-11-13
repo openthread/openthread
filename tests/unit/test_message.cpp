@@ -28,8 +28,8 @@
 
 #include <openthread/openthread.h>
 
-#include "openthread-instance.h"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "utils/wrap_string.h"
 
@@ -38,16 +38,16 @@
 
 void TestMessage(void)
 {
-    otInstance *instance;
+    ot::Instance *instance;
     ot::MessagePool *messagePool;
     ot::Message *message;
     uint8_t writeBuffer[1024];
     uint8_t readBuffer[1024];
 
-    instance = testInitInstance();
+    instance = static_cast<ot::Instance *>(testInitInstance());
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->mMessagePool;
+    messagePool = &instance->GetMessagePool();
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {

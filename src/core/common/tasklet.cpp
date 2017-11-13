@@ -35,14 +35,14 @@
 
 #include <openthread/openthread.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
 
-Tasklet::Tasklet(otInstance &aInstance, Handler aHandler, void *aContext):
+Tasklet::Tasklet(Instance &aInstance, Handler aHandler, void *aContext):
     InstanceLocator(aInstance),
     Context(aContext),
     mHandler(aHandler),
@@ -52,7 +52,7 @@ Tasklet::Tasklet(otInstance &aInstance, Handler aHandler, void *aContext):
 
 otError Tasklet::Post(void)
 {
-    return GetInstance().mTaskletScheduler.Post(*this);
+    return GetInstance().GetTaskletScheduler().Post(*this);
 }
 
 TaskletScheduler::TaskletScheduler(void):

@@ -35,7 +35,7 @@
 
 #include <openthread/jam_detection.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
@@ -43,57 +43,79 @@ using namespace ot;
 
 otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
 {
-    return aInstance->mThreadNetif.GetJamDetector().SetRssiThreshold(aRssiThreshold);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().SetRssiThreshold(aRssiThreshold);
 }
 
 int8_t otJamDetectionGetRssiThreshold(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJamDetector().GetRssiThreshold();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().GetRssiThreshold();
 }
 
 otError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow)
 {
-    return aInstance->mThreadNetif.GetJamDetector().SetWindow(aWindow);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().SetWindow(aWindow);
 }
 
 uint8_t otJamDetectionGetWindow(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJamDetector().GetWindow();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().GetWindow();
 }
 
 otError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod)
 {
-    return aInstance->mThreadNetif.GetJamDetector().SetBusyPeriod(aBusyPeriod);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().SetBusyPeriod(aBusyPeriod);
 }
 
 uint8_t otJamDetectionGetBusyPeriod(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJamDetector().GetBusyPeriod();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().GetBusyPeriod();
 }
 
 otError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetJamDetector().Start(aCallback, aContext);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().Start(aCallback, aContext);
 }
 
 otError otJamDetectionStop(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJamDetector().Stop();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().Stop();
 }
 
 bool otJamDetectionIsEnabled(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJamDetector().IsEnabled();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().IsEnabled();
 }
 
 bool otJamDetectionGetState(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJamDetector().GetState();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().GetState();
 }
 
 uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetJamDetector().GetHistoryBitmap();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetJamDetector().GetHistoryBitmap();
 }
 
 #endif  // OPENTHREAD_ENABLE_JAM_DETECTION

@@ -63,7 +63,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    JoinerRouter(otInstance &aInstance);
+    JoinerRouter(Instance &aInstance);
 
     /**
      * This method returns the Joiner UDP Port.

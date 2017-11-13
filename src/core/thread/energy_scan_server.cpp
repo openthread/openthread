@@ -37,10 +37,10 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -49,7 +49,7 @@
 
 namespace ot {
 
-EnergyScanServer::EnergyScanServer(otInstance &aInstance) :
+EnergyScanServer::EnergyScanServer(Instance &aInstance) :
     InstanceLocator(aInstance),
     mChannelMask(0),
     mChannelMaskCurrent(0),
@@ -246,7 +246,7 @@ EnergyScanServer &EnergyScanServer::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     EnergyScanServer &server = *static_cast<EnergyScanServer *>(aContext.GetContext());
 #else
-    EnergyScanServer &server = otGetThreadNetif().GetEnergyScanServer();
+    EnergyScanServer &server = Instance::Get().GetThreadNetif().GetEnergyScanServer();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return server;

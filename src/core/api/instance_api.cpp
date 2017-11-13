@@ -39,227 +39,81 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/settings.h>
 
-#include "openthread-instance.h"
-#include "openthread-single-instance.h"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
-static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
-otInstance *sInstance = NULL;
-
-otInstance *otGetInstance(void)
-{
-    return sInstance;
-}
-
-ot::ThreadNetif &otGetThreadNetif(void)
-{
-    return sInstance->mThreadNetif;
-}
-
-ot::MeshForwarder &otGetMeshForwarder(void)
-{
-    return sInstance->mThreadNetif.GetMeshForwarder();
-}
-
-ot::TaskletScheduler &otGetTaskletScheduler(void)
-{
-    return sInstance->mTaskletScheduler;
-}
-
-ot::Ip6::Ip6 &otGetIp6(void)
-{
-    return sInstance->mIp6;
-}
-#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
-otInstance::otInstance(void) :
-    mReceiveIp6DatagramCallback(NULL),
-    mReceiveIp6DatagramCallbackContext(NULL),
-    mActiveScanCallback(NULL),
-    mActiveScanCallbackContext(NULL),
-    mEnergyScanCallback(NULL),
-    mEnergyScanCallbackContext(NULL),
-    mTimerMilliScheduler(*this),
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    mTimerMicroScheduler(*this),
-#endif
-    mIp6(*this),
-    mThreadNetif(*this),
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    mLinkRaw(*this),
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-    mApplicationCoap(*this),
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL)),
-#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    mMessagePool(*this)
-{
-}
-
 using namespace ot;
 
-void otInstancePostConstructor(otInstance *aInstance)
-{
-    // restore datasets and network information
-    otPlatSettingsInit(aInstance);
-    aInstance->mThreadNetif.GetMle().Restore();
-
-#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-
-    // If auto start is configured, do that now
-    if (otThreadGetAutoStart(aInstance))
-    {
-        if (otIp6SetEnabled(aInstance, true) == OT_ERROR_NONE)
-        {
-            // Only try to start Thread if we could bring up the interface
-            if (otThreadSetEnabled(aInstance, true) != OT_ERROR_NONE)
-            {
-                // Bring the interface down if Thread failed to start
-                otIp6SetEnabled(aInstance, false);
-            }
-        }
-    }
-
-#endif
-}
-
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
-    otInstance *instance = NULL;
+    Instance *instance;
 
     otLogFuncEntry();
-
-    VerifyOrExit(aInstanceBufferSize != NULL);
-
-    // Make sure the input buffer is big enough
-    VerifyOrExit(sizeof(otInstance) <= *aInstanceBufferSize, *aInstanceBufferSize = sizeof(otInstance));
-
-    VerifyOrExit(aInstanceBuffer != NULL);
-
-    // Construct the context
-    instance = new(aInstanceBuffer)otInstance();
-
-    // Execute post constructor operations
-    otInstancePostConstructor(instance);
-
+    instance = Instance::Init(aInstanceBuffer, aInstanceBufferSize);
     otLogInfoApi(*instance, "otInstance Initialized");
-
-exit:
-
     otLogFuncExit();
+
     return instance;
 }
-
-bool otInstanceIsInitialized(otInstance *aInstance)
-{
-    return (aInstance != NULL);
-}
-
-#else // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
+#else
 otInstance *otInstanceInitSingle(void)
 {
-    otLogFuncEntry();
-
-    VerifyOrExit(sInstance == NULL);
-
-    // We need to ensure `sInstance` pointer is correctly set
-    // before any object constructor is called.
-    sInstance = reinterpret_cast<otInstance *>(&sInstanceRaw);
-
-    // Construct the context
-    sInstance = new(&sInstanceRaw)otInstance();
-
-    // Execute post constructor operations
-    otInstancePostConstructor(sInstance);
-
-    otLogInfoApi(*sInstance, "otInstance Initialized");
-
-exit:
-
-    otLogFuncExit();
-    return sInstance;
+    return &Instance::InitSingle();
 }
+#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
 
 bool otInstanceIsInitialized(otInstance *aInstance)
 {
-    return (aInstance != NULL) && (aInstance == sInstance);
-}
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    return instance.IsInitialized();
+}
 
 void otInstanceFinalize(otInstance *aInstance)
 {
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
     otLogFuncEntry();
-
-    // Ensure we are disabled
-    (void)otThreadSetEnabled(aInstance, false);
-    (void)otIp6SetEnabled(aInstance, false);
-
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    sInstance = NULL;
-#endif
-
+    instance.Finalize();
     otLogFuncExit();
 }
 
 otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
-    otError error = OT_ERROR_NO_BUFS;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
-    {
-        if (aInstance->mNetifCallback[i].IsFree())
-        {
-            aInstance->mNetifCallback[i].Set(aCallback, aCallbackContext);
-            error = aInstance->mThreadNetif.RegisterCallback(aInstance->mNetifCallback[i]);
-            break;
-        }
-    }
-
-    return error;
+    return instance.RegisterStateChangedCallback(aCallback, aCallbackContext);
 }
 
 void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
-    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
-    {
-        if (aInstance->mNetifCallback[i].IsServing(aCallback, aCallbackContext))
-        {
-            aInstance->mThreadNetif.RemoveCallback(aInstance->mNetifCallback[i]);
-            aInstance->mNetifCallback[i].Free();
-            break;
-        }
-    }
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.RemoveStateChangedCallback(aCallback, aCallbackContext);
 }
 
 void otInstanceReset(otInstance *aInstance)
 {
-    otPlatReset(aInstance);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Reset();
 }
 
 void otInstanceFactoryReset(otInstance *aInstance)
 {
-    otPlatSettingsWipe(aInstance);
-    otPlatReset(aInstance);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.FactoryReset();
 }
 
 otError otInstanceErasePersistentInfo(otInstance *aInstance)
 {
-    otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(otThreadGetDeviceRole(aInstance) ==  OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    otPlatSettingsWipe(aInstance);
-
-exit:
-    return error;
+    return instance.ErasePersistentInfo();
 }
 
 otLogLevel otGetDynamicLogLevel(otInstance *aInstance)
@@ -267,7 +121,9 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance)
     otLogLevel logLevel;
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    logLevel =  aInstance->mLogLevel;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    logLevel = instance.GetDynamicLogLevel();
 #else
     logLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
     OT_UNUSED_VARIABLE(aInstance);
@@ -281,7 +137,9 @@ otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
     otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    aInstance->mLogLevel = aLogLevel;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.SetDynamicLogLevel(aLogLevel);
 #else
     error = OT_ERROR_DISABLED_FEATURE;
     OT_UNUSED_VARIABLE(aInstance);

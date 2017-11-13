@@ -73,7 +73,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    CoapSecure(otInstance &aInstance);
+    CoapSecure(Instance &aInstance);
 
     /**
      * This method starts the secure CoAP agent.

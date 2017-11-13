@@ -37,9 +37,9 @@
 
 #include <openthread/platform/radio.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -50,7 +50,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
 
-AnnounceBeginServer::AnnounceBeginServer(otInstance &aInstance) :
+AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance) :
     InstanceLocator(aInstance),
     mChannelMask(0),
     mPeriod(0),
@@ -157,7 +157,7 @@ AnnounceBeginServer &AnnounceBeginServer::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     AnnounceBeginServer &server = *static_cast<AnnounceBeginServer *>(aContext.GetContext());
 #else
-    AnnounceBeginServer &server = otGetThreadNetif().GetAnnounceBeginServer();
+    AnnounceBeginServer &server = Instance::Get().GetThreadNetif().GetAnnounceBeginServer();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return server;
