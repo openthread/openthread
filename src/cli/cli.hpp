@@ -52,7 +52,6 @@
 #endif
 
 #include "common/code_utils.hpp"
-#include "common/context.hpp"
 #include "common/instance.hpp"
 
 #ifndef OTDLL
@@ -373,7 +372,7 @@ private:
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
 
-    static Interpreter &GetOwner(const Context &aContext);
+    static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

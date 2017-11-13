@@ -42,6 +42,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -120,7 +121,7 @@ exit:
 
 void EnergyScanServer::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<EnergyScanServer>().HandleTimer();
 }
 
 void EnergyScanServer::HandleTimer(void)
@@ -239,17 +240,6 @@ void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
         mActive = false;
         mTimer.Stop();
     }
-}
-
-EnergyScanServer &EnergyScanServer::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    EnergyScanServer &server = *static_cast<EnergyScanServer *>(aContext.GetContext());
-#else
-    EnergyScanServer &server = Instance::Get().GetThreadNetif().GetEnergyScanServer();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return server;
 }
 
 }  // namespace ot

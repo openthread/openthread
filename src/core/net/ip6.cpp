@@ -40,6 +40,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_routes.hpp"
@@ -407,7 +408,7 @@ exit:
 
 void Ip6::HandleSendQueue(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleSendQueue();
+    aTasklet.GetOwner<Ip6>().HandleSendQueue();
 }
 
 void Ip6::HandleSendQueue(void)
@@ -1113,17 +1114,6 @@ int8_t Ip6::GetOnLinkNetif(const Address &aAddress)
 
 exit:
     return rval;
-}
-
-Ip6 &Ip6::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Ip6 &ip6 = *static_cast<Ip6 *>(aContext.GetContext());
-#else
-    Ip6 &ip6 = Instance::Get().GetIp6();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return ip6;
 }
 
 const char *Ip6::IpProtoToString(IpProto aIpProto)

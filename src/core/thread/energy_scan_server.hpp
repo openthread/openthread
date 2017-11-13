@@ -87,8 +87,6 @@ private:
 
     otError SendReport(void);
 
-    static EnergyScanServer &GetOwner(const Context &aContext);
-
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;
     uint32_t mChannelMaskCurrent;

@@ -391,8 +391,6 @@ private:
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
     int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
 
-    static Ip6 &GetOwner(const Context &aContext);
-
     bool mForwardingEnabled;
     bool mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;

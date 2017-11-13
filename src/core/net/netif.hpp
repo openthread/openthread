@@ -533,7 +533,6 @@ public:
 private:
     static void HandleStateChangedTask(Tasklet &aTasklet);
     void HandleStateChangedTask(void);
-    static Netif &GetOwner(const Context &aContext);
 
     NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;

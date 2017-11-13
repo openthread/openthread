@@ -535,8 +535,6 @@ private:
     static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
 
-    static Mpl &GetOwner(const Context &aContext);
-
     uint8_t mTimerExpirations;
     uint8_t mSequence;
     uint16_t mSeedId;

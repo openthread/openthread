@@ -827,8 +827,6 @@ private:
 
     void SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild);
 
-    static MleRouter &GetOwner(const Context &aContext);
-
     TrickleTimer mAdvertiseTimer;
     TimerMilli mStateUpdateTimer;
 

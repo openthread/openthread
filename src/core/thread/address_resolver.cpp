@@ -45,6 +45,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
@@ -722,7 +723,7 @@ exit:
 
 void AddressResolver::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<AddressResolver>().HandleTimer();
 }
 
 void AddressResolver::HandleTimer(void)
@@ -807,17 +808,6 @@ void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInf
 
 exit:
     OT_UNUSED_VARIABLE(aMessageInfo);
-}
-
-AddressResolver &AddressResolver::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    AddressResolver &resolver = *static_cast<AddressResolver *>(aContext.GetContext());
-#else
-    AddressResolver &resolver = Instance::Get().GetThreadNetif().GetAddressResolver();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return resolver;
 }
 
 }  // namespace ot

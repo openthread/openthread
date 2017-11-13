@@ -113,7 +113,6 @@ public:
 
 private:
     otError DoTransmit(otRadioFrame *aFrame);
-    static LinkRaw &GetOwner(const Context &aContext);
 
     otInstance             &mInstance;
     bool                    mEnabled;

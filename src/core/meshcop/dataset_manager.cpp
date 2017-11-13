@@ -49,6 +49,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/timer.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/leader.hpp"
 #include "meshcop/meshcop.hpp"
@@ -949,17 +950,6 @@ exit:
     }
 }
 
-static ActiveDatasetBase &GetActiveDatasetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    ActiveDatasetBase &activeDataset = *static_cast<ActiveDatasetBase *>(aContext.GetContext());
-#else
-    ActiveDatasetBase &activeDataset = Instance::Get().GetThreadNetif().GetActiveDataset();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return activeDataset;
-}
-
 ActiveDatasetBase::ActiveDatasetBase(Instance &aInstance):
     DatasetManager(aInstance, Tlv::kActiveTimestamp, OT_URI_PATH_ACTIVE_SET, OT_URI_PATH_ACTIVE_GET,
                    &ActiveDatasetBase::HandleTimer),
@@ -1044,18 +1034,7 @@ void ActiveDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, cons
 
 void ActiveDatasetBase::HandleTimer(Timer &aTimer)
 {
-    GetActiveDatasetOwner(aTimer).HandleTimer();
-}
-
-static PendingDatasetBase &GetPendingDatasetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    PendingDatasetBase &pendingDataset = *static_cast<PendingDatasetBase *>(aContext.GetContext());
-#else
-    PendingDatasetBase &pendingDataset = Instance::Get().GetThreadNetif().GetPendingDataset();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return pendingDataset;
+    aTimer.GetOwner<ActiveDatasetBase>().HandleTimer();
 }
 
 PendingDatasetBase::PendingDatasetBase(Instance &aInstance):
@@ -1145,7 +1124,7 @@ void PendingDatasetBase::StartDelayTimer(void)
 
 void PendingDatasetBase::HandleDelayTimer(Timer &aTimer)
 {
-    GetPendingDatasetOwner(aTimer).HandleDelayTimer();
+    aTimer.GetOwner<PendingDatasetBase>().HandleDelayTimer();
 }
 
 void PendingDatasetBase::HandleDelayTimer(void)
@@ -1191,7 +1170,7 @@ void PendingDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, con
 
 void PendingDatasetBase::HandleTimer(Timer &aTimer)
 {
-    GetPendingDatasetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<PendingDatasetBase>().HandleTimer();
 }
 
 }  // namespace MeshCoP

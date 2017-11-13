@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
@@ -392,7 +393,7 @@ exit:
 
 void Mac::HandleEnergyScanSampleRssi(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleEnergyScanSampleRssi();
+    aTasklet.GetOwner<Mac>().HandleEnergyScanSampleRssi();
 }
 
 void Mac::HandleEnergyScanSampleRssi(void)
@@ -859,7 +860,7 @@ exit:
 
 void Mac::HandleBeginTransmit(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleBeginTransmit();
+    aTimer.GetOwner<Mac>().HandleBeginTransmit();
 }
 
 void Mac::HandleBeginTransmit(void)
@@ -1156,7 +1157,7 @@ exit:
 
 void Mac::HandleMacTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleMacTimer();
+    aTimer.GetOwner<Mac>().HandleMacTimer();
 }
 
 void Mac::HandleMacTimer(void)
@@ -1202,7 +1203,7 @@ exit:
 
 void Mac::HandleReceiveTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleReceiveTimer();
+    aTimer.GetOwner<Mac>().HandleReceiveTimer();
 }
 
 void Mac::HandleReceiveTimer(void)
@@ -1934,17 +1935,6 @@ bool Mac::IsBeaconJoinable(void)
     return joinable;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-
-Mac &Mac::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Mac &mac = *static_cast<Mac *>(aContext.GetContext());
-#else
-    Mac &mac = Instance::Get().GetThreadNetif().GetMac();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return mac;
-}
 
 const char *Mac::OperationToString(Operation aOperation)
 {

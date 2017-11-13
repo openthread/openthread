@@ -43,6 +43,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
@@ -362,7 +363,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).ScheduleTransmissionTask();
+    aTasklet.GetOwner<MeshForwarder>().ScheduleTransmissionTask();
 }
 
 void MeshForwarder::ScheduleTransmissionTask(void)
@@ -1136,7 +1137,7 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
 
 otError MeshForwarder::HandleFrameRequest(Mac::Sender &aSender, Mac::Frame &aFrame)
 {
-    return GetOwner(aSender).HandleFrameRequest(aFrame);
+    return aSender.GetOwner<MeshForwarder>().HandleFrameRequest(aFrame);
 }
 
 otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
@@ -1584,7 +1585,7 @@ otError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
 
 void MeshForwarder::HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError)
 {
-    GetOwner(aSender).HandleSentFrame(aFrame, aError);
+    aSender.GetOwner<MeshForwarder>().HandleSentFrame(aFrame, aError);
 }
 
 void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
@@ -1830,7 +1831,7 @@ void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels)
 
 void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleDiscoverTimer();
+    aTimer.GetOwner<MeshForwarder>().HandleDiscoverTimer();
 }
 
 void MeshForwarder::HandleDiscoverTimer(void)
@@ -1865,7 +1866,7 @@ exit:
 
 void MeshForwarder::HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame)
 {
-    GetOwner(aReceiver).HandleReceivedFrame(aFrame);
+    aReceiver.GetOwner<MeshForwarder>().HandleReceivedFrame(aFrame);
 }
 
 void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
@@ -2281,7 +2282,7 @@ void MeshForwarder::ClearReassemblyList(void)
 
 void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleReassemblyTimer();
+    aTimer.GetOwner<MeshForwarder>().HandleReassemblyTimer();
 }
 
 void MeshForwarder::HandleReassemblyTimer(void)
@@ -2416,18 +2417,7 @@ exit:
 
 void MeshForwarder::HandleDataPollTimeout(Mac::Receiver &aReceiver)
 {
-    GetOwner(aReceiver).GetDataPollManager().HandlePollTimeout();
-}
-
-MeshForwarder &MeshForwarder::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    MeshForwarder &meshForwader = *static_cast<MeshForwarder *>(aContext.GetContext());
-#else
-    MeshForwarder &meshForwader = Instance::Get().GetThreadNetif().GetMeshForwarder();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return meshForwader;
+    aReceiver.GetOwner<MeshForwarder>().GetDataPollManager().HandlePollTimeout();
 }
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

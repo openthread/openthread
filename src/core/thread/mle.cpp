@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac_frame.hpp"
@@ -1399,7 +1400,7 @@ exit:
 
 void Mle::HandleParentRequestTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleParentRequestTimer();
+    aTimer.GetOwner<Mle>().HandleParentRequestTimer();
 }
 
 void Mle::HandleParentRequestTimer(void)
@@ -1518,7 +1519,7 @@ void Mle::HandleParentRequestTimer(void)
 
 void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleDelayedResponseTimer();
+    aTimer.GetOwner<Mle>().HandleDelayedResponseTimer();
 }
 
 void Mle::HandleDelayedResponseTimer(void)
@@ -1730,7 +1731,7 @@ exit:
 
 void Mle::HandleSendChildUpdateRequest(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleSendChildUpdateRequest();
+    aTasklet.GetOwner<Mle>().HandleSendChildUpdateRequest();
 }
 
 void Mle::HandleSendChildUpdateRequest(void)
@@ -1749,7 +1750,7 @@ void Mle::HandleSendChildUpdateRequest(void)
 
 void Mle::HandleChildUpdateRequestTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleChildUpdateRequestTimer();
+    aTimer.GetOwner<Mle>().HandleChildUpdateRequestTimer();
 }
 
 void Mle::HandleChildUpdateRequestTimer(void)
@@ -3432,17 +3433,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
-
-Mle &Mle::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Mle &mle = *static_cast<Mle *>(aContext.GetContext());
-#else
-    Mle &mle = Instance::Get().GetThreadNetif().GetMle();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return mle;
-}
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const
 {

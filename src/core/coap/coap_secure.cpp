@@ -32,6 +32,7 @@
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -277,7 +278,7 @@ exit:
 
 void CoapSecure::HandleUdpTransmit(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleUdpTransmit();
+    aTasklet.GetOwner<CoapSecure>().HandleUdpTransmit();
 }
 
 void CoapSecure::HandleUdpTransmit(void)
@@ -309,25 +310,14 @@ exit:
     otLogFuncExit();
 }
 
-CoapSecure &CoapSecure::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    CoapSecure &coap = *static_cast<CoapSecure *>(aContext.GetContext());
-#else
-    CoapSecure &coap = Instance::Get().GetThreadNetif().GetCoapSecure();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return coap;
-}
-
 void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+    aTimer.GetOwner<CoapSecure>().CoapBase::HandleRetransmissionTimer();
 }
 
 void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
+    aTimer.GetOwner<CoapSecure>().CoapBase::HandleResponsesQueueTimer();
 }
 
 }  // namespace Coap

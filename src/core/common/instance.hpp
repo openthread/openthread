@@ -321,6 +321,24 @@ public:
      */
     MessagePool &GetMessagePool(void) { return mMessagePool; }
 
+    /**
+     * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
+     *
+     * For example, `Get<MeshForwarder>()` returns a reference to the `MeshForwarder` object of the instance.
+     *
+     * Note that any `Type` for which the `Get<Type>` is defined MUST be uniquely accessible from the OpenThread
+     * `Instance` through the member variable property hierarchy.
+     *
+     * Specializations of the `Get<Type>()` method are defined in the `instance.cpp`. The specializations are defined
+     * for any class (type) which can use `GetOwner<Type>` method, i.e., any class that is an owner of a callback
+     * providing object such as a `Timer`,`Tasklet`, or any sub-class of `OwnerLocator`.
+     *
+     * @returns A reference to the `Type` object of the instance.
+     *
+     */
+    template <typename Type>
+    Type &Get(void);
+
 private:
     Instance(void);
     void AfterInit(void);

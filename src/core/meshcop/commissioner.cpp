@@ -45,6 +45,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
@@ -321,7 +322,7 @@ otCommissionerState Commissioner::GetState(void) const
 
 void Commissioner::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<Commissioner>().HandleTimer();
 }
 
 void Commissioner::HandleTimer(void)
@@ -343,7 +344,7 @@ void Commissioner::HandleTimer(void)
 
 void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleJoinerExpirationTimer();
+    aTimer.GetOwner<Commissioner>().HandleJoinerExpirationTimer();
 }
 
 void Commissioner::HandleJoinerExpirationTimer(void)
@@ -1081,17 +1082,6 @@ otError Commissioner::GeneratePSKc(const char *aPassPhrase, const char *aNetwork
 
 exit:
     return error;
-}
-
-Commissioner &Commissioner::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Commissioner &commissioner = *static_cast<Commissioner *>(aContext.GetContext());
-#else
-    Commissioner &commissioner = Instance::Get().GetThreadNetif().GetCommissioner();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return commissioner;
 }
 
 }  // namespace MeshCoP

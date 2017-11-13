@@ -178,7 +178,6 @@ private:
     void HandleTimer(void);
     void UpdateHistory(bool aThresholdExceeded);
     void UpdateJamState(void);
-    static JamDetector &GetOwner(const Context &aContext);
 
 private:
     enum
