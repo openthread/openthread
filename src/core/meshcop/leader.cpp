@@ -41,9 +41,9 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -54,7 +54,7 @@
 namespace ot {
 namespace MeshCoP {
 
-Leader::Leader(otInstance &aInstance):
+Leader::Leader(Instance &aInstance):
     InstanceLocator(aInstance),
     mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this),
     mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
@@ -323,7 +323,7 @@ Leader &Leader::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Leader &leader = *static_cast<Leader *>(aContext.GetContext());
 #else
-    Leader &leader = otGetThreadNetif().GetLeader();
+    Leader &leader = Instance::Get().GetThreadNetif().GetLeader();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return leader;

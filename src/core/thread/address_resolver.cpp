@@ -39,11 +39,11 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -56,7 +56,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-AddressResolver::AddressResolver(otInstance &aInstance) :
+AddressResolver::AddressResolver(Instance &aInstance) :
     InstanceLocator(aInstance),
     mAddressError(OT_URI_PATH_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
     mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
@@ -814,7 +814,7 @@ AddressResolver &AddressResolver::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     AddressResolver &resolver = *static_cast<AddressResolver *>(aContext.GetContext());
 #else
-    AddressResolver &resolver = otGetThreadNetif().GetAddressResolver();
+    AddressResolver &resolver = Instance::Get().GetThreadNetif().GetAddressResolver();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return resolver;

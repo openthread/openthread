@@ -55,8 +55,6 @@ void PlatformInit(int argc, char *argv[])
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
-    // sInstance = aInstance;
-
     emskUartProcess();
     emskRadioProcess(aInstance);
     emskAlarmProcess(aInstance);

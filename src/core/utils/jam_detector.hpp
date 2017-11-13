@@ -65,7 +65,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit JamDetector(otInstance &aInstance);
+    explicit JamDetector(Instance &aInstance);
 
     /**
      * Start the jamming detection.

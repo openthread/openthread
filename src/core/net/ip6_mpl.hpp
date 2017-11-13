@@ -439,7 +439,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    Mpl(otInstance &aInstance);
+    Mpl(Instance &aInstance);
 
     /**
      * This method initializes the MPL option.

@@ -40,10 +40,10 @@
 #include <openthread/platform/misc.h>
 
 #include "openthread-core-config.h"
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/new.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_UART
@@ -56,7 +56,9 @@ static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 extern "C" void otNcpInit(otInstance *aInstance)
 {
     NcpUart *ncpUart = NULL;
-    ncpUart = new(&sNcpRaw) NcpUart(aInstance);
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    ncpUart = new(&sNcpRaw) NcpUart(instance);
 
     if (ncpUart == NULL || ncpUart != NcpBase::GetNcpInstance())
     {
@@ -91,7 +93,7 @@ const uint8_t *NcpUart::UartTxBuffer::GetBuffer(void) const
     return mBuffer;
 }
 
-NcpUart::NcpUart(otInstance *aInstance):
+NcpUart::NcpUart(Instance *aInstance):
     NcpBase(aInstance),
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),

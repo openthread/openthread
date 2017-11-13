@@ -38,6 +38,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 
 namespace ot {
 namespace Mac {

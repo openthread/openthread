@@ -74,7 +74,7 @@ public:
      * @param[in]  aInstance    A reference to the OpenThread instance
      *
      */
-    explicit SourceMatchController(otInstance &aInstance);
+    explicit SourceMatchController(Instance &aInstance);
 
     /**
      * This method returns the current state of source address matching.

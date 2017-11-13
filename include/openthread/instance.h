@@ -120,7 +120,7 @@ OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
  * @param[in]  aApiInstance  The OpenThread api instance.
  * @param[in]  aDeviceGuid   The device guid to create an OpenThread context for.
  *
- * @retval otInstance*  The new OpenThread device instance structure for the device.
+ * @returns  The new OpenThread device instance structure for the device.
  *
  * @sa otFreeMemory
  *
@@ -132,7 +132,7 @@ OTAPI otInstance *OTCALL otInstanceInit(otApiInstance *aApiInstance, const GUID 
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @retval GUID  The device GUID.
+ * @returns  The device GUID.
  *
  */
 OTAPI GUID OTCALL otGetDeviceGuid(otInstance *aInstance);
@@ -142,7 +142,7 @@ OTAPI GUID OTCALL otGetDeviceGuid(otInstance *aInstance);
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @retval uint32_t  The device IfIndex.
+ * @returns The device IfIndex.
  *
  */
 OTAPI uint32_t OTCALL otGetDeviceIfIndex(otInstance *aInstance);
@@ -152,7 +152,7 @@ OTAPI uint32_t OTCALL otGetDeviceIfIndex(otInstance *aInstance);
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @retval uint32_t  The compartment ID.
+ * @returns  The compartment ID.
  *
  */
 OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
@@ -162,9 +162,8 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
 /**
  * This function initializes the OpenThread library.
  *
- *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
- * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
+ * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is enabled.
  *
@@ -172,9 +171,9 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
  * @param[inout] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for
  *                                    otInstance, the number of bytes required for otInstance.
  *
- * @retval otInstance*  The new OpenThread instance structure.
+ * @returns  A pointer to the new OpenThread instance.
  *
- * @sa otContextFinalize
+ * @sa otInstanceFinalize
  *
  */
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
@@ -183,11 +182,11 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
  * This function initializes the static single instance of the OpenThread library.
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
- * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
+ * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is disabled.
  *
- * @retval A pointer to the single OpenThread instance structure.
+ * @returns A pointer to the single OpenThread instance.
  *
  */
 otInstance *otInstanceInitSingle(void);
@@ -195,11 +194,9 @@ otInstance *otInstanceInitSingle(void);
 /**
  * This function indicates whether or not the instance is valid/initialized.
  *
- * For single-instance case, the instance is considered valid if it is acquired and initialized using
- * `otInstanceInitSingle()`. A subsequent call to `otInstanceFinalize()` causes the instance to be considered as
- * invalid (not initialized).
- *
- * For multi-instance case, any non-NULL instance pointer is considered as valid/initialized.
+ * The instance is considered valid if it is acquired and initialized using either `otInstanceInitSingle()` (in single
+ * instance case) or `otInstanceInit()` (in multi instance case). A subsequent call to `otInstanceFinalize()` causes
+ * the instance to be considered as uninitialized.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *

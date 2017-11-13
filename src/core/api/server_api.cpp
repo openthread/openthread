@@ -37,17 +37,18 @@
 
 #include <openthread/server.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
 otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
+    error = instance.GetThreadNetif().GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
 
 exit:
     return error;
@@ -55,7 +56,9 @@ exit:
 
 otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().AddService(
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetNetworkDataLocal().AddService(
                aConfig->mEnterpriseNumber, &aConfig->mServiceData[0], aConfig->mServiceDataLength,
                aConfig->mServerConfig.mStable, &aConfig->mServerConfig.mServerData[0], aConfig->mServerConfig.mServerDataLength
            );
@@ -64,17 +67,21 @@ otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig
 otError otServerRemoveService(otInstance *aInstance, uint32_t aEnterpriseNumber, uint8_t *aServiceData,
                               uint8_t aServiceDataLength)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetNetworkDataLocal().RemoveService(aEnterpriseNumber, aServiceData,
+                                                                         aServiceDataLength);
 }
 
 otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator,
                                otServiceConfig *aConfig)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
-    error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNextService(aIterator, aConfig);
+    error = instance.GetThreadNetif().GetNetworkDataLocal().GetNextService(aIterator, aConfig);
 
 exit:
     return error;
@@ -82,7 +89,9 @@ exit:
 
 otError otServerRegister(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetNetworkDataLocal().SendServerDataNotification();
 }
 
 #endif  // OPENTHREAD_ENABLE_SERVICE

@@ -41,9 +41,9 @@
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "meshcop/joiner_router.hpp"
@@ -60,7 +60,7 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Commissioner::Commissioner(otInstance &aInstance):
+Commissioner::Commissioner(Instance &aInstance):
     InstanceLocator(aInstance),
     mState(OT_COMMISSIONER_STATE_DISABLED),
     mJoinerPort(0),
@@ -1088,7 +1088,7 @@ Commissioner &Commissioner::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Commissioner &commissioner = *static_cast<Commissioner *>(aContext.GetContext());
 #else
-    Commissioner &commissioner = otGetThreadNetif().GetCommissioner();
+    Commissioner &commissioner = Instance::Get().GetThreadNetif().GetCommissioner();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return commissioner;

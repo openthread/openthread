@@ -175,7 +175,7 @@ public:
      * @param[in]  aIp6  A reference to OpenThread instance.
      *
      */
-    Udp(otInstance &aInstance);
+    Udp(Instance &aInstance);
 
     /**
      * This method adds a UDP socket.

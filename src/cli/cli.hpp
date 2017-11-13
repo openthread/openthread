@@ -53,6 +53,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/context.hpp"
+#include "common/instance.hpp"
 
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
@@ -104,7 +105,7 @@ public:
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      */
-    Interpreter(otInstance *aInstance);
+    Interpreter(Instance *aInstance);
 
     /**
      * This method interprets a CLI command.
@@ -396,7 +397,7 @@ private:
     struct otCliContext
     {
         Interpreter *mInterpreter;
-        otInstance  *mInstance;
+        Instance    *mInstance;
     };
     otCliContext mInstances[MAX_CLI_OT_INSTANCES];
     uint8_t mInstancesLength;
@@ -426,7 +427,7 @@ private:
 
 #endif
 
-    otInstance *mInstance;
+    Instance *mInstance;
 };
 
 }  // namespace Cli

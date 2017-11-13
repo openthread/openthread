@@ -38,12 +38,12 @@
 
 #include <openthread/types.h>
 
-#include "openthread-single-instance.h"
-
 namespace ot {
 
+class Instance;
 class ThreadNetif;
 namespace Ip6 { class Ip6; }
+
 
 /**
  * @addtogroup core-locator
@@ -57,22 +57,29 @@ namespace Ip6 { class Ip6; }
 
 
 /**
- * This class implements locator for  otInstance object.
+ * This class implements a locator for an OpenThread Instance object.
+ *
+ * The `InstanceLocator` is used as base class of almost all other OpenThread classes. It provides a way for an object
+ * to get to its owning/parent OpenThread `Instance` and other objects within the OpenTread hierarchy (e.g. the
+ * `ThreadNetif` or `Ip6::Ip6` objects).
+ *
+ * If multiple-instance feature is supported, the owning/parent OpenThread `Instance` is tracked as a reference. In the
+ * single-instance case, this class becomes an empty base class.
  *
  */
 class InstanceLocator
 {
 public:
     /**
-     * This method returns a reference to the parent otInstance structure.
+     * This method returns a reference to the parent OpenThread Instance.
      *
-     * @returns A reference to the parent otInstance structure.
+     * @returns A reference to the parent otInstance.
      *
      */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance &GetInstance(void) const { return mInstance; }
+    Instance &GetInstance(void) const { return mInstance; }
 #else
-    otInstance &GetInstance(void) const { return *otGetInstance(); }
+    Instance &GetInstance(void) const;
 #endif
 
     /**
@@ -98,7 +105,7 @@ protected:
      * @param[in]  aInstance  A pointer to the otInstance.
      *
      */
-    InstanceLocator(otInstance &aInstance)
+    InstanceLocator(Instance &aInstance)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
         : mInstance(aInstance)
 #endif
@@ -108,7 +115,7 @@ protected:
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 private:
-    otInstance &mInstance;
+    Instance &mInstance;
 #endif
 };
 

@@ -63,7 +63,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Joiner(otInstance &aInstance);
+    Joiner(Instance &aInstance);
 
     /**
      * This method starts the Joiner service.

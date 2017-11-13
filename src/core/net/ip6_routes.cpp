@@ -34,6 +34,7 @@
 #include "ip6_routes.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -41,7 +42,7 @@
 namespace ot {
 namespace Ip6 {
 
-Routes::Routes(otInstance &aInstance):
+Routes::Routes(Instance &aInstance):
     InstanceLocator(aInstance),
     mRoutes(NULL)
 {

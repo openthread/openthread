@@ -35,19 +35,26 @@
 
 #include "locator.hpp"
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
 
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+Instance &InstanceLocator::GetInstance(void) const
+{
+    return Instance::Get();
+}
+#endif
+
 Ip6::Ip6 &InstanceLocator::GetIp6(void) const
 {
-    return GetInstance().mIp6;
+    return GetInstance().GetIp6();
 }
 
 ThreadNetif &InstanceLocator::GetNetif(void) const
 {
-    return GetInstance().mThreadNetif;
+    return GetInstance().GetThreadNetif();
 }
 
 }  // namespace ot

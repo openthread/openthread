@@ -231,7 +231,7 @@ public:
      * @param[in]  aInstance A reference to the OpenThread instance.
      *
      */
-    Icmp(otInstance &aInstance);
+    Icmp(Instance &aInstance);
 
     /**
      * This method returns a new ICMP message with sufficient header space reserved.

@@ -468,7 +468,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Mle(otInstance &aInstance);
+    explicit Mle(Instance &aInstance);
 
     /**
      * This method enables MLE.

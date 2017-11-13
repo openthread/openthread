@@ -68,15 +68,24 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
     uint8_t channel = 0;
+    otInstance *aInstance = NULL;
 
     otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
+    // TODO: `otPlatRandomGet()` and `otPlatRandomGetTrue()` should include a pointer to the
+    // owning OpenThread Instance as an input argument (similar to other platform APIs).
+    //
+    // The platform implementation requires to know the OpenThread instance to be able to
+    // use other radio platform APIs. However, the emsk platform implementation of radio API
+    // does not actually use the passed-in instance argument. Till the above TODO is done, as
+    // a workaround, a NULL `aInstance` is used instead.
+
     /* disable radio*/
-    if (otPlatRadioIsEnabled(sInstance))
+    if (otPlatRadioIsEnabled(aInstance))
     {
         channel = (mrf24j40_read_long_ctrl_reg(MRF24J40_RFCON0) >> 4) + 11;
-        otPlatRadioSleep(sInstance);
-        otPlatRadioDisable(sInstance);
+        otPlatRadioSleep(aInstance);
+        otPlatRadioDisable(aInstance);
     }
 
     /*
@@ -97,8 +106,8 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
     if (channel)
     {
         emskRadioInit();
-        otPlatRadioEnable(sInstance);
-        otPlatRadioReceive(sInstance, channel);
+        otPlatRadioEnable(aInstance);
+        otPlatRadioReceive(aInstance, channel);
     }
 
 exit:

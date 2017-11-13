@@ -42,6 +42,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "common/instance.hpp"
 #include "common/settings.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -50,7 +51,7 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetLocal::DatasetLocal(otInstance &aInstance, const Tlv::Type aType) :
+DatasetLocal::DatasetLocal(Instance &aInstance, const Tlv::Type aType) :
     InstanceLocator(aInstance),
     mUpdateTime(0),
     mType(aType)

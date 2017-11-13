@@ -34,7 +34,7 @@
 #include "openthread-core-config.h"
 #include "openthread/child_supervision.h"
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
@@ -42,22 +42,30 @@ using namespace ot;
 
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetChildSupervisor().GetSupervisionInterval();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetChildSupervisor().GetSupervisionInterval();
 }
 
 void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval)
 {
-    aInstance->mThreadNetif.GetChildSupervisor().SetSupervisionInterval(aInterval);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetChildSupervisor().SetSupervisionInterval(aInterval);
 }
 
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetSupervisionListener().GetTimeout();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetSupervisionListener().GetTimeout();
 }
 
 void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
 {
-    aInstance->mThreadNetif.GetSupervisionListener().SetTimeout(aTimeout);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetSupervisionListener().SetTimeout(aTimeout);
 }
 
 #endif  // OPENTHREAD_ENABLE_CHILD_SUPERVISION

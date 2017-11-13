@@ -36,8 +36,8 @@
 #include <openthread/openthread.h>
 
 #include "openthread-core-config.h"
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -48,7 +48,7 @@ namespace Utils {
 
 #if OPENTHREAD_FTD
 
-ChildSupervisor::ChildSupervisor(otInstance &aInstance) :
+ChildSupervisor::ChildSupervisor(Instance &aInstance) :
     InstanceLocator(aInstance),
     mSupervisionInterval(kDefaultSupervisionInterval),
     mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
@@ -101,7 +101,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
-    message = netif.GetInstance().mMessagePool.New(Message::kTypeSupervision, sizeof(uint8_t));
+    message = netif.GetInstance().GetMessagePool().New(Message::kTypeSupervision, sizeof(uint8_t));
     VerifyOrExit(message != NULL);
 
     // Supervision message is an empty payload 15.4 data frame.
@@ -170,7 +170,7 @@ ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     ChildSupervisor &supervisor = *static_cast<ChildSupervisor *>(aContext.GetContext());
 #else
-    ChildSupervisor &supervisor = otGetThreadNetif().GetChildSupervisor();
+    ChildSupervisor &supervisor = Instance::Get().GetThreadNetif().GetChildSupervisor();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return supervisor;
@@ -178,7 +178,7 @@ ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
 
 #endif // #if OPENTHREAD_FTD
 
-SupervisionListener::SupervisionListener(otInstance &aInstance) :
+SupervisionListener::SupervisionListener(Instance &aInstance) :
     InstanceLocator(aInstance),
     mTimeout(0),
     mTimer(aInstance, &SupervisionListener::HandleTimer, this)
@@ -262,7 +262,7 @@ SupervisionListener &SupervisionListener::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     SupervisionListener &listener = *static_cast<SupervisionListener *>(aContext.GetContext());
 #else
-    SupervisionListener &listener = otGetThreadNetif().GetSupervisionListener();
+    SupervisionListener &listener = Instance::Get().GetThreadNetif().GetSupervisionListener();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return listener;

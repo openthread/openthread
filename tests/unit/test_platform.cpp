@@ -77,7 +77,7 @@ void testPlatResetToDefaults(void)
     g_testPlatRadioGetTransmitBuffer = NULL;
 }
 
-otInstance *testInitInstance(void)
+ot::Instance *testInitInstance(void)
 {
     otInstance *instance = NULL;
 
@@ -99,7 +99,7 @@ otInstance *testInitInstance(void)
     instance = otInstanceInitSingle();
 #endif
 
-    return instance;
+    return static_cast<ot::Instance *>(instance);
 }
 
 void testFreeInstance(otInstance *aInstance)

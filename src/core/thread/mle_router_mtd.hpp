@@ -50,7 +50,7 @@ class MleRouter: public Mle
     friend class Mle;
 
 public:
-    explicit MleRouter(otInstance &aInstance) : Mle(aInstance) { }
+    explicit MleRouter(Instance &aInstance) : Mle(aInstance) { }
 
     bool IsSingleton(void) { return false; }
 

@@ -43,9 +43,6 @@
 
 #include "board/board.h"
 
-// Global OpenThread instance structure
-extern otInstance *sInstance;
-
 /**
  * This function initializes the alarm service used by OpenThread.
  *

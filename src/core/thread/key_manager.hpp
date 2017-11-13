@@ -69,7 +69,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit KeyManager(otInstance &aInstance);
+    explicit KeyManager(Instance &aInstance);
 
     /**
      * This method starts KeyManager rotation timer and sets guard timer to initial value.

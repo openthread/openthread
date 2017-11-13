@@ -30,9 +30,9 @@
 
 #include "coap_secure.hpp"
 
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "meshcop/dtls.hpp"
-#include "openthread-instance.h"
 #include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_DTLS
@@ -45,7 +45,7 @@
 namespace ot {
 namespace Coap {
 
-CoapSecure::CoapSecure(otInstance &aInstance):
+CoapSecure::CoapSecure(Instance &aInstance):
     CoapBase(aInstance, &CoapSecure::HandleRetransmissionTimer, &CoapSecure::HandleResponsesQueueTimer),
     mConnectedCallback(NULL),
     mConnectedContext(NULL),
@@ -219,7 +219,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
     otLogFuncEntry();
 
-    VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     CoapBase::Receive(*message, mPeerAddress);
@@ -314,7 +314,7 @@ CoapSecure &CoapSecure::GetOwner(const Context &aContext)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     CoapSecure &coap = *static_cast<CoapSecure *>(aContext.GetContext());
 #else
-    CoapSecure &coap = otGetThreadNetif().GetCoapSecure();
+    CoapSecure &coap = Instance::Get().GetThreadNetif().GetCoapSecure();
     OT_UNUSED_VARIABLE(aContext);
 #endif
     return coap;
