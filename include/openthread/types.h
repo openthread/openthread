@@ -720,7 +720,7 @@ typedef struct otBorderRouterConfig
     otIp6Prefix mPrefix;
 
     /**
-     * A 2-bit signed integer indicating router preference as defined in RFC 4291.
+     * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
     int mPreference : 2;
 
@@ -783,7 +783,7 @@ typedef struct otExternalRouteConfig
     uint16_t mRloc16;
 
     /**
-     * A 2-bit signed integer indicating router preference as defined in RFC 4291.
+     * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
     int mPreference : 2;
 
