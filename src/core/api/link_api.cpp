@@ -94,19 +94,19 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
     otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
 }
 
-int8_t otLinkGetMaxTransmitPower(otInstance *aInstance)
+uint32_t otLinkGetTransmitPower(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMac().GetMaxTransmitPower();
+    return instance.GetThreadNetif().GetMac().GetTransmitPower();
 }
 
-void otLinkSetMaxTransmitPower(otInstance *aInstance, int8_t aPower)
+void otLinkSetTransmitPower(otInstance *aInstance, uint32_t aTransmitPower)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().GetMac().SetMaxTransmitPower(aPower);
-    otPlatRadioSetDefaultTxPower(aInstance, aPower);
+    instance.GetThreadNetif().GetMac().SetTransmitPower(aTransmitPower);
+    otPlatRadioSetTransmitPower(aInstance, aTransmitPower);
 }
 
 otPanId otLinkGetPanId(otInstance *aInstance)

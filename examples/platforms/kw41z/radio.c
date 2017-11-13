@@ -346,7 +346,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
 
     rf_set_channel(aFrame->mChannel);
-    rf_set_tx_power(aFrame->mPower);
+    rf_set_tx_power((int8_t)aFrame->mTxPowerConfig);
 
     *(uint8_t *)ZLL->PKT_BUFFER_TX = aFrame->mLength;
 
@@ -462,11 +462,11 @@ exit:
     return status;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
 {
     (void)aInstance;
 
-    sAutoTxPwrLevel = aPower;
+    sAutoTxPwrLevel = (int8_t)aPower;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
@@ -733,7 +733,7 @@ static bool rf_process_rx_frame(void)
     sRxFrame.mLength = temp;
     temp = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
     sRxFrame.mLqi = rf_lqi_adjust(temp);
-    sRxFrame.mPower = rf_lqi_to_rssi(sRxFrame.mLqi);
+    sRxFrame.mRssi = rf_lqi_to_rssi(sRxFrame.mLqi);
 #if DOUBLE_BUFFERING
 
     for (temp = 0; temp < sRxFrame.mLength - 2; temp++)

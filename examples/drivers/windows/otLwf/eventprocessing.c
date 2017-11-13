@@ -1019,7 +1019,7 @@ otLwfEventWorkerThread(
                             SPINEL_DATATYPE_STRUCT_S( // Vendor-data
                                 SPINEL_DATATYPE_UINT_PACKED_S
                             ),
-                            &pFilter->otReceiveFrame.mPower,
+                            &pFilter->otReceiveFrame.mRssi,
                             &noiseFloor,
                             &flags,
                             &pFilter->otReceiveFrame.mChannel,

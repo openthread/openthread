@@ -1219,15 +1219,17 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
 {
     unsigned int i;
     output_config_t const *powerCfg = &(rgOutputPower[0]);
     (void)aInstance;
 
+    int8_t power = (int8_t)aPower;
+
     for (i = 1; i < OUTPUT_CONFIG_COUNT; i++)
     {
-        if (rgOutputPower[i].dbm >= aPower)
+        if (rgOutputPower[i].dbm >= power)
         {
             powerCfg = &(rgOutputPower[i]);
         }
@@ -1803,7 +1805,7 @@ static void cc2650RadioProcessReceiveQueue(otInstance *aInstance)
                 receiveFrame.mLength  = len;
                 receiveFrame.mPsdu    = &(payload[1]);
                 receiveFrame.mChannel = sReceiveCmd.channel;
-                receiveFrame.mPower   = rssi;
+                receiveFrame.mRssi    = rssi;
                 receiveFrame.mLqi     = crcCorr->status.corr;
 
                 receiveError = OT_ERROR_NONE;

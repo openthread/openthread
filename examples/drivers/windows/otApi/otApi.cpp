@@ -1654,13 +1654,13 @@ otThreadSetPSKc(
 }
 
 OTAPI 
-int8_t 
+uint32_t 
 OTCALL
-otLinkGetMaxTransmitPower(
+otLinkGetTransmitPower(
     _In_ otInstance *aInstance
     )
 {
-    int8_t Result = 0;
+    uint32_t Result = 0;
     if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER, &Result);
     return Result;
 }
@@ -1668,9 +1668,9 @@ otLinkGetMaxTransmitPower(
 OTAPI 
 void 
 OTCALL
-otLinkSetMaxTransmitPower(
+otLinkSetTransmitPower(
     _In_ otInstance *aInstance, 
-    int8_t aPower
+    uint32_t aPower
     )
 {
     if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER, aPower);

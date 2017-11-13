@@ -155,7 +155,7 @@ Mac::Mac(Instance &aInstance):
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
     mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
-    mMaxTransmitPower(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER),
+    mTransmitPower(OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER),
     mSendHead(NULL),
     mSendTail(NULL),
     mReceiveHead(NULL),
@@ -286,7 +286,7 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
 
     aBeaconFrame->GetSrcPanId(aResult.mPanId);
     aResult.mChannel = aBeaconFrame->GetChannel();
-    aResult.mRssi = aBeaconFrame->GetPower();
+    aResult.mRssi = aBeaconFrame->GetRssi();
     aResult.mLqi = aBeaconFrame->GetLqi();
 
     payloadLength = aBeaconFrame->GetPayloadLength();
@@ -870,7 +870,7 @@ void Mac::HandleBeginTransmit(void)
 
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
     {
-        sendFrame.SetPower(mMaxTransmitPower);
+        sendFrame.SetTransmitPower(mTransmitPower);
 
         switch (mOperation)
         {
@@ -908,11 +908,6 @@ void Mac::HandleBeginTransmit(void)
 
         // Security Processing
         ProcessTransmitSecurity(sendFrame);
-
-        if (sendFrame.GetPower() > mMaxTransmitPower)
-        {
-            sendFrame.SetPower(mMaxTransmitPower);
-        }
     }
 
     error = RadioReceive(sendFrame.GetChannel());
@@ -1001,7 +996,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
 
         if (neighbor != NULL)
         {
-            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetPower());
+            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetRssi());
         }
     }
 
@@ -1601,7 +1596,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         // override with the rssi in setting
         if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
-            aFrame->mPower = rssi;
+            aFrame->SetRssi(rssi);
         }
     }
 
@@ -1657,7 +1652,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
-        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mPower);
+        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
 
         if (aFrame->GetSecurityEnabled() == true)
         {

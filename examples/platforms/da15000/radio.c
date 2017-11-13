@@ -531,13 +531,15 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
 {
+    int8_t power = (int8_t)aPower;
+
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "Set DefaultTxPower: %d", aPower);
+    otLogInfoPlat(sInstance, "Set TransmitPower: %d", power);
 
-    FTDF_setValue(FTDF_PIB_TX_POWER, &aPower);
+    FTDF_setValue(FTDF_PIB_TX_POWER, &power);
 }
 
 void da15000RadioProcess(otInstance *aInstance)
@@ -656,7 +658,7 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
         sReceiveFrame[sWriteFrame].mChannel   = sChannel;
         sReceiveFrame[sWriteFrame].mLength    = frameLength;
         sReceiveFrame[sWriteFrame].mLqi       = lqi;
-        sReceiveFrame[sWriteFrame].mPower     = otPlatRadioGetRssi(sThreadInstance);
+        sReceiveFrame[sWriteFrame].mRssi      = otPlatRadioGetRssi(sThreadInstance);
         memcpy(sReceiveFrame[sWriteFrame].mPsdu, frame, frameLength);
 
         sWriteFrame = (sWriteFrame + 1) % RADIO_FRAMES_BUFFER_SIZE;

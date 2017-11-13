@@ -392,7 +392,7 @@ extern "C" {
         return OT_ERROR_NOT_IMPLEMENTED;
     }
 
-    void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+    void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
     {
         (void)aInstance;
         (void)aPower;

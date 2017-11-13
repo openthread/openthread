@@ -118,11 +118,13 @@
 /**
  * @def OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
  *
- * The default IEEE 802.15.4 maximum transmit power (dBm)
+ * The 32-bit value's interpretation is radio-specific.
+ *
+ * The default transmit power configuration.
  *
  */
-#ifndef OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
-#define OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER            0
+#ifndef OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
+#define OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER                0
 #endif
 
 /**

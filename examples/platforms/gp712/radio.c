@@ -219,7 +219,7 @@ void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
 {
     if (aError == OT_ERROR_NONE)
     {
-        sLastReceivedPower = aPacket->mPower;
+        sLastReceivedPower = aPacket->mRssi;
     }
 
     otPlatRadioReceiveDone(pQorvoInstance, aPacket, aError);
@@ -314,7 +314,7 @@ void cbQorvoRadioEnergyScanDone(int8_t aEnergyScanMaxRssi)
 }
 
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
 {
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;

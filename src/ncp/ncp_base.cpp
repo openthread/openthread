@@ -816,7 +816,7 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
     SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mPower)); // TX Power
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mRssi));  // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));           // Noise floor (Currently unused)
     SuccessOrExit(mEncoder.WriteUint16(flags));        // Flags
 
@@ -1810,17 +1810,17 @@ otError NcpBase::GetPropertyHandler_PHY_RX_SENSITIVITY(void)
 
 otError NcpBase::GetPropertyHandler_PHY_TX_POWER(void)
 {
-    return mEncoder.WriteInt8(otLinkGetMaxTransmitPower(mInstance));
+    return mEncoder.WriteUint32(otLinkGetTransmitPower(mInstance));
 }
 
 otError NcpBase::SetPropertyHandler_PHY_TX_POWER(void)
 {
-    int8_t txPower = 0;
+    uint32_t txPower = 0;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadInt8(txPower));
+    SuccessOrExit(error = mDecoder.ReadUint32(txPower));
 
-    otLinkSetMaxTransmitPower(mInstance, txPower);
+    otLinkSetTransmitPower(mInstance, txPower);
 
 exit:
     return error;

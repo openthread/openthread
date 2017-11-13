@@ -252,7 +252,7 @@ static void handleRx(void)
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {
                 otLogDebgPlat(sInstance, "Radio receive done, rssi: %d",
-                              sReceiveFrame.mPower);
+                              sReceiveFrame.mRssi);
 
                 otPlatRadioReceiveDone(sInstance, &sReceiveFrame, OT_ERROR_NONE);
             }
@@ -291,7 +291,7 @@ void PHY_DataInd(PHY_DataInd_t *ind)
 {
     sReceiveFrame.mPsdu = ind->data;
     sReceiveFrame.mLength = ind->size + IEEE802154_FCS_SIZE;
-    sReceiveFrame.mPower = ind->rssi;
+    sReceiveFrame.mRssi = ind->rssi;
 
     sRxDone = true;
 }
@@ -518,7 +518,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     uint8_t frame[OT_RADIO_FRAME_MAX_SIZE + 1];
 
     setChannel(aFrame->mChannel);
-    setTxPower(aFrame->mPower);
+    setTxPower((int8_t)aFrame->mTxPowerConfig);
 
     frame[0] = aFrame->mLength - IEEE802154_FCS_SIZE;
     memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
@@ -616,13 +616,15 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
 {
+    int8_t power = (int8_t)aPower;
+
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Radio set default TX power: %d", aPower);
+    otLogDebgPlat(sInstance, "Radio set default TX power: %d", power);
 
-    setTxPower(aPower);
+    setTxPower(power);
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)

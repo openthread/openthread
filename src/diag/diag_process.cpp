@@ -186,7 +186,7 @@ void Diag::TxPacket()
 {
     sTxPacket->mLength = sTxLen;
     sTxPacket->mChannel = sChannel;
-    sTxPacket->mPower = sTxPower;
+    sTxPacket->mTxPowerConfig = (uint32_t)sTxPower;
 
     for (uint8_t i = 0; i < sTxLen; i++)
     {
@@ -368,7 +368,7 @@ void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError 
         // for sensitivity test, only record the rssi and lqi for the first packet
         if (sStats.received_packets == 0)
         {
-            sStats.first_rssi = aFrame->mPower;
+            sStats.first_rssi = aFrame->mRssi;
             sStats.first_lqi = aFrame->mLqi;
         }
 

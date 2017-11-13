@@ -329,7 +329,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     aFrame->mPsdu[-1] = aFrame->mLength;
 
     nrf_drv_radio802154_channel_set(aFrame->mChannel);
-    nrf_drv_radio802154_tx_power_set(aFrame->mPower);
+    nrf_drv_radio802154_tx_power_set(aFrame->mTxPowerConfig);
 
     if (nrf_drv_radio802154_transmit_raw(&aFrame->mPsdu[-1], true))
     {
@@ -502,12 +502,12 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
 {
     (void)aInstance;
 
-    sDefaultTxPower = aPower;
-    nrf_drv_radio802154_tx_power_set(aPower);
+    sDefaultTxPower = (int8_t)aPower;
+    nrf_drv_radio802154_tx_power_set((int8_t)aPower);
 }
 
 void nrf5RadioProcess(otInstance *aInstance)
@@ -537,7 +537,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     if (isPendingEventSet(kPendingEventTransmit))
     {
         nrf_drv_radio802154_channel_set(sTransmitFrame.mChannel);
-        nrf_drv_radio802154_tx_power_set(sTransmitFrame.mPower);
+        nrf_drv_radio802154_tx_power_set(sTransmitFrame.mTxPowerConfig);
 
         if (nrf_drv_radio802154_transmit_raw(sTransmitPsdu, true))
         {
@@ -666,7 +666,7 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
 
     receivedFrame->mPsdu    = &p_data[1];
     receivedFrame->mLength  = p_data[0];
-    receivedFrame->mPower   = power;
+    receivedFrame->mRssi    = power;
     receivedFrame->mLqi     = lqi;
     receivedFrame->mChannel = nrf_drv_radio802154_channel_get();
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -714,7 +714,7 @@ void nrf_drv_radio802154_transmitted_raw(uint8_t *aAckPsdu, int8_t aPower, int8_
     {
         sAckFrame.mPsdu    = &aAckPsdu[1];
         sAckFrame.mLength  = aAckPsdu[0];
-        sAckFrame.mPower   = aPower;
+        sAckFrame.mRssi    = aPower;
         sAckFrame.mLqi     = aLqi;
         sAckFrame.mChannel = nrf_drv_radio802154_channel_get();
     }

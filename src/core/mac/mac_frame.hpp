@@ -637,20 +637,20 @@ public:
     void SetChannel(uint8_t aChannel) { mChannel = aChannel; }
 
     /**
-     * This method returns the transmit/receive power in dBm used for transmission or reception.
+     * This method returns the receive signal strength indicator in dBm for received frames.
      *
-     * @returns The transmit/receive power in dBm used for transmission or reception.
+     * @returns The receive signal strength indicator in dBm for received frames.
      *
      */
-    int8_t GetPower(void) const { return mPower; }
+    int8_t GetRssi(void) const { return mRssi; }
 
     /**
-     * This method sets the transmit/receive power in dBm used for transmission or reception.
+     * This method sets the receive signal strength indicator in dBm for received frames.
      *
-     * @param[in]  aPower  The transmit/receive power in dBm used for transmission or reception.
+     * @param[in]  aRssi  The receive signal strength indicator in dBm for received frames.
      *
      */
-    void SetPower(int8_t aPower) { mPower = aPower; }
+    void SetRssi(int8_t aRssi) { mRssi = aRssi; }
 
     /**
      * This method returns the receive Link Quality Indicator.
@@ -667,6 +667,26 @@ public:
      *
      */
     void SetLqi(uint8_t aLqi) { mLqi = aLqi; }
+
+    /**
+     * This method gets the transmit power configuration for outgoing frames.
+     *
+     * The 32-bit value's interpretation is radio-specific.
+     *
+     * @returns The transmit power configuration.
+     *
+     */
+    uint32_t GetTransmitPower(void) const { return mTxPowerConfig; }
+
+    /**
+     * This method sets the transmit power configuration for outgoing frames.
+     *
+     * The 32-bit value's interpretation is radio-specific.
+     *
+     * @param[in]  aTxPowerConfig  The transmit power configuration.
+     *
+     */
+    void SetTransmitPower(uint32_t aTxPowerConfig) { mTxPowerConfig = aTxPowerConfig; }
 
     /**
      * This method returns the maximum number of transmit attempts for the frame.

@@ -356,7 +356,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         }
 
         setChannel(aFrame->mChannel);
-        setTxPower(aFrame->mPower);
+        setTxPower(aFrame->mRssi);
 
         while ((HWREG(RFCORE_XREG_FSMSTAT1) & 1) == 0);
 
@@ -446,7 +446,7 @@ void readFrame(void)
         sReceiveFrame.mPsdu[i] = HWREG(RFCORE_SFR_RFDATA);
     }
 
-    sReceiveFrame.mPower = (int8_t)HWREG(RFCORE_SFR_RFDATA) - CC2538_RSSI_OFFSET;
+    sReceiveFrame.mRssi = (int8_t)HWREG(RFCORE_SFR_RFDATA) - CC2538_RSSI_OFFSET;
     crcCorr = HWREG(RFCORE_SFR_RFDATA);
 
     if (crcCorr & CC2538_CRC_BIT_MASK)
@@ -840,7 +840,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetTransmitPower(otInstance *aInstance, uint32_t aPower)
 {
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;
