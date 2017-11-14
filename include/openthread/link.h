@@ -213,23 +213,27 @@ OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExt
 OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
 
 /**
- * This function returns the maximum transmit power setting in dBm.
+ * This function returns the radio's transmit power configuration
+ *
+ * The 32-bit value's interpretation is radio-specific.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  *
- * @returns  The maximum transmit power setting.
+ * @returns  The transmit power configuration.
  *
  */
-OTAPI int8_t OTCALL otLinkGetMaxTransmitPower(otInstance *aInstance);
+OTAPI uint32_t OTCALL otLinkGetTransmitPower(otInstance *aInstance);
 
 /**
- * This function sets the maximum transmit power in dBm.
+ * This function sets the transmit power configuration.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPower    The maximum transmit power in dBm.
+ * The 32-bit value's interpretation is radio-specific.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aTransmitPower  The transmit power configuration.
  *
  */
-OTAPI void OTCALL otLinkSetMaxTransmitPower(otInstance *aInstance, int8_t aPower);
+OTAPI void OTCALL otLinkSetTransmitPower(otInstance *aInstance, uint32_t aTransmitPower);
 
 /**
  * Get the IEEE 802.15.4 PAN ID.

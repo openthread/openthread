@@ -1890,7 +1890,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     aFrame.GetSrcPanId(linkInfo.mPanId);
     linkInfo.mChannel = aFrame.GetChannel();
-    linkInfo.mRss = aFrame.GetPower();
+    linkInfo.mRss = aFrame.GetRssi();
     linkInfo.mLqi = aFrame.GetLqi();
     linkInfo.mLinkSecurity = aFrame.GetSecurityEnabled();
 

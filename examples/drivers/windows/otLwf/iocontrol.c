@@ -4798,16 +4798,16 @@ otLwfIoCtl_otMaxTransmitPower(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
 
-    if (InBufferLength >= sizeof(int8_t))
+    if (InBufferLength >= sizeof(uint32_t))
     {
-        otLinkSetMaxTransmitPower(pFilter->otCtx, *(int8_t*)InBuffer);
+        otLinkSetTransmitPower(pFilter->otCtx, *(uint32_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
-    else if (*OutBufferLength >= sizeof(int8_t))
+    else if (*OutBufferLength >= sizeof(uint32_t))
     {
-        *(int8_t*)OutBuffer = otLinkGetMaxTransmitPower(pFilter->otCtx);
-        *OutBufferLength = sizeof(int8_t);
+        *(uint32_t*)OutBuffer = otLinkGetTransmitPower(pFilter->otCtx);
+        *OutBufferLength = sizeof(uint32_t);
         status = STATUS_SUCCESS;
     }
     else

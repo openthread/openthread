@@ -82,7 +82,7 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     }
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mPower));      // TX Power
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mRssi));       // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));                // Noise Floor (Currently unused)
     SuccessOrExit(mEncoder.WriteUint16(flags));             // Flags
 
@@ -128,7 +128,7 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
             SuccessOrExit(mEncoder.WriteUint16(aAckFrame->mLength));
             SuccessOrExit(mEncoder.WriteData(aAckFrame->mPsdu, aAckFrame->mLength));
 
-            SuccessOrExit(mEncoder.WriteInt8(aAckFrame->mPower));    // RSSI
+            SuccessOrExit(mEncoder.WriteInt8(aAckFrame->mRssi));     // RSSI
             SuccessOrExit(mEncoder.WriteInt8(-128));                 // Noise Floor (Currently unused)
             SuccessOrExit(mEncoder.WriteUint16(0));                  // Flags
 
@@ -349,6 +349,7 @@ otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t aHeader)
     otRadioFrame *frame;
     uint16_t frameLen = 0;
     otError error = OT_ERROR_NONE;
+    int8_t txpower;
 
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
 
@@ -356,7 +357,8 @@ otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t aHeader)
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(frameBuffer, frameLen));
     SuccessOrExit(error = mDecoder.ReadUint8(frame->mChannel));
-    SuccessOrExit(error = mDecoder.ReadInt8(frame->mPower));
+    SuccessOrExit(error = mDecoder.ReadInt8(txpower));
+    frame->mTxPowerConfig = (uint32_t)txpower;  // TODO: support 32-bit tx power config
 
     VerifyOrExit(frameLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
 

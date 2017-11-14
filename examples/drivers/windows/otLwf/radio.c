@@ -802,7 +802,7 @@ error:
     return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
+void otPlatRadioSetTransmitPower(_In_ otInstance *otCtx, uint32_t aPower)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -813,7 +813,7 @@ void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
         otLwfCmdSetProp(
             pFilter,
             SPINEL_PROP_PHY_TX_POWER,
-            SPINEL_DATATYPE_INT8_S,
+            SPINEL_DATATYPE_UINT32_S,
             aPower
         );
     if (!NT_SUCCESS(status))

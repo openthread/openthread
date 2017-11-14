@@ -456,7 +456,7 @@ void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otErro
                           message->mCnt,
                           sID,
                           message->mID,
-                          aFrame->mPower
+                          aFrame->mRssi
                          );
             }
         }
@@ -474,7 +474,7 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 
             sTxPacket->mLength = sizeof(struct PlatformDiagMessage);
             sTxPacket->mChannel = sChannel;
-            sTxPacket->mPower = sTxPower;
+            sTxPacket->mTxPowerConfig = (uint32_t)sTxPower;
 
             sDiagMessage.mChannel = sTxPacket->mChannel;
             sDiagMessage.mID = sID;

@@ -403,20 +403,24 @@ public:
     otError SetChannel(uint8_t aChannel);
 
     /**
-     * This method returns the maximum transmit power in dBm.
+     * This method returns the transmit power configuration.
      *
-     * @returns  The maximum transmit power in dBm.
+     * The 32-bit value interpretation is radio-specific.
+     *
+     * @returns  The transmit power configuration.
      *
      */
-    int8_t GetMaxTransmitPower(void) const { return mMaxTransmitPower; }
+    uint32_t GetTransmitPower(void) const { return mTransmitPower; }
 
     /**
-     * This method sets the maximum transmit power in dBm.
+     * This method sets the transmit power configuration.
      *
-     * @param[in]  aPower  The maximum transmit power in dBm.
+     * The 32-bit value interpretation is radio-specific.
+     *
+     * @param[in]  aTransmitPower  The transmit power configuration.
      *
      */
-    void SetMaxTransmitPower(int8_t aPower) { mMaxTransmitPower = aPower; }
+    void SetTransmitPower(uint32_t aTransmitPower) { mTransmitPower = aTransmitPower; }
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -696,7 +700,7 @@ private:
     ShortAddress mShortAddress;
     PanId mPanId;
     uint8_t mChannel;
-    int8_t mMaxTransmitPower;
+    uint32_t mTransmitPower;
 
     otNetworkName mNetworkName;
     otExtendedPanId mExtendedPanId;

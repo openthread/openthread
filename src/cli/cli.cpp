@@ -2625,12 +2625,12 @@ void Interpreter::ProcessTxPowerMax(int argc, char *argv[])
 
     if (argc == 0)
     {
-        mServer->OutputFormat("%d dBm\r\n", otLinkGetMaxTransmitPower(mInstance));
+        mServer->OutputFormat("%d dBm\r\n", otLinkGetTransmitPower(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otLinkSetMaxTransmitPower(mInstance, static_cast<int8_t>(value));
+        otLinkSetTransmitPower(mInstance, static_cast<uint32_t>(value));
     }
 
 exit:

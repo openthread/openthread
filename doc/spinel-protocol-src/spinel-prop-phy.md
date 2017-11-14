@@ -46,7 +46,7 @@ that is supported by the underlying radio hardware.
 
 ### PROP 37: PROP_PHY_TX_POWER {#prop-phy-tx-power}
 * Type: Read-Write
-* Packed-Encoding: `c` (int8)
+* Packed-Encoding: `L` (uint32)
 * Unit: dBm
 
 Value is the transmit power of the radio.
