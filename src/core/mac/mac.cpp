@@ -868,6 +868,19 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*mTxFrame);
     otError error = OT_ERROR_NONE;
 
+#if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+
+    // Disable CCA for the last attempt
+    if (mTransmitAttempts == (sendFrame.GetMaxTxAttempts() - 1))
+    {
+        sendFrame.mIsCcaEnabled = false;
+    }
+    else
+#endif
+    {
+        sendFrame.mIsCcaEnabled = true;
+    }
+
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
     {
         sendFrame.SetPower(mMaxTransmitPower);
