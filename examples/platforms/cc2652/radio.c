@@ -1228,7 +1228,22 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
+{
+    otError error = OT_ERROR_NONE;
+    (void)aInstance;
+
+    otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
+    *aPower = sCurrentOutputPower->dbm;
+
+exit:
+    return error;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     unsigned int i;
     output_config_t const *powerCfg = &(rgOutputPower[0]);
@@ -1247,6 +1262,8 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
     }
 
     sCurrentOutputPower = powerCfg;
+
+    return OT_ERROR_NONE;
 }
 
 /**
@@ -1815,7 +1832,7 @@ static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
                 receiveFrame.mLength  = len;
                 receiveFrame.mPsdu    = &(payload[1]);
                 receiveFrame.mChannel = sReceiveCmd.channel;
-                receiveFrame.mPower   = rssi;
+                receiveFrame.mRssi    = rssi;
                 receiveFrame.mLqi     = crcCorr->status.corr;
 
                 receiveError = OT_ERROR_NONE;

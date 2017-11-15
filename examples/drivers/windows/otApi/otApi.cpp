@@ -1653,29 +1653,6 @@ otThreadSetPSKc(
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_PSKC, Buffer, sizeof(Buffer), nullptr, 0));
 }
 
-OTAPI 
-int8_t 
-OTCALL
-otLinkGetMaxTransmitPower(
-    _In_ otInstance *aInstance
-    )
-{
-    int8_t Result = 0;
-    if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER, &Result);
-    return Result;
-}
-
-OTAPI 
-void 
-OTCALL
-otLinkSetMaxTransmitPower(
-    _In_ otInstance *aInstance, 
-    int8_t aPower
-    )
-{
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER, aPower);
-}
-
 OTAPI
 const otIp6Address *
 OTCALL

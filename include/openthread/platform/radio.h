@@ -101,7 +101,7 @@ typedef struct otRadioFrame
     uint8_t  *mPsdu;            ///< The PSDU.
     uint8_t  mLength;           ///< Length of the PSDU.
     uint8_t  mChannel;          ///< Channel used to transmit/receive the frame.
-    int8_t   mPower;            ///< Transmit/receive power in dBm.
+    int8_t   mRssi ;            ///< Received signal strength indicator in dBm for received frames.
     uint8_t  mLqi;              ///< Link Quality Indicator for received frames.
     uint8_t  mMaxTxAttempts;    ///< Max number of transmit attempts for an outbound frame.
     bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
@@ -451,13 +451,29 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance);
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance);
 
 /**
- * Set the radio Tx power used for auto-generated frames.
+ * Get the radio's transmit power in dBm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aPower     The Tx power to use in dBm.
+ * @param[out] aPower    The transmit power in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the transmit power.
+ * @retval OT_ERROR_INVALID_ARGS     @p aPower was NULL.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  Transmit power configuration via dBm is not implemented.
  *
  */
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower);
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
+
+/**
+ * Set the radio's transmit power in dBm.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aPower     The transmit power in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully set the transmit power.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  Transmit power configuration via dBm is not implemented.
+ *
+ */
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower);
 
 /**
  * Get the status of promiscuous mode.

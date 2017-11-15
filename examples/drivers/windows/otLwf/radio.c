@@ -802,7 +802,30 @@ error:
     return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
+otError otPlatRadioGetTransmitPower(_In_ otInstance *otCtx, int8_t *aPower)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    NTSTATUS status;
+
+    status =
+        otLwfCmdGetProp(
+            pFilter,
+            NULL,
+            SPINEL_PROP_PHY_TX_POWER,
+            SPINEL_DATATYPE_INT8_S,
+            aPower
+        );
+
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Get SPINEL_PROP_PHY_TX_POWER, failed, %!STATUS!", status);
+    }
+
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
+}
+
+otError otPlatRadioSetTransmitPower(_In_ otInstance *otCtx, int8_t aPower)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -816,10 +839,13 @@ void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
             SPINEL_DATATYPE_INT8_S,
             aPower
         );
+
     if (!NT_SUCCESS(status))
     {
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_PHY_TX_POWER failed, %!STATUS!", status);
     }
+
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(_In_ otInstance *otCtx)
