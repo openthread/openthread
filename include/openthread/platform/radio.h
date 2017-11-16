@@ -107,6 +107,7 @@ typedef struct otRadioFrame
     bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
     bool     mDidTX: 1;         ///< Set to true if this frame sent from the radio. Ignored by radio driver.
     bool     mIsARetx: 1;       ///< Set to true if this frame is a retransmission. Should be ignored by radio driver.
+    bool     mIsCcaEnabled: 1;  ///< Set to true if CCA must be enabled for this packet. False otherwise.
 
     /**
      * The timestamp when the frame was received (milliseconds).

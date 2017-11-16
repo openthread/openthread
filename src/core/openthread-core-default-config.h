@@ -1008,4 +1008,14 @@
 #define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL           0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+ *
+ * Define as 1 to disable CCA on the last transmit attempt
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+#define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT           0
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
