@@ -243,10 +243,12 @@ private:
     static void SendDoneTask(void *aContext);
     void SendDoneTask(void);
 
-    otError GetPropertyHandler_ChannelMaskHelper(uint32_t channel_mask);
+    otError EncodeChannelMask(uint32_t channel_mask);
+    otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
+    otError DecodeOperationalDataset(otOperationalDataset &aDataset, const uint8_t **aTlvs, uint8_t *aTlvsLength);
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -488,6 +490,8 @@ private:
     NCP_SET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_ENABLE_FILTERING);
     NCP_GET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_PANID);
     NCP_SET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_PANID);
+    NCP_GET_PROP_HANDLER(THREAD_ACTIVE_DATASET);
+    NCP_GET_PROP_HANDLER(THREAD_PENDING_DATASET);
 
     NCP_GET_PROP_HANDLER(CNTR_TX_PKT_TOTAL);
     NCP_GET_PROP_HANDLER(CNTR_TX_PKT_ACK_REQ);
@@ -598,6 +602,10 @@ private:
     NCP_SET_PROP_HANDLER(THREAD_TMF_PROXY_STREAM);
 #endif
     NCP_REMOVE_PROP_HANDLER(THREAD_ACTIVE_ROUTER_IDS);
+    NCP_SET_PROP_HANDLER(THREAD_ACTIVE_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_PENDING_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_MGMT_ACTIVE_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_MGMT_PENDING_DATASET);
 
 #endif // OPENTHREAD_FTD
 
