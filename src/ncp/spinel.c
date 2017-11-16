@@ -1473,6 +1473,42 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_ROUTER_TABLE";
         break;
 
+    case SPINEL_PROP_THREAD_ACTIVE_DATASET:
+        ret = "PROP_THREAD_ACTIVE_DATASET";
+        break;
+
+    case SPINEL_PROP_THREAD_PENDING_DATASET:
+        ret = "PROP_THREAD_PENDING_DATASET";
+        break;
+
+    case SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET:
+        ret = "PROP_THREAD_MGMT_ACTIVE_DATASET";
+        break;
+
+    case SPINEL_PROP_THREAD_MGMT_PENDING_DATASET:
+        ret = "PROP_THREAD_MGMT_PENDING_DATASET";
+        break;
+
+    case SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP:
+        ret = "PROP_DATASET_ACTIVE_TIMESTAMP";
+        break;
+
+    case SPINEL_PROP_DATASET_PENDING_TIMESTAMP:
+        ret = "PROP_DATASET_PENDING_TIMESTAMP";
+        break;
+
+    case SPINEL_PROP_DATASET_DELAY_TIMER:
+        ret = "PROP_DATASET_DELAY_TIMER";
+        break;
+
+    case SPINEL_PROP_DATASET_SECURITY_POLICY:
+        ret = "PROP_DATASET_SECURITY_POLICY";
+        break;
+
+    case SPINEL_PROP_DATASET_RAW_TLVS:
+        ret = "PROP_DATASET_RAW_TLVS";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;
