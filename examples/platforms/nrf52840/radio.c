@@ -674,6 +674,8 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
     receivedFrame->mMsec    = timestamp / US_PER_MS;
     receivedFrame->mUsec    = timestamp - receivedFrame->mMsec * US_PER_MS;
 #endif
+
+    PlatformEventSignalPending();
 }
 
 void nrf_drv_radio802154_receive_failed(nrf_drv_radio802154_rx_error_t error)
