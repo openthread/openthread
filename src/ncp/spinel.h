@@ -795,7 +795,24 @@ typedef enum
     SPINEL_PROP_THREAD__BEGIN           = 0x50,
     SPINEL_PROP_THREAD_LEADER_ADDR      = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
     SPINEL_PROP_THREAD_PARENT           = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
-    SPINEL_PROP_THREAD_CHILD_TABLE      = SPINEL_PROP_THREAD__BEGIN + 2, ///< array(EUI64,rloc16,timeout,age,netDataVer,inLqi,aveRSS,mode) [A(t(ESLLCCcC))]
+
+    /// Thread Child Table
+    /** Format: [A(t(ESLLCCcCc)] - Read only
+     *
+     * Data per item is:
+     *
+     *  `E`: Extended/long address
+     *  `S`: RLOC16
+     *  `L`: Timeout (in seconds)
+     *  `L`: Age (in seconds)
+     *  `L`: Network Data version
+     *  `C`: Link Quality In
+     *  `c`: Average RSS (in dBm)
+     *  `C`: Mode (bit-flags)
+     *  `c`: Last RSSI (in dBm)
+     *
+     */
+    SPINEL_PROP_THREAD_CHILD_TABLE      = SPINEL_PROP_THREAD__BEGIN + 2,
     SPINEL_PROP_THREAD_LEADER_RID       = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
     SPINEL_PROP_THREAD_LEADER_WEIGHT    = SPINEL_PROP_THREAD__BEGIN + 4, ///< [C]
     SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
@@ -807,7 +824,24 @@ typedef enum
                                         = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
                                         = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
-    SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal,rloc6) [A(t(6CbCbS))]
+
+    /// On-Mesh Prefixes
+    /** Format: `A(t(6CbCbS))`
+     *
+     * Data per item is:
+     *
+     *  `6`: IPv6 Prefix
+     *  `C`: Prefix length in bits
+     *  `b`: Stable flag
+     *  `C`: TLV flags
+     *  `b`: "Is defined locally" flag. Set if this network was locally
+     *       defined. Assumed to be true for set, insert and replace. Clear if
+     *       the on mesh network was defined by another node.
+     *  `S`: The RLOC16 of the device that registered this on-mesh prefix entry.
+     *       This value is not used and ignored when adding an on-mesh prefix.
+     *
+     */
+    SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10,
 
     /// Off-mesh routes
     /** Format: [A(t(6CbCbb))]
@@ -920,8 +954,21 @@ typedef enum
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
     /// Thread Neighbor Table
-    /** Format: `A(t(ESLCcCbLL))`
-     *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
+    /** Format: `A(t(ESLCcCbLLc))` - Read only
+     *
+     * Data per item is:
+     *
+     *  `E`: Extended/long address
+     *  `S`: RLOC16
+     *  `L`: Age (in seconds)
+     *  `C`: Link Quality In
+     *  `c`: Average RSS (in dBm)
+     *  `C`: Mode (bit-flags)
+     *  `b`: `true` if neighbor is a child, `false` otherwise.
+     *  `L`: Link Frame Counter
+     *  `L`: MLE Frame Counter
+     *  `c`: The last RSSI (in dBm)
+     *
      */
     SPINEL_PROP_THREAD_NEIGHBOR_TABLE   = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
 
@@ -1182,7 +1229,23 @@ typedef enum
     SPINEL_PROP_IPV6_LL_ADDR            = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
     SPINEL_PROP_IPV6_ML_ADDR            = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
     SPINEL_PROP_IPV6_ML_PREFIX          = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE      = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,valid,preferred,flags) [A(t(6CLLC))]
+
+    /// IPv6 Address Table
+    /** Format: `A(t(6CLLC))`
+     *
+     * This property provides all unicast addresses.
+     *
+     * Array of structures containing:
+     *
+     *  `6`: IPv6 Address
+     *  `C`: Network Prefix Length
+     *  `L`: Valid Lifetime
+     *  `L`: Preferred Lifetime
+     *  `C`: Flags
+     *
+     */
+    SPINEL_PROP_IPV6_ADDRESS_TABLE      = SPINEL_PROP_IPV6__BEGIN + 3,
+
     SPINEL_PROP_IPV6_ROUTE_TABLE        = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(t(6CCC))]
 
     /// IPv6 ICMP Ping Offload
