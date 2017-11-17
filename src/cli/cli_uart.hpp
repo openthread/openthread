@@ -113,7 +113,7 @@ private:
     {
         kRxBufferSize = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
         kTxBufferSize = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
-        kMaxLineLength = OPENTHREAD_CONFIG_CLI_LINE_LENGTH,
+        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
     otError ProcessCommand(void);

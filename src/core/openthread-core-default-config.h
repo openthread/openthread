@@ -232,13 +232,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_CLI_LINE_LENGTH
+ * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
  *  The maximum size of the CLI line in bytes
  *
  */
-#ifndef OPENTHREAD_CONFIG_CLI_LINE_LENGTH
-#define OPENTHREAD_CONFIG_CLI_LINE_LENGTH                       128
+#ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
+#define OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH                   128
 #endif
 
 /**
