@@ -39,10 +39,21 @@ The long address and short address of the parent of this node.
 
 ### PROP 82: PROP_THREAD_CHILD_TABLE
 * Type: Read-Only
-* Packed-Encoding: `A(t(ES))`
+* Packed-Encoding: `A(t(ESLLCCcCc)`
 
-Table containing the long and short addresses of all
-the children of this node.
+Table containing info about all the children of this node.
+
+Data per item is:
+
+* `E`: Extended/long address
+* `S`: RLOC16
+* `L`: Timeout (in seconds)
+* `L`: Age (in seconds)
+* `L`: Network Data version
+* `C`: Link Quality In
+* `c`: Average RSS (in dBm)
+* `C`: Mode (bit-flags)
+* `c`: Last RSSI (in dBm)
 
 ### PROP 83: PROP_THREAD_LEADER_RID
 * Type: Read-Only
@@ -84,7 +95,7 @@ The local stable network data.
 
 ### PROP 90: PROP_THREAD_ON_MESH_NETS
 * Type: Read-Write
-* Packed-Encoding: `A(t(6CbCb))`
+* Packed-Encoding: `A(t(6CbCbS))`
 
 Data per item is:
 
@@ -212,7 +223,7 @@ disabled.
 
 ### PROP 5387: PROP_THREAD_NEIGHBOR_TABLE
 * Type: Read-Only
-* Packed-Encoding: `A(t(ESLCcCbLL))`
+* Packed-Encoding: `A(t(ESLCcCbLLc))`
 
 Data per item is:
 
@@ -220,11 +231,12 @@ Data per item is:
 * `S`: RLOC16
 * `L`: Age
 * `C`: Link Quality In
-* `c`: Average RSS
+* `c`: Average RSS (in dBm)
 * `C`: Mode (bit-flags)
 * `b`: `true` if neighbor is a child, `false` otherwise.
 * `L`: Link Frame Counter
 * `L`: MLE Frame Counter
+* `c`: The last RSSI (in dBm)
 
 ### PROP 5388: PROP_THREAD_CHILD_COUNT_MAX
 * Type: Read-Write
