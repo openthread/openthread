@@ -100,6 +100,8 @@ void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otCh
 
     VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_THREAD_CHILD_TABLE));
 
+    VerifyOrExit(!aChildInfo.mIsStateRestoring);
+
     switch (aEvent)
     {
     case OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED:
@@ -159,7 +161,8 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(void)
 
     for (uint8_t index = 0; index < maxChildren; index++)
     {
-        if (otThreadGetChildInfoByIndex(mInstance, index, &childInfo) != OT_ERROR_NONE)
+        if ((otThreadGetChildInfoByIndex(mInstance, index, &childInfo) != OT_ERROR_NONE) ||
+            childInfo.mIsStateRestoring)
         {
             continue;
         }
