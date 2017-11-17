@@ -731,6 +731,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset, const 
             }
 
             aDataset.mIsChannelMaskPage0Set = true;
+            break;
         }
 
         case SPINEL_PROP_DATASET_RAW_TLVS:
