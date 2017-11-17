@@ -3748,7 +3748,7 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aChild.GetState() == Neighbor::kStateValid, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(aChild.IsStateValidOrRestoring(), error = OT_ERROR_NOT_FOUND);
 
     memset(&aChildInfo, 0, sizeof(aChildInfo));
     memcpy(&aChildInfo.mExtAddress, &aChild.GetExtAddress(), sizeof(aChildInfo.mExtAddress));
