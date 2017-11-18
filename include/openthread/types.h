@@ -963,6 +963,7 @@ typedef struct
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device
     bool           mFullNetworkData : 1;   ///< Full Network Data
+    bool           mIsStateRestoring : 1;  ///< Is in restoring state
     uint8_t        mIp6AddressesLength;    ///< Number of entries in IPv6 address array.
     const otIp6Address *mIp6Addresses;     ///< Array of IPv6 addresses (unused entries contain unspecified address).
 } otChildInfo;
