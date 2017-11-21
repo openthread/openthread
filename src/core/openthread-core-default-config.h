@@ -232,6 +232,36 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
+ *
+ *  The maximum size of the CLI line in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
+#define OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH                   128
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
+ *
+ *  The size of CLI UART RX buffer in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE               512
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TX_BUFFER_SIZE
+ *
+ *  The size of CLI message buffer in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE               1024
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAX_CHILDREN
  *
  * The maximum number of children.

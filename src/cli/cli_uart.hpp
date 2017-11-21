@@ -111,9 +111,9 @@ public:
 private:
     enum
     {
-        kRxBufferSize = 512,
-        kTxBufferSize = 1024,
-        kMaxLineLength = 128,
+        kRxBufferSize = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+        kTxBufferSize = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
+        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
     otError ProcessCommand(void);
