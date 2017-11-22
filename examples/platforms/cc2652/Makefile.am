@@ -30,6 +30,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                                         = libopenthread-cc2652.a
 
+# Do not enable -pedantic-errors for cc26xx driverlib
+override CFLAGS                                      := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS                                    := $(filter-out -pedantic-errors,$(CXXFLAGS))
+
 libopenthread_cc2652_a_CPPFLAGS                       = \
     -I$(top_srcdir)/include                             \
     -I$(top_srcdir)/src                                 \
