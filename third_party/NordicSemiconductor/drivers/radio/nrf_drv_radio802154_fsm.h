@@ -214,12 +214,12 @@ void nrf_drv_radio802154_fsm_channel_update(void);
  */
 void nrf_drv_radio802154_fsm_cca_cfg_update(void);
 
-#if !RADIO_INTERNAL_IRQ_HANDLING
+#if !NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 /**
  * @brief Notify the FSM that there is a pending IRQ that should be handled.
  */
 void nrf_drv_radio802154_fsm_irq_handler(void);
-#endif // !RADIO_INTERNAL_IRQ_HANDLING
+#endif // !NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 
 #ifdef __cplusplus
 }

@@ -71,10 +71,10 @@ void nrf_drv_radio802154_pib_init(void)
     m_data.short_addr[1] = 0xff;
     memset(m_data.extended_addr, 0, sizeof(m_data.extended_addr));
 
-    m_data.cca.mode           = RADIO_CCA_MODE_DEFAULT;
-    m_data.cca.ed_threshold   = RADIO_CCA_ED_THRESHOLD_DEFAULT;
-    m_data.cca.corr_threshold = RADIO_CCA_CORR_THRESHOLD_DEFAULT;
-    m_data.cca.corr_limit     = RADIO_CCA_CORR_LIMIT_DEFAULT;
+    m_data.cca.mode           = NRF_DRV_RADIO802154_CCA_MODE_DEFAULT;
+    m_data.cca.ed_threshold   = NRF_DRV_RADIO802154_CCA_ED_THRESHOLD_DEFAULT;
+    m_data.cca.corr_threshold = NRF_DRV_RADIO802154_CCA_CORR_THRESHOLD_DEFAULT;
+    m_data.cca.corr_limit     = NRF_DRV_RADIO802154_CCA_CORR_LIMIT_DEFAULT;
 }
 
 bool nrf_drv_radio802154_pib_promiscuous_get(void)

@@ -111,19 +111,19 @@ void nrf_drv_radio802154_init(void);
  */
 void nrf_drv_radio802154_deinit(void);
 
-#if !RADIO_INTERNAL_IRQ_HANDLING
+#if !NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 /**
  * @brief Handle interrupt request from the RADIO peripheral.
  *
- * @note When RADIO_INTERNAL_IRQ_HANDLING is enabled the driver internally handles the RADIO IRQ
- *       and this function shall not be called.
+ * @note When NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING is enabled the driver internally handles the
+ *       RADIO IRQ and this function shall not be called.
  *
  * This function is intended to be used in Operating System environment when the OS handles IRQ
  * and indirectly passes it to the driver or with RAAL implementation that indirectly passes radio
  * IRQ handler to the driver (i.e. SoftDevice).
  */
 void nrf_drv_radio802154_irq_handler(void);
-#endif // !RADIO_INTERNAL_IRQ_HANDLING
+#endif // !NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 
 /**
  * @brief Set channel on which the radio shall operate right now.

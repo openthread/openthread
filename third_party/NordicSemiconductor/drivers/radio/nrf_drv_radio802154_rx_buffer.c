@@ -40,15 +40,15 @@
 
 #include "nrf_drv_radio802154_config.h"
 
-#if RADIO_RX_BUFFERS < 1
+#if NRF_DRV_RADIO802154_RX_BUFFERS < 1
 #error Not enough rx buffers in the 802.15.4 radio driver.
 #endif
 
-rx_buffer_t nrf_drv_radio802154_rx_buffers[RADIO_RX_BUFFERS]; ///< Receive buffers.
+rx_buffer_t nrf_drv_radio802154_rx_buffers[NRF_DRV_RADIO802154_RX_BUFFERS]; ///< Receive buffers.
 
 void nrf_drv_radio802154_rx_buffer_init(void)
 {
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         nrf_drv_radio802154_rx_buffers[i].free = true;
     }
@@ -56,7 +56,7 @@ void nrf_drv_radio802154_rx_buffer_init(void)
 
 rx_buffer_t * nrf_drv_radio802154_rx_buffer_free_find(void)
 {
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         if (nrf_drv_radio802154_rx_buffers[i].free)
         {

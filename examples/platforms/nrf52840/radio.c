@@ -71,7 +71,7 @@ enum
 static bool sDisabled;
 
 static otError      sReceiveError = OT_ERROR_NONE;
-static otRadioFrame sReceivedFrames[RADIO_RX_BUFFERS];
+static otRadioFrame sReceivedFrames[NRF_DRV_RADIO802154_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
@@ -105,7 +105,7 @@ static void dataInit(void)
 
     sReceiveError = OT_ERROR_NONE;
 
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         sReceivedFrames[i].mPsdu = NULL;
     }
@@ -512,7 +512,7 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 
 void nrf5RadioProcess(otInstance *aInstance)
 {
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
         {
@@ -651,7 +651,7 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
 {
     otRadioFrame *receivedFrame = NULL;
 
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu == NULL)
         {

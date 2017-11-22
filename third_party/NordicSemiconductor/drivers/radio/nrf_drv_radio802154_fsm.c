@@ -65,7 +65,7 @@
                              NRF_RADIO_SHORT_FRAMESTART_BCSTART_MASK)
 /// Value set to SHORTS register when received frame should be acknowledged.
 #define SHORTS_TX_ACK       (NRF_RADIO_SHORT_END_DISABLE_MASK)
-#if RADIO_SHORT_CCAIDLE_TXEN
+#if NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN
 /// Value set to SHORTS register during transmission of a frame
 #define SHORTS_TX_FRAME     (NRF_RADIO_SHORT_END_DISABLE_MASK | NRF_RADIO_SHORT_READY_START_MASK | \
                              NRF_RADIO_SHORT_CCAIDLE_TXEN_MASK)
@@ -100,7 +100,7 @@
  */
 #define RX_FRAME_LQI(psdu)  ((psdu)[(psdu)[0] - 1])
 
-#if RADIO_RX_BUFFERS > 1
+#if NRF_DRV_RADIO802154_RX_BUFFERS > 1
 /// Pointer to currently used receive buffer.
 static rx_buffer_t * mp_current_rx_buffer;
 #else
@@ -240,7 +240,7 @@ static inline void received_frame_notify(void)
  */
 static inline void rx_buffer_in_use_set(rx_buffer_t * p_rx_buffer)
 {
-#if RADIO_RX_BUFFERS > 1
+#if NRF_DRV_RADIO802154_RX_BUFFERS > 1
     mp_current_rx_buffer = p_rx_buffer;
 #else
     (void) p_rx_buffer;
@@ -489,7 +489,7 @@ static void nrf_radio_reset(void)
 /// Initialize interrupts for radio peripheral
 static void irq_init(void)
 {
-    NVIC_SetPriority(RADIO_IRQn, RADIO_IRQ_PRIORITY);
+    NVIC_SetPriority(RADIO_IRQn, NRF_DRV_RADIO802154_IRQ_PRIORITY);
     NVIC_ClearPendingIRQ(RADIO_IRQn);
     NVIC_EnableIRQ(RADIO_IRQn);
 }
@@ -1306,7 +1306,7 @@ static inline void irq_ready_state_continuous_carrier(void)
     assert(nrf_radio_state_get() == NRF_RADIO_STATE_TX_IDLE);
 }
 
-#if !RADIO_SHORT_CCAIDLE_TXEN
+#if !NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN
 /// This event is generated when CCA reports that channel is idle.
 static inline void irq_ccaidle_state_tx_frame(void)
 {
@@ -1314,7 +1314,7 @@ static inline void irq_ccaidle_state_tx_frame(void)
 
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
 }
-#endif // RADIO_SHORT_CCAIDLE_TXEN
+#endif // NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN
 
 /// This event is generated when CCA reports idle channel during stand-alone procedure.
 static inline void irq_ccaidle_state_cca(void)
@@ -1612,7 +1612,7 @@ static inline void irq_handler(void)
         switch (m_state)
         {
             case RADIO_STATE_TX_FRAME:
-#if !RADIO_SHORT_CCAIDLE_TXEN
+#if !NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN
                 irq_ccaidle_state_tx_frame();
 #else
                 // nrf_fem_control_time_latch was called at the beginning of the irq handler,
@@ -1625,7 +1625,7 @@ static inline void irq_handler(void)
                 irq_ccaidle_state_cca();
                 break;
 
-#if RADIO_SHORT_CCAIDLE_TXEN
+#if NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN
             case RADIO_STATE_WAITING_RX_FRAME:
             case RADIO_STATE_RX_ACK:
                 // If CCAIDLE->TXEN short is enabled, this event may be handled after event END.
@@ -2172,11 +2172,11 @@ void nrf_drv_radio802154_fsm_cca_cfg_update(void)
     }
 }
 
-#if RADIO_INTERNAL_IRQ_HANDLING
+#if NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 void RADIO_IRQHandler(void)
-#else // RADIO_INTERNAL_IRQ_HADLING
+#else // NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 void nrf_drv_radio802154_fsm_irq_handler(void)
-#endif // RADIO_INTERNAL_IRQ_HANDLING
+#endif // NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 {
     irq_handler();
 }
