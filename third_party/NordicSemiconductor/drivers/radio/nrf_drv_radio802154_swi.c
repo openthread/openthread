@@ -55,7 +55,7 @@
  * One slot for each receive buffer, one for transmission, one for busy channel and one for energy
  * detection.
  */
-#define NTF_QUEUE_SIZE (RADIO_RX_BUFFERS + 3)
+#define NTF_QUEUE_SIZE (NRF_DRV_RADIO802154_RX_BUFFERS + 3)
 /** Size of requests queue.
  *
  * Two is minimal queue size. It is not expected in current implementation to queue a few requests.
@@ -362,7 +362,7 @@ void nrf_drv_radio802154_swi_init(void)
                        TIMESLOT_EXIT_INT |
                        REQ_INT);
 
-    NVIC_SetPriority(SWI_IRQn, RADIO_NOTIFICATION_SWI_PRIORITY);
+    NVIC_SetPriority(SWI_IRQn, NRF_DRV_RADIO802154_NOTIFICATION_SWI_PRIORITY);
     NVIC_ClearPendingIRQ(SWI_IRQn);
     NVIC_EnableIRQ(SWI_IRQn);
 }

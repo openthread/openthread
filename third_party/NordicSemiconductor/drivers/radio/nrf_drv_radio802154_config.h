@@ -31,6 +31,10 @@
 #ifndef NRF_DRIVER_RADIO802154_CONFIG_H__
 #define NRF_DRIVER_RADIO802154_CONFIG_H__
 
+#ifdef NRF_DRV_RADIO802154_PROJECT_CONFIG
+#include NRF_DRV_RADIO802154_PROJECT_CONFIG
+#endif
+
 #include <nrf.h>
 
 #ifdef __cplusplus
@@ -49,39 +53,47 @@ extern "C" {
  ******************************************************************************/
 
 /**
- * @def RADIO_CCA_MODE
+ * @def NRF_DRV_RADIO802154_CCA_MODE
  *
- * RADIO CCA Mode.
- *
- */
-#define RADIO_CCA_MODE_DEFAULT  NRF_RADIO_CCA_MODE_ED
-
-/**
- * @def RADIO_CCA_ED_THRESHOLD
- *
- * RADIO Energy Detection Threshold.
+ * CCA Mode used by the driver.
  *
  */
-#define RADIO_CCA_ED_THRESHOLD_DEFAULT  0x2D
+#ifndef NRF_DRV_RADIO802154_CCA_MODE_DEFAULT
+#define NRF_DRV_RADIO802154_CCA_MODE_DEFAULT  NRF_RADIO_CCA_MODE_ED
+#endif
 
 /**
- * @def RADIO_CCA_CORR_THRESHOLD
+ * @def NRF_DRV_RADIO802154_CCA_ED_THRESHOLD
  *
- * RADIO Correlator Threshold.
+ * Energy Detection Threshold used in CCA procedure.
  *
  */
-#define RADIO_CCA_CORR_THRESHOLD_DEFAULT  0x2D
+#ifndef NRF_DRV_RADIO802154_CCA_ED_THRESHOLD_DEFAULT
+#define NRF_DRV_RADIO802154_CCA_ED_THRESHOLD_DEFAULT  0x2D
+#endif
 
 /**
- * @def RADIO_CCA_CORR_LIMIT
+ * @def NRF_DRV_RADIO802154_CCA_CORR_THRESHOLD
  *
- * RADIO Correlator limit.
+ * Correlator Threshold used in CCA procedure.
  *
  */
-#define RADIO_CCA_CORR_LIMIT_DEFAULT  0x02
+#ifndef NRF_DRV_RADIO802154_CCA_CORR_THRESHOLD_DEFAULT
+#define NRF_DRV_RADIO802154_CCA_CORR_THRESHOLD_DEFAULT  0x2D
+#endif
 
 /**
- * @def RADIO_INTERNAL_IRQ_HANDLING
+ * @def NRF_DRV_RADIO802154_CCA_CORR_LIMIT
+ *
+ * Correlator limit used in CCA procedure.
+ *
+ */
+#ifndef NRF_DRV_RADIO802154_CCA_CORR_LIMIT_DEFAULT
+#define NRF_DRV_RADIO802154_CCA_CORR_LIMIT_DEFAULT  0x02
+#endif
+
+/**
+ * @def NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
  *
  * If the driver should internally handle the RADIO IRQ.
  * In case the driver is used in an OS the RADIO IRQ may be handled by the OS and passed to
@@ -89,60 +101,79 @@ extern "C" {
  * disabled.
  */
 
+#ifndef NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
+
 #if RAAL_SOFTDEVICE
-#define RADIO_INTERNAL_IRQ_HANDLING 0
+#define NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING 0
 #else // RAAL_SOFTDEVICE
-#define RADIO_INTERNAL_IRQ_HANDLING 1
+#define NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING 1
 #endif // RAAL_SOFTDEVICE
 
-/**
- * @def RADIO_IRQ_PRIORITY
- *
- * RADIO Interrupt priority.
- *
- */
-#define RADIO_IRQ_PRIORITY  0
+#endif // NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 
 /**
- * @def RADIO_PENDING_SHORT_ADDRESSES
+ * @def NRF_DRV_RADIO802154_IRQ_PRIORITY
  *
- * RADIO Number of slots containing short addresses of nodes for which pending data is stored.
- *
- */
-#define RADIO_PENDING_SHORT_ADDRESSES  10
-
-/**
- * @def RADIO_PENDING_EXTENDED_ADDRESSES
- *
- * RADIO Number of slots containing extended addresses of nodes for which pending data is stored.
+ * Interrupt priority for RADIO peripheral.
+ * It is recommended to keep IRQ priority high (low number) to prevent losing frames due to
+ * preemption.
  *
  */
-#define RADIO_PENDING_EXTENDED_ADDRESSES  10
+#ifndef NRF_DRV_RADIO802154_IRQ_PRIORITY
+#define NRF_DRV_RADIO802154_IRQ_PRIORITY  0
+#endif
 
 /**
- * @def RADIO_RX_BUFFERS
+ * @def NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES
  *
- * RADIO Number of buffers in receive queue.
+ * Number of slots containing short addresses of nodes for which pending data is stored.
  *
  */
-#define RADIO_RX_BUFFERS  16
+#ifndef NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES
+#define NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES  10
+#endif
 
 /**
- * @def RADIO_SHORT_CCAIDLE_TXEN
+ * @def NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES
  *
- * RADIO can start transmission using short CCAIDLE->TXEN or using software interrupt handler.
+ * Number of slots containing extended addresses of nodes for which pending data is stored.
  *
  */
-#define RADIO_SHORT_CCAIDLE_TXEN  1
+#ifndef NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES
+#define NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES  10
+#endif
 
-// TODO: #ifdef to check direct / SWI notifications
 /**
- * @def RADIO_NOTIFICATION_SWI_PRIORITY
+ * @def NRF_DRV_RADIO802154_RX_BUFFERS
+ *
+ * Number of buffers in receive queue.
+ *
+ */
+#ifndef NRF_DRV_RADIO802154_RX_BUFFERS
+#define NRF_DRV_RADIO802154_RX_BUFFERS  16
+#endif
+
+/**
+ * @def NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN
+ *
+ * RADIO peripheral can start transmission using short CCAIDLE->TXEN or interrupt handler.
+ * If NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN is set to 0 interrupt handler is used, otherwise
+ * short is used.
+ *
+ */
+#ifndef NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN
+#define NRF_DRV_RADIO802154_SHORT_CCAIDLE_TXEN  1
+#endif
+
+/**
+ * @def NRF_DRV_RADIO802154_NOTIFICATION_SWI_PRIORITY
  *
  * Priority of software interrupt used to call notification from 802.15.4 driver.
  *
  */
-#define RADIO_NOTIFICATION_SWI_PRIORITY 5
+#ifndef NRF_DRV_RADIO802154_NOTIFICATION_SWI_PRIORITY
+#define NRF_DRV_RADIO802154_NOTIFICATION_SWI_PRIORITY 5
+#endif
 
 /**
  *@}

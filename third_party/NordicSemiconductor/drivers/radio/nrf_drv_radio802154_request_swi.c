@@ -76,7 +76,7 @@ static bool active_vector_priority_is_high(void)
     irq_number      = (IRQn_Type)(active_vector_id - CMSIS_IRQ_NUM_VECTACTIVE_DIFF);
     active_priority = NVIC_GetPriority(irq_number);
 
-    return active_priority <= RADIO_NOTIFICATION_SWI_PRIORITY;
+    return active_priority <= NRF_DRV_RADIO802154_NOTIFICATION_SWI_PRIORITY;
 }
 
 void nrf_drv_radio802154_request_init(void)

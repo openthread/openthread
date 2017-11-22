@@ -131,12 +131,12 @@ void nrf_drv_radio802154_deinit(void)
     nrf_drv_radio802154_fsm_deinit();
 }
 
-#if !RADIO_INTERNAL_IRQ_HANDLING
+#if !NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 void nrf_drv_radio802154_irq_handler(void)
 {
     nrf_drv_radio802154_fsm_irq_handler();
 }
-#endif // !RADIO_INTERNAL_IRQ_HANDLING
+#endif // !NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
 
 #if ENABLE_FEM
 void nrf_drv_radio802154_fem_control_cfg_set(const nrf_drv_radio802154_fem_control_cfg_t * p_cfg)
