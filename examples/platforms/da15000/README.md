@@ -7,7 +7,7 @@ This directory contains example platform drivers for the [Dialog Semiconductor D
 **NOTE:** Each Thread node requires a unique EUI-64.
 Please make sure all Thread nodes in your network have a unique EUI-64 by setting HARDCODED_NODE_ID in radio.c to a unique value.
 
-**NOTE:** Current version works only with DA15000 rev. BA
+**NOTE:** Current version works only with DA15000
 
 ## Toolchain
 
@@ -130,7 +130,7 @@ Board will indicate state of device according to LED blink speed.
 ## Remarks
 * Validation
 
-   The DA15000 example has been validated by Dialog Semiconductor with commit d250105 included.
+   The DA15000 example has been validated by Dialog Semiconductor with commit 1f6528e included.
 
 * Build environment
 

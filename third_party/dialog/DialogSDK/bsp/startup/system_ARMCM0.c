@@ -203,7 +203,7 @@ static bool apply_trim_values_from_otp(uint32_t *tcs_array, uint32_t *valid_entr
                 if ((address == 0) && (value == 0)) {
                         if ((BLACK_ORCA_TARGET_IC >= BLACK_ORCA_IC_VERSION(A, E))
                                 || ((dg_configUSE_AUTO_CHIP_DETECTION == 1)
-                                        && (CHIP_IS_AE || CHIP_IS_BA))) {
+                                        && (CHIP_IS_AE || CHIP_IS_BB))) {
                                 if (!forward_reading) {
                                         break;
                                 }
@@ -429,7 +429,7 @@ void SystemInit(void)
         if (dg_configUSE_AUTO_CHIP_DETECTION == 1) {
                 black_orca_chip_version = black_orca_get_chip_version();
 
-                if (!CHIP_IS_AE && !CHIP_IS_BA) {
+                if (!CHIP_IS_AE && !CHIP_IS_BB) {
                         // Oldest supported version is AE.
                         ASSERT_WARNING_UNINIT(0);
                 }

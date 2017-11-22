@@ -47,7 +47,7 @@
  *
  * The base address of the pages to be used for non-volatile-settings storage.
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS 		                0x7B000
+#define SETTINGS_CONFIG_BASE_ADDRESS                            0x7B000
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -80,6 +80,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN           1
+
+/**
+ * @def OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
+ *
+ * The number of EID-to-RLOC cache entries.
+ *
+ */
+#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES                 20
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT

@@ -31,16 +31,11 @@
 * Platform abstraction for the alarm
 */
 
-#include <openthread/config.h>
-
-#include <stdbool.h>
-#include <stdint.h>
-
 #include <openthread/platform/alarm-milli.h>
 
-#include "hw_timer0.h"
-#include "hw_gpio.h"
 #include "platform-da15000.h"
+
+#include "hw_timer0.h"
 
 static bool sIsRunning = false;
 static uint32_t sAlarm = 0;
@@ -88,12 +83,6 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
         hw_timer0_enable();
     }
 
-
-    if (sIsRunning == false)
-    {
-        sIsRunning = true;
-    }
-
     hw_timer0_unfreeze();
 }
 
@@ -103,6 +92,3 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
     sIsRunning = false;
     hw_timer0_freeze();
 }
-
-
-

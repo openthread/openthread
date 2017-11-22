@@ -26,10 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-
-#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
+
+#include "platform-da15000.h"
 
 #include "hw_cpm.h"
 #include "sdk_defs.h"
