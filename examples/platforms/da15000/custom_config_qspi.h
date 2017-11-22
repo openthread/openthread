@@ -28,7 +28,7 @@
 
 /**
  * @file custom_config_qspi.h
- * Custom configuration file for FreeRTOS applications executing from QSPI.
+ * Board Support Package. User Configuration file for cached QSPI mode.
  */
 
 #ifndef CUSTOM_CONFIG_QSPI_H_
@@ -37,16 +37,13 @@
 #include "bsp_definitions.h"
 
 #define dg_configBLACK_ORCA_IC_REV                     BLACK_ORCA_IC_REV_B
-#define dg_configBLACK_ORCA_IC_STEP                    BLACK_ORCA_IC_STEP_A
+#define dg_configBLACK_ORCA_IC_STEP                    BLACK_ORCA_IC_STEP_B
 
 #undef CONFIG_USE_BLE
 #define CONFIG_USE_FTDF
 
 #define __HEAP_SIZE                                    0x0600
 #define __STACK_SIZE                                   0x0100
-
-#define CONFIG_RETARGET
-#define CONFIG_RETARGET_UART                           HW_UART1
 
 #define dg_configUSE_LP_CLK                            LP_CLK_32768
 #define dg_configEXEC_MODE                             MODE_IS_CACHED
@@ -57,9 +54,6 @@
 #define dg_configEMULATE_OTP_COPY                      (0)
 
 #define dg_configUSER_CAN_USE_TIMER1                   (0)
-
-#define dg_configMEM_RETENTION_MODE                    (0x1F)
-#define dg_configSHUFFLING_MODE                        (0x3)
 
 #define dg_configUSE_WDOG                              (0)
 
@@ -82,36 +76,45 @@
 
 #define dg_configUSE_SW_CURSOR                         (1)
 
-#define dg_configFEM_DLG_REF_BOARD                     (1)
-#define dg_configPOWER_1V8P                            (1)
+#define dg_configDISABLE_BACKGROUND_FLASH_OPS          (1)
 
-#define dg_configUSE_HW_TRNG                           (1)
+/*************************************************************************************************\
+ * Memory layout specific config
+ */
+#define dg_configQSPI_CODE_SIZE                        (512 * 1024)
 
-#define dg_configUSE_HW_TIMER0                         (1)
+/*************************************************************************************************\
+ * FTDF specific config
+ */
+#define FTDF_NO_CSL           /* Define this to disable CSL mode */
+#define FTDF_NO_TSCH          /* Define this to disable TSCH mode */
+#define FTDF_LITE             /* Define this to enable LITE mode (only transparent mode enabled) */
+#define FTDF_PHY_API          /* Define this to enable PHY API mode (no FTDF adapter;
+                                 implies FTDF_LITE) */
+#define FTDF_PASS_ACK_FRAME   /* Define this to pass ACK frame */
 
-#define dg_configUSE_HW_AES_HASH                       (1)
 /*************************************************************************************************\
  * OS specific config
  */
 #define OS_BAREMETAL
-#define CPU_DA15000                                    (1)
 
 /*************************************************************************************************\
  * Peripheral specific config
  */
-#define FTDF_PHY_API
-#define dg_configUSE_HW_RF                             (1)
 #define dg_configRF_ENABLE_RECALIBRATION               (0)
-#define FTDF_NO_CSL
-#define FTDF_NO_TSCH
-#define FTDF_LITE
+
+#define dg_configUSE_HW_AES_HASH                       (1)
+#define dg_configUSE_HW_TIMER0                         (1)
+#define dg_configUSE_HW_TRNG                           (1)
 
 #define dg_configFLASH_ADAPTER                         (0)
+#define dg_configRF_ADAPTER                            (0)
 #define dg_configUART_SOFTWARE_FIFO                    (1)
 #define dg_configUART2_SOFTWARE_FIFO_SIZE              (256)
+
 #define dg_configNVMS_ADAPTER                          (0)
 #define dg_configNVMS_VES                              (0)
-#define dg_configUSE_WDOG                              (0)
+
 /* Include bsp default values */
 #include "bsp_defaults.h"
 

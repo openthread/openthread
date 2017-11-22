@@ -37,295 +37,256 @@
 #include <string.h>
 
 #include "internal.h"
-#include "regmap.h"
 #include "ftdfInfo.h"
 
-void FTDF_getReleaseInfo(char **lmacRelName, char **lmacBuildTime, char **umacRelName, char **umacBuildTime)
+void ftdf_get_release_info(char **lmac_rel_name, char **lmac_build_time, char **umac_rel_name,
+                           char **umac_build_time)
 {
-    static char        lrelName[ 16 ];
-    static char        lbldTime[ 16 ];
-    static char        urelName[ 16 ];
-    static char        ubldTime[ 16 ];
-    uint8_t            i;
+        static char lrel_name[16];
+        static char lbld_time[16];
+        static char urel_name[16];
+        static char ubld_time[16];
+        uint8_t i;
 
-    volatile uint32_t *ptr    = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_REL_NAME);
-    uint32_t          *chrPtr = (uint32_t *)lrelName;
+        volatile uint32_t *ptr = &FTDF->FTDF_REL_NAME_0_REG;
+        uint32_t *chr_ptr = (uint32_t*)lrel_name;
 
-    for (i = 0; i < FTDF_ON_OFF_REGMAP_REL_NAME_NUM; i++)
-    {
-        *chrPtr++ = *ptr++;
-    }
-
-    ptr    = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_BUILDTIME);
-    chrPtr = (uint32_t *)lbldTime;
-
-    for (i = 0; i < FTDF_ON_OFF_REGMAP_BUILDTIME_NUM; i++)
-    {
-        *chrPtr++ = *ptr++;
-    }
-
-    const char *umacVPtr = FTDF_getUmacRelName();
-
-    for (i = 0; i < 16; i++)
-    {
-        urelName[ i ] = umacVPtr[ i ];
-
-        if (umacVPtr[ i ] == '\0')
-        {
-            break;
+        for (i = 0; i < 4; i++) {
+                *chr_ptr++ = *ptr++;
         }
-    }
 
-    umacVPtr = FTDF_getUmacBuildTime();
+        ptr = &FTDF->FTDF_BUILDTIME_0_REG;
+        chr_ptr = (uint32_t*)lbld_time;
 
-    for (i = 0; i < 16; i++)
-    {
-        ubldTime[ i ] = umacVPtr[ i ];
-
-        if (umacVPtr[ i ] == '\0')
-        {
-            break;
+        for (i = 0; i < 4; i++) {
+                *chr_ptr++ = *ptr++;
         }
-    }
 
-    lrelName[ 15 ] = '\0';
-    lbldTime[ 15 ] = '\0';
-    urelName[ 15 ] = '\0';
-    ubldTime[ 15 ] = '\0';
+        const char* umac_v_ptr = ftdf_get_umac_rel_name();
 
-    *lmacRelName   = lrelName;
-    *lmacBuildTime = lbldTime;
-    *umacRelName   = urelName;
-    *umacBuildTime = ubldTime;
+        for (i = 0; i < 16; i++) {
+                urel_name[i] = umac_v_ptr[i];
+
+                if (umac_v_ptr[i] == '\0') {
+                        break;
+                }
+        }
+
+        umac_v_ptr = ftdf_get_umac_build_time();
+
+        for (i = 0; i < 16; i++) {
+                ubld_time[i] = umac_v_ptr[i];
+
+                if (umac_v_ptr[i] == '\0') {
+                        break;
+                }
+        }
+
+        lrel_name[15] = '\0';
+        lbld_time[15] = '\0';
+        urel_name[15] = '\0';
+        ubld_time[15] = '\0';
+
+        *lmac_rel_name = lrel_name;
+        *lmac_build_time = lbld_time;
+        *umac_rel_name = urel_name;
+        *umac_build_time = ubld_time;
 }
 
-void FTDF_confirmLmacInterrupt(void)
+void ftdf_confirm_lmac_interrupt(void)
 {
-    volatile uint32_t *ftdfCm = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CM);
-    *ftdfCm = 0;
+        REG_SETF(FTDF, FTDF_FTDF_CM_REG, FTDF_CM, 0);
 }
 
-void FTDF_eventHandler(void)
+void ftdf_event_handler(void)
 {
-    volatile uint32_t ftdfCe = *FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CE);
+        volatile uint32_t ftdf_ce = FTDF->FTDF_FTDF_CE_REG;
 
-    if (ftdfCe & FTDF_MSK_RX_CE)
-    {
-        FTDF_processRxEvent();
-    }
+        if (ftdf_ce & FTDF_MSK_RX_CE) {
+                ftdf_process_rx_event();
+        }
 
-    if (ftdfCe & FTDF_MSK_TX_CE)
-    {
-        FTDF_processTxEvent();
-    }
+        if (ftdf_ce & FTDF_MSK_TX_CE) {
+                ftdf_process_tx_event();
+        }
 
-    if (ftdfCe & FTDF_MSK_SYMBOL_TMR_CE)
-    {
-        FTDF_processSymbolTimerEvent();
-    }
+        if (ftdf_ce & FTDF_MSK_SYMBOL_TMR_CE) {
+                ftdf_process_symbol_timer_event();
+        }
 
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_CSL
+        if (ftdf_pib.le_enabled) {
+                ftdf_time_t cur_time = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG,
+                                                SYMBOLTIMESNAPSHOTVAL);
 
-    if (FTDF_pib.leEnabled)
-    {
-        FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-        FTDF_Time delta   = curTime - FTDF_rzTime;
+                ftdf_time_t delta = cur_time - ftdf_rz_time;
 
-        if (delta < 0x80000000)
-        {
-            // RZ has passed check if a send frame is pending
-            if (FTDF_sendFramePending != 0xfffe)
-            {
-                FTDF_Time   wakeupStartTime;
-                FTDF_Period wakeupPeriod;
+                if (delta < 0x80000000) {
+                        /* RZ has passed check if a send frame is pending */
+                        if (ftdf_send_frame_pending != 0xfffe) {
+                                ftdf_time_t wakeup_start_time;
+                                ftdf_period_t wakeup_period;
 
-                FTDF_criticalVar();
-                FTDF_enterCritical();
+                                ftdf_critical_var();
+                                ftdf_enter_critical();
 
-                FTDF_getWakeupParams(FTDF_sendFramePending, &wakeupStartTime, &wakeupPeriod);
+                                ftdf_get_wakeup_params(ftdf_send_frame_pending, &wakeup_start_time,
+                                        &wakeup_period);
 
-                FTDF_txInProgress = FTDF_TRUE;
-                FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLSTARTSAMPLETIME, wakeupStartTime);
-                FTDF_SET_FIELD(ON_OFF_REGMAP_MACWUPERIOD, wakeupPeriod);
+                                ftdf_tx_in_progress = FTDF_TRUE;
+                                REG_SETF(FTDF, FTDF_LMAC_CONTROL_8_REG, MACCSLSTARTSAMPLETIME,
+                                        wakeup_start_time);
+                                REG_SETF(FTDF, FTDF_LMAC_CONTROL_7_REG, MACWUPERIOD, wakeup_period);
 
-                volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
-                *txFlagSet           |= ((1 << FTDF_TX_DATA_BUFFER) | (1 << FTDF_TX_WAKEUP_BUFFER));
+                                REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET,
+                                        ((1 << FTDF_TX_DATA_BUFFER) |
+                                        (1 << FTDF_TX_WAKEUP_BUFFER)));
 
-                FTDF_sendFramePending = 0xfffe;
+                                ftdf_send_frame_pending = 0xfffe;
 
-                FTDF_exitCritical();
-            }
+                                ftdf_exit_critical();
+                        }
 
-            if (FTDF_txInProgress == FTDF_FALSE)
-            {
-                FTDF_setCslSampleTime();
-            }
+                        if (ftdf_tx_in_progress == FTDF_FALSE) {
+                                ftdf_set_csl_sample_time();
+                        }
+                }
         }
-    }
-
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
-    volatile uint32_t *ftdfCm = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CM);
-    *ftdfCm = FTDF_MSK_TX_CE | FTDF_MSK_RX_CE | FTDF_MSK_SYMBOL_TMR_CE;
+        REG_SETF(FTDF, FTDF_FTDF_CM_REG, FTDF_CM,
+                (FTDF_MSK_TX_CE | FTDF_MSK_RX_CE | FTDF_MSK_SYMBOL_TMR_CE));
 }
 
 #ifndef FTDF_PHY_API
-void FTDF_sndMsg(FTDF_MsgBuffer *msgBuf)
+void ftdf_snd_msg(ftdf_msg_buffer_t* msg_buf)
 {
-    switch (msgBuf->msgId)
-    {
+        switch (msg_buf->msg_id) {
 #ifndef FTDF_LITE
-
-    case FTDF_DATA_REQUEST:
-        FTDF_processDataRequest((FTDF_DataRequest *) msgBuf);
-        break;
-
-    case FTDF_PURGE_REQUEST:
-        FTDF_processPurgeRequest((FTDF_PurgeRequest *) msgBuf);
-        break;
-
-    case FTDF_ASSOCIATE_REQUEST:
-        FTDF_processAssociateRequest((FTDF_AssociateRequest *) msgBuf);
-        break;
-
-    case FTDF_ASSOCIATE_RESPONSE:
-        FTDF_processAssociateResponse((FTDF_AssociateResponse *) msgBuf);
-        break;
-
-    case FTDF_DISASSOCIATE_REQUEST:
-        FTDF_processDisassociateRequest((FTDF_DisassociateRequest *) msgBuf);
-        break;
+        case FTDF_DATA_REQUEST:
+                ftdf_process_data_request((ftdf_data_request_t*)msg_buf);
+                break;
+        case FTDF_PURGE_REQUEST:
+                ftdf_process_purge_request((ftdf_purge_request_t*)msg_buf);
+                break;
+        case FTDF_ASSOCIATE_REQUEST:
+                ftdf_process_associate_request((ftdf_associate_request_t*)msg_buf);
+                break;
+        case FTDF_ASSOCIATE_RESPONSE:
+                ftdf_process_associate_response((ftdf_associate_response_t*)msg_buf);
+                break;
+        case FTDF_DISASSOCIATE_REQUEST:
+                ftdf_process_disassociate_request((ftdf_disassociate_request_t*)msg_buf);
+                break;
 #endif /* !FTDF_LITE */
-
-    case FTDF_GET_REQUEST:
-        FTDF_processGetRequest((FTDF_GetRequest *) msgBuf);
-        break;
-
-    case FTDF_SET_REQUEST:
-        FTDF_processSetRequest((FTDF_SetRequest *) msgBuf);
-        break;
+        case FTDF_GET_REQUEST:
+                ftdf_process_get_request((ftdf_get_request_t*)msg_buf);
+                break;
+        case FTDF_SET_REQUEST:
+                ftdf_process_set_request((ftdf_set_request_t*)msg_buf);
+                break;
 #ifndef FTDF_LITE
-
-    case FTDF_ORPHAN_RESPONSE:
-        FTDF_processOrphanResponse((FTDF_OrphanResponse *) msgBuf);
-        break;
+        case FTDF_ORPHAN_RESPONSE:
+                ftdf_process_orphan_response((ftdf_orphan_response_t*)msg_buf);
+                break;
 #endif /* !FTDF_LITE */
-
-    case FTDF_RESET_REQUEST:
-        FTDF_processResetRequest((FTDF_ResetRequest *) msgBuf);
-        break;
-
-    case FTDF_RX_ENABLE_REQUEST:
-        FTDF_processRxEnableRequest((FTDF_RxEnableRequest *) msgBuf);
-        break;
+        case FTDF_RESET_REQUEST:
+                ftdf_process_reset_request((ftdf_reset_request_t*)msg_buf);
+                break;
+        case FTDF_RX_ENABLE_REQUEST:
+                ftdf_process_rx_enable_request((ftdf_rx_enable_request_t*)msg_buf);
+                break;
 #ifndef FTDF_LITE
-
-    case FTDF_SCAN_REQUEST:
-        FTDF_processScanRequest((FTDF_ScanRequest *) msgBuf);
-        break;
-
-    case FTDF_START_REQUEST:
-        FTDF_processStartRequest((FTDF_StartRequest *) msgBuf);
-        break;
-
-    case FTDF_POLL_REQUEST:
-        FTDF_processPollRequest((FTDF_PollRequest *) msgBuf);
-        break;
+        case FTDF_SCAN_REQUEST:
+                ftdf_process_scan_request((ftdf_scan_request_t*)msg_buf);
+                break;
+        case FTDF_START_REQUEST:
+                ftdf_process_start_request((ftdf_start_request_t*)msg_buf);
+                break;
+        case FTDF_POLL_REQUEST:
+                ftdf_process_poll_request((ftdf_poll_request_t*)msg_buf);
+                break;
 #ifndef FTDF_NO_TSCH
-
-    case FTDF_SET_SLOTFRAME_REQUEST:
-        FTDF_processSetSlotframeRequest((FTDF_SetSlotframeRequest *) msgBuf);
-        break;
-
-    case FTDF_SET_LINK_REQUEST:
-        FTDF_processSetLinkRequest((FTDF_SetLinkRequest *) msgBuf);
-        break;
-
-    case FTDF_TSCH_MODE_REQUEST:
-        FTDF_processTschModeRequest((FTDF_TschModeRequest *) msgBuf);
-        break;
-
-    case FTDF_KEEP_ALIVE_REQUEST:
-        FTDF_processKeepAliveRequest((FTDF_KeepAliveRequest *) msgBuf);
-        break;
+        case FTDF_SET_SLOTFRAME_REQUEST:
+                ftdf_process_set_slotframe_request((ftdf_set_slotframe_request_t*)msg_buf);
+                break;
+        case FTDF_SET_LINK_REQUEST:
+                ftdf_process_set_link_request((ftdf_set_link_request_t*)msg_buf);
+                break;
+        case FTDF_TSCH_MODE_REQUEST:
+                ftdf_process_tsch_mode_request((ftdf_tsch_mode_request_t*)msg_buf);
+                break;
+        case FTDF_KEEP_ALIVE_REQUEST:
+                ftdf_process_keep_alive_request((ftdf_keep_alive_request_t*)msg_buf);
+                break;
 #endif /* FTDF_NO_TSCH */
-
-    case FTDF_BEACON_REQUEST:
-        FTDF_processBeaconRequest((FTDF_BeaconRequest *) msgBuf);
-        break;
+        case FTDF_BEACON_REQUEST:
+                ftdf_process_beacon_request((ftdf_beacon_request_t*)msg_buf);
+                break;
 #endif /* !FTDF_LITE */
-
-    case FTDF_TRANSPARENT_ENABLE_REQUEST:
-        FTDF_enableTransparentMode(((FTDF_TransparentEnableRequest *) msgBuf)->enable,
-                                   ((FTDF_TransparentEnableRequest *) msgBuf)->options);
-        FTDF_REL_MSG_BUFFER(msgBuf);
-        break;
-
-    case FTDF_TRANSPARENT_REQUEST:
-        FTDF_processTransparentRequest((FTDF_TransparentRequest *) msgBuf);
-        break;
-
-    case FTDF_SLEEP_REQUEST:
-        FTDF_SLEEP_CALLBACK(((FTDF_SleepRequest *)msgBuf)->sleepTime);
-        FTDF_REL_MSG_BUFFER(msgBuf);
-        break;
+        case FTDF_TRANSPARENT_ENABLE_REQUEST:
+                ftdf_enable_transparent_mode(((ftdf_transparent_enable_request_t*)msg_buf)->enable,
+                        ((ftdf_transparent_enable_request_t*)msg_buf)->options);
+                FTDF_REL_MSG_BUFFER(msg_buf);
+                break;
+        case FTDF_TRANSPARENT_REQUEST:
+                ftdf_process_transparent_request((ftdf_transparent_request_t*)msg_buf);
+                break;
+        case FTDF_SLEEP_REQUEST:
+                FTDF_SLEEP_CALLBACK(((ftdf_sleep_request_t*)msg_buf)->sleep_time);
+                FTDF_REL_MSG_BUFFER(msg_buf);
+                break;
 #ifndef FTDF_LITE
-
-    case FTDF_REMOTE_REQUEST:
-        FTDF_processRemoteRequest((FTDF_RemoteRequest *)msgBuf);
-        break;
+        case FTDF_REMOTE_REQUEST:
+                ftdf_process_remote_request((ftdf_remote_request_t*)msg_buf);
+                break;
 #endif /* !FTDF_LITE */
 #if FTDF_DBG_BUS_ENABLE
-
-    case FTDF_DBG_MODE_SET_REQUEST:
-        FTDF_setDbgMode(((FTDF_DbgModeSetRequest *) msgBuf)->dbgMode);
-        FTDF_REL_MSG_BUFFER(msgBuf);
-        break;
+        case FTDF_DBG_MODE_SET_REQUEST:
+                ftdf_set_dbg_mode(((ftdf_dbg_mode_set_request_t *) msg_buf)->dbg_mode);
+                FTDF_REL_MSG_BUFFER(msg_buf);
+                break;
 #endif /* FTDF_DBG_BUS_ENABLE */
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-
-    case FTDF_FPPR_MODE_SET_REQUEST:
-        FTDF_fpprSetMode(((FTDF_FpprModeSetRequest *) msgBuf)->matchFp,
-                         ((FTDF_FpprModeSetRequest *) msgBuf)->fpOverride,
-                         ((FTDF_FpprModeSetRequest *) msgBuf)->fpForce);
-        FTDF_REL_MSG_BUFFER(msgBuf);
-        break;
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
-
-    default:
-        // Silenty release the message buffer
-        FTDF_REL_MSG_BUFFER(msgBuf);
-        break;
-    }
+        case FTDF_FPPR_MODE_SET_REQUEST:
+                ftdf_fppr_set_mode(((ftdf_fppr_mode_set_request_t *) msg_buf)->match_fp,
+                        ((ftdf_fppr_mode_set_request_t *) msg_buf)->fp_override,
+                        ((ftdf_fppr_mode_set_request_t *) msg_buf)->fp_force);
+                FTDF_REL_MSG_BUFFER(msg_buf);
+                break;
+        default:
+                // Silenty release the message buffer
+                FTDF_REL_MSG_BUFFER(msg_buf);
+                break;
+        }
 }
 
-void FTDF_sendFrameTransparentConfirm(void         *handle,
-                                      FTDF_Bitmap32 status)
+void ftdf_send_frame_transparent_confirm(void *handle, ftdf_bitmap32_t status)
 {
-    FTDF_TransparentConfirm *confirm =
-        (FTDF_TransparentConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_TransparentConfirm));
+        ftdf_transparent_confirm_t* confirm =
+                (ftdf_transparent_confirm_t*) FTDF_GET_MSG_BUFFER(
+                        sizeof(ftdf_transparent_confirm_t));
 
-    confirm->msgId  = FTDF_TRANSPARENT_CONFIRM;
-    confirm->handle = handle;
-    confirm->status = status;
+        confirm->msg_id = FTDF_TRANSPARENT_CONFIRM;
+        confirm->handle = handle;
+        confirm->status = status;
 
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) confirm);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*)confirm);
 }
 
-void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
-                              FTDF_Octet     *frame,
-                              FTDF_Bitmap32   status)
+void ftdf_rcv_frame_transparent(ftdf_data_length_t frame_length, ftdf_octet_t *frame,
+                                ftdf_bitmap32_t status, ftdf_link_quality_t link_quality)
 {
-    FTDF_TransparentIndication *indication =
-        (FTDF_TransparentIndication *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_TransparentIndication));
+        ftdf_transparent_indication_t *indication =
+                (ftdf_transparent_indication_t*) FTDF_GET_MSG_BUFFER(
+                        sizeof(ftdf_transparent_indication_t));
 
-    indication->msgId       = FTDF_TRANSPARENT_INDICATION;
-    indication->frameLength = frameLength;
-    indication->status      = status;
-    indication->frame       = FTDF_GET_DATA_BUFFER(frameLength);
-    memcpy(indication->frame, frame, frameLength);
+        indication->msg_id = FTDF_TRANSPARENT_INDICATION;
+        indication->frame_length = frame_length;
+        indication->status = status;
+        indication->frame = FTDF_GET_DATA_BUFFER(frame_length);
+        memcpy(indication->frame, frame, frame_length);
 
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) indication);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*)indication);
 }
 #endif /* !FTDF_PHY_API */

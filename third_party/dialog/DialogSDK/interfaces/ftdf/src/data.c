@@ -37,699 +37,585 @@
 
 #include <ftdf.h>
 #include "internal.h"
-#include "regmap.h"
 
+#ifdef CONFIG_USE_FTDF
 #ifndef FTDF_LITE
-void FTDF_processDataRequest(FTDF_DataRequest *dataRequest)
+void ftdf_process_data_request(ftdf_data_request_t *data_request)
 {
 #ifndef FTDF_NO_TSCH
+        if (ftdf_pib.tsch_enabled && ftdf_tsch_slot_link->request != data_request) {
+                ftdf_status_t status;
 
-    if (FTDF_pib.tschEnabled &&
-        FTDF_tschSlotLink->request != dataRequest)
-    {
-        FTDF_Status status;
+                if ((data_request->dst_addr_mode == FTDF_SHORT_ADDRESS) && !data_request->indirect_tx) {
+                        status = ftdf_schedule_tsch((ftdf_msg_buffer_t*) data_request);
 
-        if (dataRequest->dstAddrMode == FTDF_SHORT_ADDRESS &&
-            !dataRequest->indirectTX)
-        {
-            status = FTDF_scheduleTsch((FTDF_MsgBuffer *) dataRequest);
+                        if (status == FTDF_SUCCESS) {
+                                return;
+                        }
 
-            if (status == FTDF_SUCCESS)
-            {
+                } else {
+                        status = FTDF_INVALID_PARAMETER;
+                }
+
+                ftdf_send_data_confirm(data_request, status, 0, 0, 0, NULL);
+
                 return;
-            }
         }
-        else
-        {
-            status = FTDF_INVALID_PARAMETER;
-        }
-
-        FTDF_sendDataConfirm(dataRequest,
-                             status,
-                             0,
-                             0,
-                             0,
-                             NULL);
-
-        return;
-    }
-
 #endif /* FTDF_NO_TSCH */
 
-    int              queue;
-    FTDF_AddressMode dstAddrMode = dataRequest->dstAddrMode;
-    FTDF_PANId       dstPANId    = dataRequest->dstPANId;
-    FTDF_Address     dstAddr     = dataRequest->dstAddr;
+        int queue;
+        ftdf_address_mode_t dst_addr_mode = data_request->dst_addr_mode;
+        ftdf_pan_id_t dst_pan_id = data_request->dst_pan_id;
+        ftdf_address_t dst_addr = data_request->dst_addr;
 
-    // Search for an existing indirect queue
-    for (queue = 0; queue < FTDF_NR_OF_REQ_BUFFERS; queue++)
-    {
-        if (dstAddrMode == FTDF_SHORT_ADDRESS)
-        {
-            if (FTDF_txPendingList[ queue ].addrMode == dstAddrMode &&
-                FTDF_txPendingList[ queue ].addr.shortAddress == dstAddr.shortAddress)
-            {
-                break;
-            }
-        }
-        else if (dstAddrMode == FTDF_EXTENDED_ADDRESS)
-        {
-            if (FTDF_txPendingList[ queue ].addrMode == dstAddrMode &&
-                FTDF_txPendingList[ queue ].addr.extAddress == dstAddr.extAddress)
-            {
-                break;
-            }
-        }
-    }
+        /* Search for an existing indirect queue */
+        for (queue = 0; queue < FTDF_NR_OF_REQ_BUFFERS; queue++) {
 
-    if (dataRequest->indirectTX)
-    {
-        FTDF_Status status = FTDF_SUCCESS;
+                if (dst_addr_mode == FTDF_SHORT_ADDRESS) {
 
-        if (queue < FTDF_NR_OF_REQ_BUFFERS)
-        {
-            // Queue request in existing queue
-            status = FTDF_queueReqHead((FTDF_MsgBuffer *) dataRequest, &FTDF_txPendingList[ queue ].queue);
+                        if ((ftdf_tx_pending_list[queue].addr_mode == dst_addr_mode) &&
+                                (ftdf_tx_pending_list[queue].addr.short_address == dst_addr.short_address)) {
+                                break;
+                        }
 
-            if (status == FTDF_SUCCESS)
-            {
-                FTDF_addTxPendingTimer((FTDF_MsgBuffer *) dataRequest,
-                                       queue,
-                                       FTDF_pib.transactionPersistenceTime * FTDF_BASE_SUPERFRAME_DURATION,
-                                       FTDF_sendTransactionExpired);
-                return;
-            }
+                } else if (dst_addr_mode == FTDF_EXTENDED_ADDRESS) {
+
+                        if ((ftdf_tx_pending_list[queue].addr_mode == dst_addr_mode) &&
+                                (ftdf_tx_pending_list[queue].addr.ext_address == dst_addr.ext_address)) {
+                                break;
+                        }
+                }
         }
 
-        if (dstAddrMode != FTDF_EXTENDED_ADDRESS &&
-            dstAddrMode != FTDF_SHORT_ADDRESS)
-        {
-            status = FTDF_INVALID_PARAMETER;
-        }
+        if (data_request->indirect_tx) {
+                ftdf_status_t status = FTDF_SUCCESS;
 
-        if (status != FTDF_SUCCESS)
-        {
-            // Queueing of indirect transfer was not successful
-            FTDF_sendDataConfirm(dataRequest,
-                                 status,
-                                 0,
-                                 0,
-                                 0,
-                                 NULL);
+                if (queue < FTDF_NR_OF_REQ_BUFFERS) {
+                        /* Queue request in existing queue */
+                        status = ftdf_queue_req_head((ftdf_msg_buffer_t*) data_request,
+                                                     &ftdf_tx_pending_list[queue].queue);
 
-            return;
-        }
+                        if (status == FTDF_SUCCESS) {
+                                ftdf_add_tx_pending_timer((ftdf_msg_buffer_t*) data_request, queue,
+                                                          (ftdf_pib.transaction_persistence_time *
+                                                           FTDF_BASE_SUPERFRAME_DURATION),
+                                                          ftdf_send_transaction_expired);
+                                return;
+                        }
+                }
 
+                if ((dst_addr_mode != FTDF_EXTENDED_ADDRESS) && (dst_addr_mode != FTDF_SHORT_ADDRESS)) {
+                        status = FTDF_INVALID_PARAMETER;
+                }
+
+                if (status != FTDF_SUCCESS) {
+                        /* Queueing of indirect transfer was not successful */
+                        ftdf_send_data_confirm(data_request, status, 0, 0, 0, NULL);
+
+                        return;
+                }
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-        uint8_t entry, shortAddrIdx;
-
-        if (dstAddrMode == FTDF_SHORT_ADDRESS)
-        {
-            if (FTDF_fpprGetFreeShortAddress(&entry, &shortAddrIdx) == FTDF_FALSE)
-            {
-                goto transaction_overflow;
-            }
-        }
-        else if (dstAddrMode == FTDF_EXTENDED_ADDRESS)
-        {
-            if (FTDF_fpprGetFreeExtAddress(&entry) == FTDF_FALSE)
-            {
-                goto transaction_overflow;
-            }
-        }
-        else
-        {
-            status = FTDF_INVALID_PARAMETER;
-        }
-
+                uint8_t entry, short_addr_idx;
+                if (dst_addr_mode == FTDF_SHORT_ADDRESS) {
+                        if (ftdf_fppr_get_free_short_address(&entry, &short_addr_idx) == FTDF_FALSE) {
+                                goto transaction_overflow;
+                        }
+                } else if (dst_addr_mode == FTDF_EXTENDED_ADDRESS) {
+                        if (ftdf_fppr_get_free_ext_address(&entry) == FTDF_FALSE) {
+                                goto transaction_overflow;
+                        }
+                } else {
+                        status = FTDF_INVALID_PARAMETER;
+                }
 #endif
+                /* Search for an empty indirect queue */
+                for (queue = 0; queue < FTDF_NR_OF_REQ_BUFFERS; queue++) {
+                        if (ftdf_tx_pending_list[queue].addr_mode == FTDF_NO_ADDRESS) {
+                                ftdf_tx_pending_list[queue].addr_mode = dst_addr_mode;
+                                ftdf_tx_pending_list[queue].pan_id = dst_pan_id;
+                                ftdf_tx_pending_list[queue].addr = dst_addr;
 
-        // Search for an empty indirect queue
-        for (queue = 0; queue < FTDF_NR_OF_REQ_BUFFERS; queue++)
-        {
-            if (FTDF_txPendingList[ queue ].addrMode == FTDF_NO_ADDRESS)
-            {
-                FTDF_txPendingList[ queue ].addrMode = dstAddrMode;
-                FTDF_txPendingList[ queue ].PANId    = dstPANId;
-                FTDF_txPendingList[ queue ].addr     = dstAddr;
+                                status  = ftdf_queue_req_head((ftdf_msg_buffer_t*) data_request,
+                                                              &ftdf_tx_pending_list[queue].queue);
 
-                status                               = FTDF_queueReqHead((FTDF_MsgBuffer *) dataRequest,
-                                                                         &FTDF_txPendingList[ queue ].queue);
-
-                if (status == FTDF_SUCCESS)
-                {
+                                if (status == FTDF_SUCCESS) {
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-
-                    if (dstAddrMode == FTDF_SHORT_ADDRESS)
-                    {
-                        FTDF_fpprSetShortAddress(entry, shortAddrIdx, dstAddr.shortAddress);
-                        FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_TRUE);
-                    }
-                    else if (dstAddrMode == FTDF_EXTENDED_ADDRESS)
-                    {
-                        FTDF_fpprSetExtAddress(entry, dstAddr.shortAddress);
-                        FTDF_fpprSetExtAddressValid(entry, FTDF_TRUE);
-                    }
-                    else
-                    {
-                        ASSERT_WARNING(0);
-                    }
-
+                                if (dst_addr_mode == FTDF_SHORT_ADDRESS) {
+                                        ftdf_fppr_set_short_address(entry, short_addr_idx, dst_addr.short_address);
+                                        ftdf_fppr_set_short_address_valid(entry, short_addr_idx, FTDF_TRUE);
+                                } else if (dst_addr_mode == FTDF_EXTENDED_ADDRESS) {
+                                        ftdf_fppr_set_ext_address(entry, dst_addr.short_address);
+                                        ftdf_fppr_set_ext_address_valid(entry, FTDF_TRUE);
+                                } else {
+                                        ASSERT_WARNING(0);
+                                }
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
-                    FTDF_addTxPendingTimer((FTDF_MsgBuffer *) dataRequest,
-                                           queue,
-                                           FTDF_pib.transactionPersistenceTime * FTDF_BASE_SUPERFRAME_DURATION,
-                                           FTDF_sendTransactionExpired);
-                    return;
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
+                                        ftdf_add_tx_pending_timer((ftdf_msg_buffer_t*) data_request,
+                                                                  queue,
+                                                                  (ftdf_pib.transaction_persistence_time *
+                                                                   FTDF_BASE_SUPERFRAME_DURATION),
+                                                                  ftdf_send_transaction_expired);
 
-        // Did not find an existing or an empty queue
+                                        return;
+                                } else {
+                                        break;
+                                }
+                        }
+                }
+
+                /* Did not find an existing or an empty queue */
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-transaction_overflow:
+                transaction_overflow:
 #endif
-        FTDF_sendDataConfirm(dataRequest, FTDF_TRANSACTION_OVERFLOW,
-                             0,
-                             0,
-                             0,
-                             NULL);
+                ftdf_send_data_confirm(data_request, FTDF_TRANSACTION_OVERFLOW, 0, 0, 0, NULL);
 
-        return;
-    }
-
-    if (FTDF_reqCurrent == NULL)
-    {
-        FTDF_reqCurrent = (FTDF_MsgBuffer *) dataRequest;
-    }
-    else
-    {
-        if (FTDF_queueReqHead((FTDF_MsgBuffer *) dataRequest, &FTDF_reqQueue) == FTDF_TRANSACTION_OVERFLOW)
-        {
-            FTDF_sendDataConfirm(dataRequest, FTDF_TRANSACTION_OVERFLOW,
-                                 0,
-                                 0,
-                                 0,
-                                 NULL);
+                return;
         }
 
-        return;
-    }
+        if (ftdf_req_current == NULL) {
+                ftdf_req_current = (ftdf_msg_buffer_t*) data_request;
+        } else {
+                if (ftdf_queue_req_head((ftdf_msg_buffer_t*) data_request, &ftdf_req_queue) ==
+                    FTDF_TRANSACTION_OVERFLOW) {
 
-    FTDF_FrameHeader    *frameHeader    = &FTDF_fh;
-    FTDF_SecurityHeader *securityHeader = &FTDF_sh;
+                        ftdf_send_data_confirm(data_request, FTDF_TRANSACTION_OVERFLOW, 0, 0, 0, NULL);
+                }
 
-    frameHeader->frameType = dataRequest->sendMultiPurpose ? FTDF_MULTIPURPOSE_FRAME : FTDF_DATA_FRAME;
+                return;
+        }
 
-    FTDF_Boolean framePending;
+        ftdf_frame_header_t *frame_header = &ftdf_fh;
+        ftdf_security_header *security_header = &ftdf_sh;
 
-    if (queue < FTDF_NR_OF_REQ_BUFFERS)
-    {
-        framePending = FTDF_TRUE;
-    }
-    else
-    {
-        framePending = FTDF_FALSE;
-    }
+        frame_header->frame_type = data_request->send_multi_purpose ? FTDF_MULTIPURPOSE_FRAME : FTDF_DATA_FRAME;
 
-    frameHeader->options =
-        (dataRequest->securityLevel > 0 ? FTDF_OPT_SECURITY_ENABLED : 0) |
-        (dataRequest->ackTX ? FTDF_OPT_ACK_REQUESTED : 0) |
-        (framePending ? FTDF_OPT_FRAME_PENDING : 0) |
-        ((dataRequest->frameControlOptions & FTDF_PAN_ID_PRESENT) ? FTDF_OPT_PAN_ID_PRESENT : 0) |
-        ((dataRequest->frameControlOptions & FTDF_IES_INCLUDED) ? FTDF_OPT_IES_PRESENT : 0) |
-        ((dataRequest->frameControlOptions & FTDF_SEQ_NR_SUPPRESSED) ? FTDF_OPT_SEQ_NR_SUPPRESSED : 0);
+        ftdf_boolean_t frame_pending;
 
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        frameHeader->options |= FTDF_OPT_ENHANCED;
-    }
+        if (queue < FTDF_NR_OF_REQ_BUFFERS) {
+                frame_pending = FTDF_TRUE;
+        } else {
+                frame_pending = FTDF_FALSE;
+        }
 
-    frameHeader->srcAddrMode         = dataRequest->srcAddrMode;
-    frameHeader->srcPANId            = FTDF_pib.PANId;
-    frameHeader->dstAddrMode         = dataRequest->dstAddrMode;
-    frameHeader->dstPANId            = dataRequest->dstPANId;
-    frameHeader->dstAddr             = dataRequest->dstAddr;
+        frame_header->options =
+            (data_request->security_level > 0 ? FTDF_OPT_SECURITY_ENABLED : 0) |
+            (data_request->ack_tx ? FTDF_OPT_ACK_REQUESTED : 0) |
+            (frame_pending ? FTDF_OPT_FRAME_PENDING : 0) |
+            ((data_request->frame_control_options & FTDF_PAN_ID_PRESENT) ? FTDF_OPT_PAN_ID_PRESENT : 0) |
+            ((data_request->frame_control_options & FTDF_IES_INCLUDED) ? FTDF_OPT_IES_PRESENT : 0) |
+            ((data_request->frame_control_options & FTDF_SEQ_NR_SUPPRESSED) ? FTDF_OPT_SEQ_NR_SUPPRESSED : 0);
 
-    securityHeader->securityLevel    = dataRequest->securityLevel;
-    securityHeader->keyIdMode        = dataRequest->keyIdMode;
-    securityHeader->keyIndex         = dataRequest->keyIndex;
-    securityHeader->keySource        = dataRequest->keySource;
-    securityHeader->frameCounter     = FTDF_pib.frameCounter;
-    securityHeader->frameCounterMode = FTDF_pib.frameCounterMode;
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                frame_header->options |= FTDF_OPT_ENHANCED;
+        }
+
+        frame_header->src_addr_mode = data_request->src_addr_mode;
+        frame_header->src_pan_id = ftdf_pib.pan_id;
+        frame_header->dst_addr_mode = data_request->dst_addr_mode;
+        frame_header->dst_pan_id = data_request->dst_pan_id;
+        frame_header->dst_addr = data_request->dst_addr;
+
+        security_header->security_level = data_request->security_level;
+        security_header->key_id_mode = data_request->key_id_mode;
+        security_header->key_index = data_request->key_index;
+        security_header->key_source = data_request->key_source;
+        security_header->frame_counter = ftdf_pib.frame_counter;
+        security_header->frame_counter_mode = ftdf_pib.frame_counter_mode;
 
 #ifndef FTDF_NO_TSCH
-
-    if (FTDF_pib.tschEnabled)
-    {
-        frameHeader->SN = FTDF_processTschSN((FTDF_MsgBuffer *)dataRequest,
-                                             FTDF_pib.DSN,
-                                             &dataRequest->requestSN);
-    }
-    else
+        if (ftdf_pib.tsch_enabled) {
+                frame_header->sn = ftdf_process_tsch_sn((ftdf_msg_buffer_t*)data_request,
+                                                        ftdf_pib.dsn,
+                                                        &data_request->requestSN);
+        } else
 #endif /* FTDF_NO_TSCH */
-    {
-        frameHeader->SN = FTDF_pib.DSN;
-    }
+        {
+                frame_header->sn = ftdf_pib.dsn;
+        }
 
-    FTDF_Octet *txPtr = (FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO) +
-                        (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
+        ftdf_octet_t *tx_ptr = (ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_0_0_REG +
+                                                        (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
 
-    // Skip PHY header (= MAC length)
-    txPtr++;
+        /* Skip PHY header (= MAC length) */
+        tx_ptr++;
 
-    FTDF_DataLength msduLength = dataRequest->msduLength;
+        ftdf_data_length_t msdu_length = data_request->msdu_length;
 
-    txPtr           = FTDF_addFrameHeader(txPtr,
-                                          frameHeader,
-                                          msduLength);
+        tx_ptr = ftdf_add_frame_header(tx_ptr, frame_header, msdu_length);
 
-    txPtr = FTDF_addSecurityHeader(txPtr,
-                                   securityHeader);
+        tx_ptr = ftdf_add_security_header(tx_ptr, security_header);
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (dataRequest->frameControlOptions & FTDF_IES_INCLUDED)
-    {
-        txPtr = FTDF_addIes(txPtr,
-                            dataRequest->headerIEList,
-                            dataRequest->payloadIEList,
-                            dataRequest->msduLength);
-    }
-
+        if (data_request->frame_control_options & FTDF_IES_INCLUDED) {
+                tx_ptr = ftdf_add_ies(tx_ptr,
+                                      data_request->header_ie_list,
+                                      data_request->payload_ie_list,
+                                      data_request->msdu_length);
+        }
 #endif /* !FTDF_NO_CSL || !FTDF_NO_TSCH */
 
-    FTDF_Status status = FTDF_sendFrame(FTDF_pib.currentChannel,
-                                        frameHeader,
-                                        securityHeader,
-                                        txPtr,
-                                        dataRequest->msduLength,
-                                        dataRequest->msdu);
+        ftdf_status_t status = ftdf_send_frame(ftdf_pib.current_channel,
+                                               frame_header,
+                                               security_header,
+                                               tx_ptr,
+                                               data_request->msdu_length,
+                                               data_request->msdu);
 
-    if (status != FTDF_SUCCESS)
-    {
-        FTDF_sendDataConfirm(dataRequest, status,
-                             0,
-                             0,
-                             0,
-                             NULL);
+        if (status != FTDF_SUCCESS) {
+                ftdf_send_data_confirm(data_request, status, 0, 0, 0, NULL);
+                ftdf_req_current = NULL;
 
-        FTDF_reqCurrent = NULL;
+                return;
+        }
 
-        return;
-    }
+        ftdf_nr_of_retries = 0;
 
-    FTDF_nrOfRetries = 0;
-
-    if (frameHeader->SN == FTDF_pib.DSN)
-    {
-        FTDF_pib.DSN++;
-    }
+        if (frame_header->sn == ftdf_pib.dsn) {
+                ftdf_pib.dsn++;
+        }
 }
 
-void FTDF_sendDataConfirm(FTDF_DataRequest  *dataRequest,
-                          FTDF_Status        status,
-                          FTDF_Time          timestamp,
-                          FTDF_SN            DSN,
-                          FTDF_NumOfBackoffs numOfBackoffs,
-                          FTDF_IEList       *ackPayload)
+void ftdf_send_data_confirm(ftdf_data_request_t    *data_request,
+                            ftdf_status_t          status,
+                            ftdf_time_t            timestamp,
+                            ftdf_sn_t              dsn,
+                            ftdf_num_of_backoffs_t num_of_backoffs,
+                            ftdf_ie_list_t         *ack_payload)
 {
-    FTDF_REL_DATA_BUFFER(dataRequest->msdu);
+        FTDF_REL_DATA_BUFFER(data_request->msdu);
 
-    FTDF_DataConfirm *dataConfirm = (FTDF_DataConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_DataConfirm));
+        ftdf_data_confirm_t *data_confirm =
+            (ftdf_data_confirm_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_data_confirm_t));
 
-    dataConfirm->msgId         = FTDF_DATA_CONFIRM;
-    dataConfirm->msduHandle    = dataRequest->msduHandle;
-    dataConfirm->status        = status;
-    dataConfirm->timestamp     = timestamp;
-    dataConfirm->numOfBackoffs = numOfBackoffs;
-    dataConfirm->DSN           = DSN;
-    dataConfirm->ackPayload    = ackPayload;
+        data_confirm->msg_id = FTDF_DATA_CONFIRM;
+        data_confirm->msdu_handle = data_request->msdu_handle;
+        data_confirm->status = status;
+        data_confirm->timestamp = timestamp;
+        data_confirm->num_of_backoffs = num_of_backoffs;
+        data_confirm->dsn = dsn;
+        data_confirm->ack_payload = ack_payload;
 
-    if (FTDF_reqCurrent == (FTDF_MsgBuffer *)dataRequest)
-    {
-        FTDF_reqCurrent = NULL;
-    }
+        if (ftdf_req_current == (ftdf_msg_buffer_t*)data_request) {
+                ftdf_req_current = NULL;
+        }
 
-    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) dataRequest);
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) dataConfirm);
+        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*) data_request);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*) data_confirm);
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-    FTDF_fpFsmClearPending();
+        ftdf_fp_fsm_clear_pending();
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
-    FTDF_processNextRequest();
+        ftdf_process_next_request();
 }
 
-void FTDF_sendDataIndication(FTDF_FrameHeader    *frameHeader,
-                             FTDF_SecurityHeader *securityHeader,
-                             FTDF_IEList         *payloadIEList,
-                             FTDF_DataLength      msduLength,
-                             FTDF_Octet          *msdu,
-                             FTDF_LinkQuality     mpduLinkQuality,
-                             FTDF_Time            timestamp)
+void ftdf_send_data_indication(ftdf_frame_header_t  *frame_header,
+                               ftdf_security_header *security_header,
+                               ftdf_ie_list_t       *payload_ie_list,
+                               ftdf_data_length_t   msdu_length,
+                               ftdf_octet_t         *msdu,
+                               ftdf_link_quality_t  mpdu_link_quality,
+                               ftdf_time_t          timestamp)
 {
-    FTDF_DataIndication *dataIndication = (FTDF_DataIndication *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_DataIndication));
-    FTDF_Octet          *msduBuf        = FTDF_GET_DATA_BUFFER(msduLength);
-    FTDF_Octet          *bufPtr         = msduBuf;
+        ftdf_data_indication_t *data_indication =
+            (ftdf_data_indication_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_data_indication_t));
 
-    int                  n;
+        ftdf_octet_t *msdu_buf = FTDF_GET_DATA_BUFFER(msdu_length);
+        ftdf_octet_t *buf_ptr = msdu_buf;
 
-    for (n = 0; n < msduLength; n++)
-    {
-        *msduBuf++ = *msdu++;
-    }
+        int n;
 
-    dataIndication->msgId           = FTDF_DATA_INDICATION;
-    dataIndication->srcAddrMode     = frameHeader->srcAddrMode;
-    dataIndication->srcPANId        = frameHeader->srcPANId;
-    dataIndication->srcAddr         = frameHeader->srcAddr;
-    dataIndication->dstAddrMode     = frameHeader->dstAddrMode;
-    dataIndication->dstPANId        = frameHeader->dstPANId;
-    dataIndication->dstAddr         = frameHeader->dstAddr;
-    dataIndication->msduLength      = msduLength;
-    dataIndication->msdu            = bufPtr;
-    dataIndication->mpduLinkQuality = mpduLinkQuality;
-    dataIndication->DSN             = frameHeader->SN;
-    dataIndication->timestamp       = timestamp;
-    dataIndication->securityLevel   = securityHeader->securityLevel;
-    dataIndication->keyIdMode       = securityHeader->keyIdMode;
-    dataIndication->keyIndex        = securityHeader->keyIndex;
-    dataIndication->payloadIEList   = payloadIEList;
-
-    if (dataIndication->keyIdMode == 0x2)
-    {
-        for (n = 0; n < 4; n++)
-        {
-            dataIndication->keySource[ n ] = securityHeader->keySource[ n ];
-        }
-    }
-    else if (dataIndication->keyIdMode == 0x3)
-    {
-        for (n = 0; n < 8; n++)
-        {
-            dataIndication->keySource[ n ] = securityHeader->keySource[ n ];
-        }
-    }
-
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) dataIndication);
-}
-
-void FTDF_processPollRequest(FTDF_PollRequest *pollRequest)
-{
-    if (FTDF_reqCurrent == NULL)
-    {
-        FTDF_reqCurrent = (FTDF_MsgBuffer *) pollRequest;
-    }
-    else
-    {
-        if (FTDF_queueReqHead((FTDF_MsgBuffer *) pollRequest, &FTDF_reqQueue) == FTDF_TRANSACTION_OVERFLOW)
-        {
-            FTDF_sendPollConfirm(pollRequest, FTDF_TRANSACTION_OVERFLOW);
+        for (n = 0; n < msdu_length; n++) {
+                *msdu_buf++ = *msdu++;
         }
 
-        return;
-    }
+        data_indication->msg_id = FTDF_DATA_INDICATION;
+        data_indication->src_addr_mode = frame_header->src_addr_mode;
+        data_indication->src_pan_id = frame_header->src_pan_id;
+        data_indication->src_addr = frame_header->src_addr;
+        data_indication->dst_addr_mode = frame_header->dst_addr_mode;
+        data_indication->dst_pan_id = frame_header->dst_pan_id;
+        data_indication->dst_addr = frame_header->dst_addr;
+        data_indication->msdu_length = msdu_length;
+        data_indication->msdu = buf_ptr;
+        data_indication->mpdu_link_quality = mpdu_link_quality;
+        data_indication->dsn = frame_header->sn;
+        data_indication->timestamp = timestamp;
+        data_indication->security_level = security_header->security_level;
+        data_indication->key_id_mode = security_header->key_id_mode;
+        data_indication->key_index = security_header->key_index;
+        data_indication->payload_ie_list = payload_ie_list;
 
-    FTDF_FrameHeader    *frameHeader    = &FTDF_fh;
-    FTDF_SecurityHeader *securityHeader = &FTDF_sh;
+        if (data_indication->key_id_mode == 0x2) {
+                for (n = 0; n < 4; n++) {
+                        data_indication->key_source[n] = security_header->key_source[n];
+                }
+        } else if (data_indication->key_id_mode == 0x3) {
+                for (n = 0; n < 8; n++) {
+                        data_indication->key_source[n] = security_header->key_source[n];
+                }
+        }
 
-    frameHeader->frameType = FTDF_MAC_COMMAND_FRAME;
-    frameHeader->options   =
-        (pollRequest->securityLevel > 0 ? FTDF_OPT_SECURITY_ENABLED : 0) | FTDF_OPT_ACK_REQUESTED;
-
-    if (FTDF_pib.shortAddress < 0xfffe)
-    {
-        frameHeader->srcAddrMode          = FTDF_SHORT_ADDRESS;
-        frameHeader->srcAddr.shortAddress = FTDF_pib.shortAddress;
-    }
-    else
-    {
-        frameHeader->srcAddrMode        = FTDF_EXTENDED_ADDRESS;
-        frameHeader->srcAddr.extAddress = FTDF_pib.extAddress;
-    }
-
-    frameHeader->srcPANId            = FTDF_pib.PANId;
-    frameHeader->dstAddrMode         = pollRequest->coordAddrMode;
-    frameHeader->dstPANId            = pollRequest->coordPANId;
-    frameHeader->dstAddr             = pollRequest->coordAddr;
-
-    securityHeader->securityLevel    = pollRequest->securityLevel;
-    securityHeader->keyIdMode        = pollRequest->keyIdMode;
-    securityHeader->keyIndex         = pollRequest->keyIndex;
-    securityHeader->keySource        = pollRequest->keySource;
-    securityHeader->frameCounter     = FTDF_pib.frameCounter;
-    securityHeader->frameCounterMode = FTDF_pib.frameCounterMode;
-
-    FTDF_Octet *txPtr = (FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO) +
-                        (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
-
-    // Skip PHY header (= MAC length)
-    txPtr++;
-
-    frameHeader->SN = FTDF_pib.DSN;
-
-    txPtr           = FTDF_addFrameHeader(txPtr,
-                                          frameHeader,
-                                          1);
-
-    txPtr = FTDF_addSecurityHeader(txPtr,
-                                   securityHeader);
-
-    *txPtr++ = FTDF_COMMAND_DATA_REQUEST;
-
-    FTDF_Status status = FTDF_sendFrame(FTDF_pib.currentChannel,
-                                        frameHeader,
-                                        securityHeader,
-                                        txPtr,
-                                        0,
-                                        NULL);
-
-    if (status != FTDF_SUCCESS)
-    {
-        FTDF_sendPollConfirm(pollRequest, status);
-
-        return;
-    }
-
-    FTDF_nrOfRetries = 0;
-    FTDF_pib.DSN++;
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*) data_indication);
 }
 
-void FTDF_sendPollConfirm(FTDF_PollRequest *pollRequest, FTDF_Status status)
+void ftdf_process_poll_request(ftdf_poll_request_t *poll_request)
 {
-    FTDF_PollConfirm *pollConfirm = (FTDF_PollConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_PollConfirm));
+        if (ftdf_req_current == NULL) {
+                ftdf_req_current = (ftdf_msg_buffer_t*) poll_request;
+        } else {
+                if (ftdf_queue_req_head((ftdf_msg_buffer_t*) poll_request, &ftdf_req_queue) ==
+                    FTDF_TRANSACTION_OVERFLOW) {
+                        ftdf_send_poll_confirm(poll_request, FTDF_TRANSACTION_OVERFLOW);
+                }
 
-    pollConfirm->msgId  = FTDF_POLL_CONFIRM;
-    pollConfirm->status = status;
+                return;
+        }
 
-    if (FTDF_reqCurrent == (FTDF_MsgBuffer *)pollRequest)
-    {
-        FTDF_reqCurrent = NULL;
-    }
+        ftdf_frame_header_t *frame_header = &ftdf_fh;
+        ftdf_security_header *security_header = &ftdf_sh;
 
-    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) pollRequest);
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) pollConfirm);
+        frame_header->frame_type = FTDF_MAC_COMMAND_FRAME;
+        frame_header->options =
+            (poll_request->security_level > 0 ? FTDF_OPT_SECURITY_ENABLED : 0) | FTDF_OPT_ACK_REQUESTED;
 
-    FTDF_processNextRequest();
+        if (ftdf_pib.short_address < 0xfffe) {
+                frame_header->src_addr_mode = FTDF_SHORT_ADDRESS;
+                frame_header->src_addr.short_address = ftdf_pib.short_address;
+        } else {
+                frame_header->src_addr_mode = FTDF_EXTENDED_ADDRESS;
+                frame_header->src_addr.ext_address = ftdf_pib.ext_address;
+        }
+
+        frame_header->src_pan_id = ftdf_pib.pan_id;
+        frame_header->dst_addr_mode = poll_request->coord_addr_mode;
+        frame_header->dst_pan_id = poll_request->coord_pan_id;
+        frame_header->dst_addr = poll_request->coord_addr;
+
+        security_header->security_level = poll_request->security_level;
+        security_header->key_id_mode = poll_request->key_id_mode;
+        security_header->key_index = poll_request->key_index;
+        security_header->key_source = poll_request->key_source;
+        security_header->frame_counter = ftdf_pib.frame_counter;
+        security_header->frame_counter_mode = ftdf_pib.frame_counter_mode;
+
+        ftdf_octet_t *tx_ptr = (ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_0_0_REG + (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
+
+        /* Skip PHY header (= MAC length) */
+        tx_ptr++;
+
+        frame_header->sn = ftdf_pib.dsn;
+
+        tx_ptr = ftdf_add_frame_header(tx_ptr, frame_header, 1);
+
+        tx_ptr = ftdf_add_security_header(tx_ptr, security_header);
+
+        *tx_ptr++ = FTDF_COMMAND_DATA_REQUEST;
+
+        ftdf_status_t status = ftdf_send_frame(ftdf_pib.current_channel,
+                                               frame_header,
+                                               security_header,
+                                               tx_ptr,
+                                               0,
+                                               NULL);
+
+        if (status != FTDF_SUCCESS) {
+                ftdf_send_poll_confirm(poll_request, status);
+                return;
+        }
+
+        ftdf_nr_of_retries = 0;
+        ftdf_pib.dsn++;
 }
 
-void FTDF_processPurgeRequest(FTDF_PurgeRequest *purgeRequest)
+void ftdf_send_poll_confirm(ftdf_poll_request_t *poll_request, ftdf_status_t status)
 {
-    FTDF_Handle msduHandle = purgeRequest->msduHandle;
-    FTDF_Status status     = FTDF_INVALID_HANDLE;
+        ftdf_poll_confirm_t *poll_confirm = (ftdf_poll_confirm_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_poll_confirm_t));
 
-    int         n;
+        poll_confirm->msg_id  = FTDF_POLL_CONFIRM;
+        poll_confirm->status = status;
 
-    for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
-    {
-        FTDF_MsgBuffer *request = FTDF_dequeueByHandle(msduHandle, &FTDF_txPendingList[ n ].queue);
+        if (ftdf_req_current == (ftdf_msg_buffer_t*)poll_request) {
+                ftdf_req_current = NULL;
+        }
 
-        if (request)
-        {
-            FTDF_DataRequest *dataRequest = (FTDF_DataRequest *) request;
+        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*) poll_request);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*) poll_confirm);
 
-            if (dataRequest->indirectTX == FTDF_TRUE)
-            {
-                FTDF_removeTxPendingTimer(request);
+        ftdf_process_next_request();
+}
+
+void ftdf_process_purge_request(ftdf_purge_request_t *purge_request)
+{
+        ftdf_handle_t msdu_handle = purge_request->msdu_handle;
+        ftdf_status_t status = FTDF_INVALID_HANDLE;
+
+        int n;
+
+        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++) {
+                ftdf_msg_buffer_t *request =
+                    ftdf_dequeue_by_handle(msdu_handle, &ftdf_tx_pending_list[n].queue);
+
+                if (request) {
+                        ftdf_data_request_t *data_request = (ftdf_data_request_t*) request;
+
+                        if (data_request->indirect_tx == FTDF_TRUE) {
+                                ftdf_remove_tx_pending_timer(request);
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-
-                if (FTDF_txPendingList[ n ].addrMode == FTDF_SHORT_ADDRESS)
-                {
-                    uint8_t entry, shortAddrIdx;
-                    FTDF_Boolean found = FTDF_fpprLookupShortAddress(
-                                             FTDF_txPendingList[ n ].addr.shortAddress, &entry,
-                                             &shortAddrIdx);
-                    ASSERT_WARNING(found);
-                    FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
-                }
-                else if (FTDF_txPendingList[ n ].addrMode  == FTDF_EXTENDED_ADDRESS)
-                {
-                    uint8_t entry;
-                    FTDF_Boolean found = FTDF_fpprLookupExtAddress(
-                                             FTDF_txPendingList[ n ].addr.extAddress, &entry);
-                    ASSERT_WARNING(found);
-                    FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
-                }
-                else
-                {
-                    ASSERT_WARNING(0);
-                }
-
+                        if (ftdf_tx_pending_list[n].addr_mode == FTDF_SHORT_ADDRESS) {
+                                uint8_t entry, shortAddrIdx;
+                                ftdf_boolean_t found = ftdf_fppr_lookup_short_address(
+                                    ftdf_tx_pending_list[n].addr.short_address, &entry,
+                                        &shortAddrIdx);
+                                ASSERT_WARNING(found);
+                                ftdf_fppr_set_short_address_valid(entry, shortAddrIdx, FTDF_FALSE);
+                        } else if (ftdf_tx_pending_list[n].addr_mode  == FTDF_EXTENDED_ADDRESS) {
+                                uint8_t entry;
+                                ftdf_boolean_t found = ftdf_fppr_lookup_ext_address(
+                                    ftdf_tx_pending_list[n].addr.ext_address, &entry);
+                                ASSERT_WARNING(found);
+                                ftdf_fppr_set_ext_address_valid(entry, FTDF_FALSE);
+                        } else {
+                                ASSERT_WARNING(0);
+                        }
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
+                                if (ftdf_is_queue_empty(&ftdf_tx_pending_list[n].queue)) {
+                                        ftdf_tx_pending_list[n].addr_mode = FTDF_NO_ADDRESS;
+                                }
+                        }
 
-                if (FTDF_isQueueEmpty(&FTDF_txPendingList[ n ].queue))
-                {
-                    FTDF_txPendingList[ n ].addrMode = FTDF_NO_ADDRESS;
+                        FTDF_REL_DATA_BUFFER(data_request->msdu);
+                        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*) data_request);
+
+                        status = FTDF_SUCCESS;
+
+                        break;
                 }
-            }
-
-            FTDF_REL_DATA_BUFFER(dataRequest->msdu);
-            FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) dataRequest);
-
-            status = FTDF_SUCCESS;
-
-            break;
         }
-    }
 
-    FTDF_PurgeConfirm *purgeConfirm = (FTDF_PurgeConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_PurgeConfirm));
+        ftdf_purge_confirm_t *purge_confirm =
+            (ftdf_purge_confirm_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_purge_confirm_t));
 
-    purgeConfirm->msgId      = FTDF_PURGE_CONFIRM;
-    purgeConfirm->msduHandle = msduHandle;
-    purgeConfirm->status     = status;
+        purge_confirm->msg_id = FTDF_PURGE_CONFIRM;
+        purge_confirm->msdu_handle = msdu_handle;
+        purge_confirm->status = status;
 
-    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) purgeRequest);
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) purgeConfirm);
+        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*) purge_request);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*) purge_confirm);
 }
 #endif /* !FTDF_LITE */
 
 #ifdef FTDF_PHY_API
-FTDF_Status FTDF_sendFrameSimple(FTDF_DataLength    frameLength,
-                                 FTDF_Octet        *frame,
-                                 FTDF_ChannelNumber channel,
-                                 FTDF_PTI           pti,
-                                 FTDF_Boolean       csmaSuppress)
+ftdf_status_t ftdf_send_frame_simple(ftdf_data_length_t    frame_length,
+                                     ftdf_octet_t          *frame,
+                                     ftdf_channel_number_t channel,
+                                     ftdf_pti_t            pti,
+                                     ftdf_boolean_t        csma_suppress)
 {
 
-    FTDF_Octet *fp = frame;
+        ftdf_octet_t *fp = frame;
 
-    if (frameLength > 127 ||
-        FTDF_transparentMode != FTDF_TRUE)
-    {
-        return FTDF_INVALID_PARAMETER;
-    }
+        if ((frame_length > 127) || (ftdf_transparent_mode != FTDF_TRUE)) {
+                return FTDF_INVALID_PARAMETER;
+        }
 
-    FTDF_Octet *txPtr = (FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO) +
-                        (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
+        ftdf_octet_t *tx_ptr =
+            (ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_0_0_REG + (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
 
-    /* This data copy could/should be optimized using DMA */
-    *txPtr++ = frameLength;
+        /* This data copy could/should be optimized using DMA */
+        *tx_ptr++ = frame_length;
 
-    int         n;
+        int n;
 
-    for (n = 0; n < frameLength; n++)
-    {
-        *txPtr++ = *fp++;
-    }
+        for (n = 0; n < frame_length; n++) {
+                *tx_ptr++ = *fp++;
+        }
 
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-    FTDF_nrOfRetries = 0;
-    FTDF_exitCritical();
-    FTDF_sendTransparentFrame(frameLength,
-                              frame,
-                              channel,
-                              pti,
-                              csmaSuppress);
+        ftdf_critical_var();
+        ftdf_enter_critical();
+        ftdf_nr_of_retries = 0;
+        ftdf_exit_critical();
+        ftdf_send_transparent_frame(frame_length,
+                                    frame,
+                                    channel,
+                                    pti,
+                                    csma_suppress);
 
-    return FTDF_SUCCESS;
+        return FTDF_SUCCESS;
 }
 
 
 
 #else /* !FTDF_PHY_API */
-void FTDF_processTransparentRequest(FTDF_TransparentRequest *transparentRequest)
+void ftdf_process_transparent_request(ftdf_transparent_request_t *transparent_request)
 {
-    FTDF_DataLength frameLength = transparentRequest->frameLength;
+        ftdf_data_length_t frame_length = transparent_request->frame_length;
 
-    if (frameLength > 127 ||
-        FTDF_transparentMode != FTDF_TRUE)
-    {
-        FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparentRequest->handle,
-                                            FTDF_INVALID_PARAMETER);
+        if ((frame_length > 127) || (ftdf_transparent_mode != FTDF_TRUE)) {
+                FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparent_request->handle,
+                                                    FTDF_INVALID_PARAMETER);
 
-        FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) transparentRequest);
+                FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*) transparent_request);
 
-        return;
-    }
-
-    if (FTDF_reqCurrent == NULL)
-    {
-        FTDF_reqCurrent = (FTDF_MsgBuffer *) transparentRequest;
-    }
-    else
-    {
-#ifndef FTDF_LITE
-
-        if (FTDF_queueReqHead((FTDF_MsgBuffer *) transparentRequest, &FTDF_reqQueue) == FTDF_TRANSACTION_OVERFLOW)
-        {
-#endif /* !FTDF_LITE */
-            FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparentRequest->handle,
-                                                FTDF_TRANSPARENT_OVERFLOW);
-
-            FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) transparentRequest);
-#ifndef FTDF_LITE
+                return;
         }
 
+        if (ftdf_req_current == NULL) {
+                ftdf_req_current = (ftdf_msg_buffer_t*) transparent_request;
+        } else {
+#ifndef FTDF_LITE
+                if (ftdf_queue_req_head((ftdf_msg_buffer_t*) transparent_request, &ftdf_req_queue) ==
+                    FTDF_TRANSACTION_OVERFLOW) {
 #endif /* !FTDF_LITE */
-        return;
-    }
+                        FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparent_request->handle,
+                                                            FTDF_TRANSPARENT_OVERFLOW);
 
-    FTDF_Octet *txPtr = (FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO) +
-                        (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
+                        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*) transparent_request);
+#ifndef FTDF_LITE
+                }
+#endif /* !FTDF_LITE */
+                return;
+        }
 
-    *txPtr++ = frameLength;
+        ftdf_octet_t *tx_ptr =
+            (ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_0_0_REG + (FTDF_BUFFER_LENGTH * FTDF_TX_DATA_BUFFER);
 
-    FTDF_Octet *frame = transparentRequest->frame;
+        *tx_ptr++ = frame_length;
 
-    int         n;
+        ftdf_octet_t *frame = transparent_request->frame;
 
-    for (n = 0; n < frameLength; n++)
-    {
-        *txPtr++ = *frame++;
-    }
+        int n;
 
-    FTDF_sendTransparentFrame(frameLength,
-                              transparentRequest->frame,
-                              transparentRequest->channel,
-                              transparentRequest->pti,
-                              transparentRequest->cmsaSuppress);
-    FTDF_nrOfRetries = 0;
+        for (n = 0; n < frame_length; n++) {
+                *tx_ptr++ = *frame++;
+        }
+
+        ftdf_send_transparent_frame(frame_length,
+                                    transparent_request->frame,
+                                    transparent_request->channel,
+                                    transparent_request->pti,
+                                    transparent_request->cmsa_suppress);
+        ftdf_nr_of_retries = 0;
 }
 
-
-void FTDF_sendFrameTransparent(FTDF_DataLength    frameLength,
-                               FTDF_Octet        *frame,
-                               FTDF_ChannelNumber channel,
-                               FTDF_PTI           pti,
-                               FTDF_Boolean       cmsaSuppress,
-                               void              *handle)
+void ftdf_send_frame_transparent(ftdf_data_length_t    frame_length,
+                                 ftdf_octet_t          *frame,
+                                 ftdf_channel_number_t channel,
+                                 ftdf_pti_t            pti,
+                                 ftdf_boolean_t        cmsa_suppress,
+                                 void                  *handle)
 {
-    FTDF_TransparentRequest *transparentRequest =
-        (FTDF_TransparentRequest *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_TransparentRequest));
+        ftdf_transparent_request_t *transparent_request =
+            (ftdf_transparent_request_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_transparent_request_t));
 
-    transparentRequest->msgId        = FTDF_TRANSPARENT_REQUEST;
-    transparentRequest->frameLength  = frameLength;
-    transparentRequest->frame        = frame;
-    transparentRequest->channel      = channel;
-    transparentRequest->pti          = pti;
-    transparentRequest->cmsaSuppress = cmsaSuppress;
-    transparentRequest->handle       = handle;
+        transparent_request->msg_id = FTDF_TRANSPARENT_REQUEST;
+        transparent_request->frame_length  = frame_length;
+        transparent_request->frame = frame;
+        transparent_request->channel = channel;
+        transparent_request->pti = pti;
+        transparent_request->cmsa_suppress = cmsa_suppress;
+        transparent_request->handle = handle;
 
-    FTDF_processTransparentRequest(transparentRequest);
+        ftdf_process_transparent_request(transparent_request);
 }
 
 #endif /* FTDF_PHY_API */
+#endif /* CONFIG_USE_FTDF */

@@ -107,7 +107,7 @@
 #define FTDF_TRANSPARENT_RCV_UNEXP_BEACON       0x00000040
 #define FTDF_TRANSPARENT_RCV_UNEXP_NO_DEST_ADDR 0x00000080
 
-typedef uint8_t FTDF_MsgId;
+typedef uint8_t ftdf_msg_id_t;
 #define FTDF_DATA_REQUEST               1
 #define FTDF_DATA_INDICATION            2
 #define FTDF_DATA_CONFIRM               3
@@ -164,9 +164,8 @@ typedef uint8_t FTDF_MsgId;
 #if FTDF_DBG_BUS_ENABLE
 #define FTDF_DBG_MODE_SET_REQUEST       54
 #endif /* FTDF_DBG_BUS_ENABLE */
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
 #define FTDF_FPPR_MODE_SET_REQUEST      55
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+
 /**
  * \brief  Request status
  * \remark Valid statuses:
@@ -201,7 +200,7 @@ typedef uint8_t FTDF_MsgId;
  *         - FTDF_PAN_ACCESS_DENIED: PAN access denied
  *         - FTDF_HOPPING_SEQUENCE_OFFSET_DUPLICATION: Hopping sequence offset duplication
  */
-typedef uint8_t FTDF_Status;
+typedef uint8_t ftdf_status_t;
 #define FTDF_SUCCESS                             0
 #define FTDF_CHANNEL_ACCESS_FAILURE              1
 #define FTDF_NO_ACK                              2
@@ -246,7 +245,7 @@ typedef uint8_t FTDF_Status;
  *         - FTDF_ASSOCIATION_PAN_ACCESS_DENIED: Associate denied
  *         - FTDF_FAST_ASSOCIATION_SUCCESSFUL: Associate request granted (fast)
  */
-typedef uint8_t FTDF_AssociationStatus;
+typedef uint8_t ftdf_association_status_t;
 #define FTDF_ASSOCIATION_SUCCESSFUL                          0x00
 #define FTDF_ASSOCIATION_PAN_AT_CAPACITY                     0x01
 #define FTDF_ASSOCIATION_PAN_ACCESS_DENIED                   0x02
@@ -256,57 +255,56 @@ typedef uint8_t FTDF_AssociationStatus;
 /**
  * \brief Address mode
  * \remark Supported address modes:
- *         - FTDF_NO_ADDRESS 
- *         - FTDF_SHORT_ADDRESS 
- *         - FTDF_EXTENDED_ADDRESS 
+ *         - FTDF_NO_ADDRESS
+ *         - FTDF_SHORT_ADDRESS
+ *         - FTDF_EXTENDED_ADDRESS
  */
-typedef uint8_t FTDF_AddressMode;
+typedef uint8_t ftdf_address_mode_t;
 #define FTDF_NO_ADDRESS       0
 #define FTDF_SIMPLE_ADDRESS   1
 #define FTDF_SHORT_ADDRESS    2
 #define FTDF_EXTENDED_ADDRESS 3
 
 /**
- * \brief  PAN ID
+ * \brief  PAN id
  * \remark Range 0.. 65535
  */
-typedef uint16_t FTDF_PANId;
+typedef uint16_t ftdf_pan_id_t;
 
-typedef uint8_t  FTDF_SimpleAddress;
+typedef uint8_t  ftdf_simple_address_t;
 
 /**
  * \brief  Short address
  * \remark Range 00:00 - ff:ff
  */
-typedef uint16_t FTDF_ShortAddress;
+typedef uint16_t ftdf_short_address_t;
 
 /**
  * \brief  Extended address
  * \remark Range 00:00:00:00:00:00:00:00 - ff:ff:ff:ff:ff:ff:ff:ff
  */
-typedef uint64_t FTDF_ExtAddress;
+typedef uint64_t ftdf_ext_address_t;
 
-typedef union
-{
-    /** \brief DO NOT USE */
-    FTDF_SimpleAddress simpleAddress;
-    /** \brief Short address */
-    FTDF_ShortAddress  shortAddress;
-    /** \brief Extended address */
-    FTDF_ExtAddress    extAddress;
-} FTDF_Address;
+typedef union {
+        /** \brief DO NOT USE */
+        ftdf_simple_address_t simple_address;
+        /** \brief Short address */
+        ftdf_short_address_t  short_address;
+        /** \brief Extended address */
+        ftdf_ext_address_t    ext_address;
+} ftdf_address_t;
 
 #ifdef SIMULATOR
-typedef uint16_t FTDF_DataLength;
+typedef uint16_t ftdf_data_length_t;
 #else
-typedef uint8_t  FTDF_DataLength;
+typedef uint8_t  ftdf_data_length_t;
 #endif
 
 /**
  * \brief  Handle
  * \remark Range 0..255
  */
-typedef uint8_t FTDF_Handle;
+typedef uint8_t ftdf_handle_t;
 
 /**
  * \brief  Boolean
@@ -314,91 +312,102 @@ typedef uint8_t FTDF_Handle;
  *         - FTDF_FALSE
  *         - FTDF_TRUE
  */
-typedef uint8_t FTDF_Boolean;
+typedef uint8_t ftdf_boolean_t;
+
+/** \brief FTDF boolean FALSE */
 #define FTDF_FALSE 0
+/** \brief FTDF boolean TRUE */
 #define FTDF_TRUE  1
 
 /**
  * \brief  Security level
  * \remark Valid range 0..7
  */
-typedef uint8_t  FTDF_SecurityLevel;
+typedef uint8_t  ftdf_security_level_t;
 
 /**
- * \brief  Security key ID mode
+ * \brief  Security key id mode
  * \remark Valid range 0..3
  */
-typedef uint8_t  FTDF_KeyIdMode;
+typedef uint8_t  ftdf_key_id_mode_t;
 
 /**
  * \brief  Security key index
  * \remark Valid range 0..255
  */
-typedef uint8_t  FTDF_KeyIndex;
+typedef uint8_t  ftdf_key_index_t;
 
 /**
  * \brief  Sequence number
  * \remark Valid range 0..255
  */
-typedef uint8_t  FTDF_SN;
+typedef uint8_t  ftdf_sn_t;
 
 /**
  * \brief  Sequence number
  * \remark Valid range 0..0xffffffffff (5 octets)
  */
-typedef uint64_t FTDF_ASN;
+typedef uint64_t ftdf_asn_t;
 
 /**
  * \brief  Order
  */
-typedef uint8_t  FTDF_Order;
+typedef uint8_t  ftdf_order_t;
 
 /**
  * \brief  Time
  * \remark Timestamp in symbols which wraps around every 0x100000000 symbols
  */
-typedef uint32_t FTDF_Time;
+typedef uint32_t ftdf_time_t;
 
 /**
  * \brief  Real time
  * \remark Timestamp in symbols which does not wrap (in the lifetime of the device)
  */
-typedef uint64_t FTDF_Time64;
+typedef uint64_t ftdf_time64_t;
 
-typedef uint32_t FTDF_USec;
+typedef uint32_t ftdf_usec_t;
 
-typedef uint64_t FTDF_PSec;
+typedef uint64_t ftdf_psec_t;
 
-typedef uint32_t FTDF_NrLowPowerClockCycles;
+typedef uint32_t ftdf_nr_low_power_clock_cycles_t;
 
-typedef uint8_t FTDF_NrBackoffPeriods;
+typedef uint8_t ftdf_nr_backoff_periods_t;
+
+/**
+ * \brief  Link Quality mode
+ * \remark 0: RSSI, 1: LQI
+ */
+typedef uint8_t ftdf_link_quality_mode_t;
+#define FTDF_LINK_QUALITY_MODE_RSSI 0
+#define FTDF_LINK_QUALITY_MODE_LQI  1
 
 /**
  * \brief  Period of time
  * \remark Range 0..65535
  */
-typedef uint16_t FTDF_Period;
+typedef uint16_t ftdf_period_t;
 
 /**
  * \brief  Size type
  */
-typedef uint8_t  FTDF_Size;
+typedef uint8_t  ftdf_size_t;
 
 /**
  * \brief  Length type
  */
-typedef uint8_t  FTDF_Length;
+typedef uint8_t  ftdf_length_t;
 
 /**
  * \brief  Priority type
  */
-typedef uint8_t  FTDF_Priority;
+typedef uint8_t  ftdf_priority_t;
 
 /**
  * \brief  Performance counter
  * \remark Range 0..0xffffffff
  */
-typedef uint32_t FTDF_Count;
+typedef uint32_t ftdf_count_t;
 
 /**
  * \brief Disassociate reason
@@ -406,7 +415,7 @@ typedef uint32_t FTDF_Count;
  *         - FTDF_COORD_WISH_DEVICE_LEAVE_PAN: Coordinator wishes that device leaves PAN
  *         - FTDF_DEVICE_WISH_LEAVE_PAN: Device wishes to leave PAN
  */
-typedef uint8_t  FTDF_DisassociateReason;
+typedef uint8_t  ftdf_disassociate_reason_t;
 #define FTDF_COORD_WISH_DEVICE_LEAVE_PAN 1
 #define FTDF_DEVICE_WISH_LEAVE_PAN       2
 
@@ -416,7 +425,7 @@ typedef uint8_t  FTDF_DisassociateReason;
  *         - FTDF_NORMAL_BEACON: Normal beacon
  *         - FTDF_ENHANCED_BEACON: Enhanced beacon
  */
-typedef uint8_t FTDF_BeaconType;
+typedef uint8_t ftdf_beacon_type_t;
 #define FTDF_NORMAL_BEACON   0
 #define FTDF_ENHANCED_BEACON 1
 
@@ -426,7 +435,7 @@ typedef uint8_t FTDF_BeaconType;
 /** \brief aNumSuperframeSlots */
 #define FTDF_NUM_SUPERFRAME_SLOTS        16
 /** \brief aBaseSuperframeDuration */
-#define FTDF_BASE_SUPERFRAME_DURATION    ( FTDF_BASE_SLOT_DURATION * FTDF_NUM_SUPERFRAME_SLOTS )
+#define FTDF_BASE_SUPERFRAME_DURATION    (FTDF_BASE_SLOT_DURATION * FTDF_NUM_SUPERFRAME_SLOTS)
 /** \brief NOT USED */
 #define FTDF_GTS_PERSISTENCE_TIME        4
 /** \brief aMaxBeaconOverhead */
@@ -434,7 +443,7 @@ typedef uint8_t FTDF_BeaconType;
 /** \brief aMaxBeaconOverhead */
 #define FTDF_MAX_PHY_PACKET_SIZE         127
 /** \brief aMaxPHYPacketSize */
-#define FTDF_MAX_BEACON_PAYLOAD_LENGTH   ( FTDF_MAX_PHY_PACKET_SIZE - FTDF_MAX_BEACON_OVERHEAD )
+#define FTDF_MAX_BEACON_PAYLOAD_LENGTH   (FTDF_MAX_PHY_PACKET_SIZE - FTDF_MAX_BEACON_OVERHEAD)
 /** \brief NOT USED  */
 #define FTDF_MAX_LOST_BEACONS            4
 /** \brief aMaxMPDUUnsecuredOverhead */
@@ -442,9 +451,9 @@ typedef uint8_t FTDF_BeaconType;
 /** \brief aMinMPDUOverhead */
 #define FTDF_MIN_MPDU_OVERHEAD           9
 /** \brief aMaxMACSafePayloadSize */
-#define FTDF_MAX_MAC_SAFE_PAYLOAD_SIZE   ( FTDF_MAX_PHY_PACKET_SIZE - FTDF_MAX_MPDU_UNSECURED_OVERHEAD )
+#define FTDF_MAX_MAC_SAFE_PAYLOAD_SIZE   (FTDF_MAX_PHY_PACKET_SIZE - FTDF_MAX_MPDU_UNSECURED_OVERHEAD)
 /** \brief aMaxMACSafePayloadSize */
-#define FTDF_MAX_PAYLOAD_SIZE            ( FTDF_MAX_PHY_PACKET_SIZE - FTDF_MIN_MPDU_OVERHEAD )
+#define FTDF_MAX_PAYLOAD_SIZE            (FTDF_MAX_PHY_PACKET_SIZE - FTDF_MIN_MPDU_OVERHEAD)
 /** \brief aMaxMACPayloadSize */
 #define FTDF_MAX_SIFS_FRAME_SIZE         18
 /** \brief NOT USED  */
@@ -453,96 +462,154 @@ typedef uint8_t FTDF_BeaconType;
 #define FTDF_UNIT_BACKOFF_PERIOD         20
 
 /**
- * \brief PIB attribute ID
+ * \brief PIB attribute id
  * \remark List of supported PIB attributes, their types/structures and description
- * - FTDF_PIB_EXTENDED_ADDRESS, \link FTDF_ExtAddress \endlink,
+ * - FTDF_PIB_EXTENDED_ADDRESS, \link ftdf_ext_address_t \endlink,
  *         The extended address of the device
- * - FTDF_PIB_ACK_WAIT_DURATION, \link FTDF_Period \endlink, The maximum time in symbols that is waited for an ack, Read only
- * - FTDF_PIB_ASSOCIATION_PAN_COORD, \link FTDF_Boolean \endlink, Indication whether the device is associated with a PAN coordinator
- * - FTDF_PIB_ASSOCIATION_PERMIT, \link  FTDF_Boolean \endlink, Indication whether the PAN coordinator grats association requests
- * - FTDF_PIB_AUTO_REQUEST, \link FTDF_Boolean \endlink, Indication whether beacon received while scanning are forwarded to the application or not
- * - FTDF_PIB_BEACON_PAYLOAD, FTDF_Octet*, Pointer to the data to be included in a beacon as payload
- * - FTDF_PIB_BEACON_PAYLOAD_LENGTH, \link FTDF_Size \endlink, Size of the data to be included in a beacon as payload
- * - FTDF_PIB_BEACON_ORDER, \link FTDF_Order \endlink, Fixed to 15 indicating beaconless mode
- * - FTDF_PIB_BSN, \link FTDF_SN \endlink, The current beacon sequence number
- * - FTDF_PIB_COORD_EXTENDED_ADDRESS, \link FTDF_ExtAddress \endlink, The extended address of the coordinator
- * - FTDF_PIB_COORD_SHORT_ADDRESS, \link FTDF_ShortAddress \endlink, The short address of the coordinator
- * - FTDF_PIB_DSN, \link FTDF_SN \endlink, The current data sequence number
- * - FTDF_PIB_MAX_BE, \link FTDF_BEExponent \endlink, The maximum backoff exponent
- * - FTDF_PIB_MAX_CSMA_BACKOFFS, \link FTDF_Size \endlink, The maximum number of backoffs
- * - FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME, \link FTDF_Period \endlink, The maximum time in symbols that RX is ON after that a frame is received with FP set.
- * - FTDF_PIB_MAX_FRAME_RETRIES, \link FTDF_Size \endlink, The maximum number of frame retries
- * - FTDF_PIB_MIN_BE, \link FTDF_BEExponent \endlink, The minimum backoff exponent
- * - FTDF_PIB_LIFS_PERIOD, \link FTDF_Period \endlink, The long IFS period in number of symbols, Read oonly
- * - FTDF_PIB_SIFS_PERIOD, \link FTDF_Period \endlink, The short IFS period in number of symbols, Read oonly
- * - FTDF_PIB_PAN_ID, \link FTDF_PANId \endlink, The PAN ID of the device
- * - FTDF_PIB_PROMISCUOUS_MODE, \link FTDF_Boolean \endlink, Indication whether the promiscuous is enable or not
- * - FTDF_PIB_RESPONSE_WAIT_TIME, \link FTDF_Size \endlink, The maximum time in aBaseSuperFramePeriod's (960 symbols) that is waited for a command frame response
- * - FTDF_PIB_RX_ON_WHEN_IDLE, \link FTDF_Boolean \endlink, Indication whether the receiver must be on when idle
- * - FTDF_PIB_SECURITY_ENABLED, \link FTDF_Boolean \endlink, Indication whether the security is enabled
- * - FTDF_PIB_SHORT_ADDRESS, \link FTDF_ShortAddress \endlink, The short address of the device
- * - FTDF_PIB_SYNC_SYMBOL_OFFSET, \link FTDF_Period \endlink, The offset in symbols between the start of frame and that the timestamp is taken
- * - FTDF_PIB_TIMESTAMP_SUPPORTED, \link FTDF_Boolean \endlink, Indication whether timestamping is supported
- * - FTDF_PIB_TRANSACTION_PERSISTENCE_TIME, \link FTDF_Period \endlink, The maximum time in aBaseSuperFramePeriod's (960 symbols) that indirect data requests are queued
- * - FTDF_PIB_ENH_ACK_WAIT_DURATION, \link FTDF_Period \endlink, The maximum time in symbols that is waited for an enhanced ack
- * - FTDF_PIB_IMPLICIT_BROADCAST, \link FTDF_Boolean \endlink, Indication whether frames without a destination PAN are treated as broadcasts
- * - FTDF_PIB_DISCONNECT_TIME, \link FTDF_Period \endlink, The time in timeslots that disassoctate frames are send before disconnecting
- * - FTDF_PIB_JOIN_PRIORITY, \link FTDF_Priority \endlink, The join priority
- * - FTDF_PIB_ASN, \link FTDF_ASN \endlink, The current ASN
- * - FTDF_PIB_SLOTFRAME_TABLE, \link FTDF_SlotframeTable \endlink, The slotframe table, Read only
+ * - FTDF_PIB_ACK_WAIT_DURATION, \link ftdf_period_t \endlink, The maximum time in symbols that is
+     waited for an ack, Read only
+ * - FTDF_PIB_ASSOCIATION_PAN_COORD, \link ftdf_boolean_t \endlink, Indication whether the device
+     is associated with a PAN coordinator
+ * - FTDF_PIB_ASSOCIATION_PERMIT, \link  ftdf_boolean_t \endlink, Indication whether the PAN
+     coordinator grats association requests
+ * - FTDF_PIB_AUTO_REQUEST, \link ftdf_boolean_t \endlink, Indication whether beacon received while
+     scanning are forwarded to the application or not
+ * - FTDF_PIB_BEACON_PAYLOAD, ftdf_octet_t*, Pointer to the data to be included in a beacon as
+     payload
+ * - FTDF_PIB_BEACON_PAYLOAD_LENGTH, \link ftdf_size_t \endlink, Size of the data to be included
+     in a beacon as payload
+ * - FTDF_PIB_BEACON_ORDER, \link ftdf_order_t \endlink, Fixed to 15 indicating beaconless mode
+ * - FTDF_PIB_BSN, \link ftdf_sn_t \endlink, The current beacon sequence number
+ * - FTDF_PIB_COORD_EXTENDED_ADDRESS, \link ftdf_ext_address_t \endlink, The extended address of
+     the coordinator
+ * - FTDF_PIB_COORD_SHORT_ADDRESS, \link ftdf_short_address_t \endlink, The short address of the
+     coordinator
+ * - FTDF_PIB_DSN, \link ftdf_sn_t \endlink, The current data sequence number
+ * - FTDF_PIB_MAX_BE, \link ftdf_be_exponent_t \endlink, The maximum backoff exponent
+ * - FTDF_PIB_MAX_CSMA_BACKOFFS, \link ftdf_size_t \endlink, The maximum number of backoffs
+ * - FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME, \link ftdf_period_t \endlink, The maximum time in symbols
+     that RX is ON after that a frame is received with FP set.
+ * - FTDF_PIB_MAX_FRAME_RETRIES, \link ftdf_size_t \endlink, The maximum number of frame retries
+ * - FTDF_PIB_MIN_BE, \link ftdf_be_exponent_t \endlink, The minimum backoff exponent
+ * - FTDF_PIB_LIFS_PERIOD, \link ftdf_period_t \endlink, The long IFS period in number of symbols,
+     Read oonly
+ * - FTDF_PIB_SIFS_PERIOD, \link ftdf_period_t \endlink, The short IFS period in number of symbols,
+     Read oonly
+ * - FTDF_PIB_PAN_ID, \link ftdf_pan_id_t \endlink, The PAN id of the device
+ * - FTDF_PIB_PROMISCUOUS_MODE, \link ftdf_boolean_t \endlink, Indication whether the promiscuous
+     is enable or not
+ * - FTDF_PIB_RESPONSE_WAIT_TIME, \link ftdf_size_t \endlink, The maximum time in
+     aBaseSuperFramePeriod's (960 symbols) that is waited for a command frame response
+ * - FTDF_PIB_RX_ON_WHEN_IDLE, \link ftdf_boolean_t \endlink, Indication whether the receiver
+     must be on when idle
+ * - FTDF_PIB_SECURITY_ENABLED, \link ftdf_boolean_t \endlink, Indication whether the security
+     is enabled
+ * - FTDF_PIB_SHORT_ADDRESS, \link ftdf_short_address_t \endlink, The short address of the device
+ * - FTDF_PIB_SYNC_SYMBOL_OFFSET, \link ftdf_period_t \endlink, The offset in symbols between the
+     start of frame and that the timestamp is taken
+ * - FTDF_PIB_TIMESTAMP_SUPPORTED, \link ftdf_boolean_t \endlink, Indication whether
+     timestamping is supported
+ * - FTDF_PIB_TRANSACTION_PERSISTENCE_TIME, \link ftdf_period_t \endlink, The maximum time in
+     aBaseSuperFramePeriod's (960 symbols) that indirect data requests are queued
+ * - FTDF_PIB_ENH_ACK_WAIT_DURATION, \link ftdf_period_t \endlink, The maximum time in symbols
+     that is waited for an enhanced ack
+ * - FTDF_PIB_IMPLICIT_BROADCAST, \link ftdf_boolean_t \endlink, Indication whether frames without
+     a destination PAN are treated as broadcasts
+ * - FTDF_PIB_DISCONNECT_TIME, \link ftdf_period_t \endlink, The time in timeslots that disassoctate
+     frames are send before disconnecting
+ * - FTDF_PIB_JOIN_PRIORITY, \link ftdf_priority_t \endlink, The join priority
+ * - FTDF_PIB_ASN, \link ftdf_asn_t \endlink, The current ASN
+ * - FTDF_PIB_SLOTFRAME_TABLE, \link ftdf_slotframe_table_t \endlink, The slotframe table, Read only
  * - FTDF_PIB_LINK_TABLE, \link FTDF_LinkTable \endlink, The link table, Read only
- * - FTDF_PIB_TIMESLOT_TEMPLATE, \link FTDF_TimeslotTemplate \endlink, The current timeslot template
- * - FTDF_PIB_HOPPINGSEQUENCE_ID, \link FTDF_HoppingSequenceId \endlink, The ID of the current hopping sequence
- * - FTDF_PIB_CHANNEL_PAGE, \link FTDF_ChannelPage \endlink, The current channel page
- * - FTDF_PIB_HOPPING_SEQUENCE_LENGTH, \link FTDF_Length \endlink, Length of the current hopping sequence
- * - FTDF_PIB_HOPPING_SEQUENCE_LIST, \link FTDF_ChannelNumber \endlink, Hopping sequence
- * - FTDF_PIB_CURRENT_HOP, \link FTDF_Length \endlink, The current hop
- * - FTDF_PIB_CSL_PERIOD, \link FTDF_Period \endlink, The CSL sample period in units of 10 symbols
- * - FTDF_PIB_CSL_MAX_PERIOD, \link FTDF_Period \endlink, The maximum CSL sample period of devices in the PAN in units of 10 symbols
- * - FTDF_PIB_CSL_CHANNEL_MASK, \link FTDF_Bitmap32 \endlink, Bitmapped list of channels to be sample in CSL mode
- * - FTDF_PIB_CSL_FRAME_PENDING_WAIT_T, \link FTDF_Period \endlink, The maximum time in symbols that RX is ON after that a frame is received with FP set in CSL mode.
- * - FTDF_PIB_PERFORMANCE_METRICS, \link FTDF_PerformanceMetrics \endlink, The performance metrics, Read only
- * - FTDF_PIB_EB_IE_LIST, \link FTDF_IEList \endlink, Payload IE list to be added to an enhanced beacon
- * - FTDF_PIB_EBSN, \link FTDF_SN \endlink, Current enhanced beacon sequence number
- * - FTDF_PIB_EB_AUTO_SA, \link FTDF_AutoSA \endlink, Source address mode of auto generated enhanced beacons
- * - FTDF_PIB_EACK_IE_LIST, \link FTDF_IEList \endlink, Payload IE list to be added to an enhanced ack
- * - FTDF_PIB_KEY_TABLE, \link FTDF_KeyTable \endlink, Security key table
- * - FTDF_PIB_DEVICE_TABLE, \link FTDF_DeviceTable \endlink, Security device table
- * - FTDF_PIB_SECURITY_LEVEL_TABLE, \link FTDF_SecurityLevelTable \endlink, Security level table
- * - FTDF_PIB_FRAME_COUNTER, \link FTDF_FrameCounter \endlink, Current security frame counter
- * - FTDF_PIB_MT_DATA_SECURITY_LEVEL, \link FTDF_SecurityLevel \endlink, Security level for auto generated data frames
- * - FTDF_PIB_MT_DATA_KEY_ID_MODE, \link FTDF_KeyIdMode \endlink, Security key ID mode for auto generated data frames
- * - FTDF_PIB_MT_DATA_KEY_SOURCE, FTDF_Octet[ 8 ], Security key source for auto generated data frames
- * - FTDF_PIB_MT_DATA_KEY_INDEX, \link FTDF_KeyIndex \endlink, Security key index for auto generated data frames
- * - FTDF_PIB_DEFAULT_KEY_SOURCE, FTDF_Octet[ 8 ], Default key source
- * - FTDF_PIB_FRAME_COUNTER_MODE, \link FTDF_FrameCounterMode \endlink, Security frame counter mode
- * - FTDF_PIB_CSL_SYNC_TX_MARGIN, \link FTDF_Period \endlink, The margin in unit of 10 symbols used by FTDF in CSL mode in case of a synchronised transmission
- * - FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO, \link FTDF_Period \endlink, The time in unit of 10 symbols after which FTDF discard the remote synchronisation info.
- * - FTDF_PIB_TSCH_ENABLED, \link FTDF_Boolean \endlink, Indicates whether the TSCH mode is enabled or not, Read only
- * - FTDF_PIB_LE_ENABLED, \link FTDF_Boolean \endlink, Indicates whether the CSL mode is enabled or not
- * - FTDF_PIB_CURRENT_CHANNEL, \link FTDF_ChannelNumber \endlink, The current channel used by FTDF
- * - FTDF_PIB_CHANNELS_SUPPORTED, \link FTDF_ChannelDescriptorList \endlink, List of channels supported by FTDF
- * - FTDF_PIB_TX_POWER_TOLERANCE, \link FTDF_TXPowerTolerance \endlink, TX power tolerance
- * - FTDF_PIB_TX_POWER, \link FTDF_DBm \endlink, TX power
- * - FTDF_PIB_CCA_MODE, \link FTDF_CCAMode \endlink, CCA mode
- * - FTDF_PIB_CURRENT_PAGE, \link FTDF_ChannelPage \endlink, Current channel page
- * - FTDF_PIB_MAX_FRAME_DURATION, \link FTDF_Period \endlink, The maximum number of symbols in frame, Read only
- * - FTDF_PIB_SHR_DURATION, \link FTDF_Period \endlink, Synchronisation header length in symbols, Read only
- * - FTDF_PIB_TRAFFIC_COUNTERS, \link FTDF_TrafficCounters \endlink, Miscelaneous traffic counters, Read only
- * - FTDF_PIB_LE_CAPABLE, \link FTDF_Boolean \endlink, Indicates whether FTDF supports LE (CSL), Read only
- * - FTDF_PIB_LL_CAPABLE, \link FTDF_Boolean \endlink, Indicates whether FTDF supports LL, Read only
- * - FTDF_PIB_DSME_CAPABLE, \link FTDF_Boolean \endlink, Indicates whether FTDF supports DSME, Read only
- * - FTDF_PIB_RFID_CAPABLE, \link FTDF_Boolean \endlink, Indicates whether FTDF supports RFID, Read only
- * - FTDF_PIB_AMCA_CAPABLE, \link FTDF_Boolean \endlink, Indicates whether FTDF supports AMCA, Read only
- * - FTDF_PIB_TSCH_CAPABLE, \link FTDF_Boolean \endlink, Indicates whether FTDF supports FTDF, Read only
- * - FTDF_PIB_METRICS_CAPABLE, \link FTDF_Boolean \endlink, Indicates whether FTDF supports metrics, Read only
- * - FTDF_PIB_RANGING_SUPPORTED, \link FTDF_Boolean \endlink, Indicates whether FTDF supports ranging, Read only
- * - FTDF_PIB_KEEP_PHY_ENABLED, \link FTDF_Boolean \endlink, Indicates whether the PHY must be kept enabled
- * - FTDF_PIB_METRICS_ENABLED, \link FTDF_Boolean \endlink, Indicates whether metrics are enabled or not
- * - FTDF_PIB_BEACON_AUTO_RESPOND, \link FTDF_Boolean \endlink, Indicates whether FTDF must send automatically a beacon at a BECAON_REQUEST command frame or must forward the request to the application using FTDF_BEACON_REQUEST_INDICATION.
- * - FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD, \link FTDF_Period \endlink, The minimum TSCH slot sync offset in microseconds before resyncing
+ * - FTDF_PIB_TIMESLOT_TEMPLATE, \link ftdf_timeslot_template_t \endlink, The current timeslot
+     template
+ * - FTDF_PIB_HOPPINGSEQUENCE_ID, \link ftdf_hopping_sequence_id_t \endlink, The id of the current
+     hopping sequence
+ * - FTDF_PIB_CHANNEL_PAGE, \link ftdf_channel_page_t \endlink, The current channel page
+ * - FTDF_PIB_HOPPING_SEQUENCE_LENGTH, \link ftdf_length_t \endlink, Length of the current hopping
+     sequence
+ * - FTDF_PIB_HOPPING_SEQUENCE_LIST, \link ftdf_channel_number_t \endlink, Hopping sequence
+ * - FTDF_PIB_CURRENT_HOP, \link ftdf_length_t \endlink, The current hop
+ * - FTDF_PIB_CSL_PERIOD, \link ftdf_period_t \endlink, The CSL sample period in units of 10 symbols
+ * - FTDF_PIB_CSL_MAX_PERIOD, \link ftdf_period_t \endlink, The maximum CSL sample period of devices
+     in the PAN in units of 10 symbols
+ * - FTDF_PIB_CSL_CHANNEL_MASK, \link ftdf_bitmap32_t \endlink, Bitmapped list of channels to be
+     sample in CSL mode
+ * - FTDF_PIB_CSL_FRAME_PENDING_WAIT_T, \link ftdf_period_t \endlink, The maximum time in symbols
+     that RX is ON after that a frame is received with FP set in CSL mode.
+ * - FTDF_PIB_PERFORMANCE_METRICS, \link ftdf_performance_metrics_t \endlink,
+     The performance metrics, Read only
+ * - FTDF_PIB_EB_IE_LIST, \link ftdf_ie_list_t \endlink, Payload IE list to be added to an
+     enhanced beacon
+ * - FTDF_PIB_EBSN, \link ftdf_sn_t \endlink, Current enhanced beacon sequence number
+ * - FTDF_PIB_EB_AUTO_SA, \link ftdf_auto_sa_t \endlink, Source address mode of auto generated
+     enhanced beacons
+ * - FTDF_PIB_EACK_IE_LIST, \link ftdf_ie_list_t \endlink, Payload IE list to be added
+     to an enhanced ack
+ * - FTDF_PIB_KEY_TABLE, \link ftdf_key_table_t \endlink, Security key table
+ * - FTDF_PIB_DEVICE_TABLE, \link ftdf_device_table_t \endlink, Security device table
+ * - FTDF_PIB_SECURITY_LEVEL_TABLE, \link ftdf_security_level_table_t \endlink, Security level table
+ * - FTDF_PIB_FRAME_COUNTER, \link ftdf_frame_counter_t \endlink, Current security frame counter
+ * - FTDF_PIB_MT_DATA_SECURITY_LEVEL, \link ftdf_security_level_t \endlink, Security level for
+     auto generated data frames
+ * - FTDF_PIB_MT_DATA_KEY_ID_MODE, \link ftdf_key_id_mode_t \endlink, Security key id mode for
+     auto generated data frames
+ * - FTDF_PIB_MT_DATA_KEY_SOURCE, ftdf_octet_t[8], Security key source for auto generated
+     data frames
+ * - FTDF_PIB_MT_DATA_KEY_INDEX, \link ftdf_key_index_t \endlink, Security key index for auto
+     generated data frames
+ * - FTDF_PIB_DEFAULT_KEY_SOURCE, ftdf_octet_t[8], Default key source
+ * - FTDF_PIB_FRAME_COUNTER_MODE, \link ftdf_frame_counter_mode_t \endlink, Security frame counter
+     mode
+ * - FTDF_PIB_CSL_SYNC_TX_MARGIN, \link ftdf_period_t \endlink, The margin in unit of 10 symbols
+     used by FTDF in CSL mode in case of a synchronised transmission
+ * - FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO, \link ftdf_period_t \endlink, The time in unit of 10 symbols
+     after which FTDF discard the remote synchronisation info.
+ * - FTDF_PIB_TSCH_ENABLED, \link ftdf_boolean_t \endlink, Indicates whether the TSCH mode is
+     enabled or not, Read only
+ * - FTDF_PIB_LE_ENABLED, \link ftdf_boolean_t \endlink, Indicates whether the CSL mode is
+     enabled or not
+ * - FTDF_PIB_CURRENT_CHANNEL, \link ftdf_channel_number_t \endlink, The current channel used
+     by FTDF
+ * - FTDF_PIB_CHANNELS_SUPPORTED, \link ftdf_channel_descriptor_list_t \endlink, List of channels
+     supported by FTDF
+ * - FTDF_PIB_TX_POWER_TOLERANCE, \link ftdf_tx_power_tolerance_t \endlink, TX power tolerance
+ * - FTDF_PIB_TX_POWER, \link ftdf_dbm \endlink, TX power
+ * - FTDF_PIB_CCA_MODE, \link ftdf_cca_mode_t \endlink, CCA mode
+ * - FTDF_PIB_CURRENT_PAGE, \link ftdf_channel_page_t \endlink, Current channel page
+ * - FTDF_PIB_MAX_FRAME_DURATION, \link ftdf_period_t \endlink, The maximum number of symbols in
+     frame, Read only
+ * - FTDF_PIB_SHR_DURATION, \link ftdf_period_t \endlink, Synchronisation header length in
+     symbols, Read only
+ * - FTDF_PIB_TRAFFIC_COUNTERS, \link ftdf_traffic_counters_t \endlink, Miscelaneous
+     traffic counters, Read only
+ * - FTDF_PIB_LE_CAPABLE, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports LE (CSL),
+     Read only
+ * - FTDF_PIB_LL_CAPABLE, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports LL,
+     Read only
+ * - FTDF_PIB_DSME_CAPABLE, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports DSME,
+     Read only
+ * - FTDF_PIB_RFID_CAPABLE, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports RFID,
+     Read only
+ * - FTDF_PIB_AMCA_CAPABLE, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports AMCA,
+     Read only
+ * - FTDF_PIB_TSCH_CAPABLE, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports FTDF,
+     Read only
+ * - FTDF_PIB_METRICS_CAPABLE, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports
+     metrics, Read only
+ * - FTDF_PIB_RANGING_SUPPORTED, \link ftdf_boolean_t \endlink, Indicates whether FTDF supports
+     ranging, Read only
+ * - FTDF_PIB_KEEP_PHY_ENABLED, \link ftdf_boolean_t \endlink, Indicates whether the PHY must
+     be kept enabled
+ * - FTDF_PIB_METRICS_ENABLED, \link ftdf_boolean_t \endlink, Indicates whether metrics
+     are enabled or not
+ * - FTDF_PIB_BEACON_AUTO_RESPOND, \link ftdf_boolean_t \endlink, Indicates whether FTDF must
+     send automatically a beacon at a BECAON_REQUEST command frame or must forward the request
+     to the application using FTDF_BEACON_REQUEST_INDICATION.
+ * - FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD, \link ftdf_period_t \endlink, The minimum TSCH slot sync
+     offset in microseconds before resyncing
  */
-typedef uint8_t FTDF_PIBAttribute;
+typedef uint8_t ftdf_pib_attribute_t;
 // See Table 52 "MAC PIB attributes" of IEEE 802.15.4-2011 and IEEE 802.15.4e-2012 for more details
 
 // NOTE: Be careful with changing the order of these PIB attributes because initialization of related
@@ -656,17 +723,12 @@ typedef uint8_t FTDF_PIBAttribute;
 #define FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD 104
 
 /* Proprietary PIB. */
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
 #define FTDF_PIB_BO_IRQ_THRESHOLD          105
 #define FTDF_PIB_PTI_CONFIG                106
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+#define FTDF_PIB_LINK_QUALITY_MODE         107
 
 // Total number of PIB attributes
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-#define FTDF_NR_OF_PIB_ATTRIBUTES          106
-#else /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
-#define FTDF_NR_OF_PIB_ATTRIBUTES          104
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+#define FTDF_NR_OF_PIB_ATTRIBUTES          107
 
 /* Default values */
 #ifndef FTDF_BO_IRQ_THRESHOLD
@@ -678,7 +740,7 @@ typedef uint8_t FTDF_PIBAttribute;
  * \brief Debug bus mode.
  *
  */
-typedef uint8_t FTDF_DbgMode;
+typedef uint8_t ftdf_dbg_mode_t;
 
 /**
  * \brief Disable debug signals
@@ -799,7 +861,7 @@ typedef uint8_t FTDF_DbgMode;
  *              diagnose_bus bit 7-3 =
  *                      Prt statements mac frame parser
  *                      0 Reset
- *                      1 Multipurpose frame with no destination PAN ID and macImplicitBroadcast is
+ *                      1 Multipurpose frame with no destination PAN id and macImplicitBroadcast is
  *                        false and not PAN coordinator dropped
  *                      2 Multipurpose frame with no destination address and macImplicitBroadcast is
  *                        false and not PAN coordinator dropped
@@ -808,12 +870,12 @@ typedef uint8_t FTDF_DbgMode;
  *                      5 RX frame passed due to macAlwaysPassFrmType set
  *                      6 RX unsupported da_mode = 01 for frame_version 0x0- detected
  *                      7 RX unsupported sa_mode = 01 for frame_version 0x0- detected
- *                      8 Data or command frame with no destination PAN ID and macImplicitBroadcast
+ *                      8 Data or command frame with no destination PAN id and macImplicitBroadcast
  *                        is false and not PAN coordinator dropped
  *                      9 Data or command frame with no destination address and macImplicitBroadcast
  *                        is false and not PAN coordinator dropped
  *                      10 RX unsupported frame_version detected
- *                      11 Multipurpose frame with no destination PAN ID and macImplicitBroadcast is
+ *                      11 Multipurpose frame with no destination PAN id and macImplicitBroadcast is
  *                         false and not PAN coordinator dropped
  *                      12 Multipurpose frame with no destination address and macImplicitBroadcast
  *                         is false and not PAN coordinator dropped
@@ -1241,33 +1303,32 @@ typedef uint8_t FTDF_DbgMode;
 
 #define FTDF_MAX_HOPPING_SEQUENCE_LENGTH 16
 
-typedef void     FTDF_PIBAttributeValue;
+typedef void     ftdf_pib_attribute_value_t;
 
 /**
  * \brief  Link quality
  * \remark Range: 0..255
  * \remark A higher number is a higher quality
  */
-typedef uint8_t  FTDF_LinkQuality;
+typedef uint8_t  ftdf_link_quality_t;
 
 /**
- * \brief Hopping sequence ID
+ * \brief Hopping sequence id
  */
-typedef uint16_t FTDF_HoppingSequenceId;
+typedef uint16_t ftdf_hopping_sequence_id_t;
 
 /**
  * \brief  Channel number
  * \remark Supported range: 11..27
  */
-typedef uint8_t  FTDF_ChannelNumber;
+typedef uint8_t  ftdf_channel_number_t;
 
 /**
  * \brief  Packet Traffic Information (PTI) used to classify a transaction in the radio arbiter.
  */
-typedef uint8_t  FTDF_PTI;
+typedef uint8_t  ftdf_pti_t;
 
-enum
-{
+enum {
         /* PTI index for explicit Rx. */
         FTDF_PTI_CONFIG_RX,
         /* PTI index for Tx. */
@@ -1282,39 +1343,38 @@ enum
         FTDF_PTIS,
 };
 
-typedef struct
-{
-        FTDF_PTI ptis[FTDF_PTIS];
-} FTDF_PtiConfig;
+typedef struct {
+        ftdf_pti_t ptis[FTDF_PTIS];
+} ftdf_pti_config_t;
 
 /**
  * \brief  Channel page
  * \remark Supported values: 0
  */
-typedef uint8_t  FTDF_ChannelPage;
+typedef uint8_t  ftdf_channel_page_t;
 
-typedef uint8_t  FTDF_ChannelOffset;
+typedef uint8_t  ftdf_channel_offset_t;
 
-typedef uint8_t  FTDF_Octet;
+typedef uint8_t  ftdf_octet_t;
 
 /**
  * \brief 8-bit type bitmap
  */
-typedef uint8_t  FTDF_Bitmap8;
+typedef uint8_t  ftdf_bitmap8_t;
 
 /**
  * \brief 16-bit type bitmap
  */
-typedef uint16_t FTDF_Bitmap16;
+typedef uint16_t ftdf_bitmap16_t;
 
 /**
  * \brief 32-bit type bitmap
  */
-typedef uint32_t FTDF_Bitmap32;
+typedef uint32_t ftdf_bitmap32_t;
 
-typedef uint8_t  FTDF_NumOfBackoffs;
+typedef uint8_t  ftdf_num_of_backoffs_t;
 
-typedef uint8_t  FTDF_GTSCharateristics;
+typedef uint8_t  ftdf_gts_charateristics_t;
 
 /**
  * \brief Scan type
@@ -1325,14 +1385,14 @@ typedef uint8_t  FTDF_GTSCharateristics;
  *         - FTDF_ORPHAN_SCAN: Orphan scan
  *         - FTDF_ENHANCED_ACTIVE_SCAN: Enhanced active scan
  */
-typedef uint8_t  FTDF_ScanType;
+typedef uint8_t  ftdf_scan_type_t;
 #define FTDF_ED_SCAN              1
 #define FTDF_ACTIVE_SCAN          2
 #define FTDF_PASSIVE_SCAN         3
 #define FTDF_ORPHAN_SCAN          4
 #define FTDF_ENHANCED_ACTIVE_SCAN 7
 
-typedef uint8_t FTDF_ScanDuration;
+typedef uint8_t ftdf_scan_duration_t;
 
 /**
  * \brief Loss operation
@@ -1341,12 +1401,12 @@ typedef uint8_t FTDF_ScanDuration;
  *         - FTDF_REALIGNMENT
  *         - FTDF_BEACON_LOST (not supported because only beaconless mode is supported)
  */
-typedef uint8_t FTDF_LossReason;
+typedef uint8_t ftdf_loss_reason_t;
 #define FTDF_PAN_ID_CONFLICT 1
 #define FTDF_REALIGNMENT     2
 #define FTDF_BEACON_LOST     3
 
-typedef uint16_t FTDF_SlotframeSize;
+typedef uint16_t ftdf_slotframe_size_t;
 
 /**
  * \brief Set operation
@@ -1355,12 +1415,12 @@ typedef uint16_t FTDF_SlotframeSize;
  *         - FTDF_DELETE: Delete an entry
  *         - FTDF_MODIFY: Modify an entry
  */
-typedef uint8_t  FTDF_Operation;
+typedef uint8_t  ftdf_operation_t;
 #define FTDF_ADD    0
 #define FTDF_DELETE 2
 #define FTDF_MODIFY 3
 
-typedef uint16_t FTDF_Timeslot;
+typedef uint16_t ftdf_timeslot_t;
 
 /**
  * \brief Set operation
@@ -1368,7 +1428,7 @@ typedef uint16_t FTDF_Timeslot;
  *         - FTDF_NORMAL_LINK
  *         - FTDF_ADVERTISING_LINK
  */
-typedef uint8_t  FTDF_LinkType;
+typedef uint8_t  ftdf_link_type_t;
 #define FTDF_NORMAL_LINK      0
 #define FTDF_ADVERTISING_LINK 1
 
@@ -1378,34 +1438,32 @@ typedef uint8_t  FTDF_LinkType;
  *         - FTDF_TSCH_OFF
  *         - FTDF_TSCH_ON
  */
-typedef uint8_t FTDF_TSCHMode;
+typedef uint8_t ftdf_tsch_mode_t;
 #define FTDF_TSCH_OFF 0
 #define FTDF_TSCH_ON  1
 
-typedef uint16_t FTDF_KeepAlivePeriod;
+typedef uint16_t ftdf_keep_alive_period_t;
 
 /**
  * \brief BE exponent
  */
-typedef uint8_t  FTDF_BEExponent;
+typedef uint8_t  ftdf_be_exponent_t;
 
 #define FTDF_MAX_SLOTFRAMES 4
 
-typedef struct
-{
-    /** \brief Handle of this slotframe */
-    FTDF_Handle        slotframeHandle;
-    /** \brief The number of timeslots in this slotframe */
-    FTDF_SlotframeSize slotframeSize;
-} FTDF_SlotframeEntry;
+typedef struct {
+        /** \brief Handle of this slotframe */
+        ftdf_handle_t         slotframe_handle;
+        /** \brief The number of timeslots in this slotframe */
+        ftdf_slotframe_size_t slotframe_size;
+} ftdf_slotframe_entry_t;
 
-typedef struct
-{
-    /** \brief Number of slotframes in the slotframe table */
-    FTDF_Size            nrOfSlotframes;
-    /** \brief Pointer to the first slotframe entry */
-    FTDF_SlotframeEntry* slotframeEntries;
-} FTDF_SlotframeTable;
+typedef struct {
+        /** \brief Number of slotframes in the slotframe table */
+        ftdf_size_t             nr_of_slotframes;
+        /** \brief Pointer to the first slotframe entry */
+        ftdf_slotframe_entry_t* slotframe_entries;
+} ftdf_slotframe_table_t;
 
 #define FTDF_MAX_LINKS                16
 
@@ -1414,129 +1472,122 @@ typedef struct
 #define FTDF_LINK_OPTION_SHARED       0x04
 #define FTDF_LINK_OPTION_TIME_KEEPING 0x08
 
-typedef struct
-{
-    /** \brief Handle of this link, used for delete and modify operations */
-    FTDF_Handle        linkHandle;
-    /**
-     * \brief Bit mapped link options, the following options are supported:<br>
-     *        FTDF_LINK_OPTION_TRANSMIT: Lik can be used for transmitting<br>
-     *        FTDF_LINK_OPTION_RECEIVE: Link can be used for receiving<br>
-     *        FTDF_LINK_OPTION_SHARED: Shared link, multiple device can transmit in this link<br>
-     *        FTDF_LINK_OPTION_TIME_KEEPING: Link will be used to synchronise timeslots<br>
-     *        Multiple options can be defined by or-ing them.
-     */
-    FTDF_Bitmap8       linkOptions;
-    /** \brief Link type */
-    FTDF_LinkType      linkType;
-    /** \brief Handle of the slotframe of this link */
-    FTDF_Handle        slotframeHandle;
-    /** \brief Short address of the peer node, only valid if is a transmit link */
-    FTDF_ShortAddress  nodeAddress;
-    /** \brief Timeslot in the slotframe */
-    FTDF_Timeslot      timeslot;
-    /** \brief Channel offset */
-    FTDF_ChannelOffset channelOffset;
-    /** \brief DO NOT USE */
-    void*              __private1;
-    /** \brief DO NOT USE */
-    uint64_t           __private2;
-} FTDF_LinkEntry;
+typedef struct {
+        /** \brief Handle of this link, used for delete and modify operations */
+        ftdf_handle_t         link_handle;
+        /**
+         * \brief Bit mapped link options, the following options are supported:<br>
+         *        FTDF_LINK_OPTION_TRANSMIT: Lik can be used for transmitting<br>
+         *        FTDF_LINK_OPTION_RECEIVE: Link can be used for receiving<br>
+         *        FTDF_LINK_OPTION_SHARED: Shared link, multiple device can transmit in this link<br>
+         *        FTDF_LINK_OPTION_TIME_KEEPING: Link will be used to synchronise timeslots<br>
+         *        Multiple options can be defined by or-ing them.
+         */
+        ftdf_bitmap8_t        link_options;
+        /** \brief Link type */
+        ftdf_link_type_t      link_type;
+        /** \brief Handle of the slotframe of this link */
+        ftdf_handle_t         slotframe_handle;
+        /** \brief Short address of the peer node, only valid if is a transmit link */
+        ftdf_short_address_t  node_address;
+        /** \brief Timeslot in the slotframe */
+        ftdf_timeslot_t       timeslot;
+        /** \brief Channel offset */
+        ftdf_channel_offset_t channel_offset;
+        /** \brief DO NOT USE */
+        void*                 __private1;
+        /** \brief DO NOT USE */
+        uint64_t              __private2;
+} ftdf_link_entry_t;
 
-typedef struct
-{
-    /** \brief Number of links in the link table */
-    FTDF_Size       nrOfLinks;
-    /** \brief Pointer to the first link entry */
-    FTDF_LinkEntry* linkEntries;
+typedef struct {
+        /** \brief Number of links in the link table */
+        ftdf_size_t        nr_of_links;
+        /** \brief Pointer to the first link entry */
+        ftdf_link_entry_t* link_entries;
 } FTDF_LinkTable;
 
-typedef struct
-{
-    FTDF_Handle timeslotTemplateId;
-    FTDF_Period tsCCAOffset;
-    FTDF_Period tsCCA;
-    FTDF_Period tsTxOffset;
-    FTDF_Period tsRxOffset;
-    FTDF_Period tsRxAckDelay;
-    FTDF_Period tsTxAckDelay;
-    FTDF_Period tsRxWait;
-    FTDF_Period tsAckWait;
-    FTDF_Period tsRxTx;
-    FTDF_Period tsMaxAck;
-    FTDF_Period tsMaxTs;
-    FTDF_Period tsTimeslotLength;
-} FTDF_TimeslotTemplate;
+typedef struct {
+        ftdf_handle_t timeslot_template_id;
+        ftdf_period_t ts_cca_offset;
+        ftdf_period_t ts_cca;
+        ftdf_period_t ts_tx_offset;
+        ftdf_period_t ts_rx_offset;
+        ftdf_period_t ts_rx_ack_delay;
+        ftdf_period_t ts_tx_ack_delay;
+        ftdf_period_t ts_rx_wait;
+        ftdf_period_t ts_ack_wait;
+        ftdf_period_t ts_rx_tx;
+        ftdf_period_t ts_max_ack;
+        ftdf_period_t ts_max_ts;
+        ftdf_period_t ts_timeslot_length;
+} ftdf_timeslot_template_t;
 
-typedef struct
-{
-    FTDF_Size  counterOctets;
-    FTDF_Count retryCount;
-    FTDF_Count multipleRetryCount;
-    FTDF_Count TXFailCount;
-    FTDF_Count TXSuccessCount;
-    FTDF_Count FCSErrorCount;
-    FTDF_Count securityFailureCount;
-    FTDF_Count duplicateFrameCount;
-    FTDF_Count RXSuccessCount;
-    FTDF_Count NACKCount;
-    FTDF_Count RxExpiredCount;
-    FTDF_Count BOIrqCount;
-} FTDF_PerformanceMetrics;
+typedef struct {
+        ftdf_size_t  counter_octets;
+        ftdf_count_t retry_count;
+        ftdf_count_t multiple_retry_count;
+        ftdf_count_t tx_fail_count;
+        ftdf_count_t tx_success_count;
+        ftdf_count_t fcs_error_count;
+        ftdf_count_t security_failure_count;
+        ftdf_count_t duplicate_frame_count;
+        ftdf_count_t rx_success_count;
+        ftdf_count_t nack_count;
+        ftdf_count_t rx_expired_count;
+        ftdf_count_t bo_irq_count;
+} ftdf_performance_metrics_t;
 
-typedef struct
-{
-    FTDF_Count txDataFrmCnt;
-    FTDF_Count txCmdFrmCnt;
-    FTDF_Count txStdAckFrmCnt;
-    FTDF_Count txEnhAckFrmCnt;
-    FTDF_Count txBeaconFrmCnt;
-    FTDF_Count txMultiPurpFrmCnt;
-    FTDF_Count rxDataFrmOkCnt;
-    FTDF_Count rxCmdFrmOkCnt;
-    FTDF_Count rxStdAckFrmOkCnt;
-    FTDF_Count rxEnhAckFrmOkCnt;
-    FTDF_Count rxBeaconFrmOkCnt;
-    FTDF_Count rxMultiPurpFrmOkCnt;
-} FTDF_TrafficCounters;
+typedef struct {
+        ftdf_count_t tx_data_frm_cnt;
+        ftdf_count_t tx_cmd_frm_cnt;
+        ftdf_count_t tx_std_ack_frm_cnt;
+        ftdf_count_t tx_enh_ack_frm_cnt;
+        ftdf_count_t tx_ceacon_frm_cnt;
+        ftdf_count_t tx_multi_purp_frm_cnt;
+        ftdf_count_t rx_data_frm_ok_cnt;
+        ftdf_count_t rx_cmd_frm_ok_cnt;
+        ftdf_count_t rx_std_ack_frm_ok_cnt;
+        ftdf_count_t rx_enh_ack_frm_ok_cnt;
+        ftdf_count_t rx_beacon_frm_ok_cnt;
+        ftdf_count_t rx_multi_purp_frm_ok_cnt;
+} ftdf_traffic_counters_t;
 
-typedef uint8_t FTDF_Energy;
+typedef uint8_t ftdf_energy_t;
 
-typedef struct
-{
-    /** \brief Coordinator address mode */
-    FTDF_AddressMode   coordAddrMode;
-    /** \brief Coordinator PAN ID */
-    FTDF_PANId         coordPANId;
-    /** \brief Coordinator address */
-    FTDF_Address       coordAddr;
-    /** \brief Channel number */
-    FTDF_ChannelNumber channelNumber;
-    /** \brief Channnel page */
-    FTDF_ChannelPage   channelPage;
-    /** \brief NOT USED */
-    FTDF_Bitmap16      superframeSpec;
-    /** \brief NOT USED */
-    FTDF_Boolean       GTSPermit;
-    /** \brief Link quality */
-    FTDF_LinkQuality   linkQuality;
-    /** \brief */
-    FTDF_Time          timestamp;
-} FTDF_PANDescriptor;
+typedef struct {
+        /** \brief Coordinator address mode */
+        ftdf_address_mode_t   coord_addr_mode;
+        /** \brief Coordinator PAN id */
+        ftdf_pan_id_t         coord_pan_id;
+        /** \brief Coordinator address */
+        ftdf_address_t        coord_addr;
+        /** \brief Channel number */
+        ftdf_channel_number_t channel_number;
+        /** \brief Channnel page */
+        ftdf_channel_page_t   channel_page;
+        /** \brief NOT USED */
+        ftdf_bitmap16_t       superframe_spec;
+        /** \brief NOT USED */
+        ftdf_boolean_t        gts_permit;
+        /** \brief Link quality */
+        ftdf_link_quality_t   link_quality;
+        /** \brief */
+        ftdf_time_t           timestamp;
+} ftdf_pan_descriptor_t;
 
-typedef struct
-{
-    /** \brief Coordinator PAN ID */
-    FTDF_PANId         coordPANId;
-    /** \brief Coordinator short address */
-    FTDF_ShortAddress  coordShortAddr;
-    /** \brief Channel number */
-    FTDF_ChannelNumber channelNumber;
-    /** \brief Device short address */
-    FTDF_ShortAddress  shortAddr;
-    /** \brief Channnel page */
-    FTDF_ChannelPage   channelPage;
-} FTDF_CoordRealignDescriptor;
+typedef struct {
+        /** \brief Coordinator PAN id */
+        ftdf_pan_id_t         coord_pan_id;
+        /** \brief Coordinator short address */
+        ftdf_short_address_t  coord_short_addr;
+        /** \brief Channel number */
+        ftdf_channel_number_t channel_number;
+        /** \brief Device short address */
+        ftdf_short_address_t  short_addr;
+        /** \brief Channnel page */
+        ftdf_channel_page_t   channel_page;
+} ftdf_coord_realign_descriptor_t;
 
 /**
  * \brief  Auto frame source address mode
@@ -1545,7 +1596,7 @@ typedef struct
  * - FTDF_AUTO_SHORT: Short address
  * - FTDF_AUTO_FULL: Extended address
  */
-typedef uint8_t FTDF_AutoSA;
+typedef uint8_t ftdf_auto_sa_t;
 #define FTDF_AUTO_NONE  1
 #define FTDF_AUTO_SHORT 2
 #define FTDF_AUTO_FULL  3
@@ -1557,7 +1608,7 @@ typedef uint8_t FTDF_AutoSA;
  * - FTDF_POWER_TOLERANCE_3_DB
  * - FTDF_POWER_TOLERANCE_6_DB
  */
-typedef uint8_t FTDF_TXPowerTolerance;
+typedef uint8_t ftdf_tx_power_tolerance_t;
 #define FTDF_POWER_TOLERANCE_1_DB 1
 #define FTDF_POWER_TOLERANCE_3_DB 2
 #define FTDF_POWER_TOLERANCE_6_DB 3
@@ -1569,7 +1620,7 @@ typedef uint8_t FTDF_TXPowerTolerance;
  * - FTDF_CCA_MODE_2
  * - FTDF_CCA_MODE_3
  */
-typedef uint8_t FTDF_CCAMode;
+typedef uint8_t ftdf_cca_mode_t;
 #define FTDF_CCA_MODE_1 1
 #define FTDF_CCA_MODE_2 2
 #define FTDF_CCA_MODE_3 3
@@ -1577,35 +1628,34 @@ typedef uint8_t FTDF_CCAMode;
 /**
  * \brief  Frame control options
  * \remark Supported options:
- * - FTDF_PAN_ID_PRESENT:    Controls the PAN ID compression/present bit in multipurpose and version 2 frames 
- * - FTDF_IES_INCLUDED:      Indicates that IEs must be included
+ * - FTDF_PAN_ID_PRESENT:    Controls the PAN id compression/present bit in multipurpose and
+     version 2 frames
+ * - FTDF_IES_INCLUDED:      Indicates that ie must be included
  * - FTDF_SEQ_NR_SUPPRESSED: Controls suppression of the sequence number
  * \remark Multiple options can specified by bit wise or-ing them
  */
-typedef uint8_t FTDF_FrameControlOptions;
+typedef uint8_t ftdf_frame_control_options_t;
 #define FTDF_PAN_ID_PRESENT    0x01
 #define FTDF_IES_INCLUDED      0x02
 #define FTDF_SEQ_NR_SUPPRESSED 0x04
 
-typedef struct
-{
-    FTDF_ChannelPage    channelPage;
-    FTDF_Size           nrOfChannels;
-    FTDF_ChannelNumber* channels;
-} FTDF_ChannelDescriptor;
+typedef struct {
+        ftdf_channel_page_t    channel_page;
+        ftdf_size_t            nr_of_channels;
+        ftdf_channel_number_t* channels;
+} ftdf_channel_descriptor_t;
 
-typedef struct
-{
-    FTDF_Size               nrOfChannelDescriptors;
-    FTDF_ChannelDescriptor* channelDescriptors;
-} FTDF_ChannelDescriptorList;
+typedef struct {
+        ftdf_size_t                nr_of_channel_descriptors;
+        ftdf_channel_descriptor_t* channel_descriptors;
+} ftdf_channel_descriptor_list_t;
 
 /**
  * \brief Dbm data type
  */
-typedef int8_t  FTDF_DBm;
+typedef int8_t  ftdf_dbm;
 
-typedef uint8_t FTDF_FrameType;
+typedef uint8_t ftdf_frame_type_t;
 #define FTDF_BEACON_FRAME          0
 #define FTDF_DATA_FRAME            1
 #define FTDF_ACKNOWLEDGEMENT_FRAME 2
@@ -1614,7 +1664,7 @@ typedef uint8_t FTDF_FrameType;
 #define FTDF_MULTIPURPOSE_FRAME    5
 
 /**
- * \brief  Command frame ID
+ * \brief  Command frame id
  * \remark Supported command frame IDs:
  *         - FTDF_COMMAND_ASSOCIATION_REQUEST
  *         - FTDF_COMMAND_ASSOCIATION_RESPONSE
@@ -1626,7 +1676,7 @@ typedef uint8_t FTDF_FrameType;
  *         - FTDF_COMMAND_COORDINATOR_REALIGNMENT
  *         - FTDF_COMMAND_GTS_REQUEST
  */
-typedef uint8_t FTDF_CommandFrameId;
+typedef uint8_t ftdf_command_frame_id_t;
 #define FTDF_COMMAND_ASSOCIATION_REQUEST          1
 #define FTDF_COMMAND_ASSOCIATION_RESPONSE         2
 #define FTDF_COMMAND_DISASSOCIATION_NOTIFICATION  3
@@ -1642,122 +1692,114 @@ typedef uint8_t FTDF_CommandFrameId;
  * \remark Valid range 0..0xffffffff (4 octets) if frame counter mode equals 4
  * \remark Valid range 0..0xffffffffff (5 octets) if frame counter mode equals 5
  */
-typedef uint64_t FTDF_FrameCounter;
+typedef uint64_t ftdf_frame_counter_t;
 
 /**
  * \brief Security frame counter mode
  * \remark Valid range 4..5
  */
-typedef uint8_t  FTDF_FrameCounterMode;
+typedef uint8_t  ftdf_frame_counter_mode_t;
 
-typedef struct
-{
-    FTDF_KeyIdMode   keyIdMode;
-    FTDF_Octet       keySource[ 8 ];
-    FTDF_KeyIndex    keyIndex;
-    FTDF_AddressMode deviceAddrMode;
-    FTDF_PANId       devicePANId;
-    FTDF_Address     deviceAddress;
-} FTDF_KeyIdLookupDescriptor;
+typedef struct {
+        ftdf_key_id_mode_t  key_id_mode;
+        ftdf_octet_t        key_source[8];
+        ftdf_key_index_t    key_index;
+        ftdf_address_mode_t device_addr_mode;
+        ftdf_pan_id_t       device_pan_id;
+        ftdf_address_t      device_address;
+} ftdf_key_id_lookup_descriptor_t;
 
-typedef struct
-{
-    FTDF_PANId        PANId;
-    FTDF_ShortAddress shortAddress;
-    FTDF_ExtAddress   extAddress;
-    FTDF_FrameCounter frameCounter;
-    FTDF_Boolean      exempt;
-} FTDF_DeviceDescriptor;
+typedef struct {
+        ftdf_pan_id_t        pan_id;
+        ftdf_short_address_t short_address;
+        ftdf_ext_address_t   ext_address;
+        ftdf_frame_counter_t frame_counter;
+        ftdf_boolean_t       exempt;
+} ftdf_device_descriptor_t;
 
 /**
  * \brief  Device descriptor handle
- * \remark This is the index of a device in \link FTDF_DeviceTable \endlink
+ * \remark This is the index of a device in \link ftdf_device_table_t \endlink
  */
-typedef uint8_t FTDF_DeviceDescriptorHandle;
+typedef uint8_t ftdf_device_descriptor_handle_t;
 
-typedef struct
-{
-    /** \brief Frame type */
-    FTDF_FrameType      frameType;
-    /** \brief Command frame ID */
-    FTDF_CommandFrameId commandFrameId;
-} FTDF_KeyUsageDescriptor;
+typedef struct {
+        /** \brief Frame type */
+        ftdf_frame_type_t       frame_type;
+        /** \brief Command frame id */
+        ftdf_command_frame_id_t command_frame_id;
+} ftdf_key_usage_descriptor_t;
 
-typedef struct
-{
-    FTDF_Size                    nrOfKeyIdLookupDescriptors;
-    FTDF_KeyIdLookupDescriptor*  keyIdLookupDescriptors;
-    FTDF_Size                    nrOfDeviceDescriptorHandles;
-    FTDF_DeviceDescriptorHandle* deviceDescriptorHandles;
-    FTDF_Size                    nrOfKeyUsageDescriptors;
-    FTDF_KeyUsageDescriptor*     keyUsageDescriptors;
-    FTDF_Octet                   key[ 16 ];
-} FTDF_KeyDescriptor;
+typedef struct {
+        ftdf_size_t                     nr_of_key_id_lookup_descriptors;
+        ftdf_key_id_lookup_descriptor_t *key_id_lookup_descriptors;
+        ftdf_size_t                     nr_of_device_descriptor_handles;
+        ftdf_device_descriptor_handle_t *device_descriptor_handles;
+        ftdf_size_t                     nr_of_key_usage_descriptors;
+        ftdf_key_usage_descriptor_t     *key_usage_descriptors;
+        ftdf_octet_t                    key[16];
+} ftdf_key_descriptor_t;
 
-typedef struct
-{
-    FTDF_FrameType      frameType;
-    FTDF_CommandFrameId commandFrameId;
-    FTDF_SecurityLevel  securityMinimum;
-    FTDF_Boolean        deviceOverrideSecurityMinimum;
-    FTDF_Bitmap8        allowedSecurityLevels;
-} FTDF_SecurityLevelDescriptor;
+typedef struct {
+        ftdf_frame_type_t       frame_type;
+        ftdf_command_frame_id_t command_frame_id;
+        ftdf_security_level_t   security_minimum;
+        ftdf_boolean_t          device_override_security_minimum;
+        ftdf_bitmap8_t          allowed_security_levels;
+} ftdf_security_level_descriptor_t;
 
 /**
  * \brief  Key table
  * \remark As followes an example how to initialize a key table for usage with FTDF_SET_REQUEST:
  * \code
- * FTDF_KeyIdLookupDescriptor  lookupDescriptorsKey1[ ] = 
+ * ftdf_key_id_lookup_descriptor_t  lookupDescriptorsKey1[] =
  *          { { 2, { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef }, 7, 0, 0 0 },
  *            { 0, { 0, 0, 0, 0, 0, 0, 0, 0 }, 0, 2, 0x1234, 0x0001 } };
- * FTDF_KeyIdLookupDescriptor  lookupDescriptorsKey2[ ] = 
+ * ftdf_key_id_lookup_descriptor_t  lookupDescriptorsKey2[] =
  *          { { 1, { 0, 0, 0, 0, 0, 0, 0, 0 }, 5, 0, 0, 0 } };
- * FTDF_DeviceDescriptorHandle deviceDescriptorHandlesKey1[ ] = { 0, 2 };
- * FTDF_DeviceDescriptorHandle deviceDescriptorHandlesKey2[ ] = { 1 };
- * FTDF_KeyUsageDescriptor     keyUsageDescriptorKey1[ ] = { { 1, 0 }, { 3, 4 } };
- * FTDF_KeyUsageDescriptor     keyUsageDescriptorKey2[ ] = { { 1, 0 } };
- * FTDF_KeyDescriptor          keyDescriptors[ ] = 
- *          { { sizeof( lookupDescriptorsKey1 ) / sizeof( FTDF_KeyIdLookupDescriptor ),
+ * ftdf_device_descriptor_handle_t deviceDescriptorHandlesKey1[] = { 0, 2 };
+ * ftdf_device_descriptor_handle_t deviceDescriptorHandlesKey2[] = { 1 };
+ * ftdf_key_usage_descriptor_t     keyUsageDescriptorKey1[] = { { 1, 0 }, { 3, 4 } };
+ * ftdf_key_usage_descriptor_t     keyUsageDescriptorKey2[] = { { 1, 0 } };
+ * ftdf_key_descriptor_t          key_descriptors[] =
+ *          { { sizeof(lookupDescriptorsKey1) / sizeof(ftdf_key_id_lookup_descriptor_t),
  *              lookupDescriptorsKey1,
- *              sizeof( deviceDescriptorHandlesKey1 ) / sizeof( FTDF_DeviceDescriptorHandle ),
+ *              sizeof(deviceDescriptorHandlesKey1) / sizeof(ftdf_device_descriptor_handle_t),
  *              deviceDescriptorHandlesKey1,
- *              sizeof( keyUsageDescriptorKey1 ) / sizeof( FTDF_KeyUsageDescriptor ),
+ *              sizeof(keyUsageDescriptorKey1) / sizeof(ftdf_key_usage_descriptor_t),
  *              keyUsageDescriptorKey1,
  *              { 0x7e, 0x37, 0x2d, 0x41, 0xdf, 0x74, 0x72, 0x3f, 0x4c, 0x3a, 0xa7, 0x53, 0xa1, 0x11, 0x46, 0x8b } },
- *            { sizeof( lookupDescriptorsKey2 ) / sizeof( FTDF_KeyIdLookupDescriptor ),
+ *            { sizeof(lookupDescriptorsKey2) / sizeof(ftdf_key_id_lookup_descriptor_t),
  *              lookupDescriptorsKey2,
- *              sizeof( deviceDescriptorHandlesKey2 ) / sizeof( FTDF_DeviceDescriptorHandle ),
+ *              sizeof(deviceDescriptorHandlesKey2) / sizeof(ftdf_device_descriptor_handle_t),
  *              deviceDescriptorHandlesKey2,
- *              sizeof( keyUsageDescriptorKey2 ) / sizeof( FTDF_KeyUsageDescriptor ),
+ *              sizeof(keyUsageDescriptorKey2) / sizeof(ftdf_key_usage_descriptor_t),
  *              keyUsageDescriptorKey1,
  *              { 0xdf, 0x74, 0x72, 0x3f, 0x7e, 0x37, 0x2d, 0x41, 0x4c, 0x3a, 0xa1, 0x11, 0x46, 0x8, 0xa7, 0x53b } } };
- * FTDF_KeyTable               keyTable =
- *           { sizeof( keyDescriptors ) / sizeof( FTDF_KeyDescriptor ), keyDescriptors };
+ * ftdf_key_table_t               keyTable =
+ *           { sizeof(key_descriptors) / sizeof(ftdf_key_descriptor_t), key_descriptors };
  * \endcode
  */
-typedef struct
-{
-    /** \brief Number of key descriptors in the key table */
-    FTDF_Size           nrOfKeyDescriptors;
-    /** \brief Pointer to the first key descriptor entry */
-    FTDF_KeyDescriptor* keyDescriptors;
-} FTDF_KeyTable;
+typedef struct {
+        /** \brief Number of key descriptors in the key table */
+        ftdf_size_t           nr_of_key_descriptors;
+        /** \brief Pointer to the first key descriptor entry */
+        ftdf_key_descriptor_t *key_descriptors;
+} ftdf_key_table_t;
 
-typedef struct
-{
-    /** \brief Number of device descriptors in the key table */
-    FTDF_Size              nrOfDeviceDescriptors;
-    /** \brief Pointer to the first device descriptor entry */
-    FTDF_DeviceDescriptor* deviceDescriptors;
-} FTDF_DeviceTable;
+typedef struct {
+        /** \brief Number of device descriptors in the key table */
+        ftdf_size_t              nr_of_device_descriptors;
+        /** \brief Pointer to the first device descriptor entry */
+        ftdf_device_descriptor_t *device_descriptors;
+} ftdf_device_table_t;
 
-typedef struct
-{
-    /** \brief Number of security level descriptors in the key table */
-    FTDF_Size                     nrOfSecurityLevelDescriptors;
-    /** \brief Pointer to the first security level descriptor entry */
-    FTDF_SecurityLevelDescriptor* securityLevelDescriptors;
-} FTDF_SecurityLevelTable;
+typedef struct {
+        /** \brief Number of security level descriptors in the key table */
+        ftdf_size_t                      nr_of_security_level_descriptors;
+        /** \brief Pointer to the first security level descriptor entry */
+        ftdf_security_level_descriptor_t *security_level_descriptors;
+} ftdf_security_level_table_t;
 
 /**
  * \brief  IE type
@@ -1765,1125 +1807,1067 @@ typedef struct
  *         - FTDF_SHORT_IE
  *         - FTDF_LONG_IE
  */
-typedef uint8_t FTDF_IEType;
+typedef uint8_t ftdf_ie_type_t;
 #define FTDF_SHORT_IE 0
 #define FTDF_LONG_IE  1
 
-typedef uint8_t FTDF_IEId;
+typedef uint8_t ftdf_ie_id_t;
 
-typedef uint8_t FTDF_IELength;
+typedef uint8_t ftdf_ie_length_t;
 
-typedef struct
-{
-    /** \brief IE type */
-    FTDF_IEType   type;
-    /** \brief Sub IE ID*/
-    FTDF_IEId     subID;
-    /** \brief Sub IE length */
-    FTDF_IELength length;
-    /** \brief Pointer to sub IE content */
-    FTDF_Octet*   subContent;
-} FTDF_SubIEDescriptor;
+typedef struct {
+        /** \brief IE type */
+        ftdf_ie_type_t   type;
+        /** \brief Sub IE id*/
+        ftdf_ie_id_t     sub_id;
+        /** \brief Sub IE length */
+        ftdf_ie_length_t length;
+        /** \brief Pointer to sub IE content */
+        ftdf_octet_t     *sub_content;
+} ftdf_sub_ie_descriptor_t;
 
-typedef struct
-{
-    /** \brief Number of sub IE descriptors in an MLME payload IE (ID = 1) */
-    FTDF_Size             nrOfSubIEs;
-    /** \brief Pointer to the first sub IE descriptor */
-    FTDF_SubIEDescriptor* subIEs;
-} FTDF_SubIEList;
+typedef struct {
+        /** \brief Number of sub IE descriptors in an MLME payload IE (id = 1) */
+        ftdf_size_t              nr_of_sub_ie;
+        /** \brief Pointer to the first sub IE descriptor */
+        ftdf_sub_ie_descriptor_t *sub_ie;
+} ftdf_sub_ie_list_t;
 
-typedef union
-{
-    /** \brief IE content if not a MLME payload IE (ID = 1) */
-    FTDF_Octet*     raw;
-    /** \brief IE content if a MLME payload IE (ID = 1) */
-    FTDF_SubIEList* nested;
-} FTDF_IEContent;
+typedef union {
+        /** \brief IE content if not a MLME payload IE (id = 1) */
+        ftdf_octet_t       *raw;
+        /** \brief IE content if a MLME payload IE (id = 1) */
+        ftdf_sub_ie_list_t *nested;
+} ftdf_ie_content_t;
 
-typedef struct
-{
-    /** \brief IE ID */
-    FTDF_IEId      ID;
-    /** \brief Content length of the IE, undefined/unused in case of a MLME payload IE (ID = 1) */
-    FTDF_IELength  length;
-    /** \brief Content of the IE */
-    FTDF_IEContent content;
-} FTDF_IEDescriptor;
+typedef struct {
+        /** \brief IE id */
+        ftdf_ie_id_t      id;
+        /** \brief Content length of the IE, undefined/unused in case of a MLME payload IE (id = 1) */
+        ftdf_ie_length_t  length;
+        /** \brief Content of the IE */
+        ftdf_ie_content_t content;
+} ftdf_ie_descriptor_t;
 
-typedef struct
-{
-    /** \brief Number of IE descriptors */
-    FTDF_Size          nrOfIEs;
-    /** \brief Pointer to the first IE descriptor */
-    FTDF_IEDescriptor* IEs;
-} FTDF_IEList;
+typedef struct {
+        /** \brief Number of IE descriptors */
+        ftdf_size_t          nr_of_ie;
+        /** \brief Pointer to the first IE descriptor */
+        ftdf_ie_descriptor_t *ie;
+} ftdf_ie_list_t;
 
-typedef struct
-{
-    /** \brief Message ID */
-    FTDF_MsgId msgId;
-} FTDF_MsgBuffer;
+typedef struct {
+        /** \brief Message id */
+        ftdf_msg_id_t msg_id;
+} ftdf_msg_buffer_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_DATA_REQUEST */
-    FTDF_MsgId               msgId;
-    /** \brief Source address mode */
-    FTDF_AddressMode         srcAddrMode;
-    /** \brief Destination address mode */
-    FTDF_AddressMode         dstAddrMode;
-    /** \brief Destination PAN ID */
-    FTDF_PANId               dstPANId;
-    /** \brief Destination address */
-    FTDF_Address             dstAddr;
-    /** \brief Length of MSDU payload */
-    FTDF_DataLength          msduLength;
-    /**
-     * \brief MSDU payload data buffer. Must be freed by the application using FTDF_REL_DATA_BUFFER
-     *        when it receives the FTDF_DATA_CONFIRM message
-     */
-    FTDF_Octet*              msdu;
-    /** \brief Handle */
-    FTDF_Handle              msduHandle;
-    /** \brief Whether the data frame needs to be acknowledged or */
-    FTDF_Boolean             ackTX;
-    /** \brief NOT USED */
-    FTDF_Boolean             GTSTX;
-    /** 
-     * \brief Indication whether the frame must be send directly or be queued until a DATA_REQUEST COMMAND
-     *        frame is received
-     */
-    FTDF_Boolean             indirectTX;
-    /** \brief Security level */
-    FTDF_SecurityLevel       securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode           keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet               keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex            keyIndex;
-    /** \brief Frame control option bitmap */
-    FTDF_FrameControlOptions frameControlOptions;
-    /**
-     * \brief  Header IE list to be inserted.
-     *         Ignored if the FTDF_IES_INCLUDED frame control option is NOT set.
-     *         The IE list must be located in rentention RAM
-     */
-    FTDF_IEList*             headerIEList;
-    /**
-     * \brief  Payload IE list to be inserted.
-     *         Ignored if the FTDF_IES_INCLUDED frame control option is NOT set.
-     *         The IE list must be located in rentention RAM
-     */
-    FTDF_IEList*             payloadIEList;
-    /** Indication whether a DATA or MULTIPURPOSE frame must be set */
-    FTDF_Boolean             sendMultiPurpose;
-    /** \brief DO NOT USE */
-    uint8_t                  __private3;
-} FTDF_DataRequest;
+typedef struct {
+        /** \brief Message id = FTDF_DATA_REQUEST */
+        ftdf_msg_id_t                msg_id;
+        /** \brief Source address mode */
+        ftdf_address_mode_t          src_addr_mode;
+        /** \brief Destination address mode */
+        ftdf_address_mode_t          dst_addr_mode;
+        /** \brief Destination PAN id */
+        ftdf_pan_id_t                dst_pan_id;
+        /** \brief Destination address */
+        ftdf_address_t               dst_addr;
+        /** \brief Length of MSDU payload */
+        ftdf_data_length_t           msdu_length;
+        /**
+         * \brief MSDU payload data buffer. Must be freed by the application using FTDF_REL_DATA_BUFFER
+         *        when it receives the FTDF_DATA_CONFIRM message
+         */
+        ftdf_octet_t                 *msdu;
+        /** \brief Handle */
+        ftdf_handle_t                msdu_handle;
+        /** \brief Whether the data frame needs to be acknowledged or */
+        ftdf_boolean_t               ack_tx;
+        /** \brief NOT USED */
+        ftdf_boolean_t               gts_tx;
+        /**
+         * \brief Indication whether the frame must be send directly or be queued until a
+         *  DATA_REQUEST COMMAND frame is received
+         */
+        ftdf_boolean_t               indirect_tx;
+        /** \brief Security level */
+        ftdf_security_level_t        security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t           key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t                 key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t             key_index;
+        /** \brief Frame control option bitmap */
+        ftdf_frame_control_options_t frame_control_options;
+        /**
+         * \brief  Header IE list to be inserted.
+         *         Ignored if the FTDF_IES_INCLUDED frame control option is NOT set.
+         *         The IE list must be located in rentention RAM
+         */
+        ftdf_ie_list_t               *header_ie_list;
+        /**
+         * \brief  Payload IE list to be inserted.
+         *         Ignored if the FTDF_IES_INCLUDED frame control option is NOT set.
+         *         The IE list must be located in rentention RAM
+         */
+        ftdf_ie_list_t               *payload_ie_list;
+        /** Indication whether a DATA or MULTIPURPOSE frame must be set */
+        ftdf_boolean_t               send_multi_purpose;
+        /** \brief DO NOT USE */
+        uint8_t                      __private3;
+} ftdf_data_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_DATA_INDICATION */
-    FTDF_MsgId         msgId;
-    /** \brief Source address mode */
-    FTDF_AddressMode   srcAddrMode;
-    /** \brief Source PAN ID */
-    FTDF_PANId         srcPANId;
-    /** \brief Source address */
-    FTDF_Address       srcAddr;
-    /** \brief Destination address mode */
-    FTDF_AddressMode   dstAddrMode;
-    /** \brief Destination PAN ID */
-    FTDF_PANId         dstPANId;
-    /** \brief Destination address */
-    FTDF_Address       dstAddr;
-    /** \brief Length of MSDU payload */
-    FTDF_DataLength    msduLength;
-    /** \brief MSDU payload data buffer Must be freed by the application using FTDF_REL_DATA_BUFFER */
-    FTDF_Octet*        msdu;
-    /** \brief MPDU link quality */
-    FTDF_LinkQuality   mpduLinkQuality;
-    /** \brief Data sequence number */
-    FTDF_SN            DSN;
-    /** \brief Timestamp of the time the frame was received */
-    FTDF_Time          timestamp;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-    /** /brief Payload IE list<br>
-     *         The whole payload IE list (including IE descriptors, Sub IE descriptors and content)
-     *         is allocated in one data buffer that must be freed by the application using FTDF_REL_DATA_BUFFER
-     *         with the IEList pointer as parameter
-     */
-    FTDF_IEList*       payloadIEList;
-} FTDF_DataIndication;
+typedef struct {
+        /** \brief Message id = FTDF_DATA_INDICATION */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Source address mode */
+        ftdf_address_mode_t   src_addr_mode;
+        /** \brief Source PAN id */
+        ftdf_pan_id_t         src_pan_id;
+        /** \brief Source address */
+        ftdf_address_t        src_addr;
+        /** \brief Destination address mode */
+        ftdf_address_mode_t   dst_addr_mode;
+        /** \brief Destination PAN id */
+        ftdf_pan_id_t         dst_pan_id;
+        /** \brief Destination address */
+        ftdf_address_t        dst_addr;
+        /** \brief Length of MSDU payload */
+        ftdf_data_length_t    msdu_length;
+        /** \brief MSDU payload data buffer Must be freed by the application using FTDF_REL_DATA_BUFFER */
+        ftdf_octet_t          *msdu;
+        /** \brief MPDU link quality */
+        ftdf_link_quality_t   mpdu_link_quality;
+        /** \brief Data sequence number */
+        ftdf_sn_t             dsn;
+        /** \brief Timestamp of the time the frame was received */
+        ftdf_time_t           timestamp;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+        /** /brief Payload IE list<br>
+         *         The whole payload IE list (including IE descriptors, Sub IE descriptors and content)
+         *         is allocated in one data buffer that must be freed by the application using
+         *         FTDF_REL_DATA_BUFFER
+         *         with the ie_list pointer as parameter
+         */
+        ftdf_ie_list_t        *payload_ie_list;
+} ftdf_data_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_DATA_CONFIRM */
-    FTDF_MsgId         msgId;
-    /** /brief The handle given by the application in the correspoding FTDF_DATA_REQUEST */
-    FTDF_Handle        msduHandle;
-    /** /brief Timestmap of the time the frame has been sent */
-    FTDF_Time          timestamp;
-    /** /brief Status of the data request */
-    FTDF_Status        status;
-    /** /brief Number of backoffs, undefined in case status not equal to FTDF_SUCCESS or TSCH enabled */
-    FTDF_NumOfBackoffs numOfBackoffs;
-    /** /brief Data sequence number of the sent frame */
-    FTDF_SN            DSN;
-    /** /brief Acknowledgement payload IE list<br>
-     *         The whole payload IE list (including IE descriptors, Sub IE descriptors and content)
-     *         is allocated in one data buffer that must be freed by the application using FTDF_REL_DATA_BUFFER
-     *         with the IEList pointer as parameter
-     */
-    FTDF_IEList*       ackPayload;
-} FTDF_DataConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_DATA_CONFIRM */
+        ftdf_msg_id_t          msg_id;
+        /** /brief The handle given by the application in the correspoding FTDF_DATA_REQUEST */
+        ftdf_handle_t          msdu_handle;
+        /** /brief Timestmap of the time the frame has been sent */
+        ftdf_time_t            timestamp;
+        /** /brief Status of the data request */
+        ftdf_status_t          status;
+        /** /brief Number of backoffs, undefined in case status not equal to FTDF_SUCCESS or TSCH enabled */
+        ftdf_num_of_backoffs_t num_of_backoffs;
+        /** /brief Data sequence number of the sent frame */
+        ftdf_sn_t              dsn;
+        /** /brief Acknowledgement payload IE list<br>
+         *         The whole payload IE list (including IE descriptors, Sub IE descriptors and content)
+         *         is allocated in one data buffer that must be freed by the application using
+         *         FTDF_REL_DATA_BUFFER with the ie_list pointer as parameter
+         */
+        ftdf_ie_list_t         *ack_payload;
+} ftdf_data_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_PURGE_REQUEST */
-    FTDF_MsgId  msgId;
-    /** \brief Handle the data request to be purged */
-    FTDF_Handle msduHandle;
-} FTDF_PurgeRequest;
+typedef struct {
+        /** \brief Message id = FTDF_PURGE_REQUEST */
+        ftdf_msg_id_t msg_id;
+        /** \brief Handle the data request to be purged */
+        ftdf_handle_t msdu_handle;
+} ftdf_purge_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_PURGE_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Handle of the purged data request */
-    FTDF_Handle msduHandle;
-    /** /brief Status of the purge request */
-    FTDF_Status status;
-} FTDF_PurgeConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_PURGE_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Handle of the purged data request */
+        ftdf_handle_t msdu_handle;
+        /** /brief Status of the purge request */
+        ftdf_status_t status;
+} ftdf_purge_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_ASSOCIATE_REQUEST */
-    FTDF_MsgId             msgId;
-    /** \brief Channel number to be used for the associate request. Ignored in TSCH mode */
-    FTDF_ChannelNumber     channelNumber;
-    /** \brief Channel page to be used for the associate request. Ignored in TSCH mode */
-    FTDF_ChannelPage       channelPage;
-    /** \brief Coordinator address mode */
-    FTDF_AddressMode       coordAddrMode;
-    /** \brief Coordinator PAN ID */
-    FTDF_PANId             coordPANId;
-    /** \brief Coordinator address */
-    FTDF_Address           coordAddr;
-    /**
-     * \brief Capabillity information bitmap. The following capabilities are defined:<br>
-     *        FTDF_CAPABILITY_IS_FFD: Device is a full function device<br>
-     *        FTDF_CAPABILITY_AC_POWER: Device has AC power<br>
-     *        FTDF_CAPABILITY_RECEIVER_ON_WHEN_IDLE: Device receiver is on when idle<br>
-     *        FTDF_CAPABILITY_FAST_ASSOCIATION: Device wants a fast association<br>
-     *        FTDF_CAPABILITY_SUPPORTS_SECURITY: Device supports security<br>
-     *        FTDF_CAPABILITY_WANTS_SHORT_ADDRESS: Device wants short address<br>
-     */
-    FTDF_Bitmap8           capabilityInformation;
-    /** \brief Security level */
-    FTDF_SecurityLevel     securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode         keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet             keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex          keyIndex;
-    /** \brief NOT USED */
-    FTDF_ChannelOffset     channelOffset;
-    /** \brief NOT USED */
-    FTDF_HoppingSequenceId hoppingSequenceId;
-    /** \brief DO NOT USE */
-    uint8_t                __private3;
-} FTDF_AssociateRequest;
+typedef struct {
+        /** \brief Message id = FTDF_ASSOCIATE_REQUEST */
+        ftdf_msg_id_t              msg_id;
+        /** \brief Channel number to be used for the associate request. Ignored in TSCH mode */
+        ftdf_channel_number_t      channel_number;
+        /** \brief Channel page to be used for the associate request. Ignored in TSCH mode */
+        ftdf_channel_page_t        channel_page;
+        /** \brief Coordinator address mode */
+        ftdf_address_mode_t        coord_addr_mode;
+        /** \brief Coordinator PAN id */
+        ftdf_pan_id_t              coord_pan_id;
+        /** \brief Coordinator address */
+        ftdf_address_t             coord_addr;
+        /**
+         * \brief Capabillity information bitmap. The following capabilities are defined:<br>
+         *        FTDF_CAPABILITY_IS_FFD: Device is a full function device<br>
+         *        FTDF_CAPABILITY_AC_POWER: Device has AC power<br>
+         *        FTDF_CAPABILITY_RECEIVER_ON_WHEN_IDLE: Device receiver is on when idle<br>
+         *        FTDF_CAPABILITY_FAST_ASSOCIATION: Device wants a fast association<br>
+         *        FTDF_CAPABILITY_SUPPORTS_SECURITY: Device supports security<br>
+         *        FTDF_CAPABILITY_WANTS_SHORT_ADDRESS: Device wants short address<br>
+         */
+        ftdf_bitmap8_t             capability_information;
+        /** \brief Security level */
+        ftdf_security_level_t      security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t         key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t               key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t           key_index;
+        /** \brief NOT USED */
+        ftdf_channel_offset_t      channel_offset;
+        /** \brief NOT USED */
+        ftdf_hopping_sequence_id_t hopping_sequence_id;
+        /** \brief DO NOT USE */
+        uint8_t                    __private3;
+} ftdf_associate_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_ASSOCIATE_INDICATION */
-    FTDF_MsgId             msgId;
-    /** \brief Extended address of the device that did the association request */
-    FTDF_ExtAddress        deviceAddress;
-    /**
-     * \brief Capabillity information bitmap. The following capabilities are defined:<br>
-     *        FTDF_CAPABILITY_IS_FFD: Device is a full function device<br>
-     *        FTDF_CAPABILITY_AC_POWER: Device has AC power<br>
-     *        FTDF_CAPABILITY_RECEIVER_ON_WHEN_IDLE: Device receiver is on when idle<br>
-     *        FTDF_CAPABILITY_FAST_ASSOCIATION: Device wants a fast association<br>
-     *        FTDF_CAPABILITY_SUPPORTS_SECURITY: Device supports security<br>
-     *        FTDF_CAPABILITY_WANTS_SHORT_ADDRESS: Device wants short address<br>
-     */
-    FTDF_Bitmap8           capabilityInformation;
-    /** \brief Security level */
-    FTDF_SecurityLevel     securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode         keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet             keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex          keyIndex;
-    /** \brief NOT USED */
-    FTDF_ChannelOffset     channelOffset;
-    /** \brief NOT USED */
-    FTDF_HoppingSequenceId hoppingSequenceId;
-} FTDF_AssociateIndication;
+typedef struct {
+        /** \brief Message id = FTDF_ASSOCIATE_INDICATION */
+        ftdf_msg_id_t              msg_id;
+        /** \brief Extended address of the device that did the association request */
+        ftdf_ext_address_t         device_address;
+        /**
+         * \brief Capabillity information bitmap. The following capabilities are defined:<br>
+         *        FTDF_CAPABILITY_IS_FFD: Device is a full function device<br>
+         *        FTDF_CAPABILITY_AC_POWER: Device has AC power<br>
+         *        FTDF_CAPABILITY_RECEIVER_ON_WHEN_IDLE: Device receiver is on when idle<br>
+         *        FTDF_CAPABILITY_FAST_ASSOCIATION: Device wants a fast association<br>
+         *        FTDF_CAPABILITY_SUPPORTS_SECURITY: Device supports security<br>
+         *        FTDF_CAPABILITY_WANTS_SHORT_ADDRESS: Device wants short address<br>
+         */
+        ftdf_bitmap8_t             capability_information;
+        /** \brief Security level */
+        ftdf_security_level_t      security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t         key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t               key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t           key_index;
+        /** \brief NOT USED */
+        ftdf_channel_offset_t      channel_offset;
+        /** \brief NOT USED */
+        ftdf_hopping_sequence_id_t hopping_sequence_id;
+} ftdf_associate_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_ASSOCIATE_RESPONSE */
-    FTDF_MsgId             msgId;
-    /** \brief Extended address of the device that did association request and to which the response needs to be send */
-    FTDF_ExtAddress        deviceAddress;
-    /** \brief The short address for the device that did the associate request */
-    FTDF_ShortAddress      assocShortAddress;
-    /** \brief The association status of the associate request */
-    FTDF_AssociationStatus status;
-    /** \brief Indication whether this a response to fast or normal association request */
-    FTDF_Boolean           fastA;
-    /** \brief Security level */
-    FTDF_SecurityLevel     securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode         keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet             keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex          keyIndex;
-    /** \brief NOT USED */
-    FTDF_ChannelOffset     channelOffset;
-    /** \brief NOT USED */
-    FTDF_Length            hoppingSequenceLength;
-    /** \brief NOT USED */
-    FTDF_Octet*            hoppingSequence;
-    /** \brief DO NOT USE */
-    uint8_t                __private3;
-} FTDF_AssociateResponse;
+typedef struct {
+        /** \brief Message id = FTDF_ASSOCIATE_RESPONSE */
+        ftdf_msg_id_t          msg_id;
+        /** \brief Extended address of the device that did association request and to which the response needs to be send */
+        ftdf_ext_address_t     device_address;
+        /** \brief The short address for the device that did the associate request */
+        ftdf_short_address_t   assoc_short_address;
+        /** \brief The association status of the associate request */
+        ftdf_association_status_t status;
+        /** \brief Indication whether this a response to fast or normal association request */
+        ftdf_boolean_t         fast_a;
+        /** \brief Security level */
+        ftdf_security_level_t  security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t     key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t           key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t       key_index;
+        /** \brief NOT USED */
+        ftdf_channel_offset_t  channel_offset;
+        /** \brief NOT USED */
+        ftdf_length_t          hopping_sequence_length;
+        /** \brief NOT USED */
+        ftdf_octet_t*          hopping_sequence;
+        /** \brief DO NOT USE */
+        uint8_t                __private3;
+} ftdf_associate_response_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_ASSOCIATE_CONFIRM */
-    FTDF_MsgId         msgId;
-    /** \brief The short adddress assigned by the coordinator */
-    FTDF_ShortAddress  assocShortAddress;
-    /** \brief Status of the associate request */
-    FTDF_Status        status;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-    /** \brief NOT USED */
-    FTDF_ChannelOffset channelOffset;
-    /** \brief NOT USED */
-    FTDF_Length        hoppingSequenceLength;
-    /** \brief NOT USED */
-    FTDF_Octet*        hoppingSequence;
-} FTDF_AssociateConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_ASSOCIATE_CONFIRM */
+        ftdf_msg_id_t         msg_id;
+        /** \brief The short adddress assigned by the coordinator */
+        ftdf_short_address_t  assoc_short_address;
+        /** \brief Status of the associate request */
+        ftdf_status_t         status;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+        /** \brief NOT USED */
+        ftdf_channel_offset_t channel_offset;
+        /** \brief NOT USED */
+        ftdf_length_t         hopping_sequence_length;
+        /** \brief NOT USED */
+        ftdf_octet_t          *hopping_sequence;
+} ftdf_associate_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_DISASSOCIATE_REQUEST */
-    FTDF_MsgId              msgId;
-    /** \brief Device address mode */
-    FTDF_AddressMode        deviceAddrMode;
-    /** \brief Device PAN ID */
-    FTDF_PANId              devicePANId;
-    /** \brief Device address */
-    FTDF_Address            deviceAddress;
-    /** \brief Disassociate reason */
-    FTDF_DisassociateReason disassociateReason;
-    /**
-     * \brief Indication whether the disassociate request must be send directly or be queued until a
-     *        DATA_REQUEST command frame is received
-     */
-    FTDF_Boolean            txIndirect;
-    /** \brief Security level */
-    FTDF_SecurityLevel      securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode          keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet              keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex           keyIndex;
-    /** \brief DO NOT USE */
-    uint8_t                 __private3;
-} FTDF_DisassociateRequest;
+typedef struct {
+        /** \brief Message id = FTDF_DISASSOCIATE_REQUEST */
+        ftdf_msg_id_t              msg_id;
+        /** \brief Device address mode */
+        ftdf_address_mode_t        device_addr_mode;
+        /** \brief Device PAN id */
+        ftdf_pan_id_t              device_pan_id;
+        /** \brief Device address */
+        ftdf_address_t             device_address;
+        /** \brief Disassociate reason */
+        ftdf_disassociate_reason_t disassociate_reason;
+        /**
+         * \brief Indication whether the disassociate request must be send directly or be queued until a
+         *        DATA_REQUEST command frame is received
+         */
+        ftdf_boolean_t             tx_indirect;
+        /** \brief Security level */
+        ftdf_security_level_t      security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t         key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t               key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t           key_index;
+        /** \brief DO NOT USE */
+        uint8_t                    __private3;
+} ftdf_disassociate_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_DISASSOCIATE_INDICATION */
-    FTDF_MsgId              msgId;
-    /** \brief Extended address of the device that did disassociate request */
-    FTDF_ExtAddress         deviceAddress;
-    /** \brief Disassociate reason */
-    FTDF_DisassociateReason disassociateReason;
-    /** \brief Security level */
-    FTDF_SecurityLevel      securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode          keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet              keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex           keyIndex;
-} FTDF_DisassociateIndication;
+typedef struct {
+        /** \brief Message id = FTDF_DISASSOCIATE_INDICATION */
+        ftdf_msg_id_t              msg_id;
+        /** \brief Extended address of the device that did disassociate request */
+        ftdf_ext_address_t         device_address;
+        /** \brief Disassociate reason */
+        ftdf_disassociate_reason_t disassociate_reason;
+        /** \brief Security level */
+        ftdf_security_level_t      security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t         key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t               key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t           key_index;
+} ftdf_disassociate_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_DISASSOCIATE_CONFIRM */
-    FTDF_MsgId       msgId;
-    /** \brief Disassociate request status */
-    FTDF_Status      status;
-    /** \brief Address mode of the device that want/must disassociate */
-    FTDF_AddressMode deviceAddrMode;
-    /** \brief PAN ID of the device that want/must disassociate */
-    FTDF_PANId       devicePANId;
-    /** \brief address of the device that want/must disassociate */
-    FTDF_Address     deviceAddress;
-} FTDF_DisassociateConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_DISASSOCIATE_CONFIRM */
+        ftdf_msg_id_t       msg_id;
+        /** \brief Disassociate request status */
+        ftdf_status_t       status;
+        /** \brief Address mode of the device that want/must disassociate */
+        ftdf_address_mode_t device_addr_mode;
+        /** \brief PAN id of the device that want/must disassociate */
+        ftdf_pan_id_t       device_pan_id;
+        /** \brief address of the device that want/must disassociate */
+        ftdf_address_t      device_address;
+} ftdf_disassociate_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_BEACON_NOTIFY_INDCATION */
-    FTDF_MsgId          msgId;
-    /** \brief Beacon sequence number, valid only when beacon type is FTDF_NORMAL_BEACON */
-    FTDF_SN             BSN;
-    /** \brief PAN descriptor*/
-    FTDF_PANDescriptor* PANDescriptor;
-    /** \brief NOT USED */
-    FTDF_Bitmap8        pendAddrSpec;
-    /** \brief NOT USED */
-    FTDF_Address*       addrList;
-    /** \brief Length of the beacon payload */
-    FTDF_DataLength     sduLength;
-    /** \brief Beacon payload */
-    FTDF_Octet*         sdu;
-    /** \brief Enhanced beacon sequence number, valid only when beacon type is FTDF_ENHANCED_BEACON */
-    FTDF_SN             EBSN;
-    /** \brief Beacon type */
-    FTDF_BeaconType     beaconType;
-    /**
-     * \brief Payload IE list<br>
-     *        The whole Payload IE list (including IE descriptors, Sub IE descriptors and content)
-     *        is allocate in one data buffer that must be freed by the application using FTDF_REL_DATA_BUFFER
-     *        with the IEList pointer as parameter.
-     */
-    FTDF_IEList*        IEList;
-    /**
-     * \brief Timestamp of the time the beacon frame was received<br>
-     *        In TSCH mode this timestamp should be used to calculate the TSCH timeslot start time
-     *        required in a FTDF_TSCH_MODE_REQUEST message
-     */
-    FTDF_Time64         timestamp;
-} FTDF_BeaconNotifyIndication;
+typedef struct {
+        /** \brief Message id = FTDF_BEACON_NOTIFY_INDCATION */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Beacon sequence number, valid only when beacon type is FTDF_NORMAL_BEACON */
+        ftdf_sn_t             bsn;
+        /** \brief PAN descriptor*/
+        ftdf_pan_descriptor_t *pan_descriptor;
+        /** \brief NOT USED */
+        ftdf_bitmap8_t        pend_addr_spec;
+        /** \brief NOT USED */
+        ftdf_address_t        *addr_list;
+        /** \brief Length of the beacon payload */
+        ftdf_data_length_t    sdu_length;
+        /** \brief Beacon payload */
+        ftdf_octet_t          *sdu;
+        /** \brief Enhanced beacon sequence number, valid only when beacon type is FTDF_ENHANCED_BEACON */
+        ftdf_sn_t             eb_sn;
+        /** \brief Beacon type */
+        ftdf_beacon_type_t    beacon_type;
+        /**
+         * \brief Payload IE list<br>
+         *        The whole Payload IE list (including IE descriptors, Sub IE descriptors and content)
+         *        is allocate in one data buffer that must be freed by the application using FTDF_REL_DATA_BUFFER
+         *        with the ie_list pointer as parameter.
+         */
+        ftdf_ie_list_t        *ie_list;
+        /**
+         * \brief Timestamp of the time the beacon frame was received<br>
+         *        In TSCH mode this timestamp should be used to calculate the TSCH timeslot start time
+         *        required in a FTDF_TSCH_MODE_REQUEST message
+         */
+        ftdf_time64_t         timestamp;
+} ftdf_beacon_notify_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_COMM_STATUS_INDICATION */
-    FTDF_MsgId         msgId;
-    /** \brief PAN ID of the frame causing the error */
-    FTDF_PANId         PANId;
-    /** \brief Source address mode of the frame causing the error  */
-    FTDF_AddressMode   srcAddrMode;
-    /** \brief Source address of the frame causing the error */
-    FTDF_Address       srcAddr;
-    /** \brief Destination address mode of the frame causing the error */
-    FTDF_AddressMode   dstAddrMode;
-    /** \brief Destination address of the frame causing the error */
-    FTDF_Address       dstAddr;
-    /** \brief Error status */
-    FTDF_Status        status;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-} FTDF_CommStatusIndication;
+typedef struct {
+        /** \brief Message id = FTDF_COMM_STATUS_INDICATION */
+        ftdf_msg_id_t         msg_id;
+        /** \brief PAN id of the frame causing the error */
+        ftdf_pan_id_t         pan_id;
+        /** \brief Source address mode of the frame causing the error  */
+        ftdf_address_mode_t   src_addr_mode;
+        /** \brief Source address of the frame causing the error */
+        ftdf_address_t        src_addr;
+        /** \brief Destination address mode of the frame causing the error */
+        ftdf_address_mode_t   dst_addr_mode;
+        /** \brief Destination address of the frame causing the error */
+        ftdf_address_t        dst_addr;
+        /** \brief Error status */
+        ftdf_status_t         status;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+} ftdf_comm_status_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_GET_REQUEST */
-    FTDF_MsgId        msgId;
-    FTDF_PIBAttribute PIBAttribute;
-} FTDF_GetRequest;
+typedef struct {
+        /** \brief Message id = FTDF_GET_REQUEST */
+        ftdf_msg_id_t        msg_id;
+        ftdf_pib_attribute_t pib_attribute;
+} ftdf_get_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_GET_CONFIRM */
-    FTDF_MsgId                    msgId;
-    /** \brief Status of the get request */
-    FTDF_Status                   status;
-    /** \brief PIB attribute ID of PIB attribute gotten */
-    FTDF_PIBAttribute             PIBAttribute;
-    /**
-     * \brief Pointer to the PIB attribute value to be set<br>
-     *        Each PIB attribute has its own type, see \link FTDF_PIBAttribute \endlink<br>
-     *        In order to access the attribute value the application must cast this pinter
-     *        to the correct type. 
-     */
-    const FTDF_PIBAttributeValue* PIBAttributeValue;
-} FTDF_GetConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_GET_CONFIRM */
+        ftdf_msg_id_t                    msg_id;
+        /** \brief Status of the get request */
+        ftdf_status_t                    status;
+        /** \brief PIB attribute id of PIB attribute gotten */
+        ftdf_pib_attribute_t             pib_attribute;
+        /**
+         * \brief Pointer to the PIB attribute value to be set<br>
+         *        Each PIB attribute has its own type, see \link ftdf_pib_attribute_t \endlink<br>
+         *        In order to access the attribute value the application must cast this pinter
+         *        to the correct type.
+         */
+        const ftdf_pib_attribute_value_t *pib_attribute_value;
+} ftdf_get_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SET_REQUEST */
-    FTDF_MsgId                    msgId;
-    /** \brief PIB attribute ID of attribute to be set */
-    FTDF_PIBAttribute             PIBAttribute;
-    /**
-     * \brief Pointer to the PIB attribute value to be set<br>
-     *        Each PIB attribute has its own type, see \link FTDF_PIBAttribute \endlink<br>
-     *        FTDF does a shallow copy of the PIB attribute. So if the PIB attribute contains pointers to
-     *        other data this data is NOT copied by FTDF. The application must make sure that data referred
-     *        from a PIB attribute is statically allocated in retention RAM.
-     */
-    const FTDF_PIBAttributeValue* PIBAttributeValue;
-} FTDF_SetRequest;
+typedef struct {
+        /** \brief Message id = FTDF_SET_REQUEST */
+        ftdf_msg_id_t                    msg_id;
+        /** \brief PIB attribute id of attribute to be set */
+        ftdf_pib_attribute_t             pib_attribute;
+        /**
+         * \brief Pointer to the PIB attribute value to be set<br>
+         *        Each PIB attribute has its own type, see \link ftdf_pib_attribute_t \endlink<br>
+         *        FTDF does a shallow copy of the PIB attribute. So if the PIB attribute contains pointers to
+         *        other data this data is NOT copied by FTDF. The application must make sure that data referred
+         *        from a PIB attribute is statically allocated in retention RAM.
+         */
+        const ftdf_pib_attribute_value_t *pib_attribute_value;
+} ftdf_set_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_GET_CONFIRM */
-    FTDF_MsgId        msgId;
-    /** \brief Set request status */
-    FTDF_Status       status;
-    /** \brief PIB Attribute ID of PIB attribute that has been set */
-    FTDF_PIBAttribute PIBAttribute;
-} FTDF_SetConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_GET_CONFIRM */
+        ftdf_msg_id_t        msg_id;
+        /** \brief Set request status */
+        ftdf_status_t        status;
+        /** \brief PIB Attribute id of PIB attribute that has been set */
+        ftdf_pib_attribute_t pib_attribute;
+} ftdf_set_confirm_t;
 
-typedef struct
-{
-    FTDF_MsgId             msgId;
-    FTDF_GTSCharateristics GTSCharateristics;
-    FTDF_SecurityLevel     securityLevel;
-    FTDF_KeyIdMode         keyIdMode;
-    FTDF_Octet             keySource[ 8 ];
-    FTDF_KeyIndex          keyIndex;
-} FTDF_GtsRequest;
+typedef struct {
+        ftdf_msg_id_t             msg_id;
+        ftdf_gts_charateristics_t gts_charateristics;
+        ftdf_security_level_t     security_level;
+        ftdf_key_id_mode_t        key_id_mode;
+        ftdf_octet_t              key_source[8];
+        ftdf_key_index_t          key_index;
+} ftdf_gts_request_t;
 
-typedef struct
-{
-    FTDF_MsgId             msgId;
-    FTDF_GTSCharateristics GTSCharateristics;
-    FTDF_Status            status;
-} FTDF_GtsConfirm;
+typedef struct {
+        ftdf_msg_id_t             msg_id;
+        ftdf_gts_charateristics_t gts_charateristics;
+        ftdf_status_t             status;
+} ftdf_gts_confirm_t;
 
-typedef struct
-{
-    FTDF_MsgId             msgId;
-    FTDF_ShortAddress      deviceAddress;
-    FTDF_GTSCharateristics GTSCharateristics;
-    FTDF_SecurityLevel     securityLevel;
-    FTDF_KeyIdMode         keyIdMode;
-    FTDF_Octet             keySource[ 8 ];
-    FTDF_KeyIndex          keyIndex;
-} FTDF_GtsIndication;
+typedef struct {
+        ftdf_msg_id_t             msg_id;
+        ftdf_short_address_t      device_address;
+        ftdf_gts_charateristics_t gts_charateristics;
+        ftdf_security_level_t     security_level;
+        ftdf_key_id_mode_t        key_id_mode;
+        ftdf_octet_t              key_source[8];
+        ftdf_key_index_t          key_index;
+} ftdf_gts_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_ORPHAN_INDICATION */
-    FTDF_MsgId         msgId;
-    /** \brief Extended address of orphaned device */
-    FTDF_ExtAddress    orphanAddress;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-} FTDF_OrphanIndication;
+typedef struct {
+        /** \brief Message id = FTDF_ORPHAN_INDICATION */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Extended address of orphaned device */
+        ftdf_ext_address_t    orphan_address;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+} ftdf_orphan_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_ORPHAN_RESPONSE */
-    FTDF_MsgId         msgId;
-    /** \brief Extended address of orphaned device */
-    FTDF_ExtAddress    orphanAddress;
-    /** \brief Short address of orphaned device */
-    FTDF_ShortAddress  shortAddress;
-    /** \brief Indication whether the device is associated with this coordinator or not */
-    FTDF_Boolean       associatedMember;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-} FTDF_OrphanResponse;
+typedef struct {
+        /** \brief Message id = FTDF_ORPHAN_RESPONSE */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Extended address of orphaned device */
+        ftdf_ext_address_t    orphan_address;
+        /** \brief Short address of orphaned device */
+        ftdf_short_address_t  short_address;
+        /** \brief Indication whether the device is associated with this coordinator or not */
+        ftdf_boolean_t        associated_member;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+} ftdf_orphan_response_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_RESET_REQUEST */
-    FTDF_MsgId   msgId;
-    /** \brief Indicatione whether the PIB attributes must be reset to their default values or not */
-    FTDF_Boolean setDefaultPIB;
-} FTDF_ResetRequest;
+typedef struct {
+        /** \brief Message id = FTDF_RESET_REQUEST */
+        ftdf_msg_id_t  msg_id;
+        /** \brief Indication whether the PIB attributes must be reset to their default values or not */
+        ftdf_boolean_t set_default_pib;
+} ftdf_reset_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_RESET_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Status of the reset request */
-    FTDF_Status status;
-} FTDF_ResetConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_RESET_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Status of the reset request */
+        ftdf_status_t status;
+} ftdf_reset_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_RX_ENABLE_REQUEST */
-    FTDF_MsgId   msgId;
-    /** \brief NOT USED */
-    FTDF_Boolean deferPermit;
-    /** \brief NOT USED */
-    FTDF_Time    rxOnTime;
-    /** \brief The time in aBaseSuperFramePeriod's (960 symbols) that the receiver will be on */
-    FTDF_Time    rxOnDuration;
-} FTDF_RxEnableRequest;
+typedef struct {
+        /** \brief Message id = FTDF_RX_ENABLE_REQUEST */
+        ftdf_msg_id_t  msg_id;
+        /** \brief NOT USED */
+        ftdf_boolean_t defer_permit;
+        /** \brief NOT USED */
+        ftdf_time_t    rx_on_time;
+        /** \brief The time in aBaseSuperFramePeriod's (960 symbols) that the receiver will be on */
+        ftdf_time_t    rx_on_duration;
+} ftdf_rx_enable_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_RX_ENABLE_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Status of the RX enable request */
-    FTDF_Status status;
-} FTDF_RxEnableConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_RX_ENABLE_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Status of the RX enable request */
+        ftdf_status_t status;
+} ftdf_rx_enable_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SCAN_REQUEST */
-    FTDF_MsgId         msgId;
-    /** \brief Scan Type */
-    FTDF_ScanType      scanType;
-    /** \brief Bitmap of the channels to be scanned  (only channel 11 - 27 are supported ) */
-    FTDF_Bitmap32      scanChannels;
-    /** \brief Channel page of the channels to be scanned (only page 0 is supported ) */
-    FTDF_ChannelPage   channelPage;
-    /** \brief Scan duration per channel, duration = ( ( scanDuration ^ 2 ) - 1 ) * aBaseSuperFramePeriod symbols */
-    FTDF_ScanDuration  scanDuration;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-} FTDF_ScanRequest;
+typedef struct {
+        /** \brief Message id = FTDF_SCAN_REQUEST */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Scan Type */
+        ftdf_scan_type_t      scan_type;
+        /** \brief Bitmap of the channels to be scanned  (only channel 11 - 27 are supported) */
+        ftdf_bitmap32_t       scan_channels;
+        /** \brief Channel page of the channels to be scanned (only page 0 is supported) */
+        ftdf_channel_page_t   channel_page;
+        /** \brief Scan duration per channel, duration = ((scan_duration ^ 2) - 1) * aBaseSuperFramePeriod symbols */
+        ftdf_scan_duration_t  scan_duration;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+} ftdf_scan_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SCAN_CONFIRM */
-    FTDF_MsgId                   msgId;
-    /** \brief Status of the scan request */
-    FTDF_Status                  status;
-    /** \brief Scan Type */
-    FTDF_ScanType                scanType;
-    /** \brief Channel page of the scanned channels */
-    FTDF_ChannelPage             channelPage;
-    /** \brief Bitmap of the channels not scanned but were requested to be scanned */
-    FTDF_Bitmap32                unscannedChannels;
-    /** \brief Number of entries in energyDetectList or PANDescriptorList */
-    FTDF_Size                    resultListSize;
-    /** \brief Pointer to the first energy detect result */
-    FTDF_Energy*                 energyDetectList;
-    /** \brief Pointer to the first PAN descriptor */
-    FTDF_PANDescriptor*          PANDescriptorList;
-    /** \brief */
-    FTDF_CoordRealignDescriptor* coordRealignDescriptor;
-} FTDF_ScanConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_SCAN_CONFIRM */
+        ftdf_msg_id_t                   msg_id;
+        /** \brief Status of the scan request */
+        ftdf_status_t                   status;
+        /** \brief Scan Type */
+        ftdf_scan_type_t                scan_type;
+        /** \brief Channel page of the scanned channels */
+        ftdf_channel_page_t             channel_page;
+        /** \brief Bitmap of the channels not scanned but were requested to be scanned */
+        ftdf_bitmap32_t                 unscanned_channels;
+        /** \brief Number of entries in energy_detect_list or pan_descriptor_list */
+        ftdf_size_t                     result_list_size;
+        /** \brief Pointer to the first energy detect result */
+        ftdf_energy_t                   *energy_detect_list;
+        /** \brief Pointer to the first PAN descriptor */
+        ftdf_pan_descriptor_t           *pan_descriptor_list;
+        /** \brief */
+        ftdf_coord_realign_descriptor_t *coord_realign_descriptor;
+} ftdf_scan_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_START_REQUEST */
-    FTDF_MsgId         msgId;
-    /** \brief PAN ID that will be used by the coordinator */
-    FTDF_PANId         PANId;
-    /** \brief Channel number that will be used by the coordinator */
-    FTDF_ChannelNumber channelNumber;
-    /** \brief Channel page that will be used by the coordinator */
-    FTDF_ChannelPage   channelPage;
-    /** \brief NOT USED */
-    FTDF_Time          startTime;
-    /** \brief Beacon order, only beacon order 15 (beaconless) is supported  */
-    FTDF_Order         beaconOrder;
-    /** \brief NOT USED */
-    FTDF_Order         superframeOrder;
-    /** \brief Indication whether the device must be a coordinator or a PAN coordinator */
-    FTDF_Boolean       PANCoordinator;
-    /** \brief NOT USED */
-    FTDF_Boolean       batteryLifeExtension;
-    /** \brief NOT USED */
-    FTDF_Boolean       coordRealignment;
-    /** \brief NOT USED */
-    FTDF_SecurityLevel coordRealignSecurityLevel;
-    /** \brief NOT USED */
-    FTDF_KeyIdMode     coordRealignKeyIdMode;
-    /** \brief NOT USED */
-    FTDF_Octet         coordRealignKeySource[ 8 ];
-    /** \brief NOT USED */
-    FTDF_KeyIndex      coordRealignKeyIndex;
-    /** \brief NOT USED */
-    FTDF_SecurityLevel beaconSecurityLevel;
-    /** \brief NOT USED */
-    FTDF_KeyIdMode     beaconKeyIdMode;
-    /** \brief NOT USED */
-    FTDF_Octet         beaconKeySource[ 8 ];
-    /** \brief NOT USED */
-    FTDF_KeyIndex      beaconKeyIndex;
-} FTDF_StartRequest;
+typedef struct {
+        /** \brief Message id = FTDF_START_REQUEST */
+        ftdf_msg_id_t         msg_id;
+        /** \brief PAN id that will be used by the coordinator */
+        ftdf_pan_id_t         pan_id;
+        /** \brief Channel number that will be used by the coordinator */
+        ftdf_channel_number_t channel_number;
+        /** \brief Channel page that will be used by the coordinator */
+        ftdf_channel_page_t   channel_page;
+        /** \brief NOT USED */
+        ftdf_time_t           start_time;
+        /** \brief Beacon order, only beacon order 15 (beaconless) is supported  */
+        ftdf_order_t          beacon_order;
+        /** \brief NOT USED */
+        ftdf_order_t          superframe_order;
+        /** \brief Indication whether the device must be a coordinator or a PAN coordinator */
+        ftdf_boolean_t        pan_coordinator;
+        /** \brief NOT USED */
+        ftdf_boolean_t        battery_life_extension;
+        /** \brief NOT USED */
+        ftdf_boolean_t        coord_realignment;
+        /** \brief NOT USED */
+        ftdf_security_level_t coord_realign_security_level;
+        /** \brief NOT USED */
+        ftdf_key_id_mode_t    coord_realign_key_id_mode;
+        /** \brief NOT USED */
+        ftdf_octet_t          coord_realign_key_source[8];
+        /** \brief NOT USED */
+        ftdf_key_index_t      coord_realign_key_index;
+        /** \brief NOT USED */
+        ftdf_security_level_t beacon_security_level;
+        /** \brief NOT USED */
+        ftdf_key_id_mode_t    beacon_key_id_mode;
+        /** \brief NOT USED */
+        ftdf_octet_t          beacon_key_source[8];
+        /** \brief NOT USED */
+        ftdf_key_index_t      beacon_key_index;
+} ftdf_start_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_START_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Status of the start request */
-    FTDF_Status status;
-} FTDF_StartConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_START_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Status of the start request */
+        ftdf_status_t status;
+} ftdf_start_confirm_t;
 
-typedef struct
-{
-    FTDF_MsgId         msgId;
-    FTDF_ChannelNumber channnelNumber;
-    FTDF_ChannelPage   channelPage;
-    FTDF_Boolean       trackbeacon;
-} FTDF_SyncRequest;
+typedef struct {
+        ftdf_msg_id_t         msg_id;
+        ftdf_channel_number_t channnel_number;
+        ftdf_channel_page_t   channel_page;
+        ftdf_boolean_t        trackbeacon;
+} ftdf_sync_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SYNC_LOSS_INDICATION */
-    FTDF_MsgId         msgId;
-    /** \brief Loss Reason */
-    FTDF_LossReason    lossReason;
-    /** \brief PAN ID */
-    FTDF_PANId         PANId;
-    /** \brief Channel number */
-    FTDF_ChannelNumber channelNumber;
-    /** \brief Channel page */
-    FTDF_ChannelPage   channelPage;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-} FTDF_SyncLossIndication;
+typedef struct {
+        /** \brief Message id = FTDF_SYNC_LOSS_INDICATION */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Loss Reason */
+        ftdf_loss_reason_t    loss_reason;
+        /** \brief PAN id */
+        ftdf_pan_id_t         pan_id;
+        /** \brief Channel number */
+        ftdf_channel_number_t channel_number;
+        /** \brief Channel page */
+        ftdf_channel_page_t   channel_page;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+} ftdf_sync_loss_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_POLL_REQUEST */
-    FTDF_MsgId         msgId;
-    /** \brief Coordinator address mode */
-    FTDF_AddressMode   coordAddrMode;
-    /** \brief coordinator PAN ID */
-    FTDF_PANId         coordPANId;
-    /** \brief Coordinator address */
-    FTDF_Address       coordAddr;
-    /** \brief Security level */
-    FTDF_SecurityLevel securityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     keyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         keySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      keyIndex;
-} FTDF_PollRequest;
+typedef struct {
+        /** \brief Message id = FTDF_POLL_REQUEST */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Coordinator address mode */
+        ftdf_address_mode_t   coord_addr_mode;
+        /** \brief coordinator PAN id */
+        ftdf_pan_id_t         coord_pan_id;
+        /** \brief Coordinator address */
+        ftdf_address_t        coord_addr;
+        /** \brief Security level */
+        ftdf_security_level_t security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      key_index;
+} ftdf_poll_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_POLL_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Status of the poll request */
-    FTDF_Status status;
-} FTDF_PollConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_POLL_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Status of the poll request */
+        ftdf_status_t status;
+} ftdf_poll_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SET_SLOTFRAME_REQUEST */
-    FTDF_MsgId         msgId;
-    /** \brief Slotframe handle */
-    FTDF_Handle        handle;
-    /** \brief Set operation */
-    FTDF_Operation     operation;
-    /** \brief Number of timeslots in this slotframe */
-    FTDF_SlotframeSize size;
-} FTDF_SetSlotframeRequest;
+typedef struct {
+        /** \brief Message id = FTDF_SET_SLOTFRAME_REQUEST */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Slotframe handle */
+        ftdf_handle_t         handle;
+        /** \brief Set operation */
+        ftdf_operation_t      operation;
+        /** \brief Number of timeslots in this slotframe */
+        ftdf_slotframe_size_t size;
+} ftdf_set_slotframe_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SET_SLOTFRAME_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Slotframe handle */
-    FTDF_Handle handle;
-    /** \brief Status of the set sloytframe request */
-    FTDF_Status status;
-} FTDF_SetSlotframeConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_SET_SLOTFRAME_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Slotframe handle */
+        ftdf_handle_t handle;
+        /** \brief Status of the set sloytframe request */
+        ftdf_status_t status;
+} ftdf_set_slotframe_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SET_LINK_REQUEST */
-    FTDF_MsgId         msgId;
-    /** \brief Set operation */
-    FTDF_Operation     operation;
-    /** \brief Handle of this link, used for delete and modify operations */
-    FTDF_Handle        linkHandle;
-    /** \brief Handle of the slotframe of this link */
-    FTDF_Handle        slotframeHandle;
-    /** \brief Timeslot in the slotframe */
-    FTDF_Timeslot      timeslot;
-    /** \brief Channel offset */
-    FTDF_ChannelOffset channelOffset;
-    /**
-     * \brief Bit mapped link options, the following options are supported:<br>
-     *        FTDF_LINK_OPTION_TRANSMIT: Lik can be used for transmitting<br>
-     *        FTDF_LINK_OPTION_RECEIVE: Link can be used for receiving<br>
-     *        FTDF_LINK_OPTION_SHARED: Shared link, multiple device can transmit in this link<br>
-     *        FTDF_LINK_OPTION_TIME_KEEPING: Link will be used to synchronise timeslots<br>
-     *        Multiple options can be defined by or-ing them.
-     */
-    FTDF_Bitmap8       linkOptions;
-    /** \brief Link type */
-    FTDF_LinkType      linkType;
-    /** \brief Short address of the peer node, only valid if is a transmit link */
-    FTDF_ShortAddress  nodeAddress;
-} FTDF_SetLinkRequest;
+typedef struct {
+        /** \brief Message id = FTDF_SET_LINK_REQUEST */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Set operation */
+        ftdf_operation_t      operation;
+        /** \brief Handle of this link, used for delete and modify operations */
+        ftdf_handle_t         link_handle;
+        /** \brief Handle of the slotframe of this link */
+        ftdf_handle_t         slotframe_handle;
+        /** \brief Timeslot in the slotframe */
+        ftdf_timeslot_t       timeslot;
+        /** \brief Channel offset */
+        ftdf_channel_offset_t channel_offset;
+        /**
+         * \brief Bit mapped link options, the following options are supported:<br>
+         *        FTDF_LINK_OPTION_TRANSMIT: Lik can be used for transmitting<br>
+         *        FTDF_LINK_OPTION_RECEIVE: Link can be used for receiving<br>
+         *        FTDF_LINK_OPTION_SHARED: Shared link, multiple device can transmit in this link<br>
+         *        FTDF_LINK_OPTION_TIME_KEEPING: Link will be used to synchronise timeslots<br>
+         *        Multiple options can be defined by or-ing them.
+         */
+        ftdf_bitmap8_t        link_options;
+        /** \brief Link type */
+        ftdf_link_type_t      link_type;
+        /** \brief Short address of the peer node, only valid if is a transmit link */
+        ftdf_short_address_t  node_address;
+} ftdf_set_link_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_SET_LINK_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Status of the set link request */
-    FTDF_Status status;
-    /** \brief Link handle */
-    FTDF_Handle linkHandle;
-    /** \brief Slotframe handle */
-    FTDF_Handle slotframeHandle;
-} FTDF_SetLinkConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_SET_LINK_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Status of the set link request */
+        ftdf_status_t status;
+        /** \brief Link handle */
+        ftdf_handle_t link_handle;
+        /** \brief Slotframe handle */
+        ftdf_handle_t slotframe_handle;
+} ftdf_set_link_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_TSCH_MODE_REQUEST */
-    FTDF_MsgId    msgId;
-    /** \brief The new TSCH mode */
-    FTDF_TSCHMode tschMode;
-    /**
-     * \brief The timestamp in symbols of the start of the timeslot with ASN equal to the PIB attribute
-     *        FTDF_PIB_ASN<br>
-     *        The timestamp should be calculated from the timestamp of the BEACON_NOTIFY_INDICATION message<br>
-     *        Before sending the FTDF_TSCH_MODE_REQUEST message the application should set FTDF_PIB_ASN with
-     *        the ASN of the TSCH synchronization IE of the IEList of the BEACON_NOTIFY_INDICATION message
-     */
-    FTDF_Time     timeslotStartTime;
-} FTDF_TschModeRequest;
+typedef struct {
+        /** \brief Message id = FTDF_TSCH_MODE_REQUEST */
+        ftdf_msg_id_t    msg_id;
+        /** \brief The new TSCH mode */
+        ftdf_tsch_mode_t tschMode;
+        /**
+         * \brief The timestamp in symbols of the start of the timeslot with ASN equal to the PIB attribute
+         *        FTDF_PIB_ASN<br>
+         *        The timestamp should be calculated from the timestamp of the BEACON_NOTIFY_INDICATION message<br>
+         *        Before sending the FTDF_TSCH_MODE_REQUEST message the application should set FTDF_PIB_ASN with
+         *        the ASN of the TSCH synchronization IE of the ie_list of the BEACON_NOTIFY_INDICATION message
+         */
+        ftdf_time_t      timeslotStartTime;
+} ftdf_tsch_mode_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_TSCH_MODE_CONFIRM */
-    FTDF_MsgId    msgId;
-    /** \brief The new TSCH mode */
-    FTDF_TSCHMode tschMode;
-    /** \brief Status of the TSCH mode request */
-    FTDF_Status   status;
-} FTDF_TschModeConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_TSCH_MODE_CONFIRM */
+        ftdf_msg_id_t    msg_id;
+        /** \brief The new TSCH mode */
+        ftdf_tsch_mode_t tschMode;
+        /** \brief Status of the TSCH mode request */
+        ftdf_status_t    status;
+} ftdf_tsch_mode_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_KEEP_ALIVE_REQUEST */
-    FTDF_MsgId           msgId;
-    /** \brief Short address to which keep alive message should be send */
-    FTDF_ShortAddress    dstAddress;
-    /** \brief */
-    FTDF_KeepAlivePeriod keepAlivePeriod;
-} FTDF_KeepAliveRequest;
+typedef struct {
+        /** \brief Message id = FTDF_KEEP_ALIVE_REQUEST */
+        ftdf_msg_id_t            msg_id;
+        /** \brief Short address to which keep alive message should be send */
+        ftdf_short_address_t     dst_address;
+        /** \brief */
+        ftdf_keep_alive_period_t keep_alive_period;
+} ftdf_keep_alive_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_KEEP_ALIVE_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Status of the keep alive request */
-    FTDF_Status status;
-} FTDF_KeepAliveConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_KEEP_ALIVE_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Status of the keep alive request */
+        ftdf_status_t status;
+} ftdf_keep_alive_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_BEACON_REQUEST */
-    FTDF_MsgId         msgId;
-    /** \brief Beacon type */
-    FTDF_BeaconType    beaconType;
-    /** \brief Channel number at which the beacon must be sent, ignored in TSCH mode */
-    FTDF_ChannelNumber channel;
-    /** \brief Channel page, ignored in TSCH mode */
-    FTDF_ChannelPage   channelPage;
-    /** \brief NOT USED */
-    FTDF_Order         superframeOrder;
-    /** \brief Security level */
-    FTDF_SecurityLevel beaconSecurityLevel;
-    /** \brief Security key ID mode */
-    FTDF_KeyIdMode     beaconKeyIdMode;
-    /** \brief Security key source */
-    FTDF_Octet         beaconKeySource[ 8 ];
-    /** \brief Security key index */
-    FTDF_KeyIndex      beaconKeyIndex;
-    /** \brief Beacon destination address mode */
-    FTDF_AddressMode   dstAddrMode;
-    /** \brief Beacon destination address */
-    FTDF_Address       dstAddr;
-    /** \brief Indication whether the BSN (or EBSN) in the beacon frame must suppressed */
-    FTDF_Boolean       BSNSuppression;
-    /** \brief DO NOT USE */
-    uint8_t            __private3;
-} FTDF_BeaconRequest;
+typedef struct {
+        /** \brief Message id = FTDF_BEACON_REQUEST */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Beacon type */
+        ftdf_beacon_type_t    beacon_type;
+        /** \brief Channel number at which the beacon must be sent, ignored in TSCH mode */
+        ftdf_channel_number_t channel;
+        /** \brief Channel page, ignored in TSCH mode */
+        ftdf_channel_page_t   channel_page;
+        /** \brief NOT USED */
+        ftdf_order_t          superframe_order;
+        /** \brief Security level */
+        ftdf_security_level_t beacon_security_level;
+        /** \brief Security key id mode */
+        ftdf_key_id_mode_t    beacon_key_id_mode;
+        /** \brief Security key source */
+        ftdf_octet_t          beacon_key_source[8];
+        /** \brief Security key index */
+        ftdf_key_index_t      beacon_key_index;
+        /** \brief Beacon destination address mode */
+        ftdf_address_mode_t   dst_addr_mode;
+        /** \brief Beacon destination address */
+        ftdf_address_t        dst_addr;
+        /** \brief Indication whether the bsn (or eb_sn) in the beacon frame must suppressed */
+        ftdf_boolean_t        bsn_suppression;
+        /** \brief DO NOT USE */
+        uint8_t               __private3;
+} ftdf_beacon_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_BEACON_CONFIRM */
-    FTDF_MsgId  msgId;
-    /** \brief Status of the beacon request */
-    FTDF_Status status;
-} FTDF_BeaconConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_BEACON_CONFIRM */
+        ftdf_msg_id_t msg_id;
+        /** \brief Status of the beacon request */
+        ftdf_status_t status;
+} ftdf_beacon_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_BEACON_REQUEST_INDICATION */
-    FTDF_MsgId       msgId;
-    /** \brief Beacon type */
-    FTDF_BeaconType  beaconType;
-    /** \brief Source address mode */
-    FTDF_AddressMode srcAddrMode;
-    /** \brief Source address */
-    FTDF_Address     srcAddr;
-    /** \brief Source PAN ID */
-    FTDF_PANId       dstPANId;
-    /**
-     * \brief Payload IE list<br>
-     *        The whole Payload IE list (including IE descriptors, Sub IE descriptors and content)
-     *        is allocate in one data buffer that must be freed by the application using FTDF_REL_DATA_BUFFER
-     *        with the IEList pointer as parameter.
-     */
-    FTDF_IEList*     IEList;
-} FTDF_BeaconRequestIndication;
+typedef struct {
+        /** \brief Message id = FTDF_BEACON_REQUEST_INDICATION */
+        ftdf_msg_id_t       msg_id;
+        /** \brief Beacon type */
+        ftdf_beacon_type_t  beacon_type;
+        /** \brief Source address mode */
+        ftdf_address_mode_t src_addr_mode;
+        /** \brief Source address */
+        ftdf_address_t      src_addr;
+        /** \brief Source PAN id */
+        ftdf_pan_id_t       dst_pan_id;
+        /**
+         * \brief Payload IE list<br>
+         *        The whole Payload IE list (including IE descriptors, Sub IE descriptors and content)
+         *        is allocate in one data buffer that must be freed by the application using FTDF_REL_DATA_BUFFER
+         *        with the ie_list pointer as parameter.
+         */
+        ftdf_ie_list_t      *ie_list;
+} ftdf_beacon_request_indication_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_TRANSPARENT_ENABLE_REQUEST */
-    FTDF_MsgId    msgId;
-    /** \brief Enable or disable of transparent mode */
-    FTDF_Boolean  enable;
-    /** \brief Bitmapped transparent options, see FTDF_enableTransparentMode */
-    FTDF_Bitmap32 options;
-} FTDF_TransparentEnableRequest;
+typedef struct {
+        /** \brief Message id = FTDF_TRANSPARENT_ENABLE_REQUEST */
+        ftdf_msg_id_t   msg_id;
+        /** \brief Enable or disable of transparent mode */
+        ftdf_boolean_t  enable;
+        /** \brief Bitmapped transparent options, see ftdf_enable_transparent_mode */
+        ftdf_bitmap32_t options;
+} ftdf_transparent_enable_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_TRANSPARENT_REQUEST */
-    FTDF_MsgId         msgId;
-    /** \brief Frame length */
-    FTDF_DataLength    frameLength;
-    /** \brief Pointer to frame, must be allocated with FTDF_GET_DATA_BUFFER */
-    FTDF_Octet*        frame;
-    /** \brief Channel number */
-    FTDF_ChannelNumber channel;
-    /** \brief Packet Traffic Information (PTI) used for transmitting the frame. */
-    FTDF_PTI           pti;
-    /** \brief CSMA suppression */
-    FTDF_Boolean       cmsaSuppress;
-    /** \brief Application provided handle, will be returned in the transparent confirm call */
-    void*              handle;
-} FTDF_TransparentRequest;
+typedef struct {
+        /** \brief Message id = FTDF_TRANSPARENT_REQUEST */
+        ftdf_msg_id_t         msg_id;
+        /** \brief Frame length */
+        ftdf_data_length_t    frame_length;
+        /** \brief Pointer to frame, must be allocated with FTDF_GET_DATA_BUFFER */
+        ftdf_octet_t          *frame;
+        /** \brief Channel number */
+        ftdf_channel_number_t channel;
+        /** \brief Packet Traffic Information (PTI) used for transmitting the frame. */
+        ftdf_pti_t            pti;
+        /** \brief CSMA suppression */
+        ftdf_boolean_t        cmsa_suppress;
+        /** \brief Application provided handle, will be returned in the transparent confirm call */
+        void                  *handle;
+} ftdf_transparent_request_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_TRANSPARENT_CONFIRM */
-    FTDF_MsgId    msgId;
-    /** \brief Application provided handle of the corresponding FTDF_sendFrameTransparent call */
-    void*         handle;
-    /** \brief Bit mapped status */
-    FTDF_Bitmap32 status;
-} FTDF_TransparentConfirm;
+typedef struct {
+        /** \brief Message id = FTDF_TRANSPARENT_CONFIRM */
+        ftdf_msg_id_t   msg_id;
+        /** \brief Application provided handle of the corresponding FTDF_SEND_FRAME_TRANSPARENT call */
+        void            *handle;
+        /** \brief Bit mapped status */
+        ftdf_bitmap32_t status;
+} ftdf_transparent_confirm_t;
 
-typedef struct
-{
-    /** \brief Message ID = FTDF_TRANSPARENT_INDICATION */
-    FTDF_MsgId      msgId;
-    /** \brief Frame length */
-    FTDF_DataLength frameLength;
-    /** \brief Pointer to frame, must be freed by the application using FTDF_REL_DATA_BUFFER */
-    FTDF_Octet*     frame;
-    /** \brief Bit mapped receive status */
-    FTDF_Bitmap32   status;
-} FTDF_TransparentIndication;
+typedef struct {
+        /** \brief Message id = FTDF_TRANSPARENT_INDICATION */
+        ftdf_msg_id_t      msg_id;
+        /** \brief Frame length */
+        ftdf_data_length_t frame_length;
+        /** \brief Pointer to frame, must be freed by the application using FTDF_REL_DATA_BUFFER */
+        ftdf_octet_t       *frame;
+        /** \brief Bit mapped receive status */
+        ftdf_bitmap32_t    status;
+} ftdf_transparent_indication_t;
 
-typedef struct
-{
-	/** \brief Message ID = FTDF_SLEEP_REQUEST */
-	FTDF_MsgId msgId;
-	/** \brief Sleep time */
-	FTDF_USec  sleepTime;
-} FTDF_SleepRequest;
+typedef struct {
+        /** \brief Message id = FTDF_SLEEP_REQUEST */
+        ftdf_msg_id_t msg_id;
+        /** \brief Sleep time */
+        ftdf_usec_t   sleep_time;
+} ftdf_sleep_request_t;
 
 #if FTDF_DBG_BUS_ENABLE
-typedef struct
-{
-        /** \brief Message ID = FTDF_DBG_MODE_SET_REQUEST */
-        FTDF_MsgId msgId;
+typedef struct {
+        /** \brief Message id = FTDF_DBG_MODE_SET_REQUEST */
+        ftdf_msg_id_t   msg_id;
         /** \brief Debug bus mode */
-        FTDF_DbgMode dbgMode;
-} FTDF_DbgModeSetRequest;
+        ftdf_dbg_mode_t dbg_mode;
+} ftdf_dbg_mode_set_request_t;
 #endif /* FTDF_DBG_BUS_ENABLE */
 
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
 typedef struct
 {
         /** \brief Message ID = FTDF_FPPR_MODE_SET_REQUEST */
-        FTDF_MsgId msgId;
+        ftdf_msg_id_t  msg_id;
         /** \brief fp bit value to set when src address matches*/
-        FTDF_Bitmap8 matchFp;
+        ftdf_bitmap8_t match_fp;
         /** \brief When set, fp_force_value will be applied to fp bit for all src addresses*/
-        FTDF_Bitmap8 fpOverride;
+        ftdf_bitmap8_t fp_override;
         /** \brief The value will be set to fp bit for all src addresses when fp_override is set*/
-        FTDF_Bitmap8 fpForce;
-} FTDF_FpprModeSetRequest;
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+        ftdf_bitmap8_t fp_force;
+} ftdf_fppr_mode_set_request_t;
+
 /**
- * \brief       FTDF_getReleaseInfo - gets the LMAC (FPGA) and UMAC (FTDF SW driver) release info
- * \param[out]  lmacRelName:     LMAC release name
- * \param[out]  lmacBuildTime:   LMAC build time
- * \param[out]  umacRelName:     UMAC release name
- * \param[out]  umacBuildTime:   UMAC build time
+ * \brief       ftdf_get_release_info - gets the LMAC (FPGA) and UMAC (FTDF SW driver) release info
+ * \param[out]  lmac_rel_name:     LMAC release name
+ * \param[out]  lmac_build_time:   LMAC build time
+ * \param[out]  umac_rel_name:     UMAC release name
+ * \param[out]  umac_build_time:   UMAC build time
  * \remark      Sets the application character strings pointers to character strings containing the release
- *              info. The character string space is statically allocated by FTDF and does not need 
+ *              info. The character string space is statically allocated by FTDF and does not need
  *              to be released by the application.
  */
-void            FTDF_getReleaseInfo( char** lmacRelName, char** lmacBuildTime, char** umacRelName,
-                                     char** umacBuildTime );
+void ftdf_get_release_info(char **lmac_rel_name, char **lmac_build_time, char **umac_rel_name,
+                           char **umac_build_time);
 
 /**
- * \brief       FTDF_confirmLmacInterrupt - Confirmation that the LMAC interrupt has been received
+ * \brief       ftdf_confirm_lmac_interrupt - Confirmation that the LMAC interrupt has been received
  *              by the application
  * \remark      This function disables the LMAC interrupt. The application must wait for any other
- *              FTDF API function to be completed and call the function FTDF_eventHandler. This function
- *              will enable the LMAC interrupt again the function FTDF_eventHandler.
+ *              FTDF API function to be completed and call the function ftdf_event_handler. This function
+ *              will enable the LMAC interrupt again the function ftdf_event_handler.
  */
-void            FTDF_confirmLmacInterrupt( void );
+void ftdf_confirm_lmac_interrupt(void);
 
 /**
- * \brief       FTDF_eventHandler - Handles an event signalled by the LMAC interrupt
+ * \brief       ftdf_event_handler - Handles an event signalled by the LMAC interrupt
  * \remark      This function handles the event signalled by the LMAC interrupt and enables the LMAC
  *              interrupt when finished.
- * \warning     FTDF is strictly NON reentrant, so FTDF_eventHandler is NOT allowed to be called when another FTDF
+ * \warning     FTDF is strictly NON reentrant, so ftdf_event_handler is NOT allowed to be called when another FTDF
  *              is being executed
  */
-void            FTDF_eventHandler( void );
+void ftdf_event_handler(void);
 
 /**
- * \brief       FTDF_sndMsg - Sends a request (response) message to FTDF driver
- * \param[in]   msgBuf:      The message to be send. To application must set the msgId field and the request
+ * \brief       ftdf_snd_msg - Sends a request (response) message to FTDF driver
+ * \param[in]   msg_buf:     The message to be send. To application must set the msg_id field and the request
  *                           specific parameters by casting it to the appropriate request message structure.
- * \remark      The message must be allocated by the application using the function FTDF_GET_MSG_BUFFER
- *              and will be released by FTDF using FTDF_REL_MSG_BUFFER. When finished FTDF releases the message
- *              buffer and sends a confirm (indication) to the application using the function FTDF_RCV_MSG.
- * \remark      As follows a table of message IDs accepted by FTDF_sndMsg, the message structure corresponding
- *              to this message ID and the confirm send back to the application when the request has been
+ * \remark      The message must be allocated by the application using the function ftdf_get_msg_buffer
+ *              and will be released by FTDF using ftdf_rel_msg_buffer. When finished FTDF releases the message
+ *              buffer and sends a confirm (indication) to the application using the function ftdf_rcv_msg.
+ * \remark      As follows a table of message IDs accepted by ftdf_snd_msg, the message structure corresponding
+ *              to this message id and the confirm send back to the application when the request has been
  *              completed by FTDF:
  * \remark      <br>
- * \remark      Request message ID, Request structure, Request confirm
+ * \remark      Request message id, Request structure, Request confirm
  * \remark      ---------------------------------------------------------------------------------
- * \remark      FTDF_DATA_REQUEST, FTDF_DataRequest, FTDF_DATA_CONFIRM
- * \remark      FTDF_PURGE_REQUEST, FTDF_PurgeRequest, FTDF_DATA_CONFIRM
- * \remark      FTDF_ASSOCIATE_REQUEST, FTDF_AssociateRequest, FTDF_ASSOCIATE_CONFIRM
- * \remark      FTDF_ASSOCIATE_RESPONSE, FTDF_AssociateResponse, FTDF_COMM_STATUS_INDICATION
- * \remark      FTDF_DISASSOCIATE_REQUEST, FTDF_DisassociateRequest, FTDF_DISASSOCIATE_CONFIRM
- * \remark      FTDF_GET_REQUEST, FTDF_GetRequest, FTDF_GET_CONFIRM
- * \remark      FTDF_SET_REQUEST, FTDF_SetRequest, FTDF_SET_CONFIRM
- * \remark      FTDF_ORPHAN_RESPONSE, FTDF_OrphanResponse,  FTDF_COMM_STATUS_INDICATION
- * \remark      FTDF_RESET_REQUEST, FTDF_ResetRequest, FTDF_RESET_CONFIRM
- * \remark      FTDF_RX_ENABLE_REQUEST, FTDF_ScanRequest, FTDF_RX_ENABLE_CONFIRM
- * \remark      FTDF_SCAN_REQUEST, FTDF_ScanRequest, FTDF_SCAN_CONFIRM
- * \remark      FTDF_START_REQUEST, FTDF_StartRequest, FTDF_START_CONFIRM
- * \remark      FTDF_POLL_REQUEST, FTDF_PollRequest, FTDF_POLL_CONFIRM
- * \remark      FTDF_SET_SLOTFRAME_REQUEST, FTDF_SetSlotframeRequest, FTDF_SET_SLOTFRAME_CONFIRM
- * \remark      FTDF_SET_LINK_REQUEST, FTDF_SetLinkRequest, FTDF_SET_LINK_CONFIRM
- * \remark      FTDF_TSCH_MODE_REQUEST, FTDF_TschModeRequest, FTDF_TSCH_MODE_CONFIRM
- * \remark      FTDF_KEEP_ALIVE_REQUEST, FTDF_KeepAliveRequest, FTDF_KEEP_ALIVE_CONFIRM
- * \remark      FTDF_BEACON_REQUEST, FTDF_BeaconRequest, FTDF_BEACON_CONFIRM
- * \warning     FTDF is strictly NON reentrant, so it is NOT allowed to call any other FTDF function before this API has been completed. This including the FTDF_eventHandler function.
+ * \remark      FTDF_DATA_REQUEST, ftdf_data_request_t, FTDF_DATA_CONFIRM
+ * \remark      FTDF_PURGE_REQUEST, ftdf_purge_request_t, FTDF_DATA_CONFIRM
+ * \remark      FTDF_ASSOCIATE_REQUEST, ftdf_associate_request_t, FTDF_ASSOCIATE_CONFIRM
+ * \remark      FTDF_ASSOCIATE_RESPONSE, ftdf_associate_response_t, FTDF_COMM_STATUS_INDICATION
+ * \remark      FTDF_DISASSOCIATE_REQUEST, ftdf_disassociate_request_t, FTDF_DISASSOCIATE_CONFIRM
+ * \remark      FTDF_GET_REQUEST, ftdf_get_request_t, FTDF_GET_CONFIRM
+ * \remark      FTDF_SET_REQUEST, ftdf_set_request_t, FTDF_SET_CONFIRM
+ * \remark      FTDF_ORPHAN_RESPONSE, ftdf_orphan_response_t,  FTDF_COMM_STATUS_INDICATION
+ * \remark      FTDF_RESET_REQUEST, ftdf_reset_request_t, FTDF_RESET_CONFIRM
+ * \remark      FTDF_RX_ENABLE_REQUEST, ftdf_scan_request_t, FTDF_RX_ENABLE_CONFIRM
+ * \remark      FTDF_SCAN_REQUEST, ftdf_scan_request_t, FTDF_SCAN_CONFIRM
+ * \remark      FTDF_START_REQUEST, ftdf_start_request_t, FTDF_START_CONFIRM
+ * \remark      FTDF_POLL_REQUEST, ftdf_poll_request_t, FTDF_POLL_CONFIRM
+ * \remark      FTDF_SET_SLOTFRAME_REQUEST, ftdf_set_slotframe_request_t, FTDF_SET_SLOTFRAME_CONFIRM
+ * \remark      FTDF_SET_LINK_REQUEST, ftdf_set_link_request_t, FTDF_SET_LINK_CONFIRM
+ * \remark      FTDF_TSCH_MODE_REQUEST, ftdf_tsch_mode_request_t, FTDF_TSCH_MODE_CONFIRM
+ * \remark      FTDF_KEEP_ALIVE_REQUEST, ftdf_keep_alive_request_t, FTDF_KEEP_ALIVE_CONFIRM
+ * \remark      FTDF_BEACON_REQUEST, ftdf_beacon_request_t, FTDF_BEACON_CONFIRM
+ * \warning     FTDF is strictly NON reentrant, so it is NOT allowed to call any other FTDF function before this API has been completed. This including the ftdf_event_handler function.
  */
-void            FTDF_sndMsg( FTDF_MsgBuffer* msgBuf );
+void ftdf_snd_msg(ftdf_msg_buffer_t *msg_buf);
 
 /**
  * \brief       FTDF_RCV_MSG - Receives a confir or indication message from the FTDF driver
- * \param[in]   msgBuf:      The received message. The msgId field indicates the received message
- * \remark      This function must be implemented by the application and is called by FTDF to pass 
+ * \param[in]   msg_buf:     The received message. The msg_id field indicates the received message
+ * \remark      This function must be implemented by the application and is called by FTDF to pass
  *              a confirm or indication message to the application. It must be configured in the
  *              configuration file ftdf_config.h.
  * \remark      The message buffer is allocated by FTDF using FTDF_GET_MSG_BUFFER and must be released
- *              by the application using FTDF_REL_MSG_BUFFER
+ *              by the application using ftdf_rel_msg_buffer
  * \remark      As follows a table of the confirm and indications messages and their message structures.
  * \remark      <br>
- * \remark      Confirm/indication message ID, Confirm/indication structure
+ * \remark      Confirm/indication message id, Confirm/indication structure
  * \remark      ---------------------------------------------------------------------------------
- * \remark      FTDF_DATA_INDICATION, FTDF_DataIndication
- * \remark      FTDF_DATA_CONFIRM, FTDF_DataConfirm
- * \remark      FTDF_PURGE_CONFIRM, FTDF_PurgeConfirm
- * \remark      FTDF_ASSOCIATE_INDICATION, FTDF_AssociateIndication
- * \remark      FTDF_ASSOCIATE_CONFIRM, FTDF_AssociateConfirm
- * \remark      FTDF_DISASSOCIATE_INDICATION, FTDF_DisassociateIndication
- * \remark      FTDF_DISASSOCIATE_CONFIRM,FTDF_DisassociateConfirm
- * \remark      FTDF_BEACON_NOTIFY_INDICATION, FTDF_BeaconNotifyIndication
- * \remark      FTDF_COMM_STATUS_INDICATION, FTDF_CommStatusIndication
- * \remark      FTDF_GET_CONFIRM, FTDF_GetConfirm
- * \remark      FTDF_SET_CONFIRM, FTDF_SetConfirm
- * \remark      FTDF_ORPHAN_INDICATION, FTDF_OrphanIndication
- * \remark      FTDF_RESET_CONFIRM, FTDF_ResetConfirm
- * \remark      FTDF_RX_ENABLE_CONFIRM, FTDF_RxEnableConfirm
- * \remark      FTDF_SCAN_CONFIRM, FTDF_ScanConfirm
- * \remark      FTDF_START_CONFIRM, FTDF_StartConfirm
- * \remark      FTDF_SYNC_LOSS_INDICATION, FTDF_SyncLossIndication
- * \remark      FTDF_POLL_CONFIRM, FTDF_PollConfirm
- * \remark      FTDF_SET_SLOTFRAME_CONFIRM, FTDF_SetSlotframeConfirm
- * \remark      FTDF_SET_LINK_CONFIRM, FTDF_SetLinkConfirm
- * \remark      FTDF_TSCH_MODE_CONFIRM, FTDF_TschModeConfirm
- * \remark      FTDF_KEEP_ALIVE_CONFIRM, FTDF_KeepAliveConfirm
- * \remark      FTDF_BEACON_CONFIRM, FTDF_BeaconConfirm
- * \remark      FTDF_BEACON_REQUEST_INDICATION, FTDF_BeaconRequestIndication
- * \warning     FTDF is strictly NON reentrant. Because FTDF_RCV_MSG can be called by FTDF_sndMsg or FTDF_eventHandler
- *              it is not allowed to call other FTDF functions within FTDF_RCV_MSG
+ * \remark      FTDF_DATA_INDICATION, ftdf_data_indication_t
+ * \remark      FTDF_DATA_CONFIRM, ftdf_data_confirm_t
+ * \remark      FTDF_PURGE_CONFIRM, ftdf_purge_confirm_t
+ * \remark      FTDF_ASSOCIATE_INDICATION, ftdf_associate_indication_t
+ * \remark      FTDF_ASSOCIATE_CONFIRM, ftdf_associate_confirm_t
+ * \remark      FTDF_DISASSOCIATE_INDICATION, ftdf_disassociate_indication_t
+ * \remark      FTDF_DISASSOCIATE_CONFIRM,ftdf_disassociate_confirm_t
+ * \remark      FTDF_BEACON_NOTIFY_INDICATION, ftdf_beacon_notify_indication_t
+ * \remark      FTDF_COMM_STATUS_INDICATION, ftdf_comm_status_indication_t
+ * \remark      FTDF_GET_CONFIRM, ftdf_get_confirm_t
+ * \remark      FTDF_SET_CONFIRM, ftdf_set_confirm_t
+ * \remark      FTDF_ORPHAN_INDICATION, ftdf_orphan_indication_t
+ * \remark      FTDF_RESET_CONFIRM, ftdf_reset_confirm_t
+ * \remark      FTDF_RX_ENABLE_CONFIRM, ftdf_rx_enable_confirm_t
+ * \remark      FTDF_SCAN_CONFIRM, ftdf_scan_confirm_t
+ * \remark      FTDF_START_CONFIRM, ftdf_start_confirm_t
+ * \remark      FTDF_SYNC_LOSS_INDICATION, ftdf_sync_loss_indication_t
+ * \remark      FTDF_POLL_CONFIRM, ftdf_poll_confirm_t
+ * \remark      FTDF_SET_SLOTFRAME_CONFIRM, ftdf_set_slotframe_confirm_t
+ * \remark      FTDF_SET_LINK_CONFIRM, ftdf_set_link_confirm_t
+ * \remark      FTDF_TSCH_MODE_CONFIRM, ftdf_tsch_mode_confirm_t
+ * \remark      FTDF_KEEP_ALIVE_CONFIRM, ftdf_keep_alive_confirm_t
+ * \remark      FTDF_BEACON_CONFIRM, ftdf_beacon_confirm_t
+ * \remark      FTDF_BEACON_REQUEST_INDICATION, ftdf_beacon_request_indication_t
+ * \warning     FTDF is strictly NON reentrant. Because ftdf_rcv_msg can be called by ftdf_snd_msg or ftdf_event_handler
+ *              it is not allowed to call other FTDF functions within ftdf_rcv_msg
  */
-void            FTDF_RCV_MSG( FTDF_MsgBuffer* msgBuf );
+void FTDF_RCV_MSG(ftdf_msg_buffer_t *msg_buf);
 
 /**
  * \brief       FTDF_GET_MSG_BUFFER - Allocates a message buffer
  * \param[in]   len:      The length of the message buffer to be allocated
  * \remark      This function must be implemented by the application it will called by both the
  *              application and FTDF. It must be configured in the configuration file ftdf_config.h.
- * \remark      The allocated message buffer must be freed using FTDF_REL_MSG_BUFFER
+ * \remark      The allocated message buffer must be freed using ftdf_rel_msg_buffer
  * \remark      The message buffer must be located in retention RAM
  * \return      pointer to the allocated message buffer.
  */
-FTDF_MsgBuffer* FTDF_GET_MSG_BUFFER( FTDF_Size len );
+ftdf_msg_buffer_t *FTDF_GET_MSG_BUFFER(ftdf_size_t len);
 
 /**
  * \brief       FTDF_REL_MSG_BUFFER - Frees a message buffer
- * \param[in]   msgBuf:      Pointer to the message buffer to be released
+ * \param[in]   msg_buf:      Pointer to the message buffer to be released
  * \remark      This function must be implemented by the application it will called by both the
  *              application and FTDF. It must be configured in the configuration file ftdf_config.h.
- * \remark      It will free message buffers allocated with FTDF_GET_MSG_BUFFER
+ * \remark      It will free message buffers allocated with ftdf_get_msg_buffer
  */
-void            FTDF_REL_MSG_BUFFER( FTDF_MsgBuffer* msgBuf );
+void FTDF_REL_MSG_BUFFER(ftdf_msg_buffer_t *msg_buf);
 
 /**
  * \brief       FTDF_GET_DATA_BUFFER - Allocates a data buffer
@@ -2894,35 +2878,35 @@ void            FTDF_REL_MSG_BUFFER( FTDF_MsgBuffer* msgBuf );
  * \remark      The data buffer must located in retention RAM
  * \return      pointer to the allocated data buffer.
  */
-FTDF_Octet*     FTDF_GET_DATA_BUFFER( FTDF_DataLength len );
+ftdf_octet_t *FTDF_GET_DATA_BUFFER(ftdf_data_length_t len);
 
 /**
  * \brief       FTDF_REL_DATA_BUFFER - Frees a data buffer
- * \param[in]   dataBuf:      Pointer to the data buffer to be released
+ * \param[in]   data_buf:      Pointer to the data buffer to be released
  * \remark      This function must be implemented by the application it will called by both the
  *              application and FTDF. It must be configured in the configuration file ftdf_config.h.
  * \remark      It will free data buffers allocated with FTDF_GET_DATA_BUFFER
  */
-void            FTDF_REL_DATA_BUFFER( FTDF_Octet* dataBuf );
+void FTDF_REL_DATA_BUFFER(ftdf_octet_t *data_buf);
 
 /**
  * \brief       FTDF_GET_EXT_ADDRESS - Gets the extended address
  * \remark      This function must be implemented by the application it will called by FTDF. It must
  *              be configured in the configuration file ftdf_config.h.
  * \remark      After a reset it is used by FTDF to get the extended address of the device
- * \return      An extended address. 
+ * \return      An extended address.
  */
-FTDF_ExtAddress FTDF_GET_EXT_ADDRESS( void );
+ftdf_ext_address_t FTDF_GET_EXT_ADDRESS(void);
 
 /**
- * \brief       FTDF_enableTransparentMode - Enables or disables the transparent mode
+ * \brief       ftdf_enable_transparent_mode - Enables or disables the transparent mode
  * \param[in]   enable: If FTDF_TRUE transparent mode is enabled else it will be disabled
  * \param[in]   options: A bitmap of transparent mode options. Not used if enable equals to FTDF_FALSE.
  * \remark      If the transparent mode is enabled received frame are passed to the application using
  *              FTDF_RCV_FRAME_TRANSPARENT. The whole MAC frame including frame headers, security headers
  *              and FCS are passed to the application. Depending on the defined options some filtering
  *              is done.
- * \remark      When the transparent mode is enabled frames must be send using the function FTDF_sendFrameTransparent
+ * \remark      When the transparent mode is enabled frames must be send using the function FTDF_SEND_FRAME_TRANSPARENT
  * \remark      When the transparent mode is enabled only the following request messages are supported:
  * \remark      <br>
  * \remark      FTDF_GET_REQUEST
@@ -2951,73 +2935,73 @@ FTDF_ExtAddress FTDF_GET_EXT_ADDRESS( void );
  * \remark      FTDF_TRANSPARENT_PASS_CRC_ERROR: Frames with a CRC (FCS) error are passed to the application
  * \remark      FTDF_TRANSPARENT_PASS_ALL_FRAME_VERSION: Frames with any frame version are passed to the
  *              application
- * \remark      FTDF_TRANSPARENT_PASS_ALL_PAN_ID: Frames with any PAN ID (even when it does not match its own
- *              PAN ID) are passed to the application
+ * \remark      FTDF_TRANSPARENT_PASS_ALL_PAN_ID: Frames with any PAN id (even when it does not match its own
+ *              PAN id) are passed to the application
  * \remark      FTDF_TRANSPARENT_PASS_ALL_PAN_ID: Frames with any address (even when it does not match its own
  *              extended or short address) are passed to the application
  * \remark      FTDF_TRANSPARENT_PASS_ALL_BEACON: Any beacon frame is passed to the application
  * \remark      FTDF_TRANSPARENT_PASS_ALL_NO_DEST_ADDR: Frames with no destination address are always passed to
  *              the application
- * \remark      FTDF_TRANSPARENT_ENABLE_FCS_GENERATION: FTDF adds an FCS to frames send with FTDF_sendFrameTransparent
+ * \remark      FTDF_TRANSPARENT_ENABLE_FCS_GENERATION: FTDF adds an FCS to frames send with FTDF_SEND_FRAME_TRANSPARENT
  */
-void            FTDF_enableTransparentMode( FTDF_Boolean  enable,
-                                            FTDF_Bitmap32 options );
+void ftdf_enable_transparent_mode(ftdf_boolean_t  enable, ftdf_bitmap32_t options);
 
 /**
- * \brief       FTDF_sendFrameTransparent - Sends a frame transparent
- * \param[in]   frameLength:   Length of the MAC frame to be send
+ * \brief       ftdf_send_frame_transparent - Sends a frame transparent
+ * \param[in]   frame_length:  Length of the MAC frame to be send
  * \param[in]   frame:         Data buffer with the frame to be sent. Must be allocate using FTDF_GET_DATA_BUFFER
  * \param[in]   channel:       The channel used to send the frame
  * \param[in]   pti:           Packet Traffic Information used for transmitting the packet
- * \param[in]   cmsaSuppress:  If FTDF_TRUE no CSMA-CA is performed before sending the frame
+ * \param[in]   cmsa_suppress: If FTDF_TRUE no CSMA-CA is performed before sending the frame
  * \param[in]   handle:        A user defined handle.
- * \remark      FTDF sends the frame tarnsparently. That is the application has to compose the MAC frame header, 
+ * \remark      FTDF sends the frame tarnsparently. That is the application has to compose the MAC frame header,
  *              security header, etc and make sure that it complies with the IEEE802.15.4 standard. Before sending
  *              it FTDF adds the  preamble, frame start, phy header octets and optionally an FCS to the frame provide
  *              by the application.
  * \remark      When FTDF has send the frame or failed to send the frame it will call FTDF_SEND_FRAME_TRANSPARENT_CONFIRM
  *              with the handle provided by the application and the send status.
  */
-void FTDF_sendFrameTransparent( FTDF_DataLength    frameLength,
-                                FTDF_Octet*        frame,
-                                FTDF_ChannelNumber channel,
-                                FTDF_PTI           pti,
-                                FTDF_Boolean       cmsaSuppress,
-                                void*              handle );
+void ftdf_send_frame_transparent(ftdf_data_length_t    frame_length,
+                                 ftdf_octet_t          *frame,
+                                 ftdf_channel_number_t channel,
+                                 ftdf_pti_t            pti,
+                                 ftdf_boolean_t        cmsa_suppress,
+                                 void                  *handle);
 
 /**
  * \brief       FTDF_SEND_FRAME_TRANSPARENT_CONFIRM - Confirms a transparent send
- * \param[in]   handle:   The application provided handle of the corresponding FTDF_sendFrameTransparent call
+ * \param[in]   handle:   The application provided handle of the corresponding ftdf_send_frame_transparent call call
  * \param[in]   status:   Bit mapped status
  * \remark      This function must be implemented by the application it will called by FTDF. It must
  *              be configured in the configuration file ftdf_config.h.
  * \remark      FTDF calls this function when a frame has send successfully or failed to send. The application can
- *              now free the data buffer of the corresponding FTDF_sendFrameTransparent using FTDF_REL_DATA_BUFFER
+ *              now free the data buffer of the corresponding ftdf_send_frame_transparent call using ftdf_rel_data_buffer
  * \remark      If the frame is send successfully status is equal to 0
  * \remark      If sending the frame failed one of more of the following status bits is set:
  *              - FTDF_TRANSPARENT_CSMACA_FAILURE: Sending failed because CSMA-CA failed
  *              - FTDF_TRANSPARENT_OVERFLOW: Sending failed because of internal resource overflow
  */
-void FTDF_SEND_FRAME_TRANSPARENT_CONFIRM( void*         handle,
-                                          FTDF_Bitmap32 status );
+void FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(void *handle, ftdf_bitmap32_t status);
 
 /**
- * \brief       FTDF_sendFrameTransparentConfirm - Converts the FTDF_SEND_FRAME_TRANSPARENT_CONFIRM to a msg buffer
- *              and then calls FTDF_RCV_MSG.
- * \param[in]   handle:   The application provided handle of the corresponding FTDF_sendFrameTransparent call
+ * \brief       ftdf_send_frame_transparent_confirm - Converts the FTDF_SEND_FRAME_TRANSPARENT_CONFIRM to a msg buffer
+ *              and then calls ftdf_rcv_msg.
+ * \param[in]   handle:   The application provided handle of the corresponding ftdf_send_frame_transparent call
  * \param[in]   status:   Bit mapped status
- * \remark      This function converts the input parameters to a FTDF_TransparentConfirm structure
- *              and then calls FTDF_RCV_MSG.
+ * \remark      This function converts the input parameters to a ftdf_transparent_confirm_t structure
+ *              and then calls ftdf_rcv_msg.
  * \remark      FTDF_SEND_FRAME_TRANSPARENT_CONFIRM can be defined to be this function.
  */
-void FTDF_sendFrameTransparentConfirm( void*         handle,
-                                       FTDF_Bitmap32 status );
+void ftdf_send_frame_transparent_confirm(void *handle, ftdf_bitmap32_t status);
 
 /**
  * \brief       FTDF_RCV_FRAME_TRANSPARENT - Receive frame transparent
- * \param[in]   frameLength: Length of the received frame
- * \param[in]   frame:       Pointer to received frame. 
+ * \param[in]   frame_length: Length of the received frame
+ * \param[in]   frame:       Pointer to received frame.
  * \param[in]   status:      Bitmapped receive status
+ * \param[in]   link_quality: LQI/RSSI value for this packet. Depends on FTDF_PIB_LINK_QUALITY_MODE
+ *                            PIB parameter.
+ *
  * \remark      This function must be implemented by the application it will called by FTDF. It must
  *              be configured in the configuration file ftdf_config.h.
  * \remark      FTDF calls this function when a frame is received when transparent mode is enabled
@@ -3027,66 +3011,63 @@ void FTDF_sendFrameTransparentConfirm( void*         handle,
  *              - FTDF_TRANSPARENT_RCV_RES_FRAMETYPE: Received a reserved frame type
  *              - FTDF_TRANSPARENT_RCV_RES_FRAME_VERSION: Received a reserved frame version
  *              - FTDF_TRANSPARENT_RCV_UNEXP_DST_ADDR: Unexpected destination address
- *              - FTDF_TRANSPARENT_RCV_UNEXP_DST_PAN_ID: Unexpected destionation PAN ID
+ *              - FTDF_TRANSPARENT_RCV_UNEXP_DST_PAN_ID: Unexpected destionation PAN id
  *              - FTDF_TRANSPARENT_RCV_UNEXP_BEACON: Unexpected beacon frame
  *              - FTDF_TRANSPARENT_RCV_UNEXP_NO_DEST_ADDR: Unexpected frame without destination adres.
  */
-void FTDF_RCV_FRAME_TRANSPARENT( FTDF_DataLength frameLength,
-                                 FTDF_Octet*     frame,
-                                 FTDF_Bitmap32   status,
-                                 FTDF_LinkQuality lqi);
+void FTDF_RCV_FRAME_TRANSPARENT(ftdf_data_length_t frame_length, ftdf_octet_t *frame,
+                                ftdf_bitmap32_t status, ftdf_link_quality_t link_quality);
 
 /**
- * \brief       FTDF_rcvFrameTransparent - Converts the FTDF_RCV_FRAME_TRANSPARENT to a msg buffer
- *              and then calls FTDF_RCV_MSG.
- * \param[in]   frameLength: Length of the received frame
- * \param[in]   frame:       Pointer to received frame. 
+ * \brief       ftdf_rcv_frame_transparent - Converts the FTDF_RCV_FRAME_TRANSPARENT to a msg buffer
+ *              and then calls ftdf_rcv_msg.
+ * \param[in]   frame_length: Length of the received frame
+ * \param[in]   frame:       Pointer to received frame.
  * \param[in]   status:      Bitmapped receive status
- * \remark      This function convers the input parameters to a FTDF_TransparentIndication structure
- *              and then calls FTDF_RCV_MSG.
+ * \param[in]   link_quality: Received packet link quality (RSSI/LQI)
+ * \remark      This function convers the input parameters to a ftdf_transparent_indication_t structure
+ *              and then calls ftdf_rcv_msg.
  * \remark      FTDF_RCV_FRAME_TRANSPARENT can be defined to be this function.
  */
-void FTDF_rcvFrameTransparent( FTDF_DataLength frameLength,
-                               FTDF_Octet*     frame,
-                               FTDF_Bitmap32   status,
-                               FTDF_LinkQuality lqi);
+void ftdf_rcv_frame_transparent(ftdf_data_length_t frame_length, ftdf_octet_t *frame,
+                                ftdf_bitmap32_t status, ftdf_link_quality_t link_quality);
 
 /**
- * \brief       FTDF_setSleepAttributes - Set sleep atributes
- * \param[in]   lowPowerClockCycle: The LP clock cycle in picoseconds
- * \param[in]   wakeUpLatency:      The wakep up latency time in low power clock cycles
+ * \brief       ftdf_set_sleep_attributes - Set sleep atributes
+ * \param[in]   low_power_clock_cycle: The LP clock cycle in picoseconds
+ * \param[in]   wakeup_latency:      The wakep up latency time in low power clock cycles
  * \remark      This functions sets some attributes required by FTDF to go into a deep sleep and wake up from it.
  * \remark      The wake up latency is the time between the wakeup signal send by FTDF and the moment that the
  *              clocks are stable. It will be used by FTDF to determine when it must must send the wakeup signal.
- * \remark      The low power clock cycle will be used to determine how long the system has slept and recover 
+ * \remark      The low power clock cycle will be used to determine how long the system has slept and recover
  *              the symbol counter internally used by FTDF.
  */
-void FTDF_setSleepAttributes( FTDF_PSec                  lowPowerClockCycle,
-                              FTDF_NrLowPowerClockCycles wakeUpLatency );
+void ftdf_set_sleep_attributes(ftdf_psec_t low_power_clock_cycle,
+                               ftdf_nr_low_power_clock_cycles_t wakeup_latency);
 
 /**
- * \brief       FTDF_canSleep - Indicates whether FTDF can go in a deep sleep
+ * \brief       ftdf_can_sleep - Indicates whether FTDF can go in a deep sleep
  * \remark      This function returns the time in microseconds that the FTDF can deep sleep.
  * \remark      It does NOT take into account the wakeup latency.
  * \return      The number of microseconds that the FTDF can deep sleep. If equal to 0 the FTDF is still active
  *              and cannot deep sleep
  */
-FTDF_USec FTDF_canSleep( void );
+ftdf_usec_t ftdf_can_sleep(void);
 
 /**
- * \brief       FTDF_prepareForSleep - Prepare the FTDF for a deep sleep
- * \param[in]   sleepTime: The sleep time. After the sleep time the FTDF must be ready to do next scheduled activity.
+ * \brief       ftdf_prepare_for_sleep - Prepare the FTDF for a deep sleep
+ * \param[in]   sleep_time: The sleep time. After the sleep time the FTDF must be ready to do next scheduled activity.
  * \remark      When this function is completed the application can safely power off the FTDF and put the uP in
  *              a deep sleep. At least wake up latency time microseconds before sleep time is expired the FTDF
- *              will send a wakeup signal. FTDF expect that the application calls FTDF_wakeUp as it has been
+ *              will send a wakeup signal. FTDF expect that the application calls ftdf_wakeup as it has been
  *              woken up.
- * \return      FTDF_TRUE if the FTDF can be put in deep sleep, FTDF_FALSE if the sleepTime is too short to go to
- *              deep sleep and wake up again after sleepTime microseconds, the FTDF cannot be put in deep sleep.
+ * \return      FTDF_TRUE if the FTDF can be put in deep sleep, FTDF_FALSE if the sleep_time is too short to go to
+ *              deep sleep and wake up again after sleep_time microseconds, the FTDF cannot be put in deep sleep.
  */
-FTDF_Boolean FTDF_prepareForSleep( FTDF_USec sleepTime );
+ftdf_boolean_t ftdf_prepare_for_sleep(ftdf_usec_t sleep_time);
 
 /**
- * \brief       FTDF_wakeUp - Wake up the FTDF after a sleep
+ * \brief       ftdf_wakeup - Wake up the FTDF after a sleep
  * \remark      This function will restores the FTDF to state before the deep sleep. It will does this in 2 steps
  *              1. It initialises it internal states and data structures and all the non timing specific HW. After
  *              that it waits until the wake up latency time has been expired. When expired FTDF assumes that the
@@ -3094,7 +3075,7 @@ FTDF_Boolean FTDF_prepareForSleep( FTDF_USec sleepTime );
  *              2. It restores timers in HW and calls the function FTDF_WAKE_UP_READY to indicate FTDF is up again,
  *              ready to perform scheduled activities and ready to process new requests from the application.
  */
-void FTDF_wakeUp( void );
+void ftdf_wakeup(void);
 
 /**
  * \brief       FTDF_WAKE_UP_READY - Indication that FTDF has woke up
@@ -3103,48 +3084,53 @@ void FTDF_wakeUp( void );
  * \remark      FTDF calls this function when it is up again, ready to perform scheduled activities and ready to
  *              process new requests from the application.
  */
-void FTDF_WAKE_UP_READY( void );
+void FTDF_WAKE_UP_READY(void);
 
 /**
  * \brief       FTDF_SLEEP_CALLBACK - Callback from FTDF_SLEEP_REQUEST
  * \remark      This function must be implemented by the application, it will be called by FTDF.
  *              It must be configured in the configuration file ftdf_config.h
- * \remark      FTDF calls this function when an FTDF_SLEEP_REQUEST message is sent through the FTDF_sndMsg function.
+ * \remark      FTDF calls this function when an FTDF_SLEEP_REQUEST message is sent through the ftdf_snd_msg function.
  */
-void FTDF_SLEEP_CALLBACK( FTDF_USec sleepTime );
+void FTDF_SLEEP_CALLBACK(ftdf_usec_t sleep_time);
 
-void FTDF_reset(int setDefaultPIB);
+void ftdf_reset(int set_default_pib);
 
-FTDF_PTI FTDF_getRxPti( void );
+ftdf_pti_t ftdf_get_rx_pti(void);
 
-#if FTDF_USE_PTI
-void FTDF_setRxPti( FTDF_PTI rx_pti );
+
+#if dg_configCOEX_ENABLE_CONFIG
+void ftdf_set_rx_pti(ftdf_pti_t rx_pti);
 #if FTDF_USE_AUTO_PTI
-void FTDF_restoreRxPti(void);
+void ftdf_restore_rx_pti(void);
 #endif
 #endif
+
 
 #ifdef FTDF_PHY_API
-FTDF_Status FTDF_sendFrameSimple( FTDF_DataLength    frameLength,
-        FTDF_Octet*        frame,
-        FTDF_ChannelNumber channel,
-        FTDF_PTI           pti,
-        FTDF_Boolean       csmaSuppress);
-FTDF_PIBAttributeValue *FTDF_getValue(FTDF_PIBAttribute PIBAttribute);
-FTDF_Status FTDF_setValue(FTDF_PIBAttribute PIBAttribute, const FTDF_PIBAttributeValue *PIBAttributeValue);
-void FTDF_rxEnable(FTDF_Time rxOnDuration);
+ftdf_status_t ftdf_send_frame_simple(ftdf_data_length_t    frame_length,
+                                     ftdf_octet_t          *frame,
+                                     ftdf_channel_number_t channel,
+                                     ftdf_pti_t            pti,
+                                     ftdf_boolean_t        csmaSuppress);
+
+ftdf_pib_attribute_value_t *ftdf_get_value(ftdf_pib_attribute_t pib_attribute);
+ftdf_status_t ftdf_set_value(ftdf_pib_attribute_t             pib_attribute,
+                             const ftdf_pib_attribute_value_t *pib_attribute_value);
+
+void ftdf_rx_enable(ftdf_time_t rx_on_duration);
 #endif /* FTDF_PHY_API */
 
 #if FTDF_DBG_BUS_ENABLE
 /**
  * \brief Checks current debug mode and makes appropriate hardware configurations.
  */
-void FTDF_checkDbgMode(void);
+void ftdf_check_dbg_mode(void);
 
 /**
  * \brief Sets debug bus mode.
  */
-void FTDF_setDbgMode(FTDF_DbgMode dbgMode);
+void ftdf_set_dbg_mode(ftdf_dbg_mode_t dbg_mode);
 
 /**
  * \brief Debug bus GPIO configuration callback. Makes appropriate GPIO configurations for the debug
@@ -3154,10 +3140,8 @@ void FTDF_DBG_BUS_GPIO_CONFIG(void);
 #endif /* FTDF_DBG_BUS_ENABLE */
 
 #if dg_configUSE_FTDF_DDPHY == 1
-void FTDF_ddphySet(uint16_t ccaReg);
+void ftdf_ddphy_set(uint16_t cca_reg);
 #endif /* dg_configUSE_FTDF_DDPHY == 1 */
-
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
 
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
 #ifndef FTDF_LITE
@@ -3175,62 +3159,62 @@ void FTDF_ddphySet(uint16_t ccaReg);
  *
  * A short address FP FSM accepts the following notifications (events):
  *
- * - New address (initialize) by calling @ref FTDF_fpFsmShortAddressNew()
+ * - New address (initialize) by calling @ref ftdf_fp_fsm_short_address_new()
  * - Last frame pending (passed to direct sending) by calling @ref
- * FTDF_fpFsmShortAddressLastFramePending()
- * - Last pending frame sent by calling @ref FTDF_fpFsmClearPending()
+ * ftdf_fp_fsm_short_address_last_frame_pending()
+ * - Last pending frame sent by calling @ref ftdf_fp_fsm_clear_pending()
  *
  * A new address may be rejected if there is no adequate space left in FPPR.
  *
- * \param [in] panId Destination PAN ID.
- * \param [in] shortAddress Destination short address.
+ * \param [in] pan_id Destination PAN ID.
+ * \param [in] short_address Destination short address.
  *
  * \return \ref FTDF_TRUE on success.
  */
-FTDF_Boolean FTDF_fpFsmShortAddressNew(FTDF_PANId panId, FTDF_ShortAddress shortAddress);
+ftdf_boolean_t ftdf_fp_fsm_short_address_new(ftdf_pan_id_t pan_id, ftdf_short_address_t short_address);
 
 /**
  * \brief Adds a new extended address to FPPR, initializing the corresponding FSM.
  *
  * An extended address FP FSM accepts the following notifications (events):
  *
- * - New address (initialize) by calling @ref FTDF_fpFsmExtAddressNew()
+ * - New address (initialize) by calling @ref ftdf_fp_fsm_rxt_address_new()
  * - Last frame pending (passed to direct sending) by calling @ref
- * FTDF_fpFsmExtAddressLastFramePending()
- * - Last pending frame sent by calling @ref FTDF_fpFsmClearPending()
+ * ftdf_fp_fsm_ext_address_last_frame_pending()
+ * - Last pending frame sent by calling @ref ftdf_fp_fsm_clear_pending()
  *
  * A new address may be rejected if there is no adequate space left in FPPR.
  *
- * \param [in] panId Destination PAN ID.
- * \param [in] extAddress Destination extended address.
+ * \param [in] pan_id Destination PAN ID.
+ * \param [in] ext_address Destination extended address.
  *
  * \return \ref FTDF_TRUE on success.
  */
-FTDF_Boolean FTDF_fpFsmExtAddressNew(FTDF_PANId panId, FTDF_ExtAddress extAddress);
+ftdf_boolean_t ftdf_fp_fsm_rxt_address_new(ftdf_pan_id_t pan_id, ftdf_ext_address_t ext_address);
 
 /**
  * \brief Notifies FP FSM that the last packet for the associated destination has been passed for
  * direct transmission.
  *
- * \param [in] panId Destination PAN ID.
- * \param [in] shortAddress Destination short address.
+ * \param [in] pan_id Destination PAN ID.
+ * \param [in] short_address Destination short address.
  */
-void FTDF_fpFsmShortAddressLastFramePending(FTDF_PANId panId, FTDF_ShortAddress shortAddress);
+void ftdf_fp_fsm_short_address_last_frame_pending(ftdf_pan_id_t pan_id, ftdf_short_address_t short_address);
 
 /**
  * \brief Notifies FP FSM that the last packet for the associated destination has been passed for
  * direct transmission.
  *
- * \param [in] panId Destination PAN ID.
- * \param [in] shortAddress Destination extended address.
+ * \param [in] pan_id Destination PAN ID.
+ * \param [in] ext_address Destination extended address.
  */
-void FTDF_fpFsmExtAddressLastFramePending(FTDF_PANId panId, FTDF_ExtAddress extAddress);
+void ftdf_fp_fsm_ext_address_last_frame_pending(ftdf_pan_id_t pan_id, ftdf_ext_address_t ext_address);
 
 /**
  * \brief Notifies FP FSM that the last pending packet has been transmitted (UMAC state machine
  * closed).
  */
-void FTDF_fpFsmClearPending(void);
+void ftdf_fp_fsm_clear_pending(void);
 
 #endif /* #ifndef FTDF_LITE */
 
@@ -3252,47 +3236,47 @@ void FTDF_fpFsmClearPending(void);
 /**
  * \brief Resets FPPR table, invalidating all addresses.
  */
-void FTDF_fpprReset(void);
+void ftdf_fppr_reset(void);
 
 /**
  * \brief Gets the short address programmed at the specified FPPR table position.
  *
  * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
- * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
+ * \param [in] short_addr_idx Short address position within the entry (0 to 3).
  *
  * \return Requested short address
  */
-FTDF_ShortAddress FTDF_fpprGetShortAddress(uint8_t entry, uint8_t shortAddrIdx);
+ftdf_short_address_t ftdf_fppr_get_short_address(uint8_t entry, uint8_t short_addr_idx);
 
 /**
  * \brief Programs a short address programmed at the specified FPPR table position.
  *
  * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
- * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
- * \param [in] Associated short address.
+ * \param [in] short_addr_idx Short address position within the entry (0 to 3).
+ * \param [in] short_address short address.
  */
-void FTDF_fpprSetShortAddress(uint8_t entry, uint8_t shortAddrIdx,
-        FTDF_ShortAddress shortAddress);
+void ftdf_fppr_set_short_address(uint8_t entry, uint8_t short_addr_idx,
+                                 ftdf_short_address_t short_address);
 
 /**
  * \brief Determines validity of a short address programmed at the specified FPPR table position.
  *
  * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
- * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
+ * \param [in] short_addr_idx Short address position within the entry (0 to 3).
  *
  * \return FTDF_TRUE if the address is valid.
  */
-FTDF_Boolean FTDF_fpprGetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx);
+ftdf_boolean_t ftdf_fppr_get_short_address_valid(uint8_t entry, uint8_t short_addr_idx);
 
 /**
  * \brief Sets validity of a short address programmed at the specified FPPR table position.
  *
  * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
- * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
+ * \param [in] short_addr_idx Short address position within the entry (0 to 3).
  * \param [in] valid Associated validity.
  */
-void FTDF_fpprSetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx,
-        FTDF_Boolean valid);
+void ftdf_fppr_set_short_address_valid(uint8_t entry, uint8_t short_addr_idx,
+                                       ftdf_boolean_t valid);
 
 /**
  * \brief Gets the extended address programmed at the specified FPPR table position.
@@ -3301,15 +3285,15 @@ void FTDF_fpprSetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx,
  *
  * \return Requested extended address
  */
-FTDF_ExtAddress FTDF_fpprGetExtAddress(uint8_t entry);
+ftdf_ext_address_t ftdf_fppr_get_ext_address(uint8_t entry);
 
 /**
  * \brief Programs an extended address programmed at the specified FPPR table position.
  *
  * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
- * \param [in] Associated extended address.
+ * \param [in] ext_address Associated extended address.
  */
-void FTDF_fpprSetExtAddress(uint8_t entry, FTDF_ExtAddress extAddress);
+void ftdf_fppr_set_ext_address(uint8_t entry, ftdf_ext_address_t ext_address);
 
 /**
  * \brief Determines validity of an extended address programmed at the specified FPPR table
@@ -3319,7 +3303,7 @@ void FTDF_fpprSetExtAddress(uint8_t entry, FTDF_ExtAddress extAddress);
  *
  * \return \ref FTDF_TRUE if the address is valid.
  */
-FTDF_Boolean FTDF_fpprGetExtAddressValid(uint8_t entry);
+ftdf_boolean_t ftdf_fppr_get_ext_address_valid(uint8_t entry);
 
 /**
  * \brief Sets validity of an extended address programmed at the specified FPPR table position.
@@ -3327,18 +3311,17 @@ FTDF_Boolean FTDF_fpprGetExtAddressValid(uint8_t entry);
  * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
  * \param [in] valid Associated validity.
  */
-void FTDF_fpprSetExtAddressValid(uint8_t entry, FTDF_Boolean valid);
+void ftdf_fppr_set_ext_address_valid(uint8_t entry, ftdf_boolean_t valid);
 
 /**
  * \brief Gets a free (invalid) short address position in the FPPR table.
  *
  * \param [out] entry Reference to the FPPR table entry.
- * \param [out] shortAddrIdx Reference to the short address position within the entry.
+ * \param [out] short_addr_idx Reference to the short address position within the entry.
  *
  * \return \ref FTDF_TRUE if a free position was found.
  */
-FTDF_Boolean FTDF_fpprGetFreeShortAddress(uint8_t * entry,
-        uint8_t * shortAddrIdx);
+ftdf_boolean_t ftdf_fppr_get_free_short_address(uint8_t * entry, uint8_t *short_addr_idx);
 
 /**
  * \brief Gets a free (invalid) extended address position in the FPPR table.
@@ -3347,57 +3330,57 @@ FTDF_Boolean FTDF_fpprGetFreeShortAddress(uint8_t * entry,
  *
  * \return \ref FTDF_TRUE if a free position was found.
  */
-FTDF_Boolean FTDF_fpprGetFreeExtAddress(uint8_t * entry);
+ftdf_boolean_t ftdf_fppr_get_free_ext_address(uint8_t * entry);
 
 /**
  * \brief Looks up a short address within the FPPR table.
  *
  * \param [in] shortAddr Associated short address.
  * \param [out] entry Reference to the FPPR table entry.
- * \param [out] shortAddrIdx Reference to the short address position within the entry.
+ * \param [out] short_addr_idx Reference to the short address position within the entry.
  *
  *  * \return \ref FTDF_TRUE if the address was found.
  */
-FTDF_Boolean FTDF_fpprLookupShortAddress(FTDF_ShortAddress shortAddr, uint8_t * entry,
-        uint8_t * shortAddrIdx);
+ftdf_boolean_t ftdf_fppr_lookup_short_address(ftdf_short_address_t shortAddr, uint8_t *entry,
+                                           uint8_t *short_addr_idx);
 
 /**
  * \brief Looks up an extended address within the FPPR table.
  *
- * \param [in] extAddr Associated extended address.
+ * \param [in] ext_addr Associated extended address.
  * \param [out] entry Reference to the FPPR table entry.
  *
  *  * \return \ref FTDF_TRUE if the address was found.
  */
-FTDF_Boolean FTDF_fpprLookupExtAddress(FTDF_ExtAddress extAddr, uint8_t * entry);
+ftdf_boolean_t ftdf_fppr_lookup_ext_address(ftdf_ext_address_t ext_addr, uint8_t *entry);
 
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
 
 /**
  * \brief Sets FPPR mode.
  *
- * \param [in] matchFp Specifies the value of the FP bit when acknowledging a received frame with a
+ * \param [in] match_fp Specifies the value of the FP bit when acknowledging a received frame with a
  * source address that matches a valid a address in the FPPR table. The opposite value is set if the
- * source address does not match. Ignored if \a fpOverride is \ref FTDF_TRUE.
+ * source address does not match. Ignored if \a fp_override is \ref FTDF_TRUE.
  *
- * \param [in] fpOverride If \ref FTDF_TRUE, the value of \a fpForce is used for setting the FP bit,
+ * \param [in] fp_override If \ref FTDF_TRUE, the value of \a fp_force is used for setting the FP bit,
  * regardless of the address table matching result.
  *
- * \param [in] fpForce FP bit value when fpOverride is \ref FTDF_TRUE. Ignored otherwise.
+ * \param [in] fp_force FP bit value when fp_override is \ref FTDF_TRUE. Ignored otherwise.
  */
-void FTDF_fpprSetMode(FTDF_Boolean matchFp, FTDF_Boolean fpOverride, FTDF_Boolean fpForce);
+void ftdf_fppr_set_mode(ftdf_boolean_t match_fp, ftdf_boolean_t fp_override, ftdf_boolean_t fp_force);
 
 #if FTDF_FP_BIT_TEST_MODE
 /**
  * \brief Gets FPPR mode.
  *
- * \param [out] matchFp Reference to the returned value. \see FTDF_fpprRamSetMode
+ * \param [out] match_fp Reference to the returned value. \see FTDF_fpprRamSetMode
  *
- * \param [out] fpOverride Reference to the returned value. \see FTDF_fpprRamSetMode
+ * \param [out] fp_override Reference to the returned value. \see FTDF_fpprRamSetMode
  *
- * \param [out] fpForce FP Reference to the returned value. \see FTDF_fpprRamSetMode
+ * \param [out] fp_force FP Reference to the returned value. \see FTDF_fpprRamSetMode
  */
-void FTDF_fpprGetMode(FTDF_Boolean * matchFp, FTDF_Boolean * fpOverride, FTDF_Boolean * fpForce);
+void ftdf_fppr_get_mode(ftdf_boolean_t *match_fp, ftdf_boolean_t *fp_override, ftdf_boolean_t *fp_force);
 #endif //FTDF_FP_BIT_TEST_MODE
 
 #if FTDF_USE_LPDP == 1
@@ -3407,7 +3390,7 @@ void FTDF_fpprGetMode(FTDF_Boolean * matchFp, FTDF_Boolean * fpOverride, FTDF_Bo
  *
  * \param [in] enable if FTDF_TRUE, LPDP functionality is enabled.
  */
-void FTDF_lpdpEnable(FTDF_Boolean enable);
+void ftdf_lpdp_enable(ftdf_boolean_t enable);
 
 #if FTDF_FP_BIT_TEST_MODE
 /**
@@ -3415,11 +3398,10 @@ void FTDF_lpdpEnable(FTDF_Boolean enable);
  *
  * \return FTDF_TRUE, if LPDP functionality is enabled.
  */
-FTDF_Boolean FTDF_lpdpIsEnabled(void);
+ftdf_boolean_t ftdf_lpdp_is_enabled(void);
 #endif
 
 #endif /* #if FTDF_USE_LPDP == 1 */
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 
 #endif /* FTDF_H_ */
 

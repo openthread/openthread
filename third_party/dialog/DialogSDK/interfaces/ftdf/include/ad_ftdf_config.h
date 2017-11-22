@@ -7,6 +7,7 @@
 
 /**
  ****************************************************************************************
+ *
  * @file ad_ftdf_config.h
  *
  * @brief FTDF Adapter API
@@ -105,7 +106,7 @@
  * \brief Sleep value compensation
  *
  * Defines the sleep value compensation expressed in microseconds. This value
- * is subtracted from the sleep time returned by FTDF_canSleep( )
+ * is subtracted from the sleep time returned by ftdf_can_sleep()
  */
 #define AD_FTDF_SLEEP_COMPENSATION 1500
 

@@ -9,7 +9,7 @@
 */
 
 /**
-****************************************************************************************
+ ****************************************************************************************
  *
  * @file hw_cpm.h
  *
@@ -40,8 +40,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
-****************************************************************************************
-*/
+ ****************************************************************************************
+ */
 
 #ifndef CPM_H_
 #define CPM_H_
@@ -50,15 +50,49 @@
 
 #include "sdk_defs.h"
 
-#define SYS_CLK_IS_XTAL16M              (0)
-#define SYS_CLK_IS_RC16                 (1)
-#define SYS_CLK_IS_LP                   (2)
-#define SYS_CLK_IS_PLL                  (3)
 
+/**
+ * \addtogroup CLOCK_TYPES
+ * \brief Clock types
+ * \note These macros must only be used with hw_cpm_set_sysclk().
+ * \{
+ */
+
+/**
+ * \brief System crystal oscillator 16 MHz
+ */
+#define SYS_CLK_IS_XTAL16M              (0)
+/**
+ * \brief System RC oscillator 16 MHz
+ */
+#define SYS_CLK_IS_RC16                 (1)
+/**
+ * \brief System Low Power clock
+ */
+#define SYS_CLK_IS_LP                   (2)
+/**
+ * \brief System PLL
+ */
+#define SYS_CLK_IS_PLL                  (3)
+/**
+ * \brief Low Power RC oscillator 32 kHz
+ */
 #define LP_CLK_IS_RC32K                 (0)
+/**
+ * \brief Low Power RC oscillator 11.7 kHz
+ */
 #define LP_CLK_IS_RCX                   (1)
+/**
+ * \brief Low Power crystal oscillator 32 kHz
+ */
 #define LP_CLK_IS_XTAL32K               (2)
+/**
+ * \brief Low Power external clock
+ */
 #define LP_CLK_IS_EXTERNAL              (3)
+/**
+ * \}
+ */
 
 #define DCDC_IS_READY \
         (REG_MSK(DCDC, DCDC_STATUS_1_REG, DCDC_VDD_AVAILABLE))
@@ -75,6 +109,7 @@ typedef enum cal_clk_cel_type {
 
 /**
  * \brief The system clock type
+ * \note Must only be used with functions cm_sys_clk_init/set()
  *
  */
 typedef enum sysclk_type {
@@ -282,7 +317,7 @@ __STATIC_INLINE void hw_cpm_deactivate_bod_protection(void)
 }
 
 /**
- * \brief Activate BOD protection for 1V4 rail (only for DA14682/3-BA chips!).
+ * \brief Activate BOD protection for 1V4 rail (only for DA14682/3-00, DA15XXX-00 chips!).
  *
  */
 __STATIC_INLINE void hw_cpm_activate_1v4_bod_protection(void) __attribute__((always_inline));
@@ -295,7 +330,7 @@ __STATIC_INLINE void hw_cpm_activate_1v4_bod_protection(void)
 }
 
 /**
- * \brief Deactivate BOD protection for 1V4 rail (only for DA14682/3-BA chips!).
+ * \brief Deactivate BOD protection for 1V4 rail (only for DA14682/3-00, DA15XXX-00 chips!).
  *
  */
 __STATIC_INLINE void hw_cpm_deactivate_1v4_bod_protection(void) __attribute__((always_inline));

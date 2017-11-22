@@ -15,14 +15,6 @@
  *
  * @brief Access QSPI flash when running in auto mode
  *
- * The QSPI controller allows to execute code directly from QSPI flash.
- * When code is executing from flash, it is not possible to reprogram the flash.
- * To be able to modify the flash when it is used for code execution, it must me assured that
- * for the time needed to erase/write, no code is running from flash.
- * To achieve this, the code in this module is executed from the RAM.
- * Code in this module will not access any other functions or constant variables that could reside
- * in flash.
- *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -70,15 +62,11 @@
 #define __DBG_QSPI_VOLATILE__
 #endif
 
-
 /*
  * Defines (generic)
  */
 
 /* Macros to put functions that need to be copied to ram in one section (retained) */
-#define QSPI_SECTION              __attribute__((section ("text_retained"), optimize ("no-tree-switch-conversion")))
-#define QSPI_SECTION_NO_INLINE    __attribute__ ((section ("text_retained"))) __attribute__ ((noinline))
-
 typedef struct qspi_ucode_s {
        const uint32_t *code;
        uint8_t size;
@@ -182,12 +170,12 @@ static inline const void *qspi_automode_addr(uint32_t addr)
 /**
  * \brief Power up flash
  */
-QSPI_SECTION void qspi_automode_flash_power_up(void);
+__RETAINED_CODE void qspi_automode_flash_power_up(void);
 
 /**
  * \brief Set QSPI Flash into power down mode
  */
-QSPI_SECTION void qspi_automode_flash_power_down(void);
+__RETAINED_CODE void qspi_automode_flash_power_down(void);
 
 /**
  * \brief Init QSPI controller
