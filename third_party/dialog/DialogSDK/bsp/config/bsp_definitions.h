@@ -126,7 +126,7 @@
 #define BLACK_ORCA_MB_REV_D             2
 
 /*
- * The cache associtivity options.
+ * The cache associativity options.
  */
 #define CACHE_ASSOC_AS_IS               (-1)    /// leave as set by the ROM booter
 #define CACHE_ASSOC_DIRECT_MAP          0       /// direct-mapped

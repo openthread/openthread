@@ -174,7 +174,7 @@
 #endif
 
 /**
- * \brief When set to 1, the chip version (DA14680/1-01 or DA14682/3-BA ) will be detected\n
+ * \brief When set to 1, the chip version (DA14680/1-01 or DA14682/3-00, DA15XXX-00 ) will be detected\n
  *        automatically.
  * \note It cannot be used in BLE applications because of the different linker scripts\n
  *       that are used.
@@ -617,7 +617,7 @@
 #endif
 
 /**
- * \brief Watchdog Service 
+ * \brief Watchdog Service
  *
  * - 1: enabled
  * - 0: disabled
@@ -782,7 +782,7 @@
 #endif
 
 /**
- * \brief When set to 1, the USB interface is used.
+ * \brief When set to 1, the USB interface is used for data transfers.
  *
  * \bsp_default_note{\bsp_config_option_app,}
  */
@@ -1056,7 +1056,7 @@
  * This is a deprecated configuration hence not to be defined by an application.
  * When entering hibernation mode then:
  * A DA14680/1-01 system reboots only via an interrupt from the WKUP Ctrl or VBUS.
- * A DA14682/3-BA system reboots only via an interrupt from the WKUP Ctrl.
+ * A DA14682/3-00, DA15XXX-00 system reboots only via an interrupt from the WKUP Ctrl.
  */
 #ifdef dg_configLOW_VBAT_HANDLING
 #error "Configuration option dg_configLOW_VBAT_HANDLING is no longer supported."
@@ -1471,6 +1471,16 @@
                                         (SW_CURSOR_PORT == 2 ? &(GPIO->P2_RESET_DATA_REG) :   \
                                         (SW_CURSOR_PORT == 3 ? &(GPIO->P3_RESET_DATA_REG) :   \
                                                                &(GPIO->P4_RESET_DATA_REG)))))
+/**
+ * \brief Enable task monitoring.
+ *
+ * \note Task monitoring can only be enabled if RTT or RETARGET is enabled
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configENABLE_TASK_MONITORING
+#define dg_configENABLE_TASK_MONITORING        (0)
+#endif
+
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
@@ -1548,7 +1558,13 @@
 /* ------------------------------- Arbiter configuration settings ------------------------------- */
 
 /**
- * \brief Custom arbiter configuration support.
+ * \brief Custom arbiter configuration support
+ * When defined, coex is configurable and priorities can be set:
+ * -either manually, per mac, using coex api
+ * -or automatically, by the PTIs provided by each mac
+ *
+ * When not defined, coex operates with the default/fixed priority scheme:
+ * BLE traffic has always higher priority than FTDF.
  *
  * \bsp_default_note{\bsp_config_option_app,}
  */
@@ -1563,6 +1579,32 @@
  */
 #ifndef dg_configCOEX_ENABLE_STATS
 #define dg_configCOEX_ENABLE_STATS      (0)
+#endif
+
+/**
+ * \brief Arbiter diagnostics enable
+ *
+ * This automatically enables arbiter diagnostic signals (when RF PD is on)
+ *
+ * See hw_coex.h for more information.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configCOEX_ENABLE_DIAGS
+#define dg_configCOEX_ENABLE_DIAGS      (0)
+#endif
+
+/**
+ * \brief Arbiter diagnostics mode
+ *
+ * This is the default mode for arbiter diagnostics.
+ *
+ * See hw_coex.h for more information.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configCOEX_DIAGS_MODE
+#define dg_configCOEX_DIAGS_MODE        (HW_COEX_DIAG_MODE_3)
 #endif
 /* ---------------------------------------------------------------------------------------------- */
 
@@ -1716,11 +1758,84 @@
 #ifndef dg_configUSE_IF_PDM
 #define dg_configUSE_IF_PDM             (0)
 #endif
+
+/* ---------------------------------------------------------------------------------------------- */
+
+
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
  * \}
  */
+
+/* ------------------------------- USB settings ------------------------------------------------ */
+
+/**
+ * \addtogroup USB_SETTINGS
+ *
+ * \brief USB DMA enable configuration settings
+ *
+ * The macros in this section are used to enable the DMA with USB and to define the two possible end point to use the DMA for data transfers.
+ * \{
+ */
+
+/**
+ * \brief Enable the DMA for reading/writing data to USB EP.\n
+ * By default the USB DMA is not enabled.\n
+ * To enable the DMA for the USB, set this the macro to value (1) in the custom_config_xxx.h file.\n
+ * When the USB DMA is enabled, the default end points with DMA are EP1 and EP2. \n
+ * It is possible only one TX and one RX end point to use DMA.\n
+ * User can choose a different pair of end points to use the DMA as needed according to app requirements.\n
+ * To change the end points using DMA, set in the the custom_config_xxx.h file the desired values for the macros:
+ * \par \c dg_configUSB_TX_DMA_EP
+ * valid values: 1,3,5\n
+ * default value: 1
+ * \par \c dg_configUSB_RX_DMA_EP
+ * valid values: 2,4,6\n
+ * default value: 2
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configUSB_DMA_SUPPORT
+#define dg_configUSB_DMA_SUPPORT                (0)
+#endif
+
+
+/**
+ * \brief The USB TX end point (D-->H) to enable the DMA.\n
+ * User can choose a different pair of end points to use the DMA as needed according to app requirements.\n
+ * To change the TX end point using DMA, set in the the custom_config_xxx.h file the desired value for this macros.
+ * \par \c dg_configUSB_TX_DMA_EP
+ * valid values: 1,3,5\n
+ * default value: 1
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configUSB_TX_DMA_EP
+#define  dg_configUSB_TX_DMA_EP                 (1)
+#endif
+
+/**
+ * \brief The USB RX end point (D-->H) to enable the DMA.\n
+ * User can choose a different pair of end points to use the DMA as needed according to app requirements.\n
+ * To change the RX end point using DMA, set in the the custom_config_xxx.h file the desired value for this macros.
+ * \par \c dg_configUSB_RX_DMA_EP
+ * valid values: 2,4,6\n
+ * default value: 2
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configUSB_RX_DMA_EP
+#define  dg_configUSB_RX_DMA_EP                 (2)
+#endif
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/**
+ * \}
+ */
+
+
 
 /* ------------------------------- WKUP settings ------------------------------------------------ */
 
@@ -1744,7 +1859,7 @@
  * \brief WKUP latch wakeup (io) source support
  *
  * \note In chip revision DA14680/1-01, this feature is implemented in s/w
- * \note In chip revision DA14682/3-BA, this feature is implemented in h/w
+ * \note In chip revision DA14682/3-00, DA15XXX-00, this feature is implemented in h/w
  *
  * \bsp_default_note{\bsp_config_option_app,}
  */
@@ -2464,7 +2579,573 @@
 
 /* ---------------------------------------------------------------------------------------------- */
 
+/* ---------------------------------- MEMORY LAYOUT CONFIGURATION ------------------------------- */
 
+/**
+ * \addtogroup MEMORY_LAYOUT_SETTINGS
+ *
+ * \brief Memory layout configuration settings.
+ * \{
+ */
+
+/**
+ * \brief Controls the retention RAM optimization.
+ *
+ * - 0 : All RAM is retained.
+ * - 1 : Retention memory size is optimal.
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configOPTIMAL_RETRAM
+#define dg_configOPTIMAL_RETRAM                 (0)
+#endif
+/**
+ * \addtogroup OTP_PROJECT_MEMORY_LAYOUT_SETTINGS
+ *
+ * \brief Memory layout configuration settings for a OTP project.
+ * \{
+ */
+
+/**
+ * \brief Code size in OTP projects, no product specific.
+ *
+ * \note Code size cannot be more than 58K.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CODE_SIZE
+#define dg_configOTP_CODE_SIZE                                  ( 58 * 1024)
+#endif
+
+/**
+ * \brief RAM-block size in cached mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RAM_SIZE
+#define dg_configOTP_CACHED_RAM_SIZE                            (64 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in cached mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RETRAM_0_SIZE
+#define dg_configOTP_CACHED_RETRAM_0_SIZE                       ( 64 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in cached mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RETRAM_1_SIZE
+#define dg_configOTP_CACHED_RETRAM_1_SIZE                       (  0 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in mirror mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RETRAM_0_SIZE
+#define dg_configOTP_MIRROR_RETRAM_0_SIZE                       ( 48 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in mirror mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RETRAM_1_SIZE
+#define dg_configOTP_MIRROR_RETRAM_1_SIZE                       (  0 * 1024)
+#endif
+
+
+
+/**
+ * \brief Retained-RAM-0-block size for optimal retention memory in cached mode, no product specific.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configOTP_CACHED_OPTIMAL_RETRAM_0_SIZE
+#define dg_configOTP_CACHED_OPTIMAL_RETRAM_0_SIZE               ( 32 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size for optimal retention memory in cached mode, no product specific.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configOTP_CACHED_OPTIMAL_RETRAM_1_SIZE
+#define dg_configOTP_CACHED_OPTIMAL_RETRAM_1_SIZE               ( 32 * 1024)
+#endif
+
+/**
+ * \brief RAM-block size in mirror mode, no product specific.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RAM_SIZE
+#define dg_configOTP_MIRROR_RAM_SIZE                            ( 16 * 1024)
+#endif
+
+/**
+ * \brief Code size in OTP projects for DA14680/1-01.
+ *
+ * \note Code size cannot be more than 58K.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CODE_SIZE_AE
+#define dg_configOTP_CODE_SIZE_AE dg_configOTP_CODE_SIZE
+#endif
+
+/**
+ * \brief Code size in OTP projects for  DA14682/3-00, DA15XXX-00.
+ *
+ * \note Code size cannot be more than 58K.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CODE_SIZE_BB
+#define dg_configOTP_CODE_SIZE_BB dg_configOTP_CODE_SIZE
+#endif
+
+/**
+ * \brief RAM-block size in cached mode for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RAM_SIZE_AE
+#define dg_configOTP_CACHED_RAM_SIZE_AE dg_configOTP_CACHED_RAM_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in cached mode for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RETRAM_0_SIZE_AE
+#define dg_configOTP_CACHED_RETRAM_0_SIZE_AE dg_configOTP_CACHED_RETRAM_0_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in cached mode for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RETRAM_1_SIZE_AE
+#define dg_configOTP_CACHED_RETRAM_1_SIZE_AE dg_configOTP_CACHED_RETRAM_1_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size for optimal retention memory in cached mode for DA14680/1-01.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configOTP_CACHED_OPTIMAL_RETRAM_0_SIZE_AE
+#define dg_configOTP_CACHED_OPTIMAL_RETRAM_0_SIZE_AE dg_configOTP_CACHED_OPTIMAL_RETRAM_0_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size for optimal retention memory in cached mode for DA14680/1-01.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configOTP_CACHED_OPTIMAL_RETRAM_1_SIZE_AE
+#define dg_configOTP_CACHED_OPTIMAL_RETRAM_1_SIZE_AE dg_configOTP_CACHED_OPTIMAL_RETRAM_1_SIZE
+#endif
+
+/**
+ * \brief RAM-block size in cached mode for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RAM_SIZE_BB
+#define dg_configOTP_CACHED_RAM_SIZE_BB dg_configOTP_CACHED_RAM_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in cached mode for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RETRAM_0_SIZE_BB
+#define dg_configOTP_CACHED_RETRAM_0_SIZE_BB dg_configOTP_CACHED_RETRAM_0_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in cached mode for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_CACHED_RETRAM_1_SIZE_BB
+#define dg_configOTP_CACHED_RETRAM_1_SIZE_BB dg_configOTP_CACHED_RETRAM_1_SIZE
+#endif
+
+/**
+ * \brief RAM-block size in mirror mode for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RAM_SIZE_AE
+#define dg_configOTP_MIRROR_RAM_SIZE_AE dg_configOTP_MIRROR_RAM_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in mirror mode for DA14680/1-01
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RETRAM_1_SIZE_AE
+#define dg_configOTP_MIRROR_RETRAM_1_SIZE_AE  dg_configOTP_MIRROR_RETRAM_1_SIZE
+#endif
+
+/**
+ * \brief RAM-block size in mirror mode for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RAM_SIZE_BB
+#define dg_configOTP_MIRROR_RAM_SIZE_BB dg_configOTP_MIRROR_RAM_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in mirror mode for DA14682/3-00, DA15XXX-00
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RETRAM_0_SIZE_BB
+#define dg_configOTP_MIRROR_RETRAM_0_SIZE_BB dg_configOTP_MIRROR_RETRAM_0_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in mirror mode for DA14682/3-00, DA15XXX-00
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configOTP_MIRROR_RETRAM_1_SIZE_BB
+#define dg_configOTP_MIRROR_RETRAM_1_SIZE_BB dg_configOTP_MIRROR_RETRAM_1_SIZE
+#endif
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/**
+ * \}
+ */
+
+/**
+ * \addtogroup QSPI_PROJECT_MEMORY_LAYOUT_SETTINGS
+ *
+ * \brief Memory layout configuration settings for a QSPI project
+ * \{
+ */
+
+/**
+ * \brief Code size in QSPI projects, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CODE_SIZE
+#define dg_configQSPI_CODE_SIZE                                 (128 * 1024)
+#endif
+
+/**
+ * \brief RAM-block size in cached mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RAM_SIZE
+#define dg_configQSPI_CACHED_RAM_SIZE                           ( 64 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in cached mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RETRAM_0_SIZE
+#define dg_configQSPI_CACHED_RETRAM_0_SIZE                      ( 64 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in cached mode, no product specific.
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RETRAM_1_SIZE
+#define dg_configQSPI_CACHED_RETRAM_1_SIZE                      (  0 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size for optimal retention memory in cached mode, no product specific.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configQSPI_CACHED_OPTIMAL_RETRAM_0_SIZE
+#define dg_configQSPI_CACHED_OPTIMAL_RETRAM_0_SIZE              ( 32 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size for optimal retention memory in cached mode, no product specific.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \note Defining the corresponding product-specific configuration macro will override
+ *       this one.
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configQSPI_CACHED_OPTIMAL_RETRAM_1_SIZE
+#define dg_configQSPI_CACHED_OPTIMAL_RETRAM_1_SIZE              ( 32 * 1024)
+#endif
+
+/**
+ * \brief Code size in QSPI projects for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CODE_SIZE_AE
+#define dg_configQSPI_CODE_SIZE_AE dg_configQSPI_CODE_SIZE
+#endif
+
+/**
+ * \brief Code size in QSPI projects for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CODE_SIZE_BB
+#define dg_configQSPI_CODE_SIZE_BB dg_configQSPI_CODE_SIZE
+#endif
+
+/**
+ * \brief RAM-block size in cached mode for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RAM_SIZE_AE
+#define dg_configQSPI_CACHED_RAM_SIZE_AE dg_configQSPI_CACHED_RAM_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in cached mode for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RETRAM_0_SIZE_AE
+#define dg_configQSPI_CACHED_RETRAM_0_SIZE_AE dg_configQSPI_CACHED_RETRAM_0_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in cached mode for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RETRAM_1_SIZE_AE
+#define dg_configQSPI_CACHED_RETRAM_1_SIZE_AE dg_configQSPI_CACHED_RETRAM_1_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size for optimal retention memory in cached mode for DA14680/1-01.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configQSPI_CACHED_OPTIMAL_RETRAM_0_SIZE_AE
+#define dg_configQSPI_CACHED_OPTIMAL_RETRAM_0_SIZE_AE dg_configQSPI_CACHED_OPTIMAL_RETRAM_0_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size for optimal retention memory in cached mode for DA14680/1-01.
+ *
+ * \see dg_configOPTIMAL_RETRAM option
+ *
+ * \bsp_default_note{\bsp_config_option_app, \bsp_config_option_expert_only}
+ */
+#ifndef dg_configQSPI_CACHED_OPTIMAL_RETRAM_1_SIZE_AE
+#define dg_configQSPI_CACHED_OPTIMAL_RETRAM_1_SIZE_AE dg_configQSPI_CACHED_OPTIMAL_RETRAM_1_SIZE
+#endif
+
+/**
+ * \brief RAM-block size in cached mode for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RAM_SIZE_BB
+#define dg_configQSPI_CACHED_RAM_SIZE_BB dg_configQSPI_CACHED_RAM_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size in cached mode for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RETRAM_0_SIZE_BB
+#define dg_configQSPI_CACHED_RETRAM_0_SIZE_BB dg_configQSPI_CACHED_RETRAM_0_SIZE
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size in cached mode for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configQSPI_CACHED_RETRAM_1_SIZE_BB
+#define dg_configQSPI_CACHED_RETRAM_1_SIZE_BB dg_configQSPI_CACHED_RETRAM_1_SIZE
+#endif
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/**
+ * \}
+ */
+
+/**
+ * \addtogroup RAM_PROJECT_MEMORY_LAYOUT_SETTINGS
+ *
+ * \brief Memory layout configuration settings for a RAM project
+ * \{
+ */
+
+/**
+ * \brief Code size in RAM projects for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_CODE_SIZE_AE
+#define dg_configRAM_CODE_SIZE_AE                      ( 79 * 1024)
+#endif
+
+/**
+ * \brief RAM-block size for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_RAM_SIZE_AE
+#define dg_configRAM_RAM_SIZE_AE                       ( 16 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_RETRAM_0_SIZE_AE
+#define dg_configRAM_RETRAM_0_SIZE_AE                  (128 * 1024 - dg_configRAM_CODE_SIZE_AE)
+#endif
+
+/**
+ * \brief Retained-RAM-1-block size for DA14680/1-01.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_RETRAM_1_SIZE_AE
+#define dg_configRAM_RETRAM_1_SIZE_AE                  (  0 * 1024)
+#endif
+
+/**
+ * \brief Code size in RAM projects for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_CODE_SIZE_BB
+#define dg_configRAM_CODE_SIZE_BB                      (144 * 1024)
+#endif
+
+/**
+ * \brief RAM-block size for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_RAM_SIZE_BB
+#define dg_configRAM_RAM_SIZE_BB                       ( 15 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_RETRAM_0_SIZE_BB
+#define dg_configRAM_RETRAM_0_SIZE_BB                  ( 49 * 1024)
+#endif
+
+/**
+ * \brief Retained-RAM-0-block size for DA14682/3-00, DA15XXX-00.
+ *
+ * \bsp_default_note{\bsp_config_option_app,}
+ */
+#ifndef dg_configRAM_RETRAM_1_SIZE_BB
+#define dg_configRAM_RETRAM_1_SIZE_BB                  (  0 * 1024)
+#endif
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/**
+ * \}
+ */
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/**
+ * \}
+ */
+
+
+/**
+ * \}
+ */
 
 #endif /* BSP_DEFAULTS_H_ */
 

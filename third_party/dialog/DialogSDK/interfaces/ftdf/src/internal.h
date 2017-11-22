@@ -67,6 +67,16 @@
 #define FTDF_MSK_SYMBOL_TMR_CE     0x00000008
 #define FTDF_MSK_TX_CE             0x00000010
 
+#define FTDF_TX_FLAG_CLEAR_M_0_REG_INTV                 0x20
+#define FTDF_TX_FLAG_CLEAR_E_0_REG_INTV                 0x20
+#define FTDF_TX_PRIORITY_0_REG_INTV                     0x20
+#define FTDF_RX_META_1_0_REG_INTV                       0x10
+#define FTDF_TX_FLAG_S_0_REG_INTV                       0x20
+#define FTDF_TX_RETURN_STATUS_1_0_REG_INTV              0x10
+#define FTDF_TX_META_DATA_0_0_REG_INTV                  0x10
+#define FTDF_TX_RETURN_STATUS_1_0_REG_INTV              0x10
+#define FTDF_TX_META_DATA_1_0_REG_INTV                  0x10
+
 // The maximum time in symbols that is takes to process request. After succesful
 // processing a request the TX buffer is fully initialized and ready to be sent.
 #define FTDF_TSCH_MAX_PROCESS_REQUEST_TIME 35
@@ -75,280 +85,237 @@
 // TX or RX needs to be done
 #define FTDF_TSCH_MAX_SCHEDULE_TIME 30
 
-#define FTDF_GET_FIELD_ADDR( fieldName )                ( (volatile uint32_t*) ( IND_F_FTDF_ ## fieldName ) )
-#define FTDF_GET_FIELD_ADDR_INDEXED( fieldName, index ) ( (volatile uint32_t*) ( IND_F_FTDF_ ## fieldName + \
-                                                                                 (intptr_t) index * \
-                                                                                 FTDF_ ## fieldName ## _INTVL ) )
-#define FTDF_GET_REG_ADDR( regName )                    ( (volatile uint32_t*) ( IND_R_FTDF_ ## regName ) )
-#define FTDF_GET_REG_ADDR_INDEXED( regName, index )     ( (volatile uint32_t*) ( IND_R_FTDF_ ## regName + \
-                                                                                 (intptr_t) index * \
-                                                                                 FTDF_ ## regName ## _INTVL ) )
-#define FTDF_GET_FIELD( fieldName )                     ( ( ( *(volatile uint32_t*) ( IND_F_FTDF_ ## fieldName ) ) & \
-                                                            MSK_F_FTDF_ ## fieldName ) >> OFF_F_FTDF_ ## fieldName )
-#define FTDF_GET_FIELD_INDEXED( fieldName, \
-                                index )                 ( ( ( *FTDF_GET_FIELD_ADDR_INDEXED( fieldName, \
-                                                                                            index ) ) \
-                                                            & MSK_F_FTDF_ ## fieldName ) >> OFF_F_FTDF_ ## fieldName )
+#define ftdf_process_request ftdf_snd_msg
 
-#define FTDF_SET_FIELD( fieldName, value )              do {            \
-        uint32_t tmp =  *FTDF_GET_FIELD_ADDR( fieldName ) & ~MSK_F_FTDF_ ## fieldName; \
-        *FTDF_GET_FIELD_ADDR( fieldName ) = tmp | \
-                                            ( ( ( value ) << OFF_F_FTDF_ ## fieldName ) & MSK_F_FTDF_ ## fieldName ); \
-} \
-    while ( 0 )
+typedef struct {
+    ftdf_ext_address_t          ext_address;
+    ftdf_period_t               ack_wait_duration;
+#ifndef FTDF_LITE
+    ftdf_boolean_t              associated_pan_coord;
+    ftdf_boolean_t              association_permit;
+    ftdf_boolean_t              auto_request;
+    ftdf_boolean_t              batt_life_ext;
+    ftdf_num_of_backoffs_t      batt_life_ext_periods;
+    ftdf_octet_t                beacon_payload[FTDF_MAX_BEACON_PAYLOAD_LENGTH];
+    ftdf_size_t                 beacon_payload_length;
+    ftdf_order_t                beacon_order;
+    ftdf_time_t                 beacon_tx_time;
+    ftdf_sn_t                   bsn;
+    ftdf_ext_address_t          coord_ext_address;
+    ftdf_short_address_t        coord_short_address;
+    ftdf_sn_t                   dsn;
+    ftdf_boolean_t              gts_permit;
+#endif /* !FTDF_LITE */
+    ftdf_be_exponent_t          max_be;
+    ftdf_size_t                 max_csma_backoffs;
+    ftdf_period_t               max_frame_total_wait_time;
+    ftdf_size_t                 max_frame_retries;
+    ftdf_be_exponent_t          min_be;
+#ifndef FTDF_LITE
+    ftdf_period_t               lifs_period;
+    ftdf_period_t               sifs_period;
+#endif /* !FTDF_LITE */
+    ftdf_pan_id_t               pan_id;
+#ifndef FTDF_LITE
+    ftdf_boolean_t              promiscuous_mode; /* Not supported. Use transparent mode instead */
+    ftdf_size_t                 response_wait_time;
+#endif /* !FTDF_LITE */
+    ftdf_boolean_t              rx_on_when_idle;
+#ifndef FTDF_LITE
+    ftdf_boolean_t              security_enabled;
+#endif /* !FTDF_LITE */
+    ftdf_short_address_t        short_address;
+#ifndef FTDF_LITE
+    ftdf_size_t                 superframe_order;
+    ftdf_period_t               sync_symbol_offset;
+    ftdf_boolean_t              timestamp_supported;
+    ftdf_period_t               transaction_persistence_time;
+    ftdf_period_t               enh_ack_wait_duration;
+    ftdf_boolean_t              implicit_broadcast;
+    ftdf_simple_address_t       simple_address;
+    ftdf_period_t               disconnect_time;
+    ftdf_priority_t             join_priority;
+    ftdf_asn_t                  asn;
+    ftdf_boolean_t              no_hl_buffers;
+    ftdf_slotframe_table_t      slotframe_table;
+    FTDF_LinkTable              link_table;
+    ftdf_timeslot_template_t    timeslot_template;
+    ftdf_hopping_sequence_id_t  hopping_sequence_id;
+    ftdf_channel_page_t         channel_page;
+    ftdf_channel_number_t       number_of_channels;
+    ftdf_bitmap32_t             phy_configuration;
+    ftdf_bitmap8_t              extended_bitmap;
+    ftdf_length_t               hopping_sequence_length;
+    ftdf_channel_number_t       hopping_sequence_list[FTDF_MAX_HOPPING_SEQUENCE_LENGTH];
+    ftdf_length_t               current_hop;
+    ftdf_period_t               dwell_time;
+    ftdf_period_t               csl_period;
+    ftdf_period_t               csl_max_period;
+    ftdf_bitmap32_t             csl_channel_mask;
+    ftdf_period_t               csl_frame_pending_wait;
+    ftdf_boolean_t              low_energy_superframe_supported;
+    ftdf_boolean_t              low_energy_superframe_sync_interval;
+#endif /* !FTDF_LITE */
+    ftdf_performance_metrics_t  performance_metrics;
+#ifndef FTDF_LITE
+    ftdf_boolean_t              use_enhanced_becaon;
+    ftdf_ie_list_t              eb_ie_list;
+    ftdf_boolean_t              eb_filtering_enabled;
+    ftdf_sn_t                   eb_sn;
+    ftdf_auto_sa_t              eb_auto_sa;
+    ftdf_ie_list_t              e_ack_ie_list;
+    ftdf_boolean_t              tsch_enabled;
+    ftdf_boolean_t              le_enabled;
+#endif /* !FTDF_LITE */
+    ftdf_channel_number_t       current_channel;
+    ftdf_tx_power_tolerance_t   tx_power_tolerance;
+    ftdf_dbm                    tx_power;
+    ftdf_cca_mode_t             cca_mode;
+#ifndef FTDF_LITE
+    ftdf_channel_page_t         current_page;
+    ftdf_period_t               max_frame_duration;
+    ftdf_period_t               shr_duration;
+    ftdf_key_table_t            key_table;
+    ftdf_device_table_t         device_table;
+    ftdf_security_level_table_t security_level_table;
+    ftdf_frame_counter_t        frame_counter;
+    ftdf_security_level_t       mt_data_security_level;
+    ftdf_key_id_mode_t          mt_data_key_id_mode;
+    ftdf_octet_t                mt_data_key_source[8];
+    ftdf_key_index_t            mt_data_key_index;
+    ftdf_octet_t                default_key_source[8];
+    ftdf_ext_address_t          pan_coord_ext_address;
+    ftdf_short_address_t        pan_coord_short_address;
+    ftdf_frame_counter_mode_t   frame_counter_mode;
+    ftdf_period_t               csl_sync_tx_margin;
+    ftdf_period_t               csl_max_age_remote_info;
+#endif /* !FTDF_LITE */
+    ftdf_traffic_counters_t     traffic_counters;
+#ifndef FTDF_LITE
+    ftdf_boolean_t              le_capable;
+    ftdf_boolean_t              ll_capable;
+    ftdf_boolean_t              dsme_capable;
+    ftdf_boolean_t              rfid_capable;
+    ftdf_boolean_t              amca_capable;
+#endif /* !FTDF_LITE */
+    ftdf_boolean_t              metrics_capable;
+#ifndef FTDF_LITE
+    ftdf_boolean_t              ranging_supported;
+#endif /* !FTDF_LITE */
+    ftdf_boolean_t              keep_phy_enabled;
+    ftdf_boolean_t              metrics_enabled;
+#ifndef FTDF_LITE
+    ftdf_boolean_t              beacon_auto_respond;
+    ftdf_boolean_t              tsch_capable;
+    ftdf_period_t               ts_sync_correct_threshold;
+#endif /* !FTDF_LITE */
+    ftdf_nr_backoff_periods_t   bo_irq_threshold;
+    ftdf_pti_config_t           pti_config;
+    ftdf_link_quality_mode_t    link_quality_mode;
+} ftdf_pib_t;
 
-
-#define FTDF_SET_FIELD_INDEXED( fieldName, value, index )              do {            \
-        uint32_t tmp =  *FTDF_GET_FIELD_ADDR_INDEXED( fieldName, index ) & ~MSK_F_FTDF_ ## fieldName; \
-        *FTDF_GET_FIELD_ADDR_INDEXED( fieldName, index ) = tmp | \
-                                            ( ( ( value ) << OFF_F_FTDF_ ## fieldName ) & MSK_F_FTDF_ ## fieldName ); \
-} \
-    while ( 0 )
-
-#define FTDF_processRequest FTDF_sndMsg
-
-struct FTDF_Pib
-{
-    FTDF_ExtAddress         extAddress;
-    FTDF_Period             ackWaitDuration;
-#ifndef FTDF_LITE
-    FTDF_Boolean            associatedPANCoord;
-    FTDF_Boolean            associationPermit;
-    FTDF_Boolean            autoRequest;
-    FTDF_Boolean            battLifeExt;
-    FTDF_NumOfBackoffs      battLifeExtPeriods;
-    FTDF_Octet              beaconPayload[ FTDF_MAX_BEACON_PAYLOAD_LENGTH ];
-    FTDF_Size               beaconPayloadLength;
-    FTDF_Order              beaconOrder;
-    FTDF_Time               beaconTxTime;
-    FTDF_SN                 BSN;
-    FTDF_ExtAddress         coordExtAddress;
-    FTDF_ShortAddress       coordShortAddress;
-    FTDF_SN                 DSN;
-    FTDF_Boolean            GTSPermit;
-#endif /* !FTDF_LITE */
-    FTDF_BEExponent         maxBE;
-    FTDF_Size               maxCSMABackoffs;
-    FTDF_Period             maxFrameTotalWaitTime;
-    FTDF_Size               maxFrameRetries;
-    FTDF_BEExponent         minBE;
-#ifndef FTDF_LITE
-    FTDF_Period             LIFSPeriod;
-    FTDF_Period             SIFSPeriod;
-#endif /* !FTDF_LITE */
-    FTDF_PANId              PANId;
-#ifndef FTDF_LITE
-    FTDF_Boolean            promiscuousMode; /* Not supported. Use transparent mode instead */
-    FTDF_Size               responseWaitTime;
-#endif /* !FTDF_LITE */
-    FTDF_Boolean            rxOnWhenIdle;
-#ifndef FTDF_LITE
-    FTDF_Boolean            securityEnabled;
-#endif /* !FTDF_LITE */
-    FTDF_ShortAddress       shortAddress;
-#ifndef FTDF_LITE
-    FTDF_Size               superframeOrder;
-    FTDF_Period             syncSymbolOffset;
-    FTDF_Boolean            timestampSupported;
-    FTDF_Period             transactionPersistenceTime;
-    FTDF_Period             enhAckWaitDuration;
-    FTDF_Boolean            implicitBroadcast;
-    FTDF_SimpleAddress      simpleAddress;
-    FTDF_Period             disconnectTime;
-    FTDF_Priority           joinPriority;
-    FTDF_ASN                ASN;
-    FTDF_Boolean            noHLBuffers;
-    FTDF_SlotframeTable     slotframeTable;
-    FTDF_LinkTable          linkTable;
-    FTDF_TimeslotTemplate   timeslotTemplate;
-    FTDF_HoppingSequenceId  HoppingSequenceId;
-    FTDF_ChannelPage        channelPage;
-    FTDF_ChannelNumber      numberOfChannels;
-    FTDF_Bitmap32           phyConfiguration;
-    FTDF_Bitmap8            extendedBitmap;
-    FTDF_Length             hoppingSequenceLength;
-    FTDF_ChannelNumber      hoppingSequenceList[ FTDF_MAX_HOPPING_SEQUENCE_LENGTH ];
-    FTDF_Length             currentHop;
-    FTDF_Period             dwellTime;
-    FTDF_Period             CSLPeriod;
-    FTDF_Period             CSLMaxPeriod;
-    FTDF_Bitmap32           CSLChannelMask;
-    FTDF_Period             CSLFramePendingWaitT;
-    FTDF_Boolean            lowEnergySuperframeSupported;
-    FTDF_Boolean            lowEnergySuperframeSyncInterval;
-#endif /* !FTDF_LITE */
-    FTDF_PerformanceMetrics performanceMetrics;
-#ifndef FTDF_LITE
-    FTDF_Boolean            useEnhancedBecaon;
-    FTDF_IEList             EBIEList;
-    FTDF_Boolean            EBFilteringEnabled;
-    FTDF_SN                 EBSN;
-    FTDF_AutoSA             EBAutoSA;
-    FTDF_IEList             EAckIEList;
-    FTDF_Boolean            tschEnabled;
-    FTDF_Boolean            leEnabled;
-#endif /* !FTDF_LITE */
-    FTDF_ChannelNumber      currentChannel;
-    FTDF_TXPowerTolerance   TXPowerTolerance;
-    FTDF_DBm                TXPower;
-    FTDF_CCAMode            CCAMode;
-#ifndef FTDF_LITE
-    FTDF_ChannelPage        currentPage;
-    FTDF_Period             maxFrameDuration;
-    FTDF_Period             SHRDuration;
-    FTDF_KeyTable           keyTable;
-    FTDF_DeviceTable        deviceTable;
-    FTDF_SecurityLevelTable securityLevelTable;
-    FTDF_FrameCounter       frameCounter;
-    FTDF_SecurityLevel      mtDataSecurityLevel;
-    FTDF_KeyIdMode          mtDataKeyIdMode;
-    FTDF_Octet              mtDataKeySource[ 8 ];
-    FTDF_KeyIndex           mtDataKeyIndex;
-    FTDF_Octet              defaultKeySource[ 8 ];
-    FTDF_ExtAddress         PANCoordExtAddress;
-    FTDF_ShortAddress       PANCoordShortAddress;
-    FTDF_FrameCounterMode   frameCounterMode;
-    FTDF_Period             CSLSyncTxMargin;
-    FTDF_Period             CSLMaxAgeRemoteInfo;
-#endif /* !FTDF_LITE */
-    FTDF_TrafficCounters    trafficCounters;
-#ifndef FTDF_LITE
-    FTDF_Boolean            LECapable;
-    FTDF_Boolean            LLCapable;
-    FTDF_Boolean            DSMECapable;
-    FTDF_Boolean            RFIDCapable;
-    FTDF_Boolean            AMCACapable;
-#endif /* !FTDF_LITE */
-    FTDF_Boolean            metricsCapable;
-#ifndef FTDF_LITE
-    FTDF_Boolean            rangingSupported;
-#endif /* !FTDF_LITE */
-    FTDF_Boolean            keepPhyEnabled;
-    FTDF_Boolean            metricsEnabled;
-#ifndef FTDF_LITE
-    FTDF_Boolean            beaconAutoRespond;
-    FTDF_Boolean            tschCapable;
-    FTDF_Period             tsSyncCorrectThreshold;
-#endif /* !FTDF_LITE */
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-    FTDF_NrBackoffPeriods   boIrqThreshold;
-    FTDF_PtiConfig          ptiConfig;
-#endif
-};
-
-typedef uint8_t FTDF_FrameVersion;
+typedef uint8_t ftdf_frame_version_t;
 #define FTDF_FRAME_VERSION_2003          0
 #define FTDF_FRAME_VERSION_2011          1
 #define FTDF_FRAME_VERSION_E             2
 #define FTDF_FRAME_VERSION_NOT_SUPPORTED 3
 
-typedef struct
-{
-    FTDF_FrameType      frameType;
-    FTDF_FrameVersion   frameVersion;
-    FTDF_Bitmap8        options;
-    FTDF_SN             SN;
-    FTDF_AddressMode    srcAddrMode;
-    FTDF_PANId          srcPANId;
-    FTDF_Address        srcAddr;
-    FTDF_AddressMode    dstAddrMode;
-    FTDF_PANId          dstPANId;
-    FTDF_Address        dstAddr;
-    FTDF_CommandFrameId commandFrameId;
-} FTDF_FrameHeader;
+typedef struct {
+    ftdf_frame_type_t       frame_type;
+    ftdf_frame_version_t    frame_version;
+    ftdf_bitmap8_t          options;
+    ftdf_sn_t               sn;
+    ftdf_address_mode_t     src_addr_mode;
+    ftdf_pan_id_t           src_pan_id;
+    ftdf_address_t          src_addr;
+    ftdf_address_mode_t     dst_addr_mode;
+    ftdf_pan_id_t           dst_pan_id;
+    ftdf_address_t          dst_addr;
+    ftdf_command_frame_id_t command_frame_id;
+} ftdf_frame_header_t;
 
-typedef struct
-{
-    FTDF_SecurityLevel    securityLevel;
-    FTDF_KeyIdMode        keyIdMode;
-    FTDF_KeyIndex         keyIndex;
-    FTDF_FrameCounterMode frameCounterMode;
-    FTDF_Octet*           keySource;
-    FTDF_FrameCounter     frameCounter;
-} FTDF_SecurityHeader;
+typedef struct {
+    ftdf_security_level_t     security_level;
+    ftdf_key_id_mode_t        key_id_mode;
+    ftdf_key_index_t          key_index;
+    ftdf_frame_counter_mode_t frame_counter_mode;
+    ftdf_octet_t              *key_source;
+    ftdf_frame_counter_t      frame_counter;
+} ftdf_security_header;
 
-typedef struct
-{
-    FTDF_Boolean fastA;
-    FTDF_Boolean dataR;
-} FTDF_AssocAdmin;
+typedef struct {
+    ftdf_boolean_t fast_a;
+    ftdf_boolean_t data_r;
+} ftdf_assoc_admin_t;
 
-typedef uint8_t FTDF_SNSel;
+typedef uint8_t ftdf_sn_sel;
 #define FTDF_SN_SEL_DSN  0
 #define FTDF_SN_SEL_BSN  1
 #define FTDF_SN_SEL_EBSN 2
 
-typedef struct
-{
-    FTDF_AddressMode addrMode;
-    FTDF_Address     addr;
-    FTDF_Time        timestamp;
-    FTDF_Boolean     dsnValid;
-    FTDF_SN          dsn;
-    FTDF_Boolean     bsnValid;
-    FTDF_SN          bsn;
-    FTDF_Boolean     ebsnValid;
-    FTDF_SN          ebsn;
-} FTDF_RxAddressAdmin;
+typedef struct {
+    ftdf_address_mode_t addr_mode;
+    ftdf_address_t      addr;
+    ftdf_time_t         timestamp;
+    ftdf_boolean_t      dsn_valid;
+    ftdf_sn_t           dsn;
+    ftdf_boolean_t      bsn_valid;
+    ftdf_sn_t           bsn;
+    ftdf_boolean_t      ebsn_valid;
+    ftdf_sn_t           eb_sn;
+} ftdf_rx_address_admin_t;
 
-struct FTDF_Buffer_;
+struct ftdf_buffer_;
 
-typedef struct
-{
-    struct FTDF_Buffer_* next;
-    struct FTDF_Buffer_* prev;
-} FTDF_BufferHeader;
+typedef struct {
+    struct ftdf_buffer_ *next;
+    struct ftdf_buffer_ *prev;
+} ftdf_buffer_header_t;
 
-typedef struct FTDF_Buffer_
-{
-    FTDF_BufferHeader header;
-    FTDF_MsgBuffer*   request;
-} FTDF_Buffer;
+typedef struct ftdf_buffer_ {
+    ftdf_buffer_header_t header;
+    ftdf_msg_buffer_t    *request;
+} ftdf_buffer_t;
 
-typedef struct
-{
-    FTDF_BufferHeader head;
-    FTDF_BufferHeader tail;
-} FTDF_Queue;
+typedef struct {
+    ftdf_buffer_header_t head;
+    ftdf_buffer_header_t tail;
+} ftdf_queue_t;
 
-typedef struct
-{
-    FTDF_Address     addr;
-    FTDF_AddressMode addrMode;
-    FTDF_PANId       PANId;
-    FTDF_Queue       queue;
-} FTDF_Pending;
+typedef struct {
+    ftdf_address_t      addr;
+    ftdf_address_mode_t addr_mode;
+    ftdf_pan_id_t       pan_id;
+    ftdf_queue_t        queue;
+} ftdf_pending_t;
 
-typedef struct _FTDF_PendingTL_
-{
-    struct _FTDF_PendingTL_* next;
-    FTDF_Boolean             free;
-    FTDF_MsgBuffer*          request;
-    FTDF_Time                delta;
-    uint8_t                  pendListNr;
-    void ( * func )( struct _FTDF_PendingTL_* );
-} FTDF_PendingTL;
+typedef struct _ftdf_pending_tl_ {
+    struct _ftdf_pending_tl_ *next;
+    ftdf_boolean_t           free;
+    ftdf_msg_buffer_t        *request;
+    ftdf_time_t              delta;
+    uint8_t                  pend_list_nr;
+    void                     (* func)(struct _ftdf_pending_tl_*);
+} ftdf_pending_tl_t;
 
-typedef uint8_t FTDF_RemoteId;
+typedef uint8_t ftdf_remote_id;
 #define FTDF_REMOTE_DATA_REQUEST                 0
 #define FTDF_REMOTE_PAN_ID_CONFLICT_NOTIFICATION 1
 #define FTDF_REMOTE_BEACON                       2
 #define FTDF_REMOTE_KEEP_ALIVE                   3
 
-typedef struct
-{
-    FTDF_MsgId        msgId;
-    FTDF_RemoteId     remoteId;
-    FTDF_ShortAddress dstAddr;
-} FTDF_RemoteRequest;
+typedef struct {
+    ftdf_msg_id_t        msg_id;
+    ftdf_remote_id       remote_id;
+    ftdf_short_address_t dst_addr;
+} ftdf_remote_request_t;
 
 #ifndef FTDF_NO_CSL
-typedef struct
-{
-    FTDF_ShortAddress addr;
-    FTDF_Time         time;
-    FTDF_Period       period;
-} FTDF_PeerCslTiming;
+typedef struct {
+    ftdf_short_address_t addr;
+    ftdf_time_t          time;
+    ftdf_period_t        period;
+} ftdf_peer_csl_timing_t;
 #endif /* FTDF_NO_CSL */
 
 typedef uint8_t FTDF_State;
@@ -359,343 +326,336 @@ typedef uint8_t FTDF_State;
 #define FTDF_STATE_SCANNING      4
 
 #ifndef FTDF_NO_TSCH
-typedef struct
-{
-    FTDF_ShortAddress nodeAddr;
-    FTDF_Size         nrOfRetries;
-    FTDF_Size         nrOfCcaRetries;
-    FTDF_BEExponent   BE;
-} FTDF_TschRetry;
+typedef struct {
+    ftdf_short_address_t nodeAddr;
+    ftdf_size_t          nr_of_retries;
+    ftdf_size_t          nr_of_cca_retries;
+    ftdf_be_exponent_t   BE;
+} ftdf_tsch_retry_t;
 
-typedef struct
-{
-    FTDF_ShortAddress    dstAddr;
-    FTDF_KeepAlivePeriod period;
-    FTDF_RemoteRequest   msg;
+typedef struct {
+    ftdf_short_address_t     dst_addr;
+    ftdf_keep_alive_period_t period;
+    ftdf_remote_request_t    msg;
 } FTDF_NeighborEntry;
 #endif /* FTDF_NO_TSCH */
 
-typedef struct
-{
-    FTDF_Count fcsErrorCnt;
-    FTDF_Count txStdAckCnt;
-    FTDF_Count rxStdAckCnt;
-} FTDF_LmacCounters;
+typedef struct {
+    ftdf_count_t fcs_error_cnt;
+    ftdf_count_t tx_std_ack_cnt;
+    ftdf_count_t rx_std_ack_cnt;
+} ftdf_lmac_counters_t;
 
-extern struct FTDF_Pib     FTDF_pib;
-extern FTDF_State*         FTDF_state;
-extern FTDF_Boolean        FTDF_transparentMode;
-extern FTDF_Bitmap32       FTDF_transparentModeOptions;
-extern FTDF_Queue          FTDF_reqQueue;
-extern FTDF_Queue          FTDF_freeQueue;
-extern FTDF_Pending        FTDF_txPendingList[ FTDF_NR_OF_REQ_BUFFERS ];
-extern FTDF_PendingTL      FTDF_txPendingTimerList[ FTDF_NR_OF_REQ_BUFFERS ];
-extern FTDF_PendingTL*     FTDF_txPendingTimerHead;
-extern FTDF_Time           FTDF_txPendingTimerLT;
-extern FTDF_Time           FTDF_txPendingTimerTime;
-extern FTDF_MsgBuffer*     FTDF_reqCurrent;
-extern FTDF_Size           FTDF_nrOfRetries;
-extern FTDF_Boolean        FTDF_isPANCoordinator;
-extern FTDF_SlotframeEntry FTDF_slotframeTable[ FTDF_MAX_SLOTFRAMES ];
-extern FTDF_LinkEntry      FTDF_linkTable[ FTDF_MAX_LINKS ];
+extern ftdf_pib_t             ftdf_pib;
+extern FTDF_State             *FTDF_state;
+extern ftdf_boolean_t         ftdf_transparent_mode;
+extern ftdf_bitmap32_t        ftdf_transparent_mode_options;
+extern ftdf_queue_t           ftdf_req_queue;
+extern ftdf_queue_t           ftdf_freeQueue;
+extern ftdf_pending_t         ftdf_tx_pending_list[FTDF_NR_OF_REQ_BUFFERS];
+extern ftdf_pending_tl_t      ftdf_tx_pending_timer_list[FTDF_NR_OF_REQ_BUFFERS];
+extern ftdf_pending_tl_t      *ftdf_tx_pending_timer_head;
+extern ftdf_time_t            ftdf_tx_pending_timer_lt;
+extern ftdf_time_t            ftdf_tx_pending_timer_time;
+extern ftdf_msg_buffer_t      *ftdf_req_current;
+extern ftdf_size_t            ftdf_nr_of_retries;
+extern ftdf_boolean_t         ftdf_is_pan_coordinator;
+extern ftdf_slotframe_entry_t ftdf_slotframe_table[FTDF_MAX_SLOTFRAMES];
+extern ftdf_link_entry_t      ftdf_link_table[FTDF_MAX_LINKS];
 #ifndef FTDF_NO_TSCH
-extern FTDF_LinkEntry*     FTDF_startLinks[ FTDF_MAX_SLOTFRAMES ];
-extern FTDF_LinkEntry*     FTDF_endLinks[ FTDF_MAX_SLOTFRAMES ];
-extern FTDF_NeighborEntry  FTDF_neighborTable[ FTDF_NR_OF_NEIGHBORS ];
-extern FTDF_Boolean        FTDF_wakeUpEnableTsch;
+extern ftdf_link_entry_t      *ftdf_start_links[FTDF_MAX_SLOTFRAMES];
+extern ftdf_link_entry_t      *ftdf_end_links[FTDF_MAX_SLOTFRAMES];
+extern FTDF_NeighborEntry     ftdf_neighbor_table[FTDF_NR_OF_NEIGHBORS];
+extern ftdf_boolean_t         ftdf_wake_up_enable_tsch;
 #endif /* FTDF_NO_TSCH */
 #ifndef FTDF_NO_CSL
-extern FTDF_Boolean        FTDF_wakeUpEnableLe;
+extern ftdf_boolean_t         ftdf_wake_up_enable_le;
 #endif /* FTDF_NO_CSL */
-extern FTDF_LmacCounters   FTDF_lmacCounters;
+extern ftdf_lmac_counters_t   ftdf_lmac_counters;
 
-extern FTDF_FrameHeader    FTDF_fh;
-extern FTDF_SecurityHeader FTDF_sh;
-extern FTDF_AssocAdmin     FTDF_aa;
-extern FTDF_Boolean        FTDF_txInProgress;
+extern ftdf_frame_header_t    ftdf_fh;
+extern ftdf_security_header   ftdf_sh;
+extern ftdf_assoc_admin_t     ftdf_aa;
+extern ftdf_boolean_t         ftdf_tx_in_progress;
 #ifndef FTDF_NO_CSL
-extern FTDF_Time           FTDF_rzTime;
-extern FTDF_ShortAddress   FTDF_sendFramePending;
+extern ftdf_time_t            ftdf_rz_time;
+extern ftdf_short_address_t   ftdf_send_frame_pending;
 #endif /* FTDF_NO_CSL */
-extern FTDF_Time           FTDF_startCslSampleTime;
+extern ftdf_time_t            ftdf_start_csl_sample_time;
 
 #ifndef FTDF_NO_TSCH
-extern FTDF_LinkEntry*     FTDF_tschSlotLink;
-extern FTDF_Time64         FTDF_tschSlotTime;
-extern FTDF_ASN            FTDF_tschSlotASN;
+extern ftdf_link_entry_t      *ftdf_tsch_slot_link;
+extern ftdf_time64_t          ftdf_tsch_slot_time;
+extern ftdf_asn_t             ftdf_tsch_slot_asn;
 #endif /* FTDF_NO_TSCH */
 
-void FTDF_processDataRequest( FTDF_DataRequest* req );
-void FTDF_processPurgeRequest( FTDF_PurgeRequest* req );
-void FTDF_processAssociateRequest( FTDF_AssociateRequest* req );
-void FTDF_processAssociateResponse( FTDF_AssociateResponse* req );
-void FTDF_processDisassociateRequest( FTDF_DisassociateRequest* req );
-void FTDF_processGetRequest( FTDF_GetRequest* req );
-void FTDF_processSetRequest( FTDF_SetRequest* req );
-void FTDF_processOrphanResponse( FTDF_OrphanResponse* req );
-void FTDF_processResetRequest( FTDF_ResetRequest* req );
-void FTDF_processRxEnableRequest( FTDF_RxEnableRequest* req );
-void FTDF_processScanRequest( FTDF_ScanRequest* req );
-void FTDF_processStartRequest( FTDF_StartRequest* req );
-void FTDF_processPollRequest( FTDF_PollRequest* req );
+void ftdf_process_data_request(ftdf_data_request_t *req);
+void ftdf_process_purge_request(ftdf_purge_request_t *req);
+void ftdf_process_associate_request(ftdf_associate_request_t *req);
+void ftdf_process_associate_response(ftdf_associate_response_t *req);
+void ftdf_process_disassociate_request(ftdf_disassociate_request_t *req);
+void ftdf_process_get_request(ftdf_get_request_t *req);
+void ftdf_process_set_request(ftdf_set_request_t *req);
+void ftdf_process_orphan_response(ftdf_orphan_response_t *req);
+void ftdf_process_reset_request(ftdf_reset_request_t *req);
+void ftdf_process_rx_enable_request(ftdf_rx_enable_request_t *req);
+void ftdf_process_scan_request(ftdf_scan_request_t *req);
+void ftdf_process_start_request(ftdf_start_request_t *req);
+void ftdf_process_poll_request(ftdf_poll_request_t *req);
 #ifndef FTDF_NO_TSCH
-void FTDF_processSetSlotframeRequest( FTDF_SetSlotframeRequest* req );
-void FTDF_processSetLinkRequest( FTDF_SetLinkRequest* req );
-void FTDF_processTschModeRequest( FTDF_TschModeRequest* req );
-void FTDF_processKeepAliveRequest( FTDF_KeepAliveRequest* req );
+void ftdf_process_set_slotframe_request(ftdf_set_slotframe_request_t *req);
+void ftdf_process_set_link_request(ftdf_set_link_request_t *req);
+void ftdf_process_tsch_mode_request(ftdf_tsch_mode_request_t *req);
+void ftdf_process_keep_alive_request(ftdf_keep_alive_request_t *req);
 #endif /* FTDF_NO_TSCH */
-void FTDF_processBeaconRequest( FTDF_BeaconRequest* req );
-void FTDF_processTransparentRequest( FTDF_TransparentRequest* req );
-void FTDF_processRemoteRequest( FTDF_RemoteRequest* req );
+void ftdf_process_beacon_request(ftdf_beacon_request_t *req);
+void ftdf_process_transparent_request(ftdf_transparent_request_t *req);
+void ftdf_process_remote_request(ftdf_remote_request_t *req);
 
-void FTDF_processNextRequest( void );
-void FTDF_processRxEvent( void );
-void FTDF_processTxEvent( void );
-void FTDF_processSymbolTimerEvent( void );
+void ftdf_process_next_request(void);
+void ftdf_process_rx_event(void);
+void ftdf_process_tx_event(void);
+void ftdf_process_symbol_timer_event(void);
 
-void FTDF_sendDataConfirm( FTDF_DataRequest*  dataRequest,
-                           FTDF_Status        status,
-                           FTDF_Time          timestamp,
-                           FTDF_SN            DSN,
-                           FTDF_NumOfBackoffs numOfBackoffs,
-                           FTDF_IEList*       ackPayload );
+void ftdf_send_data_confirm(ftdf_data_request_t    *data_request,
+                            ftdf_status_t          status,
+                            ftdf_time_t            timestamp,
+                            ftdf_sn_t              dsn,
+                            ftdf_num_of_backoffs_t num_of_backoffs,
+                            ftdf_ie_list_t         *ack_payload);
 
-void FTDF_sendDataIndication( FTDF_FrameHeader*    frameHeader,
-                              FTDF_SecurityHeader* securityHeader,
-                              FTDF_IEList*         payloadIEList,
-                              FTDF_DataLength      msduLength,
-                              FTDF_Octet*          msdu,
-                              FTDF_LinkQuality     mpduLinkQuality,
-                              FTDF_Time            timestamp );
+void ftdf_send_data_indication(ftdf_frame_header_t  *frame_header,
+                               ftdf_security_header *security_header,
+                               ftdf_ie_list_t       *payload_ie_list,
+                               ftdf_data_length_t   msdu_length,
+                               ftdf_octet_t         *msdu,
+                               ftdf_link_quality_t  mpdu_link_quality,
+                               ftdf_time_t          timestamp);
 
-void FTDF_sendPollConfirm( FTDF_PollRequest* pollRequest, FTDF_Status status );
+void ftdf_send_poll_confirm(ftdf_poll_request_t *poll_request, ftdf_status_t status);
 
-void FTDF_sendScanConfirm( FTDF_ScanRequest* scanRequest, FTDF_Status status );
+void ftdf_send_scan_confirm(ftdf_scan_request_t *scan_request, ftdf_status_t status);
 
-void FTDF_sendBeaconNotifyIndication( FTDF_PANDescriptor* PANDescriptor );
+void ftdf_send_beacon_notify_indication(ftdf_pan_descriptor_t *pan_descriptor);
 
-void FTDF_sendBeaconConfirm( FTDF_BeaconRequest* beaconRequest, FTDF_Status status );
+void ftdf_send_beacon_confirm(ftdf_beacon_request_t *beacon_request, ftdf_status_t status);
 
-void FTDF_sendAssociateConfirm( FTDF_AssociateRequest* associateRequest,
-                                FTDF_Status            status,
-                                FTDF_ShortAddress      assocShortAddr );
+void ftdf_send_associate_confirm(ftdf_associate_request_t  *associate_request,
+                                 ftdf_status_t             status,
+                                 ftdf_short_address_t      assoc_short_addr);
 
-void FTDF_sendAssociateDataRequest( void );
+void ftdf_send_associate_data_request(void);
 
-void FTDF_sendDisassociateConfirm( FTDF_DisassociateRequest* disReq, FTDF_Status status );
+void ftdf_send_disassociate_confirm(ftdf_disassociate_request_t *dis_req, ftdf_status_t status);
 
-void FTDF_sendSyncLossIndication( FTDF_LossReason lossReason, FTDF_SecurityHeader* securityHeader );
+void ftdf_send_sync_loss_indication(ftdf_loss_reason_t loss_reason, ftdf_security_header *security_header);
 
-void FTDF_sendPANIdConflictNotification( FTDF_FrameHeader* frameHeader, FTDF_SecurityHeader* securityHeader );
+void ftdf_sendpan_id_conflict_notification(ftdf_frame_header_t *frame_header, ftdf_security_header *security_header);
 
-void FTDF_sendCommStatusIndication( FTDF_MsgBuffer*     request,
-                                    FTDF_Status         status,
-                                    FTDF_PANId          PANId,
-                                    FTDF_AddressMode    srcAddrMode,
-                                    FTDF_Address        srcAddr,
-                                    FTDF_AddressMode    dstAddrMode,
-                                    FTDF_Address        dstAddr,
-                                    FTDF_SecurityLevel  securityLevel,
-                                    FTDF_KeyIdMode      keyIdMode,
-                                    FTDF_Octet*         keySource,
-                                    FTDF_KeyIndex       keyIndex );
+void ftdf_send_comm_status_indication(ftdf_msg_buffer_t     *request,
+                                      ftdf_status_t         status,
+                                      ftdf_pan_id_t         pan_Id,
+                                      ftdf_address_mode_t   src_addr_mode,
+                                      ftdf_address_t        src_addr,
+                                      ftdf_address_mode_t   dst_addr_mode,
+                                      ftdf_address_t        dst_addr,
+                                      ftdf_security_level_t security_level,
+                                      ftdf_key_id_mode_t    key_id_mode,
+                                      ftdf_octet_t          *key_source,
+                                      ftdf_key_index_t      key_index);
 
-void FTDF_startTimer( FTDF_Period period,
-                      void        ( * timerFunc )( void* params ),
-                      void*       params );
+void ftdf_start_timer(ftdf_period_t period, void (* timer_func)(void *params), void *params);
 
-FTDF_Octet* FTDF_getTxBufPtr( FTDF_Buffer* txBuffer );
+ftdf_octet_t *ftdf_get_tx_buf_ptr(ftdf_buffer_t *tx_buffer);
 
-void        FTDF_setTxMetaData( FTDF_Buffer*       txBuffer,
-                                FTDF_DataLength    frameLength,
-                                FTDF_ChannelNumber channel,
-                                FTDF_FrameType     frameType,
-                                FTDF_Boolean       ackTX,
-                                FTDF_SN            SN );
+void ftdf_set_tx_meta_data(ftdf_buffer_t         *tx_buffer,
+                           ftdf_data_length_t    frame_length,
+                           ftdf_channel_number_t channel,
+                           ftdf_frame_type_t     frame_type,
+                           ftdf_boolean_t        ack_tx,
+                           ftdf_sn_t             sn);
 
-FTDF_Status FTDF_sendFrame( FTDF_ChannelNumber   channel,
-                            FTDF_FrameHeader*    frameHeader,
-                            FTDF_SecurityHeader* securityHeader,
-                            FTDF_Octet*          txPtr,
-                            FTDF_DataLength      payloadSize,
-                            FTDF_Octet*          payload );
+ftdf_status_t ftdf_send_frame(ftdf_channel_number_t channel,
+                              ftdf_frame_header_t   *frame_header,
+                              ftdf_security_header  *security_header,
+                              ftdf_octet_t          *tx_ptr,
+                              ftdf_data_length_t    payload_size,
+                              ftdf_octet_t          *payload);
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-FTDF_Status FTDF_sendAckFrame( FTDF_FrameHeader*    frameHeader,
-                               FTDF_SecurityHeader* securityHeader,
-                               FTDF_Octet*          txPtr );
+ftdf_status_t ftdf_send_ack_frame(ftdf_frame_header_t  *frame_header,
+                                  ftdf_security_header *security_header,
+                                  ftdf_octet_t         *tx_ptr);
 #endif /* !FTDF_NO_CSL || !FTDF_NO_TSCH */
 
-void FTDF_sendTransparentFrame( FTDF_DataLength    frameLength,
-                                FTDF_Octet*        frame,
-                                FTDF_ChannelNumber channel,
-                                FTDF_PTI           pti,
-                                FTDF_Boolean       cmsaSuppress );
+void ftdf_send_transparent_frame(ftdf_data_length_t    frame_length,
+                                 ftdf_octet_t          *frame,
+                                 ftdf_channel_number_t channel,
+                                 ftdf_pti_t            pti,
+                                 ftdf_boolean_t        cmsa_suppress);
 
-FTDF_Octet* FTDF_getRxBuffer( void );
+ftdf_octet_t *ftdf_get_rx_buffer(void);
 
-void        FTDF_processRxEvent( void );
+void ftdf_process_rx_event(void);
 
-FTDF_Octet* FTDF_addFrameHeader( FTDF_Octet*       txPtr,
-                                 FTDF_FrameHeader* frameHeader,
-                                 FTDF_DataLength   msduLength );
+ftdf_octet_t *ftdf_add_frame_header(ftdf_octet_t        *tx_ptr,
+                                    ftdf_frame_header_t *frame_header,
+                                    ftdf_data_length_t  msdu_length);
 
-FTDF_Octet* FTDF_getFrameHeader( FTDF_Octet*       rxPtr,
-                                 FTDF_FrameHeader* frameHeader );
+ftdf_octet_t *ftdf_get_frame_header(ftdf_octet_t *rx_ptr, ftdf_frame_header_t *frame_header);
 
-FTDF_DataLength FTDF_getMicLength( FTDF_SecurityLevel securityLevel );
+ftdf_data_length_t ftdf_get_mic_length(ftdf_security_level_t security_level);
 
-FTDF_Octet*     FTDF_getSecurityHeader( FTDF_Octet*          rxPtr,
-                                        uint8_t              frameVersion,
-                                        FTDF_SecurityHeader* securityHeader );
+ftdf_octet_t *ftdf_get_security_header(ftdf_octet_t         *rx_ptr,
+                                       uint8_t              frame_version,
+                                       ftdf_security_header *security_header);
 
-FTDF_Octet* FTDF_addSecurityHeader( FTDF_Octet*          txPtr,
-                                    FTDF_SecurityHeader* securityHeader );
+ftdf_octet_t *ftdf_add_security_header(ftdf_octet_t         *tx_ptr,
+                                       ftdf_security_header *security_header);
 
-FTDF_Status FTDF_secureFrame( FTDF_Octet*          bufPtr,
-                              FTDF_Octet*          privPtr,
-                              FTDF_FrameHeader*    frameHeader,
-                              FTDF_SecurityHeader* securityHeader );
+ftdf_status_t ftdf_secure_frame(ftdf_octet_t         *buf_ptr,
+                                ftdf_octet_t         *priv_ptr,
+                                ftdf_frame_header_t  *frame_header,
+                                ftdf_security_header *security_header);
 
-FTDF_Status FTDF_unsecureFrame( FTDF_Octet*          bufPtr,
-                                FTDF_Octet*          privPtr,
-                                FTDF_FrameHeader*    frameHeader,
-                                FTDF_SecurityHeader* securityHeader );
+ftdf_status_t ftdf_unsecure_frame(ftdf_octet_t         *buf_ptr,
+                                  ftdf_octet_t         *priv_ptr,
+                                  ftdf_frame_header_t  *frame_header,
+                                  ftdf_security_header *security_header);
 
-FTDF_KeyDescriptor* FTDF_lookupKey( FTDF_AddressMode devAddrMode,
-                                    FTDF_PANId       devPANId,
-                                    FTDF_Address     devAddr,
-                                    FTDF_FrameType   frameType,
-                                    FTDF_KeyIdMode   keyIdMode,
-                                    FTDF_KeyIndex    keyIndex,
-                                    FTDF_Octet*      keySource );
+ftdf_key_descriptor_t *ftdf_lookup_key(ftdf_address_mode_t dev_addr_mode,
+                                       ftdf_pan_id_t       dev_pan_id,
+                                       ftdf_address_t      dev_addr,
+                                       ftdf_frame_type_t   frame_type,
+                                       ftdf_key_id_mode_t  key_id_mode,
+                                       ftdf_key_index_t    key_index,
+                                       ftdf_octet_t        *key_source);
 
-FTDF_DeviceDescriptor* FTDF_lookupDevice( FTDF_Size                    nrOfDeviceDescriptorHandles,
-                                          FTDF_DeviceDescriptorHandle* deviceDescriptorHandles,
-                                          FTDF_AddressMode             devAddrMode,
-                                          FTDF_PANId                   devPANId,
-                                          FTDF_Address                 devAddr );
+ftdf_device_descriptor_t *ftdf_lookup_device(ftdf_size_t                     nr_of_device_descriptor_handles,
+                                             ftdf_device_descriptor_handle_t *device_descriptor_handles,
+                                             ftdf_address_mode_t             dev_addr_mode,
+                                             ftdf_pan_id_t                   dev_pan_id,
+                                             ftdf_address_t                  dev_addr);
 
-FTDF_SecurityLevelDescriptor* FTDF_getSecurityLevelDescr( FTDF_FrameType      frameType,
-                                                          FTDF_CommandFrameId commandFrameId );
+ftdf_security_level_descriptor_t *ftdf_get_security_level_descr(ftdf_frame_type_t       frame_type,
+                                                                ftdf_command_frame_id_t command_frame_id);
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-FTDF_Octet* FTDF_addIes( FTDF_Octet*  txPtr,
-                         FTDF_IEList* headerIEList,
-                         FTDF_IEList* payloadIEList,
-                         FTDF_Boolean withTerminationIE );
+ftdf_octet_t *ftdf_add_ies(ftdf_octet_t   *tx_ptr,
+                           ftdf_ie_list_t *header_ie_list,
+                           ftdf_ie_list_t *payload_ie_list,
+                           ftdf_boolean_t with_termination_ie);
 
-FTDF_Octet* FTDF_getIes( FTDF_Octet*   rxPtr,
-                         FTDF_Octet*   frameEndPtr,
-                         FTDF_IEList** headerIEList,
-                         FTDF_IEList** payloadIEList );
+ftdf_octet_t *ftdf_get_ies(ftdf_octet_t   *rx_ptr,
+                           ftdf_octet_t   *frame_end_ptr,
+                           ftdf_ie_list_t **header_ie_list,
+                           ftdf_ie_list_t **payload_ie_list);
 #endif /* !FTDF_NO_CSL || !FTDF_NO_TSCH */
 
 #ifndef FTDF_NO_CSL
-void FTDF_setPeerCslTiming( FTDF_IEList* headerIEList,
-                            FTDF_Time    timeStamp );
-void FTDF_setCslSampleTime( void );
-void FTDF_getWakeupParams( FTDF_ShortAddress dstAddr,
-                           FTDF_Time*        wakeupStartTime,
-                           FTDF_Period*      wakeupPeriod );
+void ftdf_set_peer_csl_timing(ftdf_ie_list_t *header_ie_list, ftdf_time_t    timeStamp);
+void ftdf_set_csl_sample_time(void);
+void ftdf_get_wakeup_params(ftdf_short_address_t dst_addr,
+                            ftdf_time_t          *wakeup_start_time,
+                            ftdf_period_t        *wakeup_period);
 #endif /* FTDF_NO_CSL */
 
-void            FTDF_getExtAddress( void );
-void            FTDF_setExtAddress( void );
-void            FTDF_getAckWaitDuration( void );
-void            FTDF_getEnhAckWaitDuration( void );
-void            FTDF_setEnhAckWaitDuration( void );
-void            FTDF_getImplicitBroadcast( void );
-void            FTDF_setImplicitBroadcast( void );
-void            FTDF_setShortAddress( void );
-void            FTDF_setSimpleAddress( void );
-void            FTDF_getRxOnWhenIdle( void );
-void            FTDF_setRxOnWhenIdle( void );
-void            FTDF_getPANId( void );
-void            FTDF_setPANId( void );
-void            FTDF_getCurrentChannel( void );
-void            FTDF_setCurrentChannel( void );
+void ftdf_get_ext_address(void);
+void ftdf_set_ext_address(void);
+void ftdf_get_ack_wait_duration(void);
+void ftdf_get_enh_ack_wait_duration(void);
+void ftdf_set_enh_ack_wait_duration(void);
+void ftdf_get_implicit_broadcast(void);
+void ftdf_set_implicit_broadcast(void);
+void ftdf_set_short_address(void);
+void ftdf_set_simple_address(void);
+void ftdf_get_rx_on_when_idle(void);
+void ftdf_set_rx_on_when_idle(void);
+void ftdf_getpan_id(void);
+void ftdf_setpan_id(void);
+void ftdf_get_current_channel(void);
+void ftdf_set_current_channel(void);
 void            FTDF_setTXPower( void );
-void            FTDF_getMaxFrameTotalWaitTime( void );
-void            FTDF_setMaxFrameTotalWaitTime( void );
+void ftdf_get_max_frame_total_wait_time(void);
+void ftdf_set_max_frame_total_wait_time(void);
 #ifndef FTDF_NO_CSL
-void            FTDF_setLeEnabled( void );
-void            FTDF_getCslFramePendingWaitT( void );
-void            FTDF_setCslFramePendingWaitT( void );
+void ftdf_set_le_enabled(void);
+void ftdf_get_csl_frame_pending_wait(void);
+void ftdf_set_csl_frame_pending_wait(void);
 #endif /* FTDF_NO_CSL */
-void            FTDF_getLmacPmData( void );
-void            FTDF_getLmacTrafficCounters( void );
-void            FTDF_setMaxCSMABackoffs( void );
-void            FTDF_setMaxBE( void );
-void            FTDF_setMinBE( void );
-void            FTDF_getKeepPhyEnabled( void );
-void            FTDF_setKeepPhyEnabled( void );
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-void            FTDF_setBoIrqThreshold( void );
-void            FTDF_getBoIrqThreshold( void );
-void            FTDF_setPtiConfig( void );
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+void ftdf_get_lmac_pm_data(void);
+void ftdf_get_lmac_traffic_counters(void);
+void ftdf_set_max_csma_backoffs(void);
+void ftdf_set_max_be(void);
+void ftdf_set_min_be(void);
+void ftdf_get_keep_phy_enabled(void);
+void ftdf_set_keep_phy_enabled(void);
+void ftdf_set_bo_irq_threshold(void);
+void ftdf_get_bo_irq_threshold(void);
+void ftdf_set_pti_config(void);
 
 #ifndef FTDF_NO_TSCH
-void            FTDF_setTimeslotTemplate( void );
+void ftdf_set_timeslot_template(void);
 #endif /* FTDF_NO_TSCH */
 
-void            FTDF_initLmac( void );
-void            FTDF_initQueues( void );
-void            FTDF_initQueue( FTDF_Queue* queue );
-void            FTDF_queueBufferHead( FTDF_Buffer* buffer, FTDF_Queue* queue );
-FTDF_Status     FTDF_queueReqHead( FTDF_MsgBuffer* request, FTDF_Queue* queue );
-FTDF_Buffer*    FTDF_dequeueBufferTail( FTDF_Queue* queue );
-FTDF_MsgBuffer* FTDF_dequeueReqTail( FTDF_Queue* queue );
-FTDF_MsgBuffer* FTDF_dequeueByHandle( FTDF_Handle handle, FTDF_Queue* queue );
-FTDF_Buffer*    FTDF_dequeueByBuffer( FTDF_Buffer* buffer, FTDF_Queue* queue );
-FTDF_Boolean    FTDF_isQueueEmpty( FTDF_Queue* queue );
-void            FTDF_addTxPendingTimer( FTDF_MsgBuffer* request, uint8_t pendListNr, FTDF_Time delta, void ( * func )(
-                                            FTDF_PendingTL* ) );
-void            FTDF_removeTxPendingTimer( FTDF_MsgBuffer* request );
-void            FTDF_restoreTxPendingTimer( void );
-FTDF_Boolean    FTDF_getTxPendingTimerHead( FTDF_Time* time );
-void            FTDF_sendTransactionExpired( FTDF_PendingTL* ptr );
+void ftdf_init_lmac(void);
+void ftdf_init_queues(void);
+void ftdf_init_queue(ftdf_queue_t *queue);
+void ftdf_queue_buffer_head(ftdf_buffer_t *buffer, ftdf_queue_t *queue);
+ftdf_status_t ftdf_queue_req_head(ftdf_msg_buffer_t *request, ftdf_queue_t *queue);
+ftdf_buffer_t *ftdf_dequeue_buffer_tail(ftdf_queue_t *queue);
+ftdf_msg_buffer_t *ftdf_dequeue_req_tail(ftdf_queue_t *queue);
+ftdf_msg_buffer_t *ftdf_dequeue_by_handle(ftdf_handle_t handle, ftdf_queue_t *queue);
+ftdf_buffer_t *ftdf_dequeue_by_buffer(ftdf_buffer_t *buffer, ftdf_queue_t *queue);
+ftdf_boolean_t ftdf_is_queue_empty(ftdf_queue_t *queue);
+
+void ftdf_add_tx_pending_timer(ftdf_msg_buffer_t *request,
+                               uint8_t           pend_list_nr,
+                               ftdf_time_t       delta,
+                               void              (* func)(ftdf_pending_tl_t*));
+
+void ftdf_remove_tx_pending_timer(ftdf_msg_buffer_t *request);
+void ftdf_restore_tx_pending_timer(void);
+ftdf_boolean_t ftdf_get_tx_pending_timer_head(ftdf_time_t *time);
+void ftdf_send_transaction_expired(ftdf_pending_tl_t *ptr);
 #ifndef FTDF_NO_TSCH
-void            FTDF_processKeepAliveTimerExp( FTDF_PendingTL* ptr );
-void            FTDF_resetKeepAliveTimer( FTDF_ShortAddress dstAddr );
+void ftdf_process_keep_alive_timer_exp(ftdf_pending_tl_t *ptr);
+void ftdf_reset_keep_alive_timer(ftdf_short_address_t dst_addr);
 #endif /* FTDF_NO_TSCH */
 
-void FTDF_processTxPending(FTDF_FrameHeader*    frameHeader,
-        FTDF_SecurityHeader* securityHeader );
+void ftdf_process_tx_pending(ftdf_frame_header_t  *frame_hader, ftdf_security_header *security_header);
 
-void            FTDF_processCommandFrame( FTDF_Octet*          rxBuffer,
-                                          FTDF_FrameHeader*    frameHeader,
-                                          FTDF_SecurityHeader* securityHeader,
-                                          FTDF_IEList*         payloadIEList );
+void ftdf_process_command_frame(ftdf_octet_t         *rx_buffer,
+                                ftdf_frame_header_t  *frame_header,
+                                ftdf_security_header *security_header,
+                                ftdf_ie_list_t       *payload_ie_list);
 
-void               FTDF_scanReady( FTDF_ScanRequest* );
-void               FTDF_addPANdescriptor( FTDF_PANDescriptor* );
-void               FTDF_sendBeaconRequest( FTDF_ChannelNumber channel );
-void               FTDF_sendBeaconRequestIndication( FTDF_FrameHeader* frameHeader,
-                                                     FTDF_IEList*      payloadIEList );
-void               FTDF_sendOrphanNotification( FTDF_ChannelNumber channel );
+void ftdf_scan_ready(ftdf_scan_request_t*);
+void ftdf_add_pan_descriptor(ftdf_pan_descriptor_t*);
+void ftdf_send_beacon_request(ftdf_channel_number_t channel);
+void ftdf_send_beacon_request_indication(ftdf_frame_header_t *frame_header, ftdf_ie_list_t *payload_ie_list);
+void ftdf_send_orphan_notification(ftdf_channel_number_t channel);
 
 #ifndef FTDF_NO_TSCH
-void               FTDF_setTschEnabled( void );
-FTDF_Status        FTDF_scheduleTsch( FTDF_MsgBuffer* request );
-void               FTDF_tschProcessRequest( void );
-FTDF_Size          FTDF_getTschSyncSubIe( void );
-FTDF_Octet*        FTDF_addTschSyncSubIe( FTDF_Octet* txPtr );
-FTDF_ShortAddress  FTDF_getRequestAddress( FTDF_MsgBuffer* request );
-FTDF_MsgBuffer*    FTDF_tschGetPending( FTDF_MsgBuffer* request );
-FTDF_Octet*        FTDF_addCorrTimeIE( FTDF_Octet* txPtr, FTDF_Time rxTimestamp );
-void               FTDF_correctSlotTime( FTDF_Time rxTimestamp );
-void               FTDF_correctSlotTimeFromAck( FTDF_IEList* headerIEList );
-void               FTDF_initTschRetries( void );
-FTDF_TschRetry*    FTDF_getTschRetry( FTDF_ShortAddress nodeAddr );
-FTDF_NumOfBackoffs FTDF_getNumOfBackoffs( FTDF_BEExponent BE );
-void               FTDF_initBackoff( void );
-FTDF_SN            FTDF_processTschSN( FTDF_MsgBuffer* msg, FTDF_SN sn, uint8_t* priv );
+void ftdf_set_tsch_enabled(void);
+ftdf_status_t ftdf_schedule_tsch(ftdf_msg_buffer_t *request);
+void ftdf_tsch_process_request(void);
+ftdf_size_t ftdf_get_tsch_sync_sub_ie(void);
+ftdf_octet_t *ftdf_add_tsch_sync_sub_ie(ftdf_octet_t *tx_ptr);
+ftdf_short_address_t ftdf_get_request_address(ftdf_msg_buffer_t *request);
+ftdf_msg_buffer_t *ftdf_tsch_get_pending(ftdf_msg_buffer_t *request);
+ftdf_octet_t *ftdf_add_corr_time_ie(ftdf_octet_t *tx_ptr, ftdf_time_t rx_timestamp);
+void ftdf_correct_slot_time(ftdf_time_t rx_timestamp);
+void ftdf_correct_slot_time_from_ack(ftdf_ie_list_t *header_ie_list);
+void ftdf_init_tsch_retries(void);
+ftdf_tsch_retry_t *ftdf_get_tsch_retry(ftdf_short_address_t node_addr);
+ftdf_num_of_backoffs_t ftdf_get_num_of_backoffs(ftdf_be_exponent_t be);
+void ftdf_init_backoff(void);
+ftdf_sn_t ftdf_process_tsch_sn(ftdf_msg_buffer_t *msg, ftdf_sn_t sn, uint8_t *priv);
 #endif /* FTDF_NO_TSCH */
 
-FTDF_Time64        FTDF_getCurTime64( void );
-void               FTDF_initCurTime64( void );
+ftdf_time64_t ftdf_get_cur_time64(void);
+void ftdf_init_cur_time64(void);
 
 #if FTDF_USE_SLEEP_DURING_BACKOFF
 typedef enum
@@ -704,41 +664,60 @@ typedef enum
         FTDF_SDB_STATE_BACKING_OFF,
         FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ,
         FTDF_SDB_STATE_RESUMING,
-} FTDF_SdbState;
+} ftdf_sdb_state_t;
 
 typedef struct
 {
-        FTDF_SdbState state;
-        FTDF_Size nrOfBackoffs;
-        FTDF_Time ccaRetryTime;
-        FTDF_Octet buffer[FTDF_BUFFER_LENGTH];
-        uint32_t metadata0;
-        uint32_t metadata1;
-        uint32_t phyCsmaCaAttr;
-} FTDF_Sdb;
+        ftdf_sdb_state_t state;
+        ftdf_size_t nr_of_backoffs;
+        ftdf_time_t cca_retry_time;
+        ftdf_octet_t buffer[FTDF_BUFFER_LENGTH];
+        uint32_t metadata_0;
+        uint32_t metadata_1;
+        uint32_t phy_csma_ca_attr;
+} ftdf_sdb_t;
 
-void FTDF_sdbFsmReset(void);
+void ftdf_sdb_fsm_reset(void);
 
-void FTDF_sdbFsmBackoffIRQ(void);
+void ftdf_sdb_fsm_backoff_irq(void);
 
-void FTDF_sdbFsmSleep(void);
+void ftdf_sdb_fsm_sleep(void);
 
-void FTDF_sdbFsmAbortSleep(void);
+void ftdf_sdb_fsm_abort_sleep(void);
 
-void FTDF_sdbFsmWakeUpIRQ(void);
+void ftdf_sdb_fsm_wake_up_irq(void);
 
-void FTDF_sdbFsmWakeUp(void);
+void ftdf_sdb_fsm_wake_up(void);
 
-void FTDF_sdbFsmTxIRQ(void);
+void ftdf_sdb_fsm_tx_irq(void);
 
-FTDF_USec FTDF_sdbGetSleepTime(void);
+ftdf_usec_t ftdf_sdb_get_sleep_time(void);
 
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
 
+static inline void ftdf_set_link_quality_mode(void)
+{
+#ifdef FTDF_PIB_LINK_QUALITY_MODE
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_1_REG, PHYRXATTR_DEM_PTI,
+                (ftdf_pib.link_quality_mode == FTDF_LINK_QUALITY_MODE_RSSI) ? 0x8 : 0);
+
+        REG_SETF(DEM, RF_FTDF_CTRL4_REG, LQI_SCALE, 0);
+
+        if (ftdf_pib.link_quality_mode == FTDF_LINK_QUALITY_MODE_RSSI) {
+                REG_SETF(DEM, RF_FTDF_CTRL4_REG, LQI_PREAMBLE_EN, 0);
+                REG_SETF(DEM, RF_FTDF_CTRL4_REG, LQI_CORRTH_EN, 1);
+        } else {
+                REG_SETF(DEM, RF_FTDF_CTRL4_REG, LQI_PREAMBLE_EN, 1);
+                REG_SETF(DEM, RF_FTDF_CTRL4_REG, LQI_CORRTH_EN, 0);
+        }
+
+#endif
+}
+
 #if dg_configUSE_FTDF_DDPHY == 1
 
-void FTDF_ddphyRestore(void);
+void ftdf_ddphy_restore(void);
 
-void FTDF_ddphySave(void);
+void ftdf_ddphy_save(void);
 
 #endif

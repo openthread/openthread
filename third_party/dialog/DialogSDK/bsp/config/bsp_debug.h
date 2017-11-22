@@ -597,9 +597,10 @@
 /**
  * \brief Enables BLE diagnostic signals.
  *
- * There are 4 diagnostic signal configurations that user can choose from. To enable a specific
- * configuration, simply define dg_configBLE_DIAGN_CONFIG with the perspective configuration ID.
- * Configuration ID 0 disables BLE diagnostics.
+ * There are 5 (4 plus the COEX mode, see next table) diagnostic signal configurations that
+ * user can choose from. To enable a specific configuration, simply define
+ * dg_configBLE_DIAGN_CONFIG with the perspective configuration ID. Configuration ID 0 disables
+ * BLE diagnostics.
  *
  * ------------------------------------------------------------------------------------------------------
  * | Signal     | Pin   | Config 1              | Config 2      | Config 3              | Config 4      |
@@ -620,6 +621,21 @@
  * ------------------------------------------------------------------------------------------------------
  * | ble_diag7  | P2_3  | ble_event_irq         | rf_rx_data    | rf_tx_data_valid      | ble_event_irq |
  * ------------------------------------------------------------------------------------------------------
+ *
+ * Coex Mode Diagnostics: The COEX interface multiplexes its diagnostic pins on top of BLE
+ * diagnostics when option dg_configCOEX_ENABLE_DIAGS is set to 1. However, diagnostic signals
+ * ble_diag0 and ble_diag1 are unused by the COEX diagnostics and can be used for BLE. More
+ * specifically, Config 5 enables the following configuration, that can be used simultaneously
+ * with COEX diagnostics (dg_configCOEX_ENABLE_DIAGS == 1):
+ *
+ * ----------------------------------------------
+ * | Signal     | Pin   | Config 5              |
+ * ----------------------------------------------
+ * | ble_diag0  | P3_0  | radcntl_txen          |
+ * ----------------------------------------------
+ * | ble_diag1  | P3_1  | radcntl_rxen          |
+ * ----------------------------------------------
+ *
  */
 #ifndef dg_configBLE_DIAGN_CONFIG
 #define dg_configBLE_DIAGN_CONFIG                   (0)

@@ -42,6 +42,7 @@
  *
  ****************************************************************************************
  */
+
 #ifndef _QSPI_WINBOND_H_
 #define _QSPI_WINBOND_H_
 
@@ -155,7 +156,8 @@ static void flash_w25q_deactivate_command_entry_mode(void);
  *
  * \note This function blocks until the Flash has processed the command.
  */
-QSPI_SECTION __attribute__((unused)) static inline void flash_w25q_wre_volatile(void)
+static inline void flash_w25q_wre_volatile(void) __attribute__((always_inline)) __attribute__((unused));
+static inline void flash_w25q_wre_volatile(void)
 {
         uint8_t cmd[] = { W25Q_WRITE_ENABLE_NON_VOL };
 
@@ -165,7 +167,8 @@ QSPI_SECTION __attribute__((unused)) static inline void flash_w25q_wre_volatile(
         while (flash_is_busy());
 }
 
-QSPI_SECTION __attribute__((unused)) static inline uint8_t flash_w25q_read_status_register_2(void)
+static inline uint8_t flash_w25q_read_status_register_2(void) __attribute__((always_inline));
+static inline uint8_t flash_w25q_read_status_register_2(void)
 {
         __DBG_QSPI_VOLATILE__ uint8_t status;
         uint8_t cmd[] = { W25Q_READ_STATUS_REGISTER2 };
@@ -184,7 +187,8 @@ QSPI_SECTION __attribute__((unused)) static inline uint8_t flash_w25q_read_statu
  *        value has been actually written is done though. It is up to the caller to decide whether
  *        such verification is needed or not and execute it on its own.
  */
-QSPI_SECTION __attribute__((unused)) static inline void flash_w25q_write_status_register_2(uint8_t value)
+static inline void flash_w25q_write_status_register_2(uint8_t value) __attribute__((always_inline));
+static inline void flash_w25q_write_status_register_2(uint8_t value)
 {
         uint8_t cmd[] = { W25Q_WRITE_STATUS_REGISTER2, value };
 
@@ -194,7 +198,8 @@ QSPI_SECTION __attribute__((unused)) static inline void flash_w25q_write_status_
         while (flash_is_busy());
 }
 
-QSPI_SECTION static inline void flash_w25q_enable_quad_mode(void)
+static inline void flash_w25q_enable_quad_mode(void) __attribute__((always_inline));
+static inline void flash_w25q_enable_quad_mode(void)
 {
         uint8_t status;
 
@@ -205,7 +210,7 @@ QSPI_SECTION static inline void flash_w25q_enable_quad_mode(void)
         }
 }
 
-QSPI_SECTION static bool flash_w25q_is_suspended(void)
+__RETAINED_CODE static bool flash_w25q_is_suspended(void)
 {
         __DBG_QSPI_VOLATILE__ uint8_t status;
 
@@ -213,7 +218,7 @@ QSPI_SECTION static bool flash_w25q_is_suspended(void)
         return (status & W25Q_STATUS2_SUS_MASK) != 0;
 }
 
-QSPI_SECTION static void flash_w25q_initialize(uint8_t device_type, uint8_t device_density)
+__RETAINED_CODE static void flash_w25q_initialize(uint8_t device_type, uint8_t device_density)
 {
         flash_activate_command_entry_mode();
 
@@ -222,7 +227,7 @@ QSPI_SECTION static void flash_w25q_initialize(uint8_t device_type, uint8_t devi
         flash_deactivate_command_entry_mode();
 }
 
-QSPI_SECTION static void flash_w25q_deactivate_command_entry_mode(void)
+__RETAINED_CODE static void flash_w25q_deactivate_command_entry_mode(void)
 {
 }
 

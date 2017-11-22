@@ -31,23 +31,18 @@
  * This file includes the platform-specific initializers.
  */
 
-#include <openthread/config.h>
-
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/uart.h>
 
 #include "platform-da15000.h"
 
-#include "sdk_defs.h"
-#include "ftdf.h"
 #include "hw_cpm.h"
 #include "hw_gpio.h"
 #include "hw_qspi.h"
-#include "hw_otpc.h"
 #include "hw_watchdog.h"
+#include "sdk_defs.h"
 
 static bool sBlink = false;
 static int  sMsCounterInit;
@@ -67,7 +62,7 @@ static otInstance *sInstance = NULL;
  * Router       - 2Hz
  * Child        - 0.5Hz
  */
-void ExampleProcess(otInstance *aInstance)
+static void ExampleProcess(otInstance *aInstance)
 {
     static int    aliveLEDcounter = 0;
     otDeviceRole  devRole;
@@ -136,8 +131,6 @@ void PlatformInit(int argc, char *argv[])
     da15000AlarmInit();
     // Initialize Radio
     da15000RadioInit();
-    // enable interrupts
-    portENABLE_INTERRUPTS();
 
     (void)argc;
     (void)argv;
@@ -214,9 +207,7 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_PLL48:
         if (hw_cpm_is_pll_locked() == 0)
         {
-            hw_watchdog_unfreeze();         // Start watchdog
             hw_cpm_pll_sys_on();            // Turn on PLL
-            hw_watchdog_freeze();           // Stop watchdog
         }
 
         hw_cpm_enable_pll_divider();        // Enable divider (div by 2)
@@ -229,9 +220,7 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_PLL96:
         if (hw_cpm_is_pll_locked() == 0)
         {
-            hw_watchdog_unfreeze();         // Start watchdog
             hw_cpm_pll_sys_on();            // Turn on PLL
-            hw_watchdog_freeze();           // Stop watchdog
         }
 
         hw_cpm_disable_pll_divider();       // Disable divider (div by 1)
@@ -254,7 +243,7 @@ static void ClkChange(sys_clk_t lastClock, sys_clk_t newClock)
     }
 }
 
-void StateChangedCallback(uint32_t aFlags,  void *aContext)
+static void StateChangedCallback(uint32_t aFlags,  void *aContext)
 {
     if ((aFlags & OT_CHANGED_COMMISSIONER_STATE) != 0)
     {

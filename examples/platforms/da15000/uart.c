@@ -26,16 +26,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-
 #include <openthread/platform/uart.h>
+
+#include "platform-da15000.h"
 
 #include "hw_gpio.h"
 #include "hw_uart.h"
-#include "platform-da15000.h"
 
 static bool sUartWriteDone = false;
 static bool sUartReadDone  = false;
+static char *sInitBuf = NULL;
 static uint8_t sUartBuf;
 
 static void UartSignalWrite(void *p, uint16_t transferred)
@@ -104,6 +104,12 @@ void da15000UartProcess(void)
         sUartWriteDone = false;
         otPlatUartSendDone();
     }
+
+    if (sInitBuf == NULL)
+    {
+        sInitBuf = "\n";
+        otPlatUartReceived((uint8_t *)sInitBuf, 1);
+    }
 }
 
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
@@ -112,4 +118,3 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
     return OT_ERROR_NONE;
 }
-

@@ -38,5562 +38,5180 @@
 
 #include <ftdf.h>
 #include "internal.h"
-#include "regmap.h"
 #include "sdk_defs.h"
 
+#ifdef CONFIG_USE_FTDF
 #if dg_configCOEX_ENABLE_CONFIG
 #include "hw_coex.h"
 #endif
-typedef struct
-{
-    void   *addr;
-    uint8_t size;
-    void (* getFunc)(void);
-    void (* setFunc)(void);
-} PIBAttributeDef;
+typedef struct {
+        void *addr;
+        uint8_t size;
+        void (*getFunc)(void);
+        void (*setFunc)(void);
+} pib_attribute_def_t;
 
-typedef struct
-{
-    PIBAttributeDef attributeDefs[ FTDF_NR_OF_PIB_ATTRIBUTES + 1 ];
-} PIBAttributeTable;
+typedef struct {
+        pib_attribute_def_t attribute_defs[FTDF_NR_OF_PIB_ATTRIBUTES + 1];
+} pib_attribute_table_h;
 
-struct FTDF_Pib                  FTDF_pib __attribute__((section(".retention")));
+ftdf_pib_t ftdf_pib __attribute__ ((section(".retention")));
 
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
 #if FTDF_FPPR_DEFER_INVALIDATION
-static struct
-{
-    FTDF_AddressMode        addrMode;
-    FTDF_PANId              PANId;
-    FTDF_Address            addr;
-} FTDF_fpprPending __attribute__((section(".retention")));
+static struct {
+        ftdf_address_mode_t addr_mode;
+        ftdf_pan_id_t       pan_id;
+        ftdf_address_t      addr;
+} ftdf_fppr_pending __attribute__ ((section(".retention")));
 #endif /* FTDF_FPPR_DEFER_INVALIDATION */
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
 
 #ifndef FTDF_LITE
-const FTDF_ChannelNumber         page0Channels[ FTDF_NR_OF_CHANNELS ] =
-{ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 };
-const FTDF_ChannelDescriptor     channelDescriptors[ 1 ] = { { 0, 16, (FTDF_ChannelNumber *) page0Channels } };
-const FTDF_ChannelDescriptorList channelsSupported = { 1, (FTDF_ChannelDescriptor *) channelDescriptors };
+const ftdf_channel_number_t page_0_channels[FTDF_NR_OF_CHANNELS] = {
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 };
+const ftdf_channel_descriptor_t channel_descriptors[1] = {
+        { 0, 16, (ftdf_channel_number_t*)page_0_channels } };
+const ftdf_channel_descriptor_list_t channels_supported = {
+        1, (ftdf_channel_descriptor_t*)channel_descriptors };
 #endif
 
-const PIBAttributeTable          pibAttributeTable =
-{
-    .attributeDefs[ FTDF_PIB_EXTENDED_ADDRESS ].addr                       = &FTDF_pib.extAddress,
-    .attributeDefs[ FTDF_PIB_EXTENDED_ADDRESS ].size                       = sizeof(FTDF_pib.extAddress),
-    .attributeDefs[ FTDF_PIB_EXTENDED_ADDRESS ].getFunc                    = FTDF_getExtAddress,
-    .attributeDefs[ FTDF_PIB_EXTENDED_ADDRESS ].setFunc                    = FTDF_setExtAddress,
-    .attributeDefs[ FTDF_PIB_ACK_WAIT_DURATION ].addr                      = &FTDF_pib.ackWaitDuration,
-    .attributeDefs[ FTDF_PIB_ACK_WAIT_DURATION ].size                      = 0,
-    .attributeDefs[ FTDF_PIB_ACK_WAIT_DURATION ].getFunc                   = FTDF_getAckWaitDuration,
-    .attributeDefs[ FTDF_PIB_ACK_WAIT_DURATION ].setFunc                   = NULL,
+const pib_attribute_table_h pib_attribute_table = {
+        .attribute_defs[FTDF_PIB_EXTENDED_ADDRESS].addr = &ftdf_pib.ext_address,
+        .attribute_defs[FTDF_PIB_EXTENDED_ADDRESS].size = sizeof(ftdf_pib.ext_address),
+        .attribute_defs[FTDF_PIB_EXTENDED_ADDRESS].getFunc = ftdf_get_ext_address,
+        .attribute_defs[FTDF_PIB_EXTENDED_ADDRESS].setFunc = ftdf_set_ext_address,
+        .attribute_defs[FTDF_PIB_ACK_WAIT_DURATION].addr = &ftdf_pib.ack_wait_duration,
+        .attribute_defs[FTDF_PIB_ACK_WAIT_DURATION].size = 0,
+        .attribute_defs[FTDF_PIB_ACK_WAIT_DURATION].getFunc = ftdf_get_ack_wait_duration,
+        .attribute_defs[FTDF_PIB_ACK_WAIT_DURATION].setFunc = NULL,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PAN_COORD ].addr                  = &FTDF_pib.associatedPANCoord,
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PAN_COORD ].size                  = sizeof(FTDF_pib.associatedPANCoord),
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PAN_COORD ].getFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PAN_COORD ].setFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PERMIT ].addr                     = &FTDF_pib.associationPermit,
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PERMIT ].size                     = sizeof(FTDF_pib.associationPermit),
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PERMIT ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_ASSOCIATION_PERMIT ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_AUTO_REQUEST ].addr                           = &FTDF_pib.autoRequest,
-    .attributeDefs[ FTDF_PIB_AUTO_REQUEST ].size                           = sizeof(FTDF_pib.autoRequest),
-    .attributeDefs[ FTDF_PIB_AUTO_REQUEST ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_AUTO_REQUEST ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT ].addr                          = &FTDF_pib.battLifeExt,
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT ].size                          = sizeof(FTDF_pib.battLifeExt),
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT ].getFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT ].setFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT_PERIODS ].addr                  = &FTDF_pib.battLifeExtPeriods,
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT_PERIODS ].size                  = sizeof(FTDF_pib.battLifeExtPeriods),
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT_PERIODS ].getFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_BATT_LIFE_EXT_PERIODS ].setFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD ].addr                         = &FTDF_pib.beaconPayload,
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD ].size                         = sizeof(FTDF_pib.beaconPayload),
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD ].getFunc                      = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD ].setFunc                      = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD_LENGTH ].addr                  = &FTDF_pib.beaconPayloadLength,
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD_LENGTH ].size                  = sizeof(FTDF_pib.beaconPayloadLength),
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD_LENGTH ].getFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_PAYLOAD_LENGTH ].setFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_ORDER ].addr                           = &FTDF_pib.beaconOrder,
-    .attributeDefs[ FTDF_PIB_BEACON_ORDER ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_BEACON_ORDER ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_ORDER ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_TX_TIME ].addr                         = &FTDF_pib.beaconTxTime,
-    .attributeDefs[ FTDF_PIB_BEACON_TX_TIME ].size                         = sizeof(FTDF_pib.beaconTxTime),
-    .attributeDefs[ FTDF_PIB_BEACON_TX_TIME ].getFunc                      = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_TX_TIME ].setFunc                      = NULL,
-    .attributeDefs[ FTDF_PIB_BSN ].addr                                    = &FTDF_pib.BSN,
-    .attributeDefs[ FTDF_PIB_BSN ].size                                    = sizeof(FTDF_pib.BSN),
-    .attributeDefs[ FTDF_PIB_BSN ].getFunc                                 = NULL,
-    .attributeDefs[ FTDF_PIB_BSN ].setFunc                                 = NULL,
-    .attributeDefs[ FTDF_PIB_COORD_EXTENDED_ADDRESS ].addr                 = &FTDF_pib.coordExtAddress,
-    .attributeDefs[ FTDF_PIB_COORD_EXTENDED_ADDRESS ].size                 = sizeof(FTDF_pib.coordExtAddress),
-    .attributeDefs[ FTDF_PIB_COORD_EXTENDED_ADDRESS ].getFunc              = NULL,
-    .attributeDefs[ FTDF_PIB_COORD_EXTENDED_ADDRESS ].setFunc              = NULL,
-    .attributeDefs[ FTDF_PIB_COORD_SHORT_ADDRESS ].addr                    = &FTDF_pib.coordShortAddress,
-    .attributeDefs[ FTDF_PIB_COORD_SHORT_ADDRESS ].size                    = sizeof(FTDF_pib.coordShortAddress),
-    .attributeDefs[ FTDF_PIB_COORD_SHORT_ADDRESS ].getFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_COORD_SHORT_ADDRESS ].setFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_DSN ].addr                                    = &FTDF_pib.DSN,
-    .attributeDefs[ FTDF_PIB_DSN ].size                                    = sizeof(FTDF_pib.DSN),
-    .attributeDefs[ FTDF_PIB_DSN ].getFunc                                 = NULL,
-    .attributeDefs[ FTDF_PIB_DSN ].setFunc                                 = NULL,
-    .attributeDefs[ FTDF_PIB_GTS_PERMIT ].addr                             = &FTDF_pib.GTSPermit,
-    .attributeDefs[ FTDF_PIB_GTS_PERMIT ].size                             = 0,
-    .attributeDefs[ FTDF_PIB_GTS_PERMIT ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_GTS_PERMIT ].setFunc                          = NULL,
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PAN_COORD].addr = &ftdf_pib.associated_pan_coord,
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PAN_COORD].size =  sizeof(ftdf_pib.associated_pan_coord),
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PAN_COORD].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PAN_COORD].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PERMIT].addr = &ftdf_pib.association_permit,
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PERMIT].size = sizeof(ftdf_pib.association_permit),
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PERMIT].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_ASSOCIATION_PERMIT].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_AUTO_REQUEST].addr = &ftdf_pib.auto_request,
+        .attribute_defs[FTDF_PIB_AUTO_REQUEST].size = sizeof(ftdf_pib.auto_request),
+        .attribute_defs[FTDF_PIB_AUTO_REQUEST].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_AUTO_REQUEST].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT].addr = &ftdf_pib.batt_life_ext,
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT].size = sizeof(ftdf_pib.batt_life_ext),
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT_PERIODS].addr = &ftdf_pib.batt_life_ext_periods,
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT_PERIODS].size = sizeof(ftdf_pib.batt_life_ext_periods),
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT_PERIODS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BATT_LIFE_EXT_PERIODS].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD].addr = &ftdf_pib.beacon_payload,
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD].size = sizeof(ftdf_pib.beacon_payload),
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD_LENGTH].addr = &ftdf_pib.beacon_payload_length,
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD_LENGTH].size = sizeof(ftdf_pib.beacon_payload_length),
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD_LENGTH].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_PAYLOAD_LENGTH].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_ORDER].addr = &ftdf_pib.beacon_order,
+        .attribute_defs[FTDF_PIB_BEACON_ORDER].size = 0,
+        .attribute_defs[FTDF_PIB_BEACON_ORDER].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_ORDER].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_TX_TIME].addr = &ftdf_pib.beacon_tx_time,
+        .attribute_defs[FTDF_PIB_BEACON_TX_TIME].size = sizeof(ftdf_pib.beacon_tx_time),
+        .attribute_defs[FTDF_PIB_BEACON_TX_TIME].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_TX_TIME].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_BSN].addr = &ftdf_pib.bsn,
+        .attribute_defs[FTDF_PIB_BSN].size = sizeof(ftdf_pib.bsn),
+        .attribute_defs[FTDF_PIB_BSN].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BSN].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_COORD_EXTENDED_ADDRESS].addr = &ftdf_pib.coord_ext_address,
+        .attribute_defs[FTDF_PIB_COORD_EXTENDED_ADDRESS].size = sizeof(ftdf_pib.coord_ext_address),
+        .attribute_defs[FTDF_PIB_COORD_EXTENDED_ADDRESS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_COORD_EXTENDED_ADDRESS].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_COORD_SHORT_ADDRESS].addr = &ftdf_pib.coord_short_address,
+        .attribute_defs[FTDF_PIB_COORD_SHORT_ADDRESS].size = sizeof(ftdf_pib.coord_short_address),
+        .attribute_defs[FTDF_PIB_COORD_SHORT_ADDRESS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_COORD_SHORT_ADDRESS].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_DSN].addr = &ftdf_pib.dsn,
+        .attribute_defs[FTDF_PIB_DSN].size = sizeof(ftdf_pib.dsn),
+        .attribute_defs[FTDF_PIB_DSN].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_DSN].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_GTS_PERMIT].addr = &ftdf_pib.gts_permit,
+        .attribute_defs[FTDF_PIB_GTS_PERMIT].size = 0,
+        .attribute_defs[FTDF_PIB_GTS_PERMIT].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_GTS_PERMIT].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_MAX_BE ].addr                                 = &FTDF_pib.maxBE,
-    .attributeDefs[ FTDF_PIB_MAX_BE ].size                                 = sizeof(FTDF_pib.maxBE),
-    .attributeDefs[ FTDF_PIB_MAX_BE ].getFunc                              = NULL,
-    .attributeDefs[ FTDF_PIB_MAX_BE ].setFunc                              = FTDF_setMaxBE,
-    .attributeDefs[ FTDF_PIB_MAX_CSMA_BACKOFFS ].addr                      = &FTDF_pib.maxCSMABackoffs,
-    .attributeDefs[ FTDF_PIB_MAX_CSMA_BACKOFFS ].size                      = sizeof(FTDF_pib.maxCSMABackoffs),
-    .attributeDefs[ FTDF_PIB_MAX_CSMA_BACKOFFS ].getFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_MAX_CSMA_BACKOFFS ].setFunc                   = FTDF_setMaxCSMABackoffs,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME ].addr              = &FTDF_pib.maxFrameTotalWaitTime,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME ].size              = sizeof(FTDF_pib.maxFrameTotalWaitTime),
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME ].getFunc           = FTDF_getMaxFrameTotalWaitTime,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME ].setFunc           = FTDF_setMaxFrameTotalWaitTime,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_RETRIES ].addr                      = &FTDF_pib.maxFrameRetries,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_RETRIES ].size                      = sizeof(FTDF_pib.maxFrameRetries),
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_RETRIES ].getFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_RETRIES ].setFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_MIN_BE ].addr                                 = &FTDF_pib.minBE,
-    .attributeDefs[ FTDF_PIB_MIN_BE ].size                                 = sizeof(FTDF_pib.minBE),
-    .attributeDefs[ FTDF_PIB_MIN_BE ].getFunc                              = NULL,
-    .attributeDefs[ FTDF_PIB_MIN_BE ].setFunc                              = FTDF_setMinBE,
+        .attribute_defs[FTDF_PIB_MAX_BE].addr = &ftdf_pib.max_be,
+        .attribute_defs[FTDF_PIB_MAX_BE].size = sizeof(ftdf_pib.max_be),
+        .attribute_defs[FTDF_PIB_MAX_BE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MAX_BE].setFunc = ftdf_set_max_be,
+        .attribute_defs[FTDF_PIB_MAX_CSMA_BACKOFFS].addr = &ftdf_pib.max_csma_backoffs,
+        .attribute_defs[FTDF_PIB_MAX_CSMA_BACKOFFS].size = sizeof(ftdf_pib.max_csma_backoffs),
+        .attribute_defs[FTDF_PIB_MAX_CSMA_BACKOFFS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MAX_CSMA_BACKOFFS].setFunc = ftdf_set_max_csma_backoffs,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME].addr = &ftdf_pib.max_frame_total_wait_time,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME].size = sizeof(ftdf_pib.max_frame_total_wait_time),
+        .attribute_defs[FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME].getFunc = ftdf_get_max_frame_total_wait_time,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_TOTAL_WAIT_TIME].setFunc = ftdf_set_max_frame_total_wait_time,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_RETRIES].addr = &ftdf_pib.max_frame_retries,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_RETRIES].size =
+            sizeof(ftdf_pib.max_frame_retries),
+        .attribute_defs[FTDF_PIB_MAX_FRAME_RETRIES].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_RETRIES].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_MIN_BE].addr = &ftdf_pib.min_be,
+        .attribute_defs[FTDF_PIB_MIN_BE].size = sizeof(ftdf_pib.min_be),
+        .attribute_defs[FTDF_PIB_MIN_BE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MIN_BE].setFunc = ftdf_set_min_be,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_LIFS_PERIOD ].addr                            = &FTDF_pib.LIFSPeriod,
-    .attributeDefs[ FTDF_PIB_LIFS_PERIOD ].size                            = 0,
-    .attributeDefs[ FTDF_PIB_LIFS_PERIOD ].getFunc                         = NULL,
-    .attributeDefs[ FTDF_PIB_LIFS_PERIOD ].setFunc                         = NULL,
-    .attributeDefs[ FTDF_PIB_SIFS_PERIOD ].addr                            = &FTDF_pib.SIFSPeriod,
-    .attributeDefs[ FTDF_PIB_SIFS_PERIOD ].size                            = 0,
-    .attributeDefs[ FTDF_PIB_SIFS_PERIOD ].getFunc                         = NULL,
-    .attributeDefs[ FTDF_PIB_SIFS_PERIOD ].setFunc                         = NULL,
+        .attribute_defs[FTDF_PIB_LIFS_PERIOD].addr = &ftdf_pib.lifs_period,
+        .attribute_defs[FTDF_PIB_LIFS_PERIOD].size = 0,
+        .attribute_defs[FTDF_PIB_LIFS_PERIOD].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LIFS_PERIOD].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_SIFS_PERIOD].addr = &ftdf_pib.sifs_period,
+        .attribute_defs[FTDF_PIB_SIFS_PERIOD].size = 0,
+        .attribute_defs[FTDF_PIB_SIFS_PERIOD].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SIFS_PERIOD].setFunc = NULL,
 #endif
-    .attributeDefs[ FTDF_PIB_PAN_ID ].addr                                 = &FTDF_pib.PANId,
-    .attributeDefs[ FTDF_PIB_PAN_ID ].size                                 = sizeof(FTDF_pib.PANId),
-    .attributeDefs[ FTDF_PIB_PAN_ID ].getFunc                              = FTDF_getPANId,
-    .attributeDefs[ FTDF_PIB_PAN_ID ].setFunc                              = FTDF_setPANId,
+        .attribute_defs[FTDF_PIB_PAN_ID].addr = &ftdf_pib.pan_id,
+        .attribute_defs[FTDF_PIB_PAN_ID].size = sizeof(ftdf_pib.pan_id),
+        .attribute_defs[FTDF_PIB_PAN_ID].getFunc = ftdf_getpan_id,
+        .attribute_defs[FTDF_PIB_PAN_ID].setFunc = ftdf_setpan_id,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_PROMISCUOUS_MODE ].addr                       = &FTDF_pib.promiscuousMode,
-    .attributeDefs[ FTDF_PIB_PROMISCUOUS_MODE ].size                       = sizeof(FTDF_pib.promiscuousMode),
-    .attributeDefs[ FTDF_PIB_PROMISCUOUS_MODE ].getFunc                    = NULL,
-    .attributeDefs[ FTDF_PIB_PROMISCUOUS_MODE ].setFunc                    = NULL,
-    .attributeDefs[ FTDF_PIB_RESPONSE_WAIT_TIME ].addr                     = &FTDF_pib.responseWaitTime,
-    .attributeDefs[ FTDF_PIB_RESPONSE_WAIT_TIME ].size                     = sizeof(FTDF_pib.responseWaitTime),
-    .attributeDefs[ FTDF_PIB_RESPONSE_WAIT_TIME ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_RESPONSE_WAIT_TIME ].setFunc                  = NULL,
+        .attribute_defs[FTDF_PIB_PROMISCUOUS_MODE].addr = &ftdf_pib.promiscuous_mode,
+        .attribute_defs[FTDF_PIB_PROMISCUOUS_MODE].size = sizeof(ftdf_pib.promiscuous_mode),
+        .attribute_defs[FTDF_PIB_PROMISCUOUS_MODE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_PROMISCUOUS_MODE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_RESPONSE_WAIT_TIME].addr = &ftdf_pib.response_wait_time,
+        .attribute_defs[FTDF_PIB_RESPONSE_WAIT_TIME].size = sizeof(ftdf_pib.response_wait_time),
+        .attribute_defs[FTDF_PIB_RESPONSE_WAIT_TIME].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_RESPONSE_WAIT_TIME].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_RX_ON_WHEN_IDLE ].addr                        = &FTDF_pib.rxOnWhenIdle,
-    .attributeDefs[ FTDF_PIB_RX_ON_WHEN_IDLE ].size                        = sizeof(FTDF_pib.rxOnWhenIdle),
-    .attributeDefs[ FTDF_PIB_RX_ON_WHEN_IDLE ].getFunc                     = FTDF_getRxOnWhenIdle,
-    .attributeDefs[ FTDF_PIB_RX_ON_WHEN_IDLE ].setFunc                     = FTDF_setRxOnWhenIdle,
+        .attribute_defs[FTDF_PIB_RX_ON_WHEN_IDLE].addr = &ftdf_pib.rx_on_when_idle,
+        .attribute_defs[FTDF_PIB_RX_ON_WHEN_IDLE].size = sizeof(ftdf_pib.rx_on_when_idle),
+        .attribute_defs[FTDF_PIB_RX_ON_WHEN_IDLE].getFunc = ftdf_get_rx_on_when_idle,
+        .attribute_defs[FTDF_PIB_RX_ON_WHEN_IDLE].setFunc = ftdf_set_rx_on_when_idle,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_SECURITY_ENABLED ].addr                       = &FTDF_pib.securityEnabled,
-    .attributeDefs[ FTDF_PIB_SECURITY_ENABLED ].size                       = sizeof(FTDF_pib.securityEnabled),
-    .attributeDefs[ FTDF_PIB_SECURITY_ENABLED ].getFunc                    = NULL,
-    .attributeDefs[ FTDF_PIB_SECURITY_ENABLED ].setFunc                    = NULL,
+        .attribute_defs[FTDF_PIB_SECURITY_ENABLED].addr = &ftdf_pib.security_enabled,
+        .attribute_defs[FTDF_PIB_SECURITY_ENABLED].size = sizeof(ftdf_pib.security_enabled),
+        .attribute_defs[FTDF_PIB_SECURITY_ENABLED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SECURITY_ENABLED].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_SHORT_ADDRESS ].addr                          = &FTDF_pib.shortAddress,
-    .attributeDefs[ FTDF_PIB_SHORT_ADDRESS ].size                          = sizeof(FTDF_pib.shortAddress),
-    .attributeDefs[ FTDF_PIB_SHORT_ADDRESS ].getFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_SHORT_ADDRESS ].setFunc                       = FTDF_setShortAddress,
+        .attribute_defs[FTDF_PIB_SHORT_ADDRESS].addr = &ftdf_pib.short_address,
+        .attribute_defs[FTDF_PIB_SHORT_ADDRESS].size = sizeof(ftdf_pib.short_address),
+        .attribute_defs[FTDF_PIB_SHORT_ADDRESS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SHORT_ADDRESS].setFunc = ftdf_set_short_address,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_SUPERFRAME_ORDER ].addr                       = &FTDF_pib.superframeOrder,
-    .attributeDefs[ FTDF_PIB_SUPERFRAME_ORDER ].size                       = 0,
-    .attributeDefs[ FTDF_PIB_SUPERFRAME_ORDER ].getFunc                    = NULL,
-    .attributeDefs[ FTDF_PIB_SUPERFRAME_ORDER ].setFunc                    = NULL,
-    .attributeDefs[ FTDF_PIB_SYNC_SYMBOL_OFFSET ].addr                     = &FTDF_pib.syncSymbolOffset,
-    .attributeDefs[ FTDF_PIB_SYNC_SYMBOL_OFFSET ].size                     = 0,
-    .attributeDefs[ FTDF_PIB_SYNC_SYMBOL_OFFSET ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_SYNC_SYMBOL_OFFSET ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_TIMESTAMP_SUPPORTED ].addr                    = &FTDF_pib.timestampSupported,
-    .attributeDefs[ FTDF_PIB_TIMESTAMP_SUPPORTED ].size                    = 0,
-    .attributeDefs[ FTDF_PIB_TIMESTAMP_SUPPORTED ].getFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_TIMESTAMP_SUPPORTED ].setFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_TRANSACTION_PERSISTENCE_TIME ].addr           = &FTDF_pib.transactionPersistenceTime,
-    .attributeDefs[ FTDF_PIB_TRANSACTION_PERSISTENCE_TIME ].size           =
-    sizeof(FTDF_pib.transactionPersistenceTime),
-    .attributeDefs[ FTDF_PIB_TRANSACTION_PERSISTENCE_TIME ].getFunc        = NULL,
-    .attributeDefs[ FTDF_PIB_TRANSACTION_PERSISTENCE_TIME ].setFunc        = NULL,
-    .attributeDefs[ FTDF_PIB_ENH_ACK_WAIT_DURATION ].addr                  = &FTDF_pib.enhAckWaitDuration,
-    .attributeDefs[ FTDF_PIB_ENH_ACK_WAIT_DURATION ].size                  = sizeof(FTDF_pib.enhAckWaitDuration),
-    .attributeDefs[ FTDF_PIB_ENH_ACK_WAIT_DURATION ].getFunc               = FTDF_getEnhAckWaitDuration,
-    .attributeDefs[ FTDF_PIB_ENH_ACK_WAIT_DURATION ].setFunc               = FTDF_setEnhAckWaitDuration,
-    .attributeDefs[ FTDF_PIB_IMPLICIT_BROADCAST ].addr                     = &FTDF_pib.implicitBroadcast,
-    .attributeDefs[ FTDF_PIB_IMPLICIT_BROADCAST ].size                     = sizeof(FTDF_pib.implicitBroadcast),
-    .attributeDefs[ FTDF_PIB_IMPLICIT_BROADCAST ].getFunc                  = FTDF_getImplicitBroadcast,
-    .attributeDefs[ FTDF_PIB_IMPLICIT_BROADCAST ].setFunc                  = FTDF_setImplicitBroadcast,
-    .attributeDefs[ FTDF_PIB_SIMPLE_ADDRESS ].addr                         = &FTDF_pib.simpleAddress,
-    .attributeDefs[ FTDF_PIB_SIMPLE_ADDRESS ].size                         = sizeof(FTDF_pib.simpleAddress),
-    .attributeDefs[ FTDF_PIB_SIMPLE_ADDRESS ].getFunc                      = NULL,
-    .attributeDefs[ FTDF_PIB_SIMPLE_ADDRESS ].setFunc                      = FTDF_setSimpleAddress,
-    .attributeDefs[ FTDF_PIB_DISCONNECT_TIME ].addr                        = &FTDF_pib.disconnectTime,
-    .attributeDefs[ FTDF_PIB_DISCONNECT_TIME ].size                        = sizeof(FTDF_pib.disconnectTime),
-    .attributeDefs[ FTDF_PIB_DISCONNECT_TIME ].getFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_DISCONNECT_TIME ].setFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_JOIN_PRIORITY ].addr                          = &FTDF_pib.joinPriority,
-    .attributeDefs[ FTDF_PIB_JOIN_PRIORITY ].size                          = sizeof(FTDF_pib.joinPriority),
-    .attributeDefs[ FTDF_PIB_JOIN_PRIORITY ].getFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_JOIN_PRIORITY ].setFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_ASN ].addr                                    = &FTDF_pib.ASN,
-    .attributeDefs[ FTDF_PIB_ASN ].size                                    = sizeof(FTDF_pib.ASN),
-    .attributeDefs[ FTDF_PIB_ASN ].getFunc                                 = NULL,
-    .attributeDefs[ FTDF_PIB_ASN ].setFunc                                 = NULL,
-    .attributeDefs[ FTDF_PIB_NO_HL_BUFFERS ].addr                          = &FTDF_pib.noHLBuffers,
-    .attributeDefs[ FTDF_PIB_NO_HL_BUFFERS ].size                          = sizeof(FTDF_pib.noHLBuffers),
-    .attributeDefs[ FTDF_PIB_NO_HL_BUFFERS ].getFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_NO_HL_BUFFERS ].setFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_SLOTFRAME_TABLE ].addr                        = &FTDF_pib.slotframeTable,
-    .attributeDefs[ FTDF_PIB_SLOTFRAME_TABLE ].size                        = 0,
-    .attributeDefs[ FTDF_PIB_SLOTFRAME_TABLE ].getFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_SLOTFRAME_TABLE ].setFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_LINK_TABLE ].addr                             = &FTDF_pib.linkTable,
-    .attributeDefs[ FTDF_PIB_LINK_TABLE ].size                             = 0,
-    .attributeDefs[ FTDF_PIB_LINK_TABLE ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_LINK_TABLE ].setFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_TIMESLOT_TEMPLATE ].addr                      = &FTDF_pib.timeslotTemplate,
-    .attributeDefs[ FTDF_PIB_TIMESLOT_TEMPLATE ].size                      = sizeof(FTDF_pib.timeslotTemplate),
-    .attributeDefs[ FTDF_PIB_TIMESLOT_TEMPLATE ].getFunc                   = NULL,
+        .attribute_defs[FTDF_PIB_SUPERFRAME_ORDER].addr = &ftdf_pib.superframe_order,
+        .attribute_defs[FTDF_PIB_SUPERFRAME_ORDER].size = 0,
+        .attribute_defs[FTDF_PIB_SUPERFRAME_ORDER].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SUPERFRAME_ORDER].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_SYNC_SYMBOL_OFFSET].addr = &ftdf_pib.sync_symbol_offset,
+        .attribute_defs[FTDF_PIB_SYNC_SYMBOL_OFFSET].size = 0,
+        .attribute_defs[FTDF_PIB_SYNC_SYMBOL_OFFSET].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SYNC_SYMBOL_OFFSET].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_TIMESTAMP_SUPPORTED].addr = &ftdf_pib.timestamp_supported,
+        .attribute_defs[FTDF_PIB_TIMESTAMP_SUPPORTED].size = 0,
+        .attribute_defs[FTDF_PIB_TIMESTAMP_SUPPORTED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_TIMESTAMP_SUPPORTED].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_TRANSACTION_PERSISTENCE_TIME].addr = &ftdf_pib.transaction_persistence_time,
+        .attribute_defs[FTDF_PIB_TRANSACTION_PERSISTENCE_TIME].size = sizeof(ftdf_pib.transaction_persistence_time),
+        .attribute_defs[FTDF_PIB_TRANSACTION_PERSISTENCE_TIME].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_TRANSACTION_PERSISTENCE_TIME].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_ENH_ACK_WAIT_DURATION].addr = &ftdf_pib.enh_ack_wait_duration,
+        .attribute_defs[FTDF_PIB_ENH_ACK_WAIT_DURATION].size = sizeof(ftdf_pib.enh_ack_wait_duration),
+        .attribute_defs[FTDF_PIB_ENH_ACK_WAIT_DURATION].getFunc = ftdf_get_enh_ack_wait_duration,
+        .attribute_defs[FTDF_PIB_ENH_ACK_WAIT_DURATION].setFunc = ftdf_set_enh_ack_wait_duration,
+        .attribute_defs[FTDF_PIB_IMPLICIT_BROADCAST].addr = &ftdf_pib.implicit_broadcast,
+        .attribute_defs[FTDF_PIB_IMPLICIT_BROADCAST].size = sizeof(ftdf_pib.implicit_broadcast),
+        .attribute_defs[FTDF_PIB_IMPLICIT_BROADCAST].getFunc = ftdf_get_implicit_broadcast,
+        .attribute_defs[FTDF_PIB_IMPLICIT_BROADCAST].setFunc = ftdf_set_implicit_broadcast,
+        .attribute_defs[FTDF_PIB_SIMPLE_ADDRESS].addr = &ftdf_pib.simple_address,
+        .attribute_defs[FTDF_PIB_SIMPLE_ADDRESS].size = sizeof(ftdf_pib.simple_address),
+        .attribute_defs[FTDF_PIB_SIMPLE_ADDRESS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SIMPLE_ADDRESS].setFunc = ftdf_set_simple_address,
+        .attribute_defs[FTDF_PIB_DISCONNECT_TIME].addr = &ftdf_pib.disconnect_time,
+        .attribute_defs[FTDF_PIB_DISCONNECT_TIME].size = sizeof(ftdf_pib.disconnect_time),
+        .attribute_defs[FTDF_PIB_DISCONNECT_TIME].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_DISCONNECT_TIME].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_JOIN_PRIORITY].addr = &ftdf_pib.join_priority,
+        .attribute_defs[FTDF_PIB_JOIN_PRIORITY].size = sizeof(ftdf_pib.join_priority),
+        .attribute_defs[FTDF_PIB_JOIN_PRIORITY].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_JOIN_PRIORITY].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_ASN].addr = &ftdf_pib.asn,
+        .attribute_defs[FTDF_PIB_ASN].size = sizeof(ftdf_pib.asn),
+        .attribute_defs[FTDF_PIB_ASN].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_ASN].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_NO_HL_BUFFERS].addr = &ftdf_pib.no_hl_buffers,
+        .attribute_defs[FTDF_PIB_NO_HL_BUFFERS].size = sizeof(ftdf_pib.no_hl_buffers),
+        .attribute_defs[FTDF_PIB_NO_HL_BUFFERS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_NO_HL_BUFFERS].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_SLOTFRAME_TABLE].addr = &ftdf_pib.slotframe_table,
+        .attribute_defs[FTDF_PIB_SLOTFRAME_TABLE].size = 0,
+        .attribute_defs[FTDF_PIB_SLOTFRAME_TABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SLOTFRAME_TABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_LINK_TABLE].addr = &ftdf_pib.link_table,
+        .attribute_defs[FTDF_PIB_LINK_TABLE].size = 0,
+        .attribute_defs[FTDF_PIB_LINK_TABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LINK_TABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_TIMESLOT_TEMPLATE].addr = &ftdf_pib.timeslot_template,
+        .attribute_defs[FTDF_PIB_TIMESLOT_TEMPLATE].size = sizeof(ftdf_pib.timeslot_template),
+        .attribute_defs[FTDF_PIB_TIMESLOT_TEMPLATE].getFunc = NULL,
 #ifdef FTDF_NO_TSCH
-    .attributeDefs[ FTDF_PIB_TIMESLOT_TEMPLATE ].setFunc                   = NULL,
+        .attribute_defs[FTDF_PIB_TIMESLOT_TEMPLATE].setFunc = NULL,
 #else
-    .attributeDefs[ FTDF_PIB_TIMESLOT_TEMPLATE ].setFunc                   = FTDF_setTimeslotTemplate,
+        .attribute_defs[FTDF_PIB_TIMESLOT_TEMPLATE].setFunc = ftdf_set_timeslot_template,
 #endif /* FTDF_NO_TSCH */
-    .attributeDefs[ FTDF_PIB_HOPPINGSEQUENCE_ID ].addr                     = &FTDF_pib.HoppingSequenceId,
-    .attributeDefs[ FTDF_PIB_HOPPINGSEQUENCE_ID ].size                     = sizeof(FTDF_pib.HoppingSequenceId),
-    .attributeDefs[ FTDF_PIB_HOPPINGSEQUENCE_ID ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_HOPPINGSEQUENCE_ID ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_CHANNEL_PAGE ].addr                           = &FTDF_pib.channelPage,
-    .attributeDefs[ FTDF_PIB_CHANNEL_PAGE ].size                           = sizeof(FTDF_pib.channelPage),
-    .attributeDefs[ FTDF_PIB_CHANNEL_PAGE ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_CHANNEL_PAGE ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_NUMBER_OF_CHANNELS ].addr                     = &FTDF_pib.numberOfChannels,
-    .attributeDefs[ FTDF_PIB_NUMBER_OF_CHANNELS ].size                     = sizeof(FTDF_pib.numberOfChannels),
-    .attributeDefs[ FTDF_PIB_NUMBER_OF_CHANNELS ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_NUMBER_OF_CHANNELS ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_PHY_CONFIGURATION ].addr                      = &FTDF_pib.phyConfiguration,
-    .attributeDefs[ FTDF_PIB_PHY_CONFIGURATION ].size                      = sizeof(FTDF_pib.phyConfiguration),
-    .attributeDefs[ FTDF_PIB_PHY_CONFIGURATION ].getFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_PHY_CONFIGURATION ].setFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_EXTENTED_BITMAP ].addr                        = &FTDF_pib.extendedBitmap,
-    .attributeDefs[ FTDF_PIB_EXTENTED_BITMAP ].size                        = sizeof(FTDF_pib.extendedBitmap),
-    .attributeDefs[ FTDF_PIB_EXTENTED_BITMAP ].getFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_EXTENTED_BITMAP ].setFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LENGTH ].addr                = &FTDF_pib.hoppingSequenceLength,
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LENGTH ].size                = sizeof(FTDF_pib.hoppingSequenceLength),
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LENGTH ].getFunc             = NULL,
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LENGTH ].setFunc             = NULL,
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LIST ].addr                  = FTDF_pib.hoppingSequenceList,
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LIST ].size                  = sizeof(FTDF_pib.hoppingSequenceList),
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LIST ].getFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_HOPPING_SEQUENCE_LIST ].setFunc               = NULL,
-    .attributeDefs[ FTDF_PIB_CURRENT_HOP ].addr                            = &FTDF_pib.currentHop,
-    .attributeDefs[ FTDF_PIB_CURRENT_HOP ].size                            = sizeof(FTDF_pib.currentHop),
-    .attributeDefs[ FTDF_PIB_CURRENT_HOP ].getFunc                         = NULL,
-    .attributeDefs[ FTDF_PIB_CURRENT_HOP ].setFunc                         = NULL,
-    .attributeDefs[ FTDF_PIB_DWELL_TIME ].addr                             = &FTDF_pib.dwellTime,
-    .attributeDefs[ FTDF_PIB_DWELL_TIME ].size                             = sizeof(FTDF_pib.dwellTime),
-    .attributeDefs[ FTDF_PIB_DWELL_TIME ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_DWELL_TIME ].setFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_PERIOD ].addr                             = &FTDF_pib.CSLPeriod,
-    .attributeDefs[ FTDF_PIB_CSL_PERIOD ].size                             = sizeof(FTDF_pib.CSLPeriod),
-    .attributeDefs[ FTDF_PIB_CSL_PERIOD ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_PERIOD ].setFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_MAX_PERIOD ].addr                         = &FTDF_pib.CSLMaxPeriod,
-    .attributeDefs[ FTDF_PIB_CSL_MAX_PERIOD ].size                         = sizeof(FTDF_pib.CSLMaxPeriod),
-    .attributeDefs[ FTDF_PIB_CSL_MAX_PERIOD ].getFunc                      = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_MAX_PERIOD ].setFunc                      = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_CHANNEL_MASK ].addr                       = &FTDF_pib.CSLChannelMask,
-    .attributeDefs[ FTDF_PIB_CSL_CHANNEL_MASK ].size                       = sizeof(FTDF_pib.CSLChannelMask),
-    .attributeDefs[ FTDF_PIB_CSL_CHANNEL_MASK ].getFunc                    = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_CHANNEL_MASK ].setFunc                    = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_FRAME_PENDING_WAIT_T ].addr               = &FTDF_pib.CSLFramePendingWaitT,
-    .attributeDefs[ FTDF_PIB_CSL_FRAME_PENDING_WAIT_T ].size               = sizeof(FTDF_pib.CSLFramePendingWaitT),
+        .attribute_defs[FTDF_PIB_HOPPINGSEQUENCE_ID].addr = &ftdf_pib.hopping_sequence_id,
+        .attribute_defs[FTDF_PIB_HOPPINGSEQUENCE_ID].size = sizeof(ftdf_pib.hopping_sequence_id),
+        .attribute_defs[FTDF_PIB_HOPPINGSEQUENCE_ID].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_HOPPINGSEQUENCE_ID].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CHANNEL_PAGE].addr = &ftdf_pib.channel_page,
+        .attribute_defs[FTDF_PIB_CHANNEL_PAGE].size = sizeof(ftdf_pib.channel_page),
+        .attribute_defs[FTDF_PIB_CHANNEL_PAGE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CHANNEL_PAGE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_NUMBER_OF_CHANNELS].addr = &ftdf_pib.number_of_channels,
+        .attribute_defs[FTDF_PIB_NUMBER_OF_CHANNELS].size = sizeof(ftdf_pib.number_of_channels),
+        .attribute_defs[FTDF_PIB_NUMBER_OF_CHANNELS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_NUMBER_OF_CHANNELS].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_PHY_CONFIGURATION].addr = &ftdf_pib.phy_configuration,
+        .attribute_defs[FTDF_PIB_PHY_CONFIGURATION].size = sizeof(ftdf_pib.phy_configuration),
+        .attribute_defs[FTDF_PIB_PHY_CONFIGURATION].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_PHY_CONFIGURATION].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_EXTENTED_BITMAP].addr = &ftdf_pib.extended_bitmap,
+        .attribute_defs[FTDF_PIB_EXTENTED_BITMAP].size = sizeof(ftdf_pib.extended_bitmap),
+        .attribute_defs[FTDF_PIB_EXTENTED_BITMAP].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_EXTENTED_BITMAP].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LENGTH].addr = &ftdf_pib.hopping_sequence_length,
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LENGTH].size = sizeof(ftdf_pib.hopping_sequence_length),
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LENGTH].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LENGTH].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LIST].addr = ftdf_pib.hopping_sequence_list,
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LIST].size = sizeof(ftdf_pib.hopping_sequence_list),
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LIST].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_HOPPING_SEQUENCE_LIST].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CURRENT_HOP].addr = &ftdf_pib.current_hop,
+        .attribute_defs[FTDF_PIB_CURRENT_HOP].size = sizeof(ftdf_pib.current_hop),
+        .attribute_defs[FTDF_PIB_CURRENT_HOP].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CURRENT_HOP].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_DWELL_TIME].addr = &ftdf_pib.dwell_time,
+        .attribute_defs[FTDF_PIB_DWELL_TIME].size = sizeof(ftdf_pib.dwell_time),
+        .attribute_defs[FTDF_PIB_DWELL_TIME].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_DWELL_TIME].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_PERIOD].addr = &ftdf_pib.csl_period,
+        .attribute_defs[FTDF_PIB_CSL_PERIOD].size = sizeof(ftdf_pib.csl_period),
+        .attribute_defs[FTDF_PIB_CSL_PERIOD].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_PERIOD].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_MAX_PERIOD].addr = &ftdf_pib.csl_max_period,
+        .attribute_defs[FTDF_PIB_CSL_MAX_PERIOD].size = sizeof(ftdf_pib.csl_max_period),
+        .attribute_defs[FTDF_PIB_CSL_MAX_PERIOD].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_MAX_PERIOD].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_CHANNEL_MASK].addr = &ftdf_pib.csl_channel_mask,
+        .attribute_defs[FTDF_PIB_CSL_CHANNEL_MASK].size = sizeof(ftdf_pib.csl_channel_mask),
+        .attribute_defs[FTDF_PIB_CSL_CHANNEL_MASK].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_CHANNEL_MASK].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_FRAME_PENDING_WAIT_T].addr = &ftdf_pib.csl_frame_pending_wait,
+        .attribute_defs[FTDF_PIB_CSL_FRAME_PENDING_WAIT_T].size = sizeof(ftdf_pib.csl_frame_pending_wait),
 #ifdef FTDF_NO_CSL
-    .attributeDefs[ FTDF_PIB_CSL_FRAME_PENDING_WAIT_T ].getFunc            = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_FRAME_PENDING_WAIT_T ].setFunc            = NULL,
+        .attribute_defs[FTDF_PIB_CSL_FRAME_PENDING_WAIT_T].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_FRAME_PENDING_WAIT_T].setFunc = NULL,
 #else
-    .attributeDefs[ FTDF_PIB_CSL_FRAME_PENDING_WAIT_T ].getFunc            = FTDF_getCslFramePendingWaitT,
-    .attributeDefs[ FTDF_PIB_CSL_FRAME_PENDING_WAIT_T ].setFunc            = FTDF_setCslFramePendingWaitT,
+        .attribute_defs[FTDF_PIB_CSL_FRAME_PENDING_WAIT_T].getFunc = ftdf_get_csl_frame_pending_wait,
+        .attribute_defs[FTDF_PIB_CSL_FRAME_PENDING_WAIT_T].setFunc = ftdf_set_csl_frame_pending_wait,
 #endif /* FTDF_NO_CSL */
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED ].addr        = &FTDF_pib.lowEnergySuperframeSupported,
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED ].size        =
-    sizeof(FTDF_pib.lowEnergySuperframeSupported),
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED ].getFunc     = NULL,
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED ].setFunc     = NULL,
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL ].addr    = &FTDF_pib.lowEnergySuperframeSyncInterval,
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL ].size    =
-    sizeof(FTDF_pib.lowEnergySuperframeSyncInterval),
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL ].getFunc = NULL,
-    .attributeDefs[ FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL ].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED].addr = &ftdf_pib.low_energy_superframe_supported,
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED].size = sizeof(ftdf_pib.low_energy_superframe_supported),
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SUPPORTED].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL].addr = &ftdf_pib.low_energy_superframe_sync_interval,
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL].size = sizeof(ftdf_pib.low_energy_superframe_sync_interval),
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LOW_ENERGY_SUPERFRAME_SYNC_INTERVAL].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_PERFORMANCE_METRICS ].addr                    = &FTDF_pib.performanceMetrics,
-    .attributeDefs[ FTDF_PIB_PERFORMANCE_METRICS ].size                    = sizeof(FTDF_pib.performanceMetrics),
-    .attributeDefs[ FTDF_PIB_PERFORMANCE_METRICS ].getFunc                 = FTDF_getLmacPmData,
-    .attributeDefs[ FTDF_PIB_PERFORMANCE_METRICS ].setFunc                 = NULL,
+        .attribute_defs[FTDF_PIB_PERFORMANCE_METRICS].addr = &ftdf_pib.performance_metrics,
+        .attribute_defs[FTDF_PIB_PERFORMANCE_METRICS].size = sizeof(ftdf_pib.performance_metrics),
+        .attribute_defs[FTDF_PIB_PERFORMANCE_METRICS].getFunc = ftdf_get_lmac_pm_data,
+        .attribute_defs[FTDF_PIB_PERFORMANCE_METRICS].setFunc = NULL,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_USE_ENHANCED_BEACON ].addr                    = &FTDF_pib.useEnhancedBecaon,
-    .attributeDefs[ FTDF_PIB_USE_ENHANCED_BEACON ].size                    = sizeof(FTDF_pib.useEnhancedBecaon),
-    .attributeDefs[ FTDF_PIB_USE_ENHANCED_BEACON ].getFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_USE_ENHANCED_BEACON ].setFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_EB_IE_LIST ].addr                             = &FTDF_pib.EBIEList,
-    .attributeDefs[ FTDF_PIB_EB_IE_LIST ].size                             = sizeof(FTDF_pib.EBIEList),
-    .attributeDefs[ FTDF_PIB_EB_IE_LIST ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_EB_IE_LIST ].setFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_EB_FILTERING_ENABLED ].addr                   = &FTDF_pib.EBFilteringEnabled,
-    .attributeDefs[ FTDF_PIB_EB_FILTERING_ENABLED ].size                   = sizeof(FTDF_pib.EBFilteringEnabled),
-    .attributeDefs[ FTDF_PIB_EB_FILTERING_ENABLED ].getFunc                = NULL,
-    .attributeDefs[ FTDF_PIB_EB_FILTERING_ENABLED ].setFunc                = NULL,
-    .attributeDefs[ FTDF_PIB_EBSN ].addr                                   = &FTDF_pib.EBSN,
-    .attributeDefs[ FTDF_PIB_EBSN ].size                                   = sizeof(FTDF_pib.EBSN),
-    .attributeDefs[ FTDF_PIB_EBSN ].getFunc                                = NULL,
-    .attributeDefs[ FTDF_PIB_EBSN ].setFunc                                = NULL,
-    .attributeDefs[ FTDF_PIB_EB_AUTO_SA ].addr                             = &FTDF_pib.EBAutoSA,
-    .attributeDefs[ FTDF_PIB_EB_AUTO_SA ].size                             = sizeof(FTDF_pib.EBAutoSA),
-    .attributeDefs[ FTDF_PIB_EB_AUTO_SA ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_EB_AUTO_SA ].setFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_EACK_IE_LIST ].addr                           = &FTDF_pib.EAckIEList,
-    .attributeDefs[ FTDF_PIB_EACK_IE_LIST ].size                           = sizeof(FTDF_pib.EAckIEList),
-    .attributeDefs[ FTDF_PIB_EACK_IE_LIST ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_EACK_IE_LIST ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_KEY_TABLE ].addr                              = &FTDF_pib.keyTable,
-    .attributeDefs[ FTDF_PIB_KEY_TABLE ].size                              = sizeof(FTDF_pib.keyTable),
-    .attributeDefs[ FTDF_PIB_KEY_TABLE ].getFunc                           = NULL,
-    .attributeDefs[ FTDF_PIB_KEY_TABLE ].setFunc                           = NULL,
-    .attributeDefs[ FTDF_PIB_DEVICE_TABLE ].addr                           = &FTDF_pib.deviceTable,
-    .attributeDefs[ FTDF_PIB_DEVICE_TABLE ].size                           = sizeof(FTDF_pib.deviceTable),
-    .attributeDefs[ FTDF_PIB_DEVICE_TABLE ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_DEVICE_TABLE ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_SECURITY_LEVEL_TABLE ].addr                   = &FTDF_pib.securityLevelTable,
-    .attributeDefs[ FTDF_PIB_SECURITY_LEVEL_TABLE ].size                   = sizeof(FTDF_pib.securityLevelTable),
-    .attributeDefs[ FTDF_PIB_SECURITY_LEVEL_TABLE ].getFunc                = NULL,
-    .attributeDefs[ FTDF_PIB_SECURITY_LEVEL_TABLE ].setFunc                = NULL,
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER ].addr                          = &FTDF_pib.frameCounter,
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER ].size                          = sizeof(FTDF_pib.frameCounter),
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER ].getFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER ].setFunc                       = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_SECURITY_LEVEL ].addr                 = &FTDF_pib.mtDataSecurityLevel,
-    .attributeDefs[ FTDF_PIB_MT_DATA_SECURITY_LEVEL ].size                 =
-    sizeof(FTDF_pib.mtDataSecurityLevel),
-    .attributeDefs[ FTDF_PIB_MT_DATA_SECURITY_LEVEL ].getFunc              = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_SECURITY_LEVEL ].setFunc              = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_ID_MODE ].addr                    = &FTDF_pib.mtDataKeyIdMode,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_ID_MODE ].size                    = sizeof(FTDF_pib.mtDataKeyIdMode),
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_ID_MODE ].getFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_ID_MODE ].setFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_SOURCE ].addr                     = &FTDF_pib.mtDataKeySource,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_SOURCE ].size                     = sizeof(FTDF_pib.mtDataKeySource),
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_SOURCE ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_SOURCE ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_INDEX ].addr                      = &FTDF_pib.mtDataKeyIndex,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_INDEX ].size                      = sizeof(FTDF_pib.mtDataKeyIndex),
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_INDEX ].getFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_MT_DATA_KEY_INDEX ].setFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_DEFAULT_KEY_SOURCE ].addr                     = &FTDF_pib.defaultKeySource,
-    .attributeDefs[ FTDF_PIB_DEFAULT_KEY_SOURCE ].size                     = sizeof(FTDF_pib.defaultKeySource),
-    .attributeDefs[ FTDF_PIB_DEFAULT_KEY_SOURCE ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_DEFAULT_KEY_SOURCE ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS ].addr             = &FTDF_pib.PANCoordExtAddress,
-    .attributeDefs[ FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS ].size             = sizeof(FTDF_pib.PANCoordExtAddress),
-    .attributeDefs[ FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS ].getFunc          = NULL,
-    .attributeDefs[ FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS ].setFunc          = NULL,
-    .attributeDefs[ FTDF_PIB_PAN_COORD_SHORT_ADDRESS ].addr                = &FTDF_pib.PANCoordShortAddress,
-    .attributeDefs[ FTDF_PIB_PAN_COORD_SHORT_ADDRESS ].size                = sizeof(FTDF_pib.PANCoordShortAddress),
-    .attributeDefs[ FTDF_PIB_PAN_COORD_SHORT_ADDRESS ].getFunc             = NULL,
-    .attributeDefs[ FTDF_PIB_PAN_COORD_SHORT_ADDRESS ].setFunc             = NULL,
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER_MODE ].addr                     = &FTDF_pib.frameCounterMode,
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER_MODE ].size                     = sizeof(FTDF_pib.frameCounterMode),
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER_MODE ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_FRAME_COUNTER_MODE ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_SYNC_TX_MARGIN ].addr                     = &FTDF_pib.CSLSyncTxMargin,
-    .attributeDefs[ FTDF_PIB_CSL_SYNC_TX_MARGIN ].size                     = sizeof(FTDF_pib.CSLSyncTxMargin),
-    .attributeDefs[ FTDF_PIB_CSL_SYNC_TX_MARGIN ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_SYNC_TX_MARGIN ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO ].addr                = &FTDF_pib.CSLMaxAgeRemoteInfo,
-    .attributeDefs[ FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO ].size                = sizeof(FTDF_pib.CSLMaxAgeRemoteInfo),
-    .attributeDefs[ FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO ].getFunc             = NULL,
-    .attributeDefs[ FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO ].setFunc             = NULL,
-    .attributeDefs[ FTDF_PIB_TSCH_ENABLED ].addr                           = &FTDF_pib.tschEnabled,
-    .attributeDefs[ FTDF_PIB_TSCH_ENABLED ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_TSCH_ENABLED ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_TSCH_ENABLED ].setFunc                        = NULL,
+        .attribute_defs[FTDF_PIB_USE_ENHANCED_BEACON].addr = &ftdf_pib.use_enhanced_becaon,
+        .attribute_defs[FTDF_PIB_USE_ENHANCED_BEACON].size = sizeof(ftdf_pib.use_enhanced_becaon),
+        .attribute_defs[FTDF_PIB_USE_ENHANCED_BEACON].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_USE_ENHANCED_BEACON].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_EB_IE_LIST].addr = &ftdf_pib.eb_ie_list,
+        .attribute_defs[FTDF_PIB_EB_IE_LIST].size = sizeof(ftdf_pib.eb_ie_list),
+        .attribute_defs[FTDF_PIB_EB_IE_LIST].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_EB_IE_LIST].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_EB_FILTERING_ENABLED].addr = &ftdf_pib.eb_filtering_enabled,
+        .attribute_defs[FTDF_PIB_EB_FILTERING_ENABLED].size = sizeof(ftdf_pib.eb_filtering_enabled),
+        .attribute_defs[FTDF_PIB_EB_FILTERING_ENABLED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_EB_FILTERING_ENABLED].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_EBSN].addr = &ftdf_pib.eb_sn,
+        .attribute_defs[FTDF_PIB_EBSN].size = sizeof(ftdf_pib.eb_sn),
+        .attribute_defs[FTDF_PIB_EBSN].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_EBSN].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_EB_AUTO_SA].addr = &ftdf_pib.eb_auto_sa,
+        .attribute_defs[FTDF_PIB_EB_AUTO_SA].size = sizeof(ftdf_pib.eb_auto_sa),
+        .attribute_defs[FTDF_PIB_EB_AUTO_SA].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_EB_AUTO_SA].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_EACK_IE_LIST].addr = &ftdf_pib.e_ack_ie_list,
+        .attribute_defs[FTDF_PIB_EACK_IE_LIST].size = sizeof(ftdf_pib.e_ack_ie_list),
+        .attribute_defs[FTDF_PIB_EACK_IE_LIST].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_EACK_IE_LIST].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_KEY_TABLE].addr = &ftdf_pib.key_table,
+        .attribute_defs[FTDF_PIB_KEY_TABLE].size = sizeof(ftdf_pib.key_table),
+        .attribute_defs[FTDF_PIB_KEY_TABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_KEY_TABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_DEVICE_TABLE].addr = &ftdf_pib.device_table,
+        .attribute_defs[FTDF_PIB_DEVICE_TABLE].size = sizeof(ftdf_pib.device_table),
+        .attribute_defs[FTDF_PIB_DEVICE_TABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_DEVICE_TABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_SECURITY_LEVEL_TABLE].addr = &ftdf_pib.security_level_table,
+        .attribute_defs[FTDF_PIB_SECURITY_LEVEL_TABLE].size = sizeof(ftdf_pib.security_level_table),
+        .attribute_defs[FTDF_PIB_SECURITY_LEVEL_TABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SECURITY_LEVEL_TABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER].addr = &ftdf_pib.frame_counter,
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER].size = sizeof(ftdf_pib.frame_counter),
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_SECURITY_LEVEL].addr = &ftdf_pib.mt_data_security_level,
+        .attribute_defs[FTDF_PIB_MT_DATA_SECURITY_LEVEL].size = sizeof(ftdf_pib.mt_data_security_level),
+        .attribute_defs[FTDF_PIB_MT_DATA_SECURITY_LEVEL].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_SECURITY_LEVEL].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_ID_MODE].addr = &ftdf_pib.mt_data_key_id_mode,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_ID_MODE].size = sizeof(ftdf_pib.mt_data_key_id_mode),
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_ID_MODE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_ID_MODE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_SOURCE].addr = &ftdf_pib.mt_data_key_source,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_SOURCE].size = sizeof(ftdf_pib.mt_data_key_source),
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_SOURCE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_SOURCE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_INDEX].addr = &ftdf_pib.mt_data_key_index,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_INDEX].size = sizeof(ftdf_pib.mt_data_key_index),
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_INDEX].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MT_DATA_KEY_INDEX].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_DEFAULT_KEY_SOURCE].addr = &ftdf_pib.default_key_source,
+        .attribute_defs[FTDF_PIB_DEFAULT_KEY_SOURCE].size = sizeof(ftdf_pib.default_key_source),
+        .attribute_defs[FTDF_PIB_DEFAULT_KEY_SOURCE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_DEFAULT_KEY_SOURCE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS].addr = &ftdf_pib.pan_coord_ext_address,
+        .attribute_defs[FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS].size = sizeof(ftdf_pib.pan_coord_ext_address),
+        .attribute_defs[FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_PAN_COORD_EXTENDED_ADDRESS].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_PAN_COORD_SHORT_ADDRESS].addr = &ftdf_pib.pan_coord_short_address,
+        .attribute_defs[FTDF_PIB_PAN_COORD_SHORT_ADDRESS].size = sizeof(ftdf_pib.pan_coord_short_address),
+        .attribute_defs[FTDF_PIB_PAN_COORD_SHORT_ADDRESS].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_PAN_COORD_SHORT_ADDRESS].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER_MODE].addr = &ftdf_pib.frame_counter_mode,
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER_MODE].size = sizeof(ftdf_pib.frame_counter_mode),
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER_MODE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_FRAME_COUNTER_MODE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_SYNC_TX_MARGIN].addr = &ftdf_pib.csl_sync_tx_margin,
+        .attribute_defs[FTDF_PIB_CSL_SYNC_TX_MARGIN].size = sizeof(ftdf_pib.csl_sync_tx_margin),
+        .attribute_defs[FTDF_PIB_CSL_SYNC_TX_MARGIN].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_SYNC_TX_MARGIN].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO].addr = &ftdf_pib.csl_max_age_remote_info,
+        .attribute_defs[FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO].size = sizeof(ftdf_pib.csl_max_age_remote_info),
+        .attribute_defs[FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CSL_MAX_AGE_REMOTE_INFO].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_TSCH_ENABLED].addr = &ftdf_pib.tsch_enabled,
+        .attribute_defs[FTDF_PIB_TSCH_ENABLED].size = 0,
+        .attribute_defs[FTDF_PIB_TSCH_ENABLED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_TSCH_ENABLED].setFunc = NULL,
 #ifdef FTDF_NO_CSL
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].addr                             = &FTDF_pib.leEnabled,
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].size                             = 0,
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].setFunc                          = NULL,
+        .attribute_defs[FTDF_PIB_LE_ENABLED].addr = &ftdf_pib.le_enabled,
+        .attribute_defs[FTDF_PIB_LE_ENABLED].size = 0,
+        .attribute_defs[FTDF_PIB_LE_ENABLED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LE_ENABLED].setFunc = NULL,
 #else
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].addr                             = &FTDF_pib.leEnabled,
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].size                             = sizeof(FTDF_pib.leEnabled),
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_LE_ENABLED ].setFunc                          = FTDF_setLeEnabled,
+        .attribute_defs[FTDF_PIB_LE_ENABLED].addr = &ftdf_pib.le_enabled,
+        .attribute_defs[FTDF_PIB_LE_ENABLED].size = sizeof(ftdf_pib.le_enabled),
+        .attribute_defs[FTDF_PIB_LE_ENABLED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LE_ENABLED].setFunc = ftdf_set_le_enabled,
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_CURRENT_CHANNEL ].addr                        = &FTDF_pib.currentChannel,
-    .attributeDefs[ FTDF_PIB_CURRENT_CHANNEL ].size                        = sizeof(FTDF_pib.currentChannel),
-    .attributeDefs[ FTDF_PIB_CURRENT_CHANNEL ].getFunc                     = FTDF_getCurrentChannel,
-    .attributeDefs[ FTDF_PIB_CURRENT_CHANNEL ].setFunc                     = FTDF_setCurrentChannel,
+        .attribute_defs[FTDF_PIB_CURRENT_CHANNEL].addr = &ftdf_pib.current_channel,
+        .attribute_defs[FTDF_PIB_CURRENT_CHANNEL].size = sizeof(ftdf_pib.current_channel),
+        .attribute_defs[FTDF_PIB_CURRENT_CHANNEL].getFunc = ftdf_get_current_channel,
+        .attribute_defs[FTDF_PIB_CURRENT_CHANNEL].setFunc = ftdf_set_current_channel,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_CHANNELS_SUPPORTED ].addr                     = (void *) &channelsSupported,
-    .attributeDefs[ FTDF_PIB_CHANNELS_SUPPORTED ].size                     = 0,
-    .attributeDefs[ FTDF_PIB_CHANNELS_SUPPORTED ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_CHANNELS_SUPPORTED ].setFunc                  = NULL,
+        .attribute_defs[FTDF_PIB_CHANNELS_SUPPORTED].addr = (void*)&channels_supported,
+        .attribute_defs[FTDF_PIB_CHANNELS_SUPPORTED].size = 0,
+        .attribute_defs[FTDF_PIB_CHANNELS_SUPPORTED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CHANNELS_SUPPORTED].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_TX_POWER_TOLERANCE ].addr                     = &FTDF_pib.TXPowerTolerance,
-    .attributeDefs[ FTDF_PIB_TX_POWER_TOLERANCE ].size                     = sizeof(FTDF_pib.TXPowerTolerance),
-    .attributeDefs[ FTDF_PIB_TX_POWER_TOLERANCE ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_TX_POWER_TOLERANCE ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_TX_POWER ].addr                               = &FTDF_pib.TXPower,
-    .attributeDefs[ FTDF_PIB_TX_POWER ].size                               = sizeof(FTDF_pib.TXPower),
-    .attributeDefs[ FTDF_PIB_TX_POWER ].getFunc                            = NULL,
-    .attributeDefs[ FTDF_PIB_TX_POWER ].setFunc                            = NULL,
-    .attributeDefs[ FTDF_PIB_CCA_MODE ].addr                               = &FTDF_pib.CCAMode,
-    .attributeDefs[ FTDF_PIB_CCA_MODE ].size                               = sizeof(FTDF_pib.CCAMode),
-    .attributeDefs[ FTDF_PIB_CCA_MODE ].getFunc                            = NULL,
-    .attributeDefs[ FTDF_PIB_CCA_MODE ].setFunc                            = FTDF_setTXPower,
+        .attribute_defs[FTDF_PIB_TX_POWER_TOLERANCE].addr = &ftdf_pib.tx_power_tolerance,
+        .attribute_defs[FTDF_PIB_TX_POWER_TOLERANCE].size = sizeof(ftdf_pib.tx_power_tolerance),
+        .attribute_defs[FTDF_PIB_TX_POWER_TOLERANCE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_TX_POWER_TOLERANCE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_TX_POWER].addr = &ftdf_pib.tx_power,
+        .attribute_defs[FTDF_PIB_TX_POWER].size = sizeof(ftdf_pib.tx_power),
+        .attribute_defs[FTDF_PIB_TX_POWER].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_TX_POWER].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_CCA_MODE].addr = &ftdf_pib.cca_mode,
+        .attribute_defs[FTDF_PIB_CCA_MODE].size = sizeof(ftdf_pib.cca_mode),
+        .attribute_defs[FTDF_PIB_CCA_MODE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CCA_MODE].setFunc = NULL,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_CURRENT_PAGE ].addr                           = &FTDF_pib.currentPage,
-    .attributeDefs[ FTDF_PIB_CURRENT_PAGE ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_CURRENT_PAGE ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_CURRENT_PAGE ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_DURATION ].addr                     = &FTDF_pib.maxFrameDuration,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_DURATION ].size                     = 0,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_DURATION ].getFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_MAX_FRAME_DURATION ].setFunc                  = NULL,
-    .attributeDefs[ FTDF_PIB_SHR_DURATION ].addr                           = &FTDF_pib.SHRDuration,
-    .attributeDefs[ FTDF_PIB_SHR_DURATION ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_SHR_DURATION ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_SHR_DURATION ].setFunc                        = NULL,
+        .attribute_defs[FTDF_PIB_CURRENT_PAGE].addr = &ftdf_pib.current_page,
+        .attribute_defs[FTDF_PIB_CURRENT_PAGE].size = 0,
+        .attribute_defs[FTDF_PIB_CURRENT_PAGE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_CURRENT_PAGE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_DURATION].addr = &ftdf_pib.max_frame_duration,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_DURATION].size = 0,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_DURATION].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_MAX_FRAME_DURATION].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_SHR_DURATION].addr = &ftdf_pib.shr_duration,
+        .attribute_defs[FTDF_PIB_SHR_DURATION].size = 0,
+        .attribute_defs[FTDF_PIB_SHR_DURATION].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_SHR_DURATION].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_TRAFFIC_COUNTERS ].addr                       = &FTDF_pib.trafficCounters,
-    .attributeDefs[ FTDF_PIB_TRAFFIC_COUNTERS ].size                       = 0,
-    .attributeDefs[ FTDF_PIB_TRAFFIC_COUNTERS ].getFunc                    = FTDF_getLmacTrafficCounters,
-    .attributeDefs[ FTDF_PIB_TRAFFIC_COUNTERS ].setFunc                    = NULL,
+        .attribute_defs[FTDF_PIB_TRAFFIC_COUNTERS].addr = &ftdf_pib.traffic_counters,
+        .attribute_defs[FTDF_PIB_TRAFFIC_COUNTERS].size = 0,
+        .attribute_defs[FTDF_PIB_TRAFFIC_COUNTERS].getFunc = ftdf_get_lmac_traffic_counters,
+        .attribute_defs[FTDF_PIB_TRAFFIC_COUNTERS].setFunc = NULL,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_LE_CAPABLE ].addr                             = &FTDF_pib.LECapable,
-    .attributeDefs[ FTDF_PIB_LE_CAPABLE ].size                             = 0,
-    .attributeDefs[ FTDF_PIB_LE_CAPABLE ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_LE_CAPABLE ].setFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_LL_CAPABLE ].addr                             = &FTDF_pib.LLCapable,
-    .attributeDefs[ FTDF_PIB_LL_CAPABLE ].size                             = 0,
-    .attributeDefs[ FTDF_PIB_LL_CAPABLE ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_LL_CAPABLE ].setFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_DSME_CAPABLE ].addr                           = &FTDF_pib.DSMECapable,
-    .attributeDefs[ FTDF_PIB_DSME_CAPABLE ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_DSME_CAPABLE ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_DSME_CAPABLE ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_RFID_CAPABLE ].addr                           = &FTDF_pib.RFIDCapable,
-    .attributeDefs[ FTDF_PIB_RFID_CAPABLE ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_RFID_CAPABLE ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_RFID_CAPABLE ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_AMCA_CAPABLE ].addr                           = &FTDF_pib.AMCACapable,
-    .attributeDefs[ FTDF_PIB_AMCA_CAPABLE ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_AMCA_CAPABLE ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_AMCA_CAPABLE ].setFunc                        = NULL,
+        .attribute_defs[FTDF_PIB_LE_CAPABLE].addr = &ftdf_pib.le_capable,
+        .attribute_defs[FTDF_PIB_LE_CAPABLE].size = 0,
+        .attribute_defs[FTDF_PIB_LE_CAPABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LE_CAPABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_LL_CAPABLE].addr = &ftdf_pib.ll_capable,
+        .attribute_defs[FTDF_PIB_LL_CAPABLE].size = 0,
+        .attribute_defs[FTDF_PIB_LL_CAPABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LL_CAPABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_DSME_CAPABLE].addr = &ftdf_pib.dsme_capable,
+        .attribute_defs[FTDF_PIB_DSME_CAPABLE].size = 0,
+        .attribute_defs[FTDF_PIB_DSME_CAPABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_DSME_CAPABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_RFID_CAPABLE].addr = &ftdf_pib.rfid_capable,
+        .attribute_defs[FTDF_PIB_RFID_CAPABLE].size = 0,
+        .attribute_defs[FTDF_PIB_RFID_CAPABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_RFID_CAPABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_AMCA_CAPABLE].addr = &ftdf_pib.amca_capable,
+        .attribute_defs[FTDF_PIB_AMCA_CAPABLE].size = 0,
+        .attribute_defs[FTDF_PIB_AMCA_CAPABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_AMCA_CAPABLE].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_METRICS_CAPABLE ].addr                        = &FTDF_pib.metricsCapable,
-    .attributeDefs[ FTDF_PIB_METRICS_CAPABLE ].size                        = 0,
-    .attributeDefs[ FTDF_PIB_METRICS_CAPABLE ].getFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_METRICS_CAPABLE ].setFunc                     = NULL,
+        .attribute_defs[FTDF_PIB_METRICS_CAPABLE].addr = &ftdf_pib.metrics_capable,
+        .attribute_defs[FTDF_PIB_METRICS_CAPABLE].size = 0,
+        .attribute_defs[FTDF_PIB_METRICS_CAPABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_METRICS_CAPABLE].setFunc = NULL,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_RANGING_SUPPORTED ].addr                      = &FTDF_pib.rangingSupported,
-    .attributeDefs[ FTDF_PIB_RANGING_SUPPORTED ].size                      = 0,
-    .attributeDefs[ FTDF_PIB_RANGING_SUPPORTED ].getFunc                   = NULL,
-    .attributeDefs[ FTDF_PIB_RANGING_SUPPORTED ].setFunc                   = NULL,
+        .attribute_defs[FTDF_PIB_RANGING_SUPPORTED].addr = &ftdf_pib.ranging_supported,
+        .attribute_defs[FTDF_PIB_RANGING_SUPPORTED].size = 0,
+        .attribute_defs[FTDF_PIB_RANGING_SUPPORTED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_RANGING_SUPPORTED].setFunc = NULL,
 #endif /* !FTDF_LITE */
-    .attributeDefs[ FTDF_PIB_KEEP_PHY_ENABLED ].addr                       = &FTDF_pib.keepPhyEnabled,
-    .attributeDefs[ FTDF_PIB_KEEP_PHY_ENABLED ].size                       = sizeof(FTDF_pib.keepPhyEnabled),
-    .attributeDefs[ FTDF_PIB_KEEP_PHY_ENABLED ].getFunc                    = FTDF_getKeepPhyEnabled,
-    .attributeDefs[ FTDF_PIB_KEEP_PHY_ENABLED ].setFunc                    = FTDF_setKeepPhyEnabled,
-    .attributeDefs[ FTDF_PIB_METRICS_ENABLED ].addr                        = &FTDF_pib.metricsEnabled,
-    .attributeDefs[ FTDF_PIB_METRICS_ENABLED ].size                        = sizeof(FTDF_pib.metricsEnabled),
-    .attributeDefs[ FTDF_PIB_METRICS_ENABLED ].getFunc                     = NULL,
-    .attributeDefs[ FTDF_PIB_METRICS_ENABLED ].setFunc                     = NULL,
+        .attribute_defs[FTDF_PIB_KEEP_PHY_ENABLED].addr = &ftdf_pib.keep_phy_enabled,
+        .attribute_defs[FTDF_PIB_KEEP_PHY_ENABLED].size = sizeof(ftdf_pib.keep_phy_enabled),
+        .attribute_defs[FTDF_PIB_KEEP_PHY_ENABLED].getFunc = ftdf_get_keep_phy_enabled,
+        .attribute_defs[FTDF_PIB_KEEP_PHY_ENABLED].setFunc = ftdf_set_keep_phy_enabled,
+        .attribute_defs[FTDF_PIB_METRICS_ENABLED].addr = &ftdf_pib.metrics_enabled,
+        .attribute_defs[FTDF_PIB_METRICS_ENABLED].size = sizeof(ftdf_pib.metrics_enabled),
+        .attribute_defs[FTDF_PIB_METRICS_ENABLED].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_METRICS_ENABLED].setFunc = NULL,
 #ifndef FTDF_LITE
-    .attributeDefs[ FTDF_PIB_BEACON_AUTO_RESPOND ].addr                    = &FTDF_pib.beaconAutoRespond,
-    .attributeDefs[ FTDF_PIB_BEACON_AUTO_RESPOND ].size                    = sizeof(FTDF_pib.beaconAutoRespond),
-    .attributeDefs[ FTDF_PIB_BEACON_AUTO_RESPOND ].getFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_BEACON_AUTO_RESPOND ].setFunc                 = NULL,
-    .attributeDefs[ FTDF_PIB_TSCH_CAPABLE ].addr                           = &FTDF_pib.tschCapable,
-    .attributeDefs[ FTDF_PIB_TSCH_CAPABLE ].size                           = 0,
-    .attributeDefs[ FTDF_PIB_TSCH_CAPABLE ].getFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_TSCH_CAPABLE ].setFunc                        = NULL,
-    .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].addr              = &FTDF_pib.tsSyncCorrectThreshold,
-    .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].size              = sizeof(FTDF_pib.tsSyncCorrectThreshold),
-    .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].getFunc           = NULL,
-    .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].setFunc           = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_AUTO_RESPOND].addr = &ftdf_pib.beacon_auto_respond,
+        .attribute_defs[FTDF_PIB_BEACON_AUTO_RESPOND].size = sizeof(ftdf_pib.beacon_auto_respond),
+        .attribute_defs[FTDF_PIB_BEACON_AUTO_RESPOND].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_BEACON_AUTO_RESPOND].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_TSCH_CAPABLE].addr = &ftdf_pib.tsch_capable,
+        .attribute_defs[FTDF_PIB_TSCH_CAPABLE].size = 0,
+        .attribute_defs[FTDF_PIB_TSCH_CAPABLE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_TSCH_CAPABLE].setFunc = NULL,
+        .attribute_defs[FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD].addr = &ftdf_pib.ts_sync_correct_threshold,
+        .attribute_defs[FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD].size = sizeof(ftdf_pib.ts_sync_correct_threshold),
+        .attribute_defs[FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD].setFunc = NULL,
 #endif /* !FTDF_LITE */
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].addr                       = &FTDF_pib.boIrqThreshold,
-    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].size                       = sizeof(FTDF_pib.boIrqThreshold),
-    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].getFunc                    = FTDF_getBoIrqThreshold,
-    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].setFunc                    = FTDF_setBoIrqThreshold,
-    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].addr                             = &FTDF_pib.ptiConfig,
-    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].size                             = sizeof(FTDF_pib.ptiConfig),
-    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].getFunc                          = NULL,
-    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].setFunc                          = FTDF_setPtiConfig,
-#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+        .attribute_defs[FTDF_PIB_BO_IRQ_THRESHOLD].addr = &ftdf_pib.bo_irq_threshold,
+        .attribute_defs[FTDF_PIB_BO_IRQ_THRESHOLD].size = sizeof(ftdf_pib.bo_irq_threshold),
+        .attribute_defs[FTDF_PIB_BO_IRQ_THRESHOLD].getFunc = ftdf_get_bo_irq_threshold,
+        .attribute_defs[FTDF_PIB_BO_IRQ_THRESHOLD].setFunc = ftdf_set_bo_irq_threshold,
+        .attribute_defs[FTDF_PIB_PTI_CONFIG].addr = &ftdf_pib.pti_config,
+        .attribute_defs[FTDF_PIB_PTI_CONFIG].size = sizeof(ftdf_pib.pti_config),
+        .attribute_defs[FTDF_PIB_PTI_CONFIG].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_PTI_CONFIG].setFunc = ftdf_set_pti_config,
+        .attribute_defs[FTDF_PIB_LINK_QUALITY_MODE].addr = &ftdf_pib.link_quality_mode,
+        .attribute_defs[FTDF_PIB_LINK_QUALITY_MODE].size = sizeof(ftdf_pib.link_quality_mode),
+        .attribute_defs[FTDF_PIB_LINK_QUALITY_MODE].getFunc = NULL,
+        .attribute_defs[FTDF_PIB_LINK_QUALITY_MODE].setFunc = NULL,
 };
 
-FTDF_Boolean        FTDF_transparentMode                              __attribute__((section(".retention")));
-FTDF_Bitmap32       FTDF_transparentModeOptions                       __attribute__((section(".retention")));
+ftdf_boolean_t          ftdf_transparent_mode                              __attribute__ ((section(".retention")));
+ftdf_bitmap32_t         ftdf_transparent_mode_options                      __attribute__ ((section(".retention")));
 #if FTDF_DBG_BUS_ENABLE
-FTDF_DbgMode        FTDF_dbgMode                                      __attribute__((section(".retention")));
+ftdf_dbg_mode_t         ftdf_dbg_mode                                      __attribute__ ((section(".retention")));
 #endif
 #if dg_configUSE_FTDF_DDPHY == 1
-uint16_t            FTDF_ddphyCcaReg                                  __attribute__((section(".retention")));
+uint16_t            ftdf_ddphy_cca_reg                                  __attribute__ ((section(".retention")));
 #endif
 #ifndef FTDF_LITE
-FTDF_Buffer         FTDF_reqBuffers[ FTDF_NR_OF_REQ_BUFFERS ]         __attribute__((section(".retention")));
-FTDF_Queue          FTDF_reqQueue                                     __attribute__((section(".retention")));
-FTDF_Queue          FTDF_freeQueue                                    __attribute__((section(".retention")));
-FTDF_Pending        FTDF_txPendingList[ FTDF_NR_OF_REQ_BUFFERS ]      __attribute__((section(".retention")));
-FTDF_PendingTL      FTDF_txPendingTimerList[ FTDF_NR_OF_REQ_BUFFERS ] __attribute__((section(".retention")));
-FTDF_PendingTL     *FTDF_txPendingTimerHead                           __attribute__((section(".retention")));
-FTDF_Time           FTDF_txPendingTimerLT                             __attribute__((section(".retention")));
-FTDF_Time           FTDF_txPendingTimerTime                           __attribute__((section(".retention")));
+ftdf_buffer_t           ftdf_req_buffers[FTDF_NR_OF_REQ_BUFFERS]           __attribute__ ((section(".retention")));
+ftdf_queue_t            ftdf_req_queue                                     __attribute__ ((section(".retention")));
+ftdf_queue_t            ftdf_free_queue                                    __attribute__ ((section(".retention")));
+ftdf_pending_t          ftdf_tx_pending_list[FTDF_NR_OF_REQ_BUFFERS]       __attribute__ ((section(".retention")));
+ftdf_pending_tl_t       ftdf_tx_pending_timer_list[FTDF_NR_OF_REQ_BUFFERS] __attribute__ ((section(".retention")));
+ftdf_pending_tl_t       *ftdf_tx_pending_timer_head                        __attribute__ ((section(".retention")));
+ftdf_time_t             ftdf_tx_pending_timer_lt                           __attribute__ ((section(".retention")));
+ftdf_time_t             ftdf_tx_pending_timer_time                         __attribute__ ((section(".retention")));
 #endif /* !FTDF_LITE */
 #ifndef FTDF_PHY_API
-FTDF_MsgBuffer     *FTDF_reqCurrent                                   __attribute__((section(".retention")));
+ftdf_msg_buffer_t       *ftdf_req_current                                  __attribute__ ((section(".retention")));
 #endif
-FTDF_Size           FTDF_nrOfRetries                                  __attribute__((section(".retention")));
+ftdf_size_t             ftdf_nr_of_retries                                 __attribute__ ((section(".retention")));
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-static FTDF_Sdb     FTDF_sdb                                          __attribute__((section(".retention")));
+static ftdf_sdb_t       ftdf_sdb                                           __attribute__ ((section(".retention")));
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
 #ifndef FTDF_LITE
-FTDF_Boolean        FTDF_isPANCoordinator                             __attribute__((section(".retention")));
-FTDF_Time           FTDF_startCslSampleTime                           __attribute__((section(".retention")));
-FTDF_RxAddressAdmin FTDF_rxa[ FTDF_NR_OF_RX_ADDRS ]                   __attribute__((section(".retention")));
+ftdf_boolean_t          ftdf_is_pan_coordinator                            __attribute__ ((section(".retention")));
+ftdf_time_t             ftdf_start_csl_sample_time                         __attribute__ ((section(".retention")));
+ftdf_rx_address_admin_t ftdf_rxa[FTDF_NR_OF_RX_ADDRS]                      __attribute__ ((section(".retention")));
 #endif /* !FTDF_LITE */
-FTDF_Boolean        FTDF_txInProgress                                 __attribute__((section(".retention")));
+ftdf_boolean_t          ftdf_tx_in_progress                                __attribute__ ((section(".retention")));
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_CSL
-FTDF_PeerCslTiming  FTDF_peerCslTiming[ FTDF_NR_OF_CSL_PEERS ]        __attribute__((section(".retention")));
-FTDF_Boolean        FTDF_oldLeEnabled                                 __attribute__((section(".retention")));
-FTDF_Time           FTDF_rzTime                                       __attribute__((section(".retention")));
-FTDF_ShortAddress   FTDF_sendFramePending                             __attribute__((section(".retention")));
+ftdf_peer_csl_timing_t  ftdf_peer_csl_timing[FTDF_NR_OF_CSL_PEERS]         __attribute__ ((section(".retention")));
+ftdf_boolean_t          ftdf_old_le_enabled                                __attribute__ ((section(".retention")));
+ftdf_time_t             ftdf_rz_time                                       __attribute__ ((section(".retention")));
+ftdf_short_address_t    ftdf_send_frame_pending                            __attribute__ ((section(".retention")));
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
-uint32_t            FTDF_curTime[ 2 ]                                 __attribute__((section(".retention")));
-FTDF_LmacCounters   FTDF_lmacCounters                                 __attribute__((section(".retention")));
-FTDF_FrameHeader    FTDF_fh;
+uint32_t                ftdf_cur_time[2]                                   __attribute__ ((section(".retention")));
+ftdf_lmac_counters_t    ftdf_lmac_counters                                 __attribute__ ((section(".retention")));
+ftdf_frame_header_t     ftdf_fh;
 #ifndef FTDF_LITE
-FTDF_SecurityHeader FTDF_sh;
-FTDF_AssocAdmin     FTDF_aa;
+ftdf_security_header    ftdf_sh;
+ftdf_assoc_admin_t      ftdf_aa;
 #endif /* !FTDF_LITE */
 
-#if FTDF_USE_PTI
+#if dg_configCOEX_ENABLE_CONFIG
 /* Packet traffic information used when FTDF is in RX enable. */
-static FTDF_PTI  FTDF_RxPti __attribute__((section(".retention")));
+static ftdf_pti_t ftdf_rx_pti __attribute__ ((section(".retention")));
 #endif
-static void sendConfirm(FTDF_Status status,
-                        FTDF_MsgId  msgId);
+static void send_confirm(ftdf_status_t status, ftdf_msg_id_t msg_id);
 
-void FTDF_reset(int setDefaultPIB)
+void ftdf_reset(int set_default_pib)
 {
-    if (setDefaultPIB)
-    {
-        // Reset PIB values to their default values
-        memset(&FTDF_pib, 0, sizeof(FTDF_pib));
+        if (set_default_pib) {
+                /* Reset PIB values to their default values */
+                memset(&ftdf_pib, 0, sizeof(ftdf_pib));
 
-        FTDF_pib.extAddress                        = FTDF_GET_EXT_ADDRESS();
-        FTDF_pib.ackWaitDuration                   = 0x36;
+                ftdf_pib.ext_address = FTDF_GET_EXT_ADDRESS();
+                ftdf_pib.ack_wait_duration = 0x36;
 #ifndef FTDF_LITE
-        FTDF_pib.autoRequest                       = FTDF_TRUE;
-        FTDF_pib.beaconOrder                       = 15;
-        FTDF_pib.DSN                               = FTDF_pib.extAddress & 0xff;
-        FTDF_pib.BSN                               = FTDF_pib.extAddress & 0xff;
-        FTDF_pib.EBSN                              = FTDF_pib.extAddress & 0xff;
-        FTDF_pib.coordShortAddress                 = 0xffff;
+                ftdf_pib.auto_request = FTDF_TRUE;
+                ftdf_pib.beacon_order = 15;
+                ftdf_pib.dsn = ftdf_pib.ext_address & 0xff;
+                ftdf_pib.bsn = ftdf_pib.ext_address & 0xff;
+                ftdf_pib.eb_sn = ftdf_pib.ext_address & 0xff;
+                ftdf_pib.coord_short_address = 0xffff;
 #endif /* !FTDF_LITE */
-        FTDF_pib.maxBE                             = 5;
-        FTDF_pib.maxCSMABackoffs                   = 4;
-        FTDF_pib.maxFrameTotalWaitTime             = 1026; // see asic_vol v40.100.2.30 PR2540
-        FTDF_pib.maxFrameRetries                   = 3;
-        FTDF_pib.minBE                             = 3;
+                ftdf_pib.max_be = 5;
+                ftdf_pib.max_csma_backoffs = 4;
+                ftdf_pib.max_frame_total_wait_time = 1026; /* see asic_vol v40.100.2.30 PR2540 */
+                ftdf_pib.max_frame_retries = 3;
+                ftdf_pib.min_be = 3;
 #ifndef FTDF_LITE
-        FTDF_pib.LIFSPeriod                        = 40;
-        FTDF_pib.SIFSPeriod                        = 12;
+                ftdf_pib.lifs_period = 40;
+                ftdf_pib.sifs_period = 12;
 #endif /* !FTDF_LITE */
-        FTDF_pib.PANId                             = 0xffff;
+                ftdf_pib.pan_id = 0xffff;
 #ifndef FTDF_LITE
-        FTDF_pib.responseWaitTime                  = 32;
+                ftdf_pib.response_wait_time = 32;
 #endif /* !FTDF_LITE */
-        FTDF_pib.shortAddress                      = 0xffff;
+                ftdf_pib.short_address = 0xffff;
 #ifndef FTDF_LITE
-        FTDF_pib.superframeOrder                   = 15;
-        FTDF_pib.timestampSupported                = FTDF_TRUE;
-        FTDF_pib.transactionPersistenceTime        = 0x1f4;
-        FTDF_pib.enhAckWaitDuration                = 0x360;
-        FTDF_pib.EBAutoSA                          = FTDF_AUTO_FULL;
+                ftdf_pib.superframe_order = 15;
+                ftdf_pib.timestamp_supported = FTDF_TRUE;
+                ftdf_pib.transaction_persistence_time = 0x1f4;
+                ftdf_pib.enh_ack_wait_duration = 0x360;
+                ftdf_pib.eb_auto_sa = FTDF_AUTO_FULL;
 #endif /* !FTDF_LITE */
-        FTDF_pib.currentChannel                    = 11;
-        FTDF_pib.CCAMode                           = FTDF_CCA_MODE_1;
+                ftdf_pib.current_channel = 11;
+                ftdf_pib.cca_mode = FTDF_CCA_MODE_1;
 #ifndef FTDF_LITE
-        FTDF_pib.maxFrameDuration                  = FTDF_TBD;
-        FTDF_pib.SHRDuration                       = FTDF_TBD;
-        FTDF_pib.frameCounterMode                  = 4;
+                ftdf_pib.max_frame_duration = FTDF_TBD;
+                ftdf_pib.shr_duration = FTDF_TBD;
+                ftdf_pib.frame_counter_mode = 4;
 #endif /* !FTDF_LITE */
-        FTDF_pib.metricsCapable                    = FTDF_TRUE;
+                ftdf_pib.metrics_capable = FTDF_TRUE;
 #ifndef FTDF_LITE
-        FTDF_pib.beaconAutoRespond                 = FTDF_TRUE;
+                ftdf_pib.beacon_auto_respond = FTDF_TRUE;
 #endif /* !FTDF_LITE */
-        FTDF_pib.performanceMetrics.counterOctets  = 4; // 32 bit counters
+                ftdf_pib.performance_metrics.counter_octets = 4; /* 32 bit counters */
 #ifndef FTDF_LITE
-        FTDF_pib.joinPriority                      = 1;
-        FTDF_pib.slotframeTable.slotframeEntries   = FTDF_slotframeTable;
-        FTDF_pib.linkTable.linkEntries             = FTDF_linkTable;
-        FTDF_pib.timeslotTemplate.tsCCAOffset      = 1800;
-        FTDF_pib.timeslotTemplate.tsCCA            = 128;
-        FTDF_pib.timeslotTemplate.tsTxOffset       = 2120;
-        FTDF_pib.timeslotTemplate.tsRxOffset       = 1020;
-        FTDF_pib.timeslotTemplate.tsRxAckDelay     = 800;
-        FTDF_pib.timeslotTemplate.tsTxAckDelay     = 1000;
-        FTDF_pib.timeslotTemplate.tsRxWait         = 2200;
-        FTDF_pib.timeslotTemplate.tsAckWait        = 400;
-        FTDF_pib.timeslotTemplate.tsRxTx           = 192;
-        FTDF_pib.timeslotTemplate.tsMaxAck         = 2400;
-        FTDF_pib.timeslotTemplate.tsMaxTs          = 4256;
-        FTDF_pib.timeslotTemplate.tsTimeslotLength = 10000;
-        FTDF_pib.tsSyncCorrectThreshold            = 220;
-        FTDF_pib.hoppingSequenceLength             = 16;
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-        int i;
-
-        for (i = 0; i < FTDF_PTIS; i++)
-        {
-            FTDF_pib.ptiConfig.ptis[i] = 0;
-        }
-
-#endif
+                ftdf_pib.join_priority = 1;
+                ftdf_pib.slotframe_table.slotframe_entries = ftdf_slotframe_table;
+                ftdf_pib.link_table.link_entries = ftdf_link_table;
+                ftdf_pib.timeslot_template.ts_cca_offset = 1800;
+                ftdf_pib.timeslot_template.ts_cca = 128;
+                ftdf_pib.timeslot_template.ts_tx_offset = 2120;
+                ftdf_pib.timeslot_template.ts_rx_offset = 1020;
+                ftdf_pib.timeslot_template.ts_rx_ack_delay = 800;
+                ftdf_pib.timeslot_template.ts_tx_ack_delay = 1000;
+                ftdf_pib.timeslot_template.ts_rx_wait = 2200;
+                ftdf_pib.timeslot_template.ts_ack_wait = 400;
+                ftdf_pib.timeslot_template.ts_rx_tx = 192;
+                ftdf_pib.timeslot_template.ts_max_ack = 2400;
+                ftdf_pib.timeslot_template.ts_max_ts = 4256;
+                ftdf_pib.timeslot_template.ts_timeslot_length = 10000;
+                ftdf_pib.ts_sync_correct_threshold = 220;
+                ftdf_pib.hopping_sequence_length = 16;
+                int i;
+                for (i = 0; i < FTDF_PTIS; i++) {
+                        ftdf_pib.pti_config.ptis[i] = 0;
+                }
 #ifdef FTDF_NO_CSL
-        FTDF_pib.LECapable                         = FTDF_FALSE;
+                ftdf_pib.le_capable = FTDF_FALSE;
 #else
-        FTDF_pib.LECapable                         = FTDF_TRUE;
+                ftdf_pib.le_capable = FTDF_TRUE;
 #endif /* FTDF_NO_CSL */
 #ifdef FTDF_NO_TSCH
-        FTDF_pib.tschCapable                       = FTDF_FALSE;
+                ftdf_pib.tsch_capable = FTDF_FALSE;
 #else
-        FTDF_pib.tschCapable                       = FTDF_TRUE;
+                ftdf_pib.tsch_capable = FTDF_TRUE;
 #endif /* FTDF_NO_TSCH */
 
-        int n;
+                int n;
 
-        for (n = 0; n < FTDF_MAX_HOPPING_SEQUENCE_LENGTH; n++)
-        {
-            FTDF_pib.hoppingSequenceList[ n ] = n + 11;
+                for (n = 0; n < FTDF_MAX_HOPPING_SEQUENCE_LENGTH; n++) {
+                        ftdf_pib.hopping_sequence_list[n] = n + 11;
+                }
+#endif /* !FTDF_LITE */
+
+                ftdf_transparent_mode = FTDF_FALSE;
+#ifndef FTDF_LITE
+                ftdf_is_pan_coordinator = FTDF_FALSE;
+#endif /* !FTDF_LITE */
+                ftdf_lmac_counters.fcs_error_cnt = 0;
+                ftdf_lmac_counters.tx_std_ack_cnt = 0;
+                ftdf_lmac_counters.rx_std_ack_cnt = 0;
+
+#ifndef FTDF_LITE
+                memset(ftdf_pib.default_key_source, 0xff, 8);
+#endif /* !FTDF_LITE */
+                ftdf_pib.bo_irq_threshold = FTDF_BO_IRQ_THRESHOLD;
+                ftdf_pib.link_quality_mode = FTDF_LINK_QUALITY_MODE_RSSI;
         }
 
-#endif /* !FTDF_LITE */
+        ftdf_init_queues();
 
-        FTDF_transparentMode  = FTDF_FALSE;
-#ifndef FTDF_LITE
-        FTDF_isPANCoordinator = FTDF_FALSE;
-#endif /* !FTDF_LITE */
-        FTDF_lmacCounters.fcsErrorCnt = 0;
-        FTDF_lmacCounters.txStdAckCnt = 0;
-        FTDF_lmacCounters.rxStdAckCnt = 0;
+        FTDF->FTDF_LMACRESET_REG = REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_CONTROL) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_RX) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_TX) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_AHB) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_OREG) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_TSTIM) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_SEC) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_COUNT) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACRESET_TIMCTRL) |
+                    REG_MSK(FTDF, FTDF_LMACRESET_REG, LMACGLOBRESET_COUNT);
 
-#ifndef FTDF_LITE
-        memset(FTDF_pib.defaultKeySource, 0xff, 8);
-#endif /* !FTDF_LITE */
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-        FTDF_pib.boIrqThreshold                         = FTDF_BO_IRQ_THRESHOLD;
-#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
-    }
+        uint32_t wait = 0;
 
-    FTDF_initQueues();
+        while (REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, LMACREADY4SLEEP) == 0) {
+                wait++;
+        }
 
-    volatile uint32_t *lmacReset = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMACRESET);
-    *lmacReset = MSK_R_FTDF_ON_OFF_REGMAP_LMACRESET;
+        REG_SETF(FTDF, FTDF_WAKEUP_CONTROL_OS_REG, WAKEUPTIMERENABLE_CLEAR, 1);
 
-    volatile uint32_t *controlStatus = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_STATUS);
-    uint32_t           wait          = 0;
+        while (REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, WAKEUPTIMERENABLESTATUS)) {}
 
-    while ((*controlStatus & MSK_F_FTDF_ON_OFF_REGMAP_LMACREADY4SLEEP) == 0)
-    {
-        wait++;
-    }
+        REG_SETF(FTDF, FTDF_WAKEUP_CONTROL_OS_REG, WAKEUPTIMERENABLE_SET, 1);
 
-    volatile uint32_t *wakeupTimerEnableStatus = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS);
-
-#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
-    FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPTIMERENABLE, 0);
-
-#else
-    FTDF_SET_FIELD(ON_OFF_REGMAP_WAKEUPTIMERENABLE_CLEAR, 1);
-#endif
-
-    while (*wakeupTimerEnableStatus & MSK_F_FTDF_ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS)
-    { }
-
-#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
-    FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPTIMERENABLE, 1);
-
-#else
-    FTDF_SET_FIELD(ON_OFF_REGMAP_WAKEUPTIMERENABLE_SET, 1);
-#endif
-
-    while ((*wakeupTimerEnableStatus & MSK_F_FTDF_ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS) == 0)
-    { }
+        while ((REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, WAKEUPTIMERENABLESTATUS)) == 0) {}
 
 #ifndef FTDF_LITE
-    int n;
+        int n;
 
 #ifndef FTDF_NO_CSL
+        for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++) {
+                ftdf_peer_csl_timing[n].addr = 0xffff;
+        }
 
-    for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++)
-    {
-        FTDF_peerCslTiming[ n ].addr = 0xffff;
-    }
-
-    FTDF_oldLeEnabled     = FTDF_FALSE;
-    FTDF_wakeUpEnableLe   = FTDF_FALSE;
-    FTDF_sendFramePending = 0xfffe;
+        ftdf_old_le_enabled = FTDF_FALSE;
+        ftdf_wake_up_enable_le = FTDF_FALSE;
+        ftdf_send_frame_pending = 0xfffe;
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
-    FTDF_txInProgress     = FTDF_FALSE;
+        ftdf_tx_in_progress = FTDF_FALSE;
 
-    FTDF_initCurTime64();
+        ftdf_init_cur_time64();
 #ifndef FTDF_NO_TSCH
-    FTDF_initTschRetries();
-    FTDF_initBackoff();
+        ftdf_init_tsch_retries();
+        ftdf_init_backoff();
 #endif /* FTDF_NO_TSCH */
 
 #ifndef FTDF_LITE
-
-    for (n = 0; n < FTDF_NR_OF_RX_ADDRS; n++)
-    {
-        FTDF_rxa[ n ].addrMode  = FTDF_NO_ADDRESS;
-        FTDF_rxa[ n ].dsnValid  = FTDF_FALSE;
-        FTDF_rxa[ n ].bsnValid  = FTDF_FALSE;
-        FTDF_rxa[ n ].ebsnValid = FTDF_FALSE;
-    }
+        for (n = 0; n < FTDF_NR_OF_RX_ADDRS; n++) {
+                ftdf_rxa[n].addr_mode = FTDF_NO_ADDRESS;
+                ftdf_rxa[n].dsn_valid = FTDF_FALSE;
+                ftdf_rxa[n].bsn_valid = FTDF_FALSE;
+                ftdf_rxa[n].ebsn_valid = FTDF_FALSE;
+        }
 
 #ifndef FTDF_NO_TSCH
-
-    for (n = 0; n < FTDF_NR_OF_NEIGHBORS; n++)
-    {
-        FTDF_neighborTable[ n ].dstAddr = 0xffff;
-    }
-
+        for (n = 0; n < FTDF_NR_OF_NEIGHBORS; n++) {
+                ftdf_neighbor_table[n].dst_addr = 0xffff;
+        }
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-    FTDF_sdbFsmReset();
+        ftdf_sdb_fsm_reset();
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
-    FTDF_initLmac();
+        ftdf_init_lmac();
 
 #ifndef FTDF_NO_CSL
-    FTDF_rzTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+        ftdf_rz_time = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
 #endif /* FTDF_NO_CSL */
 
 #if dg_configUSE_FTDF_DDPHY == 1
-    FTDF_ddphySet(0);
+        ftdf_ddphy_set(0);
 #endif
 }
 
-#ifndef FTDF_PHY_API
-void FTDF_processResetRequest(FTDF_ResetRequest *resetRequest)
+
+#ifndef FTDF_LITE
+void ftdf_cleanup_queues(void)
 {
+        while (!ftdf_is_queue_empty(&ftdf_req_queue)) {
+                ftdf_msg_buffer_t *request = ftdf_dequeue_req_tail(&ftdf_req_queue);
+                if (request) {
+                        ad_ftdf_rel_msg_data(request);
+                }
+        }
 
-    FTDF_reset(resetRequest->setDefaultPIB);
-    FTDF_ResetConfirm *resetConfirm = (FTDF_ResetConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_ResetConfirm));
+        int n;
+        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++) {
+                while (!ftdf_is_queue_empty(&ftdf_tx_pending_list[n].queue)) {
+                        ftdf_msg_buffer_t *request = ftdf_dequeue_req_tail(&ftdf_tx_pending_list[n].queue);
+                        if (request) {
+                                ad_ftdf_rel_msg_data(request);
+                        }
+                }
+        }
+}
+#endif /* !FTDF_LITE */
 
-    resetConfirm->msgId  = FTDF_RESET_CONFIRM;
-    resetConfirm->status = FTDF_SUCCESS;
+#ifndef FTDF_PHY_API
+void ftdf_process_reset_request(ftdf_reset_request_t *reset_request)
+{
+#ifndef FTDF_LITE
+        ftdf_cleanup_queues();
+#endif
+        ftdf_reset(reset_request->set_default_pib);
+        ftdf_reset_confirm_t* resetConfirm =
+            (ftdf_reset_confirm_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_reset_confirm_t));
 
-    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) resetRequest);
+        resetConfirm->msg_id = FTDF_RESET_CONFIRM;
+        resetConfirm->status = FTDF_SUCCESS;
 
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) resetConfirm);
+        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*)reset_request);
+
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*)resetConfirm);
 }
 #endif /* FTDF_PHY_API */
 
-void FTDF_initLmac(void)
+void ftdf_init_lmac(void)
 {
-    FTDF_PIBAttribute PIBAttribute;
+        ftdf_pib_attribute_t pib_attribute;
 
-    for (PIBAttribute = 1; PIBAttribute <= FTDF_NR_OF_PIB_ATTRIBUTES; PIBAttribute++)
-    {
-        if (pibAttributeTable.attributeDefs[ PIBAttribute ].setFunc != NULL)
-        {
-            pibAttributeTable.attributeDefs[ PIBAttribute ].setFunc();
+        for (pib_attribute = 1; pib_attribute <= FTDF_NR_OF_PIB_ATTRIBUTES; pib_attribute++) {
+                if (pib_attribute_table.attribute_defs[pib_attribute].setFunc != NULL) {
+                        pib_attribute_table.attribute_defs[pib_attribute].setFunc();
+                }
         }
-    }
 
-    if (FTDF_transparentMode == FTDF_TRUE)
-    {
-        FTDF_enableTransparentMode(FTDF_TRUE, FTDF_transparentModeOptions);
-    }
+        if (ftdf_transparent_mode == FTDF_TRUE) {
+                ftdf_enable_transparent_mode(FTDF_TRUE, ftdf_transparent_mode_options);
+        }
 
 #ifndef FTDF_LITE
-
-    if (FTDF_isPANCoordinator)
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_ISPANCOORDINATOR, 1);
-    }
-
+        if (ftdf_is_pan_coordinator) {
+                REG_SETF(FTDF, FTDF_GLOB_CONTROL_0_REG, ISPANCOORDINATOR, 1);
+        }
 #endif /* !FTDF_LITE */
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CCAIDLEWAIT, 192);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_3_REG, CCAIDLEWAIT, 192);
 
-    volatile uint32_t *txFlagClear = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_CLEAR);
-    *txFlagClear = MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR;
+        FTDF->FTDF_TX_CLEAR_OS_REG = REG_MSK(FTDF, FTDF_TX_CLEAR_OS_REG, TX_FLAG_CLEAR);
 
-    volatile uint32_t *phyParams = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_PHY_PARAMETERS_2);
-    *phyParams = (FTDF_PHYTXSTARTUP << OFF_F_FTDF_ON_OFF_REGMAP_PHYTXSTARTUP) |
-                 (FTDF_PHYTXLATENCY << OFF_F_FTDF_ON_OFF_REGMAP_PHYTXLATENCY) |
-                 (FTDF_PHYTXFINISH << OFF_F_FTDF_ON_OFF_REGMAP_PHYTXFINISH) |
-                 (FTDF_PHYTRXWAIT << OFF_F_FTDF_ON_OFF_REGMAP_PHYTRXWAIT);
+        uint32_t phy_params = 0;
+        REG_SET_FIELD(FTDF, FTDF_PHY_PARAMETERS_2_REG, PHYTXSTARTUP, phy_params, FTDF_PHYTXSTARTUP);
+        REG_SET_FIELD(FTDF, FTDF_PHY_PARAMETERS_2_REG, PHYTXLATENCY, phy_params, FTDF_PHYTXLATENCY);
+        REG_SET_FIELD(FTDF, FTDF_PHY_PARAMETERS_2_REG, PHYTXFINISH, phy_params, FTDF_PHYTXFINISH);
+        REG_SET_FIELD(FTDF, FTDF_PHY_PARAMETERS_2_REG, PHYTRXWAIT, phy_params, FTDF_PHYTRXWAIT);
+        FTDF->FTDF_PHY_PARAMETERS_2_REG = phy_params;
 
-    phyParams = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_PHY_PARAMETERS_3);
-    *phyParams = (FTDF_PHYRXSTARTUP << OFF_F_FTDF_ON_OFF_REGMAP_PHYRXSTARTUP) |
-                 (FTDF_PHYRXLATENCY << OFF_F_FTDF_ON_OFF_REGMAP_PHYRXLATENCY) |
-                 (FTDF_PHYENABLE << OFF_F_FTDF_ON_OFF_REGMAP_PHYENABLE);
+        phy_params = 0;
+        REG_SET_FIELD(FTDF, FTDF_PHY_PARAMETERS_3_REG, PHYRXSTARTUP, phy_params, FTDF_PHYRXSTARTUP);
+        REG_SET_FIELD(FTDF, FTDF_PHY_PARAMETERS_3_REG, PHYRXLATENCY, phy_params, FTDF_PHYRXLATENCY);
+        REG_SET_FIELD(FTDF, FTDF_PHY_PARAMETERS_3_REG, PHYENABLE, phy_params, FTDF_PHYENABLE);
+        FTDF->FTDF_PHY_PARAMETERS_3_REG = phy_params;
 
-    volatile uint32_t *ftdfCm = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CM);
-    *ftdfCm = FTDF_MSK_TX_CE | FTDF_MSK_RX_CE | FTDF_MSK_SYMBOL_TMR_CE;
 
-    volatile uint32_t *rxMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_RX_MASK);
-    *rxMask = MSK_R_FTDF_ON_OFF_REGMAP_RX_MASK;
+        REG_SETF(FTDF, FTDF_FTDF_CM_REG, FTDF_CM,
+                (FTDF_MSK_TX_CE | FTDF_MSK_RX_CE | FTDF_MSK_SYMBOL_TMR_CE));
 
-    volatile uint32_t *lmacMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_MASK);
-    *lmacMask = MSK_F_FTDF_ON_OFF_REGMAP_RXTIMEREXPIRED_M;
+        uint32_t rx_mask = REG_MSK(FTDF, FTDF_RX_MASK_REG, RXSOF_M) |
+                REG_MSK(FTDF, FTDF_RX_MASK_REG, RX_OVERFLOW_M) |
+                REG_MSK(FTDF, FTDF_RX_MASK_REG, RX_BUF_AVAIL_M) |
+                REG_MSK(FTDF, FTDF_RX_MASK_REG, RXBYTE_M);
+        FTDF->FTDF_RX_MASK_REG = rx_mask;
 
-    volatile uint32_t *lmacCtrlMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_MASK);
-    *lmacCtrlMask = MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIMETHR_M |
-                    MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIME2THR_M |
-                    MSK_F_FTDF_ON_OFF_REGMAP_SYNCTIMESTAMP_M;
+        FTDF->FTDF_LMAC_MASK_REG = REG_MSK(FTDF, FTDF_LMAC_MASK_REG, RXTIMEREXPIRED_M);
 
-    volatile uint32_t *txFlagClearM;
-    txFlagClearM   = FTDF_GET_FIELD_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_CLEAR_M, FTDF_TX_DATA_BUFFER);
-    *txFlagClearM |= MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_M;
-    txFlagClearM   = FTDF_GET_FIELD_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_CLEAR_M, FTDF_TX_WAKEUP_BUFFER);
-    *txFlagClearM |= MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_M;
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+        uint32_t lmac_ctrl_mask = REG_MSK(FTDF, FTDF_LMAC_CONTROL_MASK_REG, SYMBOLTIMETHR_M) |
+                REG_MSK(FTDF, FTDF_LMAC_CONTROL_MASK_REG, SYMBOLTIME2THR_M) |
+                REG_MSK(FTDF, FTDF_LMAC_CONTROL_MASK_REG, SYNCTIMESTAMP_M);
+        FTDF->FTDF_LMAC_CONTROL_MASK_REG = lmac_ctrl_mask;
+
+        FTDF->FTDF_TX_FLAG_CLEAR_M_0_REG |= REG_MSK(FTDF, FTDF_TX_FLAG_CLEAR_M_0_REG, TX_FLAG_CLEAR_M);
+        FTDF->FTDF_TX_FLAG_CLEAR_M_1_REG |= REG_MSK(FTDF, FTDF_TX_FLAG_CLEAR_M_1_REG, TX_FLAG_CLEAR_M);
+
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-    FTDF_fpprReset();
-    FTDF_fpprSetMode(FTDF_TRUE, FTDF_FALSE, FTDF_FALSE);
+    ftdf_fppr_reset();
+    ftdf_fppr_set_mode(FTDF_TRUE, FTDF_FALSE, FTDF_FALSE);
 #else
-    FTDF_fpprSetMode(FTDF_FALSE, FTDF_TRUE, FTDF_TRUE);
+    ftdf_fppr_set_mode(FTDF_FALSE, FTDF_TRUE, FTDF_TRUE);
 #endif /* #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
 #if FTDF_USE_SLEEP_DURING_BACKOFF
     /* Unmask long BO interrupt. */
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THR_M, 1);
+    REG_SETF(FTDF, FTDF_LMAC_MASK_REG, CSMA_CA_BO_THR_M, 1);
 #else /* FTDF_USE_SLEEP_DURING_BACKOFF */
     /* Set BO threshold. */
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THRESHOLD, FTDF_BO_IRQ_THRESHOLD);
+    REG_SETF(FTDF, FTDF_LMAC_CONTROL_11_REG, CSMA_CA_BO_THRESHOLD, FTDF_BO_IRQ_THRESHOLD);
 
     /* Mask long BO interrupt. */
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THR_M, 0);
+    REG_SETF(FTDF, FTDF_LMAC_MASK_REG, CSMA_CA_BO_THR_M, 0);
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
 #if FTDF_USE_LPDP == 1
-    FTDF_lpdpEnable(FTDF_TRUE);
+    ftdf_lpdp_enable(FTDF_TRUE);
 #endif /* #if FTDF_USE_LPDP == 1 */
-#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 }
 
 #ifdef FTDF_PHY_API
-FTDF_PIBAttributeValue *FTDF_getValue(FTDF_PIBAttribute PIBAttribute)
+ftdf_pib_attribute_value_t *ftdf_get_value(ftdf_pib_attribute_t pib_attribute)
 {
 
-    if (PIBAttribute <= FTDF_NR_OF_PIB_ATTRIBUTES &&
-        pibAttributeTable.attributeDefs[ PIBAttribute ].addr != NULL)
-    {
-        // Update PIB attribute with current LMAC status if a getFunc is defined
-        if (pibAttributeTable.attributeDefs[ PIBAttribute ].getFunc != NULL)
-        {
-            pibAttributeTable.attributeDefs[ PIBAttribute ].getFunc();
+        if ((pib_attribute <= FTDF_NR_OF_PIB_ATTRIBUTES) &&
+                (pib_attribute_table.attribute_defs[pib_attribute].addr != NULL)) {
+
+                /* Update PIB attribute with current LMAC status if a getFunc is defined */
+                if (pib_attribute_table.attribute_defs[pib_attribute].getFunc != NULL) {
+                        pib_attribute_table.attribute_defs[pib_attribute].getFunc();
+                }
+
+                return pib_attribute_table.attribute_defs[pib_attribute].addr;
         }
 
-        return pibAttributeTable.attributeDefs[ PIBAttribute ].addr;
-    }
-
-    return NULL;
+        return NULL;
 }
 
-FTDF_Status FTDF_setValue(FTDF_PIBAttribute PIBAttribute, const FTDF_PIBAttributeValue *PIBAttributeValue)
+ftdf_status_t ftdf_set_value(ftdf_pib_attribute_t pib_attribute, const ftdf_pib_attribute_value_t *pib_attribute_value)
 {
-    if (PIBAttribute <= FTDF_NR_OF_PIB_ATTRIBUTES &&
-        pibAttributeTable.attributeDefs[ PIBAttribute ].addr != NULL)
-    {
-        if (pibAttributeTable.attributeDefs[ PIBAttribute ].size != 0)
-        {
-            memcpy(pibAttributeTable.attributeDefs[ PIBAttribute ].addr,
-                   PIBAttributeValue,
-                   pibAttributeTable.attributeDefs[ PIBAttribute ].size);
+        if ((pib_attribute <= FTDF_NR_OF_PIB_ATTRIBUTES) &&
+                (pib_attribute_table.attribute_defs[pib_attribute].addr != NULL)) {
 
-            // Update LMAC with new PIB attribute value if a setFunc is defined
-            if (pibAttributeTable.attributeDefs[ PIBAttribute ].setFunc != NULL)
-            {
-                pibAttributeTable.attributeDefs[ PIBAttribute ].setFunc();
-            }
+                if (pib_attribute_table.attribute_defs[pib_attribute].size != 0) {
+                        memcpy(pib_attribute_table.attribute_defs[pib_attribute].addr,
+                               pib_attribute_value,
+                               pib_attribute_table.attribute_defs[pib_attribute].size);
 
-            return FTDF_SUCCESS;
+                        /* Update LMAC with new PIB attribute value if a setFunc is defined */
+                        if (pib_attribute_table.attribute_defs[pib_attribute].setFunc != NULL) {
+                                pib_attribute_table.attribute_defs[pib_attribute].setFunc();
+                        }
 
+                        return FTDF_SUCCESS;
+
+                } else {
+                        return FTDF_READ_ONLY;
+                }
         }
-        else
-        {
-            return FTDF_READ_ONLY;
-        }
-    }
 
-    return FTDF_UNSUPPORTED_ATTRIBUTE;
+        return FTDF_UNSUPPORTED_ATTRIBUTE;
 }
 
 #else /* FTDF_PHY_API */
-void FTDF_processGetRequest(FTDF_GetRequest *getRequest)
+void ftdf_process_get_request(ftdf_get_request_t *get_request)
 {
-    FTDF_GetConfirm  *getConfirm   = (FTDF_GetConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_GetConfirm));
-    FTDF_PIBAttribute PIBAttribute = getRequest->PIBAttribute;
+        ftdf_get_confirm_t *get_confirm =
+            (ftdf_get_confirm_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_get_confirm_t));
+        ftdf_pib_attribute_t pib_attribute = get_request->pib_attribute;
 
-    getConfirm->msgId        = FTDF_GET_CONFIRM;
-    getConfirm->PIBAttribute = PIBAttribute;
+        get_confirm->msg_id = FTDF_GET_CONFIRM;
+        get_confirm->pib_attribute = pib_attribute;
 
-    if (PIBAttribute <= FTDF_NR_OF_PIB_ATTRIBUTES &&
-        pibAttributeTable.attributeDefs[ PIBAttribute ].addr != NULL)
-    {
-        // Update PIB attribute with current LMAC status if a getFunc is defined
-        if (pibAttributeTable.attributeDefs[ PIBAttribute ].getFunc != NULL)
-        {
-            pibAttributeTable.attributeDefs[ PIBAttribute ].getFunc();
+        if ((pib_attribute <= FTDF_NR_OF_PIB_ATTRIBUTES) &&
+                (pib_attribute_table.attribute_defs[pib_attribute].addr != NULL)) {
+
+                /* Update PIB attribute with current LMAC status if a getFunc is defined */
+                if (pib_attribute_table.attribute_defs[pib_attribute].getFunc != NULL) {
+                        pib_attribute_table.attribute_defs[pib_attribute].getFunc();
+                }
+
+                get_confirm->status = FTDF_SUCCESS;
+                get_confirm->pib_attribute_value =
+                    pib_attribute_table.attribute_defs[pib_attribute].addr;
+
+        } else {
+                get_confirm->status = FTDF_UNSUPPORTED_ATTRIBUTE;
         }
 
-        getConfirm->status            = FTDF_SUCCESS;
-        getConfirm->PIBAttributeValue = pibAttributeTable.attributeDefs[ PIBAttribute ].addr;
-    }
-    else
-    {
-        getConfirm->status = FTDF_UNSUPPORTED_ATTRIBUTE;
-    }
+        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*)get_request);
 
-    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) getRequest);
-
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) getConfirm);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*)get_confirm);
 }
 
-void FTDF_processSetRequest(FTDF_SetRequest *setRequest)
+void ftdf_process_set_request(ftdf_set_request_t *set_request)
 {
-    FTDF_SetConfirm  *setConfirm   = (FTDF_SetConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_SetConfirm));
-    FTDF_PIBAttribute PIBAttribute = setRequest->PIBAttribute;
+        ftdf_set_confirm_t *set_confirm =
+            (ftdf_set_confirm_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_set_confirm_t));
+        ftdf_pib_attribute_t pib_attribute = set_request->pib_attribute;
 
-    setConfirm->msgId        = FTDF_SET_CONFIRM;
-    setConfirm->PIBAttribute = PIBAttribute;
+        set_confirm->msg_id = FTDF_SET_CONFIRM;
+        set_confirm->pib_attribute = pib_attribute;
 
-    if (PIBAttribute <= FTDF_NR_OF_PIB_ATTRIBUTES &&
-        pibAttributeTable.attributeDefs[ PIBAttribute ].addr != NULL)
-    {
-        if (pibAttributeTable.attributeDefs[ PIBAttribute ].size != 0)
-        {
-            setConfirm->status = FTDF_SUCCESS;
-            memcpy(pibAttributeTable.attributeDefs[ PIBAttribute ].addr,
-                   setRequest->PIBAttributeValue,
-                   pibAttributeTable.attributeDefs[ PIBAttribute ].size);
+        if ((pib_attribute <= FTDF_NR_OF_PIB_ATTRIBUTES) &&
+                (pib_attribute_table.attribute_defs[pib_attribute].addr != NULL)) {
 
-            // Update LMAC with new PIB attribute value if a setFunc is defined
-            if (pibAttributeTable.attributeDefs[ PIBAttribute ].setFunc != NULL)
-            {
-                pibAttributeTable.attributeDefs[ PIBAttribute ].setFunc();
-            }
+                if (pib_attribute_table.attribute_defs[pib_attribute].size != 0) {
+
+                        set_confirm->status = FTDF_SUCCESS;
+                        memcpy(pib_attribute_table.attribute_defs[pib_attribute].addr,
+                               set_request->pib_attribute_value,
+                               pib_attribute_table.attribute_defs[pib_attribute].size);
+
+                        /* Update LMAC with new PIB attribute value if a setFunc is defined */
+                        if (pib_attribute_table.attribute_defs[pib_attribute].setFunc != NULL) {
+                                pib_attribute_table.attribute_defs[pib_attribute].setFunc();
+                        }
+
+                } else {
+                        set_confirm->status = FTDF_READ_ONLY;
+                }
+
+        } else {
+                set_confirm->status = FTDF_UNSUPPORTED_ATTRIBUTE;
         }
-        else
-        {
-            setConfirm->status = FTDF_READ_ONLY;
-        }
-    }
-    else
-    {
-        setConfirm->status = FTDF_UNSUPPORTED_ATTRIBUTE;
-    }
 
-    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) setRequest);
+        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*)set_request);
 
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) setConfirm);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*)set_confirm);
 }
 
-
-void FTDF_sendCommStatusIndication(FTDF_MsgBuffer     *request,
-                                   FTDF_Status         status,
-                                   FTDF_PANId          PANId,
-                                   FTDF_AddressMode    srcAddrMode,
-                                   FTDF_Address        srcAddr,
-                                   FTDF_AddressMode    dstAddrMode,
-                                   FTDF_Address        dstAddr,
-                                   FTDF_SecurityLevel  securityLevel,
-                                   FTDF_KeyIdMode      keyIdMode,
-                                   FTDF_Octet         *keySource,
-                                   FTDF_KeyIndex       keyIndex)
+void ftdf_send_comm_status_indication(ftdf_msg_buffer_t *request,
+                                      ftdf_status_t status,
+                                      ftdf_pan_id_t pan_id,
+                                      ftdf_address_mode_t src_addr_mode,
+                                      ftdf_address_t src_addr,
+                                      ftdf_address_mode_t dst_addr_mode,
+                                      ftdf_address_t dst_addr,
+                                      ftdf_security_level_t security_level,
+                                      ftdf_key_id_mode_t key_id_mode,
+                                      ftdf_octet_t *key_source,
+                                      ftdf_key_index_t key_index)
 {
-    FTDF_CommStatusIndication *commStatus =
-        (FTDF_CommStatusIndication *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_CommStatusIndication));
+        ftdf_comm_status_indication_t *comm_status =
+                (ftdf_comm_status_indication_t*) FTDF_GET_MSG_BUFFER(sizeof(ftdf_comm_status_indication_t));
 
-    commStatus->msgId         = FTDF_COMM_STATUS_INDICATION;
-    commStatus->PANId         = PANId;
-    commStatus->srcAddrMode   = srcAddrMode;
-    commStatus->srcAddr       = srcAddr;
-    commStatus->dstAddrMode   = dstAddrMode;
-    commStatus->dstAddr       = dstAddr;
-    commStatus->status        = status;
-    commStatus->securityLevel = securityLevel;
-    commStatus->keyIdMode     = keyIdMode;
-    commStatus->keyIndex      = keyIndex;
+        comm_status->msg_id = FTDF_COMM_STATUS_INDICATION;
+        comm_status->pan_id = pan_id;
+        comm_status->src_addr_mode = src_addr_mode;
+        comm_status->src_addr = src_addr;
+        comm_status->dst_addr_mode = dst_addr_mode;
+        comm_status->dst_addr = dst_addr;
+        comm_status->status = status;
+        comm_status->security_level = security_level;
+        comm_status->key_id_mode = key_id_mode;
+        comm_status->key_index = key_index;
 
-    uint8_t n;
+        uint8_t n;
 
-    if (securityLevel != 0)
-    {
-        if (keyIdMode == 0x2)
-        {
-            for (n = 0; n < 4; n++)
-            {
-                commStatus->keySource[ n ] = keySource[ n ];
-            }
+        if (security_level != 0) {
+                if (key_id_mode == 0x2) {
+                        for (n = 0; n < 4; n++) {
+                                comm_status->key_source[n] = key_source[n];
+                        }
+                } else if (key_id_mode == 0x3) {
+                        for (n = 0; n < 8; n++) {
+                                comm_status->key_source[n] = key_source[n];
+                        }
+                }
         }
-        else if (keyIdMode == 0x3)
-        {
-            for (n = 0; n < 8; n++)
-            {
-                commStatus->keySource[ n ] = keySource[ n ];
-            }
-        }
-    }
-
 #ifndef FTDF_LITE
+        if (request && ((request->msg_id == FTDF_ORPHAN_RESPONSE) ||
+                    (request->msg_id == FTDF_ASSOCIATE_RESPONSE))) {
 
-    if (request &&
-        (request->msgId == FTDF_ORPHAN_RESPONSE ||
-         request->msgId == FTDF_ASSOCIATE_RESPONSE))
-    {
-        if (FTDF_reqCurrent == request)
-        {
-            FTDF_reqCurrent = NULL;
-        }
+                if (ftdf_req_current == request) {
+                        ftdf_req_current = NULL;
+                }
 
-        FTDF_REL_MSG_BUFFER(request);
-        FTDF_RCV_MSG((FTDF_MsgBuffer *) commStatus);
-        /* Check for orphan response. */
+                FTDF_REL_MSG_BUFFER(request);
+                FTDF_RCV_MSG((ftdf_msg_buffer_t*)comm_status);
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-        FTDF_fpFsmClearPending();
+                ftdf_fp_fsm_clear_pending();
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
-        FTDF_processNextRequest();
-        return;
-    }
-
+                ftdf_process_next_request();
+                return;
+        }
 #endif /* !FTDF_LITE */
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) commStatus);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t*)comm_status);
 }
 #endif /* FTDF_PHY_API */
 
 #ifndef FTDF_LITE
-FTDF_Octet *FTDF_addFrameHeader(FTDF_Octet       *txPtr,
-                                FTDF_FrameHeader *frameHeader,
-                                FTDF_DataLength   msduLength)
+ftdf_octet_t* ftdf_add_frame_header(ftdf_octet_t *tx_ptr,
+                                    ftdf_frame_header_t *frame_header,
+                                    ftdf_data_length_t msdu_length)
 {
-    uint8_t          frameVersion;
-    uint8_t          longFrameControl = 0x00;
-    FTDF_Boolean     panIdCompression = FTDF_FALSE;
-    FTDF_Bitmap8     options          = frameHeader->options;
-    FTDF_Boolean     secure           = options & FTDF_OPT_SECURITY_ENABLED;
-    FTDF_Boolean     framePending     = options & FTDF_OPT_FRAME_PENDING;
-    FTDF_Boolean     ackTX            = options & FTDF_OPT_ACK_REQUESTED;
-    FTDF_Boolean     panIdPresent     = options & FTDF_OPT_PAN_ID_PRESENT;
-    FTDF_Boolean     seqNrSuppressed  = options & FTDF_OPT_SEQ_NR_SUPPRESSED;
-    FTDF_Boolean     iesIncluded      = options & FTDF_OPT_IES_PRESENT;
-    FTDF_FrameType   frameType        = frameHeader->frameType;
-    FTDF_AddressMode dstAddrMode      = frameHeader->dstAddrMode;
-    FTDF_AddressMode srcAddrMode      = frameHeader->srcAddrMode;
-    FTDF_PANId       dstPANId         = frameHeader->dstPANId;
+        uint8_t frame_version;
+        uint8_t long_frame_control = 0x00;
+        ftdf_boolean_t pan_id_compression = FTDF_FALSE;
+        ftdf_bitmap8_t options = frame_header->options;
+        ftdf_boolean_t secure = options & FTDF_OPT_SECURITY_ENABLED;
+        ftdf_boolean_t frame_pending = options & FTDF_OPT_FRAME_PENDING;
+        ftdf_boolean_t ack_tx = options & FTDF_OPT_ACK_REQUESTED;
+        ftdf_boolean_t pan_id_present = options & FTDF_OPT_PAN_ID_PRESENT;
+        ftdf_boolean_t seq_nr_suppressed = options & FTDF_OPT_SEQ_NR_SUPPRESSED;
+        ftdf_boolean_t ies_included = options & FTDF_OPT_IES_PRESENT;
+        ftdf_frame_type_t frame_type = frame_header->frame_type;
+        ftdf_address_mode_t dst_addr_mode = frame_header->dst_addr_mode;
+        ftdf_address_mode_t src_addr_mode = frame_header->src_addr_mode;
+        ftdf_pan_id_t dstpan_id = frame_header->dst_pan_id;
 
-    if (frameType == FTDF_MULTIPURPOSE_FRAME)
-    {
-        if (options & (FTDF_OPT_SECURITY_ENABLED | FTDF_OPT_ACK_REQUESTED | FTDF_OPT_PAN_ID_PRESENT |
-                       FTDF_OPT_IES_PRESENT | FTDF_OPT_SEQ_NR_SUPPRESSED | FTDF_OPT_FRAME_PENDING))
-        {
-            longFrameControl = 0x08;
+        if (frame_type == FTDF_MULTIPURPOSE_FRAME) {
+
+                if (options & (FTDF_OPT_SECURITY_ENABLED | FTDF_OPT_ACK_REQUESTED |
+                            FTDF_OPT_PAN_ID_PRESENT | FTDF_OPT_IES_PRESENT |
+                            FTDF_OPT_SEQ_NR_SUPPRESSED | FTDF_OPT_FRAME_PENDING)) {
+
+                        long_frame_control = 0x08;
+                }
+
+                /* Frame control field byte 1 */
+                *tx_ptr++ = 0x05 | long_frame_control | dst_addr_mode << 4 | src_addr_mode << 6;
+
+                if (long_frame_control) {
+                        /* Frame control field byte 2 */
+                        *tx_ptr++ = (pan_id_present ? 0x01 : 0x00) |
+                                (secure ? 0x02 : 0x00) |
+                                (seq_nr_suppressed ? 0x04 : 0x00) |
+                                (frame_pending ? 0x08 : 0x00) |
+                                (ack_tx ? 0x40 : 0x00) |
+                                (ies_included ? 0x80 : 0x00);
+                }
+
+        } else {
+                //        if (panIdPresent || iesIncluded || seqNrSuppressed || (options & FTDF_OPT_ENHANCED) || ftdf_pib.tsch_enabled)
+                if (pan_id_present || ies_included || seq_nr_suppressed || (options & FTDF_OPT_ENHANCED)) {
+                        frame_version = 0x02;
+                } else {
+
+                        if (secure || (msdu_length > FTDF_MAX_MAC_SAFE_PAYLOAD_SIZE)) {
+                                frame_version = 0x01;
+                        } else {
+                                frame_version = 0x00;
+                        }
+                }
+
+                if (frame_version < 0x02) {
+                        if ((dst_addr_mode != FTDF_NO_ADDRESS) &&
+                                (src_addr_mode != FTDF_NO_ADDRESS) &&
+                                (dstpan_id == frame_header->src_pan_id)) {
+
+                                pan_id_compression = FTDF_TRUE;
+                        }
+
+                } else {
+                        pan_id_compression = pan_id_present;
+                }
+
+                /* Frame control field byte 1 */
+                *tx_ptr++ = (frame_type & 0x7) |
+                        (secure ? 0x08 : 0x00) |
+                        (frame_pending ? 0x10 : 0x00) |
+                        (ack_tx ? 0x20 : 0x00) |
+                        (pan_id_compression ? 0x40 : 0x00);
+
+                /* Frame control field byte 2 */
+                *tx_ptr++ = (seq_nr_suppressed ? 0x01 : 0x00) |
+                        (ies_included ? 0x02 : 0x00) |
+                        (dst_addr_mode << 2) |
+                        (frame_version << 4) |
+                        (src_addr_mode << 6);
         }
 
-        // Frame control field byte 1
-        *txPtr++ = 0x05 | longFrameControl | dstAddrMode << 4 | srcAddrMode << 6;
-
-        if (longFrameControl)
-        {
-            // Frame control field byte 2
-            *txPtr++ =
-                (panIdPresent ? 0x01 : 0x00) |
-                (secure ? 0x02 : 0x00) |
-                (seqNrSuppressed ? 0x04 : 0x00) |
-                (framePending ? 0x08 : 0x00) |
-                (ackTX ? 0x40 : 0x00) |
-                (iesIncluded ? 0x80 : 0x00);
-        }
-    }
-    else
-    {
-        //        if ( panIdPresent || iesIncluded || seqNrSuppressed || ( options & FTDF_OPT_ENHANCED ) || FTDF_pib.tschEnabled )
-        if (panIdPresent || iesIncluded || seqNrSuppressed || (options & FTDF_OPT_ENHANCED))
-        {
-            frameVersion = 0b10;
-        }
-        else
-        {
-            if (secure ||
-                msduLength > FTDF_MAX_MAC_SAFE_PAYLOAD_SIZE)
-            {
-                frameVersion = 0b01;
-            }
-            else
-            {
-                frameVersion = 0b00;
-            }
+        if (!seq_nr_suppressed) {
+                *tx_ptr++ = frame_header->sn;
         }
 
-        if (frameVersion < 0b10)
-        {
-            if (dstAddrMode != FTDF_NO_ADDRESS &&
-                srcAddrMode != FTDF_NO_ADDRESS &&
-                dstPANId == frameHeader->srcPANId)
-            {
-                panIdCompression = FTDF_TRUE;
-            }
+        ftdf_boolean_t add_dstpan_id = FTDF_FALSE;
+
+        if (frame_type == FTDF_MULTIPURPOSE_FRAME) {
+                if (pan_id_present) {
+                        add_dstpan_id = FTDF_TRUE;
+                }
+
+        } else {
+
+                if (frame_version < 0x02) {
+                        if (dst_addr_mode != FTDF_NO_ADDRESS) {
+                                add_dstpan_id = FTDF_TRUE;
+                        }
+
+                } else {
+
+                        /* See Table 2a "PAN ID Compression" of IEEE 802.15.4-2011 for more details */
+                        if (((src_addr_mode == FTDF_NO_ADDRESS) &&
+                                (dst_addr_mode == FTDF_NO_ADDRESS) && pan_id_compression) ||
+                                ((src_addr_mode == FTDF_NO_ADDRESS) &&
+                                        (dst_addr_mode != FTDF_NO_ADDRESS && !pan_id_compression)) ||
+                                ((src_addr_mode != FTDF_NO_ADDRESS) &&
+                                        (dst_addr_mode != FTDF_NO_ADDRESS && !pan_id_compression))) {
+
+                                add_dstpan_id = FTDF_TRUE;
+                        }
+                }
         }
-        else
-        {
-            panIdCompression = panIdPresent;
+
+        if (add_dstpan_id) {
+                ftdf_octet_t *pan_idPtr = (ftdf_octet_t*)&dstpan_id;
+
+                *tx_ptr++ = *pan_idPtr++;
+                *tx_ptr++ = *pan_idPtr;
         }
 
-        // Frame control field byte 1
-        *txPtr++ =
-            (frameType & 0x7) |
-            (secure ? 0x08 : 0x00) |
-            (framePending ? 0x10 : 0x00) |
-            (ackTX ? 0x20 : 0x00) |
-            (panIdCompression ? 0x40 : 0x00);
+        ftdf_address_t dst_addr = frame_header->dst_addr;
 
-        // Frame control field byte 2
-        *txPtr++ =
-            (seqNrSuppressed ? 0x01 : 0x00) |
-            (iesIncluded ? 0x02 : 0x00) |
-            dstAddrMode << 2 |
-            frameVersion << 4 |
-            srcAddrMode << 6;
-    }
+        if (dst_addr_mode == FTDF_SIMPLE_ADDRESS) {
+                *tx_ptr++ = dst_addr.simple_address;
+        } else if (dst_addr_mode == FTDF_SHORT_ADDRESS) {
+                ftdf_octet_t* short_address_ptr = (ftdf_octet_t*)&dst_addr.short_address;
 
-    if (!seqNrSuppressed)
-    {
-        *txPtr++ = frameHeader->SN;
-    }
+                *tx_ptr++ = *short_address_ptr++;
+                *tx_ptr++ = *short_address_ptr;
+        } else if (dst_addr_mode == FTDF_EXTENDED_ADDRESS) {
+                ftdf_octet_t* ext_address_ptr = (ftdf_octet_t*)&dst_addr.ext_address;
+                int n;
 
-    FTDF_Boolean addDstPANId = FTDF_FALSE;
-
-    if (frameType == FTDF_MULTIPURPOSE_FRAME)
-    {
-        if (panIdPresent)
-        {
-            addDstPANId = FTDF_TRUE;
+                for (n = 0; n < 8; n++) {
+                        *tx_ptr++ = *ext_address_ptr++;
+                }
         }
-    }
-    else
-    {
-        if (frameVersion < 0b10)
-        {
-            if (dstAddrMode != FTDF_NO_ADDRESS)
-            {
-                addDstPANId = FTDF_TRUE;
-            }
+
+        ftdf_boolean_t add_srcpan_id = FTDF_FALSE;
+
+        if (frame_type != FTDF_MULTIPURPOSE_FRAME) {
+                if (frame_version < 0x02) {
+                        if ((src_addr_mode != FTDF_NO_ADDRESS) && !pan_id_compression) {
+                                add_srcpan_id = FTDF_TRUE;
+                        }
+
+                } else {
+
+                        /* See Table 2a "PAN ID Compression" of IEEE 802.15.4-2011 for more details */
+                        if ((src_addr_mode != FTDF_NO_ADDRESS) && (dst_addr_mode == FTDF_NO_ADDRESS) &&
+                                !pan_id_compression) {
+
+                                add_srcpan_id = FTDF_TRUE;
+                        }
+                }
         }
-        else
-        {
-            // See Table 2a "PAN ID Compression" of IEEE 802.15.4-2011 for more details
-            if ((srcAddrMode == FTDF_NO_ADDRESS && dstAddrMode == FTDF_NO_ADDRESS && panIdCompression) ||
-                (srcAddrMode == FTDF_NO_ADDRESS && dstAddrMode != FTDF_NO_ADDRESS && !panIdCompression) ||
-                (srcAddrMode != FTDF_NO_ADDRESS && dstAddrMode != FTDF_NO_ADDRESS && !panIdCompression))
-            {
-                addDstPANId = FTDF_TRUE;
-            }
+
+        if (add_srcpan_id) {
+                ftdf_octet_t* pan_idPtr = (ftdf_octet_t*)&frame_header->src_pan_id;
+
+                *tx_ptr++ = *pan_idPtr++;
+                *tx_ptr++ = *pan_idPtr;
         }
-    }
 
-    if (addDstPANId)
-    {
-        FTDF_Octet *PANIdPtr = (FTDF_Octet *)&dstPANId;
-
-        *txPtr++ = *PANIdPtr++;
-        *txPtr++ = *PANIdPtr;
-    }
-
-    FTDF_Address dstAddr = frameHeader->dstAddr;
-
-    if (dstAddrMode == FTDF_SIMPLE_ADDRESS)
-    {
-        *txPtr++ = dstAddr.simpleAddress;
-    }
-    else if (dstAddrMode == FTDF_SHORT_ADDRESS)
-    {
-        FTDF_Octet *shortAddressPtr = (FTDF_Octet *)&dstAddr.shortAddress;
-
-        *txPtr++ = *shortAddressPtr++;
-        *txPtr++ = *shortAddressPtr;
-    }
-    else if (dstAddrMode == FTDF_EXTENDED_ADDRESS)
-    {
-        FTDF_Octet *extAddressPtr = (FTDF_Octet *)&dstAddr.extAddress;
-        int         n;
-
-        for (n = 0; n < 8; n++)
-        {
-            *txPtr++ = *extAddressPtr++;
+        if (src_addr_mode == FTDF_SIMPLE_ADDRESS) {
+                *tx_ptr++ = ftdf_pib.simple_address;
         }
-    }
+        else if (src_addr_mode == FTDF_SHORT_ADDRESS) {
+                ftdf_octet_t* short_address_ptr = (ftdf_octet_t*)&ftdf_pib.short_address;
 
-    FTDF_Boolean addSrcPANId = FTDF_FALSE;
-
-    if (frameType != FTDF_MULTIPURPOSE_FRAME)
-    {
-        if (frameVersion < 0b10)
-        {
-            if (srcAddrMode != FTDF_NO_ADDRESS && !panIdCompression)
-            {
-                addSrcPANId = FTDF_TRUE;
-            }
+                *tx_ptr++ = *short_address_ptr++;
+                *tx_ptr++ = *short_address_ptr;
         }
-        else
-        {
-            // See Table 2a "PAN ID Compression" of IEEE 802.15.4-2011 for more details
-            if (srcAddrMode != FTDF_NO_ADDRESS && dstAddrMode == FTDF_NO_ADDRESS && !panIdCompression)
-            {
-                addSrcPANId = FTDF_TRUE;
-            }
+        else if (src_addr_mode == FTDF_EXTENDED_ADDRESS) {
+                ftdf_octet_t* ext_address_ptr = (ftdf_octet_t*)&ftdf_pib.ext_address;
+                int n;
+
+                for (n = 0; n < 8; n++) {
+                        *tx_ptr++ = *ext_address_ptr++;
+                }
         }
-    }
 
-    if (addSrcPANId)
-    {
-        FTDF_Octet *PANIdPtr = (FTDF_Octet *)&frameHeader->srcPANId;
-
-        *txPtr++ = *PANIdPtr++;
-        *txPtr++ = *PANIdPtr;
-    }
-
-    if (srcAddrMode == FTDF_SIMPLE_ADDRESS)
-    {
-        *txPtr++ = FTDF_pib.simpleAddress;
-    }
-    else if (srcAddrMode == FTDF_SHORT_ADDRESS)
-    {
-        FTDF_Octet *shortAddressPtr = (FTDF_Octet *)&FTDF_pib.shortAddress;
-
-        *txPtr++ = *shortAddressPtr++;
-        *txPtr++ = *shortAddressPtr;
-    }
-    else if (srcAddrMode == FTDF_EXTENDED_ADDRESS)
-    {
-        FTDF_Octet *extAddressPtr = (FTDF_Octet *)&FTDF_pib.extAddress;
-        int         n;
-
-        for (n = 0; n < 8; n++)
-        {
-            *txPtr++ = *extAddressPtr++;
-        }
-    }
-
-    return txPtr;
+        return tx_ptr;
 }
 #endif /* !FTDF_LITE */
 
-FTDF_PTI FTDF_getRxPti(void)
-{
-#if FTDF_USE_PTI
-    FTDF_PTI rx_pti;
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-    rx_pti = FTDF_RxPti;
-    FTDF_exitCritical();
-    return rx_pti;
-#else
-    return 0;
-#endif
-}
-
-#ifdef FTDF_PHY_API
-void FTDF_rxEnable(FTDF_Time rxOnDuration)
+ftdf_pti_t ftdf_get_rx_pti(void)
 {
 #if dg_configCOEX_ENABLE_CONFIG
-    /* We do not force decision here. It will be automatically made when FTDF begins
-     * transaction.
-     */
-    hw_coex_update_ftdf_pti((hw_coex_pti_t) FTDF_getRxPti(), NULL, false);
-#endif
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 0);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXONDURATION, rxOnDuration);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 1);
-}
+        ftdf_pti_t rx_pti;
+        ftdf_critical_var();
+        ftdf_enter_critical();
+        rx_pti = ftdf_rx_pti;
+        ftdf_exit_critical();
+
+        return rx_pti;
 #else
-void FTDF_processRxEnableRequest(FTDF_RxEnableRequest *rxEnableRequest)
-{
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 0);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXONDURATION, rxEnableRequest->rxOnDuration);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 1);
-
-    FTDF_RxEnableConfirm *rxEnableConfirm =
-        (FTDF_RxEnableConfirm *) FTDF_GET_MSG_BUFFER(sizeof(FTDF_RxEnableConfirm));
-
-    rxEnableConfirm->msgId  = FTDF_RX_ENABLE_CONFIRM;
-    rxEnableConfirm->status = FTDF_SUCCESS;
-
-    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) rxEnableRequest);
-    FTDF_RCV_MSG((FTDF_MsgBuffer *) rxEnableConfirm);
+        return 0;
+#endif
 }
-#endif /* FTDF_PHY_API */
-
-FTDF_Octet *FTDF_getFrameHeader(FTDF_Octet       *rxBuffer,
-                                FTDF_FrameHeader *frameHeader)
-{
-    FTDF_FrameType   frameType    = *rxBuffer & 0x07;
-    uint8_t          frameVersion = 0;
-    FTDF_Bitmap8     options      = 0;
-    FTDF_AddressMode dstAddrMode;
-    FTDF_AddressMode srcAddrMode;
-    FTDF_Boolean     panIdCompression = FTDF_FALSE;
-    FTDF_Boolean     panIdPresent     = FTDF_FALSE;
-
-    if (frameType == FTDF_MULTIPURPOSE_FRAME)
-    {
-        dstAddrMode = (*rxBuffer & 0x30) >> 4;
-        srcAddrMode = (*rxBuffer & 0xc0) >> 6;
-
-        // Check Long Frame Control
-        if (*rxBuffer & 0x08)
-        {
-            rxBuffer++;
-
-            panIdPresent = *rxBuffer & 0x01;
-
-            if (*rxBuffer & 0x02)
-            {
-                options |= FTDF_OPT_SECURITY_ENABLED;
-            }
-
-            if (*rxBuffer & 0x04)
-            {
-                options |= FTDF_OPT_SEQ_NR_SUPPRESSED;
-            }
-
-            if (*rxBuffer & 0x08)
-            {
-                options |= FTDF_OPT_FRAME_PENDING;
-            }
-
-            if (*rxBuffer & 0x40)
-            {
-                options |= FTDF_OPT_ACK_REQUESTED;
-            }
-
-            if (*rxBuffer & 0x80)
-            {
-                options |= FTDF_OPT_IES_PRESENT;
-            }
-
-            frameVersion              = 0;
-
-            frameHeader->frameVersion = FTDF_FRAME_VERSION_E;
-
-            rxBuffer++;
-        }
-        else
-        {
-            rxBuffer++;
-        }
-    }
-    else
-    {
-        if (*rxBuffer & 0x08)
-        {
-            options |= FTDF_OPT_SECURITY_ENABLED;
-        }
-
-        if (*rxBuffer & 0x10)
-        {
-            options |= FTDF_OPT_FRAME_PENDING;
-        }
-
-        if (*rxBuffer & 0x20)
-        {
-            options |= FTDF_OPT_ACK_REQUESTED;
-        }
-
-        panIdCompression = *rxBuffer & 0x40;
-
-        rxBuffer++;
-
-        frameVersion = (*rxBuffer & 0x30) >> 4;
-
-        if (frameVersion == 0x02)
-        {
-            if (*rxBuffer & 0x01)
-            {
-                options |= FTDF_OPT_SEQ_NR_SUPPRESSED;
-            }
-
-            if (*rxBuffer & 0x02)
-            {
-                options |= FTDF_OPT_IES_PRESENT;
-            }
-
-            frameHeader->frameVersion = FTDF_FRAME_VERSION_E;
-        }
-        else if (frameVersion == 0x01)
-        {
-            frameHeader->frameVersion = FTDF_FRAME_VERSION_2011;
-        }
-        else if (frameVersion == 0x00)
-        {
-            frameHeader->frameVersion = FTDF_FRAME_VERSION_2003;
-        }
-        else
-        {
-            frameHeader->frameVersion = FTDF_FRAME_VERSION_NOT_SUPPORTED;
-            return rxBuffer;
-        }
-
-        dstAddrMode = (*rxBuffer & 0x0c) >> 2;
-        srcAddrMode = (*rxBuffer & 0xc0) >> 6;
-
-        rxBuffer++;
-    }
-
-    if ((options & FTDF_OPT_SEQ_NR_SUPPRESSED) == 0)
-    {
-        frameHeader->SN = *rxBuffer++;
-    }
-
-    FTDF_Boolean hasDstPANId = FTDF_FALSE;
-
-    if (frameType == FTDF_MULTIPURPOSE_FRAME)
-    {
-        hasDstPANId = panIdPresent;
-    }
-    else
-    {
-        if (frameVersion < 0x02)
-        {
-            if (dstAddrMode != FTDF_NO_ADDRESS)
-            {
-                hasDstPANId = FTDF_TRUE;
-            }
-        }
-        else
-        {
-            if ((srcAddrMode == FTDF_NO_ADDRESS && dstAddrMode == FTDF_NO_ADDRESS && panIdCompression) ||
-                (srcAddrMode == FTDF_NO_ADDRESS && dstAddrMode != FTDF_NO_ADDRESS && !panIdCompression) ||
-                (srcAddrMode != FTDF_NO_ADDRESS && dstAddrMode != FTDF_NO_ADDRESS && !panIdCompression))
-            {
-                hasDstPANId = FTDF_TRUE;
-            }
-        }
-    }
-
-    if (hasDstPANId)
-    {
-        FTDF_Octet *PANIdPtr = (FTDF_Octet *) &frameHeader->dstPANId;
-
-        *PANIdPtr++ = *rxBuffer++;
-        *PANIdPtr   = *rxBuffer++;
-    }
-
-    if (dstAddrMode == FTDF_SIMPLE_ADDRESS)
-    {
-        frameHeader->dstAddr.simpleAddress = *rxBuffer++;
-    }
-    else if (dstAddrMode == FTDF_SHORT_ADDRESS)
-    {
-        FTDF_Octet *shortAddressPtr = (FTDF_Octet *)&frameHeader->dstAddr.shortAddress;
-
-        *shortAddressPtr++ = *rxBuffer++;
-        *shortAddressPtr   = *rxBuffer++;
-    }
-    else if (dstAddrMode == FTDF_EXTENDED_ADDRESS)
-    {
-        FTDF_Octet *extAddressPtr = (FTDF_Octet *)&frameHeader->dstAddr.extAddress;
-        int         n;
-
-        for (n = 0; n < 8; n++)
-        {
-            *extAddressPtr++ = *rxBuffer++;
-        }
-    }
-
-    FTDF_Boolean hasSrcPANId = FTDF_FALSE;
-
-    if (frameVersion < 0x02 && frameType != FTDF_MULTIPURPOSE_FRAME)
-    {
-        if (srcAddrMode != FTDF_NO_ADDRESS && !panIdCompression)
-        {
-            hasSrcPANId = FTDF_TRUE;
-        }
-    }
-    else
-    {
-        if (srcAddrMode != FTDF_NO_ADDRESS && dstAddrMode == FTDF_NO_ADDRESS && !panIdCompression)
-        {
-            hasSrcPANId = FTDF_TRUE;
-        }
-    }
-
-    if (hasSrcPANId)
-    {
-        FTDF_Octet *PANIdPtr = (FTDF_Octet *) &frameHeader->srcPANId;
-
-        *PANIdPtr++ = *rxBuffer++;
-        *PANIdPtr   = *rxBuffer++;
-    }
-    else
-    {
-        frameHeader->srcPANId = frameHeader->dstPANId;
-    }
-
-    if (srcAddrMode == FTDF_SIMPLE_ADDRESS)
-    {
-        frameHeader->srcAddr.simpleAddress = *rxBuffer++;
-    }
-    else if (srcAddrMode == FTDF_SHORT_ADDRESS)
-    {
-        FTDF_Octet *shortAddressPtr = (FTDF_Octet *)&frameHeader->srcAddr.shortAddress;
-
-        *shortAddressPtr++ = *rxBuffer++;
-        *shortAddressPtr   = *rxBuffer++;
-    }
-    else if (srcAddrMode == FTDF_EXTENDED_ADDRESS)
-    {
-        FTDF_Octet *extAddressPtr = (FTDF_Octet *)&frameHeader->srcAddr.extAddress;
-        int         n;
-
-        for (n = 0; n < 8; n++)
-        {
-            *extAddressPtr++ = *rxBuffer++;
-        }
-    }
-
-    frameHeader->frameType   = frameType;
-    frameHeader->options     = options;
-    frameHeader->dstAddrMode = dstAddrMode;
-    frameHeader->srcAddrMode = srcAddrMode;
-
-    return rxBuffer;
-}
-
-#ifndef FTDF_LITE
-void FTDF_processNextRequest(void)
-{
-#ifndef FTDF_NO_TSCH
-
-    if (FTDF_pib.tschEnabled)
-    {
-        FTDF_MsgBuffer *request = FTDF_tschGetPending(FTDF_tschSlotLink->request);
-
-        FTDF_tschSlotLink->request = NULL;
-
-        FTDF_scheduleTsch(request);
-
-        return;
-    }
-
-#endif /* FTDF_NO_TSCH */
-
-    while (FTDF_reqCurrent == NULL)
-    {
-        FTDF_MsgBuffer *request = FTDF_dequeueReqTail(&FTDF_reqQueue);
-
-        if (request)
-        {
-            FTDF_processRequest(request);
-        }
-        else
-        {
-            break;
-        }
-    }
-}
-#endif /* !FTDF_LITE */
-
-static void processRxFrame(int readBuf)
-{
-    static FTDF_PANDescriptor PANDescriptor;
-    static FTDF_Address       pendAddrList[ 7 ];
-
-    FTDF_FrameHeader         *frameHeader    = &FTDF_fh;
-#ifndef FTDF_LITE
-    FTDF_SecurityHeader      *securityHeader = &FTDF_sh;
-#endif /* !FTDF_LITE */
-
-    uint8_t                   pendAddrSpec   = 0;
-
-    FTDF_Octet               *rxBuffer       =
-        (FTDF_Octet *)(IND_R_FTDF_RX_RAM_RX_FIFO + (intptr_t) readBuf * FTDF_BUFFER_LENGTH);
-    FTDF_Octet               *rxPtr          = rxBuffer;
-    FTDF_DataLength           frameLen       = *rxPtr++;
-
-    if (FTDF_transparentMode)
-    {
-        if (FTDF_pib.metricsEnabled)
-        {
-            FTDF_pib.performanceMetrics.RXSuccessCount++;
-        }
-
-        uint32_t           rxMeta1 = *FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_RX_META_1, (intptr_t)readBuf);
-        FTDF_LinkQuality   lqi     = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_QUALITY_INDICATOR, readBuf);
-        FTDF_Bitmap32      status  = FTDF_TRANSPARENT_RCV_SUCCESSFUL;
-
-        status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_CRC16_ERROR ? FTDF_TRANSPARENT_RCV_CRC_ERROR : 0;
-        status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_RES_FRM_TYPE_ERROR ? FTDF_TRANSPARENT_RCV_RES_FRAMETYPE : 0;
-        status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_RES_FRM_VERSION_ERROR ? FTDF_TRANSPARENT_RCV_RES_FRAME_VERSION : 0;
-        status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_DPANID_ERROR ? FTDF_TRANSPARENT_RCV_UNEXP_DST_PAN_ID : 0;
-        status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_DADDR_ERROR ? FTDF_TRANSPARENT_RCV_UNEXP_DST_ADDR : 0;
-
-        FTDF_RCV_FRAME_TRANSPARENT(frameLen, rxPtr, status, lqi);
-
-#if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
-
-        if ((FTDF_transparentModeOptions & FTDF_TRANSPARENT_WAIT_FOR_ACK))
-        {
-            FTDF_getFrameHeader(rxPtr, frameHeader);
-
-            if (frameHeader->frameType == FTDF_ACKNOWLEDGEMENT_FRAME &&
-                (status == FTDF_TRANSPARENT_RCV_SUCCESSFUL))
-            {
-
-#ifndef FTDF_PHY_API
-                volatile uint32_t *txFlagS = FTDF_GET_REG_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_S, FTDF_TX_DATA_BUFFER);
-
-                while (*txFlagS & MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_STAT)
-                { }
-
-                // It is required to call FTDF_processTxEvent here because an RX ack generates two events
-                // The RX event is raised first, then after an IFS the TX event is raised. However,
-                // the FTDF_processNextRequest requires that both events have been handled.
-                FTDF_processTxEvent();
-#endif /* !FTDF_PHY_API */
-
-                FTDF_SN SN = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_MACSN, FTDF_TX_DATA_BUFFER);
 
 #ifdef FTDF_PHY_API
-                FTDF_criticalVar();
-                FTDF_enterCritical();
-
-                if (FTDF_txInProgress &&
-                    frameHeader->SN == SN)
-                {
-                    FTDF_exitCritical();
-                    return;
-                }
-
-                FTDF_exitCritical();
-#else
-
-                if (FTDF_reqCurrent &&
-                    frameHeader->SN == SN)
-                {
-                    FTDF_TransparentRequest *transparentRequest = (FTDF_TransparentRequest *) FTDF_reqCurrent;
-
-                    FTDF_criticalVar();
-                    FTDF_enterCritical();
-                    FTDF_reqCurrent = NULL;
-                    FTDF_exitCritical();
-                    FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparentRequest->handle, FTDF_TRANSPARENT_SEND_SUCCESSFUL);
-
-                    FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) transparentRequest);
-
-                    return;
-                }
-
-#endif /* FTDF_PHY_API */
-            }
-        }
-
-#endif /* FTDF_TRANSPARENT_USE_WAIT_FOR_ACK */
-        return;
-    }
-
-#ifndef FTDF_LITE
-    rxPtr = FTDF_getFrameHeader(rxPtr, frameHeader);
-
-#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_MANUAL
-
-    if (frameHeader->options & FTDF_OPT_ACK_REQUESTED)
-    {
-        int n;
-        FTDF_Boolean addressFound = FTDF_FALSE;
-
-        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
-        {
-            if (FTDF_txPendingList[ n ].addrMode == frameHeader->srcAddrMode &&
-                FTDF_txPendingList[ n ].PANId == frameHeader->srcPANId)
-            {
-                if (frameHeader->srcAddrMode == FTDF_SHORT_ADDRESS)
-                {
-                    if (FTDF_txPendingList[ n ].addr.shortAddress ==
-                        frameHeader->srcAddr.shortAddress)
-                    {
-                        addressFound = FTDF_TRUE;
-                        break;
-                    }
-                }
-                else if (frameHeader->srcAddrMode == FTDF_EXTENDED_ADDRESS)
-                {
-                    if (FTDF_txPendingList[ n ].addr.extAddress ==
-                        frameHeader->srcAddr.extAddress)
-                    {
-                        addressFound = FTDF_TRUE;
-                        break;
-                    }
-                }
-                else
-                {
-                    // Invalid srcAddrMode
-                    return;
-                }
-            }
-        }
-
-        if (addressFound)
-        {
-            FTDF_fpprSetMode(FTDF_FALSE, FTDF_TRUE, FTDF_TRUE);
-        }
-        else
-        {
-            FTDF_fpprSetMode(FTDF_FALSE, FTDF_TRUE, FTDF_FALSE);
-        }
-    }
-
+void ftdf_rx_enable(ftdf_time_t rx_on_duration)
+{
+#if dg_configCOEX_ENABLE_CONFIG && !FTDF_USE_AUTO_PTI
+        /* We do not force decision here. It will be automatically made when FTDF begins
+         * transaction.
+         */
+        hw_coex_update_ftdf_pti((hw_coex_pti_t) ftdf_get_rx_pti(), NULL, false);
 #endif
 
-    if (frameHeader->frameVersion == FTDF_FRAME_VERSION_NOT_SUPPORTED)
-    {
-        return;
-    }
+        ftdf_set_link_quality_mode();
 
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, RXENABLE, 0);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_0_REG, RXONDURATION, rx_on_duration);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, RXENABLE, 1);
+}
+#else
+void ftdf_process_rx_enable_request(ftdf_rx_enable_request_t *rx_enable_request)
+{
+        ftdf_set_link_quality_mode();
+
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, RXENABLE, 0);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_0_REG, RXONDURATION, rx_enable_request->rx_on_duration);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, RXENABLE, 1);
+
+        ftdf_rx_enable_confirm_t *rx_enable_confirm =
+                (ftdf_rx_enable_confirm_t *) FTDF_GET_MSG_BUFFER(sizeof(ftdf_rx_enable_confirm_t));
+
+        rx_enable_confirm->msg_id = FTDF_RX_ENABLE_CONFIRM;
+        rx_enable_confirm->status = FTDF_SUCCESS;
+
+        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t *)rx_enable_request);
+        FTDF_RCV_MSG((ftdf_msg_buffer_t *)rx_enable_confirm);
+}
+#endif /* FTDF_PHY_API */
+
+ftdf_octet_t *ftdf_get_frame_header(ftdf_octet_t *rx_buffer,
+                                    ftdf_frame_header_t* frame_header)
+{
+        ftdf_frame_type_t frame_type = *rx_buffer & 0x07;
+        uint8_t frame_version = 0x00;
+        ftdf_bitmap8_t options = 0;
+        ftdf_address_mode_t dst_addr_mode;
+        ftdf_address_mode_t src_addr_mode;
+        ftdf_boolean_t pan_id_compression = FTDF_FALSE;
+        ftdf_boolean_t pan_id_present = FTDF_FALSE;
+
+        if (frame_type == FTDF_MULTIPURPOSE_FRAME) {
+                dst_addr_mode = (*rx_buffer & 0x30) >> 4;
+                src_addr_mode = (*rx_buffer & 0xc0) >> 6;
+
+                /* Check Long Frame Control */
+                if (*rx_buffer & 0x08) {
+                        rx_buffer++;
+
+                        pan_id_present = *rx_buffer & 0x01;
+
+                        if (*rx_buffer & 0x02) {
+                                options |= FTDF_OPT_SECURITY_ENABLED;
+                        }
+
+                        if (*rx_buffer & 0x04) {
+                                options |= FTDF_OPT_SEQ_NR_SUPPRESSED;
+                        }
+
+                        if (*rx_buffer & 0x08) {
+                                options |= FTDF_OPT_FRAME_PENDING;
+                        }
+
+                        if (*rx_buffer & 0x40) {
+                                options |= FTDF_OPT_ACK_REQUESTED;
+                        }
+
+                        if (*rx_buffer & 0x80) {
+                                options |= FTDF_OPT_IES_PRESENT;
+                        }
+
+                        frame_version = 0x00;
+
+                        frame_header->frame_version = FTDF_FRAME_VERSION_E;
+
+                        rx_buffer++;
+                } else {
+                        rx_buffer++;
+                }
+
+        } else {
+
+                if (*rx_buffer & 0x08) {
+                        options |= FTDF_OPT_SECURITY_ENABLED;
+                }
+
+                if (*rx_buffer & 0x10) {
+                        options |= FTDF_OPT_FRAME_PENDING;
+                }
+
+                if (*rx_buffer & 0x20) {
+                        options |= FTDF_OPT_ACK_REQUESTED;
+                }
+
+                pan_id_compression = *rx_buffer & 0x40;
+
+                rx_buffer++;
+
+                frame_version = (*rx_buffer & 0x30) >> 4;
+
+                if (frame_version == 0x02) {
+                        if (*rx_buffer & 0x01) {
+                                options |= FTDF_OPT_SEQ_NR_SUPPRESSED;
+                        }
+
+                        if (*rx_buffer & 0x02) {
+                                options |= FTDF_OPT_IES_PRESENT;
+                        }
+
+                        frame_header->frame_version = FTDF_FRAME_VERSION_E;
+                } else if (frame_version == 0x01) {
+                        frame_header->frame_version = FTDF_FRAME_VERSION_2011;
+                } else if (frame_version == 0x00) {
+                        frame_header->frame_version = FTDF_FRAME_VERSION_2003;
+                } else {
+                        frame_header->frame_version = FTDF_FRAME_VERSION_NOT_SUPPORTED;
+                        return rx_buffer;
+                }
+
+                dst_addr_mode = (*rx_buffer & 0x0c) >> 2;
+                src_addr_mode = (*rx_buffer & 0xc0) >> 6;
+
+                rx_buffer++;
+        }
+
+        if ((options & FTDF_OPT_SEQ_NR_SUPPRESSED) == 0) {
+                frame_header->sn = *rx_buffer++;
+        }
+
+        ftdf_boolean_t has_dstpan_id = FTDF_FALSE;
+
+        if (frame_type == FTDF_MULTIPURPOSE_FRAME) {
+                has_dstpan_id = pan_id_present;
+        } else {
+
+                if (frame_version < 0x02) {
+                        if (dst_addr_mode != FTDF_NO_ADDRESS) {
+                                has_dstpan_id = FTDF_TRUE;
+                        }
+
+                } else {
+
+                        if (((src_addr_mode == FTDF_NO_ADDRESS) &&
+                                (dst_addr_mode == FTDF_NO_ADDRESS) && pan_id_compression) ||
+                                ((src_addr_mode == FTDF_NO_ADDRESS) &&
+                                        (dst_addr_mode != FTDF_NO_ADDRESS) && !pan_id_compression) ||
+                                ((src_addr_mode != FTDF_NO_ADDRESS) &&
+                                        (dst_addr_mode != FTDF_NO_ADDRESS) && !pan_id_compression)) {
+
+                                has_dstpan_id = FTDF_TRUE;
+                        }
+                }
+        }
+
+        if (has_dstpan_id) {
+                ftdf_octet_t *pan_id_ptr = (ftdf_octet_t*)&frame_header->dst_pan_id;
+
+                *pan_id_ptr++ = *rx_buffer++;
+                *pan_id_ptr = *rx_buffer++;
+        }
+
+        if (dst_addr_mode == FTDF_SIMPLE_ADDRESS) {
+                frame_header->dst_addr.simple_address = *rx_buffer++;
+        } else if (dst_addr_mode == FTDF_SHORT_ADDRESS) {
+                ftdf_octet_t *short_address_ptr = (ftdf_octet_t*)&frame_header->dst_addr.short_address;
+
+                *short_address_ptr++ = *rx_buffer++;
+                *short_address_ptr = *rx_buffer++;
+        } else if (dst_addr_mode == FTDF_EXTENDED_ADDRESS) {
+                ftdf_octet_t *ext_address_ptr = (ftdf_octet_t*)&frame_header->dst_addr.ext_address;
+                int n;
+
+                for (n = 0; n < 8; n++) {
+                        *ext_address_ptr++ = *rx_buffer++;
+                }
+        }
+
+        ftdf_boolean_t has_srcpan_id = FTDF_FALSE;
+
+        if (frame_version < 0x02 && frame_type != FTDF_MULTIPURPOSE_FRAME) {
+                if (src_addr_mode != FTDF_NO_ADDRESS && !pan_id_compression) {
+                        has_srcpan_id = FTDF_TRUE;
+                }
+
+        } else {
+
+                if ((src_addr_mode != FTDF_NO_ADDRESS) && (dst_addr_mode == FTDF_NO_ADDRESS) &&
+                        !pan_id_compression) {
+
+                        has_srcpan_id = FTDF_TRUE;
+                }
+        }
+
+        if (has_srcpan_id) {
+                ftdf_octet_t *pan_id_ptr = (ftdf_octet_t*)&frame_header->src_pan_id;
+
+                *pan_id_ptr++ = *rx_buffer++;
+                *pan_id_ptr = *rx_buffer++;
+        } else {
+                frame_header->src_pan_id = frame_header->dst_pan_id;
+        }
+
+        if (src_addr_mode == FTDF_SIMPLE_ADDRESS) {
+                frame_header->src_addr.simple_address = *rx_buffer++;
+        } else if (src_addr_mode == FTDF_SHORT_ADDRESS) {
+                ftdf_octet_t *short_address_ptr =
+                        (ftdf_octet_t*)&frame_header->src_addr.short_address;
+
+                *short_address_ptr++ = *rx_buffer++;
+                *short_address_ptr = *rx_buffer++;
+        } else if (src_addr_mode == FTDF_EXTENDED_ADDRESS) {
+                ftdf_octet_t* ext_address_ptr = (ftdf_octet_t*)&frame_header->src_addr.ext_address;
+                int n;
+
+                for (n = 0; n < 8; n++) {
+                        *ext_address_ptr++ = *rx_buffer++;
+                }
+        }
+
+        frame_header->frame_type = frame_type;
+        frame_header->options = options;
+        frame_header->dst_addr_mode = dst_addr_mode;
+        frame_header->src_addr_mode = src_addr_mode;
+
+        return rx_buffer;
+}
+
+#ifndef FTDF_LITE
+void ftdf_process_next_request(void)
+{
+#ifndef FTDF_NO_TSCH
+        if (ftdf_pib.tsch_enabled) {
+                ftdf_msg_buffer_t *request = ftdf_tsch_get_pending(ftdf_tsch_slot_link->request);
+
+                ftdf_tsch_slot_link->request = NULL;
+
+                ftdf_schedule_tsch(request);
+
+                return;
+        }
+#endif /* FTDF_NO_TSCH */
+
+        while (ftdf_req_current == NULL) {
+                ftdf_msg_buffer_t *request = ftdf_dequeue_req_tail(&ftdf_req_queue);
+
+                if (request) {
+                        ftdf_process_request(request);
+                } else {
+                        break;
+                }
+        }
+}
+#endif /* !FTDF_LITE */
+
+static void process_rx_frame(int read_buf)
+{
+        static ftdf_pan_descriptor_t pan_descriptor;
+        static ftdf_address_t pend_addr_list[7];
+
+        ftdf_frame_header_t *frame_header = &ftdf_fh;
+#ifndef FTDF_LITE
+        ftdf_security_header *security_header = &ftdf_sh;
+#endif /* !FTDF_LITE */
+
+        uint8_t pend_addr_spec = 0;
+
+        ftdf_octet_t *rx_buffer =
+                (ftdf_octet_t*) (&FTDF->FTDF_RX_FIFO_0_0_REG) + (read_buf * FTDF_BUFFER_LENGTH);
+        ftdf_octet_t *rx_ptr = rx_buffer;
+        ftdf_data_length_t frameLen = *rx_ptr++;
+
+        if (ftdf_transparent_mode) {
+                if (ftdf_pib.metrics_enabled) {
+                        ftdf_pib.performance_metrics.rx_success_count++;
+                }
+
+                uint32_t rx_meta_1 = 0;
+
+                ftdf_bitmap32_t status = FTDF_TRANSPARENT_RCV_SUCCESSFUL;
+
+                switch (read_buf) {
+                case 0:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_0_REG;
+                        break;
+                case 1:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_1_REG;
+                        break;
+                case 2:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_2_REG;
+                        break;
+                case 3:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_3_REG;
+                        break;
+                case 4:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_4_REG;
+                        break;
+                case 5:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_5_REG;
+                        break;
+                case 6:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_6_REG;
+                        break;
+                case 7:
+                        rx_meta_1 = FTDF->FTDF_RX_META_1_7_REG;
+                        break;
+                default:
+                        OS_ASSERT(0);
+                }
+
+                status |= rx_meta_1 & REG_MSK(FTDF, FTDF_RX_META_1_0_REG, CRC16_ERROR) ?
+                        FTDF_TRANSPARENT_RCV_CRC_ERROR : 0;
+                status |= rx_meta_1 & REG_MSK(FTDF, FTDF_RX_META_1_0_REG, RES_FRM_TYPE_ERROR) ?
+                        FTDF_TRANSPARENT_RCV_RES_FRAMETYPE : 0;
+                status |= rx_meta_1 & REG_MSK(FTDF, FTDF_RX_META_1_0_REG, RES_FRM_VERSION_ERROR) ?
+                        FTDF_TRANSPARENT_RCV_RES_FRAME_VERSION : 0;
+                status |= rx_meta_1 & REG_MSK(FTDF, FTDF_RX_META_1_0_REG, DPANID_ERROR) ?
+                        FTDF_TRANSPARENT_RCV_UNEXP_DST_PAN_ID : 0;
+                status |= rx_meta_1 & REG_MSK(FTDF, FTDF_RX_META_1_0_REG, DADDR_ERROR) ?
+                        FTDF_TRANSPARENT_RCV_UNEXP_DST_ADDR : 0;
+
+#ifdef FTDF_PASS_ACK_FRAME
+                FTDF_RCV_FRAME_TRANSPARENT(frameLen, rx_ptr, status,
+                        REG_GET_FIELD(FTDF, FTDF_RX_META_1_0_REG, QUALITY_INDICATOR, rx_meta_1));
+#endif /* FTDF_PASS_ACK_FRAME */
+
+#if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
+                if ((ftdf_transparent_mode_options & FTDF_TRANSPARENT_WAIT_FOR_ACK)) {
+
+                        ftdf_get_frame_header(rx_ptr, frame_header);
+
+                        if ((frame_header->frame_type == FTDF_ACKNOWLEDGEMENT_FRAME) &&
+                                (status == FTDF_TRANSPARENT_RCV_SUCCESSFUL)) {
+
+#ifndef FTDF_PHY_API
+                                while (REG_GETF(FTDF, FTDF_TX_FLAG_S_0_REG, TX_FLAG_STAT)) {}
+
+                                /* It is required to call FTDF_processTxEvent here because an RX ack
+                                 * generates two events. The RX event is raised first, then after
+                                 * an IFS the TX event is raised. However, the ftdf_process_next_request
+                                 * requires that both events have been handled. */
+                                ftdf_process_tx_event();
+#endif /* !FTDF_PHY_API */
+
+                                ftdf_sn_t SN = REG_GETF(FTDF, FTDF_TX_META_DATA_1_0_REG, MACSN);
+
+#ifdef FTDF_PHY_API
+                                ftdf_critical_var();
+                                ftdf_enter_critical();
+                                if (ftdf_tx_in_progress && (frame_header->sn == SN)) {
+                                        ftdf_exit_critical();
+                                        return;
+                                }
+
+                                ftdf_exit_critical();
+#else
+                                if (ftdf_req_current && (frame_header->sn == SN)) {
+
+                                        ftdf_transparent_request_t *transparent_request =
+                                                (ftdf_transparent_request_t*)ftdf_req_current;
+
+                                        ftdf_critical_var();
+                                        ftdf_enter_critical();
+                                        ftdf_req_current = NULL;
+                                        ftdf_exit_critical();
+                                        FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparent_request->handle,
+                                                                            FTDF_TRANSPARENT_SEND_SUCCESSFUL);
+
+                                        FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t *)transparent_request);
+
+                                        return;
+                                }
+#endif /* FTDF_PHY_API */
+                        }
+                }
+#endif /* FTDF_TRANSPARENT_USE_WAIT_FOR_ACK */
+#ifndef FTDF_PASS_ACK_FRAME
+                FTDF_RCV_FRAME_TRANSPARENT(frameLen, rx_ptr, status,
+                        REG_GET_FIELD(FTDF, FTDF_RX_META_1_0_REG, QUALITY_INDICATOR, rx_meta_1));
+#endif /* !FTDF_PASS_ACK_FRAME */
+
+                return;
+        }
+
+#ifndef FTDF_LITE
+        rx_ptr = ftdf_get_frame_header(rx_ptr, frame_header);
+
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_MANUAL
+    if (frame_header->options & FTDF_OPT_ACK_REQUESTED) {
+            int n;
+            ftdf_boolean_t address_found = FTDF_FALSE;
+            for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++) {
+                    if (ftdf_tx_pending_list[n].addr_mode == frame_header->src_addr_mode &&
+                            ftdf_tx_pending_list[n].pan_id == frame_header->src_pan_id) {
+                            if (frame_header->src_addr_mode == FTDF_SHORT_ADDRESS) {
+                                    if (ftdf_tx_pending_list[n].addr.short_address == frame_header->src_addr.short_address) {
+                                            address_found = FTDF_TRUE;
+                                            break;
+                                    }
+                            } else if (frame_header->src_addr_mode == FTDF_EXTENDED_ADDRESS) {
+                                    if (ftdf_tx_pending_list[n].addr.ext_address == frame_header->src_addr.ext_address) {
+                                            address_found = FTDF_TRUE;
+                                            break;
+                                    }
+                            } else {
+                                    // Invalid srcAddrMode
+                                    return;
+                            }
+                    }
+            }
+            if (address_found) {
+                    ftdf_fppr_set_mode(FTDF_FALSE, FTDF_TRUE, FTDF_TRUE);
+            } else {
+                    ftdf_fppr_set_mode(FTDF_FALSE, FTDF_TRUE, FTDF_FALSE);
+            }
+    }
+#endif
+
+        if (frame_header->frame_version == FTDF_FRAME_VERSION_NOT_SUPPORTED) {
+                return;
+        }
 #if defined(FTDF_NO_CSL) && defined(FTDF_NO_TSCH)
-    else if (frameHeader->frameVersion == FTDF_FRAME_VERSION_E ||
-             frameHeader->frameType == FTDF_MULTIPURPOSE_FRAME)
-    {
-        return;
-    }
+        else if ((frame_header->frame_version == FTDF_FRAME_VERSION_E) ||
+                (frame_header->frame_type == FTDF_MULTIPURPOSE_FRAME)) {
 
+                return;
+        }
 #endif /* FTDF_NO_CSL && FTDF_NO_TSCH */
 
-    FTDF_FrameType frameType = frameHeader->frameType;
-    FTDF_Boolean   duplicate = FTDF_FALSE;
+        ftdf_frame_type_t frame_type = frame_header->frame_type;
+        ftdf_boolean_t duplicate = FTDF_FALSE;
 
-    if ((frameHeader->options & FTDF_OPT_SEQ_NR_SUPPRESSED) == 0 &&
-        frameHeader->srcAddrMode != FTDF_NO_ADDRESS)
-    {
-        FTDF_Time    timestamp = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_RX_TIMESTAMP, readBuf);
-        FTDF_SNSel   snSel     = FTDF_SN_SEL_DSN;
-        FTDF_Boolean drop;
+        if (((frame_header->options & FTDF_OPT_SEQ_NR_SUPPRESSED) == 0) &&
+                (frame_header->src_addr_mode != FTDF_NO_ADDRESS)) {
 
-        if ((FTDF_pib.tschEnabled || frameHeader->frameVersion == FTDF_FRAME_VERSION_E) &&
-            (frameHeader->options & FTDF_OPT_ACK_REQUESTED))
-        {
-            drop = FTDF_FALSE;
-        }
-        else
-        {
-            drop = FTDF_TRUE;
-        }
+                ftdf_time_t timestamp;
+                ftdf_sn_sel sn_sel = FTDF_SN_SEL_DSN;
+                ftdf_boolean_t drop;
 
-        if (frameType == FTDF_BEACON_FRAME)
-        {
-            snSel = frameHeader->frameVersion == FTDF_FRAME_VERSION_E ? FTDF_SN_SEL_EBSN : FTDF_SN_SEL_BSN;
-        }
-
-        uint8_t i;
-
-        for (i = 0; i < FTDF_NR_OF_RX_ADDRS; i++)
-        {
-            // Check if entry is empty or matches
-            if (FTDF_rxa[ i ].addrMode == FTDF_NO_ADDRESS ||
-                (FTDF_rxa[ i ].addrMode == frameHeader->srcAddrMode &&
-                 ((frameHeader->srcAddrMode == FTDF_SHORT_ADDRESS &&
-                   frameHeader->srcAddr.shortAddress == FTDF_rxa[ i ].addr.shortAddress) ||
-                  (frameHeader->srcAddrMode == FTDF_EXTENDED_ADDRESS &&
-                   frameHeader->srcAddr.extAddress == FTDF_rxa[ i ].addr.extAddress))))
-            {
-                break;
-            }
-        }
-
-        if (i < FTDF_NR_OF_RX_ADDRS)
-        {
-            if (FTDF_rxa[ i ].addrMode != FTDF_NO_ADDRESS)
-            {
-                switch (snSel)
-                {
-                case FTDF_SN_SEL_DSN:
-
-                    if (FTDF_rxa[ i ].dsnValid == FTDF_TRUE)
-                    {
-                        if (frameHeader->SN == FTDF_rxa[ i ].dsn)
-                        {
-                            if (FTDF_pib.metricsEnabled)
-                            {
-                                FTDF_pib.performanceMetrics.duplicateFrameCount++;
-                            }
-
-                            if (drop)
-                            {
-                                return;
-                            }
-
-                            duplicate = FTDF_TRUE;
-                        }
-                    }
-                    else
-                    {
-                        FTDF_rxa[ i ].dsnValid = FTDF_TRUE;
-                    }
-
-                    FTDF_rxa[ i ].dsn = frameHeader->SN;
-                    break;
-
-                case FTDF_SN_SEL_BSN:
-
-                    if (FTDF_rxa[ i ].bsnValid == FTDF_TRUE)
-                    {
-                        if (frameHeader->SN == FTDF_rxa[ i ].bsn)
-                        {
-                            if (FTDF_pib.metricsEnabled)
-                            {
-                                FTDF_pib.performanceMetrics.duplicateFrameCount++;
-                            }
-
-                            if (drop)
-                            {
-                                return;
-                            }
-
-                            duplicate = FTDF_TRUE;
-                        }
-                    }
-                    else
-                    {
-                        FTDF_rxa[ i ].bsnValid = FTDF_TRUE;
-                    }
-
-                    FTDF_rxa[ i ].bsn = frameHeader->SN;
-                    break;
-
-                case FTDF_SN_SEL_EBSN:
-
-                    if (FTDF_rxa[ i ].ebsnValid == FTDF_TRUE)
-                    {
-                        if (frameHeader->SN == FTDF_rxa[ i ].ebsn)
-                        {
-                            if (FTDF_pib.metricsEnabled)
-                            {
-                                FTDF_pib.performanceMetrics.duplicateFrameCount++;
-                            }
-
-                            if (drop)
-                            {
-                                return;
-                            }
-
-                            duplicate = FTDF_TRUE;
-                        }
-                    }
-                    else
-                    {
-                        FTDF_rxa[ i ].ebsnValid = FTDF_TRUE;
-                    }
-
-                    FTDF_rxa[ i ].ebsn = frameHeader->SN;
-                    break;
+                switch(read_buf) {
+                case 0:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_0_REG, RX_TIMESTAMP);
+                        break;
+                case 1:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_1_REG, RX_TIMESTAMP);
+                        break;
+                case 2:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_2_REG, RX_TIMESTAMP);
+                        break;
+                case 3:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_3_REG, RX_TIMESTAMP);
+                        break;
+                case 4:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_4_REG, RX_TIMESTAMP);
+                        break;
+                case 5:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_5_REG, RX_TIMESTAMP);
+                        break;
+                case 6:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_6_REG, RX_TIMESTAMP);
+                        break;
+                case 7:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_7_REG, RX_TIMESTAMP);
+                        break;
+                default:
+                        OS_ASSERT(0);
                 }
-            }
-            else
-            {
-                FTDF_rxa[ i ].addrMode = frameHeader->srcAddrMode;
-                FTDF_rxa[ i ].addr     = frameHeader->srcAddr;
 
-                switch (snSel)
-                {
-                case FTDF_SN_SEL_DSN:
-                    FTDF_rxa[ i ].dsnValid = FTDF_TRUE;
-                    FTDF_rxa[ i ].dsn      = frameHeader->SN;
-                    break;
+                if ((ftdf_pib.tsch_enabled || (frame_header->frame_version == FTDF_FRAME_VERSION_E)) &&
+                        (frame_header->options & FTDF_OPT_ACK_REQUESTED)) {
 
-                case FTDF_SN_SEL_BSN:
-                    FTDF_rxa[ i ].bsnValid = FTDF_TRUE;
-                    FTDF_rxa[ i ].bsn      = frameHeader->SN;
-                    break;
-
-                case FTDF_SN_SEL_EBSN:
-                    FTDF_rxa[ i ].ebsnValid = FTDF_TRUE;
-                    FTDF_rxa[ i ].ebsn      = frameHeader->SN;
-                    break;
+                        drop = FTDF_FALSE;
+                } else {
+                        drop = FTDF_TRUE;
                 }
-            }
 
-            FTDF_rxa[ i ].timestamp = timestamp;
-        }
-        else
-        {
-            // find oldest entry and overwrite it
-            FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-            FTDF_Time delta, greatestDelta = 0;
-            uint8_t   entry   = 0;
-
-            for (i = 0; i < FTDF_NR_OF_RX_ADDRS; i++)
-            {
-                delta = curTime - FTDF_rxa[ i ].timestamp;
-
-                if (delta > greatestDelta)
-                {
-                    greatestDelta = delta;
-                    entry         = i;
+                if (frame_type == FTDF_BEACON_FRAME) {
+                        sn_sel = (frame_header->frame_version == FTDF_FRAME_VERSION_E) ?
+                                FTDF_SN_SEL_EBSN : FTDF_SN_SEL_BSN;
                 }
-            }
 
-            FTDF_rxa[ entry ].addrMode = frameHeader->srcAddrMode;
-            FTDF_rxa[ entry ].addr     = frameHeader->srcAddr;
+                uint8_t i;
 
-            switch (snSel)
-            {
-            case FTDF_SN_SEL_DSN:
-                FTDF_rxa[ entry ].bsnValid  = FTDF_FALSE;
-                FTDF_rxa[ entry ].ebsnValid = FTDF_FALSE;
-                FTDF_rxa[ entry ].dsnValid  = FTDF_TRUE;
-                FTDF_rxa[ entry ].dsn       = frameHeader->SN;
-                break;
+                for (i = 0; i < FTDF_NR_OF_RX_ADDRS; i++) {
 
-            case FTDF_SN_SEL_BSN:
-                FTDF_rxa[ entry ].dsnValid  = FTDF_FALSE;
-                FTDF_rxa[ entry ].ebsnValid = FTDF_FALSE;
-                FTDF_rxa[ entry ].bsnValid  = FTDF_TRUE;
-                FTDF_rxa[ entry ].bsn       = frameHeader->SN;
-                break;
+                        /* Check if entry is empty or matches */
+                        if ((ftdf_rxa[i].addr_mode == FTDF_NO_ADDRESS) ||
+                                ((ftdf_rxa[i].addr_mode == frame_header->src_addr_mode) &&
+                                 (((frame_header->src_addr_mode == FTDF_SHORT_ADDRESS) &&
+                                   (frame_header->src_addr.short_address == ftdf_rxa[i].addr.short_address)) ||
+                                  ((frame_header->src_addr_mode == FTDF_EXTENDED_ADDRESS) &&
+                                   (frame_header->src_addr.ext_address == ftdf_rxa[i].addr.ext_address))))) {
 
-            case FTDF_SN_SEL_EBSN:
-                FTDF_rxa[ entry ].dsnValid  = FTDF_FALSE;
-                FTDF_rxa[ entry ].bsnValid  = FTDF_FALSE;
-                FTDF_rxa[ entry ].ebsnValid = FTDF_TRUE;
-                FTDF_rxa[ entry ].ebsn      = frameHeader->SN;
-                break;
-            }
+                                break;
+                        }
+                }
+
+                if (i < FTDF_NR_OF_RX_ADDRS) {
+                        if (ftdf_rxa[i].addr_mode != FTDF_NO_ADDRESS) {
+                                switch (sn_sel) {
+                                case FTDF_SN_SEL_DSN:
+
+                                        if (ftdf_rxa[i].dsn_valid == FTDF_TRUE) {
+                                                if (frame_header->sn == ftdf_rxa[i].dsn) {
+                                                        if (ftdf_pib.metrics_enabled) {
+                                                                ftdf_pib.performance_metrics.duplicate_frame_count++;
+                                                        }
+
+                                                        if (drop) {
+                                                                return;
+                                                        }
+
+                                                        duplicate = FTDF_TRUE;
+                                                }
+                                        } else {
+                                                ftdf_rxa[i].dsn_valid = FTDF_TRUE;
+                                        }
+
+                                        ftdf_rxa[i].dsn = frame_header->sn;
+                                        break;
+                                case FTDF_SN_SEL_BSN:
+
+                                        if (ftdf_rxa[i].bsn_valid == FTDF_TRUE) {
+                                                if (frame_header->sn == ftdf_rxa[i].bsn) {
+                                                        if (ftdf_pib.metrics_enabled) {
+                                                                ftdf_pib.performance_metrics.duplicate_frame_count++;
+                                                        }
+
+                                                        if (drop) {
+                                                                return;
+                                                        }
+
+                                                        duplicate = FTDF_TRUE;
+                                                }
+                                        } else {
+                                                ftdf_rxa[i].bsn_valid = FTDF_TRUE;
+                                        }
+
+                                        ftdf_rxa[i].bsn = frame_header->sn;
+                                        break;
+                                case FTDF_SN_SEL_EBSN:
+
+                                        if (ftdf_rxa[i].ebsn_valid == FTDF_TRUE) {
+                                                if (frame_header->sn == ftdf_rxa[i].eb_sn) {
+                                                        if (ftdf_pib.metrics_enabled) {
+                                                                ftdf_pib.performance_metrics.duplicate_frame_count++;
+                                                        }
+
+                                                        if (drop) {
+                                                                return;
+                                                        }
+
+                                                        duplicate = FTDF_TRUE;
+                                                }
+                                        } else {
+                                                ftdf_rxa[i].ebsn_valid = FTDF_TRUE;
+                                        }
+
+                                        ftdf_rxa[i].eb_sn = frame_header->sn;
+                                        break;
+                                }
+                        } else {
+                                ftdf_rxa[i].addr_mode = frame_header->src_addr_mode;
+                                ftdf_rxa[i].addr = frame_header->src_addr;
+
+                                switch (sn_sel) {
+                                case FTDF_SN_SEL_DSN:
+                                        ftdf_rxa[i].dsn_valid = FTDF_TRUE;
+                                        ftdf_rxa[i].dsn = frame_header->sn;
+                                        break;
+                                case FTDF_SN_SEL_BSN:
+                                        ftdf_rxa[i].bsn_valid = FTDF_TRUE;
+                                        ftdf_rxa[i].bsn = frame_header->sn;
+                                        break;
+                                case FTDF_SN_SEL_EBSN:
+                                        ftdf_rxa[i].ebsn_valid = FTDF_TRUE;
+                                        ftdf_rxa[i].eb_sn = frame_header->sn;
+                                        break;
+                                }
+                        }
+
+                        ftdf_rxa[i].timestamp = timestamp;
+                } else {
+                        /* find oldest entry and overwrite it */
+                        ftdf_time_t cur_time =
+                            REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+                        ftdf_time_t delta, greatest_delta = 0;
+                        uint8_t entry = 0;
+
+                        for (i = 0; i < FTDF_NR_OF_RX_ADDRS; i++) {
+                                delta = cur_time - ftdf_rxa[i].timestamp;
+
+                                if (delta > greatest_delta) {
+                                        greatest_delta = delta;
+                                        entry = i;
+                                }
+                        }
+
+                        ftdf_rxa[entry].addr_mode = frame_header->src_addr_mode;
+                        ftdf_rxa[entry].addr = frame_header->src_addr;
+
+                        switch (sn_sel) {
+                        case FTDF_SN_SEL_DSN:
+                                ftdf_rxa[entry].bsn_valid = FTDF_FALSE;
+                                ftdf_rxa[entry].ebsn_valid = FTDF_FALSE;
+                                ftdf_rxa[entry].dsn_valid = FTDF_TRUE;
+                                ftdf_rxa[entry].dsn = frame_header->sn;
+                                break;
+                        case FTDF_SN_SEL_BSN:
+                                ftdf_rxa[entry].dsn_valid = FTDF_FALSE;
+                                ftdf_rxa[entry].ebsn_valid = FTDF_FALSE;
+                                ftdf_rxa[entry].bsn_valid = FTDF_TRUE;
+                                ftdf_rxa[entry].bsn = frame_header->sn;
+                                break;
+                        case FTDF_SN_SEL_EBSN:
+                                ftdf_rxa[entry].dsn_valid = FTDF_FALSE;
+                                ftdf_rxa[entry].bsn_valid = FTDF_FALSE;
+                                ftdf_rxa[entry].ebsn_valid = FTDF_TRUE;
+                                ftdf_rxa[entry].eb_sn = frame_header->sn;
+                                break;
+                        }
+                }
         }
-    }
 
-    if (frameHeader->options & FTDF_OPT_SECURITY_ENABLED)
-    {
-        rxPtr = FTDF_getSecurityHeader(rxPtr, frameHeader->frameVersion, securityHeader);
-    }
-    else
-    {
-        securityHeader->securityLevel = 0;
-        securityHeader->keyIdMode     = 0;
-    }
+        if (frame_header->options & FTDF_OPT_SECURITY_ENABLED) {
+                rx_ptr = ftdf_get_security_header(rx_ptr, frame_header->frame_version, security_header);
+        } else {
+                security_header->security_level = 0;
+                security_header->key_id_mode = 0;
+        }
 
-    FTDF_IEList *headerIEList  = NULL;
-    FTDF_IEList *payloadIEList = NULL;
-    int          micLength     = FTDF_getMicLength(securityHeader->securityLevel);
+        ftdf_ie_list_t* header_ie_list = NULL;
+        ftdf_ie_list_t* payload_ie_list = NULL;
+        int mic_length = ftdf_get_mic_length(security_header->security_level);
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (frameHeader->options & FTDF_OPT_IES_PRESENT)
-    {
-        rxPtr =
-            FTDF_getIes(rxPtr, rxBuffer + (frameLen - micLength - FTDF_FCS_LENGTH), &headerIEList, &payloadIEList);
-    }
-
+        if (frame_header->options & FTDF_OPT_IES_PRESENT) {
+                rx_ptr = ftdf_get_ies(rx_ptr, rx_buffer + (frameLen - mic_length - FTDF_FCS_LENGTH),
+                                      &header_ie_list, &payload_ie_list);
+        }
 #endif /* !FTDF_NO_CSL || !FTDF_NO_TSCH */
 
-    // Get start of private data (needed to unsecure a frame)
-    if (frameType == FTDF_MAC_COMMAND_FRAME)
-    {
-        frameHeader->commandFrameId = *rxPtr++;
-    }
-    else if (frameType == FTDF_BEACON_FRAME)
-    {
-        PANDescriptor.coordAddrMode = frameHeader->srcAddrMode;
-        PANDescriptor.coordPANId    = frameHeader->srcPANId;
-        PANDescriptor.coordAddr     = frameHeader->srcAddr;
-        PANDescriptor.channelNumber = ((FTDF_GET_FIELD(ON_OFF_REGMAP_PHYRXATTR) >> 4) & 0xf) + 11;
-        PANDescriptor.channelPage   = 0;
-        PANDescriptor.timestamp     = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_RX_TIMESTAMP, readBuf);
-        PANDescriptor.linkQuality   = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_QUALITY_INDICATOR, readBuf);
+        /* Get start of private data (needed to unsecure a frame) */
+        if (frame_type == FTDF_MAC_COMMAND_FRAME) {
 
-        FTDF_Octet *superframeSpecPtr = (FTDF_Octet *) &PANDescriptor.superframeSpec;
-        *superframeSpecPtr++ = *rxPtr++;
-        *superframeSpecPtr   = *rxPtr++;
+                frame_header->command_frame_id = *rx_ptr++;
 
-        uint8_t gtsSpec = *rxPtr++;
+        } else if (frame_type == FTDF_BEACON_FRAME) {
 
-        PANDescriptor.GTSPermit = (gtsSpec & 0x08) ? FTDF_TRUE : FTDF_FALSE;
-        uint8_t gtsDescrCount = gtsSpec & 0x7;
+                pan_descriptor.coord_addr_mode = frame_header->src_addr_mode;
+                pan_descriptor.coord_pan_id = frame_header->src_pan_id;
+                pan_descriptor.coord_addr = frame_header->src_addr;
+                pan_descriptor.channel_number = REG_GETF(FTDF, FTDF_LMAC_CONTROL_1_REG, PHYRXATTR_CN) + 11;
+                pan_descriptor.channel_page = 0;
 
-        if (gtsDescrCount != 0)
-        {
-            // GTS is not supported, so just skip the GTS direction and GTS list fields if present
-            rxPtr += (1 + (3 * gtsDescrCount));
-        }
-
-        pendAddrSpec = *rxPtr++;
-        uint8_t nrOfShortAddrs = pendAddrSpec & 0x07;
-        uint8_t nrOfExtAddrs   = (pendAddrSpec & 0x70) >> 4;
-
-        int     n;
-
-        for (n = 0; n < (nrOfShortAddrs + nrOfExtAddrs); n++)
-        {
-            if (n < nrOfShortAddrs)
-            {
-                FTDF_Octet *shortAddressPtr = (FTDF_Octet *) &pendAddrList[ n ].shortAddress;
-                *shortAddressPtr++ = *rxBuffer++;
-                *shortAddressPtr   = *rxBuffer++;
-            }
-            else
-            {
-                FTDF_Octet *extAddressPtr = (FTDF_Octet *) &pendAddrList[ n ].extAddress;
-                int         m;
-
-                for (m = 0; m < 8; m++)
-                {
-                    *extAddressPtr++ = *rxBuffer++;
+                switch (read_buf) {
+                case 0:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_0_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_0_REG, QUALITY_INDICATOR);
+                        break;
+                case 1:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_1_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_1_REG, QUALITY_INDICATOR);
+                        break;
+                case 2:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_2_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_2_REG, QUALITY_INDICATOR);
+                        break;
+                case 3:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_3_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_3_REG, QUALITY_INDICATOR);
+                        break;
+                case 4:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_4_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_4_REG, QUALITY_INDICATOR);
+                        break;
+                case 5:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_5_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_5_REG, QUALITY_INDICATOR);
+                        break;
+                case 6:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_6_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_6_REG, QUALITY_INDICATOR);
+                        break;
+                case 7:
+                        pan_descriptor.timestamp = REG_GETF(FTDF, FTDF_RX_META_0_7_REG, RX_TIMESTAMP);
+                        pan_descriptor.link_quality = REG_GETF(FTDF, FTDF_RX_META_1_7_REG, QUALITY_INDICATOR);
+                        break;
+                default:
+                        /* Unsupported register index occurred */
+                        OS_ASSERT(0);
                 }
-            }
+
+                ftdf_octet_t* superframe_spec_ptr = (ftdf_octet_t*)&pan_descriptor.superframe_spec;
+                *superframe_spec_ptr++ = *rx_ptr++;
+                *superframe_spec_ptr = *rx_ptr++;
+
+                uint8_t gts_spec = *rx_ptr++;
+
+                pan_descriptor.gts_permit = (gts_spec & 0x08) ? FTDF_TRUE : FTDF_FALSE;
+                uint8_t gts_descr_count = gts_spec & 0x7;
+
+                if (gts_descr_count != 0) {
+                        /* GTS is not supported, so just skip the GTS direction and GTS list
+                         * fields if present */
+                        rx_ptr += (1 + (3 * gts_descr_count));
+                }
+
+                pend_addr_spec = *rx_ptr++;
+                uint8_t nr_of_short_addrs = pend_addr_spec & 0x07;
+                uint8_t nr_of_ext_addrs = (pend_addr_spec & 0x70) >> 4;
+
+                int n;
+
+                for (n = 0; n < (nr_of_short_addrs + nr_of_ext_addrs); n++) {
+                        if (n < nr_of_short_addrs) {
+
+                                ftdf_octet_t* short_address_ptr =
+                                        (ftdf_octet_t*)&pend_addr_list[n].short_address;
+                                *short_address_ptr++ = *rx_buffer++;
+                                *short_address_ptr = *rx_buffer++;
+
+                        } else {
+
+                                ftdf_octet_t* ext_address_ptr =
+                                        (ftdf_octet_t*)&pend_addr_list[n].ext_address;
+                                int m;
+
+                                for (m = 0; m < 8; m++) {
+                                        *ext_address_ptr++ = *rx_buffer++;
+                                }
+                        }
+                }
+        }  else if ((frame_type == FTDF_ACKNOWLEDGEMENT_FRAME) &&
+                (security_header->security_level != 0)) {
+
+                if (ftdf_req_current) {
+                        switch (ftdf_req_current->msg_id) {
+                        case FTDF_DATA_REQUEST:
+                        {
+                                ftdf_data_request_t *data_request =
+                                        (ftdf_data_request_t*)ftdf_req_current;
+
+                                frame_header->src_pan_id = data_request->dst_pan_id;
+                                frame_header->src_addr_mode = data_request->dst_addr_mode;
+                                frame_header->src_addr = data_request->dst_addr;
+                                break;
+                        }
+                        case FTDF_POLL_REQUEST:
+                        {
+                                ftdf_poll_request_t *poll_request =
+                                        (ftdf_poll_request_t*)ftdf_req_current;
+
+                                frame_header->src_pan_id = poll_request->coord_pan_id;
+                                frame_header->src_addr_mode = poll_request->coord_addr_mode;
+                                frame_header->src_addr = poll_request->coord_addr;
+                                break;
+                        }
+                        case FTDF_ASSOCIATE_REQUEST:
+                        {
+                                ftdf_associate_request_t *associate_request =
+                                        (ftdf_associate_request_t*)ftdf_req_current;
+
+                                frame_header->src_pan_id = associate_request->coord_pan_id;
+                                frame_header->src_addr_mode = associate_request->coord_addr_mode;
+                                frame_header->src_addr = associate_request->coord_addr;
+                                break;
+                        }
+                        case FTDF_DISASSOCIATE_REQUEST:
+                        {
+                                ftdf_disassociate_request_t *disassociate_request =
+                                        (ftdf_disassociate_request_t*)ftdf_req_current;
+
+                                frame_header->src_pan_id = disassociate_request->device_pan_id;
+                                frame_header->src_addr_mode =
+                                        disassociate_request->device_addr_mode;
+                                frame_header->src_addr = disassociate_request->device_address;
+                                break;
+                        }
+                        case FTDF_ASSOCIATE_RESPONSE:
+                        {
+                                ftdf_associate_response_t *associate_response =
+                                        (ftdf_associate_response_t*)ftdf_req_current;
+
+                                frame_header->src_addr_mode = FTDF_EXTENDED_ADDRESS;
+                                frame_header->src_addr.ext_address =
+                                        associate_response->device_address;
+                                break;
+                        }
+                        }
+                }
         }
-    }
-    else if (frameType == FTDF_ACKNOWLEDGEMENT_FRAME &&
-             securityHeader->securityLevel != 0)
-    {
-        if (FTDF_reqCurrent)
-        {
-            switch (FTDF_reqCurrent->msgId)
-            {
-            case FTDF_DATA_REQUEST:
-            {
-                FTDF_DataRequest *dataRequest = (FTDF_DataRequest *) FTDF_reqCurrent;
-                frameHeader->srcPANId    = dataRequest->dstPANId;
-                frameHeader->srcAddrMode = dataRequest->dstAddrMode;
-                frameHeader->srcAddr     = dataRequest->dstAddr;
-                break;
-            }
 
-            case FTDF_POLL_REQUEST:
-            {
-                FTDF_PollRequest *pollRequest = (FTDF_PollRequest *) FTDF_reqCurrent;
-                frameHeader->srcPANId    = pollRequest->coordPANId;
-                frameHeader->srcAddrMode = pollRequest->coordAddrMode;
-                frameHeader->srcAddr     = pollRequest->coordAddr;
-                break;
-            }
+        ftdf_status_t status = ftdf_unsecure_frame(rx_buffer, rx_ptr, frame_header, security_header);
 
-            case FTDF_ASSOCIATE_REQUEST:
-            {
-                FTDF_AssociateRequest *associateRequest = (FTDF_AssociateRequest *) FTDF_reqCurrent;
-                frameHeader->srcPANId    = associateRequest->coordPANId;
-                frameHeader->srcAddrMode = associateRequest->coordAddrMode;
-                frameHeader->srcAddr     = associateRequest->coordAddr;
-                break;
-            }
+        if (status != FTDF_SUCCESS) {
+                if (ftdf_pib.metrics_enabled) {
+                        ftdf_pib.performance_metrics.security_failure_count++;
+                }
 
-            case FTDF_DISASSOCIATE_REQUEST:
-            {
-                FTDF_DisassociateRequest *disassociateRequest =
-                    (FTDF_DisassociateRequest *) FTDF_reqCurrent;
-                frameHeader->srcPANId    = disassociateRequest->devicePANId;
-                frameHeader->srcAddrMode = disassociateRequest->deviceAddrMode;
-                frameHeader->srcAddr     = disassociateRequest->deviceAddress;
-                break;
-            }
+                FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
 
-            case FTDF_ASSOCIATE_RESPONSE:
-            {
-                FTDF_AssociateResponse *associateResponse = (FTDF_AssociateResponse *) FTDF_reqCurrent;
-                frameHeader->srcAddrMode        = FTDF_EXTENDED_ADDRESS;
-                frameHeader->srcAddr.extAddress = associateResponse->deviceAddress;
-                break;
-            }
-            }
-        }
-    }
+                /* Since unsecure of acknowledgement frame is always successful,
+                 * nothing special has to be done to get the address information correct. */
+                ftdf_send_comm_status_indication(ftdf_req_current, status,
+                                                 ftdf_pib.pan_id,
+                                                 frame_header->src_addr_mode,
+                                                 frame_header->src_addr,
+                                                 frame_header->dst_addr_mode,
+                                                 frame_header->dst_addr,
+                                                 security_header->security_level,
+                                                 security_header->key_id_mode,
+                                                 security_header->key_source,
+                                                 security_header->key_index);
 
-    FTDF_Status status = FTDF_unsecureFrame(rxBuffer, rxPtr, frameHeader, securityHeader);
+                if ((frame_type == FTDF_ACKNOWLEDGEMENT_FRAME) && ftdf_req_current) {
 
-    if (status != FTDF_SUCCESS)
-    {
-        if (FTDF_pib.metricsEnabled)
-        {
-            FTDF_pib.performanceMetrics.securityFailureCount++;
+                        send_confirm(FTDF_NO_ACK, ftdf_req_current->msg_id);
+
+                        ftdf_process_next_request();
+                }
+
+                return;
         }
 
-        FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-
-        // Since unsecure of acknowledgement frame is always successful,
-        // nothing special has to be done to get the address information correct.
-        FTDF_sendCommStatusIndication(FTDF_reqCurrent, status,
-                                      FTDF_pib.PANId,
-                                      frameHeader->srcAddrMode,
-                                      frameHeader->srcAddr,
-                                      frameHeader->dstAddrMode,
-                                      frameHeader->dstAddr,
-                                      securityHeader->securityLevel,
-                                      securityHeader->keyIdMode,
-                                      securityHeader->keySource,
-                                      securityHeader->keyIndex);
-
-        if (frameType == FTDF_ACKNOWLEDGEMENT_FRAME && FTDF_reqCurrent)
-        {
-            sendConfirm(FTDF_NO_ACK,
-                        FTDF_reqCurrent->msgId);
-
-            FTDF_processNextRequest();
+        if (ftdf_pib.metrics_enabled && frame_type != FTDF_ACKNOWLEDGEMENT_FRAME) {
+                ftdf_pib.performance_metrics.rx_success_count++;
         }
-
-        return;
-    }
-
-    if (FTDF_pib.metricsEnabled && frameType != FTDF_ACKNOWLEDGEMENT_FRAME)
-    {
-        FTDF_pib.performanceMetrics.RXSuccessCount++;
-    }
 
 #ifndef FTDF_NO_TSCH
+        if (ftdf_pib.tsch_enabled && frame_type != FTDF_ACKNOWLEDGEMENT_FRAME) {
+                ftdf_time_t timestamp;
 
-    if (FTDF_pib.tschEnabled && frameType != FTDF_ACKNOWLEDGEMENT_FRAME)
-    {
-        FTDF_Time timestamp = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_RX_TIMESTAMP, readBuf);
+                switch (read_buf) {
+                case 0:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_0_REG, RX_TIMESTAMP);
+                        break;
+                case 1:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_1_REG, RX_TIMESTAMP);
+                        break;
+                case 2:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_2_REG, RX_TIMESTAMP);
+                        break;
+                case 3:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_3_REG, RX_TIMESTAMP);
+                        break;
+                case 4:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_4_REG, RX_TIMESTAMP);
+                        break;
+                case 5:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_5_REG, RX_TIMESTAMP);
+                        break;
+                case 6:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_6_REG, RX_TIMESTAMP);
+                        break;
+                case 7:
+                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_7_REG, RX_TIMESTAMP);
+                        break;
+                default:
+                        /* Unsupported register index occurred */
+                        OS_ASSERT(0);
+                }
 
-        FTDF_correctSlotTime(timestamp);
-    }
-
+                ftdf_correct_slot_time(timestamp);
+        }
 #endif /* FTDF_NO_TSCH */
 
-    switch (frameType)
-    {
-    case FTDF_ACKNOWLEDGEMENT_FRAME:
+        switch (frame_type) {
+        case FTDF_ACKNOWLEDGEMENT_FRAME:
+                if (ftdf_pib.metrics_enabled) {
+                        if (ftdf_nr_of_retries == 0) {
+                                ftdf_pib.performance_metrics.tx_success_count++;
+                        } else if (ftdf_nr_of_retries == 1) {
+                                ftdf_pib.performance_metrics.retry_count++;
+                        } else {
+                                ftdf_pib.performance_metrics.multiple_retry_count++;
+                        }
+                }
 
-        if (FTDF_pib.metricsEnabled)
-        {
-            if (FTDF_nrOfRetries == 0)
-            {
-                FTDF_pib.performanceMetrics.TXSuccessCount++;
-            }
-            else if (FTDF_nrOfRetries == 1)
-            {
-                FTDF_pib.performanceMetrics.retryCount++;
-            }
-            else
-            {
-                FTDF_pib.performanceMetrics.multipleRetryCount++;
-            }
+                if (frame_header->frame_version == FTDF_FRAME_VERSION_E) {
+                        ftdf_pib.traffic_counters.rx_enh_ack_frm_ok_cnt++;
+                }
+                break;
+        case FTDF_BEACON_FRAME:
+                ftdf_pib.traffic_counters.rx_beacon_frm_ok_cnt++;
+                break;
+        case FTDF_DATA_FRAME:
+                ftdf_pib.traffic_counters.rx_data_frm_ok_cnt++;
+                break;
+        case FTDF_MAC_COMMAND_FRAME:
+                ftdf_pib.traffic_counters.rx_cmd_frm_ok_cnt++;
+                break;
+        case FTDF_MULTIPURPOSE_FRAME:
+                ftdf_pib.traffic_counters.rx_multi_purp_frm_ok_cnt++;
+                break;
         }
 
-        if (frameHeader->frameVersion == FTDF_FRAME_VERSION_E)
-        {
-            FTDF_pib.trafficCounters.rxEnhAckFrmOkCnt++;
-        }
+        if (frame_type == FTDF_ACKNOWLEDGEMENT_FRAME) {
 
-        break;
+                while (REG_GETF(FTDF, FTDF_TX_FLAG_S_0_REG, TX_FLAG_STAT)) {}
 
-    case FTDF_BEACON_FRAME:
-        FTDF_pib.trafficCounters.rxBeaconFrmOkCnt++;
-        break;
+                /* It is required to call ftdf_process_tx_event here because an RX ack generates two events
+                 * The RX event is raised first, then after an IFS the TX event is raised. However,
+                 * the ftdf_process_next_request requires that both events have been handled. */
+                ftdf_process_tx_event();
 
-    case FTDF_DATA_FRAME:
-        FTDF_pib.trafficCounters.rxDataFrmOkCnt++;
-        break;
+                ftdf_sn_t SN = REG_GETF(FTDF, FTDF_TX_META_DATA_1_0_REG, MACSN);
 
-    case FTDF_MAC_COMMAND_FRAME:
-        FTDF_pib.trafficCounters.rxCmdFrmOkCnt++;
-        break;
-
-    case FTDF_MULTIPURPOSE_FRAME:
-        FTDF_pib.trafficCounters.rxMultiPurpFrmOkCnt++;
-        break;
-    }
-
-    if (frameType == FTDF_ACKNOWLEDGEMENT_FRAME)
-    {
-        volatile uint32_t *txFlagS = FTDF_GET_REG_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_S, FTDF_TX_DATA_BUFFER);
-
-        while (*txFlagS & MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_STAT)
-        { }
-
-        // It is required to call FTDF_processTxEvent here because an RX ack generates two events
-        // The RX event is raised first, then after an IFS the TX event is raised. However,
-        // the FTDF_processNextRequest requires that both events have been handled.
-        FTDF_processTxEvent();
-
-        FTDF_SN SN = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_MACSN, FTDF_TX_DATA_BUFFER);
-
-        if (FTDF_reqCurrent &&
-            frameHeader->SN == SN)
-        {
+                if (ftdf_req_current && frame_header->sn == SN) {
 #ifndef FTDF_NO_CSL
+                        if (ftdf_pib.le_enabled == FTDF_TRUE) {
+                                ftdf_time_t timestamp;
 
-            if (FTDF_pib.leEnabled == FTDF_TRUE)
-            {
-                FTDF_Time timestamp = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_RX_TIMESTAMP,
-                                                             readBuf);
+                                switch (read_buf) {
+                                case 0:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_0_REG, RX_TIMESTAMP);
+                                        break;
+                                case 1:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_1_REG, RX_TIMESTAMP);
+                                        break;
+                                case 2:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_2_REG, RX_TIMESTAMP);
+                                        break;
+                                case 3:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_3_REG, RX_TIMESTAMP);
+                                        break;
+                                case 4:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_4_REG, RX_TIMESTAMP);
+                                        break;
+                                case 5:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_5_REG, RX_TIMESTAMP);
+                                        break;
+                                case 6:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_6_REG, RX_TIMESTAMP);
+                                        break;
+                                case 7:
+                                        timestamp = REG_GETF(FTDF, FTDF_RX_META_0_7_REG, RX_TIMESTAMP);
+                                        break;
+                                default:
+                                        /* Unsupported register index occurred */
+                                        OS_ASSERT(0);
+                                }
 
-                FTDF_setPeerCslTiming(headerIEList, timestamp);
-            }
-
+                                ftdf_set_peer_csl_timing(header_ie_list, timestamp);
+                        }
 #endif /* FTDF_NO_CSL */
 
 #ifndef FTDF_NO_TSCH
+                        if (ftdf_pib.tsch_enabled == FTDF_TRUE) {
+                                ftdf_correct_slot_time_from_ack(header_ie_list);
 
-            if (FTDF_pib.tschEnabled == FTDF_TRUE)
-            {
-                FTDF_correctSlotTimeFromAck(headerIEList);
+                                ftdf_tsch_retry_t* tsch_retry =
+                                    ftdf_get_tsch_retry(ftdf_get_request_address(ftdf_req_current));
 
-                FTDF_TschRetry *tschRetry = FTDF_getTschRetry(FTDF_getRequestAddress(FTDF_reqCurrent));
-
-                tschRetry->nrOfRetries     = 0;
-                FTDF_tschSlotLink->request = NULL;
-            }
-
+                                tsch_retry->nr_of_retries = 0;
+                                ftdf_tsch_slot_link->request = NULL;
+                        }
 #endif /* FTDF_NO_TSCH */
 
-            switch (FTDF_reqCurrent->msgId)
-            {
-            case FTDF_DATA_REQUEST:
-            {
-                FTDF_Time          timestamp     = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_TXTIMESTAMP,
-                                                                          FTDF_TX_DATA_BUFFER);
-                FTDF_NumOfBackoffs numOfBackoffs = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_CSMACANRRETRIES,
-                                                                          FTDF_TX_DATA_BUFFER);
+                        switch (ftdf_req_current->msg_id) {
+                        case FTDF_DATA_REQUEST:
+                        {
+                                ftdf_time_t timestamp = REG_GETF(FTDF, FTDF_TX_RETURN_STATUS_0_0_REG, TXTIMESTAMP);
+                                ftdf_num_of_backoffs_t num_of_backoffs = REG_GETF(FTDF, FTDF_TX_RETURN_STATUS_1_0_REG, CSMACANRRETRIES);
 
-                FTDF_sendDataConfirm((FTDF_DataRequest *)FTDF_reqCurrent,
-                                     FTDF_SUCCESS,
-                                     timestamp,
-                                     SN,
-                                     numOfBackoffs,
-                                     payloadIEList);
+                                ftdf_send_data_confirm((ftdf_data_request_t*)ftdf_req_current,
+                                                       FTDF_SUCCESS,
+                                                       timestamp,
+                                                       SN,
+                                                       num_of_backoffs,
+                                                       payload_ie_list);
+                                break;
+                        }
+                        case FTDF_POLL_REQUEST:
+                        {
+                                if (!(frame_header->options & FTDF_OPT_FRAME_PENDING)) {
+                                        ftdf_send_poll_confirm((ftdf_poll_request_t*)ftdf_req_current,
+                                                               FTDF_NO_DATA);
+                                }
+                                break;
+                        }
+                        case FTDF_ASSOCIATE_REQUEST:
+                        {
+                                ftdf_assoc_admin_t* assoc_admin = &ftdf_aa;
 
-                break;
-            }
+                                if ((assoc_admin->fast_a == FTDF_TRUE) || (assoc_admin->data_r == FTDF_FALSE)) {
+                                        uint32_t timestamp =
+                                            REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
 
-            case FTDF_POLL_REQUEST:
-            {
-                if (!(frameHeader->options & FTDF_OPT_FRAME_PENDING))
-                {
-                    FTDF_sendPollConfirm((FTDF_PollRequest *)FTDF_reqCurrent, FTDF_NO_DATA);
+                                        REG_SETF(FTDF, FTDF_SYMBOLTIME2THR_REG, SYMBOLTIME2THR,
+                                                (timestamp + ftdf_pib.response_wait_time * FTDF_BASE_SUPERFRAME_DURATION));
+
+                                } else if (!(frame_header->options & FTDF_OPT_FRAME_PENDING)) {
+
+                                        ftdf_send_associate_confirm((ftdf_associate_request_t*)ftdf_req_current,
+                                                                    FTDF_NO_DATA,
+                                                                    0xffff);
+                                }
+                                break;
+                        }
+                        case FTDF_ASSOCIATE_RESPONSE:
+                        {
+                                ftdf_associate_response_t* assoc_resp =
+                                        (ftdf_associate_response_t*)ftdf_req_current;
+
+                                ftdf_address_t src_addr, dst_addr;
+                                src_addr.ext_address = ftdf_pib.ext_address;
+                                dst_addr.ext_address = assoc_resp->device_address;
+
+                                ftdf_send_comm_status_indication(ftdf_req_current, FTDF_SUCCESS,
+                                                                 ftdf_pib.pan_id,
+                                                                 FTDF_EXTENDED_ADDRESS,
+                                                                 src_addr,
+                                                                 FTDF_EXTENDED_ADDRESS,
+                                                                 dst_addr,
+                                                                 assoc_resp->security_level,
+                                                                 assoc_resp->key_id_mode,
+                                                                 assoc_resp->key_source,
+                                                                 assoc_resp->key_index);
+                                break;
+                        }
+                        case FTDF_ORPHAN_RESPONSE:
+                        {
+                                ftdf_orphan_response_t* orphan_resp =
+                                        (ftdf_orphan_response_t*)ftdf_req_current;
+
+                                ftdf_address_t src_addr, dst_addr;
+                                src_addr.ext_address = ftdf_pib.ext_address;
+                                dst_addr.ext_address = orphan_resp->orphan_address;
+
+                                ftdf_send_comm_status_indication(ftdf_req_current, FTDF_SUCCESS,
+                                                                 ftdf_pib.pan_id,
+                                                                 FTDF_EXTENDED_ADDRESS,
+                                                                 src_addr,
+                                                                 FTDF_EXTENDED_ADDRESS,
+                                                                 dst_addr,
+                                                                 orphan_resp->security_level,
+                                                                 orphan_resp->key_id_mode,
+                                                                 orphan_resp->key_source,
+                                                                 orphan_resp->key_index);
+                                break;
+                        }
+                        case FTDF_DISASSOCIATE_REQUEST:
+                        {
+                                ftdf_send_disassociate_confirm((ftdf_disassociate_request_t*)ftdf_req_current,
+                                                               FTDF_SUCCESS);
+                                break;
+                        }
+                        case FTDF_REMOTE_REQUEST:
+                        {
+                                ftdf_remote_request_t* remote_request =
+                                        (ftdf_remote_request_t*)ftdf_req_current;
+
+                                if (remote_request->remote_id ==
+                                        FTDF_REMOTE_PAN_ID_CONFLICT_NOTIFICATION) {
+
+                                        ftdf_send_sync_loss_indication(FTDF_PAN_ID_CONFLICT,
+                                                                       security_header);
+                                }
+
+                                ftdf_req_current = NULL;
+                                break;
+                        }
+                        }
+
+                        if (ftdf_req_current->msg_id != FTDF_DATA_REQUEST) {
+                                /* for data request the application owns the memory */
+                                FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                        }
+
+                        ftdf_process_next_request();
+                } else {
+                        FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
                 }
+        } else if (((frame_header->frame_version == FTDF_FRAME_VERSION_E) || ftdf_pib.tsch_enabled) &&
+                (frame_header->options & FTDF_OPT_ACK_REQUESTED)) {
 
-                break;
-            }
-
-            case FTDF_ASSOCIATE_REQUEST:
-            {
-                FTDF_AssocAdmin *assocAdmin = &FTDF_aa;
-
-                if (assocAdmin->fastA == FTDF_TRUE ||
-                    assocAdmin->dataR == FTDF_FALSE)
-                {
-                    uint32_t timestamp = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-                    FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIME2THR,
-                                   (timestamp + FTDF_pib.responseWaitTime * FTDF_BASE_SUPERFRAME_DURATION));
-                }
-                else if (!(frameHeader->options & FTDF_OPT_FRAME_PENDING))
-                {
-                    FTDF_sendAssociateConfirm((FTDF_AssociateRequest *)FTDF_reqCurrent,
-                                              FTDF_NO_DATA,
-                                              0xffff);
-                }
-
-                break;
-            }
-
-            case FTDF_ASSOCIATE_RESPONSE:
-            {
-                FTDF_AssociateResponse *assocResp = (FTDF_AssociateResponse *)FTDF_reqCurrent;
-
-                FTDF_Address srcAddr, dstAddr;
-                srcAddr.extAddress = FTDF_pib.extAddress;
-                dstAddr.extAddress = assocResp->deviceAddress;
-
-                FTDF_sendCommStatusIndication(FTDF_reqCurrent, FTDF_SUCCESS,
-                                              FTDF_pib.PANId,
-                                              FTDF_EXTENDED_ADDRESS,
-                                              srcAddr,
-                                              FTDF_EXTENDED_ADDRESS,
-                                              dstAddr,
-                                              assocResp->securityLevel,
-                                              assocResp->keyIdMode,
-                                              assocResp->keySource,
-                                              assocResp->keyIndex);
-                break;
-            }
-
-            case FTDF_ORPHAN_RESPONSE:
-            {
-                FTDF_OrphanResponse *orphanResp = (FTDF_OrphanResponse *)FTDF_reqCurrent;
-
-                FTDF_Address srcAddr, dstAddr;
-                srcAddr.extAddress = FTDF_pib.extAddress;
-                dstAddr.extAddress = orphanResp->orphanAddress;
-
-                FTDF_sendCommStatusIndication(FTDF_reqCurrent, FTDF_SUCCESS,
-                                              FTDF_pib.PANId,
-                                              FTDF_EXTENDED_ADDRESS,
-                                              srcAddr,
-                                              FTDF_EXTENDED_ADDRESS,
-                                              dstAddr,
-                                              orphanResp->securityLevel,
-                                              orphanResp->keyIdMode,
-                                              orphanResp->keySource,
-                                              orphanResp->keyIndex);
-                break;
-            }
-
-            case FTDF_DISASSOCIATE_REQUEST:
-            {
-                FTDF_sendDisassociateConfirm((FTDF_DisassociateRequest *)FTDF_reqCurrent, FTDF_SUCCESS);
-                break;
-            }
-
-            case FTDF_REMOTE_REQUEST:
-            {
-                FTDF_RemoteRequest *remoteRequest = (FTDF_RemoteRequest *) FTDF_reqCurrent;
-
-                if (remoteRequest->remoteId == FTDF_REMOTE_PAN_ID_CONFLICT_NOTIFICATION)
-                {
-                    FTDF_sendSyncLossIndication(FTDF_PAN_ID_CONFLICT, securityHeader);
-                }
-
-                FTDF_reqCurrent = NULL;
-
-                break;
-            }
-            }
-
-            if (FTDF_reqCurrent->msgId != FTDF_DATA_REQUEST)
-            {
-                // for data request the application owns the memory
-                FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-            }
-
-            FTDF_processNextRequest();
-        }
-        else
-        {
-            FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-        }
-    }
-    else if ((frameHeader->frameVersion == FTDF_FRAME_VERSION_E || FTDF_pib.tschEnabled) &&
-             (frameHeader->options & FTDF_OPT_ACK_REQUESTED))
-    {
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-        static FTDF_FrameHeader afh;
-        FTDF_FrameHeader       *ackFrameHeader = &afh;
+                static ftdf_frame_header_t afh;
+                ftdf_frame_header_t *ack_frame_header = &afh;
 
-        ackFrameHeader->frameType = FTDF_ACKNOWLEDGEMENT_FRAME;
-        ackFrameHeader->options   =
-            (frameHeader->options &
-             (FTDF_OPT_SECURITY_ENABLED | FTDF_OPT_SEQ_NR_SUPPRESSED)) | FTDF_OPT_ENHANCED;
+                ack_frame_header->frame_type = FTDF_ACKNOWLEDGEMENT_FRAME;
+                ack_frame_header->options =
+                        (frame_header->options & (FTDF_OPT_SECURITY_ENABLED | FTDF_OPT_SEQ_NR_SUPPRESSED)) |
+                        FTDF_OPT_ENHANCED;
 
-        if (FTDF_pib.leEnabled == FTDF_TRUE ||
-            FTDF_pib.tschEnabled == FTDF_TRUE ||
-            FTDF_pib.EAckIEList.nrOfIEs != 0)
-        {
-            ackFrameHeader->options |= FTDF_OPT_IES_PRESENT;
-        }
+                if ((ftdf_pib.le_enabled == FTDF_TRUE) || (ftdf_pib.tsch_enabled == FTDF_TRUE) ||
+                        (ftdf_pib.e_ack_ie_list.nr_of_ie != 0)) {
 
-        ackFrameHeader->dstAddrMode = FTDF_NO_ADDRESS;
-        ackFrameHeader->srcAddrMode = FTDF_NO_ADDRESS;
-        ackFrameHeader->SN          = frameHeader->SN;
+                        ack_frame_header->options |= FTDF_OPT_IES_PRESENT;
+                }
 
-        FTDF_Octet *txPtr = (FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO) +
-                            (FTDF_BUFFER_LENGTH * FTDF_TX_ACK_BUFFER);
+                ack_frame_header->dst_addr_mode = FTDF_NO_ADDRESS;
+                ack_frame_header->src_addr_mode = FTDF_NO_ADDRESS;
+                ack_frame_header->sn = frame_header->sn;
 
-        // Skip PHY header (= MAC length)
-        txPtr++;
+                ftdf_octet_t *tx_ptr = (ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_2_0_REG;
 
-        txPtr = FTDF_addFrameHeader(txPtr,
-                                    ackFrameHeader,
-                                    0);
+                /* Skip PHY header (= MAC length) */
+                tx_ptr++;
 
-        if (frameHeader->options & FTDF_OPT_SECURITY_ENABLED)
-        {
-            securityHeader->frameCounter     = FTDF_pib.frameCounter;
-            securityHeader->frameCounterMode = FTDF_pib.frameCounterMode;
+                tx_ptr = ftdf_add_frame_header(tx_ptr, ack_frame_header, 0);
 
-            txPtr                            = FTDF_addSecurityHeader(txPtr,
-                                                                      securityHeader);
-        }
+                if (frame_header->options & FTDF_OPT_SECURITY_ENABLED) {
+                        security_header->frame_counter = ftdf_pib.frame_counter;
+                        security_header->frame_counter_mode = ftdf_pib.frame_counter_mode;
+
+                        tx_ptr = ftdf_add_security_header(tx_ptr, security_header);
+                }
 
 #ifndef FTDF_NO_CSL
+                if (ftdf_pib.le_enabled == FTDF_TRUE) {
+                        static ftdf_octet_t phase_and_period[4];
+                        static ftdf_ie_descriptor_t cslIE = { 0x1a, 4, { phase_and_period } };
+                        static ftdf_ie_list_t cslIEList = { 1, &cslIE };
+                        ftdf_time_t curTime =
+                            REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
 
-        if (FTDF_pib.leEnabled == FTDF_TRUE)
-        {
-            static FTDF_Octet        phaseAndPeriod[ 4 ];
-            static FTDF_IEDescriptor cslIE     = { 0x1a, 4, { phaseAndPeriod } };
-            static FTDF_IEList       cslIEList = { 1, &cslIE };
-            FTDF_Time                curTime   = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+                        ftdf_time_t delta =
+                            curTime - (ftdf_start_csl_sample_time - ftdf_pib.csl_period * 10);
 
-            FTDF_Time                delta     = curTime -
-                                                 (FTDF_startCslSampleTime - FTDF_pib.CSLPeriod * 10);
+                        *(ftdf_period_t*)(phase_and_period + 0) = (ftdf_period_t)(delta / 10);
+                        *(ftdf_period_t*)(phase_and_period + 2) = ftdf_pib.csl_period;
 
-            *(FTDF_Period *)(phaseAndPeriod + 0) = (FTDF_Period)(delta / 10);
-            *(FTDF_Period *)(phaseAndPeriod + 2) = FTDF_pib.CSLPeriod;
-
-            txPtr                                  = FTDF_addIes(txPtr,
-                                                                 &cslIEList,
-                                                                 &FTDF_pib.EAckIEList,
-                                                                 FTDF_FALSE);
-        }
-
+                        tx_ptr = ftdf_add_ies(tx_ptr, &cslIEList, &ftdf_pib.e_ack_ie_list, FTDF_FALSE);
+                }
 #endif /* FTDF_NO_CSL */
 
 #ifndef FTDF_NO_TSCH
+                if (ftdf_pib.tsch_enabled == FTDF_TRUE) {
+                        ftdf_time_t rx_timestamp;
 
-        if (FTDF_pib.tschEnabled == FTDF_TRUE)
-        {
-            FTDF_Time rxTimestamp = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_RX_TIMESTAMP, readBuf);
+                        switch (read_buf) {
+                        case 0:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_0_REG, RX_TIMESTAMP);
+                                break;
+                        case 1:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_1_REG, RX_TIMESTAMP);
+                                break;
+                        case 2:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_2_REG, RX_TIMESTAMP);
+                                break;
+                        case 3:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_3_REG, RX_TIMESTAMP);
+                                break;
+                        case 4:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_4_REG, RX_TIMESTAMP);
+                                break;
+                        case 5:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_5_REG, RX_TIMESTAMP);
+                                break;
+                        case 6:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_6_REG, RX_TIMESTAMP);
+                                break;
+                        case 7:
+                                rx_timestamp = REG_GETF(FTDF, FTDF_RX_META_0_7_REG, RX_TIMESTAMP);
+                                break;
+                        default:
+                                /* Unsupported register index occurred */
+                                OS_ASSERT(0);
+                        }
 
-            txPtr = FTDF_addCorrTimeIE(txPtr, rxTimestamp);
-        }
-
+                        tx_ptr = ftdf_add_corr_time_ie(tx_ptr, rx_timestamp);
+                }
 #endif /* FTDF_NO_TSCH */
 
-        if (!FTDF_pib.leEnabled && !FTDF_pib.tschEnabled)
-        {
-            txPtr = FTDF_addIes(txPtr,
-                                NULL,
-                                &FTDF_pib.EAckIEList,
-                                FTDF_FALSE);
-        }
+                if (!ftdf_pib.le_enabled && !ftdf_pib.tsch_enabled) {
+                        tx_ptr = ftdf_add_ies(tx_ptr, NULL, &ftdf_pib.e_ack_ie_list, FTDF_FALSE);
+                }
 
-        FTDF_sendAckFrame(frameHeader,
-                          securityHeader,
-                          txPtr);
+                ftdf_send_ack_frame(frame_header, security_header, tx_ptr);
 #endif /* !FTDF_NO_CSL || !FTDF_NO_TSCH */
 
-        if (duplicate)
-        {
-            FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-            return;
-        }
-    }
-
-    if (frameType == FTDF_DATA_FRAME || frameType == FTDF_MULTIPURPOSE_FRAME)
-    {
-        FTDF_DataLength payloadLength = frameLen -
-                                        (rxPtr - rxBuffer) + 1 - micLength - FTDF_FCS_LENGTH;
-
-        if (FTDF_reqCurrent &&
-            FTDF_reqCurrent->msgId == FTDF_POLL_REQUEST)
-        {
-            FTDF_PollRequest *pollRequest = (FTDF_PollRequest *) FTDF_reqCurrent;
-
-            if (frameHeader->srcAddrMode == pollRequest->coordAddrMode &&
-                frameHeader->srcPANId == pollRequest->coordPANId &&
-                ((frameHeader->srcAddrMode == FTDF_SHORT_ADDRESS &&
-                  frameHeader->srcAddr.shortAddress == pollRequest->coordAddr.shortAddress) ||
-                 (frameHeader->srcAddrMode == FTDF_EXTENDED_ADDRESS &&
-                  frameHeader->srcAddr.extAddress == pollRequest->coordAddr.extAddress)))
-            {
-                if (payloadLength == 0)
-                {
-                    FTDF_sendPollConfirm(pollRequest, FTDF_NO_DATA);
+                if (duplicate) {
+                        FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                        return;
                 }
-                else
-                {
-                    FTDF_sendPollConfirm(pollRequest, FTDF_SUCCESS);
+        }
+
+        if ((frame_type == FTDF_DATA_FRAME) || (frame_type == FTDF_MULTIPURPOSE_FRAME)) {
+                ftdf_data_length_t payload_length =
+                    frameLen - (rx_ptr - rx_buffer) + 1 - mic_length - FTDF_FCS_LENGTH;
+
+                if (ftdf_req_current && (ftdf_req_current->msg_id == FTDF_POLL_REQUEST)) {
+                        ftdf_poll_request_t *poll_request = (ftdf_poll_request_t*)ftdf_req_current;
+
+                        if ((frame_header->src_addr_mode == poll_request->coord_addr_mode) &&
+                                (frame_header->src_pan_id == poll_request->coord_pan_id) &&
+                                (((frame_header->src_addr_mode == FTDF_SHORT_ADDRESS) &&
+                                  (frame_header->src_addr.short_address == poll_request->coord_addr.short_address)) ||
+                                 ((frame_header->src_addr_mode == FTDF_EXTENDED_ADDRESS) &&
+                                  (frame_header->src_addr.ext_address =  poll_request->coord_addr.ext_address)))) {
+
+                                if (payload_length == 0) {
+                                        ftdf_send_poll_confirm(poll_request, FTDF_NO_DATA);
+                                } else {
+                                        ftdf_send_poll_confirm(poll_request, FTDF_SUCCESS);
+                                }
+                        }
+                } else if (ftdf_req_current && (ftdf_req_current->msg_id == FTDF_ASSOCIATE_REQUEST) &&
+                        (payload_length == 0)) {
+
+                        send_confirm(FTDF_NO_DATA, FTDF_ASSOCIATE_REQUEST);
                 }
-            }
-        }
-        else if (FTDF_reqCurrent &&
-                 FTDF_reqCurrent->msgId == FTDF_ASSOCIATE_REQUEST &&
-                 payloadLength == 0)
-        {
-            sendConfirm(FTDF_NO_DATA, FTDF_ASSOCIATE_REQUEST);
-        }
 
-        if (payloadLength != 0)
-        {
-            FTDF_LinkQuality mpduLinkQuality = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_QUALITY_INDICATOR,
-                                                                      readBuf);
-            FTDF_Time        timestamp       = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_RX_TIMESTAMP,
-                                                                      readBuf);
+                if (payload_length != 0) {
+                        ftdf_link_quality_t mpdu_link_quality;
+                        ftdf_time_t timestamp;
 
-            FTDF_sendDataIndication(frameHeader,
-                                    securityHeader,
-                                    payloadIEList,
-                                    payloadLength,
-                                    rxPtr,
-                                    mpduLinkQuality,
-                                    timestamp);
-        }
+                        switch (read_buf) {
+                        case 0:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_0_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_0_REG, RX_TIMESTAMP);
+                                break;
+                        case 1:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_1_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_1_REG, RX_TIMESTAMP);
+                                break;
+                        case 2:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_2_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_2_REG, RX_TIMESTAMP);
+                                break;
+                        case 3:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_3_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_3_REG, RX_TIMESTAMP);
+                                break;
+                        case 4:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_4_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_4_REG, RX_TIMESTAMP);
+                                break;
+                        case 5:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_5_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_5_REG, RX_TIMESTAMP);
+                                break;
+                        case 6:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_6_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_6_REG, RX_TIMESTAMP);
+                                break;
+                        case 7:
+                                mpdu_link_quality = REG_GETF(FTDF, FTDF_RX_META_1_7_REG, QUALITY_INDICATOR);
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_7_REG, RX_TIMESTAMP);
+                                break;
+                        default:
+                                OS_ASSERT(0);
+                        }
 
+                        ftdf_send_data_indication(frame_header,
+                                                  security_header,
+                                                  payload_ie_list,
+                                                  payload_length,
+                                                  rx_ptr,
+                                                  mpdu_link_quality,
+                                                  timestamp);
+                }
 #ifndef FTDF_NO_CSL
-        else if (headerIEList->nrOfIEs == 1 &&
-                 headerIEList->IEs[ 0 ].ID == 0x1d)
-        {
-            FTDF_Period rzTime = *(uint16_t *) headerIEList->IEs[ 0 ].content.raw;
+                else if ((header_ie_list->nr_of_ie == 1) && (header_ie_list->ie[0].id == 0x1d)) {
+                        ftdf_period_t rz_time = *(uint16_t*)header_ie_list->ie[0].content.raw;
 
-            FTDF_criticalVar();
-            FTDF_enterCritical();
+                        ftdf_critical_var();
+                        ftdf_enter_critical();
 
-            FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+                        ftdf_time_t cur_time =
+                            REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
 
-            FTDF_rzTime = curTime + (FTDF_Time) rzTime * 10 + 260;  // 260 length of max frame in symbols
+                        ftdf_rz_time = cur_time + (ftdf_time_t)rz_time * 10 + 260; /* 260 length of max frame in symbols */
 
-            FTDF_Time CSLPeriod = FTDF_pib.CSLPeriod * 10;
-            FTDF_Time delta     = FTDF_rzTime - FTDF_startCslSampleTime;
+                        ftdf_time_t csl_period = ftdf_pib.csl_period * 10;
+                        ftdf_time_t delta = ftdf_rz_time - ftdf_start_csl_sample_time;
 
-            while (delta < 0x80000000)    // A delta larger than 0x80000000 is assumed a negative delta
-            {
-                FTDF_startCslSampleTime += CSLPeriod;
-                delta                    = FTDF_rzTime - FTDF_startCslSampleTime;
-            }
+                        /* A delta larger than 0x80000000 is assumed a negative delta */
+                        while (delta < 0x80000000) {
+                                ftdf_start_csl_sample_time += csl_period;
+                                delta = ftdf_rz_time - ftdf_start_csl_sample_time;
+                        }
 
-            FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLSTARTSAMPLETIME, FTDF_startCslSampleTime);
+                        REG_SETF(FTDF, FTDF_LMAC_CONTROL_8_REG, MACCSLSTARTSAMPLETIME,
+                                 ftdf_start_csl_sample_time);
 
-            FTDF_exitCritical();
+                        ftdf_exit_critical();
 
-            FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-        }
-
+                        FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                }
 #endif /* FTDF_NO_CSL */
-        else
-        {
-            FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
+                else {
+                        FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                }
+        } else if (frame_type == FTDF_MAC_COMMAND_FRAME) {
+                ftdf_process_command_frame(rx_ptr, frame_header, security_header, payload_ie_list);
+        } else if (frame_type == FTDF_BEACON_FRAME) {
+                ftdf_octet_t* superframe_spec_ptr = (ftdf_octet_t*)&pan_descriptor.superframe_spec;
+                superframe_spec_ptr++;
+
+                if (ftdf_is_pan_coordinator) {
+                        if ((frame_header->src_pan_id == ftdf_pib.pan_id) && (*superframe_spec_ptr & 0x40)) {
+
+                                FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                                ftdf_send_sync_loss_indication(FTDF_PAN_ID_CONFLICT,
+                                                               security_header);
+
+                                return;
+                        }
+                } else if (ftdf_pib.associated_pan_coord) {
+                        if ((frame_header->src_pan_id == ftdf_pib.pan_id) && (*superframe_spec_ptr & 0x40) &&
+                                (((frame_header->src_addr_mode == FTDF_SHORT_ADDRESS) &&
+                                  (frame_header->src_addr.short_address != ftdf_pib.coord_short_address)) ||
+                                 ((frame_header->src_addr_mode == FTDF_EXTENDED_ADDRESS) &&
+                                  (frame_header->src_addr.ext_address != ftdf_pib.coord_ext_address)))) {
+
+                                FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                                ftdf_sendpan_id_conflict_notification(frame_header, security_header);
+                                return;
+                        }
+                }
+
+                ftdf_data_length_t beacon_payload_length =
+                    frameLen - (rx_ptr - rx_buffer) + 1- mic_length - FTDF_FCS_LENGTH;
+
+                if ((ftdf_pib.auto_request == FTDF_FALSE) || (beacon_payload_length != 0)) {
+                        ftdf_time_t timestamp;
+
+                        switch (read_buf) {
+                        case 0:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_0_REG, RX_TIMESTAMP);
+                                break;
+                        case 1:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_1_REG, RX_TIMESTAMP);
+                                break;
+                        case 2:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_2_REG, RX_TIMESTAMP);
+                                break;
+                        case 3:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_3_REG, RX_TIMESTAMP);
+                                break;
+                        case 4:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_4_REG, RX_TIMESTAMP);
+                                break;
+                        case 5:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_5_REG, RX_TIMESTAMP);
+                                break;
+                        case 6:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_6_REG, RX_TIMESTAMP);
+                                break;
+                        case 7:
+                                timestamp = REG_GETF(FTDF, FTDF_RX_META_0_7_REG, RX_TIMESTAMP);
+                                break;
+                        default:
+                                /* Unsupported register index occurred */
+                                OS_ASSERT(0);
+                        }
+
+                        ftdf_beacon_notify_indication_t* beacon_notify_indication =
+                                (ftdf_beacon_notify_indication_t*) FTDF_GET_MSG_BUFFER(
+                                        sizeof(ftdf_beacon_notify_indication_t));
+
+                        beacon_notify_indication->msg_id = FTDF_BEACON_NOTIFY_INDICATION;
+                        beacon_notify_indication->bsn = frame_header->sn;
+                        beacon_notify_indication->pan_descriptor = &pan_descriptor;
+                        beacon_notify_indication->pend_addr_spec = pend_addr_spec;
+                        beacon_notify_indication->addr_list = pend_addr_list;
+                        beacon_notify_indication->sdu_length = beacon_payload_length;
+                        beacon_notify_indication->sdu = FTDF_GET_DATA_BUFFER(beacon_payload_length);
+                        beacon_notify_indication->eb_sn = frame_header->sn;
+                        beacon_notify_indication->beacon_type =
+                                frame_header->frame_version == FTDF_FRAME_VERSION_E ?
+                                        FTDF_ENHANCED_BEACON : FTDF_NORMAL_BEACON;
+                        beacon_notify_indication->ie_list = payload_ie_list;
+                        beacon_notify_indication->timestamp = timestamp;
+
+                        memcpy(beacon_notify_indication->sdu, rx_ptr, beacon_payload_length);
+
+                        FTDF_RCV_MSG((ftdf_msg_buffer_t*)beacon_notify_indication);
+
+                } else if (ftdf_req_current && (ftdf_req_current->msg_id == FTDF_SCAN_REQUEST)) {
+
+                        FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                        ftdf_add_pan_descriptor(&pan_descriptor);
+
+                } else {
+                        FTDF_REL_DATA_BUFFER((ftdf_octet_t*)payload_ie_list);
+                }
         }
-    }
-    else if (frameType == FTDF_MAC_COMMAND_FRAME)
-    {
-        FTDF_processCommandFrame(rxPtr, frameHeader, securityHeader, payloadIEList);
-    }
-    else if (frameType == FTDF_BEACON_FRAME)
-    {
-        FTDF_Octet *superframeSpecPtr = (FTDF_Octet *)&PANDescriptor.superframeSpec;
-        superframeSpecPtr++;
-
-        if (FTDF_isPANCoordinator)
-        {
-            if (frameHeader->srcPANId == FTDF_pib.PANId && (*superframeSpecPtr & 0x40))
-            {
-                FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-                FTDF_sendSyncLossIndication(FTDF_PAN_ID_CONFLICT, securityHeader);
-                return;
-            }
-        }
-        else if (FTDF_pib.associatedPANCoord)
-        {
-            if (frameHeader->srcPANId == FTDF_pib.PANId && (*superframeSpecPtr & 0x40) &&
-                ((frameHeader->srcAddrMode == FTDF_SHORT_ADDRESS &&
-                  frameHeader->srcAddr.shortAddress != FTDF_pib.coordShortAddress) ||
-                 (frameHeader->srcAddrMode == FTDF_EXTENDED_ADDRESS &&
-                  frameHeader->srcAddr.extAddress != FTDF_pib.coordExtAddress)))
-            {
-                FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-                FTDF_sendPANIdConflictNotification(frameHeader, securityHeader);
-                return;
-            }
-        }
-
-        FTDF_DataLength beaconPayloadLength = frameLen - (rxPtr - rxBuffer) + 1 - micLength - FTDF_FCS_LENGTH;
-
-        if (FTDF_pib.autoRequest == FTDF_FALSE ||
-            beaconPayloadLength != 0)
-        {
-            FTDF_Time timestamp = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_RX_TIMESTAMP,
-                                                         readBuf);
-
-            FTDF_BeaconNotifyIndication *beaconNotifyIndication =
-                (FTDF_BeaconNotifyIndication *) FTDF_GET_MSG_BUFFER(
-                    sizeof(FTDF_BeaconNotifyIndication));
-
-            beaconNotifyIndication->msgId         = FTDF_BEACON_NOTIFY_INDICATION;
-            beaconNotifyIndication->BSN           = frameHeader->SN;
-            beaconNotifyIndication->PANDescriptor = &PANDescriptor;
-            beaconNotifyIndication->pendAddrSpec  = pendAddrSpec;
-            beaconNotifyIndication->addrList      = pendAddrList;
-            beaconNotifyIndication->sduLength     = beaconPayloadLength;
-            beaconNotifyIndication->sdu           = FTDF_GET_DATA_BUFFER(beaconPayloadLength);
-            beaconNotifyIndication->EBSN          = frameHeader->SN;
-            beaconNotifyIndication->beaconType    =
-                frameHeader->frameVersion == FTDF_FRAME_VERSION_E ? FTDF_ENHANCED_BEACON : FTDF_NORMAL_BEACON;
-            beaconNotifyIndication->IEList        = payloadIEList;
-            beaconNotifyIndication->timestamp     = timestamp;
-
-            memcpy(beaconNotifyIndication->sdu, rxPtr, beaconPayloadLength);
-
-            FTDF_RCV_MSG((FTDF_MsgBuffer *) beaconNotifyIndication);
-        }
-        else if (FTDF_reqCurrent &&
-                 FTDF_reqCurrent->msgId == FTDF_SCAN_REQUEST)
-        {
-            FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-            FTDF_addPANdescriptor(&PANDescriptor);
-        }
-        else
-        {
-            FTDF_REL_DATA_BUFFER((FTDF_Octet *)payloadIEList);
-        }
-    }
-
 #if FTDF_USE_LPDP
 #if FTDF_FP_BIT_TEST_MODE
-
-    if (FTDF_lpdpIsEnabled() && !FTDF_reqCurrent && frameType == FTDF_DATA_FRAME)
-    {
-        FTDF_processTxPending(frameHeader, securityHeader);
-    }
-
+        if (ftdf_lpdp_is_enabled() && !ftdf_req_current && (frame_type == FTDF_DATA_FRAME)) {
+                ftdf_process_tx_pending(frame_header, security_header);
+        }
 #else /* FTDF_FP_BIT_TEST_MODE */
-
-    if (!FTDF_reqCurrent && frameType == FTDF_DATA_FRAME)
-    {
-        FTDF_processTxPending(frameHeader, securityHeader);
-    }
-
+        if (!ftdf_req_current && frame_type == FTDF_DATA_FRAME) {
+                ftdf_process_tx_pending(frame_header, security_header);
+        }
 #endif /* FTDF_FP_BIT_TEST_MODE */
 #endif /* FTDF_USE_LPDP */
 #ifndef FTDF_NO_TSCH
-
-    if (FTDF_pib.tschEnabled == FTDF_TRUE)
-    {
-        FTDF_scheduleTsch(NULL);
-    }
-
+        if (ftdf_pib.tsch_enabled == FTDF_TRUE) {
+                ftdf_schedule_tsch(NULL);
+        }
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
 }
 
-
-
-void FTDF_processRxEvent(void)
+void ftdf_process_rx_event(void)
 {
-    volatile uint32_t *rxEvent = (volatile uint32_t *) IND_R_FTDF_ON_OFF_REGMAP_RX_EVENT;
-
-    if (*rxEvent & MSK_F_FTDF_ON_OFF_REGMAP_RXSOF_E)
-    {
+        if (REG_GETF(FTDF, FTDF_RX_EVENT_REG, RXSOF_E)) {
 #ifdef SIMULATOR
-        *rxEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_RXSOF_E;
+                REG_CLR_BIT(FTDF, FTDF_RX_EVENT_REG, RXSOF_E);
 #else
-        *rxEvent  = MSK_F_FTDF_ON_OFF_REGMAP_RXSOF_E;
+                FTDF->FTDF_RX_EVENT_REG = REG_MSK(FTDF, FTDF_RX_EVENT_REG, RXSOF_E);
 #endif
-    }
-
-    if (*rxEvent & MSK_F_FTDF_ON_OFF_REGMAP_RXBYTE_E)
-    {
-#ifdef SIMULATOR
-        *rxEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_RXBYTE_E;
-#else
-        *rxEvent  = MSK_F_FTDF_ON_OFF_REGMAP_RXBYTE_E;
-#endif
-    }
-
-    if (*rxEvent & MSK_F_FTDF_ON_OFF_REGMAP_RX_OVERFLOW_E)
-    {
-        // No API defined to report this error to the higher layer, so just clear it.
-#ifdef SIMULATOR
-        *rxEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_RX_OVERFLOW_E;
-#else
-        *rxEvent  = MSK_F_FTDF_ON_OFF_REGMAP_RX_OVERFLOW_E;
-#endif
-    }
-
-    if (*rxEvent & MSK_F_FTDF_ON_OFF_REGMAP_RX_BUF_AVAIL_E)
-    {
-        int readBuf  = FTDF_GET_FIELD(ON_OFF_REGMAP_RX_READ_BUF_PTR);
-        int writeBuf = FTDF_GET_FIELD(ON_OFF_REGMAP_RX_WRITE_BUF_PTR);
-
-        while (readBuf != writeBuf)
-        {
-            processRxFrame(readBuf % 8);
-            readBuf = (readBuf + 1) % 16;
         }
 
-        FTDF_SET_FIELD(ON_OFF_REGMAP_RX_READ_BUF_PTR, readBuf);
-
+        if (REG_GETF(FTDF, FTDF_RX_EVENT_REG, RXBYTE_E)) {
 #ifdef SIMULATOR
-        *rxEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_RX_BUF_AVAIL_E;
+                REG_CLR_BIT(FTDF, FTDF_RX_EVENT_REG, RXBYTE_E);
 #else
-        *rxEvent  = MSK_F_FTDF_ON_OFF_REGMAP_RX_BUF_AVAIL_E;
+                FTDF->FTDF_RX_EVENT_REG = REG_MSK(FTDF, FTDF_RX_EVENT_REG, RXBYTE_E);
 #endif
-    }
+        }
 
-    volatile uint32_t *lmacEvent = (volatile uint32_t *) IND_R_FTDF_ON_OFF_REGMAP_LMAC_EVENT;
-
-    if (*lmacEvent & MSK_F_FTDF_ON_OFF_REGMAP_EDSCANREADY_E)
-    {
+        if (REG_GETF(FTDF, FTDF_RX_EVENT_REG, RX_OVERFLOW_E)) {
+                // No API defined to report this error to the higher layer, so just clear it.
 #ifdef SIMULATOR
-        *lmacEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_EDSCANREADY_E;
+                REG_CLR_BIT(FTDF, FTDF_RX_EVENT_REG, RX_OVERFLOW_E);
 #else
-        *lmacEvent  = MSK_F_FTDF_ON_OFF_REGMAP_EDSCANREADY_E;
+                FTDF->FTDF_RX_EVENT_REG = REG_MSK(FTDF, FTDF_RX_EVENT_REG, RX_OVERFLOW_E);
+#endif
+        }
+
+        if (REG_GETF(FTDF, FTDF_RX_EVENT_REG, RX_BUF_AVAIL_E)) {
+                int read_buf = REG_GETF(FTDF, FTDF_RX_CONTROL_0_REG, RX_READ_BUF_PTR);
+                int write_buf = REG_GETF(FTDF, FTDF_RX_STATUS_REG, RX_WRITE_BUF_PTR);
+
+                while (read_buf != write_buf) {
+                        process_rx_frame(read_buf % 8);
+                        read_buf = (read_buf + 1) % 16;
+                }
+
+                REG_SETF(FTDF, FTDF_RX_CONTROL_0_REG, RX_READ_BUF_PTR, read_buf);
+
+#ifdef SIMULATOR
+                REG_CLR_BIT(FTDF, FTDF_RX_EVENT_REG, RX_BUF_AVAIL_E);
+#else
+                FTDF->FTDF_RX_EVENT_REG = REG_MSK(FTDF, FTDF_RX_EVENT_REG, RX_BUF_AVAIL_E);
+#endif
+        }
+
+        if (REG_GETF(FTDF, FTDF_LMAC_EVENT_REG, EDSCANREADY_E)) {
+#ifdef SIMULATOR
+                REG_CLR_BIT(FTDF, FTDF_LMAC_EVENT_REG, EDSCANREADY_E);
+#else
+                FTDF->FTDF_LMAC_EVENT_REG = REG_MSK(FTDF, FTDF_LMAC_EVENT_REG, EDSCANREADY_E);
 #endif
 
 #ifndef FTDF_LITE
-        FTDF_MsgBuffer *request = FTDF_reqCurrent;
+                ftdf_msg_buffer_t *request = ftdf_req_current;
 
-        if (request->msgId == FTDF_SCAN_REQUEST)
-        {
-            FTDF_scanReady((FTDF_ScanRequest *) request);
+                if (request->msg_id == FTDF_SCAN_REQUEST) {
+                        ftdf_scan_ready((ftdf_scan_request_t*)request);
+                }
+#endif /* !FTDF_LITE */
         }
 
-#endif /* !FTDF_LITE */
-    }
-
-    if (*lmacEvent & MSK_F_FTDF_ON_OFF_REGMAP_RXTIMEREXPIRED_E)
-    {
+        if (REG_GETF(FTDF, FTDF_LMAC_EVENT_REG, RXTIMEREXPIRED_E)) {
 #ifdef SIMULATOR
-        *lmacEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_RXTIMEREXPIRED_E;
+                REG_CLR_BIT(FTDF, FTDF_LMAC_EVENT_REG, RXTIMEREXPIRED_E);
 #else
-        *lmacEvent  = MSK_F_FTDF_ON_OFF_REGMAP_RXTIMEREXPIRED_E;
+                FTDF->FTDF_LMAC_EVENT_REG = REG_MSK(FTDF, FTDF_LMAC_EVENT_REG, RXTIMEREXPIRED_E);
 #endif
 
-        if (FTDF_pib.metricsEnabled)
-        {
-            FTDF_pib.performanceMetrics.RxExpiredCount++;
+        if ( ftdf_pib.metrics_enabled ) {
+                ftdf_pib.performance_metrics.rx_expired_count++;
         }
-
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_TSCH
-
-        if (FTDF_pib.tschEnabled)
-        {
-            FTDF_scheduleTsch(NULL);
-        }
-        else
+                if (ftdf_pib.tsch_enabled) {
+                        ftdf_schedule_tsch(NULL);
+                } else
 #endif /* FTDF_NO_TSCH */
-            if (FTDF_reqCurrent)
-            {
-                FTDF_MsgId msgId = FTDF_reqCurrent->msgId;
+                if (ftdf_req_current) {
+                        ftdf_msg_id_t msg_id = ftdf_req_current->msg_id;
 
-                if (msgId == FTDF_POLL_REQUEST)
-                {
-                    FTDF_sendPollConfirm((FTDF_PollRequest *)FTDF_reqCurrent, FTDF_NO_DATA);
+                        if (msg_id == FTDF_POLL_REQUEST) {
+                                ftdf_send_poll_confirm((ftdf_poll_request_t*)ftdf_req_current,
+                                                        FTDF_NO_DATA);
+                        } else if (msg_id == FTDF_SCAN_REQUEST) {
+                                ftdf_scan_ready((ftdf_scan_request_t*)ftdf_req_current);
+                        } else if (msg_id == FTDF_ASSOCIATE_REQUEST) {
+                                ftdf_send_associate_confirm((ftdf_associate_request_t*)ftdf_req_current,
+                                                            FTDF_NO_DATA,
+                                                            0xffff);
+                        }
                 }
-                else if (msgId == FTDF_SCAN_REQUEST)
-                {
-                    FTDF_scanReady((FTDF_ScanRequest *) FTDF_reqCurrent);
-                }
-                else if (msgId == FTDF_ASSOCIATE_REQUEST)
-                {
-                    FTDF_sendAssociateConfirm((FTDF_AssociateRequest *)FTDF_reqCurrent,
-                                              FTDF_NO_DATA,
-                                              0xffff);
-                }
-            }
-
 #endif /* !FTDF_LITE */
-    }
-
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-
-    if (*lmacEvent & MSK_F_FTDF_ON_OFF_REGMAP_CSMA_CA_BO_THR_E)
-    {
-#ifdef SIMULATOR
-        *lmacEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_CSMA_CA_BO_THR_E;
-#else
-        *lmacEvent  = MSK_F_FTDF_ON_OFF_REGMAP_CSMA_CA_BO_THR_E;
-#endif
-#if FTDF_USE_SLEEP_DURING_BACKOFF
-
-        if (FTDF_pib.metricsEnabled)
-        {
-            FTDF_pib.performanceMetrics.BOIrqCount++;
         }
 
-        FTDF_sdbFsmBackoffIRQ();
-#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
-    }
+        if (REG_GETF(FTDF, FTDF_LMAC_EVENT_REG, CSMA_CA_BO_THR_E)) {
+#ifdef SIMULATOR
+                REG_CLEAR_BIT(FTDF, FTDF_LMAC_EVENT_REG, CSMA_CA_BO_THR_E);
+#else
+                FTDF->FTDF_LMAC_EVENT_REG = REG_MSK(FTDF, FTDF_LMAC_EVENT_REG, CSMA_CA_BO_THR_E);
 
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+                if (ftdf_pib.metrics_enabled) {
+                        ftdf_pib.performance_metrics.bo_irq_count++;
+                }
+                ftdf_sdb_fsm_backoff_irq();
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+        }
 #endif
 }
 
-static void sendConfirm(FTDF_Status status,
-                        FTDF_MsgId  msgId)
+static void send_confirm(ftdf_status_t status, ftdf_msg_id_t msg_id)
 {
-    switch (msgId)
-    {
+
+        switch (msg_id) {
 #ifndef FTDF_LITE
-
-    case FTDF_DATA_REQUEST:
-    {
-        FTDF_DataRequest  *dataRequest   = (FTDF_DataRequest *) FTDF_reqCurrent;
-
-        FTDF_Time          timestamp     = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_TXTIMESTAMP,
-                                                                  FTDF_TX_DATA_BUFFER);
-        FTDF_SN            SN            = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_MACSN, FTDF_TX_DATA_BUFFER);
-        FTDF_NumOfBackoffs numOfBackoffs = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_CSMACANRRETRIES,
-                                                                  FTDF_TX_DATA_BUFFER);
-
-        FTDF_sendDataConfirm(dataRequest, status,
-                             timestamp,
-                             SN,
-                             numOfBackoffs,
-                             NULL);
-
-        break;
-    }
-
-    case FTDF_POLL_REQUEST:
-
-        if (status != FTDF_SUCCESS)
+        case FTDF_DATA_REQUEST:
         {
-            FTDF_sendPollConfirm((FTDF_PollRequest *)FTDF_reqCurrent, status);
+                ftdf_data_request_t* data_request = (ftdf_data_request_t*)ftdf_req_current;
+
+                ftdf_time_t timestamp = REG_GETF(FTDF, FTDF_TX_RETURN_STATUS_0_0_REG, TXTIMESTAMP);
+                ftdf_sn_t sn = REG_GETF(FTDF, FTDF_TX_META_DATA_1_0_REG, MACSN);
+                ftdf_num_of_backoffs_t num_of_backoffs = REG_GETF(FTDF, FTDF_TX_RETURN_STATUS_1_0_REG, CSMACANRRETRIES);
+
+                ftdf_send_data_confirm(data_request, status, timestamp, sn, num_of_backoffs, NULL);
+
+                break;
         }
 
-        break;
+        case FTDF_POLL_REQUEST:
+                if (status != FTDF_SUCCESS) {
+                        ftdf_send_poll_confirm((ftdf_poll_request_t*)ftdf_req_current, status);
+                }
 
-    case FTDF_ASSOCIATE_REQUEST:
+                break;
+        case FTDF_ASSOCIATE_REQUEST:
+                if (status != FTDF_SUCCESS) {
+                        ftdf_send_associate_confirm((ftdf_associate_request_t*)ftdf_req_current,
+                                                    status,
+                                                    0xffff);
+                }
 
-        if (status != FTDF_SUCCESS)
-        {
-            FTDF_sendAssociateConfirm((FTDF_AssociateRequest *)FTDF_reqCurrent,
-                                      status,
-                                      0xffff);
-        }
+                break;
+        case FTDF_ASSOCIATE_RESPONSE:
+                if (status != FTDF_SUCCESS) {
+                        ftdf_associate_response_t *assoc_resp =
+                                (ftdf_associate_response_t*)ftdf_req_current;
 
-        break;
+                        ftdf_address_t src_addr, dst_addr;
+                        src_addr.ext_address = ftdf_pib.ext_address;
+                        dst_addr.ext_address = assoc_resp->device_address;
 
-    case FTDF_ASSOCIATE_RESPONSE:
+                        ftdf_send_comm_status_indication(ftdf_req_current, status,
+                                                         ftdf_pib.pan_id,
+                                                         FTDF_EXTENDED_ADDRESS,
+                                                         src_addr,
+                                                         FTDF_EXTENDED_ADDRESS,
+                                                         dst_addr,
+                                                         assoc_resp->security_level,
+                                                         assoc_resp->key_id_mode,
+                                                         assoc_resp->key_source,
+                                                         assoc_resp->key_index);
+                }
 
-        if (status != FTDF_SUCCESS)
-        {
-            FTDF_AssociateResponse *assocResp = (FTDF_AssociateResponse *)FTDF_reqCurrent;
+                break;
+        case FTDF_ORPHAN_RESPONSE:
+                if (status != FTDF_SUCCESS) {
+                        ftdf_orphan_response_t *orphan_resp =
+                                (ftdf_orphan_response_t*)ftdf_req_current;
 
-            FTDF_Address srcAddr, dstAddr;
-            srcAddr.extAddress = FTDF_pib.extAddress;
-            dstAddr.extAddress = assocResp->deviceAddress;
+                        ftdf_address_t src_addr, dst_addr;
+                        src_addr.ext_address = ftdf_pib.ext_address;
+                        dst_addr.ext_address = orphan_resp->orphan_address;
 
-            FTDF_sendCommStatusIndication(FTDF_reqCurrent, status,
-                                          FTDF_pib.PANId,
-                                          FTDF_EXTENDED_ADDRESS,
-                                          srcAddr,
-                                          FTDF_EXTENDED_ADDRESS,
-                                          dstAddr,
-                                          assocResp->securityLevel,
-                                          assocResp->keyIdMode,
-                                          assocResp->keySource,
-                                          assocResp->keyIndex);
-        }
+                        ftdf_send_comm_status_indication(ftdf_req_current, status,
+                                                         ftdf_pib.pan_id,
+                                                         FTDF_EXTENDED_ADDRESS,
+                                                         src_addr,
+                                                         FTDF_EXTENDED_ADDRESS,
+                                                         dst_addr,
+                                                         orphan_resp->security_level,
+                                                         orphan_resp->key_id_mode,
+                                                         orphan_resp->key_source,
+                                                         orphan_resp->key_index);
+                }
 
-        break;
+                break;
+        case FTDF_DISASSOCIATE_REQUEST:
+                if (status != FTDF_SUCCESS) {
+                        ftdf_send_disassociate_confirm(
+                                (ftdf_disassociate_request_t*)ftdf_req_current, status);
+                }
 
-    case FTDF_ORPHAN_RESPONSE:
+                break;
+        case FTDF_SCAN_REQUEST:
+                if (status != FTDF_SUCCESS) {
+                        ftdf_send_scan_confirm((ftdf_scan_request_t*)ftdf_req_current, status);
+                }
 
-        if (status != FTDF_SUCCESS)
-        {
-            FTDF_OrphanResponse *orphanResp = (FTDF_OrphanResponse *)FTDF_reqCurrent;
-
-            FTDF_Address srcAddr, dstAddr;
-            srcAddr.extAddress = FTDF_pib.extAddress;
-            dstAddr.extAddress = orphanResp->orphanAddress;
-
-            FTDF_sendCommStatusIndication(FTDF_reqCurrent, status,
-                                          FTDF_pib.PANId,
-                                          FTDF_EXTENDED_ADDRESS,
-                                          srcAddr,
-                                          FTDF_EXTENDED_ADDRESS,
-                                          dstAddr,
-                                          orphanResp->securityLevel,
-                                          orphanResp->keyIdMode,
-                                          orphanResp->keySource,
-                                          orphanResp->keyIndex);
-        }
-
-        break;
-
-    case FTDF_DISASSOCIATE_REQUEST:
-
-        if (status != FTDF_SUCCESS)
-        {
-            FTDF_sendDisassociateConfirm((FTDF_DisassociateRequest *)FTDF_reqCurrent, status);
-        }
-
-        break;
-
-    case FTDF_SCAN_REQUEST:
-
-        if (status != FTDF_SUCCESS)
-        {
-            FTDF_sendScanConfirm((FTDF_ScanRequest *)FTDF_reqCurrent, status);
-        }
-
-        break;
-
-    case FTDF_BEACON_REQUEST:
-        FTDF_sendBeaconConfirm((FTDF_BeaconRequest *)FTDF_reqCurrent, status);
-        break;
-
-    case FTDF_REMOTE_REQUEST:
-        FTDF_reqCurrent = NULL;
-        break;
+                break;
+        case FTDF_BEACON_REQUEST:
+                ftdf_send_beacon_confirm((ftdf_beacon_request_t*)ftdf_req_current, status);
+                break;
+        case FTDF_REMOTE_REQUEST:
+                ftdf_req_current = NULL;
+                break;
 #endif /* !FTDF_LITE */
-
-    case FTDF_TRANSPARENT_REQUEST:
-    {
+        case FTDF_TRANSPARENT_REQUEST:
+        {
 #ifndef FTDF_PHY_API
-        FTDF_TransparentRequest *transparentRequest = (FTDF_TransparentRequest *) FTDF_reqCurrent;
+                ftdf_transparent_request_t *transparent_request =
+                        (ftdf_transparent_request_t*)ftdf_req_current;
 #endif
-        FTDF_Bitmap32            transparentStatus  = 0;
+                ftdf_bitmap32_t transparent_status = 0;
 
-        switch (status)
-        {
-        case FTDF_SUCCESS:
-            transparentStatus = FTDF_TRANSPARENT_SEND_SUCCESSFUL;
-            break;
-
-        case FTDF_CHANNEL_ACCESS_FAILURE:
-            transparentStatus = FTDF_TRANSPARENT_CSMACA_FAILURE;
-            break;
+                switch (status) {
+                case FTDF_SUCCESS:
+                        transparent_status = FTDF_TRANSPARENT_SEND_SUCCESSFUL;
+                        break;
+                case FTDF_CHANNEL_ACCESS_FAILURE:
+                        transparent_status = FTDF_TRANSPARENT_CSMACA_FAILURE;
+                        break;
 #if FTDF_TRANSPARENT_WAIT_FOR_ACK
-
-        case FTDF_NO_ACK:
-            transparentStatus = FTDF_TRANSPARENT_NO_ACK;
-            break;
+                case FTDF_NO_ACK:
+                        transparent_status = FTDF_TRANSPARENT_NO_ACK;
+                        break;
 #endif
-        }
+                }
 
-        if (FTDF_pib.metricsEnabled)
-        {
-            FTDF_pib.performanceMetrics.TXSuccessCount++;
-        }
-
+                if (ftdf_pib.metrics_enabled) {
+                        ftdf_pib.performance_metrics.tx_success_count++;
+                }
 #ifdef FTDF_PHY_API
-        FTDF_criticalVar();
-        FTDF_enterCritical();
-        FTDF_txInProgress = FTDF_FALSE;
-        FTDF_exitCritical();
+                ftdf_critical_var();
+                ftdf_enter_critical();
+                ftdf_tx_in_progress = FTDF_FALSE;
+                ftdf_exit_critical();
 
-        FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(NULL, transparentStatus);
+                FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(NULL, transparent_status);
 #else
 
-        FTDF_reqCurrent = NULL;
+                ftdf_req_current = NULL;
 
-        FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparentRequest->handle,
-                                            transparentStatus);
+                FTDF_SEND_FRAME_TRANSPARENT_CONFIRM(transparent_request->handle, transparent_status);
 
-        FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) transparentRequest);
+                FTDF_REL_MSG_BUFFER((ftdf_msg_buffer_t*)transparent_request);
 #ifndef FTDF_LITE
-        FTDF_processNextRequest();
+                ftdf_process_next_request();
 #endif /* !FTDF_LITE */
 
 #endif /* FTDF_PHY_API */
-        break;
-    }
-    }
+                break;
+        }
+        }
 }
 
-void FTDF_processTxEvent(void)
+void ftdf_process_tx_event(void)
 {
-    volatile uint32_t *txFlagStatE;
-    FTDF_Status        status = FTDF_SUCCESS;
+        volatile uint32_t *tx_flag_state;
+        ftdf_status_t status = FTDF_SUCCESS;
 
-#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
-    /* Restore Rx PTI in case the Tx transaction that just ended interrupted an Rx-always-on
-     * transaction. */
-    hw_coex_pti_t tx_pti;
-    hw_coex_update_ftdf_pti(FTDF_getRxPti(), &tx_pti, true);
+#if dg_configCOEX_ENABLE_CONFIG && !FTDF_USE_AUTO_PTI
+        /* Restore Rx PTI in case the Tx transaction that just ended interrupted an Rx-always-on
+         * transaction. */
+        hw_coex_pti_t tx_pti;
+        hw_coex_update_ftdf_pti(ftdf_get_rx_pti(), &tx_pti, true);
 #endif
 
-    txFlagStatE = FTDF_GET_FIELD_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_CLEAR_E, FTDF_TX_WAKEUP_BUFFER);
-
-    if (*txFlagStatE & MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_E)
-    {
+        if (REG_GETF(FTDF, FTDF_TX_FLAG_CLEAR_E_1_REG, TX_FLAG_CLEAR_E)) {
 #ifdef SIMULATOR
-        *txFlagStatE &= ~MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_E;
+                REG_CLR_BIT(FTDF, FTDF_TX_FLAG_CLEAR_E_1_REG, TX_FLAG_CLEAR_E);
 #else
-        *txFlagStatE  = MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_E;
+                FTDF->FTDF_TX_FLAG_CLEAR_E_1_REG = REG_MSK(FTDF, FTDF_TX_FLAG_CLEAR_E_1_REG, TX_FLAG_CLEAR_E);
 #endif
 
-        volatile uint32_t *txStatus =
-            FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_RETURN_STATUS_1, FTDF_TX_WAKEUP_BUFFER);
+                if (REG_GETF(FTDF, FTDF_TX_RETURN_STATUS_1_1_REG, CSMACAFAIL)) {
+                        if (ftdf_pib.metrics_enabled) {
+                                ftdf_pib.performance_metrics.tx_fail_count++;
+                        }
 
-        if (*txStatus & MSK_F_FTDF_RETENTION_RAM_CSMACAFAIL)
-        {
-            if (FTDF_pib.metricsEnabled)
-            {
-                FTDF_pib.performanceMetrics.TXFailCount++;
-            }
-
-            status = FTDF_CHANNEL_ACCESS_FAILURE;
+                        status = FTDF_CHANNEL_ACCESS_FAILURE;
+                }
         }
-    }
 
-    txFlagStatE = FTDF_GET_FIELD_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_CLEAR_E, FTDF_TX_DATA_BUFFER);
-
-    if (*txFlagStatE & MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_E)
-    {
+        if (REG_GETF(FTDF, FTDF_TX_FLAG_CLEAR_E_0_REG, TX_FLAG_CLEAR_E)) {
 #ifdef SIMULATOR
-        *txFlagStatE &= ~MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_E;
+                REG_CLR_BIT(FTDF, FTDF_TX_FLAG_CLEAR_E_0_REG, TX_FLAG_CLEAR_E);
 #else
-        *txFlagStatE  = MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_E;
+                FTDF->FTDF_TX_FLAG_CLEAR_E_0_REG = REG_MSK(FTDF, FTDF_TX_FLAG_CLEAR_E_0_REG, TX_FLAG_CLEAR_E);
 #endif
-    }
-    else
-    {
-        return;
-    }
+        } else {
+                return;
+        }
 
 #ifndef FTDF_PHY_API
-    FTDF_txInProgress = FTDF_FALSE;
+        ftdf_tx_in_progress = FTDF_FALSE;
 
-    if (FTDF_reqCurrent == NULL)
-    {
-        return;
-    }
-
+        if (ftdf_req_current == NULL) {
+                return;
+        }
 #else
-    FTDF_criticalVar();
-    FTDF_enterCritical();
+        ftdf_critical_var();
+        ftdf_enter_critical();
 
-    if (FTDF_txInProgress == FTDF_FALSE)
-    {
-        FTDF_exitCritical();
-        return;
-    }
+        if (ftdf_tx_in_progress == FTDF_FALSE) {
+                ftdf_exit_critical();
 
-    FTDF_exitCritical();
+                return;
+        }
+
+        ftdf_exit_critical();
 #endif
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-    FTDF_sdbFsmTxIRQ();
+        ftdf_sdb_fsm_tx_irq();
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
-    FTDF_Boolean ackTX = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_ACKREQUEST, FTDF_TX_DATA_BUFFER);
+        ftdf_boolean_t ack_tx = REG_GETF(FTDF, FTDF_TX_META_DATA_0_0_REG, ACKREQUEST);
 
-    if (status == FTDF_SUCCESS)
-    {
-        volatile uint32_t *txMeta    = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_DATA_BUFFER);
-        FTDF_FrameType     frameType =
-            (*txMeta & MSK_F_FTDF_RETENTION_RAM_FRAMETYPE) >> OFF_F_FTDF_RETENTION_RAM_FRAMETYPE;
+        if (status == FTDF_SUCCESS) {
+                ftdf_frame_type_t frame_type = REG_GETF(FTDF, FTDF_TX_META_DATA_0_0_REG, FRAMETYPE);
 
-        switch (frameType)
-        {
-        case FTDF_BEACON_FRAME:
-            FTDF_pib.trafficCounters.txBeaconFrmCnt++;
-            break;
-
-        case FTDF_DATA_FRAME:
-            FTDF_pib.trafficCounters.txDataFrmCnt++;
-            break;
-
-        case FTDF_MAC_COMMAND_FRAME:
-            FTDF_pib.trafficCounters.txCmdFrmCnt++;
-            break;
-
-        case FTDF_MULTIPURPOSE_FRAME:
-            FTDF_pib.trafficCounters.txMultiPurpFrmCnt++;
-            break;
-        }
-
-        volatile uint32_t *txStatus =
-            FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_RETURN_STATUS_1, FTDF_TX_DATA_BUFFER);
-#ifndef FTDF_LITE
-#ifndef FTDF_NO_TSCH
-        FTDF_TschRetry *tschRetry = NULL;
-
-        if (FTDF_pib.tschEnabled)
-        {
-            tschRetry = FTDF_getTschRetry(FTDF_getRequestAddress(FTDF_reqCurrent));
-        }
-
-#endif /* FTDF_NO_TSCH */
-#endif /* !FTDF_LITE */
-
-        if (*txStatus & MSK_F_FTDF_RETENTION_RAM_ACKFAIL)
-        {
-#ifndef FTDF_LITE
-#ifndef FTDF_NO_TSCH
-
-            if (FTDF_pib.tschEnabled)
-            {
-                tschRetry->nrOfRetries++;
-                FTDF_tschSlotLink->request = NULL;
-                status                     = FTDF_scheduleTsch(FTDF_reqCurrent);
-
-                if (status == FTDF_SUCCESS)
-                {
-                    // If FTDF_reqCurrent is not equal to NULL the retried request will be queued
-                    // rather then send again
-                    FTDF_reqCurrent = NULL;
+                switch (frame_type) {
+                case FTDF_BEACON_FRAME:
+                        ftdf_pib.traffic_counters.tx_ceacon_frm_cnt++;
+                        break;
+                case FTDF_DATA_FRAME:
+                        ftdf_pib.traffic_counters.tx_data_frm_cnt++;
+                        break;
+                case FTDF_MAC_COMMAND_FRAME:
+                        ftdf_pib.traffic_counters.tx_cmd_frm_cnt++;
+                        break;
+                case FTDF_MULTIPURPOSE_FRAME:
+                        ftdf_pib.traffic_counters.tx_multi_purp_frm_cnt++;
+                        break;
                 }
-            }
-            else
+
+#ifndef FTDF_LITE
+#ifndef FTDF_NO_TSCH
+                ftdf_tsch_retry_t *tsch_retry = NULL;
+
+                if (ftdf_pib.tsch_enabled) {
+                        tsch_retry = ftdf_get_tsch_retry(ftdf_get_request_address(ftdf_req_current));
+                }
+#endif /* FTDF_NO_TSCH */
+#endif /* !FTDF_LITE */
+                if (REG_GETF(FTDF, FTDF_TX_RETURN_STATUS_1_0_REG, ACKFAIL)) {
+#ifndef FTDF_LITE
+#ifndef FTDF_NO_TSCH
+                        if (ftdf_pib.tsch_enabled) {
+                                tsch_retry->nr_of_retries++;
+                                ftdf_tsch_slot_link->request = NULL;
+                                status = ftdf_schedule_tsch(ftdf_req_current);
+
+                                if (status == FTDF_SUCCESS) {
+                                        /* If ftdf_req_current is not equal to NULL the retried
+                                         * request will be queued rather then send again */
+                                        ftdf_req_current = NULL;
+                                }
+
+                        } else
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
 
-                if (FTDF_nrOfRetries < FTDF_pib.maxFrameRetries)
-                {
-                    FTDF_nrOfRetries++;
+                        if (ftdf_nr_of_retries < ftdf_pib.max_frame_retries) {
+                                ftdf_nr_of_retries++;
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_CSL
+                        if (ftdf_pib.le_enabled) {
+                                ftdf_set_peer_csl_timing(NULL, 0);
 
-                    if (FTDF_pib.leEnabled)
-                    {
-                        FTDF_setPeerCslTiming(NULL, 0);
+                                ftdf_critical_var();
+                                ftdf_enter_critical();
 
-                        FTDF_criticalVar();
-                        FTDF_enterCritical();
+                                ftdf_time_t cur_time =
+                                        REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
 
-                        FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+                                ftdf_tx_in_progress = FTDF_TRUE;
+                                REG_SETF(FTDF, FTDF_LMAC_CONTROL_8_REG, MACCSLSTARTSAMPLETIME,
+                                         cur_time + 5);
+                                REG_SETF(FTDF, FTDF_LMAC_CONTROL_7_REG, MACWUPERIOD,
+                                         ftdf_pib.csl_max_period);
 
-                        FTDF_txInProgress = FTDF_TRUE;
-                        FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLSTARTSAMPLETIME, curTime + 5);
-                        FTDF_SET_FIELD(ON_OFF_REGMAP_MACWUPERIOD, FTDF_pib.CSLMaxPeriod);
+                                REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET,
+                                         ((1 << FTDF_TX_DATA_BUFFER) | (1 << FTDF_TX_WAKEUP_BUFFER)));
 
-                        volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
-                        *txFlagSet |= ((1 << FTDF_TX_DATA_BUFFER) | (1 << FTDF_TX_WAKEUP_BUFFER));
+                                ftdf_exit_critical();
 
-                        FTDF_exitCritical();
-                    }
-                    else
+                                } else
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
-                    {
-#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
-                        hw_coex_update_ftdf_pti(tx_pti, NULL, true);
+                                {
+#if dg_configCOEX_ENABLE_CONFIG && !FTDF_USE_AUTO_PTI
+                                        hw_coex_update_ftdf_pti(tx_pti, NULL, true);
 #endif
-                        volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
-                        *txFlagSet |= (1 << FTDF_TX_DATA_BUFFER);
-                    }
+                                        REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET, (1 << FTDF_TX_DATA_BUFFER));
+                                }
 
-                    return;
-                }
-                else
-                {
-                    if (FTDF_pib.metricsEnabled)
-                    {
-                        FTDF_pib.performanceMetrics.TXFailCount++;
-                    }
+                                return;
 
-                    status = FTDF_NO_ACK;
-                }
-        }
-        else if (*txStatus & MSK_F_FTDF_RETENTION_RAM_CSMACAFAIL)
-        {
+                        } else {
+
+                                if (ftdf_pib.metrics_enabled) {
+                                        ftdf_pib.performance_metrics.tx_fail_count++;
+                                }
+
+                                status = FTDF_NO_ACK;
+                        }
+
+                } else if (REG_GETF(FTDF, FTDF_TX_RETURN_STATUS_1_0_REG, CSMACAFAIL)) {
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_TSCH
+                        if (ftdf_pib.tsch_enabled) {
+                                tsch_retry->nr_of_cca_retries++;
 
-            if (FTDF_pib.tschEnabled)
-            {
-                tschRetry->nrOfCcaRetries++;
+                                if (tsch_retry->nr_of_cca_retries < ftdf_pib.max_csma_backoffs) {
 
-                if (tschRetry->nrOfCcaRetries < FTDF_pib.maxCSMABackoffs)
-                {
-                    FTDF_tschSlotLink->request = NULL;
-                    status                     = FTDF_scheduleTsch(FTDF_reqCurrent);
+                                        ftdf_tsch_slot_link->request = NULL;
+                                        status = ftdf_schedule_tsch(ftdf_req_current);
 
-                    if (status == FTDF_SUCCESS)
-                    {
-                        // If FTDF_reqCurrent is not equal to NULL the retried request will be queued
-                        // rather then send again
-                        FTDF_reqCurrent = NULL;
-                    }
-                }
-                else
-                {
-                    status = FTDF_CHANNEL_ACCESS_FAILURE;
-                }
-            }
-            else
+                                        if (status == FTDF_SUCCESS) {
+                                                /* If ftdf_req_current is not equal to NULL the
+                                                 * retried request will be queued rather then send again */
+                                                ftdf_req_current = NULL;
+                                        }
+
+                                } else {
+                                        status = FTDF_CHANNEL_ACCESS_FAILURE;
+                                }
+                        } else
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
-            {
-                status = FTDF_CHANNEL_ACCESS_FAILURE;
-            }
+                        {
+                                status = FTDF_CHANNEL_ACCESS_FAILURE;
+                        }
 
-            if (FTDF_pib.metricsEnabled && status != FTDF_SUCCESS)
-            {
-                FTDF_pib.performanceMetrics.TXFailCount++;
-            }
-        }
-        else
-        {
-            if (ackTX == FTDF_FALSE && FTDF_pib.metricsEnabled)
-            {
-                FTDF_pib.performanceMetrics.TXSuccessCount++;
-            }
+                        if (ftdf_pib.metrics_enabled && status != FTDF_SUCCESS) {
+                                ftdf_pib.performance_metrics.tx_fail_count++;
+                        }
+
+                } else {
+
+                        if (ack_tx == FTDF_FALSE && ftdf_pib.metrics_enabled) {
+                                ftdf_pib.performance_metrics.tx_success_count++;
+                        }
 
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_TSCH
-
-            if (FTDF_pib.tschEnabled)
-            {
-                tschRetry->nrOfCcaRetries = 0;
-            }
-
+                        if (ftdf_pib.tsch_enabled) {
+                                tsch_retry->nr_of_cca_retries = 0;
+                        }
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
+                }
         }
-    }
 
 #ifndef FTDF_PHY_API
-
-    if ((ackTX == FTDF_FALSE || status != FTDF_SUCCESS) && FTDF_reqCurrent)
-    {
-        sendConfirm(status,
-                    FTDF_reqCurrent->msgId);
+        if (((ack_tx == FTDF_FALSE) || (status != FTDF_SUCCESS)) && ftdf_req_current) {
+                send_confirm(status,  ftdf_req_current->msg_id);
 #ifndef FTDF_LITE
-        FTDF_processNextRequest();
+                ftdf_process_next_request();
 #endif /* !FTDF_LITE */
-    }
+        }
 
 #else
-
-    if (FTDF_txInProgress)
-    {
-        sendConfirm(status, FTDF_TRANSPARENT_REQUEST);
-    }
-
+        if (ftdf_tx_in_progress) {
+                send_confirm(status, FTDF_TRANSPARENT_REQUEST);
+        }
 #endif
 }
 
-void FTDF_processSymbolTimerEvent(void)
+void ftdf_process_symbol_timer_event(void)
 {
-    volatile uint32_t *symbolTimeThrEvent = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_SYMBOLTIMETHR_E);
-
 #ifdef FTDF_PHY_API
-    volatile uint32_t *lmacReady4sleepEvent = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_LMACREADY4SLEEP_D);
+        if (REG_GETF(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, LMACREADY4SLEEP_D)) {
+                FTDF->FTDF_LMAC_CONTROL_DELTA_REG = REG_MSK(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, LMACREADY4SLEEP_D);
 
-    if (*lmacReady4sleepEvent & MSK_F_FTDF_ON_OFF_REGMAP_LMACREADY4SLEEP_D)
-    {
-        *lmacReady4sleepEvent = MSK_F_FTDF_ON_OFF_REGMAP_LMACREADY4SLEEP_D;
-
-        /* If lmac ready 4 sleep, call respective callback, after disabling the interrupt */
-        if (FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 1)
-        {
-            volatile uint32_t *lmacCtrlMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_MASK);
-            *lmacCtrlMask &= ~MSK_F_FTDF_ON_OFF_REGMAP_LMACREADY4SLEEP_M;
-            FTDF_LMACREADY4SLEEP_CB(FTDF_TRUE, 0);
+                /* If lmac ready 4 sleep, call respective callback, after disabling the interrupt */
+                if (REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, LMACREADY4SLEEP) == 1) {
+                        REG_CLR_BIT(FTDF, FTDF_LMAC_CONTROL_MASK_REG, LMACREADY4SLEEP_M);
+                        FTDF_LMACREADY4SLEEP_CB(FTDF_TRUE, 0);
+                }
         }
-    }
-
 #endif
 
-    // sync timestamp event
-    if (*symbolTimeThrEvent & MSK_F_FTDF_ON_OFF_REGMAP_SYNCTIMESTAMP_E)
-    {
+        /* sync timestamp event */
+        if (REG_GETF(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYNCTIMESTAMP_E)) {
 #ifdef SIMULATOR
-        *symbolTimeThrEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_SYNCTIMESTAMP_E;
+                REG_CLR_BIT(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYNCTIMESTAMP_E);
 #else
-        *symbolTimeThrEvent  = MSK_F_FTDF_ON_OFF_REGMAP_SYNCTIMESTAMP_E;
+                FTDF->FTDF_LMAC_CONTROL_DELTA_REG = REG_MSK(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYNCTIMESTAMP_E);
 #endif
 
-        FTDF_SET_FIELD(ON_OFF_REGMAP_SYNCTIMESTAMPENA, 0);
+                REG_SETF(FTDF, FTDF_TIMER_CONTROL_1_REG, SYNCTIMESTAMPENA, 0);
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_CSL
-        FTDF_oldLeEnabled = FTDF_FALSE;
+                ftdf_old_le_enabled = FTDF_FALSE;
 
-        if (FTDF_wakeUpEnableLe)
-        {
-            FTDF_pib.leEnabled  = FTDF_TRUE;
-            FTDF_setLeEnabled();
-            FTDF_wakeUpEnableLe = FTDF_FALSE;
-        }
-
+                if (ftdf_wake_up_enable_le) {
+                        ftdf_pib.le_enabled = FTDF_TRUE;
+                        ftdf_set_le_enabled();
+                        ftdf_wake_up_enable_le = FTDF_FALSE;
+                }
 #endif /* FTDF_NO_CSL */
 
 #ifndef FTDF_NO_TSCH
-
-        if (FTDF_wakeUpEnableTsch)
-        {
-            FTDF_setTschEnabled();
-        }
-
+                if (ftdf_wake_up_enable_tsch) {
+                        ftdf_set_tsch_enabled();
+                }
 #endif /* FTDF_NO_TSCH */
 
-        FTDF_restoreTxPendingTimer();
+                ftdf_restore_tx_pending_timer();
 #endif /* !FTDF_LITE */
-        FTDF_WAKE_UP_READY();
-    }
+                FTDF_WAKE_UP_READY();
+        }
 
-    // miscellaneous event
-    // - Non-TSCH mode: association timer
-    // - TSCH mode: next active link timer
-    if (*symbolTimeThrEvent & MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIME2THR_E)
-    {
+        /* miscellaneous event
+         * - Non-TSCH mode: association timer
+         * - TSCH mode: next active link timer */
+        if (REG_GETF(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYMBOLTIME2THR_E)) {
 #ifdef SIMULATOR
-        *symbolTimeThrEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIME2THR_E;
+                REG_CLR_BIT(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYMBOLTIME2THR_E);
 #else
-        *symbolTimeThrEvent  = MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIME2THR_E;
+                FTDF->FTDF_LMAC_CONTROL_DELTA_REG  = REG_MSK(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYMBOLTIME2THR_E);
 #endif
 
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_TSCH
-
-        if (FTDF_pib.tschEnabled)
-        {
-            FTDF_tschProcessRequest();
-        }
-        else
+                if (ftdf_pib.tsch_enabled) {
+                        ftdf_tsch_process_request();
+                } else
 #endif /* FTDF_NO_TSCH */
-            if (FTDF_reqCurrent &&
-                FTDF_reqCurrent->msgId == FTDF_ASSOCIATE_REQUEST)
-            {
-                FTDF_AssocAdmin *assocAdmin = &FTDF_aa;
+                if (ftdf_req_current && (ftdf_req_current->msg_id == FTDF_ASSOCIATE_REQUEST)) {
+                        ftdf_assoc_admin_t* assoc_admin = &ftdf_aa;
 
-                // macResponseWaitTime expired
-                assocAdmin->dataR = FTDF_TRUE;
+                        /* macResponseWaitTime expired */
+                        assoc_admin->data_r = FTDF_TRUE;
 
-                FTDF_sendAssociateDataRequest();
-            }
-
+                        ftdf_send_associate_data_request();
+                }
 #endif /* !FTDF_LITE */
-    }
+        }
 
-    // pending queue symbol timer event
-    if (*symbolTimeThrEvent & MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIMETHR_E)
-    {
+        /* pending queue symbol timer event */
+        if (REG_GETF(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYMBOLTIMETHR_E)) {
 #ifdef SIMULATOR
-        *symbolTimeThrEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIMETHR_E;
+                REG_CLR_BIT(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYMBOLTIMETHR_E);
 #else
-        *symbolTimeThrEvent  = MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIMETHR_E;
+                FTDF->FTDF_LMAC_CONTROL_DELTA_REG = REG_MSK(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, SYMBOLTIMETHR_E);
 #endif
 
 #ifndef FTDF_LITE
-        FTDF_removeTxPendingTimer(NULL);
+                ftdf_remove_tx_pending_timer(NULL);
 #endif /* !FTDF_LITE */
-    }
+        }
 }
 
 #ifndef FTDF_LITE
-FTDF_Status FTDF_sendFrame(FTDF_ChannelNumber   channel,
-                           FTDF_FrameHeader    *frameHeader,
-                           FTDF_SecurityHeader *securityHeader,
-                           FTDF_Octet          *txPtr,
-                           FTDF_DataLength      payloadSize,
-                           FTDF_Octet          *payload)
+ftdf_status_t ftdf_send_frame(ftdf_channel_number_t channel,
+                              ftdf_frame_header_t *frame_header,
+                              ftdf_security_header *security_header,
+                              ftdf_octet_t *tx_ptr,
+                              ftdf_data_length_t payload_size,
+                              ftdf_octet_t *payload)
 {
-    FTDF_Octet     *txBufPtr       = (FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO);
+        ftdf_octet_t *tx_buf_ptr = (ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_0_0_REG;
 
-    FTDF_DataLength micLength      = FTDF_getMicLength(securityHeader->securityLevel);
-    FTDF_DataLength phyPayloadSize = (txPtr - txBufPtr) - 1 + payloadSize + micLength + FTDF_FCS_LENGTH;
+        ftdf_data_length_t mic_length = ftdf_get_mic_length(security_header->security_level);
+        ftdf_data_length_t phy_payload_size =
+            (tx_ptr - tx_buf_ptr) - 1 + payload_size + mic_length + FTDF_FCS_LENGTH;
 
-    if (phyPayloadSize > (FTDF_BUFFER_LENGTH - 1))
-    {
-        return FTDF_FRAME_TOO_LONG;
-    }
-
-    *txBufPtr = phyPayloadSize;
-
-    FTDF_Octet *privPtr = txPtr;
-
-    int         n;
-
-    for (n = 0; n < payloadSize; n++)
-    {
-        *txPtr++ = *payload++;
-    }
-
-    FTDF_Status status = FTDF_secureFrame(txBufPtr,
-                                          privPtr,
-                                          frameHeader,
-                                          securityHeader);
-
-    if (status != FTDF_SUCCESS)
-    {
-        return status;
-    }
-
-    FTDF_Bitmap8       options   = frameHeader->options;
-
-    volatile uint32_t *metaData0 = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_DATA_BUFFER);
-    volatile uint32_t *metaData1 = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_DATA_BUFFER);
-
-    uint16_t           phyAttr   = (FTDF_pib.CCAMode & 0x3) | 0x08 | ((channel - 11) & 0x0F) << 4 |
-                                   (FTDF_pib.TXPower & 0x07) << 12;
-
-    metaData0  = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_DATA_BUFFER);
-    metaData1  = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_DATA_BUFFER);
-
-    *metaData0 =
-        ((phyPayloadSize << OFF_F_FTDF_RETENTION_RAM_FRAME_LENGTH) & MSK_F_FTDF_RETENTION_RAM_FRAME_LENGTH) |
-        ((phyAttr << OFF_F_FTDF_RETENTION_RAM_PHYATTR) & MSK_F_FTDF_RETENTION_RAM_PHYATTR) |
-        ((frameHeader->frameType << OFF_F_FTDF_RETENTION_RAM_FRAMETYPE) & MSK_F_FTDF_RETENTION_RAM_FRAMETYPE) |
-        MSK_F_FTDF_RETENTION_RAM_CSMACA_ENA |
-        ((options & FTDF_OPT_ACK_REQUESTED) ? MSK_F_FTDF_RETENTION_RAM_ACKREQUEST : 0) |
-        MSK_F_FTDF_RETENTION_RAM_CRC16_ENA;
-
-    *metaData1 =
-        ((frameHeader->SN << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
-
-    uint32_t phyCsmaCaAttr = (FTDF_pib.CCAMode & 0x3) | ((channel - 11) & 0xf) << 4 |
-                             (FTDF_pib.TXPower & 0x07) << 12;
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR, phyCsmaCaAttr);
-
-#ifndef FTDF_NO_CSL
-
-    if (FTDF_pib.leEnabled == FTDF_TRUE)
-    {
-        if (frameHeader->dstAddrMode != FTDF_SHORT_ADDRESS)
-        {
-            return FTDF_NO_SHORT_ADDRESS;
+        if (phy_payload_size > (FTDF_BUFFER_LENGTH - 1)) {
+                return FTDF_FRAME_TOO_LONG;
         }
 
-        // Clear CSMACA of data frame buffer
-        *metaData0 &= ~MSK_F_FTDF_RETENTION_RAM_CSMACA_ENA;
+        *tx_buf_ptr = phy_payload_size;
 
-        txPtr       = txBufPtr = ((FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO)) +
-                                 (FTDF_BUFFER_LENGTH * FTDF_TX_WAKEUP_BUFFER);
+        ftdf_octet_t* priv_ptr = tx_ptr;
 
-        *txPtr++                    = 0x0d;
-        *txPtr++                    = 0x2d;
-        *txPtr++                    = 0x81;
-        *txPtr++                    = frameHeader->SN;
-        *(FTDF_PANId *) txPtr        = frameHeader->dstPANId;
-        txPtr                      += 2;
-        *(FTDF_ShortAddress *) txPtr = frameHeader->dstAddr.shortAddress;
-        txPtr                      += 2;
-        *txPtr++                    = 0x82;
-        *txPtr++                    = 0x0e;
+        int n;
 
-        metaData0                   = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_WAKEUP_BUFFER);
-        metaData1                   = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_WAKEUP_BUFFER);
-        volatile uint32_t *txPriority =
-            FTDF_GET_REG_ADDR_INDEXED(ON_OFF_REGMAP_TX_PRIORITY, FTDF_TX_WAKEUP_BUFFER);
+        for (n = 0; n < payload_size; n++) {
+                *tx_ptr++ = *payload++;
+        }
 
-        *metaData0 =
-            ((0x0d << OFF_F_FTDF_RETENTION_RAM_FRAME_LENGTH) & MSK_F_FTDF_RETENTION_RAM_FRAME_LENGTH) |
-            ((phyAttr << OFF_F_FTDF_RETENTION_RAM_PHYATTR) & MSK_F_FTDF_RETENTION_RAM_PHYATTR) |
-            ((FTDF_MULTIPURPOSE_FRAME << OFF_F_FTDF_RETENTION_RAM_FRAMETYPE) & MSK_F_FTDF_RETENTION_RAM_FRAMETYPE) |
-            MSK_F_FTDF_RETENTION_RAM_CSMACA_ENA |
-            MSK_F_FTDF_RETENTION_RAM_CRC16_ENA;
+        ftdf_status_t status = ftdf_secure_frame(tx_buf_ptr, priv_ptr, frame_header, security_header);
 
-        *metaData1 =
-            ((frameHeader->SN << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
-#if FTDF_USE_PTI && FTDF_USE_AUTO_PTI
-        *txPriority |= MSK_F_FTDF_ON_OFF_REGMAP_ISWAKEUP;
+        if (status != FTDF_SUCCESS) {
+                return status;
+        }
+
+        ftdf_bitmap8_t options = frame_header->options;
+
+        uint32_t meta_data_0 = 0;
+
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, FRAME_LENGTH, meta_data_0, phy_payload_size);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, PHYATTR_DEM_PTI, meta_data_0, ((ftdf_pib.cca_mode & 0x3) | 0x08));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, PHYATTR_CN, meta_data_0, (channel - 11));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, PHYATTR_RF_GPIO_PINS, meta_data_0, (ftdf_pib.tx_power & 0x07));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, FRAMETYPE, meta_data_0, frame_header->frame_type);
+
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, CSMACA_ENA, meta_data_0, 1);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, ACKREQUEST, meta_data_0,
+                      ((options & FTDF_OPT_ACK_REQUESTED) ? 1 : 0));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, CRC16_ENA, meta_data_0, 1);
+
+        FTDF->FTDF_TX_META_DATA_0_0_REG = meta_data_0;
+
+        uint32_t meta_data_1 = 0;
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_1_0_REG, MACSN, meta_data_1, frame_header->sn);
+        FTDF->FTDF_TX_META_DATA_1_0_REG = meta_data_1;
+
+        uint32_t tmp = FTDF->FTDF_LMAC_CONTROL_5_REG;
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_DEM_PTI, tmp, (ftdf_pib.cca_mode & 0x3));
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_CN, tmp, (channel - 11));
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_CALCAP, tmp, 0);
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_RF_GPIO_PINS, tmp, 0);
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_HSI, tmp, 0);
+        FTDF->FTDF_LMAC_CONTROL_5_REG = tmp;
+
+#ifndef FTDF_NO_CSL
+        if (ftdf_pib.le_enabled == FTDF_TRUE) {
+                if (frame_header->dst_addr_mode != FTDF_SHORT_ADDRESS) {
+                        return FTDF_NO_SHORT_ADDRESS;
+                }
+
+                /* Clear CSMACA of data frame buffer */
+                REG_SETF(FTDF, FTDF_TX_META_DATA_0_0_REG, CSMACA_ENA, 0);
+
+                tx_ptr = tx_buf_ptr = (ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_1_0_REG;
+
+                *tx_ptr++ = 0x0d;
+                *tx_ptr++ = 0x2d;
+                *tx_ptr++ = 0x81;
+                *tx_ptr++ = frame_header->sn;
+                *(ftdf_pan_id_t*)tx_ptr = frame_header->dst_pan_id;
+                tx_ptr += 2;
+                *(ftdf_short_address_t*)tx_ptr = frame_header->dst_addr.short_address;
+                tx_ptr += 2;
+                *tx_ptr++ = 0x82;
+                *tx_ptr++ = 0x0e;
+
+                meta_data_0 = 0;
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_1_REG, FRAME_LENGTH, meta_data_0, 0x0d);
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_1_REG, PHYATTR_DEM_PTI, meta_data_0, ((ftdf_pib.cca_mode & 0x3) | 0x08));
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_1_REG, PHYATTR_CN, meta_data_0, (channel - 11));
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_1_REG, PHYATTR_RF_GPIO_PINS, meta_data_0, (ftdf_pib.tx_power & 0x07));
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_1_REG, FRAMETYPE, meta_data_0, FTDF_MULTIPURPOSE_FRAME);
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_1_REG, CSMACA_ENA, meta_data_0, 1);
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_1_REG, CRC16_ENA, meta_data_0, 1);
+                FTDF->FTDF_TX_META_DATA_0_1_REG = meta_data_0;
+
+                uint32_t meta_data_1 = 0;
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_1_1_REG, MACSN, meta_data_1, frame_header->sn);
+                FTDF->FTDF_TX_META_DATA_1_1_REG = meta_data_1;
+
+#if FTDF_USE_AUTO_PTI
+                FTDF->FTDF_TX_PRIORITY_1_REG |= REG_MSK(FTDF, FTDF_TX_PRIORITY_1_REG, ISWAKEUP);
 #else
-        *txPriority = MSK_F_FTDF_ON_OFF_REGMAP_ISWAKEUP;
+                FTDF->FTDF_TX_PRIORITY_1_REG = REG_MSK(FTDF, FTDF_TX_PRIORITY_1_REG, ISWAKEUP);
 #endif
-    }
-
+        }
 #endif /* FTDF_NO_CSL */
-
-    volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
 
 #ifndef FTDF_NO_CSL
+        if (ftdf_pib.le_enabled == FTDF_TRUE) {
+                ftdf_time_t cur_time =
+                    REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+                ftdf_time_t delta = cur_time - ftdf_rz_time;
 
-    if (FTDF_pib.leEnabled == FTDF_TRUE)
-    {
-        FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-        FTDF_Time delta   = curTime - FTDF_rzTime;
+                if (delta > 0x80000000) {
 
-        if (delta > 0x80000000)
-        {
-            // Receiving an wakeup frame sequence, delay sending until RZ has passed.
-            FTDF_sendFramePending = frameHeader->dstAddr.shortAddress;
-        }
-        else
-        {
-            FTDF_Time   wakeupStartTime;
-            FTDF_Period wakeupPeriod;
+                        /* Receiving an wakeup frame sequence, delay sending until RZ has passed. */
+                        ftdf_send_frame_pending = frame_header->dst_addr.short_address;
 
-            FTDF_criticalVar();
-            FTDF_enterCritical();
+                } else {
 
-            FTDF_getWakeupParams(frameHeader->dstAddr.shortAddress, &wakeupStartTime, &wakeupPeriod);
+                        ftdf_time_t wakeup_start_time;
+                        ftdf_period_t wakeup_period;
 
-            FTDF_txInProgress = FTDF_TRUE;
-            FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLSTARTSAMPLETIME, wakeupStartTime);
-            FTDF_SET_FIELD(ON_OFF_REGMAP_MACWUPERIOD, wakeupPeriod);
+                        ftdf_critical_var();
+                        ftdf_enter_critical();
 
-            *txFlagSet |= ((1 << FTDF_TX_DATA_BUFFER) | (1 << FTDF_TX_WAKEUP_BUFFER));
+                        ftdf_get_wakeup_params(frame_header->dst_addr.short_address,
+                                               &wakeup_start_time, &wakeup_period);
 
-            FTDF_exitCritical();
-        }
-    }
-    else
+                        ftdf_tx_in_progress = FTDF_TRUE;
+                        REG_SETF(FTDF, FTDF_LMAC_CONTROL_8_REG, MACCSLSTARTSAMPLETIME,
+                                wakeup_start_time);
+                        REG_SETF(FTDF, FTDF_LMAC_CONTROL_7_REG, MACWUPERIOD, wakeup_period);
+
+                        REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET,
+                                ((1 << FTDF_TX_DATA_BUFFER) | (1 << FTDF_TX_WAKEUP_BUFFER)));
+
+                        ftdf_exit_critical();
+                }
+
+        } else
 #endif /* FTDF_NO_CSL */
-        if (!FTDF_pib.tschEnabled)
-        {
-            *txFlagSet |= (1 << FTDF_TX_DATA_BUFFER);
-//                SetWord16(P2_SET_DATA_REG, (1 << 3));
-//                        SetWord16(P23_MODE_REG, 0x300); // SW trigger - output
-//                        for (volatile int k = 0; k < 100; k++) {
-//                        }
-//                        SetWord16(P23_MODE_REG, 0x000);// SW trigger - high Z
-
-
+        if (!ftdf_pib.tsch_enabled) {
+                REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET, (1 << FTDF_TX_DATA_BUFFER));
         }
 
-    return FTDF_SUCCESS;
+        return FTDF_SUCCESS;
 }
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-FTDF_Status FTDF_sendAckFrame(FTDF_FrameHeader    *frameHeader,
-                              FTDF_SecurityHeader *securityHeader,
-                              FTDF_Octet          *txPtr)
+ftdf_status_t ftdf_send_ack_frame(ftdf_frame_header_t *frame_header,
+                                  ftdf_security_header *security_header,
+                                  ftdf_octet_t *tx_ptr)
 {
-    FTDF_Octet     *txBufPtr       = ((FTDF_Octet *) FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO)) +
-                                     2 * FTDF_BUFFER_LENGTH;
-    FTDF_DataLength micLength      = FTDF_getMicLength(securityHeader->securityLevel);
-    FTDF_DataLength phyPayloadSize = (txPtr - txBufPtr) - 1 + micLength + FTDF_FCS_LENGTH;
+        ftdf_octet_t *tx_buf_ptr = ((ftdf_octet_t*) &FTDF->FTDF_TX_FIFO_2_0_REG);
+        ftdf_data_length_t mic_length = ftdf_get_mic_length(security_header->security_level);
+        ftdf_data_length_t phy_payload_size =
+            (tx_ptr - tx_buf_ptr) - 1 + mic_length + FTDF_FCS_LENGTH;
 
-    *txBufPtr = phyPayloadSize;
+        *tx_buf_ptr = phy_payload_size;
 
-    FTDF_Status status = FTDF_secureFrame(txBufPtr,
-                                          txPtr,
-                                          frameHeader,
-                                          securityHeader);
+        ftdf_status_t status = ftdf_secure_frame(tx_buf_ptr,
+                                                 tx_ptr,
+                                                 frame_header,
+                                                 security_header);
 
-    if (status != FTDF_SUCCESS)
-    {
-        return status;
-    }
-
-    volatile uint32_t *metaData0  = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_ACK_BUFFER);
-    volatile uint32_t *metaData1  = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_ACK_BUFFER);
-    volatile uint32_t *txPriority = FTDF_GET_REG_ADDR_INDEXED(ON_OFF_REGMAP_TX_PRIORITY, FTDF_TX_ACK_BUFFER);
-
-    uint16_t           phyAttr    =
-        (FTDF_pib.CCAMode & 0x3) | 0x08 | (FTDF_GET_FIELD(ON_OFF_REGMAP_PHYRXATTR) & 0x00f0) |
-        (FTDF_pib.TXPower & 0x07) << 12;
-
-    *metaData0 =
-        ((phyPayloadSize << OFF_F_FTDF_RETENTION_RAM_FRAME_LENGTH) & MSK_F_FTDF_RETENTION_RAM_FRAME_LENGTH) |
-        ((phyAttr << OFF_F_FTDF_RETENTION_RAM_PHYATTR) & MSK_F_FTDF_RETENTION_RAM_PHYATTR) |
-        ((FTDF_ACKNOWLEDGEMENT_FRAME << OFF_F_FTDF_RETENTION_RAM_FRAMETYPE) & MSK_F_FTDF_RETENTION_RAM_FRAMETYPE) |
-        MSK_F_FTDF_RETENTION_RAM_CRC16_ENA;
-
-    *metaData1 =
-        ((frameHeader->SN << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
-
-#if FTDF_USE_PTI && FTDF_USE_AUTO_PTI
-    *txPriority |= 1;
-#else
-    *txPriority = 1;
-#endif
-
-    volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
-
-#ifndef FTDF_NO_TSCH
-
-    if (FTDF_pib.tschEnabled)
-    {
-        FTDF_criticalVar();
-        FTDF_enterCritical();
-
-        FTDF_Period txAckDelayVal = FTDF_GET_FIELD(ON_OFF_REGMAP_MACTSTXACKDELAYVAL);
-
-        if (txAckDelayVal > 20)
-        {
-            *txFlagSet |= 1 << FTDF_TX_ACK_BUFFER;
+        if (status != FTDF_SUCCESS) {
+                return status;
         }
 
-        FTDF_exitCritical();
-    }
-    else
-#endif /* FTDF_NO_TSCH */
-    {
-        *txFlagSet |= 1 << FTDF_TX_ACK_BUFFER;
-    }
+        uint32_t meta_data_0 = 0;
 
-    FTDF_pib.trafficCounters.txEnhAckFrmCnt++;
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_2_REG, FRAME_LENGTH, meta_data_0, phy_payload_size);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_2_REG, PHYATTR_DEM_PTI, meta_data_0, ((ftdf_pib.cca_mode & 0x3) | 0x08));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_2_REG, PHYATTR_CN, meta_data_0, REG_GETF(FTDF, FTDF_LMAC_CONTROL_1_REG, PHYRXATTR_CN));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_2_REG, PHYATTR_RF_GPIO_PINS, meta_data_0, (ftdf_pib.tx_power & 0x07));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_2_REG, FRAMETYPE, meta_data_0, FTDF_ACKNOWLEDGEMENT_FRAME);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_2_REG, CRC16_ENA, meta_data_0, 1);
 
-    return FTDF_SUCCESS;
+        FTDF->FTDF_TX_META_DATA_0_2_REG = meta_data_0;
+
+        uint32_t meta_data_1 = 0;
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_1_2_REG, MACSN, meta_data_1, frame_header->sn);
+        FTDF->FTDF_TX_META_DATA_1_2_REG = meta_data_1;
+
+#if FTDF_USE_AUTO_PTI
+        REG_SETF(FTDF, FTDF_TX_PRIORITY_2_REG, TX_PRIORITY, 1);
+#else
+        FTDF->FTDF_TX_PRIORITY_2_REG = 1;
+#endif
+
+#ifndef FTDF_NO_TSCH
+        if (ftdf_pib.tsch_enabled) {
+
+                ftdf_critical_var();
+                ftdf_enter_critical();
+
+                ftdf_period_t tx_ack_delay_val =
+                    REG_GETF(FTDF, FTDF_MACTSTXACKDELAYVAL_REG, MACTSTXACKDELAYVAL);
+
+                if (tx_ack_delay_val > 20) {
+                        REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET, (1 << FTDF_TX_ACK_BUFFER));
+                }
+
+                ftdf_exit_critical();
+
+        } else
+        #endif /* FTDF_NO_TSCH */
+        {
+                REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET, (1 << FTDF_TX_ACK_BUFFER));
+        }
+
+        ftdf_pib.traffic_counters.tx_enh_ack_frm_cnt++;
+
+        return FTDF_SUCCESS;
 }
 #endif /* !FTDF_NO_CSL || !FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
 
-void FTDF_sendTransparentFrame(FTDF_DataLength    frameLength,
-                               FTDF_Octet        *frame,
-                               FTDF_ChannelNumber channel,
-                               FTDF_PTI           pti,
-                               FTDF_Boolean       cmsaSuppress)
+void ftdf_send_transparent_frame(ftdf_data_length_t frame_length,
+                                 ftdf_octet_t *frame,
+                                 ftdf_channel_number_t channel,
+                                 ftdf_pti_t pti,
+                                 ftdf_boolean_t cmsa_suppress)
 {
-    volatile uint32_t *metaData0 = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_DATA_BUFFER);
-    volatile uint32_t *metaData1 = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_DATA_BUFFER);
-    volatile uint32_t *txPriority = FTDF_GET_REG_ADDR_INDEXED(ON_OFF_REGMAP_TX_PRIORITY, FTDF_TX_DATA_BUFFER);
+        uint32_t meta_data_0 = 0;
+        uint32_t tmp;
 
 #if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
-    FTDF_Boolean useAck = FTDF_FALSE;
-    //FTDF_FrameHeader*         frameHeader    = &FTDF_fh;
-    FTDF_FrameHeader frameHeader;
-    FTDF_SN SN;
+        ftdf_boolean_t use_ack = FTDF_FALSE;
+        //ftdf_frame_header_t *frame_header = &ftdf_fh;
+        ftdf_frame_header_t frame_header;
+        ftdf_sn_t sn;
 #endif
-    uint16_t           phyAttr   = (FTDF_pib.CCAMode & 0x3) | 0x08 | ((channel - 11) & 0x0F) << 4 |
-                                   (FTDF_pib.TXPower & 0x07) << 12;
+
 #if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
-
-    if (FTDF_transparentModeOptions & FTDF_TRANSPARENT_WAIT_FOR_ACK)
-    {
-        FTDF_getFrameHeader(frame, &frameHeader);
-
-        if (frameHeader.options & FTDF_OPT_ACK_REQUESTED)
-        {
-            useAck = FTDF_TRUE;
+        if (ftdf_transparent_mode_options & FTDF_TRANSPARENT_WAIT_FOR_ACK) {
+                ftdf_get_frame_header(frame, &frame_header);
+                if (frame_header.options & FTDF_OPT_ACK_REQUESTED) {
+                        use_ack = FTDF_TRUE;
+                }
+                sn = frame_header.sn;
         }
-
-        SN = frameHeader.SN;
-    }
-
 #endif
 
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-    *txPriority = ((pti << OFF_F_FTDF_ON_OFF_REGMAP_PTI_TX) &
-                   MSK_F_FTDF_ON_OFF_REGMAP_PTI_TX) | 1;
-#endif
-    *metaData0 =
-        ((frameLength << OFF_F_FTDF_RETENTION_RAM_FRAME_LENGTH) & MSK_F_FTDF_RETENTION_RAM_FRAME_LENGTH) |
-        ((phyAttr << OFF_F_FTDF_RETENTION_RAM_PHYATTR) & MSK_F_FTDF_RETENTION_RAM_PHYATTR) |
-        (((*frame & 0x7) << OFF_F_FTDF_RETENTION_RAM_FRAMETYPE) & MSK_F_FTDF_RETENTION_RAM_FRAMETYPE) |
-        ((cmsaSuppress) ? 0 : MSK_F_FTDF_RETENTION_RAM_CSMACA_ENA) |
-#if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
-        ((useAck) ? MSK_F_FTDF_RETENTION_RAM_ACKREQUEST : 0) |
-#endif
-        ((FTDF_transparentModeOptions &
-          FTDF_TRANSPARENT_ENABLE_FCS_GENERATION) ? MSK_F_FTDF_RETENTION_RAM_CRC16_ENA : 0);
+        tmp = 0;
+        REG_SET_FIELD(FTDF, FTDF_TX_PRIORITY_0_REG, PTI_TX, tmp, pti);
+        REG_SET_FIELD(FTDF, FTDF_TX_PRIORITY_0_REG, TX_PRIORITY, tmp, 1);
+        FTDF->FTDF_TX_PRIORITY_0_REG = tmp;
+
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, FRAME_LENGTH, meta_data_0, frame_length);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, PHYATTR_DEM_PTI, meta_data_0, (ftdf_pib.cca_mode & 0x3) | 0x08);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, PHYATTR_CN, meta_data_0, (channel - 11));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, PHYATTR_RF_GPIO_PINS, meta_data_0, (ftdf_pib.tx_power & 0x07));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, FRAMETYPE, meta_data_0, (*frame & 0x7));
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, CSMACA_ENA, meta_data_0, ((cmsa_suppress) ? 0 : 1));
 
 #if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
-
-    if (useAck)
-    {
-        *metaData1 = ((SN << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
-    }
-    else
-    {
-        *metaData1 = ((0 << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
-    }
-
-#else
-    *metaData1 =
-        ((0 << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, ACKREQUEST, meta_data_0, (use_ack ? 1 : 0));
 #endif
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_0_0_REG, CRC16_ENA, meta_data_0,
+                      ((ftdf_transparent_mode_options & FTDF_TRANSPARENT_ENABLE_FCS_GENERATION) ? 1 : 0));
 
-    uint32_t phyCsmaCaAttr = (FTDF_pib.CCAMode & 0x3) | ((channel - 11) & 0xf) << 4 |
-                             (FTDF_pib.TXPower & 0x07) << 12;
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR, phyCsmaCaAttr);
-#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
-    hw_coex_update_ftdf_pti((hw_coex_pti_t) pti, NULL, true);
+        FTDF->FTDF_TX_META_DATA_0_0_REG = meta_data_0;
+
+        uint32_t meta_data_1 = 0;
+#if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
+        if (use_ack) {
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_1_0_REG, MACSN, meta_data_1, sn);
+        } else {
+                REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_1_0_REG, MACSN, meta_data_1, 0);
+        }
 #else
-    // FTDF_SET_FIELD(ON_OFF_REGMAP_PTI_TX, pti);
+        REG_SET_FIELD(FTDF, FTDF_TX_META_DATA_1_0_REG, MACSN, meta_data_1, 0);
 #endif
-    volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
-    *txFlagSet |= (1 << FTDF_TX_DATA_BUFFER);
+        FTDF->FTDF_TX_META_DATA_1_0_REG = meta_data_1;
+
+        tmp = FTDF->FTDF_LMAC_CONTROL_5_REG;
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_DEM_PTI, tmp, (ftdf_pib.cca_mode & 0x3));
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_CN, tmp, (channel - 11));
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_CALCAP, tmp, 0);
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_RF_GPIO_PINS, tmp, (ftdf_pib.tx_power & 0x07));
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_HSI, tmp, 0);
+        FTDF->FTDF_LMAC_CONTROL_5_REG = tmp;
+
+#if dg_configCOEX_ENABLE_CONFIG && !FTDF_USE_AUTO_PTI
+        hw_coex_update_ftdf_pti((hw_coex_pti_t)pti, NULL, true);
+#else
+        // REG_SETF(FTDF, FTDF_TX_PRIORITY_0_REG, PTI_TX, pti);
+#endif
+        REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET, (1 << FTDF_TX_DATA_BUFFER));
 }
 
-void FTDF_initQueues(void)
+void ftdf_init_queues(void)
 {
 #ifndef FTDF_LITE
-    FTDF_initQueue(&FTDF_freeQueue);
-    FTDF_initQueue(&FTDF_reqQueue);
+        ftdf_init_queue(&ftdf_free_queue);
+        ftdf_init_queue(&ftdf_req_queue);
 
-    int n;
+        int n;
 
-    for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
-    {
-        FTDF_queueBufferHead(&FTDF_reqBuffers[ n ], &FTDF_freeQueue);
+        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++) {
+                ftdf_queue_buffer_head(&ftdf_req_buffers[n], &ftdf_free_queue);
 
-        FTDF_txPendingList[ n ].addr.extAddress = 0xFFFFFFFFFFFFFFFFLL;
-        FTDF_txPendingList[ n ].addrMode        = FTDF_NO_ADDRESS;
-        FTDF_txPendingList[ n ].PANId           = 0xFFFF;
-        FTDF_initQueue(&FTDF_txPendingList[ n ].queue);
+                ftdf_tx_pending_list[n].addr.ext_address = 0xFFFFFFFFFFFFFFFFLL;
+                ftdf_tx_pending_list[n].addr_mode = FTDF_NO_ADDRESS;
+                ftdf_tx_pending_list[n].pan_id = 0xFFFF;
+                ftdf_init_queue(&ftdf_tx_pending_list[n].queue);
 
-        FTDF_txPendingTimerList[ n ].free = FTDF_TRUE;
-        FTDF_txPendingTimerList[ n ].next = NULL;
-    }
+                ftdf_tx_pending_timer_list[n].free = FTDF_TRUE;
+                ftdf_tx_pending_timer_list[n].next = NULL;
+        }
 
-    FTDF_txPendingTimerHead = FTDF_txPendingTimerList;
-    FTDF_txPendingTimerTime = 0;
+        ftdf_tx_pending_timer_head = ftdf_tx_pending_timer_list;
+        ftdf_tx_pending_timer_time = 0;
 #endif /* !FTDF_LITE */
 #ifndef FTDF_PHY_API
-    FTDF_reqCurrent         = NULL;
+        ftdf_req_current = NULL;
 #endif
 }
 
 #ifndef FTDF_LITE
-void FTDF_initQueue(FTDF_Queue *queue)
+void ftdf_init_queue(ftdf_queue_t *queue)
 {
-    queue->head.next = (FTDF_Buffer *) &queue->tail;
-    queue->head.prev = NULL;
-    queue->tail.next = NULL;
-    queue->tail.prev = (FTDF_Buffer *) &queue->head;
+        queue->head.next = (ftdf_buffer_t*)&queue->tail;
+        queue->head.prev = NULL;
+        queue->tail.next = NULL;
+        queue->tail.prev = (ftdf_buffer_t*)&queue->head;
 }
 
-void FTDF_queueBufferHead(FTDF_Buffer *buffer, FTDF_Queue *queue)
+void ftdf_queue_buffer_head(ftdf_buffer_t *buffer, ftdf_queue_t *queue)
 {
-    FTDF_Buffer *next = queue->head.next;
+        ftdf_buffer_t *next = queue->head.next;
 
-    queue->head.next    = buffer;
-    next->header.prev   = buffer;
-    buffer->header.next = next;
-    buffer->header.prev = (FTDF_Buffer *) &queue->head;
+        queue->head.next = buffer;
+        next->header.prev = buffer;
+        buffer->header.next = next;
+        buffer->header.prev = (ftdf_buffer_t*)&queue->head;
 }
 
-FTDF_Buffer *FTDF_dequeueBufferTail(FTDF_Queue *queue)
+ftdf_buffer_t *ftdf_dequeue_buffer_tail(ftdf_queue_t *queue)
 {
-    FTDF_Buffer *buffer = queue->tail.prev;
+        ftdf_buffer_t *buffer = queue->tail.prev;
 
-    if (buffer->header.prev == NULL)
-    {
-        return NULL;
-    }
-
-    queue->tail.prev                 = buffer->header.prev;
-    buffer->header.prev->header.next = (FTDF_Buffer *) &queue->tail;
-
-    return buffer;
-}
-
-FTDF_Status FTDF_queueReqHead(FTDF_MsgBuffer *request, FTDF_Queue *queue)
-{
-    FTDF_Buffer *buffer = FTDF_dequeueBufferTail(&FTDF_freeQueue);
-
-    if (buffer == NULL)
-    {
-        return FTDF_TRANSACTION_OVERFLOW;
-    }
-
-    FTDF_Buffer *next = queue->head.next;
-
-    queue->head.next    = buffer;
-    next->header.prev   = buffer;
-    buffer->header.next = next;
-    buffer->header.prev = (FTDF_Buffer *) &queue->head;
-    buffer->request     = request;
-
-    return FTDF_SUCCESS;
-}
-
-FTDF_MsgBuffer *FTDF_dequeueReqTail(FTDF_Queue *queue)
-{
-    FTDF_Buffer *buffer = queue->tail.prev;
-
-    if (buffer->header.prev == NULL)
-    {
-        return NULL;
-    }
-
-    queue->tail.prev                 = buffer->header.prev;
-    buffer->header.prev->header.next = (FTDF_Buffer *) &queue->tail;
-
-    FTDF_MsgBuffer *request = buffer->request;
-
-    FTDF_queueBufferHead(buffer, &FTDF_freeQueue);
-
-    return request;
-}
-
-FTDF_MsgBuffer *FTDF_dequeueByHandle(FTDF_Handle handle, FTDF_Queue *queue)
-{
-    FTDF_Buffer *buffer = queue->head.next;
-
-    while (buffer->header.next != NULL)
-    {
-        if (buffer->request &&
-            buffer->request->msgId == FTDF_DATA_REQUEST &&
-            ((FTDF_DataRequest *) buffer->request)->msduHandle == handle)
-        {
-            buffer->header.prev->header.next = buffer->header.next;
-            buffer->header.next->header.prev = buffer->header.prev;
-
-            FTDF_MsgBuffer *request = buffer->request;
-
-            FTDF_queueBufferHead(buffer, &FTDF_freeQueue);
-
-            return request;
+        if (buffer->header.prev == NULL) {
+                return NULL;
         }
 
-        buffer = buffer->header.next;
-    }
+        queue->tail.prev = buffer->header.prev;
+        buffer->header.prev->header.next = (ftdf_buffer_t*)&queue->tail;
 
-    return NULL;
+        return buffer;
 }
 
-FTDF_MsgBuffer *FTDF_dequeueByRequest(FTDF_MsgBuffer *request, FTDF_Queue *queue)
+ftdf_status_t ftdf_queue_req_head(ftdf_msg_buffer_t *request, ftdf_queue_t *queue)
 {
-    FTDF_Buffer *buffer = queue->head.next;
+        ftdf_buffer_t *buffer = ftdf_dequeue_buffer_tail(&ftdf_free_queue);
 
-    while (buffer->header.next != NULL)
-    {
-        if (buffer->request == request)
-        {
-            buffer->header.prev->header.next = buffer->header.next;
-            buffer->header.next->header.prev = buffer->header.prev;
-
-            FTDF_MsgBuffer *req = buffer->request;
-
-            FTDF_queueBufferHead(buffer, &FTDF_freeQueue);
-
-            return req;
+        if (buffer == NULL) {
+                return FTDF_TRANSACTION_OVERFLOW;
         }
 
-        buffer = buffer->header.next;
-    }
+        ftdf_buffer_t *next = queue->head.next;
 
-    return NULL;
+        queue->head.next = buffer;
+        next->header.prev = buffer;
+        buffer->header.next = next;
+        buffer->header.prev = (ftdf_buffer_t*)&queue->head;
+        buffer->request = request;
+
+        return FTDF_SUCCESS;
 }
 
-FTDF_Boolean FTDF_isQueueEmpty(FTDF_Queue *queue)
+ftdf_msg_buffer_t *ftdf_dequeue_req_tail(ftdf_queue_t *queue)
 {
-    if (queue->head.next->header.next == NULL)
-    {
-        return FTDF_TRUE;
-    }
-    else
-    {
-        return FTDF_FALSE;
-    }
+        ftdf_buffer_t *buffer = queue->tail.prev;
+
+        if (buffer->header.prev == NULL) {
+                return NULL;
+        }
+
+        queue->tail.prev = buffer->header.prev;
+        buffer->header.prev->header.next = (ftdf_buffer_t*)&queue->tail;
+
+        ftdf_msg_buffer_t *request = buffer->request;
+
+        ftdf_queue_buffer_head(buffer, &ftdf_free_queue);
+
+        return request;
 }
 
-static FTDF_PendingTL *FTDF_findFreePendingTimer(void)
+ftdf_msg_buffer_t *ftdf_dequeue_by_handle(ftdf_handle_t handle, ftdf_queue_t *queue)
 {
-    uint8_t i;
+        ftdf_buffer_t *buffer = queue->head.next;
 
-    for (i = 0; i < FTDF_NR_OF_REQ_BUFFERS; i++)
-    {
-        if (FTDF_txPendingTimerList[ i ].free == FTDF_TRUE)
-        {
-            break;
-        }
-    }
+        while (buffer->header.next != NULL) {
+                if (buffer->request && buffer->request->msg_id == FTDF_DATA_REQUEST &&
+                        ((ftdf_data_request_t*)buffer->request)->msdu_handle == handle) {
+                        buffer->header.prev->header.next = buffer->header.next;
+                        buffer->header.next->header.prev = buffer->header.prev;
 
-    return &FTDF_txPendingTimerList[ i ];
-}
+                        ftdf_msg_buffer_t *request = buffer->request;
 
-void FTDF_addTxPendingTimer(FTDF_MsgBuffer *request, uint8_t pendListNr, FTDF_Time delta, void (* func)(
-                                FTDF_PendingTL *))
-{
-    FTDF_criticalVar();
-    FTDF_enterCritical();
+                        ftdf_queue_buffer_head(buffer, &ftdf_free_queue);
 
-    FTDF_PendingTL *ptr       = FTDF_txPendingTimerHead;
-    FTDF_Time       timestamp = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-
-    if (ptr->free == FTDF_FALSE)
-    {
-        while (ptr)
-        {
-            ptr->delta -= timestamp - FTDF_txPendingTimerLT;
-            ptr         = ptr->next;
-        }
-    }
-
-    FTDF_txPendingTimerLT = timestamp;
-    ptr                   = FTDF_txPendingTimerHead;
-
-    if (ptr->free == FTDF_TRUE)
-    {
-        ptr->free       = FTDF_FALSE;
-        ptr->next       = NULL;
-        ptr->request    = request;
-        ptr->delta      = delta;
-        ptr->pendListNr = pendListNr;
-        ptr->func       = func;
-
-        FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIMETHR, delta + timestamp);
-        FTDF_txPendingTimerTime = delta + timestamp;
-        FTDF_exitCritical();
-        return;
-    }
-
-    if (ptr->delta > delta)
-    {
-        FTDF_txPendingTimerHead             = FTDF_findFreePendingTimer();
-        FTDF_txPendingTimerHead->free       = FTDF_FALSE;
-        FTDF_txPendingTimerHead->next       = ptr;
-        FTDF_txPendingTimerHead->request    = request;
-        FTDF_txPendingTimerHead->delta      = delta;
-        FTDF_txPendingTimerHead->pendListNr = pendListNr;
-        FTDF_txPendingTimerHead->func       = func;
-
-        FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIMETHR, delta + timestamp);
-        FTDF_txPendingTimerTime = delta + timestamp;
-        FTDF_exitCritical();
-        return;
-    }
-    else if (ptr->delta == delta)
-    {
-        delta++;
-    }
-
-    FTDF_PendingTL *prev;
-
-    while (ptr->next)
-    {
-        prev = ptr;
-        ptr  = ptr->next;
-
-        if (ptr->delta == delta)
-        {
-            delta++;
-        }
-
-        if (prev->delta < delta && ptr->delta > delta)
-        {
-            prev->next       = FTDF_findFreePendingTimer();
-            prev->next->next = ptr;
-            ptr              = prev->next;
-            ptr->free        = FTDF_FALSE;
-            ptr->request     = request;
-            ptr->delta       = delta;
-            ptr->pendListNr  = pendListNr;
-            ptr->func        = func;
-
-            FTDF_exitCritical();
-            return;
-        }
-    }
-
-    ptr->next       = FTDF_findFreePendingTimer();
-    ptr             = ptr->next;
-    ptr->free       = FTDF_FALSE;
-    ptr->next       = NULL;
-    ptr->request    = request;
-    ptr->delta      = delta;
-    ptr->pendListNr = pendListNr;
-    ptr->func       = func;
-
-    FTDF_exitCritical();
-}
-
-void FTDF_removeTxPendingTimer(FTDF_MsgBuffer *request)
-{
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-
-    FTDF_PendingTL *ptr       = FTDF_txPendingTimerHead;
-    FTDF_Time       timestamp = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-
-    if (ptr->free == FTDF_TRUE)
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIMETHR, timestamp - 1);
-        FTDF_txPendingTimerTime = timestamp - 1;
-        FTDF_exitCritical();
-        return;
-    }
-
-    while (ptr)
-    {
-        ptr->delta -= timestamp - FTDF_txPendingTimerLT;
-        ptr         = ptr->next;
-    }
-
-    FTDF_txPendingTimerLT = timestamp;
-    ptr                   = FTDF_txPendingTimerHead;
-
-    if (!request || ptr->request == request)
-    {
-        if (ptr->next)
-        {
-            FTDF_PendingTL *temp = ptr;
-
-            if (ptr->next->delta < 75)
-            {
-                while (temp)
-                {
-                    temp->delta += 75;
-                    temp         = temp->next;
+                        return request;
                 }
-            }
 
-            FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIMETHR, timestamp + ptr->next->delta);
-            FTDF_txPendingTimerTime = timestamp + ptr->next->delta;
-            FTDF_txPendingTimerHead = ptr->next;
-
-            ptr->free               = FTDF_TRUE;
-            ptr->next               = NULL;
-        }
-        else
-        {
-            FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIMETHR, timestamp - 1);
-            FTDF_txPendingTimerTime = timestamp - 1;
-
-            ptr->free = FTDF_TRUE;
-            ptr->next = NULL;
+                buffer = buffer->header.next;
         }
 
-        FTDF_exitCritical();
-
-        if (!request)
-        {
-            if (ptr->func)
-            {
-                ptr->func(ptr);
-            }
-        }
-
-        return;
-    }
-
-    FTDF_PendingTL *prev = ptr;
-
-    while (ptr->next)
-    {
-        prev = ptr;
-        ptr  = ptr->next;
-
-        if (ptr->request == request)
-        {
-            prev->next = ptr->next;
-            ptr->free  = FTDF_TRUE;
-            ptr->next  = NULL;
-
-            FTDF_exitCritical();
-            return;
-        }
-    }
-
-    FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIMETHR, timestamp - 1);
-    FTDF_txPendingTimerTime = timestamp - 1;
-    FTDF_exitCritical();
+        return NULL;
 }
 
-void FTDF_restoreTxPendingTimer(void)
+ftdf_msg_buffer_t *ftdf_dequeue_by_request(ftdf_msg_buffer_t *request, ftdf_queue_t *queue)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_SYMBOLTIMETHR, FTDF_txPendingTimerTime);
+        ftdf_buffer_t *buffer = queue->head.next;
+
+        while (buffer->header.next != NULL) {
+                if (buffer->request == request) {
+                        buffer->header.prev->header.next = buffer->header.next;
+                        buffer->header.next->header.prev = buffer->header.prev;
+
+                        ftdf_msg_buffer_t *req = buffer->request;
+
+                        ftdf_queue_buffer_head(buffer, &ftdf_free_queue);
+
+                        return req;
+                }
+
+                buffer = buffer->header.next;
+        }
+
+        return NULL;
 }
 
-FTDF_Boolean FTDF_getTxPendingTimerHead(FTDF_Time *time)
+ftdf_boolean_t ftdf_is_queue_empty(ftdf_queue_t *queue)
 {
-    FTDF_PendingTL *ptr = FTDF_txPendingTimerHead;
+        if (queue->head.next->header.next == NULL) {
+                return FTDF_TRUE;
+        } else {
+                return FTDF_FALSE;
+        }
+}
 
-    if (ptr->free == FTDF_TRUE)
-    {
-        return FTDF_FALSE;
-    }
+static ftdf_pending_tl_t *ftdf_find_free_pending_timer(void)
+{
+        uint8_t i;
 
-    *time = FTDF_txPendingTimerTime;
-    return FTDF_TRUE;
+        for (i = 0; i < FTDF_NR_OF_REQ_BUFFERS; i++) {
+                if (ftdf_tx_pending_timer_list[i].free == FTDF_TRUE) {
+                        break;
+                }
+        }
+
+        return &ftdf_tx_pending_timer_list[i];
+}
+
+void ftdf_add_tx_pending_timer(ftdf_msg_buffer_t *request, uint8_t pendListNr, ftdf_time_t delta,
+                               void (*func)(ftdf_pending_tl_t*))
+{
+        ftdf_critical_var();
+        ftdf_enter_critical();
+
+        ftdf_pending_tl_t *ptr = ftdf_tx_pending_timer_head;
+        ftdf_time_t timestamp = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG,
+                SYMBOLTIMESNAPSHOTVAL);
+
+        if (ptr->free == FTDF_FALSE) {
+                while (ptr) {
+                        ptr->delta -= timestamp - ftdf_tx_pending_timer_lt;
+                        ptr = ptr->next;
+                }
+        }
+
+        ftdf_tx_pending_timer_lt = timestamp;
+        ptr = ftdf_tx_pending_timer_head;
+
+        if (ptr->free == FTDF_TRUE) {
+                ptr->free = FTDF_FALSE;
+                ptr->next = NULL;
+                ptr->request = request;
+                ptr->delta = delta;
+                ptr->pend_list_nr = pendListNr;
+                ptr->func = func;
+
+                REG_SETF(FTDF, FTDF_SYMBOLTIMETHR_REG, SYMBOLTIMETHR, delta + timestamp);
+                ftdf_tx_pending_timer_time = delta + timestamp;
+                ftdf_exit_critical();
+                return;
+        }
+
+        if (ptr->delta > delta) {
+                ftdf_tx_pending_timer_head = ftdf_find_free_pending_timer();
+                ftdf_tx_pending_timer_head->free = FTDF_FALSE;
+                ftdf_tx_pending_timer_head->next = ptr;
+                ftdf_tx_pending_timer_head->request = request;
+                ftdf_tx_pending_timer_head->delta = delta;
+                ftdf_tx_pending_timer_head->pend_list_nr = pendListNr;
+                ftdf_tx_pending_timer_head->func = func;
+
+                REG_SETF(FTDF, FTDF_SYMBOLTIMETHR_REG, SYMBOLTIMETHR, delta + timestamp);
+                ftdf_tx_pending_timer_time = delta + timestamp;
+                ftdf_exit_critical();
+
+                return;
+        } else if (ptr->delta == delta) {
+                delta++;
+        }
+
+        ftdf_pending_tl_t *prev;
+
+        while (ptr->next) {
+                prev = ptr;
+                ptr = ptr->next;
+
+                if (ptr->delta == delta) {
+                        delta++;
+                }
+
+                if (prev->delta < delta && ptr->delta > delta) {
+                        prev->next = ftdf_find_free_pending_timer();
+                        prev->next->next = ptr;
+                        ptr = prev->next;
+                        ptr->free = FTDF_FALSE;
+                        ptr->request = request;
+                        ptr->delta = delta;
+                        ptr->pend_list_nr = pendListNr;
+                        ptr->func = func;
+
+                        ftdf_exit_critical();
+
+                        return;
+                }
+        }
+
+        ptr->next = ftdf_find_free_pending_timer();
+        ptr = ptr->next;
+        ptr->free = FTDF_FALSE;
+        ptr->next = NULL;
+        ptr->request = request;
+        ptr->delta = delta;
+        ptr->pend_list_nr = pendListNr;
+        ptr->func = func;
+
+        ftdf_exit_critical();
+}
+
+void ftdf_remove_tx_pending_timer(ftdf_msg_buffer_t *request)
+{
+        ftdf_critical_var();
+        ftdf_enter_critical();
+
+        ftdf_pending_tl_t *ptr = ftdf_tx_pending_timer_head;
+        ftdf_time_t timestamp =
+            REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+
+        if (ptr->free == FTDF_TRUE) {
+                REG_SETF(FTDF, FTDF_SYMBOLTIMETHR_REG, SYMBOLTIMETHR, timestamp - 1);
+                ftdf_tx_pending_timer_time = timestamp - 1;
+                ftdf_exit_critical();
+
+                return;
+        }
+
+        while (ptr) {
+                ptr->delta -= timestamp - ftdf_tx_pending_timer_lt;
+                ptr = ptr->next;
+        }
+
+        ftdf_tx_pending_timer_lt = timestamp;
+        ptr = ftdf_tx_pending_timer_head;
+
+        if (!request || ptr->request == request) {
+                if (ptr->next) {
+                        ftdf_pending_tl_t *temp = ptr;
+
+                        if (ptr->next->delta < 75) {
+                                while (temp) {
+                                        temp->delta += 75;
+                                        temp = temp->next;
+                                }
+                        }
+
+                        REG_SETF(FTDF, FTDF_SYMBOLTIMETHR_REG, SYMBOLTIMETHR,
+                                timestamp + ptr->next->delta);
+                        ftdf_tx_pending_timer_time = timestamp + ptr->next->delta;
+                        ftdf_tx_pending_timer_head = ptr->next;
+
+                        ptr->free = FTDF_TRUE;
+                        ptr->next = NULL;
+                } else {
+                        REG_SETF(FTDF, FTDF_SYMBOLTIMETHR_REG, SYMBOLTIMETHR, timestamp - 1);
+                        ftdf_tx_pending_timer_time = timestamp - 1;
+
+                        ptr->free = FTDF_TRUE;
+                        ptr->next = NULL;
+                }
+
+                ftdf_exit_critical();
+
+                if (!request) {
+                        if (ptr->func) {
+                                ptr->func(ptr);
+                        }
+                }
+
+                return;
+        }
+
+        ftdf_pending_tl_t *prev = ptr;
+
+        while (ptr->next) {
+                prev = ptr;
+                ptr = ptr->next;
+
+                if (ptr->request == request) {
+                        prev->next = ptr->next;
+                        ptr->free = FTDF_TRUE;
+                        ptr->next = NULL;
+
+                        ftdf_exit_critical();
+
+                        return;
+                }
+        }
+
+        REG_SETF(FTDF, FTDF_SYMBOLTIMETHR_REG, SYMBOLTIMETHR, timestamp - 1);
+        ftdf_tx_pending_timer_time = timestamp - 1;
+        ftdf_exit_critical();
+}
+
+void ftdf_restore_tx_pending_timer(void)
+{
+        REG_SETF(FTDF, FTDF_SYMBOLTIMETHR_REG, SYMBOLTIMETHR, ftdf_tx_pending_timer_time);
+}
+
+ftdf_boolean_t ftdf_get_tx_pending_timer_head(ftdf_time_t *time)
+{
+        ftdf_pending_tl_t *ptr = ftdf_tx_pending_timer_head;
+
+        if (ptr->free == FTDF_TRUE) {
+                return FTDF_FALSE;
+        }
+
+        *time = ftdf_tx_pending_timer_time;
+
+        return FTDF_TRUE;
 }
 
 #ifndef FTDF_NO_TSCH
-void FTDF_processKeepAliveTimerExp(FTDF_PendingTL *ptr)
-{
-    FTDF_RemoteRequest *remoteRequest = (FTDF_RemoteRequest *)ptr->request;
+void ftdf_process_keep_alive_timer_exp(ftdf_pending_tl_t *ptr) {
+        ftdf_remote_request_t *remote_request = (ftdf_remote_request_t*)ptr->request;
 
-    remoteRequest->msgId    = FTDF_REMOTE_REQUEST;
-    remoteRequest->remoteId = FTDF_REMOTE_KEEP_ALIVE;
-    remoteRequest->dstAddr  = FTDF_neighborTable[ ptr->pendListNr ].dstAddr;
+        remote_request->msg_id = FTDF_REMOTE_REQUEST;
+        remote_request->remote_id = FTDF_REMOTE_KEEP_ALIVE;
+        remote_request->dst_addr = ftdf_neighbor_table[ptr->pend_list_nr].dst_addr;
 
-    FTDF_processRemoteRequest(remoteRequest);
+        ftdf_process_remote_request(remote_request);
 }
 #endif /* FTDF_NO_TSCH */
 
-void FTDF_sendTransactionExpired(FTDF_PendingTL *ptr)
+void ftdf_send_transaction_expired(ftdf_pending_tl_t *ptr)
 {
-    FTDF_MsgBuffer *req =
-        FTDF_dequeueByRequest(ptr->request, &FTDF_txPendingList[ ptr->pendListNr ].queue);
+        ftdf_msg_buffer_t *req =
+                ftdf_dequeue_by_request(ptr->request,
+                        &ftdf_tx_pending_list[ptr->pend_list_nr].queue);
 
-    if (!req)
-    {
-        return;
-    }
-
-    if (FTDF_isQueueEmpty(&FTDF_txPendingList[ ptr->pendListNr ].queue))
-    {
-#ifndef FTDF_NO_TSCH
-
-        if (FTDF_pib.tschEnabled)
-        {
-            FTDF_txPendingList[ ptr->pendListNr ].addr.shortAddress = 0xfffe;
+        if (!req) {
+                return;
         }
-        else
+
+        if (ftdf_is_queue_empty(&ftdf_tx_pending_list[ptr->pend_list_nr].queue)) {
+#ifndef FTDF_NO_TSCH
+                if (ftdf_pib.tsch_enabled) {
+                        ftdf_tx_pending_list[ptr->pend_list_nr].addr.short_address = 0xfffe;
+                } else
 #endif /* FTDF_NO_TSCH */
-        {
+                {
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
-
-            if (FTDF_txPendingList[ ptr->pendListNr ].addrMode == FTDF_SHORT_ADDRESS)
-            {
-                uint8_t entry, shortAddrIdx;
-                FTDF_Boolean found = FTDF_fpprLookupShortAddress(
-                                         FTDF_txPendingList[ ptr->pendListNr ].addr.shortAddress, &entry,
-                                         &shortAddrIdx);
-                ASSERT_WARNING(found);
-                FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
+                if (ftdf_tx_pending_list[ptr->pend_list_nr].addr_mode == FTDF_SHORT_ADDRESS) {
+                        uint8_t entry, short_addr_idx;
+                        ftdf_boolean_t found = ftdf_fppr_lookup_short_address(
+                            ftdf_tx_pending_list[ptr->pend_list_nr].addr.short_address, &entry,
+                            &short_addr_idx);
+                        ASSERT_WARNING(found);
+                        ftdf_fppr_set_short_address_valid(entry, short_addr_idx, FTDF_FALSE);
+            } else if (ftdf_tx_pending_list[ptr->pend_list_nr].addr_mode == FTDF_EXTENDED_ADDRESS) {
+                    uint8_t entry;
+                    ftdf_boolean_t found = ftdf_fppr_lookup_ext_address(
+                            ftdf_tx_pending_list[ptr->pend_list_nr].addr.ext_address, &entry);
+                    ASSERT_WARNING(found);
+                    ftdf_fppr_set_ext_address_valid(entry, FTDF_FALSE);
+            } else {
+                    ASSERT_WARNING(0);
             }
-            else if (FTDF_txPendingList[ ptr->pendListNr ].addrMode == FTDF_EXTENDED_ADDRESS)
-            {
-                uint8_t entry;
-                FTDF_Boolean found = FTDF_fpprLookupExtAddress(
-                                         FTDF_txPendingList[ ptr->pendListNr ].addr.extAddress, &entry);
-                ASSERT_WARNING(found);
-                FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
-            }
-            else
-            {
-                ASSERT_WARNING(0);
-            }
-
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
-            FTDF_txPendingList[ ptr->pendListNr ].addrMode = FTDF_NO_ADDRESS;
+                        ftdf_tx_pending_list[ptr->pend_list_nr].addr_mode = FTDF_NO_ADDRESS;
+                }
         }
-    }
 
-    switch (req->msgId)
-    {
-    case FTDF_DATA_REQUEST:
-    {
-        FTDF_DataRequest *dataRequest = (FTDF_DataRequest *)req;
+        switch (req->msg_id) {
+        case FTDF_DATA_REQUEST:
+        {
+                ftdf_data_request_t *data_request = (ftdf_data_request_t*)req;
 
-        FTDF_sendDataConfirm(dataRequest, FTDF_TRANSACTION_EXPIRED, 0, 0, 0, NULL);
+                ftdf_send_data_confirm(data_request, FTDF_TRANSACTION_EXPIRED, 0, 0, 0, NULL);
 
-        break;
-    }
+                break;
+        }
+        case FTDF_ASSOCIATE_REQUEST:
+        {
+                ftdf_associate_request_t* associate_request = (ftdf_associate_request_t*)req;
 
-    case FTDF_ASSOCIATE_REQUEST:
-    {
-        FTDF_AssociateRequest *associateRequest = (FTDF_AssociateRequest *)req;
+                ftdf_send_associate_confirm(associate_request, FTDF_TRANSACTION_EXPIRED, 0xffff);
 
-        FTDF_sendAssociateConfirm(associateRequest, FTDF_TRANSACTION_EXPIRED, 0xffff);
+                break;
+        }
+        case FTDF_ASSOCIATE_RESPONSE:
+        {
+                ftdf_associate_response_t *assoc_resp = (ftdf_associate_response_t*)req;
 
-        break;
-    }
+                ftdf_address_t src_addr, dst_addr;
+                src_addr.ext_address = ftdf_pib.ext_address;
+                dst_addr.ext_address = assoc_resp->device_address;
 
-    case FTDF_ASSOCIATE_RESPONSE:
-    {
-        FTDF_AssociateResponse *assocResp = (FTDF_AssociateResponse *)req;
+                ftdf_send_comm_status_indication(req, FTDF_TRANSACTION_EXPIRED,
+                                                 ftdf_pib.pan_id,
+                                                 FTDF_EXTENDED_ADDRESS,
+                                                 src_addr,
+                                                 FTDF_EXTENDED_ADDRESS,
+                                                 dst_addr,
+                                                 assoc_resp->security_level,
+                                                 assoc_resp->key_id_mode,
+                                                 assoc_resp->key_source,
+                                                 assoc_resp->key_index);
 
-        FTDF_Address srcAddr, dstAddr;
-        srcAddr.extAddress = FTDF_pib.extAddress;
-        dstAddr.extAddress = assocResp->deviceAddress;
+                break;
+        }
+        case FTDF_DISASSOCIATE_REQUEST:
+        {
+                ftdf_disassociate_request_t* dis_req = (ftdf_disassociate_request_t*)req;
 
-        FTDF_sendCommStatusIndication(req, FTDF_TRANSACTION_EXPIRED,
-                                      FTDF_pib.PANId,
-                                      FTDF_EXTENDED_ADDRESS,
-                                      srcAddr,
-                                      FTDF_EXTENDED_ADDRESS,
-                                      dstAddr,
-                                      assocResp->securityLevel,
-                                      assocResp->keyIdMode,
-                                      assocResp->keySource,
-                                      assocResp->keyIndex);
+                ftdf_send_disassociate_confirm(dis_req, FTDF_TRANSACTION_EXPIRED);
 
-        break;
-    }
+                break;
+        }
+        case FTDF_BEACON_REQUEST:
+        {
+                ftdf_beacon_request_t* beacon_request = (ftdf_beacon_request_t*)req;
 
-    case FTDF_DISASSOCIATE_REQUEST:
-    {
-        FTDF_DisassociateRequest *disReq = (FTDF_DisassociateRequest *)req;
+                ftdf_send_beacon_confirm(beacon_request, FTDF_TRANSACTION_EXPIRED);
 
-        FTDF_sendDisassociateConfirm(disReq, FTDF_TRANSACTION_EXPIRED);
-
-        break;
-    }
-
-    case FTDF_BEACON_REQUEST:
-    {
-        FTDF_BeaconRequest *beaconRequest = (FTDF_BeaconRequest *)req;
-
-        FTDF_sendBeaconConfirm(beaconRequest, FTDF_TRANSACTION_EXPIRED);
-
-        break;
-    }
-    }
+                break;
+        }
+        }
 }
 
 #ifndef FTDF_NO_TSCH
-void FTDF_resetKeepAliveTimer(FTDF_ShortAddress dstAddr)
+void ftdf_reset_keep_alive_timer(ftdf_short_address_t dst_addr)
 {
-    uint8_t n;
+        uint8_t n;
 
-    for (n = 0; n < FTDF_NR_OF_NEIGHBORS; n++)
-    {
-        if (FTDF_neighborTable[ n ].dstAddr == dstAddr)
-        {
-            break;
+        for (n = 0; n < FTDF_NR_OF_NEIGHBORS; n++) {
+                if (ftdf_neighbor_table[n].dst_addr == dst_addr) {
+                        break;
+                }
         }
-    }
 
-    if (n == FTDF_NR_OF_NEIGHBORS)
-    {
-        return;
-    }
+        if (n == FTDF_NR_OF_NEIGHBORS) {
+                return;
+        }
 
-    FTDF_removeTxPendingTimer((FTDF_MsgBuffer *)&FTDF_neighborTable[ n ].msg);
+        ftdf_remove_tx_pending_timer((ftdf_msg_buffer_t*)&ftdf_neighbor_table[n].msg);
 
-    FTDF_Time tsTimeslotLength = (FTDF_Time) FTDF_pib.timeslotTemplate.tsTimeslotLength / 16;
-    FTDF_Time delta            = tsTimeslotLength * FTDF_neighborTable[ n ].period;
+        ftdf_time_t ts_timeslot_length = (ftdf_time_t)ftdf_pib.timeslot_template.ts_timeslot_length
+                / 16;
+        ftdf_time_t delta = ts_timeslot_length * ftdf_neighbor_table[n].period;
 
-    FTDF_addTxPendingTimer((FTDF_MsgBuffer *)&FTDF_neighborTable[ n ].msg, n, delta, FTDF_processKeepAliveTimerExp);
+        ftdf_add_tx_pending_timer((ftdf_msg_buffer_t*)&ftdf_neighbor_table[n].msg, n, delta,
+                ftdf_process_keep_alive_timer_exp);
 }
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
 
-void FTDF_enableTransparentMode(FTDF_Boolean  enable,
-                                FTDF_Bitmap32 options)
+void ftdf_enable_transparent_mode(ftdf_boolean_t enable,
+                                  ftdf_bitmap32_t options)
 {
 #ifndef FTDF_LITE
-
-    if (FTDF_pib.leEnabled == FTDF_TRUE ||
-        FTDF_pib.tschEnabled == FTDF_TRUE)
-    {
-        return;
-    }
-
+        if ((ftdf_pib.le_enabled == FTDF_TRUE) || (ftdf_pib.tsch_enabled == FTDF_TRUE)) {
+                return;
+        }
 #endif /* !FTDF_LITE */
 
-    FTDF_transparentMode        = enable;
-    FTDF_transparentModeOptions = options;
 
-    if (enable)
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSFRMTYPE,
-                       (options & FTDF_TRANSPARENT_PASS_ALL_FRAME_TYPES));
-        FTDF_SET_FIELD(ON_OFF_REGMAP_DISRXACKREQUESTCA, (options & FTDF_TRANSPARENT_AUTO_ACK ? 0 : 1));
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSCRCERROR, (options & FTDF_TRANSPARENT_PASS_CRC_ERROR ? 1 : 0));
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSRESFRAMEVERSION,
-                       (options & FTDF_TRANSPARENT_PASS_ALL_FRAME_VERSION ? 1 : 0));
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSWRONGDPANID,
-                       (options & FTDF_TRANSPARENT_PASS_ALL_PAN_ID ? 1 : 0));
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSWRONGDADDR, (options & FTDF_TRANSPARENT_PASS_ALL_ADDR ? 1 : 0));
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSBEACONWRONGPANID,
-                       (options & FTDF_TRANSPARENT_PASS_ALL_BEACON ? 1 : 0));
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSTOPANCOORDINATOR,
-                       (options & FTDF_TRANSPARENT_PASS_ALL_NO_DEST_ADDR ? 1 : 0));
-    }
-    else
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSFRMTYPE, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_DISRXACKREQUESTCA, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSCRCERROR, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSRESFRAMEVERSION, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSWRONGDPANID, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSWRONGDADDR, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSBEACONWRONGPANID, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACALWAYSPASSTOPANCOORDINATOR, 0);
-    }
+        ftdf_transparent_mode = enable;
+        ftdf_transparent_mode_options = options;
+
+        uint32_t tmp = FTDF->FTDF_RX_CONTROL_0_REG;
+
+        if (enable) {
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSFRMTYPE, tmp,
+                        (options & FTDF_TRANSPARENT_PASS_ALL_FRAME_TYPES));
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, DISRXACKREQUESTCA, tmp,
+                        (options & FTDF_TRANSPARENT_AUTO_ACK ? 0 : 1));
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSCRCERROR, tmp,
+                        (options & FTDF_TRANSPARENT_PASS_CRC_ERROR ? 1 : 0));
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSRESFRAMEVERSION, tmp,
+                        (options & FTDF_TRANSPARENT_PASS_ALL_FRAME_VERSION ? 1 : 0));
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSWRONGDPANID, tmp,
+                        (options & FTDF_TRANSPARENT_PASS_ALL_PAN_ID ? 1 : 0));
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSWRONGDADDR, tmp,
+                        (options & FTDF_TRANSPARENT_PASS_ALL_ADDR ? 1 : 0));
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSBEACONWRONGPANID, tmp,
+                        (options & FTDF_TRANSPARENT_PASS_ALL_BEACON ? 1 : 0));
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSTOPANCOORDINATOR, tmp,
+                        (options & FTDF_TRANSPARENT_PASS_ALL_NO_DEST_ADDR ? 1 : 0));
+        } else {
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSFRMTYPE, tmp, 0);
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, DISRXACKREQUESTCA, tmp, 0);
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSCRCERROR, tmp, 0);
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSRESFRAMEVERSION, tmp, 0);
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSWRONGDPANID, tmp, 0);
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSWRONGDADDR, tmp, 0);
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSBEACONWRONGPANID, tmp, 0);
+                REG_SET_FIELD(FTDF, FTDF_RX_CONTROL_0_REG, MACALWAYSPASSTOPANCOORDINATOR, tmp, 0);
+        }
+
+        FTDF->FTDF_RX_CONTROL_0_REG = tmp;
 }
 
 #if FTDF_DBG_BUS_ENABLE
-void FTDF_checkDbgMode(void)
+void ftdf_check_dbg_mode(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_DBG_CONTROL, FTDF_dbgMode);
-
-    if (FTDF_dbgMode)
-    {
-        FTDF_DBG_BUS_GPIO_CONFIG();
-    }
+        REG_SET_MASKED(FTDF, FTDF_DEBUGCONTROL_REG, 0xFF, ftdf_dbg_mode);
+        if (ftdf_dbg_mode) {
+                FTDF_DBG_BUS_GPIO_CONFIG();
+        }
 }
 
-void FTDF_setDbgMode(FTDF_DbgMode dbgMode)
+void ftdf_set_dbg_mode(ftdf_dbg_mode_t dbg_mode)
 {
-    FTDF_dbgMode = dbgMode;
-    FTDF_checkDbgMode();
+        ftdf_dbg_mode = dbg_mode;
+        ftdf_check_dbg_mode();
 }
 #endif /* FTDF_DBG_BUS_ENABLE */
 
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_CSL
-void FTDF_setPeerCslTiming(FTDF_IEList *headerIEList, FTDF_Time timeStamp)
+void ftdf_set_peer_csl_timing(ftdf_ie_list_t *header_ie_list, ftdf_time_t time_stamp)
 {
-    if (FTDF_reqCurrent->msgId != FTDF_DATA_REQUEST)
-    {
-        // Only use the CSL timing of data frame acks
-        return;
-    }
-
-    FTDF_DataRequest *dataRequest = (FTDF_DataRequest *) FTDF_reqCurrent;
-    FTDF_ShortAddress dstAddr     = dataRequest->dstAddr.shortAddress;
-
-    if (dataRequest->dstAddrMode != FTDF_SHORT_ADDRESS ||
-        dstAddr == 0xffff)
-    {
-        return;
-    }
-
-    int n;
-
-    // Search for an existing entry
-    for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++)
-    {
-        if (FTDF_peerCslTiming[ n ].addr == dstAddr)
-        {
-            break;
-        }
-    }
-
-    if (headerIEList == NULL)
-    {
-        if (n < FTDF_NR_OF_CSL_PEERS)
-        {
-            // Delete entry
-            FTDF_peerCslTiming[ n ].addr = 0xffff;
+        if (ftdf_req_current->msg_id != FTDF_DATA_REQUEST) {
+                /* Only use the CSL timing of data frame acks */
+                return;
         }
 
-        return;
-    }
+        ftdf_data_request_t* data_request = (ftdf_data_request_t*)ftdf_req_current;
+        ftdf_short_address_t dst_addr = data_request->dst_addr.short_address;
 
-    int ieNr = 0;
-
-    while (ieNr < headerIEList->nrOfIEs &&
-           headerIEList->IEs[ ieNr ].ID != 0x1a)
-    {
-        ieNr++;
-    }
-
-    if (ieNr == headerIEList->nrOfIEs)
-    {
-        return;
-    }
-
-    if (n == FTDF_NR_OF_CSL_PEERS)
-    {
-        // Search for an empty entry
-        for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++)
-        {
-            if (FTDF_peerCslTiming[ n ].addr == 0xffff)
-            {
-                break;
-            }
-        }
-    }
-
-    if (n == FTDF_NR_OF_CSL_PEERS)
-    {
-        // No free entry, search for the least recently used entry
-        FTDF_Time maxDelta = 0;
-        int       lru      = 0;
-
-        for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++)
-        {
-            FTDF_Time delta = timeStamp - FTDF_peerCslTiming[ n ].time;
-
-            if (delta > maxDelta)
-            {
-                maxDelta = delta;
-                lru      = n;
-            }
+        if ((data_request->dst_addr_mode != FTDF_SHORT_ADDRESS) || (dst_addr == 0xffff)) {
+                return;
         }
 
-        n = lru;
-    }
+        int n;
 
-    FTDF_Period phase  = (*(FTDF_Period *)(headerIEList->IEs[ 0 ].content.raw + 0));
-    FTDF_Period period = (*(FTDF_Period *)(headerIEList->IEs[ 0 ].content.raw + 2));
+        /* Search for an existing entry */
+        for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++) {
+                if (ftdf_peer_csl_timing[n].addr == dst_addr) {
+                        break;
+                }
+        }
 
-    FTDF_peerCslTiming[ n ].addr   = dstAddr;
-    FTDF_peerCslTiming[ n ].time   = timeStamp - (phase * 10);
-    FTDF_peerCslTiming[ n ].period = period;
+        if (header_ie_list == NULL) {
+                if (n < FTDF_NR_OF_CSL_PEERS) {
+                        /* Delete entry */
+                        ftdf_peer_csl_timing[n].addr = 0xffff;
+                }
+
+                return;
+        }
+
+        int ie_nr = 0;
+
+        while (ie_nr < header_ie_list->nr_of_ie && header_ie_list->ie[ie_nr].id != 0x1a) {
+                ie_nr++;
+        }
+
+        if (ie_nr == header_ie_list->nr_of_ie) {
+                return;
+        }
+
+        if (n == FTDF_NR_OF_CSL_PEERS) {
+                /* Search for an empty entry */
+                for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++) {
+                        if (ftdf_peer_csl_timing[n].addr == 0xffff) {
+                                break;
+                        }
+                }
+        }
+
+        if (n == FTDF_NR_OF_CSL_PEERS) {
+                /* No free entry, search for the least recently used entry */
+                ftdf_time_t max_delta = 0;
+                int lru = 0;
+
+                for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++) {
+                        ftdf_time_t delta = time_stamp - ftdf_peer_csl_timing[n].time;
+
+                        if (delta > max_delta) {
+                                max_delta = delta;
+                                lru = n;
+                        }
+                }
+
+                n = lru;
+        }
+
+        ftdf_period_t phase = (*(ftdf_period_t*)(header_ie_list->ie[0].content.raw + 0));
+        ftdf_period_t period = (*(ftdf_period_t*)(header_ie_list->ie[0].content.raw + 2));
+
+        ftdf_peer_csl_timing[n].addr = dst_addr;
+        ftdf_peer_csl_timing[n].time = time_stamp - (phase * 10);
+        ftdf_peer_csl_timing[n].period = period;
 }
 
-void FTDF_getWakeupParams(FTDF_ShortAddress dstAddr,
-                          FTDF_Time        *wakeupStartTime,
-                          FTDF_Period      *wakeupPeriod)
+void ftdf_get_wakeup_params(ftdf_short_address_t dst_addr, ftdf_time_t *wakeup_start_time,
+        ftdf_period_t *wakeup_period)
 {
-    int n;
+        int n;
 
-    for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++)
-    {
-        if (FTDF_peerCslTiming[ n ].addr == dstAddr)
-        {
-            break;
+        for (n = 0; n < FTDF_NR_OF_CSL_PEERS; n++) {
+                if (ftdf_peer_csl_timing[n].addr == dst_addr) {
+                        break;
+                }
         }
-    }
 
-    FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+        ftdf_time_t cur_time = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG,
+                SYMBOLTIMESNAPSHOTVAL);
 
-    if (dstAddr == 0xffff ||
-        n == FTDF_NR_OF_CSL_PEERS)
-    {
-        *wakeupStartTime = curTime + 5;
-        *wakeupPeriod    = FTDF_pib.CSLMaxPeriod;
+        if (dst_addr == 0xffff ||
+                n == FTDF_NR_OF_CSL_PEERS) {
+                *wakeup_start_time = cur_time + 5;
+                *wakeup_period = ftdf_pib.csl_max_period;
 
-        return;
-    }
+                return;
+        }
 
-    FTDF_Time peerTime   = FTDF_peerCslTiming[ n ].time;
-    FTDF_Time peerPeriod = FTDF_peerCslTiming[ n ].period * 10;
-    FTDF_Time delta      = curTime - peerTime;
+        ftdf_time_t peer_time = ftdf_peer_csl_timing[n].time;
+        ftdf_time_t peer_period = ftdf_peer_csl_timing[n].period * 10;
+        ftdf_time_t delta = cur_time - peer_time;
 
-    if (delta > (uint32_t)(FTDF_pib.CSLMaxAgeRemoteInfo * 10))
-    {
-        *wakeupStartTime = curTime + 5;
-        *wakeupPeriod    = FTDF_pib.CSLMaxPeriod;
+        if (delta > (uint32_t)(ftdf_pib.csl_max_age_remote_info * 10)) {
+                *wakeup_start_time = cur_time + 5;
+                *wakeup_period = ftdf_pib.csl_max_period;
 
-        return;
-    }
+                return;
+        }
 
-    FTDF_Time wStart = peerTime + (((delta / peerPeriod) + 1) * peerPeriod) - FTDF_pib.CSLSyncTxMargin;
-    delta = wStart - curTime;
+        ftdf_time_t w_start = peer_time + (((delta / peer_period) + 1) * peer_period)
+                - ftdf_pib.csl_sync_tx_margin;
+        delta = w_start - cur_time;
 
-    if (delta < 3 || delta > 0x80000000)    // A delta larger than 0x80000000 is assumed a negative delta
-    {
-        wStart += peerPeriod;
-    }
+        /* A delta larger than 0x80000000 is assumed a negative delta */
+        if ((delta < 3) || (delta > 0x80000000)) {
+                w_start += peer_period;
+        }
 
-    *wakeupPeriod    = (FTDF_pib.CSLSyncTxMargin / 10) * 2;
-    *wakeupStartTime = wStart;
+        *wakeup_period = (ftdf_pib.csl_sync_tx_margin / 10) * 2;
+        *wakeup_start_time = w_start;
 }
 
-void FTDF_setCslSampleTime(void)
+void ftdf_set_csl_sample_time(void)
 {
-    FTDF_Time CSLPeriod = FTDF_pib.CSLPeriod * 10;
+        ftdf_time_t csl_period = ftdf_pib.csl_period * 10;
 
-    FTDF_criticalVar();
-    FTDF_enterCritical();
+        ftdf_critical_var();
+        ftdf_enter_critical();
 
-    FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-    FTDF_Time delta   = (curTime - FTDF_startCslSampleTime);
+        ftdf_time_t cur_time = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+        ftdf_time_t delta = (cur_time - ftdf_start_csl_sample_time);
 
-    // A delta larger than 0x80000000 is assumed a negative delta, in this case the sample time does
-    // not need to be updated.
-    if (delta < 0x80000000)
-    {
-        if (delta < CSLPeriod)
-        {
-            FTDF_startCslSampleTime += CSLPeriod;
+        /* A delta larger than 0x80000000 is assumed a negative delta, in this case the sample time
+         * does not need to be updated. */
+        if (delta < 0x80000000) {
+                if (delta < csl_period) {
+                        ftdf_start_csl_sample_time += csl_period;
 
-            if (delta < 3)
-            {
-                // To avoid to set the CSL sample time to a time stamp in the past set it to a sample period later
-                // if the next sample would be within 3 symbols.
-                FTDF_startCslSampleTime += CSLPeriod;
-            }
+                        if (delta < 3) {
+                                /* To avoid to set the CSL sample time to a time stamp in the past
+                                 * set it to a sample period later if the next sample would be
+                                 * within 3 symbols. */
+                                ftdf_start_csl_sample_time += csl_period;
+                        }
+
+                } else {
+
+                        ftdf_start_csl_sample_time =
+                            ftdf_start_csl_sample_time + ((delta / csl_period) + 1) * csl_period;
+                }
+
+                REG_SETF(FTDF, FTDF_LMAC_CONTROL_8_REG, MACCSLSTARTSAMPLETIME, ftdf_start_csl_sample_time);
         }
-        else
-        {
-            FTDF_startCslSampleTime = FTDF_startCslSampleTime + ((delta / CSLPeriod) + 1) * CSLPeriod;
-        }
 
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLSTARTSAMPLETIME, FTDF_startCslSampleTime);
-    }
-
-    FTDF_exitCritical();
+        ftdf_exit_critical();
 }
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
 
-FTDF_Time64 FTDF_getCurTime64(void)
+ftdf_time64_t ftdf_get_cur_time64(void)
 {
-    FTDF_Time newTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+        ftdf_time_t new_time = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
 
-    if (newTime < FTDF_curTime[ 0 ])
-    {
-        FTDF_curTime[ 1 ]++;
-    }
+        if (new_time < ftdf_cur_time[0]) {
+                ftdf_cur_time[1]++;
+        }
 
-    FTDF_curTime[ 0 ] = newTime;
+        ftdf_cur_time[0] = new_time;
 
-    return *(FTDF_Time64 *)FTDF_curTime;
+        return *(ftdf_time64_t*)ftdf_cur_time;
 }
 
-void FTDF_initCurTime64(void)
+void ftdf_init_cur_time64(void)
 {
-    FTDF_curTime[ 0 ] = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-    FTDF_curTime[ 1 ] = 0;
+        ftdf_cur_time[0] = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+        ftdf_cur_time[1] = 0;
 }
 
-void FTDF_getExtAddress(void)
+void ftdf_get_ext_address(void)
 {
-    uint32_t *extAddress = (uint32_t *) &FTDF_pib.extAddress;
-    extAddress[ 0 ] = FTDF_GET_FIELD(ON_OFF_REGMAP_AEXTENDEDADDRESS_L);
-    extAddress[ 1 ] = FTDF_GET_FIELD(ON_OFF_REGMAP_AEXTENDEDADDRESS_H);
+        uint32_t *ext_address = (uint32_t*)&ftdf_pib.ext_address;
+
+        ext_address[0] = REG_GETF(FTDF, FTDF_GLOB_CONTROL_2_REG, AEXTENDEDADDRESS_L);
+        ext_address[1] = REG_GETF(FTDF, FTDF_GLOB_CONTROL_3_REG, AEXTENDEDADDRESS_H);
 }
 
-void FTDF_setExtAddress(void)
+void ftdf_set_ext_address(void)
 {
-    uint32_t *extAddress = (uint32_t *) &FTDF_pib.extAddress;
-    FTDF_SET_FIELD(ON_OFF_REGMAP_AEXTENDEDADDRESS_L, extAddress[ 0 ]);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_AEXTENDEDADDRESS_H, extAddress[ 1 ]);
+        uint32_t *ext_address = (uint32_t*)&ftdf_pib.ext_address;
+
+        REG_SETF(FTDF, FTDF_GLOB_CONTROL_2_REG, AEXTENDEDADDRESS_L, ext_address[0]);
+        REG_SETF(FTDF, FTDF_GLOB_CONTROL_3_REG, AEXTENDEDADDRESS_H, ext_address[1]);
 }
 
-void FTDF_getAckWaitDuration(void)
+void ftdf_get_ack_wait_duration(void)
 {
-    FTDF_pib.ackWaitDuration = FTDF_GET_FIELD(ON_OFF_REGMAP_MACACKWAITDURATION);
-}
-
-#ifndef FTDF_LITE
-void FTDF_getEnhAckWaitDuration(void)
-{
-    FTDF_pib.enhAckWaitDuration = FTDF_GET_FIELD(ON_OFF_REGMAP_MACENHACKWAITDURATION);
-}
-
-void FTDF_setEnhAckWaitDuration(void)
-{
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACENHACKWAITDURATION, FTDF_pib.enhAckWaitDuration);
-}
-
-void FTDF_getImplicitBroadcast(void)
-{
-    FTDF_pib.implicitBroadcast = FTDF_GET_FIELD(ON_OFF_REGMAP_MACIMPLICITBROADCAST);
-}
-
-void FTDF_setImplicitBroadcast(void)
-{
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACIMPLICITBROADCAST, FTDF_pib.implicitBroadcast);
-}
-#endif /* !FTDF_LITE */
-
-void FTDF_setShortAddress(void)
-{
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACSHORTADDRESS, FTDF_pib.shortAddress);
+        ftdf_pib.ack_wait_duration = REG_GETF(FTDF, FTDF_MACACKWAITDURATION_REG, MACACKWAITDURATION);
 }
 
 #ifndef FTDF_LITE
-void FTDF_setSimpleAddress(void)
+void ftdf_get_enh_ack_wait_duration(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACSIMPLEADDRESS, FTDF_pib.simpleAddress);
+        ftdf_pib.enh_ack_wait_duration = REG_GETF(FTDF, FTDF_MACENHACKWAITDURATION_REG,
+                                                  MACENHACKWAITDURATION);
+}
+
+void ftdf_set_enh_ack_wait_duration(void)
+{
+        REG_SETF(FTDF, FTDF_MACENHACKWAITDURATION_REG, MACENHACKWAITDURATION,
+                 ftdf_pib.enh_ack_wait_duration);
+}
+
+void ftdf_get_implicit_broadcast(void)
+{
+        ftdf_pib.implicit_broadcast = REG_GETF(FTDF, FTDF_RX_CONTROL_0_REG, MACIMPLICITBROADCAST);
+}
+
+void ftdf_set_implicit_broadcast(void)
+{
+        REG_SETF(FTDF, FTDF_RX_CONTROL_0_REG, MACIMPLICITBROADCAST, ftdf_pib.implicit_broadcast);
 }
 #endif /* !FTDF_LITE */
 
-void FTDF_getRxOnWhenIdle(void)
+void ftdf_set_short_address(void)
 {
-    FTDF_pib.rxOnWhenIdle = FTDF_GET_FIELD(ON_OFF_REGMAP_RXALWAYSON);
+        REG_SETF(FTDF, FTDF_GLOB_CONTROL_1_REG, MACSHORTADDRESS, ftdf_pib.short_address);
 }
 
-void FTDF_setRxOnWhenIdle(void)
+#ifndef FTDF_LITE
+void ftdf_set_simple_address(void)
 {
-#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
-    /* We do not force decision here. It will be automatically made when FTDF begins
-     * transaction.
-     */
-    hw_coex_update_ftdf_pti((hw_coex_pti_t) FTDF_getRxPti(), NULL, false);
-#endif /* FTDF_USE_PTI && !FTDF_USE_AUTO_PTI */
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 0);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXALWAYSON, FTDF_pib.rxOnWhenIdle);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 1);
+        REG_SETF(FTDF, FTDF_GLOB_CONTROL_0_REG, MACSIMPLEADDRESS, ftdf_pib.simple_address);
+}
+#endif /* !FTDF_LITE */
+
+void ftdf_get_rx_on_when_idle(void)
+{
+        ftdf_pib.rx_on_when_idle = REG_GETF(FTDF, FTDF_LMAC_CONTROL_0_REG, RXALWAYSON);
+}
+
+void ftdf_set_rx_on_when_idle(void)
+{
+#if dg_configCOEX_ENABLE_CONFIG && !FTDF_USE_AUTO_PTI
+        /* We do not force decision here. It will be automatically made when FTDF begins
+         * transaction.
+         */
+        hw_coex_update_ftdf_pti((hw_coex_pti_t)ftdf_get_rx_pti(), NULL, false);
+#endif /* dg_configCOEX_ENABLE_CONFIG && !FTDF_USE_AUTO_PTI */
+        ftdf_set_link_quality_mode();
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, RXENABLE, 0);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_0_REG, RXALWAYSON, ftdf_pib.rx_on_when_idle);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, RXENABLE, 1);
 
 }
 
-void FTDF_getPANId(void)
+void ftdf_getpan_id(void)
 {
-    FTDF_pib.PANId = FTDF_GET_FIELD(ON_OFF_REGMAP_MACPANID);
+        ftdf_pib.pan_id = REG_GETF(FTDF, FTDF_GLOB_CONTROL_1_REG, MACPANID);
 }
 
-void FTDF_setPANId(void)
+void ftdf_setpan_id(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACPANID, FTDF_pib.PANId);
+        REG_SETF(FTDF, FTDF_GLOB_CONTROL_1_REG, MACPANID, ftdf_pib.pan_id);
 }
 
-void FTDF_getCurrentChannel(void)
+void ftdf_get_current_channel(void)
 {
-    FTDF_pib.currentChannel = ((FTDF_GET_FIELD(ON_OFF_REGMAP_PHYRXATTR) & 0x00f0) >> 4) + 11;
+        ftdf_pib.current_channel = (REG_GETF(FTDF, FTDF_LMAC_CONTROL_1_REG, PHYRXATTR_CN)) + 11;
 }
 
-void FTDF_setCurrentChannel(void)
+void ftdf_set_current_channel(void)
 {
-    uint32_t phyAckAttr = 0x08 | ((FTDF_pib.currentChannel - 11) & 0xf) << 4 | (FTDF_pib.TXPower & 0x7) << 12;
+        uint32_t phy_ack_attr = 0;
 
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYRXATTR, (((FTDF_pib.currentChannel - 11) & 0xf) << 4));
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYACKATTR, phyAckAttr);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_1_REG, PHYRXATTR_CN, (ftdf_pib.current_channel - 11));
+
+        ftdf_set_link_quality_mode();
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_4_REG, PHYACKATTR_DEM_PTI, phy_ack_attr, 0x08);
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_4_REG, PHYACKATTR_CN, phy_ack_attr,
+                      (ftdf_pib.current_channel - 11));
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_4_REG, PHYACKATTR_RF_GPIO_PINS, phy_ack_attr,
+                      (ftdf_pib.tx_power & 0x07));
+
+        FTDF->FTDF_LMAC_CONTROL_4_REG = phy_ack_attr;
 }
 
-void FTDF_setTXPower(void)
+void ftdf_set_tx_power(void)
 {
-    /* Just like setCurrentChannel, this sets pyAckAttr */
-    uint32_t phyAckAttr = 0x08 | ((FTDF_pib.currentChannel - 11) & 0xf) << 4 | (FTDF_pib.TXPower & 0x7) << 12;
+        /* Just like setCurrentChannel, this sets pyAckAttr */
+        uint32_t phy_ack_attr = 0;
 
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYACKATTR, phyAckAttr);
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_4_REG, PHYACKATTR_DEM_PTI, phy_ack_attr, 0x08);
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_4_REG, PHYACKATTR_CN, phy_ack_attr,
+                      (ftdf_pib.current_channel - 11));
+        REG_SET_FIELD(FTDF, FTDF_LMAC_CONTROL_4_REG, PHYACKATTR_RF_GPIO_PINS, phy_ack_attr,
+                      (ftdf_pib.tx_power & 0x07));
+
+        FTDF->FTDF_LMAC_CONTROL_4_REG = phy_ack_attr;
 }
 
-void FTDF_getMaxFrameTotalWaitTime(void)
+void ftdf_get_max_frame_total_wait_time(void)
 {
-    FTDF_pib.maxFrameTotalWaitTime = FTDF_GET_FIELD(ON_OFF_REGMAP_MACMAXFRAMETOTALWAITTIME);
+        ftdf_pib.max_frame_total_wait_time = REG_GETF(FTDF, FTDF_LMAC_CONTROL_3_REG, MACMAXFRAMETOTALWAITTIME);
 }
 
-void FTDF_setMaxFrameTotalWaitTime(void)
+void ftdf_set_max_frame_total_wait_time(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACMAXFRAMETOTALWAITTIME, FTDF_pib.maxFrameTotalWaitTime);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_3_REG, MACMAXFRAMETOTALWAITTIME, ftdf_pib.max_frame_total_wait_time);
 }
 
-void FTDF_setMaxCSMABackoffs(void)
+void ftdf_set_max_csma_backoffs(void)
 {
 #ifndef FTDF_LITE
-
-    if (FTDF_pib.leEnabled == FTDF_FALSE && FTDF_pib.tschEnabled == FTDF_FALSE)
+        if ((ftdf_pib.le_enabled == FTDF_FALSE) && (ftdf_pib.tsch_enabled == FTDF_FALSE))
 #endif /* !FTDF_LITE */
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACMAXCSMABACKOFFS, FTDF_pib.maxCSMABackoffs);
-    }
+        {
+                REG_SETF(FTDF, FTDF_TX_CONTROL_0_REG, MACMAXCSMABACKOFFS, ftdf_pib.max_csma_backoffs);
+        }
 }
 
-void FTDF_setMaxBE(void)
+void ftdf_set_max_be(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACMAXBE, FTDF_pib.maxBE);
+        REG_SETF(FTDF, FTDF_TX_CONTROL_0_REG, MACMAXBE, ftdf_pib.max_be);
 }
 
-void FTDF_setMinBE(void)
+void ftdf_set_min_be(void)
 {
 #ifndef FTDF_LITE
-
-    if (FTDF_pib.leEnabled == FTDF_FALSE && FTDF_pib.tschEnabled == FTDF_FALSE)
+        if ((ftdf_pib.le_enabled == FTDF_FALSE) && (ftdf_pib.tsch_enabled == FTDF_FALSE))
 #endif /* !FTDF_LITE */
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACMINBE, FTDF_pib.minBE);
-    }
+        {
+                REG_SETF(FTDF, FTDF_TX_CONTROL_0_REG, MACMINBE, ftdf_pib.min_be);
+        }
 }
 
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_CSL
-void FTDF_setLeEnabled(void)
+void ftdf_set_le_enabled(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLSAMPLEPERIOD, 66);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLDATAPERIOD, 66);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLMARGINRZ, 1);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_7_REG, MACCSLSAMPLEPERIOD, 66);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_9_REG, MACCSLDATAPERIOD, 66);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_10_REG, MACCSLMARGINRZ, 1);
 
-    if (FTDF_pib.leEnabled)
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACMAXCSMABACKOFFS, 0);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACMINBE, 0);
+        if (ftdf_pib.le_enabled) {
+                REG_SETF(FTDF, FTDF_TX_CONTROL_0_REG, MACMAXCSMABACKOFFS, 0);
+                REG_SETF(FTDF, FTDF_TX_CONTROL_0_REG, MACMINBE, 0);
 
-        if (FTDF_oldLeEnabled == FTDF_FALSE)
-        {
-            if (FTDF_wakeUpEnableLe == FTDF_FALSE)
-            {
-                FTDF_startCslSampleTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-                FTDF_setCslSampleTime();
-            }
-            else
-            {
-                FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLSTARTSAMPLETIME, FTDF_startCslSampleTime);
-            }
+                if (ftdf_old_le_enabled == FTDF_FALSE) {
+
+                        if (ftdf_wake_up_enable_le == FTDF_FALSE) {
+                                ftdf_start_csl_sample_time =
+                                    REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+                                ftdf_set_csl_sample_time();
+
+                        } else {
+
+                                REG_SETF(FTDF, FTDF_LMAC_CONTROL_8_REG, MACCSLSTARTSAMPLETIME,
+                                        ftdf_start_csl_sample_time);
+                        }
+                }
+
+        } else {
+
+                REG_SETF(FTDF, FTDF_TX_CONTROL_0_REG, MACMAXCSMABACKOFFS, ftdf_pib.max_csma_backoffs);
+                REG_SETF(FTDF, FTDF_TX_CONTROL_0_REG, MACMINBE, ftdf_pib.min_be);
         }
-    }
-    else
-    {
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACMAXCSMABACKOFFS, FTDF_pib.maxCSMABackoffs);
-        FTDF_SET_FIELD(ON_OFF_REGMAP_MACMINBE, FTDF_pib.minBE);
-    }
 
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACLEENABLED, FTDF_pib.leEnabled);
+        REG_SETF(FTDF, FTDF_GLOB_CONTROL_0_REG, MACLEENABLED, ftdf_pib.le_enabled);
 
-    FTDF_oldLeEnabled = FTDF_pib.leEnabled;
+        ftdf_old_le_enabled = ftdf_pib.le_enabled;
 }
 
-void FTDF_getCslFramePendingWaitT(void)
+void ftdf_get_csl_frame_pending_wait(void)
 {
-    FTDF_pib.CSLFramePendingWaitT = FTDF_GET_FIELD(ON_OFF_REGMAP_MACCSLFRAMEPENDINGWAITT);
+        ftdf_pib.csl_frame_pending_wait = REG_GETF(FTDF, FTDF_LMAC_CONTROL_9_REG, MACCSLFRAMEPENDINGWAITT);
 }
 
-void FTDF_setCslFramePendingWaitT(void)
+void ftdf_set_csl_frame_pending_wait(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACCSLFRAMEPENDINGWAITT, FTDF_pib.CSLFramePendingWaitT);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_9_REG, MACCSLFRAMEPENDINGWAITT,
+                ftdf_pib.csl_frame_pending_wait);
 }
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
 
-void FTDF_getLmacPmData(void)
+void ftdf_get_lmac_pm_data(void)
 {
-    FTDF_pib.performanceMetrics.FCSErrorCount = FTDF_GET_FIELD(ON_OFF_REGMAP_MACFCSERRORCOUNT) +
-                                                FTDF_lmacCounters.fcsErrorCnt;
+        ftdf_pib.performance_metrics.fcs_error_count =
+                REG_GETF(FTDF, FTDF_MACFCSERRORCOUNT_REG, MACFCSERRORCOUNT) +
+                        ftdf_lmac_counters.fcs_error_cnt;
 }
 
-void FTDF_getLmacTrafficCounters(void)
+void ftdf_get_lmac_traffic_counters(void)
 {
-    FTDF_pib.trafficCounters.txStdAckFrmCnt   = FTDF_GET_FIELD(ON_OFF_REGMAP_MACTXSTDACKFRMCNT) +
-                                                FTDF_lmacCounters.txStdAckCnt;
-    FTDF_pib.trafficCounters.rxStdAckFrmOkCnt = FTDF_GET_FIELD(ON_OFF_REGMAP_MACRXSTDACKFRMOKCNT) +
-                                                FTDF_lmacCounters.rxStdAckCnt;
+        ftdf_pib.traffic_counters.tx_std_ack_frm_cnt =
+                REG_GETF(FTDF, FTDF_MACTXSTDACKFRMCNT_REG, MACTXSTDACKFRMCNT) +
+                ftdf_lmac_counters.tx_std_ack_cnt;
+
+        ftdf_pib.traffic_counters.rx_std_ack_frm_ok_cnt =
+                REG_GETF(FTDF, FTDF_MACRXSTDACKFRMOKCNT_REG, MACRXSTDACKFRMOKCNT) +
+                        ftdf_lmac_counters.rx_std_ack_cnt;
 }
 
-void FTDF_getKeepPhyEnabled(void)
+void ftdf_get_keep_phy_enabled(void)
 {
-    FTDF_pib.keepPhyEnabled = FTDF_GET_FIELD(ON_OFF_REGMAP_KEEP_PHY_EN);
+        ftdf_pib.keep_phy_enabled = REG_GETF(FTDF, FTDF_LMAC_CONTROL_0_REG, KEEP_PHY_EN);
 }
 
-void FTDF_setKeepPhyEnabled(void)
+void ftdf_set_keep_phy_enabled(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_KEEP_PHY_EN, FTDF_pib.keepPhyEnabled);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_0_REG, KEEP_PHY_EN, ftdf_pib.keep_phy_enabled);
 }
 
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
-void FTDF_setBoIrqThreshold(void)
+void ftdf_set_bo_irq_threshold(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THRESHOLD, FTDF_pib.boIrqThreshold);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_11_REG, CSMA_CA_BO_THRESHOLD, ftdf_pib.bo_irq_threshold);
 }
-void FTDF_getBoIrqThreshold(void)
+void ftdf_get_bo_irq_threshold(void)
 {
-    FTDF_pib.boIrqThreshold = FTDF_GET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THRESHOLD);
+        ftdf_pib.bo_irq_threshold = REG_GETF(FTDF, FTDF_LMAC_CONTROL_11_REG, CSMA_CA_BO_THRESHOLD);
 }
-void FTDF_setPtiConfig(void)
+void ftdf_set_pti_config(void)
 {
-    FTDF_SET_FIELD_INDEXED(ON_OFF_REGMAP_PTI_TX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_TX],
-                           FTDF_TX_DATA_BUFFER);
-    FTDF_SET_FIELD_INDEXED(ON_OFF_REGMAP_PTI_TX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_TX],
-                           FTDF_TX_WAKEUP_BUFFER);
-    FTDF_SET_FIELD_INDEXED(ON_OFF_REGMAP_PTI_TX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_RX],
-                           FTDF_TX_ACK_BUFFER);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PTI_RX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_RX]);
+        REG_SETF(FTDF, FTDF_TX_PRIORITY_0_REG, PTI_TX, ftdf_pib.pti_config.ptis[FTDF_PTI_CONFIG_TX]);
+        REG_SETF(FTDF, FTDF_TX_PRIORITY_1_REG, PTI_TX, ftdf_pib.pti_config.ptis[FTDF_PTI_CONFIG_TX]);
+        REG_SETF(FTDF, FTDF_TX_PRIORITY_2_REG, PTI_TX, ftdf_pib.pti_config.ptis[FTDF_PTI_CONFIG_RX]);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_0_REG, PTI_RX, ftdf_pib.pti_config.ptis[FTDF_PTI_CONFIG_RX]);
 }
-#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_TSCH
-void FTDF_setTimeslotTemplate(void)
+void ftdf_set_timeslot_template(void)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACTSTXACKDELAY, FTDF_pib.timeslotTemplate.tsTxAckDelay);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACTSRXWAIT, FTDF_pib.timeslotTemplate.tsRxWait);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACTSRXACKDELAY, FTDF_pib.timeslotTemplate.tsRxAckDelay);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACTSACKWAIT, FTDF_pib.timeslotTemplate.tsAckWait);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_MACTSRXTX, FTDF_pib.timeslotTemplate.tsRxTx -
-                   FTDF_PHYTRXWAIT - FTDF_PHYTXSTARTUP - FTDF_PHYTXLATENCY);
+        REG_SETF(FTDF, FTDF_TSCH_CONTROL_0_REG, MACTSTXACKDELAY,
+                ftdf_pib.timeslot_template.ts_tx_ack_delay);
+        REG_SETF(FTDF, FTDF_TSCH_CONTROL_0_REG, MACTSRXWAIT, ftdf_pib.timeslot_template.ts_rx_wait);
+        REG_SETF(FTDF, FTDF_TSCH_CONTROL_2_REG, MACTSRXACKDELAY,
+                ftdf_pib.timeslot_template.ts_rx_ack_delay);
+        REG_SETF(FTDF, FTDF_TSCH_CONTROL_2_REG, MACTSACKWAIT,
+                ftdf_pib.timeslot_template.ts_ack_wait);
+        REG_SETF(FTDF, FTDF_TSCH_CONTROL_1_REG, MACTSRXTX, (ftdf_pib.timeslot_template.ts_rx_tx -
+                FTDF_PHYTRXWAIT - FTDF_PHYTXSTARTUP - FTDF_PHYTXLATENCY));
 }
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
 
-#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
 #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
 /************************************ FPPR common functions ***************************************/
 #ifndef FTDF_LITE
 
-FTDF_Boolean FTDF_fpFsmShortAddressNew(FTDF_PANId panId, FTDF_ShortAddress shortAddress)
+ftdf_boolean_t ftdf_fp_fsm_short_address_new(ftdf_pan_id_t panId, ftdf_short_address_t short_address)
 {
-    uint8_t entry;
-    uint8_t shortAddrIdx;
+        uint8_t entry;
+        uint8_t short_addr_idx;
 
-    if (FTDF_fpprGetFreeShortAddress(&entry, &shortAddrIdx) == FTDF_FALSE)
-    {
-        return FTDF_FALSE;
-    }
+        if (ftdf_fppr_get_free_short_address(&entry, &short_addr_idx) == FTDF_FALSE) {
+                return FTDF_FALSE;
+        }
 
-    FTDF_fpprSetShortAddress(entry, shortAddrIdx, shortAddress);
-    FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_TRUE);
+        ftdf_fppr_set_short_address(entry, short_addr_idx, short_address);
+        ftdf_fppr_set_short_address_valid(entry, short_addr_idx, FTDF_TRUE);
 
-    return FTDF_TRUE;
+        return FTDF_TRUE;
 }
 
-FTDF_Boolean FTDF_fpFsmExtAddressNew(FTDF_PANId panId, FTDF_ExtAddress extAddress)
+ftdf_boolean_t ftdf_fp_fsm_rxt_address_new(ftdf_pan_id_t panId, ftdf_ext_address_t ext_address)
 {
-    uint8_t entry;
+        uint8_t entry;
 
-    if (FTDF_fpprGetFreeExtAddress(&entry) == FTDF_FALSE)
-    {
-        return FTDF_FALSE;
-    }
+        if (ftdf_fppr_get_free_ext_address(&entry) == FTDF_FALSE) {
+                return FTDF_FALSE;
+        }
 
-    FTDF_fpprSetExtAddress(entry, extAddress);
-    FTDF_fpprSetExtAddressValid(entry, FTDF_TRUE);
+        ftdf_fppr_set_ext_address(entry, ext_address);
+        ftdf_fppr_set_ext_address_valid(entry, FTDF_TRUE);
 
-    return FTDF_TRUE;
+        return FTDF_TRUE;
 }
 
-void FTDF_fpFsmShortAddressLastFramePending(FTDF_PANId PANId, FTDF_ShortAddress shortAddress)
-{
+void ftdf_fp_fsm_short_address_last_frame_pending(ftdf_pan_id_t pan_id, ftdf_short_address_t short_address) {
 #if FTDF_FPPR_DEFER_INVALIDATION
-    FTDF_fpprPending.addrMode = FTDF_SHORT_ADDRESS;
-    FTDF_fpprPending.PANId = PANId;
-    FTDF_fpprPending.addr.shortAddress = shortAddress;
+        ftdf_fppr_pending.addr_mode = FTDF_SHORT_ADDRESS;
+        ftdf_fppr_pending.pan_id = pan_id;
+        ftdf_fppr_pending.addr.short_address = short_address;
 #else /* FTDF_FPPR_DEFER_INVALIDATION */
-    uint8_t entry;
-    uint8_t shortAddrIdx;
-    FTDF_Boolean found = FTDF_fpprLookupShortAddress(shortAddress, &entry, &shortAddrIdx);
-    ASSERT_WARNING(found);
-    FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
+        uint8_t entry;
+        uint8_t short_addr_idx;
+        ftdf_boolean_t found = ftdf_fppr_lookup_short_address(short_address, &entry, &short_addr_idx);
+        ASSERT_WARNING(found);
+        ftdf_fppr_set_short_address_valid(entry, short_addr_idx, FTDF_FALSE);
 #endif /* FTDF_FPPR_DEFER_INVALIDATION */
 }
 
-void FTDF_fpFsmExtAddressLastFramePending(FTDF_PANId PANId, FTDF_ExtAddress extAddress)
-{
+void ftdf_fp_fsm_ext_address_last_frame_pending(ftdf_pan_id_t pan_id, ftdf_ext_address_t ext_address) {
 #if FTDF_FPPR_DEFER_INVALIDATION
-    FTDF_fpprPending.addrMode = FTDF_EXTENDED_ADDRESS;
-    FTDF_fpprPending.PANId = PANId;
-    FTDF_fpprPending.addr.extAddress = extAddress;
+        ftdf_fppr_pending.addr_mode = FTDF_EXTENDED_ADDRESS;
+        ftdf_fppr_pending.pan_id = pan_id;
+        ftdf_fppr_pending.addr.ext_address = ext_address;
 #else /* FTDF_FPPR_DEFER_INVALIDATION */
-    uint8_t entry;
-    FTDF_Boolean found = FTDF_fpprLookupExtAddress(extAddress, &entry);
-    ASSERT_WARNING(found);
-    FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
+        uint8_t entry;
+        ftdf_boolean_t found = ftdf_fppr_lookup_ext_address(ext_address, &entry);
+        ASSERT_WARNING(found);
+        ftdf_fppr_set_ext_address_valid(entry, FTDF_FALSE);
 #endif /* FTDF_FPPR_DEFER_INVALIDATION */
 }
 
-void FTDF_fpFsmClearPending(void)
+void ftdf_fp_fsm_clear_pending(void)
 {
 #if FTDF_FPPR_DEFER_INVALIDATION
-    int n;
-
-    if (FTDF_fpprPending.addrMode == FTDF_NO_ADDRESS)
-    {
-        return;
-    }
-
-    if (FTDF_fpprPending.addrMode == FTDF_SHORT_ADDRESS)
-    {
-        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
-        {
-            if (FTDF_txPendingList[ n ].addrMode == FTDF_SHORT_ADDRESS)
-            {
-                if ((FTDF_txPendingList[ n ].PANId == FTDF_fpprPending.PANId) &&
-                    (FTDF_txPendingList[ n ].addr.shortAddress ==
-                     FTDF_fpprPending.addr.shortAddress))
-                {
-                    return;
-                }
-            }
+        int n;
+        if (ftdf_fppr_pending.addr_mode == FTDF_NO_ADDRESS) {
+                return;
         }
-
-        // Address not found.
-        uint8_t entry;
-        uint8_t shortAddrIdx;
-        FTDF_Boolean found = FTDF_fpprLookupShortAddress(
-                                 FTDF_fpprPending.addr.shortAddress, &entry, &shortAddrIdx);
-        ASSERT_WARNING(found);
-        FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
-    }
-    else if (FTDF_fpprPending.addrMode == FTDF_EXTENDED_ADDRESS)
-    {
-        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
-        {
-            if (FTDF_txPendingList[ n ].addrMode == FTDF_EXTENDED_ADDRESS)
-            {
-                if (FTDF_txPendingList[ n ].addr.extAddress ==
-                    FTDF_fpprPending.addr.extAddress)
-                {
-                    return;
+        if (ftdf_fppr_pending.addr_mode == FTDF_SHORT_ADDRESS) {
+                for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++) {
+                        if (ftdf_tx_pending_list[n].addr_mode == FTDF_SHORT_ADDRESS) {
+                                if ((ftdf_tx_pending_list[n].pan_id == ftdf_fppr_pending.pan_id) &&
+                                        (ftdf_tx_pending_list[n].addr.short_address ==
+                                                ftdf_fppr_pending.addr.short_address)) {
+                                        return;
+                                }
+                        }
                 }
-            }
+                // Address not found.
+                uint8_t entry;
+                uint8_t short_addr_idx;
+                ftdf_boolean_t found = ftdf_fppr_lookup_short_address(
+                        ftdf_fppr_pending.addr.short_address, &entry, &short_addr_idx);
+                ASSERT_WARNING(found);
+                ftdf_fppr_set_short_address_valid(entry, short_addr_idx, FTDF_FALSE);
+        } else if (ftdf_fppr_pending.addr_mode == FTDF_EXTENDED_ADDRESS) {
+                for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++) {
+                        if (ftdf_tx_pending_list[n].addr_mode == FTDF_EXTENDED_ADDRESS) {
+                                if (ftdf_tx_pending_list[n].addr.ext_address ==
+                                        ftdf_fppr_pending.addr.ext_address) {
+                                        return;
+                                }
+                        }
+                }
+                // Address not found.
+                uint8_t entry;
+                ftdf_boolean_t found = ftdf_fppr_lookup_ext_address(ftdf_fppr_pending.addr.ext_address,
+                        &entry);
+                ASSERT_WARNING(found);
+                ftdf_fppr_set_ext_address_valid(entry, FTDF_FALSE);
+        } else {
+
         }
-
-        // Address not found.
-        uint8_t entry;
-        FTDF_Boolean found = FTDF_fpprLookupExtAddress(FTDF_fpprPending.addr.extAddress,
-                                                       &entry);
-        ASSERT_WARNING(found);
-        FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
-    }
-    else
-    {
-
-    }
-
-    FTDF_fpprPending.addrMode = FTDF_NO_ADDRESS;
+        ftdf_fppr_pending.addr_mode = FTDF_NO_ADDRESS;
 #endif /* FTDF_FPPR_DEFER_INVALIDATION */
 }
 
 #endif /* #ifndef FTDF_LITE */
 /*********************************** FPPR low-level access ****************************************/
-void FTDF_fpprReset(void)
+void ftdf_fppr_reset(void)
 {
-    unsigned int i;
-
-    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
-    {
-        *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i) = 0;
-    }
-}
-
-FTDF_ShortAddress FTDF_fpprGetShortAddress(uint8_t entry, uint8_t shortAddrIdx)
-{
-    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
-
-    switch (shortAddrIdx)
-    {
-    case 0:
-        return (FTDF_ShortAddress)
-               * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) &
-               0x0000ffff;
-
-    case 1:
-        return (FTDF_ShortAddress)
-               (*FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) >> 16) &
-               0x0000ffff;
-
-    case 2:
-        return (FTDF_ShortAddress)
-               * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) &
-               0x0000ffff;
-
-    case 3:
-        return (FTDF_ShortAddress)
-               (*FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) >> 16) &
-               0x0000ffff;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-void FTDF_fpprSetShortAddress(uint8_t entry, uint8_t shortAddrIdx,
-                              FTDF_ShortAddress shortAddress)
-{
-    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
-    uint32_t val32;
-
-    switch (shortAddrIdx)
-    {
-    case 0:
-        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry);
-        val32 &= 0xffff0000;
-        val32 |= (shortAddress & 0x0000ffff);
-        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) = val32;
-        break;
-
-    case 1:
-        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry);
-        val32 &= 0x0000ffff;
-        val32 |= (shortAddress & 0x0000ffff) << 16;
-        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) = val32;
-        break;
-
-    case 2:
-        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry);
-        val32 &= 0xffff0000;
-        val32 |= (shortAddress & 0x0000ffff);
-        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) = val32;
-        break;
-
-    case 3:
-        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry);
-        val32 &= 0x0000ffff;
-        val32 |= (shortAddress & 0x0000ffff) << 16;
-        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) = val32;
-        break;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-FTDF_Boolean FTDF_fpprGetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx)
-{
-    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
-    ASSERT_WARNING(shortAddrIdx < 4);
-    uint32_t val32;
-    val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry);
-    return ((val32 & (MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT | (1 << shortAddrIdx))) ==
-            (MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT | (1 << shortAddrIdx))) ?
-           FTDF_TRUE : FTDF_FALSE;
-}
-
-void FTDF_fpprSetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx,
-                                   FTDF_Boolean valid)
-{
-    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
-    ASSERT_WARNING(shortAddrIdx < 4);
-    uint32_t val32;
-    val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry);
-
-    if (valid)
-    {
-        val32 |= MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT | (1 << shortAddrIdx); /* Also indicate short address. */
-    }
-    else
-    {
-        val32 &= ~(1 << shortAddrIdx);
-    }
-
-    *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) = val32;
-}
-
-FTDF_ExtAddress FTDF_fpprGetExtAddress(uint8_t entry)
-{
-    FTDF_ExtAddress extAddress;
-    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
-    extAddress = (FTDF_ExtAddress) * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H,
-                                                                 entry) << 32;
-    extAddress |= (FTDF_ExtAddress) * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L,
-                                                                  entry);
-    return extAddress;
-}
-
-void FTDF_fpprSetExtAddress(uint8_t entry, FTDF_ExtAddress extAddress)
-{
-    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
-    *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) =
-        (uint32_t)(extAddress);
-    *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) =
-        (uint32_t)((extAddress >> 32));
-}
-
-FTDF_Boolean FTDF_fpprGetExtAddressValid(uint8_t entry)
-{
-    return (*FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) == 0x1) ?
-           FTDF_TRUE : FTDF_FALSE;
-}
-
-void FTDF_fpprSetExtAddressValid(uint8_t entry, FTDF_Boolean valid)
-{
-    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
-
-    if (valid)
-    {
-        /* Also indicate ext address. */
-        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) = 0x1;
-    }
-    else
-    {
-        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) = 0x0;
-    }
-}
-
-FTDF_Boolean FTDF_fpprGetFreeShortAddress(uint8_t *entry, uint8_t *shortAddrIdx)
-{
-    int i, j;
-    uint32_t sizeAndVal;
-    int emptyEntry;
-    bool emptyFound = false, nonEmptyFound = false;
-
-    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
-    {
-        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
-
-        if (sizeAndVal == 0x1)
-        {
-            /* Check if there is a valid extended address.  */
-            continue;
+        unsigned int i;
+        for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++) {
+                *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, i) = 0;
         }
-        else if ((sizeAndVal & MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT) == 0)
-        {
-            /* There is an invalid extended address, ignore SA valid bits  */
-            sizeAndVal = 0;
+}
+
+ftdf_short_address_t ftdf_fppr_get_short_address(uint8_t entry, uint8_t short_addr_idx)
+{
+        ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+        switch (short_addr_idx) {
+        case 0:
+                return (ftdf_short_address_t)
+                        *REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, 0x10, entry) &
+                        0x0000ffff;
+        case 1:
+                return (ftdf_short_address_t)
+                        (*REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, 0x10, entry)  >> 16) &
+                        0x0000ffff;
+        case 2:
+                return (ftdf_short_address_t)
+                        *REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, 0x10, entry) &
+                        0x0000ffff;
+        case 3:
+                return (ftdf_short_address_t)
+                        (*REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, 0x10, entry) >> 16) &
+                        0x0000ffff;
+        default:
+                ASSERT_WARNING(0);
         }
-        else
-        {
-            /* There is a SA. We are interested in bits V0 - V3. */
-            sizeAndVal &= 0xf;
-        }
+}
 
-        /* Check if entire entry is free. */
-        if (sizeAndVal == 0)
-        {
-            /* We prefer to use partially full entries. Make note of this and
-             * continue. */
-            if (!emptyFound)
-            {
-                emptyEntry = i;
-                emptyFound = true;
-            }
-
-            continue;
-        }
-
-        /* Check for free short address entries. */
-        sizeAndVal = (~sizeAndVal) & 0xf;
-        j = 0;
-
-        while (sizeAndVal)
-        {
-            if (sizeAndVal & 0x1)
-            {
-                nonEmptyFound = true;
+void ftdf_fppr_set_short_address(uint8_t entry, uint8_t short_addr_idx,
+                                 ftdf_short_address_t short_address)
+{
+        ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+        uint32_t val32;
+        volatile uint32_t *long_addr_reg;
+        switch (short_addr_idx) {
+        case 0:
+                long_addr_reg = REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, 0x10, entry);
+                val32 = *long_addr_reg;
+                val32 &= 0xffff0000;
+                val32 |= (short_address & 0x0000ffff);
+                *long_addr_reg = val32;
                 break;
-            }
-
-            sizeAndVal >>= 1;
-            j++;
+        case 1:
+                long_addr_reg = REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, 0x10, entry);
+                val32 = *long_addr_reg;
+                val32 &= 0x0000ffff;
+                val32 |= (short_address & 0x0000ffff) << 16;
+                *long_addr_reg = val32;
+                break;
+        case 2:
+                long_addr_reg = REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, 0x10, entry);
+                val32 = *long_addr_reg;
+                val32 &= 0xffff0000;
+                val32 |= (short_address & 0x0000ffff);
+                *long_addr_reg = val32;
+                break;
+        case 3:
+                long_addr_reg = REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, 0x10, entry);
+                val32 = *long_addr_reg;
+                val32 &= 0x0000ffff;
+                val32 |= (short_address & 0x0000ffff) << 16;
+                *long_addr_reg = val32;
+                break;
+        default:
+                ASSERT_WARNING(0);
         }
+}
 
-        if (nonEmptyFound)
-        {
-            break;
+ftdf_boolean_t ftdf_fppr_get_short_address_valid(uint8_t entry, uint8_t short_addr_idx)
+{
+        ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+        ASSERT_WARNING(short_addr_idx < 4);
+        uint32_t val32 = *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, entry);
+        return ((val32 & (REG_MSK(FTDF, FTDF_SIZE_AND_VAL_0_REG, SHORT_LONGNOT) | (1 << short_addr_idx))) ==
+                (REG_MSK(FTDF, FTDF_SIZE_AND_VAL_0_REG, SHORT_LONGNOT) | (1 << short_addr_idx))) ?
+                FTDF_TRUE : FTDF_FALSE;
+}
+
+void ftdf_fppr_set_short_address_valid(uint8_t entry, uint8_t short_addr_idx,
+        ftdf_boolean_t valid)
+{
+        ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+        ASSERT_WARNING(short_addr_idx < 4);
+        volatile uint32_t *reg_val = REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, entry);
+        if (valid) {
+                *reg_val |= REG_MSK(FTDF, FTDF_SIZE_AND_VAL_0_REG, SHORT_LONGNOT) | (1 << short_addr_idx); /* Also indicate short address. */
+        } else {
+                *reg_val &= ~(1 << short_addr_idx);
         }
-    }
+}
 
-    if (nonEmptyFound)
-    {
-        *entry = i;
-        *shortAddrIdx = j;
-    }
-    else if (emptyFound)
-    {
-        *entry = emptyEntry;
-        *shortAddrIdx = 0;
-    }
-    else
-    {
+ftdf_ext_address_t ftdf_fppr_get_ext_address(uint8_t entry)
+{
+        ftdf_ext_address_t ext_address;
+        ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+        ext_address = (ftdf_ext_address_t)
+                (*REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, 0x10, entry)) << 32;
+        ext_address |= (ftdf_ext_address_t)
+                (*REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, 0x10, entry));
+
+        return ext_address;
+}
+
+void ftdf_fppr_set_ext_address(uint8_t entry, ftdf_ext_address_t ext_address)
+{
+        ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+        *REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, 0x10, entry) = (uint32_t) ext_address;
+        *REG_GET_ADDR_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, 0x10, entry) = (uint32_t) (ext_address >> 32);
+}
+
+ftdf_boolean_t ftdf_fppr_get_ext_address_valid(uint8_t entry)
+{
+        return (REG_GETF_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, VALID_SA, 0x10, entry) == 0x1) ?
+                FTDF_TRUE : FTDF_FALSE;
+}
+
+void ftdf_fppr_set_ext_address_valid(uint8_t entry, ftdf_boolean_t valid)
+{
+        ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+        if (valid) {
+                /* Also indicate ext address. */
+                *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, entry) = 0x1;
+        } else {
+                *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, entry) = 0x0;
+        }
+}
+
+ftdf_boolean_t ftdf_fppr_get_free_short_address(uint8_t *entry, uint8_t *short_addr_idx)
+{
+        int i, j;
+        uint32_t size_and_val;
+        int empty_entry;
+        bool empty_found = false, non_empty_found = false;
+        for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++) {
+                size_and_val = *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, i);
+                if (size_and_val == 0x1) {
+                        /* Check if there is a valid extended address.  */
+                        continue;
+                } else if ((size_and_val & REG_MSK(FTDF, FTDF_SIZE_AND_VAL_0_REG, SHORT_LONGNOT)) == 0) {
+                        /* There is an invalid extended address, ignore SA valid bits  */
+                        size_and_val = 0;
+                } else {
+                        /* There is a SA. We are interested in bits V0 - V3. */
+                        size_and_val &= 0xf;
+                }
+
+                /* Check if entire entry is free. */
+                if (size_and_val == 0) {
+                        /* We prefer to use partially full entries. Make note of this and
+                         * continue. */
+                        if (!empty_found) {
+                                empty_entry = i;
+                                empty_found = true;
+                        }
+                        continue;
+                }
+                /* Check for free short address entries. */
+                size_and_val = (~size_and_val) & 0xf;
+                j = 0;
+                while (size_and_val) {
+                        if (size_and_val & 0x1) {
+                                non_empty_found = true;
+                                break;
+                        }
+                        size_and_val >>= 1;
+                        j++;
+                }
+                if (non_empty_found) {
+                        break;
+                }
+        }
+        if (non_empty_found) {
+                *entry = i;
+                *short_addr_idx = j;
+        } else if (empty_found) {
+                *entry = empty_entry;
+                *short_addr_idx = 0;
+        } else {
+                return FTDF_FALSE;
+        }
+        return FTDF_TRUE;
+}
+
+ftdf_boolean_t ftdf_fppr_get_free_ext_address(uint8_t * entry)
+{
+        int i;
+        uint32_t size_and_val;
+        bool found = false;
+        for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++) {
+                size_and_val = *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, i);
+                /* Check if there is no valid extended or short address.  */
+                if (!size_and_val || (size_and_val == REG_MSK(FTDF, FTDF_SIZE_AND_VAL_0_REG, SHORT_LONGNOT))) {
+                        found = true;
+                        break;
+                }
+        }
+        if (found) {
+                *entry = i;
+        } else {
+                return FTDF_FALSE;
+        }
+        return FTDF_TRUE;
+}
+
+ftdf_boolean_t ftdf_fppr_lookup_short_address(ftdf_short_address_t short_addr, uint8_t *entry,
+                                              uint8_t *short_addr_idx)
+{
+        uint8_t i;
+        uint32_t size_and_val;
+        uint32_t saPart;
+        for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++) {
+                size_and_val = *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, i);
+                /* Check if there is a valid short address. */
+                if (!(size_and_val & REG_MSK(FTDF, FTDF_SIZE_AND_VAL_0_REG, SHORT_LONGNOT)) ||
+                        !(size_and_val & REG_MSK(FTDF, FTDF_SIZE_AND_VAL_0_REG, VALID_SA))) {
+                        continue;
+                }
+                saPart = REG_GETF_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, EXP_SA_L, 0x10, i);
+                if (size_and_val & 0x1) {
+                        if (short_addr == (ftdf_short_address_t) (saPart & 0x0000ffff)) {
+                                *entry = i;
+                                *short_addr_idx = 0;
+                                return FTDF_TRUE;
+                        }
+                }
+                if (size_and_val & 0x2) {
+                        if (short_addr == (ftdf_short_address_t) ((saPart >> 16) & 0x0000ffff)) {
+                                *entry = i;
+                                *short_addr_idx = 1;
+                                return FTDF_TRUE;
+                        }
+                }
+                saPart = REG_GETF_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, EXP_SA_H, 0x10, i);
+                if (size_and_val & 0x4) {
+                        if (short_addr == (ftdf_short_address_t) (saPart & 0x0000ffff)) {
+                                *entry = i;
+                                *short_addr_idx = 2;
+                                return FTDF_TRUE;
+                        }
+                }
+                if (size_and_val & 0x8) {
+                        if (short_addr == ((ftdf_short_address_t) (saPart >> 16) & 0x0000ffff)) {
+                                *entry = i;
+                                *short_addr_idx = 3;
+                                return FTDF_TRUE;
+                        }
+                }
+        }
         return FTDF_FALSE;
-    }
-
-    return FTDF_TRUE;
 }
 
-FTDF_Boolean FTDF_fpprGetFreeExtAddress(uint8_t *entry)
+ftdf_boolean_t ftdf_fppr_lookup_ext_address(ftdf_ext_address_t ext_addr, uint8_t *entry)
 {
-    int i;
-    uint32_t sizeAndVal;
-    bool found = false;
-
-    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
-    {
-        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
-
-        /* Check if there is no valid extended or short address.  */
-        if (!sizeAndVal || (sizeAndVal == MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT))
-        {
-            found = true;
-            break;
+        uint8_t i;
+        uint32_t size_and_val;
+        uint32_t ext_addr_hi, ext_addr_lo;
+        ext_addr_hi = (uint32_t) ((ext_addr >> 32) & 0xffffffff);
+        ext_addr_lo = (uint32_t) (ext_addr & 0xffffffff);
+        for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++) {
+                size_and_val = *REG_GET_ADDR_INDEXED(FTDF, FTDF_SIZE_AND_VAL_0_REG, 0x10, i);
+                /* Check if there is a valid extended address. */
+                if (size_and_val != 0x1) {
+                        continue;
+                }
+                if ((ext_addr_lo == REG_GETF_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, EXP_SA_L, 0x10, i)) &&
+                        (ext_addr_hi == REG_GETF_INDEXED(FTDF, FTDF_LONG_ADDR_1_0_REG, EXP_SA_H, 0x10, i))) {
+                        *entry = i;
+                        return FTDF_TRUE;
+                }
         }
-    }
-
-    if (found)
-    {
-        *entry = i;
-    }
-    else
-    {
         return FTDF_FALSE;
-    }
-
-    return FTDF_TRUE;
-}
-
-FTDF_Boolean FTDF_fpprLookupShortAddress(FTDF_ShortAddress shortAddr, uint8_t *entry,
-                                         uint8_t *shortAddrIdx)
-{
-    uint8_t i;
-    uint32_t sizeAndVal;
-    uint32_t saPart;
-
-    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
-    {
-        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
-
-        /* Check if there is a valid short address. */
-        if (!(sizeAndVal & MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT) ||
-            !(sizeAndVal & MSK_F_FTDF_FP_PROCESSING_RAM_VALID_SA))
-        {
-            continue;
-        }
-
-        saPart = FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, i);
-
-        if (sizeAndVal & 0x1)
-        {
-            if (shortAddr == (FTDF_ShortAddress)(saPart & 0x0000ffff))
-            {
-                *entry = i;
-                *shortAddrIdx = 0;
-                return FTDF_TRUE;
-            }
-        }
-
-        if (sizeAndVal & 0x2)
-        {
-            if (shortAddr == (FTDF_ShortAddress)((saPart >> 16) & 0x0000ffff))
-            {
-                *entry = i;
-                *shortAddrIdx = 1;
-                return FTDF_TRUE;
-            }
-        }
-
-        saPart = FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, i);
-
-        if (sizeAndVal & 0x4)
-        {
-            if (shortAddr == (FTDF_ShortAddress)(saPart & 0x0000ffff))
-            {
-                *entry = i;
-                *shortAddrIdx = 2;
-                return FTDF_TRUE;
-            }
-        }
-
-        if (sizeAndVal & 0x8)
-        {
-            if (shortAddr == ((FTDF_ShortAddress)(saPart >> 16) & 0x0000ffff))
-            {
-                *entry = i;
-                *shortAddrIdx = 3;
-                return FTDF_TRUE;
-            }
-        }
-    }
-
-    return FTDF_FALSE;
-}
-
-FTDF_Boolean FTDF_fpprLookupExtAddress(FTDF_ExtAddress extAddr, uint8_t *entry)
-{
-    uint8_t i;
-    uint32_t sizeAndVal;
-    uint32_t extAddrHi, extAddrLo;
-    extAddrHi = (uint32_t)((extAddr >> 32) & 0xffffffff);
-    extAddrLo = (uint32_t)(extAddr & 0xffffffff);
-
-    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
-    {
-        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
-
-        /* Check if there is a valid extended address. */
-        if (sizeAndVal != 0x1)
-        {
-            continue;
-        }
-
-        if ((extAddrLo == FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, i)) &&
-            (extAddrHi == FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, i)))
-        {
-            *entry = i;
-            return FTDF_TRUE;
-        }
-    }
-
-    return FTDF_FALSE;
 }
 
 #endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
 
-void FTDF_fpprSetMode(FTDF_Boolean matchFp, FTDF_Boolean fpOverride, FTDF_Boolean fpForce)
+void ftdf_fppr_set_mode(ftdf_boolean_t match_fp, ftdf_boolean_t fp_override, ftdf_boolean_t fp_force)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_ADDR_TAB_MATCH_FP_VALUE, matchFp ? 1 : 0);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_FP_OVERRIDE, fpOverride ? 1 : 0);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_FP_FORCE_VALUE, fpForce ? 1 : 0);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_3_REG, ADDR_TAB_MATCH_FP_VALUE, match_fp ? 1 : 0);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_3_REG, FP_OVERRIDE,fp_override ? 1 : 0);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_3_REG, FP_FORCE_VALUE, fp_force ? 1 : 0);
 }
 
 #if FTDF_FP_BIT_TEST_MODE
-void FTDF_fpprGetMode(FTDF_Boolean *matchFp, FTDF_Boolean *fpOverride, FTDF_Boolean *fpForce)
+void ftdf_fppr_get_mode(ftdf_boolean_t *match_fp, ftdf_boolean_t *fp_override, ftdf_boolean_t *fp_force)
 {
-    *matchFp = FTDF_GET_FIELD(ON_OFF_REGMAP_ADDR_TAB_MATCH_FP_VALUE) ? FTDF_TRUE : FTDF_FALSE;
-    *fpOverride = FTDF_GET_FIELD(ON_OFF_REGMAP_FP_OVERRIDE) ? FTDF_TRUE : FTDF_FALSE;
-    *fpForce = FTDF_GET_FIELD(ON_OFF_REGMAP_FP_FORCE_VALUE) ? FTDF_TRUE : FTDF_FALSE;
+        *match_fp = REG_GETF(FTDF, FTDF_LMAC_CONTROL_3_REG, ADDR_TAB_MATCH_FP_VALUE) ? FTDF_TRUE : FTDF_FALSE;
+        *fp_override = REG_GETF(FTDF, FTDF_LMAC_CONTROL_3_REG, FP_OVERRIDE) ? FTDF_TRUE : FTDF_FALSE;
+        *fp_force = REG_GETF(FTDF, FTDF_LMAC_CONTROL_3_REG, FP_FORCE_VALUE) ? FTDF_TRUE : FTDF_FALSE;
 }
 #endif // FTDF_FP_BIT_TEST_MODE
 
-void FTDF_lpdpEnable(FTDF_Boolean enable)
+void ftdf_lpdp_enable(ftdf_boolean_t enable)
 {
-    FTDF_SET_FIELD(ON_OFF_REGMAP_FTDF_LPDP_ENABLE, enable ? 1 : 0);
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_3_REG, FTDF_LPDP_ENABLE, enable ? 1 : 0);
 }
 
 #if FTDF_FP_BIT_TEST_MODE
-FTDF_Boolean FTDF_lpdpIsEnabled(void)
+ftdf_boolean_t ftdf_lpdp_is_enabled(void)
 {
-    return FTDF_GET_FIELD(ON_OFF_REGMAP_FTDF_LPDP_ENABLE) ? FTDF_TRUE : FTDF_FALSE;
+        return REG_GETF(FTDF, FTDF_LMAC_CONTROL_3_REG, FTDF_LPDP_ENABLE) ? FTDF_TRUE : FTDF_FALSE;
 }
 #endif
 
 #if FTDF_USE_SLEEP_DURING_BACKOFF
 
-static inline void FTDF_sdbSaveState(void)
+static inline void ftdf_sdb_save_state(void)
 {
-    volatile uint32_t *txFifoPtr = FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO);
-    uint32_t *dstPtr = (uint32_t *) FTDF_sdb.buffer;
-    uint8_t word_length_rem;
+        volatile uint32_t *tx_fifo_ptr = &FTDF->FTDF_TX_FIFO_0_0_REG;
+        uint32_t * dstPtr = (uint32_t *) ftdf_sdb.buffer;
+        uint8_t word_length_rem;
 
-    FTDF_sdb.nrOfBackoffs = FTDF_GET_FIELD(ON_OFF_REGMAP_CSMA_CA_NB_STAT);
+        ftdf_sdb.nr_of_backoffs = REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, CSMA_CA_NB_STAT);
 
-    /* Read first 4 bytes. */
-    *dstPtr++ = *txFifoPtr++;
+        /* Read first 4 bytes. */
+        *dstPtr++ = *tx_fifo_ptr++;
 
-    ASSERT_WARNING((FTDF_sdb.buffer[0] >= 3) && (FTDF_sdb.buffer[0] < FTDF_BUFFER_LENGTH));
-    /* The length is the buffer length excluding the length byte itself */
-    word_length_rem = (FTDF_sdb.buffer[0] + 4) / 4 - 1; /* 1 word we already read */
+        ASSERT_WARNING((ftdf_sdb.buffer[0] >= 3) && (ftdf_sdb.buffer[0] < FTDF_BUFFER_LENGTH));
+        /* The length is the buffer length excluding the length byte itself */
+        word_length_rem = (ftdf_sdb.buffer[0] + 4) / 4 - 1; /* 1 word we already read */
 
-    while (word_length_rem--)
-    {
-        *dstPtr++ = *txFifoPtr++;
-    }
-
-    FTDF_sdb.metadata0 = *FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0,
-                                                    FTDF_TX_DATA_BUFFER);
-    FTDF_sdb.metadata1 = *FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1,
-                                                    FTDF_TX_DATA_BUFFER);
-    FTDF_sdb.phyCsmaCaAttr = FTDF_GET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR);
-}
-
-static inline void FTDF_sdbResume(void)
-{
-    volatile uint32_t *txFifoPtr = FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO);
-    volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
-    uint32_t *srcPtr = (uint32_t *) FTDF_sdb.buffer;
-
-    uint8_t word_length_rem;
-
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_NB_VAL, FTDF_sdb.nrOfBackoffs);
-
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_RESUME_SET, 1);
-
-    ASSERT_WARNING((FTDF_sdb.buffer[0] >= 3) && (FTDF_sdb.buffer[0] < FTDF_BUFFER_LENGTH));
-
-    /* The length is the buffer length excluding the length byte itself */
-    word_length_rem = (FTDF_sdb.buffer[0] + 4) / 4;
-
-    while (word_length_rem--)
-    {
-        *txFifoPtr++ = *srcPtr++;
-    }
-
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR, FTDF_sdb.phyCsmaCaAttr);
-
-    *FTDF_GET_REG_ADDR(RETENTION_RAM_TX_META_DATA_0) = FTDF_sdb.metadata0;
-
-    *FTDF_GET_REG_ADDR(RETENTION_RAM_TX_META_DATA_1) = FTDF_sdb.metadata1;
-
-    *txFlagSet |= (1 << FTDF_TX_DATA_BUFFER);
-}
-
-static inline void FTDF_sdbReset(void)
-{
-    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_RESUME_CLEAR, 1);
-}
-
-static inline void FTDF_sdbSetCCARetryTime(void)
-{
-    FTDF_Time timestamp = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-    FTDF_Time boStat = FTDF_GET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_STAT) *
-                       FTDF_UNIT_BACKOFF_PERIOD;
-    FTDF_sdb.ccaRetryTime = timestamp + boStat;
-}
-
-void FTDF_sdbFsmReset(void)
-{
-    FTDF_sdbReset();
-    FTDF_sdb.state = FTDF_SDB_STATE_INIT;
-}
-
-void FTDF_sdbFsmBackoffIRQ(void)
-{
-#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        return;
-    }
-
-#endif
-
-    switch (FTDF_sdb.state)
-    {
-    case FTDF_SDB_STATE_RESUMING:
-        FTDF_sdbReset();
-
-    case FTDF_SDB_STATE_INIT:
-    case FTDF_SDB_STATE_BACKING_OFF:
-        FTDF_sdbSetCCARetryTime();
-        FTDF_sdb.state = FTDF_SDB_STATE_BACKING_OFF;
-        break;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-void FTDF_sdbFsmSleep(void)
-{
-#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        return;
-    }
-
-#endif
-
-    switch (FTDF_sdb.state)
-    {
-    case FTDF_SDB_STATE_BACKING_OFF:
-        FTDF_sdbSaveState();
-        FTDF_sdb.state = FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ;
-        break;
-
-    case FTDF_SDB_STATE_INIT:
-        break;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-void FTDF_sdbFsmAbortSleep(void)
-{
-#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        return;
-    }
-
-#endif
-
-    switch (FTDF_sdb.state)
-    {
-    case FTDF_SDB_STATE_BACKING_OFF:
-        FTDF_sdb.state = FTDF_SDB_STATE_INIT;
-        break;
-
-    case FTDF_SDB_STATE_INIT:
-    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
-    case FTDF_SDB_STATE_RESUMING:
-        break;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-void FTDF_sdbFsmWakeUpIRQ(void)
-{
-#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        return;
-    }
-
-#endif
-
-    switch (FTDF_sdb.state)
-    {
-    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
-        FTDF_sdb.state = FTDF_SDB_STATE_RESUMING;
-        break;
-
-    case FTDF_SDB_STATE_INIT:
-        break;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-void FTDF_sdbFsmWakeUp(void)
-{
-#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        return;
-    }
-
-#endif
-
-    switch (FTDF_sdb.state)
-    {
-    case FTDF_SDB_STATE_RESUMING:
-        FTDF_sdbResume();
-        break;
-
-    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
-        break;
-
-    case FTDF_SDB_STATE_INIT:
-        break;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-void FTDF_sdbFsmTxIRQ(void)
-{
-#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        return;
-    }
-
-#endif
-
-    switch (FTDF_sdb.state)
-    {
-    case FTDF_SDB_STATE_RESUMING:
-        FTDF_sdbReset();
-        FTDF_sdb.state = FTDF_SDB_STATE_INIT;
-        break;
-
-    case FTDF_SDB_STATE_BACKING_OFF:
-        FTDF_sdb.state = FTDF_SDB_STATE_INIT;
-        break;
-
-    case FTDF_SDB_STATE_INIT:
-        break;
-
-    default:
-        ASSERT_WARNING(0);
-    }
-}
-
-FTDF_USec FTDF_sdbGetSleepTime(void)
-{
-    FTDF_USec sleepTime = ~((FTDF_USec) 0);
-#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        return sleepTime;
-    }
-
-#endif
-
-    switch (FTDF_sdb.state)
-    {
-    case FTDF_SDB_STATE_INIT:
-    {
-        if ((FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0) || FTDF_reqCurrent)
-        {
-            sleepTime = 0;
-        }
-        else
-        {
-            sleepTime = ~((FTDF_USec) 0);
+        while (word_length_rem--) {
+                *dstPtr++ = *tx_fifo_ptr++;
         }
 
-        break;
-    }
+        ftdf_sdb.metadata_0 = FTDF->FTDF_TX_META_DATA_0_0_REG;
+        ftdf_sdb.metadata_1 = FTDF->FTDF_TX_META_DATA_1_0_REG;
 
-    case FTDF_SDB_STATE_BACKING_OFF:
-    {
-        FTDF_Time currentTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+        ftdf_sdb.phy_csma_ca_attr = FTDF->FTDF_LMAC_CONTROL_5_REG;
+}
 
-        if (currentTime <= FTDF_sdb.ccaRetryTime)
-        {
-            sleepTime = (FTDF_sdb.ccaRetryTime - currentTime) * 16;
+static inline void ftdf_sdb_resume(void)
+{
+        volatile uint32_t *tx_fifo_ptr = &FTDF->FTDF_TX_FIFO_0_0_REG;
+        uint32_t * src_ptr = (uint32_t *) ftdf_sdb.buffer;
+
+        uint8_t word_length_rem;
+
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_11_REG, CSMA_CA_NB_VAL, ftdf_sdb.nr_of_backoffs);
+
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, CSMA_CA_RESUME_SET, 1);
+
+        ASSERT_WARNING((ftdf_sdb.buffer[0] >= 3) && (ftdf_sdb.buffer[0] < FTDF_BUFFER_LENGTH));
+
+        /* The length is the buffer length excluding the length byte itself */
+        word_length_rem = (ftdf_sdb.buffer[0] + 4) / 4;
+
+        while (word_length_rem--) {
+                *tx_fifo_ptr++ = *src_ptr++;
         }
-        else
-        {
-            sleepTime = (1 << SIZE_F_FTDF_ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL - 1) -
-                        (currentTime + FTDF_sdb.ccaRetryTime) * 16;
+
+        REG_SET_MASKED(FTDF, FTDF_LMAC_CONTROL_5_REG,
+               (REG_MSK(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_DEM_PTI) |
+               REG_MSK(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_CN) |
+               REG_MSK(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_CALCAP) |
+               REG_MSK(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_RF_GPIO_PINS) |
+               REG_MSK(FTDF, FTDF_LMAC_CONTROL_5_REG, PHYCSMACAATTR_HSI)), ftdf_sdb.phy_csma_ca_attr);
+
+        FTDF->FTDF_TX_META_DATA_0_0_REG = ftdf_sdb.metadata_0;
+
+        FTDF->FTDF_TX_META_DATA_1_0_REG = ftdf_sdb.metadata_1;
+
+        REG_SETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET,
+                 (REG_GETF(FTDF, FTDF_TX_SET_OS_REG, TX_FLAG_SET) | (1 << FTDF_TX_DATA_BUFFER)));
+}
+
+static inline void ftdf_sdb_reset(void)
+{
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, CSMA_CA_RESUME_CLEAR, 1);
+}
+
+static inline void ftdf_sdb_set_cca_retry_time(void)
+{
+        ftdf_time_t timestamp = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+        ftdf_time_t bo_stat = REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, CSMA_CA_BO_STAT) *
+                FTDF_UNIT_BACKOFF_PERIOD;
+        ftdf_sdb.cca_retry_time = timestamp + bo_stat;
+}
+
+void ftdf_sdb_fsm_reset(void) {
+        ftdf_sdb_reset();
+        ftdf_sdb.state = FTDF_SDB_STATE_INIT;
+}
+
+void ftdf_sdb_fsm_backoff_irq(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                return;
         }
-
-        if (sleepTime > 256 * FTDF_UNIT_BACKOFF_PERIOD * 16)
-        {
-            /* We have exceeded the CCA retry time. Abort sleep and wait for Tx IRQ. */
-            sleepTime = 0;
+#endif
+        switch (ftdf_sdb.state) {
+        case FTDF_SDB_STATE_RESUMING:
+                ftdf_sdb_reset();
+        case FTDF_SDB_STATE_INIT:
+        case FTDF_SDB_STATE_BACKING_OFF:
+                ftdf_sdb_set_cca_retry_time();
+                ftdf_sdb.state = FTDF_SDB_STATE_BACKING_OFF;
+                break;
+        default:
+                ASSERT_WARNING(0);
         }
+}
 
-        break;
-    }
+void ftdf_sdb_fsm_sleep(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                return;
+        }
+#endif
+        switch (ftdf_sdb.state) {
+        case FTDF_SDB_STATE_BACKING_OFF:
+                ftdf_sdb_save_state();
+                ftdf_sdb.state = FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ;
+                break;
+        case FTDF_SDB_STATE_INIT:
+                break;
+        default:
+                ASSERT_WARNING(0);
+        }
+}
 
-    case FTDF_SDB_STATE_RESUMING:
-        sleepTime = 0;
-        break;
+void ftdf_sdb_fsm_abort_sleep(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                return;
+        }
+#endif
+        switch (ftdf_sdb.state) {
+        case FTDF_SDB_STATE_BACKING_OFF:
+                ftdf_sdb.state = FTDF_SDB_STATE_INIT;
+                break;
+        case FTDF_SDB_STATE_INIT:
+        case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+        case FTDF_SDB_STATE_RESUMING:
+                break;
+        default:
+                ASSERT_WARNING(0);
+        }
+}
 
-    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
-        sleepTime = ~((FTDF_USec) 0);
-        break;
+void ftdf_sdb_fsm_wake_up_irq(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                return;
+        }
+#endif
+        switch (ftdf_sdb.state) {
+        case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+                ftdf_sdb.state = FTDF_SDB_STATE_RESUMING;
+                break;
+        case FTDF_SDB_STATE_INIT:
+                break;
+        default:
+                ASSERT_WARNING(0);
+        }
+}
 
-    default:
-        ASSERT_WARNING(0);
-    }
+void ftdf_sdb_fsm_wake_up(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                return;
+        }
+#endif
+        switch (ftdf_sdb.state) {
+        case FTDF_SDB_STATE_RESUMING:
+                ftdf_sdb_resume();
+                break;
+        case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+                break;
+        case FTDF_SDB_STATE_INIT:
+                break;
+        default:
+                ASSERT_WARNING(0);
+        }
+}
 
-    return sleepTime;
+void ftdf_sdb_fsm_tx_irq(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                return;
+        }
+#endif
+        switch (ftdf_sdb.state) {
+        case FTDF_SDB_STATE_RESUMING:
+                ftdf_sdb_reset();
+                ftdf_sdb.state = FTDF_SDB_STATE_INIT;
+                break;
+        case FTDF_SDB_STATE_BACKING_OFF:
+                ftdf_sdb.state = FTDF_SDB_STATE_INIT;
+                break;
+        case FTDF_SDB_STATE_INIT:
+                break;
+        default:
+                ASSERT_WARNING(0);
+        }
+}
+
+ftdf_usec_t ftdf_sdb_get_sleep_time(void)
+{
+        ftdf_usec_t sleep_time = ~((ftdf_usec_t) 0);
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                return sleep_time;
+        }
+#endif
+        switch (ftdf_sdb.state) {
+        case FTDF_SDB_STATE_INIT:
+                if ((REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, LMACREADY4SLEEP) == 0) || ftdf_req_current) {
+                        sleep_time = 0;
+                } else {
+                        sleep_time = ~((ftdf_usec_t) 0);
+                }
+                break;
+        case FTDF_SDB_STATE_BACKING_OFF:
+        {
+                ftdf_time_t currentTime = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+                if (currentTime <= ftdf_sdb.cca_retry_time) {
+                        sleep_time = (ftdf_sdb.cca_retry_time - currentTime) * 16;
+                } else {
+                        sleep_time = (1 << 31) - (currentTime + ftdf_sdb.cca_retry_time) * 16;
+                }
+                if (sleep_time > 256 * FTDF_UNIT_BACKOFF_PERIOD * 16) {
+                        /* We have exceeded the CCA retry time. Abort sleep and wait for Tx IRQ. */
+                        sleep_time = 0;
+                }
+                break;
+        }
+        case FTDF_SDB_STATE_RESUMING:
+                sleep_time = 0;
+                break;
+        case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+                sleep_time = ~((ftdf_usec_t) 0);
+                break;
+        default:
+                ASSERT_WARNING(0);
+        }
+        return sleep_time;
 }
 
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
 
-#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
-
 #if dg_configUSE_FTDF_DDPHY == 1
-void FTDF_ddphySet(uint16_t ccaReg)
+void ftdf_ddphy_set(uint16_t cca_reg)
 {
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-    /* We use the critical section here as protection for the global variable and the HW sleep
-     * state. */
-    FTDF_ddphyCcaReg = ccaReg;
-
-    /* Apply immediately if block is up. */
-    if (REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0)
-    {
-        FTDF_DPHY->DDPHY_CCA_REG = FTDF_ddphyCcaReg;
-    }
-
-    FTDF_exitCritical();
-}
-
-void FTDF_ddphyRestore(void)
-{
-    if (FTDF_ddphyCcaReg)
-    {
+        ftdf_critical_var();
+        ftdf_enter_critical();
+        /* We use the critical section here as protection for the global variable and the HW sleep
+         * state. */
+        ftdf_ddphy_cca_reg = cca_reg;
         /* Apply immediately if block is up. */
-        FTDF_criticalVar();
-        FTDF_enterCritical();
-        ASSERT_WARNING(REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0);
-        FTDF_DPHY->DDPHY_CCA_REG = FTDF_ddphyCcaReg;
-        FTDF_exitCritical();
-    }
+        if (REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0) {
+                FTDF_DPHY->DDPHY_CCA_REG = ftdf_ddphy_cca_reg;
+        }
+        ftdf_exit_critical();
 }
 
-void FTDF_ddphySave(void)
+void ftdf_ddphy_restore(void)
 {
-    /* Apply immediately if block is up. */
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-    ASSERT_WARNING(REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0);
-    FTDF_ddphyCcaReg = FTDF_DPHY->DDPHY_CCA_REG;
-    FTDF_exitCritical();
+        if (ftdf_ddphy_cca_reg) {
+                /* Apply immediately if block is up. */
+                ftdf_critical_var();
+                ftdf_enter_critical();
+                ASSERT_WARNING(REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0);
+                FTDF_DPHY->DDPHY_CCA_REG = ftdf_ddphy_cca_reg;
+                ftdf_exit_critical();
+        }
+}
+
+void ftdf_ddphy_save(void)
+{
+        /* Apply immediately if block is up. */
+        ftdf_critical_var();
+        ftdf_enter_critical();
+        ASSERT_WARNING(REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0);
+        ftdf_ddphy_cca_reg = FTDF_DPHY->DDPHY_CCA_REG;
+        ftdf_exit_critical();
 }
 #endif
+#endif /* CONFIG_USE_FTDF */

@@ -78,8 +78,8 @@
 #       error "Unknown chip stepping for revision A -- check the value of dg_configBLACK_ORCA_IC_STEP"
 #  endif
 #elif dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B
-#  if dg_configBLACK_ORCA_IC_STEP == BLACK_ORCA_IC_STEP_A
-#       include "DA14680BA.h"
+#  if dg_configBLACK_ORCA_IC_STEP == BLACK_ORCA_IC_STEP_B
+#       include "DA14680BB.h"
 #  else
 #       error "Unknown chip stepping for revision B -- check the value of dg_configBLACK_ORCA_IC_STEP"
 #  endif
@@ -287,7 +287,7 @@
 extern uint32_t black_orca_chip_version;
 
 #define CHIP_IS_AE                      (black_orca_chip_version == BLACK_ORCA_IC_VERSION(A, E))
-#define CHIP_IS_BA                      (black_orca_chip_version == BLACK_ORCA_IC_VERSION(B, A))
+#define CHIP_IS_BB                      (black_orca_chip_version == BLACK_ORCA_IC_VERSION(B, B))
 
 /**
  * \brief Get the chip version of the system, at runtime.
@@ -310,8 +310,8 @@ __RETAINED_CODE void hw_cpm_assert_trigger_gpio(void);
  */
 #define ASSERT_WARNING(a)                                                                       \
         {                                                                                       \
-                if (dg_configIMAGE_SETUP == DEVELOPMENT_MODE) {                                 \
-                        if (!(a)) {                                                             \
+                if (!(a)) {                                                                     \
+                        if (dg_configIMAGE_SETUP == DEVELOPMENT_MODE) {                         \
                                 __asm volatile ( " cpsid i " );                                 \
                                 GPREG->SET_FREEZE_REG = GPREG_SET_FREEZE_REG_FRZ_WDOG_Msk;      \
                                 hw_cpm_assert_trigger_gpio();                                   \
@@ -349,8 +349,8 @@ __RETAINED_CODE void hw_cpm_assert_trigger_gpio(void);
  */
 #define ASSERT_WARNING_UNINIT(a)                                                                \
         {                                                                                       \
-                if (dg_configIMAGE_SETUP == DEVELOPMENT_MODE) {                                 \
-                        if (!(a)) {                                                             \
+                if (!(a)) {                                                                     \
+                        if (dg_configIMAGE_SETUP == DEVELOPMENT_MODE) {                         \
                                 __asm volatile ( " cpsid i " );                                 \
                                 GPREG->SET_FREEZE_REG = GPREG_SET_FREEZE_REG_FRZ_WDOG_Msk;      \
                                 do {} while(1);                                                 \
@@ -583,6 +583,41 @@ void __aeabi_memset(void *dest, size_t n, int c);
 #define REG_CLR_FIELD(base, reg, field, var) \
         var &= ~(base ## _ ## reg ## _ ## field ## _Msk)
 
+/**
+ * \brief Get the address of a register value by index (provided a register interval)
+ *
+ * \note The register interval should be an exact multiple of the register's base size. For example,
+ * if the register size is 32-bit, then the interval should be 0x4, 0x8, etc. Otherwise, the result
+ * will be undefined. The interval value must be in bytes. The index value (0,1,2...) is multiplied by
+ * the interval value (in bytes) to find the actual offset of the register.
+ *
+ * Returns a register address value by index
+ */
+#define REG_GET_ADDR_INDEXED(base, reg, interval, index) \
+        ((&base->reg) + (((intptr_t) index) * ((interval) / sizeof(base->reg))))
+
+/**
+ * \brief Return the value of a register field by index (provided a register interval).
+ *
+ * e.g.
+ * \code
+ * uint16_t val;
+ * uint16_t index = 2
+ *
+ * val = REG_GETF_INDEXED(FTDF, FTDF_LONG_ADDR_0_0_REG, REG_EXP_SA_L, 0x10, index)
+ *
+ * ...
+ * \endcode
+ *
+ * \note The register interval should be an exact multiple of the register's base size. For example,
+ * if the register size is 32-bit, then the interval should be 0x4, 0x8, etc. Otherwise, the result
+ * will be undefined. The interval value must be in bytes. The index value (0,1,2...) is multiplied by
+ * the interval value (in bytes) to find the actual offset of the register.
+ *
+ */
+#define REG_GETF_INDEXED(base, reg, field, interval, index) \
+        (((*REG_GET_ADDR_INDEXED(base, reg, interval, index)) & \
+            (base ## _ ## reg ## _ ## field ## _Msk)) >> (base ## _ ## reg ## _ ## field ## _Pos))
 
 /**
  * \brief Return the value of a register field.
