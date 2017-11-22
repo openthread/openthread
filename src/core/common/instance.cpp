@@ -93,7 +93,9 @@ exit:
 
 Instance &Instance::Get(void)
 {
-    return *reinterpret_cast<Instance *>(&sInstanceRaw);
+    void *instance = &sInstanceRaw;
+
+    return *static_cast<Instance *>(instance);
 }
 
 #else // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
