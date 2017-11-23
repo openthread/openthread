@@ -857,6 +857,11 @@ typedef struct otServerConfig
 typedef struct otServiceConfig
 {
     /**
+     * Service ID. This field is used to return service ID when iterating over network data from leader.
+     */
+    uint8_t mServiceID;
+
+    /**
      * IANA Enterprise Number.
      */
     uint32_t mEnterpriseNumber;
