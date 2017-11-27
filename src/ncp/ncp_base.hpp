@@ -258,9 +258,9 @@ private:
     void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
-#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
     otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
-#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
     otError CommandHandler_NOOP(uint8_t aHeader);
     otError CommandHandler_RESET(uint8_t aHeader);
