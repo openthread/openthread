@@ -772,6 +772,7 @@ otError NcpFrameBuffer::OutFrameRemove(void)
     uint8_t *bufPtr;
     otMessage *message;
     uint16_t header;
+    uint8_t numSegments;
     FrameTag tag;
 
     VerifyOrExit(!IsEmpty(), error = OT_ERROR_NOT_FOUND);
@@ -784,6 +785,7 @@ otError NcpFrameBuffer::OutFrameRemove(void)
     // Begin at the start of current frame and move through all segments.
 
     bufPtr = mReadFrameStart[mReadDirection];
+    numSegments = 0;
 
     while (bufPtr != mWriteFrameStart[mReadDirection])
     {
@@ -812,6 +814,12 @@ otError NcpFrameBuffer::OutFrameRemove(void)
 
         // Move the pointer to next segment.
         bufPtr = GetUpdatedBufPtr(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask), mReadDirection);
+
+        numSegments++;
+
+        // If this assert fails, it is a likely indicator that the internal structure of the NCP buffer has been
+        // corrupted.
+        assert(numSegments <= kMaxSegments);
     }
 
     mReadFrameStart[mReadDirection] = bufPtr;
@@ -858,6 +866,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
     uint16_t frameLength = 0;
     uint16_t header;
     uint8_t *bufPtr;
+    uint8_t numSegments;
     otMessage *message = NULL;
 
     // If the frame length was calculated before, return the previously calculated length.
@@ -870,6 +879,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
     // Calculate frame length by adding length of all segments and messages within the current frame.
 
     bufPtr = mReadFrameStart[mReadDirection];
+    numSegments = 0;
 
     while (bufPtr != mWriteFrameStart[mReadDirection])
     {
@@ -904,6 +914,12 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
 
         // Move the pointer to next segment.
         bufPtr = GetUpdatedBufPtr(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask), mReadDirection);
+
+        numSegments++;
+
+        // If this assert fails, it is a likely indicator that the internal structure of the NCP buffer has been
+        // corrupted.
+        assert(numSegments <= kMaxSegments);
     }
 
     // Remember the calculated frame length for current active frame.
