@@ -111,6 +111,21 @@ OTAPI otError OTCALL otServerGetNextService(otInstance *aInstance, otNetworkData
                                             otServiceConfig *aConfig);
 
 /**
+ * This function gets the next service in the leader Network Data.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first service entry
+                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]    aConfig    A pointer to where the service information will be placed.
+ *
+ * @retval OT_ERROR_NONE       Successfully found the next service.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the leader Network Data.
+ *
+ */
+OTAPI otError OTCALL otServerGetNextLeaderService(otInstance *aInstance, otNetworkDataIterator *aIterator,
+                                                  otServiceConfig *aConfig);
+
+/**
  * Immediately register the local network data with the Leader.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
