@@ -285,6 +285,7 @@ otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, uint16_t a
             {
                 memset(aConfig, 0, sizeof(*aConfig));
 
+                aConfig->mServiceID = service->GetServiceID();
                 aConfig->mEnterpriseNumber = service->GetEnterpriseNumber();
                 aConfig->mServiceDataLength = service->GetServiceDataLength();
 
