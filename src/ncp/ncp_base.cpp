@@ -956,7 +956,7 @@ otError NcpBase::HandleCommand(uint8_t aHeader, unsigned int aCommand)
 
     default:
 
-#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
         if (aCommand >= SPINEL_CMD_VENDOR__BEGIN && aCommand < SPINEL_CMD_VENDOR__END)
         {
             error = VendorCommandHandler(aHeader, aCommand);
