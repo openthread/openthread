@@ -2658,7 +2658,7 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
         SuccessOrExit(error = mEncoder.BeginFrame(
                                   SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                                   SPINEL_CMD_PROP_VALUE_INSERTED,
-                                  SPINEL_PROP_MAC_SCAN_BEACON
+                                  SPINEL_PROP_MAC_ENERGY_SCAN_RESULT
                               ));
         SuccessOrExit(error = mEncoder.WriteUint8(aResult->mChannel));
         SuccessOrExit(error = mEncoder.WriteInt8(aResult->mMaxRssi));
