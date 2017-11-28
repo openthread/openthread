@@ -1781,6 +1781,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_DEBUG_NCP_LOG_LEVEL";
         break;
 
+    case SPINEL_PROP_DEBUG_TEST_WATCHDOG:
+        ret = "PROP_DEBUG_TEST_WATCHDOG";
+        break;
+
     default:
         break;
     }
