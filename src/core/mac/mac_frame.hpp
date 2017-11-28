@@ -637,20 +637,20 @@ public:
     void SetChannel(uint8_t aChannel) { mChannel = aChannel; }
 
     /**
-     * This method returns the transmit/receive power in dBm used for transmission or reception.
+     * This method returns the RSSI in dBm used for reception.
      *
-     * @returns The transmit/receive power in dBm used for transmission or reception.
+     * @returns The RSSI in dBm used for reception.
      *
      */
-    int8_t GetPower(void) const { return mPower; }
+    int8_t GetRssi(void) const { return mRssi; }
 
     /**
-     * This method sets the transmit/receive power in dBm used for transmission or reception.
+     * This method sets the RSSI in dBm used for reception.
      *
-     * @param[in]  aPower  The transmit/receive power in dBm used for transmission or reception.
+     * @param[in]  aRssi  The RSSI in dBm used for reception.
      *
      */
-    void SetPower(int8_t aPower) { mPower = aPower; }
+    void SetRssi(int8_t aRssi) { mRssi = aRssi; }
 
     /**
      * This method returns the receive Link Quality Indicator.

@@ -188,7 +188,7 @@ DECL_IOCTL_FUNC(otAddMacBlacklist);
 DECL_IOCTL_FUNC(otRemoveMacBlacklist);
 DECL_IOCTL_FUNC(otNextMacBlacklist);
 DECL_IOCTL_FUNC(otClearMacBlacklist);
-DECL_IOCTL_FUNC(otMaxTransmitPower);
+DECL_IOCTL_FUNC(otTransmitPower);
 DECL_IOCTL_FUNC(otNextOnMeshPrefix);
 DECL_IOCTL_FUNC(otPollPeriod);
 DECL_IOCTL_FUNC(otLocalLeaderPartitionId);

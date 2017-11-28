@@ -472,7 +472,7 @@ void readFrame(void)
     /* Read PSDU */
     memcpy(sReceiveFrame.mPsdu, readBuffer, length - 2);
 
-    sReceiveFrame.mPower = (int8_t)(readRssi / MRF24J40_RSSI_SLOPE) - MRF24J40_RSSI_OFFSET;
+    sReceiveFrame.mRssi = (int8_t)(readRssi / MRF24J40_RSSI_SLOPE) - MRF24J40_RSSI_OFFSET;
     sReceiveFrame.mLength = (uint8_t) length;
     sReceiveFrame.mLqi = readPlqi;
 
@@ -675,11 +675,20 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;
     (void)aPower;
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
+{
+    // TODO: Create a proper implementation for this driver.
+    (void)aInstance;
+    (void)aPower;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)

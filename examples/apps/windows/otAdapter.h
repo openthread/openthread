@@ -148,13 +148,17 @@ public:
 
 #pragma region Link Layer
 
-    property signed int /*int8_t*/ MaxTransmitPower
+    property signed int /*int8_t*/ TransmitPower
     {
-        signed int get() { return otLinkGetMaxTransmitPower(DeviceInstance); }
+        signed int get() {
+            int8_t value;
+            ThrowOnFailure(otPlatRadioGetTransmitPower(DeviceInstance, &value));
+            return value;
+        }
         void set(signed int value)
         {
             if (value > 127) throw Exception::CreateException(E_INVALIDARG);
-            otLinkSetMaxTransmitPower(DeviceInstance, (int8_t)value);
+            ThrowOnFailure(otPlatRadioSetTransmitPower(DeviceInstance, (int8_t)value);
         }
     }
 
