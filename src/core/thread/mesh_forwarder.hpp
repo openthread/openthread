@@ -316,8 +316,6 @@ private:
 #endif // OPENTHREAD_ENABLE_SERVICE
 #endif // OPENTHREAD_FTD
 
-    static MeshForwarder &GetOwner(const Context &aContext);
-
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        otError aError);
 

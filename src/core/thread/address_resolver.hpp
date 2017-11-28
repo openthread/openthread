@@ -207,8 +207,6 @@ private:
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
-    static AddressResolver &GetOwner(const Context &aContext);
-
     Coap::Resource mAddressError;
     Coap::Resource mAddressQuery;
     Coap::Resource mAddressNotification;

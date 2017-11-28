@@ -38,6 +38,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 
 using namespace ot;
 
@@ -509,7 +510,7 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 void LinkRaw::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<LinkRaw>().HandleTimer();
 }
 
 void LinkRaw::HandleTimer(void)
@@ -601,7 +602,7 @@ void LinkRaw::StartCsmaBackoff(void)
 
 void LinkRaw::HandleEnergyScanTask(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleEnergyScanTask();
+    aTasklet.GetOwner<LinkRaw>().HandleEnergyScanTask();
 }
 
 void LinkRaw::HandleEnergyScanTask(void)
@@ -627,17 +628,6 @@ void LinkRaw::HandleEnergyScanTask(void)
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-
-LinkRaw &LinkRaw::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    LinkRaw &link = *static_cast<LinkRaw *>(aContext.GetContext());
-#else
-    LinkRaw &link = Instance::Get().GetLinkRaw();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return link;
-}
 
 } // namespace ot
 

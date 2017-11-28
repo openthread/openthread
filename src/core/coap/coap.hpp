@@ -750,7 +750,6 @@ public:
     Coap(Instance &aInstance);
 
 private:
-    static Coap &GetOwner(const Context &aContext);
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
 };
@@ -773,7 +772,6 @@ public:
     ApplicationCoap(Instance &aInstance);
 
 private:
-    static ApplicationCoap &GetOwner(const Context &aContext);
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
 };

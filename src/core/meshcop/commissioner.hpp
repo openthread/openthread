@@ -279,8 +279,6 @@ private:
     otError SendPetition(void);
     otError SendKeepAlive(void);
 
-    static Commissioner &GetOwner(const Context &aContext);
-
     otCommissionerState mState;
 
     struct Joiner

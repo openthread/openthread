@@ -94,8 +94,6 @@ private:
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
-    static AnnounceBeginServer &GetOwner(const Context &aContext);
-
     uint32_t mChannelMask;
     uint16_t mPeriod;
     uint8_t mCount;

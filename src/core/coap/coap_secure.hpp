@@ -219,8 +219,6 @@ private:
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
 
-    static CoapSecure &GetOwner(const Context &aContext);
-
     Ip6::MessageInfo mPeerAddress;
     ConnectedCallback mConnectedCallback;
     void *mConnectedContext;

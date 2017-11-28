@@ -224,8 +224,6 @@ private:
     static bool HandleTrickleTimer(TrickleTimer &aTrickleTimer);
     bool HandleTrickleTimer(void);
 
-    static Dhcp6Client &GetOwner(const Context &aContext);
-
     Ip6::UdpSocket mSocket;
 
     TrickleTimer mTrickleTimer;

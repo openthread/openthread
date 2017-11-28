@@ -43,6 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
 #include "thread/thread_netif.hpp"
@@ -376,7 +377,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
 
 void Dtls::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<Dtls>().HandleTimer();
 }
 
 void Dtls::HandleTimer(void)
@@ -513,17 +514,6 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
         otLogDebgMbedTls(pThis->GetInstance(), "%s", str);
         break;
     }
-}
-
-Dtls &Dtls::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Dtls &dtls = *static_cast<Dtls *>(aContext.GetContext());
-#else
-    Dtls &dtls = Instance::Get().GetThreadNetif().GetDtls();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return dtls;
 }
 
 }  // namespace MeshCoP

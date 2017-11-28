@@ -133,8 +133,6 @@ private:
 
     void ResignCommissioner(void);
 
-    static Leader &GetOwner(const Context &aContext);
-
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
     TimerMilli mTimer;

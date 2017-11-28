@@ -45,6 +45,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -286,7 +287,7 @@ uint32_t Leader::GetDelayTimerMinimal(void) const
 
 void Leader::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)
@@ -316,17 +317,6 @@ void Leader::ResignCommissioner(void)
     SetEmptyCommissionerData();
 
     otLogInfoMeshCoP(GetInstance(), "commissioner inactive");
-}
-
-Leader &Leader::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Leader &leader = *static_cast<Leader *>(aContext.GetContext());
-#else
-    Leader &leader = Instance::Get().GetThreadNetif().GetLeader();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return leader;
 }
 
 }  // namespace MeshCoP

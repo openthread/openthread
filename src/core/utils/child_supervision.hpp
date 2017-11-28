@@ -157,7 +157,6 @@ private:
     void SendMessage(Child &aChild);
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
-    static ChildSupervisor &GetOwner(const Context &aContext);
 
     uint16_t     mSupervisionInterval;
     TimerMilli   mTimer;
@@ -249,7 +248,6 @@ private:
     void RestartTimer(void);
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
-    static SupervisionListener &GetOwner(const Context &aContext);
 
     uint16_t mTimeout;
     TimerMilli mTimer;

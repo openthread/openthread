@@ -1441,8 +1441,6 @@ private:
     otError InformPreviousParent(void);
 #endif
 
-    static Mle &GetOwner(const Context &aContext);
-
     MessageQueue mDelayedResponses;
 
     struct

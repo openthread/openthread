@@ -252,8 +252,6 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static Client &GetOwner(const Context &aContext);
-
     Ip6::UdpSocket mSocket;
 
     uint16_t mMessageId;

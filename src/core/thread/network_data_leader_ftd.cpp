@@ -47,6 +47,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
@@ -1516,7 +1517,7 @@ otError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
 void Leader::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)
@@ -1544,17 +1545,6 @@ void Leader::HandleTimer(void)
     {
         mTimer.Start(kStateUpdatePeriod);
     }
-}
-
-Leader &Leader::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Leader &leader = *static_cast<Leader *>(aContext.GetContext());
-#else
-    Leader &leader = Instance::Get().GetThreadNetif().GetNetworkDataLeader();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return leader;
 }
 
 }  // namespace NetworkData

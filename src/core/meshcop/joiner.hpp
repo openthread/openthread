@@ -157,8 +157,6 @@ private:
     void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
 
-    static Joiner &GetOwner(const Context &aContext);
-
     otJoinerState mState;
 
     otJoinerCallback mCallback;
