@@ -1597,7 +1597,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
             routerid = GetNetif().GetMle().GetRouterId(srcaddr.mShortAddress);
             neighbor = static_cast<Neighbor *>(GetNetif().GetMle().GetRouter(routerid));
 
-            if (neighbor->GetState() != Neighbor::kStateValid)
+            if (neighbor != NULL && (neighbor->GetState() != Neighbor::kStateValid))
             {
                 neighbor = NULL;
             }
