@@ -75,7 +75,6 @@ MleRouter::MleRouter(Instance &aInstance):
     mLeaderWeight(kLeaderWeight),
     mFixedLeaderPartitionId(0),
     mRouterRoleEnabled(true),
-    mIsRouterRestoringChildren(false),
     mAddressSolicitPending(false),
     mPreviousPartitionId(0),
     mRouterSelectionJitter(kRouterSelectionJitter),
@@ -447,12 +446,13 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
 
+    // remove children that do not have matching RLOC16
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].GetState() == Neighbor::kStateRestored)
+        if (mChildren[i].IsStateValidOrRestoring() &&
+            GetRouterId(mChildren[i].GetRloc16()) != mRouterId)
         {
-            mIsRouterRestoringChildren = true;
-            break;
+            RemoveNeighbor(mChildren[i]);
         }
     }
 
@@ -492,12 +492,13 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
 
+    // remove children that do not have matching RLOC16
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].GetState() == Neighbor::kStateRestored)
+        if (mChildren[i].IsStateValidOrRestoring() &&
+            GetRouterId(mChildren[i].GetRloc16()) != mRouterId)
         {
-            mIsRouterRestoringChildren = true;
-            break;
+            RemoveNeighbor(mChildren[i]);
         }
     }
 
@@ -1867,26 +1868,6 @@ void MleRouter::HandleStateUpdateTimer(void)
         break;
     }
 
-    if (mIsRouterRestoringChildren)
-    {
-        bool hasRestoringChildren = false;
-
-        for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
-        {
-            if (mChildren[i].GetState() == Neighbor::kStateRestored)
-            {
-                SendChildUpdateRequest(mChildren[i]);
-                hasRestoringChildren = true;
-            }
-        }
-
-        // no child to restore
-        if (!hasRestoringChildren)
-        {
-            mIsRouterRestoringChildren = false;
-        }
-    }
-
     // update children state
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
@@ -1914,6 +1895,11 @@ void MleRouter::HandleStateUpdateTimer(void)
         {
             otLogInfoMle(GetInstance(), "Child timeout expired");
             RemoveNeighbor(mChildren[i]);
+        }
+        else if ((mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER) &&
+                 (mChildren[i].GetState() == Neighbor::kStateRestored))
+        {
+            SendChildUpdateRequest(mChildren[i]);
         }
     }
 
@@ -3690,7 +3676,7 @@ otError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 
         SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), Settings::kKeyChildInfo, i,
                                                 reinterpret_cast<uint8_t *>(&childInfo), &length));
-        VerifyOrExit(length == sizeof(childInfo), error = OT_ERROR_PARSE);
+        VerifyOrExit(length >= sizeof(childInfo), error = OT_ERROR_PARSE);
 
         if (childInfo.mRloc16 == aChildRloc16)
         {
