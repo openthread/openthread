@@ -1586,6 +1586,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
                      ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
                       dstaddr.mShortAddress == mShortAddress), error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
+#ifdef OPENTHREAD_FTD
         // Allow multicasts from neighbor routers if FFD
         if (neighbor == NULL && dstaddr.mShortAddress == kShortAddrBroadcast &&
             (GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD))
@@ -1600,6 +1601,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
             	neighbor = NULL;
             }
         }
+#endif
 
         break;
 
