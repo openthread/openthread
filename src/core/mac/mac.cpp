@@ -1571,8 +1571,47 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     SuccessOrExit(error = aFrame->ValidatePsdu());
 
     aFrame->GetSrcAddr(srcaddr);
+    aFrame->GetDstAddr(dstaddr);
     neighbor = GetNetif().GetMle().GetNeighbor(srcaddr);
 
+    // Destination Address Filtering
+    switch (dstaddr.mLength)
+    {
+    case 0:
+        break;
+
+    case sizeof(ShortAddress):
+        aFrame->GetDstPanId(panid);
+        VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
+                     ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
+                      dstaddr.mShortAddress == mShortAddress), error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
+
+        // Allow multicasts from neighbor routers if FFD
+        if (neighbor == NULL && dstaddr.mShortAddress == kShortAddrBroadcast &&
+            (GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD))
+        {
+            uint8_t routerid;
+
+            routerid = GetNetif().GetMle().GetRouterId(srcaddr.mShortAddress);
+            neighbor = static_cast<Neighbor *>(GetNetif().GetMle().GetRouter(routerid));
+
+            if(neighbor->GetState() != Neighbor::kStateValid)
+            {
+            	neighbor = NULL;
+            }
+        }
+
+        break;
+
+    case sizeof(ExtAddress):
+        aFrame->GetDstPanId(panid);
+        VerifyOrExit(panid == mPanId &&
+                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0,
+                     error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
+        break;
+    }
+
+    // Source Address Filtering
     switch (srcaddr.mLength)
     {
     case 0:
@@ -1619,29 +1658,6 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     }
 
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
-
-    // Destination Address Filtering
-    aFrame->GetDstAddr(dstaddr);
-
-    switch (dstaddr.mLength)
-    {
-    case 0:
-        break;
-
-    case sizeof(ShortAddress):
-        aFrame->GetDstPanId(panid);
-        VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
-                     ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
-                      dstaddr.mShortAddress == mShortAddress), error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
-        break;
-
-    case sizeof(ExtAddress):
-        aFrame->GetDstPanId(panid);
-        VerifyOrExit(panid == mPanId &&
-                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0,
-                     error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
-        break;
-    }
 
     // Increment counters
     if (dstaddr.mShortAddress == kShortAddrBroadcast)
