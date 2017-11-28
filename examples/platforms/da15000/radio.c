@@ -71,6 +71,7 @@ static bool          sRadioPromiscuous       = false;
 static bool          sTransmitDoneFrame      = false;
 static uint8_t       sChannel                = RADIO_DEFAULT_CHANNEL;
 static uint8_t       sEnableRX               = 0;
+static int8_t        sTxPower                = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 static uint8_t       sReadFrame              = 0;
 static uint8_t       sWriteFrame             = 0;
 static uint32_t      sSleepInitDelay         = 0;
@@ -466,11 +467,26 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
+{
+    otError error = OT_ERROR_NONE;
+    (void)aInstance;
+
+    otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
+    *aPower = sTxPower;
+
+exit:
+    return error;
+}
+
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     otLogInfoPlat(aInstance, "Set DefaultTxPower: %d", aPower);
 
+    sTxPower = aPower;
     ftdf_set_value(FTDF_PIB_TX_POWER, &aPower);
+
+    return OT_ERROR_NONE;
 }
 
 void da15000RadioProcess(otInstance *aInstance)
@@ -577,7 +593,7 @@ void ftdf_rcv_frame_transparent(ftdf_data_length_t frame_length,
         sReceiveFrame[sWriteFrame].mChannel   = sChannel;
         sReceiveFrame[sWriteFrame].mLength    = frame_length;
         sReceiveFrame[sWriteFrame].mLqi       = OT_RADIO_LQI_NONE;
-        sReceiveFrame[sWriteFrame].mPower     = otPlatRadioGetRssi(sThreadInstance);
+        sReceiveFrame[sWriteFrame].mRssi      = otPlatRadioGetRssi(sThreadInstance);
         memcpy(sReceiveFrame[sWriteFrame].mPsdu, frame, frame_length);
 
         sWriteFrame = (sWriteFrame + 1) % RADIO_FRAMES_BUFFER_SIZE;

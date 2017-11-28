@@ -102,7 +102,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_REMOVE_MAC_BLACKLIST",        REF_IOCTL_FUNC(otRemoveMacBlacklist) },
     { "IOCTL_OTLWF_OT_NEXT_MAC_BLACKLIST",          REF_IOCTL_FUNC(otNextMacBlacklist) },
     { "IOCTL_OTLWF_OT_CLEAR_MAC_BLACKLIST",         REF_IOCTL_FUNC(otClearMacBlacklist) },
-    { "IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER",          REF_IOCTL_FUNC(otMaxTransmitPower) },
+    { "IOCTL_OTLWF_OT_TRANSMIT_POWER",              REF_IOCTL_FUNC(otTransmitPower) },
     { "IOCTL_OTLWF_OT_NEXT_ON_MESH_PREFIX",         REF_IOCTL_FUNC(otNextOnMeshPrefix) },
     { "IOCTL_OTLWF_OT_POLL_PERIOD",                 REF_IOCTL_FUNC(otPollPeriod) },
     { "IOCTL_OTLWF_OT_LOCAL_LEADER_PARTITION_ID",   REF_IOCTL_FUNC(otLocalLeaderPartitionId) },
@@ -4786,7 +4786,7 @@ otLwfIoCtl_otClearMacBlacklist(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfIoCtl_otMaxTransmitPower(
+otLwfIoCtl_otTransmitPower(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
             PUCHAR          InBuffer,
@@ -4800,15 +4800,13 @@ otLwfIoCtl_otMaxTransmitPower(
 
     if (InBufferLength >= sizeof(int8_t))
     {
-        otLinkSetMaxTransmitPower(pFilter->otCtx, *(int8_t*)InBuffer);
-        status = STATUS_SUCCESS;
+        status = ThreadErrorToNtstatus(otPlatRadioSetTransmitPower(pFilter->otCtx, *(int8_t*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(int8_t))
     {
-        *(int8_t*)OutBuffer = otLinkGetMaxTransmitPower(pFilter->otCtx);
+        status = ThreadErrorToNtstatus(otPlatRadioGetTransmitPower(pFilter->otCtx, (int8_t*)OutBuffer));
         *OutBufferLength = sizeof(int8_t);
-        status = STATUS_SUCCESS;
     }
     else
     {

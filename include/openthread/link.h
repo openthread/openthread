@@ -213,25 +213,6 @@ OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExt
 OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
 
 /**
- * This function returns the maximum transmit power setting in dBm.
- *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
- *
- * @returns  The maximum transmit power setting.
- *
- */
-OTAPI int8_t OTCALL otLinkGetMaxTransmitPower(otInstance *aInstance);
-
-/**
- * This function sets the maximum transmit power in dBm.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPower    The maximum transmit power in dBm.
- *
- */
-OTAPI void OTCALL otLinkSetMaxTransmitPower(otInstance *aInstance, int8_t aPower);
-
-/**
  * Get the IEEE 802.15.4 PAN ID.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

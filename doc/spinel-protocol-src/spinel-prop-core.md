@@ -465,7 +465,7 @@ The frame metadata field consists of the following fields:
 
  Field   | Description                  | Type       | Len   | Default
 :--------|:-----------------------------|:-----------|-------|----------
-MD_POWER | (dBm) RSSI/TX-Power          | `c` int8   | 1     | -128
+MD_RSSI  | (dBm) RSSI                   | `c` int8   | 1     | -128
 MD_NOISE | (dBm) Noise floor            | `c` int8   | 1     | -128
 MD_FLAG  | Flags (defined below)        | `S` uint16 | 2     |
 MD_PHY   | PHY-specific data            | `d` data   | >=2   |
@@ -476,11 +476,6 @@ the host:
 
 * MD_NOISE
 * MD_FLAG
-
-When specifying `MD_POWER` for a packet to be transmitted, the actual
-transmit power is never larger than the current value of `PROP_PHY_TX_POWER`
-((#prop-phy-tx-power)). When left unspecified (or set to the value -128),
-an appropriate transmit power will be chosen by the NCP.
 
 The bit values in `MD_FLAG` are defined as follows:
 

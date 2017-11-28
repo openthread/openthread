@@ -305,7 +305,10 @@ private:
     void ProcessSingleton(int argc, char *argv[]);
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
-    void ProcessTxPowerMax(int argc, char *argv[]);
+#ifndef OTDLL
+    void ProcessTxPower(int argc, char *argv[]);
+    void ProcessUdp(int argc, char *argv[]);
+#endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
     void ProcessMacFilter(int argc, char *argv[]);
@@ -319,10 +322,6 @@ private:
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);
     void ProcessInstance(int argc, char *argv[]);
-#endif
-
-#ifndef OTDLL
-    void ProcessUdp(int argc, char *argv[]);
 #endif
 
 #ifndef OTDLL

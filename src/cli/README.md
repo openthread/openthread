@@ -1592,20 +1592,20 @@ Done
 
 ### txpowermax
 
-Get the maximum transmit power in dBm.
+Get the transmit power in dBm.
 
 ```bash
-> txpowermax
+> txpower
 -10 dBm
 Done
 ```
 
 ### txpowermax \<txpowermax\>
 
-Set the maximum transmit power.
+Set the transmit power.
 
 ```bash
-> txpowermax -10
+> txpower -10
 Done
 ```
 
