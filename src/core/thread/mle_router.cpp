@@ -3313,16 +3313,14 @@ Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
             }
         }
 
-        for (int i = 0; i <= kMaxRouterId; i++)
+        if (IsActiveRouter(aAddress))
         {
-            if (i == mRouterId)
-            {
-                continue;
-            }
+            uint8_t routerId = GetRouterId(aAddress);
+            Router *router = &mRouters[routerId];
 
-            if (mRouters[i].GetState() == Neighbor::kStateValid && mRouters[i].GetRloc16() == aAddress)
+            if (router->GetState() == Neighbor::kStateValid && router->GetRloc16() == aAddress)
             {
-                ExitNow(rval = &mRouters[i]);
+                ExitNow(rval = router);
             }
         }
 
