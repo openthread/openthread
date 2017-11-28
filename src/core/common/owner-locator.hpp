@@ -28,76 +28,40 @@
 
 /**
  * @file
- *   This file includes definitions for maintaining a pointer to arbitrary context information.
+ *   This file includes definitions for owner locator.
  */
 
-#ifndef CONTEXT_HPP_
-#define CONTEXT_HPP_
+#ifndef OWNER_LOCATOR_HPP_
+#define OWNER_LOCATOR_HPP_
 
 #include "openthread-core-config.h"
 
-#include <openthread/platform/toolchain.h>
-
-#include "openthread-core-config.h"
+#include <openthread/types.h>
+#include "common/instance.hpp"
+#include "common/locator.hpp"
 
 namespace ot {
 
-/**
- * @addtogroup core-context
- *
- * @brief
- *   This module includes definitions for maintaining a pointer to arbitrary context information.
- *
- * @{
- *
- */
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
-/**
- * This class implements definitions for maintaining a pointer to arbitrary context information.
- *
- * This is used as base class for objects that provide a callback or handler (e.g., Timer or Tasklet).
- *
- */
-class Context
+template <typename OwnerType>
+OwnerType &OwnerLocator::GetOwner(void)
 {
-public:
+    // This method uses the `Instance` template method `Get<Type>`
+    // to get to the given `Type` from the single OpenThread
+    // instance.
+    //
+    // The specializations of `Instance::Get<Type>` should be defined
+    // for any class (type) which would use `GetOwner<Type>` method
+    // (i.e., any class that is an owner of a callback providing object
+    // such as a `Timer`, `Tasklet`, or in general any sub-class of
+    // `OwnerLocator`).
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    /**
-     * This method returns the pointer to the arbitrary context information.
-     *
-     * @returns The pointer to the context information.
-     *
-     */
-    void *GetContext(void) const { return mContext; }
+    return Instance::Get().Get<OwnerType>();
+}
+
 #endif
-
-protected:
-    /**
-     * This constructor initializes the context object.
-     *
-     * @param[in]  aContext    A pointer to arbitrary context information.
-     *
-     */
-    Context(void *aContext)
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-        : mContext(aContext)
-#endif
-    {
-        OT_UNUSED_VARIABLE(aContext);
-    }
-
-private:
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    void *mContext;
-#endif
-};
-
-/**
- * @}
- *
- */
 
 }  // namespace ot
 
-#endif  // CONTEXT_HPP_
+#endif  // OWNER_LOCATOR_HPP_

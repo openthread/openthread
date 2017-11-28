@@ -42,9 +42,9 @@
 
 namespace ot {
 
-Tasklet::Tasklet(Instance &aInstance, Handler aHandler, void *aContext):
+Tasklet::Tasklet(Instance &aInstance, Handler aHandler, void *aOwner):
     InstanceLocator(aInstance),
-    Context(aContext),
+    OwnerLocator(aOwner),
     mHandler(aHandler),
     mNext(NULL)
 {
@@ -66,6 +66,8 @@ otError TaskletScheduler::Post(Tasklet &aTasklet)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = OT_ERROR_ALREADY);
+
+    VerifyOrExit(&aTasklet.GetInstance().Get<TaskletScheduler>() == this);
 
     if (mTail == NULL)
     {

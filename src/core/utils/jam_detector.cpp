@@ -38,6 +38,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/owner-locator.hpp"
 #include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -136,7 +137,7 @@ exit:
 
 void JamDetector::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<JamDetector>().HandleTimer();
 }
 
 void JamDetector::HandleTimer(void)
@@ -236,17 +237,6 @@ void JamDetector::UpdateJamState(void)
     {
         mHandler(mJamState, mContext);
     }
-}
-
-JamDetector &JamDetector::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    JamDetector &detector = *static_cast<JamDetector *>(aContext.GetContext());
-#else
-    JamDetector &detector = Instance::Get().GetThreadNetif().GetJamDetector();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return detector;
 }
 
 }  // namespace Utils

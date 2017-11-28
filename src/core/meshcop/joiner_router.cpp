@@ -43,6 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle.hpp"
@@ -427,7 +428,7 @@ exit:
 
 void JoinerRouter::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<JoinerRouter>().HandleTimer();
 }
 
 void JoinerRouter::HandleTimer(void)
@@ -527,17 +528,6 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *a
 
 exit:
     return ;
-}
-
-JoinerRouter &JoinerRouter::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    JoinerRouter &joiner = *static_cast<JoinerRouter *>(aContext.GetContext());
-#else
-    JoinerRouter &joiner = Instance::Get().GetThreadNetif().GetJoinerRouter();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return joiner;
 }
 
 }  // namespace Dtls

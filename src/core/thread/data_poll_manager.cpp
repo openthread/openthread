@@ -41,6 +41,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -410,18 +411,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
 void DataPollManager::HandlePollTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).SendDataPoll();
-}
-
-DataPollManager &DataPollManager::GetOwner(Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    DataPollManager &manager = *static_cast<DataPollManager *>(aContext.GetContext());
-#else
-    DataPollManager &manager = Instance::Get().GetThreadNetif().GetMeshForwarder().GetDataPollManager();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return manager;
+    aTimer.GetOwner<DataPollManager>().SendDataPoll();
 }
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const

@@ -234,8 +234,6 @@ private:
     void Close(void);
     void Process(void);
 
-    static Dtls &GetOwner(const Context &aContext);
-
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 

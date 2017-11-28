@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "common/context.hpp"
 #include "common/timer.hpp"
 
 namespace ot {
@@ -86,14 +85,14 @@ public:
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
      * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
-     * @param[in]  aContext                 A pointer to arbitrary context information.
+     * @param[in]  aOwner                   A pointer to owner of the `TrickleTimer` object.
      *
      */
     TrickleTimer(Instance &aInstance,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
                  uint32_t aRedundancyConstant,
 #endif
-                 Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext);
+                 Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aOwner);
 
     /**
      * This method indicates whether or not the trickle timer instance is running.

@@ -46,6 +46,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
 #include "thread/thread_netif.hpp"
@@ -578,7 +579,7 @@ exit:
 
 void Joiner::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<Joiner>().HandleTimer();
 }
 
 void Joiner::HandleTimer(void)
@@ -612,17 +613,6 @@ void Joiner::HandleTimer(void)
     }
 
     Complete(error);
-}
-
-Joiner &Joiner::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Joiner &joiner = *static_cast<Joiner *>(aContext.GetContext());
-#else
-    Joiner &joiner = Instance::Get().GetThreadNetif().GetJoiner();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return joiner;
 }
 
 }  // namespace MeshCoP

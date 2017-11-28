@@ -3536,13 +3536,13 @@ void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength
     mUserCommandsLength = aLength;
 }
 
-Interpreter &Interpreter::GetOwner(const Context &aContext)
+Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
 {
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Interpreter &interpreter = *static_cast<Interpreter *>(aContext.GetContext());
+    Interpreter &interpreter = (aOwnerLocator.GetOwner<Interpreter>());
 #else
     Interpreter &interpreter = Uart::sUartServer->GetInterpreter();
-    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aOwnerLocator);
 #endif
     return interpreter;
 }

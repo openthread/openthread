@@ -42,6 +42,7 @@
 #include "common/instance.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -127,7 +128,7 @@ exit:
 
 void AnnounceBeginServer::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<AnnounceBeginServer>().HandleTimer();
 }
 
 void AnnounceBeginServer::HandleTimer(void)
@@ -150,17 +151,6 @@ void AnnounceBeginServer::HandleTimer(void)
             mCount--;
         }
     }
-}
-
-AnnounceBeginServer &AnnounceBeginServer::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    AnnounceBeginServer &server = *static_cast<AnnounceBeginServer *>(aContext.GetContext());
-#else
-    AnnounceBeginServer &server = Instance::Get().GetThreadNetif().GetAnnounceBeginServer();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return server;
 }
 
 }  // namespace ot

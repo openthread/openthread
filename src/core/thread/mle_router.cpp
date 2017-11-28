@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "common/settings.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/icmp6.hpp"
@@ -506,7 +507,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
 
 bool MleRouter::HandleAdvertiseTimer(TrickleTimer &aTimer)
 {
-    return GetOwner(aTimer).HandleAdvertiseTimer();
+    return aTimer.GetOwner<MleRouter>().HandleAdvertiseTimer();
 }
 
 bool MleRouter::HandleAdvertiseTimer(void)
@@ -1770,7 +1771,7 @@ exit:
 
 void MleRouter::HandleStateUpdateTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleStateUpdateTimer();
+    aTimer.GetOwner<MleRouter>().HandleStateUpdateTimer();
 }
 
 void MleRouter::HandleStateUpdateTimer(void)
@@ -4839,17 +4840,6 @@ otError MleRouter::SetAssignParentPriority(int8_t aParentPriority)
 
 exit:
     return error;
-}
-
-MleRouter &MleRouter::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    MleRouter &mle = *static_cast<MleRouter *>(aContext.GetContext());
-#else
-    MleRouter &mle = Instance::Get().GetThreadNetif().GetMle();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return mle;
 }
 
 otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const

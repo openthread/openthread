@@ -36,6 +36,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
@@ -917,25 +918,14 @@ Coap::Coap(Instance &aInstance):
 {
 }
 
-Coap &Coap::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Coap &coap = *static_cast<Coap *>(aContext.GetContext());
-#else
-    Coap &coap = Instance::Get().GetThreadNetif().GetCoap();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return coap;
-}
-
 void Coap::HandleRetransmissionTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+    aTimer.GetOwner<Coap>().CoapBase::HandleRetransmissionTimer();
 }
 
 void Coap::HandleResponsesQueueTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
+    aTimer.GetOwner<Coap>().CoapBase::HandleResponsesQueueTimer();
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -945,25 +935,14 @@ ApplicationCoap::ApplicationCoap(Instance &aInstance):
 {
 }
 
-ApplicationCoap &ApplicationCoap::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    ApplicationCoap &coap = *static_cast<ApplicationCoap *>(aContext.GetContext());
-#else
-    ApplicationCoap &coap = Instance::Get().GetApplicationCoap();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return coap;
-}
-
 void ApplicationCoap::HandleRetransmissionTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleRetransmissionTimer();
 }
 
 void ApplicationCoap::HandleResponsesQueueTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
+    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleResponsesQueueTimer();
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP

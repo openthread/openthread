@@ -206,7 +206,6 @@ HEADERS_COMMON                      = \
     coap/coap_header.hpp              \
     coap/coap_secure.hpp              \
     common/code_utils.hpp             \
-    common/context.hpp                \
     common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
@@ -214,6 +213,7 @@ HEADERS_COMMON                      = \
     common/locator.hpp                \
     common/logging.hpp                \
     common/message.hpp                \
+    common/owner-locator.hpp          \
     common/settings.hpp               \
     common/new.hpp                    \
     common/tasklet.hpp                \

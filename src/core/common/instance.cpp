@@ -241,4 +241,179 @@ void Instance::InvokeEnergyScanCallback(otEnergyScanResult *aResult) const
     }
 }
 
+// Specializations of the `Get<Type>()` method.
+
+template<> TaskletScheduler &Instance::Get(void)
+{
+    return GetTaskletScheduler();
+}
+
+template<> MeshForwarder &Instance::Get(void)
+{
+    return GetThreadNetif().GetMeshForwarder();
+}
+
+template<> Mle::Mle &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle();
+}
+
+template<> Mle::MleRouter &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle();
+}
+
+template<> Ip6::Netif &Instance::Get(void)
+{
+    return GetThreadNetif();
+}
+
+template<> Ip6::Ip6 &Instance::Get(void)
+{
+    return GetIp6();
+}
+
+template<> Mac::Mac &Instance::Get(void)
+{
+    return GetThreadNetif().GetMac();
+}
+
+template<> KeyManager &Instance::Get(void)
+{
+    return GetThreadNetif().GetKeyManager();
+}
+
+#if OPENTHREAD_FTD
+template<> AddressResolver &Instance::Get(void)
+{
+    return GetThreadNetif().GetAddressResolver();
+}
+
+template<> MeshCoP::Leader &Instance::Get(void)
+{
+    return GetThreadNetif().GetLeader();
+}
+
+template<> MeshCoP::JoinerRouter &Instance::Get(void)
+{
+    return GetThreadNetif().GetJoinerRouter();
+}
+#endif // OPENTHREAD_FTD
+
+template<> AnnounceBeginServer &Instance::Get(void)
+{
+    return GetThreadNetif().GetAnnounceBeginServer();
+}
+
+template<> DataPollManager &Instance::Get(void)
+{
+    return GetThreadNetif().GetMeshForwarder().GetDataPollManager();
+}
+
+template<> EnergyScanServer &Instance::Get(void)
+{
+    return GetThreadNetif().GetEnergyScanServer();
+}
+
+template<> PanIdQueryServer &Instance::Get(void)
+{
+    return GetThreadNetif().GetPanIdQueryServer();
+}
+
+template<> NetworkData::Leader &Instance::Get(void)
+{
+    return GetThreadNetif().GetNetworkDataLeader();
+}
+
+template<> Ip6::Mpl &Instance::Get(void)
+{
+    return GetIp6().GetMpl();
+}
+
+template<> Coap::Coap &Instance::Get(void)
+{
+    return GetThreadNetif().GetCoap();
+}
+
+template<> MeshCoP::ActiveDatasetBase &Instance::Get(void)
+{
+    return GetThreadNetif().GetActiveDataset();
+}
+
+template<> MeshCoP::PendingDatasetBase &Instance::Get(void)
+{
+    return GetThreadNetif().GetPendingDataset();
+}
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+template<> Coap::ApplicationCoap &Instance::Get(void)
+{
+    return GetApplicationCoap();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+template<> MeshCoP::Commissioner &Instance::Get(void)
+{
+    return GetThreadNetif().GetCommissioner();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_JOINER
+template<> MeshCoP::Joiner &Instance::Get(void)
+{
+    return GetThreadNetif().GetJoiner();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+template<> Dns::Client &Instance::Get(void)
+{
+    return GetThreadNetif().GetDnsClient();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_DTLS
+template<> MeshCoP::Dtls &Instance::Get(void)
+{
+    return GetThreadNetif().GetDtls();
+}
+
+template<> Coap::CoapSecure &Instance::Get(void)
+{
+    return GetThreadNetif().GetCoapSecure();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+template<> LinkRaw &Instance::Get(void)
+{
+    return GetLinkRaw();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+template<> Dhcp6::Dhcp6Client &Instance::Get(void)
+{
+    return GetThreadNetif().GetDhcp6Client();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+template<> Utils::JamDetector &Instance::Get(void)
+{
+    return GetThreadNetif().GetJamDetector();
+}
+#endif
+
+template<> Utils::ChildSupervisor &Instance::Get(void)
+{
+    return GetThreadNetif().GetChildSupervisor();
+}
+
+template<> Utils::SupervisionListener &Instance::Get(void)
+{
+    return GetThreadNetif().GetSupervisionListener();
+}
+
 } // namespance ot

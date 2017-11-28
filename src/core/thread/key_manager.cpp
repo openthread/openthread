@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/timer.hpp"
+#include "common/owner-locator.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -248,7 +249,7 @@ void KeyManager::StartKeyRotationTimer(void)
 
 void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleKeyRotationTimer();
+    aTimer.GetOwner<KeyManager>().HandleKeyRotationTimer();
 }
 
 void KeyManager::HandleKeyRotationTimer(void)
@@ -268,17 +269,6 @@ void KeyManager::HandleKeyRotationTimer(void)
     {
         SetCurrentKeySequence(mKeySequence + 1);
     }
-}
-
-KeyManager &KeyManager::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    KeyManager &keyManager = *static_cast<KeyManager *>(aContext.GetContext());
-#else
-    KeyManager &keyManager = Instance::Get().GetThreadNetif().GetKeyManager();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return keyManager;
 }
 
 }  // namespace ot

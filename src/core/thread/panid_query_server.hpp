@@ -84,8 +84,6 @@ private:
 
     otError SendConflict(void);
 
-    static PanIdQueryServer &GetOwner(const Context &aContext);
-
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;
     uint16_t mPanId;

@@ -113,8 +113,6 @@ private:
 
     otError GetBorderAgentRloc(uint16_t &aRloc);
 
-    static JoinerRouter &GetOwner(const Context &aContext);
-
     Ip6::NetifCallback mNetifCallback;
 
     Ip6::UdpSocket mSocket;

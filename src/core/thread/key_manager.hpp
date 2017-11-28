@@ -341,8 +341,6 @@ private:
     static void HandleKeyRotationTimer(Timer &aTimer);
     void HandleKeyRotationTimer(void);
 
-    static KeyManager &GetOwner(const Context &aContext);
-
     otMasterKey mMasterKey;
 
     uint32_t mKeySequence;
