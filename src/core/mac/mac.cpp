@@ -1588,8 +1588,10 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
 #if OPENTHREAD_FTD
 
-        // Allow multicasts from neighbor routers if FFD
+        // Allow non link-local multicasts from neighbor routers if FFD
         if (neighbor == NULL && dstaddr.mShortAddress == kShortAddrBroadcast &&
+            srcaddr.mLength == sizeof(ShortAddress) &&
+            GetNetif().GetMle().IsActiveRouter(srcaddr.mShortAddress) &&
             (GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD))
         {
             uint8_t routerid;
