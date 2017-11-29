@@ -63,6 +63,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 {
     NCP_GET_PROP_HANDLER_ENTRY(CAPS),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_ASSERT),
+    NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_WATCHDOG),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_NCP_LOG_LEVEL),
     NCP_GET_PROP_HANDLER_ENTRY(HWADDR),
     NCP_GET_PROP_HANDLER_ENTRY(HOST_POWER_STATE),
@@ -1849,6 +1850,16 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(void)
 
     OT_UNREACHABLE_CODE(
         return mEncoder.WriteBool(false);
+    )
+}
+
+otError NcpBase::GetPropertyHandler_DEBUG_TEST_WATCHDOG(void)
+{
+    while (true)
+        ;
+
+    OT_UNREACHABLE_CODE(
+        return OT_ERROR_NONE;
     )
 }
 
