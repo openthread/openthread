@@ -347,23 +347,7 @@ otError Mle::Restore(void)
     {
         netif.GetMle().SetRouterId(GetRouterId(GetRloc16()));
         netif.GetMle().SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
-
-        switch (netif.GetMle().RestoreChildren())
-        {
-        // If there are more saved children in non-volatile settings
-        // than could be restored or the values in the settings are
-        // invalid, erase all the children info in the settings and
-        // refresh the info to ensure that the non-volatile settings
-        // stay in sync with the child table.
-
-        case OT_ERROR_FAILED:
-        case OT_ERROR_NO_BUFS:
-            netif.GetMle().RefreshStoredChildren();
-            break;
-
-        default:
-            break;
-        }
+        netif.GetMle().RestoreChildren();
     }
 
 exit:
