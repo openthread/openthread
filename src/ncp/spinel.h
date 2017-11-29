@@ -1555,17 +1555,29 @@ typedef enum
 
     SPINEL_PROP_DEBUG__BEGIN            = 16384,
 
-    /// Reading this property will cause an assert on the NCP.
-    /// This is intended for testing the assert functionality of
-    /// underlying platform/NCP. Assert should ideally cause the
-    /// NCP to reset, but if this is not supported a `false` boolean
-    /// is returned in response.
-    /** Format: 'b' (read-only) */
+    /// Testing platform assert
+    /** Format: 'b' (read-only)
+     *
+     * Reading this property will cause an assert on the NCP. This is intended for testing the assert functionality of
+     * underlying platform/NCP. Assert should ideally cause the NCP to reset, but if this is not supported a `false`
+     * boolean is returned in response.
+     *
+     */
     SPINEL_PROP_DEBUG_TEST_ASSERT       = SPINEL_PROP_DEBUG__BEGIN + 0,
 
     /// The NCP log level.
     /** Format: `C` */
     SPINEL_PROP_DEBUG_NCP_LOG_LEVEL     = SPINEL_PROP_DEBUG__BEGIN + 1,
+
+    /// Testing platform watchdog
+    /** Format: Empty  (read-only)
+     *
+     * Reading this property will causes NCP to start a `while(true) ;` loop and thus triggering a watchdog.
+     *
+     * This is intended for testing the watchdog functionality on the underlying platform/NCP.
+     *
+     */
+    SPINEL_PROP_DEBUG_TEST_WATCHDOG     = SPINEL_PROP_DEBUG__BEGIN + 2,
 
     SPINEL_PROP_DEBUG__END              = 17408,
 
