@@ -37,9 +37,9 @@
 #include <openthread/platform/misc.h>
 
 #include "openthread-core-config.h"
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/new.hpp"
 #include "net/ip6.hpp"
 
@@ -58,8 +58,9 @@ static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 extern "C" void otNcpInit(otInstance *aInstance)
 {
     NcpSpi *ncpSpi = NULL;
+    Instance *instance = static_cast<Instance *>(aInstance);
 
-    ncpSpi = new(&sNcpRaw) NcpSpi(aInstance);
+    ncpSpi = new(&sNcpRaw) NcpSpi(instance);
 
     if (ncpSpi == NULL || ncpSpi != NcpBase::GetNcpInstance())
     {
@@ -99,7 +100,7 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
     return ( header[3] + static_cast<uint16_t>(header[4] << 8) );
 }
 
-NcpSpi::NcpSpi(otInstance *aInstance) :
+NcpSpi::NcpSpi(Instance *aInstance) :
     NcpBase(aInstance),
     mTxState(kTxStateIdle),
     mHandlingRxFrame(false),

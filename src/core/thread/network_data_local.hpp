@@ -66,7 +66,7 @@ public:
      * @param[in]  aNetif  A reference to the Thread network interface.
      *
      */
-    explicit Local(otInstance &aInstance);
+    explicit Local(Instance &aInstance);
 
     /**
      * This method adds a Border Router entry to the Thread Network Data.

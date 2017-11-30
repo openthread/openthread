@@ -211,6 +211,13 @@ static void AlarmStartAt(uint32_t aT0, uint32_t aDt, AlarmIndex aIndex)
     if (AlarmShallStrike(now, aIndex))
     {
         HandleCompareMatch(aIndex, true);
+
+        /**
+         * Normally ISR sets event flag automatically.
+         * Here we are calling HandleCompareMatch explicitly and no ISR will be fired.
+         * To prevent possible permanent sleep on next WFE we have to set event flag.
+         */
+        __SEV();
     }
     else
     {

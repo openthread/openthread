@@ -41,10 +41,11 @@
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
@@ -60,7 +61,7 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Commissioner::Commissioner(otInstance &aInstance):
+Commissioner::Commissioner(Instance &aInstance):
     InstanceLocator(aInstance),
     mState(OT_COMMISSIONER_STATE_DISABLED),
     mJoinerPort(0),
@@ -174,7 +175,7 @@ otError Commissioner::SendCommissionerSet(void)
             break;
         }
 
-        steeringData.ComputeBloomFilter(&mJoiners[i].mExtAddress);
+        steeringData.ComputeBloomFilter(mJoiners[i].mJoinerId);
     }
 
     // set bloom filter
@@ -202,15 +203,15 @@ void Commissioner::ClearJoiners(void)
     otLogFuncExit();
 }
 
-otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout)
+otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout)
 {
     otError error = OT_ERROR_NO_BUFS;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
+    otLogFuncEntryMsg("%llX, %s", (aEui64 ? HostSwap64(*reinterpret_cast<const uint64_t *>(aEui64)) : 0), aPSKd);
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
-    RemoveJoiner(aExtAddress, 0);  // remove imediately
+    RemoveJoiner(aEui64, 0);  // remove immediately
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
@@ -219,9 +220,9 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *
             continue;
         }
 
-        if (aExtAddress != NULL)
+        if (aEui64 != NULL)
         {
-            mJoiners[i].mExtAddress = *aExtAddress;
+            ComputeJoinerId(*aEui64, mJoiners[i].mJoinerId);
             mJoiners[i].mAny = false;
         }
         else
@@ -245,13 +246,19 @@ exit:
     return error;
 }
 
-otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay)
+otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay)
 {
     otError error = OT_ERROR_NOT_FOUND;
+    Mac::ExtAddress joinerId;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0));
+    otLogFuncEntryMsg("%llX", (aEui64 ? HostSwap64(*reinterpret_cast<const uint64_t *>(aEui64)) : 0));
+
+    if (aEui64 != NULL)
+    {
+        ComputeJoinerId(*aEui64, joinerId);
+    }
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
@@ -260,9 +267,9 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t 
             continue;
         }
 
-        if (aExtAddress != NULL)
+        if (aEui64 != NULL)
         {
-            if (memcmp(&mJoiners[i].mExtAddress, aExtAddress, sizeof(mJoiners[i].mExtAddress)))
+            if (memcmp(&mJoiners[i].mJoinerId, &joinerId, sizeof(mJoiners[i].mJoinerId)))
             {
                 continue;
             }
@@ -315,7 +322,7 @@ otCommissionerState Commissioner::GetState(void) const
 
 void Commissioner::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<Commissioner>().HandleTimer();
 }
 
 void Commissioner::HandleTimer(void)
@@ -337,7 +344,7 @@ void Commissioner::HandleTimer(void)
 
 void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleJoinerExpirationTimer();
+    aTimer.GetOwner<Commissioner>().HandleJoinerExpirationTimer();
 }
 
 void Commissioner::HandleJoinerExpirationTimer(void)
@@ -355,7 +362,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
         if (static_cast<int32_t>(now - mJoiners[i].mExpirationTime) >= 0)
         {
             otLogDebgMeshCoP(GetInstance(), "removing joiner due to timeout or successfully joined");
-            RemoveJoiner(&mJoiners[i].mExtAddress, 0);  // remove imediately
+            RemoveJoiner(&mJoiners[i].mJoinerId, 0);  // remove immediately
         }
     }
 
@@ -812,7 +819,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
                 continue;
             }
 
-            if (mJoiners[i].mAny || !memcmp(&mJoiners[i].mExtAddress, mJoinerIid, sizeof(mJoiners[i].mExtAddress)))
+            if (mJoiners[i].mAny || !memcmp(&mJoiners[i].mJoinerId, mJoinerIid, sizeof(mJoiners[i].mJoinerId)))
             {
 
                 error = netif.GetCoapSecure().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
@@ -1075,17 +1082,6 @@ otError Commissioner::GeneratePSKc(const char *aPassPhrase, const char *aNetwork
 
 exit:
     return error;
-}
-
-Commissioner &Commissioner::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Commissioner &commissioner = *static_cast<Commissioner *>(aContext.GetContext());
-#else
-    Commissioner &commissioner = otGetThreadNetif().GetCommissioner();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return commissioner;
 }
 
 }  // namespace MeshCoP

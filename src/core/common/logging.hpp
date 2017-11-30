@@ -1517,7 +1517,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
 /**
 * Local/private macro to format the log message
 */
-#define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)         \
+#define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)        \
     _otDynamicLog(                                                          \
         aInstance,                                                          \
         aLogLevel,                                                          \

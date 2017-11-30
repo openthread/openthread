@@ -74,7 +74,7 @@ public:
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *
      */
-    explicit DataPollManager(otInstance &aInstance);
+    explicit DataPollManager(Instance &aInstance);
 
     /**
      * This method instructs the data poll manager to start sending periodic data polls.
@@ -219,7 +219,6 @@ private:
     void ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t CalculatePollPeriod(void) const;
     static void HandlePollTimer(Timer &aTimer);
-    static DataPollManager &GetOwner(Context &aContext);
     uint32_t GetDefaultPollPeriod(void) const;
 
     uint32_t    mTimerStartTime;

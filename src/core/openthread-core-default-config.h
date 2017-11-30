@@ -116,13 +116,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
+ * @def OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
  *
- * The default IEEE 802.15.4 maximum transmit power (dBm)
+ * The default IEEE 802.15.4 transmit power (dBm)
  *
  */
-#ifndef OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
-#define OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER            0
+#ifndef OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
+#define OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER                0
 #endif
 
 /**
@@ -229,6 +229,36 @@
  */
 #ifndef OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY
 #define OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY         28800
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
+ *
+ *  The maximum size of the CLI line in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
+#define OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH                   128
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
+ *
+ *  The size of CLI UART RX buffer in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE               512
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TX_BUFFER_SIZE
+ *
+ *  The size of CLI message buffer in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE               1024
 #endif
 
 /**
@@ -1006,6 +1036,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
 #define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL           0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+ *
+ * Define as 1 to disable CCA on the last transmit attempt
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+#define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT           0
 #endif
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

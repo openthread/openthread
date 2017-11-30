@@ -37,11 +37,12 @@
 
 #include <openthread/platform/radio.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -50,7 +51,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
 
-AnnounceBeginServer::AnnounceBeginServer(otInstance &aInstance) :
+AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance) :
     InstanceLocator(aInstance),
     mChannelMask(0),
     mPeriod(0),
@@ -127,7 +128,7 @@ exit:
 
 void AnnounceBeginServer::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<AnnounceBeginServer>().HandleTimer();
 }
 
 void AnnounceBeginServer::HandleTimer(void)
@@ -150,17 +151,6 @@ void AnnounceBeginServer::HandleTimer(void)
             mCount--;
         }
     }
-}
-
-AnnounceBeginServer &AnnounceBeginServer::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    AnnounceBeginServer &server = *static_cast<AnnounceBeginServer *>(aContext.GetContext());
-#else
-    AnnounceBeginServer &server = otGetThreadNetif().GetAnnounceBeginServer();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return server;
 }
 
 }  // namespace ot

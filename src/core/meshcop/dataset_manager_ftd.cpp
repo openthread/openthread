@@ -42,11 +42,10 @@
 #include <openthread/platform/random.h>
 #include <openthread/platform/radio.h>
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
 #include "coap/coap_header.hpp"
-#include "common/debug.hpp"
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
@@ -60,7 +59,7 @@
 namespace ot {
 namespace MeshCoP {
 
-ActiveDataset::ActiveDataset(otInstance &aInstance):
+ActiveDataset::ActiveDataset(Instance &aInstance):
     ActiveDatasetBase(aInstance),
     mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 {
@@ -207,7 +206,7 @@ exit:
     return;
 }
 
-PendingDataset::PendingDataset(otInstance &aInstance):
+PendingDataset::PendingDataset(Instance &aInstance):
     PendingDatasetBase(aInstance),
     mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
 {

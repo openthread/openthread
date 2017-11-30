@@ -37,10 +37,11 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -49,7 +50,7 @@
 
 namespace ot {
 
-DataPollManager::DataPollManager(otInstance &aInstance):
+DataPollManager::DataPollManager(Instance &aInstance):
     InstanceLocator(aInstance),
     mTimerStartTime(0),
     mExternalPollPeriod(0),
@@ -112,7 +113,7 @@ otError DataPollManager::SendDataPoll(void)
         VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
     }
 
-    message = GetInstance().mMessagePool.New(Message::kTypeMacDataPoll, 0);
+    message = GetInstance().GetMessagePool().New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = netif.GetMeshForwarder().SendMessage(*message);
@@ -410,18 +411,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
 void DataPollManager::HandlePollTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).SendDataPoll();
-}
-
-DataPollManager &DataPollManager::GetOwner(Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    DataPollManager &manager = *static_cast<DataPollManager *>(aContext.GetContext());
-#else
-    DataPollManager &manager = otGetMeshForwarder().GetDataPollManager();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return manager;
+    aTimer.GetOwner<DataPollManager>().SendDataPoll();
 }
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const

@@ -29,9 +29,9 @@
 #include <stdarg.h>
 
 #include <openthread/openthread.h>
-#include <openthread-instance.h>
 
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "utils/wrap_string.h"
 
@@ -208,7 +208,7 @@ void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength,
 
 void TestPriorityQueue(void)
 {
-    otInstance *instance;
+    ot::Instance *instance;
     ot::MessagePool *messagePool;
     ot::PriorityQueue queue;
     ot::MessageQueue messageQueue;
@@ -221,7 +221,7 @@ void TestPriorityQueue(void)
     instance = testInitInstance();
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->mMessagePool;
+    messagePool = &instance->GetMessagePool();
 
     // Allocate messages with different priorities.
     for (int i = 0; i < kNumTestMessages; i++)

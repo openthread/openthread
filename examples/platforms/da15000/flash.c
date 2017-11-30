@@ -26,8 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
+#include "platform-da15000.h"
 
 #include "qspi_automode.h"
 
@@ -144,4 +143,3 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     return qspi_automode_read(aAddress, aData, aSize);;
 }
-

@@ -73,7 +73,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    CoapSecure(otInstance &aInstance);
+    CoapSecure(Instance &aInstance);
 
     /**
      * This method starts the secure CoAP agent.
@@ -218,8 +218,6 @@ private:
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
-
-    static CoapSecure &GetOwner(const Context &aContext);
 
     Ip6::MessageInfo mPeerAddress;
     ConnectedCallback mConnectedCallback;

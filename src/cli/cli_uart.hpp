@@ -40,7 +40,9 @@
 
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
+#include "common/instance.hpp"
 #include "common/tasklet.hpp"
+
 
 namespace ot {
 namespace Cli {
@@ -58,7 +60,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Uart(otInstance *aInstance);
+    Uart(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -109,9 +111,9 @@ public:
 private:
     enum
     {
-        kRxBufferSize = 512,
-        kTxBufferSize = 1024,
-        kMaxLineLength = 128,
+        kRxBufferSize = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+        kTxBufferSize = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
+        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
     otError ProcessCommand(void);

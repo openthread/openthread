@@ -36,6 +36,7 @@
 #include <openthread/platform/random.h>
 
 #include "platform-da15000.h"
+
 #include "hw_trng.h"
 #include "sdk_defs.h"
 
@@ -125,4 +126,3 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 
     return OT_ERROR_NONE;
 }
-

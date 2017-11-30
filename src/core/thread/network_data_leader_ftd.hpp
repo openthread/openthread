@@ -73,7 +73,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Leader(otInstance &aInstance);
+    explicit Leader(Instance &aInstance);
 
     /**
      * This method reset the Thread Network Data.
@@ -203,7 +203,6 @@ private:
                                       uint8_t *aTlvs, uint8_t aLength);
     void SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
-    static Leader &GetOwner(const Context &aContext);
 
     /**
      * Thread Specification Constants

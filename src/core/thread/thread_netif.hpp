@@ -104,7 +104,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    ThreadNetif(otInstance &aInstance);
+    ThreadNetif(Instance &aInstance);
 
     /**
      * This method enables the Thread network interface.
@@ -326,7 +326,7 @@ public:
     /**
      * This method returns a reference to the commissioner object.
      *
-     * @returns A reference to the commissioenr object.
+     * @returns A reference to the commissioner object.
      *
      */
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }

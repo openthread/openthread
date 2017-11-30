@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_leader.hpp"
@@ -46,7 +47,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Lowpan {
 
-Lowpan::Lowpan(otInstance &aInstance):
+Lowpan::Lowpan(Instance &aInstance):
     InstanceLocator(aInstance)
 {
 }

@@ -134,7 +134,7 @@ void efr32RadioInit(void)
         assert(false);
     }
 
-    RAIL_TxPowerSet(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER);
+    RAIL_TxPowerSet(OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER);
 
     otLogInfoPlat(sInstance, "Initialized", NULL);
 }
@@ -337,7 +337,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     txOption.removeCrc  = false;
     txOption.syncWordId = 0;
 
-    RAIL_TxPowerSet(aFrame->mPower);
     setChannel(aFrame->mChannel);
     RAIL_RfIdleExt(RAIL_IDLE, true);
 
@@ -695,7 +694,7 @@ void RAILCb_RxPacketReceived(void *aRxPacketHandle)
 #endif
 
     memcpy(sReceiveFrame.mPsdu, rxPacketInfo->dataPtr + 1, rxPacketInfo->dataLength);
-    sReceiveFrame.mPower = rxPacketInfo->appendedInfo.rssiLatch;
+    sReceiveFrame.mRssi = rxPacketInfo->appendedInfo.rssiLatch;
     sReceiveFrame.mLqi = rxPacketInfo->appendedInfo.lqi;
     sReceiveFrame.mLength = length;
     sReceiveError = OT_ERROR_NONE;
@@ -844,10 +843,24 @@ void RAILCb_FreeMemory(void *aHandle)
     (void)aHandle;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
+{
+    otError error = OT_ERROR_NONE;
+    (void)aInstance;
+
+    otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
+    *aPower = (int8_t)RAIL_TxPowerGet();
+
+exit:
+    return error;
+}
+
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
     RAIL_TxPowerSet(aPower);
+
+    return OT_ERROR_NONE;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)

@@ -35,7 +35,7 @@
 
 #include <openthread/dataset.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
@@ -57,10 +57,11 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = aInstance->mThreadNetif.GetActiveDataset().GetLocal().Get(*aDataset);
+    error = instance.GetThreadNetif().GetActiveDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;
@@ -69,10 +70,11 @@ exit:
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
 {
     otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = aInstance->mThreadNetif.GetPendingDataset().GetLocal().Get(*aDataset);
+    error = instance.GetThreadNetif().GetPendingDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;

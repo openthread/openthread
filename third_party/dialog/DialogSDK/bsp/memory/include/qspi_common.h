@@ -43,6 +43,7 @@
  *
  ****************************************************************************************
  */
+
 #ifndef _QSPI_COMMON_H_
 #define _QSPI_COMMON_H_
 
@@ -162,8 +163,8 @@ static uint8_t flash_read_status_register(void);
 static void flash_write_status_register(uint8_t value);
 static void flash_write_enable(void);
 static void qspi_automode_set_dummy_bytes_count(uint8_t count);
-static bool flash_is_busy(void);
-static inline bool flash_erase_program_in_progress(void);
+static inline bool flash_erase_program_in_progress(void) __attribute__((always_inline));
+static inline bool flash_is_busy(void) __attribute__((always_inline));
 
 #endif /* _QSPI_COMMON_H_ */
 /**

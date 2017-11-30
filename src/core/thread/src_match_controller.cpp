@@ -37,13 +37,14 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 
-SourceMatchController::SourceMatchController(otInstance &aInstance) :
+SourceMatchController::SourceMatchController(Instance &aInstance) :
     InstanceLocator(aInstance),
     mEnabled(false)
 {

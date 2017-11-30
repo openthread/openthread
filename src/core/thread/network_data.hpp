@@ -101,7 +101,7 @@ public:
      * @param[in]  aLocal        TRUE if this represents local network data, FALSE otherwise.
      *
      */
-    NetworkData(otInstance &aInstance, bool aLocal);
+    NetworkData(Instance &aInstance, bool aLocal);
 
     /**
      * This method clears the network data.

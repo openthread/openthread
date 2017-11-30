@@ -26,78 +26,29 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for maintaining a pointer to arbitrary context information.
+/*
+ * Helper functions for running c++ without the standard library
  */
 
-#ifndef CONTEXT_HPP_
-#define CONTEXT_HPP_
+__extension__ typedef int __guard __attribute__((mode(__DI__)));
 
-#include "openthread-core-config.h"
-
-#include <openthread/platform/toolchain.h>
-
-#include "openthread-core-config.h"
-
-namespace ot {
-
-/**
- * @addtogroup core-context
- *
- * @brief
- *   This module includes definitions for maintaining a pointer to arbitrary context information.
- *
- * @{
- *
- */
-
-/**
- * This class implements definitions for maintaining a pointer to arbitrary context information.
- *
- * This is used as base class for objects that provide a callback or handler (e.g., Timer or Tasklet).
- *
- */
-class Context
+int __cxa_guard_acquire(__guard *g)
 {
-public:
+    return !*(char *)(g);
+}
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    /**
-     * This method returns the pointer to the arbitrary context information.
-     *
-     * @returns The pointer to the context information.
-     *
-     */
-    void *GetContext(void) const { return mContext; }
-#endif
+void __cxa_guard_release(__guard *g)
+{
+    *(char *)g = 1;
+}
 
-protected:
-    /**
-     * This constructor initializes the context object.
-     *
-     * @param[in]  aContext    A pointer to arbitrary context information.
-     *
-     */
-    Context(void *aContext)
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-        : mContext(aContext)
-#endif
-    {
-        OT_UNUSED_VARIABLE(aContext);
-    }
+void __cxa_guard_abort(__guard *g)
+{
+    (void)g;
+}
 
-private:
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    void *mContext;
-#endif
-};
+void __cxa_pure_virtual(void)
+{
+    while (1);
+}
 
-/**
- * @}
- *
- */
-
-}  // namespace ot
-
-#endif  // CONTEXT_HPP_

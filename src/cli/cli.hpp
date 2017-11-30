@@ -52,7 +52,7 @@
 #endif
 
 #include "common/code_utils.hpp"
-#include "common/context.hpp"
+#include "common/instance.hpp"
 
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
@@ -104,7 +104,7 @@ public:
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      */
-    Interpreter(otInstance *aInstance);
+    Interpreter(Instance *aInstance);
 
     /**
      * This method interprets a CLI command.
@@ -232,7 +232,6 @@ private:
     void ProcessFIConfigure(int argc, char *argv[]);
     void ProcessFIResetConfiguration(int argc, char *argv[]);
 #endif
-    void ProcessHashMacAddress(int argc, char *argv[]);
     void ProcessIfconfig(int argc, char *argv[]);
     void ProcessIpAddr(int argc, char *argv[]);
     otError ProcessIpAddrAdd(int argc, char *argv[]);
@@ -245,6 +244,7 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
+    void ProcessJoinerId(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_FTD
     void ProcessJoinerPort(int argc, char *argv[]);
@@ -310,7 +310,10 @@ private:
     void ProcessSingleton(int argc, char *argv[]);
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
-    void ProcessTxPowerMax(int argc, char *argv[]);
+#ifndef OTDLL
+    void ProcessTxPower(int argc, char *argv[]);
+    void ProcessUdp(int argc, char *argv[]);
+#endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
     void ProcessMacFilter(int argc, char *argv[]);
@@ -324,10 +327,6 @@ private:
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);
     void ProcessInstance(int argc, char *argv[]);
-#endif
-
-#ifndef OTDLL
-    void ProcessUdp(int argc, char *argv[]);
 #endif
 
 #ifndef OTDLL
@@ -379,7 +378,7 @@ private:
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
 
-    static Interpreter &GetOwner(const Context &aContext);
+    static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
@@ -402,7 +401,7 @@ private:
     struct otCliContext
     {
         Interpreter *mInterpreter;
-        otInstance  *mInstance;
+        Instance    *mInstance;
     };
     otCliContext mInstances[MAX_CLI_OT_INSTANCES];
     uint8_t mInstancesLength;
@@ -432,7 +431,7 @@ private:
 
 #endif
 
-    otInstance *mInstance;
+    Instance *mInstance;
 };
 
 }  // namespace Cli

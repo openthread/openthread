@@ -49,6 +49,7 @@ ALOC_FLAG_REGEX_PATTERN = '.*:fc..$'
 LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff32:40:fdde:ad00:beef:0:0:1'
 REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff33:40:fdde:ad00:beef:0:0:1'
 REALM_LOCAL_ALL_ROUTERS_ADDRESS = 'ff03::2'
+LINK_LOCAL_ALL_NODES_ADDRESS = 'ff02::1'
 
 DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
@@ -58,6 +59,11 @@ RSSI = {'LINK_QULITY_0': -100, 'LINK_QULITY_1': -95, 'LINK_QULITY_2': -85, 'LINK
 
 SNIFFER_ID = int(os.getenv('SNIFFER_ID', 34))
 PANID = 0xface
+
+MAX_NEIGHBOR_AGE = 100
+INFINITE_COST_TIMEOUT = 90
+
+MAX_ADVERTISEMENT_INTERVAL = 32
 
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
@@ -208,6 +214,7 @@ def create_default_uri_path_based_payload_factories():
         "/a/as": network_layer_tlvs_factory,
         "/a/aq": network_layer_tlvs_factory,
         "/a/ar": network_layer_tlvs_factory,
+        "/a/ae": network_layer_tlvs_factory,
         "/a/an": network_layer_tlvs_factory
     }
 

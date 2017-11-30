@@ -122,6 +122,18 @@ set -x
     arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
+    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
+    mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 }
 
 [ $BUILD_TARGET != arm-gcc54 ] || {
@@ -178,6 +190,18 @@ set -x
     arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
+    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
+    mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 }
 
 [ $BUILD_TARGET != arm-gcc63 ] || {
@@ -219,21 +243,33 @@ set -x
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
 
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # ./bootstrap || die
-    # make -f examples/Makefile-cc2650 || die
-    # arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-cc2650 || die
+    arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
 
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # ./bootstrap || die
-    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2652 || die
-    # arm-none-eabi-size  output/cc2652/bin/ot-cli-ftd || die
-    # arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
-    # arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2652 || die
+    arm-none-eabi-size  output/cc2652/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
+    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
+    mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 
     export PATH=/tmp/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install/bin:$PATH || die
 

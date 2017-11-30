@@ -48,6 +48,7 @@
 #include <openthread/types.h>
 
 #include "changed_props_set.hpp"
+#include "common/instance.hpp"
 #include "common/tasklet.hpp"
 #include "ncp/ncp_buffer.hpp"
 #include "ncp/spinel_decoder.hpp"
@@ -73,7 +74,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpBase(otInstance *aInstance);
+    NcpBase(Instance *aInstance);
 
     /**
      * This static method returns the pointer to the single NCP instance.
@@ -242,10 +243,12 @@ private:
     static void SendDoneTask(void *aContext);
     void SendDoneTask(void);
 
-    otError GetPropertyHandler_ChannelMaskHelper(uint32_t channel_mask);
+    otError EncodeChannelMask(uint32_t channel_mask);
+    otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
+    otError DecodeOperationalDataset(otOperationalDataset &aDataset, const uint8_t **aTlvs, uint8_t *aTlvsLength);
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -255,9 +258,9 @@ private:
     void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
-#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
     otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
-#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
     otError CommandHandler_NOOP(uint8_t aHeader);
     otError CommandHandler_RESET(uint8_t aHeader);
@@ -318,6 +321,7 @@ private:
     NCP_GET_PROP_HANDLER(VENDOR_ID);
     NCP_GET_PROP_HANDLER(CAPS);
     NCP_GET_PROP_HANDLER(DEBUG_TEST_ASSERT);
+    NCP_GET_PROP_HANDLER(DEBUG_TEST_WATCHDOG);
     NCP_GET_PROP_HANDLER(DEBUG_NCP_LOG_LEVEL);
     NCP_SET_PROP_HANDLER(DEBUG_NCP_LOG_LEVEL);
     NCP_GET_PROP_HANDLER(NCP_VERSION);
@@ -487,6 +491,8 @@ private:
     NCP_SET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_ENABLE_FILTERING);
     NCP_GET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_PANID);
     NCP_SET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_PANID);
+    NCP_GET_PROP_HANDLER(THREAD_ACTIVE_DATASET);
+    NCP_GET_PROP_HANDLER(THREAD_PENDING_DATASET);
 
     NCP_GET_PROP_HANDLER(CNTR_TX_PKT_TOTAL);
     NCP_GET_PROP_HANDLER(CNTR_TX_PKT_ACK_REQ);
@@ -597,6 +603,10 @@ private:
     NCP_SET_PROP_HANDLER(THREAD_TMF_PROXY_STREAM);
 #endif
     NCP_REMOVE_PROP_HANDLER(THREAD_ACTIVE_ROUTER_IDS);
+    NCP_SET_PROP_HANDLER(THREAD_ACTIVE_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_PENDING_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_MGMT_ACTIVE_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_MGMT_PENDING_DATASET);
 
 #endif // OPENTHREAD_FTD
 
@@ -622,7 +632,7 @@ protected:
     static NcpBase *sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
     static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData);
-    otInstance *mInstance;
+    Instance *mInstance;
     NcpFrameBuffer  mTxFrameBuffer;
     SpinelEncoder mEncoder;
     SpinelDecoder mDecoder;

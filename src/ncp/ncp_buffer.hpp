@@ -571,6 +571,7 @@ private:
         kUnknownFrameLength                = 0xffff,     // Value used when frame length is unknown.
         kSegmentHeaderSize                 = 2,          // Length of the segment header.
         kSegmentHeaderLengthMask           = 0x3fff,     // Bit mask to get the length from the segment header
+        kMaxSegments                       = 10,         // Max number of segments allowed in a frame
 
         kSegmentHeaderNoFlag               = 0,          // No flags are set.
         kSegmentHeaderNewFrameFlag         = (1 << 15),  // Indicates that this segment starts a new frame.

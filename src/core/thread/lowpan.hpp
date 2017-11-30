@@ -87,7 +87,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Lowpan(otInstance &aInstance);
+    explicit Lowpan(Instance &aInstance);
 
     /**
      * This method indicates whether or not the header is a LOWPAN_IPHC header.

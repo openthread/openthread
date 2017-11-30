@@ -32,6 +32,7 @@
 
 #include "ncp_base.hpp"
 
+#include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/ncp.h>
@@ -39,13 +40,14 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #include <openthread/thread_ftd.h>
+
 #if OPENTHREAD_ENABLE_TMF_PROXY
 #include <openthread/tmf_proxy.h>
 #endif
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include "meshcop/commissioner.hpp"
 #endif
@@ -97,6 +99,8 @@ void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otCh
     unsigned int command = 0;
 
     VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_THREAD_CHILD_TABLE));
+
+    VerifyOrExit(!aChildInfo.mIsStateRestoring);
 
     switch (aEvent)
     {
@@ -157,7 +161,8 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(void)
 
     for (uint8_t index = 0; index < maxChildren; index++)
     {
-        if (otThreadGetChildInfoByIndex(mInstance, index, &childInfo) != OT_ERROR_NONE)
+        if ((otThreadGetChildInfoByIndex(mInstance, index, &childInfo) != OT_ERROR_NONE) ||
+            childInfo.mIsStateRestoring)
         {
             continue;
         }
@@ -381,7 +386,7 @@ exit:
 otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
 {
     otError error = OT_ERROR_NONE;
-    const otExtAddress *extAddress = NULL;
+    const otExtAddress *eui64 = NULL;
     const char *aPSKd = NULL;
     uint32_t joinerTimeout = 0;
 
@@ -390,13 +395,13 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
     SuccessOrExit(error = mDecoder.ReadUtf8(aPSKd));
     SuccessOrExit(error = mDecoder.ReadUint32(joinerTimeout));
 
-    if (mDecoder.ReadEui64(extAddress) != OT_ERROR_NONE)
+    if (mDecoder.ReadEui64(eui64) != OT_ERROR_NONE)
     {
-        extAddress = NULL;
+        eui64 = NULL;
     }
 
 
-    error = otCommissionerAddJoiner(mInstance, extAddress, aPSKd, joinerTimeout);
+    error = otCommissionerAddJoiner(mInstance, eui64, aPSKd, joinerTimeout);
 
 exit:
     return error;
@@ -591,6 +596,231 @@ exit:
     }
 }
 #endif // OPENTHREAD_ENABLE_TMF_PROXY
+
+otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset, const uint8_t **aTlvs, uint8_t *aTlvsLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    memset(&aDataset, 0, sizeof(otOperationalDataset));
+
+    if (aTlvs != NULL)
+    {
+        *aTlvs = NULL;
+    }
+
+    if (aTlvsLength != NULL)
+    {
+        *aTlvsLength = 0;
+    }
+
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        unsigned int propKey;
+
+        SuccessOrExit(error = mDecoder.OpenStruct());
+        SuccessOrExit(error = mDecoder.ReadUintPacked(propKey));
+
+        switch (static_cast<spinel_prop_key_t>(propKey))
+        {
+        case SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP:
+            SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mActiveTimestamp));
+            aDataset.mIsActiveTimestampSet = true;
+            break;
+
+        case SPINEL_PROP_DATASET_PENDING_TIMESTAMP:
+            SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mPendingTimestamp));
+            aDataset.mIsPendingTimestampSet = true;
+            break;
+
+        case SPINEL_PROP_NET_MASTER_KEY:
+        {
+            const uint8_t *key;
+            uint16_t len;
+
+            SuccessOrExit(error = mDecoder.ReadData(key, len));
+            VerifyOrExit(len == OT_MASTER_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(aDataset.mMasterKey.m8, key, len);
+            aDataset.mIsMasterKeySet = true;
+            break;
+        }
+
+        case SPINEL_PROP_NET_NETWORK_NAME:
+        {
+            const char *name;
+            size_t len;
+
+            SuccessOrExit(error = mDecoder.ReadUtf8(name));
+            len = strlen(name);
+            VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(aDataset.mNetworkName.m8, name, len + 1);
+            aDataset.mIsNetworkNameSet = true;
+            break;
+        }
+
+        case SPINEL_PROP_NET_XPANID:
+        {
+            const uint8_t *xpanid;
+            uint16_t len;
+
+            SuccessOrExit(error = mDecoder.ReadData(xpanid, len));
+            VerifyOrExit(len == OT_EXT_PAN_ID_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(aDataset.mExtendedPanId.m8, xpanid, len);
+            aDataset.mIsExtendedPanIdSet = true;
+            break;
+        }
+
+        case SPINEL_PROP_IPV6_ML_PREFIX:
+        {
+            const otIp6Address *addr;
+            uint8_t prefixLen;
+
+            SuccessOrExit(error = mDecoder.ReadIp6Address(addr));
+            SuccessOrExit(error = mDecoder.ReadUint8(prefixLen));
+            VerifyOrExit(prefixLen == 64, error = OT_ERROR_INVALID_ARGS);
+            memcpy(aDataset.mMeshLocalPrefix.m8, addr, OT_MESH_LOCAL_PREFIX_SIZE);
+            aDataset.mIsMeshLocalPrefixSet = true;
+            break;
+        }
+
+        case SPINEL_PROP_DATASET_DELAY_TIMER:
+            SuccessOrExit(error = mDecoder.ReadUint32(aDataset.mDelay));
+            aDataset.mIsDelaySet = true;
+            break;
+
+        case SPINEL_PROP_MAC_15_4_PANID:
+            SuccessOrExit(error = mDecoder.ReadUint16(aDataset.mPanId));
+            aDataset.mIsPanIdSet = true;
+            break;
+
+        case SPINEL_PROP_PHY_CHAN:
+        {
+            uint8_t channel;
+
+            SuccessOrExit(error = mDecoder.ReadUint8(channel));
+            aDataset.mChannel = channel;
+            aDataset.mIsChannelSet = true;
+            break;
+        }
+
+        case SPINEL_PROP_NET_PSKC:
+        {
+            const uint8_t *psk;
+            uint16_t len;
+
+            SuccessOrExit(error = mDecoder.ReadData(psk, len));
+            VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(aDataset.mPSKc.m8, psk, OT_PSKC_MAX_SIZE);
+            aDataset.mIsPSKcSet = true;
+            break;
+        }
+
+        case SPINEL_PROP_DATASET_SECURITY_POLICY:
+            SuccessOrExit(error = mDecoder.ReadUint16(aDataset.mSecurityPolicy.mRotationTime));
+            SuccessOrExit(error = mDecoder.ReadUint8(aDataset.mSecurityPolicy.mFlags));
+            aDataset.mIsSecurityPolicySet = true;
+            break;
+
+        case SPINEL_PROP_PHY_CHAN_SUPPORTED:
+        {
+            uint8_t channel;
+
+            aDataset.mChannelMaskPage0 = 0;
+
+            while (!mDecoder.IsAllReadInStruct())
+            {
+                SuccessOrExit(error = mDecoder.ReadUint8(channel));
+                VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
+                aDataset.mChannelMaskPage0 |= (1U << channel);
+            }
+
+            aDataset.mIsChannelMaskPage0Set = true;
+            break;
+        }
+
+        case SPINEL_PROP_DATASET_RAW_TLVS:
+        {
+            const uint8_t *tlvs;
+            uint16_t len;
+
+            SuccessOrExit(error = mDecoder.ReadData(tlvs, len));
+            VerifyOrExit(len <= 255, error = OT_ERROR_INVALID_ARGS);
+
+            if (aTlvs != NULL)
+            {
+                *aTlvs = tlvs;
+            }
+
+            if (aTlvsLength != NULL)
+            {
+                *aTlvsLength = static_cast<uint8_t>(len);
+            }
+
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        SuccessOrExit(error = mDecoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+otError NcpBase::SetPropertyHandler_THREAD_ACTIVE_DATASET(void)
+{
+    otError error = OT_ERROR_NONE;
+    otOperationalDataset dataset;
+
+    SuccessOrExit(error = DecodeOperationalDataset(dataset, NULL, NULL));
+    error = otDatasetSetActive(mInstance, &dataset);
+
+exit:
+    return error;
+}
+
+otError NcpBase::SetPropertyHandler_THREAD_PENDING_DATASET(void)
+{
+    otError error = OT_ERROR_NONE;
+    otOperationalDataset dataset;
+
+    SuccessOrExit(error = DecodeOperationalDataset(dataset, NULL, NULL));
+    error = otDatasetSetPending(mInstance, &dataset);
+
+exit:
+    return error;
+}
+
+otError NcpBase::SetPropertyHandler_THREAD_MGMT_ACTIVE_DATASET(void)
+{
+    otError error = OT_ERROR_NONE;
+    otOperationalDataset dataset;
+    const uint8_t *extraTlvs;
+    uint8_t extraTlvsLength;
+
+    SuccessOrExit(error = DecodeOperationalDataset(dataset, &extraTlvs, &extraTlvsLength));
+    error = otDatasetSendMgmtActiveSet(mInstance, &dataset, extraTlvs, extraTlvsLength);
+
+exit:
+    return error;
+
+}
+
+otError NcpBase::SetPropertyHandler_THREAD_MGMT_PENDING_DATASET(void)
+{
+    otError error = OT_ERROR_NONE;
+    otOperationalDataset dataset;
+    const uint8_t *extraTlvs;
+    uint8_t extraTlvsLength;
+
+    SuccessOrExit(error = DecodeOperationalDataset(dataset, &extraTlvs, &extraTlvsLength));
+    error = otDatasetSendMgmtPendingSet(mInstance, &dataset, extraTlvs, extraTlvsLength);
+
+exit:
+    return error;
+}
 
 }  // namespace Ncp
 }  // namespace ot

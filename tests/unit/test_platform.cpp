@@ -77,7 +77,7 @@ void testPlatResetToDefaults(void)
     g_testPlatRadioGetTransmitBuffer = NULL;
 }
 
-otInstance *testInitInstance(void)
+ot::Instance *testInitInstance(void)
 {
     otInstance *instance = NULL;
 
@@ -99,7 +99,7 @@ otInstance *testInitInstance(void)
     instance = otInstanceInitSingle();
 #endif
 
-    return instance;
+    return static_cast<ot::Instance *>(instance);
 }
 
 void testFreeInstance(otInstance *aInstance)
@@ -392,10 +392,11 @@ extern "C" {
         return OT_ERROR_NOT_IMPLEMENTED;
     }
 
-    void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+    otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     {
         (void)aInstance;
         (void)aPower;
+        return OT_ERROR_NOT_IMPLEMENTED;
     }
 
     int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)

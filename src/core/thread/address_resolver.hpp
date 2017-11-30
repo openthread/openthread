@@ -73,7 +73,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    explicit AddressResolver(otInstance &aInstance);
+    explicit AddressResolver(Instance &aInstance);
 
     /**
      * This method clears the EID-to-RLOC cache.
@@ -206,8 +206,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
-
-    static AddressResolver &GetOwner(const Context &aContext);
 
     Coap::Resource mAddressError;
     Coap::Resource mAddressQuery;

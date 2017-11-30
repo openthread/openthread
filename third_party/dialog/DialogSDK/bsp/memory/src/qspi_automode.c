@@ -38,6 +38,11 @@
 #include <string.h>
 #include "sdk_defs.h"
 
+#if (dg_configDISABLE_BACKGROUND_FLASH_OPS == 0)
+#include "osal.h"
+#include "sys_power_mgr.h"
+#endif
+
 #include "hw_cpm.h"
 
 #include "hw_qspi.h"
@@ -83,18 +88,18 @@
  *          Use with extreme caution!!
  */
 #if dg_configFLASH_AUTODETECT == 1
-#define FLASH_AUTODETECT                1       // Enable Flash auto-detection
+        #define FLASH_AUTODETECT                1       // Enable Flash auto-detection
 #else
-#if !defined(dg_configFLASH_MANUFACTURER_ID)
-#error Please define dg_configFLASH_MANUFACTURER_ID !!!
-#endif
-#if !defined(dg_configFLASH_DEVICE_TYPE)
-#error Please define dg_configFLASH_DEVICE_TYPE !!!
-#endif
-#if !defined(dg_configFLASH_DENSITY)
-#error Please define dg_configFLASH_DENSITY !!!
-#endif
-#define FLASH_AUTODETECT                0
+        #if !defined(dg_configFLASH_MANUFACTURER_ID)
+        #error Please define dg_configFLASH_MANUFACTURER_ID !!!
+        #endif
+        #if !defined(dg_configFLASH_DEVICE_TYPE)
+        #error Please define dg_configFLASH_DEVICE_TYPE !!!
+        #endif
+        #if !defined(dg_configFLASH_DENSITY)
+        #error Please define dg_configFLASH_DENSITY !!!
+        #endif
+        #define FLASH_AUTODETECT                0
 #endif
 
 #if FLASH_AUTODETECT == 1
@@ -110,16 +115,15 @@
 
 #if (FLASH_AUTODETECT == 1)
 
-static const qspi_flash_config_t *flash_config_table[] =
-{
-    &flash_w25q80ew_config, // This is the default one
-    &flash_mx25u51245_config,
-    &flash_gd25lq80b_config,
+static const qspi_flash_config_t* flash_config_table[] = {
+        &flash_w25q80ew_config, // This is the default one
+        &flash_mx25u51245_config,
+        &flash_gd25lq80b_config,
 };
 
 __RETAINED static qspi_flash_config_t flash_autodetect_config;
 
-__RETAINED qspi_flash_config_t *flash_config;
+__RETAINED qspi_flash_config_t * flash_config;
 
 #endif
 
@@ -140,24 +144,21 @@ static inline void qspi_set_bus_mode(HW_QSPI_BUS_MODE mode) __attribute__((alway
 
 static inline void qspi_set_bus_mode(HW_QSPI_BUS_MODE mode)
 {
-    if (mode == HW_QSPI_BUS_MODE_SINGLE)
-    {
-        QSPIC->QSPIC_CTRLBUS_REG = REG_MSK(QSPIC, QSPIC_CTRLBUS_REG, QSPIC_SET_SINGLE);
-        QSPIC->QSPIC_CTRLMODE_REG |=
-            BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO2_OEN, 1) |
-            BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO2_DAT, 1) |
-            BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO3_OEN, 1) |
-            BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO3_DAT, 1);
-    }
-    else
-    {
+        if (mode == HW_QSPI_BUS_MODE_SINGLE) {
+                QSPIC->QSPIC_CTRLBUS_REG = REG_MSK(QSPIC, QSPIC_CTRLBUS_REG, QSPIC_SET_SINGLE);
+                QSPIC->QSPIC_CTRLMODE_REG |=
+                        BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO2_OEN, 1) |
+                        BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO2_DAT, 1) |
+                        BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO3_OEN, 1) |
+                        BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO3_DAT, 1);
+        } else {
 #if QUAD_MODE
-        QSPIC->QSPIC_CTRLBUS_REG = REG_MSK(QSPIC, QSPIC_CTRLBUS_REG, QSPIC_SET_QUAD);
-        QSPIC->QSPIC_CTRLMODE_REG &=
-            ~(BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO2_OEN, 1) |
-              BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO3_OEN, 1));
+                QSPIC->QSPIC_CTRLBUS_REG = REG_MSK(QSPIC, QSPIC_CTRLBUS_REG, QSPIC_SET_QUAD);
+                QSPIC->QSPIC_CTRLMODE_REG &=
+                        ~(BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO2_OEN, 1) |
+                          BITS32(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_IO3_OEN, 1));
 #endif
-    }
+        }
 }
 
 /**
@@ -169,7 +170,7 @@ static inline void qspi_set_automode(bool automode) __attribute__((always_inline
 
 static inline void qspi_set_automode(bool automode)
 {
-    REG_SETF(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_AUTO_MD, automode);
+        REG_SETF(QSPIC, QSPIC_CTRLMODE_REG, QSPIC_AUTO_MD, automode);
 }
 
 /**
@@ -181,18 +182,17 @@ static inline void qspi_set_automode(bool automode)
  * \note The data are transferred as bytes (8 bits wide). No optimization is done in trying to use
  *       faster access methods (i.e. transfer words instead of bytes whenever it is possible).
  */
-QSPI_SECTION static void qspi_write(const uint8_t *wbuf, size_t wlen)
+__RETAINED_CODE static void qspi_write(const uint8_t *wbuf, size_t wlen)
 {
-    size_t i;
+        size_t i;
 
-    hw_qspi_cs_enable();
+        hw_qspi_cs_enable();
 
-    for (i = 0; i < wlen; ++i)
-    {
-        hw_qspi_write8(wbuf[i]);
-    }
+        for (i = 0; i < wlen; ++i) {
+                hw_qspi_write8(wbuf[i]);
+        }
 
-    hw_qspi_cs_disable();
+        hw_qspi_cs_disable();
 }
 
 /**
@@ -207,63 +207,53 @@ QSPI_SECTION static void qspi_write(const uint8_t *wbuf, size_t wlen)
  * \note The data are transferred as bytes (8 bits wide). No optimization is done in trying to use
  *       faster access methods (i.e. transfer words instead of bytes whenever it is possible).
  */
-QSPI_SECTION static void qspi_transact(const uint8_t *wbuf, size_t wlen, uint8_t *rbuf, size_t rlen)
+__RETAINED_CODE static void qspi_transact(const uint8_t *wbuf, size_t wlen, uint8_t *rbuf, size_t rlen)
 {
-    size_t i;
+        size_t i;
 
-    hw_qspi_cs_enable();
+        hw_qspi_cs_enable();
 
-    for (i = 0; i < wlen; ++i)
-    {
-        hw_qspi_write8(wbuf[i]);
-    }
+        for (i = 0; i < wlen; ++i) {
+                hw_qspi_write8(wbuf[i]);
+        }
 
-    for (i = 0; i < rlen; ++i)
-    {
-        rbuf[i] = hw_qspi_read8();
-    }
+        for (i = 0; i < rlen; ++i) {
+                rbuf[i] = hw_qspi_read8();
+        }
 
-    hw_qspi_cs_disable();
+        hw_qspi_cs_disable();
 }
 
-QSPI_SECTION static inline bool flash_erase_program_in_progress(void) __attribute__((always_inline));
 
-QSPI_SECTION static inline bool flash_erase_program_in_progress(void)
+static inline bool flash_erase_program_in_progress(void)
 {
-    __DBG_QSPI_VOLATILE__ uint8_t status;
-    uint8_t cmd[] = { flash_config->read_erase_progress_opcode };
+        __DBG_QSPI_VOLATILE__ uint8_t status;
+        uint8_t cmd[] = { flash_config->read_erase_progress_opcode };
 
-    qspi_transact(cmd, 1, &status, 1);
+        qspi_transact(cmd, 1, &status, 1);
 
-    return ((status & (1 << flash_config->erase_in_progress_bit)) != 0) == flash_config->erase_in_progress_bit_high_level;
+        return ((status & (1 << flash_config->erase_in_progress_bit)) != 0) == flash_config->erase_in_progress_bit_high_level;
 }
 
-QSPI_SECTION static inline bool flash_is_busy(void) __attribute__((always_inline));
 
-QSPI_SECTION static inline bool flash_is_busy(void)
+static inline bool flash_is_busy(void)
 {
-    return (flash_read_status_register() & FLASH_STATUS_BUSY_MASK) != 0;
+        return (flash_read_status_register() & FLASH_STATUS_BUSY_MASK) != 0;
 }
 
 /**
  * \brief Exit from continuous mode.
  */
-QSPI_SECTION static inline void flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SIZE break_seq_size) __attribute__((
-            always_inline));
-
-QSPI_SECTION static inline void flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SIZE break_seq_size)
+__RETAINED_CODE static void flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SIZE break_seq_size)
 {
-    hw_qspi_cs_enable();
-    hw_qspi_write8(CMD_EXIT_CONTINUOUS_MODE);
-
-    if (break_seq_size == HW_QSPI_BREAK_SEQ_SIZE_2B)
-    {
+        hw_qspi_cs_enable();
         hw_qspi_write8(CMD_EXIT_CONTINUOUS_MODE);
-    }
+        if (break_seq_size == HW_QSPI_BREAK_SEQ_SIZE_2B) {
+                hw_qspi_write8(CMD_EXIT_CONTINUOUS_MODE);
+        }
+        hw_qspi_cs_disable();
 
-    hw_qspi_cs_disable();
-
-    while (flash_is_busy());
+        while (flash_is_busy());
 }
 
 /**
@@ -273,18 +263,18 @@ QSPI_SECTION static inline void flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SI
  *
  * \note The function blocks until the Flash executes the command.
  */
-QSPI_SECTION __attribute__((unused)) static uint8_t flash_get_id(void)
+__RETAINED_CODE __attribute__((unused)) static uint8_t flash_get_id(void)
 {
-    uint8_t id;
+        uint8_t id;
 
-    hw_qspi_cs_enable();
-    hw_qspi_write32(CMD_RELEASE_POWER_DOWN);
-    id = hw_qspi_read8();
-    hw_qspi_cs_disable();
+        hw_qspi_cs_enable();
+        hw_qspi_write32(CMD_RELEASE_POWER_DOWN);
+        id = hw_qspi_read8();
+        hw_qspi_cs_disable();
 
-    while (flash_is_busy());
+        while (flash_is_busy());
 
-    return id;
+        return id;
 }
 
 /**
@@ -297,23 +287,18 @@ QSPI_SECTION __attribute__((unused)) static uint8_t flash_get_id(void)
  * \note This function blocks until the Flash has processed the command and it will be repeated if,
  *       for any reason, the command was not successfully executed by the Flash.
  */
-QSPI_SECTION static void flash_write_enable(void)
+__RETAINED_CODE static void flash_write_enable(void)
 {
-    __DBG_QSPI_VOLATILE__ uint8_t status;
-    uint8_t cmd[] = { CMD_WRITE_ENABLE };
+        __DBG_QSPI_VOLATILE__ uint8_t status;
+        uint8_t cmd[] = { CMD_WRITE_ENABLE };
 
-    do
-    {
-        qspi_write(cmd, 1);
-
-        /* Verify */
-        do
-        {
-            status = flash_read_status_register();
-        }
-        while (status & FLASH_STATUS_BUSY_MASK);
-    }
-    while (!(status & FLASH_STATUS_WEL_MASK));
+        do {
+                qspi_write(cmd, 1);
+                /* Verify */
+                do {
+                        status = flash_read_status_register();
+                } while (status & FLASH_STATUS_BUSY_MASK);
+        } while (!(status & FLASH_STATUS_WEL_MASK));
 }
 
 /**
@@ -321,14 +306,14 @@ QSPI_SECTION static void flash_write_enable(void)
  *
  * \return uint8_t The value of the Status Register 1 of the Flash.
  */
-QSPI_SECTION static uint8_t flash_read_status_register(void)
+__RETAINED_CODE static uint8_t flash_read_status_register(void)
 {
-    __DBG_QSPI_VOLATILE__ uint8_t status;
-    uint8_t cmd[] = { CMD_READ_STATUS_REGISTER };
+        __DBG_QSPI_VOLATILE__ uint8_t status;
+        uint8_t cmd[] = { CMD_READ_STATUS_REGISTER };
 
-    qspi_transact(cmd, 1, &status, 1);
+        qspi_transact(cmd, 1, &status, 1);
 
-    return status;
+        return status;
 }
 
 /**
@@ -340,14 +325,14 @@ QSPI_SECTION static uint8_t flash_read_status_register(void)
  *        value has been actually written is done though. It is up to the caller to decide whether
  *        such verification is needed or not and execute it on its own.
  */
-QSPI_SECTION __attribute__((unused)) static void flash_write_status_register(uint8_t value)
+__RETAINED_CODE __attribute__((unused)) static void flash_write_status_register(uint8_t value)
 {
-    uint8_t cmd[2] = { CMD_WRITE_STATUS_REGISTER, value };
+        uint8_t cmd[2] = { CMD_WRITE_STATUS_REGISTER, value };
 
-    qspi_write(cmd, 2);
+        qspi_write(cmd, 2);
 
-    /* Wait for the Flash to process the command */
-    while (flash_is_busy());
+        /* Wait for the Flash to process the command */
+        while (flash_is_busy());
 }
 
 /**
@@ -367,15 +352,15 @@ void fast_write_to_fifo32(uint32_t start, uint32_t end, uint32_t dest) __attribu
 
 static inline void fast_write_to_fifo32(uint32_t start, uint32_t end, uint32_t dest)
 {
-    __asm volatile("copy:                                  \n"
-                   "       ldmia %[start]!, {r3}           \n"
-                   "       str r3, [%[dest]]               \n"
-                   "       cmp %[start], %[end]            \n"
-                   "       blt copy                        \n"
-                   :
-                   :                                                         /* output */
-                   [start] "l"(start), [end] "r"(end), [dest] "l"(dest) :    /* inputs (%0, %1, %2) */
-                   "r3");                                              /* registers that are destroyed */
+        __asm volatile(   "copy:                                  \n"
+                          "       ldmia %[start]!, {r3}           \n"
+                          "       str r3, [%[dest]]               \n"
+                          "       cmp %[start], %[end]            \n"
+                          "       blt copy                        \n"
+                          :
+                          :                                                         /* output */
+                          [start] "l" (start), [end] "r" (end), [dest] "l" (dest) : /* inputs (%0, %1, %2) */
+                          "r3");                                              /* registers that are destroyed */
 }
 
 /**
@@ -392,107 +377,89 @@ static inline void fast_write_to_fifo32(uint32_t start, uint32_t end, uint32_t d
  *        issue another flash_write_page() call in order to write the remaining data to the next
  *        page.
  */
-QSPI_SECTION static size_t flash_write_page(uint32_t addr, const uint8_t *buf, uint16_t size)
+__RETAINED_CODE static size_t flash_write_page(uint32_t addr, const uint8_t *buf, uint16_t size)
 {
-    size_t i = 0;
-    size_t odd = ((uint32_t) buf) & 3;
-    size_t size_aligned32;
-    size_t tmp;
+        size_t i = 0;
+        size_t odd = ((uint32_t) buf) & 3;
+        size_t size_aligned32;
+        size_t tmp;
 
-    DBG_SET_HIGH(FLASH_DEBUG, FLASHDBG_PAGE_PROG);
+        DBG_SET_HIGH(FLASH_DEBUG, FLASHDBG_PAGE_PROG);
 
-    flash_write_enable();
+        flash_write_enable();
 
-    /* Reduce max write size, that can reduce interrupt latency time */
-    if (size > FLASH_MAX_WRITE_SIZE)
-    {
-        size = FLASH_MAX_WRITE_SIZE;
-    }
-
-    /* Make sure write will not cross page boundary */
-    tmp = 256 - (addr & 0xFF);
-
-    if (size > tmp)
-    {
-        size = tmp;
-    }
-
-    hw_qspi_cs_enable();
-
-    if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32)
-    {
-        hw_qspi_write8(flash_config->page_program_opcode);
-#if QUAD_MODE
-
-        if (flash_config->quad_page_program_address == true)
-        {
-            qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+        /* Reduce max write size, that can reduce interrupt latency time */
+        if (size > FLASH_MAX_WRITE_SIZE) {
+                size = FLASH_MAX_WRITE_SIZE;
         }
 
-#endif
-        hw_qspi_write32((addr >> 24) | ((addr >> 8) & 0xFF00) | ((addr << 8) & 0xFF0000) | (addr << 24));
-#if QUAD_MODE
-
-        if (flash_config->quad_page_program_address == false)
-        {
-            qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+        /* Make sure write will not cross page boundary */
+        tmp = 256 - (addr & 0xFF);
+        if (size > tmp) {
+                size = tmp;
         }
 
-#endif
-    }
-    else
-    {
-        if (flash_config->quad_page_program_address == true)
-        {
-            hw_qspi_write8(flash_config->page_program_opcode);
+        hw_qspi_cs_enable();
+
+        if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32) {
+                hw_qspi_write8(flash_config->page_program_opcode);
 #if QUAD_MODE
-            qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+                if (flash_config->quad_page_program_address == true) {
+                        qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+                }
 #endif
-            hw_qspi_write16(((addr >> 16) & 0xFF) | (addr & 0xFF00));
-            hw_qspi_write8(addr & 0xFF);
-        }
-        else
-        {
-            hw_qspi_write32(CMD_QUAD_PAGE_PROGRAM | ((addr >> 8) & 0xFF00) | ((addr << 8) & 0xFF0000) | (addr << 24));
+                hw_qspi_write32((addr >> 24) | ((addr >> 8) & 0xFF00) | ((addr << 8) & 0xFF0000) | (addr << 24));
 #if QUAD_MODE
-            qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+                if (flash_config->quad_page_program_address == false) {
+                        qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+                }
 #endif
         }
-    }
-
-    if (odd)
-    {
-        odd = 4 - odd;
-
-        for (i = 0; i < odd && i < size; ++i)
-        {
-            hw_qspi_write8(buf[i]);
+        else {
+                if (flash_config->quad_page_program_address == true) {
+                        hw_qspi_write8(flash_config->page_program_opcode);
+#if QUAD_MODE
+                        qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+#endif
+                        hw_qspi_write16(((addr >> 16) & 0xFF) | (addr & 0xFF00));
+                        hw_qspi_write8(addr & 0xFF);
+                }
+                else {
+                        hw_qspi_write32(CMD_QUAD_PAGE_PROGRAM | ((addr >> 8) & 0xFF00) | ((addr << 8) & 0xFF0000) | (addr << 24));
+#if QUAD_MODE
+                        qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+#endif
+                }
         }
-    }
 
-    size_aligned32 = ((size - i) & ~0x3);
+        if (odd) {
+                odd = 4 - odd;
+                for (i = 0; i < odd && i < size; ++i) {
+                        hw_qspi_write8(buf[i]);
+                }
+        }
 
-    if (size_aligned32)
-    {
-        fast_write_to_fifo32((uint32_t)(buf + i), (uint32_t)(buf + i + size_aligned32),
-                             (uint32_t) & (QSPIC->QSPIC_WRITEDATA_REG));
-        i += size_aligned32;
-    }
+        size_aligned32 = ((size - i) & ~0x3);
 
-    for (; i < size; i++)
-    {
-        hw_qspi_write8(buf[i]);
-    }
+        if (size_aligned32) {
+                fast_write_to_fifo32((uint32_t)(buf + i), (uint32_t)(buf + i + size_aligned32),
+                        (uint32_t)&(QSPIC->QSPIC_WRITEDATA_REG));
+                i += size_aligned32;
+        }
 
-    hw_qspi_cs_disable();
+        for (; i < size; i++) {
+                hw_qspi_write8(buf[i]);
+        }
 
-    DBG_SET_LOW(FLASH_DEBUG, FLASHDBG_PAGE_PROG);
+        hw_qspi_cs_disable();
+
+        DBG_SET_LOW(FLASH_DEBUG, FLASHDBG_PAGE_PROG);
 
 #if QUAD_MODE
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
 #endif
 
-    return i;
+        return i;
 }
 
 /**
@@ -502,24 +469,22 @@ QSPI_SECTION static size_t flash_write_page(uint32_t addr, const uint8_t *buf, u
  *
  * \note This function blocks until the Flash has processed the command.
  */
-QSPI_SECTION __attribute__((unused)) static void flash_erase_sector(uint32_t addr)
+__RETAINED_CODE __attribute__((unused)) static void flash_erase_sector(uint32_t addr)
 {
-    flash_write_enable();
+        flash_write_enable();
 
-    if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32)
-    {
-        uint8_t cmd[5] = { flash_config->erase_opcode, addr >> 24, addr >> 16, addr >>  8, addr };
-        qspi_write(cmd, 5);
-    }
-    else
-    {
-        uint8_t cmd[4] = { flash_config->erase_opcode, addr >> 16, addr >>  8, addr };
-        qspi_write(cmd, 4);
-    }
+        if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32) {
+                uint8_t cmd[5] = { flash_config->erase_opcode, addr >> 24, addr >> 16, addr >>  8, addr };
+                qspi_write(cmd, 5);
+        }
+        else {
+                uint8_t cmd[4] = { flash_config->erase_opcode, addr >> 16, addr >>  8, addr };
+                qspi_write(cmd, 4);
+        }
 
 
-    /* Wait for the Flash to process the command */
-    while (flash_erase_program_in_progress());
+        /* Wait for the Flash to process the command */
+        while (flash_erase_program_in_progress());
 }
 
 /**
@@ -528,36 +493,36 @@ QSPI_SECTION __attribute__((unused)) static void flash_erase_sector(uint32_t add
  * \return bool True if the Flash is not busy else false.
  *
  */
-QSPI_SECTION_NO_INLINE static bool qspi_writable(void)
+__RETAINED_CODE static bool qspi_writable(void)
 {
-    bool writable;
+        bool writable;
 
-    /*
-     * From now on QSPI may not be available, turn off interrupts.
-     */
-    GLOBAL_INT_DISABLE();
+        /*
+         * From now on QSPI may not be available, turn off interrupts.
+         */
+        GLOBAL_INT_DISABLE();
 
-    /*
-     * Turn on command entry mode.
-     */
-    flash_activate_command_entry_mode();
+        /*
+         * Turn on command entry mode.
+         */
+        flash_activate_command_entry_mode();
 
-    /*
-     * Check if flash is ready.
-     */
-    writable = !(flash_is_busy());
+        /*
+         * Check if flash is ready.
+         */
+        writable = !(flash_is_busy());
 
-    /*
-     * Restore auto mode.
-     */
-    flash_deactivate_command_entry_mode();
+        /*
+         * Restore auto mode.
+         */
+        flash_deactivate_command_entry_mode();
 
-    /*
-     * Let other code to be executed including QSPI one.
-     */
-    GLOBAL_INT_RESTORE();
+        /*
+         * Let other code to be executed including QSPI one.
+         */
+        GLOBAL_INT_RESTORE();
 
-    return writable;
+        return writable;
 }
 
 /**
@@ -570,11 +535,11 @@ QSPI_SECTION_NO_INLINE static bool qspi_writable(void)
  *        3: Suspended Erase procedure
  *        4: Finishing the Erase procedure
  */
-QSPI_SECTION static uint8_t qspi_get_erase_status(void)
+__RETAINED_CODE __attribute__((unused)) static uint8_t qspi_get_erase_status(void)
 {
-    QSPIC->QSPIC_CHCKERASE_REG = 0;
+        QSPIC->QSPIC_CHCKERASE_REG = 0;
 
-    return HW_QSPIC_REG_GETF(ERASECTRL, ERS_STATE);
+        return HW_QSPIC_REG_GETF(ERASECTRL, ERS_STATE);
 }
 
 /**
@@ -586,173 +551,163 @@ static inline HW_QSPI_ADDR_SIZE qspi_get_address_size(void) __attribute__((alway
 
 static inline HW_QSPI_ADDR_SIZE qspi_get_address_size(void)
 {
-    return (HW_QSPI_ADDR_SIZE)HW_QSPIC_REG_GETF(CTRLMODE, USE_32BA);
+        return (HW_QSPI_ADDR_SIZE)HW_QSPIC_REG_GETF(CTRLMODE, USE_32BA);
 }
 
 __RETAINED_CODE void flash_activate_command_entry_mode(void)
 {
-    /*
-     * Turn off auto mode to allow write.
-     */
-    qspi_set_automode(false);
+        /*
+         * Turn off auto mode to allow write.
+         */
+        qspi_set_automode(false);
 
-    /*
-     * Switch to single mode for command entry.
-     */
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
+        /*
+         * Switch to single mode for command entry.
+         */
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
 
-    /*
-     * Exit continuous mode (QPI mode), after this the flash will interpret commands again.
-     */
-    if (flash_config->send_once != 0)
-    {
-        flash_reset_continuous_mode(flash_config->break_seq_size);
-    }
+        /*
+         * Exit continuous mode (QPI mode), after this the flash will interpret commands again.
+         */
+        if (flash_config->send_once != 0) {
+                flash_reset_continuous_mode(flash_config->break_seq_size);
+        }
 }
 
 
 __RETAINED_CODE void flash_deactivate_command_entry_mode(void)
 {
-    flash_config->deactivate_command_entry_mode();
+        flash_config->deactivate_command_entry_mode();
 
 #if QUAD_MODE
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
 #endif
-    qspi_set_automode(true);
+        qspi_set_automode(true);
 }
 
 #if (dg_configDISABLE_BACKGROUND_FLASH_OPS == 0)
 __RETAINED_CODE void flash_erase_sector_manual_mode(uint32_t addr)
 {
-    /*
-     * Turn on command entry mode.
-     */
-    flash_activate_command_entry_mode();
+        /*
+         * Turn on command entry mode.
+         */
+        flash_activate_command_entry_mode();
 
-    /*
-     * Issue the erase sector command.
-     */
-    flash_write_enable();
+        /*
+         * Issue the erase sector command.
+         */
+        flash_write_enable();
 
-    if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32)
-    {
-        uint8_t cmd[5] = { flash_config->erase_opcode, addr >> 24, addr >> 16, addr >>  8, addr };
-        qspi_write(cmd, 5);
-    }
-    else
-    {
-        uint8_t cmd[4] = { flash_config->erase_opcode, addr >> 16, addr >>  8, addr };
-        qspi_write(cmd, 4);
-    }
+        if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32) {
+                uint8_t cmd[5] = { flash_config->erase_opcode, addr >> 24, addr >> 16, addr >>  8, addr };
+                qspi_write(cmd, 5);
+        }
+        else {
+                uint8_t cmd[4] = { flash_config->erase_opcode, addr >> 16, addr >>  8, addr };
+                qspi_write(cmd, 4);
+        }
 
-    /*
-     * Flash stays in manual mode.
-     */
+        /*
+         * Flash stays in manual mode.
+         */
 }
 
 __RETAINED_CODE size_t flash_program_page_manual_mode(uint32_t addr, const uint8_t *buf, uint16_t size)
 {
-    size_t written = flash_write_page(addr, buf, size);
+        size_t written = flash_write_page(addr, buf, size);
 
-    /*
-     * Flash stays in manual mode.
-     */
+        /*
+         * Flash stays in manual mode.
+         */
 
-    return written;
+        return written;
 }
 
 __RETAINED_CODE bool qspi_check_program_erase_in_progress(void)
 {
-    return flash_is_busy();
+        return flash_is_busy();
 }
 
 __RETAINED_CODE bool qspi_check_and_suspend(void)
 {
-    uint8_t cmd[] = { flash_config->erase_suspend_opcode };
-    bool am = hw_qspi_get_automode();
-    bool ret = true;
+        uint8_t cmd[] = { flash_config->erase_suspend_opcode };
+        bool am = hw_qspi_get_automode();
+        bool ret = true;
 
-    if (am)
-    {
+        if (am) {
+                /*
+                 * Turn on command entry mode.
+                 */
+                flash_activate_command_entry_mode();
+        }
+
         /*
-         * Turn on command entry mode.
+         * Suspend action.
          */
-        flash_activate_command_entry_mode();
-    }
+        DBG_SET_HIGH(FLASH_DEBUG, FLASHDBG_SUSPEND_ACTION);
 
-    /*
-     * Suspend action.
-     */
-    DBG_SET_HIGH(FLASH_DEBUG, FLASHDBG_SUSPEND_ACTION);
+        /*
+         * Check if an operation is ongoing.
+         */
+        while (flash_erase_program_in_progress()) {
+                qspi_write(cmd, 1);
+        }
 
-    /*
-     * Check if an operation is ongoing.
-     */
-    while (flash_erase_program_in_progress())
-    {
-        qspi_write(cmd, 1);
-    }
+        hw_cpm_delay_usec(FLASH_SUS_DELAY);  // Wait for SUS bit to be updated
 
-    hw_cpm_delay_usec(FLASH_SUS_DELAY);  // Wait for SUS bit to be updated
+        DBG_SET_LOW(FLASH_DEBUG, FLASHDBG_SUSPEND_ACTION);
 
-    DBG_SET_LOW(FLASH_DEBUG, FLASHDBG_SUSPEND_ACTION);
+        if (flash_config->is_suspended() == false) {
+                ret = false;
+        }
 
-    if (flash_config->is_suspended() == false)
-    {
-        ret = false;
-    }
+        /*
+         * Restore auto mode.
+         */
+        flash_deactivate_command_entry_mode();
 
-    /*
-     * Restore auto mode.
-     */
-    flash_deactivate_command_entry_mode();
-
-    return ret;
+        return ret;
 }
 
 __RETAINED_CODE void qspi_resume(void)
 {
-    uint8_t cmd[] = { flash_config->erase_resume_opcode };
+        uint8_t cmd[] = { flash_config->erase_resume_opcode };
 
-    do
-    {
+        do {
+                /*
+                 * Turn on command entry mode.
+                 */
+                flash_activate_command_entry_mode();
+
+                /*
+                 * Check if suspended.
+                 */
+                if (flash_config->is_suspended() == false) {
+                        break;
+                }
+
+                /*
+                 * Wait for flash to become ready again.
+                 */
+                do {
+                        /*
+                         * Resume action.
+                         */
+                        qspi_write(cmd, 1);
+
+                        /*
+                         * Check if SUS bit is cleared.
+                         */
+                } while (flash_config->is_suspended());
+        } while (0);
+
         /*
-         * Turn on command entry mode.
+         * Flash stays in manual mode.
          */
-        flash_activate_command_entry_mode();
-
-        /*
-         * Check if suspended.
-         */
-        if (flash_config->is_suspended() == false)
-        {
-            break;
-        }
-
-        /*
-         * Wait for flash to become ready again.
-         */
-        do
-        {
-            /*
-             * Resume action.
-             */
-            qspi_write(cmd, 1);
-
-            /*
-             * Check if SUS bit is cleared.
-             */
-        }
-        while (flash_config->is_suspended());
-    }
-    while (0);
-
-    /*
-     * Flash stays in manual mode.
-     */
 }
 #endif
 
+#if (ERASE_IN_AUTOMODE == 1)
 /**
  * \brief Erase sector (via CPM background processing or using the QSPI controller)
  *
@@ -764,28 +719,44 @@ __RETAINED_CODE void qspi_resume(void)
  *
  * \param[in] addr The address of the sector to be erased.
  */
-QSPI_SECTION_NO_INLINE static void qspi_erase_sector(uint32_t addr)
+__RETAINED_CODE static void qspi_erase_sector(uint32_t addr)
 {
-    /* Wait for previous erase to end */
-    while (qspi_get_erase_status() != 0)
-    {
-    }
+#if (dg_configDISABLE_BACKGROUND_FLASH_OPS == 0)
+        OS_TASK handle;
+        void *op;
 
-    if (qspi_get_address_size() == HW_QSPI_ADDR_SIZE_32)
-    {
-        addr >>= 12;
-    }
-    else
-    {
-        addr >>= 4;
-    }
+        handle = OS_GET_CURRENT_TASK();
 
-    /* Setup erase block page */
-    HW_QSPIC_REG_SETF(ERASECTRL, ERS_ADDR, addr);
+        /* Instruct CPM to erase this sector */
+        if (pm_register_qspi_operation(handle, addr, NULL, 0, &op)) {
+                /* Block until erase is completed */
+                OS_TASK_SUSPEND(handle);
+                OS_FREE(op);
+        }
+        else {
+                /* The PM has not started yet... */
 
-    /* Fire erase */
-    HW_QSPIC_REG_SETF(ERASECTRL, ERASE_EN, 1);
+#endif
+                /* Wait for previous erase to end */
+                while (qspi_get_erase_status() != 0) {
+                }
+
+                if (qspi_get_address_size() == HW_QSPI_ADDR_SIZE_32) {
+                        addr >>= 12;
+                } else {
+                        addr >>= 4;
+                }
+
+                /* Setup erase block page */
+                HW_QSPIC_REG_SETF(ERASECTRL, ERS_ADDR, addr);
+
+                /* Fire erase */
+                HW_QSPIC_REG_SETF(ERASECTRL, ERASE_EN, 1);
+#if (dg_configDISABLE_BACKGROUND_FLASH_OPS == 0)
+        }
+#endif
 }
+#endif /* (ERASE_IN_AUTOMODE == 1)  */
 
 /**
  * \brief Write data to a page in the Flash (via CPM background processing or using the QSPI
@@ -806,39 +777,57 @@ QSPI_SECTION_NO_INLINE static void qspi_erase_sector(uint32_t addr)
  *
  * \warning The caller should ensure that buf does not point to QSPI mapped memory.
  */
-QSPI_SECTION_NO_INLINE static size_t write_page(uint32_t addr, const uint8_t *buf, uint16_t size)
+__RETAINED_CODE static size_t write_page(uint32_t addr, const uint8_t *buf, uint16_t size)
 {
-    size_t written;
+        size_t written;
 
-    /*
-     * From now on QSPI may not be available, turn of interrupts.
-     */
-    GLOBAL_INT_DISABLE();
+#if (dg_configDISABLE_BACKGROUND_FLASH_OPS == 0)
+        OS_TASK handle;
+        void *op;
 
-    /*
-     * Turn on command entry mode.
-     */
-    flash_activate_command_entry_mode();
+        handle = OS_GET_CURRENT_TASK();
 
-    /*
-     * Write data into the page of the Flash.
-     */
-    written = flash_write_page(addr, buf, size);
+        /* Instruct CPM to program this sector */
+        if (pm_register_qspi_operation(handle, addr, buf, &size, &op)) {
+                /* Block until program is completed */
+                OS_TASK_SUSPEND(handle);
+                OS_FREE(op);
+                written = size;
+        }
+        else {
+#endif
+                /*
+                 * From now on QSPI may not be available, turn of interrupts.
+                 */
+                GLOBAL_INT_DISABLE();
 
-    /* Wait for the Flash to process the command */
-    while (flash_erase_program_in_progress());
+                /*
+                 * Turn on command entry mode.
+                 */
+                flash_activate_command_entry_mode();
 
-    /*
-     * Restore auto mode.
-     */
-    flash_deactivate_command_entry_mode();
+                /*
+                 * Write data into the page of the Flash.
+                 */
+                written = flash_write_page(addr, buf, size);
 
-    /*
-     * Let other code to be executed including QSPI one.
-     */
-    GLOBAL_INT_RESTORE();
+                /* Wait for the Flash to process the command */
+                while (flash_erase_program_in_progress());
 
-    return written;
+                /*
+                 * Restore auto mode.
+                 */
+                flash_deactivate_command_entry_mode();
+
+                /*
+                 * Let other code to be executed including QSPI one.
+                 */
+                GLOBAL_INT_RESTORE();
+#if (dg_configDISABLE_BACKGROUND_FLASH_OPS == 0)
+        }
+#endif
+
+        return written;
 }
 
 /**
@@ -855,160 +844,149 @@ QSPI_SECTION_NO_INLINE static size_t write_page(uint32_t addr, const uint8_t *bu
  *
  * \param[in] addr The address of the sector to be erased.
  */
-QSPI_SECTION_NO_INLINE static void erase_sector(uint32_t addr)
+__RETAINED_CODE static void erase_sector(uint32_t addr)
 {
 #if ERASE_IN_AUTOMODE
-    /*
-     * Erase sector in automode
-     */
-    qspi_erase_sector(addr);
+        /*
+         * Erase sector in automode
+         */
+        qspi_erase_sector(addr);
 
-    /*
-     * Wait for erase to finish
-     */
-    while (qspi_get_erase_status())
-    {
-    }
-
+        /*
+         * Wait for erase to finish
+         */
+        while (qspi_get_erase_status()) {
+        }
 #else
-    /*
-     * From now on QSPI may not be available, turn of interrupts.
-     */
-    GLOBAL_INT_DISABLE();
+        /*
+         * From now on QSPI may not be available, turn of interrupts.
+         */
+        GLOBAL_INT_DISABLE();
 
-    /*
-     * Turn off auto mode to allow write.
-     */
-    qspi_set_automode(false);
+        /*
+         * Turn off auto mode to allow write.
+         */
+        qspi_set_automode(false);
 
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
 
-    /*
-     * Get the Flash out of Power Down mode.
-     */
-    flash_release_power_down();
+        /*
+         * Exit continuous mode, after this the flash will interpret commands again.
+         */
+        flash_reset_continuous_mode(flash_config->break_seq_size);
 
-    /*
-     * Exit continuous mode, after this the flash will interpret commands again.
-     */
-    flash_reset_continuous_mode(flash_config->break_seq_size);
+        /*
+         * Execute erase command.
+         */
+        flash_erase_sector(addr);
 
-    /*
-     * Execute erase command.
-     */
-    flash_erase_sector(addr);
+        /*
+         * Restore auto mode.
+         */
+        flash_deactivate_command_entry_mode();
 
-    /*
-     * Restore auto mode.
-     */
-    flash_deactivate_command_entry_mode();
-
-    /*
-     * Let other code to be executed including QSPI one.
-     */
-    GLOBAL_INT_RESTORE();
+        /*
+         * Let other code to be executed including QSPI one.
+         */
+        GLOBAL_INT_RESTORE();
 #endif
 }
 
 uint32_t qspi_automode_get_code_buffer_size(void)
 {
-    /* Return 1 in case some code will pass this value to memory allocation function */
-    return 1;
+        /* Return 1 in case some code will pass this value to memory allocation function */
+        return 1;
 }
 
 void qspi_automode_set_code_buffer(void *ram)
 {
-    (void) ram; /* Unused */
+        (void) ram; /* Unused */
 }
 
 bool qspi_automode_writable(void)
 {
-    return qspi_writable();
+        return qspi_writable();
 }
 
 size_t qspi_automode_write_flash_page(uint32_t addr, const uint8_t *buf, size_t size)
 {
-    while (!qspi_automode_writable())
-    {
-    }
+        while (!qspi_automode_writable()) {
+        }
 
-    return write_page(addr, buf, size);
+        return write_page(addr, buf, size);
 }
 
 void qspi_automode_erase_flash_sector(uint32_t addr)
 {
-    while (!qspi_automode_writable())
-    {
-    }
+        while (!qspi_automode_writable()) {
+        }
 
-    erase_sector(addr);
+        erase_sector(addr);
 }
 
 void qspi_automode_erase_chip(void)
 {
-    flash_activate_command_entry_mode();
+        flash_activate_command_entry_mode();
 
-    hw_qspi_cs_enable();
-    hw_qspi_write8(CMD_WRITE_ENABLE);
-    hw_qspi_cs_disable();
+        hw_qspi_cs_enable();
+        hw_qspi_write8(CMD_WRITE_ENABLE);
+        hw_qspi_cs_disable();
 
-    hw_qspi_cs_enable();
-    hw_qspi_write8(CMD_CHIP_ERASE);
-    hw_qspi_cs_disable();
+        hw_qspi_cs_enable();
+        hw_qspi_write8(CMD_CHIP_ERASE);
+        hw_qspi_cs_disable();
 
-    hw_qspi_cs_enable();
-    hw_qspi_write8(CMD_READ_STATUS_REGISTER);
+        hw_qspi_cs_enable();
+        hw_qspi_write8(CMD_READ_STATUS_REGISTER);
+        while (hw_qspi_read8() & FLASH_STATUS_BUSY_MASK);
+        hw_qspi_cs_disable();
 
-    while (hw_qspi_read8() & FLASH_STATUS_BUSY_MASK);
-
-    hw_qspi_cs_disable();
-
-    flash_deactivate_command_entry_mode();
+        flash_deactivate_command_entry_mode();
 }
 
 size_t qspi_automode_read(uint32_t addr, uint8_t *buf, size_t len)
 {
-    memcpy(buf, (void *)(MEMORY_QSPIF_BASE + addr), len);
+        memcpy(buf, (void *)(MEMORY_QSPIF_BASE + addr), len);
 
-    return len;
+        return len;
 }
 
-QSPI_SECTION void qspi_automode_flash_power_up(void)
+__RETAINED_CODE void qspi_automode_flash_power_up(void)
 {
-    hw_cpm_delay_usec(flash_config->power_down_delay);
+        hw_cpm_delay_usec(flash_config->power_down_delay);
 
-    /* Interrupts must be turned off since the flash goes in manual mode, and
-     * code (e.g. for an ISR) cannot be fetched from flash during this time
-     */
-    GLOBAL_INT_DISABLE();
+        /* Interrupts must be turned off since the flash goes in manual mode, and
+         * code (e.g. for an ISR) cannot be fetched from flash during this time
+         */
+        GLOBAL_INT_DISABLE();
 
-    // Do not call flash_activate_command_entry_mode(). This function will call
-    // flash_reset_continuous_mode which will try to send break sequence to the QSPI Flash
-    // which is in power-down mode.
-    qspi_set_automode(false);
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
+        // Do not call flash_activate_command_entry_mode(). This function will call
+        // flash_reset_continuous_mode which will try to send break sequence to the QSPI Flash
+        // which is in power-down mode.
+        qspi_set_automode(false);
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
 
-    hw_qspi_cs_enable();
-    hw_qspi_write8(CMD_RELEASE_POWER_DOWN);
-    hw_qspi_cs_disable();
+        hw_qspi_cs_enable();
+        hw_qspi_write8(CMD_RELEASE_POWER_DOWN);
+        hw_qspi_cs_disable();
 
-    flash_deactivate_command_entry_mode();
+        flash_deactivate_command_entry_mode();
 
-    /*
-     * The flash is in auto mode again. Re-enable the interrupts
-     */
-    GLOBAL_INT_RESTORE();
+        /*
+         * The flash is in auto mode again. Re-enable the interrupts
+         */
+        GLOBAL_INT_RESTORE();
 
-    hw_cpm_delay_usec(flash_config->release_power_down_delay);
+        hw_cpm_delay_usec(flash_config->release_power_down_delay);
 }
 
-QSPI_SECTION void qspi_automode_flash_power_down(void)
+__RETAINED_CODE void qspi_automode_flash_power_down(void)
 {
-    flash_activate_command_entry_mode();
+        flash_activate_command_entry_mode();
 
-    hw_qspi_cs_enable();
-    hw_qspi_write8(CMD_ENTER_POWER_DOWN);
-    hw_qspi_cs_disable();
+        hw_qspi_cs_enable();
+        hw_qspi_write8(CMD_ENTER_POWER_DOWN);
+        hw_qspi_cs_disable();
 
 // Do not call flash_deactivate_command_entry_mode(). This function will call
 // flash_config->deactivate_command_entry_mode() which will try to send commands to the QSPI Flash
@@ -1017,14 +995,13 @@ QSPI_SECTION void qspi_automode_flash_power_down(void)
 //        flash_deactivate_command_entry_mode();
 
 #if QUAD_MODE
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
 #endif
-    qspi_set_automode(true);
+        qspi_set_automode(true);
 }
 
-static qspi_config qspi_cfg =
-{
-    HW_QSPI_ADDR_SIZE_24, HW_QSPI_POL_HIGH, HW_QSPI_SAMPLING_EDGE_NEGATIVE
+static qspi_config qspi_cfg = {
+        HW_QSPI_ADDR_SIZE_24, HW_QSPI_POL_HIGH, HW_QSPI_SAMPLING_EDGE_NEGATIVE
 };
 
 /**
@@ -1035,27 +1012,27 @@ static qspi_config qspi_cfg =
  * \param[in] density Pointer to the variable where the device density will be returned
  */
 #if FLASH_AUTODETECT
-QSPI_SECTION static void flash_read_jedec_id(uint8_t *manufacturer_id, uint8_t *device_type, uint8_t *density)
+__RETAINED_CODE static void flash_read_jedec_id(uint8_t *manufacturer_id, uint8_t *device_type, uint8_t *density)
 {
-    uint8_t cmd[] = { CMD_READ_JEDEC_ID };
-    uint8_t buffer[3];
+        uint8_t cmd[] = { CMD_READ_JEDEC_ID };
+        uint8_t buffer[3];
 
-    qspi_set_automode(false);
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
+        qspi_set_automode(false);
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_SINGLE);
 
-    // reset continuous mode using both one and two break bytes to cover all cases
-    flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SIZE_2B);
-    flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SIZE_1B);
+        // reset continuous mode using both one and two break bytes to cover all cases
+        flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SIZE_2B);
+        flash_reset_continuous_mode(HW_QSPI_BREAK_SEQ_SIZE_1B);
 
-    qspi_transact(cmd, 1, buffer, 3);
-    *manufacturer_id = buffer[0];
-    *device_type = buffer[1];
-    *density = buffer[2];
+        qspi_transact(cmd, 1, buffer, 3);
+        *manufacturer_id = buffer[0];
+        *device_type = buffer[1];
+        *density = buffer[2];
 
 #if QUAD_MODE
-    qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
+        qspi_set_bus_mode(HW_QSPI_BUS_MODE_QUAD);
 #endif
-    qspi_set_automode(true);
+        qspi_set_automode(true);
 }
 #endif
 
@@ -1064,157 +1041,139 @@ QSPI_SECTION static void flash_read_jedec_id(uint8_t *manufacturer_id, uint8_t *
  *
  * \param[in] count Number of dummy bytes (not including extra byte)
  */
-QSPI_SECTION __attribute__((unused)) static void qspi_automode_set_dummy_bytes_count(uint8_t count)
+__RETAINED_CODE __attribute__((unused)) static void qspi_automode_set_dummy_bytes_count(uint8_t count)
 {
-    if (count == 3)
-    {
-        HW_QSPIC_REG_SETF(BURSTCMDB, DMY_FORCE, 1);
-    }
-    else
-    {
-        QSPIC->QSPIC_BURSTCMDB_REG =
-            (QSPIC->QSPIC_BURSTCMDB_REG &
-             ~(REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_FORCE) |
-               REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_NUM))) |
-            BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_NUM,
-                   dummy_num[count]);
-    }
+        if (count == 3) {
+                HW_QSPIC_REG_SETF(BURSTCMDB, DMY_FORCE, 1);
+        } else {
+                QSPIC->QSPIC_BURSTCMDB_REG =
+                        (QSPIC->QSPIC_BURSTCMDB_REG &
+                                ~(REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_FORCE) |
+                                        REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_NUM))) |
+                                        BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_NUM,
+                                                dummy_num[count]);
+        }
 }
 
 __RETAINED_CODE bool qspi_automode_init(void)
 {
-    uint8_t device_type;
-    uint8_t device_density;
+        uint8_t device_type;
+        uint8_t device_density;
 
-    hw_qspi_enable_clock();
+        hw_qspi_enable_clock();
 
 
 #if __DBG_QSPI_ENABLED
-    REG_SETF(CRG_TOP, CLK_AMBA_REG, QSPI_DIV, 3);
+        REG_SETF(CRG_TOP, CLK_AMBA_REG, QSPI_DIV, 3);
 #endif
 
 #if FLASH_AUTODETECT
-    uint8_t manufacturer_id;
-    uint8_t i;
+        uint8_t manufacturer_id;
+        uint8_t i;
 
 
-    flash_read_jedec_id(&manufacturer_id, &device_type, &device_density);
+        flash_read_jedec_id(&manufacturer_id, &device_type, &device_density);
 
-    const qspi_flash_config_t *flash_config_init = flash_config_table[0]; // default to first entry.
+        const qspi_flash_config_t* flash_config_init = flash_config_table[0]; // default to first entry.
 
-    for (i = 0; i < sizeof(flash_config_table) / sizeof(qspi_flash_config_t *); i++)
-    {
-        if ((flash_config_table[i]->manufacturer_id == manufacturer_id) &&
-            (flash_config_table[i]->device_type == device_type) &&
-            (flash_config_table[i]->device_density == device_density))
-        {
-            flash_config_init = flash_config_table[i];
-            break;
+        for (i=0; i< sizeof(flash_config_table)/sizeof(qspi_flash_config_t*); i++) {
+                if ( (flash_config_table[i]->manufacturer_id == manufacturer_id) &&
+                        (flash_config_table[i]->device_type == device_type) &&
+                        (flash_config_table[i]->device_density == device_density)) {
+                        flash_config_init = flash_config_table[i];
+                        break;
+                }
         }
-    }
-
-    flash_autodetect_config = *flash_config_init;
-    flash_config = &flash_autodetect_config;
+        flash_autodetect_config = *flash_config_init;
+        flash_config = &flash_autodetect_config;
 #else
-    device_type     = dg_configFLASH_DEVICE_TYPE;
-    device_density  = dg_configFLASH_DENSITY;
+        device_type     = dg_configFLASH_DEVICE_TYPE;
+        device_density  = dg_configFLASH_DENSITY;
 #endif
 
-    /*
-     * Copy the selected flash struct from flash into retram
-     */
-    flash_config->initialize(device_type, device_density);
+        /*
+         * Copy the selected flash struct from flash into retram
+         */
+        flash_config->initialize(device_type, device_density);
 
-    uint8_t read_opcode;
+        uint8_t read_opcode;
 
-    if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32)
-    {
-        read_opcode = CMD_FAST_READ_QUAD_4B;
-        qspi_cfg.address_size = HW_QSPI_ADDR_SIZE_32; // It will be set when hw_qspi_init() is called
-    }
-    else
-    {
-        read_opcode = CMD_FAST_READ_QUAD;
-    }
+        if (flash_config->address_size == HW_QSPI_ADDR_SIZE_32) {
+                read_opcode = CMD_FAST_READ_QUAD_4B;
+                qspi_cfg.address_size = HW_QSPI_ADDR_SIZE_32; // It will be set when hw_qspi_init() is called
+        }
+        else {
+                read_opcode = CMD_FAST_READ_QUAD;
+        }
+        /*
+         * Setup erase instruction that will be sent by QSPI controller to erase sector in automode.
+         */
+        hw_qspi_set_erase_instruction(flash_config->erase_opcode, HW_QSPI_BUS_MODE_SINGLE,
+                HW_QSPI_BUS_MODE_SINGLE, 15, 5);
+        /*
+         * Setup instruction pair that will temporarily suspend erase operation to allow read.
+         */
+        hw_qspi_set_suspend_resume_instructions(flash_config->erase_suspend_opcode, HW_QSPI_BUS_MODE_SINGLE,
+                                                flash_config->erase_resume_opcode, HW_QSPI_BUS_MODE_SINGLE, 7);
 
-    /*
-     * Setup erase instruction that will be sent by QSPI controller to erase sector in automode.
-     */
-    hw_qspi_set_erase_instruction(flash_config->erase_opcode, HW_QSPI_BUS_MODE_SINGLE,
-                                  HW_QSPI_BUS_MODE_SINGLE, 15, 5);
-    /*
-     * Setup instruction pair that will temporarily suspend erase operation to allow read.
-     */
-    hw_qspi_set_suspend_resume_instructions(flash_config->erase_suspend_opcode, HW_QSPI_BUS_MODE_SINGLE,
-                                            flash_config->erase_resume_opcode, HW_QSPI_BUS_MODE_SINGLE, 7);
+        /*
+         * QSPI controller must send write enable before erase, this sets it up.
+         */
+        hw_qspi_set_write_enable_instruction(CMD_WRITE_ENABLE, HW_QSPI_BUS_MODE_SINGLE);
 
-    /*
-     * QSPI controller must send write enable before erase, this sets it up.
-     */
-    hw_qspi_set_write_enable_instruction(CMD_WRITE_ENABLE, HW_QSPI_BUS_MODE_SINGLE);
+        /*
+         * Setup instruction that will be used to periodically check erase operation status.
+         * Check LSB which is 1 when erase is in progress.
+         */
+        hw_qspi_set_read_status_instruction(flash_config->read_erase_progress_opcode, HW_QSPI_BUS_MODE_SINGLE,
+                HW_QSPI_BUS_MODE_SINGLE, flash_config->erase_in_progress_bit, flash_config->erase_in_progress_bit_high_level?1:0, 20, 0);
 
-    /*
-     * Setup instruction that will be used to periodically check erase operation status.
-     * Check LSB which is 1 when erase is in progress.
-     */
-    hw_qspi_set_read_status_instruction(flash_config->read_erase_progress_opcode, HW_QSPI_BUS_MODE_SINGLE,
-                                        HW_QSPI_BUS_MODE_SINGLE, flash_config->erase_in_progress_bit, flash_config->erase_in_progress_bit_high_level ? 1 : 0,
-                                        20, 0);
+        /*
+         * This sequence is necessary if flash is working in continuous read mode, when instruction
+         * is not sent on every read access just address. Sending 0xFFFF will exit this mode.
+         * This sequence is sent only when QSPI is working in automode and decides to send one of
+         * instructions above.
+         * If flash is working in DUAL bus mode sequence should be 0xFFFF and size should be
+         * HW_QSPI_BREAK_SEQ_SIZE_2B.
+         */
+        hw_qspi_set_break_sequence(0xFFFF, HW_QSPI_BUS_MODE_SINGLE, flash_config->break_seq_size, 0);
 
-    /*
-     * This sequence is necessary if flash is working in continuous read mode, when instruction
-     * is not sent on every read access just address. Sending 0xFFFF will exit this mode.
-     * This sequence is sent only when QSPI is working in automode and decides to send one of
-     * instructions above.
-     * If flash is working in DUAL bus mode sequence should be 0xFFFF and size should be
-     * HW_QSPI_BREAK_SEQ_SIZE_2B.
-     */
-    hw_qspi_set_break_sequence(0xFFFF, HW_QSPI_BUS_MODE_SINGLE, flash_config->break_seq_size, 0);
+        /*
+         * If application starts from FLASH then bootloader must have set read instruction.
+         */
+        if (dg_configCODE_LOCATION != NON_VOLATILE_IS_FLASH) {
+                hw_qspi_init(&qspi_cfg);
+                hw_qspi_set_div(HW_QSPI_DIV_1);
+        }
+        flash_activate_command_entry_mode();
 
-    /*
-     * If application starts from FLASH then bootloader must have set read instruction.
-     */
-    if (dg_configCODE_LOCATION != NON_VOLATILE_IS_FLASH)
-    {
-        hw_qspi_init(&qspi_cfg);
-        hw_qspi_set_div(HW_QSPI_DIV_1);
-    }
+        hw_qspi_set_read_instruction(read_opcode, flash_config->send_once, flash_config->get_dummy_bytes(), HW_QSPI_BUS_MODE_SINGLE,
+                                     HW_QSPI_BUS_MODE_QUAD, HW_QSPI_BUS_MODE_QUAD,
+                                     HW_QSPI_BUS_MODE_QUAD);
+        hw_qspi_set_extra_byte(flash_config->extra_byte, HW_QSPI_BUS_MODE_QUAD, 0);
+        hw_qspi_set_address_size(flash_config->address_size);
 
-#ifdef  ENABLE_AUTOMODE_CONFIGURATION_FOR_READ
+        flash_deactivate_command_entry_mode();
 
-    flash_activate_command_entry_mode();
+        HW_QSPIC_REG_SETF(BURSTCMDB, CS_HIGH_MIN, 0);
 
-    hw_qspi_set_read_instruction(read_opcode, flash_config->send_once, flash_config->get_dummy_bytes(),
-                                 HW_QSPI_BUS_MODE_SINGLE,
-                                 HW_QSPI_BUS_MODE_QUAD, HW_QSPI_BUS_MODE_QUAD,
-                                 HW_QSPI_BUS_MODE_QUAD);
-    hw_qspi_set_extra_byte(flash_config->extra_byte, HW_QSPI_BUS_MODE_QUAD, 0);
-    hw_qspi_set_address_size(flash_config->address_size);
-
-    flash_deactivate_command_entry_mode();
-
-    HW_QSPIC_REG_SETF(BURSTCMDB, CS_HIGH_MIN, 0);
-#else
-    (void) read_opcode;
-#endif
-    return true;
+        return true;
 }
 
-QSPI_SECTION void qspi_automode_sys_clock_cfg(sys_clk_t sys_clk)
+__RETAINED_CODE void qspi_automode_sys_clock_cfg(sys_clk_t sys_clk)
 {
-    if ((CRG_TOP->CLK_AMBA_REG & (1 << REG_POS(CRG_TOP, CLK_AMBA_REG, QSPI_ENABLE))) != 0)  // If clock is enabled
-    {
-        /* Some of the sys_clk_cfg() implementations put the flash in command entry mode, where the flash is
-         * not available for code execution. We must make sure that no interrupt (that may cause a cache miss)
-         * hits during this time.
-         */
-        GLOBAL_INT_DISABLE();
-        flash_config->sys_clk_cfg(sys_clk);
-        GLOBAL_INT_RESTORE();
-    }
+        if ((CRG_TOP->CLK_AMBA_REG & (1 << REG_POS(CRG_TOP, CLK_AMBA_REG, QSPI_ENABLE))) != 0) { // If clock is enabled
+                /* Some of the sys_clk_cfg() implementations put the flash in command entry mode, where the flash is
+                 * not available for code execution. We must make sure that no interrupt (that may cause a cache miss)
+                 * hits during this time.
+                 */
+                GLOBAL_INT_DISABLE();
+                flash_config->sys_clk_cfg(sys_clk);
+                GLOBAL_INT_RESTORE();
+        }
 }
 
 const qspi_ucode_t *qspi_automode_get_ucode(void)
 {
-    return &flash_config->ucode_wakeup;
+        return &flash_config->ucode_wakeup;
 }

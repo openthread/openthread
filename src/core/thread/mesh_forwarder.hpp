@@ -80,7 +80,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit MeshForwarder(otInstance &aInstance);
+    explicit MeshForwarder(Instance &aInstance);
 
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
@@ -315,8 +315,6 @@ private:
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 #endif // OPENTHREAD_ENABLE_SERVICE
 #endif // OPENTHREAD_FTD
-
-    static MeshForwarder &GetOwner(const Context &aContext);
 
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        otError aError);

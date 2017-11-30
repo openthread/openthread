@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "coap/coap_header.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -54,7 +55,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
 
-EnergyScanClient::EnergyScanClient(otInstance &aInstance) :
+EnergyScanClient::EnergyScanClient(Instance &aInstance) :
     InstanceLocator(aInstance),
     mEnergyScan(OT_URI_PATH_ENERGY_REPORT, &EnergyScanClient::HandleReport, this)
 {

@@ -33,7 +33,7 @@
 
 #include "mac_filter.hpp"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 #include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"

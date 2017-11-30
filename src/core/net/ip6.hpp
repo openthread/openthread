@@ -123,7 +123,7 @@ public:
      * @param[in]  aInstance   A reference to the otInstance object.
      *
      */
-    Ip6(otInstance &aInstance);
+    Ip6(Instance &aInstance);
 
     /**
      * This method sends an IPv6 datagram.
@@ -390,8 +390,6 @@ private:
     otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
     int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
-
-    static Ip6 &GetOwner(const Context &aContext);
 
     bool mForwardingEnabled;
     bool mIsReceiveIp6FilterEnabled;

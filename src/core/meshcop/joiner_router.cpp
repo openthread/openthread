@@ -39,10 +39,11 @@
 
 #include <stdio.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle.hpp"
@@ -55,9 +56,9 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-JoinerRouter::JoinerRouter(otInstance &aInstance):
+JoinerRouter::JoinerRouter(Instance &aInstance):
     InstanceLocator(aInstance),
-    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
     mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mTimer(aInstance, &JoinerRouter::HandleTimer, this),
     mJoinerUdpPort(0),
@@ -427,7 +428,7 @@ exit:
 
 void JoinerRouter::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<JoinerRouter>().HandleTimer();
 }
 
 void JoinerRouter::HandleTimer(void)
@@ -527,17 +528,6 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *a
 
 exit:
     return ;
-}
-
-JoinerRouter &JoinerRouter::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    JoinerRouter &joiner = *static_cast<JoinerRouter *>(aContext.GetContext());
-#else
-    JoinerRouter &joiner = otGetThreadNetif().GetJoinerRouter();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return joiner;
 }
 
 }  // namespace Dtls

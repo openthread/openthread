@@ -1548,18 +1548,6 @@ otLinkGetFactoryAssignedIeeeEui64(
 }
 
 OTAPI 
-void 
-OTCALL
-otLinkGetJoinerId(
-    _In_ otInstance *aInstance, 
-    _Out_ otExtAddress *aHashMacAddress
-    )
-{
-    if (aInstance == nullptr) return;
-    (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_HASH_MAC_ADDRESS, aHashMacAddress);
-}
-
-OTAPI 
 otError 
 OTCALL
 otThreadGetLeaderRloc(
@@ -1663,29 +1651,6 @@ otThreadSetPSKc(
     memcpy_s(Buffer + sizeof(GUID), sizeof(Buffer) - sizeof(GUID), aPSKc, sizeof(otPSKc));
     
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_PSKC, Buffer, sizeof(Buffer), nullptr, 0));
-}
-
-OTAPI 
-int8_t 
-OTCALL
-otLinkGetMaxTransmitPower(
-    _In_ otInstance *aInstance
-    )
-{
-    int8_t Result = 0;
-    if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER, &Result);
-    return Result;
-}
-
-OTAPI 
-void 
-OTCALL
-otLinkSetMaxTransmitPower(
-    _In_ otInstance *aInstance, 
-    int8_t aPower
-    )
-{
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER, aPower);
 }
 
 OTAPI
@@ -3917,6 +3882,18 @@ otJoinerStop(
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_STOP));
+}
+
+OTAPI 
+otError 
+OTCALL
+otJoinerGetId(
+    _In_ otInstance *aInstance, 
+    _Out_ otExtAddress *aJoinerId
+    )
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_ID, aJoinerId));
 }
 
 OTAPI

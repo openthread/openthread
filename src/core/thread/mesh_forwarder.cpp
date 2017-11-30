@@ -37,12 +37,13 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
@@ -56,7 +57,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-MeshForwarder::MeshForwarder(otInstance &aInstance):
+MeshForwarder::MeshForwarder(Instance &aInstance):
     InstanceLocator(aInstance),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
@@ -362,7 +363,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).ScheduleTransmissionTask();
+    aTasklet.GetOwner<MeshForwarder>().ScheduleTransmissionTask();
 }
 
 void MeshForwarder::ScheduleTransmissionTask(void)
@@ -1136,7 +1137,7 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
 
 otError MeshForwarder::HandleFrameRequest(Mac::Sender &aSender, Mac::Frame &aFrame)
 {
-    return GetOwner(aSender).HandleFrameRequest(aFrame);
+    return aSender.GetOwner<MeshForwarder>().HandleFrameRequest(aFrame);
 }
 
 otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
@@ -1584,7 +1585,7 @@ otError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
 
 void MeshForwarder::HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError)
 {
-    GetOwner(aSender).HandleSentFrame(aFrame, aError);
+    aSender.GetOwner<MeshForwarder>().HandleSentFrame(aFrame, aError);
 }
 
 void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
@@ -1830,7 +1831,7 @@ void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels)
 
 void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleDiscoverTimer();
+    aTimer.GetOwner<MeshForwarder>().HandleDiscoverTimer();
 }
 
 void MeshForwarder::HandleDiscoverTimer(void)
@@ -1865,7 +1866,7 @@ exit:
 
 void MeshForwarder::HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame)
 {
-    GetOwner(aReceiver).HandleReceivedFrame(aFrame);
+    aReceiver.GetOwner<MeshForwarder>().HandleReceivedFrame(aFrame);
 }
 
 void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
@@ -1890,7 +1891,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     aFrame.GetSrcPanId(linkInfo.mPanId);
     linkInfo.mChannel = aFrame.GetChannel();
-    linkInfo.mRss = aFrame.GetPower();
+    linkInfo.mRss = aFrame.GetRssi();
     linkInfo.mLqi = aFrame.GetLqi();
     linkInfo.mLinkSecurity = aFrame.GetSecurityEnabled();
 
@@ -2011,7 +2012,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
         meshHeader.SetHopsLeft(meshHeader.GetHopsLeft() - 1);
         meshHeader.AppendTo(aFrame);
 
-        VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kType6lowpan, 0)) != NULL,
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
@@ -2145,7 +2146,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
-        VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
         message->SetPanId(aLinkInfo.mPanId);
@@ -2281,7 +2282,7 @@ void MeshForwarder::ClearReassemblyList(void)
 
 void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleReassemblyTimer();
+    aTimer.GetOwner<MeshForwarder>().HandleReassemblyTimer();
 }
 
 void MeshForwarder::HandleReassemblyTimer(void)
@@ -2324,7 +2325,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     Message *message;
     int headerLength;
 
-    VerifyOrExit((message = GetInstance().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
                  error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     message->SetPanId(aLinkInfo.mPanId);
@@ -2416,18 +2417,7 @@ exit:
 
 void MeshForwarder::HandleDataPollTimeout(Mac::Receiver &aReceiver)
 {
-    GetOwner(aReceiver).GetDataPollManager().HandlePollTimeout();
-}
-
-MeshForwarder &MeshForwarder::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    MeshForwarder &meshForwader = *static_cast<MeshForwarder *>(aContext.GetContext());
-#else
-    MeshForwarder &meshForwader = otGetMeshForwarder();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return meshForwader;
+    aReceiver.GetOwner<MeshForwarder>().GetDataPollManager().HandlePollTimeout();
 }
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

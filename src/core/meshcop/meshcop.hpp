@@ -39,6 +39,7 @@
 
 #include "coap/coap.hpp"
 #include "common/message.hpp"
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -57,6 +58,14 @@ inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHe
     return aCoap.NewMessage(aHeader, kMeshCoPMessagePriority);
 }
 
+/**
+ * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.
+ *
+ * @param[in]   aEui64     The factory-assigned IEEE EUI-64.
+ * @param[out]  aJoinerId  The Joiner ID.
+ *
+ */
+void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 
 }  // namespace MeshCoP
 

@@ -55,6 +55,8 @@ void otPlatReset(otInstance *aInstance)
     platformRadioDeinit();
     platformUartRestore();
 
+    alarm(0);
+
     execvp(argv[0], argv);
     perror("reset failed");
     exit(EXIT_FAILURE);

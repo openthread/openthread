@@ -34,9 +34,9 @@
 
 #include "thread_netif.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -57,7 +57,7 @@ static const otMasterKey kThreadMasterKey =
     }
 };
 
-ThreadNetif::ThreadNetif(otInstance &aInstance):
+ThreadNetif::ThreadNetif(Instance &aInstance):
     Netif(aInstance, OT_NETIF_INTERFACE_ID_THREAD),
     mCoap(aInstance),
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -67,7 +67,7 @@ ThreadNetif::ThreadNetif(otInstance &aInstance):
     mDhcp6Server(aInstance),
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    mDnsClient(aInstance.mThreadNetif),
+    mDnsClient(aInstance.GetThreadNetif()),
 #endif  // OPENTHREAD_ENABLE_DNS_CLIENT
     mActiveDataset(aInstance),
     mPendingDataset(aInstance),

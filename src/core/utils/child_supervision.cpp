@@ -36,9 +36,10 @@
 #include <openthread/openthread.h>
 
 #include "openthread-core-config.h"
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
@@ -48,7 +49,7 @@ namespace Utils {
 
 #if OPENTHREAD_FTD
 
-ChildSupervisor::ChildSupervisor(otInstance &aInstance) :
+ChildSupervisor::ChildSupervisor(Instance &aInstance) :
     InstanceLocator(aInstance),
     mSupervisionInterval(kDefaultSupervisionInterval),
     mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
@@ -101,7 +102,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
-    message = netif.GetInstance().mMessagePool.New(Message::kTypeSupervision, sizeof(uint8_t));
+    message = netif.GetInstance().GetMessagePool().New(Message::kTypeSupervision, sizeof(uint8_t));
     VerifyOrExit(message != NULL);
 
     // Supervision message is an empty payload 15.4 data frame.
@@ -132,7 +133,7 @@ void ChildSupervisor::UpdateOnSend(Child &aChild)
 
 void ChildSupervisor::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<ChildSupervisor>().HandleTimer();
 }
 
 void ChildSupervisor::HandleTimer(void)
@@ -165,20 +166,9 @@ exit:
     return;
 }
 
-ChildSupervisor &ChildSupervisor::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    ChildSupervisor &supervisor = *static_cast<ChildSupervisor *>(aContext.GetContext());
-#else
-    ChildSupervisor &supervisor = otGetThreadNetif().GetChildSupervisor();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return supervisor;
-}
-
 #endif // #if OPENTHREAD_FTD
 
-SupervisionListener::SupervisionListener(otInstance &aInstance) :
+SupervisionListener::SupervisionListener(Instance &aInstance) :
     InstanceLocator(aInstance),
     mTimeout(0),
     mTimer(aInstance, &SupervisionListener::HandleTimer, this)
@@ -239,7 +229,7 @@ void SupervisionListener::RestartTimer(void)
 
 void SupervisionListener::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<SupervisionListener>().HandleTimer();
 }
 
 void SupervisionListener::HandleTimer(void)
@@ -255,17 +245,6 @@ void SupervisionListener::HandleTimer(void)
 
 exit:
     RestartTimer();
-}
-
-SupervisionListener &SupervisionListener::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    SupervisionListener &listener = *static_cast<SupervisionListener *>(aContext.GetContext());
-#else
-    SupervisionListener &listener = otGetThreadNetif().GetSupervisionListener();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return listener;
 }
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION

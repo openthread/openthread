@@ -179,7 +179,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Dhcp6Client(otInstance &aInstance);
+    explicit Dhcp6Client(Instance &aInstance);
 
     /**
      * This method update addresses that shall be automatically created using DHCP.
@@ -223,8 +223,6 @@ private:
 
     static bool HandleTrickleTimer(TrickleTimer &aTrickleTimer);
     bool HandleTrickleTimer(void);
-
-    static Dhcp6Client &GetOwner(const Context &aContext);
 
     Ip6::UdpSocket mSocket;
 

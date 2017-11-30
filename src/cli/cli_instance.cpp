@@ -61,7 +61,7 @@ void Interpreter::CacheInstances()
         for (uint8_t i = 0; i < mInstancesLength; i++)
         {
             mInstances[i].mInterpreter = this;
-            mInstances[i].mInstance = otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]);
+            mInstances[i].mInstance = static_cast<Instance *>(otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]));
             assert(mInstances[i].mInstance);
             otSetStateChangedCallback(mInstances[i].mInstance, &Interpreter::s_HandleNetifStateChanged, &mInstances[i]);
         }

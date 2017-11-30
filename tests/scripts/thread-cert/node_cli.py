@@ -192,6 +192,10 @@ class otCli:
         self.pexpect.expect('Done')
         return addr16
 
+    def get_router_id(self):
+        rloc16 = self.get_addr16()
+        return (rloc16 >> 10)
+
     def get_addr64(self):
         self.send_command('extaddr')
         i = self.pexpect.expect('([0-9a-fA-F]{16})')
@@ -201,8 +205,17 @@ class otCli:
         self.pexpect.expect('Done')
         return addr64
 
-    def get_hashmacaddr(self):
-        self.send_command('hashmacaddr')
+    def get_eui64(self):
+        self.send_command('eui64')
+        i = self.pexpect.expect('([0-9a-fA-F]{16})')
+        if i == 0:
+            addr64 = self.pexpect.match.groups()[0].decode("utf-8")
+
+        self.pexpect.expect('Done')
+        return addr64
+
+    def get_joiner_id(self):
+        self.send_command('joinerid')
         i = self.pexpect.expect('([0-9a-fA-F]{16})')
         if i == 0:
             addr = self.pexpect.match.groups()[0].decode("utf-8")

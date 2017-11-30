@@ -645,10 +645,10 @@ public:
     /**
      * This method computes the Bloom Filter.
      *
-     * @param[in]  aExtAddress  Extended address
+     * @param[in]  aJoinerId  The Joiner ID.
      *
      */
-    void ComputeBloomFilter(const otExtAddress *aExtAddress);
+    void ComputeBloomFilter(const otExtAddress &aJoinerId);
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

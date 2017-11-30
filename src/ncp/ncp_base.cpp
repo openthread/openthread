@@ -44,9 +44,9 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 
@@ -63,6 +63,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 {
     NCP_GET_PROP_HANDLER_ENTRY(CAPS),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_ASSERT),
+    NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_WATCHDOG),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_NCP_LOG_LEVEL),
     NCP_GET_PROP_HANDLER_ENTRY(HWADDR),
     NCP_GET_PROP_HANDLER_ENTRY(HOST_POWER_STATE),
@@ -136,6 +137,8 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_NETWORK_DATA),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_STABLE_NETWORK_DATA),
 #endif
+    NCP_GET_PROP_HANDLER_ENTRY(THREAD_ACTIVE_DATASET),
+    NCP_GET_PROP_HANDLER_ENTRY(THREAD_PENDING_DATASET),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_LL_ADDR),
@@ -310,6 +313,10 @@ const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(THREAD_TMF_PROXY_ENABLED),
     NCP_SET_PROP_HANDLER_ENTRY(THREAD_TMF_PROXY_STREAM),
 #endif
+    NCP_SET_PROP_HANDLER_ENTRY(THREAD_ACTIVE_DATASET),
+    NCP_SET_PROP_HANDLER_ENTRY(THREAD_PENDING_DATASET),
+    NCP_SET_PROP_HANDLER_ENTRY(THREAD_MGMT_ACTIVE_DATASET),
+    NCP_SET_PROP_HANDLER_ENTRY(THREAD_MGMT_PENDING_DATASET),
 #endif // #if OPENTHREAD_FTD
 };
 
@@ -498,7 +505,7 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason aReason)
 
 NcpBase *NcpBase::sNcpInstance = NULL;
 
-NcpBase::NcpBase(otInstance *aInstance):
+NcpBase::NcpBase(Instance *aInstance):
     mInstance(aInstance),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mEncoder(mTxFrameBuffer),
@@ -816,7 +823,7 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
     SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mPower)); // TX Power
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mRssi));  // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));           // Noise floor (Currently unused)
     SuccessOrExit(mEncoder.WriteUint16(flags));        // Flags
 
@@ -950,7 +957,7 @@ otError NcpBase::HandleCommand(uint8_t aHeader, unsigned int aCommand)
 
     default:
 
-#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
         if (aCommand >= SPINEL_CMD_VENDOR__BEGIN && aCommand < SPINEL_CMD_VENDOR__END)
         {
             error = VendorCommandHandler(aHeader, aCommand);
@@ -1810,7 +1817,14 @@ otError NcpBase::GetPropertyHandler_PHY_RX_SENSITIVITY(void)
 
 otError NcpBase::GetPropertyHandler_PHY_TX_POWER(void)
 {
-    return mEncoder.WriteInt8(otLinkGetMaxTransmitPower(mInstance));
+    int8_t power;
+    otError error;
+
+    SuccessOrExit(error = otPlatRadioGetTransmitPower(mInstance, &power));
+    error = mEncoder.WriteInt8(power);
+
+exit:
+    return error;
 }
 
 otError NcpBase::SetPropertyHandler_PHY_TX_POWER(void)
@@ -1819,8 +1833,7 @@ otError NcpBase::SetPropertyHandler_PHY_TX_POWER(void)
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadInt8(txPower));
-
-    otLinkSetMaxTransmitPower(mInstance, txPower);
+    error = otPlatRadioSetTransmitPower(mInstance, txPower);
 
 exit:
     return error;
@@ -1837,6 +1850,16 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(void)
 
     OT_UNREACHABLE_CODE(
         return mEncoder.WriteBool(false);
+    )
+}
+
+otError NcpBase::GetPropertyHandler_DEBUG_TEST_WATCHDOG(void)
+{
+    while (true)
+        ;
+
+    OT_UNREACHABLE_CODE(
+        return OT_ERROR_NONE;
     )
 }
 

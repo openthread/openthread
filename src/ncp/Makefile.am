@@ -29,6 +29,7 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                        = \
+    example_vendor_hook.cpp                         \
     $(NULL)
 
 # Pull in the sources that comprise the OpenThread NCP library.
@@ -83,6 +84,24 @@ COMMON_SOURCES                                    = \
     ncp_uart.cpp                                    \
     ncp_uart.hpp                                    \
     $(NULL)
+
+if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+
+.INTERMEDIATE: ncp_vendor_hook_temp.cpp
+ncp_vendor_hook_temp.cpp: ${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE}
+	$(AM_V_GEN)cp $< $@
+
+# "nodist_" prefix tells automake not to include in 'make dist'
+nodist_libopenthread_ncp_mtd_a_SOURCES            = \
+    ncp_vendor_hook_temp.cpp                        \
+    $(NULL)
+
+# "nodist_" prefix tells automake not to include in 'make dist'
+nodist_libopenthread_ncp_ftd_a_SOURCES            = \
+    ncp_vendor_hook_temp.cpp                        \
+    $(NULL)
+
+endif # if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
 libopenthread_ncp_mtd_a_SOURCES                   = \
    $(COMMON_SOURCES)                                \

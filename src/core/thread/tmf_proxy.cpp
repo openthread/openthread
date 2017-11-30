@@ -37,6 +37,7 @@
 
 #include <openthread/types.h>
 
+#include "common/instance.hpp"
 #include "coap/coap_header.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/thread_tlvs.hpp"

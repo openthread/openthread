@@ -70,7 +70,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    explicit NetworkDiagnostic(otInstance &aInstance);
+    explicit NetworkDiagnostic(Instance &aInstance);
 
     /**
      * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.

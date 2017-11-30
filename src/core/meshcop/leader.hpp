@@ -70,7 +70,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Leader(otInstance &aInstance);
+    Leader(Instance &aInstance);
 
     /**
      * This method sends a MGMT_DATASET_CHANGED message to commissioner.
@@ -132,8 +132,6 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     void ResignCommissioner(void);
-
-    static Leader &GetOwner(const Context &aContext);
 
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;

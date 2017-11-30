@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
@@ -48,7 +49,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Ip6 {
 
-Icmp::Icmp(otInstance &aInstance):
+Icmp::Icmp(Instance &aInstance):
     InstanceLocator(aInstance),
     mHandlers(NULL),
     mEchoSequence(1),

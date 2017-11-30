@@ -39,12 +39,13 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
@@ -56,7 +57,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-AddressResolver::AddressResolver(otInstance &aInstance) :
+AddressResolver::AddressResolver(Instance &aInstance) :
     InstanceLocator(aInstance),
     mAddressError(OT_URI_PATH_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
     mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
@@ -722,7 +723,7 @@ exit:
 
 void AddressResolver::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<AddressResolver>().HandleTimer();
 }
 
 void AddressResolver::HandleTimer(void)
@@ -807,17 +808,6 @@ void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInf
 
 exit:
     OT_UNUSED_VARIABLE(aMessageInfo);
-}
-
-AddressResolver &AddressResolver::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    AddressResolver &resolver = *static_cast<AddressResolver *>(aContext.GetContext());
-#else
-    AddressResolver &resolver = otGetThreadNetif().GetAddressResolver();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return resolver;
 }
 
 }  // namespace ot

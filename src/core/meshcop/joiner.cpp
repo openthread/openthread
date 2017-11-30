@@ -44,7 +44,9 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
 #include "thread/thread_netif.hpp"
@@ -58,7 +60,7 @@ using ot::Encoding::BigEndian::HostSwap64;
 namespace ot {
 namespace MeshCoP {
 
-Joiner::Joiner(otInstance &aInstance):
+Joiner::Joiner(Instance &aInstance):
     InstanceLocator(aInstance),
     mState(OT_JOINER_STATE_IDLE),
     mCallback(NULL),
@@ -76,13 +78,19 @@ Joiner::Joiner(otInstance &aInstance):
     GetNetif().GetCoap().AddResource(mJoinerEntrust);
 }
 
+void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
+{
+    otPlatRadioGetIeeeEui64(&GetInstance(), aJoinerId.m8);
+    ComputeJoinerId(aJoinerId, aJoinerId);
+}
+
 otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
                       const char *aVendorName, const char *aVendorModel, const char *aVendorSwVersion,
                       const char *aVendorData, otJoinerCallback aCallback, void *aContext)
 {
     ThreadNetif &netif = GetNetif();
     otError error;
-    Mac::ExtAddress extAddress;
+    Mac::ExtAddress joinerId;
     Crc16 ccitt(Crc16::kCcitt);
     Crc16 ansi(Crc16::kAnsi);
 
@@ -93,14 +101,14 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
 
     // use extended address based on factory-assigned IEEE EUI-64
-    netif.GetMac().GetHashMacAddress(&extAddress);
-    netif.GetMac().SetExtAddress(extAddress);
+    GetJoinerId(joinerId);
+    netif.GetMac().SetExtAddress(joinerId);
     netif.GetMle().UpdateLinkLocalAddress();
 
-    for (size_t i = 0; i < sizeof(extAddress); i++)
+    for (size_t i = 0; i < sizeof(joinerId); i++)
     {
-        ccitt.Update(extAddress.m8[i]);
-        ansi.Update(extAddress.m8[i]);
+        ccitt.Update(joinerId.m8[i]);
+        ansi.Update(joinerId.m8[i]);
     }
 
     mCcitt = ccitt.Get();
@@ -571,7 +579,7 @@ exit:
 
 void Joiner::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<Joiner>().HandleTimer();
 }
 
 void Joiner::HandleTimer(void)
@@ -605,17 +613,6 @@ void Joiner::HandleTimer(void)
     }
 
     Complete(error);
-}
-
-Joiner &Joiner::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Joiner &joiner = *static_cast<Joiner *>(aContext.GetContext());
-#else
-    Joiner &joiner = otGetThreadNetif().GetJoiner();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return joiner;
 }
 
 }  // namespace MeshCoP

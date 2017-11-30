@@ -95,7 +95,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit ChildSupervisor(otInstance &aInstance);
+    explicit ChildSupervisor(Instance &aInstance);
 
     /**
      * This method starts the child supervision process on parent.
@@ -157,7 +157,6 @@ private:
     void SendMessage(Child &aChild);
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
-    static ChildSupervisor &GetOwner(const Context &aContext);
 
     uint16_t     mSupervisionInterval;
     TimerMilli   mTimer;
@@ -194,7 +193,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit SupervisionListener(otInstance &aInstance);
+    explicit SupervisionListener(Instance &aInstance);
 
     /**
      * This method starts the supervision listener operation.
@@ -249,7 +248,6 @@ private:
     void RestartTimer(void);
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
-    static SupervisionListener &GetOwner(const Context &aContext);
 
     uint16_t mTimeout;
     TimerMilli mTimer;

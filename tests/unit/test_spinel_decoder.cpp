@@ -30,8 +30,8 @@
 
 #include <openthread/openthread.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "ncp/spinel_decoder.hpp"
 
 #include "test_util.h"

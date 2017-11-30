@@ -35,7 +35,7 @@
 
 #include <openthread/message.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
@@ -46,70 +46,70 @@ void otMessageFree(otMessage *aMessage)
 
 uint16_t otMessageGetLength(otMessage *aMessage)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->GetLength();
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.GetLength();
 }
 
 otError otMessageSetLength(otMessage *aMessage, uint16_t aLength)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->SetLength(aLength);
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.SetLength(aLength);
 }
 
 uint16_t otMessageGetOffset(otMessage *aMessage)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->GetOffset();
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.GetOffset();
 }
 
 otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->SetOffset(aOffset);
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.SetOffset(aOffset);
 }
 
 bool otMessageIsLinkSecurityEnabled(otMessage *aMessage)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->IsLinkSecurityEnabled();
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.IsLinkSecurityEnabled();
 }
 
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
 {
-    Message *message = static_cast<Message *>(aMessage);
+    Message &message = *static_cast<Message *>(aMessage);
 
     if (aEnabled)
     {
-        message->SetDirectTransmission();
+        message.SetDirectTransmission();
     }
     else
     {
-        message->ClearDirectTransmission();
+        message.ClearDirectTransmission();
     }
 }
 
 int8_t otMessageGetRss(otMessage *aMessage)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->GetAverageRss();
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.GetAverageRss();
 }
 
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->Append(aBuf, aLength);
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.Append(aBuf, aLength);
 }
 
 int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->Read(aOffset, aLength, aBuf);
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.Read(aOffset, aLength, aBuf);
 }
 
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    return message->Write(aOffset, aLength, aBuf);
+    Message &message = *static_cast<Message *>(aMessage);
+    return message.Write(aOffset, aLength, aBuf);
 }
 
 void otMessageQueueInit(otMessageQueue *aQueue)
@@ -119,40 +119,44 @@ void otMessageQueueInit(otMessageQueue *aQueue)
 
 otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
-    return queue->Enqueue(*message);
+    Message &message = *static_cast<Message *>(aMessage);
+    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+    return queue.Enqueue(message);
 }
 
 otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
-    return queue->Enqueue(*message, MessageQueue::kQueuePositionHead);
+    Message &message = *static_cast<Message *>(aMessage);
+    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+    return queue.Enqueue(message, MessageQueue::kQueuePositionHead);
 }
 
 otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message *message = static_cast<Message *>(aMessage);
-    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
-    return queue->Dequeue(*message);
+    Message &message = *static_cast<Message *>(aMessage);
+    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+    return queue.Dequeue(message);
 }
 
 otMessage *otMessageQueueGetHead(otMessageQueue *aQueue)
 {
-    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
-    return queue->GetHead();
+    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+    return queue.GetHead();
 }
 
 otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessage)
 {
     Message *next;
-    const Message *message = static_cast<const Message *>(aMessage);
-    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
 
-    VerifyOrExit(message != NULL, next = NULL);
-    VerifyOrExit(message->GetMessageQueue() == queue, next = NULL);
-    next = message->GetNext();
+    VerifyOrExit(aMessage != NULL, next = NULL);
+
+    {
+        const Message &message = *static_cast<const Message *>(aMessage);
+        MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+
+        VerifyOrExit(message.GetMessageQueue() == &queue, next = NULL);
+        next = message.GetNext();
+    }
 
 exit:
     return next;
@@ -161,39 +165,40 @@ exit:
 void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 {
     uint16_t messages, buffers;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
     aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
 
-    aBufferInfo->mFreeBuffers = aInstance->mMessagePool.GetFreeBufferCount();
+    aBufferInfo->mFreeBuffers = instance.GetMessagePool().GetFreeBufferCount();
 
-    aInstance->mThreadNetif.GetMeshForwarder().GetSendQueue().GetInfo(aBufferInfo->m6loSendMessages,
-                                                                      aBufferInfo->m6loSendBuffers);
+    instance.GetThreadNetif().GetMeshForwarder().GetSendQueue().GetInfo(aBufferInfo->m6loSendMessages,
+                                                                        aBufferInfo->m6loSendBuffers);
 
-    aInstance->mThreadNetif.GetMeshForwarder().GetReassemblyQueue().GetInfo(aBufferInfo->m6loReassemblyMessages,
-                                                                            aBufferInfo->m6loReassemblyBuffers);
+    instance.GetThreadNetif().GetMeshForwarder().GetReassemblyQueue().GetInfo(aBufferInfo->m6loReassemblyMessages,
+                                                                              aBufferInfo->m6loReassemblyBuffers);
 
-    aInstance->mThreadNetif.GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
-                                                                           aBufferInfo->mArpBuffers);
+    instance.GetThreadNetif().GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
+                                                                             aBufferInfo->mArpBuffers);
 
-    aInstance->mThreadNetif.GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages,
-                                                            aBufferInfo->mIp6Buffers);
+    instance.GetThreadNetif().GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages,
+                                                              aBufferInfo->mIp6Buffers);
 
-    aInstance->mThreadNetif.GetIp6().GetMpl().GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
-                                                                              aBufferInfo->mMplBuffers);
+    instance.GetThreadNetif().GetIp6().GetMpl().GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
+                                                                                aBufferInfo->mMplBuffers);
 
-    aInstance->mThreadNetif.GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages,
-                                                               aBufferInfo->mMleBuffers);
+    instance.GetThreadNetif().GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages,
+                                                                 aBufferInfo->mMleBuffers);
 
-    aInstance->mThreadNetif.GetCoap().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages,
-                                                                   aBufferInfo->mCoapBuffers);
-    aInstance->mThreadNetif.GetCoap().GetCachedResponses().GetInfo(messages, buffers);
+    instance.GetThreadNetif().GetCoap().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages,
+                                                                     aBufferInfo->mCoapBuffers);
+    instance.GetThreadNetif().GetCoap().GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mCoapMessages += messages;
     aBufferInfo->mCoapBuffers += buffers;
 
 #if OPENTHREAD_ENABLE_DTLS
-    aInstance->mThreadNetif.GetCoapSecure().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
-                                                                         aBufferInfo->mCoapSecureBuffers);
-    aInstance->mThreadNetif.GetCoapSecure().GetCachedResponses().GetInfo(messages, buffers);
+    instance.GetThreadNetif().GetCoapSecure().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
+                                                                           aBufferInfo->mCoapSecureBuffers);
+    instance.GetThreadNetif().GetCoapSecure().GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mCoapSecureMessages += messages;
     aBufferInfo->mCoapSecureBuffers += buffers;
 #else
@@ -202,9 +207,9 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    aInstance->mApplicationCoap.GetRequestMessages().GetInfo(aBufferInfo->mApplicationCoapMessages,
-                                                             aBufferInfo->mApplicationCoapBuffers);
-    aInstance->mApplicationCoap.GetCachedResponses().GetInfo(messages, buffers);
+    instance.GetApplicationCoap().GetRequestMessages().GetInfo(aBufferInfo->mApplicationCoapMessages,
+                                                               aBufferInfo->mApplicationCoapBuffers);
+    instance.GetApplicationCoap().GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mApplicationCoapMessages += messages;
     aBufferInfo->mApplicationCoapBuffers += buffers;
 #else

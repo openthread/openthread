@@ -33,9 +33,10 @@
 
 #include "network_data_local.hpp"
 
-#include "common/debug.hpp"
-#include "common/logging.hpp"
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/instance.hpp"
+#include "common/logging.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -44,7 +45,7 @@
 namespace ot {
 namespace NetworkData {
 
-Local::Local(otInstance &aInstance):
+Local::Local(Instance &aInstance):
     NetworkData(aInstance, true),
     mOldRloc(Mac::kShortAddrInvalid)
 {

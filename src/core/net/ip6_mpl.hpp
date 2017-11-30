@@ -439,7 +439,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    Mpl(otInstance &aInstance);
+    Mpl(Instance &aInstance);
 
     /**
      * This method initializes the MPL option.
@@ -534,8 +534,6 @@ private:
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     void HandleRetransmissionTimer(void);
-
-    static Mpl &GetOwner(const Context &aContext);
 
     uint8_t mTimerExpirations;
     uint8_t mSequence;

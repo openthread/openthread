@@ -63,7 +63,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    EnergyScanServer(otInstance &aInstance);
+    EnergyScanServer(Instance &aInstance);
 
 private:
     enum
@@ -86,8 +86,6 @@ private:
     void HandleNetifStateChanged(uint32_t aFlags);
 
     otError SendReport(void);
-
-    static EnergyScanServer &GetOwner(const Context &aContext);
 
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;

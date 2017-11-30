@@ -213,37 +213,6 @@ OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExt
 OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
 
 /**
- * Get the Joiner ID.
- *
- * Joiner ID is the first 64 bits of the result of computing SHA-256 over factory-assigned
- * IEEE EUI-64, which is used as IEEE 802.15.4 Extended Address during commissioning process.
- *
- * @param[in]   aInstance          A pointer to the OpenThread instance.
- * @param[out]  aHashMacAddress    A pointer to where the Hash Mac Address is placed.
- *
- */
-OTAPI void OTCALL otLinkGetJoinerId(otInstance *aInstance, otExtAddress *aHashMacAddress);
-
-/**
- * This function returns the maximum transmit power setting in dBm.
- *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
- *
- * @returns  The maximum transmit power setting.
- *
- */
-OTAPI int8_t OTCALL otLinkGetMaxTransmitPower(otInstance *aInstance);
-
-/**
- * This function sets the maximum transmit power in dBm.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPower    The maximum transmit power in dBm.
- *
- */
-OTAPI void OTCALL otLinkSetMaxTransmitPower(otInstance *aInstance, int8_t aPower);
-
-/**
  * Get the IEEE 802.15.4 PAN ID.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

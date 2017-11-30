@@ -39,6 +39,7 @@
 #include "utils/wrap_string.h"
 
 #include "cli/cli.hpp"
+#include "common/instance.hpp"
 #include "common/new.hpp"
 
 namespace ot {
@@ -50,7 +51,9 @@ static otDEFINE_ALIGNED_VAR(sCliConsoleRaw, sizeof(Console), uint64_t);
 
 extern "C" void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
 {
-    sServer = new(&sCliConsoleRaw) Console(aInstance);
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    sServer = new(&sCliConsoleRaw) Console(instance);
     sServer->SetOutputCallback(aCallback);
     sServer->SetContext(aContext);
 }
@@ -60,7 +63,7 @@ extern "C" void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength)
     sServer->ReceiveTask(aBuf, aBufLength);
 }
 
-Console::Console(otInstance *aInstance):
+Console::Console(Instance *aInstance):
     mCallback(NULL),
     mContext(NULL),
     mInterpreter(aInstance)

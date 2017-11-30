@@ -32,10 +32,11 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
@@ -48,10 +49,10 @@
 namespace ot {
 namespace Coap {
 
-CoapBase::CoapBase(otInstance &aInstance, Timer::Handler aRetransmissionTimerHandler,
+CoapBase::CoapBase(Instance &aInstance, Timer::Handler aRetransmissionTimerHandler,
                    Timer::Handler aResponsesQueueTimerHandler):
     InstanceLocator(aInstance),
-    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
     mRetransmissionTimer(aInstance, aRetransmissionTimerHandler, this),
     mResources(NULL),
     mContext(NULL),
@@ -331,6 +332,7 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetPeerAddr(coapMetadata.mDestinationAddress);
                 messageInfo.SetPeerPort(coapMetadata.mDestinationPort);
                 messageInfo.SetSockAddr(coapMetadata.mSourceAddress);
+                messageInfo.SetInterfaceId(GetNetif().GetInterfaceId());
 
                 SendCopy(*message, messageInfo);
             }
@@ -744,7 +746,7 @@ CoapMetadata::CoapMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageIn
     mConfirmable = aConfirmable;
 }
 
-ResponsesQueue::ResponsesQueue(otInstance &aInstance, Timer::Handler aHandler, void *aContext):
+ResponsesQueue::ResponsesQueue(Instance &aInstance, Timer::Handler aHandler, void *aContext):
     mQueue(),
     mTimer(aInstance, aHandler, aContext)
 {
@@ -911,58 +913,36 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
     return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
 }
 
-Coap::Coap(otInstance &aInstance):
+Coap::Coap(Instance &aInstance):
     CoapBase(aInstance, &Coap::HandleRetransmissionTimer, &Coap::HandleResponsesQueueTimer)
 {
 }
 
-Coap &Coap::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Coap &coap = *static_cast<Coap *>(aContext.GetContext());
-#else
-    Coap &coap = otGetThreadNetif().GetCoap();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return coap;
-}
-
 void Coap::HandleRetransmissionTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+    aTimer.GetOwner<Coap>().CoapBase::HandleRetransmissionTimer();
 }
 
 void Coap::HandleResponsesQueueTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
+    aTimer.GetOwner<Coap>().CoapBase::HandleResponsesQueueTimer();
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-ApplicationCoap::ApplicationCoap(otInstance &aInstance):
+ApplicationCoap::ApplicationCoap(Instance &aInstance):
     CoapBase(aInstance, &ApplicationCoap::HandleRetransmissionTimer, &ApplicationCoap::HandleResponsesQueueTimer)
 {
 }
 
-ApplicationCoap &ApplicationCoap::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    ApplicationCoap &coap = *static_cast<ApplicationCoap *>(aContext.GetContext());
-#else
-    ApplicationCoap &coap = otGetInstance()->mApplicationCoap;
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return coap;
-}
-
 void ApplicationCoap::HandleRetransmissionTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleRetransmissionTimer();
+    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleRetransmissionTimer();
 }
 
 void ApplicationCoap::HandleResponsesQueueTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).CoapBase::HandleResponsesQueueTimer();
+    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleResponsesQueueTimer();
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP

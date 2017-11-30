@@ -63,7 +63,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Joiner(otInstance &aInstance);
+    Joiner(Instance &aInstance);
 
     /**
      * This method starts the Joiner service.
@@ -96,8 +96,6 @@ public:
     /**
      * This function returns the Joiner State.
      *
-     * @param[in]  aInstance  A pointer to an OpenThread instance.
-     *
      * @retval OT_JOINER_STATE_IDLE
      * @retval OT_JOINER_STATE_DISCOVER
      * @retval OT_JOINER_STATE_CONNECT
@@ -107,6 +105,14 @@ public:
      *
      */
     otJoinerState GetState(void) const;
+
+    /**
+     * This method retrieves the Joiner ID.
+     *
+     * @param[out]  aJoinerId  The Joiner ID.
+     *
+     */
+    void GetJoinerId(Mac::ExtAddress &aJoinerId) const;
 
 private:
     enum
@@ -150,8 +156,6 @@ private:
                                     const otMessageInfo *aMessageInfo);
     void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
-
-    static Joiner &GetOwner(const Context &aContext);
 
     otJoinerState mState;
 

@@ -363,8 +363,7 @@ OTAPI otError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aC
  * @sa otGetMaxAllowedChildren
  *
  */
-OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex,
-                                                 otChildInfo *aChildInfo);
+OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
 
 /**
  * Get the current Router ID Sequence.
@@ -488,6 +487,8 @@ typedef void (*otThreadChildTableCallback)(otThreadChildTableEvent aEvent, const
 /**
  * This function gets the child table callback function.
  *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
  * @returns  The callback function pointer.
  *
  */
@@ -500,7 +501,8 @@ otThreadChildTableCallback otThreadGetChildTableCallback(otInstance *aInstance);
  * table. Subsequent calls to this method will overwrite the previous callback. Note that this callback in invoked
  * while the child table is being updated and always before the `otStateChangedCallback`.
  *
- * @param[in] aCallback                  A pointer to callback handler function.
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  A pointer to callback handler function.
  *
  */
 void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCallback aCallback);

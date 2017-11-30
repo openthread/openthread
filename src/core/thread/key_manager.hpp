@@ -69,7 +69,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit KeyManager(otInstance &aInstance);
+    explicit KeyManager(Instance &aInstance);
 
     /**
      * This method starts KeyManager rotation timer and sets guard timer to initial value.
@@ -340,8 +340,6 @@ private:
     void StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
     void HandleKeyRotationTimer(void);
-
-    static KeyManager &GetOwner(const Context &aContext);
 
     otMasterKey mMasterKey;
 

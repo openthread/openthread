@@ -40,6 +40,7 @@
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
@@ -49,7 +50,7 @@
 namespace ot {
 namespace NetworkData {
 
-NetworkData::NetworkData(otInstance &aInstance, bool aLocal):
+NetworkData::NetworkData(Instance &aInstance, bool aLocal):
     InstanceLocator(aInstance),
     mLocal(aLocal),
     mLastAttemptWait(false),
@@ -284,6 +285,7 @@ otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, uint16_t a
             {
                 memset(aConfig, 0, sizeof(*aConfig));
 
+                aConfig->mServiceID = service->GetServiceID();
                 aConfig->mEnterpriseNumber = service->GetEnterpriseNumber();
                 aConfig->mServiceDataLength = service->GetServiceDataLength();
 

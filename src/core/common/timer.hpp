@@ -43,7 +43,6 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 
-#include "common/context.hpp"
 #include "common/debug.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
@@ -66,7 +65,7 @@ class TimerMilliScheduler;
  * This class implements a timer.
  *
  */
-class Timer: public InstanceLocator, public Context
+class Timer: public InstanceLocator, public OwnerLocator
 {
     friend class TimerScheduler;
 
@@ -88,14 +87,14 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aInstance   A reference to the instance.
+     * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
-     * @param[in]  aContext    A pointer to arbitrary context information.
+     * @param[in]  aOwner      A pointer to owner of the `Timer` object.
      *
      */
-    Timer(otInstance &aInstance, Handler aHandler, void *aContext):
+    Timer(Instance &aInstance, Handler aHandler, void *aOwner):
         InstanceLocator(aInstance),
-        Context(aContext),
+        OwnerLocator(aOwner),
         mHandler(aHandler),
         mFireTime(0),
         mNext(this) {
@@ -148,13 +147,13 @@ public:
     /**
      * This constructor creates a millisecond timer instance.
      *
-     * @param[in]  aInstance   A reference to the instance.
+     * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
-     * @param[in]  aContext    A pointer to arbitrary context information.
+     * @param[in]  aOwner      A pointer to the owner of the `TimerMilli` object.
      *
      */
-    TimerMilli(otInstance &aInstance, Handler aHandler, void *aContext):
-        Timer(aInstance, aHandler, aContext) {
+    TimerMilli(Instance &aInstance, Handler aHandler, void *aOwner):
+        Timer(aInstance, aHandler, aOwner) {
     }
 
     /**
@@ -243,7 +242,7 @@ protected:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerScheduler(otInstance &aInstance):
+    TimerScheduler(Instance &aInstance):
         InstanceLocator(aInstance),
         mHead(NULL) {
     }
@@ -313,7 +312,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMilliScheduler(otInstance &aInstance):
+    TimerMilliScheduler(Instance &aInstance):
         TimerScheduler(aInstance) {
     }
 
@@ -356,13 +355,13 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aInstance   A reference to the instance object.
+     * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
-     * @param[in]  aContext    A pointer to arbitrary context information.
+     * @param[in]  aOwner      A pointer to owner of the `TimerMicro` object.
      *
      */
-    TimerMicro(otInstance &aInstance, Handler aHandler, void *aContext):
-        Timer(aInstance, aHandler, aContext) {
+    TimerMicro(Instance &aInstance, Handler aHandler, void *aOwner):
+        Timer(aInstance, aHandler, aOwner) {
     }
 
     /**
@@ -421,7 +420,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMicroScheduler(otInstance &aInstance):
+    TimerMicroScheduler(Instance &aInstance):
         TimerScheduler(aInstance) {
     }
 

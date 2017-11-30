@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /**
  * @file
  *   This file implements the PAN ID Query Server.
@@ -37,11 +38,12 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -49,7 +51,7 @@
 
 namespace ot {
 
-PanIdQueryServer::PanIdQueryServer(otInstance &aInstance) :
+PanIdQueryServer::PanIdQueryServer(Instance &aInstance) :
     InstanceLocator(aInstance),
     mChannelMask(0),
     mPanId(Mac::kPanIdBroadcast),
@@ -164,24 +166,13 @@ exit:
 
 void PanIdQueryServer::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<PanIdQueryServer>().HandleTimer();
 }
 
 void PanIdQueryServer::HandleTimer(void)
 {
     GetNetif().GetMac().ActiveScan(mChannelMask, 0, HandleScanResult, this);
     mChannelMask = 0;
-}
-
-PanIdQueryServer &PanIdQueryServer::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    PanIdQueryServer &server = *static_cast<PanIdQueryServer *>(aContext.GetContext());
-#else
-    PanIdQueryServer &server = otGetThreadNetif().GetPanIdQueryServer();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return server;
 }
 
 }  // namespace ot

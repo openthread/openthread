@@ -55,7 +55,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    LinkRaw(otInstance &aInstance);
+    LinkRaw(Instance &aInstance);
 
     /**
      * This method returns true if the raw link-layer is enabled.
@@ -113,7 +113,6 @@ public:
 
 private:
     otError DoTransmit(otRadioFrame *aFrame);
-    static LinkRaw &GetOwner(const Context &aContext);
 
     otInstance             &mInstance;
     bool                    mEnabled;

@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
@@ -51,7 +52,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 namespace Dhcp6 {
 
-Dhcp6Server::Dhcp6Server(otInstance &aInstance):
+Dhcp6Server::Dhcp6Server(Instance &aInstance):
     InstanceLocator(aInstance),
     mSocket(GetNetif().GetIp6().GetUdp())
 {
@@ -555,7 +556,8 @@ otError Dhcp6Server::AddIaAddress(Message &aMessage, otIp6Prefix &aIp6Prefix, Cl
 
     option.Init();
     memcpy((option.GetAddress()->mFields.m8), &(aIp6Prefix.mPrefix), 8);
-    memcpy(&(option.GetAddress()->mFields.m8[8]), aClient.GetDuidLinkLayerAddress(), sizeof(Mac::ExtAddress));
+    static_cast<Ip6::Address *>(option.GetAddress())->SetIid(
+        *reinterpret_cast<Mac::ExtAddress *>(aClient.GetDuidLinkLayerAddress()));
     option.SetPreferredLifetime(OT_DHCP6_DEFAULT_PREFERRED_LIFETIME);
     option.SetValidLifetime(OT_DHCP6_DEFAULT_VALID_LIFETIME);
     SuccessOrExit(error = aMessage.Append(&option, sizeof(option)));

@@ -117,6 +117,7 @@ SOURCES_COMMON                      = \
     coap/coap_header.cpp              \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
+    common/instance.cpp               \
     common/logging.cpp                \
     common/locator.cpp                \
     common/message.cpp                \
@@ -146,9 +147,10 @@ SOURCES_COMMON                      = \
     meshcop/joiner.cpp                \
     meshcop/joiner_router.cpp         \
     meshcop/leader.cpp                \
+    meshcop/meshcop.cpp               \
+    meshcop/meshcop_tlvs.cpp          \
     meshcop/panid_query_client.cpp    \
     meshcop/timestamp.cpp             \
-    meshcop/meshcop_tlvs.cpp          \
     net/dhcp6_client.cpp              \
     net/dhcp6_server.cpp              \
     net/dns_client.cpp                \
@@ -201,20 +203,19 @@ libopenthread_ftd_a_SOURCES         = \
 HEADERS_COMMON                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
-    openthread-instance.h             \
-    openthread-single-instance.h      \
     api/link_raw.hpp                  \
     coap/coap.hpp                     \
     coap/coap_header.hpp              \
     coap/coap_secure.hpp              \
     common/code_utils.hpp             \
-    common/context.hpp                \
     common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
+    common/instance.hpp               \
     common/locator.hpp                \
     common/logging.hpp                \
     common/message.hpp                \
+    common/owner-locator.hpp          \
     common/settings.hpp               \
     common/new.hpp                    \
 	common/otfaultinjection.hpp       \
@@ -245,9 +246,9 @@ HEADERS_COMMON                      = \
     meshcop/joiner_router.hpp         \
     meshcop/leader.hpp                \
     meshcop/meshcop.hpp               \
+    meshcop/meshcop_tlvs.hpp          \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \
-    meshcop/meshcop_tlvs.hpp          \
     net/dhcp6.hpp                     \
     net/dhcp6_client.hpp              \
     net/dhcp6_server.hpp              \

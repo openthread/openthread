@@ -728,7 +728,7 @@ void radioProcessFrame(otInstance *aInstance)
         goto exit;
     }
 
-    sReceiveFrame.mPower = -20;
+    sReceiveFrame.mRssi = -20;
     sReceiveFrame.mLqi = OT_RADIO_LQI_NONE;
 
     // generate acknowledgment
@@ -857,10 +857,18 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     (void)aInstance;
     (void)aPower;
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
+{
+    (void)aInstance;
+    (void)aPower;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)

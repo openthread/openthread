@@ -38,10 +38,11 @@
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
@@ -56,9 +57,9 @@ namespace ot {
 
 namespace Dhcp6 {
 
-Dhcp6Client::Dhcp6Client(otInstance &aInstance) :
+Dhcp6Client::Dhcp6Client(Instance &aInstance) :
     InstanceLocator(aInstance),
-    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
     mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this),
     mStartTime(0),
     mAddresses(NULL),
@@ -332,7 +333,7 @@ exit:
 
 bool Dhcp6Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
 {
-    return GetOwner(aTrickleTimer).HandleTrickleTimer();
+    return aTrickleTimer.GetOwner<Dhcp6Client>().HandleTrickleTimer();
 }
 
 bool Dhcp6Client::HandleTrickleTimer(void)
@@ -714,17 +715,6 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 
 exit:
     return error;
-}
-
-Dhcp6Client &Dhcp6Client::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Dhcp6Client &client = *static_cast<Dhcp6Client *>(aContext.GetContext());
-#else
-    Dhcp6Client &client = otGetThreadNetif().GetDhcp6Client();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return client;
 }
 
 }  // namespace Dhcp6

@@ -30,11 +30,11 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ficonfigure](#ficonfigure)
 * [firesetcounters](#firesetcounters)
 * [firesetconfiguration](#firesetconfiguration)
-* [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [ipmaddr](#ipmaddr)
 * [joiner](#joiner-start-pskd-provisioningurl)
+* [joinerid](#joinerid)
 * [joinerport](#joinerport-port)
 * [keysequence](#keysequence-counter)
 * [leaderdata](#leaderdata)
@@ -299,11 +299,11 @@ This command will cause the device to send LEAD_KA[Reject] messages.
 Done
 ```
 
-### commissioner joiner add \<hashmacaddr\> \<psdk\>
+### commissioner joiner add \<eui64\> \<psdk\>
 
 Add a Joiner entry.
 
-* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+* eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
 * pskd: Pre-Shared Key for the Joiner.
 
 ```bash
@@ -311,11 +311,11 @@ Add a Joiner entry.
 Done
 ```
 
-### commissioner joiner remove \<hashmacaddr\>
+### commissioner joiner remove \<eui64\>
 
 Remove a Joiner entry.
 
-* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+* eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
 
 ```bash
 > commissioner joiner remove d45e64fa83f81cf7
@@ -772,6 +772,7 @@ Delete all stored settings, and signal a platform reset.
 > factoryreset
 ```
 
+<<<<<<< HEAD
 ### fiprintcounters
 Print the fault injection counters.
 
@@ -826,6 +827,8 @@ e0b220eb7d8dda7e
 Done
 ```
 
+=======
+>>>>>>> master
 ### ifconfig
 
 Show the status of the IPv6 interface.
@@ -963,6 +966,16 @@ Stop the Joiner role.
 
 ```bash
 > joiner stop
+Done
+```
+
+### joinerid
+
+Get the Joiner ID.
+
+```bash
+> joinerid
+e0b220eb7d8dda7e
 Done
 ```
 
@@ -1640,20 +1653,20 @@ Done
 
 ### txpowermax
 
-Get the maximum transmit power in dBm.
+Get the transmit power in dBm.
 
 ```bash
-> txpowermax
+> txpower
 -10 dBm
 Done
 ```
 
 ### txpowermax \<txpowermax\>
 
-Set the maximum transmit power.
+Set the transmit power.
 
 ```bash
-> txpowermax -10
+> txpower -10
 Done
 ```
 

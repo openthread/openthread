@@ -1,7 +1,7 @@
 /**
  ****************************************************************************************
  *
- * @file ftdf.c
+ * @file ad_ftdf.c
  *
  * @brief FTDF FreeRTOS Adapter
  *
@@ -43,14 +43,17 @@
 #include "sys_power_mgr.h"
 #endif
 
+#if dg_configRF_ADAPTER
 #include "ad_rf.h"
+#else
+#include "hw_rf.h"
+#endif
 
 #include "sys_tcs.h"
 
 #include "sdk_defs.h"
 #include "ad_ftdf.h"
 #include "internal.h"
-#include "regmap.h"
 #if FTDF_DBG_BUS_ENABLE
 #include "hw_gpio.h"
 #endif /* FTDF_DBG_BUS_ENABLE */
@@ -74,166 +77,155 @@
 #endif
 #endif
 
-PRIVILEGED_DATA FTDF_Boolean explicit_sleep; /* = FTDF_FALSE; */
-PRIVILEGED_DATA eSleepStatus sleep_status;
+PRIVILEGED_DATA ftdf_boolean_t explicit_sleep; /* = FTDF_FALSE; */
+PRIVILEGED_DATA sleep_status_t sleep_status;
 
-PRIVILEGED_DATA FTDF_ExtAddress uExtAddress;
+PRIVILEGED_DATA ftdf_ext_address_t u_ext_address;
 
 static void ad_ftdf_sleep(void)
 {
+        ftdf_critical_var();
+        ftdf_enter_critical();
+        REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);                 // go sleep
+        ftdf_exit_critical();
 
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-    REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);                 // go sleep
-    FTDF_exitCritical();
+        // don't go-go before I sleep
+        while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_DOWN) == 0x0) {
 
-    while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_DOWN) == 0x0)    // don't go-go before I sleep
-    {
-    }
-
+        }
 #if FTDF_DBG_BLOCK_SLEEP_ENABLE
-    hw_gpio_set_inactive(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN);
+        hw_gpio_set_inactive(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN);
 #endif
 }
 
 void ad_ftdf_wake_up_internal(bool sync)
 {
-    if (sleep_status != BLOCK_SLEEPING)
-    {
-        return;
-    }
+        if ( sleep_status != BLOCK_SLEEPING ) {
+                return;
+        }
 
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-    /* Wake up power domains */
-    REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);                 // go wake up
-    FTDF_exitCritical();
+        ftdf_critical_var();
+        ftdf_enter_critical();
+        /* Wake up power domains */
+        REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);                 // go wake up
+        ftdf_exit_critical();
 
-    while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0)      // don't go-go before I sleep
-    {
-    }
+        // don't go-go before I sleep
+        while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0) {
 
+        }
 #if FTDF_DBG_BLOCK_SLEEP_ENABLE
-    hw_gpio_configure_pin(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN,
-                          HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_GPIO, true);
+        hw_gpio_configure_pin(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN,
+                HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_GPIO, true);
 #endif
 
-    /* Power on and configure RF */
-    ad_rf_request_on(false);
+        /* Power on and configure RF */
+#if dg_configRF_ADAPTER
+        ad_rf_request_on(false);
+#else
+        hw_rf_request_on(false);
+#endif
 
-    /* Apply trim values */
-//        sys_tcs_apply(tcs_ftdf);
+        /* Apply trim values */
+        sys_tcs_apply(tcs_ftdf);
 
-    ad_rf_request_recommended_settings();
+#if dg_configRF_ADAPTER
+        ad_rf_request_recommended_settings();
+#else
+        hw_rf_request_recommended_settings();
+#endif
 
-    if (sync)
-    {
-        FTDF_initLmac();
-        sleep_status = BLOCK_ACTIVE;
-    }
-    else
-    {
-        /* Wake up FTDF block */
-        sleep_status = BLOCK_WAKING_UP;
-        FTDF_wakeUp();
+
+        if (sync) {
+                ftdf_init_lmac( );
+                sleep_status = BLOCK_ACTIVE;
+        } else {
+                /* Wake up FTDF block */
+                sleep_status = BLOCK_WAKING_UP;
+                ftdf_wakeup();
 #if defined(FTDF_NO_CSL) && defined(FTDF_NO_TSCH)
-        ad_ftdf_wakeUpReady();
+                ad_ftdf_wake_up_ready();
 #endif
-    }
+        }
 
 }
 
 void ad_ftdf_wake_up_async(void)
 {
-    ad_ftdf_wake_up_internal(false);
+        ad_ftdf_wake_up_internal(false);
 }
 
 void ad_ftdf_wake_up_sync(void)
 {
-    ad_ftdf_wake_up_internal(true);
+        ad_ftdf_wake_up_internal(true);
 }
 
-void sleep_when_possible(uint8_t explicit_request, uint32_t sleepTime)
+void sleep_when_possible(uint8_t explicit_request, uint32_t sleep_time )
 {
-    FTDF_Boolean blockSleep = FTDF_FALSE;
+        ftdf_boolean_t block_sleep = FTDF_FALSE;
 
-    if ((!AD_FTDF_SLEEP_WHEN_IDLE && !explicit_request) || sleep_status != BLOCK_ACTIVE)
-    {
-        return;
-    }
-
-    FTDF_USec us;
-
-
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-#ifdef FTDF_PHY_API
-
-    if (explicit_request && FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0)
-    {
-        volatile uint32_t *lmacCtrlMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_MASK);
-        volatile uint32_t *lmacReady4sleepEvent = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_LMACREADY4SLEEP_D);
-
-        /* clear a previous interrupt */
-        *lmacReady4sleepEvent = MSK_F_FTDF_ON_OFF_REGMAP_LMACREADY4SLEEP_D;
-
-        /* Enable (unmask) interrupt */
-        *lmacCtrlMask |= MSK_F_FTDF_ON_OFF_REGMAP_LMACREADY4SLEEP_M;
-        us = 0;
-    }
-    else
-    {
-        us = FTDF_canSleep();
-    }
-
-#else
-    us = FTDF_canSleep();
-#endif
-
-    /* Try to sleep as much as needed (if sleepTime is 0, then sleep as much as possible).
-     * Otherwise, sleep as much as possible. */
-    if (explicit_request == FTDF_TRUE)
-    {
-        if (sleepTime && us > sleepTime)
-        {
-            us = sleepTime;
+        if ((!AD_FTDF_SLEEP_WHEN_IDLE && !explicit_request) || sleep_status != BLOCK_ACTIVE) {
+                return;
         }
-    }
 
-    if (us > (WUP_LATENCY / 1000000) + AD_FTDF_SLEEP_COMPENSATION)
-    {
-        // Subtract sleep compensation from the sleep time, compensating for delays
-        us -= AD_FTDF_SLEEP_COMPENSATION;
+        ftdf_usec_t us;
 
-        blockSleep = FTDF_prepareForSleep(us);
 
-        if (blockSleep)
-        {
-            // FTDF ready to sleep, disable clocks
-            sleep_status = BLOCK_SLEEPING;
-            explicit_sleep = explicit_request;
+        ftdf_critical_var();
+        ftdf_enter_critical();
+#ifdef FTDF_PHY_API
+        if (explicit_request && (REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, LMACREADY4SLEEP) == 0)) {
+
+                /* clear a previous interrupt */
+                FTDF->FTDF_LMAC_CONTROL_DELTA_REG = REG_MSK(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, LMACREADY4SLEEP_D);
+
+                /* Enable (unmask) interrupt */
+                REG_SET_BIT(FTDF, FTDF_LMAC_CONTROL_MASK_REG, LMACREADY4SLEEP_M);
+                us = 0;
+        } else {
+                us = ftdf_can_sleep();
+        }
+#else
+        us = ftdf_can_sleep();
+#endif
+        /* Try to sleep as much as needed (if sleep_time is 0, then sleep as much as possible).
+         * Otherwise, sleep as much as possible. */
+        if ( explicit_request == FTDF_TRUE ) {
+                if (sleep_time && us > sleep_time)
+                        us = sleep_time;
+        }
+
+        if (us > ( WUP_LATENCY / 1000000) + AD_FTDF_SLEEP_COMPENSATION) {
+                // Subtract sleep compensation from the sleep time, compensating for delays
+                us -= AD_FTDF_SLEEP_COMPENSATION;
+
+                block_sleep = ftdf_prepare_for_sleep(us);
+
+                if (block_sleep) {
+                        // FTDF ready to sleep, disable clocks
+                        sleep_status = BLOCK_SLEEPING;
+                        explicit_sleep = explicit_request;
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-            FTDF_sdbFsmSleep();
+                        ftdf_sdb_fsm_sleep();
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
 #if dg_configUSE_FTDF_DDPHY == 1
-            FTDF_ddphySave();
+                        ftdf_ddphy_save();
 #endif /* dg_configUSE_FTDF_DDPHY */
-            ad_ftdf_sleep();
-        }
-        else
-        {
+                        ad_ftdf_sleep();
+                } else {
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-            FTDF_sdbFsmAbortSleep();
+                        ftdf_sdb_fsm_abort_sleep();
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+                }
         }
-    }
-
-    FTDF_exitCritical();
-
-    if (blockSleep)
-    {
-        ad_rf_request_off(false);
-    }
+        ftdf_exit_critical();
+        if (block_sleep) {
+#if dg_configRF_ADAPTER
+                ad_rf_request_off(false);
+#else
+                hw_rf_request_off(false);
+#endif
+        }
 }
 
 /**
@@ -241,76 +233,109 @@ void sleep_when_possible(uint8_t explicit_request, uint32_t sleepTime)
  */
 void ad_ftdf_init(void)
 {
-    /* Wake up power domains */
-    REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);                 // go wake up
+        /* Wake up power domains */
+        GLOBAL_INT_DISABLE();
+        REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);                 // go wake up
+        GLOBAL_INT_RESTORE();
 
-    while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0)      // don't go-go before I sleep
-    {
-    }
+        // don't go-go before I sleep
+        while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0) {
+
+        }
 
 #if FTDF_DBG_BLOCK_SLEEP_ENABLE
-    hw_gpio_configure_pin(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN,
-                          HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_GPIO, true);
+        hw_gpio_configure_pin(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN,
+                HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_GPIO, true);
 #endif
-    REG_SET_BIT(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_ENABLE);   // on
-    REG_SETF(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_DIV, 0);      // divide by 1
+        GLOBAL_INT_DISABLE();
+        REG_SET_BIT(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_ENABLE);   // on
+        REG_SETF(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_DIV, 0);      // divide by 1
+        GLOBAL_INT_RESTORE();
 
-    /* Power on and configure RF */
-    ad_rf_request_on(false);
+        /* Power on and configure RF */
+#if dg_configRF_ADAPTER
+        ad_rf_request_on(false);
+#else
+        hw_rf_request_on(false);
+#endif
 
-    /* Apply trim values */
-    sys_tcs_apply(tcs_ftdf);
+        /* Apply trim values */
+        sys_tcs_apply(tcs_ftdf);
 
-    ad_rf_request_recommended_settings();
+#if dg_configRF_ADAPTER
+        ad_rf_request_recommended_settings();
+#else
+        hw_rf_request_recommended_settings();
+#endif
 
-    FTDF_setSleepAttributes(AD_FTDF_LP_CLOCK_CYCLE,
-                            AD_FTDF_WUP_LATENCY);
+        ftdf_set_sleep_attributes( AD_FTDF_LP_CLOCK_CYCLE, AD_FTDF_WUP_LATENCY );
 
 #ifdef FTDF_PHY_API
-    ad_ftdf_init_phy_api();
+        ad_ftdf_init_phy_api();
 #else
-    ad_ftdf_init_mac_api();
+        ad_ftdf_init_mac_api();
 #endif
 }
 
-void ad_ftdf_sleepCb(FTDF_USec sleepTime)
+void ad_ftdf_sleep_cb(ftdf_usec_t sleep_time )
 {
-    sleep_when_possible(FTDF_TRUE, sleepTime);
-
-
+        sleep_when_possible( FTDF_TRUE, sleep_time );
 }
 
 #if FTDF_DBG_BUS_ENABLE
-void ad_ftdf_dbgBusGpioConfig(void)
+void ad_ftdf_dbg_bus_gpio_config(void)
 {
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_4, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_6, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_7, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
+
+#if FTDF_DBG_BUS_USE_PORT_4 == 1
+
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_0, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_1, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_2, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_4, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_6, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_4, HW_GPIO_PIN_7, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+
+
+#else
+        hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_4, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_6, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_7, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
 #if FTDF_DBG_BUS_USE_SWDIO_PIN
-    /*
-     * Note that this pin has a conflict with SWD. Disable the debugger in order to use this
-     * pin.
-     */
-    hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_6, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
+        /*
+         * Note that this pin has a conflict with SWD. Disable the debugger in order to use this
+         * pin.
+         */
+        hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_6, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
 #endif
-    hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_7, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_7, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
 #if FTDF_DBG_BUS_USE_GPIO_P1_3_P2_2
-    /*
-     * Note that these pins have a conflict with the pins used for UART by default. Configure
-     * UART on different pins if you would like to use the pins below for diagnostics.
-     */
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
-    hw_gpio_set_pin_function(HW_GPIO_PORT_2, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_FTDF_DIAG);
+        /*
+         * Note that these pins have a conflict with the pins used for UART by default. Configure
+         * UART on different pins if you would like to use the pins below for diagnostics.
+         */
+        hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
+        hw_gpio_set_pin_function(HW_GPIO_PORT_2, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT,
+                HW_GPIO_FUNC_FTDF_DIAG);
 #endif
+#endif /* FTDF_DBG_BUS_USE_PORT_4 == 1 */
 }
 #endif /* FTDF_DBG_BUS_ENABLE */
 #endif

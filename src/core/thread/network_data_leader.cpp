@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
@@ -56,7 +57,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace NetworkData {
 
-LeaderBase::LeaderBase(otInstance &aInstance):
+LeaderBase::LeaderBase(Instance &aInstance):
     NetworkData(aInstance, false)
 {
     Reset();

@@ -35,337 +35,293 @@
 #include <stdlib.h>
 #include <ftdf.h>
 #include "internal.h"
-#include "regmap.h"
+#include "sdk_defs.h"
 
-static FTDF_PSec FTDF_lowPowerClockCycle    __attribute__((section(".retention")));
-static FTDF_PSec FTDF_wakeUpLatency         __attribute__((section(".retention")));
+#ifdef CONFIG_USE_FTDF
+static ftdf_psec_t ftdf_low_power_clock_cycle                  __attribute__ ((section(".retention")));
+static ftdf_psec_t ftdf_wake_up_latency                        __attribute__ ((section(".retention")));
 /* Pre-calculated value for optimization. */
-static FTDF_USec FTDF_lowPowerClockCycleUSec __attribute__((section(".retention")));
+static ftdf_usec_t ftdf_low_power_clock_cycle_u_sec            __attribute__ ((section(".retention")));
 /* Pre-calculated value for optimization. */
-static FTDF_USec FTDF_wakeUpLatencyUSec     __attribute__((section(".retention")));
+static ftdf_usec_t ftdf_wake_up_latency_u_sec                  __attribute__ ((section(".retention")));
 /* Pre-calculated value for optimization. */
-static FTDF_NrLowPowerClockCycles FTDF_csmacaWakeupThr __attribute__((section(".retention")));
+static ftdf_nr_low_power_clock_cycles_t ftdf_csmaca_wakeup_thr __attribute__ ((section(".retention")));
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-static uint32_t  FTDF_eventCurrVal          __attribute__((section(".retention")));
-static uint32_t  FTDF_timeStampCurrVal      __attribute__((section(".retention")));
-static uint32_t  FTDF_timeStampCurrPhaseVal __attribute__((section(".retention")));
+static uint32_t ftdf_event_curr_val                            __attribute__ ((section(".retention")));
+static uint32_t ftdf_time_stamp_curr_val                       __attribute__ ((section(".retention")));
+static uint32_t ftdf_time_stamp_curr_phase_val                 __attribute__ ((section(".retention")));
 #endif
 #ifndef FTDF_NO_CSL
-FTDF_Boolean     FTDF_wakeUpEnableLe        __attribute__((section(".retention")));
+ftdf_boolean_t ftdf_wake_up_enable_le                          __attribute__ ((section(".retention")));
 #endif /* FTDF_NO_CSL */
 #ifndef FTDF_NO_TSCH
-FTDF_Boolean     FTDF_wakeUpEnableTsch;
+ftdf_boolean_t ftdf_wake_up_enable_tsch;
 #endif /* FTDF_NO_TSCH */
 
-void FTDF_setSleepAttributes(FTDF_PSec                  lowPowerClockCycle,
-                             FTDF_NrLowPowerClockCycles wakeUpLatency)
+void ftdf_set_sleep_attributes(ftdf_psec_t low_power_clock_cycle,
+                               ftdf_nr_low_power_clock_cycles_t wake_up_latency)
 {
-    FTDF_lowPowerClockCycle = lowPowerClockCycle;
-    FTDF_wakeUpLatency      = (uint64_t)wakeUpLatency * lowPowerClockCycle;
-    FTDF_lowPowerClockCycleUSec = FTDF_lowPowerClockCycle / 1000000;
-    FTDF_wakeUpLatencyUSec = FTDF_wakeUpLatency / 1000000;
-    FTDF_csmacaWakeupThr = (FTDF_NrLowPowerClockCycles)
-                           (((FTDF_PSec) 0xffffffff * 1000000 - FTDF_wakeUpLatency) / FTDF_lowPowerClockCycle);
+        ftdf_low_power_clock_cycle = low_power_clock_cycle;
+        ftdf_wake_up_latency = (ftdf_psec_t)wake_up_latency * low_power_clock_cycle;
+        ftdf_low_power_clock_cycle_u_sec = ftdf_low_power_clock_cycle / 1000000;
+        ftdf_wake_up_latency_u_sec = ftdf_wake_up_latency / 1000000;
+        ftdf_csmaca_wakeup_thr = (ftdf_nr_low_power_clock_cycles_t)
+            (((ftdf_psec_t) 0xffffffff * 1000000 - ftdf_wake_up_latency) / ftdf_low_power_clock_cycle);
 }
 
-FTDF_USec FTDF_canSleep(void)
+ftdf_usec_t ftdf_can_sleep(void)
 {
 #ifdef FTDF_PHY_API
-
-    if (FTDF_txInProgress || FTDF_pib.keepPhyEnabled)
-    {
-        return 0;
-    }
-
+        if (ftdf_tx_in_progress || ftdf_pib.keep_phy_enabled) {
+                return 0;
+        }
 #else
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-
-    if (FTDF_pib.keepPhyEnabled)
+        if (ftdf_pib.keep_phy_enabled)
 #else
-    if (FTDF_reqCurrent || FTDF_pib.keepPhyEnabled)
+        if (ftdf_req_current || ftdf_pib.keep_phy_enabled)
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
-    {
-        return 0;
-    }
-
+        {
+                return 0;
+        }
 #endif
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-
-    if (FTDF_GET_FIELD(ON_OFF_REGMAP_SECBUSY) == 1)
+        if (REG_GETF(FTDF, FTDF_SECURITY_STATUS_REG, SECBUSY) == 1)
 #else /* FTDF_USE_SLEEP_DURING_BACKOFF */
-    if (FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0 ||
-        FTDF_GET_FIELD(ON_OFF_REGMAP_SECBUSY) == 1)
+        if ((REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, LMACREADY4SLEEP) == 0) ||
+                (REG_GETF(FTDF, FTDF_SECURITY_STATUS_REG, SECBUSY) == 1))
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
-    {
-        return 0;
-    }
+        {
+
+                return 0;
+        }
 
 #ifndef FTDF_NO_CSL
-
-    if (FTDF_pib.leEnabled)
-    {
+        if (ftdf_pib.le_enabled) {
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-
-        /* Abort sleep when LMAC is busy. */
-        if (FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0)
-        {
-            return 0;
-        }
-
+                /* Abort sleep when LMAC is busy. */
+                if (REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, LMACREADY4SLEEP) == 0) {
+                        return 0;
+                }
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+                if (ftdf_tx_in_progress == FTDF_FALSE) {
+                        ftdf_time_t cur_time = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG,
+                                                        SYMBOLTIMESNAPSHOTVAL);
+                        ftdf_time_t delta = cur_time - ftdf_start_csl_sample_time;
 
-        if (FTDF_txInProgress == FTDF_FALSE)
-        {
-            FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-            FTDF_Time delta   = curTime - FTDF_startCslSampleTime;
+                        /* A delta larger than 0x80000000 is assumed to be negative */
+                        /* Do not return a sleep value when CSL sample time is in the past */
+                        if (delta < 0x80000000) {
+                                return 0;
+                        }
 
-            // A delta larger than 0x80000000 is assumed to be negative
-            // Do not return a sleep value when CSL sample time is in the past
-            if (delta < 0x80000000)
-            {
-                return 0;
-            }
-
-            return (FTDF_startCslSampleTime - curTime) * 16;
+                        return (ftdf_start_csl_sample_time - cur_time) * 16;
+                } else {
+                        return 0;
+                }
         }
-        else
-        {
-            return 0;
-        }
-    }
-
 #endif /* FTDF_NO_CSL */
 
 #ifndef FTDF_NO_TSCH
-
-    if (FTDF_pib.tschEnabled)
-    {
+        if (ftdf_pib.tsch_enabled) {
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-
-        /* Abort sleep when LMAC is busy. */
-        if (FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0)
-        {
-            return 0;
-        }
-
+                /* Abort sleep when LMAC is busy. */
+                if (REG_GETF(FTDF, FTDF_LMAC_CONTROL_STATUS_REG, LMACREADY4SLEEP) == 0) {
+                        return 0;
+                }
 #endif
-        FTDF_Time64 curTime64 = FTDF_getCurTime64();
-        FTDF_Time64 delta     = curTime64 - FTDF_tschSlotTime;
+                ftdf_time64_t curTime64 = ftdf_get_cur_time64();
+                ftdf_time64_t delta = curTime64 - ftdf_tsch_slot_time;
 
-        // A delta larger than 0x8000000000000000 is assumed to be negative
-        // Do not return a sleep value when TSCH slot time is in the past
-        if (delta < 0x8000000000000000ULL)
-        {
-            return 0;
+                /* A delta larger than 0x8000000000000000 is assumed to be negative */
+                /* Do not return a sleep value when TSCH slot time is in the past */
+                if (delta < 0x8000000000000000ULL) {
+                        return 0;
+                }
+
+                ftdf_usec_t sleep_time = (ftdf_usec_t)(ftdf_tsch_slot_time - curTime64);
+
+                ftdf_time_t pend_list_time;
+                ftdf_time_t curTime = REG_GETF(FTDF, FTDF_SYMBOLTIMESNAPSHOTVAL_REG, SYMBOLTIMESNAPSHOTVAL);
+                ftdf_boolean_t pending = ftdf_get_tx_pending_timer_head(&pend_list_time);
+
+                if (pending) {
+                        /* A delta larger than 0x80000000 is assumed to be negative */
+                        /* Do not return a sleep value when pending timer time is in the past */
+                        if (curTime - pend_list_time < 0x80000000) {
+                                return 0;
+                        }
+
+                        ftdf_usec_t tmp_sleep_time = (ftdf_usec_t)(pend_list_time - curTime);
+
+                        if (tmp_sleep_time < sleep_time) {
+                                sleep_time = tmp_sleep_time;
+                        }
+                }
+
+                if (sleep_time < FTDF_TSCH_MAX_PROCESS_REQUEST_TIME + FTDF_TSCH_MAX_SCHEDULE_TIME) {
+                        return 0;
+                }
+
+                return (sleep_time - (FTDF_TSCH_MAX_PROCESS_REQUEST_TIME + FTDF_TSCH_MAX_SCHEDULE_TIME)) * 16;
         }
-
-        FTDF_USec    sleepTime = (FTDF_USec)(FTDF_tschSlotTime - curTime64);
-
-        FTDF_Time    pendListTime;
-        FTDF_Time    curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
-        FTDF_Boolean pending = FTDF_getTxPendingTimerHead(&pendListTime);
-
-        if (pending)
-        {
-            // A delta larger than 0x80000000 is assumed to be negative
-            // Do not return a sleep value when pending timer time is in the past
-            if (curTime - pendListTime < 0x80000000)
-            {
-                return 0;
-            }
-
-            FTDF_USec tmpSleepTime = (FTDF_USec)(pendListTime - curTime);
-
-            if (tmpSleepTime < sleepTime)
-            {
-                sleepTime = tmpSleepTime;
-            }
-        }
-
-        if (sleepTime < FTDF_TSCH_MAX_PROCESS_REQUEST_TIME + FTDF_TSCH_MAX_SCHEDULE_TIME)
-        {
-            return 0;
-        }
-
-        return (sleepTime - (FTDF_TSCH_MAX_PROCESS_REQUEST_TIME + FTDF_TSCH_MAX_SCHEDULE_TIME)) * 16;
-    }
-
 #endif /* FTDF_NO_TSCH */
 
 #ifndef FTDF_LITE
-    // Normal mode
-    int n;
+        /* Normal mode */
+        int n;
 
-    for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
-    {
-        if (FTDF_txPendingList[ n ].addrMode != FTDF_NO_ADDRESS)
-        {
-            return 0;
+        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++) {
+                if (ftdf_tx_pending_list[n].addr_mode != FTDF_NO_ADDRESS) {
+                        return 0;
+                }
         }
-    }
-
 #endif /* !FTDF_LITE */
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-    return FTDF_sdbGetSleepTime();
+        return ftdf_sdb_get_sleep_time();
 #else /* FTDF_USE_SLEEP_DURING_BACKOFF */
-    return 0xffffffff;
+        return 0xffffffff;
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
-
 }
 
-FTDF_Boolean FTDF_prepareForSleep(FTDF_USec sleepTime)
+ftdf_boolean_t ftdf_prepare_for_sleep(ftdf_usec_t sleep_time)
 {
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                if (sleep_time < (2 * ftdf_low_power_clock_cycle_u_sec)) {
+                        return FTDF_FALSE;
+                }
 
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        if (sleepTime < 2 * FTDF_lowPowerClockCycleUSec)
-        {
-            return FTDF_FALSE;
+                // Correct sleeptime with the inaccuracy of this function
+                sleep_time -= (2 * ftdf_low_power_clock_cycle_u_sec);
+
+                if (sleep_time < (ftdf_wake_up_latency_u_sec + 500)) {
+                        return FTDF_FALSE;
+                }
         }
-
-        // Correct sleeptime with the inaccuracy of this function
-        sleepTime -= 2 * FTDF_lowPowerClockCycleUSec;
-
-        if (sleepTime < FTDF_wakeUpLatencyUSec + 500)
-        {
-            return FTDF_FALSE;
-        }
-    }
 
 #endif
 
-    FTDF_criticalVar();
-    FTDF_enterCritical();
+        ftdf_critical_var();
+        ftdf_enter_critical();
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-    // Capture the current value of both the event generator and the timestamp generator
-    // and phase on the rising edge of LP_CLK
-    FTDF_SET_FIELD(ON_OFF_REGMAP_GETGENERATORVAL, 1);
+        /* Capture the current value of both the event generator and the timestamp generator
+           and phase on the rising edge of LP_CLK */
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, GETGENERATORVAL, 1);
 
 #endif
-    // Save current LMAC PM counters
-    FTDF_lmacCounters.fcsErrorCnt += FTDF_GET_FIELD(ON_OFF_REGMAP_MACFCSERRORCOUNT);
-    FTDF_lmacCounters.txStdAckCnt += FTDF_GET_FIELD(ON_OFF_REGMAP_MACTXSTDACKFRMCNT);
-    FTDF_lmacCounters.rxStdAckCnt += FTDF_GET_FIELD(ON_OFF_REGMAP_MACRXSTDACKFRMOKCNT);
+        /* Save current LMAC PM counters */
+        ftdf_lmac_counters.fcs_error_cnt += REG_GETF(FTDF, FTDF_MACFCSERRORCOUNT_REG, MACFCSERRORCOUNT);
+        ftdf_lmac_counters.tx_std_ack_cnt += REG_GETF(FTDF, FTDF_MACTXSTDACKFRMCNT_REG, MACTXSTDACKFRMCNT);
+        ftdf_lmac_counters.rx_std_ack_cnt += REG_GETF(FTDF, FTDF_MACRXSTDACKFRMOKCNT_REG, MACRXSTDACKFRMOKCNT);
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-    volatile uint32_t *getGeneratorValE = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_GETGENERATORVAL_E);
 
-    // Wait until data is ready
-    while ((*getGeneratorValE & MSK_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E) == 0)
-    { }
+        /* Wait until data is ready */
+        while (REG_GETF(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, GETGENERATORVAL_E) == 0) {}
 
-    FTDF_eventCurrVal          = FTDF_GET_FIELD(ON_OFF_REGMAP_EVENTCURRVAL);
-    FTDF_timeStampCurrVal      = FTDF_GET_FIELD(ON_OFF_REGMAP_TIMESTAMPCURRVAL);
-    FTDF_timeStampCurrPhaseVal = FTDF_GET_FIELD(ON_OFF_REGMAP_TIMESTAMPCURRPHASEVAL);
+        ftdf_event_curr_val = REG_GETF(FTDF, FTDF_EVENTCURRVAL_REG, EVENTCURRVAL);
+        ftdf_time_stamp_curr_val = REG_GETF(FTDF, FTDF_TIMESTAMPCURRVAL_REG, TIMESTAMPCURRVAL);
+        ftdf_time_stamp_curr_phase_val = REG_GETF(FTDF, FTDF_TIMESTAMPCURRPHASEVAL_REG, TIMESTAMPCURRPHASEVAL);
 
 #ifdef SIMULATOR
-    *getGeneratorValE &= ~MSK_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E;
+        REG_CLR_FIELD(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, GETGENERATORVAL_E, FTDF->FTDF_LMAC_CONTROL_DELTA_REG);
 #else
-    *getGeneratorValE  = MSK_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E;
+        FTDF->FTDF_LMAC_CONTROL_DELTA_REG = REG_MSK(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, GETGENERATORVAL_E);
 #endif
-    uint64_t nextWakeUpThr;
+        uint64_t next_wake_up_thr;
 #if FTDF_USE_SLEEP_DURING_BACKOFF
-    uint64_t picoSleepTime = (uint64_t)sleepTime * 1000000;
-    nextWakeUpThr = (picoSleepTime - FTDF_wakeUpLatency) / FTDF_lowPowerClockCycle;
+        uint64_t pico_sleep_time = (uint64_t)sleep_time * 1000000;
+        next_wake_up_thr = ( pico_sleep_time - ftdf_wake_up_latency ) / ftdf_low_power_clock_cycle;
 #else /* FTDF_USE_SLEEP_DURING_BACKOFF */
-
-    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
-    {
-        uint64_t picoSleepTime = (uint64_t)sleepTime * 1000000;
-        nextWakeUpThr = (picoSleepTime - FTDF_wakeUpLatency) / FTDF_lowPowerClockCycle;
-    }
-    else
-    {
-        nextWakeUpThr = FTDF_csmacaWakeupThr;
-    }
-
+        if (ftdf_pib.le_enabled || ftdf_pib.tsch_enabled) {
+                uint64_t picoSleepTime = (uint64_t)sleep_time * 1000000;
+                next_wake_up_thr = (picoSleepTime - ftdf_wake_up_latency) / ftdf_low_power_clock_cycle;
+        } else {
+                next_wake_up_thr = ftdf_csmaca_wakeup_thr;
+        }
 #endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
 
-    // Set wake up threshold
-    uint32_t wakeUpIntThr = FTDF_eventCurrVal + nextWakeUpThr;
-    // Note that for IC revs other than A the size of WAKEUPINTTHR is 25 bits.
-    FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPINTTHR, wakeUpIntThr);
-    FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPENABLE, 1);
+        /* Set wake up threshold */
+        uint32_t wake_up_int_thr = ftdf_event_curr_val + next_wake_up_thr;
+        /* Note that for IC revs other than A the size of WAKEUPINTTHR is 25 bits. */
+        REG_SETF(FTDF, FTDF_WAKEUP_CONTROL_REG, WAKEUPINTTHR, wake_up_int_thr);
+        REG_SETF(FTDF, FTDF_WAKEUP_CONTROL_REG, WAKEUPENABLE, 1);
 #endif
-    FTDF_exitCritical();
+        ftdf_exit_critical();
 
-    return FTDF_TRUE;
+        return FTDF_TRUE;
 }
 
-void FTDF_wakeUp(void)
+void ftdf_wakeup(void)
 {
 #ifndef FTDF_PHY_API
-    FTDF_criticalVar();
-    FTDF_enterCritical();
+        ftdf_critical_var();
+        ftdf_enter_critical();
 
-    FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPENABLE, 0);
+        REG_SETF(FTDF, FTDF_WAKEUP_CONTROL_REG, WAKEUPENABLE, 0);
 
 #if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
-    // Capture the current value of both the event generator and the timestamp generator
-    // and phase on the rising edge of LP_CLK
-    FTDF_SET_FIELD(ON_OFF_REGMAP_GETGENERATORVAL, 1);
+        /* Capture the current value of both the event generator and the timestamp generator
+           and phase on the rising edge of LP_CLK */
+        REG_SETF(FTDF, FTDF_LMAC_CONTROL_OS_REG, GETGENERATORVAL, 1);
 
-    volatile uint32_t *getGeneratorValE = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_GETGENERATORVAL_E);
+        /* Wait until data is ready */
+        while (REG_GETF(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, GETGENERATORVAL_E) == 0) {}
 
-    // Wait until data is ready
-    while ((*getGeneratorValE & MSK_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E) == 0)
-    { }
-
-    uint32_t eventNewCurrVal = FTDF_GET_FIELD(ON_OFF_REGMAP_EVENTCURRVAL);
+        uint32_t event_new_curr_val = REG_GETF(FTDF, FTDF_EVENTCURRVAL_REG, EVENTCURRVAL);
 
 #ifdef SIMULATOR
-    *getGeneratorValE &= ~MSK_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E;
+        REG_CLR_FIELD(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, GETGENERATORVAL_E);
 #else
-    *getGeneratorValE  = MSK_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E;
+        FTDF->FTDF_LMAC_CONTROL_DELTA_REG = REG_MSK(FTDF, FTDF_LMAC_CONTROL_DELTA_REG, GETGENERATORVAL_E);
 #endif
 
-    // Backward calculate the time slept
-    //FTDF_PSec sleepTime = ( (uint64_t)( eventNewCurrVal - FTDF_eventCurrVal ) * FTDF_lowPowerClockCycle ) + FTDF_wakeUpLatency;
+        /* Backward calculate the time slept */
+        /* ftdf_psec_t sleep_time = ((uint64_t)(event_new_curr_val - ftdf_event_curr_val) *
+                ftdf_low_power_clock_cycle) + ftdf_wake_up_latency; */
 
-    FTDF_PSec sleepTime;
+        ftdf_psec_t sleep_time;
+        if (event_new_curr_val >= ftdf_event_curr_val) { /* Check for wraps. */
+                sleep_time = (event_new_curr_val - ftdf_event_curr_val) * ftdf_low_power_clock_cycle  +
+                        ftdf_wake_up_latency;
+        } else {
+                sleep_time = (event_new_curr_val +
+                        (REG_MSK(FTDF, FTDF_EVENTCURRVAL_REG, EVENTCURRVAL) - ftdf_event_curr_val)) *
+                                ftdf_low_power_clock_cycle  + ftdf_wake_up_latency;
+        }
+        /* Calculate sync values */
+        uint64_t new_sync_vals = ((uint64_t)ftdf_time_stamp_curr_val << 8) |
+            (ftdf_time_stamp_curr_phase_val & 0xff);
 
-    if (eventNewCurrVal >= FTDF_eventCurrVal)   /* Check for wraps. */
-    {
-        sleepTime = (eventNewCurrVal - FTDF_eventCurrVal) * FTDF_lowPowerClockCycle  +
-                    FTDF_wakeUpLatency;
-    }
-    else
-    {
-        sleepTime = (eventNewCurrVal +
-                     (MSK_R_FTDF_ON_OFF_REGMAP_EVENTCURRVAL - FTDF_eventCurrVal)) *
-                    FTDF_lowPowerClockCycle  + FTDF_wakeUpLatency;
-    }
+        new_sync_vals += (sleep_time / 62500) + 1;
 
-    // Calculate sync values
-    uint64_t newSyncVals = ((uint64_t)FTDF_timeStampCurrVal << 8) | (FTDF_timeStampCurrPhaseVal & 0xff);
-    newSyncVals += (sleepTime / 62500) + 1;
+        uint32_t sync_timestamp_thr = ftdf_event_curr_val + (sleep_time / ftdf_low_power_clock_cycle);
+        uint32_t sync_timestamp_val = (new_sync_vals & 0xffffffff00) >> 8;
+        uint32_t sync_timestamp_phase_val = (new_sync_vals & 0xff);
 
-    uint32_t syncTimestampThr      = FTDF_eventCurrVal + (sleepTime / FTDF_lowPowerClockCycle);
-    uint32_t syncTimestampVal      = (newSyncVals & 0xffffffff00) >> 8;
-    uint32_t syncTimestampPhaseVal = (newSyncVals & 0xff);
-
-    // Set values
-    FTDF_SET_FIELD(ON_OFF_REGMAP_SYNCTIMESTAMPTHR, syncTimestampThr);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_SYNCTIMESTAMPVAL, syncTimestampVal);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_SYNCTIMESTAMPPHASEVAL, syncTimestampPhaseVal);
-    FTDF_SET_FIELD(ON_OFF_REGMAP_SYNCTIMESTAMPENA, 1);
+        /* Set values */
+        REG_SETF(FTDF, FTDF_SYNCTIMESTAMPTHR_REG, SYNCTIMESTAMPTHR, sync_timestamp_thr);
+        REG_SETF(FTDF, FTDF_SYNCTIMESTAMPVAL_REG, SYNCTIMESTAMPVAL, sync_timestamp_val);
+        REG_SETF(FTDF, FTDF_SYNCTIMESTAMPPHASEVAL_REG, SYNCTIMESTAMPPHASEVAL, sync_timestamp_phase_val);
+        REG_SETF(FTDF, FTDF_TIMER_CONTROL_1_REG, SYNCTIMESTAMPENA, 1);
 #endif
 
-    FTDF_exitCritical();
+        ftdf_exit_critical();
 
 #ifndef FTDF_NO_CSL
-    FTDF_wakeUpEnableLe   = FTDF_pib.leEnabled;
-    FTDF_pib.leEnabled    = FTDF_FALSE;
+        ftdf_wake_up_enable_le = ftdf_pib.le_enabled;
+        ftdf_pib.le_enabled = FTDF_FALSE;
 #endif /* FTDF_NO_CSL */
 
 #ifndef FTDF_NO_TSCH
-    FTDF_wakeUpEnableTsch = FTDF_pib.tschEnabled;
-    FTDF_pib.tschEnabled  = FTDF_FALSE;
+        ftdf_wake_up_enable_tsch = ftdf_pib.tsch_enabled;
+        ftdf_pib.tsch_enabled = FTDF_FALSE;
 #endif /* FTDF_NO_TSCH */
 #endif /* ! FTDF_PHY_API */
-    // Init LMAC
-    FTDF_initLmac();
+        /* Init LMAC */
+        ftdf_init_lmac();
 }
+#endif /* CONFIG_USE_FTDF */

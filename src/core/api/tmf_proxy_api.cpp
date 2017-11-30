@@ -35,28 +35,38 @@
 
 #include <openthread/tmf_proxy.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
+using namespace ot;
+
 otError otTmfProxyStart(otInstance *aInstance, otTmfProxyStreamHandler aTmfProxyCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetTmfProxy().Start(aTmfProxyCallback, aContext);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetTmfProxy().Start(aTmfProxyCallback, aContext);
 }
 
 otError otTmfProxyStop(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetTmfProxy().Stop();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetTmfProxy().Stop();
 }
 
 otError otTmfProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
 {
-    return aInstance->mThreadNetif.GetTmfProxy().Send(*static_cast<ot::Message *>(aMessage), aLocator, aPort);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetTmfProxy().Send(*static_cast<ot::Message *>(aMessage), aLocator, aPort);
 }
 
 bool otTmfProxyIsEnabled(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetTmfProxy().IsEnabled();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetTmfProxy().IsEnabled();
 }
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY

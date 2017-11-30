@@ -1,4 +1,6 @@
-/*
+ /**
+ ****************************************************************************************
+ *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -23,13 +25,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @file     DA14680BA.h
- * @brief    CMSIS Cortex-M0 Peripheral Access Layer Header File for DA14680BA from Dialog.
+ * @file     DA14680BB.h
+ *
+ * @brief    CMSIS Cortex-M0 Peripheral Access Layer Header File for
+ *           DA14680BB from Dialog.
+ *
  * @version  V1.2
- * @date     9. August 2016
- * @note     Generated with SVDConv V2.87g
- *           from CMSIS SVD File 'DA14680BA.xml'
- *           Version 1.2
+ * @date     14. June 2017
+ *
+ * @note     Generated with SVDConv V2.87l 
+ *           from CMSIS SVD File 'DA14680BB.xml' Version 1.2,
+ *
+ *****************************************************************************************
  */
 
 
@@ -38,13 +45,12 @@
   * @{
   */
 
-
-/** @addtogroup DA14680BA
+/** @addtogroup DA14680BB
   * @{
   */
 
-#ifndef DA14680BA_H
-#define DA14680BA_H
+#ifndef DA14680BB_H
+#define DA14680BB_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,7 +71,7 @@ typedef enum {
   SVCall_IRQn                   =  -5,              /*!<  11  System Service Call via SVC instruction                          */
   PendSV_IRQn                   =  -2,              /*!<  14  Pendable request for system service                              */
   SysTick_IRQn                  =  -1,              /*!<  15  System Tick Timer                                                */
-/* --------------------  DA14680BA Specific Interrupt Numbers  -------------------- */
+/* --------------------  DA14680BB Specific Interrupt Numbers  -------------------- */
   BLE_WAKEUP_LP_IRQn            =   0,              /*!<   0  BLE_WAKEUP_LP                                                    */
   BLE_GEN_IRQn                  =   1,              /*!<   1  BLE_GEN                                                          */
   FTDF_WAKEUP_IRQn              =   2,              /*!<   2  FTDF_WAKEUP                                                      */
@@ -101,7 +107,7 @@ typedef enum {
 } IRQn_Type;
 
 
-/** @addtogroup Configuration_of_CMSIS_DA14680BA
+/** @addtogroup Configuration_of_CMSIS_DA14680BB
   * @{
   */
 
@@ -118,7 +124,7 @@ typedef enum {
 /** @} */ /* End of group Configuration_of_CMSIS */
 
 #include "core_cm0.h"                               /*!< Cortex-M0 processor and core peripherals                              */
-#include "system_DA14680.h"                       /*!< DA14680BA System                                                      */
+#include "system_DA14680.h"                         /*!< DA14680BB System                                                      */
 
 
 /* ================================================================================ */
@@ -126,7 +132,7 @@ typedef enum {
 /* ================================================================================ */
 
 
-/** @addtogroup Device_Peripheral_Registers_DA14680BA
+/** @addtogroup Device_Peripheral_Registers_DA14680BB
   * @{
   */
 
@@ -469,7 +475,7 @@ typedef struct {                                    /*!< (@ 0x50000000) CRG_TOP 
   __I  uint32_t  RESERVED2[2];
   __IO uint16_t  CLK_32K_REG;                       /*!< (@ 0x50000020) 32 kHz oscillator register                             */
   __IO uint16_t  CLK_16M_REG;                       /*!< (@ 0x50000022) 16 MHz RC and xtal oscillator register                 */
-  __IO uint16_t  CLK_RCX20K_REG;                    /*!< (@ 0x50000024) 20KHz RXC-oscillator control register                  */
+  __IO uint16_t  CLK_RCX20K_REG;                    /*!< (@ 0x50000024) RCX-oscillator control register                        */
   __I  uint16_t  RESERVED3;
   __IO uint16_t  BANDGAP_REG;                       /*!< (@ 0x50000028) bandgap trimming                                       */
   __IO uint16_t  ANA_STATUS_REG;                    /*!< (@ 0x5000002A) status bit of analog (power management) circuits       */
@@ -490,7 +496,7 @@ typedef struct {                                    /*!< (@ 0x50000000) CRG_TOP 
   __IO uint16_t  XTALRDY_STAT_REG;                  /*!< (@ 0x50000052) Difference between XTAL_OK and XTALRDY_IRQ in
                                                          LP clock cycles                                                       */
   __IO uint16_t  LDO_CTRL3_REG;                     /*!< (@ 0x50000054) Retention LDO control register                         */
-  __I  uint16_t  RESERVED6;
+  __IO uint16_t  XTAL16M_CTRL_REG;                  /*!< (@ 0x50000056) Control register for XTAL16M                           */
   __IO uint16_t  XTAL16M_START_REG;                 /*!< (@ 0x50000058) Xtal frequency trimming register during startup        */
   __IO uint16_t  XTAL16M_RAMP_REG;                  /*!< (@ 0x5000005A) Xtal frequency trimming register during ramping        */
   __IO uint16_t  XTAL16M_TRSTAT_REG;                /*!< (@ 0x5000005C) Read back value of current XTAL trimming               */
@@ -1901,11 +1907,13 @@ typedef struct {                                    /*!< (@ 0x50005000) TRNG Str
   */
 
 typedef struct {                                    /*!< (@ 0x50001000) UART Structure                                         */
-  __IO uint16_t  UART_RBR_THR_DLL_REG;              /*!< (@ 0x50001000) Receive Buffer Register                                */
+  __IO uint16_t  UART_RBR_THR_DLL_REG;              /*!< (@ 0x50001000) Receive Buffer Register/Transmit Holding Register/Divisor
+                                                         Latch Low                                                             */
   __I  uint16_t  RESERVED;
-  __IO uint16_t  UART_IER_DLH_REG;                  /*!< (@ 0x50001004) Interrupt Enable Register                              */
+  __IO uint16_t  UART_IER_DLH_REG;                  /*!< (@ 0x50001004) Interrupt Enable Register/Divisor Latch High           */
   __I  uint16_t  RESERVED1;
-  __IO uint16_t  UART_IIR_FCR_REG;                  /*!< (@ 0x50001008) Interrupt Identification Register                      */
+  __IO uint16_t  UART_IIR_FCR_REG;                  /*!< (@ 0x50001008) Interrupt Identification Register/FIFO Control
+                                                         Register                                                              */
   __I  uint16_t  RESERVED2;
   __IO uint16_t  UART_LCR_REG;                      /*!< (@ 0x5000100C) Line Control Register                                  */
   __I  uint16_t  RESERVED3;
@@ -1943,9 +1951,10 @@ typedef struct {                                    /*!< (@ 0x50001000) UART Str
   */
 
 typedef struct {                                    /*!< (@ 0x50001100) UART2 Structure                                        */
-  __IO uint16_t  UART2_RBR_THR_DLL_REG;             /*!< (@ 0x50001100) Receive Buffer Register                                */
+  __IO uint16_t  UART2_RBR_THR_DLL_REG;             /*!< (@ 0x50001100) Receive Buffer Register/Transmit Holding Register/Divisor
+                                                         Latch Low                                                             */
   __I  uint16_t  RESERVED;
-  __IO uint16_t  UART2_IER_DLH_REG;                 /*!< (@ 0x50001104) Interrupt Enable Register                              */
+  __IO uint16_t  UART2_IER_DLH_REG;                 /*!< (@ 0x50001104) Interrupt Enable Register/Divisor Latch High           */
   __I  uint16_t  RESERVED1;
   __IO uint16_t  UART2_IIR_FCR_REG;                 /*!< (@ 0x50001108) Interrupt Identification Register/FIFO Control
                                                          Register                                                              */
@@ -1994,11 +2003,11 @@ typedef struct {                                    /*!< (@ 0x50001100) UART2 St
   __I  uint16_t  RESERVED23;
   __IO uint16_t  UART2_FAR_REG;                     /*!< (@ 0x50001170) FIFO Access Register                                   */
   __I  uint16_t  RESERVED24[5];
-  __IO uint16_t  UART2_USR_REG;                     /*!< (@ 0x5000117C) UART Status register.                                  */
+  __IO uint16_t  UART2_USR_REG;                     /*!< (@ 0x5000117C) UART Status Register                                   */
   __I  uint16_t  RESERVED25;
   __IO uint16_t  UART2_TFL_REG;                     /*!< (@ 0x50001180) Transmit FIFO Level                                    */
   __I  uint16_t  RESERVED26;
-  __IO uint16_t  UART2_RFL_REG;                     /*!< (@ 0x50001184) Receive FIFO Level.                                    */
+  __IO uint16_t  UART2_RFL_REG;                     /*!< (@ 0x50001184) Receive FIFO Level                                     */
   __I  uint16_t  RESERVED27;
   __IO uint16_t  UART2_SRR_REG;                     /*!< (@ 0x50001188) Software Reset Register.                               */
   __I  uint16_t  RESERVED28;
@@ -4328,6 +4337,18 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_PA_RET_ENABLE_Msk (0x10UL)        /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_PA_RET_ENABLE (Bitfield-Mask: 0x01) */
 #define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_PA_RET_VREF_HOLD_Pos (5UL)        /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_PA_RET_VREF_HOLD (Bit 5)     */
 #define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_PA_RET_VREF_HOLD_Msk (0x20UL)     /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_PA_RET_VREF_HOLD (Bitfield-Mask: 0x01) */
+
+/* --------------------------  CRG_TOP_XTAL16M_CTRL_REG  -------------------------- */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_FREQ_TRIM_SW2_AMP_Pos (0UL)    /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_FREQ_TRIM_SW2_AMP (Bit 0) */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_FREQ_TRIM_SW2_AMP_Msk (0x7UL)  /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_FREQ_TRIM_SW2_AMP (Bitfield-Mask: 0x07) */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_AMP_REG_SIG_SEL_Pos (3UL)      /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_AMP_REG_SIG_SEL (Bit 3)   */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_AMP_REG_SIG_SEL_Msk (0x8UL)    /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_AMP_REG_SIG_SEL (Bitfield-Mask: 0x01) */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_TST_AON_Pos (4UL)              /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_TST_AON (Bit 4)           */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_TST_AON_Msk (0x30UL)           /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_TST_AON (Bitfield-Mask: 0x03) */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_SH_OVERRULE_Pos (6UL)          /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_SH_OVERRULE (Bit 6)       */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_SH_OVERRULE_Msk (0xc0UL)       /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_SH_OVERRULE (Bitfield-Mask: 0x03) */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_ENABLE_ZERO_Pos (8UL)          /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_ENABLE_ZERO (Bit 8)       */
+#define CRG_TOP_XTAL16M_CTRL_REG_XTAL16M_ENABLE_ZERO_Msk (0x100UL)      /*!< CRG_TOP XTAL16M_CTRL_REG: XTAL16M_ENABLE_ZERO (Bitfield-Mask: 0x01) */
 
 /* --------------------------  CRG_TOP_XTAL16M_START_REG  ------------------------- */
 #define CRG_TOP_XTAL16M_START_REG_FINE_ADJ_Pos (0UL)                    /*!< CRG_TOP XTAL16M_START_REG: FINE_ADJ (Bit 0)                 */
@@ -11048,6 +11069,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define UART_UART_IER_DLH_REG_ETBEI_dlh1_Msk  (0x2UL)                   /*!< UART UART_IER_DLH_REG: ETBEI_dlh1 (Bitfield-Mask: 0x01)     */
 #define UART_UART_IER_DLH_REG_ELSI_dhl2_Pos   (2UL)                     /*!< UART UART_IER_DLH_REG: ELSI_dhl2 (Bit 2)                    */
 #define UART_UART_IER_DLH_REG_ELSI_dhl2_Msk   (0x4UL)                   /*!< UART UART_IER_DLH_REG: ELSI_dhl2 (Bitfield-Mask: 0x01)      */
+#define UART_UART_IER_DLH_REG_EDSSI_dlh3_Pos  (3UL)                     /*!< UART UART_IER_DLH_REG: EDSSI_dlh3 (Bit 3)                   */
+#define UART_UART_IER_DLH_REG_EDSSI_dlh3_Msk  (0x8UL)                   /*!< UART UART_IER_DLH_REG: EDSSI_dlh3 (Bitfield-Mask: 0x01)     */
+#define UART_UART_IER_DLH_REG_dlh6_4_Pos      (4UL)                     /*!< UART UART_IER_DLH_REG: dlh6_4 (Bit 4)                       */
+#define UART_UART_IER_DLH_REG_dlh6_4_Msk      (0x70UL)                  /*!< UART UART_IER_DLH_REG: dlh6_4 (Bitfield-Mask: 0x07)         */
 #define UART_UART_IER_DLH_REG_PTIME_dlh7_Pos  (7UL)                     /*!< UART UART_IER_DLH_REG: PTIME_dlh7 (Bit 7)                   */
 #define UART_UART_IER_DLH_REG_PTIME_dlh7_Msk  (0x80UL)                  /*!< UART UART_IER_DLH_REG: PTIME_dlh7 (Bitfield-Mask: 0x01)     */
 
@@ -11148,6 +11173,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define UART2_UART2_IER_DLH_REG_ETBEI_dlh1_Msk (0x2UL)                  /*!< UART2 UART2_IER_DLH_REG: ETBEI_dlh1 (Bitfield-Mask: 0x01)   */
 #define UART2_UART2_IER_DLH_REG_ELSI_dhl2_Pos (2UL)                     /*!< UART2 UART2_IER_DLH_REG: ELSI_dhl2 (Bit 2)                  */
 #define UART2_UART2_IER_DLH_REG_ELSI_dhl2_Msk (0x4UL)                   /*!< UART2 UART2_IER_DLH_REG: ELSI_dhl2 (Bitfield-Mask: 0x01)    */
+#define UART2_UART2_IER_DLH_REG_EDSSI_dlh3_Pos (3UL)                    /*!< UART2 UART2_IER_DLH_REG: EDSSI_dlh3 (Bit 3)                 */
+#define UART2_UART2_IER_DLH_REG_EDSSI_dlh3_Msk (0x8UL)                  /*!< UART2 UART2_IER_DLH_REG: EDSSI_dlh3 (Bitfield-Mask: 0x01)   */
+#define UART2_UART2_IER_DLH_REG_dlh6_4_Pos    (4UL)                     /*!< UART2 UART2_IER_DLH_REG: dlh6_4 (Bit 4)                     */
+#define UART2_UART2_IER_DLH_REG_dlh6_4_Msk    (0x70UL)                  /*!< UART2 UART2_IER_DLH_REG: dlh6_4 (Bitfield-Mask: 0x07)       */
 #define UART2_UART2_IER_DLH_REG_PTIME_dlh7_Pos (7UL)                    /*!< UART2 UART2_IER_DLH_REG: PTIME_dlh7 (Bit 7)                 */
 #define UART2_UART2_IER_DLH_REG_PTIME_dlh7_Msk (0x80UL)                 /*!< UART2 UART2_IER_DLH_REG: PTIME_dlh7 (Bitfield-Mask: 0x01)   */
 
@@ -12112,7 +12141,7 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 
 
 /** @} */ /* End of group Device_Peripheral_Registers */
-/** @} */ /* End of group DA14680BA */
+/** @} */ /* End of group DA14680BB */
 /** @} */ /* End of group Dialog */
 
 #ifdef __cplusplus
@@ -12120,5 +12149,5 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #endif
 
 
-#endif  /* DA14680BA_H */
+#endif  /* DA14680BB_H */
 

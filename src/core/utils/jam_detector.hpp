@@ -65,7 +65,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit JamDetector(otInstance &aInstance);
+    explicit JamDetector(Instance &aInstance);
 
     /**
      * Start the jamming detection.
@@ -178,7 +178,6 @@ private:
     void HandleTimer(void);
     void UpdateHistory(bool aThresholdExceeded);
     void UpdateJamState(void);
-    static JamDetector &GetOwner(const Context &aContext);
 
 private:
     enum

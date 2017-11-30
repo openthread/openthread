@@ -56,7 +56,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    AnnounceBeginServer(otInstance &aInstance);
+    AnnounceBeginServer(Instance &aInstance);
 
     /**
      * This method begins the MLE Announce transmission process using Count=3 and Period=1s.
@@ -93,8 +93,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
-
-    static AnnounceBeginServer &GetOwner(const Context &aContext);
 
     uint32_t mChannelMask;
     uint16_t mPeriod;

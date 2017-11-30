@@ -35,11 +35,12 @@
 
 #include "ip6.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_routes.hpp"
@@ -50,7 +51,7 @@
 namespace ot {
 namespace Ip6 {
 
-Ip6::Ip6(otInstance &aInstance):
+Ip6::Ip6(Instance &aInstance):
     InstanceLocator(aInstance),
     mForwardingEnabled(false),
     mIsReceiveIp6FilterEnabled(false),
@@ -68,8 +69,8 @@ Ip6::Ip6(otInstance &aInstance):
 
 Message *Ip6::NewMessage(uint16_t aReserved)
 {
-    return GetInstance().mMessagePool.New(Message::kTypeIp6,
-                                          sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
+    return GetInstance().GetMessagePool().New(Message::kTypeIp6,
+                                              sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
@@ -407,7 +408,7 @@ exit:
 
 void Ip6::HandleSendQueue(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleSendQueue();
+    aTasklet.GetOwner<Ip6>().HandleSendQueue();
 }
 
 void Ip6::HandleSendQueue(void)
@@ -613,7 +614,7 @@ otError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &
             case kCoapUdpPort:
 
                 // do not pass TMF messages
-                if (GetInstance().mThreadNetif.IsTmfMessage(aMessageInfo))
+                if (GetInstance().GetThreadNetif().IsTmfMessage(aMessageInfo))
                 {
                     ExitNow(error = OT_ERROR_NO_ROUTE);
                 }
@@ -1113,17 +1114,6 @@ int8_t Ip6::GetOnLinkNetif(const Address &aAddress)
 
 exit:
     return rval;
-}
-
-Ip6 &Ip6::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Ip6 &ip6 = *static_cast<Ip6 *>(aContext.GetContext());
-#else
-    Ip6 &ip6 = otGetIp6();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return ip6;
 }
 
 const char *Ip6::IpProtoToString(IpProto aIpProto)

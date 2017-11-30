@@ -63,7 +63,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    JoinerRouter(otInstance &aInstance);
+    JoinerRouter(Instance &aInstance);
 
     /**
      * This method returns the Joiner UDP Port.
@@ -112,8 +112,6 @@ private:
     otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError GetBorderAgentRloc(uint16_t &aRloc);
-
-    static JoinerRouter &GetOwner(const Context &aContext);
 
     Ip6::NetifCallback mNetifCallback;
 

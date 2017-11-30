@@ -457,8 +457,8 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_CTL_CODE(156, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
 
-#define IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER \
-    OTLWF_CTL_CODE(157, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+//#define IOCTL_OTLWF_OT_TRANSMIT_POWER                                 \
+//    OTLWF_CTL_CODE(157, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
     // GUID - InterfaceGuid
     // int8_t - aPower
 
@@ -542,7 +542,7 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // otExtAddress - aEui64
 
-#define IOCTL_OTLWF_OT_HASH_MAC_ADDRESS \
+#define IOCTL_OTLWF_OT_JOINER_ID \
     OTLWF_CTL_CODE(172, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
     // otExtAddress - aEui64

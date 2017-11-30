@@ -35,9 +35,10 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -53,7 +54,7 @@ void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentT
     SetIntervalOffset(aInterval - t);
 }
 
-Mpl::Mpl(otInstance &aInstance):
+Mpl::Mpl(Instance &aInstance):
     InstanceLocator(aInstance),
     mTimerExpirations(0),
     mSequence(0),
@@ -172,7 +173,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
     // adjust the first MPL forward interval dynamically according to the network scale
     uint8_t interval = (kDataMessageInterval / Mle::kMaxRouters) *
-                       GetInstance().mThreadNetif.GetMle().GetActiveNeighborRouterCount();
+                       GetInstance().GetThreadNetif().GetMle().GetActiveNeighborRouterCount();
 #else
     uint8_t interval = kDataMessageInterval;
 #endif
@@ -259,7 +260,7 @@ exit:
 
 void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleRetransmissionTimer();
+    aTimer.GetOwner<Mpl>().HandleRetransmissionTimer();
 }
 
 void Mpl::HandleRetransmissionTimer(void)
@@ -346,7 +347,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
 void Mpl::HandleSeedSetTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleSeedSetTimer();
+    aTimer.GetOwner<Mpl>().HandleSeedSetTimer();
 }
 
 void Mpl::HandleSeedSetTimer(void)
@@ -366,17 +367,6 @@ void Mpl::HandleSeedSetTimer(void)
     {
         mSeedSetTimer.Start(kSeedEntryLifetimeDt);
     }
-}
-
-Mpl &Mpl::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Mpl &mpl = *static_cast<Mpl *>(aContext.GetContext());
-#else
-    Mpl &mpl = otGetIp6().GetMpl();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return mpl;
 }
 
 }  // namespace Ip6

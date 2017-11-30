@@ -795,7 +795,24 @@ typedef enum
     SPINEL_PROP_THREAD__BEGIN           = 0x50,
     SPINEL_PROP_THREAD_LEADER_ADDR      = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
     SPINEL_PROP_THREAD_PARENT           = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
-    SPINEL_PROP_THREAD_CHILD_TABLE      = SPINEL_PROP_THREAD__BEGIN + 2, ///< array(EUI64,rloc16,timeout,age,netDataVer,inLqi,aveRSS,mode) [A(t(ESLLCCcC))]
+
+    /// Thread Child Table
+    /** Format: [A(t(ESLLCCcCc)] - Read only
+     *
+     * Data per item is:
+     *
+     *  `E`: Extended/long address
+     *  `S`: RLOC16
+     *  `L`: Timeout (in seconds)
+     *  `L`: Age (in seconds)
+     *  `L`: Network Data version
+     *  `C`: Link Quality In
+     *  `c`: Average RSS (in dBm)
+     *  `C`: Mode (bit-flags)
+     *  `c`: Last RSSI (in dBm)
+     *
+     */
+    SPINEL_PROP_THREAD_CHILD_TABLE      = SPINEL_PROP_THREAD__BEGIN + 2,
     SPINEL_PROP_THREAD_LEADER_RID       = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
     SPINEL_PROP_THREAD_LEADER_WEIGHT    = SPINEL_PROP_THREAD__BEGIN + 4, ///< [C]
     SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
@@ -807,7 +824,24 @@ typedef enum
                                         = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
                                         = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
-    SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal,rloc6) [A(t(6CbCbS))]
+
+    /// On-Mesh Prefixes
+    /** Format: `A(t(6CbCbS))`
+     *
+     * Data per item is:
+     *
+     *  `6`: IPv6 Prefix
+     *  `C`: Prefix length in bits
+     *  `b`: Stable flag
+     *  `C`: TLV flags
+     *  `b`: "Is defined locally" flag. Set if this network was locally
+     *       defined. Assumed to be true for set, insert and replace. Clear if
+     *       the on mesh network was defined by another node.
+     *  `S`: The RLOC16 of the device that registered this on-mesh prefix entry.
+     *       This value is not used and ignored when adding an on-mesh prefix.
+     *
+     */
+    SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10,
 
     /// Off-mesh routes
     /** Format: [A(t(6CbCbb))]
@@ -920,8 +954,21 @@ typedef enum
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
     /// Thread Neighbor Table
-    /** Format: `A(t(ESLCcCbLL))`
-     *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
+    /** Format: `A(t(ESLCcCbLLc))` - Read only
+     *
+     * Data per item is:
+     *
+     *  `E`: Extended/long address
+     *  `S`: RLOC16
+     *  `L`: Age (in seconds)
+     *  `C`: Link Quality In
+     *  `c`: Average RSS (in dBm)
+     *  `C`: Mode (bit-flags)
+     *  `b`: `true` if neighbor is a child, `false` otherwise.
+     *  `L`: Link Frame Counter
+     *  `L`: MLE Frame Counter
+     *  `c`: The last RSSI (in dBm)
+     *
      */
     SPINEL_PROP_THREAD_NEIGHBOR_TABLE   = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
 
@@ -1011,7 +1058,7 @@ typedef enum
     SPINEL_PROP_THREAD_STEERING_DATA    = SPINEL_PROP_THREAD_EXT__BEGIN + 22,
 
     /// Thread Router Table.
-    /** Format: `A(t(ESCCCCCCb)`.
+    /** Format: `A(t(ESCCCCCCb)` - Read only
      *
      * Data per item is:
      *
@@ -1028,13 +1075,177 @@ typedef enum
      */
     SPINEL_PROP_THREAD_ROUTER_TABLE     = SPINEL_PROP_THREAD_EXT__BEGIN + 23,
 
+    /// Thread Active Operational Dataset
+    /** Format: `A(t(iD))` - Read-Write
+     *
+     * This property provides access to current Thread Active Operational Dataset. A Thread device maintains the
+     * Operational Dataset that it has stored locally and the one currently in use by the partition to which it is
+     * attached. This property corresponds to the locally stored Dataset on the device.
+     *
+     * Operational Dataset consists of a set of supported properties (e.g., channel, master key, network name, PAN id,
+     * etc). Note that not all supported properties may be present (have a value) in a Dataset.
+     *
+     * The Dataset value is encoded as an array of structs containing pairs of property key (as `i`) followed by the
+     * property value (as `D`). The property value must follow the format associated with the corresponding property.
+     *
+     * On write, any unknown/unsupported property keys must be ignored.
+     *
+     * The following properties can be included in a Dataset list:
+     *
+     *   SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP
+     *   SPINEL_PROP_PHY_CHAN
+     *   SPINEL_PROP_PHY_CHAN_SUPPORTED (Channel Mask Page 0)
+     *   SPINEL_PROP_NET_MASTER_KEY
+     *   SPINEL_PROP_NET_NETWORK_NAME
+     *   SPINEL_PROP_NET_XPANID
+     *   SPINEL_PROP_MAC_15_4_PANID
+     *   SPINEL_PROP_IPV6_ML_PREFIX
+     *   SPINEL_PROP_NET_PSKC
+     *   SPINEL_PROP_DATASET_SECURITY_POLICY
+     *
+     */
+    SPINEL_PROP_THREAD_ACTIVE_DATASET   = SPINEL_PROP_THREAD_EXT__BEGIN + 24,
+
+    /// Thread Pending Operational Dataset
+    /** Format: `A(t(iD))` - Read-Write
+     *
+     * This property provide access to current locally stored Pending Operational Dataset.
+     *
+     * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_ACTIVE_DATASET.
+     *
+     * In addition supported properties in SPINEL_PROP_THREAD_ACTIVE_DATASET, the following properties can also
+     * be included in the Pending Dataset:
+     *
+     *   SPINEL_PROP_DATASET_PENDING_TIMESTAMP
+     *   SPINEL_PROP_DATASET_DELAY_TIMER
+     *
+     */
+    SPINEL_PROP_THREAD_PENDING_DATASET  = SPINEL_PROP_THREAD_EXT__BEGIN + 25,
+
+    /// Thread Active Operational Dataset (MGMT send)
+    /** Format: `A(t(iD))` - Write only
+     *
+     * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_ACTIVE_DATASET.
+     *
+     * This is write-only property. When written, it triggers a MGMT_ACTIVE_SET meshcop command to be sent to leader
+     * with the given Dataset. The spinel frame response should be a `LAST_STATUS` with the status of the transmission
+     * of MGMT_ACTIVE_SET command.
+     *
+     * In addition to supported properties in SPINEL_PROP_THREAD_ACTIVE_DATASET, the following property can be
+     * included in the Dataset (to allow for custom raw TLVs):
+     *
+     *    SPINEL_PROP_DATASET_RAW_TLVS
+     *
+     */
+    SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 26,
+
+    /// Thread Pending Operational Dataset (MGMT send)
+    /** Format: `A(t(iD))` - Write only
+     *
+     * This property is similar to SPINEL_PROP_THREAD_PENDING_DATASET and follows the same format and rules.
+     *
+     * In addition to supported properties in SPINEL_PROP_THREAD_PENDING_DATASET, the following property can be
+     * included the Dataset (to allow for custom raw TLVs to be provided).
+     *
+     *    SPINEL_PROP_DATASET_RAW_TLVS
+     *
+     */
+    SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 27,
+
+    /// Operational Dataset Active Timestamp
+    /** Format: `X` - No direct read or write
+     *
+     * It can only be included in one of the Dataset related properties below:
+     *
+     *   SPINEL_PROP_THREAD_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *
+     */
+    SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 28,
+
+    /// Operational Dataset Pending Timestamp
+    /** Format: `X` - No direct read or write
+     *
+     * It can only be included in one of the Pending Dataset properties:
+     *
+     *   SPINEL_PROP_THREAD_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *
+     */
+    SPINEL_PROP_DATASET_PENDING_TIMESTAMP
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 29,
+
+    /// Operational Dataset Delay Timer
+    /** Format: `L` - No direct read or write
+     *
+     * Delay timer (in ms) specifies the time renaming until Thread devices overwrite the value in the Active
+     * Operational Dataset with the corresponding values in the Pending Operational Dataset.
+     *
+     * It can only be included in one of the Pending Dataset properties:
+     *
+     *   SPINEL_PROP_THREAD_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *
+     */
+    SPINEL_PROP_DATASET_DELAY_TIMER     = SPINEL_PROP_THREAD_EXT__BEGIN + 30,
+
+    /// Operational Dataset Security Policy
+    /** Format: `SC` - No direct read or write
+     *
+     * It can only be included in one of the Dataset related properties below:
+     *
+     *   SPINEL_PROP_THREAD_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *
+     * Content is
+     *   `S` : Key Rotation Time (in units of hour)
+     *   `C` : Security Policy Flags (as specified in Thread 1.1 Section 8.10.1.15)
+     *
+     */
+    SPINEL_PROP_DATASET_SECURITY_POLICY = SPINEL_PROP_THREAD_EXT__BEGIN + 31,
+
+    /// Operational Dataset Additional Raw TLVs
+    /** Format: `D` - No direct read or write
+     *
+     * This property defines extra raw TLVs that can be added to an Operational DataSet.
+     *
+     * It can only be included in one of the following Dataset properties:
+     *
+     *   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *
+     */
+    SPINEL_PROP_DATASET_RAW_TLVS        = SPINEL_PROP_THREAD_EXT__BEGIN + 32,
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN             = 0x60,
     SPINEL_PROP_IPV6_LL_ADDR            = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
     SPINEL_PROP_IPV6_ML_ADDR            = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
     SPINEL_PROP_IPV6_ML_PREFIX          = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE      = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,valid,preferred,flags) [A(t(6CLLC))]
+
+    /// IPv6 Address Table
+    /** Format: `A(t(6CLLC))`
+     *
+     * This property provides all unicast addresses.
+     *
+     * Array of structures containing:
+     *
+     *  `6`: IPv6 Address
+     *  `C`: Network Prefix Length
+     *  `L`: Valid Lifetime
+     *  `L`: Preferred Lifetime
+     *  `C`: Flags
+     *
+     */
+    SPINEL_PROP_IPV6_ADDRESS_TABLE      = SPINEL_PROP_IPV6__BEGIN + 3,
+
     SPINEL_PROP_IPV6_ROUTE_TABLE        = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(t(6CCC))]
 
     /// IPv6 ICMP Ping Offload
@@ -1344,17 +1555,29 @@ typedef enum
 
     SPINEL_PROP_DEBUG__BEGIN            = 16384,
 
-    /// Reading this property will cause an assert on the NCP.
-    /// This is intended for testing the assert functionality of
-    /// underlying platform/NCP. Assert should ideally cause the
-    /// NCP to reset, but if this is not supported a `false` boolean
-    /// is returned in response.
-    /** Format: 'b' (read-only) */
+    /// Testing platform assert
+    /** Format: 'b' (read-only)
+     *
+     * Reading this property will cause an assert on the NCP. This is intended for testing the assert functionality of
+     * underlying platform/NCP. Assert should ideally cause the NCP to reset, but if this is not supported a `false`
+     * boolean is returned in response.
+     *
+     */
     SPINEL_PROP_DEBUG_TEST_ASSERT       = SPINEL_PROP_DEBUG__BEGIN + 0,
 
     /// The NCP log level.
     /** Format: `C` */
     SPINEL_PROP_DEBUG_NCP_LOG_LEVEL     = SPINEL_PROP_DEBUG__BEGIN + 1,
+
+    /// Testing platform watchdog
+    /** Format: Empty  (read-only)
+     *
+     * Reading this property will causes NCP to start a `while(true) ;` loop and thus triggering a watchdog.
+     *
+     * This is intended for testing the watchdog functionality on the underlying platform/NCP.
+     *
+     */
+    SPINEL_PROP_DEBUG_TEST_WATCHDOG     = SPINEL_PROP_DEBUG__BEGIN + 2,
 
     SPINEL_PROP_DEBUG__END              = 17408,
 

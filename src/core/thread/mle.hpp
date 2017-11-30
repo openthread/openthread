@@ -468,7 +468,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Mle(otInstance &aInstance);
+    explicit Mle(Instance &aInstance);
 
     /**
      * This method enables MLE.
@@ -1380,6 +1380,7 @@ protected:
 
     TimerMilli mParentRequestTimer;          ///< The timer for driving the Parent Request process.
     TimerMilli mDelayedResponseTimer;        ///< The timer to delay MLE responses.
+    TimerMilli mChildUpdateRequestTimer;     ///< The timer for sending MLE Child Update Request messages.
     uint32_t mLastPartitionId;               ///< The partition ID of the previous Thread partition
     uint8_t mLastPartitionRouterIdSequence;  ///< The router ID sequence from the previous Thread partition
     uint8_t mLastPartitionIdTimeout;         ///< The time remaining to avoid the previous Thread partition
@@ -1402,6 +1403,8 @@ private:
     void HandleParentRequestTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
     void HandleDelayedResponseTimer(void);
+    static void HandleChildUpdateRequestTimer(Timer &aTimer);
+    void HandleChildUpdateRequestTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleSendChildUpdateRequest(Tasklet &aTasklet);
@@ -1437,8 +1440,6 @@ private:
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     otError InformPreviousParent(void);
 #endif
-
-    static Mle &GetOwner(const Context &aContext);
 
     MessageQueue mDelayedResponses;
 

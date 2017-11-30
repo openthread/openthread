@@ -71,7 +71,7 @@ enum
 static bool sDisabled;
 
 static otError      sReceiveError = OT_ERROR_NONE;
-static otRadioFrame sReceivedFrames[RADIO_RX_BUFFERS];
+static otRadioFrame sReceivedFrames[NRF_DRV_RADIO802154_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
@@ -105,7 +105,7 @@ static void dataInit(void)
 
     sReceiveError = OT_ERROR_NONE;
 
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         sReceivedFrames[i].mPsdu = NULL;
     }
@@ -329,7 +329,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     aFrame->mPsdu[-1] = aFrame->mLength;
 
     nrf_drv_radio802154_channel_set(aFrame->mChannel);
-    nrf_drv_radio802154_tx_power_set(aFrame->mPower);
 
     if (nrf_drv_radio802154_transmit_raw(&aFrame->mPsdu[-1], true))
     {
@@ -502,17 +501,36 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
+{
+    otError error = OT_ERROR_NONE;
+    (void)aInstance;
+
+    if (aPower == NULL)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        *aPower = sDefaultTxPower;
+    }
+
+    return error;
+}
+
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
 
     sDefaultTxPower = aPower;
     nrf_drv_radio802154_tx_power_set(aPower);
+
+    return OT_ERROR_NONE;
 }
 
 void nrf5RadioProcess(otInstance *aInstance)
 {
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
         {
@@ -537,7 +555,6 @@ void nrf5RadioProcess(otInstance *aInstance)
     if (isPendingEventSet(kPendingEventTransmit))
     {
         nrf_drv_radio802154_channel_set(sTransmitFrame.mChannel);
-        nrf_drv_radio802154_tx_power_set(sTransmitFrame.mPower);
 
         if (nrf_drv_radio802154_transmit_raw(sTransmitPsdu, true))
         {
@@ -651,7 +668,7 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
 {
     otRadioFrame *receivedFrame = NULL;
 
-    for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu == NULL)
         {
@@ -666,7 +683,7 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
 
     receivedFrame->mPsdu    = &p_data[1];
     receivedFrame->mLength  = p_data[0];
-    receivedFrame->mPower   = power;
+    receivedFrame->mRssi    = power;
     receivedFrame->mLqi     = lqi;
     receivedFrame->mChannel = nrf_drv_radio802154_channel_get();
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -674,6 +691,8 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
     receivedFrame->mMsec    = timestamp / US_PER_MS;
     receivedFrame->mUsec    = timestamp - receivedFrame->mMsec * US_PER_MS;
 #endif
+
+    PlatformEventSignalPending();
 }
 
 void nrf_drv_radio802154_receive_failed(nrf_drv_radio802154_rx_error_t error)
@@ -714,7 +733,7 @@ void nrf_drv_radio802154_transmitted_raw(uint8_t *aAckPsdu, int8_t aPower, int8_
     {
         sAckFrame.mPsdu    = &aAckPsdu[1];
         sAckFrame.mLength  = aAckPsdu[0];
-        sAckFrame.mPower   = aPower;
+        sAckFrame.mRssi    = aPower;
         sAckFrame.mLqi     = aLqi;
         sAckFrame.mChannel = nrf_drv_radio802154_channel_get();
     }

@@ -33,10 +33,11 @@
 
 #include "netif.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -90,7 +91,7 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress =
 };
 
 
-Netif::Netif(otInstance &aInstance, int8_t aInterfaceId):
+Netif::Netif(Instance &aInstance, int8_t aInterfaceId):
     InstanceLocator(aInstance),
     mCallbacks(NULL),
     mUnicastAddresses(NULL),
@@ -561,7 +562,7 @@ void Netif::SetStateChangedFlags(uint32_t aFlags)
 
 void Netif::HandleStateChangedTask(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleStateChangedTask();
+    aTasklet.GetOwner<Netif>().HandleStateChangedTask();
 }
 
 void Netif::HandleStateChangedTask(void)
@@ -574,17 +575,6 @@ void Netif::HandleStateChangedTask(void)
     {
         callback->Callback(flags);
     }
-}
-
-Netif &Netif::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Netif &netif = *static_cast<Netif *>(aContext.GetContext());
-#else
-    Netif &netif = otGetThreadNetif();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return netif;
 }
 
 }  // namespace Ip6

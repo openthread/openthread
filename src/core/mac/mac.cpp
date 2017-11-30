@@ -39,12 +39,13 @@
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/otfaultinjection.hpp"
+#include "common/owner-locator.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
@@ -137,7 +138,7 @@ void Mac::StartCsmaBackoff(void)
     }
 }
 
-Mac::Mac(otInstance &aInstance):
+Mac::Mac(Instance &aInstance):
     InstanceLocator(aInstance),
     mOperation(kOperationIdle),
     mPendingActiveScan(false),
@@ -156,7 +157,6 @@ Mac::Mac(otInstance &aInstance):
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
     mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
-    mMaxTransmitPower(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER),
     mSendHead(NULL),
     mSendTail(NULL),
     mReceiveHead(NULL),
@@ -287,7 +287,7 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
 
     aBeaconFrame->GetSrcPanId(aResult.mPanId);
     aResult.mChannel = aBeaconFrame->GetChannel();
-    aResult.mRssi = aBeaconFrame->GetPower();
+    aResult.mRssi = aBeaconFrame->GetRssi();
     aResult.mLqi = aBeaconFrame->GetLqi();
 
     payloadLength = aBeaconFrame->GetPayloadLength();
@@ -336,18 +336,20 @@ void Mac::StartEnergyScan(void)
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRaw.IsEnabled())
+    if (instance->GetLinkRaw().IsEnabled())
     {
-        aInstance->mLinkRaw.InvokeEnergyScanDone(aEnergyScanMaxRssi);
+        instance->GetLinkRaw().InvokeEnergyScanDone(aEnergyScanMaxRssi);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
+        instance->GetThreadNetif().GetMac().EnergyScanDone(aEnergyScanMaxRssi);
     }
 
 exit:
@@ -392,7 +394,7 @@ exit:
 
 void Mac::HandleEnergyScanSampleRssi(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleEnergyScanSampleRssi();
+    aTasklet.GetOwner<Mac>().HandleEnergyScanSampleRssi();
 }
 
 void Mac::HandleEnergyScanSampleRssi(void)
@@ -488,24 +490,6 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
     mExtAddress = aExtAddress;
 
     otLogFuncExit();
-}
-
-void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
-{
-    Crypto::Sha256 sha256;
-    uint8_t buf[Crypto::Sha256::kHashSize];
-
-    otLogFuncEntry();
-
-    otPlatRadioGetIeeeEui64(&GetInstance(), buf);
-    sha256.Start();
-    sha256.Update(buf, OT_EXT_ADDRESS_SIZE);
-    sha256.Finish(buf);
-
-    memcpy(aHashMacAddress->m8, buf, OT_EXT_ADDRESS_SIZE);
-    aHashMacAddress->SetLocal(true);
-
-    otLogFuncExitMsg("%llX", HostSwap64(*reinterpret_cast<uint64_t *>(aHashMacAddress)));
 }
 
 otError Mac::SetShortAddress(ShortAddress aShortAddress)
@@ -877,7 +861,7 @@ exit:
 
 void Mac::HandleBeginTransmit(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleBeginTransmit();
+    aTimer.GetOwner<Mac>().HandleBeginTransmit();
 }
 
 void Mac::HandleBeginTransmit(void)
@@ -885,10 +869,21 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*mTxFrame);
     otError error = OT_ERROR_NONE;
 
+#if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+
+    // Disable CCA for the last attempt
+    if (mTransmitAttempts == (sendFrame.GetMaxTxAttempts() - 1))
+    {
+        sendFrame.mIsCcaEnabled = false;
+    }
+    else
+#endif
+    {
+        sendFrame.mIsCcaEnabled = true;
+    }
+
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
     {
-        sendFrame.SetPower(mMaxTransmitPower);
-
         switch (mOperation)
         {
         case kOperationActiveScan:
@@ -925,11 +920,6 @@ void Mac::HandleBeginTransmit(void)
 
         // Security Processing
         ProcessTransmitSecurity(sendFrame);
-
-        if (sendFrame.GetPower() > mMaxTransmitPower)
-        {
-            sendFrame.SetPower(mMaxTransmitPower);
-        }
     }
 
     error = RadioReceive(sendFrame.GetChannel());
@@ -954,9 +944,11 @@ exit:
 
 extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     otLogFuncEntry();
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
-    aInstance->mThreadNetif.GetMac().TransmitStartedTask(aFrame);
+    VerifyOrExit(instance->IsInitialized());
+    instance->GetThreadNetif().GetMac().TransmitStartedTask(aFrame);
 exit:
     otLogFuncExit();
 }
@@ -975,19 +967,21 @@ void Mac::TransmitStartedTask(otRadioFrame *aFrame)
 extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame,
                                   otError aError)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     otLogFuncEntryMsg("%!otError!", aError);
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
+    VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRaw.IsEnabled())
+    if (instance->GetLinkRaw().IsEnabled())
     {
-        aInstance->mLinkRaw.InvokeTransmitDone(aFrame, aAckFrame, aError);
+        instance->GetLinkRaw().InvokeTransmitDone(aFrame, aAckFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
+        instance->GetThreadNetif().GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
     }
 
 exit:
@@ -1014,7 +1008,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
 
         if (neighbor != NULL)
         {
-            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetPower());
+            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetRssi());
         }
     }
 
@@ -1059,9 +1053,9 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
 
     default:
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-        if (GetInstance().mLinkRaw.IsEnabled())
+        if (GetInstance().GetLinkRaw().IsEnabled())
         {
-            GetInstance().mLinkRaw.InvokeTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
+            GetInstance().GetLinkRaw().InvokeTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
         }
         else
 #endif
@@ -1164,7 +1158,7 @@ exit:
 
 void Mac::HandleMacTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleMacTimer();
+    aTimer.GetOwner<Mac>().HandleMacTimer();
 }
 
 void Mac::HandleMacTimer(void)
@@ -1210,7 +1204,7 @@ exit:
 
 void Mac::HandleReceiveTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleReceiveTimer();
+    aTimer.GetOwner<Mac>().HandleReceiveTimer();
 }
 
 void Mac::HandleReceiveTimer(void)
@@ -1520,21 +1514,23 @@ exit:
 
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
+    Instance *instance = static_cast<Instance *>(aInstance);
+
     OT_FAULT_INJECT(OT_FAULT_ID_RADIO_RX_DROP, aError = OT_ERROR_FAILED);
 
     otLogFuncEntryMsg("%!otError!", aError);
-    VerifyOrExit(otInstanceIsInitialized(aInstance));
+    VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRaw.IsEnabled())
+    if (instance->GetLinkRaw().IsEnabled())
     {
-        aInstance->mLinkRaw.InvokeReceiveDone(aFrame, aError);
+        instance->GetLinkRaw().InvokeReceiveDone(aFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+        instance->GetThreadNetif().GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
     }
 
 exit:
@@ -1614,7 +1610,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         // override with the rssi in setting
         if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
-            aFrame->mPower = rssi;
+            aFrame->mRssi = rssi;
         }
     }
 
@@ -1670,7 +1666,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
-        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mPower);
+        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mRssi);
 
         if (aFrame->GetSecurityEnabled() == true)
         {
@@ -1917,6 +1913,11 @@ void Mac::ResetCounters(void)
     memset(&mCounters, 0, sizeof(mCounters));
 }
 
+int8_t Mac::GetNoiseFloor(void)
+{
+    return otPlatRadioGetReceiveSensitivity(&GetInstance());
+}
+
 #if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
 bool Mac::IsBeaconJoinable(void)
 {
@@ -1937,17 +1938,6 @@ bool Mac::IsBeaconJoinable(void)
     return joinable;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-
-Mac &Mac::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Mac &mac = *static_cast<Mac *>(aContext.GetContext());
-#else
-    Mac &mac = otGetInstance()->mThreadNetif.GetMac();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return mac;
-}
 
 const char *Mac::OperationToString(Operation aOperation)
 {

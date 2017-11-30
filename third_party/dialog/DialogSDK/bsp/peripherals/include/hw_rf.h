@@ -15,66 +15,6 @@
  *
  * @brief Radio module (RF) Low Level Driver API.
  *
- * @note The following recalibration-related weak functions can be overridden, if needed, 
- *       to provide additional functionality
- *
- * @note
- * ~~~{.c}
- * bool hw_rf_preoff_cb(void)
- * ~~~
- *
- * @note Called before actually shutting down the RF PD. If this returns true, the PD
- *       will NOT be shutdown, but will stay on. This function can be used to decide
- *       whether an RF recalibration is needed and to start the respective operation.
- *       The default implementation (if an explicit implementation is omitted) returns
- *       false (i.e. the RF PD shuts off immediately).
- *
- * @note 
- * ~~~{.c}
- * void hw_rf_postconf_cb(void)
- * ~~~
- *
- * @note Called after the RF recommended settings are applied, or after the
- *       recalibration procedure is completed. Can be used to start/reset a
- *       recalibration timer, in case periodic recalibration is enabled using
- *       dg_configRF_RECALIBRATION_TIMER_TIMEOUT
- *
- * @note 
- * ~~~{.c}
- * void hw_rf_precalib_cb(void)
- * void hw_rf_postcalib_cb(void):
- * ~~~
- *
- * @note Called when the re-calibration (not the initial calibration) procedure
- *       starts/ends. Can be used to instruct the system not to go to sleep during
- *       this time.
- *
- * @note
- * ~~~{.c}
- * void hw_rf_apply_tcs_cb(void)
- * ~~~
- *
- * @note Called before applying the rf recommended settings. The implementation should
- *       apply the TCS values
- *
- * @note
- * ~~~{.c}
- * uint64_t hw_rf_get_start_iff_time(void)
- * ~~~
- *
- * @note Called to get the time when IFF calibration starts
- *
- * @note
- * ~~~{.c}
- * bool hw_rf_check_iff_timeout(uint64_t start_time)
- * ~~~
- *
- * @note Called to check if IFF calibration has timed-out (i.e. took too long). It takes argument the
- *       IFF calib start_time, as return by hw_rf_get_start_iff_time(). It should normally check against
- *       config macro dg_configRF_IFF_CALIBRATION_TIMEOUT.
- *
- * @warning All the above functions are called in a critical section. They should not block.
- *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -102,6 +42,7 @@
  *
  *****************************************************************************************
  */
+
 #ifndef HW_RF_H_
 #define HW_RF_H_
 
@@ -359,6 +300,19 @@ void hw_rf_request_off(bool mode_ble);
  *                            Range: 0x00 – 0xf.
  */
 void hw_rf_start_continuous_wave(uint8_t mode, uint8_t ch);
+
+/**
+ * \brief Start reception of a continuous wave (unmodulated reception)
+ *
+ * \param [in] mode is the mode to use. 1: BLE, 2 or 3: FTDF (0: Normal, use hw_rf_stop_*)
+ *
+ * \param [in] ch is the Channel to receive on, calculated as:
+ *             (mode is BLE)  ch = (F – 2402) / 2, where F ranges from 2402 MHz to 2480 MHz.
+ *                            Range: 0x00 – 0x27.
+ *             (mode is FTDF) ch = (F – 2405) / 5, where F ranges from 2405 MHz to 2480 MHz.
+ *                            Range: 0x00 – 0xf.
+ */
+void hw_rf_start_continuous_wave_rx(uint8_t mode, uint8_t ch);
 
 /**
  * \brief Stop transmitting a continuous wave (unmodulated transmission)

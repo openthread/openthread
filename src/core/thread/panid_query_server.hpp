@@ -63,7 +63,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    PanIdQueryServer(otInstance &aInstance);
+    PanIdQueryServer(Instance &aInstance);
 
 private:
     enum
@@ -83,8 +83,6 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     otError SendConflict(void);
-
-    static PanIdQueryServer &GetOwner(const Context &aContext);
 
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;

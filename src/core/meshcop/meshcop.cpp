@@ -28,70 +28,27 @@
 
 /**
  * @file
- * @brief
- *  This file defines the getter functions for single instance OpenThread objects.
+ *   This file implements common MeshCoP utility functions.
  */
 
-#ifndef SINGLE_OPENTHREAD_INSTANCE_H_
-#define SINGLE_OPENTHREAD_INSTANCE_H_
-
-#include "openthread-core-config.h"
-
-#include <openthread/types.h>
-
-
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#include "crypto/sha256.hpp"
+#include "mac/mac_frame.hpp"
 
 namespace ot {
+namespace MeshCoP {
 
-class ThreadNetif;
-class MeshForwarder;
-class TaskletScheduler;
-namespace Ip6 { class Ip6; }
+void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
+{
+    Crypto::Sha256 sha256;
+    uint8_t hash[Crypto::Sha256::kHashSize];
 
-} // namespace ot
+    sha256.Start();
+    sha256.Update(aEui64.m8, sizeof(aEui64));
+    sha256.Finish(hash);
 
-/**
- * This function returns a pointer to the single otInstance (if initialized and ready).
- *
- * @returns A pointer to single otInstance structure, or NULL if the instance is not ready, i.e. either it is not yet
- *          initialized (no call to `otInstanceInitSingle()`) or it is finalized (call to `otInstanceFinalize()`).
- *
- */
-otInstance *otGetInstance(void);
+    memcpy(&aJoinerId, hash, sizeof(aJoinerId));
+    aJoinerId.SetLocal(true);
+}
 
-/**
- * This function returns a reference to the single thread network interface instance.
- *
- * @returns A reference to the thread network interface instance.
- *
- */
-ot::ThreadNetif &otGetThreadNetif(void);
-
-/**
- * This function returns a reference to the single MeshForwarder instance.
- *
- * @returns A reference to the MeshForwarder instance.
- *
- */
-ot::MeshForwarder &otGetMeshForwarder(void);
-
-/**
- * This function returns a reference to the single TaskletShceduler instance.
- *
- * @returns A reference to the TaskletShceduler instance.
- *
- */
-ot::TaskletScheduler &otGetTaskletScheduler(void);
-
-/**
- * This function returns a reference to the single Ip6 instance.
- *
- * @returns A reference to the Ip6 instance.
- *
- */
-ot::Ip6::Ip6 &otGetIp6(void);
-
-#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
-#endif  // SINGLE_OPENTHREAD_INSTANCE_H_
+}  // namespace MeshCoP
+}  // namespace ot

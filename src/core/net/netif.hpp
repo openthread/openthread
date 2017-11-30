@@ -264,7 +264,7 @@ public:
      * @param[in]  aInterfaceId     The interface ID for this object.
      *
      */
-    Netif(otInstance &aInstance, int8_t aInterfaceId);
+    Netif(Instance &aInstance, int8_t aInterfaceId);
 
     /**
      * This method returns the next network interface in the list.
@@ -533,7 +533,6 @@ public:
 private:
     static void HandleStateChangedTask(Tasklet &aTasklet);
     void HandleStateChangedTask(void);
-    static Netif &GetOwner(const Context &aContext);
 
     NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;

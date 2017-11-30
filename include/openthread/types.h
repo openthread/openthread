@@ -720,7 +720,7 @@ typedef struct otBorderRouterConfig
     otIp6Prefix mPrefix;
 
     /**
-     * A 2-bit signed integer indicating router preference as defined in RFC 4291.
+     * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
     int mPreference : 2;
 
@@ -783,7 +783,7 @@ typedef struct otExternalRouteConfig
     uint16_t mRloc16;
 
     /**
-     * A 2-bit signed integer indicating router preference as defined in RFC 4291.
+     * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
     int mPreference : 2;
 
@@ -857,6 +857,11 @@ typedef struct otServerConfig
 typedef struct otServiceConfig
 {
     /**
+     * Service ID. This field is used to return service ID when iterating over network data from leader.
+     */
+    uint8_t mServiceID;
+
+    /**
      * IANA Enterprise Number.
      */
     uint32_t mEnterpriseNumber;
@@ -871,6 +876,9 @@ typedef struct otServiceConfig
      */
     uint8_t mServiceData[kMaxServiceDataSize];
 
+    /**
+     * The Server configuration.
+     */
     otServerConfig mServerConfig;
 } otServiceConfig;
 
@@ -960,6 +968,9 @@ typedef struct
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device
     bool           mFullNetworkData : 1;   ///< Full Network Data
+    bool           mIsStateRestoring : 1;  ///< Is in restoring state
+    uint8_t        mIp6AddressesLength;    ///< Number of entries in IPv6 address array.
+    const otIp6Address *mIp6Addresses;     ///< Array of IPv6 addresses (unused entries contain unspecified address).
 } otChildInfo;
 
 /**

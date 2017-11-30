@@ -48,9 +48,9 @@
 #include <openthread/thread_ftd.h>
 #endif
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -217,7 +217,7 @@ otError NcpBase::GetPropertyHandler_PHY_FREQ(void)
 
 otError NcpBase::GetPropertyHandler_PHY_CHAN_SUPPORTED(void)
 {
-    return GetPropertyHandler_ChannelMaskHelper(mSupportedChannelMask);
+    return EncodeChannelMask(mSupportedChannelMask);
 }
 
 otError NcpBase::GetPropertyHandler_PHY_RSSI(void)
@@ -842,6 +842,139 @@ otError NcpBase::GetPropertyHandler_THREAD_DISCOVERY_SCAN_PANID(void)
 otError NcpBase::SetPropertyHandler_THREAD_DISCOVERY_SCAN_PANID(void)
 {
    return  mDecoder.ReadUint16(mDiscoveryScanPanId);
+}
+
+otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aDataset.mIsActiveTimestampSet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP));
+        SuccessOrExit(mEncoder.WriteUint64(aDataset.mActiveTimestamp));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsPendingTimestampSet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_PENDING_TIMESTAMP));
+        SuccessOrExit(mEncoder.WriteUint64(aDataset.mPendingTimestamp));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsMasterKeySet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_MASTER_KEY));
+        SuccessOrExit(mEncoder.WriteData(aDataset.mMasterKey.m8, OT_MASTER_KEY_SIZE));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsNetworkNameSet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_NETWORK_NAME));
+        SuccessOrExit(mEncoder.WriteUtf8(aDataset.mNetworkName.m8));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsExtendedPanIdSet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_XPANID));
+        SuccessOrExit(mEncoder.WriteData(aDataset.mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsMeshLocalPrefixSet)
+    {
+        otIp6Address addr;
+
+        memcpy(addr.mFields.m8, aDataset.mMeshLocalPrefix.m8, 8);
+        memset(addr.mFields.m8 + 8, 0, 8);  // Zero out the last 8 bytes.
+
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_IPV6_ML_PREFIX));
+        SuccessOrExit(error = mEncoder.WriteIp6Address(addr));      // Mesh local prefix
+        SuccessOrExit(error = mEncoder.WriteUint8(64));             // Prefix length (in bits)
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsDelaySet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_DELAY_TIMER));
+        SuccessOrExit(mEncoder.WriteUint32(aDataset.mDelay));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsPanIdSet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_MAC_15_4_PANID));
+        SuccessOrExit(mEncoder.WriteUint16(aDataset.mPanId));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsChannelSet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN));
+
+        // The channel is stored in Dataset as `uint16_t` (to accommodate
+        // larger number of channels in sub-GHz band),  however the current
+        // definition of `SPINEL_PROP_PHY_CHAN` property limits the channel
+        // to a `uint8_t`.
+
+        SuccessOrExit(mEncoder.WriteUint8(static_cast<uint8_t>(aDataset.mChannel)));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsPSKcSet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_PSKC));
+        SuccessOrExit(mEncoder.WriteData(aDataset.mPSKc.m8, sizeof(spinel_net_pskc_t)));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsSecurityPolicySet)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_SECURITY_POLICY));
+        SuccessOrExit(mEncoder.WriteUint16(aDataset.mSecurityPolicy.mRotationTime));
+        SuccessOrExit(mEncoder.WriteUint8(aDataset.mSecurityPolicy.mFlags));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aDataset.mIsChannelMaskPage0Set)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN_SUPPORTED));
+        SuccessOrExit(EncodeChannelMask(aDataset.mChannelMaskPage0));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_THREAD_ACTIVE_DATASET(void)
+{
+    otOperationalDataset dataset;
+
+    IgnoreReturnValue(otDatasetGetActive(mInstance, &dataset));
+    return EncodeOperationalDataset(dataset);
+}
+
+otError NcpBase::GetPropertyHandler_THREAD_PENDING_DATASET(void)
+{
+    otOperationalDataset dataset;
+
+    IgnoreReturnValue(otDatasetGetPending(mInstance, &dataset));
+    return EncodeOperationalDataset(dataset);
 }
 
 otError NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(void)
@@ -2254,7 +2387,7 @@ otError NcpBase::GetPropertyHandler_NEST_LEGACY_LAST_NODE_JOINED(void)
 }
 #endif // OPENTHREAD_ENABLE_LEGACY
 
-otError NcpBase::GetPropertyHandler_ChannelMaskHelper(uint32_t aChannelMask)
+otError NcpBase::EncodeChannelMask(uint32_t aChannelMask)
 {
     otError error = OT_ERROR_NONE;
 
@@ -2273,7 +2406,7 @@ exit:
 
 otError NcpBase::GetPropertyHandler_MAC_SCAN_MASK(void)
 {
-    return GetPropertyHandler_ChannelMaskHelper(mChannelMask);
+    return EncodeChannelMask(mChannelMask);
 }
 
 otError NcpBase::SetPropertyHandler_MAC_SCAN_MASK(void)
@@ -2525,7 +2658,7 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
         SuccessOrExit(error = mEncoder.BeginFrame(
                                   SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                                   SPINEL_CMD_PROP_VALUE_INSERTED,
-                                  SPINEL_PROP_MAC_SCAN_BEACON
+                                  SPINEL_PROP_MAC_ENERGY_SCAN_RESULT
                               ));
         SuccessOrExit(error = mEncoder.WriteUint8(aResult->mChannel));
         SuccessOrExit(error = mEncoder.WriteInt8(aResult->mMaxRssi));

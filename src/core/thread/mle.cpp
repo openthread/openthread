@@ -39,11 +39,12 @@
 #include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac_frame.hpp"
@@ -60,7 +61,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Mle {
 
-Mle::Mle(otInstance &aInstance) :
+Mle::Mle(Instance &aInstance) :
     InstanceLocator(aInstance),
     mRetrieveNewNetworkData(false),
     mRole(OT_DEVICE_ROLE_DISABLED),
@@ -69,6 +70,7 @@ Mle::Mle(otInstance &aInstance) :
     mReattachState(kReattachStop),
     mParentRequestTimer(aInstance, &Mle::HandleParentRequestTimer, this),
     mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this),
+    mChildUpdateRequestTimer(aInstance, &Mle::HandleChildUpdateRequestTimer, this),
     mLastPartitionId(0),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionIdTimeout(0),
@@ -81,7 +83,7 @@ Mle::Mle(otInstance &aInstance) :
     mChildUpdateAttempts(0),
     mParentLinkMargin(0),
     mParentIsSingleton(false),
-    mSocket(aInstance.mThreadNetif.GetIp6().GetUdp()),
+    mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
     mTimeout(kMleEndDeviceTimeout),
     mSendChildUpdateRequest(aInstance, &Mle::HandleSendChildUpdateRequest, this),
     mDiscoverHandler(NULL),
@@ -345,23 +347,7 @@ otError Mle::Restore(void)
     {
         netif.GetMle().SetRouterId(GetRouterId(GetRloc16()));
         netif.GetMle().SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
-
-        switch (netif.GetMle().RestoreChildren())
-        {
-        // If there are more saved children in non-volatile settings
-        // than could be restored or the values in the settings are
-        // invalid, erase all the children info in the settings and
-        // refresh the info to ensure that the non-volatile settings
-        // stay in sync with the child table.
-
-        case OT_ERROR_FAILED:
-        case OT_ERROR_NO_BUFS:
-            netif.GetMle().RefreshStoredChildren();
-            break;
-
-        default:
-            break;
-        }
+        netif.GetMle().RestoreChildren();
     }
 
 exit:
@@ -597,6 +583,7 @@ otError Mle::SetStateDetached(void)
     mRole = OT_DEVICE_ROLE_DETACHED;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
+    mChildUpdateRequestTimer.Stop();
     netif.GetMeshForwarder().SetRxOff();
     netif.GetMac().SetBeaconEnabled(false);
     netif.GetMle().HandleDetachStart();
@@ -629,8 +616,9 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
-        mParentRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
-                                  static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts);
+        mChildUpdateRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
+                                       static_cast<uint32_t>(kUnicastRetransmissionDelay) *
+                                       kMaxChildKeepAliveAttempts);
     }
 
     if ((mDeviceMode & ModeTlv::kModeFFD) != 0)
@@ -1396,7 +1384,7 @@ exit:
 
 void Mle::HandleParentRequestTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleParentRequestTimer();
+    aTimer.GetOwner<Mle>().HandleParentRequestTimer();
 }
 
 void Mle::HandleParentRequestTimer(void)
@@ -1406,15 +1394,7 @@ void Mle::HandleParentRequestTimer(void)
     switch (mParentRequestState)
     {
     case kParentIdle:
-        if (mParent.GetState() == Neighbor::kStateValid)
-        {
-            SendChildUpdateRequest();
-        }
-        else
-        {
-            BecomeDetached();
-        }
-
+        assert(false);
         break;
 
     case kParentSynchronize:
@@ -1513,12 +1493,6 @@ void Mle::HandleParentRequestTimer(void)
                 break;
 
             case kAttachBetter:
-                if (mRole == OT_DEVICE_ROLE_CHILD)
-                {
-                    // Restart keep-alive timer as it was disturbed by attachment procedure.
-                    mParentRequestTimer.Start(0);
-                }
-
                 break;
             }
         }
@@ -1529,7 +1503,7 @@ void Mle::HandleParentRequestTimer(void)
 
 void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleDelayedResponseTimer();
+    aTimer.GetOwner<Mle>().HandleDelayedResponseTimer();
 }
 
 void Mle::HandleDelayedResponseTimer(void)
@@ -1741,7 +1715,7 @@ exit:
 
 void Mle::HandleSendChildUpdateRequest(Tasklet &aTasklet)
 {
-    GetOwner(aTasklet).HandleSendChildUpdateRequest();
+    aTasklet.GetOwner<Mle>().HandleSendChildUpdateRequest();
 }
 
 void Mle::HandleSendChildUpdateRequest(void)
@@ -1758,6 +1732,16 @@ void Mle::HandleSendChildUpdateRequest(void)
     }
 }
 
+void Mle::HandleChildUpdateRequestTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<Mle>().HandleChildUpdateRequestTimer();
+}
+
+void Mle::HandleChildUpdateRequestTimer(void)
+{
+    SendChildUpdateRequest();
+}
+
 otError Mle::SendChildUpdateRequest(void)
 {
     ThreadNetif &netif = GetNetif();
@@ -1772,7 +1756,9 @@ otError Mle::SendChildUpdateRequest(void)
         ExitNow();
     }
 
-    mParentRequestTimer.Start(kUnicastRetransmissionDelay);
+    VerifyOrExit(mParent.IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
+
+    mChildUpdateRequestTimer.Start(kUnicastRetransmissionDelay);
     mChildUpdateAttempts++;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -3083,12 +3069,13 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
         {
             netif.GetMeshForwarder().GetDataPollManager().SetAttachMode(false);
             netif.GetMeshForwarder().SetRxOnWhenIdle(false);
-            mParentRequestTimer.Stop();
+            mChildUpdateRequestTimer.Stop();
         }
         else
         {
-            mParentRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
-                                      static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts);
+            mChildUpdateRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
+                                           static_cast<uint32_t>(kUnicastRetransmissionDelay) *
+                                           kMaxChildKeepAliveAttempts);
             netif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }
 
@@ -3430,17 +3417,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
-
-Mle &Mle::GetOwner(const Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Mle &mle = *static_cast<Mle *>(aContext.GetContext());
-#else
-    Mle &mle = otGetInstance()->mThreadNetif.GetMle();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return mle;
-}
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const
 {
