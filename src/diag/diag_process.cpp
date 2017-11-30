@@ -52,7 +52,6 @@ const struct Command Diag::sCommands[] =
     { "power", &ProcessPower },
     { "send", &ProcessSend },
     { "repeat", &ProcessRepeat },
-    { "sleep", &ProcessSleep },
     { "stats", &ProcessStats },
 };
 
@@ -301,21 +300,6 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMa
     }
 
 exit:
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
-}
-
-void Diag::ProcessSleep(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
-
-    otPlatRadioSleep(sContext);
-    snprintf(aOutput, aOutputMaxLen, "sleeping now...\r\n");
-
-exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
