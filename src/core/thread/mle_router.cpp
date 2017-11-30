@@ -1514,7 +1514,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
         }
 
-        // fall through
+    // fall through
 
     case OT_DEVICE_ROLE_LEADER:
 
@@ -1833,7 +1833,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             ExitNow();
         }
 
-        // fall through
+    // fall through
 
     case OT_DEVICE_ROLE_ROUTER:
         // verify path to leader
@@ -4805,7 +4805,7 @@ void MleRouter::RemoveChildren(void)
         case Neighbor::kStateValid:
             SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, mChildren[i]);
 
-            // fall-through
+        // fall-through
 
         case Neighbor::kStateChildUpdateRequest:
         case Neighbor::kStateRestored:
