@@ -3628,19 +3628,21 @@ exit:
     return error;
 }
 
-otError MleRouter::RestoreChildren(void)
+void MleRouter::RestoreChildren(void)
 {
     otError error = OT_ERROR_NONE;
+    bool foundDuplicate = false;
+    uint8_t index;
 
-    for (uint8_t i = 0; ; i++)
+    for (index = 0; ; index++)
     {
         Child *child;
         Settings::ChildInfo childInfo;
         uint16_t length;
 
         length = sizeof(childInfo);
-        SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), Settings::kKeyChildInfo, i,
-                                                reinterpret_cast<uint8_t *>(&childInfo), &length));
+        SuccessOrExit(otPlatSettingsGet(&GetInstance(), Settings::kKeyChildInfo, index,
+                                        reinterpret_cast<uint8_t *>(&childInfo), &length));
         VerifyOrExit(length >= sizeof(childInfo), error = OT_ERROR_PARSE);
 
         child = FindChild(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));
@@ -3648,6 +3650,10 @@ otError MleRouter::RestoreChildren(void)
         if (child == NULL)
         {
             VerifyOrExit((child = NewChild()) != NULL, error = OT_ERROR_NO_BUFS);
+        }
+        else
+        {
+            foundDuplicate = true;
         }
 
         memset(child, 0, sizeof(*child));
@@ -3662,7 +3668,17 @@ otError MleRouter::RestoreChildren(void)
     }
 
 exit:
-    return error;
+
+    if (foundDuplicate || (index > kMaxChildren) || (error != OT_ERROR_NONE))
+    {
+        // If there is any error, e.g., there are more saved children
+        // in non-volatile settings than could be restored or there are
+        // duplicate entries with same extended address, refresh the stored
+        // children info to ensure that the non-volatile settings remain
+        // consistent with the child table.
+
+        RefreshStoredChildren();
+    }
 }
 
 otError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)

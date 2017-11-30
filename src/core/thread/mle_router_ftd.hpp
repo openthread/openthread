@@ -438,12 +438,8 @@ public:
     /**
      * This method restores children information from non-volatile memory.
      *
-     * @retval  OT_ERROR_NONE     Successfully restored children information.
-     * @retval  OT_ERROR_FAILED   The saved child info in non-volatile memory is invalid.
-     * @retval  OT_ERROR_NO_BUFS  More children in settings than max children.
-     *
      */
-    otError RestoreChildren(void);
+    void RestoreChildren(void);
 
     /**
      * This method remove a stored child information from non-volatile memory.
@@ -466,16 +462,6 @@ public:
      *
      */
     otError StoreChild(uint16_t aChildRloc16);
-
-    /**
-     * This method refreshes all the saved children information in non-volatile memory by first erasing any saved
-     * child information in non-volatile memory and then saving all children info.
-     *
-     * @retval  OT_ERROR_NONE      Successfully refreshed all children info in non-volatile memory
-     * @retval  OT_ERROR_NO_BUFS   Insufficient available buffers to store child.
-     *
-     */
-    otError RefreshStoredChildren(void);
 
     /**
      * This method returns a pointer to a Neighbor object.
@@ -744,6 +730,7 @@ private:
     otError AppendActiveDataset(Message &aMessage);
     otError AppendPendingDataset(Message &aMessage);
     otError GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
+    otError RefreshStoredChildren(void);
     otError HandleDetachStart(void);
     otError HandleChildStart(AttachMode aMode);
     otError HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
