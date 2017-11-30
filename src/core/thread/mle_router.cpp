@@ -1514,7 +1514,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
         }
 
-    // fall through
+        // fall through
 
     case OT_DEVICE_ROLE_LEADER:
 
@@ -1833,7 +1833,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             ExitNow();
         }
 
-    // fall through
+        // fall through
 
     case OT_DEVICE_ROLE_ROUTER:
         // verify path to leader
@@ -3482,6 +3482,54 @@ exit:
     return rval;
 }
 
+Neighbor *MleRouter::GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
+{
+    Neighbor *rval = NULL;
+
+    VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD, rval = NULL);
+
+    switch (aAddress.mLength)
+    {
+    case sizeof(aAddress.mShortAddress):
+        if (IsActiveRouter(aAddress.mShortAddress))
+        {
+            uint8_t routerId = GetRouterId(aAddress.mShortAddress);
+            Router *router = &mRouters[routerId];
+
+            if (router->GetState() == Neighbor::kStateValid &&
+                router->GetRloc16() == aAddress.mShortAddress)
+            {
+                ExitNow(rval = router);
+            }
+        }
+
+        break;
+
+    case sizeof(aAddress.mExtAddress):
+        for (int i = 0; i <= kMaxRouterId; i++)
+        {
+            if (i == mRouterId)
+            {
+                continue;
+            }
+
+            if (mRouters[i].GetState() == Neighbor::kStateValid &&
+                memcmp(&mRouters[i].GetExtAddress(), &aAddress.mExtAddress, sizeof(aAddress.mExtAddress)) == 0)
+            {
+                ExitNow(rval = &mRouters[i]);
+            }
+        }
+
+        break;
+
+    default:
+        break;
+    }
+
+exit:
+    return rval;
+}
+
 uint16_t MleRouter::GetNextHop(uint16_t aDestination)
 {
     uint8_t destinationId = GetRouterId(aDestination);
@@ -4757,7 +4805,7 @@ void MleRouter::RemoveChildren(void)
         case Neighbor::kStateValid:
             SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, mChildren[i]);
 
-        // fall-through
+            // fall-through
 
         case Neighbor::kStateChildUpdateRequest:
         case Neighbor::kStateRestored:
