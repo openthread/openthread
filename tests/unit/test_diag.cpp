@@ -140,10 +140,6 @@ void TestDiag()
             "sending packets of length 0x64 at the delay of 0x64 ms\r\nstatus 0x00\r\n"
         },
         {
-            "diag sleep\n",
-            "sleeping now...\r\n",
-        },
-        {
             "diag stop\n",
             "received packets: 0\r\nsent packets: 0\r\nfirst received packet: rssi=0, lqi=0\r\n\nstop diagnostics mode\r\nstatus 0x00\r\n",
         },
