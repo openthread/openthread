@@ -427,7 +427,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
 
     if (mRole != OT_DEVICE_ROLE_ROUTER)
     {
-        netif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     SetRloc16(aRloc16);
@@ -466,7 +466,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
 
     if (mRole != OT_DEVICE_ROLE_LEADER)
     {
-        netif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     SetRloc16(aRloc16);
@@ -4939,11 +4939,11 @@ void MleRouter::SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild
     switch (aEvent)
     {
     case OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED:
-        GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_ADDED);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_CHILD_ADDED);
         break;
 
     case OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED:
-        GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
         break;
     }
 }

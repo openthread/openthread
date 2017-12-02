@@ -81,18 +81,18 @@ void otInstanceFinalize(otInstance *aInstance)
     otLogFuncExit();
 }
 
-otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.RegisterStateChangedCallback(aCallback, aCallbackContext);
+    return instance.GetNotifier().RegisterCallback(aCallback, aContext);
 }
 
-void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.RemoveStateChangedCallback(aCallback, aCallbackContext);
+    instance.GetNotifier().RemoveCallback(aCallback, aContext);
 }
 
 void otInstanceReset(otInstance *aInstance)

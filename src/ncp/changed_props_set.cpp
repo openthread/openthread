@@ -73,6 +73,12 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] =
     { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_JOIN_FAILURE,        false },         // 19
     { SPINEL_PROP_MAC_SCAN_STATE,                        SPINEL_STATUS_OK,                  false },         // 20
     { SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE,          SPINEL_STATUS_OK,                  true  },         // 21
+    { SPINEL_PROP_PHY_CHAN,                              SPINEL_STATUS_OK,                  true  },         // 22
+    { SPINEL_PROP_MAC_15_4_PANID,                        SPINEL_STATUS_OK,                  true  },         // 23
+    { SPINEL_PROP_NET_NETWORK_NAME,                      SPINEL_STATUS_OK,                  true  },         // 24
+    { SPINEL_PROP_NET_XPANID,                            SPINEL_STATUS_OK,                  true  },         // 25
+    { SPINEL_PROP_NET_MASTER_KEY,                        SPINEL_STATUS_OK,                  true  },         // 26
+    { SPINEL_PROP_NET_PSKC,                              SPINEL_STATUS_OK,                  true  },         // 27
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const

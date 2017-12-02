@@ -2763,7 +2763,7 @@ exit:
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void NcpBase::HandleStateChanged(uint32_t aFlags, void *aContext)
 {
     NcpBase *ncp = static_cast<NcpBase *>(aContext);
 
@@ -2791,6 +2791,12 @@ void NcpBase::ProcessThreadChangedFlags(void)
         { OT_CHANGED_THREAD_CHILD_REMOVED,        SPINEL_PROP_THREAD_CHILD_TABLE             },
         { OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED,   SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
         { OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
+        { OT_CHANGED_THREAD_CHANNEL,              SPINEL_PROP_PHY_CHAN                       },
+        { OT_CHANGED_THREAD_PANID,                SPINEL_PROP_MAC_15_4_PANID                 },
+        { OT_CHANGED_THREAD_NETWORK_NAME,         SPINEL_PROP_NET_NETWORK_NAME               },
+        { OT_CHANGED_THREAD_EXT_PANID,            SPINEL_PROP_NET_XPANID                     },
+        { OT_CHANGED_MASTER_KEY,                  SPINEL_PROP_NET_MASTER_KEY                 },
+        { OT_CHANGED_PSKC,                        SPINEL_PROP_NET_PSKC                       },
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

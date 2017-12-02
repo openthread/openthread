@@ -42,6 +42,7 @@ namespace ot {
 
 class Instance;
 class ThreadNetif;
+class Notifier;
 namespace Ip6 { class Ip6; }
 
 
@@ -96,6 +97,14 @@ public:
      *
      */
     ThreadNetif &GetNetif(void) const;
+
+    /**
+     * This method returns a reference to the Notifier.
+     *
+     * @returns   A reference to the Notifier.
+     *
+     */
+    Notifier &GetNotifier(void) const;
 
 protected:
     /**

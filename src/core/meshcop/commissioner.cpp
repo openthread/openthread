@@ -127,7 +127,7 @@ otError Commissioner::Stop(void)
     GetNetif().GetCoapSecure().Stop();
 
     mState = OT_COMMISSIONER_STATE_DISABLED;
-    GetNetif().SetStateChangedFlags(OT_CHANGED_COMMISSIONER_STATE);
+    GetNotifier().SetFlags(OT_CHANGED_COMMISSIONER_STATE);
     RemoveCoapResources();
     mTransmitAttempts = 0;
 
@@ -677,7 +677,7 @@ exit:
         }
     }
 
-    GetNetif().SetStateChangedFlags(OT_CHANGED_COMMISSIONER_STATE);
+    GetNotifier().SetFlags(OT_CHANGED_COMMISSIONER_STATE);
 
     otLogFuncExit();
 }

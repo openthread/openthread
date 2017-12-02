@@ -51,9 +51,9 @@
 #include "crypto/heap.hpp"
 #include "crypto/mbedtls.hpp"
 #endif
+#include "common/notifier.hpp"
 #include "net/ip6.hpp"
 #include "thread/thread_netif.hpp"
-
 
 /**
  * @addtogroup core-instance
@@ -139,27 +139,6 @@ public:
     void Finalize(void);
 
     /**
-     * This method registers a callback to indicate when certain configuration or state changes within OpenThread.
-     *
-     * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
-     * @param[in]  aContext   A pointer to application-specific context.
-     *
-     * @retval OT_ERROR_NONE     Added the callback to the list of callbacks and registered it with OpenThread.
-     * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
-     *
-     */
-    otError RegisterStateChangedCallback(otStateChangedCallback aCallback, void *aContext);
-
-    /**
-     * This method removes/unregisters a previously registered "state changed" callback.
-     *
-     * @param[in]  aCallback         A pointer to the callback function pointer.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
-     */
-    void RemoveStateChangedCallback(otStateChangedCallback aCallback, void *aCallbackContext);
-
-    /**
      * This method triggers a platform reset.
      *
      * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that
@@ -240,6 +219,14 @@ public:
      *
      */
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
+
+    /**
+     * This method returns a reference to the `Notifier` object.
+     *
+     * @returns A reference to the `Notifier` object.
+     *
+     */
+    Notifier &GetNotifier(void) { return mNotifier; }
 
     /**
      * This method returns a reference to the tasklet scheduler object.
@@ -343,16 +330,12 @@ private:
     Instance(void);
     void AfterInit(void);
 
-    enum
-    {
-        kMaxNetifCallbacks = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS,
-    };
-
-    Ip6::NetifCallback          mNetifCallback[kMaxNetifCallbacks];
     otHandleActiveScanResult    mActiveScanCallback;
     void                       *mActiveScanCallbackContext;
     otHandleEnergyScanResult    mEnergyScanCallback;
     void                       *mEnergyScanCallbackContext;
+
+    Notifier                    mNotifier;
 
     TaskletScheduler            mTaskletScheduler;
     TimerMilliScheduler         mTimerMilliScheduler;
