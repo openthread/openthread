@@ -52,7 +52,6 @@ configure_OPTIONS               = \
     $(NULL)
 
 DEFAULT_LOGGING ?= 1
-include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 ifeq ($(CLI_LOGGING),1)
 configure_OPTIONS              += --enable-cli-logging
@@ -70,6 +69,8 @@ COMMONCFLAGS                   := \
     -W                            \
     -Wall                         \
     $(NULL)
+
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
