@@ -76,7 +76,6 @@ public:
 
 private:
     static void AppendErrorResult(otError error, char *aOutput, size_t aOutputMaxLen);
-    static void ProcessSleep(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessStop(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessSend(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
