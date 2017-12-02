@@ -49,25 +49,7 @@ configure_OPTIONS               = \
     --enable-linker-map           \
     $(NULL)
 
-ifeq ($(CERT_LOG),1)
-configure_OPTIONS              += --enable-cert-log
-endif
-
-ifeq ($(COMMISSIONER),1)
-configure_OPTIONS              += --enable-commissioner
-endif
-
-ifeq ($(JOINER),1)
-configure_OPTIONS              += --enable-joiner
-endif
-
-ifeq ($(DHCP6_SERVER),1)
-configure_OPTIONS              += --enable-dhcp6-server
-endif
-
-ifeq ($(DHCP6_CLIENT),1)
-configure_OPTIONS              += --enable-dhcp6-client
-endif
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
