@@ -167,6 +167,12 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,
     va_start(paramList, aFormat);
     length += vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length),
                         aFormat, paramList);
+
+    if (length > LOG_PARSE_BUFFER_SIZE)
+    {
+        length = LOG_PARSE_BUFFER_SIZE;
+    }
+
     logString[length++] = '\n';
     va_end(paramList);
 
