@@ -68,8 +68,6 @@ configure_OPTIONS                   = \
     --with-ncp-bus=uart               \
     $(NULL)
 
-include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
-
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
@@ -82,6 +80,8 @@ COMMONCFLAGS                   := \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
+
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
