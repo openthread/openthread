@@ -36,10 +36,12 @@
 #define PLATFORM_CONFIG_H_
 
 #include "device/nrf.h"
-#include "hal/nrf_uart.h"
+#include "drivers/clock/nrf_drv_clock.h"
 #include "hal/nrf_peripherals.h"
 #include "hal/nrf_radio.h"
+#include "hal/nrf_uart.h"
 
+#include "openthread-core-config.h"
 #include <openthread/config.h>
 
 /*******************************************************************************
@@ -332,6 +334,58 @@
  */
 #ifndef USB_CDC_AS_SERIAL_TRANSPORT
 #define USB_CDC_AS_SERIAL_TRANSPORT  0
+#endif
+
+/*******************************************************************************
+ * @section Radio driver configuration.
+ ******************************************************************************/
+
+/**
+ * @def NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES
+ *
+ * Number of slots containing short addresses of nodes for which pending data is stored.
+ *
+ */
+#ifndef NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES
+#define NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES  OPENTHREAD_CONFIG_MAX_CHILDREN
+#endif
+
+/**
+ * @def NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES
+ *
+ * Number of slots containing extended addresses of nodes for which pending data is stored.
+ *
+ */
+#ifndef NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES
+#define NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES  OPENTHREAD_CONFIG_MAX_CHILDREN
+#endif
+
+/**
+ * @def NRF_RAAL_HFCLK_START
+ *
+ * Macro to request High Frequency Clock start. It may use external driver or OS function.
+ *
+ */
+#ifndef NRF_RAAL_HFCLK_START
+#define NRF_RAAL_HFCLK_START()                                                                     \
+    do {                                                                                           \
+        nrf_drv_clock_hfclk_request(NULL);                                                         \
+                                                                                                   \
+        while(NRF_CLOCK->HFCLKSTAT != (CLOCK_HFCLKSTAT_SRC_Msk | CLOCK_HFCLKSTAT_STATE_Msk)) {}    \
+    } while(0);
+#endif
+
+/**
+ * @def NRF_RAAL_HFCLK_STOP
+ *
+ * Macro to release High Frequency Clock. It may use external driver or OS function.
+ *
+ */
+#ifndef NRF_RAAL_HFCLK_STOP
+#define NRF_RAAL_HFCLK_STOP()                                                                      \
+    do {                                                                                           \
+        nrf_drv_clock_hfclk_release();                                                             \
+    } while(0);
 #endif
 
 #endif  // PLATFORM_CONFIG_H_

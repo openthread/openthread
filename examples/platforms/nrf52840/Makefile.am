@@ -38,6 +38,7 @@ COMMONCPPFLAGS                                                                  
     -DCONFIG_GPIO_AS_PINRESET                                                                                \
     -DNRF52840_XXAA                                                                                          \
     -DENABLE_FEM=1                                                                                           \
+    -DNRF_DRV_RADIO802154_PROJECT_CONFIG=\"platform-config.h\"                                               \
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
     -I$(top_srcdir)/src/core                                                                                 \
