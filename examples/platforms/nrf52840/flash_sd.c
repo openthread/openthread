@@ -42,7 +42,6 @@
 #include "platform-nrf5.h"
 #include "softdevice.h"
 
-#define MIN(a, b)        (((a) < (b)) ? (a) : (b))
 #define FLASH_PAGE_SIZE  4096
 #define FLASH_TIMEOUT    1000
 

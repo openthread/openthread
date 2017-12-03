@@ -45,8 +45,6 @@
 #include "nrf.h"
 #include "nrf_peripherals.h"
 
-#define ASSERT assert
-
 #ifdef __cplusplus
 extern "C" {
 #endif
