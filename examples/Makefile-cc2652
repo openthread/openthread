@@ -51,7 +51,6 @@ configure_OPTIONS                                          = \
     $(NULL)
 
 DEFAULT_LOGGING                                           ?= 1
-include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 CC2652_MBEDTLS_CPPFLAGS                                    = \
     -DMBEDTLS_CONFIG_FILE='\"cc2652-mbedtls-config.h\"'      \
@@ -73,6 +72,8 @@ COMMONCFLAGS                                              := \
     -g                                                       \
     $(CC2652_CONFIG_FILE_CPPFLAGS)                           \
     $(NULL)
+
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 CPPFLAGS                                                  += \
     $(COMMONCFLAGS)                                          \
