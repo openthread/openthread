@@ -1305,6 +1305,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+    uint8_t linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
     Mac::ExtAddress macAddr;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
@@ -1342,6 +1343,8 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
     {
         otLogInfoMle(GetInstance(), "Different partition (peer:%d, local:%d)",
                      leaderData.GetPartitionId(), mLeaderData.GetPartitionId());
+
+        VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = OT_ERROR_LINK_MARGIN_LOW);
 
         if ((mDeviceMode & ModeTlv::kModeFFD) &&
             (mLastPartitionIdTimeout > 0) &&
@@ -1528,7 +1531,9 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         }
 
         // Send link request if no link to router
-        if ((router->GetState() != Neighbor::kStateValid) && (router->GetState() != Neighbor::kStateLinkRequest))
+        if ((router->GetState() != Neighbor::kStateValid) &&
+            (router->GetState() != Neighbor::kStateLinkRequest) &&
+            (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN))
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();

@@ -273,6 +273,11 @@ typedef enum otError
     OT_ERROR_DISABLED_FEATURE = 33,
 
     /**
+     * The link margin was too low.
+     */
+    OT_ERROR_LINK_MARGIN_LOW = 34,
+
+    /**
      * Generic error (should not use).
      */
     OT_ERROR_GENERIC = 255,

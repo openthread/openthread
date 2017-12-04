@@ -410,6 +410,10 @@ const char *otThreadErrorToString(otError aError)
         retval = "GenericError";
         break;
 
+    case OT_ERROR_LINK_MARGIN_LOW:
+        retval = "LinkMarginLow";
+        break;
+
     default:
         retval = "UnknownErrorType";
         break;
