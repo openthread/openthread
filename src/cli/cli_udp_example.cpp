@@ -54,6 +54,12 @@ const struct UdpExample::Command UdpExample::sCommands[] =
     { "send", &UdpExample::ProcessSend }
 };
 
+UdpExample::UdpExample(Interpreter &aInterpreter):
+    mInterpreter(aInterpreter)
+{
+    memset(&mSocket, 0, sizeof(mSocket));
+}
+
 otError UdpExample::ProcessHelp(int argc, char *argv[])
 {
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
