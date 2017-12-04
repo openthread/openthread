@@ -319,6 +319,17 @@ void nrf5UartInit(void)
 
 void nrf5UartDeinit(void)
 {
+    if (nrf_drv_usbd_is_started())
+    {
+        app_usbd_stop();
+
+        while (app_usbd_event_queue_process()) { }
+    }
+    else if (nrf_drv_usbd_is_enabled())
+    {
+        app_usbd_disable();
+    }
+
     nrf_drv_power_usbevt_uninit();
 
     app_usbd_class_remove_all();
