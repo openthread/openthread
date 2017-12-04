@@ -71,8 +71,6 @@ void otPlatReset(otInstance *aInstance)
 {
     (void)aInstance;
 
-    PlatformDeinit();
-
     NVIC_SystemReset();
 }
 
