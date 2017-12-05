@@ -1405,6 +1405,17 @@ private:
         kMleHopLimit        = 255,
     };
 
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+    enum
+    {
+        // All timer intervals are converted to milliseconds
+        kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u),
+        kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u),
+        kParentSearchJitterInterval  = (15 * 1000u),
+        kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
+    };
+#endif
+
     void GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
                        uint8_t *aNonce);
 
@@ -1452,6 +1463,13 @@ private:
     otError InformPreviousParent(void);
 #endif
 
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+    static void HandleParentSearchTimer(Timer &aTimer);
+    void HandleParentSearchTimer(void);
+    void StartParentSearchTimer(void);
+    void UpdateParentSearchState(void);
+#endif
+
     MessageQueue mDelayedResponses;
 
     struct
@@ -1490,6 +1508,14 @@ private:
 
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+    bool mParentSearchIsInBackoff        : 1;
+    bool mParentSearchBackoffWasCanceled : 1;
+    bool mParentSearchRecentlyDetached   : 1;
+    uint32_t mParentSearchBackoffCancelTime;
+    TimerMilli mParentSearchTimer;
 #endif
 
     uint8_t mAnnounceChannel;
