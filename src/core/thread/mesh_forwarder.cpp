@@ -619,7 +619,7 @@ Message *MeshForwarder::GetDirectTransmission(void)
         case Message::kTypeMacDataPoll:
         {
             ThreadNetif &netif = GetNetif();
-            Neighbor *parent = netif.GetMle().GetParent();
+            Neighbor *parent = netif.GetMle().GetParentCandidate();
 
             if ((parent != NULL) && (parent->IsStateValidOrRestoring()))
             {
@@ -1781,7 +1781,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
     if (mSendMessage->GetType() == Message::kTypeMacDataPoll)
     {
-        neighbor = netif.GetMle().GetParent();
+        neighbor = netif.GetMle().GetParentCandidate();
 
         if (neighbor->GetState() == Neighbor::kStateInvalid)
         {
