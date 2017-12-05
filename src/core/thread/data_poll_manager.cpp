@@ -103,7 +103,7 @@ otError DataPollManager::SendDataPoll(void)
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!netif.GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
-    parent = netif.GetMle().GetParent();
+    parent = netif.GetMle().GetParentCandidate();
     VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();

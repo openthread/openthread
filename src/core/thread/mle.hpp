@@ -711,6 +711,17 @@ public:
     Router *GetParent(void);
 
     /**
+     * This method returns a pointer to the parent candidate or parent.
+     *
+     * This method is useful when sending IEEE 802.15.4 Data Request frames while attempting to attach to a new parent.
+     *
+     * If attempting to attach to a new parent, this method returns the parent candidate.
+     * If not attempting to attach, this method returns the parent.
+     *
+     */
+    Router *GetParentCandidate(void);
+
+    /**
      * This method indicates whether or not an IPv6 address is an RLOC.
      *
      * @retval TRUE   If @p aAddress is an RLOC.
@@ -1463,6 +1474,7 @@ private:
     LeaderDataTlv mParentLeaderData;
     uint8_t mParentLinkMargin;
     bool mParentIsSingleton;
+    bool mReceivedResponseFromParent;
 
     Router mParentCandidate;
 
