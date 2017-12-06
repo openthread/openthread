@@ -227,17 +227,17 @@ otError NcpBase::GetPropertyHandler_PHY_RSSI(void)
 
 otError NcpBase::CommandHandler_NET_SAVE(uint8_t aHeader)
 {
-    return SendLastStatus(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
+    return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
 otError NcpBase::CommandHandler_NET_CLEAR(uint8_t aHeader)
 {
-    return SendLastStatus(aHeader, ThreadErrorToSpinelStatus(otInstanceErasePersistentInfo(mInstance)));
+    return PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(otInstanceErasePersistentInfo(mInstance)));
 }
 
 otError NcpBase::CommandHandler_NET_RECALL(uint8_t aHeader)
 {
-    return SendLastStatus(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
+    return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
 otError NcpBase::GetPropertyHandler_NET_SAVED(void)
@@ -668,7 +668,7 @@ exit:
         // the state of these ports, so we need to report
         // those incomplete changes via an asynchronous
         // change event.
-        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_THREAD_ASSISTING_PORTS);
+        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_THREAD_ASSISTING_PORTS);
     }
 
     return error;
@@ -1854,7 +1854,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_WHITELIST);
+        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_WHITELIST);
     }
 
     return error;
@@ -1912,7 +1912,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-       HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_BLACKLIST);
+       WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_BLACKLIST);
     }
 
     return error;
@@ -1975,7 +1975,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_FIXED_RSS);
+        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_FIXED_RSS);
     }
 
     return error;
@@ -2115,7 +2115,7 @@ otError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader)
 
     error = mDecoder.ReadUtf8(string);
 
-    VerifyOrExit(error == OT_ERROR_NONE, error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error)));
+    VerifyOrExit(error == OT_ERROR_NONE, error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
 
     // All diagnostics related features are processed within diagnostics module
     output = otDiagProcessCmdLine(const_cast<char *>(string));
@@ -2695,13 +2695,20 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
     VerifyOrExit(aMessage != NULL);
 
     SuccessOrExit(otMessageQueueEnqueue(&mMessageQueue, aMessage));
-    SuccessOrExit(SendQueuedDatagramMessages());
+
+    // If there is no queued spinel command response, try to write/send
+    // the datagram message immediately. If there is a queued response
+    // or if currently out of buffer space, the IPv6 datagram message
+    // will be sent from `HandleFrameRemovedFromNcpBuffer()` when buffer
+    //  space becomes available and after any pending spinel command
+    // response.
+
+    if (IsResponseQueueEmpty())
+    {
+        IgnoreReturnValue(SendQueuedDatagramMessages());
+    }
 
 exit:
-    // If the queued message can not be sent now (out of buffer),
-    // it will be sent once spinel buffer becomes available from
-    // `HandleFrameRemovedFromNcpBuffer()` callback.
-
     return;
 }
 

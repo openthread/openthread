@@ -380,7 +380,7 @@ otError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader)
     }
 
 exit:
-    return SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
+    return PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(error));
 }
 
 otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
@@ -423,18 +423,19 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
+otError NcpBase::GetPropertyHandler_THREAD_STEERING_DATA(void)
+{
+    return mEncoder.WriteEui64(mSteeringDataAddress);
+}
+
 otError NcpBase::SetPropertyHandler_THREAD_STEERING_DATA(void)
 {
-    const otExtAddress *extAddress;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
+    SuccessOrExit(error = mDecoder.ReadEui64(mSteeringDataAddress));
 
-    SuccessOrExit(error = otThreadSetSteeringData(mInstance, extAddress));
-
-    // Note that there is no get handler for this property
-    // so the response becomes `VALUE_IS` echo of the
-    // received content.
+    SuccessOrExit(error = otThreadSetSteeringData(mInstance, &mSteeringDataAddress));
 
 exit:
     return error;
@@ -454,18 +455,18 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(void)
+{
+    return mEncoder.WriteUint8(mPreferredRouteId);
+}
+
 otError NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(void)
 {
-    uint8_t routerId = 0;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadUint8(routerId));
+    SuccessOrExit(error = mDecoder.ReadUint8(mPreferredRouteId));
 
-    SuccessOrExit(error = otThreadSetPreferredRouterId(mInstance, routerId));
-
-    // Note that there is no get handler for this property
-    // so the response becomes `VALUE_IS` echo of the
-    // received content.
+    SuccessOrExit(error = otThreadSetPreferredRouterId(mInstance, mPreferredRouteId));
 
 exit:
     return error;
