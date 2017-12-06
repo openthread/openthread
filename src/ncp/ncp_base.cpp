@@ -1554,7 +1554,7 @@ otError NcpBase::SetPropertyHandler_UNSOL_UPDATE_FILTER(void)
 
     while (mDecoder.GetRemainingLengthInStruct() > 0)
     {
-        SuccessOrExit(mDecoder.ReadUintPacked(propKey));
+        SuccessOrExit(error = mDecoder.ReadUintPacked(propKey));
 
         IgnoreReturnValue(mChangedPropsSet.EnablePropertyFilter(static_cast<spinel_prop_key_t>(propKey), true));
     }
