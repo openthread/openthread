@@ -1339,7 +1339,7 @@ otError NcpBase::SetPropertyHandler_STREAM_NET(void)
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     error = otIp6Send(mInstance, message);
 
@@ -2058,7 +2058,7 @@ otError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(void)
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     // Ensure the insecure message is forwarded using direct transmission.
     otMessageSetDirectTransmission(message, true);
