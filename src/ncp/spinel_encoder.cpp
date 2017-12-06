@@ -267,9 +267,9 @@ otError SpinelEncoder::WritePacked(const char *aPackFormat, ...)
 
     error = mNcpBuffer.InFrameFeedData(buf, static_cast<uint16_t>(packedLen));
 
+exit:
     va_end(args);
 
-exit:
     return error;
 }
 
