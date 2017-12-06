@@ -1396,17 +1396,7 @@ otError NcpBase::GetPropertyHandler_JAM_DETECT_BUSY(void)
 
 otError NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP(void)
 {
-    otError error = OT_ERROR_NONE;
-    uint64_t historyBitmap = otJamDetectionGetHistoryBitmap(mInstance);
-
-    // History bitmap - bits 0-31
-    SuccessOrExit(error = mEncoder.WriteUint32(static_cast<uint32_t>(historyBitmap & 0xffffffff)));
-
-    // // History bitmap - bits 32-63
-    SuccessOrExit(error = mEncoder.WriteUint32(static_cast<uint32_t>(historyBitmap >> 32)));
-
-exit:
-    return error;
+    return mEncoder.WriteUint64(otJamDetectionGetHistoryBitmap(mInstance));
 }
 
 otError NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE(void)

@@ -654,7 +654,7 @@ typedef enum
     SPINEL_PROP_JAM_DETECT_BUSY         = SPINEL_PROP_PHY_EXT__BEGIN + 4,
 
     /// Jamming detection history bitmap (for debugging)
-    /** Format: `LL` (read-only)
+    /** Format: `X` (read-only)
      *
      * This value provides information about current state of jamming detection
      * module for monitoring/debugging purpose. It returns a 64-bit value where
@@ -663,9 +663,6 @@ typedef enum
      * The bit is set to 1 if the jamming detection module observed/detected
      * high signal level during the corresponding one second interval.
      *
-     * The value is read-only and is encoded as two uint32 values in
-     * little-endian format (first uint32 gives the lower bits corresponding to
-     * more recent history).
      */
     SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 5,
