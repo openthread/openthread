@@ -1041,6 +1041,24 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE
+ *
+ * Size of NCP Spinel command response queue.
+ *
+ * NCP guarantees that it can respond up to `OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE` spinel commands at the
+ * same time. The spinel protocol defines a Transaction ID (TID) as part of spinel command frame (the TID can be
+ * a value 0-15 where TID 0 is used for frames which require no response). Spinel protocol can support at most support
+ * 15 simultaneous commands.
+ *
+ * The host driver implementation may further limit the number of simultaneous Spinel command frames (e.g., wpantund
+ * limits this to two). This configuration option can be used to reduce the response queue size.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE
+#define OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE        15
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
  *
  * Define as 1 to stay awake between fragments while transmitting a large packet,
