@@ -1820,10 +1820,17 @@ otError NcpBase::GetPropertyHandler_PHY_TX_POWER(void)
     int8_t power;
     otError error;
 
-    SuccessOrExit(error = otPlatRadioGetTransmitPower(mInstance, &power));
-    error = mEncoder.WriteInt8(power);
+    error = otPlatRadioGetTransmitPower(mInstance, &power);
 
-exit:
+    if (error == OT_ERROR_NONE)
+    {
+        error = mEncoder.WriteInt8(power);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
     return error;
 }
 
