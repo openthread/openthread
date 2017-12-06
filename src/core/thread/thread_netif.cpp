@@ -83,6 +83,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance):
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     mNetworkDiagnostic(aInstance),
 #endif
+    mIsUp(false),
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     mCommissioner(aInstance),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
