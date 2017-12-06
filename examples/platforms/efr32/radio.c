@@ -134,7 +134,7 @@ void efr32RadioInit(void)
         assert(false);
     }
 
-    RAIL_TxPowerSet(OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER);
+    RAIL_TxPowerSet(((int32_t)OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER) * 10);
 
     otLogInfoPlat(sInstance, "Initialized", NULL);
 }
@@ -849,7 +849,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
     (void)aInstance;
 
     otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
-    *aPower = (int8_t)RAIL_TxPowerGet();
+    *aPower = (int8_t)(RAIL_TxPowerGet() / 10);
 
 exit:
     return error;
@@ -858,7 +858,7 @@ exit:
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
-    RAIL_TxPowerSet(aPower);
+    RAIL_TxPowerSet(((int32_t)aPower) * 10);
 
     return OT_ERROR_NONE;
 }
