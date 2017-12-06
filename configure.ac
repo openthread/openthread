@@ -890,6 +890,44 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK],[${OPENTHREAD_ENABLE_NCP_
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}" = "1"])
 
 #
+# NCP Spinel Transformer
+#
+
+AC_ARG_WITH(
+    [ncp-spinel-transformer-libs],
+    [AS_HELP_STRING([--with-ncp-spinel-transformer-libs=<LIBSPINEL_TRANSFORMER.A>],[Specify library files (absolute paths) implementing the NCP Spinel Transformer. @<:@default=none@:>@.])],
+    [
+        if test "${withval}" = "no"
+        then OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER=0
+        else
+            OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER=1
+            OPENTHREAD_NCP_SPINEL_TRANSFORMER_LIBS=${withval}
+        fi
+    ],
+    [
+        OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER=0
+    ])
+
+AC_MSG_CHECKING([for NCP Spinel Transformer])
+AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_TRANSFORMER_LIBS-none})
+AC_SUBST(OPENTHREAD_NCP_SPINEL_TRANSFORMER_LIBS)
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER],[${OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER}],[Define to 1 if using NCP Spinel Transformer])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER}" = "1"])
+
+AC_ARG_WITH(
+    [ncp-spinel-transformer-outbound-buffer-size],
+    [AS_HELP_STRING([--with-ncp-spinel-transformer-outbound-buffer-size=<SIZE IN BYTES>],[Specify a NCP Spinel Transformer's outbound buffer size. @<:@default=none@:>@.])],
+    [
+        OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE=${withval}
+        AC_DEFINE_UNQUOTED([OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE],[${OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE}],[Define NCP Spinel Transformer's outbound buffer size])
+    ],
+    []
+    )
+
+AC_MSG_CHECKING([NCP Spinel Transformer outbound buffer size])
+AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE-none})
+
+#
 # Child Supervision
 #
 
@@ -1532,6 +1570,8 @@ AC_MSG_NOTICE([
   OpenThread NCP-FTD support                : ${enable_ncp_app_ftd}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
+  OpenThread NCP Spinel Transformer         : ${with_ncp_spinel_transformer_libs}
+  OpenThread Transformer's buffer size      : ${ncp_spinel_transformer_outbound_buffer_size}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}

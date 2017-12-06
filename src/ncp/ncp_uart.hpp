@@ -38,6 +38,10 @@
 #include "ncp/hdlc.hpp"
 #include "ncp/ncp_base.hpp"
 
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+#include "spinel_transformer.hpp"
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+
 namespace ot {
 namespace Ncp {
 
@@ -96,6 +100,39 @@ private:
         uint8_t        mBuffer[kUartTxBufferSize];
     };
 
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+#if OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
+#define OUTBOUND_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
+#else
+#define OUTBOUND_BUFFER_SIZE OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
+#endif // OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
+
+    /**
+     * Wraps NcpFrameBuffer allowing to read data through spinel transformer.
+     * Creates additional buffers to allow transforming of the whole spinel frames.
+     */
+    class NcpFrameBufferTransformerReader
+    {
+    public:
+        explicit NcpFrameBufferTransformerReader(NcpFrameBuffer &aTxFrameBuffer);
+        bool IsEmpty() const;
+        otError OutFrameBegin();
+        bool OutFrameHasEnded();
+        uint8_t OutFrameReadByte();
+        otError OutFrameRemove();
+
+    private:
+        void Reset();
+
+        NcpFrameBuffer &mTxFrameBuffer;
+        uint8_t mInputBuffer[OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE];
+        size_t mInputBufferLength;
+        uint8_t mOutputBuffer[OUTBOUND_BUFFER_SIZE];
+        size_t mOutputBufferReadIndex;
+        size_t mOutputBufferLength;
+    };
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+
     void            EncodeAndSendToUart(void);
     void            HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
     void            HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength);
@@ -116,6 +153,11 @@ private:
     uint8_t         mRxBuffer[kRxBufferSize];
     bool            mUartSendImmediate;
     Tasklet         mUartSendTask;
+
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+    uint8_t         mRxBufferTransformed[kRxBufferSize];
+    NcpFrameBufferTransformerReader    mTxFrameBufferTransformerReader;
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 };
 
 }  // namespace Ncp

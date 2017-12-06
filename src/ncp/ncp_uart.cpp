@@ -101,6 +101,9 @@ NcpUart::NcpUart(Instance *aInstance):
     mByte(0),
     mUartSendImmediate(false),
     mUartSendTask(*aInstance, EncodeAndSendToUart, this)
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+    , mTxFrameBufferTransformerReader(mTxFrameBuffer)
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 
@@ -138,8 +141,13 @@ void NcpUart::EncodeAndSendToUart(void)
 {
     uint16_t len;
     bool prevHostPowerState;
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+    NcpFrameBufferTransformerReader &txFrameBuffer = mTxFrameBufferTransformerReader;
+#else
+    NcpFrameBuffer &txFrameBuffer = mTxFrameBuffer;
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 
-    while (!mTxFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
+    while (!txFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
     {
         switch (mState)
         {
@@ -153,13 +161,13 @@ void NcpUart::EncodeAndSendToUart(void)
             VerifyOrExit(super_t::ShouldDeferHostSend() == false);
             SuccessOrExit(mFrameEncoder.Init(mUartBuffer));
 
-            mTxFrameBuffer.OutFrameBegin();
+            txFrameBuffer.OutFrameBegin();
 
             mState = kEncodingFrame;
 
-            while (!mTxFrameBuffer.OutFrameHasEnded())
+            while (!txFrameBuffer.OutFrameHasEnded())
             {
-                mByte = mTxFrameBuffer.OutFrameReadByte();
+                mByte = txFrameBuffer.OutFrameReadByte();
 
         case kEncodingFrame:
 
@@ -170,7 +178,7 @@ void NcpUart::EncodeAndSendToUart(void)
             // call to OutFrameRemove.
             prevHostPowerState = mHostPowerStateInProgress;
 
-            mTxFrameBuffer.OutFrameRemove();
+            txFrameBuffer.OutFrameRemove();
 
             if (prevHostPowerState && !mHostPowerStateInProgress)
             {
@@ -252,7 +260,17 @@ void NcpUart::HandleFrame(void *aContext, uint8_t *aBuf, uint16_t aBufLength)
 
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+    size_t mRxBufferTransformedLen = 0;
+
+    if (SpinelTransformer::TransformInbound(aBuf, aBufLength, mRxBufferTransformed, &mRxBufferTransformedLen))
+    {
+        super_t::HandleReceive(mRxBufferTransformed, mRxBufferTransformedLen);
+    }
+
+#else
     super_t::HandleReceive(aBuf, aBufLength);
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 }
 
 void NcpUart::HandleError(void *aContext, otError aError, uint8_t *aBuf, uint16_t aBufLength)
@@ -292,6 +310,73 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     // We skip the first byte since it has a space in it.
     otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
+
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+
+NcpUart::NcpFrameBufferTransformerReader::NcpFrameBufferTransformerReader(NcpFrameBuffer &aTxFrameBuffer) :
+    mTxFrameBuffer(aTxFrameBuffer),
+    mInputBufferLength(0),
+    mOutputBufferReadIndex(0),
+    mOutputBufferLength(0) {}
+
+bool NcpUart::NcpFrameBufferTransformerReader::IsEmpty() const
+{
+    return mTxFrameBuffer.IsEmpty() && !mOutputBufferLength;
+}
+
+otError NcpUart::NcpFrameBufferTransformerReader::OutFrameBegin()
+{
+    otError status = OT_ERROR_FAILED;
+
+    Reset();
+
+    if ((status = mTxFrameBuffer.OutFrameBegin()) == OT_ERROR_NONE)
+    {
+        while (!mTxFrameBuffer.OutFrameHasEnded())
+        {
+            uint8_t byte = mTxFrameBuffer.OutFrameReadByte();
+            mInputBuffer[mInputBufferLength++] = byte;
+        }
+
+        if (mInputBufferLength > 0)
+        {
+            if (!SpinelTransformer::TransformOutbound(mInputBuffer, mInputBufferLength, mOutputBuffer, &mOutputBufferLength))
+            {
+                status = OT_ERROR_FAILED;
+            }
+        }
+        else
+        {
+            status = OT_ERROR_FAILED;
+        }
+    }
+
+    return status;
+}
+
+bool NcpUart::NcpFrameBufferTransformerReader::OutFrameHasEnded()
+{
+    return (mOutputBufferReadIndex >= mOutputBufferLength);
+}
+
+uint8_t NcpUart::NcpFrameBufferTransformerReader::OutFrameReadByte()
+{
+    return mOutputBuffer[mOutputBufferReadIndex++];
+}
+
+otError NcpUart::NcpFrameBufferTransformerReader::OutFrameRemove()
+{
+    return mTxFrameBuffer.OutFrameRemove();
+}
+
+void NcpUart::NcpFrameBufferTransformerReader::Reset()
+{
+    mInputBufferLength = 0;
+    mOutputBufferLength = 0;
+    mOutputBufferReadIndex = 0;
+}
+
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 
 }  // namespace Ncp
 }  // namespace ot
