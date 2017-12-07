@@ -419,10 +419,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
                 // Flush the RX buffer
                 HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
                 HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
-
-                // Clear RXOVERF and RXABO flags
-                HWREG(RFCORE_SFR_RFERRF) &=
-                    ~(RFCORE_SFR_RFERRF_RXOVERF | RFCORE_SFR_RFERRF_RXABO);
             }
 
             // Check for idle state.  After flushing the RX buffer, we may wind up here.
@@ -446,9 +442,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
                 // In this situation, try sending our TX frame again.
                 setupTransmit(aFrame);
-
-                // Clear the TX underflow bit.
-                HWREG(RFCORE_SFR_RFERRF) &= ~RFCORE_SFR_RFERRF_TXUNDERF;
             }
         }
 
