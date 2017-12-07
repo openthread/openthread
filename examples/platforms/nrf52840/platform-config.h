@@ -328,6 +328,17 @@
 #endif
 
 /**
+ * @def USB_HOST_UART_CONFIG_DELAY_MS
+ *
+ * Delay after DTR gets asserted that we start send any queued data. This allows slow
+ * Linux-based hosts to have enough time to configure their port for raw mode.
+ *
+ */
+#ifndef USB_HOST_UART_CONFIG_DELAY_MS
+#define USB_HOST_UART_CONFIG_DELAY_MS 10
+#endif
+
+/**
  * @def USB_CDC_AS_SERIAL_TRANSPORT
  *
  * Use USB CDC driver for serial communication.

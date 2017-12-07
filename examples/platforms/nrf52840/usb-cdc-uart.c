@@ -44,9 +44,12 @@
 #include <assert.h>
 
 #include <openthread/types.h>
+#include <openthread/platform/diag.h>
 #include <openthread/platform/uart.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/misc.h>
+#include <utils/code_utils.h>
+#include <common/logging.hpp>
 
 #include "platform-nrf5.h"
 
@@ -102,8 +105,10 @@ static struct
     size_t         mReceivedDataSize;
     bool           mUartEnabled;
     bool           mLastConnectionStatus;
+    uint32_t       mOpenTimestamp;
     volatile bool  mConnected;
-    volatile bool  mReady;
+    volatile bool  mReadyToStart;
+    volatile bool  mTransferInProgress;
     volatile bool  mTransferDone;
     volatile bool  mReceiveDone;
 } sUsbState;
@@ -138,6 +143,7 @@ static void cdcAcmUserEventHandler(app_usbd_class_inst_t const *aCdcAcmInstance,
     case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
         // Setup first transfer.
         (void)app_usbd_cdc_acm_read(&sAppCdcAcm, sRxBuffer, sizeof(sRxBuffer));
+        sUsbState.mOpenTimestamp = otPlatAlarmMilliGetNow();
         break;
 
     case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
@@ -187,12 +193,19 @@ static void powerUsbEventHandler(nrf_drv_power_usb_evt_t aEvent)
         break;
 
     case NRF_DRV_POWER_USB_EVT_READY:
-        sUsbState.mReady = true;
+        sUsbState.mReadyToStart = true;
         break;
 
     default:
         assert(false);
     }
+}
+
+static bool hasPortOpenDelayPassed(void)
+{
+    int32_t timeDiff = otPlatAlarmMilliGetNow() - sUsbState.mOpenTimestamp;
+
+    return (timeDiff < 0) || (timeDiff > USB_HOST_UART_CONFIG_DELAY_MS);
 }
 
 static bool isPortOpened(void)
@@ -201,7 +214,7 @@ static bool isPortOpened(void)
 
     if (app_usbd_cdc_acm_line_state_get(&sAppCdcAcm, APP_USBD_CDC_ACM_LINE_STATE_DTR, &value) == NRF_SUCCESS)
     {
-        return value;
+        return (value != 0) && hasPortOpenDelayPassed();
     }
 
     return false;
@@ -213,9 +226,9 @@ static void processConnection(void)
 
     if (sUsbState.mLastConnectionStatus != connectionStatus)
     {
-        sUsbState.mLastConnectionStatus = sUsbState.mUartEnabled && sUsbState.mConnected;
+        sUsbState.mLastConnectionStatus = connectionStatus;
 
-        if (sUsbState.mUartEnabled && sUsbState.mConnected)
+        if (connectionStatus)
         {
             if (!nrf_drv_usbd_is_enabled())
             {
@@ -236,7 +249,7 @@ static void processConnection(void)
     }
 
     // Provide some delay so the OS can re-enumerate the device in case of reset.
-    if (sUsbState.mReady)
+    if (sUsbState.mReadyToStart)
     {
         if (((otPlatGetResetReason(NULL) == OT_PLAT_RESET_REASON_EXTERNAL) ||
              (otPlatGetResetReason(NULL) == OT_PLAT_RESET_REASON_SOFTWARE)) &&
@@ -245,7 +258,7 @@ static void processConnection(void)
             return;
         }
 
-        sUsbState.mReady = false;
+        sUsbState.mReadyToStart = false;
 
         if (nrf_drv_usbd_is_enabled())
         {
@@ -258,12 +271,17 @@ static void processReceive(void)
 {
     if (sUsbState.mReceiveDone)
     {
-        sUsbState.mReceiveDone = false;
-
-        otPlatUartReceived((const uint8_t *)sRxBuffer, sUsbState.mReceivedDataSize);
+        if (sUsbState.mReceivedDataSize != 0)
+        {
+            otPlatUartReceived((const uint8_t *)sRxBuffer, sUsbState.mReceivedDataSize);
+            sUsbState.mReceivedDataSize = 0;
+        }
 
         // Setup next transfer.
-        (void)app_usbd_cdc_acm_read(&sAppCdcAcm, sRxBuffer, sizeof(sRxBuffer));
+        if (app_usbd_cdc_acm_read(&sAppCdcAcm, sRxBuffer, sizeof(sRxBuffer)) == NRF_SUCCESS)
+        {
+            sUsbState.mReceiveDone = false;
+        }
     }
 }
 
@@ -274,14 +292,17 @@ static void processTransmit(void)
     {
         if (app_usbd_cdc_acm_write(&sAppCdcAcm, sUsbState.mTxBuffer, sUsbState.mTxSize) == NRF_SUCCESS)
         {
+            sUsbState.mTransferInProgress = true;
             sUsbState.mTxBuffer = NULL;
             sUsbState.mTxSize = 0;
         }
     }
-
-    if (sUsbState.mTransferDone)
+    else if (sUsbState.mTransferDone)
     {
+        otPlatLog(OT_LOG_LEVEL_DEBG, OT_LOG_REGION_PLATFORM, "otPlatUartSendDone");
+
         sUsbState.mTransferDone = false;
+        sUsbState.mTransferInProgress = false;
 
         otPlatUartSendDone();
     }
@@ -363,25 +384,26 @@ otError otPlatUartDisable(void)
 
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(sUsbState.mTransferInProgress == false, error = OT_ERROR_BUSY);
+    otEXPECT_ACTION(sUsbState.mTxBuffer == NULL, error = OT_ERROR_BUSY);
+
     if (!isPortOpened())
     {
         // If port is closed, queue the message until it can be sent.
-        if (sUsbState.mTxBuffer == NULL)
-        {
-            sUsbState.mTxBuffer = aBuf;
-            sUsbState.mTxSize = aBufLength;
-        }
-        else
-        {
-            return OT_ERROR_BUSY;
-        }
+        sUsbState.mTxBuffer = aBuf;
+        sUsbState.mTxSize = aBufLength;
     }
-    else if (app_usbd_cdc_acm_write(&sAppCdcAcm, aBuf, aBufLength) != NRF_SUCCESS)
+    else
     {
-        return OT_ERROR_FAILED;
+        otEXPECT_ACTION(app_usbd_cdc_acm_write(&sAppCdcAcm, aBuf, aBufLength) == NRF_SUCCESS, error = OT_ERROR_FAILED);
+        sUsbState.mTransferInProgress = true;
     }
 
-    return OT_ERROR_NONE;
+exit:
+
+    return error;
 }
 
 #endif // USB_CDC_AS_SERIAL_TRANSPORT == 1
