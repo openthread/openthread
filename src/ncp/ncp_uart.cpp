@@ -261,8 +261,7 @@ void NcpUart::HandleFrame(void *aContext, uint8_t *aBuf, uint16_t aBufLength)
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
 #if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
-    size_t mRxBufferTransformedLen = 0;
-
+    size_t mRxBufferTransformedLen = sizeof(mRxBufferTransformed);
     if (SpinelTransformer::TransformInbound(aBuf, aBufLength, mRxBufferTransformed, &mRxBufferTransformedLen))
     {
         super_t::HandleReceive(mRxBufferTransformed, mRxBufferTransformedLen);
@@ -340,6 +339,7 @@ otError NcpUart::NcpFrameBufferTransformerReader::OutFrameBegin()
 
         if (mInputBufferLength > 0)
         {
+            mOutputBufferLength = sizeof(mOutputBuffer);
             if (!SpinelTransformer::TransformOutbound(mInputBuffer, mInputBufferLength, mOutputBuffer, &mOutputBufferLength))
             {
                 status = OT_ERROR_FAILED;
