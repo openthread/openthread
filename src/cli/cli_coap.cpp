@@ -43,6 +43,12 @@
 namespace ot {
 namespace Cli {
 
+Coap::Coap(Interpreter &aInterpreter):
+    mInterpreter(aInterpreter)
+{
+    memset(&mResource, 0, sizeof(mResource));
+}
+
 void Coap::PrintPayload(otMessage *aMessage) const
 {
     uint8_t buf[kMaxBufferSize];
