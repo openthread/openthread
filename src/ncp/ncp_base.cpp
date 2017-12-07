@@ -564,7 +564,8 @@ NcpBase::NcpBase(Instance *aInstance):
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
     mRxSpinelOutOfOrderTidCounter(0),
-    mTxSpinelFrameCounter(0)
+    mTxSpinelFrameCounter(0),
+    mDidInitialUpdates(false)
 {
     assert(mInstance != NULL);
 
@@ -1028,7 +1029,7 @@ void NcpBase::UpdateChangedProps(void)
 
             SuccessOrExit(WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, status));
         }
-        else
+        else if (mDidInitialUpdates)
         {
             SuccessOrExit(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, propKey));
         }
@@ -1038,6 +1039,7 @@ void NcpBase::UpdateChangedProps(void)
     }
 
 exit:
+    mDidInitialUpdates = true;
     return;
 }
 
