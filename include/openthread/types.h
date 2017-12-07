@@ -813,7 +813,7 @@ typedef enum otRoutePreference
 } otRoutePreference;
 
 #define OT_MAX_SERVICE_DATA_SIZE 252    ///< Maximum size of Service Data in bytes.
-#define OT_NAX_SERVER_DATA_SIZE 248     ///< Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
+#define OT_MAX_SERVER_DATA_SIZE 248     ///< Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
 
 /**
  * This structure represents a Server configuration.
@@ -833,7 +833,7 @@ typedef struct otServerConfig
     /**
      * Server data bytes
      */
-    uint8_t mServerData[kMaxServerDataSize];
+    uint8_t mServerData[OT_MAX_SERVER_DATA_SIZE];
 
     /**
      * The Server Rloc.
@@ -864,7 +864,7 @@ typedef struct otServiceConfig
     /**
      * Service data bytes
      */
-    uint8_t mServiceData[kMaxServiceDataSize];
+    uint8_t mServiceData[OT_MAX_SERVICE_DATA_SIZE];
 
     /**
      * The Server configuration.
