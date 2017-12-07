@@ -42,6 +42,7 @@
 
 #include "utils/code_utils.h"
 
+#include "em_core.h"
 #include "rail.h"
 
 static uint32_t sTimerHi = 0;
@@ -57,6 +58,10 @@ void efr32AlarmInit(void)
 uint32_t otPlatAlarmMilliGetNow(void)
 {
     uint32_t timer_lo;
+    uint32_t timer_ms;
+
+    CORE_DECLARE_IRQ_STATE;
+    CORE_ENTER_CRITICAL();
 
     timer_lo = RAIL_GetTime();
 
@@ -67,7 +72,11 @@ uint32_t otPlatAlarmMilliGetNow(void)
 
     sTimerLo = timer_lo;
 
-    return (((uint64_t)sTimerHi << 32) | sTimerLo) / 1000;
+    timer_ms = (((uint64_t)sTimerHi << 32) | sTimerLo) / 1000;
+
+    CORE_EXIT_CRITICAL();
+
+    return timer_ms;
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
