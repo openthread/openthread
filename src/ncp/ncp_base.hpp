@@ -759,6 +759,7 @@ private:
     bool mLegacyNodeDidJoin;
 #endif
 
+    bool mDidInitialUpdates;
 };
 
 }  // namespace Ncp
