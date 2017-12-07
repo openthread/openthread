@@ -434,15 +434,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
                 sChannel = 0;
                 setChannel(aFrame->mChannel);
             }
-
-            // Check for a transmitter buffer underflow.
-            if (HWREG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_TXUNDERF)
-            {
-                otLogCritPlat(sInstance, "TX underflow detected", NULL);
-
-                // In this situation, try sending our TX frame again.
-                setupTransmit(aFrame);
-            }
         }
 
         // wait for valid rssi
