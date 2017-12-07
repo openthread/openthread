@@ -114,6 +114,10 @@ private:
     class NcpFrameBufferTransformerReader
     {
     public:
+        /**
+         * C-tor.
+         * Takes a reference to NcpFrameBuffer in order to read spinel frames.
+         */
         explicit NcpFrameBufferTransformerReader(NcpFrameBuffer &aTxFrameBuffer);
         bool IsEmpty() const;
         otError OutFrameBegin();
