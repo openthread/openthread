@@ -63,7 +63,7 @@ Filter::Entry *Filter::FindEntry(const ExtAddress &aExtAddress)
     for (uint8_t i = 0; i < GetMaxEntries(); i++)
     {
         if ((mEntries[i].mFiltered || mEntries[i].mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED) &&
-            memcmp(&aExtAddress, &mEntries[i].mExtAddress, OT_EXT_ADDRESS_SIZE) == 0)
+            (aExtAddress == static_cast<const ExtAddress &>(mEntries[i].mExtAddress)))
         {
             ExitNow(entry = &mEntries[i]);
         }
@@ -112,7 +112,7 @@ otError Filter::AddAddress(const ExtAddress &aExtAddress)
     if (entry == NULL)
     {
         VerifyOrExit((entry = FindAvailEntry()) != NULL, error = OT_ERROR_NO_BUFS);
-        memcpy(&entry->mExtAddress, &aExtAddress, OT_EXT_ADDRESS_SIZE);
+        entry->mExtAddress = aExtAddress;
     }
 
     if (entry->mFiltered)
@@ -187,7 +187,7 @@ otError Filter::AddRssIn(const ExtAddress *aExtAddress, int8_t aRss)
         if (entry == NULL)
         {
             VerifyOrExit((entry = FindAvailEntry()) != NULL, error = OT_ERROR_NO_BUFS);
-            memcpy(&entry->mExtAddress, aExtAddress, OT_EXT_ADDRESS_SIZE);
+            entry->mExtAddress = static_cast<const otExtAddress &>(*aExtAddress);
         }
 
         entry->mRssIn = aRss;

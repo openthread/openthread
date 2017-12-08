@@ -357,8 +357,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     VerifyOrExit(aParentInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
     parent = instance.GetThreadNetif().GetMle().GetParent();
-    memcpy(aParentInfo->mExtAddress.m8, &parent->GetExtAddress(), sizeof(aParentInfo->mExtAddress));
-
+    aParentInfo->mExtAddress      = parent->GetExtAddress();
     aParentInfo->mRloc16          = parent->GetRloc16();
     aParentInfo->mRouterId        = Mle::Mle::GetRouterId(parent->GetRloc16());
     aParentInfo->mNextHop         = parent->GetNextHop();

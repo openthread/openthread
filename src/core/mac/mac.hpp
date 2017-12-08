@@ -350,12 +350,12 @@ public:
     void GenerateExtAddress(ExtAddress *aExtAddress);
 
     /**
-     * This method returns a pointer to the IEEE 802.15.4 Extended Address.
+     * This method returns a reference to the IEEE 802.15.4 Extended Address.
      *
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
      *
      */
-    const ExtAddress *GetExtAddress(void) const { return &mExtAddress; }
+    const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
     /**
      * This method sets the IEEE 802.15.4 Extended Address
