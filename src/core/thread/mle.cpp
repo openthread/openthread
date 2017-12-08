@@ -808,14 +808,14 @@ exit:
     return OT_ERROR_NONE;
 }
 
-const Ip6::Address *Mle::GetLinkLocalAllThreadNodesAddress(void) const
+const Ip6::Address &Mle::GetLinkLocalAllThreadNodesAddress(void) const
 {
-    return &mLinkLocalAllThreadNodes.GetAddress();
+    return mLinkLocalAllThreadNodes.GetAddress();
 }
 
-const Ip6::Address *Mle::GetRealmLocalAllThreadNodesAddress(void) const
+const Ip6::Address &Mle::GetRealmLocalAllThreadNodesAddress(void) const
 {
-    return &mRealmLocalAllThreadNodes.GetAddress();
+    return mRealmLocalAllThreadNodes.GetAddress();
 }
 
 uint16_t Mle::GetRloc16(void) const
