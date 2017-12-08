@@ -53,6 +53,8 @@
 namespace ot {
 namespace Ncp {
 
+#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
+
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
@@ -67,6 +69,8 @@ extern "C" void otNcpInit(otInstance *aInstance)
         assert(false);
     }
 }
+
+#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
 
 static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
 {
