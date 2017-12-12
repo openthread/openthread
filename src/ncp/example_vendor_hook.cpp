@@ -30,6 +30,8 @@
  *   This file shows how to implement the NCP vendor hook.
  */
 
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+
 #include "ncp_base.hpp"
 
 namespace ot {
@@ -52,3 +54,5 @@ otError NcpBase::VendorCommandHandler(uint8_t aHeader, unsigned int aCommand)
 
 }  // namespace Ncp
 }  // namespace ot
+
+#endif
