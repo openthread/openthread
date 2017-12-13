@@ -167,7 +167,7 @@ public:
      */
     bool ShouldDeferHostSend(void);
 
-private:
+protected:
     typedef otError (NcpBase::*PropertyHandler)(void);
 
     struct PropertyHandlerEntry
@@ -674,7 +674,6 @@ protected:
     SpinelDecoder mDecoder;
     bool mHostPowerStateInProgress;
 
-private:
     enum
     {
         kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,  // Tx Buffer size (used by mTxFrameBuffer).
