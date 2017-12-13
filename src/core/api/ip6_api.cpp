@@ -151,7 +151,7 @@ otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddress, void 
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
-           instance.GetThreadNetif().GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
+           &instance.GetThreadNetif().GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
     aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
 
     return OT_ERROR_NONE;

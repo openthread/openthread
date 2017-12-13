@@ -404,10 +404,13 @@ typedef uint16_t otShortAddress;
  * This type represents the IEEE 802.15.4 Extended Address.
  *
  */
-typedef struct otExtAddress
+OT_TOOL_PACKED_BEGIN
+struct otExtAddress
 {
     uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
-} otExtAddress;
+} OT_TOOL_PACKED_END;
+
+typedef struct otExtAddress otExtAddress;
 
 #define OT_IP6_PREFIX_SIZE         8   ///< Size of an IPv6 prefix (bytes)
 #define OT_IP6_ADDRESS_SIZE        16  ///< Size of an IPv6 address (bytes)

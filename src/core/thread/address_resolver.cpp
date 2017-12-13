@@ -574,7 +574,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
         for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
         {
             if (children[i].GetIp6Address(j) == *targetTlv.GetTarget() &&
-                memcmp(&children[i].GetExtAddress(), &macAddr, sizeof(macAddr)))
+                children[i].GetExtAddress() != macAddr)
             {
                 // Target EID matches child address and Mesh Local EID differs on child
                 memset(&children[i].GetIp6Address(j), 0, sizeof(children[i].GetIp6Address(j)));

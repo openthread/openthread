@@ -427,7 +427,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
             else
             {
                 mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-                memcpy(mMacSource.mExtAddress.m8, netif.GetMac().GetExtAddress(), sizeof(mMacDest.mExtAddress));
+                mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
             }
 
             child.GetMacAddress(mMacDest);
@@ -634,9 +634,9 @@ Message *MeshForwarder::GetDirectTransmission(void)
                 else
                 {
                     mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-                    memcpy(mMacSource.mExtAddress.m8, netif.GetMac().GetExtAddress(), sizeof(mMacSource.mExtAddress));
+                    mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
                     mMacDest.mLength = sizeof(mMacDest.mExtAddress);
-                    memcpy(mMacDest.mExtAddress.m8, &parent->GetExtAddress(), sizeof(mMacDest.mExtAddress));
+                    mMacDest.mExtAddress = parent->GetExtAddress();
                 }
             }
             else
@@ -1090,7 +1090,7 @@ otError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Ad
 
     aIp6Addr.ToExtAddress(aMacAddr.mExtAddress);
 
-    if (memcmp(&aMacAddr.mExtAddress, netif.GetMac().GetExtAddress(), sizeof(aMacAddr.mExtAddress)) != 0)
+    if (aMacAddr.mExtAddress != netif.GetMac().GetExtAddress())
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
         aMacAddr.mShortAddress = netif.GetMac().GetShortAddress();
@@ -1553,7 +1553,7 @@ otError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
     else
     {
         macSource.mLength = sizeof(macSource.mExtAddress);
-        memcpy(&macSource.mExtAddress, netif.GetMac().GetExtAddress(), sizeof(macSource.mExtAddress));
+        macSource.mExtAddress = netif.GetMac().GetExtAddress();
     }
 
     fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;

@@ -609,7 +609,7 @@ otError Dhcp6Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset
                    (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
                    (option.GetDuidType() == kDuidLL) &&
                    (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
-                  (!memcmp(option.GetDuidLinkLayerAddress(), GetNetif().GetMac().GetExtAddress(),
+                  (!memcmp(option.GetDuidLinkLayerAddress(), &GetNetif().GetMac().GetExtAddress(),
                            sizeof(Mac::ExtAddress)))),
                  error = OT_ERROR_PARSE);
 exit:
