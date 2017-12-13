@@ -1079,7 +1079,27 @@
 #define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT  0
 #endif
 
-/*
+/**
+ * @def OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN
+ *
+ * Specifies the minimum link margin in dBm required before attempting to establish a link with a neighboring router.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN
+#define OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN           10
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN
+ *
+ * Specifies the minimum link margin in dBm required before attempting to merge to a different partition.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN
+#define OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN        10
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
  *
  * Enable the "Debug Uart" platform feature.
