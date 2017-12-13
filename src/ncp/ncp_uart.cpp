@@ -51,6 +51,8 @@
 namespace ot {
 namespace Ncp {
 
+#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
+
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
@@ -65,6 +67,8 @@ extern "C" void otNcpInit(otInstance *aInstance)
         assert(false);
     }
 }
+
+#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
 
 NcpUart::UartTxBuffer::UartTxBuffer(void)
     : Hdlc::Encoder::BufferWriteIterator()
