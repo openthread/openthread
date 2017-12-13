@@ -687,20 +687,20 @@ public:
     otError UpdateLinkLocalAddress(void);
 
     /**
-     * This method returns a pointer to the link-local all Thread nodes multicast address.
+     * This method returns a reference to the link-local all Thread nodes multicast address.
      *
-     * @returns A pointer to the link-local all Thread nodes multicast address.
+     * @returns A reference to the link-local all Thread nodes multicast address.
      *
      */
-    const Ip6::Address *GetLinkLocalAllThreadNodesAddress(void) const;
+    const Ip6::Address &GetLinkLocalAllThreadNodesAddress(void) const;
 
     /**
-     * This method returns a pointer to the realm-local all Thread nodes multicast address.
+     * This method returns a reference to the realm-local all Thread nodes multicast address.
      *
-     * @returns A pointer to the realm-local all Thread nodes multicast address.
+     * @returns A reference to the realm-local all Thread nodes multicast address.
      *
      */
-    const Ip6::Address *GetRealmLocalAllThreadNodesAddress(void) const;
+    const Ip6::Address &GetRealmLocalAllThreadNodesAddress(void) const;
 
     /**
      * This method returns a pointer to the parent when operating in End Device mode.
