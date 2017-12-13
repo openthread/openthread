@@ -138,12 +138,12 @@ public:
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
-     * This method returns a pointer to the Target EID.
+     * This method returns a reference to the Target EID.
      *
      * @returns A pointer to the Target EID.
      *
      */
-    const Ip6::Address *GetTarget(void) const { return &mTarget; }
+    const Ip6::Address &GetTarget(void) const { return mTarget; }
 
     /**
      * This method sets the Target EID.

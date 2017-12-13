@@ -172,7 +172,7 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 
     for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
     {
-        if (memcmp(&cur->mAddress, &aAddress, sizeof(cur->mAddress)) == 0)
+        if (cur->GetAddress() == aAddress)
         {
             ExitNow(rval = true);
         }
@@ -342,7 +342,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 
     for (entry = mMulticastAddresses; entry; entry = entry->GetNext())
     {
-        if (memcmp(&entry->mAddress, &aAddress, sizeof(otIp6Address)) == 0)
+        if (entry->GetAddress() == aAddress)
         {
             VerifyOrExit((entry >= &mExtMulticastAddresses[0]) && (entry < &mExtMulticastAddresses[num]),
                          error = OT_ERROR_INVALID_ARGS);
@@ -382,7 +382,7 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
         // In unused entries, the `mNext` points back to the entry itself.
         if (entry->mNext != entry)
         {
-            UnsubscribeExternalMulticast(*static_cast<Address *>(&entry->mAddress));
+            UnsubscribeExternalMulticast(entry->GetAddress());
         }
     }
 }
@@ -449,7 +449,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
-        if (memcmp(&entry->mAddress, &aAddress.mAddress, sizeof(otIp6Address)) == 0)
+        if (entry->GetAddress() == aAddress.GetAddress())
         {
             VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
                          error = OT_ERROR_INVALID_ARGS);
@@ -493,7 +493,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
-        if (memcmp(&entry->mAddress, &aAddress, sizeof(otIp6Address)) == 0)
+        if (entry->GetAddress() == aAddress)
         {
             VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
                          error = OT_ERROR_INVALID_ARGS);
@@ -533,7 +533,7 @@ void Netif::RemoveAllExternalUnicastAddresses(void)
         // In unused entries, the `mNext` points back to the entry itself.
         if (entry->mNext != entry)
         {
-            RemoveExternalUnicastAddress(*static_cast<Address *>(&entry->mAddress));
+            RemoveExternalUnicastAddress(entry->GetAddress());
         }
     }
 }

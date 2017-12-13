@@ -164,7 +164,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
         cur->Read(Ip6::Header::GetDestinationOffset(), sizeof(ip6Dst), &ip6Dst);
 
-        if (memcmp(&ip6Dst, &aEid, sizeof(ip6Dst)) == 0)
+        if (ip6Dst == aEid)
         {
             mResolvingQueue.Dequeue(*cur);
 
@@ -469,10 +469,8 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
         aMessage.Read(0, sizeof(ip6Header), &ip6Header);
 
-        if (!memcmp(&ip6Header.GetDestination(), netif.GetMle().GetLinkLocalAllThreadNodesAddress(),
-                    sizeof(ip6Header.GetDestination())) ||
-            !memcmp(&ip6Header.GetDestination(), netif.GetMle().GetRealmLocalAllThreadNodesAddress(),
-                    sizeof(ip6Header.GetDestination())))
+        if (ip6Header.GetDestination() == netif.GetMle().GetLinkLocalAllThreadNodesAddress() ||
+            ip6Header.GetDestination() == netif.GetMle().GetRealmLocalAllThreadNodesAddress())
         {
             // schedule direct transmission
             aMessage.SetDirectTransmission();

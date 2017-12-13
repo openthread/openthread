@@ -93,7 +93,7 @@ public:
      * @returns The unicast address.
      *
      */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
+    const Address &GetAddress(void) const { return static_cast<const Address &>(mAddress); }
 
     /**
      * This method returns the unicast address.
@@ -101,7 +101,7 @@ public:
      * @returns The unicast address.
      *
      */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
+    Address &GetAddress(void) { return static_cast<Address &>(mAddress); }
 
     /**
      * This method returns the IPv6 scope value.
@@ -145,7 +145,7 @@ public:
      * @returns The multicast address.
      *
      */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
+    const Address &GetAddress(void) const { return static_cast<const Address &>(mAddress); }
 
     /**
      * This method returns the multicast address.
@@ -153,7 +153,7 @@ public:
      * @returns The multicast address.
      *
      */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
+    Address &GetAddress(void) { return static_cast<Address &>(mAddress); }
 
     /**
      * This method returns the next multicast address subscribed to the interface.
