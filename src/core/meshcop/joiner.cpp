@@ -234,7 +234,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         joinerRouter.mJoinerUdpPort = aResult->mJoinerUdpPort;
         joinerRouter.mPanId = aResult->mPanId;
         joinerRouter.mChannel = aResult->mChannel;
-        memcpy(joinerRouter.mExtAddr.m8, &aResult->mExtAddress, sizeof(joinerRouter.mExtAddr));
+        joinerRouter.mExtAddr = static_cast<Mac::ExtAddress &>(aResult->mExtAddress);
         AddJoinerRouter(joinerRouter);
     }
     else

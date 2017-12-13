@@ -293,7 +293,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRespon
         {
             ExtMacAddressTlv tlv;
             tlv.Init();
-            tlv.SetMacAddr(*netif.GetMac().GetExtAddress());
+            tlv.SetMacAddr(netif.GetMac().GetExtAddress());
             SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             break;
         }

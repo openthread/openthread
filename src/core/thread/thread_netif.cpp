@@ -159,7 +159,7 @@ otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 {
     address.mType = Ip6::LinkAddress::kEui64;
     address.mLength = sizeof(address.mExtAddress);
-    memcpy(&address.mExtAddress, mMac.GetExtAddress(), address.mLength);
+    address.mExtAddress = mMac.GetExtAddress();
     return OT_ERROR_NONE;
 }
 

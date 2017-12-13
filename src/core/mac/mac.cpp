@@ -221,7 +221,7 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
     VerifyOrExit(aBeaconFrame->GetType() == Frame::kFcfFrameBeacon, error = OT_ERROR_PARSE);
     SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
     VerifyOrExit(address.mLength == sizeof(address.mExtAddress), error = OT_ERROR_PARSE);
-    memcpy(&aResult.mExtAddress, &address.mExtAddress, sizeof(aResult.mExtAddress));
+    aResult.mExtAddress = address.mExtAddress;
 
     aBeaconFrame->GetSrcPanId(aResult.mPanId);
     aResult.mChannel = aBeaconFrame->GetChannel();
@@ -1590,8 +1590,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
     case sizeof(ExtAddress):
         aFrame->GetDstPanId(panid);
-        VerifyOrExit(panid == mPanId &&
-                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0,
+        VerifyOrExit(panid == mPanId && dstaddr.mExtAddress == mExtAddress,
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
         break;
     }
@@ -1622,7 +1621,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     }
 
     // Duplicate Address Protection
-    if (memcmp(&srcaddr.mExtAddress, &mExtAddress, sizeof(srcaddr.mExtAddress)) == 0)
+    if (srcaddr.mExtAddress == mExtAddress)
     {
         ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
     }
