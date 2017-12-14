@@ -226,7 +226,7 @@ public:
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
      * @param[in]  aContext       A pointer to arbitrary context information.
-     * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
+     * @param[in]  aBeaconFrame   A pointer to the Beacon frame or NULL to indicate end of Active Scan operation.
      *
      */
     typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
@@ -234,10 +234,14 @@ public:
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
-     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
-     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     * @param[in]  aScanChannels  A bit vector indicating which channels to scan. Zero is mapped to all channels.
+     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel. Zero duration maps to
+     *                            default value `kScanDurationDefault` = 300 ms.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
      * @param[in]  aContext       A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE  Successfully scheduled the Active Scan request.
+     * @retval OT_ERROR_BUSY  Could not schedule the scan (a scan is ongoing or scheduled).
      *
      */
     otError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
@@ -256,7 +260,7 @@ public:
     otError ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult);
 
     /**
-     * This function pointer is called during an "Energy Scan" when the result for a channel is ready or the scan
+     * This function pointer is called during an Energy Scan when the result for a channel is ready or the scan
      * completes.
      *
      * @param[in]  aContext  A pointer to arbitrary context information.
@@ -269,8 +273,9 @@ public:
     /**
      * This method starts an IEEE 802.15.4 Energy Scan.
      *
-     * @param[in]  aScanChannels     A bit vector indicating on which channels to perform energy scan.
-     * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
+     * @param[in]  aScanChannels     A bit vector indicating on which channels to scan. Zero is mapped to all channels.
+     * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel. If the duration is set to
+     *                               zero, a single RSSI sample will be taken per channel.
      * @param[in]  aHandler          A pointer to a function called to pass on scan result or indicate scan completion.
      * @param[in]  aContext          A pointer to arbitrary context information.
      *
@@ -631,7 +636,6 @@ private:
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
-    void StartEnergyScan(void);
     otError HandleMacCommand(Frame &aFrame);
 
     static void HandleMacTimer(Timer &aTimer);
@@ -644,7 +648,12 @@ private:
     void HandleEnergyScanSampleRssi(void);
 
     void StartCsmaBackoff(void);
-    otError Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
+
+    void Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
+    otError UpdateScanChannel(void);
+    void PerformActiveScan(void);
+    void PerformEnergyScan(void);
+    void ReportEnergyScanResult(int8_t aRssi);
 
     otError RadioTransmit(Frame *aSendFrame);
     otError RadioReceive(uint8_t aChannel);

@@ -133,61 +133,43 @@ Mac::Mac(Instance &aInstance):
 
 otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
     mActiveScanHandler = aHandler;
-    SuccessOrExit(error = Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext));
 
-exit:
-
-    if (OT_ERROR_NONE != error)
+    if (aScanDuration == 0)
     {
-        mActiveScanHandler = NULL;
+        aScanDuration = kScanDurationDefault;
     }
 
+    Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext);
+
+exit:
     return error;
 }
 
 otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
 {
-    otError error;
-
-    mEnergyScanHandler = aHandler;
-    SuccessOrExit(error = Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext));
-
-exit:
-
-    if (OT_ERROR_NONE != error)
-    {
-        mEnergyScanHandler = NULL;
-    }
-
-    return error;
-}
-
-otError Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext)
-{
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
-    mScanContext = aContext;
-    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
-    mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(kScanDurationDefault) : aScanDuration;
-
-    mScanChannel = OT_RADIO_CHANNEL_MIN;
-    mScanChannels >>= OT_RADIO_CHANNEL_MIN;
-
-    while ((mScanChannels & 1) == 0)
-    {
-        mScanChannels >>= 1;
-        mScanChannel++;
-    }
-
-    StartOperation(aScanOperation);
+    mEnergyScanHandler = aHandler;
+    Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext);
 
 exit:
     return error;
+}
+
+void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext)
+{
+    mScanContext = aContext;
+    mScanDuration = aScanDuration;
+    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
+    mScanChannel = OT_RADIO_CHANNEL_MIN - 1;
+    StartOperation(aScanOperation);
 }
 
 bool Mac::IsActiveScanInProgress(void)
@@ -250,25 +232,65 @@ exit:
     return error;
 }
 
-void Mac::StartEnergyScan(void)
+otError Mac::UpdateScanChannel(void)
 {
-    if (!(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN))
+    otError error = OT_ERROR_NONE;
+
+    do
     {
-        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mMacTimer.Start(mScanDuration);
-        mEnergyScanSampleRssiTask.Post();
-        RadioReceive(mScanChannel);
+        mScanChannel++;
+        VerifyOrExit(mScanChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_NOT_FOUND);
+
+    }
+    while ((mScanChannels & (1U << mScanChannel)) == 0);
+
+exit:
+    return error;
+}
+
+void Mac::PerformActiveScan(void)
+{
+    if (UpdateScanChannel() == OT_ERROR_NONE)
+    {
+        // If there are more channels to scan, start CSMA backoff to send the beacon request.
+        StartCsmaBackoff();
     }
     else
     {
-        otError error = otPlatRadioEnergyScan(&GetInstance(), mScanChannel, mScanDuration);
+        otPlatRadioSetPanId(&GetInstance(), mPanId);
+        mActiveScanHandler(mScanContext, NULL);
+        FinishOperation();
+    }
+}
 
-        if (error != OT_ERROR_NONE)
+void Mac::PerformEnergyScan(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = UpdateScanChannel());
+
+    if (!(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN) || (mScanDuration == 0))
+    {
+        RadioReceive(mScanChannel);
+        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
+        mEnergyScanSampleRssiTask.Post();
+
+        if (mScanDuration != 0)
         {
-            // Cancel scan
-            mEnergyScanHandler(mScanContext, NULL);
-            FinishOperation();
+            mMacTimer.Start(mScanDuration);
         }
+    }
+    else
+    {
+        SuccessOrExit(error = otPlatRadioEnergyScan(&GetInstance(), mScanChannel, mScanDuration));
+    }
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        mEnergyScanHandler(mScanContext, NULL);
+        FinishOperation();
     }
 }
 
@@ -294,40 +316,23 @@ exit:
     return;
 }
 
-void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
+void Mac::ReportEnergyScanResult(int8_t aRssi)
 {
-    // Trigger a energy scan handler callback if necessary
-    if (aEnergyScanMaxRssi != kInvalidRssiValue)
+    if (aRssi != kInvalidRssiValue)
     {
         otEnergyScanResult result;
 
         result.mChannel = mScanChannel;
-        result.mMaxRssi = aEnergyScanMaxRssi;
+        result.mMaxRssi = aRssi;
+
         mEnergyScanHandler(mScanContext, &result);
     }
+}
 
-    // Update to the next scan channel
-    do
-    {
-        mScanChannels >>= 1;
-        mScanChannel++;
-
-        // If we have scanned all the channels, then fire the final callback
-        // and finish scan operation.
-        if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
-        {
-            mEnergyScanHandler(mScanContext, NULL);
-            FinishOperation();
-            ExitNow();
-        }
-    }
-    while ((mScanChannels & 1) == 0);
-
-    // Start scanning the next channel
-    StartEnergyScan();
-
-exit:
-    return;
+void Mac::EnergyScanDone(int8_t aRssi)
+{
+    ReportEnergyScanResult(aRssi);
+    PerformEnergyScan();
 }
 
 void Mac::HandleEnergyScanSampleRssi(Tasklet &aTasklet)
@@ -351,7 +356,14 @@ void Mac::HandleEnergyScanSampleRssi(void)
         }
     }
 
-    mEnergyScanSampleRssiTask.Post();
+    if (mScanDuration == 0)
+    {
+        EnergyScanDone(mEnergyScanCurrentMaxRssi);
+    }
+    else
+    {
+        mEnergyScanSampleRssiTask.Post();
+    }
 
 exit:
     return;
@@ -581,13 +593,13 @@ void Mac::StartOperation(Operation aOperation)
     {
         mPendingActiveScan = false;
         mOperation = kOperationActiveScan;
-        StartCsmaBackoff();
+        PerformActiveScan();
     }
     else if (mPendingEnergyScan)
     {
         mPendingEnergyScan = false;
         mOperation = kOperationEnergyScan;
-        StartEnergyScan();
+        PerformEnergyScan();
     }
     else if (mPendingTransmitBeacon)
     {
@@ -1262,22 +1274,7 @@ void Mac::HandleMacTimer(void)
     switch (mOperation)
     {
     case kOperationActiveScan:
-        do
-        {
-            mScanChannels >>= 1;
-            mScanChannel++;
-
-            if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
-            {
-                otPlatRadioSetPanId(&GetInstance(), mPanId);
-                mActiveScanHandler(mScanContext, NULL);
-                FinishOperation();
-                ExitNow();
-            }
-        }
-        while ((mScanChannels & 1) == 0);
-
-        StartCsmaBackoff();
+        PerformActiveScan();
         break;
 
     case kOperationEnergyScan:
@@ -1293,9 +1290,6 @@ void Mac::HandleMacTimer(void)
         assert(false);
         break;
     }
-
-exit:
-    return;
 }
 
 void Mac::HandleReceiveTimer(Timer &aTimer)
