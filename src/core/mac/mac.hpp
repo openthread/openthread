@@ -164,7 +164,8 @@ class Sender: public OwnerLocator
 
 public:
     /**
-     * This function pointer is called when the MAC is about to transmit the frame.
+     * This function pointer is called when the MAC is about to transmit the frame asking MAC sender client to provide
+     * the frame.
      *
      * @param[in]  aSender   A reference to the MAC sender client object.
      * @param[in]  aFrame    A reference to the MAC frame buffer.
@@ -466,34 +467,34 @@ public:
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     /**
-     * This method is called to handle receive events.
+     * This method is called to handle a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation aborted.
-     * @param[in]  aError  OT_ERROR_NONE when successfully received a frame, OT_ERROR_ABORT when reception
-     *                     was aborted and a frame was not received.
+     * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation was aborted.
+     * @param[in]  aError  OT_ERROR_NONE when successfully received a frame,
+     *                     OT_ERROR_ABORT when reception was aborted and a frame was not received.
      *
      */
-    void ReceiveDoneTask(Frame *aFrame, otError aError);
+    void HandleReceivedFrame(Frame *aFrame, otError aError);
 
     /**
      * This method is called to handle transmission start events.
      *
      * @param[in]  aFrame  A pointer to the frame that is transmitted.
      */
-    void TransmitStartedTask(otRadioFrame *aFrame);
+    void HandleTransmitStarted(otRadioFrame *aFrame);
 
     /**
      * This method is called to handle transmit events.
      *
      * @param[in]  aFrame      A pointer to the frame that was transmitted.
      * @param[in]  aAckFrame   A pointer to the ACK frame, NULL if no ACK was received.
-     * @param[in]  aError      OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
-     *                         transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the
-     *                         transmission could not take place due to activity on the channel, OT_ERROR_ABORT when
-     *                         transmission was aborted for other reasons.
+     * @param[in]  aError      OT_ERROR_NONE when the frame was transmitted,
+     *                         OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
+     *                         OT_ERROR_CHANNEL_ACCESS_FAILURE when the tx failed due to activity on the channel,
+     *                         OT_ERROR_ABORT when transmission was aborted for other reasons.
      *
      */
-    void TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+    void HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -627,7 +628,6 @@ private:
     void UpdateIdleMode(void);
     void StartOperation(Operation aOperation);
     void FinishOperation(void);
-    void SentFrame(otError aError);
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
