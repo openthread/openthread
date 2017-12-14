@@ -57,4 +57,9 @@ ThreadNetif &InstanceLocator::GetNetif(void) const
     return GetInstance().GetThreadNetif();
 }
 
+Notifier &InstanceLocator::GetNotifier(void) const
+{
+    return GetInstance().GetNotifier();
+}
+
 }  // namespace ot

@@ -119,6 +119,7 @@ SOURCES_COMMON                      = \
     common/instance.cpp               \
     common/logging.cpp                \
     common/locator.cpp                \
+    common/notifier.cpp               \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
@@ -213,6 +214,7 @@ HEADERS_COMMON                      = \
     common/locator.hpp                \
     common/logging.hpp                \
     common/message.hpp                \
+    common/notifier.hpp               \
     common/owner-locator.hpp          \
     common/settings.hpp               \
     common/new.hpp                    \

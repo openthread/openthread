@@ -61,22 +61,22 @@ JoinerRouter::JoinerRouter(Instance &aInstance):
     mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
     mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mTimer(aInstance, &JoinerRouter::HandleTimer, this),
+    mNotifierCallback(&JoinerRouter::HandleStateChanged, this),
     mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false),
     mExpectJoinEntRsp(false)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     GetNetif().GetCoap().AddResource(mRelayTransmit);
-    mNetifCallback.Set(HandleNetifStateChanged, this);
-    GetNetif().RegisterCallback(mNetifCallback);
+    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
-void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
 {
-    static_cast<JoinerRouter *>(aContext)->HandleNetifStateChanged(aFlags);
+    aCallback.GetOwner<JoinerRouter>().HandleStateChanged(aFlags);
 }
 
-void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
+void JoinerRouter::HandleStateChanged(uint32_t aFlags)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -142,7 +142,7 @@ otError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
     otLogFuncEntry();
     mJoinerUdpPort = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
-    HandleNetifStateChanged(OT_CHANGED_THREAD_NETDATA);
+    HandleStateChanged(OT_CHANGED_THREAD_NETDATA);
     otLogFuncExit();
     return OT_ERROR_NONE;
 }
