@@ -937,7 +937,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        TransmitDoneTask(mTxFrame, NULL, OT_ERROR_ABORT);
+        HandleTransmitDone(mTxFrame, NULL, OT_ERROR_ABORT);
     }
 }
 
@@ -947,12 +947,12 @@ extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame
 
     otLogFuncEntry();
     VerifyOrExit(instance->IsInitialized());
-    instance->GetThreadNetif().GetMac().TransmitStartedTask(aFrame);
+    instance->GetThreadNetif().GetMac().HandleTransmitStarted(aFrame);
 exit:
     otLogFuncExit();
 }
 
-void Mac::TransmitStartedTask(otRadioFrame *aFrame)
+void Mac::HandleTransmitStarted(otRadioFrame *aFrame)
 {
     Frame *frame = static_cast<Frame *>(aFrame);
 
@@ -980,111 +980,60 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        instance->GetThreadNetif().GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
+        instance->GetThreadNetif().GetMac().HandleTransmitDone(aFrame, aAckFrame, aError);
     }
 
 exit:
     otLogFuncExit();
 }
 
-void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
+void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    Frame *txFrame = static_cast<Frame *>(aFrame);
-    Address addr;
+    Frame &sendFrame = *static_cast<Frame *>(aFrame);
     bool framePending = false;
+    Address dstAddr;
 
+    // Stop the ack timer.
     mMacTimer.Stop();
 
-    txFrame->GetDstAddr(addr);
-
-    if (aError == OT_ERROR_NONE && txFrame->GetAckRequest() && aAckFrame != NULL)
+    switch (aError)
     {
-        Frame *ackFrame = static_cast<Frame *>(aAckFrame);
-        Neighbor *neighbor;
-
-        framePending = ackFrame->GetFramePending();
-        neighbor = GetNetif().GetMle().GetNeighbor(addr);
-
-        if (neighbor != NULL)
-        {
-            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetRssi());
-        }
-    }
-
-    if (aError == OT_ERROR_ABORT)
-    {
+    case OT_ERROR_ABORT:
         mCounters.mTxErrAbort++;
+
+    // fall through
+
+    case OT_ERROR_NONE:
+    case OT_ERROR_NO_ACK:
+    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+        break;
+
+    default:
+        assert(false);
+        ExitNow();
     }
+
+    // Determine whether a CSMA retry is required.
 
     if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
     {
         mCounters.mTxErrCca++;
-    }
 
-    if (!RadioSupportsCsmaBackoff() &&
-        aError == OT_ERROR_CHANNEL_ACCESS_FAILURE &&
-        mCsmaAttempts < kMaxCSMABackoffs)
-    {
-        mCsmaAttempts++;
-        StartCsmaBackoff();
-
-        ExitNow();
+        if (!RadioSupportsCsmaBackoff() && mCsmaAttempts < kMaxCSMABackoffs)
+        {
+            mCsmaAttempts++;
+            StartCsmaBackoff();
+            ExitNow();
+        }
     }
 
     mCsmaAttempts = 0;
 
-    switch (mOperation)
-    {
-    case kOperationTransmitData:
-
-        if (framePending && txFrame->IsDataRequestCommand())
-        {
-            mReceiveTimer.Start(kDataPollTimeout);
-            StartOperation(kOperationWaitingForData);
-        }
-
-    // fall through
-
-    case kOperationActiveScan:
-    case kOperationTransmitBeacon:
-        SentFrame(aError);
-        break;
-
-    default:
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        if (GetInstance().GetLinkRaw().IsEnabled())
-        {
-            GetInstance().GetLinkRaw().InvokeTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
-        }
-        else
-#endif
-        {
-            assert(false);
-        }
-
-        break;
-    }
-
-exit:
-    return;
-}
-
-void Mac::SentFrame(otError aError)
-{
-    Frame &sendFrame(*mTxFrame);
-    Sender *sender;
-    Address addr;
+    // Determine whether to re-transmit the frame.
 
     mTransmitAttempts++;
 
-    switch (aError)
-    {
-    case OT_ERROR_NONE:
-        break;
-
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-    case OT_ERROR_ABORT:
-    case OT_ERROR_NO_ACK:
+    if (aError != OT_ERROR_NONE)
     {
         char stringBuffer[Frame::kInfoStringSize];
 
@@ -1093,25 +1042,36 @@ void Mac::SentFrame(otError aError)
                      sendFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
         otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
-        if (!RadioSupportsRetries() &&
-            mTransmitAttempts < sendFrame.GetMaxTxAttempts())
+        if (!RadioSupportsRetries() && mTransmitAttempts < sendFrame.GetMaxTxAttempts())
         {
-            StartCsmaBackoff();
             mCounters.mTxRetry++;
+            StartCsmaBackoff();
             ExitNow();
         }
 
         OT_UNUSED_VARIABLE(stringBuffer);
-        break;
-    }
-
-    default:
-        assert(false);
-        break;
     }
 
     mTransmitAttempts = 0;
-    mCsmaAttempts = 0;
+
+    // Process the ack frame for "frame pending".
+
+    sendFrame.GetDstAddr(dstAddr);
+
+    if (aError == OT_ERROR_NONE && sendFrame.GetAckRequest() && aAckFrame != NULL)
+    {
+        Frame &ackFrame = *static_cast<Frame *>(aAckFrame);
+        Neighbor *neighbor = GetNetif().GetMle().GetNeighbor(dstAddr);
+
+        framePending = ackFrame.GetFramePending();
+
+        if (neighbor != NULL)
+        {
+            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame.GetRssi());
+        }
+    }
+
+    // Update MAC counters.
 
     mCounters.mTxTotal++;
 
@@ -1120,16 +1080,12 @@ void Mac::SentFrame(otError aError)
         mCounters.mTxErrBusyChannel++;
     }
 
-    mTxFrame->GetDstAddr(addr);
-
-    if (addr.mShortAddress == kShortAddrBroadcast)
+    if (dstAddr.mShortAddress == kShortAddrBroadcast)
     {
-        // Broadcast frame
         mCounters.mTxBroadcast++;
     }
     else
     {
-        // Unicast Frame
         mCounters.mTxUnicast++;
     }
 
@@ -1147,6 +1103,8 @@ void Mac::SentFrame(otError aError)
         mCounters.mTxNoAckRequested++;
     }
 
+    // Determine next action based on current operation.
+
     switch (mOperation)
     {
     case kOperationActiveScan:
@@ -1160,8 +1118,17 @@ void Mac::SentFrame(otError aError)
         break;
 
     case kOperationTransmitData:
-        if (mReceiveTimer.IsRunning())
+    {
+        Sender *sender;
+
+        if (sendFrame.IsDataRequestCommand())
         {
+            if (framePending)
+            {
+                mReceiveTimer.Start(kDataPollTimeout);
+                StartOperation(kOperationWaitingForData);
+            }
+
             mCounters.mTxDataPoll++;
         }
         else
@@ -1186,9 +1153,9 @@ void Mac::SentFrame(otError aError)
 
         otDumpDebgMac(GetInstance(), "TX", sendFrame.GetHeader(), sendFrame.GetLength());
         sender->HandleSentFrame(sendFrame, aError);
-
         FinishOperation();
         break;
+    }
 
     default:
         assert(false);
@@ -1319,7 +1286,7 @@ void Mac::HandleMacTimer(void)
 
     case kOperationTransmitData:
         otLogDebgMac(GetInstance(), "Ack timer fired");
-        SentFrame(OT_ERROR_NO_ACK);
+        HandleTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
         break;
 
     default:
@@ -1527,14 +1494,14 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        instance->GetThreadNetif().GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+        instance->GetThreadNetif().GetMac().HandleReceivedFrame(static_cast<Frame *>(aFrame), aError);
     }
 
 exit:
     otLogFuncExit();
 }
 
-void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
+void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 {
     Address srcaddr;
     Address dstaddr;
