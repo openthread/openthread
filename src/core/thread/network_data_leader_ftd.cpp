@@ -101,12 +101,10 @@ void Leader::Stop(void)
 
 void Leader::IncrementVersion(void)
 {
-    ThreadNetif &netif = GetNetif();
-
-    if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         mVersion++;
-        netif.SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
     }
 }
 
@@ -145,7 +143,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16)
         mStableVersion++;
     }
 
-    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return;
@@ -771,7 +769,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
         }
     }
 
-    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;
@@ -1177,7 +1175,7 @@ otError Leader::FreeContext(uint8_t aContextId)
     mContextUsed &= ~(1 << aContextId);
     mVersion++;
     mStableVersion++;
-    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
     return OT_ERROR_NONE;
 }
 

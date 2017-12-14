@@ -234,22 +234,21 @@ typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
  * @param[in]  aContext   A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE     Added the callback to the list of callbacks.
+ * @retval OT_ERROR_ALREADY  The callback was already registered.
  * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
  *
  */
-OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                               void *aContext);
+OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called with certain configuration or state changes.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aCallback   A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aContext    A pointer to application-specific context.
  *
  */
-OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                              void *aCallbackContext);
+OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This method triggers a platform reset.

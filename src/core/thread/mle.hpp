@@ -1419,8 +1419,8 @@ private:
     void GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
                        uint8_t *aNonce);
 
-    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
-    void HandleNetifStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
+    void HandleStateChanged(uint32_t aFlags);
     static void HandleParentRequestTimer(Timer &aTimer);
     void HandleParentRequestTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
@@ -1534,7 +1534,7 @@ private:
     Ip6::NetifMulticastAddress mLinkLocalAllThreadNodes;
     Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
 
-    Ip6::NetifCallback mNetifCallback;
+    Notifier::Callback mNotifierCallback;
 };
 
 }  // namespace Mle

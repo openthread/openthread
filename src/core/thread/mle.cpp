@@ -103,7 +103,8 @@ Mle::Mle(Instance &aInstance) :
 #endif
     mAnnounceChannel(OT_RADIO_CHANNEL_MIN),
     mPreviousChannel(0),
-    mPreviousPanId(Mac::kPanIdBroadcast)
+    mPreviousPanId(Mac::kPanIdBroadcast),
+    mNotifierCallback(&Mle::HandleStateChanged, this)
 {
     uint8_t meshLocalPrefix[8];
     size_t i = 0;
@@ -199,8 +200,7 @@ Mle::Mle(Instance &aInstance) :
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
 
-    mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
-    GetNetif().RegisterCallback(mNetifCallback);
+    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
     StartParentSearchTimer();
@@ -244,7 +244,7 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
     mRole = OT_DEVICE_ROLE_DETACHED;
-    netif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
     SetStateDetached();
 
     netif.GetKeyManager().Start();
@@ -582,7 +582,7 @@ otError Mle::SetStateDetached(void)
 
     if (mRole != OT_DEVICE_ROLE_DETACHED)
     {
-        netif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     if (mRole == OT_DEVICE_ROLE_LEADER)
@@ -610,7 +610,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
     if (mRole != OT_DEVICE_ROLE_CHILD)
     {
-        netif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     if (mRole == OT_DEVICE_ROLE_LEADER)
@@ -735,7 +735,7 @@ otError Mle::UpdateLinkLocalAddress(void)
     mLinkLocal64.GetAddress().SetIid(netif.GetMac().GetExtAddress());
     netif.AddUnicastAddress(mLinkLocal64);
 
-    netif.SetStateChangedFlags(OT_CHANGED_THREAD_LL_ADDR);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_LL_ADDR);
 
     return OT_ERROR_NONE;
 }
@@ -802,7 +802,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     }
 
     // Changing the prefix also causes the mesh local address to be different.
-    netif.SetStateChangedFlags(OT_CHANGED_THREAD_ML_ADDR);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_ML_ADDR);
 
 exit:
     return OT_ERROR_NONE;
@@ -854,7 +854,7 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
         mLastPartitionId = mLeaderData.GetPartitionId();
         mLastPartitionRouterIdSequence = GetNetif().GetMle().GetRouterIdSequence();
         mLastPartitionIdTimeout = GetNetif().GetMle().GetNetworkIdTimeout();
-        GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_PARTITION_ID);
+        GetNotifier().SetFlags(OT_CHANGED_THREAD_PARTITION_ID);
     }
 
     mLeaderData.SetPartitionId(aPartitionId);
@@ -1276,12 +1276,12 @@ exit:
     return error;
 }
 
-void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void Mle::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
 {
-    static_cast<Mle *>(aContext)->HandleNetifStateChanged(aFlags);
+    aCallback.GetOwner<Mle>().HandleStateChanged(aFlags);
 }
 
-void Mle::HandleNetifStateChanged(uint32_t aFlags)
+void Mle::HandleStateChanged(uint32_t aFlags)
 {
     ThreadNetif &netif = GetNetif();
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
@@ -1297,7 +1297,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
             }
 
             netif.AddUnicastAddress(mMeshLocal64);
-            netif.SetStateChangedFlags(OT_CHANGED_THREAD_ML_ADDR);
+            GetNotifier().SetFlags(OT_CHANGED_THREAD_ML_ADDR);
         }
 
         if (mRole == OT_DEVICE_ROLE_CHILD && (mDeviceMode & ModeTlv::kModeFFD) == 0)
@@ -1752,7 +1752,7 @@ void Mle::HandleSendChildUpdateRequest(void)
 {
     // a Network Data update can cause a change to the IPv6 address configuration
     // only send a Child Update Request after we know there are no more pending changes
-    if (GetNetif().IsStateChangedCallbackPending())
+    if (GetNotifier().IsPending())
     {
         mSendChildUpdateRequest.Post();
     }

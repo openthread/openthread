@@ -175,80 +175,6 @@ public:
 };
 
 /**
- * This class implements network interface handlers.
- *
- */
-class NetifCallback
-{
-    friend class Netif;
-
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    NetifCallback(void):
-        mCallback(NULL),
-        mContext(NULL),
-        mNext(NULL) {
-    }
-
-    /**
-     * This method sets the callback information.
-     *
-     * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.
-     * @param[in]  aContext   A pointer to arbitrary context information.
-     *
-     */
-    void Set(otStateChangedCallback aCallback, void *aContext) {
-        mCallback = aCallback;
-        mContext = aContext;
-    }
-
-    /**
-     * This method tests whether the object is free or in use.
-     *
-     * @returns True if the object is free, false otherwise.
-     *
-     */
-    bool IsFree(void) { return (mCallback == NULL); }
-
-    /**
-     * This method frees the object.
-     *
-     */
-    void Free(void) {
-        mCallback = NULL;
-        mContext = NULL;
-        mNext = NULL;
-    }
-
-    /**
-     * This method tests whether the object is set to the provided elements.
-     *
-     * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.
-     * @param[in]  aContext   A pointer to arbitrary context information.
-     *
-     * @returns True if the object elements equal the input params, false otherwise.
-     *
-     */
-    bool IsServing(otStateChangedCallback aCallback, void *aContext) {
-        return (aCallback == mCallback && aContext == mContext);
-    }
-
-private:
-    void Callback(uint32_t aFlags) {
-        if (mCallback != NULL) {
-            mCallback(aFlags, mContext);
-        }
-    }
-
-    otStateChangedCallback mCallback;
-    void *mContext;
-    NetifCallback *mNext;
-};
-
-/**
  * This class implements an IPv6 network interface.
  *
  */
@@ -459,44 +385,6 @@ public:
     void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
 
     /**
-     * This method registers a network interface callback.
-     *
-     * @param[in]  aCallback  A reference to the callback.
-     *
-     * @retval OT_ERROR_NONE    Successfully registered the callback.
-     * @retval OT_ERROR_ALREADY The callback was already registered.
-     */
-    otError RegisterCallback(NetifCallback &aCallback);
-
-    /**
-     * This method removes a network interface callback.
-     *
-     * @param[in]  aCallback  A reference to the callback.
-     *
-     * @retval OT_ERROR_NONE    Successfully removed the callback.
-     * @retval OT_ERROR_ALREADY The callback was not in the list.
-     */
-    otError RemoveCallback(NetifCallback &aCallback);
-
-    /**
-     * This method indicates whether or not a state changed callback is pending.
-     *
-     * @retval TRUE if a state changed callback is pending, FALSE otherwise.
-     *
-     */
-    bool IsStateChangedCallbackPending(void) { return mStateChangedFlags != 0; }
-
-    /**
-     * This method schedules notification of @p aFlags.
-     *
-     * The @p aFlags are combined (bitwise-or) with other flags that have not been provided in a callback yet.
-     *
-     * @param[in]  aFlags  A bit-field indicating what configuration or state has changed.
-     *
-     */
-    void SetStateChangedFlags(uint32_t aFlags);
-
-    /**
      * This virtual method enqueues an IPv6 messages on this network interface.
      *
      * @param[in]  aMessage  A reference to the IPv6 message.
@@ -531,18 +419,11 @@ public:
                                 uint8_t *aPrefixMatch) = 0;
 
 private:
-    static void HandleStateChangedTask(Tasklet &aTasklet);
-    void HandleStateChangedTask(void);
-
-    NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
     int8_t mInterfaceId;
     bool mMulticastPromiscuous;
-    Tasklet mStateChangedTask;
     Netif *mNext;
-
-    uint32_t mStateChangedFlags;
 
     NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
     NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
