@@ -1140,7 +1140,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    MessagePool(Instance &aInstance);
+    explicit MessagePool(Instance &aInstance);
 
     /**
      * This method is used to obtain a new message. The default priority `kDefaultMessagePriority`

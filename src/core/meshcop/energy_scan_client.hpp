@@ -58,7 +58,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    EnergyScanClient(Instance &aInstance);
+    explicit EnergyScanClient(Instance &aInstance);
 
     /**
      * This method sends an Energy Scan Query message.

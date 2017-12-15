@@ -104,7 +104,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    ThreadNetif(Instance &aInstance);
+    explicit ThreadNetif(Instance &aInstance);
 
     /**
      * This method enables the Thread network interface.

@@ -63,7 +63,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    PanIdQueryServer(Instance &aInstance);
+    explicit PanIdQueryServer(Instance &aInstance);
 
 private:
     enum
