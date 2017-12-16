@@ -64,7 +64,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    EnergyScanServer(Instance &aInstance);
+    explicit EnergyScanServer(Instance &aInstance);
 
 private:
     enum

@@ -106,7 +106,7 @@ public:
      *  @param[in] aInstance     A reference to OpenThread instance.
      *
      */
-    Notifier(Instance &aInstance);
+    explicit Notifier(Instance &aInstance);
 
     /**
      * This method registers a callback.
