@@ -53,6 +53,13 @@
 #include "mbedtls/oid.h"
 #endif
 
+#ifndef MBEDTLS_SLOW_CPU
+#define MBEDTLS_SLOW_CPU 0
+#endif //ndef MBEDTLS_SLOW_CPU
+#ifndef MBEDTLS_COMPUTATION_UNTILL_SEQ_NR
+#define MBEDTLS_COMPUTATION_UNTILL_SEQ_NR 6
+#endif //ndef MBEDTLS_COMPUTATION_UNTILL_SEQ_NR
+
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -3070,6 +3077,16 @@ static int ssl_reassemble_dtls_handshake( mbedtls_ssl_context *ssl )
 }
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
 
+static inline uint64_t ssl_load_six_bytes( unsigned char *buf )
+{
+    return( ( (uint64_t) buf[0] << 40 ) |
+            ( (uint64_t) buf[1] << 32 ) |
+            ( (uint64_t) buf[2] << 24 ) |
+            ( (uint64_t) buf[3] << 16 ) |
+            ( (uint64_t) buf[4] <<  8 ) |
+            ( (uint64_t) buf[5]       ) );
+}
+
 int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context *ssl )
 {
     if( ssl->in_msglen < mbedtls_ssl_hs_hdr_len( ssl ) )
@@ -3101,8 +3118,19 @@ int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context *ssl )
             /* Retransmit only on last message from previous flight, to avoid
              * too many retransmissions.
              * Besides, No sane server ever retransmits HelloVerifyRequest */
-            if( recv_msg_seq == ssl->handshake->in_flight_start_seq - 1 &&
-                ssl->in_msg[0] != MBEDTLS_SSL_HS_HELLO_VERIFY_REQUEST )
+            uint64_t rec_seqnum = ssl_load_six_bytes( ssl->in_ctr + 2 );
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dtls seq %d", (uint32_t) (rec_seqnum&0xFFFFFFFF)));
+            if( (recv_msg_seq == ssl->handshake->in_flight_start_seq - 1) 
+                && (ssl->in_msg[0] != MBEDTLS_SSL_HS_HELLO_VERIFY_REQUEST) 
+#if MBEDTLS_SLOW_CPU == 1
+                /* if the crypto calculations take longer then the timeout
+                 * then don't reply to retransmissions that are currently in the rx queue.
+                 * Since the calculation time is deterministic, we know how many messages
+                 * from the queue need to be skipped; i.e. -> we don't trigger
+                 * retransmits on them */
+                && (rec_seqnum     >  MBEDTLS_COMPUTATION_UNTILL_SEQ_NR)
+#endif
+                )
             {
                 MBEDTLS_SSL_DEBUG_MSG( 2, ( "received message from last flight, "
                                     "message_seq = %d, start_of_flight = %d",
@@ -3189,16 +3217,6 @@ static void ssl_dtls_replay_reset( mbedtls_ssl_context *ssl )
 {
     ssl->in_window_top = 0;
     ssl->in_window = 0;
-}
-
-static inline uint64_t ssl_load_six_bytes( unsigned char *buf )
-{
-    return( ( (uint64_t) buf[0] << 40 ) |
-            ( (uint64_t) buf[1] << 32 ) |
-            ( (uint64_t) buf[2] << 24 ) |
-            ( (uint64_t) buf[3] << 16 ) |
-            ( (uint64_t) buf[4] <<  8 ) |
-            ( (uint64_t) buf[5]       ) );
 }
 
 /*
