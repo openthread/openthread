@@ -65,7 +65,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Commissioner(Instance &aInstance);
+    explicit Commissioner(Instance &aInstance);
 
     /**
      * This method starts the Commissioner service.

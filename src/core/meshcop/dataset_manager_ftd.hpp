@@ -53,7 +53,7 @@ namespace MeshCoP {
 class ActiveDataset: public ActiveDatasetBase
 {
 public:
-    ActiveDataset(Instance &aInstance);
+    explicit ActiveDataset(Instance &aInstance);
 
     otError GenerateLocal(void);
 
@@ -74,7 +74,7 @@ private:
 class PendingDataset: public PendingDatasetBase
 {
 public:
-    PendingDataset(Instance &aInstance);
+    explicit PendingDataset(Instance &aInstance);
 
     void StartLeader(void);
 

@@ -747,7 +747,7 @@ public:
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    Coap(Instance &aInstance);
+    explicit Coap(Instance &aInstance);
 
 private:
     static void HandleRetransmissionTimer(Timer &aTimer);
@@ -769,7 +769,7 @@ public:
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    ApplicationCoap(Instance &aInstance);
+    explicit ApplicationCoap(Instance &aInstance);
 
 private:
     static void HandleRetransmissionTimer(Timer &aTimer);
