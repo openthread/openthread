@@ -674,7 +674,7 @@ public:
      * @retval OT_ERROR_NONE  Steering data was set
      *
      */
-    otError SetSteeringData(const otExtAddress *aExtAddress);
+    otError SetSteeringData(const Mac::ExtAddress *aExtAddress);
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
     /**
