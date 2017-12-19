@@ -1509,6 +1509,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_DATASET_RAW_TLVS";
         break;
 
+    case SPINEL_PROP_THREAD_CHILD_TABLE_ADDRESSES:
+        ret = "PROP_THREAD_CHILD_TABLE_ADDRESSES";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;
