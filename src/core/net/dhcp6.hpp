@@ -292,7 +292,7 @@ public:
      * @param[in]  aLinkLayerAddress The client LinkLayerAddress.
      *
      */
-    void SetDuidLinkLayerAddress(const Mac::ExtAddress *aDuidLinkLayerAddress) { memcpy(mDuidLinkLayerAddress, aDuidLinkLayerAddress, sizeof(Mac::ExtAddress)); }
+    void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress) { memcpy(mDuidLinkLayerAddress, &aDuidLinkLayerAddress, sizeof(Mac::ExtAddress)); }
 
 private:
     uint16_t mDuidType;                                         ///< Duid Type
@@ -356,7 +356,7 @@ public:
      * @param[in]  aLinkLayerAddress The server LinkLayerAddress.
      *
      */
-    void SetDuidLinkLayerAddress(const Mac::ExtAddress *aDuidLinkLayerAddress) { memcpy(mDuidLinkLayerAddress, aDuidLinkLayerAddress, sizeof(Mac::ExtAddress)); }
+    void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress) { memcpy(mDuidLinkLayerAddress, &aDuidLinkLayerAddress, sizeof(Mac::ExtAddress)); }
 
 private:
     uint16_t mDuidType;                                         ///< Duid Type

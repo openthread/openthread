@@ -167,7 +167,7 @@ public:
      */
     bool ShouldDeferHostSend(void);
 
-private:
+protected:
     typedef otError (NcpBase::*PropertyHandler)(void);
 
     struct PropertyHandlerEntry
@@ -250,7 +250,7 @@ private:
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    static void HandleStateChanged(uint32_t aFlags, void *aContext);
     void ProcessThreadChangedFlags(void);
 
 #if OPENTHREAD_FTD
@@ -674,7 +674,6 @@ protected:
     SpinelDecoder mDecoder;
     bool mHostPowerStateInProgress;
 
-private:
     enum
     {
         kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,  // Tx Buffer size (used by mTxFrameBuffer).
@@ -759,6 +758,7 @@ private:
     bool mLegacyNodeDidJoin;
 #endif
 
+    bool mDidInitialUpdates;
 };
 
 }  // namespace Ncp

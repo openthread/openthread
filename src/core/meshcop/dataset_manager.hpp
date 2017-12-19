@@ -282,7 +282,7 @@ public:
      * @param[in]  aInstance      A reference to the OpenThread instance.
      *
      */
-    ActiveDatasetBase(Instance &aInstance);
+    explicit ActiveDatasetBase(Instance &aInstance);
 
     /**
      * This method restores the Active Operational Dataset from non-volatile memory.
@@ -364,7 +364,7 @@ public:
      * @param[in]  The Thread network interface.
      *
      */
-    PendingDatasetBase(Instance &aInstance);
+    explicit PendingDatasetBase(Instance &aInstance);
 
     /**
      * This method restores the Operational Dataset from non-volatile memory.

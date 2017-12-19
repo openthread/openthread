@@ -81,6 +81,7 @@ typedef otShortAddress ShortAddress;
  * This structure represents an IEEE 802.15.4 Extended Address.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ExtAddress: public otExtAddress
 {
 public:
@@ -132,13 +133,35 @@ public:
         }
     }
 
+    /**
+     * This method evaluates whether or not the Extended Addresses match.
+     *
+     * @param[in]  aOther  The Extended Address to compare.
+     *
+     * @retval TRUE   If the Extended Addresses match.
+     * @retval FALSE  If the Extended Addresses do not match.
+     *
+     */
+    bool operator==(const ExtAddress &aOther) const;
+
+    /**
+     * This method evaluates whether or not the Extended Addresses match.
+     *
+     * @param[in]  aOther  The Extended Address to compare.
+     *
+     * @retval TRUE   If the Extended Addresses do not match.
+     * @retval FALSE  If the Extended Addresses match.
+     *
+     */
+    bool operator!=(const ExtAddress &aOther) const;
+
 private:
     enum
     {
         kGroupFlag = 1 << 0,
         kLocalFlag = 1 << 1,
     };
-};
+} OT_TOOL_PACKED_END;
 
 /**
  * This structure represents an IEEE 802.15.4 Short or Extended Address.

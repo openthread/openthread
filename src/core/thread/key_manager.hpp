@@ -323,7 +323,7 @@ public:
      * @param[in]  aSecurityPolicyFlags  The Security Policy Flags.
      *
      */
-    void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags) { mSecurityPolicyFlags = aSecurityPolicyFlags; }
+    void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags);
 
 private:
     enum

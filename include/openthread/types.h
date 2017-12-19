@@ -273,6 +273,11 @@ typedef enum otError
     OT_ERROR_DISABLED_FEATURE = 33,
 
     /**
+     * The link margin was too low.
+     */
+    OT_ERROR_LINK_MARGIN_LOW = 34,
+
+    /**
      * Generic error (should not use).
      */
     OT_ERROR_GENERIC = 255,
@@ -399,10 +404,13 @@ typedef uint16_t otShortAddress;
  * This type represents the IEEE 802.15.4 Extended Address.
  *
  */
-typedef struct otExtAddress
+OT_TOOL_PACKED_BEGIN
+struct otExtAddress
 {
     uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
-} otExtAddress;
+} OT_TOOL_PACKED_END;
+
+typedef struct otExtAddress otExtAddress;
 
 #define OT_IP6_PREFIX_SIZE         8   ///< Size of an IPv6 prefix (bytes)
 #define OT_IP6_ADDRESS_SIZE        16  ///< Size of an IPv6 address (bytes)
@@ -688,6 +696,13 @@ enum
     OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED  = 1 << 13,  ///< Unsubscribed from a IPv6 multicast address
     OT_CHANGED_COMMISSIONER_STATE           = 1 << 14,  ///< Commissioner state changed
     OT_CHANGED_JOINER_STATE                 = 1 << 15,  ///< Joiner state changed
+    OT_CHANGED_THREAD_CHANNEL               = 1 << 16,  ///< Thread network channel changed
+    OT_CHANGED_THREAD_PANID                 = 1 << 17,  ///< Thread network PAN Id changed
+    OT_CHANGED_THREAD_NETWORK_NAME          = 1 << 18,  ///< Thread network name changed
+    OT_CHANGED_THREAD_EXT_PANID             = 1 << 19,  ///< Thread network extended PAN ID changed
+    OT_CHANGED_MASTER_KEY                   = 1 << 20,  ///< Master key changed
+    OT_CHANGED_PSKC                         = 1 << 21,  ///< PSKc changed
+    OT_CHANGED_SECURITY_POLICY              = 1 << 22,  ///< Security Policy changed
 };
 
 /**
@@ -812,18 +827,8 @@ typedef enum otRoutePreference
     OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
 
-enum
-{
-    /**
-     * Maximum size of Service Data in bytes.
-     */
-    kMaxServiceDataSize = 252,
-
-    /**
-     * Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
-     */
-    kMaxServerDataSize = 248,
-};
+#define OT_SERVICE_DATA_MAX_SIZE 252    ///< Maximum size of Service Data in bytes.
+#define OT_SERVER_DATA_MAX_SIZE  248    ///< Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
 
 /**
  * This structure represents a Server configuration.
@@ -843,7 +848,7 @@ typedef struct otServerConfig
     /**
      * Server data bytes
      */
-    uint8_t mServerData[kMaxServerDataSize];
+    uint8_t mServerData[OT_SERVER_DATA_MAX_SIZE];
 
     /**
      * The Server Rloc.
@@ -874,7 +879,7 @@ typedef struct otServiceConfig
     /**
      * Service data bytes
      */
-    uint8_t mServiceData[kMaxServiceDataSize];
+    uint8_t mServiceData[OT_SERVICE_DATA_MAX_SIZE];
 
     /**
      * The Server configuration.

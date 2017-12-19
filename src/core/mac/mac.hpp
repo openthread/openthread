@@ -164,7 +164,8 @@ class Sender: public OwnerLocator
 
 public:
     /**
-     * This function pointer is called when the MAC is about to transmit the frame.
+     * This function pointer is called when the MAC is about to transmit the frame asking MAC sender client to provide
+     * the frame.
      *
      * @param[in]  aSender   A reference to the MAC sender client object.
      * @param[in]  aFrame    A reference to the MAC frame buffer.
@@ -225,7 +226,7 @@ public:
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
      * @param[in]  aContext       A pointer to arbitrary context information.
-     * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
+     * @param[in]  aBeaconFrame   A pointer to the Beacon frame or NULL to indicate end of Active Scan operation.
      *
      */
     typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
@@ -233,10 +234,14 @@ public:
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
-     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
-     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     * @param[in]  aScanChannels  A bit vector indicating which channels to scan. Zero is mapped to all channels.
+     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel. Zero duration maps to
+     *                            default value `kScanDurationDefault` = 300 ms.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
      * @param[in]  aContext       A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE  Successfully scheduled the Active Scan request.
+     * @retval OT_ERROR_BUSY  Could not schedule the scan (a scan is ongoing or scheduled).
      *
      */
     otError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
@@ -255,7 +260,7 @@ public:
     otError ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult);
 
     /**
-     * This function pointer is called during an "Energy Scan" when the result for a channel is ready or the scan
+     * This function pointer is called during an Energy Scan when the result for a channel is ready or the scan
      * completes.
      *
      * @param[in]  aContext  A pointer to arbitrary context information.
@@ -268,8 +273,9 @@ public:
     /**
      * This method starts an IEEE 802.15.4 Energy Scan.
      *
-     * @param[in]  aScanChannels     A bit vector indicating on which channels to perform energy scan.
-     * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
+     * @param[in]  aScanChannels     A bit vector indicating on which channels to scan. Zero is mapped to all channels.
+     * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel. If the duration is set to
+     *                               zero, a single RSSI sample will be taken per channel.
      * @param[in]  aHandler          A pointer to a function called to pass on scan result or indicate scan completion.
      * @param[in]  aContext          A pointer to arbitrary context information.
      *
@@ -350,12 +356,12 @@ public:
     void GenerateExtAddress(ExtAddress *aExtAddress);
 
     /**
-     * This method returns a pointer to the IEEE 802.15.4 Extended Address.
+     * This method returns a reference to the IEEE 802.15.4 Extended Address.
      *
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
      *
      */
-    const ExtAddress *GetExtAddress(void) const { return &mExtAddress; }
+    const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
     /**
      * This method sets the IEEE 802.15.4 Extended Address
@@ -466,34 +472,34 @@ public:
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     /**
-     * This method is called to handle receive events.
+     * This method is called to handle a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation aborted.
-     * @param[in]  aError  OT_ERROR_NONE when successfully received a frame, OT_ERROR_ABORT when reception
-     *                     was aborted and a frame was not received.
+     * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation was aborted.
+     * @param[in]  aError  OT_ERROR_NONE when successfully received a frame,
+     *                     OT_ERROR_ABORT when reception was aborted and a frame was not received.
      *
      */
-    void ReceiveDoneTask(Frame *aFrame, otError aError);
+    void HandleReceivedFrame(Frame *aFrame, otError aError);
 
     /**
      * This method is called to handle transmission start events.
      *
      * @param[in]  aFrame  A pointer to the frame that is transmitted.
      */
-    void TransmitStartedTask(otRadioFrame *aFrame);
+    void HandleTransmitStarted(otRadioFrame *aFrame);
 
     /**
      * This method is called to handle transmit events.
      *
      * @param[in]  aFrame      A pointer to the frame that was transmitted.
      * @param[in]  aAckFrame   A pointer to the ACK frame, NULL if no ACK was received.
-     * @param[in]  aError      OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
-     *                         transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the
-     *                         transmission could not take place due to activity on the channel, OT_ERROR_ABORT when
-     *                         transmission was aborted for other reasons.
+     * @param[in]  aError      OT_ERROR_NONE when the frame was transmitted,
+     *                         OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
+     *                         OT_ERROR_CHANNEL_ACCESS_FAILURE when the tx failed due to activity on the channel,
+     *                         OT_ERROR_ABORT when transmission was aborted for other reasons.
      *
      */
-    void TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+    void HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -627,11 +633,9 @@ private:
     void UpdateIdleMode(void);
     void StartOperation(Operation aOperation);
     void FinishOperation(void);
-    void SentFrame(otError aError);
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
-    void StartEnergyScan(void);
     otError HandleMacCommand(Frame &aFrame);
 
     static void HandleMacTimer(Timer &aTimer);
@@ -644,7 +648,12 @@ private:
     void HandleEnergyScanSampleRssi(void);
 
     void StartCsmaBackoff(void);
-    otError Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
+
+    void Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
+    otError UpdateScanChannel(void);
+    void PerformActiveScan(void);
+    void PerformEnergyScan(void);
+    void ReportEnergyScanResult(int8_t aRssi);
 
     otError RadioTransmit(Frame *aSendFrame);
     otError RadioReceive(uint8_t aChannel);

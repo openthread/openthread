@@ -83,6 +83,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance):
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     mNetworkDiagnostic(aInstance),
 #endif
+    mIsUp(false),
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     mCommissioner(aInstance),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -158,7 +159,7 @@ otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 {
     address.mType = Ip6::LinkAddress::kEui64;
     address.mLength = sizeof(address.mExtAddress);
-    memcpy(&address.mExtAddress, mMac.GetExtAddress(), address.mLength);
+    address.mExtAddress = mMac.GetExtAddress();
     return OT_ERROR_NONE;
 }
 

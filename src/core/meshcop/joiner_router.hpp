@@ -42,6 +42,7 @@
 #include "coap/coap_header.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -63,7 +64,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    JoinerRouter(Instance &aInstance);
+    explicit JoinerRouter(Instance &aInstance);
 
     /**
      * This method returns the Joiner UDP Port.
@@ -89,8 +90,8 @@ private:
         kDelayJoinEnt = 50,  ///< milliseconds
     };
 
-    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
-    void HandleNetifStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
+    void HandleStateChanged(uint32_t aFlags);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -113,13 +114,13 @@ private:
 
     otError GetBorderAgentRloc(uint16_t &aRloc);
 
-    Ip6::NetifCallback mNetifCallback;
-
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
 
     TimerMilli mTimer;
     MessageQueue mDelayedJoinEnts;
+
+    Notifier::Callback mNotifierCallback;
 
     uint16_t mJoinerUdpPort;
 

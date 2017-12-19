@@ -399,11 +399,11 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
 
     otLogInfoArp(GetInstance(), "Received address notification from 0x%04x for %s to 0x%04x",
                  HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]),
-                 targetTlv.GetTarget()->ToString(stringBuffer, sizeof(stringBuffer)), rloc16Tlv.GetRloc16());
+                 targetTlv.GetTarget().ToString(stringBuffer, sizeof(stringBuffer)), rloc16Tlv.GetRloc16());
 
     for (int i = 0; i < kCacheEntries; i++)
     {
-        if (mCache[i].mTarget != *targetTlv.GetTarget())
+        if (mCache[i].mTarget != targetTlv.GetTarget())
         {
             continue;
         }
@@ -448,7 +448,7 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
                 otLogInfoArp(GetInstance(), "Sending address notification acknowledgment");
             }
 
-            netif.GetMeshForwarder().HandleResolved(*targetTlv.GetTarget(), OT_ERROR_NONE);
+            netif.GetMeshForwarder().HandleResolved(targetTlv.GetTarget(), OT_ERROR_NONE);
             break;
         }
     }
@@ -496,7 +496,7 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, const 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoArp(GetInstance(), "Sending address error for target %s",
-                 aTarget.GetTarget()->ToString(stringBuffer, sizeof(stringBuffer)));
+                 aTarget.GetTarget().ToString(stringBuffer, sizeof(stringBuffer)));
 
     OT_UNUSED_VARIABLE(stringBuffer);
 
@@ -550,7 +550,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
 
     for (const Ip6::NetifUnicastAddress *address = netif.GetUnicastAddresses(); address; address = address->GetNext())
     {
-        if (memcmp(&address->mAddress, targetTlv.GetTarget(), sizeof(address->mAddress)) == 0 &&
+        if (address->GetAddress() == targetTlv.GetTarget() &&
             memcmp(netif.GetMle().GetMeshLocal64().GetIid(), mlIidTlv.GetIid(), 8))
         {
             // Target EID matches address and Mesh Local EID differs
@@ -573,8 +573,8 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
 
         for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
         {
-            if (children[i].GetIp6Address(j) == *targetTlv.GetTarget() &&
-                memcmp(&children[i].GetExtAddress(), &macAddr, sizeof(macAddr)))
+            if (children[i].GetIp6Address(j) == targetTlv.GetTarget() &&
+                children[i].GetExtAddress() != macAddr)
             {
                 // Target EID matches child address and Mesh Local EID differs on child
                 memset(&children[i].GetIp6Address(j), 0, sizeof(children[i].GetIp6Address(j)));
@@ -631,9 +631,9 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
     otLogInfoArp(GetInstance(), "Received address query from 0x%04x for target %s",
                  HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]),
-                 targetTlv.GetTarget()->ToString(stringBuffer, sizeof(stringBuffer)));
+                 targetTlv.GetTarget().ToString(stringBuffer, sizeof(stringBuffer)));
 
-    if (netif.IsUnicastAddress(*targetTlv.GetTarget()))
+    if (netif.IsUnicastAddress(targetTlv.GetTarget()))
     {
         mlIidTlv.SetIid(netif.GetMle().GetMeshLocal64().GetIid());
         SendAddressQueryResponse(targetTlv, mlIidTlv, NULL, aMessageInfo.GetPeerAddr());
@@ -653,7 +653,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
         for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
         {
-            if (children[i].GetIp6Address(j) != *targetTlv.GetTarget())
+            if (children[i].GetIp6Address(j) != targetTlv.GetTarget())
             {
                 continue;
             }
@@ -709,7 +709,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoArp(GetInstance(), "Sending address notification for target %s",
-                 aTargetTlv.GetTarget()->ToString(stringBuffer, sizeof(stringBuffer)));
+                 aTargetTlv.GetTarget().ToString(stringBuffer, sizeof(stringBuffer)));
 
     OT_UNUSED_VARIABLE(stringBuffer);
 

@@ -69,7 +69,7 @@ const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return reinterpret_cast<const otExtAddress *>(instance.GetThreadNetif().GetMac().GetExtAddress());
+    return &instance.GetThreadNetif().GetMac().GetExtAddress();
 }
 
 otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)

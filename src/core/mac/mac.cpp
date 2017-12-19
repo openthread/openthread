@@ -76,67 +76,6 @@ const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod *OT_RADIO_SYMB
 static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
 #endif
 
-void Mac::StartCsmaBackoff(void)
-{
-    if (RadioSupportsCsmaBackoff())
-    {
-        // If the radio supports CSMA back off logic, immediately schedule the send.
-        HandleBeginTransmit();
-    }
-    else
-    {
-        uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
-        uint32_t backoff;
-        bool shouldReceive;
-
-        if (backoffExponent > kMaxBE)
-        {
-            backoffExponent = kMaxBE;
-        }
-
-        backoff = (otPlatRandomGet() % (1UL << backoffExponent));
-        backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
-
-        // Put the radio in either sleep or receive mode depending on
-        // `mRxOnWhenIdle` flag before starting the backoff timer.
-
-        shouldReceive = (mRxOnWhenIdle || otPlatRadioGetPromiscuous(&GetInstance()));
-
-        if (!shouldReceive)
-        {
-            if (RadioSleep() == OT_ERROR_INVALID_STATE)
-            {
-                // If `RadioSleep()` returns `OT_ERROR_INVALID_STATE`
-                // indicating sleep is being delayed, the radio should
-                // be put in receive mode.
-
-                shouldReceive = true;
-            }
-        }
-
-        if (shouldReceive)
-        {
-            switch (mOperation)
-            {
-            case kOperationActiveScan:
-            case kOperationEnergyScan:
-                RadioReceive(mScanChannel);
-                break;
-
-            default:
-                RadioReceive(mChannel);
-                break;
-            }
-        }
-
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-        mBackoffTimer.Start(backoff);
-#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-        mBackoffTimer.Start(backoff / 1000UL);
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    }
-}
-
 Mac::Mac(Instance &aInstance):
     InstanceLocator(aInstance),
     mOperation(kOperationIdle),
@@ -194,61 +133,43 @@ Mac::Mac(Instance &aInstance):
 
 otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
     mActiveScanHandler = aHandler;
-    SuccessOrExit(error = Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext));
 
-exit:
-
-    if (OT_ERROR_NONE != error)
+    if (aScanDuration == 0)
     {
-        mActiveScanHandler = NULL;
+        aScanDuration = kScanDurationDefault;
     }
 
+    Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext);
+
+exit:
     return error;
 }
 
 otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
 {
-    otError error;
-
-    mEnergyScanHandler = aHandler;
-    SuccessOrExit(error = Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext));
-
-exit:
-
-    if (OT_ERROR_NONE != error)
-    {
-        mEnergyScanHandler = NULL;
-    }
-
-    return error;
-}
-
-otError Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext)
-{
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
-    mScanContext = aContext;
-    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
-    mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(kScanDurationDefault) : aScanDuration;
-
-    mScanChannel = OT_RADIO_CHANNEL_MIN;
-    mScanChannels >>= OT_RADIO_CHANNEL_MIN;
-
-    while ((mScanChannels & 1) == 0)
-    {
-        mScanChannels >>= 1;
-        mScanChannel++;
-    }
-
-    StartOperation(aScanOperation);
+    mEnergyScanHandler = aHandler;
+    Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext);
 
 exit:
     return error;
+}
+
+void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext)
+{
+    mScanContext = aContext;
+    mScanDuration = aScanDuration;
+    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
+    mScanChannel = OT_RADIO_CHANNEL_MIN - 1;
+    StartOperation(aScanOperation);
 }
 
 bool Mac::IsActiveScanInProgress(void)
@@ -282,7 +203,7 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
     VerifyOrExit(aBeaconFrame->GetType() == Frame::kFcfFrameBeacon, error = OT_ERROR_PARSE);
     SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
     VerifyOrExit(address.mLength == sizeof(address.mExtAddress), error = OT_ERROR_PARSE);
-    memcpy(&aResult.mExtAddress, &address.mExtAddress, sizeof(aResult.mExtAddress));
+    aResult.mExtAddress = address.mExtAddress;
 
     aBeaconFrame->GetSrcPanId(aResult.mPanId);
     aResult.mChannel = aBeaconFrame->GetChannel();
@@ -311,25 +232,65 @@ exit:
     return error;
 }
 
-void Mac::StartEnergyScan(void)
+otError Mac::UpdateScanChannel(void)
 {
-    if (!(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN))
+    otError error = OT_ERROR_NONE;
+
+    do
     {
-        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mMacTimer.Start(mScanDuration);
-        mEnergyScanSampleRssiTask.Post();
-        RadioReceive(mScanChannel);
+        mScanChannel++;
+        VerifyOrExit(mScanChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_NOT_FOUND);
+
+    }
+    while ((mScanChannels & (1U << mScanChannel)) == 0);
+
+exit:
+    return error;
+}
+
+void Mac::PerformActiveScan(void)
+{
+    if (UpdateScanChannel() == OT_ERROR_NONE)
+    {
+        // If there are more channels to scan, start CSMA backoff to send the beacon request.
+        StartCsmaBackoff();
     }
     else
     {
-        otError error = otPlatRadioEnergyScan(&GetInstance(), mScanChannel, mScanDuration);
+        otPlatRadioSetPanId(&GetInstance(), mPanId);
+        mActiveScanHandler(mScanContext, NULL);
+        FinishOperation();
+    }
+}
 
-        if (error != OT_ERROR_NONE)
+void Mac::PerformEnergyScan(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = UpdateScanChannel());
+
+    if (!(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN) || (mScanDuration == 0))
+    {
+        RadioReceive(mScanChannel);
+        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
+        mEnergyScanSampleRssiTask.Post();
+
+        if (mScanDuration != 0)
         {
-            // Cancel scan
-            mEnergyScanHandler(mScanContext, NULL);
-            FinishOperation();
+            mMacTimer.Start(mScanDuration);
         }
+    }
+    else
+    {
+        SuccessOrExit(error = otPlatRadioEnergyScan(&GetInstance(), mScanChannel, mScanDuration));
+    }
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        mEnergyScanHandler(mScanContext, NULL);
+        FinishOperation();
     }
 }
 
@@ -355,40 +316,23 @@ exit:
     return;
 }
 
-void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
+void Mac::ReportEnergyScanResult(int8_t aRssi)
 {
-    // Trigger a energy scan handler callback if necessary
-    if (aEnergyScanMaxRssi != kInvalidRssiValue)
+    if (aRssi != kInvalidRssiValue)
     {
         otEnergyScanResult result;
 
         result.mChannel = mScanChannel;
-        result.mMaxRssi = aEnergyScanMaxRssi;
+        result.mMaxRssi = aRssi;
+
         mEnergyScanHandler(mScanContext, &result);
     }
+}
 
-    // Update to the next scan channel
-    do
-    {
-        mScanChannels >>= 1;
-        mScanChannel++;
-
-        // If we have scanned all the channels, then fire the final callback
-        // and finish scan operation.
-        if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
-        {
-            mEnergyScanHandler(mScanContext, NULL);
-            FinishOperation();
-            ExitNow();
-        }
-    }
-    while ((mScanChannels & 1) == 0);
-
-    // Start scanning the next channel
-    StartEnergyScan();
-
-exit:
-    return;
+void Mac::EnergyScanDone(int8_t aRssi)
+{
+    ReportEnergyScanResult(aRssi);
+    PerformEnergyScan();
 }
 
 void Mac::HandleEnergyScanSampleRssi(Tasklet &aTasklet)
@@ -412,7 +356,14 @@ void Mac::HandleEnergyScanSampleRssi(void)
         }
     }
 
-    mEnergyScanSampleRssiTask.Post();
+    if (mScanDuration == 0)
+    {
+        EnergyScanDone(mEnergyScanCurrentMaxRssi);
+    }
+    else
+    {
+        mEnergyScanSampleRssiTask.Post();
+    }
 
 exit:
     return;
@@ -642,13 +593,13 @@ void Mac::StartOperation(Operation aOperation)
     {
         mPendingActiveScan = false;
         mOperation = kOperationActiveScan;
-        StartCsmaBackoff();
+        PerformActiveScan();
     }
     else if (mPendingEnergyScan)
     {
         mPendingEnergyScan = false;
         mOperation = kOperationEnergyScan;
-        StartEnergyScan();
+        PerformEnergyScan();
     }
     else if (mPendingTransmitBeacon)
     {
@@ -858,6 +809,67 @@ exit:
     return;
 }
 
+void Mac::StartCsmaBackoff(void)
+{
+    if (RadioSupportsCsmaBackoff())
+    {
+        // If the radio supports CSMA back off logic, immediately schedule the send.
+        HandleBeginTransmit();
+    }
+    else
+    {
+        uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
+        uint32_t backoff;
+        bool shouldReceive;
+
+        if (backoffExponent > kMaxBE)
+        {
+            backoffExponent = kMaxBE;
+        }
+
+        backoff = (otPlatRandomGet() % (1UL << backoffExponent));
+        backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
+
+        // Put the radio in either sleep or receive mode depending on
+        // `mRxOnWhenIdle` flag before starting the backoff timer.
+
+        shouldReceive = (mRxOnWhenIdle || otPlatRadioGetPromiscuous(&GetInstance()));
+
+        if (!shouldReceive)
+        {
+            if (RadioSleep() == OT_ERROR_INVALID_STATE)
+            {
+                // If `RadioSleep()` returns `OT_ERROR_INVALID_STATE`
+                // indicating sleep is being delayed, the radio should
+                // be put in receive mode.
+
+                shouldReceive = true;
+            }
+        }
+
+        if (shouldReceive)
+        {
+            switch (mOperation)
+            {
+            case kOperationActiveScan:
+            case kOperationEnergyScan:
+                RadioReceive(mScanChannel);
+                break;
+
+            default:
+                RadioReceive(mChannel);
+                break;
+            }
+        }
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        mBackoffTimer.Start(backoff);
+#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        mBackoffTimer.Start(backoff / 1000UL);
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    }
+}
+
 void Mac::HandleBeginTransmit(Timer &aTimer)
 {
     aTimer.GetOwner<Mac>().HandleBeginTransmit();
@@ -937,7 +949,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        TransmitDoneTask(mTxFrame, NULL, OT_ERROR_ABORT);
+        HandleTransmitDone(mTxFrame, NULL, OT_ERROR_ABORT);
     }
 }
 
@@ -947,12 +959,12 @@ extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame
 
     otLogFuncEntry();
     VerifyOrExit(instance->IsInitialized());
-    instance->GetThreadNetif().GetMac().TransmitStartedTask(aFrame);
+    instance->GetThreadNetif().GetMac().HandleTransmitStarted(aFrame);
 exit:
     otLogFuncExit();
 }
 
-void Mac::TransmitStartedTask(otRadioFrame *aFrame)
+void Mac::HandleTransmitStarted(otRadioFrame *aFrame)
 {
     Frame *frame = static_cast<Frame *>(aFrame);
 
@@ -980,88 +992,185 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        instance->GetThreadNetif().GetMac().TransmitDoneTask(aFrame, aAckFrame, aError);
+        instance->GetThreadNetif().GetMac().HandleTransmitDone(aFrame, aAckFrame, aError);
     }
 
 exit:
     otLogFuncExit();
 }
 
-void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
+void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    Frame *txFrame = static_cast<Frame *>(aFrame);
-    Address addr;
+    Frame &sendFrame = *static_cast<Frame *>(aFrame);
     bool framePending = false;
+    Address dstAddr;
 
+    // Stop the ack timer.
     mMacTimer.Stop();
 
-    txFrame->GetDstAddr(addr);
-
-    if (aError == OT_ERROR_NONE && txFrame->GetAckRequest() && aAckFrame != NULL)
+    switch (aError)
     {
-        Frame *ackFrame = static_cast<Frame *>(aAckFrame);
-        Neighbor *neighbor;
-
-        framePending = ackFrame->GetFramePending();
-        neighbor = GetNetif().GetMle().GetNeighbor(addr);
-
-        if (neighbor != NULL)
-        {
-            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetRssi());
-        }
-    }
-
-    if (aError == OT_ERROR_ABORT)
-    {
+    case OT_ERROR_ABORT:
         mCounters.mTxErrAbort++;
+
+    // fall through
+
+    case OT_ERROR_NONE:
+    case OT_ERROR_NO_ACK:
+    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+        break;
+
+    default:
+        assert(false);
+        ExitNow();
     }
+
+    // Determine whether a CSMA retry is required.
 
     if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
     {
         mCounters.mTxErrCca++;
-    }
 
-    if (!RadioSupportsCsmaBackoff() &&
-        aError == OT_ERROR_CHANNEL_ACCESS_FAILURE &&
-        mCsmaAttempts < kMaxCSMABackoffs)
-    {
-        mCsmaAttempts++;
-        StartCsmaBackoff();
-
-        ExitNow();
+        if (!RadioSupportsCsmaBackoff() && mCsmaAttempts < kMaxCSMABackoffs)
+        {
+            mCsmaAttempts++;
+            StartCsmaBackoff();
+            ExitNow();
+        }
     }
 
     mCsmaAttempts = 0;
 
+    // Determine whether to re-transmit the frame.
+
+    mTransmitAttempts++;
+
+    if (aError != OT_ERROR_NONE)
+    {
+        char stringBuffer[Frame::kInfoStringSize];
+
+        otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, attempt:%d/%d, %s", otThreadErrorToString(aError),
+                     mTransmitAttempts, sendFrame.GetMaxTxAttempts(),
+                     sendFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
+        otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
+
+        if (!RadioSupportsRetries() && mTransmitAttempts < sendFrame.GetMaxTxAttempts())
+        {
+            mCounters.mTxRetry++;
+            StartCsmaBackoff();
+            ExitNow();
+        }
+
+        OT_UNUSED_VARIABLE(stringBuffer);
+    }
+
+    mTransmitAttempts = 0;
+
+    // Process the ack frame for "frame pending".
+
+    sendFrame.GetDstAddr(dstAddr);
+
+    if (aError == OT_ERROR_NONE && sendFrame.GetAckRequest() && aAckFrame != NULL)
+    {
+        Frame &ackFrame = *static_cast<Frame *>(aAckFrame);
+        Neighbor *neighbor = GetNetif().GetMle().GetNeighbor(dstAddr);
+
+        framePending = ackFrame.GetFramePending();
+
+        if (neighbor != NULL)
+        {
+            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame.GetRssi());
+        }
+    }
+
+    // Update MAC counters.
+
+    mCounters.mTxTotal++;
+
+    if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
+    {
+        mCounters.mTxErrBusyChannel++;
+    }
+
+    if (dstAddr.mShortAddress == kShortAddrBroadcast)
+    {
+        mCounters.mTxBroadcast++;
+    }
+    else
+    {
+        mCounters.mTxUnicast++;
+    }
+
+    if (sendFrame.GetAckRequest())
+    {
+        mCounters.mTxAckRequested++;
+
+        if (aError == OT_ERROR_NONE)
+        {
+            mCounters.mTxAcked++;
+        }
+    }
+    else
+    {
+        mCounters.mTxNoAckRequested++;
+    }
+
+    // Determine next action based on current operation.
+
     switch (mOperation)
     {
-    case kOperationTransmitData:
-
-        if (framePending && txFrame->IsDataRequestCommand())
-        {
-            mReceiveTimer.Start(kDataPollTimeout);
-            StartOperation(kOperationWaitingForData);
-        }
-
-    // fall through
-
     case kOperationActiveScan:
-    case kOperationTransmitBeacon:
-        SentFrame(aError);
+        mCounters.mTxBeaconRequest++;
+        mMacTimer.Start(mScanDuration);
         break;
 
-    default:
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        if (GetInstance().GetLinkRaw().IsEnabled())
+    case kOperationTransmitBeacon:
+        mCounters.mTxBeacon++;
+        FinishOperation();
+        break;
+
+    case kOperationTransmitData:
+    {
+        Sender *sender;
+
+        if (sendFrame.IsDataRequestCommand())
         {
-            GetInstance().GetLinkRaw().InvokeTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
+            if (framePending)
+            {
+                mReceiveTimer.Start(kDataPollTimeout);
+                StartOperation(kOperationWaitingForData);
+            }
+
+            mCounters.mTxDataPoll++;
         }
         else
-#endif
         {
-            assert(false);
+            mCounters.mTxData++;
         }
 
+        sender = mSendHead;
+        mSendHead = mSendHead->mNext;
+
+        if (mSendHead == NULL)
+        {
+            mSendTail = NULL;
+        }
+
+        sender->mNext = NULL;
+
+        if (!sendFrame.IsARetransmission())
+        {
+            mDataSequence++;
+        }
+
+        otDumpDebgMac(GetInstance(), "TX", sendFrame.GetHeader(), sendFrame.GetLength());
+        sender->HandleSentFrame(sendFrame, aError);
+        FinishOperation();
+        break;
+    }
+
+    default:
+        assert(false);
         break;
     }
 
@@ -1165,22 +1274,7 @@ void Mac::HandleMacTimer(void)
     switch (mOperation)
     {
     case kOperationActiveScan:
-        do
-        {
-            mScanChannels >>= 1;
-            mScanChannel++;
-
-            if (mScanChannels == 0 || mScanChannel > OT_RADIO_CHANNEL_MAX)
-            {
-                otPlatRadioSetPanId(&GetInstance(), mPanId);
-                mActiveScanHandler(mScanContext, NULL);
-                FinishOperation();
-                ExitNow();
-            }
-        }
-        while ((mScanChannels & 1) == 0);
-
-        StartCsmaBackoff();
+        PerformActiveScan();
         break;
 
     case kOperationEnergyScan:
@@ -1189,16 +1283,13 @@ void Mac::HandleMacTimer(void)
 
     case kOperationTransmitData:
         otLogDebgMac(GetInstance(), "Ack timer fired");
-        SentFrame(OT_ERROR_NO_ACK);
+        HandleTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
         break;
 
     default:
         assert(false);
         break;
     }
-
-exit:
-    return;
 }
 
 void Mac::HandleReceiveTimer(Timer &aTimer)
@@ -1231,136 +1322,6 @@ void Mac::HandleReceiveTimer(void)
 
         UpdateIdleMode();
     }
-}
-
-void Mac::SentFrame(otError aError)
-{
-    Frame &sendFrame(*mTxFrame);
-    Sender *sender;
-    Address addr;
-
-    mTransmitAttempts++;
-
-    switch (aError)
-    {
-    case OT_ERROR_NONE:
-        break;
-
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-    case OT_ERROR_ABORT:
-    case OT_ERROR_NO_ACK:
-    {
-        char stringBuffer[Frame::kInfoStringSize];
-
-        otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, attempt:%d/%d, %s", otThreadErrorToString(aError),
-                     mTransmitAttempts, sendFrame.GetMaxTxAttempts(),
-                     sendFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
-        otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
-
-        if (!RadioSupportsRetries() &&
-            mTransmitAttempts < sendFrame.GetMaxTxAttempts())
-        {
-            StartCsmaBackoff();
-            mCounters.mTxRetry++;
-            ExitNow();
-        }
-
-        OT_UNUSED_VARIABLE(stringBuffer);
-        break;
-    }
-
-    default:
-        assert(false);
-        break;
-    }
-
-    mTransmitAttempts = 0;
-    mCsmaAttempts = 0;
-
-    mCounters.mTxTotal++;
-
-    if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
-    {
-        mCounters.mTxErrBusyChannel++;
-    }
-
-    mTxFrame->GetDstAddr(addr);
-
-    if (addr.mShortAddress == kShortAddrBroadcast)
-    {
-        // Broadcast frame
-        mCounters.mTxBroadcast++;
-    }
-    else
-    {
-        // Unicast Frame
-        mCounters.mTxUnicast++;
-    }
-
-    if (sendFrame.GetAckRequest())
-    {
-        mCounters.mTxAckRequested++;
-
-        if (aError == OT_ERROR_NONE)
-        {
-            mCounters.mTxAcked++;
-        }
-    }
-    else
-    {
-        mCounters.mTxNoAckRequested++;
-    }
-
-    switch (mOperation)
-    {
-    case kOperationActiveScan:
-        mCounters.mTxBeaconRequest++;
-        mMacTimer.Start(mScanDuration);
-        break;
-
-    case kOperationTransmitBeacon:
-        mCounters.mTxBeacon++;
-        FinishOperation();
-        break;
-
-    case kOperationTransmitData:
-        if (mReceiveTimer.IsRunning())
-        {
-            mCounters.mTxDataPoll++;
-        }
-        else
-        {
-            mCounters.mTxData++;
-        }
-
-        sender = mSendHead;
-        mSendHead = mSendHead->mNext;
-
-        if (mSendHead == NULL)
-        {
-            mSendTail = NULL;
-        }
-
-        sender->mNext = NULL;
-
-        if (!sendFrame.IsARetransmission())
-        {
-            mDataSequence++;
-        }
-
-        otDumpDebgMac(GetInstance(), "TX", sendFrame.GetHeader(), sendFrame.GetLength());
-        sender->HandleSentFrame(sendFrame, aError);
-
-        FinishOperation();
-        break;
-
-    default:
-        assert(false);
-        break;
-    }
-
-exit:
-    return;
 }
 
 otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
@@ -1527,14 +1488,14 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
-        instance->GetThreadNetif().GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+        instance->GetThreadNetif().GetMac().HandleReceivedFrame(static_cast<Frame *>(aFrame), aError);
     }
 
 exit:
     otLogFuncExit();
 }
 
-void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
+void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 {
     Address srcaddr;
     Address dstaddr;
@@ -1590,8 +1551,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
 
     case sizeof(ExtAddress):
         aFrame->GetDstPanId(panid);
-        VerifyOrExit(panid == mPanId &&
-                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0,
+        VerifyOrExit(panid == mPanId && dstaddr.mExtAddress == mExtAddress,
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
         break;
     }
@@ -1622,7 +1582,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     }
 
     // Duplicate Address Protection
-    if (memcmp(&srcaddr.mExtAddress, &mExtAddress, sizeof(srcaddr.mExtAddress)) == 0)
+    if (srcaddr.mExtAddress == mExtAddress)
     {
         ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
     }

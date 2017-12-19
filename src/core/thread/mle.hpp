@@ -687,20 +687,20 @@ public:
     otError UpdateLinkLocalAddress(void);
 
     /**
-     * This method returns a pointer to the link-local all Thread nodes multicast address.
+     * This method returns a reference to the link-local all Thread nodes multicast address.
      *
-     * @returns A pointer to the link-local all Thread nodes multicast address.
+     * @returns A reference to the link-local all Thread nodes multicast address.
      *
      */
-    const Ip6::Address *GetLinkLocalAllThreadNodesAddress(void) const;
+    const Ip6::Address &GetLinkLocalAllThreadNodesAddress(void) const;
 
     /**
-     * This method returns a pointer to the realm-local all Thread nodes multicast address.
+     * This method returns a reference to the realm-local all Thread nodes multicast address.
      *
-     * @returns A pointer to the realm-local all Thread nodes multicast address.
+     * @returns A reference to the realm-local all Thread nodes multicast address.
      *
      */
-    const Ip6::Address *GetRealmLocalAllThreadNodesAddress(void) const;
+    const Ip6::Address &GetRealmLocalAllThreadNodesAddress(void) const;
 
     /**
      * This method returns a pointer to the parent when operating in End Device mode.
@@ -1419,8 +1419,8 @@ private:
     void GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
                        uint8_t *aNonce);
 
-    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
-    void HandleNetifStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
+    void HandleStateChanged(uint32_t aFlags);
     static void HandleParentRequestTimer(Timer &aTimer);
     void HandleParentRequestTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
@@ -1534,7 +1534,7 @@ private:
     Ip6::NetifMulticastAddress mLinkLocalAllThreadNodes;
     Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
 
-    Ip6::NetifCallback mNetifCallback;
+    Notifier::Callback mNotifierCallback;
 };
 
 }  // namespace Mle

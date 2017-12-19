@@ -40,6 +40,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
@@ -63,7 +64,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    EnergyScanServer(Instance &aInstance);
+    explicit EnergyScanServer(Instance &aInstance);
 
 private:
     enum
@@ -82,8 +83,8 @@ private:
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void);
 
-    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
-    void HandleNetifStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
+    void HandleStateChanged(uint32_t aFlags);
 
     otError SendReport(void);
 
@@ -100,7 +101,7 @@ private:
 
     TimerMilli mTimer;
 
-    Ip6::NetifCallback mNetifCallback;
+    Notifier::Callback mNotifierCallback;
 
     Coap::Resource mEnergyScan;
 };

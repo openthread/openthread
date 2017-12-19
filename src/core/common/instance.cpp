@@ -55,6 +55,7 @@ Instance::Instance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
+    mNotifier(*this),
     mTimerMilliScheduler(*this),
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     mTimerMicroScheduler(*this),
@@ -161,36 +162,6 @@ exit:
     return;
 }
 
-otError Instance::RegisterStateChangedCallback(otStateChangedCallback aCallback, void *aContext)
-{
-    otError error = OT_ERROR_NO_BUFS;
-
-    for (size_t i = 0; i < kMaxNetifCallbacks; i++)
-    {
-        if (mNetifCallback[i].IsFree())
-        {
-            mNetifCallback[i].Set(aCallback, aContext);
-            error = mThreadNetif.RegisterCallback(mNetifCallback[i]);
-            break;
-        }
-    }
-
-    return error;
-}
-
-void Instance::RemoveStateChangedCallback(otStateChangedCallback aCallback, void *aContext)
-{
-    for (size_t i = 0; i < kMaxNetifCallbacks; i++)
-    {
-        if (mNetifCallback[i].IsServing(aCallback, aContext))
-        {
-            mThreadNetif.RemoveCallback(mNetifCallback[i]);
-            mNetifCallback[i].Free();
-            break;
-        }
-    }
-}
-
 void Instance::Reset(void)
 {
     otPlatReset(this);
@@ -242,6 +213,11 @@ void Instance::InvokeEnergyScanCallback(otEnergyScanResult *aResult) const
 }
 
 // Specializations of the `Get<Type>()` method.
+
+template<> Notifier &Instance::Get(void)
+{
+    return GetNotifier();
+}
 
 template<> TaskletScheduler &Instance::Get(void)
 {

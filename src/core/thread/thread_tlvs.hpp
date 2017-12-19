@@ -138,12 +138,12 @@ public:
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
-     * This method returns a pointer to the Target EID.
+     * This method returns a reference to the Target EID.
      *
      * @returns A pointer to the Target EID.
      *
      */
-    const Ip6::Address *GetTarget(void) const { return &mTarget; }
+    const Ip6::Address &GetTarget(void) const { return mTarget; }
 
     /**
      * This method sets the Target EID.
@@ -161,6 +161,7 @@ private:
  * This class implements Extended MAC Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN;
 class ThreadExtMacAddressTlv: public ThreadTlv
 {
 public:
@@ -180,12 +181,12 @@ public:
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
-     * This method returns a pointer to the Extended MAC Address.
+     * This method returns a reference to the Extended MAC Address.
      *
      * @returns A pointer to the Extended MAC Address.
      *
      */
-    const Mac::ExtAddress *GetMacAddr(void) const { return &mMacAddr; }
+    const Mac::ExtAddress &GetMacAddr(void) const { return mMacAddr; }
 
     /**
      * This method sets the Extended MAC Address.
@@ -197,7 +198,7 @@ public:
 
 private:
     Mac::ExtAddress mMacAddr;
-};
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements RLOC16 TLV generation and parsing.

@@ -1339,7 +1339,7 @@ otError NcpBase::SetPropertyHandler_STREAM_NET(void)
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     error = otIp6Send(mInstance, message);
 
@@ -1396,17 +1396,7 @@ otError NcpBase::GetPropertyHandler_JAM_DETECT_BUSY(void)
 
 otError NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP(void)
 {
-    otError error = OT_ERROR_NONE;
-    uint64_t historyBitmap = otJamDetectionGetHistoryBitmap(mInstance);
-
-    // History bitmap - bits 0-31
-    SuccessOrExit(error = mEncoder.WriteUint32(static_cast<uint32_t>(historyBitmap & 0xffffffff)));
-
-    // // History bitmap - bits 32-63
-    SuccessOrExit(error = mEncoder.WriteUint32(static_cast<uint32_t>(historyBitmap >> 32)));
-
-exit:
-    return error;
+    return mEncoder.WriteUint64(otJamDetectionGetHistoryBitmap(mInstance));
 }
 
 otError NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE(void)
@@ -2058,7 +2048,7 @@ otError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(void)
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     // Ensure the insecure message is forwarded using direct transmission.
     otMessageSetDirectTransmission(message, true);
@@ -2773,7 +2763,7 @@ exit:
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void NcpBase::HandleStateChanged(uint32_t aFlags, void *aContext)
 {
     NcpBase *ncp = static_cast<NcpBase *>(aContext);
 
@@ -2801,6 +2791,12 @@ void NcpBase::ProcessThreadChangedFlags(void)
         { OT_CHANGED_THREAD_CHILD_REMOVED,        SPINEL_PROP_THREAD_CHILD_TABLE             },
         { OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED,   SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
         { OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
+        { OT_CHANGED_THREAD_CHANNEL,              SPINEL_PROP_PHY_CHAN                       },
+        { OT_CHANGED_THREAD_PANID,                SPINEL_PROP_MAC_15_4_PANID                 },
+        { OT_CHANGED_THREAD_NETWORK_NAME,         SPINEL_PROP_NET_NETWORK_NAME               },
+        { OT_CHANGED_THREAD_EXT_PANID,            SPINEL_PROP_NET_XPANID                     },
+        { OT_CHANGED_MASTER_KEY,                  SPINEL_PROP_NET_MASTER_KEY                 },
+        { OT_CHANGED_PSKC,                        SPINEL_PROP_NET_PSKC                       },
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

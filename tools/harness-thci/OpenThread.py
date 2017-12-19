@@ -1919,6 +1919,9 @@ class OpenThread(IThci):
 
         return self.__sendCommand(cmd)
 
+    def diagnosticQuery(self,strDestinationAddr, listTLV_ids = []):
+        self.diagnosticGet(strDestinationAddr, listTLV_ids)
+
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
         #TODO: Support the whole Native Commissioner functionality
         #      Currently it only aims to trigger a Discovery Request message to pass Certification test 5.8.4

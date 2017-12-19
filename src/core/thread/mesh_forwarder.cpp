@@ -164,7 +164,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
         cur->Read(Ip6::Header::GetDestinationOffset(), sizeof(ip6Dst), &ip6Dst);
 
-        if (memcmp(&ip6Dst, &aEid, sizeof(ip6Dst)) == 0)
+        if (ip6Dst == aEid)
         {
             mResolvingQueue.Dequeue(*cur);
 
@@ -427,7 +427,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
             else
             {
                 mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-                memcpy(mMacSource.mExtAddress.m8, netif.GetMac().GetExtAddress(), sizeof(mMacDest.mExtAddress));
+                mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
             }
 
             child.GetMacAddress(mMacDest);
@@ -469,10 +469,8 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
         aMessage.Read(0, sizeof(ip6Header), &ip6Header);
 
-        if (!memcmp(&ip6Header.GetDestination(), netif.GetMle().GetLinkLocalAllThreadNodesAddress(),
-                    sizeof(ip6Header.GetDestination())) ||
-            !memcmp(&ip6Header.GetDestination(), netif.GetMle().GetRealmLocalAllThreadNodesAddress(),
-                    sizeof(ip6Header.GetDestination())))
+        if (ip6Header.GetDestination() == netif.GetMle().GetLinkLocalAllThreadNodesAddress() ||
+            ip6Header.GetDestination() == netif.GetMle().GetRealmLocalAllThreadNodesAddress())
         {
             // schedule direct transmission
             aMessage.SetDirectTransmission();
@@ -634,9 +632,9 @@ Message *MeshForwarder::GetDirectTransmission(void)
                 else
                 {
                     mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-                    memcpy(mMacSource.mExtAddress.m8, netif.GetMac().GetExtAddress(), sizeof(mMacSource.mExtAddress));
+                    mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
                     mMacDest.mLength = sizeof(mMacDest.mExtAddress);
-                    memcpy(mMacDest.mExtAddress.m8, &parent->GetExtAddress(), sizeof(mMacDest.mExtAddress));
+                    mMacDest.mExtAddress = parent->GetExtAddress();
                 }
             }
             else
@@ -1090,7 +1088,7 @@ otError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Ad
 
     aIp6Addr.ToExtAddress(aMacAddr.mExtAddress);
 
-    if (memcmp(&aMacAddr.mExtAddress, netif.GetMac().GetExtAddress(), sizeof(aMacAddr.mExtAddress)) != 0)
+    if (aMacAddr.mExtAddress != netif.GetMac().GetExtAddress())
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
         aMacAddr.mShortAddress = netif.GetMac().GetShortAddress();
@@ -1553,7 +1551,7 @@ otError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
     else
     {
         macSource.mLength = sizeof(macSource.mExtAddress);
-        memcpy(&macSource.mExtAddress, netif.GetMac().GetExtAddress(), sizeof(macSource.mExtAddress));
+        macSource.mExtAddress = netif.GetMac().GetExtAddress();
     }
 
     fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;

@@ -56,7 +56,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    AnnounceBeginServer(Instance &aInstance);
+    explicit AnnounceBeginServer(Instance &aInstance);
 
     /**
      * This method begins the MLE Announce transmission process using Count=3 and Period=1s.

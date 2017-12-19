@@ -564,7 +564,8 @@ NcpBase::NcpBase(Instance *aInstance):
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
     mRxSpinelOutOfOrderTidCounter(0),
-    mTxSpinelFrameCounter(0)
+    mTxSpinelFrameCounter(0),
+    mDidInitialUpdates(false)
 {
     assert(mInstance != NULL);
 
@@ -576,7 +577,7 @@ NcpBase::NcpBase(Instance *aInstance):
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueueInit(&mMessageQueue);
-    otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
+    otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
     otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void *>(this));
@@ -1028,7 +1029,7 @@ void NcpBase::UpdateChangedProps(void)
 
             SuccessOrExit(WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, status));
         }
-        else
+        else if (mDidInitialUpdates)
         {
             SuccessOrExit(WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, propKey));
         }
@@ -1038,6 +1039,7 @@ void NcpBase::UpdateChangedProps(void)
     }
 
 exit:
+    mDidInitialUpdates = true;
     return;
 }
 
@@ -1683,7 +1685,7 @@ otError NcpBase::SetPropertyHandler_UNSOL_UPDATE_FILTER(void)
 
     while (mDecoder.GetRemainingLengthInStruct() > 0)
     {
-        SuccessOrExit(mDecoder.ReadUintPacked(propKey));
+        SuccessOrExit(error = mDecoder.ReadUintPacked(propKey));
 
         IgnoreReturnValue(mChangedPropsSet.EnablePropertyFilter(static_cast<spinel_prop_key_t>(propKey), true));
     }
@@ -1949,10 +1951,17 @@ otError NcpBase::GetPropertyHandler_PHY_TX_POWER(void)
     int8_t power;
     otError error;
 
-    SuccessOrExit(error = otPlatRadioGetTransmitPower(mInstance, &power));
-    error = mEncoder.WriteInt8(power);
+    error = otPlatRadioGetTransmitPower(mInstance, &power);
 
-exit:
+    if (error == OT_ERROR_NONE)
+    {
+        error = mEncoder.WriteInt8(power);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
     return error;
 }
 

@@ -43,6 +43,16 @@
 namespace ot {
 namespace Mac {
 
+bool ExtAddress::operator==(const ExtAddress &aOther) const
+{
+    return memcmp(m8, aOther.m8, sizeof(ExtAddress)) == 0;
+}
+
+bool ExtAddress::operator!=(const ExtAddress &aOther) const
+{
+    return memcmp(m8, aOther.m8, sizeof(ExtAddress)) != 0;
+}
+
 const char *Address::ToString(char *aBuf, uint16_t aSize) const
 {
     switch (mLength)

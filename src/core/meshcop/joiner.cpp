@@ -98,7 +98,7 @@ otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
-    GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
+    GetNotifier().SetFlags(OT_CHANGED_JOINER_STATE);
 
     // use extended address based on factory-assigned IEEE EUI-64
     GetJoinerId(joinerId);
@@ -173,7 +173,7 @@ void Joiner::Complete(otError aError)
     ThreadNetif &netif = GetNetif();
     mState = OT_JOINER_STATE_IDLE;
     otError error = OT_ERROR_NOT_FOUND;
-    GetNetif().SetStateChangedFlags(OT_CHANGED_JOINER_STATE);
+    GetNotifier().SetFlags(OT_CHANGED_JOINER_STATE);
 
     netif.GetCoapSecure().Disconnect();
 
@@ -234,7 +234,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         joinerRouter.mJoinerUdpPort = aResult->mJoinerUdpPort;
         joinerRouter.mPanId = aResult->mPanId;
         joinerRouter.mChannel = aResult->mChannel;
-        memcpy(joinerRouter.mExtAddr.m8, &aResult->mExtAddress, sizeof(joinerRouter.mExtAddr));
+        joinerRouter.mExtAddr = static_cast<Mac::ExtAddress &>(aResult->mExtAddress);
         AddJoinerRouter(joinerRouter);
     }
     else
