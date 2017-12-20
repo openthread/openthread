@@ -277,7 +277,7 @@ spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t d
 
             if (arg_ptr)
             {
-                *arg_ptr = data_ptr[0];
+                *arg_ptr = data_ptr[0] != 0;
             }
 
             ret += sizeof(uint8_t);
