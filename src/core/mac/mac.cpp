@@ -89,6 +89,7 @@ Mac::Mac(Instance &aInstance):
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelaySleep(false),
 #endif
+    mOperationTask(aInstance, &Mac::PerformOperation, this),
     mMacTimer(aInstance, &Mac::HandleMacTimer, this),
     mBackoffTimer(aInstance, &Mac::HandleBeginTransmit, this),
     mReceiveTimer(aInstance, &Mac::HandleReceiveTimer, this),
@@ -109,7 +110,6 @@ Mac::Mac(Instance &aInstance):
     mEnergyScanCurrentMaxRssi(kInvalidRssiValue),
     mScanContext(NULL),
     mActiveScanHandler(NULL), // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
-    mEnergyScanSampleRssiTask(aInstance, &Mac::HandleEnergyScanSampleRssi, this),
     mPcapCallback(NULL),
     mPcapCallbackContext(NULL),
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -273,7 +273,7 @@ void Mac::PerformEnergyScan(void)
     {
         RadioReceive(mScanChannel);
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mEnergyScanSampleRssiTask.Post();
+        mOperationTask.Post();
 
         if (mScanDuration != 0)
         {
@@ -335,16 +335,9 @@ void Mac::EnergyScanDone(int8_t aRssi)
     PerformEnergyScan();
 }
 
-void Mac::HandleEnergyScanSampleRssi(Tasklet &aTasklet)
-{
-    aTasklet.GetOwner<Mac>().HandleEnergyScanSampleRssi();
-}
-
-void Mac::HandleEnergyScanSampleRssi(void)
+void Mac::SampleRssi(void)
 {
     int8_t rssi;
-
-    VerifyOrExit(mOperation == kOperationEnergyScan);
 
     rssi = otPlatRadioGetRssi(&GetInstance());
 
@@ -362,11 +355,8 @@ void Mac::HandleEnergyScanSampleRssi(void)
     }
     else
     {
-        mEnergyScanSampleRssiTask.Post();
+        mOperationTask.Post();
     }
-
-exit:
-    return;
 }
 
 otError Mac::RegisterReceiver(Receiver &aReceiver)
@@ -577,6 +567,30 @@ void Mac::StartOperation(Operation aOperation)
         break;
     }
 
+    if (mOperation == kOperationIdle)
+    {
+        mOperationTask.Post();
+    }
+}
+
+void Mac::PerformOperation(Tasklet &aTasklet)
+{
+    aTasklet.GetOwner<Mac>().PerformOperation();
+}
+
+void Mac::PerformOperation(void)
+{
+    // The `mOperationTask` tasklet serves two purposes:
+    //
+    // (a) it is used to start a pending operation,
+    // (b) while performing Energy Scan, it is used to take RSSI samples.
+
+    if (mOperation == kOperationEnergyScan)
+    {
+        SampleRssi();
+        ExitNow();
+    }
+
     VerifyOrExit(mOperation == kOperationIdle);
 
     // `WaitingForData` should be checked before any other pending
@@ -634,7 +648,13 @@ void Mac::FinishOperation(void)
     otLogDebgMac(GetInstance(), "Finishing operation \"%s\"", OperationToString(mOperation));
 
     mOperation = kOperationIdle;
-    StartOperation(kOperationIdle);
+
+    // Note that we do not want to post the `mOperationTask` here and
+    // instead we do a direct call to `PerformOperation()`. This helps
+    // ensure that if there is no pending operation, the radio is
+    // switched to idle mode immediately.
+
+    PerformOperation();
 }
 
 void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
