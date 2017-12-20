@@ -39,7 +39,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
 endif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
 
 if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w") # no warnings here
+    # If a warning level has been defined, suppress all warnings for test code
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W0")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX-")
 endif(MSVC)
 
 add_test_suite(aes aes.ecb)
@@ -113,7 +115,7 @@ if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
         if (CMAKE_HOST_UNIX)
             set(command ln -s ${target} ${link})
         else()
-            set(command cmd.exe /c mklink /d ${link} ${target})
+            set(command cmd.exe /c mklink /j ${link} ${target})
         endif()
 
         execute_process(COMMAND ${command}
