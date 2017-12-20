@@ -48,10 +48,16 @@ extern "C" {
 #ifdef NRF52840_XXAA
 
 /** Radio ramp-up time in TX mode, in us. */
-#define NRF_FEM_RADIO_TX_STARTUP_LATENCY_US 129
+#define NRF_FEM_RADIO_TX_STARTUP_LATENCY_US 40
 
 /** Radio ramp-up time in RX mode, in us. */
-#define NRF_FEM_RADIO_RX_STARTUP_LATENCY_US 129
+#define NRF_FEM_RADIO_RX_STARTUP_LATENCY_US 40
+
+/** Radio turnaround from RX to TX mode, in us. */
+#define NRF_FEM_RADIO_TX_TURNAROUND_LATENCY_US 20
+
+/** Radio turnaround from TX to RX mode, in us. */
+#define NRF_FEM_RADIO_RX_TURNAROUND_LATENCY_US 20
 
 /** Tifs drift measured, in us. */
 #define NRF_FEM_RADIO_TIFS_DRIFT_US         20

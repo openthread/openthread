@@ -172,9 +172,13 @@ void nrf_fem_control_time_latch(void)
     }
 }
 
-void nrf_fem_control_pa_set(bool shorts_used)
+void nrf_fem_control_pa_set(bool shorts_used, bool turnaround)
 {
     uint32_t target_time;
+    uint32_t latency;
+
+    latency = turnaround ? NRF_FEM_RADIO_TX_TURNAROUND_LATENCY_US :
+                           NRF_FEM_RADIO_TX_STARTUP_LATENCY_US;
 
     if (m_nrf_fem_control_cfg.pa_cfg.enable)
     {
@@ -184,8 +188,8 @@ void nrf_fem_control_pa_set(bool shorts_used)
 
         uint32_t tifs = nrf_radio_ifs_get();
 
-        target_time = tifs <= NRF_FEM_RADIO_TX_STARTUP_LATENCY_US ?
-                      m_time_latch + NRF_FEM_RADIO_TX_STARTUP_LATENCY_US - NRF_FEM_PA_TIME_IN_ADVANCE :
+        target_time = tifs <= latency ?
+                      m_time_latch + latency - NRF_FEM_PA_TIME_IN_ADVANCE :
                       m_time_latch + tifs - NRF_FEM_RADIO_TIFS_DRIFT_US - NRF_FEM_PA_TIME_IN_ADVANCE;
 
         if (shorts_used)

@@ -51,8 +51,11 @@
 #include "nrf_drv_radio802154_pib.h"
 #include "nrf_drv_radio802154_priority_drop.h"
 #include "nrf_drv_radio802154_request.h"
+#include "nrf_drv_radio802154_revision.h"
 #include "nrf_drv_radio802154_rx_buffer.h"
 #include "hal/nrf_radio.h"
+#include "platform/clock/nrf_drv_radio802154_clock.h"
+#include "platform/timer/nrf_drv_radio802154_timer.h"
 #include "raal/nrf_raal_api.h"
 
 #include <cmsis/core_cmFunc.h>
@@ -116,19 +119,24 @@ int8_t nrf_drv_radio802154_dbm_from_energy_level_calculate(uint8_t energy_level)
 void nrf_drv_radio802154_init(void)
 {
     nrf_drv_radio802154_ack_pending_bit_init();
+    nrf_drv_radio802154_clock_init();
     nrf_drv_radio802154_debug_init();
     nrf_drv_radio802154_fsm_init();
     nrf_drv_radio802154_notification_init();
     nrf_drv_radio802154_pib_init();
     nrf_drv_radio802154_priority_drop_init();
     nrf_drv_radio802154_request_init();
+    nrf_drv_radio802154_revision_init();
     nrf_drv_radio802154_rx_buffer_init();
+    nrf_drv_radio802154_timer_init();
     nrf_raal_init();
 }
 
 void nrf_drv_radio802154_deinit(void)
 {
+    nrf_drv_radio802154_timer_deinit();
     nrf_drv_radio802154_fsm_deinit();
+    nrf_drv_radio802154_clock_deinit();
 }
 
 #if !NRF_DRV_RADIO802154_INTERNAL_IRQ_HANDLING
