@@ -47,6 +47,7 @@
 #include "common/owner-locator.hpp"
 #include "common/settings.hpp"
 #include "mac/mac_frame.hpp"
+#include "meshcop/meshcop.hpp"
 #include "net/icmp6.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -2635,11 +2636,11 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-otError MleRouter::SetSteeringData(const otExtAddress *aExtAddress)
+otError MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    ExtAddress nullExtAddr;
-    ExtAddress allowAnyExtAddr;
+    Mac::ExtAddress nullExtAddr;
+    Mac::ExtAddress allowAnyExtAddr;
 
     memset(nullExtAddr.m8, 0, sizeof(nullExtAddr.m8));
     memset(allowAnyExtAddr.m8, 0xFF, sizeof(allowAnyExtAddr.m8));
@@ -2659,8 +2660,12 @@ otError MleRouter::SetSteeringData(const otExtAddress *aExtAddress)
     }
     else
     {
-        // Set bloom filter with the extended address passed in
-        mSteeringData.ComputeBloomFilter(*aExtAddress);
+        Mac::ExtAddress joinerId;
+
+        // compute Joiner ID
+        MeshCoP::ComputeJoinerId(*aExtAddress, joinerId);
+        // compute Bloom Filter
+        mSteeringData.ComputeBloomFilter(joinerId);
     }
 
     return error;

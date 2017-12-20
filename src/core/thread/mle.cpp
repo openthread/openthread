@@ -48,6 +48,7 @@
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac_frame.hpp"
+#include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
@@ -3249,18 +3250,19 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
             // or if it matches the factory set EUI64.
             if (mEnableEui64Filtering)
             {
-                otExtAddress mfgEUI64;
+                Mac::ExtAddress extaddr;
                 Crc16 ccitt(Crc16::kCcitt);
                 Crc16 ansi(Crc16::kAnsi);
 
-                // Get Factory set EUI64
-                otPlatRadioGetIeeeEui64(&GetInstance(), mfgEUI64.m8);
+                otPlatRadioGetIeeeEui64(&GetInstance(), extaddr.m8);
+
+                MeshCoP::ComputeJoinerId(extaddr, extaddr);
 
                 // Compute bloom filter
-                for (size_t i = 0; i < sizeof(mfgEUI64.m8); i++)
+                for (size_t i = 0; i < sizeof(extaddr.m8); i++)
                 {
-                    ccitt.Update(mfgEUI64.m8[i]);
-                    ansi.Update(mfgEUI64.m8[i]);
+                    ccitt.Update(extaddr.m8[i]);
+                    ansi.Update(extaddr.m8[i]);
                 }
 
                 // Drop responses that don't match the bloom filter
