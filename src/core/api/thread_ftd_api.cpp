@@ -303,7 +303,7 @@ otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtA
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetMle().SetSteeringData(aExtAddress);
+    error = instance.GetThreadNetif().GetMle().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aExtAddress);
