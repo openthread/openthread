@@ -113,22 +113,6 @@ public:
     };
 
     /**
-     * This method returns the Type value.
-     *
-     * @returns The Type value.
-     *
-     */
-    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
-
-    /**
-     * This method sets the Type value.
-     *
-     * @param[in]  aType  The Type value.
-     *
-     */
-    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
-
-    /**
      * This static method reads the requested TLV out of @p aMessage.
      *
      * @param[in]   aMessage    A reference to the message.
