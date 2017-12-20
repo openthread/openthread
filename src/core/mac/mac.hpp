@@ -644,8 +644,8 @@ private:
     void HandleBeginTransmit(void);
     static void HandleReceiveTimer(Timer &aTimer);
     void HandleReceiveTimer(void);
-    static void HandleEnergyScanSampleRssi(Tasklet &aTasklet);
-    void HandleEnergyScanSampleRssi(void);
+    static void PerformOperation(Tasklet &aTasklet);
+    void PerformOperation(void);
 
     void StartCsmaBackoff(void);
 
@@ -654,6 +654,7 @@ private:
     void PerformActiveScan(void);
     void PerformEnergyScan(void);
     void ReportEnergyScanResult(int8_t aRssi);
+    void SampleRssi(void);
 
     otError RadioTransmit(Frame *aSendFrame);
     otError RadioReceive(uint8_t aChannel);
@@ -673,6 +674,8 @@ private:
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mDelaySleep              : 1;
 #endif
+
+    Tasklet mOperationTask;
 
     TimerMilli mMacTimer;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -708,7 +711,6 @@ private:
         ActiveScanHandler mActiveScanHandler;
         EnergyScanHandler mEnergyScanHandler;
     };
-    Tasklet mEnergyScanSampleRssiTask;
 
     otLinkPcapCallback mPcapCallback;
     void *mPcapCallbackContext;
