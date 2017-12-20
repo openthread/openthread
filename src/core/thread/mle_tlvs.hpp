@@ -603,7 +603,7 @@ private:
     };
     uint8_t mRouterIdSequence;
     uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
-    uint8_t mRouteData[kMaxRouters];
+    uint8_t mRouteData[kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
 /**
