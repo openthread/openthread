@@ -77,7 +77,7 @@ void PlatformInit(int argc, char *argv[])
 
     NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
 
-    if (*endptr != '\0')
+    if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
     {
         fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
         exit(EXIT_FAILURE);
