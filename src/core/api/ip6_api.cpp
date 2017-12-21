@@ -86,18 +86,19 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
     return instance.GetThreadNetif().GetUnicastAddresses();
 }
 
-otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *address)
+otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().AddExternalUnicastAddress(*static_cast<const Ip6::NetifUnicastAddress *>(address));
+    return instance.GetThreadNetif().AddExternalUnicastAddress(
+               *static_cast<const Ip6::NetifUnicastAddress *>(aAddress));
 }
 
-otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *address)
+otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
+    return instance.GetThreadNetif().RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(aAddress));
 }
 
 const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
@@ -233,14 +234,14 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
     return instance.GetThreadNetif().GetIp6Filter().GetUnsecurePorts(*aNumEntries);
 }
 
-bool otIp6IsAddressEqual(const otIp6Address *a, const otIp6Address *b)
+bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
+    return *static_cast<const Ip6::Address *>(aFirst) == *static_cast<const Ip6::Address *>(aSecond);
 }
 
-otError otIp6AddressFromString(const char *str, otIp6Address *address)
+otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 {
-    return static_cast<Ip6::Address *>(address)->FromString(str);
+    return static_cast<Ip6::Address *>(aAddress)->FromString(aString);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)

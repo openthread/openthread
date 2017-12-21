@@ -347,13 +347,13 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
 /**
  * Test if two IPv6 addresses are the same.
  *
- * @param[in]  a  A pointer to the first IPv6 address to compare.
- * @param[in]  b  A pointer to the second IPv6 address to compare.
+ * @param[in]  aFrist   A pointer to the first IPv6 address to compare.
+ * @param[in]  aSecond  A pointer to the second IPv6 address to compare.
  *
  * @retval TRUE   The two IPv6 addresses are the same.
  * @retval FALSE  The two IPv6 addresses are not the same.
  */
-OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *a, const otIp6Address *b);
+OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
  * Convert a human-readable IPv6 address string into a binary representation.

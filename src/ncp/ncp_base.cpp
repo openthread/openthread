@@ -2124,12 +2124,12 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 }
 
 
-extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
+extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     char logString[128];
     int charsWritten;
 
-    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, ap)) > 0)
+    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, aArgs)) > 0)
     {
         if (charsWritten > static_cast<int>(sizeof(logString) - 1))
         {
