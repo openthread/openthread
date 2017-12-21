@@ -1042,7 +1042,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     default:
         assert(false);
-        ExitNow();
+        OT_UNREACHABLE_CODE(ExitNow());
     }
 
     // Determine whether a CSMA retry is required.
