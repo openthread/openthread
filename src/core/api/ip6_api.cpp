@@ -254,3 +254,8 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 exit:
     return rval;
 }
+
+bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
+{
+    return static_cast<const Ip6::Address *>(aAddress)->IsUnspecified();
+}
