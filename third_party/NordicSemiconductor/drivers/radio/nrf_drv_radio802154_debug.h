@@ -68,6 +68,7 @@ extern "C" {
 #define FUNCTION_EVENT_CCAIDLE                 0x0106UL
 #define FUNCTION_EVENT_CCABUSY                 0x0107UL
 #define FUNCTION_EVENT_EDEND                   0x0108UL
+#define FUNCTION_EVENT_PHYEND                  0x0109UL
 
 #define FUNCTION_AUTO_ACK_ABORT                0x0201UL
 #define FUNCTION_TIMESLOT_STARTED              0x0202UL
@@ -94,6 +95,7 @@ extern "C" {
 #define PIN_DBG_RADIO_EVT_READY                13
 #define PIN_DBG_RADIO_EVT_FRAMESTART           14
 #define PIN_DBG_RADIO_EVT_EDEND                25
+#define PIN_DBG_RADIO_EVT_PHYEND               24
 
 #define PIN_DBG_TIMESLOT_ACTIVE                3
 #define PIN_DBG_TIMESLOT_EXTEND_REQ            4

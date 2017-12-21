@@ -50,6 +50,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                           \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                            \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                        \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal                                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/power                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/systick                                          \
@@ -134,8 +135,11 @@ RADIO_DRIVER_SOURCES                                                            
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_debug.c                 \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_fsm.c                   \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_pib.c                   \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_revision.c              \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_rx_buffer.c             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_common.c                \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_drv_radio802154_clock_sdk.c  \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_drv_radio802154_timer_none.c  \
     $(NULL)
 
 NORDICSEMI_SOURCES                                                                                         = \
@@ -220,10 +224,14 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_priority_drop.h          \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_procedures_duration.h    \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_request.h                \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_revision.h               \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_rx_buffer.h              \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_api.h                    \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_config.h                 \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_internal.h               \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal/nrf_radio.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_drv_radio802154_clock.h   \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_drv_radio802154_timer.h   \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_api.h                          \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_config.h                       \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/softdevice/nrf_raal_softdevice.h        \
@@ -235,7 +243,6 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_nvmc.h                                             \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_peripherals.h                                      \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_ppi.h                                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_radio.h                                            \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_rng.h                                              \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_uart.h                                             \
     $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.h                                    \
