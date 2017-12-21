@@ -208,9 +208,9 @@ void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
  * @param[in]  aLogLevel   The log level.
  * @param[in]  aLogRegion  The log region.
  * @param[in]  aFormat     A pointer to the format string.
- * @param[in]  ap          va_list matching aFormat.
+ * @param[in]  aArgs       va_list matching aFormat.
  */
-void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap);
+void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
 
 /**
  * @}

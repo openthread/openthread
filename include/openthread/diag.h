@@ -62,13 +62,13 @@ void otDiagInit(otInstance *aInstance);
 /**
  * This function processes a factory diagnostics command line.
  *
- * @param[in]  argc  The argument counter of diagnostics command line.
- * @param[in]  argv  The argument vector of diagnostics command line.
+ * @param[in]  aArgc  The argument counter of diagnostics command line.
+ * @param[in]  aArgv  The argument vector of diagnostics command line.
  *
  * @returns A pointer to the output string.
  *
  */
-char *otDiagProcessCmd(int argc, char *argv[]);
+char *otDiagProcessCmd(int aArgc, char *aArgv[]);
 
 /**
  * This function processes a factory diagnostics command line.

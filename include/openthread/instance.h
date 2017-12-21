@@ -103,7 +103,8 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
  *
  */
 OTAPI void OTCALL otSetDeviceAvailabilityChangedCallback(otApiInstance *aApiInstance,
-                                                         otDeviceAvailabilityChangedCallback aCallback, void *aCallbackContext);
+                                                         otDeviceAvailabilityChangedCallback aCallback,
+                                                         void *aCallbackContext);
 
 /**
  * This function querys the list of OpenThread device contexts on the system.
