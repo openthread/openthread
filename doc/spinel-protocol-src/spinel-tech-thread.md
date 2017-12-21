@@ -45,7 +45,7 @@ Table containing info about all the children of this node.
 
 Data per item is:
 
-* `E`: Extended/long address
+* `E`: Extended address
 * `S`: RLOC16
 * `L`: Timeout (in seconds)
 * `L`: Age (in seconds)
@@ -227,7 +227,7 @@ disabled.
 
 Data per item is:
 
-* `E`: Extended/long address
+* `E`: Extended address
 * `S`: RLOC16
 * `L`: Age
 * `C`: Link Quality In
@@ -525,3 +525,17 @@ It can only be included in one of the following Dataset properties:
 
 *   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
 *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+
+### PROP 5409: SPINEL_PROP_THREAD_CHILD_TABLE_ADDRESSES (#prop-thread-child-table-addresses)
+
+* Type: Read-Only
+* Packing-Encoding: `A(t(ESA(6))`
+
+This property provides the list of all addresses associated with every child
+including any registered IPv6 addresses.
+
+Data per item is:
+
+* `E`: Extended address of the child
+* `S`: RLOC16 of the child
+* `A(6)`: List of IPv6 addresses registered by the child (if any)

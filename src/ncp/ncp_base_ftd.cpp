@@ -210,6 +210,45 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE_ADDRESSES(void)
+{
+    otError error = OT_ERROR_NONE;
+    otChildInfo childInfo;
+    uint8_t maxChildren;
+    const otIp6Address *ip6Address;
+
+    maxChildren = otThreadGetMaxAllowedChildren(mInstance);
+
+    for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    {
+        if ((otThreadGetChildInfoByIndex(mInstance, childIndex, &childInfo) != OT_ERROR_NONE) ||
+            childInfo.mIsStateRestoring)
+        {
+            continue;
+        }
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteEui64(childInfo.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint16(childInfo.mRloc16));
+
+        ip6Address = childInfo.mIp6Addresses;
+
+        for (uint8_t num = childInfo.mIp6AddressesLength; num > 0; num--, ip6Address++)
+        {
+            if (!otIp6IsAddressUnspecified(ip6Address))
+            {
+                SuccessOrExit(error = mEncoder.WriteIp6Address(*ip6Address));
+            }
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
 otError NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(void)
 {
     return mEncoder.WriteBool(otThreadIsRouterRoleEnabled(mInstance));

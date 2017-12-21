@@ -378,6 +378,17 @@ OTAPI otError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *a
 OTAPI uint8_t OTCALL otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
+ * This function indicates whether or not a given IPv6 address is the Unspecified Address.
+ *
+ * @param[in]  aAddress   A pointer to an IPv6 address.
+ *
+ * @retval TRUE   If the IPv6 address is the Unspecified Address.
+ * @retval FALSE  If the IPv6 address is not the Unspecified Address.
+ *
+ */
+bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
+
+/**
  * @}
  *
  */
