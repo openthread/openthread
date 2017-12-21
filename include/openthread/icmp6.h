@@ -166,8 +166,8 @@ otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler);
  *                           May be zero.
  *
  */
-otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
-                               const otMessageInfo *aMessageInfo, uint16_t aIdentifier);
+otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
+                               uint16_t aIdentifier);
 
 /**
  * @}

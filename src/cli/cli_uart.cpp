@@ -294,14 +294,14 @@ void Uart::SendDoneTask(void)
     Send();
 }
 
-extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
+extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     if (NULL == Uart::sUartServer)
     {
         return;
     }
 
-    Uart::sUartServer->OutputFormatV(aFormat, ap);
+    Uart::sUartServer->OutputFormatV(aFormat, aArgs);
     Uart::sUartServer->OutputFormat("\r\n");
 
     OT_UNUSED_VARIABLE(aLogLevel);
