@@ -161,7 +161,7 @@ private:
  * This class implements Extended MAC Address TLV generation and parsing.
  *
  */
-OT_TOOL_PACKED_BEGIN;
+OT_TOOL_PACKED_BEGIN
 class ThreadExtMacAddressTlv: public ThreadTlv
 {
 public:
