@@ -480,8 +480,6 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     otError error = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
-
     if (aEnabled)
     {
         VerifyOrExit(instance.GetThreadNetif().GetMac().GetPanId() != Mac::kPanIdBroadcast,
@@ -494,7 +492,6 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     }
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 

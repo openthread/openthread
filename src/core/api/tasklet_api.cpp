@@ -47,12 +47,11 @@ void otTaskletsProcess(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
     VerifyOrExit(otInstanceIsInitialized(aInstance));
     instance.GetTaskletScheduler().ProcessQueuedTasklets();
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 bool otTaskletsArePending(otInstance *aInstance)

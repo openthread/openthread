@@ -139,11 +139,10 @@ exit:
 
 otError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 {
-    otLogFuncEntry();
     mJoinerUdpPort = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
     HandleStateChanged(OT_CHANGED_THREAD_NETDATA);
-    otLogFuncExit();
+
     return OT_ERROR_NONE;
 }
 
@@ -166,8 +165,6 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     ExtendedTlv tlv;
     uint16_t borderAgentRloc;
 
-    otLogFuncEntryMsg("from peer: %llX",
-                      HostSwap64(*reinterpret_cast<const uint64_t *>(aMessageInfo.GetPeerAddr().mFields.m8 + 8)));
     otLogInfoMeshCoP(GetInstance(), "JoinerRouter::HandleUdpReceive");
 
     SuccessOrExit(error = GetBorderAgentRloc(borderAgentRloc));
@@ -226,8 +223,6 @@ exit:
     {
         message->Free();
     }
-
-    otLogFuncExitErr(error);
 }
 
 void JoinerRouter::HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -249,7 +244,6 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     Message *message = NULL;
     Ip6::MessageInfo messageInfo;
 
-    otLogFuncEntry();
     VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE &&
                  aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
@@ -307,8 +301,6 @@ exit:
     {
         message->Free();
     }
-
-    otLogFuncExitErr(error);
 }
 
 
@@ -329,8 +321,6 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     const Tlv *tlv;
 
     DelayedJoinEntHeader delayedMessage;
-
-    otLogFuncEntry();
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.AppendUriPathOptions(OT_URI_PATH_JOINER_ENTRUST);
@@ -422,7 +412,6 @@ exit:
         message->Free();
     }
 
-    otLogFuncExitErr(error);
     return error;
 }
 

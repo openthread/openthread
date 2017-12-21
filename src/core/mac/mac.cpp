@@ -419,8 +419,6 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
 {
     otExtAddress address;
 
-    otLogFuncEntry();
-
     for (size_t i = 0; i < sizeof(address); i++)
     {
         address.m8[i] = aExtAddress.m8[7 - i];
@@ -428,16 +426,13 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
 
     otPlatRadioSetExtendedAddress(&GetInstance(), &address);
     mExtAddress = aExtAddress;
-
-    otLogFuncExit();
 }
 
 otError Mac::SetShortAddress(ShortAddress aShortAddress)
 {
-    otLogFuncEntryMsg("%d", aShortAddress);
     mShortAddress = aShortAddress;
     otPlatRadioSetShortAddress(&GetInstance(), aShortAddress);
-    otLogFuncExit();
+
     return OT_ERROR_NONE;
 }
 
@@ -445,15 +440,12 @@ otError Mac::SetChannel(uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntryMsg("%d", aChannel);
-
     VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
 
     mChannel = aChannel;
     UpdateIdleMode();
 
 exit:
-    otLogFuncExit();
     return error;
 }
 
@@ -461,23 +453,19 @@ otError Mac::SetNetworkName(const char *aNetworkName)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntryMsg("%s", aNetworkName);
-
     VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
 
     (void)strlcpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName));
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
 otError Mac::SetPanId(PanId aPanId)
 {
-    otLogFuncEntryMsg("%d", aPanId);
     mPanId = aPanId;
     otPlatRadioSetPanId(&GetInstance(), mPanId);
-    otLogFuncExit();
+
     return OT_ERROR_NONE;
 }
 
@@ -977,11 +965,11 @@ extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
     VerifyOrExit(instance->IsInitialized());
     instance->GetThreadNetif().GetMac().HandleTransmitStarted(aFrame);
+
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void Mac::HandleTransmitStarted(otRadioFrame *aFrame)
@@ -1000,7 +988,6 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntryMsg("%!otError!", aError);
     VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1016,7 +1003,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     }
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
@@ -1496,7 +1483,6 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntryMsg("%!otError!", aError);
     VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1512,7 +1498,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
     }
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)

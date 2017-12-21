@@ -215,13 +215,11 @@ extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
-
     VerifyOrExit(otInstanceIsInitialized(aInstance));
     instance->GetTimerMilliScheduler().ProcessTimers();
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -253,13 +251,11 @@ extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
-
     VerifyOrExit(otInstanceIsInitialized(aInstance));
     instance->GetTimerMicroScheduler().ProcessTimers();
 
 exit:
-    otLogFuncExit();
+    return;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
