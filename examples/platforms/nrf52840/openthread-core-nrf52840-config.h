@@ -162,6 +162,7 @@
  */
 #if defined(__CC_ARM)
     _Pragma("diag_suppress=111")
+    _Pragma("diag_suppress=128")
 #endif
 
 #endif  // OPENTHREAD_CORE_NRF52840_CONFIG_H_

@@ -392,4 +392,4 @@ template<> Utils::SupervisionListener &Instance::Get(void)
     return GetThreadNetif().GetSupervisionListener();
 }
 
-} // namespance ot
+} // namespace ot
