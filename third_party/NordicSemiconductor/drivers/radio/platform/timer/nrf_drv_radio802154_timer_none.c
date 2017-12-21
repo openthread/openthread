@@ -28,43 +28,35 @@
  *
  */
 
-#ifndef NRF_RAAL_CONFIG_H__
-#define NRF_RAAL_CONFIG_H__
-
-#ifdef NRF_DRV_RADIO802154_PROJECT_CONFIG
-#include NRF_DRV_RADIO802154_PROJECT_CONFIG
-#endif
-
-#include <nrf.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * @defgroup nrf_raal_config RAAL configuration
- * @{
- * @ingroup nrf_driver_radio802154
- * @brief Configuration of Radio Arbiter Abstraction Layer.
- */
-
-/**
- * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
+ * @file
+ *   This file implements the nrf 802.15.4 timer abstraction in case timer is not used.
  *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
+ * This timer abstraction should be used only when none of driver features that use timer is enabled.
  *
  */
-#ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
-#endif
 
-/**
- *@}
- **/
+#include "nrf_drv_radio802154_timer.h"
 
-#ifdef __cplusplus
+void nrf_drv_radio802154_timer_init(void)
+{
+    // Intentionally empty
 }
-#endif
 
-#endif // NRF_RAAL_CONFIG_H__
+void nrf_drv_radio802154_timer_deinit(void)
+{
+    // Intentionally empty
+}
+
+void nrf_drv_radio802154_timer_critical_section_enter(void)
+{
+    // Intentionally empty
+}
+
+void nrf_drv_radio802154_timer_critical_section_exit(void)
+{
+    // Intentionally empty
+}
+
+// Other functions from TimAL API are intentionally not implemented to detect build configuration
+// problems compile-time.

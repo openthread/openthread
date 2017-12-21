@@ -1,33 +1,42 @@
-/* Copyright (c) 2016, Nordic Semiconductor ASA
+/**
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
  * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *   1. Redistributions of source code must retain the above copyright notice, this
- *      list of conditions and the following disclaimer.
- *
- *   2. Redistributions in binary form must reproduce the above copyright notice,
- *      this list of conditions and the following disclaimer in the documentation
- *      and/or other materials provided with the distribution.
- *
- *   3. Neither the name of Nordic Semiconductor ASA nor the names of its
- *      contributors may be used to endorse or promote products derived from
- *      this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
  */
-
 /**
  * @file
  * @brief RNG HAL API.
@@ -95,20 +104,14 @@ typedef enum
  *
  * @param[in]  rng_int_mask              Mask of interrupts.
  */
-__STATIC_INLINE void nrf_rng_int_enable(uint32_t rng_int_mask)
-{
-    NRF_RNG->INTENSET = rng_int_mask;
-}
+__STATIC_INLINE void nrf_rng_int_enable(uint32_t rng_int_mask);
 
 /**
  * @brief Function for disabling interrupts.
  *
  * @param[in]  rng_int_mask              Mask of interrupts.
  */
-__STATIC_INLINE void nrf_rng_int_disable(uint32_t rng_int_mask)
-{
-    NRF_RNG->INTENCLR = rng_int_mask;
-}
+__STATIC_INLINE void nrf_rng_int_disable(uint32_t rng_int_mask);
 
 /**
  * @brief Function for getting the state of a specific interrupt.
@@ -118,10 +121,7 @@ __STATIC_INLINE void nrf_rng_int_disable(uint32_t rng_int_mask)
  * @retval     true                   If the interrupt is not enabled.
  * @retval     false                  If the interrupt is enabled.
  */
-__STATIC_INLINE bool nrf_rng_int_get(nrf_rng_int_mask_t rng_int_mask)
-{
-    return (bool)(NRF_RNG->INTENCLR & rng_int_mask);
-}
+__STATIC_INLINE bool nrf_rng_int_get(nrf_rng_int_mask_t rng_int_mask);
 
 /**
  * @brief Function for getting the address of a specific task.
@@ -130,20 +130,14 @@ __STATIC_INLINE bool nrf_rng_int_get(nrf_rng_int_mask_t rng_int_mask)
  *
  * @param[in]  rng_task              Task.
  */
-__STATIC_INLINE uint32_t *nrf_rng_task_address_get(nrf_rng_task_t rng_task)
-{
-    return (uint32_t *)((uint8_t *)NRF_RNG + rng_task);
-}
+__STATIC_INLINE uint32_t * nrf_rng_task_address_get(nrf_rng_task_t rng_task);
 
 /**
  * @brief Function for setting a specific task.
  *
  * @param[in]  rng_task              Task.
  */
-__STATIC_INLINE void nrf_rng_task_trigger(nrf_rng_task_t rng_task)
-{
-    *((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_task)) = NRF_RNG_TASK_SET;
-}
+__STATIC_INLINE void nrf_rng_task_trigger(nrf_rng_task_t rng_task);
 
 /**
  * @brief Function for getting address of a specific event.
@@ -152,24 +146,14 @@ __STATIC_INLINE void nrf_rng_task_trigger(nrf_rng_task_t rng_task)
  *
  * @param[in]  rng_event              Event.
  */
-__STATIC_INLINE uint32_t *nrf_rng_event_address_get(nrf_rng_event_t rng_event)
-{
-    return (uint32_t *)((uint8_t *)NRF_RNG + rng_event);
-}
+__STATIC_INLINE uint32_t * nrf_rng_event_address_get(nrf_rng_event_t rng_event);
 
 /**
  * @brief Function for clearing a specific event.
  *
  * @param[in]  rng_event              Event.
  */
-__STATIC_INLINE void nrf_rng_event_clear(nrf_rng_event_t rng_event)
-{
-    *((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_event)) = NRF_RNG_EVENT_CLEAR;
-#if __CORTEX_M == 0x04
-    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_event));
-    (void)dummy;
-#endif
-}
+__STATIC_INLINE void nrf_rng_event_clear(nrf_rng_event_t rng_event);
 
 /**
  * @brief Function for getting the state of a specific event.
@@ -179,10 +163,7 @@ __STATIC_INLINE void nrf_rng_event_clear(nrf_rng_event_t rng_event)
  * @retval     true               If the event is not set.
  * @retval     false              If the event is set.
  */
-__STATIC_INLINE bool nrf_rng_event_get(nrf_rng_event_t rng_event)
-{
-    return (bool) * ((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_event));
-}
+__STATIC_INLINE bool nrf_rng_event_get(nrf_rng_event_t rng_event);
 
 /**
  * @brief Function for setting shortcuts.
@@ -190,10 +171,7 @@ __STATIC_INLINE bool nrf_rng_event_get(nrf_rng_event_t rng_event)
  * @param[in]  rng_short_mask              Mask of shortcuts.
  *
  */
-__STATIC_INLINE void nrf_rng_shorts_enable(uint32_t rng_short_mask)
-{
-    NRF_RNG->SHORTS |= rng_short_mask;
-}
+__STATIC_INLINE void nrf_rng_shorts_enable(uint32_t rng_short_mask);
 
 /**
  * @brief Function for clearing shortcuts.
@@ -201,39 +179,101 @@ __STATIC_INLINE void nrf_rng_shorts_enable(uint32_t rng_short_mask)
  * @param[in]  rng_short_mask              Mask of shortcuts.
  *
  */
-__STATIC_INLINE void nrf_rng_shorts_disable(uint32_t rng_short_mask)
-{
-    NRF_RNG->SHORTS &= ~rng_short_mask;
-}
+__STATIC_INLINE void nrf_rng_shorts_disable(uint32_t rng_short_mask);
 
 /**
  * @brief Function for getting the previously generated random value.
  *
  * @return     Previously generated random value.
  */
+__STATIC_INLINE uint8_t nrf_rng_random_value_get(void);
+
+/**
+ * @brief Function for enabling digital error correction.
+ */
+__STATIC_INLINE void nrf_rng_error_correction_enable(void);
+
+/**
+ * @brief Function for disabling digital error correction.
+ */
+__STATIC_INLINE void nrf_rng_error_correction_disable(void);
+
+/**
+ *@}
+ **/
+
+#ifndef SUPPRESS_INLINE_IMPLEMENTATION
+
+__STATIC_INLINE void nrf_rng_int_enable(uint32_t rng_int_mask)
+{
+    NRF_RNG->INTENSET = rng_int_mask;
+}
+
+__STATIC_INLINE void nrf_rng_int_disable(uint32_t rng_int_mask)
+{
+    NRF_RNG->INTENCLR = rng_int_mask;
+}
+
+__STATIC_INLINE bool nrf_rng_int_get(nrf_rng_int_mask_t rng_int_mask)
+{
+    return (bool)(NRF_RNG->INTENCLR & rng_int_mask);
+}
+
+__STATIC_INLINE uint32_t * nrf_rng_task_address_get(nrf_rng_task_t rng_task)
+{
+    return (uint32_t *)((uint8_t *)NRF_RNG + rng_task);
+}
+
+__STATIC_INLINE void nrf_rng_task_trigger(nrf_rng_task_t rng_task)
+{
+    *((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_task)) = NRF_RNG_TASK_SET;
+}
+
+__STATIC_INLINE uint32_t * nrf_rng_event_address_get(nrf_rng_event_t rng_event)
+{
+    return (uint32_t *)((uint8_t *)NRF_RNG + rng_event);
+}
+
+__STATIC_INLINE void nrf_rng_event_clear(nrf_rng_event_t rng_event)
+{
+    *((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_event)) = NRF_RNG_EVENT_CLEAR;
+#if __CORTEX_M == 0x04
+    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_event));
+    (void)dummy;
+#endif
+}
+
+__STATIC_INLINE bool nrf_rng_event_get(nrf_rng_event_t rng_event)
+{
+    return (bool) * ((volatile uint32_t *)((uint8_t *)NRF_RNG + rng_event));
+}
+
+__STATIC_INLINE void nrf_rng_shorts_enable(uint32_t rng_short_mask)
+{
+     NRF_RNG->SHORTS |= rng_short_mask;
+}
+
+__STATIC_INLINE void nrf_rng_shorts_disable(uint32_t rng_short_mask)
+{
+     NRF_RNG->SHORTS &= ~rng_short_mask;
+}
+
 __STATIC_INLINE uint8_t nrf_rng_random_value_get(void)
 {
     return (uint8_t)(NRF_RNG->VALUE & RNG_VALUE_VALUE_Msk);
 }
 
-/**
- * @brief Function for enabling digital error correction.
- */
 __STATIC_INLINE void nrf_rng_error_correction_enable(void)
 {
     NRF_RNG->CONFIG |= RNG_CONFIG_DERCEN_Msk;
 }
 
-/**
- * @brief Function for disabling digital error correction.
- */
 __STATIC_INLINE void nrf_rng_error_correction_disable(void)
 {
     NRF_RNG->CONFIG &= ~RNG_CONFIG_DERCEN_Msk;
 }
-/**
- *@}
- **/
+
+#endif
 
 #ifdef __cplusplus
 }

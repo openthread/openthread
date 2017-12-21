@@ -89,6 +89,7 @@ typedef enum /*lint -save -e30 -esym(628,__INTADDR__) */
     NRF_RADIO_EVENT_FRAMESTART = offsetof(NRF_RADIO_Type, EVENTS_FRAMESTART), /**< IEEE 802.15.4 length field received. */
     NRF_RADIO_EVENT_EDEND      = offsetof(NRF_RADIO_Type, EVENTS_EDEND),      /**< Energy Detection procedure ended. */
     NRF_RADIO_EVENT_BCMATCH    = offsetof(NRF_RADIO_Type, EVENTS_BCMATCH),    /**< Bit counter reached bit count value. */
+    NRF_RADIO_EVENT_PHYEND     = offsetof(NRF_RADIO_Type, EVENTS_PHYEND),     /**< Generated in Ble_LR125Kbit, Ble_LR500Kbit and Ieee802154_250Kbit modes when last bit is sent on air. */
 } nrf_radio_event_t;                                                          /*lint -restore */
 
 /**
@@ -109,6 +110,7 @@ typedef enum
     NRF_RADIO_INT_FRAMESTART_MASK = RADIO_INTENSET_FRAMESTART_Msk, /**< Mask for enabling or disabling an interrupt on FRAMESTART event. */
     NRF_RADIO_INT_EDEND_MASK      = RADIO_INTENSET_EDEND_Msk,      /**< Mask for enabling or disabling an interrupt on EDEND event. */
     NRF_RADIO_INT_BCMATCH_MASK    = RADIO_INTENSET_BCMATCH_Msk,    /**< Mask for enabling or disabling an interrupt on BCMATCH event. */
+    NRF_RADIO_INT_PHYEND_MASK     = RADIO_INTENSET_PHYEND_Msk,     /**< Mask for enabling or disabling an interrupt on PHYEND event. */
 } nrf_radio_int_mask_t;
 
 /**
@@ -124,6 +126,8 @@ typedef enum
     NRF_RADIO_SHORT_CCAIDLE_TXEN_MASK       = RADIO_SHORTS_CCAIDLE_TXEN_Msk,       /**< Mask for setting shortcut between EVENT_CCAIDLE and TASK_TXEN. */
     NRF_RADIO_SHORT_DISABLED_TXEN_MASK      = RADIO_SHORTS_DISABLED_TXEN_Msk,      /**< Mask for setting shortcut between EVENT_DISABLED and TASK_TXEN. */
     NRF_RADIO_SHORT_FRAMESTART_BCSTART_MASK = RADIO_SHORTS_FRAMESTART_BCSTART_Msk, /**< Mask for setting shortcut between EVENT_FRAMESTART and TASK_BCSTART. */
+    NRF_RADIO_SHORT_PHYEND_DISABLE_MASK     = RADIO_SHORTS_PHYEND_DISABLE_Msk,     /**< Mask for setting shortcut between EVENT_PHYEND and TASK_DISABLE. */
+    NRF_RADIO_SHORT_PHYEND_START_MASK       = RADIO_SHORTS_PHYEND_START_Msk,       /**< Mask for setting shortcut between EVENT_PHYEND and TASK_START. */
 } nrf_radio_short_mask_t;
 
 /**

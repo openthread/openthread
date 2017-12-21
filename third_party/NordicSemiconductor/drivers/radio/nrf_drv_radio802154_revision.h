@@ -28,43 +28,40 @@
  *
  */
 
-#ifndef NRF_RAAL_CONFIG_H__
-#define NRF_RAAL_CONFIG_H__
+/**
+ * @brief This module contains helpers for checking nRF SoC revision.
+ *
+ */
 
-#ifdef NRF_DRV_RADIO802154_PROJECT_CONFIG
-#include NRF_DRV_RADIO802154_PROJECT_CONFIG
-#endif
+#ifndef NRF_DRV_RADIO802154_REVISION_H_
+#define NRF_DRV_RADIO802154_REVISION_H_
 
-#include <nrf.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_raal_config RAAL configuration
- * @{
- * @ingroup nrf_driver_radio802154
- * @brief Configuration of Radio Arbiter Abstraction Layer.
+ * @brief This function initializes the module by reading the nRF52840 revision
+ *        from the registers and storing it for convenient access.
+ *
+ * @note If the chip revision is not recognized, this module assumes that it is running on a newer
+ *       chip revision that has all of the features, that the most recent known revision has.
  */
+void nrf_drv_radio802154_revision_init(void);
 
 /**
- * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
+ * @brief Function to check if the program is running on NRF52840 revision that supports PHYEND event.
  *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
- *
+ * @retval true  If PHYEND event is supported.
+ * @retval false If PHYEND event is not supported.
  */
-#ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
-#endif
-
-/**
- *@}
- **/
+bool nrf_drv_radio802154_revision_has_phyend_event(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // NRF_RAAL_CONFIG_H__
+#endif /* NRF_DRV_RADIO802154_REVISION_H_ */
