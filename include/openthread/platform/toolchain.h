@@ -243,8 +243,10 @@ extern "C" {
 
 #define OT_UNREACHABLE_CODE(CODE)       \
     _Pragma("diag_suppress=Pe111")      \
+    _Pragma("diag_suppress=Pe128")      \
     CODE                                \
-    _Pragma("diag_default=Pe111")
+    _Pragma("diag_default=Pe111")       \
+    _Pragma("diag_default=Pe128")
 
 #elif defined(__CC_ARM)
 
