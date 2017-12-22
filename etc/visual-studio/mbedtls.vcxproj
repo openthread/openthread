@@ -54,7 +54,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\third_party\mbedtls\hardware_entropy.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\aes.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\bignum.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ccm.c" />

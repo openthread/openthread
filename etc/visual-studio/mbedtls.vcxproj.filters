@@ -13,9 +13,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\third_party\mbedtls\hardware_entropy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\aes.c">
       <Filter>Source Files\repo.patched\library</Filter>
     </ClCompile>

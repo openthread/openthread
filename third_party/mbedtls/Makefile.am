@@ -41,7 +41,6 @@ libmbedcrypto_a_CPPFLAGS                      = \
     $(NULL)
 
 libmbedcrypto_a_SOURCES                       = \
-    hardware_entropy.c                          \
     repo.patched/library/md.c                   \
     repo.patched/library/md_wrap.c              \
     repo.patched/library/memory_buffer_alloc.c  \
