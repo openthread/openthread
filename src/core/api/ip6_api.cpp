@@ -48,8 +48,6 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     otError error = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
-
     if (aEnabled)
     {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -68,7 +66,6 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 exit:
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -189,12 +186,8 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     otError error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
-
     error = instance.GetIp6().SendRaw(*static_cast<Message *>(aMessage),
                                       instance.GetThreadNetif().GetInterfaceId());
-
-    otLogFuncExitErr(error);
 
     return error;
 }
@@ -203,7 +196,6 @@ otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message *message = instance.GetMessagePool().New(Message::kTypeIp6, 0);
-
 
     if (message)
     {

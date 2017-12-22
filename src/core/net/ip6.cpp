@@ -706,7 +706,6 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceI
     uint8_t hopLimit;
     int8_t forwardInterfaceId;
 
-    otLogFuncEntry();
 
 #if 0
     uint8_t buf[1024];
@@ -833,15 +832,12 @@ exit:
         aMessage.Free();
     }
 
-    otLogFuncExitErr(error);
     return error;
 }
 
 int8_t Ip6::FindForwardInterfaceId(const MessageInfo &aMessageInfo)
 {
     int8_t interfaceId;
-
-    otLogFuncEntry();
 
     if (aMessageInfo.GetSockAddr().IsMulticast())
     {
@@ -867,8 +863,6 @@ int8_t Ip6::FindForwardInterfaceId(const MessageInfo &aMessageInfo)
     {
         interfaceId = 0;
     }
-
-    otLogFuncExit();
 
     return interfaceId;
 }
