@@ -50,10 +50,8 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     Instance *instance;
 
-    otLogFuncEntry();
     instance = Instance::Init(aInstanceBuffer, aInstanceBufferSize);
     otLogInfoApi(*instance, "otInstance Initialized");
-    otLogFuncExit();
 
     return instance;
 }
@@ -76,9 +74,7 @@ void otInstanceFinalize(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
     instance.Finalize();
-    otLogFuncExit();
 }
 
 otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)

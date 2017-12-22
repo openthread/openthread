@@ -238,8 +238,6 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntry();
-
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
     VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
@@ -274,7 +272,6 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     }
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -282,7 +279,6 @@ otError Mle::Stop(bool aClearNetworkDatasets)
 {
     ThreadNetif &netif = GetNetif();
 
-    otLogFuncEntry();
     netif.GetKeyManager().Stop();
     SetStateDetached();
     netif.RemoveUnicastAddress(mMeshLocal16);
@@ -298,7 +294,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     }
 
     mRole = OT_DEVICE_ROLE_DISABLED;
-    otLogFuncExit();
+
     return OT_ERROR_NONE;
 }
 
@@ -503,8 +499,6 @@ otError Mle::BecomeDetached(void)
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntry();
-
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     // not in reattach stage after reset
@@ -523,7 +517,6 @@ otError Mle::BecomeDetached(void)
     BecomeChild(kAttachAny);
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -531,8 +524,6 @@ otError Mle::BecomeChild(AttachMode aMode)
 {
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
-
-    otLogFuncEntry();
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mParentRequestState == kParentIdle, error = OT_ERROR_BUSY);
@@ -568,7 +559,6 @@ otError Mle::BecomeChild(AttachMode aMode)
     mParentRequestTimer.Start((otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
