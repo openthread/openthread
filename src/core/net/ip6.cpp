@@ -708,12 +708,6 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceI
 
     otLogFuncEntry();
 
-#if 0
-    uint8_t buf[1024];
-    aMessage.Read(0, sizeof(buf), buf);
-    dump("handle datagram", buf, aMessage.GetLength());
-#endif
-
     SuccessOrExit(error = header.Init(aMessage));
 
     messageInfo.SetPeerAddr(header.GetSource());
