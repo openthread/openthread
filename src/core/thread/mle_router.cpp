@@ -2227,12 +2227,7 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     }
     else
     {
-        RemoveStoredChild(child->GetRloc16());
-
-        if (!child->IsRxOnWhenIdle())
-        {
-            netif.GetMeshForwarder().ClearChildIndirectMessages(*child);
-        }
+        RemoveNeighbor(*child);
     }
 
     child->SetLastHeard(TimerMilli::GetNow());
@@ -2465,8 +2460,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
 
         if (status.GetStatus() == StatusTlv::kError)
         {
-            RemoveStoredChild(child->GetRloc16());
-            child->SetState(Neighbor::kStateInvalid);
+            RemoveNeighbor(*child);
             ExitNow();
         }
     }
@@ -3238,11 +3232,16 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        if (aNeighbor.IsStateValidOrRestoring() && !IsActiveRouter(aNeighbor.GetRloc16()))
+        if (!IsActiveRouter(aNeighbor.GetRloc16()))
         {
-            SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, static_cast<Child &>(aNeighbor));
+            if (aNeighbor.IsStateValidOrRestoring())
+            {
+                SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, static_cast<Child &>(aNeighbor));
+            }
+
             aNeighbor.SetState(Neighbor::kStateInvalid);
-            netif.GetMeshForwarder().UpdateIndirectMessages();
+
+            netif.GetMeshForwarder().ClearChildIndirectMessages(static_cast<Child &>(aNeighbor));
             netif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.GetRloc16());
 
             if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFFD)
@@ -3253,7 +3252,7 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
             RemoveStoredChild(aNeighbor.GetRloc16());
         }
-        else if ((aNeighbor.GetState() == Neighbor::kStateValid) && IsActiveRouter(aNeighbor.GetRloc16()))
+        else if (aNeighbor.GetState() == Neighbor::kStateValid)
         {
             Router &routerToRemove = static_cast<Router &>(aNeighbor);
 
@@ -4821,23 +4820,10 @@ void MleRouter::RemoveChildren(void)
 {
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
-        switch (mChildren[i].GetState())
+        if (mChildren[i].IsStateValidOrRestoring())
         {
-        case Neighbor::kStateValid:
-            SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, mChildren[i]);
-
-        // fall-through
-
-        case Neighbor::kStateChildUpdateRequest:
-        case Neighbor::kStateRestored:
-            RemoveStoredChild(mChildren[i].GetRloc16());
-            break;
-
-        default:
-            break;
+            RemoveNeighbor(mChildren[i]);
         }
-
-        mChildren[i].SetState(Neighbor::kStateInvalid);
     }
 }
 
