@@ -97,13 +97,24 @@ exit:
     return error;
 }
 
-void AddressResolver::Remove(uint8_t routerId)
+void AddressResolver::Remove(uint8_t aRouterId)
 {
     for (int i = 0; i < kCacheEntries; i++)
     {
-        if (Mle::Mle::GetRouterId(mCache[i].mRloc16) == routerId)
+        if (Mle::Mle::GetRouterId(mCache[i].mRloc16) == aRouterId)
         {
             InvalidateCacheEntry(mCache[i], kReasonRemovingRouterId);
+        }
+    }
+}
+
+void AddressResolver::Remove(uint16_t aRloc16)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mRloc16 == aRloc16)
+        {
+            InvalidateCacheEntry(mCache[i], kReasonRemovingRloc16);
         }
     }
 }
@@ -154,6 +165,10 @@ const char *AddressResolver::ConvertInvalidationReasonToString(InvalidationReaso
     {
     case kReasonRemovingRouterId:
         str = "removing router id";
+        break;
+
+    case kReasonRemovingRloc16:
+        str = "removing rloc16";
         break;
 
     case kReasonReceivedIcmpDstUnreachNoRoute:
