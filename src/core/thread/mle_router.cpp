@@ -3244,6 +3244,13 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             aNeighbor.SetState(Neighbor::kStateInvalid);
             netif.GetMeshForwarder().UpdateIndirectMessages();
             netif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.GetRloc16());
+
+            if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFFD)
+            {
+                // Clear all EID-to-RLOC entries assossiated with the child.
+                netif.GetAddressResolver().Remove(aNeighbor.GetRloc16());
+            }
+
             RemoveStoredChild(aNeighbor.GetRloc16());
         }
         else if ((aNeighbor.GetState() == Neighbor::kStateValid) && IsActiveRouter(aNeighbor.GetRloc16()))
@@ -3270,6 +3277,9 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             if (routerToRemove.GetNextHop() == kInvalidRouterId)
             {
                 ResetAdvertiseInterval();
+
+                // Clear all EID-to-RLOC entries assossiated with the router.
+                netif.GetAddressResolver().Remove(GetRouterId(aNeighbor.GetRloc16()));
             }
         }
 
