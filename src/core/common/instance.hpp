@@ -53,7 +53,11 @@
 #endif
 #include "common/notifier.hpp"
 #include "net/ip6.hpp"
+#include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#include "utils/channel_monitor.hpp"
+#endif
 
 /**
  * @addtogroup core-instance
@@ -300,6 +304,16 @@ public:
     Coap::ApplicationCoap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
 
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    /**
+     * This method returns a reference to ChannelMonitor object.
+     *
+     * @returns A reference to the ChannelMonitor object.
+     *
+     */
+    Utils::ChannelMonitor &GetChannelMonitor(void) { return mChannelMonitor; }
+#endif
+
     /**
      * This method returns a reference to message pool object.
      *
@@ -362,6 +376,10 @@ private:
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     otLogLevel                  mLogLevel;
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    Utils::ChannelMonitor       mChannelMonitor;
 #endif
 
     MessagePool                 mMessagePool;

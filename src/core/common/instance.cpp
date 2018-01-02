@@ -71,6 +71,9 @@ Instance::Instance(void) :
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL)),
 #endif
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    mChannelMonitor(*this),
+#endif
     mMessagePool(*this),
     mIsInitialized(false)
 {
@@ -391,5 +394,12 @@ template<> Utils::SupervisionListener &Instance::Get(void)
 {
     return GetThreadNetif().GetSupervisionListener();
 }
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+template<> Utils::ChannelMonitor &Instance::Get(void)
+{
+    return GetChannelMonitor();
+}
+#endif
 
 } // namespace ot
