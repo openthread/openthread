@@ -2490,7 +2490,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
         break;
 
     case kMessagePrepareIndirect:
-        actionText = "Preping indir tx";
+        actionText = "Prepping indir tx";
         shouldLogSrcDstAddresses = false;
         break;
 
@@ -2499,7 +2499,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
         break;
 
     case kMessageReassemblyDrop:
-        actionText = "Dropping (reassembly timeout)";
+        actionText = "Dropping (reassembly queue)";
         shouldLogRss = true;
         break;
 
