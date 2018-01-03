@@ -56,11 +56,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "otNodeApi", "otNodeApi.vcxp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "otTestRunner", "otTestRunner.csproj", "{D5577E51-FA31-4802-8669-1DB32805935E}"
 EndProject
-#Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenThread", "OpenThread.vcxproj", "{F8C22844-9B93-4978-80DF-8AF2B37A7ABB}"
-#	ProjectSection(ProjectDependencies) = postProject
-#		{ED0EA262-C222-42C7-98D3-E70C72978ED2} = {ED0EA262-C222-42C7-98D3-E70C72978ED2}
-#	EndProjectSection
-#EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spinel_k", "spinel_k.vcxproj", "{A55766B5-58B6-4519-835E-5A4B7C164B5A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ottmp", "ottmp.vcxproj", "{1EAFF7C8-8215-4EDA-83B2-EEB56CECE84D}"
