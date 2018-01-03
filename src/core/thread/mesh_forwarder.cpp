@@ -615,35 +615,8 @@ Message *MeshForwarder::GetDirectTransmission(void)
             break;
 
         case Message::kTypeMacDataPoll:
-        {
-            ThreadNetif &netif = GetNetif();
-            Neighbor *parent = netif.GetMle().GetParentCandidate();
-
-            if ((parent != NULL) && (parent->IsStateValidOrRestoring()))
-            {
-                mMacSource.mShortAddress = netif.GetMac().GetShortAddress();
-
-                if (mMacSource.mShortAddress != Mac::kShortAddrInvalid)
-                {
-                    mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-                    mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-                    mMacDest.mShortAddress = parent->GetRloc16();
-                }
-                else
-                {
-                    mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-                    mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
-                    mMacDest.mLength = sizeof(mMacDest.mExtAddress);
-                    mMacDest.mExtAddress = parent->GetExtAddress();
-                }
-            }
-            else
-            {
-                error = OT_ERROR_DROP;
-            }
-
+            error = PrepareDataPoll();
             break;
-        }
 
         case Message::kTypeSupervision:
             error = OT_ERROR_DROP;
@@ -776,6 +749,36 @@ void MeshForwarder::PrepareIndirectTransmission(Message &aMessage, const Child &
         assert(false);
         break;
     }
+}
+
+otError MeshForwarder::PrepareDataPoll(void)
+{
+    otError error = OT_ERROR_NONE;
+    ThreadNetif &netif = GetNetif();
+    Neighbor *parent = netif.GetMle().GetParentCandidate();
+    uint16_t shortAddress;
+
+    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_DROP);
+
+    shortAddress = netif.GetMac().GetShortAddress();
+
+    if ((shortAddress == Mac::kShortAddrInvalid) || (parent != netif.GetMle().GetParent()))
+    {
+        mMacSource.mLength = sizeof(mMacSource.mExtAddress);
+        mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
+        mMacDest.mLength = sizeof(mMacDest.mExtAddress);
+        mMacDest.mExtAddress = parent->GetExtAddress();
+    }
+    else
+    {
+        mMacSource.mLength = sizeof(mMacSource.mShortAddress);
+        mMacSource.mShortAddress = shortAddress;
+        mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+        mMacDest.mShortAddress = parent->GetRloc16();
+    }
+
+exit:
+    return error;
 }
 
 otError MeshForwarder::UpdateMeshRoute(Message &aMessage)
