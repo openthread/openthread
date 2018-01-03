@@ -79,19 +79,19 @@ extern "C" {
  */
 
 /**
- * This type represents the OpenThread instance structure.
+ * This structure represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
 
 #ifdef OTDLL
 
 /**
- * This type represents the handle to the OpenThread API.
+ * This structure represents the handle to the OpenThread API.
  */
 typedef struct otApiInstance otApiInstance;
 
 /**
- * This type represents a list of device GUIDs.
+ * This structure represents a list of device GUIDs.
  */
 typedef struct otDeviceList
 {
@@ -305,7 +305,7 @@ struct otMasterKey
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents a Thread Master Key.
+ * This structure represents a Thread Master Key.
  *
  */
 typedef struct otMasterKey otMasterKey;
@@ -401,7 +401,9 @@ typedef uint16_t otShortAddress;
 #define OT_EXT_ADDRESS_SIZE        8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
 
 /**
- * This type represents the IEEE 802.15.4 Extended Address.
+ * @struct otExtAddress
+ *
+ * This structure represents the IEEE 802.15.4 Extended Address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -433,7 +435,7 @@ struct otIp6Address
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an IPv6 address.
+ * This structure represents an IPv6 address.
  *
  */
 typedef struct otIp6Address otIp6Address;
@@ -482,7 +484,7 @@ typedef struct otMessageInfo
 } otMessageInfo;
 
 /**
- * This type points to an OpenThread message buffer.
+ * This structure points to an OpenThread message buffer.
  */
 typedef struct otMessage
 {
@@ -524,7 +526,7 @@ typedef struct otSteeringData
 } otSteeringData;
 
 /**
- * This struct represents a received IEEE 802.15.4 Beacon.
+ * This structure represents a received IEEE 802.15.4 Beacon.
  *
  */
 typedef struct otActiveScanResult
@@ -544,7 +546,7 @@ typedef struct otActiveScanResult
 } otActiveScanResult;
 
 /**
- * This struct represents an energy scan result.
+ * This structure represents an energy scan result.
  *
  */
 typedef struct otEnergyScanResult
@@ -685,7 +687,7 @@ struct otIp6Prefix
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an IPv6 prefix.
+ * This structure represents an IPv6 prefix.
  */
 typedef struct otIp6Prefix otIp6Prefix;
 
@@ -1167,7 +1169,7 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
 typedef uint8_t otLogLevel;
 
 /**
- * This enum represents log regions.
+ * This enumeration represents log regions.
  *
  */
 typedef enum otLogRegion
