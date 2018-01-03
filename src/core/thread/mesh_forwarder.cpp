@@ -957,21 +957,15 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
         VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = OT_ERROR_DROP);
 
-        if (netif.GetMle().GetNeighbor(mMeshDest) != NULL)
-        {
-            // destination is neighbor
-            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-            mMacDest.mShortAddress = mMeshDest;
-        }
-        else
+        mMeshSource = netif.GetMac().GetShortAddress();
+        mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+
+        SuccessOrExit(error = netif.GetMle().CheckReachability(mMeshSource, mMeshDest, ip6Header));
+        mMacDest.mShortAddress = netif.GetMle().GetNextHop(mMeshDest);
+
+        if (mMacDest.mShortAddress != mMeshDest)
         {
             // destination is not neighbor
-            mMeshSource = netif.GetMac().GetShortAddress();
-
-            SuccessOrExit(error = netif.GetMle().CheckReachability(mMeshSource, mMeshDest, ip6Header));
-
-            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-            mMacDest.mShortAddress = netif.GetMle().GetNextHop(mMeshDest);
             mMacSource.mLength = sizeof(mMacSource.mShortAddress);
             mMacSource.mShortAddress = mMeshSource;
             mAddMeshHeader = true;
