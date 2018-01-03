@@ -347,7 +347,7 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
 /**
  * Test if two IPv6 addresses are the same.
  *
- * @param[in]  aFrist   A pointer to the first IPv6 address to compare.
+ * @param[in]  aFirst   A pointer to the first IPv6 address to compare.
  * @param[in]  aSecond  A pointer to the second IPv6 address to compare.
  *
  * @retval TRUE   The two IPv6 addresses are the same.
