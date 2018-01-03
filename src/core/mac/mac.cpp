@@ -269,16 +269,24 @@ void Mac::PerformEnergyScan(void)
 
     SuccessOrExit(error = UpdateScanChannel());
 
-    if (!(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN) || (mScanDuration == 0))
+    if (mScanDuration == 0)
+    {
+        while (true)
+        {
+            int8_t rssi;
+
+            RadioReceive(mScanChannel);
+            rssi = otPlatRadioGetRssi(&GetInstance());
+            ReportEnergyScanResult(rssi);
+            SuccessOrExit(error = UpdateScanChannel());
+        }
+    }
+    else if ((otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN) == 0)
     {
         RadioReceive(mScanChannel);
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
         mOperationTask.Post();
-
-        if (mScanDuration != 0)
-        {
-            mMacTimer.Start(mScanDuration);
-        }
+        mMacTimer.Start(mScanDuration);
     }
     else
     {
@@ -349,14 +357,7 @@ void Mac::SampleRssi(void)
         }
     }
 
-    if (mScanDuration == 0)
-    {
-        EnergyScanDone(mEnergyScanCurrentMaxRssi);
-    }
-    else
-    {
-        mOperationTask.Post();
-    }
+    mOperationTask.Post();
 }
 
 otError Mac::RegisterReceiver(Receiver &aReceiver)
