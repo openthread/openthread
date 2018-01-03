@@ -98,6 +98,11 @@ void otInstanceReset(otInstance *aInstance)
     instance.Reset();
 }
 
+void otInstanceRebootBootloader(otInstance *aInstance)
+{
+    otPlatRebootBootloader(aInstance);
+}
+
 void otInstanceFactoryReset(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

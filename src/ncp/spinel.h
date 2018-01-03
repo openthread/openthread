@@ -344,6 +344,8 @@ enum
     SPINEL_CMD_PROP_VALUE_MULTI_SET     = 22,
     SPINEL_CMD_PROP_VALUES_ARE          = 23,
 
+    SPINEL_CMD_REBOOT_BOOTLOADER        = 24,
+
     SPINEL_CMD_NEST__BEGIN              = 15296,
     SPINEL_CMD_NEST__END                = 15360,
 

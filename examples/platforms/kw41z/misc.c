@@ -39,6 +39,12 @@ void otPlatReset(otInstance *aInstance)
     while (1) {}
 }
 
+void otPlatRebootBootloader(otInstance *aInstance)
+{
+    (void)aInstance;
+    // TODO: Write me!
+}
+
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;

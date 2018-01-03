@@ -486,6 +486,11 @@ exit:
         (void)aInstance;
     }
 
+    void otPlatRebootBootloader(otInstance *aInstance)
+    {
+        (void)aInstance;
+    }
+
     otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         (void)aInstance;

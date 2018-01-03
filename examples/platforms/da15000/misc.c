@@ -39,6 +39,12 @@ void otPlatReset(otInstance *aInstance)
     hw_cpm_reboot_system();
 }
 
+void otPlatRebootBootloader(otInstance *aInstance)
+{
+    (void)aInstance;
+    // TODO: Write me!
+}
+
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;

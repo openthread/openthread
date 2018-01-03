@@ -35,6 +35,25 @@ instead with the value set to the generated status code for the error.
 
 
 
+## CMD 1: (Host->NCP) CMD_REBOOT_BOOTLOADER {#cmd-bootloader}
+
+Octets: |    1   |     1
+--------|--------|----------
+Fields: | HEADER | CMD_REBOOT_BOOTLOADER
+
+Reset the NCP and hold in bootloader. Causes the NCP to perform a
+software reset and wait for an update in the bootloader, if the
+platform supports this in software. On error, or if this is an
+unsupported operation, the NCP will reset as in `CMD_RESET`
+
+The command payload for this command SHOULD be empty. The receiver
+MUST ignore any non-empty command payload.
+
+If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
+instead with the value set to the generated status code for the error.
+
+
+
 ## CMD 2: (Host->NCP) CMD_PROP_VALUE_GET {#cmd-prop-value-get}
 
 Octets: |    1   |          1         |   1-3
