@@ -1673,6 +1673,7 @@ otError Mle::SendChildIdRequest(void)
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     mParentCandidate.SetState(Neighbor::kStateValid);
+    SetRloc16(Mac::kShortAddrInvalid);
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
