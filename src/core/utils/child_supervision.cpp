@@ -214,9 +214,7 @@ void SupervisionListener::RestartTimer(void)
 {
     ThreadNetif &netif = GetNetif();
 
-    // Restart the timer, if the timeout value is non-zero and the device is a sleepy child.
-
-    if ((mTimeout != 0) && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
+    if ((mTimeout != 0) && (netif.GetMle().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
         (netif.GetMeshForwarder().GetRxOnWhenIdle() == false))
     {
         mTimer.Start(TimerMilli::SecToMsec(mTimeout));
