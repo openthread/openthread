@@ -275,6 +275,7 @@ private:
     Message *GetIndirectTransmission(Child &aChild);
     otError PrepareDiscoverRequest(void);
     void PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
+    otError PrepareDataPoll(void);
     void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
                     const otThreadLinkInfo &aLinkInfo);
     void HandleFragment(uint8_t *aFrame, uint8_t aPayloadLength,
