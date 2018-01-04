@@ -80,6 +80,31 @@ Dtls::Dtls(Instance &aInstance):
     mProvisioningUrl.Init();
 }
 
+int Dtls::HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen)
+{
+    otError error;
+    int rval = 0;
+
+    OT_UNUSED_VARIABLE(aData);
+
+    error = otPlatRandomGetTrue((uint8_t *)aOutput, (uint16_t)aInLen);
+    SuccessOrExit(error);
+
+    if (aOutLen != NULL)
+    {
+        *aOutLen = aInLen;
+    }
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        rval = MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    return rval;
+}
+
 otError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
                     SendHandler aSendHandler, void *aContext)
 {
@@ -99,6 +124,9 @@ otError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHan
     mbedtls_ssl_config_init(&mConf);
     mbedtls_ctr_drbg_init(&mCtrDrbg);
     mbedtls_entropy_init(&mEntropy);
+    rval = mbedtls_entropy_add_source(&mEntropy, &Dtls::HandleMbedtlsEntropyPoll, NULL,
+                                      MBEDTLS_ENTROPY_MIN_PLATFORM, MBEDTLS_ENTROPY_SOURCE_STRONG);
+    VerifyOrExit(rval == 0);
 
     // mbedTLS's debug level is almost the same as OpenThread's
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
