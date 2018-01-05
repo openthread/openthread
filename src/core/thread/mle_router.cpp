@@ -551,7 +551,14 @@ otError MleRouter::SendAdvertisement(void)
 {
     otError error = OT_ERROR_NONE;
     Ip6::Address destination;
-    Message *message;
+    Message *message = NULL;
+
+    // Suppress MLE Advertisements when trying to attach to a better partition.
+    //
+    // Without this suppression, a device may send an MLE Advertisement before receiving the MLE Child ID Response.
+    // The candidate parent then removes the attaching device because the Source Address TLV includes an RLOC16 that
+    // indicates a Router role (i.e. a Child ID equal to zero).
+    VerifyOrExit(mParentRequestState == kParentIdle);
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandAdvertisement));
