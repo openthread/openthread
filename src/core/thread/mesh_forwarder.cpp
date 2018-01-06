@@ -211,6 +211,7 @@ void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
         }
     }
 
+    aChild.SetIndirectMessage(NULL);
     mSourceMatchController.ResetMessageCount(aChild);
 
 exit:
