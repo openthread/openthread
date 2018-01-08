@@ -1543,7 +1543,6 @@ AC_MSG_NOTICE([
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Child Supervision support      : ${enable_child_supervision}
-  OpenThread Spinel vendor specific support : ${enable_vendor}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
