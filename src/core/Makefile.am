@@ -182,6 +182,7 @@ SOURCES_COMMON                      = \
     thread/thread_netif.cpp           \
     thread/tmf_proxy.cpp              \
     thread/topology.cpp               \
+    utils/channel_monitor.cpp         \
     utils/child_supervision.cpp       \
     utils/jam_detector.cpp            \
     utils/missing_strlcpy.c           \
@@ -293,6 +294,7 @@ HEADERS_COMMON                      = \
     thread/thread_uri_paths.hpp       \
     thread/tmf_proxy.hpp              \
     thread/topology.hpp               \
+    utils/channel_monitor.hpp         \
     utils/child_supervision.hpp       \
     utils/slaac_address.hpp           \
     utils/jam_detector.hpp            \

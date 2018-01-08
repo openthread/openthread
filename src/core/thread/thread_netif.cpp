@@ -126,6 +126,9 @@ otError ThreadNetif::Up(void)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
         mDnsClient.Start();
 #endif
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+        GetInstance().GetChannelMonitor().Start();
+#endif
         mChildSupervisor.Start();
         mMleRouter.Enable();
         mIsUp = true;
@@ -139,6 +142,9 @@ otError ThreadNetif::Down(void)
     mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
+#endif
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    GetInstance().GetChannelMonitor().Stop();
 #endif
     mChildSupervisor.Stop();
     mMleRouter.Disable();
