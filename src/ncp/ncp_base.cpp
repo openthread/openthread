@@ -770,12 +770,11 @@ otError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLe
     VerifyOrExit(!mDisableStreamWrite, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(streamPropKey), error = OT_ERROR_INVALID_STATE);
 
-    // If there is a pending queued response or unsolicited property update,
-    // we do not allow any new log stream writes. This is to ensure that log
-    // messages can not continue to use the NCP buffer space and block other
-    // spinel frames.
+    // If there is a pending queued response we do not allow any new log
+    // stream writes. This is to ensure that log messages can not continue
+    // to use the NCP buffer space and block other spinel frames.
 
-    VerifyOrExit(IsResponseQueueEmpty() && mChangedPropsSet.IsEmpty(), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(IsResponseQueueEmpty(), error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, streamPropKey));
     SuccessOrExit(error = mEncoder.WriteData(aDataPtr, static_cast<uint16_t>(aDataLen)));
