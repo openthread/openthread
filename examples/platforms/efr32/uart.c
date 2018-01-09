@@ -39,97 +39,125 @@
 
 #include "utils/code_utils.h"
 
-#include "bspconfig.h"
-#include "em_cmu.h"
-#include "em_gpio.h"
-#include "em_usart.h"
+#include "em_core.h"
+#include "uartdrv.h"
+
+#include "retargetserialhalconfig.h"
 
 enum
 {
-    kPlatformClock     = 32000000,
-    kBaudRate          = 115200,
-    kReceiveBufferSize = 128,
+    kReceiveFifoSize = 128,
 };
 
-static void processReceive(void);
-static void processTransmit(void);
+#define USART_INIT                                                                           \
+    {                                                                                        \
+        RETARGET_UART,                                    /* USART port */                   \
+        115200,                                           /* Baud rate */                    \
+        RETARGET_TX_LOCATION,                             /* USART Tx pin location number */ \
+        RETARGET_RX_LOCATION,                             /* USART Rx pin location number */ \
+        (USART_Stopbits_TypeDef)USART_FRAME_STOPBITS_ONE, /* Stop bits */                    \
+        (USART_Parity_TypeDef)USART_FRAME_PARITY_NONE,    /* Parity */                       \
+        (USART_OVS_TypeDef)USART_CTRL_OVS_X16,            /* Oversampling mode*/             \
+        false,                                            /* Majority vote disable */        \
+        uartdrvFlowControlHwUart,                         /* Flow control */                 \
+        RETARGET_CTSPORT,                                 /* CTS port number */              \
+        RETARGET_CTSPIN,                                  /* CTS pin number */               \
+        RETARGET_RTSPORT,                                 /* RTS port number */              \
+        RETARGET_RTSPIN,                                  /* RTS pin number */               \
+        (UARTDRV_Buffer_FifoQueue_t *)&sUartRxQueue,      /* RX operation queue */           \
+        (UARTDRV_Buffer_FifoQueue_t *)&sUartTxQueue,      /* TX operation queue */           \
+        RETARGET_CTS_LOCATION,                            /* CTS location */                 \
+        RETARGET_RTS_LOCATION                             /* RTS location */                 \
+    }
 
-static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t       sTransmitLength = 0;
+DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_RX_BUFS, sUartRxQueue);
+DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_TX_BUFS, sUartTxQueue);
 
-typedef struct RecvBuffer
+static UARTDRV_HandleData_t  sUartHandleData;
+static UARTDRV_Handle_t      sUartHandle = &sUartHandleData;
+static uint8_t               sReceiveBuffer[2];
+static const uint8_t        *sTransmitBuffer = NULL;
+static uint16_t              sTransmitLength = 0;
+
+typedef struct ReceiveFifo_t
 {
     // The data buffer
-    uint8_t mBuffer[kReceiveBufferSize];
+    uint8_t mBuffer[kReceiveFifoSize];
     // The offset of the first item written to the list.
     uint16_t mHead;
     // The offset of the next item to be written to the list.
     uint16_t mTail;
-} RecvBuffer;
+} ReceiveFifo_t;
 
-static RecvBuffer     sReceive;
+static ReceiveFifo_t sReceiveFifo;
+
+static void processReceive(void);
+
+static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
+{
+    // We can only write if incrementing mTail doesn't equal mHead
+    if (sReceiveFifo.mHead != (sReceiveFifo.mTail + 1) % kReceiveFifoSize)
+    {
+        sReceiveFifo.mBuffer[sReceiveFifo.mTail] = aData[0];
+        sReceiveFifo.mTail = (sReceiveFifo.mTail + 1) % kReceiveFifoSize;
+    }
+
+    UARTDRV_Receive(aHandle, aData, 1, receiveDone);
+}
+
+static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
+{
+    sTransmitLength = 0;
+}
+
+static void processReceive(void)
+{
+    // Copy tail to prevent multiple reads
+    uint16_t tail = sReceiveFifo.mTail;
+
+    // If the data wraps around, process the first part
+    if (sReceiveFifo.mHead > tail)
+    {
+        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, kReceiveFifoSize - sReceiveFifo.mHead);
+
+        // Reset the buffer mHead back to zero.
+        sReceiveFifo.mHead = 0;
+    }
+
+    // For any data remaining, process it
+    if (sReceiveFifo.mHead != tail)
+    {
+        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, tail - sReceiveFifo.mHead);
+
+        // Set mHead to the local tail we have cached
+        sReceiveFifo.mHead = tail;
+    }
+}
+
+static void processTransmit(void)
+{
+    if (sTransmitBuffer != NULL && sTransmitLength == 0)
+    {
+        sTransmitBuffer = NULL;
+        otPlatUartSendDone();
+    }
+}
 
 otError otPlatUartEnable(void)
 {
-    USART_TypeDef           *usart = USART0;
-    USART_InitAsync_TypeDef init   = USART_INITASYNC_DEFAULT;
+    UARTDRV_Init_t uartInit = USART_INIT;
 
-    sReceive.mHead = 0;
-    sReceive.mTail = 0;
+    sReceiveFifo.mHead = 0;
+    sReceiveFifo.mTail = 0;
 
-    /* Enable peripheral clocks */
-    CMU_ClockEnable(cmuClock_HFPER, true);
-    /* Configure GPIO pins */
-    CMU_ClockEnable(cmuClock_GPIO, true);
+    UARTDRV_Init(sUartHandle, &uartInit);
 
-    /* Configure GPIO pin for UART TX */
-    /* To avoid false start, configure output as high. */
-    GPIO_PinModeSet(BSP_BCC_TXPORT, BSP_BCC_TXPIN, gpioModePushPull, 1u);
-    /* Configure GPIO pin for UART RX */
-    GPIO_PinModeSet(BSP_BCC_RXPORT, BSP_BCC_RXPIN, gpioModeInput, 1u);
-
-    /* Enable the switch that enables UART communication. */
-    GPIO_PinModeSet(BSP_BCC_ENABLE_PORT, BSP_BCC_ENABLE_PIN, gpioModePushPull, 1u);
-
-    CMU_ClockEnable(cmuClock_USART0, true);
-
-    /* Configure USART for basic async operation */
-    init.enable = usartDisable;
-    USART_InitAsync(usart, &init);
-
-    /* Enable pins at correct UART/USART location. */
-    usart->ROUTEPEN = USART_ROUTEPEN_RXPEN | USART_ROUTEPEN_TXPEN;
-    usart->ROUTELOC0 = (usart->ROUTELOC0 & ~(_USART_ROUTELOC0_TXLOC_MASK | _USART_ROUTELOC0_RXLOC_MASK))
-                       | (_USART_ROUTELOC0_TXLOC_LOC0 << _USART_ROUTELOC0_TXLOC_SHIFT)
-                       | (_USART_ROUTELOC0_RXLOC_LOC0 << _USART_ROUTELOC0_RXLOC_SHIFT);
-
-    /* Clear previous RX interrupts */
-    USART_IntClear(usart, USART_IF_RXDATAV);
-    NVIC_ClearPendingIRQ(USART0_RX_IRQn);
-
-    /* Enable RX interrupts */
-    USART_IntEnable(usart, USART_IF_RXDATAV);
-    NVIC_EnableIRQ(USART0_RX_IRQn);
-
-    /* Finally enable it */
-    USART_Enable(usart, usartEnable);
+    for (uint8_t i = 0; i < sizeof(sReceiveBuffer); i++)
+    {
+        UARTDRV_Receive(sUartHandle, &sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
+    }
 
     return OT_ERROR_NONE;
-}
-
-void USART0_RX_IRQHandler(void)
-{
-    if (USART0->STATUS & USART_STATUS_RXDATAV)
-    {
-        uint8_t byte = USART_Rx(USART0);
-
-        // We can only write if incrementing mTail doesn't equal mHead
-        if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)
-        {
-            sReceive.mBuffer[sReceive.mTail] = byte;
-            sReceive.mTail = (sReceive.mTail + 1) % kReceiveBufferSize;
-        }
-    }
 }
 
 otError otPlatUartDisable(void)
@@ -146,48 +174,10 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     sTransmitBuffer = aBuf;
     sTransmitLength = aBufLength;
 
+    UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone);
+
 exit:
     return error;
-}
-
-void processReceive(void)
-{
-    // Copy tail to prevent multiple reads
-    uint16_t tail = sReceive.mTail;
-
-    // If the data wraps around, process the first part
-    if (sReceive.mHead > tail)
-    {
-        otPlatUartReceived(sReceive.mBuffer + sReceive.mHead, kReceiveBufferSize - sReceive.mHead);
-
-        // Reset the buffer mHead back to zero.
-        sReceive.mHead = 0;
-    }
-
-    // For any data remaining, process it
-    if (sReceive.mHead != tail)
-    {
-        otPlatUartReceived(sReceive.mBuffer + sReceive.mHead, tail - sReceive.mHead);
-
-        // Set mHead to the local tail we have cached
-        sReceive.mHead = tail;
-    }
-}
-
-void processTransmit(void)
-{
-    otEXPECT(sTransmitBuffer != NULL);
-
-    for (; sTransmitLength > 0; sTransmitLength--)
-    {
-        USART_Tx(USART0, *sTransmitBuffer++);
-    }
-
-    sTransmitBuffer = NULL;
-    otPlatUartSendDone();
-
-exit:
-    return;
 }
 
 void efr32UartProcess(void)
