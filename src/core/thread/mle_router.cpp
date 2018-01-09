@@ -3183,6 +3183,23 @@ Child *MleRouter::GetChildren(uint8_t *aNumChildren)
     return mChildren;
 }
 
+bool MleRouter::IsMinimalChild(uint16_t aRloc16)
+{
+    ThreadNetif &netif = GetNetif();
+    bool rval = false;
+
+    if (GetRouterId(aRloc16) == GetRouterId(netif.GetMac().GetShortAddress()))
+    {
+        Neighbor *neighbor;
+
+        neighbor = netif.GetMle().GetNeighbor(aRloc16);
+
+        rval = (neighbor != NULL) && (!neighbor->IsFullThreadDevice());
+    }
+
+    return rval;
+}
+
 otError MleRouter::SetMaxAllowedChildren(uint8_t aMaxChildren)
 {
     otError error = OT_ERROR_NONE;
