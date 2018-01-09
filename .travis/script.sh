@@ -311,6 +311,7 @@ set -x
         --enable-legacy                     \
         --enable-mac-filter                 \
         --enable-service                    \
+        --enable-channel-monitor            \
         --disable-docs                      \
         --disable-test || die
     make -j 8 || die
