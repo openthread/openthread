@@ -160,7 +160,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
         if (aResult->mMaxRssi != OT_RADIO_RSSI_INVALID)
         {
-            newValue = (aResult->mMaxRssi >= kRssThreshold) ? kMaxQualityIndicator : 0;
+            newValue = (aResult->mMaxRssi >= kRssiThreshold) ? kMaxQualityIndicator : 0;
         }
 
         // `mChannelQuality` stores the average rate/percentage of RSS samples

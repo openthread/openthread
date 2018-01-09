@@ -399,6 +399,7 @@ enum
     SPINEL_CAP_MAC_WHITELIST            = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                  = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
     SPINEL_CAP_OOB_STEERING_DATA        = (SPINEL_CAP_OPENTHREAD__BEGIN + 2),
+    SPINEL_CAP_CHANNEL_MONITOR          = (SPINEL_CAP_OPENTHREAD__BEGIN + 3),
     SPINEL_CAP_OPENTHREAD__END          = 640,
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
@@ -666,6 +667,87 @@ typedef enum
      */
     SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 5,
+
+    /// Channel monitoring sample interval
+    /** Format: `L` (read-only)
+     *  Units: Milliseconds
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * If channel monitoring is enabled and active, every sample interval, a
+     * zero-duration Energy Scan is performed, collecting a single RSSI sample
+     * per channel. The RSSI samples are compared with a pre-specified RSSI
+     * threshold.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 6,
+
+    /// Channel monitoring RSSI threshold
+    /** Format: `c` (read-only)
+     *  Units: dBm
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * This value specifies the threshold used by channel monitoring module.
+     * Channel monitoring maintains the average rate of RSSI samples that
+     * are above the threshold within (approximately) a pre-specified number
+     * of samples (sample window).
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_RSSI_THRESHOLD
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 7,
+
+    /// Channel monitoring sample window
+    /** Format: `L` (read-only)
+     *  Units: Number of samples
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * The averaging sample window length (in units of number of channel
+     * samples) used by channel monitoring module. Channel monitoring will
+     * sample all channels every sample interval. It maintains the average rate
+     * of RSSI samples that are above the RSSI threshold within (approximately)
+     * the sample window.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_WINDOW
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 8,
+
+    /// Channel monitoring sample count
+    /** Format: `L` (read-only)
+     *  Units: Number of samples
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * Total number of RSSI samples (per channel) taken by the channel
+     * monitoring module since its start (since Thread network interface
+     * was enabled).
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_COUNT
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 9,
+
+    /// Channel monitoring channel quality
+    /** Format: `A(t(CU))` (read-only)
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * Data per item is:
+     *
+     *  `C`: Channel
+     *  `U`: Channel quality indicator
+     *
+     * The channel quality value represents the average rate/percentage of
+     * RSSI samples that were above RSSI threshold ("bad" RSSI samples) within
+     * (approximately) sample window latest RSSI samples.
+     *
+     * Max value of `0xffff` indicates all RSSI samples were above RSSI
+     * threshold (i.e. 100% of samples were "bad").
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 10,
 
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
