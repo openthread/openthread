@@ -429,8 +429,6 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
     const char *aPSKd = NULL;
     uint32_t joinerTimeout = 0;
 
-    VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
-
     SuccessOrExit(error = mDecoder.ReadUtf8(aPSKd));
     SuccessOrExit(error = mDecoder.ReadUint32(joinerTimeout));
 
@@ -439,13 +437,11 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
         eui64 = NULL;
     }
 
-
     error = otCommissionerAddJoiner(mInstance, eui64, aPSKd, joinerTimeout);
 
 exit:
     return error;
 }
-
 #endif // OPENTHREAD_ENABLE_COMMISSIONER
 
 otError NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(void)
