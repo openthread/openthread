@@ -277,7 +277,7 @@ spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t d
 
             if (arg_ptr)
             {
-                *arg_ptr = data_ptr[0];
+                *arg_ptr = data_ptr[0] != 0;
             }
 
             ret += sizeof(uint8_t);
@@ -1507,6 +1507,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_DATASET_RAW_TLVS:
         ret = "PROP_DATASET_RAW_TLVS";
+        break;
+
+    case SPINEL_PROP_THREAD_CHILD_TABLE_ADDRESSES:
+        ret = "PROP_THREAD_CHILD_TABLE_ADDRESSES";
         break;
 
     case SPINEL_PROP_IPV6_LL_ADDR:

@@ -211,6 +211,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(NET_PSKC),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_LEADER_WEIGHT),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_CHILD_TABLE),
+    NCP_GET_PROP_HANDLER_ENTRY(THREAD_CHILD_TABLE_ADDRESSES),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_ROUTER_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_LOCAL_LEADER_WEIGHT),
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_ROUTER_ROLE_ENABLED),
@@ -769,12 +770,11 @@ otError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLe
     VerifyOrExit(!mDisableStreamWrite, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(streamPropKey), error = OT_ERROR_INVALID_STATE);
 
-    // If there is a pending queued response or unsolicited property update,
-    // we do not allow any new log stream writes. This is to ensure that log
-    // messages can not continue to use the NCP buffer space and block other
-    // spinel frames.
+    // If there is a pending queued response we do not allow any new log
+    // stream writes. This is to ensure that log messages can not continue
+    // to use the NCP buffer space and block other spinel frames.
 
-    VerifyOrExit(IsResponseQueueEmpty() && mChangedPropsSet.IsEmpty(), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(IsResponseQueueEmpty(), error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, streamPropKey));
     SuccessOrExit(error = mEncoder.WriteData(aDataPtr, static_cast<uint16_t>(aDataLen)));
@@ -2123,12 +2123,12 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 }
 
 
-extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap)
+extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     char logString[128];
     int charsWritten;
 
-    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, ap)) > 0)
+    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, aArgs)) > 0)
     {
         if (charsWritten > static_cast<int>(sizeof(logString) - 1))
         {

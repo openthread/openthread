@@ -48,21 +48,21 @@ void otDiagInit(otInstance *aInstance)
     Diag::Init(aInstance);
 }
 
-char *otDiagProcessCmd(int argc, char *argv[])
+char *otDiagProcessCmd(int aArgc, char *aArgv[])
 {
-    return Diag::ProcessCmd(argc, argv);
+    return Diag::ProcessCmd(aArgc, aArgv);
 }
 
-char *otDiagProcessCmdLine(char *string)
+char *otDiagProcessCmdLine(char *aString)
 {
     char *argv[8];
     int argc = 0;
-    int length = static_cast<int>(strlen(string));
+    int length = static_cast<int>(strlen(aString));
     char *cmd;
 
-    for (; *string == ' '; string++, length--);
+    for (; *aString == ' '; aString++, length--);
 
-    for (cmd = string + 1; (cmd < string + length) && (cmd != NULL); ++cmd)
+    for (cmd = aString + 1; (cmd < aString + length) && (cmd != NULL); ++cmd)
     {
         if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
         {

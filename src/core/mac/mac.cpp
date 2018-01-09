@@ -89,6 +89,7 @@ Mac::Mac(Instance &aInstance):
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelaySleep(false),
 #endif
+    mOperationTask(aInstance, &Mac::PerformOperation, this),
     mMacTimer(aInstance, &Mac::HandleMacTimer, this),
     mBackoffTimer(aInstance, &Mac::HandleBeginTransmit, this),
     mReceiveTimer(aInstance, &Mac::HandleReceiveTimer, this),
@@ -109,7 +110,6 @@ Mac::Mac(Instance &aInstance):
     mEnergyScanCurrentMaxRssi(kInvalidRssiValue),
     mScanContext(NULL),
     mActiveScanHandler(NULL), // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
-    mEnergyScanSampleRssiTask(aInstance, &Mac::HandleEnergyScanSampleRssi, this),
     mPcapCallback(NULL),
     mPcapCallbackContext(NULL),
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -269,16 +269,24 @@ void Mac::PerformEnergyScan(void)
 
     SuccessOrExit(error = UpdateScanChannel());
 
-    if (!(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN) || (mScanDuration == 0))
+    if (mScanDuration == 0)
+    {
+        while (true)
+        {
+            int8_t rssi;
+
+            RadioReceive(mScanChannel);
+            rssi = otPlatRadioGetRssi(&GetInstance());
+            ReportEnergyScanResult(rssi);
+            SuccessOrExit(error = UpdateScanChannel());
+        }
+    }
+    else if ((otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ENERGY_SCAN) == 0)
     {
         RadioReceive(mScanChannel);
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mEnergyScanSampleRssiTask.Post();
-
-        if (mScanDuration != 0)
-        {
-            mMacTimer.Start(mScanDuration);
-        }
+        mOperationTask.Post();
+        mMacTimer.Start(mScanDuration);
     }
     else
     {
@@ -335,16 +343,9 @@ void Mac::EnergyScanDone(int8_t aRssi)
     PerformEnergyScan();
 }
 
-void Mac::HandleEnergyScanSampleRssi(Tasklet &aTasklet)
-{
-    aTasklet.GetOwner<Mac>().HandleEnergyScanSampleRssi();
-}
-
-void Mac::HandleEnergyScanSampleRssi(void)
+void Mac::SampleRssi(void)
 {
     int8_t rssi;
-
-    VerifyOrExit(mOperation == kOperationEnergyScan);
 
     rssi = otPlatRadioGetRssi(&GetInstance());
 
@@ -356,17 +357,7 @@ void Mac::HandleEnergyScanSampleRssi(void)
         }
     }
 
-    if (mScanDuration == 0)
-    {
-        EnergyScanDone(mEnergyScanCurrentMaxRssi);
-    }
-    else
-    {
-        mEnergyScanSampleRssiTask.Post();
-    }
-
-exit:
-    return;
+    mOperationTask.Post();
 }
 
 otError Mac::RegisterReceiver(Receiver &aReceiver)
@@ -429,8 +420,6 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
 {
     otExtAddress address;
 
-    otLogFuncEntry();
-
     for (size_t i = 0; i < sizeof(address); i++)
     {
         address.m8[i] = aExtAddress.m8[7 - i];
@@ -438,16 +427,13 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
 
     otPlatRadioSetExtendedAddress(&GetInstance(), &address);
     mExtAddress = aExtAddress;
-
-    otLogFuncExit();
 }
 
 otError Mac::SetShortAddress(ShortAddress aShortAddress)
 {
-    otLogFuncEntryMsg("%d", aShortAddress);
     mShortAddress = aShortAddress;
     otPlatRadioSetShortAddress(&GetInstance(), aShortAddress);
-    otLogFuncExit();
+
     return OT_ERROR_NONE;
 }
 
@@ -455,15 +441,12 @@ otError Mac::SetChannel(uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntryMsg("%d", aChannel);
-
     VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
 
     mChannel = aChannel;
     UpdateIdleMode();
 
 exit:
-    otLogFuncExit();
     return error;
 }
 
@@ -471,23 +454,19 @@ otError Mac::SetNetworkName(const char *aNetworkName)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntryMsg("%s", aNetworkName);
-
     VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
 
     (void)strlcpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName));
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
 otError Mac::SetPanId(PanId aPanId)
 {
-    otLogFuncEntryMsg("%d", aPanId);
     mPanId = aPanId;
     otPlatRadioSetPanId(&GetInstance(), mPanId);
-    otLogFuncExit();
+
     return OT_ERROR_NONE;
 }
 
@@ -577,6 +556,30 @@ void Mac::StartOperation(Operation aOperation)
         break;
     }
 
+    if (mOperation == kOperationIdle)
+    {
+        mOperationTask.Post();
+    }
+}
+
+void Mac::PerformOperation(Tasklet &aTasklet)
+{
+    aTasklet.GetOwner<Mac>().PerformOperation();
+}
+
+void Mac::PerformOperation(void)
+{
+    // The `mOperationTask` tasklet serves two purposes:
+    //
+    // (a) it is used to start a pending operation,
+    // (b) while performing Energy Scan, it is used to take RSSI samples.
+
+    if (mOperation == kOperationEnergyScan)
+    {
+        SampleRssi();
+        ExitNow();
+    }
+
     VerifyOrExit(mOperation == kOperationIdle);
 
     // `WaitingForData` should be checked before any other pending
@@ -634,7 +637,13 @@ void Mac::FinishOperation(void)
     otLogDebgMac(GetInstance(), "Finishing operation \"%s\"", OperationToString(mOperation));
 
     mOperation = kOperationIdle;
-    StartOperation(kOperationIdle);
+
+    // Note that we do not want to post the `mOperationTask` here and
+    // instead we do a direct call to `PerformOperation()`. This helps
+    // ensure that if there is no pending operation, the radio is
+    // switched to idle mode immediately.
+
+    PerformOperation();
 }
 
 void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
@@ -957,11 +966,11 @@ extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
     VerifyOrExit(instance->IsInitialized());
     instance->GetThreadNetif().GetMac().HandleTransmitStarted(aFrame);
+
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void Mac::HandleTransmitStarted(otRadioFrame *aFrame)
@@ -980,7 +989,6 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntryMsg("%!otError!", aError);
     VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -996,7 +1004,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
     }
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
@@ -1022,7 +1030,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     default:
         assert(false);
-        ExitNow();
+        OT_UNREACHABLE_CODE(ExitNow());
     }
 
     // Determine whether a CSMA retry is required.
@@ -1476,7 +1484,6 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    otLogFuncEntryMsg("%!otError!", aError);
     VerifyOrExit(instance->IsInitialized());
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1492,7 +1499,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
     }
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)

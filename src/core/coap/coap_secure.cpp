@@ -131,14 +131,11 @@ otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandle
 {
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntry();
-
     VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
 
     error = CoapBase::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -157,8 +154,6 @@ otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &netif = GetNetif();
-
-    otLogFuncEntry();
 
     if (!netif.GetDtls().IsStarted())
     {
@@ -193,7 +188,7 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
     netif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
@@ -218,8 +213,6 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     Message *message = NULL;
 
-    otLogFuncEntry();
-
     VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
@@ -231,8 +224,6 @@ exit:
     {
         message->Free();
     }
-
-    otLogFuncExit();
 }
 
 otError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
@@ -243,8 +234,6 @@ otError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t
 otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
     otError error = OT_ERROR_NONE;
-
-    otLogFuncEntry();
 
     if (mTransmitMessage == NULL)
     {
@@ -271,8 +260,6 @@ exit:
         mTransmitMessage = NULL;
     }
 
-    otLogFuncExitErr(error);
-
     return error;
 }
 
@@ -284,8 +271,6 @@ void CoapSecure::HandleUdpTransmit(Tasklet &aTasklet)
 void CoapSecure::HandleUdpTransmit(void)
 {
     otError error = OT_ERROR_NONE;
-
-    otLogFuncEntry();
 
     VerifyOrExit(mTransmitMessage != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -306,8 +291,6 @@ exit:
     }
 
     mTransmitMessage = NULL;
-
-    otLogFuncExit();
 }
 
 void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)

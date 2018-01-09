@@ -47,6 +47,7 @@
 #include "common/owner-locator.hpp"
 #include "common/settings.hpp"
 #include "mac/mac_frame.hpp"
+#include "meshcop/meshcop.hpp"
 #include "net/icmp6.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -2226,12 +2227,7 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     }
     else
     {
-        RemoveStoredChild(child->GetRloc16());
-
-        if (!child->IsRxOnWhenIdle())
-        {
-            netif.GetMeshForwarder().ClearChildIndirectMessages(*child);
-        }
+        RemoveNeighbor(*child);
     }
 
     child->SetLastHeard(TimerMilli::GetNow());
@@ -2464,8 +2460,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
 
         if (status.GetStatus() == StatusTlv::kError)
         {
-            RemoveStoredChild(child->GetRloc16());
-            child->SetState(Neighbor::kStateInvalid);
+            RemoveNeighbor(*child);
             ExitNow();
         }
     }
@@ -2635,11 +2630,11 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-otError MleRouter::SetSteeringData(const otExtAddress *aExtAddress)
+otError MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    ExtAddress nullExtAddr;
-    ExtAddress allowAnyExtAddr;
+    Mac::ExtAddress nullExtAddr;
+    Mac::ExtAddress allowAnyExtAddr;
 
     memset(nullExtAddr.m8, 0, sizeof(nullExtAddr.m8));
     memset(allowAnyExtAddr.m8, 0xFF, sizeof(allowAnyExtAddr.m8));
@@ -2659,8 +2654,12 @@ otError MleRouter::SetSteeringData(const otExtAddress *aExtAddress)
     }
     else
     {
-        // Set bloom filter with the extended address passed in
-        mSteeringData.ComputeBloomFilter(*aExtAddress);
+        Mac::ExtAddress joinerId;
+
+        // compute Joiner ID
+        MeshCoP::ComputeJoinerId(*aExtAddress, joinerId);
+        // compute Bloom Filter
+        mSteeringData.ComputeBloomFilter(joinerId);
     }
 
     return error;
@@ -3233,15 +3232,27 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        if (aNeighbor.IsStateValidOrRestoring() && !IsActiveRouter(aNeighbor.GetRloc16()))
+        if (!IsActiveRouter(aNeighbor.GetRloc16()))
         {
-            SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, static_cast<Child &>(aNeighbor));
+            if (aNeighbor.IsStateValidOrRestoring())
+            {
+                SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, static_cast<Child &>(aNeighbor));
+            }
+
             aNeighbor.SetState(Neighbor::kStateInvalid);
-            netif.GetMeshForwarder().UpdateIndirectMessages();
+
+            netif.GetMeshForwarder().ClearChildIndirectMessages(static_cast<Child &>(aNeighbor));
             netif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.GetRloc16());
+
+            if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFFD)
+            {
+                // Clear all EID-to-RLOC entries assossiated with the child.
+                netif.GetAddressResolver().Remove(aNeighbor.GetRloc16());
+            }
+
             RemoveStoredChild(aNeighbor.GetRloc16());
         }
-        else if ((aNeighbor.GetState() == Neighbor::kStateValid) && IsActiveRouter(aNeighbor.GetRloc16()))
+        else if (aNeighbor.GetState() == Neighbor::kStateValid)
         {
             Router &routerToRemove = static_cast<Router &>(aNeighbor);
 
@@ -3265,6 +3276,9 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             if (routerToRemove.GetNextHop() == kInvalidRouterId)
             {
                 ResetAdvertiseInterval();
+
+                // Clear all EID-to-RLOC entries assossiated with the router.
+                netif.GetAddressResolver().Remove(GetRouterId(aNeighbor.GetRloc16()));
             }
         }
 
@@ -4806,23 +4820,10 @@ void MleRouter::RemoveChildren(void)
 {
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
-        switch (mChildren[i].GetState())
+        if (mChildren[i].IsStateValidOrRestoring())
         {
-        case Neighbor::kStateValid:
-            SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, mChildren[i]);
-
-        // fall-through
-
-        case Neighbor::kStateChildUpdateRequest:
-        case Neighbor::kStateRestored:
-            RemoveStoredChild(mChildren[i].GetRloc16());
-            break;
-
-        default:
-            break;
+            RemoveNeighbor(mChildren[i]);
         }
-
-        mChildren[i].SetState(Neighbor::kStateInvalid);
     }
 }
 

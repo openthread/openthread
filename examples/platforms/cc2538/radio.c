@@ -64,7 +64,7 @@ enum
 
 enum
 {
-    CC2538_RECEIVE_SENSITIVITY = -100, // dBm
+    CC2538_RECEIVE_SENSITIVITY = -88, // dBm
 };
 
 typedef struct TxPowerTable

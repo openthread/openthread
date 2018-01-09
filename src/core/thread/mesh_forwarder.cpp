@@ -211,6 +211,7 @@ void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
         }
     }
 
+    aChild.SetIndirectMessage(NULL);
     mSourceMatchController.ResetMessageCount(aChild);
 
 exit:
@@ -615,35 +616,8 @@ Message *MeshForwarder::GetDirectTransmission(void)
             break;
 
         case Message::kTypeMacDataPoll:
-        {
-            ThreadNetif &netif = GetNetif();
-            Neighbor *parent = netif.GetMle().GetParentCandidate();
-
-            if ((parent != NULL) && (parent->IsStateValidOrRestoring()))
-            {
-                mMacSource.mShortAddress = netif.GetMac().GetShortAddress();
-
-                if (mMacSource.mShortAddress != Mac::kShortAddrInvalid)
-                {
-                    mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-                    mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-                    mMacDest.mShortAddress = parent->GetRloc16();
-                }
-                else
-                {
-                    mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-                    mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
-                    mMacDest.mLength = sizeof(mMacDest.mExtAddress);
-                    mMacDest.mExtAddress = parent->GetExtAddress();
-                }
-            }
-            else
-            {
-                error = OT_ERROR_DROP;
-            }
-
+            error = PrepareDataPoll();
             break;
-        }
 
         case Message::kTypeSupervision:
             error = OT_ERROR_DROP;
@@ -776,6 +750,36 @@ void MeshForwarder::PrepareIndirectTransmission(Message &aMessage, const Child &
         assert(false);
         break;
     }
+}
+
+otError MeshForwarder::PrepareDataPoll(void)
+{
+    otError error = OT_ERROR_NONE;
+    ThreadNetif &netif = GetNetif();
+    Neighbor *parent = netif.GetMle().GetParentCandidate();
+    uint16_t shortAddress;
+
+    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_DROP);
+
+    shortAddress = netif.GetMac().GetShortAddress();
+
+    if ((shortAddress == Mac::kShortAddrInvalid) || (parent != netif.GetMle().GetParent()))
+    {
+        mMacSource.mLength = sizeof(mMacSource.mExtAddress);
+        mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
+        mMacDest.mLength = sizeof(mMacDest.mExtAddress);
+        mMacDest.mExtAddress = parent->GetExtAddress();
+    }
+    else
+    {
+        mMacSource.mLength = sizeof(mMacSource.mShortAddress);
+        mMacSource.mShortAddress = shortAddress;
+        mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+        mMacDest.mShortAddress = parent->GetRloc16();
+    }
+
+exit:
+    return error;
 }
 
 otError MeshForwarder::UpdateMeshRoute(Message &aMessage)
@@ -954,21 +958,15 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
         VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = OT_ERROR_DROP);
 
-        if (netif.GetMle().GetNeighbor(mMeshDest) != NULL)
-        {
-            // destination is neighbor
-            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-            mMacDest.mShortAddress = mMeshDest;
-        }
-        else
+        mMeshSource = netif.GetMac().GetShortAddress();
+        mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+
+        SuccessOrExit(error = netif.GetMle().CheckReachability(mMeshSource, mMeshDest, ip6Header));
+        mMacDest.mShortAddress = netif.GetMle().GetNextHop(mMeshDest);
+
+        if (mMacDest.mShortAddress != mMeshDest)
         {
             // destination is not neighbor
-            mMeshSource = netif.GetMac().GetShortAddress();
-
-            SuccessOrExit(error = netif.GetMle().CheckReachability(mMeshSource, mMeshDest, ip6Header));
-
-            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-            mMacDest.mShortAddress = netif.GetMle().GetNextHop(mMeshDest);
             mMacSource.mLength = sizeof(mMacSource.mShortAddress);
             mMacSource.mShortAddress = mMeshSource;
             mAddMeshHeader = true;
@@ -2490,7 +2488,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
         break;
 
     case kMessagePrepareIndirect:
-        actionText = "Preping indir tx";
+        actionText = "Prepping indir tx";
         shouldLogSrcDstAddresses = false;
         break;
 
@@ -2499,7 +2497,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
         break;
 
     case kMessageReassemblyDrop:
-        actionText = "Dropping (reassembly timeout)";
+        actionText = "Dropping (reassembly queue)";
         shouldLogRss = true;
         break;
 

@@ -94,7 +94,15 @@ public:
     otError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
 
     /**
-     * This method removes a Router ID from the EID-to-RLOC cache.
+     * This method removes the EID-to-RLOC cache entries corresponding to an RLOC16.
+     *
+     * @param[in]  aRloc16  The RLOC16 address.
+     *
+     */
+    void Remove(uint16_t aRloc16);
+
+    /**
+     * This method removes all EID-to-RLOC cache entries assossiated with a Router ID.
      *
      * @param[in]  aRouterId  The Router ID.
      *
@@ -169,6 +177,7 @@ private:
     enum InvalidationReason
     {
         kReasonRemovingRouterId,
+        kReasonRemovingRloc16,
         kReasonReceivedIcmpDstUnreachNoRoute,
         kReasonEvictingForNewEntry,
     };

@@ -58,14 +58,6 @@
 extern "C" {
 #endif
 
-#ifndef WINDOWS_LOGGING
-#define otLogFuncEntry()
-#define otLogFuncEntryMsg(aFormat, ...)
-#define otLogFuncExit()
-#define otLogFuncExitMsg(aFormat, ...)
-#define otLogFuncExitErr(error)
-#endif
-
 /**
  * @def otLogCrit
  *

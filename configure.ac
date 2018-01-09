@@ -765,6 +765,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
 
 #
+# Channel Monitor
+#
+
+AC_ARG_ENABLE(channel_monitor,
+    [AS_HELP_STRING([--enable-channel-monitor],[Enable Channel Monitor support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_channel_monitor=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_channel_monitor} for --enable-channel-monitor])
+            ;;
+        esac
+    ],
+    [enable_channel_monitor=no])
+
+if test "$enable_channel_monitor" = "yes"; then
+    OPENTHREAD_ENABLE_CHANNEL_MONITOR=1
+else
+    OPENTHREAD_ENABLE_CHANNEL_MONITOR=0
+fi
+
+AC_MSG_CHECKING([whether to enable channel monitor])
+AC_MSG_RESULT(${enable_channel_monitor})
+AC_SUBST(OPENTHREAD_ENABLE_CHANNEL_MONITOR)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CHANNEL_MONITOR], [test "${enable_channel_monitor}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHANNEL_MONITOR],[${OPENTHREAD_ENABLE_CHANNEL_MONITOR}],[Define to 1 if you want to use channel monitor feature])
+
+#
 # MAC Filter (include AddressFilter and RssInFilter)
 #
 
@@ -1580,10 +1612,10 @@ AC_MSG_NOTICE([
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Jam Detection support          : ${enable_jam_detection}
+  OpenThread Channel Monitor support        : ${enable_channel_monitor}
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Child Supervision support      : ${enable_child_supervision}
-  OpenThread Spinel vendor specific support : ${enable_vendor}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}

@@ -142,6 +142,7 @@ void nrf_fem_control_time_latch(void);
 /**@brief Activate Power Amplifier (TX) pin of the Front End Module.
  *
  * @param[in] shorts_used Information if this operation is related to a task triggered by a short.
+ * @param[in] turnaround  Information if TX mode is entered from RX mode (turnaround) or DISABLED (ramp up).
  *
  * This function will set up a timer to activate the pin 5 +/- 2.5 us before radio READY event is generated.
  * It will also set up a PPI to deactivate the pin on radio DISABLED event.
@@ -149,7 +150,7 @@ void nrf_fem_control_time_latch(void);
  * @note This function shall always be called after @ref nrf_fem_control_time_latch function was called,
  *       to enable precise time measurement.
  * */
-void nrf_fem_control_pa_set(bool shorts_used);
+void nrf_fem_control_pa_set(bool shorts_used, bool turnaround);
 
 /**@brief Activate Low Noise Amplifier (RX) pin of the Front End Module.
  *

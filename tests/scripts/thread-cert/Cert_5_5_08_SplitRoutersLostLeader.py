@@ -48,6 +48,7 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
         self.nodes[LEADER1].set_mode('rsdn')
         self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[LEADER1].enable_whitelist()
+        self.nodes[LEADER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')

@@ -48,8 +48,6 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     otError error = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
-
     if (aEnabled)
     {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -68,7 +66,6 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 exit:
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -86,18 +83,19 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
     return instance.GetThreadNetif().GetUnicastAddresses();
 }
 
-otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *address)
+otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().AddExternalUnicastAddress(*static_cast<const Ip6::NetifUnicastAddress *>(address));
+    return instance.GetThreadNetif().AddExternalUnicastAddress(
+               *static_cast<const Ip6::NetifUnicastAddress *>(aAddress));
 }
 
-otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *address)
+otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
+    return instance.GetThreadNetif().RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(aAddress));
 }
 
 const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
@@ -188,12 +186,8 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     otError error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
-
     error = instance.GetIp6().SendRaw(*static_cast<Message *>(aMessage),
                                       instance.GetThreadNetif().GetInterfaceId());
-
-    otLogFuncExitErr(error);
 
     return error;
 }
@@ -202,7 +196,6 @@ otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message *message = instance.GetMessagePool().New(Message::kTypeIp6, 0);
-
 
     if (message)
     {
@@ -233,14 +226,14 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
     return instance.GetThreadNetif().GetIp6Filter().GetUnsecurePorts(*aNumEntries);
 }
 
-bool otIp6IsAddressEqual(const otIp6Address *a, const otIp6Address *b)
+bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
+    return *static_cast<const Ip6::Address *>(aFirst) == *static_cast<const Ip6::Address *>(aSecond);
 }
 
-otError otIp6AddressFromString(const char *str, otIp6Address *address)
+otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 {
-    return static_cast<Ip6::Address *>(address)->FromString(str);
+    return static_cast<Ip6::Address *>(aAddress)->FromString(aString);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
@@ -253,4 +246,9 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 
 exit:
     return rval;
+}
+
+bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
+{
+    return static_cast<const Ip6::Address *>(aAddress)->IsUnspecified();
 }

@@ -172,8 +172,9 @@ The following toolchains have been used for testing and verification:
   - gcc version 4.9.3
   - gcc version 6.2.0
 
-The nRF52840 example has been verified by Nordic Semiconductor with following commits:
-  - `6a15261` - 29.06.2017 (the newest checked)
+ The following OpenThread commits have been verified with nRF52840 examples by Nordic Semiconductor:
+  - `a89eb88` - 16.11.2017 (the newest checked)
+  - `6a15261` - 29.06.2017
   - `030efba` - 22.04.2017
   - `de48acf` - 02.03.2017
   - `50db58d` - 23.01.2017
@@ -187,12 +188,12 @@ The <i>nRF5 SDK for Thread</i> includes:
  - unique Thread/Bluetooth Low Energy dynamic multiprotocol solution which allows for concurrent operation of Thread and Bluetooth Low Energy utilizing OpenThread and SoftDevice (Nordic’s Bluetooth Low Energy stack) with accompanying example applications,
  - Thread/Bluetooth Low Energy switched multiprotocol solution with accompanying example applications,
  - unique support for DFU-over-Thread (Device Firmware Upgrade),
- - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and built-in CoAP protocol,
- - support for an OpenThread Network Co-Processor (NCP),
+ - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and CoAP or MQTT-SN protocols,
+ - support for an OpenThread Network Co-Processor (NCP) using either UART or USB transport protocol,
  - Border Router and cloud connectivity example,
  - Thread native commissioning with NFC example,
  - example applications demonstrating the use of FreeRTOS with OpenThread,
- - support for IAR compiler for OpenThread stack and all example applications,
+ - support for IAR, Keil MDK-ARM and Segger Embedded Studio (SES) IDEs for OpenThread stack and all example applications,
  - range of PC tools including a Thread Topology Monitor,
  - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
 

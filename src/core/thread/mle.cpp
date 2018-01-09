@@ -48,6 +48,7 @@
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac_frame.hpp"
+#include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
@@ -237,8 +238,6 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntry();
-
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
     VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
@@ -273,7 +272,6 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     }
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -281,7 +279,6 @@ otError Mle::Stop(bool aClearNetworkDatasets)
 {
     ThreadNetif &netif = GetNetif();
 
-    otLogFuncEntry();
     netif.GetKeyManager().Stop();
     SetStateDetached();
     netif.RemoveUnicastAddress(mMeshLocal16);
@@ -297,7 +294,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     }
 
     mRole = OT_DEVICE_ROLE_DISABLED;
-    otLogFuncExit();
+
     return OT_ERROR_NONE;
 }
 
@@ -502,8 +499,6 @@ otError Mle::BecomeDetached(void)
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntry();
-
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     // not in reattach stage after reset
@@ -522,7 +517,6 @@ otError Mle::BecomeDetached(void)
     BecomeChild(kAttachAny);
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -530,8 +524,6 @@ otError Mle::BecomeChild(AttachMode aMode)
 {
     ThreadNetif &netif = GetNetif();
     otError error = OT_ERROR_NONE;
-
-    otLogFuncEntry();
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mParentRequestState == kParentIdle, error = OT_ERROR_BUSY);
@@ -567,7 +559,6 @@ otError Mle::BecomeChild(AttachMode aMode)
     mParentRequestTimer.Start((otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
@@ -3249,18 +3240,19 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
             // or if it matches the factory set EUI64.
             if (mEnableEui64Filtering)
             {
-                otExtAddress mfgEUI64;
+                Mac::ExtAddress extaddr;
                 Crc16 ccitt(Crc16::kCcitt);
                 Crc16 ansi(Crc16::kAnsi);
 
-                // Get Factory set EUI64
-                otPlatRadioGetIeeeEui64(&GetInstance(), mfgEUI64.m8);
+                otPlatRadioGetIeeeEui64(&GetInstance(), extaddr.m8);
+
+                MeshCoP::ComputeJoinerId(extaddr, extaddr);
 
                 // Compute bloom filter
-                for (size_t i = 0; i < sizeof(mfgEUI64.m8); i++)
+                for (size_t i = 0; i < sizeof(extaddr.m8); i++)
                 {
-                    ccitt.Update(mfgEUI64.m8[i]);
-                    ansi.Update(mfgEUI64.m8[i]);
+                    ccitt.Update(extaddr.m8[i]);
+                    ansi.Update(extaddr.m8[i]);
                 }
 
                 // Drop responses that don't match the bloom filter
