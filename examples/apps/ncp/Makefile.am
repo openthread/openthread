@@ -63,11 +63,11 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif
 
-if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 LDADD_COMMON                                                          += \
-    $(OPENTHREAD_NCP_SPINEL_TRANSFORMER_LIBS)                            \
+    $(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)                            \
     $(NULL)
-endif # OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+endif # OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 if OPENTHREAD_ENABLE_NCP_FTD
 bin_PROGRAMS                                                          += \

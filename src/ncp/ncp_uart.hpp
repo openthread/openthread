@@ -38,9 +38,9 @@
 #include "ncp/hdlc.hpp"
 #include "ncp/ncp_base.hpp"
 
-#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
-#include "spinel_transformer.hpp"
-#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#include "spinel_encrypter.hpp"
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 namespace ot {
 namespace Ncp {
@@ -100,27 +100,27 @@ private:
         uint8_t        mBuffer[kUartTxBufferSize];
     };
 
-#if OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
-#define TX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
-#define RX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
+#if OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
+#define TX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
+#define RX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
 #else
 #define TX_BUFFER_SIZE OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
 #define RX_BUFFER_SIZE kRxBufferSize
-#endif // OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
+#endif // OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
 
-#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     /**
-     * Wraps NcpFrameBuffer allowing to read data through spinel transformer.
+     * Wraps NcpFrameBuffer allowing to read data through spinel encrypter.
      * Creates additional buffers to allow transforming of the whole spinel frames.
      */
-    class NcpFrameBufferTransformerReader
+    class NcpFrameBufferEncrypterReader
     {
     public:
         /**
          * C-tor.
          * Takes a reference to NcpFrameBuffer in order to read spinel frames.
          */
-        explicit NcpFrameBufferTransformerReader(NcpFrameBuffer &aTxFrameBuffer);
+        explicit NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer);
         bool IsEmpty() const;
         otError OutFrameBegin();
         bool OutFrameHasEnded();
@@ -135,7 +135,7 @@ private:
         size_t mDataBufferReadIndex;
         size_t mOutputDataLength;
     };
-#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
     void            EncodeAndSendToUart(void);
     void            HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
@@ -158,9 +158,9 @@ private:
     bool            mUartSendImmediate;
     Tasklet         mUartSendTask;
 
-#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
-    NcpFrameBufferTransformerReader    mTxFrameBufferTransformerReader;
-#endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+    NcpFrameBufferEncrypterReader    mTxFrameBufferEncrypterReader;
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 };
 
 }  // namespace Ncp
