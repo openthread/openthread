@@ -265,12 +265,11 @@ void NcpUart::HandleFrame(void *aContext, uint8_t *aBuf, uint16_t aBufLength)
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
 #if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
-    size_t mRxBufferTransformedLen = sizeof(mRxBufferTransformed);
-    if (SpinelTransformer::TransformInbound(aBuf, aBufLength, mRxBufferTransformed, &mRxBufferTransformedLen))
+    size_t bufTransformedLen = sizeof(mRxBuffer);
+    if (SpinelTransformer::TransformInbound(aBuf, aBufLength, aBuf, &bufTransformedLen))
     {
-        super_t::HandleReceive(mRxBufferTransformed, mRxBufferTransformedLen);
+        super_t::HandleReceive(aBuf, bufTransformedLen);
     }
-
 #else
     super_t::HandleReceive(aBuf, aBufLength);
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
@@ -318,13 +317,12 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 
 NcpUart::NcpFrameBufferTransformerReader::NcpFrameBufferTransformerReader(NcpFrameBuffer &aTxFrameBuffer) :
     mTxFrameBuffer(aTxFrameBuffer),
-    mInputBufferLength(0),
-    mOutputBufferReadIndex(0),
-    mOutputBufferLength(0) {}
+    mDataBufferReadIndex(0),
+    mOutputDataLength(0) {}
 
 bool NcpUart::NcpFrameBufferTransformerReader::IsEmpty() const
 {
-    return mTxFrameBuffer.IsEmpty() && !mOutputBufferLength;
+    return mTxFrameBuffer.IsEmpty() && !mOutputDataLength;
 }
 
 otError NcpUart::NcpFrameBufferTransformerReader::OutFrameBegin()
@@ -335,16 +333,15 @@ otError NcpUart::NcpFrameBufferTransformerReader::OutFrameBegin()
 
     if ((status = mTxFrameBuffer.OutFrameBegin()) == OT_ERROR_NONE)
     {
-        while (!mTxFrameBuffer.OutFrameHasEnded())
-        {
-            uint8_t byte = mTxFrameBuffer.OutFrameReadByte();
-            mInputBuffer[mInputBufferLength++] = byte;
-        }
+        size_t inputDataLength = mTxFrameBuffer.OutFrameGetLength();
 
-        if (mInputBufferLength > 0)
+        if (inputDataLength > 0)
         {
-            mOutputBufferLength = sizeof(mOutputBuffer);
-            if (!SpinelTransformer::TransformOutbound(mInputBuffer, mInputBufferLength, mOutputBuffer, &mOutputBufferLength))
+            assert(inputDataLength <= sizeof(mDataBuffer));
+            mTxFrameBuffer.OutFrameRead(inputDataLength, mDataBuffer);
+            mOutputDataLength = sizeof(mDataBuffer);
+
+            if (!SpinelTransformer::TransformOutbound(mDataBuffer, inputDataLength, mDataBuffer, &mOutputDataLength))
             {
                 status = OT_ERROR_FAILED;
             }
@@ -360,12 +357,12 @@ otError NcpUart::NcpFrameBufferTransformerReader::OutFrameBegin()
 
 bool NcpUart::NcpFrameBufferTransformerReader::OutFrameHasEnded()
 {
-    return (mOutputBufferReadIndex >= mOutputBufferLength);
+    return (mDataBufferReadIndex >= mOutputDataLength);
 }
 
 uint8_t NcpUart::NcpFrameBufferTransformerReader::OutFrameReadByte()
 {
-    return mOutputBuffer[mOutputBufferReadIndex++];
+    return mDataBuffer[mDataBufferReadIndex++];
 }
 
 otError NcpUart::NcpFrameBufferTransformerReader::OutFrameRemove()
@@ -375,9 +372,8 @@ otError NcpUart::NcpFrameBufferTransformerReader::OutFrameRemove()
 
 void NcpUart::NcpFrameBufferTransformerReader::Reset()
 {
-    mInputBufferLength = 0;
-    mOutputBufferLength = 0;
-    mOutputBufferReadIndex = 0;
+    mOutputDataLength = 0;
+    mDataBufferReadIndex = 0;
 }
 
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER

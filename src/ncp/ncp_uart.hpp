@@ -100,13 +100,15 @@ private:
         uint8_t        mBuffer[kUartTxBufferSize];
     };
 
-#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 #if OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
-#define OUTBOUND_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
+#define TX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
+#define RX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
 #else
-#define OUTBOUND_BUFFER_SIZE OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
+#define TX_BUFFER_SIZE OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
+#define RX_BUFFER_SIZE kRxBufferSize
 #endif // OPENTHREAD_NCP_SPINEL_TRANSFORMER_OUTBOUND_BUFFER_SIZE
 
+#if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
     /**
      * Wraps NcpFrameBuffer allowing to read data through spinel transformer.
      * Creates additional buffers to allow transforming of the whole spinel frames.
@@ -129,11 +131,9 @@ private:
         void Reset();
 
         NcpFrameBuffer &mTxFrameBuffer;
-        uint8_t mInputBuffer[OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE];
-        size_t mInputBufferLength;
-        uint8_t mOutputBuffer[OUTBOUND_BUFFER_SIZE];
-        size_t mOutputBufferReadIndex;
-        size_t mOutputBufferLength;
+        uint8_t mDataBuffer[TX_BUFFER_SIZE];
+        size_t mDataBufferReadIndex;
+        size_t mOutputDataLength;
     };
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 
@@ -154,12 +154,11 @@ private:
     UartTxBuffer    mUartBuffer;
     UartTxState     mState;
     uint8_t         mByte;
-    uint8_t         mRxBuffer[kRxBufferSize];
+    uint8_t         mRxBuffer[RX_BUFFER_SIZE];
     bool            mUartSendImmediate;
     Tasklet         mUartSendTask;
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
-    uint8_t         mRxBufferTransformed[kRxBufferSize];
     NcpFrameBufferTransformerReader    mTxFrameBufferTransformerReader;
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_TRANSFORMER
 };
