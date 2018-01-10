@@ -171,6 +171,8 @@ SOURCES_COMMON                      = \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
     thread/mesh_forwarder.cpp         \
+    thread/mesh_forwarder_ftd.cpp     \
+    thread/mesh_forwarder_mtd.cpp     \
     thread/mle.cpp                    \
     thread/mle_router.cpp             \
     thread/network_data.cpp           \

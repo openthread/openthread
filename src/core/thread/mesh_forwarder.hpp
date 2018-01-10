@@ -200,14 +200,6 @@ public:
     const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
 
     /**
-     * This method returns a reference to the resolving queue.
-     *
-     * @returns  A reference to the resolving queue.
-     *
-     */
-    const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
-
-    /**
      * This method returns a reference to the data poll manager.
      *
      * @returns  A reference to the data poll manager.
@@ -216,20 +208,30 @@ public:
     DataPollManager &GetDataPollManager(void) { return mDataPollManager; }
 
     /**
-     * This method returns a reference to the source match controller.
-     *
-     * @returns  A reference to the source match controller.
-     *
-     */
-    SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
-
-    /**
      * This method returns a reference to the IP level counters.
      *
      * @returns A reference to the IP level counters.
      *
      */
     const otIpCounters &GetCounters(void) const { return mIpCounters; }
+
+#if OPENTHREAD_FTD
+    /**
+     * This method returns a reference to the resolving queue.
+     *
+     * @returns  A reference to the resolving queue.
+     *
+     */
+    const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
+
+    /**
+     * This method returns a reference to the source match controller.
+     *
+     * @returns  A reference to the source match controller.
+     *
+     */
+    SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
+#endif
 
 private:
     enum
@@ -272,6 +274,7 @@ private:
     otError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
+    otError GetIndirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
     otError PrepareDiscoverRequest(void);
     void PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
@@ -290,6 +293,7 @@ private:
     otError SendFragment(Message &aMessage, Mac::Frame &aFrame);
     otError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
     otError UpdateIp6Route(Message &aMessage);
+    otError UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError UpdateMeshRoute(Message &aMessage);
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo,
                            const Mac::Address &aMacSource);
@@ -303,6 +307,7 @@ private:
     otError HandleFrameRequest(Mac::Frame &aFrame);
     static void HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError);
     void HandleSentFrame(Mac::Frame &aFrame, otError aError);
+    void HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &macDest);
     static void HandleDiscoverTimer(Timer &aTimer);
     void HandleDiscoverTimer(void);
     static void HandleReassemblyTimer(Timer &aTimer);
@@ -311,11 +316,7 @@ private:
     void ScheduleTransmissionTask(void);
     static void HandleDataPollTimeout(Mac::Receiver &aReceiver);
 
-#if OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_SERVICE
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
-#endif // OPENTHREAD_ENABLE_SERVICE
-#endif // OPENTHREAD_FTD
 
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        otError aError);
@@ -327,17 +328,12 @@ private:
 
     PriorityQueue         mSendQueue;
     MessageQueue          mReassemblyList;
-    MessageQueue          mResolvingQueue;
     uint16_t              mFragTag;
     uint16_t              mMessageNextOffset;
 
-    uint32_t              mSendMessageFrameCounter;
-    Message               *mSendMessage;
+    Message              *mSendMessage;
     bool                  mSendMessageIsARetransmission;
     uint8_t               mSendMessageMaxMacTxAttempts;
-    uint8_t               mSendMessageKeyId;
-    uint8_t               mSendMessageDataSequenceNumber;
-    uint8_t               mStartChildIndex;
 
     Mac::Address          mMacSource;
     Mac::Address          mMacDest;
@@ -356,10 +352,18 @@ private:
     uint16_t              mRestorePanId;
     bool                  mScanning;
 
-    DataPollManager       mDataPollManager;
-    SourceMatchController mSourceMatchController;
-
     otIpCounters          mIpCounters;
+
+#if OPENTHREAD_FTD
+    MessageQueue          mResolvingQueue;
+    SourceMatchController mSourceMatchController;
+    uint32_t              mSendMessageFrameCounter;
+    uint8_t               mSendMessageKeyId;
+    uint8_t               mSendMessageDataSequenceNumber;
+    uint8_t               mStartChildIndex;
+#endif
+
+    DataPollManager       mDataPollManager;
 };
 
 /**
