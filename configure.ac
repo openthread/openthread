@@ -1603,7 +1603,7 @@ AC_MSG_NOTICE([
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
   OpenThread NCP Spinel Transformer         : ${with_ncp_spinel_transformer_libs}
-  OpenThread Transformer's buffer size      : ${ncp_spinel_transformer_outbound_buffer_size}
+  OpenThread Transformer's buffer size      : ${with_ncp_spinel_transformer_outbound_buffer_size}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
