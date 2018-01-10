@@ -365,3 +365,10 @@ otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOob
 
     return instance.GetThreadNetif().GetMac().SendOutOfBandFrameRequest(aOobFrame);
 }
+
+uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetMac().GetCcaFailureRate();
+}

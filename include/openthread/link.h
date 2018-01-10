@@ -597,6 +597,18 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
  */
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 
+
+/**
+ * This function returns the current CCA (Clear Channel Assessment) failure rate.
+ *
+ * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW`
+ * frame transmissions.
+ *
+ * @returns The CCA failure rate with maximum value `0xffff` corresponding to 100% failure rate.
+ *
+ */
+uint16_t otLinkGetCcaFailureRate(otInstance *aInstance);
+
 /**
  * @}
  *

@@ -44,6 +44,7 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_filter.hpp"
 #include "thread/key_manager.hpp"
+#include "thread/link_quality.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/topology.hpp"
 
@@ -623,10 +624,22 @@ public:
      */
     bool RadioSupportsRetries(void);
 
+    /**
+     * This method returns the current CCA (Clear Channel Assessment) failure rate.
+     *
+     * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW`
+     * frame transmissions.
+     *
+     * @returns The CCA failure rate with maximum value `0xffff` corresponding to 100% failure rate.
+     *
+     */
+    uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
+
 private:
     enum
     {
-        kInvalidRssiValue = 127
+        kInvalidRssiValue = 127,
+        kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
     };
 
     enum Operation
@@ -739,6 +752,9 @@ private:
 
     otMacCounters mCounters;
     uint32_t mKeyIdMode2FrameCounter;
+
+    SuccessRateTracker mCcaSuccessRateTracker;
+    uint16_t mCcaSampleCount;
 };
 
 /**

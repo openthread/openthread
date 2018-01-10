@@ -50,6 +50,68 @@ namespace ot {
  * @{
  */
 
+/**
+ * This class implements an operation Success Rate Tracker.
+ *
+ * This can be used to track different link quality related metrics, e.g., CCA failure rate, frame tx success rate).
+ * The success rate is maintained using an exponential moving IIR averaging filter with a `uint16_t` as the storage.
+ *
+ */
+class SuccessRateTracker
+{
+public:
+    enum
+    {
+        kMaxRateValue = 0xffff,    ///< Indicates value corresponding to maximum (failure/success) rate of 100%.
+    };
+
+    /**
+     * This constructor initializes a `SuccessRateTracker` instance.
+     *
+     * After initialization the tracker starts with success rate 100% (failure rate 0%).
+     *
+     */
+    SuccessRateTracker(void): mSuccessRate(kMaxRateValue) { }
+
+    /**
+     * This method resets the tracker to its initialized state, setting success rate to 100%.
+     *
+     */
+    void Reset(void) { mSuccessRate = kMaxRateValue; }
+
+    /**
+     * This method adds a sample (success or failure) to `SuccessRateTracker`.
+     *
+     * @param[in] aSuccess   The sample status be added, `true` for success, `false` for failure.
+     * @param[in] aWeight    The weight coefficient used for adding the new sample into average.
+     *
+     */
+    void AddSample(bool aSuccess, uint16_t aWeight = kDefaultWeight);
+
+    /**
+     * This method returns the average failure rate.
+     *
+     * @retval the average failure rate `[0-kMaxRateValue]` with `kMaxRateValue` corresponding to 100%.
+     *
+     */
+    uint16_t GetFailureRate(void) const { return kMaxRateValue - mSuccessRate; }
+
+    /**
+     * This method returns the average success rate.
+     *
+     * @retval the average success rate as [0-kMaxRateValue] with `kMaxRateValue` corresponding to 100%.
+     *
+     */
+    uint16_t GetSuccessRate(void) const { return mSuccessRate; }
+
+private:
+    enum
+    {
+        kDefaultWeight = 64,
+    };
+
+    uint16_t mSuccessRate;
+};
 
 /**
  * This class implements a Received Signal Strength (RSS) averager.
@@ -191,7 +253,7 @@ public:
     void AddRss(int8_t aNoiseFloor, int8_t aRss);
 
     /**
-     * This method returns the current average signal strength value.
+     * This method returns the current average received signal strength value.
      *
      * @returns The current average value or @c OT_RADIO_RSSI_INVALID if no average is available.
      *
@@ -208,7 +270,7 @@ public:
     uint16_t GetAverageRssRaw(void) const { return mRssAverager.GetRaw(); }
 
     /**
-     * This method converts the link quality info  to NULL-terminated info/debug human-readable string.
+     * This method converts the link quality info to NULL-terminated info/debug human-readable string.
      *
      * @param[out]  aBuf   A pointer to the string buffer.
      * @param[in]   aSize  The maximum size of the string buffer.
