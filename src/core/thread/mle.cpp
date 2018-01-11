@@ -1647,11 +1647,23 @@ otError Mle::SendChildIdRequest(void)
     Message *message = NULL;
     Ip6::Address destination;
 
-    if (mRole == OT_DEVICE_ROLE_CHILD &&
-        mParent.GetExtAddress() == mParentCandidate.GetExtAddress())
+    if (mParent.GetExtAddress() == mParentCandidate.GetExtAddress())
     {
-        otLogInfoMle(GetInstance(), "Already attached to candidate parent");
-        ExitNow(error = OT_ERROR_ALREADY);
+        if (mRole == OT_DEVICE_ROLE_CHILD)
+        {
+            otLogInfoMle(GetInstance(), "Already attached to candidate parent");
+            ExitNow(error = OT_ERROR_ALREADY);
+        }
+        else
+        {
+            // Invalidate stale parent state.
+            //
+            // Parent state is not normally invalidated after becoming a Router/Leader (see #1875).  When trying to
+            // attach to a better partition, invalidating old parent state (especially when in kStateRestored) ensures
+            // that GetNeighbor() returns mParentCandidate when processing the Child ID Response.
+            mParent.SetState(Neighbor::kStateInvalid);
+            otPlatSettingsDelete(&GetInstance(), Settings::kKeyParentInfo, -1);
+        }
     }
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
