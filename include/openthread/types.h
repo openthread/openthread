@@ -412,6 +412,10 @@ struct otExtAddress
     uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
 } OT_TOOL_PACKED_END;
 
+/**
+ * This structure represents the IEEE 802.15.4 Extended Address.
+ *
+ */
 typedef struct otExtAddress otExtAddress;
 
 #define OT_IP6_PREFIX_SIZE         8   ///< Size of an IPv6 prefix (bytes)
