@@ -533,6 +533,17 @@ public:
     otError GetChildInfoByIndex(uint8_t aChildIndex, otChildInfo &aChildInfo);
 
     /**
+     * This method indicates whether or not the RLOC16 is an MTD child of this device.
+     *
+     * @param[in]  aRloc16  The RLOC16.
+     *
+     * @retval TRUE if @p aRloc16 is an MTD child of this device.
+     * @retval FALSE if @p aRloc16 is not an MTD child of this device.
+     *
+     */
+    bool IsMinimalChild(uint16_t aRloc16);
+
+    /**
      * This method gets the next neighbor information. It is used to iterate through the entries of
      * the neighbor table.
      *

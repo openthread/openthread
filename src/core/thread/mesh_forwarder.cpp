@@ -1981,7 +1981,8 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     UpdateRoutes(aFrame, aFrameLength, meshSource, meshDest);
 #endif // OPENTHREAD_FTD
 
-    if (meshDest.mShortAddress == netif.GetMac().GetShortAddress())
+    if (meshDest.mShortAddress == netif.GetMac().GetShortAddress() ||
+        netif.GetMle().IsMinimalChild(meshDest.mShortAddress))
     {
         aFrame += meshHeader.GetHeaderLength();
         aFrameLength -= meshHeader.GetHeaderLength();

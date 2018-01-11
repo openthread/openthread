@@ -93,6 +93,8 @@ public:
         return NULL;
     }
 
+    bool IsMinimalChild(uint16_t) { return false; }
+
     void RestoreChildren(void) { }
     otError RemoveStoredChild(uint16_t) {return OT_ERROR_NOT_IMPLEMENTED; }
     otError StoreChild(uint16_t) {return OT_ERROR_NOT_IMPLEMENTED; }
