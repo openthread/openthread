@@ -74,9 +74,9 @@ private:
 
     enum
     {
-        kUartTxBufferSize = OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE,  // Uart tx buffer size.
-        kRxBufferSize = OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,     // Rx buffer size (should be large enough to fit
-                                                                       // one whole (decoded) received frame).
+        kUartTxBufferSize = OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE,           // Uart tx buffer size.
+        kRxBufferSize = OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE +             // Rx buffer size (should be large enough to fit
+                        OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE, // one whole (decoded) received frame).
     };
 
     enum UartTxState
@@ -99,14 +99,6 @@ private:
     private:
         uint8_t        mBuffer[kUartTxBufferSize];
     };
-
-#if OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
-#define TX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
-#define RX_BUFFER_SIZE OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
-#else
-#define TX_BUFFER_SIZE OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
-#define RX_BUFFER_SIZE kRxBufferSize
-#endif // OPENTHREAD_NCP_SPINEL_ENCRYPTER_OUTBOUND_BUFFER_SIZE
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     /**
@@ -131,7 +123,7 @@ private:
         void Reset();
 
         NcpFrameBuffer &mTxFrameBuffer;
-        uint8_t mDataBuffer[TX_BUFFER_SIZE];
+        uint8_t mDataBuffer[kRxBufferSize];
         size_t mDataBufferReadIndex;
         size_t mOutputDataLength;
     };
@@ -154,7 +146,7 @@ private:
     UartTxBuffer    mUartBuffer;
     UartTxState     mState;
     uint8_t         mByte;
-    uint8_t         mRxBuffer[RX_BUFFER_SIZE];
+    uint8_t         mRxBuffer[kRxBufferSize];
     bool            mUartSendImmediate;
     Tasklet         mUartSendTask;
 
