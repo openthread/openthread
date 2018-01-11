@@ -45,7 +45,6 @@ EXTRA_DIST                                                         = \
     Cert_5_1_12_NewRouterNeighborSync.py                             \
     Cert_5_1_13_RouterReset.py                                       \
     Cert_5_2_01_BecomeActiveRouter.py                                \
-    Cert_5_2_02_LeaderReject1Hop.py                                  \
     Cert_5_2_03_LeaderReject2Hops.py                                 \
     Cert_5_2_04_REEDUpgrade.py                                       \
     Cert_5_2_05_AddressQuery.py                                      \
@@ -162,7 +161,6 @@ check_SCRIPTS                                                      = \
     test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
-    Cert_5_2_02_LeaderReject1Hop.py                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \
