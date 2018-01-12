@@ -369,15 +369,17 @@ otError CoapBase::AbortTransaction(otCoapResponseHandler aHandler, void *aContex
 {
     otError error = OT_ERROR_NOT_FOUND;
     Message *message;
+    Message *nextMessage;
     CoapMetadata coapMetadata;
 
-    for (message = mPendingRequests.GetHead(); message != NULL; message = message->GetNext())
+    for (message = mPendingRequests.GetHead(); message != NULL; message = nextMessage)
     {
+        nextMessage = message->GetNext();
         coapMetadata.ReadFrom(*message);
 
         if (coapMetadata.mResponseHandler == aHandler && coapMetadata.mResponseContext == aContext)
         {
-            DequeueMessage(*message);
+            FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, NULL, OT_ERROR_ABORT);
             error = OT_ERROR_NONE;
         }
     }
