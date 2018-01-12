@@ -135,25 +135,17 @@ otError Netif::SubscribeAllRoutersMulticast(void)
 {
     otError error = OT_ERROR_NONE;
 
-    if (mMulticastAddresses == &kLinkLocalAllNodesMulticastAddress)
+    for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
     {
-        mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-                                  const_cast<otNetifMulticastAddress *>(&kLinkLocalAllRoutersMulticastAddress));
-    }
-    else
-    {
-        for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
+        if (cur == &kLinkLocalAllRoutersMulticastAddress)
         {
-            if (cur == &kLinkLocalAllRoutersMulticastAddress)
-            {
-                ExitNow(error = OT_ERROR_ALREADY);
-            }
+            ExitNow(error = OT_ERROR_ALREADY);
+        }
 
-            if (cur->mNext == &kLinkLocalAllNodesMulticastAddress)
-            {
-                cur->mNext = &kLinkLocalAllRoutersMulticastAddress;
-                break;
-            }
+        if (cur->mNext == &kLinkLocalAllNodesMulticastAddress)
+        {
+            cur->mNext = &kLinkLocalAllRoutersMulticastAddress;
+            break;
         }
     }
 
@@ -166,13 +158,6 @@ exit:
 otError Netif::UnsubscribeAllRoutersMulticast(void)
 {
     otError error = OT_ERROR_NONE;
-
-    if (mMulticastAddresses == &kLinkLocalAllRoutersMulticastAddress)
-    {
-        mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-                                  const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
-        ExitNow();
-    }
 
     for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
     {
