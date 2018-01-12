@@ -293,6 +293,7 @@ protected:
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
     otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
+    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
 #endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
     otError CommandHandler_NOOP(uint8_t aHeader);
