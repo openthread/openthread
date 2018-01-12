@@ -706,6 +706,10 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag
 
     SuccessOrExit(SendQueuedResponses());
 
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+    VendorHandleFrameRemovedFromNcpBuffer(aFrameTag);
+#endif
+
     // Check if `HOST_POWER_STATE` property update is required.
 
     if (mHostPowerStateHeader)
