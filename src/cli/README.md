@@ -856,6 +856,16 @@ Unsubscribe the Thread interface to the IPv6 multicast address.
 Done
 ```
 
+### ipmaddr register
+
+Immediately trigger address registration. Currently only trigger MLE Child Update Request
+for MTD.
+
+```bash
+> ipmaddr register
+Done
+```
+
 ### ipmaddr promiscuous
 
 Get multicast promiscuous mode.

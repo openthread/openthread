@@ -136,6 +136,10 @@ public:
 
     otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
+    bool IsMulticastChildrenSubscribed(const Ip6::Address &) { return false; }
+
+    bool IsMulticastChildSubscribed(const Ip6::Address &, Child &) { return false; }
+
 private:
     otError HandleDetachStart(void) { return OT_ERROR_NONE; }
     otError HandleChildStart(AttachMode) { return OT_ERROR_NONE; }

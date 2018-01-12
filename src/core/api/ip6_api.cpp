@@ -119,6 +119,13 @@ otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Addre
     return instance.GetThreadNetif().UnsubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
 }
 
+otError otIp6RegisterAddresses(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetMle().RegisterAddresses();
+}
+
 bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

@@ -753,6 +753,29 @@ public:
      */
     otThreadChildTableCallback GetChildTableChangedCallback(void) const { return mChildTableChangedCallback; }
 
+    /**
+     * This method returns whether the address is a multicast address subsribed by its sleepy children.
+     *
+     * @param[in]  aAddress  The reference of the address.
+     *
+     * @retval TRUE   If @p aAddress is a multicast address subsribed by its sleepy children.
+     * @retval FALSE  If @p aAddress is not a multicast address or not subsribed by its sleepy children.
+     *
+     */
+    bool IsMulticastChildrenSubscribed(const Ip6::Address &aAddress);
+
+    /**
+     * This method returns whether the multicast address is subsribed by its specific sleepy child.
+     *
+     * @param[in]  aAddress  The reference of the address.
+     * @param[in]  aChild    The reference of the child.
+     *
+     * @retval TRUE   If the multicast address @p aAddress is subsribed by its sleepy child @p aChild.
+     * @retval FALSE  If the multicast address @p aAddress is not subsribed by its sleepy child @p aChild.
+     *
+     */
+    bool IsMulticastChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
+
 private:
     enum
     {

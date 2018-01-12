@@ -2130,6 +2130,11 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
 
         }
 
+        if (address.IsMulticast())
+        {
+            continue;
+        }
+
         // We check if the same address is in-use by another child, if so
         // remove it. This implements "last-in wins" duplicate address
         // resolution policy.
@@ -4696,17 +4701,18 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 
     while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
     {
-        if (netif.GetNetworkDataLeader().GetContext(address, context) == OT_ERROR_NONE)
-        {
-            // compressed entry
-            entry.SetContextId(context.mContextId);
-            entry.SetIid(address.GetIid());
-        }
-        else
+        if (aChild.GetIp6Address(i).IsMulticast() ||
+            netif.GetNetworkDataLeader().GetContext(aChild.GetIp6Address(i), context) == OT_ERROR_NOT_FOUND)
         {
             // uncompressed entry
             entry.SetUncompressed();
             entry.SetIp6Address(address);
+        }
+        else
+        {
+            // compressed entry
+            entry.SetContextId(context.mContextId);
+            entry.SetIid(aChild.GetIp6Address(i).GetIid());
         }
 
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
@@ -5034,6 +5040,46 @@ void MleRouter::SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild
         GetNotifier().SetFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
         break;
     }
+}
+
+bool MleRouter::IsMulticastChildrenSubscribed(const Ip6::Address &aAddress)
+{
+    bool rval = false;
+
+    VerifyOrExit(aAddress.IsMulticast());
+
+    for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
+    {
+        if (mChildren[i].GetState() != Neighbor::kStateValid || mChildren[i].IsRxOnWhenIdle())
+        {
+            continue;
+        }
+
+        if (IsMulticastChildSubscribed(aAddress, mChildren[i]))
+        {
+            ExitNow(rval = true);
+        }
+    }
+
+exit:
+    return rval;
+}
+
+bool MleRouter::IsMulticastChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
+{
+    bool rval = false;
+
+    for (uint8_t i = 0; i < Child::kMaxIp6AddressPerChild; i++)
+    {
+        if (aChild.GetIp6Address(i).IsMulticast() &&
+            aChild.GetIp6Address(i) == aAddress)
+        {
+            ExitNow(rval = true);
+        }
+    }
+
+exit:
+    return rval;
 }
 
 }  // namespace Mle

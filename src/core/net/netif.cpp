@@ -249,6 +249,32 @@ exit:
     return error;
 }
 
+otError Netif::GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    NetifMulticastAddress *entry;
+
+    VerifyOrExit(aIterator < num);
+
+    // Find an available entry in the `mExtMulticastAddresses` array.
+    for (uint8_t i = aIterator; i < num; i++)
+    {
+        entry = &mExtMulticastAddresses[i];
+
+        // In an unused/available entry, `mNext` points back to the entry itself.
+        if (entry->mNext != entry)
+        {
+            aAddress = entry->GetAddress();
+            aIterator = i + 1;
+            ExitNow(error = OT_ERROR_NONE);
+        }
+    }
+
+exit:
+    return error;
+}
+
 otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
     otError error = OT_ERROR_NONE;

@@ -212,6 +212,15 @@ public:
     bool IsRealmLocalAllMplForwarders(void) const;
 
     /**
+     * This method indicates whether or not the IPv6 address is multicast address higher than realm local.
+     *
+     * @retval TRUE   If the IPv6 address is multicast higher than realm local.
+     * @retval FALSE  If the IPv6 address is not multicast or the scope is not higher realm local.
+     *
+     */
+    bool IsMulticastHigherThanRealmLocal(void) const;
+
+    /**
      * This method indicates whether or not the IPv6 address is a RLOC address.
      *
      * @retval TRUE   If the IPv6 address is a RLOC address.
