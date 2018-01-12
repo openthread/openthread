@@ -2145,15 +2145,14 @@ exit:
 otError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader)
 {
     const char *string = NULL;
-    char *output = NULL;
+    const char *output = NULL;
     otError error = OT_ERROR_NONE;
 
     error = mDecoder.ReadUtf8(string);
 
     VerifyOrExit(error == OT_ERROR_NONE, error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
 
-    // All diagnostics related features are processed within diagnostics module
-    output = otDiagProcessCmdLine(const_cast<char *>(string));
+    output = otDiagProcessCmdLine(string);
 
     // Prepare the response
     SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_NEST_STREAM_MFG));
