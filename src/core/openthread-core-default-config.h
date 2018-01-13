@@ -928,11 +928,11 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSS_THRESHOLD
+ * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD
  *
  * The RSSI threshold in dBm used by Channel Monitoring feature.
  *
- * The RSSI samples are compared with the given threshold. Channel monitoring reports the average rate of RSS samples
+ * The RSSI samples are compared with the given threshold. Channel monitoring reports the average rate of RSSI samples
  * that are above this threshold within an observation window (per channel).
  *
  * It is recommended that this value is set to same value as the CCA threshold used by radio.
@@ -940,8 +940,8 @@
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MONITOR` is set).
  *
  */
-#ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSS_THRESHOLD
-#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSS_THRESHOLD        -75
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD        -75
 #endif
 
 /**
@@ -949,14 +949,14 @@
  *
  * The averaging sample window length (in units of channel sample interval) used by Channel Monitoring feature.
  *
- * Channel monitoring will sample all channels every sample interval. It maintains the average rate of RSS samples
- * that are above the RSS threshold within (approximately) this sample window.
+ * Channel monitoring will sample all channels every sample interval. It maintains the average rate of RSSI samples
+ * that are above the RSSI threshold within (approximately) this sample window.
  *
  * Applicable only if Channel Monitoring feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MONITOR` is set).
  *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW
-#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW        960
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW         960
 #endif
 
 /**

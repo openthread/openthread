@@ -35,6 +35,9 @@
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 #include <openthread/border_router.h>
 #endif
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#include <openthread/channel_monitor.h>
+#endif
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -1472,6 +1475,48 @@ void NcpBase::HandleJamStateChange(bool aJamState)
 }
 
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_INTERVAL(void)
+{
+    return mEncoder.WriteUint32(otChannelMonitorGetSampleInterval(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_RSSI_THRESHOLD(void)
+{
+    return mEncoder.WriteInt8(otChannelMonitorGetRssiThreshold(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_WINDOW(void)
+{
+    return mEncoder.WriteUint32(otChannelMonitorGetSampleWindow(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_COUNT(void)
+{
+    return mEncoder.WriteUint32(otChannelMonitorGetSampleCount(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteUint8(channel));
+        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelQuality(mInstance, channel)));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
 otError NcpBase::GetPropertyHandler_CNTR_TX_PKT_TOTAL(void)
 {
