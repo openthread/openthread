@@ -442,7 +442,6 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     mRouters[mRouterId].SetNextHop(mRouterId);
     mPreviousPartitionId = mLeaderData.GetPartitionId();
     netif.GetNetworkDataLeader().Stop();
-    mStateUpdateTimer.Start(kStateUpdatePeriod);
     netif.GetIp6().SetForwardingEnabled(true);
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
@@ -1792,6 +1791,8 @@ void MleRouter::HandleStateUpdateTimer(void)
 {
     bool routerStateUpdate = false;
 
+    mStateUpdateTimer.Start(kStateUpdatePeriod);
+
     if (mChallengeTimeout > 0)
     {
         mChallengeTimeout--;
@@ -1985,8 +1986,6 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     SynchronizeChildNetworkData();
-
-    mStateUpdateTimer.Start(kStateUpdatePeriod);
 
 exit:
     return;
