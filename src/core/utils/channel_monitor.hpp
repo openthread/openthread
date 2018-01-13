@@ -63,9 +63,9 @@ namespace Utils {
  * with less interference).
  *
  * When Channel Monitoring is active, every `kSampleInterval`, a zero-duration Energy Scan is performed on every
- * channel collecting a single RSSI sample per channel. The RSSI samples are compared with a pre-specified RSSI
- * threshold `kRssThreshold`. As an indicator of channel quality, the `ChannelMonitor` maintains and provides the
- * average rate/percentage of RSS samples that are above the threshold within (approximately) a specified sample window.
+ * channel collecting a single RSSI  sample per channel. The RSSI samples are compared with a pre-specified RSSI
+ * threshold `kRssiThreshold`. As an indicator of channel quality, the `ChannelMonitor` maintains and provides the
+ * average rate/percentage of RSSI samples that are above the threshold within (approximately) a specified sample window.
  *
  */
 class ChannelMonitor : public InstanceLocator
@@ -86,7 +86,7 @@ public:
          * It is recommended that this value is set to same value as the CCA threshold used by radio.
          *
          */
-        kRssThreshold = OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSS_THRESHOLD,
+        kRssiThreshold = OPENTHREAD_CONFIG_CHANNEL_MONITOR_RSSI_THRESHOLD,
 
         /**
          * The averaging sample window length (in units of sample interval).
@@ -126,9 +126,9 @@ public:
     void Clear(void);
 
     /**
-     * This method returns the total number of RSS samples (per channel) taken so far.
+     * This method returns the total number of RSSI samples (per channel) taken so far (since call to `Start()`).
      *
-     * @returns total number of RSS samples taken so far.
+     * @returns total number of RSSI sample taken since last call to `Start()`.
      *
      */
     uint32_t GetSampleCount(void) const { return mSampleCount; }
@@ -136,8 +136,8 @@ public:
     /**
      * This method returns the current channel quality value for a given channel.
      *
-     * The channel quality value represents the average rate/percentage of RSS samples that were above RSS threshold
-     * `kRssThreshold` ("bad" RSS samples).
+     * The channel quality value represents the average rate/percentage of RSSI samples that were above RSSI threshold
+     * `kRssiThreshold` ("bad" RSSI samples).
      *
      * For the first `kSampleWindow` samples, the average is maintained as the actual percentage (i.e., ratio of number
      * of "bad" samples by total number of samples). After `kSampleWindow` samples, the averager uses an exponentially
@@ -145,7 +145,7 @@ public:
      * the quality is representative of up to `3 * kSampleWindow` last samples with highest weight given to latest
      * `kSampleWindow` samples.
      *
-     * Max value of `0xffff` indicates all RSS samples were above RSS threshold (i.e. 100% of samples were "bad").
+     * Max value of `0xffff` indicates all RSSI samples were above RSSI threshold (i.e. 100% of samples were "bad").
      *
      * @param[in]  aChannel     The channel for which to get the link quality.
      *
