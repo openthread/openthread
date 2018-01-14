@@ -243,16 +243,7 @@ otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     otLogInfoMle(GetInstance(), "Attempt to become router");
 
-    for (int i = 0; i <= kMaxRouterId; i++)
-    {
-        mRouters[i].SetAllocated(false);
-        mRouters[i].SetReclaimDelay(false);
-        mRouters[i].SetState(Neighbor::kStateInvalid);
-        mRouters[i].SetNextHop(kInvalidRouterId);
-    }
-
     mAdvertiseTimer.Stop();
-    netif.GetAddressResolver().Clear();
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
     mRouterSelectionJitterTimeout = 0;
 
@@ -303,7 +294,6 @@ otError MleRouter::BecomeLeader(void)
 
     router->SetExtAddress(netif.GetMac().GetExtAddress());
     mAdvertiseTimer.Stop();
-    netif.GetAddressResolver().Clear();
 
     if (mFixedLeaderPartitionId != 0)
     {
@@ -445,6 +435,16 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     netif.GetIp6().SetForwardingEnabled(true);
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
+    netif.GetAddressResolver().Clear();
+
+    // clear router table
+    for (int i = 0; i <= kMaxRouterId; i++)
+    {
+        mRouters[i].SetAllocated(false);
+        mRouters[i].SetReclaimDelay(false);
+        mRouters[i].SetState(Neighbor::kStateInvalid);
+        mRouters[i].SetNextHop(kInvalidRouterId);
+    }
 
     // remove children that do not have matching RLOC16
     for (int i = 0; i < mMaxChildrenAllowed; i++)
@@ -491,6 +491,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     netif.GetIp6().SetForwardingEnabled(true);
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
+    netif.GetAddressResolver().Clear();
 
     // remove children that do not have matching RLOC16
     for (int i = 0; i < mMaxChildrenAllowed; i++)
@@ -4150,7 +4151,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     ThreadRouterMaskTlv routerMaskTlv;
     uint8_t routerId;
     Router *router;
-    bool old;
 
     mAddressSolicitPending = false;
 
@@ -4213,13 +4213,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     for (uint8_t i = 0; i <= kMaxRouterId; i++)
     {
-        old = mRouters[i].IsAllocated();
         mRouters[i].SetAllocated(routerMaskTlv.IsAssignedRouterIdSet(i));
-
-        if (old && !mRouters[i].IsAllocated())
-        {
-            GetNetif().GetAddressResolver().Remove(i);
-        }
     }
 
     // Keep link to the parent in order to respond to Parent Requests before new link is established.
