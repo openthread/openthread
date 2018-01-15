@@ -4,6 +4,13 @@ import network_layer
 import config
 import mle
 
+from enum import IntEnum
+
+class CheckType(IntEnum):
+    CONTAIN = 0
+    NOT_CONTAIN = 1
+    OPTIONAL = 2
+
 def check_address_query(command_msg, source_node, destination_address):
     """Verify source_node sent a properly formatted Address Query Request message to the destination_address.
     """
@@ -125,9 +132,78 @@ def get_routing_cost(command_msg, router_id):
  
     return tlv.link_quality_and_route_data[routing_entry_pos].route
 
+def check_mle_optional_tlv(command_msg, type, tlv):
+    if (type == CheckType.CONTAIN):
+        command_msg.assertMleMessageContainsTlv(tlv)
+    elif (type == CheckType.NOT_CONTAIN):
+        command_msg.assertMleMessageDoesNotContainTlv(tlv)
+    elif (type == CheckType.OPTIONAL):
+        command_msg.assertMleMessageContainsOptionalTlv(tlv)
+    else:
+        raise ValueError("Invalid check type")
+
 def check_mle_advertisement(command_msg):
     command_msg.assertSentWithHopLimit(255)
     command_msg.assertSentToDestinationAddress(config.LINK_LOCAL_ALL_NODES_ADDRESS)
     command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
     command_msg.assertMleMessageContainsTlv(mle.LeaderData)
     command_msg.assertMleMessageContainsTlv(mle.Route64)
+
+def check_parent_request(command_msg):
+    """Verify a properly formatted Parent Request command message.
+    """
+    command_msg.assertSentWithHopLimit(255)
+    command_msg.assertSentToDestinationAddress(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS)
+    command_msg.assertMleMessageContainsTlv(mle.Mode)
+    command_msg.assertMleMessageContainsTlv(mle.Challenge)
+    command_msg.assertMleMessageContainsTlv(mle.ScanMask)
+    command_msg.assertMleMessageContainsTlv(mle.Version)
+
+def check_parent_response(command_msg, mle_frame_counter = CheckType.OPTIONAL):
+    """Verify a properly formatted Parent Response command message.
+    """
+    command_msg.assertMleMessageContainsTlv(mle.Challenge)
+    command_msg.assertMleMessageContainsTlv(mle.Connectivity)
+    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+    command_msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+    command_msg.assertMleMessageContainsTlv(mle.LinkMargin)
+    command_msg.assertMleMessageContainsTlv(mle.Response)
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    command_msg.assertMleMessageContainsTlv(mle.Version)
+
+    check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
+
+def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
+    mle_frame_counter = CheckType.OPTIONAL, address_registration = CheckType.OPTIONAL, \
+    active_timestamp = CheckType.OPTIONAL, pending_timestamp = CheckType.OPTIONAL):
+    """Verify a properly formatted Child Id Request command message.
+    """
+    command_msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+    command_msg.assertMleMessageContainsTlv(mle.Mode)
+    command_msg.assertMleMessageContainsTlv(mle.Response)
+    command_msg.assertMleMessageContainsTlv(mle.Timeout)
+    command_msg.assertMleMessageContainsTlv(mle.Version)
+
+    check_mle_optional_tlv(command_msg, tlv_request, mle.TlvRequest)
+    check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
+    check_mle_optional_tlv(command_msg, address_registration, mle.AddressRegistration)
+    check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
+    check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
+
+def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_data = CheckType.OPTIONAL, \
+    address_registration = CheckType.OPTIONAL, active_timestamp = CheckType.OPTIONAL, \
+    pending_timestamp = CheckType.OPTIONAL, active_operational_dataset = CheckType.OPTIONAL, \
+    pending_operational_dataset = CheckType.OPTIONAL):
+    """Verify a properly formatted Child Id Response command message.
+    """
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+    command_msg.assertMleMessageContainsTlv(mle.Address16)
+
+    check_mle_optional_tlv(command_msg, route64, mle.Route64)
+    check_mle_optional_tlv(command_msg, network_data, mle.NetworkData)
+    check_mle_optional_tlv(command_msg, address_registration, mle.AddressRegistration)
+    check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
+    check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
+    check_mle_optional_tlv(command_msg, active_operational_dataset, mle.ActiveOperationalDataset)
+    check_mle_optional_tlv(command_msg, pending_operational_dataset, mle.PendingOperationalDataset)

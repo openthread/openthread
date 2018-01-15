@@ -270,6 +270,16 @@ class Message(object):
             if dst_addr == ipaddress.ip_address(addr):
                 sent_to_node = True
 
+        if self.mac_header.dest_address.type == common.MacAddressType.SHORT:
+            mac_address = common.MacAddress.from_rloc16(node.get_addr16())
+            if self.mac_header.dest_address == mac_address:
+                sent_to_node = True
+
+        elif self.mac_header.dest_address.type == common.MacAddressType.LONG:
+            mac_address = common.MacAddress.from_eui64(bytearray(node.get_addr64(), encoding="utf-8"))
+            if self.mac_header.dest_address == mac_address:
+                sent_to_node = True
+
         assert sent_to_node == True
 
     def assertSentToDestinationAddress(self, ipv6_address):

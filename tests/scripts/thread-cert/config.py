@@ -50,6 +50,7 @@ LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff32:40:fdde:ad00:beef:0:0:1'
 REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff33:40:fdde:ad00:beef:0:0:1'
 REALM_LOCAL_ALL_ROUTERS_ADDRESS = 'ff03::2'
 LINK_LOCAL_ALL_NODES_ADDRESS = 'ff02::1'
+LINK_LOCAL_ALL_ROUTERS_ADDRESS = 'ff02::2'
 
 DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
