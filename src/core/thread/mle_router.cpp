@@ -1308,6 +1308,30 @@ uint8_t MleRouter::GetActiveNeighborRouterCount(void) const
     return rval;
 }
 
+bool MleRouter::IsSingleton(const RouteTlv &aRouteTlv)
+{
+    bool rval = true;
+    uint8_t count = 0;
+
+    // REEDs do not include a Route TLV and indicate not a singleton
+    if (!aRouteTlv.IsValid())
+    {
+        ExitNow(rval = false);
+    }
+
+    // Check if 2 or more active routers
+    for (uint8_t i = 0; i <= kMaxRouterId; i++)
+    {
+        if (aRouteTlv.IsRouterIdSet(i) && (++count >= 2))
+        {
+            ExitNow(rval = false);
+        }
+    }
+
+exit:
+    return rval;
+}
+
 otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &netif = GetNetif();
@@ -1341,9 +1365,16 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
 
-    // Route Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
-    VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
+    // Route Data (optional)
+    if (Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
+    }
+    else
+    {
+        // mark that a Route TLV was not included
+        route.SetLength(0);
+    }
 
     partitionId = leaderData.GetPartitionId();
 
@@ -1354,7 +1385,8 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = OT_ERROR_LINK_MARGIN_LOW);
 
-        if ((mDeviceMode & ModeTlv::kModeFFD) &&
+        if (route.IsValid() &&
+            (mDeviceMode & ModeTlv::kModeFFD) &&
             (mLastPartitionIdTimeout > 0) &&
             (partitionId == mLastPartitionId))
         {
@@ -1368,17 +1400,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             ExitNow();
         }
 
-        routerCount = 0;
-
-        for (uint8_t i = 0; i <= kMaxRouterId; i++)
-        {
-            if (route.IsRouterIdSet(i))
-            {
-                routerCount++;
-            }
-        }
-
-        if (ComparePartitions(routerCount <= 1, leaderData, IsSingleton(), mLeaderData) > 0)
+        if (ComparePartitions(IsSingleton(route), leaderData, IsSingleton(), mLeaderData) > 0)
         {
             BecomeChild(kAttachBetter);
         }
@@ -1397,7 +1419,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         ExitNow();
     }
 
-    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()));
+    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()) && route.IsValid());
     routerId = GetRouterId(sourceAddress.GetRloc16());
     router = GetRouter(routerId);
     VerifyOrExit(router != NULL, error = OT_ERROR_PARSE);
