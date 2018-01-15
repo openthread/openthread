@@ -366,6 +366,7 @@ bool Message::IsSubTypeMle(void) const
         mBuffer.mHead.mInfo.mSubType == kSubTypeMleDiscoverRequest ||
         mBuffer.mHead.mInfo.mSubType == kSubTypeMleDiscoverResponse ||
         mBuffer.mHead.mInfo.mSubType == kSubTypeMleChildUpdateRequest ||
+        mBuffer.mHead.mInfo.mSubType == kSubTypeMleDataResponse ||
         mBuffer.mHead.mInfo.mSubType == kSubTypeMleGeneral)
     {
         rval = true;

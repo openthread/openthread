@@ -2198,6 +2198,7 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     // Remove existing MLE messages
     netif.GetMeshForwarder().RemoveMessages(*child, Message::kSubTypeMleGeneral);
     netif.GetMeshForwarder().RemoveMessages(*child, Message::kSubTypeMleChildUpdateRequest);
+    netif.GetMeshForwarder().RemoveMessages(*child, Message::kSubTypeMleDataResponse);
 
     // Link-Layer Frame Counter
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter),
@@ -3131,6 +3132,7 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint
     }
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
+    message->SetSubType(Message::kSubTypeMleDataResponse);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -3159,6 +3161,12 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint
 
     if (aDelay)
     {
+        // Remove MLE Data Responses from Send Message Queue.
+        GetNetif().GetMeshForwarder().RemoveDataResponseMessages();
+
+        // Remove multicast MLE Data Response from Delayed Message Queue.
+        RemoveDelayedDataResponseMessage();
+
         SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
         LogMleMessage("Delay Data Response", aDestination);
     }

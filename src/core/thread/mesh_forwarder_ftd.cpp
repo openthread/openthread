@@ -314,6 +314,43 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
     }
 }
 
+void MeshForwarder::RemoveDataResponseMessages(void)
+{
+    Ip6::Header ip6Header;
+
+    for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
+    {
+        if (message->GetSubType() != Message::kSubTypeMleDataResponse)
+        {
+            continue;
+        }
+
+        message->Read(0, sizeof(ip6Header), &ip6Header);
+
+        if (!(ip6Header.GetDestination().IsMulticast()))
+        {
+            Child *children;
+            uint8_t numChildren;
+
+            children = GetNetif().GetMle().GetChildren(&numChildren);
+
+            for (uint8_t i = 0; i < numChildren; i++)
+            {
+                IgnoreReturnValue(RemoveMessageFromSleepyChild(*message, children[i]));
+            }
+        }
+
+        if (mSendMessage == message)
+        {
+            mSendMessage = NULL;
+        }
+
+        mSendQueue.Dequeue(*message);
+        LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_NONE);
+        message->Free();
+    }
+}
+
 otError MeshForwarder::GetIndirectTransmission(void)
 {
     otError error = OT_ERROR_NOT_FOUND;
