@@ -610,6 +610,8 @@ public:
     /**
      * This method aborts CoAP transactions associated with given handler and context.
      *
+     * The associated response handler will be called with OT_ERROR_ABORT.
+     *
      * @param[in]  aHandler  A function pointer that should be called when the transaction ends.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
