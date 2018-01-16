@@ -2979,12 +2979,20 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
     {
         uint8_t childIndex = netif.GetMle().GetChildIndex(aChild);
 
-        // No need to send "Child Update Request" to the sleepy child if there is one already queued for it.
         for (message = netif.GetMeshForwarder().GetSendQueue().GetHead(); message; message = message->GetNext())
         {
             if (message->GetChildMask(childIndex) && message->GetSubType() == Message::kSubTypeMleChildUpdateRequest)
             {
-                ExitNow();
+                // No need to send the resync "Child Update Request" to the sleepy child
+                // if there is one already queued.
+                if (aChild.IsStateRestoring())
+                {
+                    ExitNow();
+                }
+
+                // Remove queued outdated "Child Update Request" when there is newer Network Data is to send.
+                netif.GetMeshForwarder().RemoveMessages(aChild, Message::kSubTypeMleChildUpdateRequest);
+                break;
             }
         }
     }
