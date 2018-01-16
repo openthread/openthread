@@ -815,6 +815,8 @@ private:
 
     static bool IsSingleton(const RouteTlv &aRouteTlv);
 
+    void HandlePartitionChange(void);
+
     Child *NewChild(void);
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);

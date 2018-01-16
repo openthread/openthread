@@ -842,6 +842,7 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
 {
     if (mLeaderData.GetPartitionId() != aPartitionId)
     {
+        GetNetif().GetMle().HandlePartitionChange();
         mLastPartitionId = mLeaderData.GetPartitionId();
         mLastPartitionRouterIdSequence = GetNetif().GetMle().GetRouterIdSequence();
         mLastPartitionIdTimeout = GetNetif().GetMle().GetNetworkIdTimeout();

@@ -90,6 +90,14 @@ MleRouter::MleRouter(Instance &aInstance):
     SetRouterId(kInvalidRouterId);
 }
 
+void MleRouter::HandlePartitionChange(void)
+{
+    ThreadNetif &netif = GetNetif();
+
+    netif.GetAddressResolver().Clear();
+    netif.GetCoap().AbortTransaction(&MleRouter::HandleAddressSolicitResponse, this);
+}
+
 bool MleRouter::IsRouterRoleEnabled(void) const
 {
     return mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD);
@@ -324,6 +332,7 @@ void MleRouter::StopLeader(void)
     mAdvertiseTimer.Stop();
     netif.GetNetworkDataLeader().Stop();
     netif.UnsubscribeAllRoutersMulticast();
+    HandlePartitionChange();
 }
 
 otError MleRouter::HandleDetachStart(void)
