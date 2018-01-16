@@ -151,6 +151,7 @@ private:
     otError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     otError HandleNetworkDataUpdateRouter(void) { return OT_ERROR_NONE; }
     otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    void HandlePartitionChange(void) { }
 
     void StopAdvertiseTimer(void) { }
     otError ProcessRouteTlv(const RouteTlv &aRoute) { OT_UNUSED_VARIABLE(aRoute); return OT_ERROR_NONE; }
