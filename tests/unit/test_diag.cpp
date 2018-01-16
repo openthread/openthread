@@ -79,18 +79,83 @@ extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *aFrame)
     (void) aFrame;
 }
 
-
 /**
- *  diagnostics module tests
+ * Converts a given string replacing '\n', '\r', '\t', etc. with literal strings "\n", "\r", "\t", etc. to make it
+ * printable on console.
+ *
  */
-void TestDiag()
+const char *MakePrintable(const char *aString)
 {
-    static const struct
+    static char printableString[256];
+
+    char *ptr = &printableString[0];
+
+    *ptr++ = '\"';
+
+    while ((*aString != 0) && (ptr < &printableString[sizeof(printableString) - 4]))
     {
-        const char *command;
-        const char *output;
-    } tests[] =
+        // We ensure that at least 4 characters are remaining in output,
+        // two for encoding the current char (in case it needs a backslash)
+        // and two for the ending `"` and null char.
+
+        char c = *aString++;
+        bool addBackslash = true;
+
+        switch (c)
+        {
+        case '\n':
+            c = 'n';
+            break;
+
+        case '\r':
+            c = 'r';
+            break;
+
+        case '\t':
+            c = 't';
+            break;
+
+        case '\"':
+            c = '\"';
+            break;
+
+        case '\'':
+            c = '\'';
+            break;
+
+        case '\\':
+            break;
+
+        default:
+            addBackslash = false;
+            break;
+        }
+
+        if (addBackslash)
+        {
+            *ptr++ = '\\';
+        }
+
+        *ptr++ = c;
+    }
+
+    *ptr++ = '\"';
+    *ptr = 0;
+
+    return printableString;
+}
+
+void TestDiag(void)
+{
+    struct TestCommand
     {
+        const char *mCommand;
+        const char *mExpectedOutput;
+    };
+
+    static const TestCommand tests[] =
+    {
+
         {
             "diag\n",
             "diagnostics mode is disabled\r\n",
@@ -104,7 +169,11 @@ void TestDiag()
             "start diagnostics mode\r\nstatus 0x00\r\n",
         },
         {
-            "diag\n",
+            "diag",
+            "diagnostics mode is enabled\r\n",
+        },
+        {
+            "",
             "diagnostics mode is enabled\r\n",
         },
         {
@@ -136,6 +205,10 @@ void TestDiag()
             "sending 0x14 packet(s), length 0x64\r\nstatus 0x00\r\n",
         },
         {
+            "  diag \t send    \t 20\t100",           // Check parsing of extra space chars between args
+            "sending 0x14 packet(s), length 0x64\r\nstatus 0x00\r\n",
+        },
+        {
             "diag repeat 100 100\n",
             "sending packets of length 0x64 at the delay of 0x64 ms\r\nstatus 0x00\r\n"
         },
@@ -144,9 +217,17 @@ void TestDiag()
             "received packets: 0\r\nsent packets: 0\r\nfirst received packet: rssi=0, lqi=0\r\n\nstop diagnostics mode\r\nstatus 0x00\r\n",
         },
         {
-            "diag\n",
+            "diag",
             "diagnostics mode is disabled\r\n",
         },
+        {
+            "diag 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32",
+            "failed: command string contains too many arguments\r\n",
+        },
+        {
+            NULL,
+            NULL,
+        }
     };
 
     // initialize platform layer
@@ -157,19 +238,17 @@ void TestDiag()
     // initialize diagnostics module
     otDiagInit(NULL);
 
-    // test diagnostics commands
-    VerifyOrQuit(!otDiagIsEnabled(), "diagnostics mode shoud be disabled as default\n");
+    VerifyOrQuit(!otDiagIsEnabled(), "diagnostics mode should be disabled as default\n");
 
-    for (unsigned int i = 0; i < sizeof(tests) / sizeof(tests[0]);  i++)
+    for (const TestCommand *test = &tests[0]; test->mCommand != NULL; test++)
     {
-        char string[50];
-        char *output = NULL;
+        const char *output = NULL;
 
-        memcpy(string, tests[i].command, strlen(tests[i].command) + 1);
+        printf("\nCommand: %s", MakePrintable(test->mCommand));
+        output = otDiagProcessCmdLine(test->mCommand);
+        printf("\nOutput:  %s\n", MakePrintable(output));
 
-        output = otDiagProcessCmdLine(string);
-        VerifyOrQuit(memcmp(output, tests[i].output, strlen(tests[i].output)) == 0,
-                     "Test Diagnostics module failed\r\n");
+        VerifyOrQuit(strcmp(output, test->mExpectedOutput) == 0, "diagnostics output does not match expected result\n");
     }
 }
 
@@ -177,7 +256,7 @@ void TestDiag()
 int main(void)
 {
     TestDiag();
-    printf("All tests passed\n");
+    printf("\nAll tests passed\n");
     return 0;
 }
 #endif

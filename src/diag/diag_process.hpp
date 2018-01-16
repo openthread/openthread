@@ -47,46 +47,50 @@ namespace ot {
 
 namespace Diagnostics {
 
-#define MAX_DIAG_OUTPUT 256
-
-struct Command
-{
-    const char *mName;                         ///< A pointer to the command string.
-    void (*mCommand)(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);  ///< A function pointer to process the command.
-};
-
-struct DiagStats
-{
-    uint32_t received_packets;
-    uint32_t sent_packets;
-    int8_t first_rssi;
-    uint8_t first_lqi;
-};
-
 class Diag
 {
 public:
     static void Init(otInstance *aInstance);
-    static char *ProcessCmd(int argc, char *argv[]);
-    static bool isEnabled(void);
+    static const char *ProcessCmd(int aArgCount, char *aArgVector[]);
+    static bool IsEnabled(void);
 
     static void DiagTransmitDone(otInstance *aInstance, otError aError);
     static void DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     static void AlarmFired(otInstance *aInstance);
 
 private:
-    static void AppendErrorResult(otError error, char *aOutput, size_t aOutputMaxLen);
-    static void ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessStop(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessSend(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessStats(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessChannel(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessPower(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+
+    enum
+    {
+        kMaxOutputSize = 256,
+    };
+
+    struct DiagStats
+    {
+        uint32_t mReceivedPackets;
+        uint32_t mSentPackets;
+        int8_t   mFirstRssi;
+        uint8_t  mFirstLqi;
+    };
+
+    struct Command
+    {
+        const char *mName;
+        void (*mHandler)(int aArgCount, char *aArgVector[]);
+    };
+
+    static void AppendErrorResult(otError aError);
+    static void ProcessStart(int aArgCount, char *aArgVector[]);
+    static void ProcessStop(int aArgCount, char *aArgVector[]);
+    static void ProcessSend(int aArgCount, char *aArgVector[]);
+    static void ProcessRepeat(int aArgCount, char *aArgVector[]);
+    static void ProcessStats(int aArgCount, char *aArgVector[]);
+    static void ProcessChannel(int aArgCount, char *aArgVector[]);
+    static void ProcessPower(int aArgCount, char *aArgVector[]);
     static void TxPacket(void);
     static otError ParseLong(char *aString, long &aLong);
 
-    static char sDiagOutput[];
+    static char sOutput[];
     static const struct Command sCommands[];
     static struct DiagStats sStats;
     static int8_t sTxPower;
@@ -95,7 +99,7 @@ private:
     static uint32_t sTxPeriod;
     static uint32_t sTxPackets;
     static otRadioFrame *sTxPacket;
-    static otInstance *sContext;
+    static otInstance *sInstance;
     static bool sRepeatActive;
 };
 
