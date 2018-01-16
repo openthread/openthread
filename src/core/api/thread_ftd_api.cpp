@@ -41,6 +41,7 @@
 
 #include "common/instance.hpp"
 #include "thread/mle_constants.hpp"
+#include "thread/topology.hpp"
 
 using namespace ot;
 
@@ -253,6 +254,27 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, 
     VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
     error = instance.GetThreadNetif().GetMle().GetChildInfoByIndex(aChildIndex, *aChildInfo);
+
+exit:
+    return error;
+}
+
+otError otThreadGetChildNextIp6Address(otInstance *aInstance, uint8_t aChildIndex, otChildIp6AddressIterator *aIterator,
+                                       otIp6Address *aAddress)
+{
+    otError error = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Child::Ip6AddressIterator iterator;
+    Ip6::Address *address;
+
+    VerifyOrExit(aIterator != NULL && aAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    address = static_cast<Ip6::Address *>(aAddress);
+    iterator.Set(*aIterator);
+
+    SuccessOrExit(error = instance.GetThreadNetif().GetMle().GetChildNextIp6Address(aChildIndex, iterator, *address));
+
+    *aIterator = iterator.Get();
 
 exit:
     return error;

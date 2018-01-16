@@ -361,58 +361,110 @@ class Child : public Neighbor
 public:
     enum
     {
-        kMaxIp6AddressPerChild = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
         kMaxRequestTlvs        = 5,
     };
 
     /**
-     * This method clears the IPv6 addresses for the child.
+     * This class defines an iterator used by `GetNextIp6Address()` to go through IPv6 address entries of a child.
      *
      */
-    void ClearIp6Addresses(void) { memset(mIp6Address, 0, sizeof(mIp6Address)); }
+    class Ip6AddressIterator
+    {
+        friend class Child;
+
+    public:
+
+        /**
+         * This constructor initializes the iterator object.
+         *
+         * After initialization a call to `GetNextIp6Address()` would start at the first IPv6 address entry in the list.
+         *
+         */
+        Ip6AddressIterator(void): mIndex(0) { }
+
+        /**
+         * This method resets the iterator.
+         *
+         * After reset the next call to `GetNextIp6Address()` would start at the first IPv6 address entry in the list.
+         *
+         */
+        void Reset(void) { mIndex = 0; }
+
+        /**
+         * This method sets the iterator from an `otChildIp6AddressIterator`
+         *
+         * @param[in]   aChildAddressIterator  A child address iterator
+         *
+         */
+        void Set(otChildIp6AddressIterator aChildAddressIterator) { mIndex = aChildAddressIterator; }
+
+        /**
+         * This method returns the iterator as an `otChildIp6AddressIterator`
+         *
+         * @returns The iterator as an `otChildIp6AddressIterator`
+         *
+         */
+        otChildIp6AddressIterator Get(void) const { return mIndex; }
+
+    private:
+        void Increment(void) { mIndex++; }
+
+        otChildIp6AddressIterator mIndex;
+    };
 
     /**
-     * This method gets the IPv6 address array.
-     *
-     * The array contains `kMaxIp6AddressPerChild` entries. Unused address entries contain unspecified address (all
-     * zeros).
-     *
-     * @returns A pointer to the first entry of IPv6 address array.
+     * This method clears the IPv6 address list for the child.
      *
      */
-    const Ip6::Address *GetIp6Addresses(void) const { return mIp6Address; }
+    void ClearIp6Addresses(void);
 
     /**
-     * This method gets the IPv6 address at index @p aIndex.
+     * This method gets the next IPv6 address in the list.
      *
-     * @param[in]  aIndex  The index into the IPv6 address array.
+     * @param[inout] aIterator   A reference to an IPv6 address iterator.
+     * @param[out]   aAddress    A reference to an IPv6 address to provide the next address (if any).
      *
-     * @returns A reference to the IPv6 address entry at index @p aIndex.
+     * @retval OT_ERROR_NONE       Successfully found the next address and updated @p aAddress and @p aIterator.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent IPv6 address exists in the IPv6 address list.
      *
      */
-    Ip6::Address &GetIp6Address(uint8_t aIndex) { return mIp6Address[aIndex]; }
+    otError GetNextIp6Address(Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const;
 
     /**
-     * This method searches for a given IPv6 address in the child's IPv6 address array and provides the index of the
-     * address in the array if it is found.
+     * This method adds an IPv6 address to the list.
      *
-     * @param[in]  aAddress           The IPv6 address to search for in the IPv6 address array.
-     * @param[out] aIndex             Pointer to variable where the index of address is provided if address is found in
-     *                                the array. @p aIndex can be set NULL if index is not required.
+     * @param[in]   aAddress    A reference to IPv6 address to be added.
      *
-     * @retval OT_ERROR_NONE          Successfully found the address in IPv6 address array and updated @p aIndex.
-     * @retval OT_ERROR_NOT_FOUND     Could not find the address in the array.
+     * @retval OT_ERROR_NONE         Successfully added the new address.
+     * @retval OT_ERROR_ALREADY      Address is already in the list.
+     * @retval OT_ERROR_NO_BUFS      Already at maximum number of addresses. No entry available to add the new address.
+     * @retval OT_ERROR_INVALID_ARGS Address is invalid (it is the Unspecified Address).
      *
      */
-    otError FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const;
+    otError AddIp6Address(const Ip6::Address &aAddress);
 
     /**
-     * This method removes the address at index @p aIndex.
+     * This method removes an IPv6 address from the list.
      *
-     * @param[in] aIndex   The index into the IPv6 address array.
+     * @param[in]   aAddress    A reference to IPv6 address to be removed.
+     *
+     * @retval OT_ERROR_NONE         Successfully removed the address.
+     * @retval OT_ERROR_NOT_FOUND    Address was not found in the list.
+     * @retval OT_ERROR_INVALID_ARGS Address is invalid (it is the Unspecified Address).
      *
      */
-    void RemoveIp6Address(uint8_t aIndex);
+    otError RemoveIp6Address(const Ip6::Address &aAddress);
+
+    /**
+     * This method indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
+     *
+     * @param[in]   aAddress    A reference to IPv6 address.
+     *
+     * @retval TRUE    The address exists on the list.
+     * @retval FALSE   Address was not found in the list.
+     *
+     */
+    bool HasIp6Address(const Ip6::Address &aAddress) const;
 
     /**
      * This method gets the child timeout.
@@ -686,6 +738,11 @@ public:
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 private:
+    enum
+    {
+        kMaxIp6AddressPerChild = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
+    };
+
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
 
