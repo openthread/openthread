@@ -44,7 +44,7 @@
 namespace ot {
 namespace Diagnostics {
 
-const struct Command Diag::sCommands[] =
+const struct Diag::Command Diag::sCommands[] =
 {
     { "start", &ProcessStart },
     { "stop", &ProcessStop },
@@ -53,10 +53,11 @@ const struct Command Diag::sCommands[] =
     { "send", &ProcessSend },
     { "repeat", &ProcessRepeat },
     { "stats", &ProcessStats },
+    { NULL, NULL },
 };
 
-char Diag::sDiagOutput[MAX_DIAG_OUTPUT];
-struct DiagStats Diag::sStats;
+char Diag::sOutput[Diag::kMaxOutputSize];
+struct Diag::DiagStats Diag::sStats;
 
 int8_t Diag::sTxPower;
 uint8_t Diag::sChannel;
@@ -65,12 +66,11 @@ uint32_t Diag::sTxPeriod;
 uint32_t Diag::sTxPackets;
 otRadioFrame * Diag::sTxPacket;
 bool Diag::sRepeatActive;
-
-otInstance *Diag::sContext;
+otInstance *Diag::sInstance;
 
 void Diag::Init(otInstance *aInstance)
 {
-    sContext = aInstance;
+    sInstance = aInstance;
     sChannel = 20;
     sTxPower = 0;
     sTxPeriod = 0;
@@ -78,110 +78,98 @@ void Diag::Init(otInstance *aInstance)
     sTxPackets = 0;
     sRepeatActive = false;
     memset(&sStats, 0, sizeof(struct DiagStats));
-    sTxPacket = otPlatRadioGetTransmitBuffer(sContext);
+    sTxPacket = otPlatRadioGetTransmitBuffer(sInstance);
     otPlatDiagChannelSet(sChannel);
     otPlatDiagTxPowerSet(sTxPower);
 }
 
-char *Diag::ProcessCmd(int argc, char *argv[])
+const char *Diag::ProcessCmd(int aArgCount, char *aArgVector[])
 {
-    unsigned int i;
-
-    if (argc == 0)
+    if (aArgCount == 0)
     {
-        snprintf(sDiagOutput, sizeof(sDiagOutput), "diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
+        snprintf(sOutput, sizeof(sOutput), "diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
+        ExitNow();
     }
-    else
-    {
-        for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
-        {
-            if (strcmp(argv[0], sCommands[i].mName) == 0)
-            {
-                sCommands[i].mCommand(argc - 1, argc > 1 ? &argv[1] : NULL, sDiagOutput, sizeof(sDiagOutput));
-                break;
-            }
-        }
 
-        // more platform specific features will be processed under platform layer
-        if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    for (const Command *command = &sCommands[0]; command->mName != NULL; command++)
+    {
+        if (strcmp(aArgVector[0], command->mName) == 0)
         {
-            otPlatDiagProcess(sContext, argc, argv, sDiagOutput, sizeof(sDiagOutput));
+            command->mHandler(aArgCount - 1, (aArgCount > 1) ? &aArgVector[1] : NULL);
+            ExitNow();
         }
     }
 
-    return sDiagOutput;
+    // more platform specific features will be processed under platform layer
+    otPlatDiagProcess(sInstance, aArgCount, aArgVector, sOutput, sizeof(sOutput));
+
+exit:
+    return sOutput;
 }
 
-bool Diag::isEnabled()
+bool Diag::IsEnabled(void)
 {
     return otPlatDiagModeGet();
 }
 
-void Diag::AppendErrorResult(otError aError, char *aOutput, size_t aOutputMaxLen)
+void Diag::AppendErrorResult(otError aError)
 {
     if (aError != OT_ERROR_NONE)
     {
-        snprintf(aOutput, aOutputMaxLen, "failed\r\nstatus %#x\r\n", aError);
+        snprintf(sOutput, sizeof(sOutput), "failed\r\nstatus %#x\r\n", aError);
     }
 }
 
-void Diag::ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void Diag::ProcessStart(int aArgCount, char *aArgVector[])
 {
     otError error = OT_ERROR_NONE;
 
-    // enable radio
-    otPlatRadioEnable(sContext);
+    OT_UNUSED_VARIABLE(aArgCount);
+    OT_UNUSED_VARIABLE(aArgVector);
 
-    // enable promiscuous mode
-    otPlatRadioSetPromiscuous(sContext, true);
-
-    // stop timer
-    otPlatAlarmMilliStop(sContext);
-
-    // start to listen on the default channel
-    SuccessOrExit(error = otPlatRadioReceive(sContext, sChannel));
-
-    // enable diagnostics mode
+    otPlatRadioEnable(sInstance);
+    otPlatRadioSetPromiscuous(sInstance, true);
+    otPlatAlarmMilliStop(sInstance);
+    SuccessOrExit(error = otPlatRadioReceive(sInstance, sChannel));
     otPlatDiagModeSet(true);
-
     memset(&sStats, 0, sizeof(struct DiagStats));
-
-    snprintf(aOutput, aOutputMaxLen, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
+    snprintf(sOutput, sizeof(sOutput), "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    AppendErrorResult(error);
 }
 
-void Diag::ProcessStop(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void Diag::ProcessStop(int aArgCount, char *aArgVector[])
 {
     otError error = OT_ERROR_NONE;
+
+    OT_UNUSED_VARIABLE(aArgCount);
+    OT_UNUSED_VARIABLE(aArgVector);
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    otPlatAlarmMilliStop(sContext);
+    otPlatAlarmMilliStop(sInstance);
     otPlatDiagModeSet(false);
-    otPlatRadioSetPromiscuous(sContext, false);
+    otPlatRadioSetPromiscuous(sInstance, false);
 
-    snprintf(aOutput, aOutputMaxLen, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
-            static_cast<int>(sStats.received_packets), static_cast<int>(sStats.sent_packets), static_cast<int>(sStats.first_rssi),
-            static_cast<int>(sStats.first_lqi), error);
+    snprintf(sOutput, sizeof(sOutput),
+             "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n"
+             "\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
+             static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
+             static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi), error);
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    AppendErrorResult(error);
 }
 
-otError Diag::ParseLong(char *argv, long &value)
+otError Diag::ParseLong(char *aArgVector, long &aValue)
 {
     char *endptr;
-    value = strtol(argv, &endptr, 0);
+    aValue = strtol(aArgVector, &endptr, 0);
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
-void Diag::TxPacket()
+void Diag::TxPacket(void)
 {
     sTxPacket->mLength = sTxLen;
     sTxPacket->mChannel = sChannel;
@@ -190,142 +178,150 @@ void Diag::TxPacket()
     {
         sTxPacket->mPsdu[i] = i;
     }
-    otPlatRadioTransmit(sContext, sTxPacket);
+
+    otPlatRadioTransmit(sInstance, sTxPacket);
 }
 
-void Diag::ProcessChannel(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void Diag::ProcessChannel(int aArgCount, char *aArgVector[])
 {
     otError error = OT_ERROR_NONE;
 
+
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    if (argc == 0)
+    if (aArgCount == 0)
     {
-        snprintf(aOutput, aOutputMaxLen, "channel: %d\r\n", sChannel);
+        snprintf(sOutput, sizeof(sOutput), "channel: %d\r\n", sChannel);
     }
     else
     {
         long value;
 
-        SuccessOrExit(error = ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(aArgVector[0], value));
         VerifyOrExit(value >= OT_RADIO_CHANNEL_MIN && value <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
-        sChannel = static_cast<uint8_t>(value);
 
-        // listen on the set channel immediately
-        otPlatRadioReceive(sContext, sChannel);
+        sChannel = static_cast<uint8_t>(value);
+        otPlatRadioReceive(sInstance, sChannel);
         otPlatDiagChannelSet(sChannel);
-        snprintf(aOutput, aOutputMaxLen, "set channel to %d\r\nstatus 0x%02x\r\n", sChannel, error);
+
+        snprintf(sOutput, sizeof(sOutput), "set channel to %d\r\nstatus 0x%02x\r\n", sChannel, error);
     }
 
 exit:
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    AppendErrorResult(error);
 }
 
-void Diag::ProcessPower(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void Diag::ProcessPower(int aArgCount, char *aArgVector[])
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    if (argc == 0)
+    if (aArgCount == 0)
     {
-        snprintf(aOutput, aOutputMaxLen, "tx power: %d dBm\r\n", sTxPower);
+        snprintf(sOutput, sizeof(sOutput), "tx power: %d dBm\r\n", sTxPower);
     }
     else
     {
         long value;
 
-        SuccessOrExit(error = ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(aArgVector[0], value));
+
         sTxPower = static_cast<int8_t>(value);
         otPlatDiagTxPowerSet(sTxPower);
-        snprintf(aOutput, aOutputMaxLen, "set tx power to %d dBm\r\nstatus 0x%02x\r\n", sTxPower, error);
+
+        snprintf(sOutput, sizeof(sOutput), "set tx power to %d dBm\r\nstatus 0x%02x\r\n", sTxPower, error);
     }
 
 exit:
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    AppendErrorResult(error);
 }
 
-void Diag::ProcessSend(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void Diag::ProcessSend(int aArgCount, char *aArgVector[])
 {
     otError error = OT_ERROR_NONE;
     long value;
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgCount == 2, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = ParseLong(argv[0], value));
+    SuccessOrExit(error = ParseLong(aArgVector[0], value));
     sTxPackets = static_cast<uint32_t>(value);
 
-    SuccessOrExit(error = ParseLong(argv[1], value));
+    SuccessOrExit(error = ParseLong(aArgVector[1], value));
     VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
     sTxLen = static_cast<uint8_t>(value);
 
-    snprintf(aOutput, aOutputMaxLen, "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", static_cast<int>(sTxPackets), static_cast<int>(sTxLen), error);
+    snprintf(sOutput, sizeof(sOutput), "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n",
+             static_cast<int>(sTxPackets), static_cast<int>(sTxLen), error);
     TxPacket();
 
 exit:
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    AppendErrorResult(error);
 }
 
-void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void Diag::ProcessRepeat(int aArgCount, char *aArgVector[])
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgCount > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if (strcmp(argv[0], "stop") == 0)
+    if (strcmp(aArgVector[0], "stop") == 0)
     {
-        otPlatAlarmMilliStop(sContext);
+        otPlatAlarmMilliStop(sInstance);
         sRepeatActive = false;
-        snprintf(aOutput, aOutputMaxLen, "repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
+        snprintf(sOutput, sizeof(sOutput), "repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
     }
     else
     {
         long value;
 
-        VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(aArgCount == 2, error = OT_ERROR_INVALID_ARGS);
 
-        SuccessOrExit(error = ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(aArgVector[0], value));
         sTxPeriod = static_cast<uint32_t>(value);
 
-        SuccessOrExit(error = ParseLong(argv[1], value));
+        SuccessOrExit(error = ParseLong(aArgVector[1], value));
         VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
         sTxLen = static_cast<uint8_t>(value);
 
         sRepeatActive = true;
         uint32_t now = otPlatAlarmMilliGetNow();
-        otPlatAlarmMilliStartAt(sContext, now, sTxPeriod);
-        snprintf(aOutput, aOutputMaxLen, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
+        otPlatAlarmMilliStartAt(sInstance, now, sTxPeriod);
+        snprintf(sOutput, sizeof(sOutput), "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n",
+                 static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
     }
 
 exit:
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    AppendErrorResult(error);
 }
 
-void Diag::ProcessStats(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void Diag::ProcessStats(int aArgCount, char *aArgVector[])
 {
     otError error = OT_ERROR_NONE;
 
+    OT_UNUSED_VARIABLE(aArgCount);
+    OT_UNUSED_VARIABLE(aArgVector);
+
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    snprintf(aOutput, aOutputMaxLen, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
-            static_cast<int>(sStats.received_packets), static_cast<int>(sStats.sent_packets),
-            static_cast<int>(sStats.first_rssi), static_cast<int>(sStats.first_lqi));
+    snprintf(sOutput, sizeof(sOutput),
+             "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
+            static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
+            static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi));
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
-    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    AppendErrorResult(error);
 }
 
 void Diag::DiagTransmitDone(otInstance *aInstance, otError aError)
 {
-    VerifyOrExit(aInstance == sContext);
+    VerifyOrExit(aInstance == sInstance);
 
     if (aError == OT_ERROR_NONE)
     {
-        sStats.sent_packets++;
+        sStats.mSentPackets++;
 
         if (sTxPackets > 1)
         {
@@ -344,18 +340,18 @@ exit:
 
 void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    VerifyOrExit(aInstance == sContext);
+    VerifyOrExit(aInstance == sInstance);
 
     if (aError == OT_ERROR_NONE)
     {
         // for sensitivity test, only record the rssi and lqi for the first packet
-        if (sStats.received_packets == 0)
+        if (sStats.mReceivedPackets == 0)
         {
-            sStats.first_rssi = aFrame->mRssi;
-            sStats.first_lqi = aFrame->mLqi;
+            sStats.mFirstRssi = aFrame->mRssi;
+            sStats.mFirstLqi = aFrame->mLqi;
         }
 
-        sStats.received_packets++;
+        sStats.mReceivedPackets++;
     }
     otPlatDiagRadioReceived(aInstance, aFrame, aError);
 
@@ -365,7 +361,7 @@ exit:
 
 void Diag::AlarmFired(otInstance *aInstance)
 {
-    VerifyOrExit(aInstance == sContext);
+    VerifyOrExit(aInstance == sInstance);
 
     if(sRepeatActive)
     {
