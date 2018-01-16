@@ -243,7 +243,6 @@ otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     otLogInfoMle(GetInstance(), "Attempt to become router");
 
-    mAdvertiseTimer.Stop();
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
     mRouterSelectionJitterTimeout = 0;
 
@@ -293,7 +292,6 @@ otError MleRouter::BecomeLeader(void)
     SetRouterId(routerId);
 
     router->SetExtAddress(netif.GetMac().GetExtAddress());
-    mAdvertiseTimer.Stop();
 
     if (mFixedLeaderPartitionId != 0)
     {
@@ -331,8 +329,6 @@ void MleRouter::StopLeader(void)
 otError MleRouter::HandleDetachStart(void)
 {
     otError error = OT_ERROR_NONE;
-
-    GetNetif().GetAddressResolver().Clear();
 
     for (int i = 0; i <= kMaxRouterId; i++)
     {
@@ -426,6 +422,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
     mChildUpdateRequestTimer.Stop();
+    mAdvertiseTimer.Stop();
     ResetAdvertiseInterval();
 
     netif.SubscribeAllRoutersMulticast();
@@ -474,6 +471,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
     mChildUpdateRequestTimer.Stop();
+    mAdvertiseTimer.Stop();
     ResetAdvertiseInterval();
     AddLeaderAloc();
 
@@ -559,6 +557,12 @@ otError MleRouter::SendAdvertisement(void)
     // The candidate parent then removes the attaching device because the Source Address TLV includes an RLOC16 that
     // indicates a Router role (i.e. a Child ID equal to zero).
     VerifyOrExit(mParentRequestState == kParentIdle);
+
+    // Suppress MLE Advertisements when transitioning to the router role.
+    //
+    // When trying to attach to a new partition, sending out advertisements as a REED can cause already-attached
+    // children to detach.
+    VerifyOrExit(!mAddressSolicitPending);
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandAdvertisement));
@@ -1859,7 +1863,8 @@ void MleRouter::HandleStateUpdateTimer(void)
                 // upgrade to Router
                 BecomeRouter(ThreadStatusTlv::kTooFewRouters);
             }
-            else if (!mAdvertiseTimer.IsRunning())
+
+            if (!mAdvertiseTimer.IsRunning())
             {
                 SendAdvertisement();
 
