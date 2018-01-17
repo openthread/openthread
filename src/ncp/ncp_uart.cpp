@@ -265,10 +265,10 @@ void NcpUart::HandleFrame(void *aContext, uint8_t *aBuf, uint16_t aBufLength)
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
-    size_t bufTransformedLen = sizeof(mRxBuffer);
-    if (SpinelEncrypter::DecryptInbound(aBuf, aBufLength, aBuf, &bufTransformedLen))
+    size_t dataLen = aBufLength;
+    if (SpinelEncrypter::DecryptInbound(aBuf, sizeof(mRxBuffer), &dataLen))
     {
-        super_t::HandleReceive(aBuf, bufTransformedLen);
+        super_t::HandleReceive(aBuf, dataLen);
     }
 #else
     super_t::HandleReceive(aBuf, aBufLength);
@@ -333,16 +333,16 @@ otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameBegin()
 
     if ((status = mTxFrameBuffer.OutFrameBegin()) == OT_ERROR_NONE)
     {
-        size_t inputDataLength = mTxFrameBuffer.OutFrameGetLength();
+        mOutputDataLength = mTxFrameBuffer.OutFrameGetLength();
 
-        if (inputDataLength > 0)
+        if (mOutputDataLength > 0)
         {
-            assert(inputDataLength <= sizeof(mDataBuffer));
-            mTxFrameBuffer.OutFrameRead(inputDataLength, mDataBuffer);
-            mOutputDataLength = sizeof(mDataBuffer);
+            assert(mOutputDataLength <= sizeof(mDataBuffer));
+            mTxFrameBuffer.OutFrameRead(mOutputDataLength, mDataBuffer);
 
-            if (!SpinelEncrypter::EncryptOutbound(mDataBuffer, inputDataLength, mDataBuffer, &mOutputDataLength))
+            if (!SpinelEncrypter::EncryptOutbound(mDataBuffer, sizeof(mDataBuffer), &mOutputDataLength))
             {
+                mOutputDataLength = 0;
                 status = OT_ERROR_FAILED;
             }
         }

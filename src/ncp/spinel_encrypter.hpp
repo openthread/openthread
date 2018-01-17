@@ -8,28 +8,26 @@ namespace SpinelEncrypter {
  * Encrypts spinel frames before sending to AP/NCP.
  *
  * This method encrypts outbound frames in both directions, i.e. from AP to NCP and from NCP to AP.
- * NOTE: \p aOutputLength might be different than \p aInputLength, so make sure to allocate enough memory.
  *
- * @param[in] aInput Pointer to buffer containing spinel frame.
- * @param[in] aInputLength Length of spinel frame.
- * @param[out] aOutput Pointer to allocated buffer for encrypted spinel frame.
- * @param[in,out] aOutputLength Length of allocated buffer for encrypted spinel frame.
- * In return, it will contain the actual length of encrypted frame.
+ * @param[in,out] aFrameBuf Pointer to buffer containing the frame, also where the encrypted frame will be placed.
+ * @param[in] aFrameSize Max number of bytes in frame buffer (max length of spinel frame + additional data for encryption).
+ * @param[in,out] aFrameLength Pointer to store frame length, on input value is set to frame length,
+ * on output changed to show the frame length after encryption.
  * @return \c true on success, \c false otherwise.
  */
-bool EncryptOutbound(const unsigned char *aInput, size_t aInputLength, unsigned char *aOutput, size_t *aOutputLength);
+bool EncryptOutbound(unsigned char *aFrameBuf, size_t aFrameSize, size_t *aFrameLength);
 
 /**
- * Decrypts spinel frames by decrypting data received from AP/NCP.
+ * Decrypts spinel frames received from AP/NCP.
  *
  * This method decrypts inbound frames in both directions, i.e. from AP to NCP and from NCP to AP.
- * @param[in] aInput Pointer to buffer containing received encrypted data.
- * @param[in] aInputLength Length of received encrypted data.
- * @param[out] aOutput Pointer to allocated buffer for decrypted spinel frame.
- * @param[in,out] aOutputLength Length of allocated buffer for decrypted spinel frame.
- * In return, it will contain the actual length of decrypted frame.
+ *
+ * @param[in,out] aFrameBuf Pointer to buffer containing encrypted frame, also where the decrypted frame will be placed.
+ * @param[in] aFrameSize Max number of bytes in frame buffer (max length of spinel frame + additional data for encryption).
+ * @param[in,out] aFrameLength Pointer to store frame length, on input value is set to encrypted frame length,
+ * on output changed to show the frame length after decryption.
  * @return \c true on success, \c false otherwise.
  */
-bool DecryptInbound(const unsigned char *aInput, size_t aInputLength, unsigned char *aOutput, size_t *aOutputLength);
+bool DecryptInbound(unsigned char *aFrameBuf, size_t aFrameSize, size_t *aFrameLength);
 
 } // namespace SpinelEncrypter
