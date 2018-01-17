@@ -1427,10 +1427,8 @@ void Mle::HandleParentRequestTimer(void)
     // fall through
 
     case kParentRequestChild:
-        mParentRequestState = kParentRequestChild;
-
         if (mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
-            (mRole != OT_DEVICE_ROLE_CHILD || mReceivedResponseFromParent) &&
+            (mRole != OT_DEVICE_ROLE_CHILD || mReceivedResponseFromParent || mParentRequestMode == kAttachBetter) &&
             SendChildIdRequest() == OT_ERROR_NONE)
         {
             mParentRequestState = kChildIdRequest;
