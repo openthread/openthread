@@ -177,8 +177,13 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     instance.GetThreadNetif().GetMeshForwarder().GetReassemblyQueue().GetInfo(aBufferInfo->m6loReassemblyMessages,
                                                                               aBufferInfo->m6loReassemblyBuffers);
 
+#if OPENTHREAD_FTD
     instance.GetThreadNetif().GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
                                                                              aBufferInfo->mArpBuffers);
+#else
+    aBufferInfo->mArpMessages = 0;
+    aBufferInfo->mArpBuffers = 0;
+#endif
 
     instance.GetThreadNetif().GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages,
                                                               aBufferInfo->mIp6Buffers);
