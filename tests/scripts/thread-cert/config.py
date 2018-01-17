@@ -195,7 +195,7 @@ def create_deafult_network_tlvs_factories():
         network_layer.TlvType.ROUTER_MASK: network_layer.RouterMaskFactory(),
         network_layer.TlvType.ND_OPTION: network_layer.NdOptionFactory(),
         network_layer.TlvType.ND_DATA: network_layer.NdDataFactory(),
-        network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(create_default_network_data_tlvs_factory),
+        network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(create_default_network_data_tlvs_factory()),
 
         # Routing information are distributed in a Thread network by MLE Routing TLV
         # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20
@@ -216,7 +216,8 @@ def create_default_uri_path_based_payload_factories():
         "/a/aq": network_layer_tlvs_factory,
         "/a/ar": network_layer_tlvs_factory,
         "/a/ae": network_layer_tlvs_factory,
-        "/a/an": network_layer_tlvs_factory
+        "/a/an": network_layer_tlvs_factory,
+        "/a/sd": network_layer_tlvs_factory
     }
 
 

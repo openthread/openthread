@@ -116,6 +116,9 @@ class Sniffer:
         self._thread.join()
         self._thread = None
 
+    def set_lowpan_context(self, cid, prefix):
+        self._message_factory.set_lowpan_context(cid, prefix)
+
     def get_messages_sent_by(self, nodeid):
         """ Get sniffed messages.
 

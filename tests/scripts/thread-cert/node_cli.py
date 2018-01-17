@@ -32,6 +32,7 @@ import sys
 import time
 import pexpect
 import re
+import ipaddress
 
 import config
 
@@ -387,6 +388,17 @@ class otCli:
                 break
 
         return addrs
+
+    def get_addr(self, prefix):
+        network = ipaddress.ip_network(unicode(prefix))
+        addrs = self.get_addrs()
+
+        for addr in addrs:
+            ipv6_address = ipaddress.ip_address(addr.decode("utf-8"))
+            if ipv6_address in network:
+                return ipv6_address.exploded.encode('utf-8')
+
+        return None
 
     def add_service(self, enterpriseNumber, serviceData, serverData):
         cmd = 'service add ' + enterpriseNumber + ' ' + serviceData+ ' '  + serverData
