@@ -137,6 +137,8 @@
     <ClCompile Include="..\..\src\core\thread\link_quality.cpp" />
     <ClCompile Include="..\..\src\core\thread\lowpan.cpp" />
     <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_ftd.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_mtd.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle_router.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data.cpp" />
