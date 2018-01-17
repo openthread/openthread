@@ -92,6 +92,7 @@ struct NetworkInfo
     uint32_t         mPreviousPartitionId;     ///< PartitionId
     Mac::ExtAddress  mExtAddress;              ///< Extended Address
     uint8_t          mMlIid[OT_IP6_IID_SIZE];  ///< IID from ML-EID
+    uint8_t          mInitialDeviceMode;       ///< Initial device mode setting.
 };
 
 /**

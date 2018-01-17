@@ -122,6 +122,7 @@ class SnifferSocketTransport(SnifferTransport):
         if not self.is_opened:
             raise RuntimeError("Transport opening failed.")
 
+        self._socket.settimeout(5)
         self._socket.bind(self._nodeid_to_address(self._nodeid))
 
     def close(self):
@@ -141,7 +142,10 @@ class SnifferSocketTransport(SnifferTransport):
         return self._socket.sendto(data, address)
 
     def recv(self, bufsize):
-        data, address = self._socket.recvfrom(bufsize)
+        try:
+            data, address = self._socket.recvfrom(bufsize)
+        except socket.timeout:
+            return None, None
 
         nodeid = self._address_to_nodeid(address)
 

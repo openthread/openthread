@@ -1366,6 +1366,7 @@ protected:
     otDeviceRole mRole;                     ///< Current Thread role.
     Router mParent;                         ///< Parent information.
     uint8_t mDeviceMode;                    ///< Device mode setting.
+    uint8_t mInitialDeviceMode;             ///< Initial device mode setting.
 
     /**
      * States when searching for a parent.

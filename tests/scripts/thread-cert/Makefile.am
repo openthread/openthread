@@ -144,6 +144,7 @@ EXTRA_DIST                                                         = \
     test_mac802154.py                                                \
     test_mle.py                                                      \
     test_service.py                                                  \
+    test_set_device_mode.py                                          \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     $(NULL)
@@ -160,6 +161,7 @@ check_SCRIPTS                                                      = \
     test_mac802154.py                                                \
     test_mle.py                                                      \
     test_service.py                                                  \
+    test_set_device_mode.py                                          \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     Cert_5_1_01_RouterAttach.py                                      \

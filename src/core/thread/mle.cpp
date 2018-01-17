@@ -67,6 +67,7 @@ Mle::Mle(Instance &aInstance) :
     mRetrieveNewNetworkData(false),
     mRole(OT_DEVICE_ROLE_DISABLED),
     mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest),
+    mInitialDeviceMode(0),
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
     mParentRequestTimer(aInstance, &Mle::HandleParentRequestTimer, this),
@@ -312,6 +313,13 @@ otError Mle::Restore(void)
     length = sizeof(networkInfo);
     SuccessOrExit(error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
+
+    if (length == sizeof(networkInfo) - sizeof(networkInfo.mInitialDeviceMode))
+    {
+        networkInfo.mInitialDeviceMode = 0;
+        length += sizeof(networkInfo.mInitialDeviceMode);
+    }
+
     VerifyOrExit(length >= sizeof(networkInfo), error = OT_ERROR_NOT_FOUND);
 
     netif.GetKeyManager().SetCurrentKeySequence(networkInfo.mKeySequence);
@@ -321,6 +329,7 @@ otError Mle::Restore(void)
     VerifyOrExit(networkInfo.mRole >= OT_DEVICE_ROLE_CHILD);
 
     mDeviceMode = networkInfo.mDeviceMode;
+    mInitialDeviceMode = networkInfo.mInitialDeviceMode;
     SetRloc16(networkInfo.mRloc16);
     netif.GetMac().SetExtAddress(networkInfo.mExtAddress);
     UpdateLinkLocalAddress();
@@ -400,6 +409,7 @@ otError Mle::Store(void)
         networkInfo.mRloc16 = GetRloc16();
         networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
         networkInfo.mExtAddress = netif.GetMac().GetExtAddress();
+        networkInfo.mInitialDeviceMode = mInitialDeviceMode;
         memcpy(networkInfo.mMlIid, &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], OT_IP6_IID_SIZE);
 
         if (mRole == OT_DEVICE_ROLE_CHILD)
@@ -710,8 +720,17 @@ otError Mle::SetDeviceMode(uint8_t aDeviceMode)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
-        SetStateChild(GetRloc16());
-        SendChildUpdateRequest();
+        if ((mInitialDeviceMode & ModeTlv::kModeFFD) > (aDeviceMode & ModeTlv::kModeFFD) ||
+            (mInitialDeviceMode & ModeTlv::kModeRxOnWhenIdle) > (aDeviceMode & ModeTlv::kModeRxOnWhenIdle))
+        {
+            BecomeDetached();
+        }
+        else
+        {
+            SetStateChild(GetRloc16());
+            SendChildUpdateRequest();
+        }
+
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
@@ -3032,6 +3051,8 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     netif.GetActiveDataset().ApplyConfiguration();
 
     SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
+
+    mInitialDeviceMode = mDeviceMode;
 
 exit:
 

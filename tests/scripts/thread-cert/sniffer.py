@@ -80,6 +80,9 @@ class Sniffer:
         while self._thread_alive.is_set():
             data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
 
+            if not data:
+                continue
+
             # Ignore any exceptions
             try:
                 msg = self._message_factory.create(io.BytesIO(data))
@@ -112,7 +115,7 @@ class Sniffer:
         self._thread_alive.clear()
 
         self._transport.close()
-        
+
         self._thread.join()
         self._thread = None
 
