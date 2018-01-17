@@ -1017,7 +1017,7 @@ typedef struct otMacCounters
     uint32_t mRxAddressFiltered;      ///< The number of received packets filtered by address filter (whitelist or blacklist).
     uint32_t mRxDestAddrFiltered;     ///< The number of received packets filtered by destination check.
     uint32_t mRxDuplicated;           ///< The number of received duplicated packets.
-    uint32_t mRxErrNoFrame;           ///< The number of received packets that do not contain contents.
+    uint32_t mRxErrNoFrame;           ///< The number of received packets with no or malformed content.
     uint32_t mRxErrUnknownNeighbor;   ///< The number of received packets from unknown neighbor.
     uint32_t mRxErrInvalidSrcAddr;    ///< The number of received packets whose source address is invalid.
     uint32_t mRxErrSec;               ///< The number of received packets with security error.
