@@ -83,6 +83,7 @@ Mac::Mac(Instance &aInstance):
     mPendingEnergyScan(false),
     mPendingTransmitBeacon(false),
     mPendingTransmitData(false),
+    mPendingTransmitOobFrame(false),
     mPendingWaitingForData(false),
     mRxOnWhenIdle(false),
     mBeaconsEnabled(false),
@@ -116,6 +117,7 @@ Mac::Mac(Instance &aInstance):
     mFilter(),
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
     mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance))),
+    mOobFrame(NULL),
     mKeyIdMode2FrameCounter(0)
 {
     GenerateExtAddress(&mExtAddress);
@@ -184,7 +186,8 @@ bool Mac::IsEnergyScanInProgress(void)
 
 bool Mac::IsInTransmitState(void)
 {
-    return (mOperation == kOperationTransmitData) || (mOperation == kOperationTransmitBeacon);
+    return (mOperation == kOperationTransmitData) ||
+           (mOperation == kOperationTransmitBeacon) || (mOperation == kOperationTransmitOutOfBandFrame);
 }
 
 otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult)
@@ -499,6 +502,20 @@ exit:
     return error;
 }
 
+otError Mac::SendOutOfBandFrameRequest(otRadioFrame *aOobFrame)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mOobFrame == NULL, error = OT_ERROR_ALREADY);
+
+    mOobFrame = static_cast<Frame *>(aOobFrame);
+
+    StartOperation(kOperationTransmitOutOfBandFrame);
+
+exit:
+    return error;
+}
+
 void Mac::UpdateIdleMode(void)
 {
     VerifyOrExit(mOperation == kOperationIdle);
@@ -554,6 +571,10 @@ void Mac::StartOperation(Operation aOperation)
     case kOperationWaitingForData:
         mPendingWaitingForData = true;
         break;
+
+    case kOperationTransmitOutOfBandFrame:
+        mPendingTransmitOobFrame = true;
+        break;
     }
 
     if (mOperation == kOperationIdle)
@@ -591,6 +612,12 @@ void Mac::PerformOperation(void)
         mPendingWaitingForData = false;
         mOperation = kOperationWaitingForData;
         RadioReceive(mChannel);
+    }
+    else if (mPendingTransmitOobFrame)
+    {
+        mPendingTransmitOobFrame = false;
+        mOperation = kOperationTransmitOutOfBandFrame;
+        StartCsmaBackoff();
     }
     else if (mPendingActiveScan)
     {
@@ -884,10 +911,31 @@ void Mac::HandleBeginTransmit(Timer &aTimer)
     aTimer.GetOwner<Mac>().HandleBeginTransmit();
 }
 
+Frame *Mac::GetOperationFrame(void)
+{
+    Frame *frame = NULL;
+
+    switch (mOperation)
+    {
+    case kOperationTransmitOutOfBandFrame:
+        frame = mOobFrame;
+        break;
+
+    default:
+        frame = mTxFrame;
+        break;
+    }
+
+    assert(frame != NULL);
+
+    return frame;
+}
+
 void Mac::HandleBeginTransmit(void)
 {
-    Frame &sendFrame(*mTxFrame);
     otError error = OT_ERROR_NONE;
+    bool applyTransmitSecurity = true;
+    Frame &sendFrame(*GetOperationFrame());
 
 #if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
 
@@ -933,13 +981,20 @@ void Mac::HandleBeginTransmit(void)
 
             break;
 
+        case kOperationTransmitOutOfBandFrame:
+            applyTransmitSecurity = false;
+            break;
+
         default:
             assert(false);
             break;
         }
 
-        // Security Processing
-        ProcessTransmitSecurity(sendFrame);
+        if (applyTransmitSecurity)
+        {
+            // Security Processing
+            ProcessTransmitSecurity(sendFrame);
+        }
     }
 
     error = RadioReceive(sendFrame.GetChannel());
@@ -958,7 +1013,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleTransmitDone(mTxFrame, NULL, OT_ERROR_ABORT);
+        HandleTransmitDone(&sendFrame, NULL, OT_ERROR_ABORT);
     }
 }
 
@@ -1176,6 +1231,11 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         FinishOperation();
         break;
     }
+
+    case kOperationTransmitOutOfBandFrame:
+        mOobFrame = NULL;
+        FinishOperation();
+        break;
 
     default:
         assert(false);
@@ -1941,6 +2001,10 @@ const char *Mac::OperationToString(Operation aOperation)
 
     case kOperationWaitingForData:
         retval = "WaitingForData";
+        break;
+
+    case kOperationTransmitOutOfBandFrame:
+        retval = "TransmitOobFrame";
         break;
     }
 
