@@ -105,6 +105,9 @@ NcpUart::NcpUart(Instance *aInstance):
     mByte(0),
     mUartSendImmediate(false),
     mUartSendTask(*aInstance, EncodeAndSendToUart, this)
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+    , mTxFrameBufferEncrypterReader(mTxFrameBuffer)
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 
@@ -142,8 +145,13 @@ void NcpUart::EncodeAndSendToUart(void)
 {
     uint16_t len;
     bool prevHostPowerState;
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+    NcpFrameBufferEncrypterReader &txFrameBuffer = mTxFrameBufferEncrypterReader;
+#else
+    NcpFrameBuffer &txFrameBuffer = mTxFrameBuffer;
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
-    while (!mTxFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
+    while (!txFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
     {
         switch (mState)
         {
@@ -157,13 +165,13 @@ void NcpUart::EncodeAndSendToUart(void)
             VerifyOrExit(super_t::ShouldDeferHostSend() == false);
             SuccessOrExit(mFrameEncoder.Init(mUartBuffer));
 
-            mTxFrameBuffer.OutFrameBegin();
+            txFrameBuffer.OutFrameBegin();
 
             mState = kEncodingFrame;
 
-            while (!mTxFrameBuffer.OutFrameHasEnded())
+            while (!txFrameBuffer.OutFrameHasEnded())
             {
-                mByte = mTxFrameBuffer.OutFrameReadByte();
+                mByte = txFrameBuffer.OutFrameReadByte();
 
         case kEncodingFrame:
 
@@ -174,7 +182,7 @@ void NcpUart::EncodeAndSendToUart(void)
             // call to OutFrameRemove.
             prevHostPowerState = mHostPowerStateInProgress;
 
-            mTxFrameBuffer.OutFrameRemove();
+            txFrameBuffer.OutFrameRemove();
 
             if (prevHostPowerState && !mHostPowerStateInProgress)
             {
@@ -256,7 +264,15 @@ void NcpUart::HandleFrame(void *aContext, uint8_t *aBuf, uint16_t aBufLength)
 
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+    size_t dataLen = aBufLength;
+    if (SpinelEncrypter::DecryptInbound(aBuf, sizeof(mRxBuffer), &dataLen))
+    {
+        super_t::HandleReceive(aBuf, dataLen);
+    }
+#else
     super_t::HandleReceive(aBuf, aBufLength);
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 }
 
 void NcpUart::HandleError(void *aContext, otError aError, uint8_t *aBuf, uint16_t aBufLength)
@@ -296,6 +312,71 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     // We skip the first byte since it has a space in it.
     otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
+
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+
+NcpUart::NcpFrameBufferEncrypterReader::NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer) :
+    mTxFrameBuffer(aTxFrameBuffer),
+    mDataBufferReadIndex(0),
+    mOutputDataLength(0) {}
+
+bool NcpUart::NcpFrameBufferEncrypterReader::IsEmpty() const
+{
+    return mTxFrameBuffer.IsEmpty() && !mOutputDataLength;
+}
+
+otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameBegin()
+{
+    otError status = OT_ERROR_FAILED;
+
+    Reset();
+
+    if ((status = mTxFrameBuffer.OutFrameBegin()) == OT_ERROR_NONE)
+    {
+        mOutputDataLength = mTxFrameBuffer.OutFrameGetLength();
+
+        if (mOutputDataLength > 0)
+        {
+            assert(mOutputDataLength <= sizeof(mDataBuffer));
+            mTxFrameBuffer.OutFrameRead(mOutputDataLength, mDataBuffer);
+
+            if (!SpinelEncrypter::EncryptOutbound(mDataBuffer, sizeof(mDataBuffer), &mOutputDataLength))
+            {
+                mOutputDataLength = 0;
+                status = OT_ERROR_FAILED;
+            }
+        }
+        else
+        {
+            status = OT_ERROR_FAILED;
+        }
+    }
+
+    return status;
+}
+
+bool NcpUart::NcpFrameBufferEncrypterReader::OutFrameHasEnded()
+{
+    return (mDataBufferReadIndex >= mOutputDataLength);
+}
+
+uint8_t NcpUart::NcpFrameBufferEncrypterReader::OutFrameReadByte()
+{
+    return mDataBuffer[mDataBufferReadIndex++];
+}
+
+otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameRemove()
+{
+    return mTxFrameBuffer.OutFrameRemove();
+}
+
+void NcpUart::NcpFrameBufferEncrypterReader::Reset()
+{
+    mOutputDataLength = 0;
+    mDataBufferReadIndex = 0;
+}
+
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 }  // namespace Ncp
 }  // namespace ot
