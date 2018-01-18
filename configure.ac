@@ -922,6 +922,31 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK],[${OPENTHREAD_ENABLE_NCP_
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}" = "1"])
 
 #
+# NCP Spinel Encrypter
+#
+
+AC_ARG_WITH(
+    [ncp-spinel-encrypter-libs],
+    [AS_HELP_STRING([--with-ncp-spinel-encrypter-libs=<LIBSPINEL_ENCRYPTER.A>],[Specify library files (absolute paths) implementing the NCP Spinel Encrypter. @<:@default=none@:>@.])],
+    [
+        if test "${withval}" = "no"
+        then OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
+        else
+            OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=1
+            OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS=${withval}
+        fi
+    ],
+    [
+        OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
+    ])
+
+AC_MSG_CHECKING([for NCP Spinel Encrypter])
+AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
+AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}],[Define to 1 if using NCP Spinel Encrypter])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
+
+#
 # Child Supervision
 #
 
@@ -1564,6 +1589,7 @@ AC_MSG_NOTICE([
   OpenThread NCP-FTD support                : ${enable_ncp_app_ftd}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
+  OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
