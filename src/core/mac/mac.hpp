@@ -348,6 +348,18 @@ public:
     otError SendFrameRequest(Sender &aSender);
 
     /**
+     * This method registers a Out of Band frame for MAC Transmission.
+     * An Out of Band frame is one that was generated outside of OpenThread.
+     *
+     * @param[in]  aOobFrame  A pointer to the frame.
+     *
+     * @retval OT_ERROR_NONE     Successfully registered the frame.
+     * @retval OT_ERROR_ALREADY  MAC layer is busy sending a previously registered frame.
+     *
+     */
+    otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
+
+    /**
      * This method generates a random IEEE 802.15.4 Extended Address.
      *
      * @param[out]  aExtAddress  A pointer to where the generated Extended Address is placed.
@@ -625,6 +637,7 @@ private:
         kOperationTransmitBeacon,
         kOperationTransmitData,
         kOperationWaitingForData,
+        kOperationTransmitOutOfBandFrame,
     };
 
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
@@ -637,6 +650,7 @@ private:
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
     otError HandleMacCommand(Frame &aFrame);
+    Frame *GetOperationFrame(void);
 
     static void HandleMacTimer(Timer &aTimer);
     void HandleMacTimer(void);
@@ -668,6 +682,7 @@ private:
     bool mPendingEnergyScan       : 1;
     bool mPendingTransmitBeacon   : 1;
     bool mPendingTransmitData     : 1;
+    bool mPendingTransmitOobFrame : 1;
     bool mPendingWaitingForData   : 1;
     bool mRxOnWhenIdle            : 1;
     bool mBeaconsEnabled          : 1;
@@ -720,6 +735,7 @@ private:
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
     Frame *mTxFrame;
+    Frame *mOobFrame;
 
     otMacCounters mCounters;
     uint32_t mKeyIdMode2FrameCounter;

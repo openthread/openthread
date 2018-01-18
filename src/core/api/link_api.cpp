@@ -358,3 +358,10 @@ bool otLinkIsInTransmitState(otInstance *aInstance)
 
     return instance.GetThreadNetif().GetMac().IsInTransmitState();
 }
+
+otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetMac().SendOutOfBandFrameRequest(aOobFrame);
+}
