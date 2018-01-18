@@ -186,9 +186,8 @@ bool Mac::IsEnergyScanInProgress(void)
 
 bool Mac::IsInTransmitState(void)
 {
-    return (mOperation == kOperationTransmitData) || 
-           (mOperation == kOperationTransmitBeacon) || 
-           (mOperation == kOperationTransmitOutOfBandFrame);
+    return (mOperation == kOperationTransmitData) ||
+           (mOperation == kOperationTransmitBeacon) || (mOperation == kOperationTransmitOutOfBandFrame);
 }
 
 otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult)
