@@ -936,8 +936,7 @@ void Mac::HandleBeginTransmit(void)
 {
     otError error = OT_ERROR_NONE;
     bool applyTransmitSecurity = true;
-    Frame *opFrame = GetOperationFrame();
-    Frame &sendFrame(*opFrame);
+    Frame &sendFrame(*GetOperationFrame());
 
 #if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
 
@@ -1015,7 +1014,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleTransmitDone(opFrame, NULL, OT_ERROR_ABORT);
+        HandleTransmitDone(&sendFrame, NULL, OT_ERROR_ABORT);
     }
 }
 
