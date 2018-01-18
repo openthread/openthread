@@ -337,8 +337,23 @@ otError Mle::Restore(void)
     if (!IsActiveRouter(networkInfo.mRloc16))
     {
         length = sizeof(parentInfo);
-        SuccessOrExit(error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyParentInfo, 0,
-                                                reinterpret_cast<uint8_t *>(&parentInfo), &length));
+
+        error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyParentInfo, 0,
+                                  reinterpret_cast<uint8_t *>(&parentInfo), &length);
+
+        if (error != OT_ERROR_NONE)
+        {
+            // If the restored RLOC16 corresponds to an end-device, it
+            // is expected that the `ParentInfo` settings to be valid
+            // as well. The device can still recover from such an invalid
+            // setting by skipping the re-attach ("Child Update Request"
+            // exchange) and going through the full attach process.
+
+            otLogWarnMle(GetInstance(), "Invalid settings - no saved parent info with valid end-device RLOC16 0x%04x",
+                         networkInfo.mRloc16);
+            ExitNow();
+        }
+
         VerifyOrExit(length >= sizeof(parentInfo), error = OT_ERROR_PARSE);
 
         memset(&mParent, 0, sizeof(mParent));
@@ -1788,7 +1803,12 @@ otError Mle::SendChildUpdateRequest(void)
         ExitNow();
     }
 
-    VerifyOrExit(mParent.IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
+    if (!mParent.IsStateValidOrRestoring())
+    {
+        otLogWarnMle(GetInstance(), "No valid parent when sending Child Update Request");
+        BecomeDetached();
+        ExitNow();
+    }
 
     mChildUpdateRequestTimer.Start(kUnicastRetransmissionDelay);
     mChildUpdateAttempts++;
