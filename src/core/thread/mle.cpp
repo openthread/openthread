@@ -1806,18 +1806,14 @@ otError Mle::SendChildUpdateRequest(void)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
-    {
-        static const uint8_t tlvs[] = {Tlv::kNetworkData};
-
         for (uint8_t i = 0; i < sizeof(mParentRequest.mChallenge); i++)
         {
             mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
         }
 
-        SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
-        SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
+        SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge,
+                                              sizeof(mParentRequest.mChallenge)));
         break;
-    }
 
     case OT_DEVICE_ROLE_CHILD:
         SuccessOrExit(error = AppendSourceAddress(*message));
