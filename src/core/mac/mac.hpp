@@ -354,7 +354,7 @@ public:
      * @param[in]  aOobFrame  A pointer to the frame.
      *
      * @retval OT_ERROR_NONE     Successfully registered the frame.
-     * @retval OT_ERROR_ALREADY  The frame was already registered.
+     * @retval OT_ERROR_ALREADY  MAC layer is busy sending a previously registered frame.
      *
      */
     otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
@@ -650,6 +650,7 @@ private:
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
     otError HandleMacCommand(Frame &aFrame);
+    Frame *GetOperationFrame(void);
 
     static void HandleMacTimer(Timer &aTimer);
     void HandleMacTimer(void);

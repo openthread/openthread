@@ -186,7 +186,9 @@ bool Mac::IsEnergyScanInProgress(void)
 
 bool Mac::IsInTransmitState(void)
 {
-    return (mOperation == kOperationTransmitData) || (mOperation == kOperationTransmitBeacon) || (mOperation == kOperationTransmitOutOfBandFrame);
+    return (mOperation == kOperationTransmitData) || 
+           (mOperation == kOperationTransmitBeacon) || 
+           (mOperation == kOperationTransmitOutOfBandFrame);
 }
 
 otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult)
@@ -910,26 +912,32 @@ void Mac::HandleBeginTransmit(Timer &aTimer)
     aTimer.GetOwner<Mac>().HandleBeginTransmit();
 }
 
-void Mac::HandleBeginTransmit(void)
+Frame *Mac::GetOperationFrame(void)
 {
-    Frame *theFrame = NULL;
-    otError error = OT_ERROR_NONE;
-    bool applyTransmitSecurity = true;
+    Frame *frame = NULL;
 
     switch (mOperation)
     {
     case kOperationTransmitOutOfBandFrame:
-        theFrame = mOobFrame;
+        frame = mOobFrame;
         break;
 
     default:
-        theFrame = mTxFrame;
+        frame = mTxFrame;
         break;
     }
 
-    assert(theFrame != NULL);
+    assert(frame != NULL);
 
-    Frame &sendFrame(*theFrame);
+    return frame;
+}
+
+void Mac::HandleBeginTransmit(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool applyTransmitSecurity = true;
+    Frame *opFrame = GetOperationFrame();
+    Frame &sendFrame(*opFrame);
 
 #if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
 
@@ -1007,7 +1015,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleTransmitDone(theFrame, NULL, OT_ERROR_ABORT);
+        HandleTransmitDone(opFrame, NULL, OT_ERROR_ABORT);
     }
 }
 
