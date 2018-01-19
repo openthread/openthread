@@ -137,15 +137,6 @@ public:
     otError Set(const Dataset &aDataset);
 
     /**
-     * This method restores dataset from non-volatile memory.
-     *
-     * @retval OT_ERROR_NONE       Successfully restore the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
-     *
-     */
-    otError Restore(void);
-
-    /**
      * This method compares this dataset to another based on the timestamp.
      *
      * @param[in]  aCompare  A reference to the timestamp to compare.
