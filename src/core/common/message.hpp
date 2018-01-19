@@ -218,6 +218,7 @@ public:
         kSubTypeMleGeneral             = 6,  ///< General MLE
         kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
         kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request
+        kSubTypeMleDataResponse        = 9,  ///< MLE Data Response
     };
 
     enum

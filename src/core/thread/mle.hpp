@@ -937,6 +937,12 @@ public:
      */
     const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
 
+    /**
+     * This method frees multicast MLE Data Response from Delayed Message Queue if any.
+     *
+     */
+    void RemoveDelayedDataResponseMessage(void);
+
 protected:
     enum
     {
