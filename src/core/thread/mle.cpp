@@ -1699,7 +1699,6 @@ otError Mle::SendChildIdRequest(void)
             // attach to a better partition, invalidating old parent state (especially when in kStateRestored) ensures
             // that GetNeighbor() returns mParentCandidate when processing the Child ID Response.
             mParent.SetState(Neighbor::kStateInvalid);
-            otPlatSettingsDelete(&GetInstance(), Settings::kKeyParentInfo, -1);
         }
     }
 
