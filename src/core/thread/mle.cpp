@@ -1565,6 +1565,29 @@ void Mle::HandleDelayedResponseTimer(void)
     }
 }
 
+void Mle::RemoveDelayedDataResponseMessage(void)
+{
+    Message *message = mDelayedResponses.GetHead();
+    DelayedResponseHeader delayedResponse;
+
+    while (message != NULL)
+    {
+        delayedResponse.ReadFrom(*message);
+
+        if (message->GetSubType() == Message::kSubTypeMleDataResponse)
+        {
+            mDelayedResponses.Dequeue(*message);
+            message->Free();
+            LogMleMessage("Remove Delayed Data Response", delayedResponse.GetDestination());
+
+            // no more than one multicast MLE Data Response in Delayed Message Queue.
+            break;
+        }
+
+        message = message->GetNext();
+    }
+}
+
 otError Mle::SendParentRequest(void)
 {
     otError error = OT_ERROR_NONE;
