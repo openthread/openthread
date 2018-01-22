@@ -30,81 +30,158 @@
 import time
 import unittest
 
+import config
+import command
+import ipv6
+import mle
 import node
 
-LEADER = 1
-ED1 = 2
-ED2 = 3
-ED3 = 4
-ED4 = 5
+DUT_LEADER = 1
+BR = 2
+MED1 = 3
+MED2 = 4
 
-MTDS = [ED1, ED2, ED3, ED4]
+MTDS = [MED1, MED2]
 
 class Cert_5_3_8_ChildAddressSet(unittest.TestCase):
     def setUp(self):
+
         self.nodes = {}
-        for i in range(1,6):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, (i in MTDS))
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED3].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED4].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
+        self.nodes[DUT_LEADER].set_panid(0xface)
+        self.nodes[DUT_LEADER].set_mode('rsdn')
+        self.nodes[DUT_LEADER].add_whitelist(self.nodes[BR].get_addr64())
+        self.nodes[DUT_LEADER].add_whitelist(self.nodes[MED1].get_addr64())
+        self.nodes[DUT_LEADER].add_whitelist(self.nodes[MED2].get_addr64())
+        self.nodes[DUT_LEADER].enable_whitelist()
 
-        self.nodes[ED1].set_panid(0xface)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED1].enable_whitelist()
+        self.nodes[BR].set_panid(0xface)
+        self.nodes[BR].set_mode('rsdn')
+        self.nodes[BR].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
+        self.nodes[BR].enable_whitelist()
+        self.nodes[BR].set_router_selection_jitter(1)
 
-        self.nodes[ED2].set_panid(0xface)
-        self.nodes[ED2].set_mode('rsn')
-        self.nodes[ED2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED2].enable_whitelist()
+        for i in MTDS:
+            self.nodes[i].set_panid(0xface)
+            self.nodes[i].set_mode('rsn')
+            self.nodes[i].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
+            self.nodes[i].enable_whitelist()
 
-        self.nodes[ED3].set_panid(0xface)
-        self.nodes[ED3].set_mode('rsn')
-        self.nodes[ED3].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED3].enable_whitelist()
-
-        self.nodes[ED4].set_panid(0xface)
-        self.nodes[ED4].set_mode('rsn')
-        self.nodes[ED4].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED4].enable_whitelist()
+        self.sniffer = config.create_default_thread_sniffer()
+        self.sniffer.start()
 
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
     def test(self):
-        self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
-        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        self.nodes[DUT_LEADER].start()
+        self.nodes[DUT_LEADER].set_state('leader')
+        self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
-        self.nodes[ED1].start()
+        self.nodes[BR].start()
         time.sleep(5)
-        self.assertEqual(self.nodes[ED1].get_state(), 'child')
+        self.assertEqual(self.nodes[BR].get_state(), 'router')
 
-        self.nodes[ED2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED2].get_state(), 'child')
+        # 1 BR: Configure BR to be a DHCPv6 server
+        self.nodes[BR].add_prefix('2001::/64', 'pdros')
+        self.nodes[BR].add_prefix('2002::/64', 'pdros')
+        self.nodes[BR].add_prefix('2003::/64', 'pdros')
+        self.nodes[BR].register_netdata()
 
-        self.nodes[ED3].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED3].get_state(), 'child')
+        # Set lowpan context of sniffer
+        self.sniffer.set_lowpan_context(1, '2001::/64')
+        self.sniffer.set_lowpan_context(2, '2002::/64')
+        self.sniffer.set_lowpan_context(3, '2003::/64')
 
-        self.nodes[ED4].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED4].get_state(), 'child')
+        # 2 DUT_LEADER: Verify LEADER sent an Advertisement
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        command.check_mle_advertisement(msg)
 
-        for i in range(2,6):
-            addrs = self.nodes[i].get_addrs()
-            for addr in addrs:
-                if addr[0:4] != 'fe80':
-                    self.assertTrue(self.nodes[LEADER].ping(addr))
+        # 3 MED1, MED2: MED1 and MED2 attach to DUT_LEADER
+        for i in MTDS:
+            self.nodes[i].start()
+            time.sleep(5)
+            self.assertEqual(self.nodes[i].get_state(), 'child')
+
+        # 4 MED1: MED1 send an ICMPv6 Echo Request to the MED2 ML-EID
+        med2_ml_eid = self.nodes[MED2].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        self.assertTrue(med2_ml_eid != None)
+        self.assertTrue(self.nodes[MED1].ping(med2_ml_eid))
+
+        # Verify DUT_LEADER didn't generate an Address Query Request
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
+        assert msg is None, "Error: The DUT_LEADER sent an unexpected Address Query Request"
+
+        # Wait for sniffer got packets
+        time.sleep(1)
+
+        # Verify MED2 sent an ICMPv6 Echo Reply
+        med2_messages = self.sniffer.get_messages_sent_by(MED2)
+        msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
+        assert msg is not None, "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
+
+        # 5 MED1: MED1 send an ICMPv6 Echo Request to the MED2 2001::GUA
+        addr = self.nodes[MED2].get_addr("2001::/64")
+        self.assertTrue(addr is not None)
+        self.assertTrue(self.nodes[MED1].ping(addr))
+
+        # Verify DUT_LEADER didn't generate an Address Query Request
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
+        assert msg is None, "Error: The DUT_LEADER sent an unexpected Address Query Request"
+
+        # Wait for sniffer got packets
+        time.sleep(1)
+
+        # Verify MED2 sent an ICMPv6 Echo Reply
+        med2_messages = self.sniffer.get_messages_sent_by(MED2)
+        msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
+        assert msg is not None, "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
+
+        # 6 MED1: MED1 send an ICMPv6 Echo Request to the MED2 2002::GUA
+        addr = self.nodes[MED2].get_addr("2002::/64")
+        self.assertTrue(addr is not None)
+        self.assertTrue(self.nodes[MED1].ping(addr))
+
+        # Verify DUT_LEADER didn't generate an Address Query Request
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
+        assert msg is None, "Error: The DUT_LEADER sent an unexpected Address Query Request"
+
+        # Wait for sniffer got packets
+        time.sleep(1)
+
+        # Verify MED2 sent an ICMPv6 Echo Reply
+        med2_messages = self.sniffer.get_messages_sent_by(MED2)
+        msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
+        assert msg is not None, "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
+
+        # 7 MED1: MED1 send an ICMPv6 Echo Request to the MED2 2003::GUA
+        addr = self.nodes[MED2].get_addr("2003::/64")
+        self.assertTrue(addr is not None)
+        self.assertTrue(self.nodes[MED1].ping(addr))
+
+        # Verify DUT_LEADER didn't generate an Address Query Request
+        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        msg = leader_messages.next_coap_message('0.02', '/a/aq', False)
+        assert msg is None, "Error: The DUT_LEADER sent an unexpected Address Query Request"
+
+        # Wait for sniffer got packets
+        time.sleep(1)
+
+        # Verify MED2 sent an ICMPv6 Echo Reply
+        med2_messages = self.sniffer.get_messages_sent_by(MED2)
+        msg = med2_messages.get_icmp_message(ipv6.ICMP_ECHO_RESPONSE)
+        assert msg is not None, "Error: The MED2 didn't send ICMPv6 Echo Reply to MED1"
 
 if __name__ == '__main__':
     unittest.main()
