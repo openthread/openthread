@@ -533,6 +533,21 @@ public:
     otError GetChildInfoByIndex(uint8_t aChildIndex, otChildInfo &aChildInfo);
 
     /**
+     * This methods gets the next IPv6 address (using an iterator) for a given child.
+     *
+     * @param[in]     aChildIndex  The child index.
+     * @param[inout]  aIterator    A reference to iterator. On success the iterator will be updated to point to next
+     *                             entry in the list.
+     * @param[out]    aAddress     A reference to an IPv6 address where the child's next address is placed (on success).
+     *
+     * @retval OT_ERROR_NONE          Successfully found the next address (@p aAddress and @ aIterator are updated).
+     * @retval OT_ERROR_NOT_FOUND     The child has no subsequent IPv6 address entry.
+     * @retval OT_ERROR_INVALID_ARGS  Child at @p aChildIndex is not valid.
+     *
+     */
+    otError GetChildNextIp6Address(uint8_t aChildIndex, Child::Ip6AddressIterator &aIterator, Ip6::Address &aAddress);
+
+    /**
      * This method indicates whether or not the RLOC16 is an MTD child of this device.
      *
      * @param[in]  aRloc16  The RLOC16.

@@ -2086,15 +2086,15 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
     const AddressRegistrationEntry *entry;
     Ip6::Address address;
     Lowpan::Context context;
-    Child *child;
     uint8_t count;
-    uint8_t index;
     char stringBuffer[Ip6::Address::kIp6AddressStringSize];
 
     aChild.ClearIp6Addresses();
 
-    for (count = 0; count < Child::kMaxIp6AddressPerChild; count++)
+    for (count = 0; ; count++)
     {
+        otError error = OT_ERROR_NONE;
+
         if ((entry = aTlv.GetAddressEntry(count)) == NULL)
         {
             break;
@@ -2112,10 +2112,23 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
             address = *entry->GetIp6Address();
         }
 
-        aChild.GetIp6Address(count) = address;
+        // We try to accept/add as many IPv6 addresses as possible.
+        // "Child ID/Update Response" will indicate the accepted
+        // addresses.
 
-        otLogInfoMle(GetInstance(), "Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), count,
-                     address.ToString(stringBuffer, sizeof(stringBuffer)));
+        error = aChild.AddIp6Address(address);
+
+        if (error == OT_ERROR_NONE)
+        {
+            otLogInfoMle(GetInstance(), "Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), count,
+                         address.ToString(stringBuffer, sizeof(stringBuffer)));
+        }
+        else
+        {
+            otLogWarnMle(GetInstance(), "Error %s adding IPv6 address %s to child 0x%04x", otThreadErrorToString(error),
+                         address.ToString(stringBuffer, sizeof(stringBuffer)), aChild.GetRloc16());
+
+        }
 
         // We check if the same address is in-use by another child, if so
         // remove it. This implements "last-in wins" duplicate address
@@ -2129,17 +2142,14 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
 
         for (int i = 0; i < mMaxChildrenAllowed; i++)
         {
-            child = &mChildren[i];
+            Child &child = mChildren[i];
 
-            if (!child->IsStateValidOrRestoring() || (child == &aChild))
+            if (!child.IsStateValidOrRestoring() || (&child == &aChild))
             {
                 continue;
             }
 
-            if (child->FindIp6Address(address, &index) == OT_ERROR_NONE)
-            {
-                child->RemoveIp6Address(index);
-            }
+            IgnoreReturnValue(child.RemoveIp6Address(address));
         }
     }
 
@@ -3535,7 +3545,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
             ExitNow(rval = child);
         }
 
-        if (child->FindIp6Address(aAddress, NULL) == OT_ERROR_NONE)
+        if (child->HasIp6Address(aAddress))
         {
             ExitNow(rval = child);
         }
@@ -3770,6 +3780,20 @@ exit:
     return error;
 }
 
+otError MleRouter::GetChildNextIp6Address(uint8_t aChildIndex, Child::Ip6AddressIterator &aIterator,
+                                          Ip6::Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aChildIndex < mMaxChildrenAllowed, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mChildren[aChildIndex].IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
+
+    error = mChildren[aChildIndex].GetNextIp6Address(aIterator, aAddress);
+
+exit:
+    return error;
+}
+
 void MleRouter::RestoreChildren(void)
 {
     otError error = OT_ERROR_NONE;
@@ -3910,9 +3934,6 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mFullFunction      = aChild.IsFullThreadDevice();
     aChildInfo.mFullNetworkData   = aChild.IsFullNetworkData();
     aChildInfo.mIsStateRestoring  = aChild.IsStateRestoring();
-
-    aChildInfo.mIp6AddressesLength = Child::kMaxIp6AddressPerChild;
-    aChildInfo.mIp6Addresses       = aChild.GetIp6Addresses();
 
 exit:
     return error;
@@ -4662,6 +4683,8 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 {
     ThreadNetif &netif = GetNetif();
     otError error;
+    Ip6::Address address;
+    Child::Ip6AddressIterator iterator;
     Tlv tlv;
     AddressRegistrationEntry entry;
     Lowpan::Context context;
@@ -4671,24 +4694,19 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    for (uint8_t i = 0; i < Child::kMaxIp6AddressPerChild; i++)
+    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
     {
-        if (aChild.GetIp6Address(i).IsUnspecified())
-        {
-            break;
-        }
-
-        if (netif.GetNetworkDataLeader().GetContext(aChild.GetIp6Address(i), context) == OT_ERROR_NONE)
+        if (netif.GetNetworkDataLeader().GetContext(address, context) == OT_ERROR_NONE)
         {
             // compressed entry
             entry.SetContextId(context.mContextId);
-            entry.SetIid(aChild.GetIp6Address(i).GetIid());
+            entry.SetIid(address.GetIid());
         }
         else
         {
             // uncompressed entry
             entry.SetUncompressed();
-            entry.SetIp6Address(aChild.GetIp6Address(i));
+            entry.SetIp6Address(address);
         }
 
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
