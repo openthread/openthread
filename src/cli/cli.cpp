@@ -1108,19 +1108,6 @@ exit:
     return error;
 }
 
-otError Interpreter::ProcessIpMulticastAddrRegister(int argc, char *argv[])
-{
-    otError error;
-
-    VerifyOrExit(argc == 0, error = OT_ERROR_PARSE);
-
-    error = otIp6RegisterAddresses(mInstance);
-
-exit:
-    OT_UNUSED_VARIABLE(argv);
-    return error;
-}
-
 otError Interpreter::ProcessMulticastPromiscuous(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -1184,10 +1171,6 @@ void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
         else if (strcmp(argv[0], "del") == 0)
         {
             SuccessOrExit(error = ProcessIpMulticastAddrDel(argc - 1, argv + 1));
-        }
-        else if (strcmp(argv[0], "register") == 0)
-        {
-            SuccessOrExit(error = ProcessIpMulticastAddrRegister(argc - 1, argv + 1));
         }
         else if (strcmp(argv[0], "promiscuous") == 0)
         {

@@ -4701,8 +4701,8 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 
     while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
     {
-        if (aChild.GetIp6Address(i).IsMulticast() ||
-            netif.GetNetworkDataLeader().GetContext(aChild.GetIp6Address(i), context) == OT_ERROR_NOT_FOUND)
+        if (address.IsMulticast() ||
+            netif.GetNetworkDataLeader().GetContext(address, context) != OT_ERROR_NONE)
         {
             // uncompressed entry
             entry.SetUncompressed();
@@ -4712,7 +4712,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
         {
             // compressed entry
             entry.SetContextId(context.mContextId);
-            entry.SetIid(aChild.GetIp6Address(i).GetIid());
+            entry.SetIid(address.GetIid());
         }
 
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
@@ -5042,20 +5042,18 @@ void MleRouter::SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild
     }
 }
 
-bool MleRouter::IsMulticastChildrenSubscribed(const Ip6::Address &aAddress)
+bool MleRouter::HasSleepyChildrenSubscribed(const Ip6::Address &aAddress)
 {
     bool rval = false;
 
-    VerifyOrExit(aAddress.IsMulticast());
-
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].GetState() != Neighbor::kStateValid || mChildren[i].IsRxOnWhenIdle())
+        if (!mChildren[i].IsStateValidOrRestoring() || mChildren[i].IsRxOnWhenIdle())
         {
             continue;
         }
 
-        if (IsMulticastChildSubscribed(aAddress, mChildren[i]))
+        if (HasSleepyChildSubscribed(aAddress, mChildren[i]))
         {
             ExitNow(rval = true);
         }
@@ -5065,14 +5063,17 @@ exit:
     return rval;
 }
 
-bool MleRouter::IsMulticastChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
+bool MleRouter::HasSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
 {
     bool rval = false;
+    Ip6::Address address;
+    Child::Ip6AddressIterator iterator;
 
-    for (uint8_t i = 0; i < Child::kMaxIp6AddressPerChild; i++)
+    VerifyOrExit(aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle());
+
+    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
     {
-        if (aChild.GetIp6Address(i).IsMulticast() &&
-            aChild.GetIp6Address(i) == aAddress)
+        if (address == aAddress)
         {
             ExitNow(rval = true);
         }

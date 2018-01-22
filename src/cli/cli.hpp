@@ -234,7 +234,6 @@ private:
 #ifndef OTDLL
     otError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
     otError ProcessIpMulticastAddrDel(int argc, char *argv[]);
-    otError ProcessIpMulticastAddrRegister(int argc, char *argv[]);
     otError ProcessMulticastPromiscuous(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_ENABLE_JOINER

@@ -96,7 +96,7 @@ bool Address::IsRealmLocalMulticast(void) const
 
 bool Address::IsMulticastHigherThanRealmLocal(void) const
 {
-    return (mFields.m8[0] == 0xff) && (GetScope() > kRealmLocalScope);
+    return IsMulticast() && (GetScope() > kRealmLocalScope);
 }
 
 bool Address::IsRealmLocalAllNodesMulticast(void) const

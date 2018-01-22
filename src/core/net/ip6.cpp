@@ -209,9 +209,8 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
     else
     {
         if (aIp6Header.GetDestination().IsMulticastHigherThanRealmLocal() &&
-            GetInstance().GetThreadNetif().GetMle().IsMulticastChildrenSubscribed(aIp6Header.GetDestination()))
+            GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(aIp6Header.GetDestination()))
         {
-
             Message *messageCopy = NULL;
 
             if ((messageCopy = aMessage.Clone()) != NULL)
@@ -221,7 +220,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             }
             else
             {
-                otLogInfoIp6(GetInstance(),
+                otLogWarnIp6(GetInstance(),
                              "No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
@@ -392,13 +391,12 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
     if (aMessageInfo.GetPeerAddr().IsMulticast() &&
         aMessageInfo.GetPeerAddr().GetScope() > Address::kRealmLocalScope)
     {
-        if (GetInstance().GetThreadNetif().GetMle().IsMulticastChildrenSubscribed(header.GetDestination()))
+        if (GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
         {
             Message *messageCopy = NULL;
 
             if ((messageCopy = aMessage.Clone()) != NULL)
             {
-
                 otLogInfoIp6(GetInstance(), "Message copy for indirect transmission to sleepy children");
 
                 // compute checksum
@@ -431,7 +429,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
             }
             else
             {
-                otLogInfoIp6(GetInstance(),
+                otLogWarnIp6(GetInstance(),
                              "No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
@@ -792,7 +790,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceI
             }
 
             if (header.GetDestination().IsMulticastHigherThanRealmLocal() &&
-                GetInstance().GetThreadNetif().GetMle().IsMulticastChildrenSubscribed(header.GetDestination()))
+                GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
             {
                 forward = true;
             }

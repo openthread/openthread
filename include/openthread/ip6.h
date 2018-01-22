@@ -143,17 +143,6 @@ otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address
 otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
- * Immediately trigger address registration.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @retval OT_ERROR_NONE  Successfully trigger address registration.
- * @retval OT_ERROR_INVALID_STATE Not in the proper state for registration.
- *
- */
-otError otIp6RegisterAddresses(otInstance *aInstance);
-
-/**
  * Get the list of IPv6 multicast addresses subscribed to the Thread interface.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

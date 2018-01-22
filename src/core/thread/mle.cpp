@@ -1244,7 +1244,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
-        VerifyOrExit(counter < Child::kMaxIp6AddressPerChild);
+        VerifyOrExit(counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER);
     }
 
     // For sleepy end device, register external multicast addresses to the parent for indirect transmission
@@ -1263,7 +1263,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
 
             counter++;
             // only continue to append if there is available entry.
-            VerifyOrExit(counter < Child::kMaxIp6AddressPerChild);
+            VerifyOrExit(counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER);
         }
     }
 
@@ -1338,6 +1338,16 @@ void Mle::HandleStateChanged(uint32_t aFlags)
         }
 
         if (mRole == OT_DEVICE_ROLE_CHILD && (mDeviceMode & ModeTlv::kModeFFD) == 0)
+        {
+            mSendChildUpdateRequest.Post();
+        }
+    }
+
+    if ((aFlags & (OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED | OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED)) != 0)
+    {
+        if (mRole == OT_DEVICE_ROLE_CHILD &&
+            (mDeviceMode & ModeTlv::kModeFFD) == 0 &&
+            (mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             mSendChildUpdateRequest.Post();
         }
@@ -3677,20 +3687,6 @@ void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, ui
     OT_UNUSED_VARIABLE(aLogString);
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aRloc);
-}
-
-otError Mle::RegisterAddresses(void)
-{
-    otError error = OT_ERROR_INVALID_STATE;
-
-    // Trigger address registration only for MTD devices.
-    VerifyOrExit((mDeviceMode & ModeTlv::kModeFFD) == 0 && mRole == OT_DEVICE_ROLE_CHILD);
-
-    SendChildUpdateRequest();
-    error = OT_ERROR_NONE;
-
-exit:
-    return error;
 }
 
 }  // namespace Mle

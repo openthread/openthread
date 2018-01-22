@@ -754,27 +754,27 @@ public:
     otThreadChildTableCallback GetChildTableChangedCallback(void) const { return mChildTableChangedCallback; }
 
     /**
-     * This method returns whether the address is a multicast address subsribed by its sleepy children.
+     * This method returns whether the device has any sleepy children subscribed the address.
      *
      * @param[in]  aAddress  The reference of the address.
      *
-     * @retval TRUE   If @p aAddress is a multicast address subsribed by its sleepy children.
-     * @retval FALSE  If @p aAddress is not a multicast address or not subsribed by its sleepy children.
+     * @retval TRUE   If the device has any sleepy children subscribed the address @p aAddress.
+     * @retval FLASE  If the device doesn't have any sleepy children subscribed the address @p aAddress.
      *
      */
-    bool IsMulticastChildrenSubscribed(const Ip6::Address &aAddress);
+    bool HasSleepyChildrenSubscribed(const Ip6::Address &aAddress);
 
     /**
-     * This method returns whether the multicast address is subsribed by its specific sleepy child.
+     * This method returns whether the specific child has subscribed the address.
      *
      * @param[in]  aAddress  The reference of the address.
      * @param[in]  aChild    The reference of the child.
      *
-     * @retval TRUE   If the multicast address @p aAddress is subsribed by its sleepy child @p aChild.
-     * @retval FALSE  If the multicast address @p aAddress is not subsribed by its sleepy child @p aChild.
+     * @retval TRUE   If the sleepy child @p aChild has subscribed the address @p aAddress.
+     * @retval FALSE  If the sleepy child @p aChild has not subscribed the address @p aAddress.
      *
      */
-    bool IsMulticastChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
+    bool HasSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
 
 private:
     enum
