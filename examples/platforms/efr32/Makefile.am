@@ -55,8 +55,6 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/hal/efr32                   \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/plugin/pa-conversions       \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/common/bsp                             \
-    -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/common/drivers                         \
-    -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/common/halconfig                       \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/EFR32MG12_BRD4161A/config              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/CMSIS/Include                              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/Device/SiliconLabs/EFR32MG12P/Include      \
@@ -96,7 +94,6 @@ nodist_libopenthread_efr32_a_SOURCES                                            
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/hardware/kit/common/bsp/bsp_init.c                                     \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/hardware/kit/common/bsp/bsp_stk.c                                      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/hardware/kit/common/bsp/bsp_stk_leds.c                                 \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/hardware/kit/common/drivers/retargetserial.c                           \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/platform/emdrv/dmadrv/src/dmadrv.c                                     \
