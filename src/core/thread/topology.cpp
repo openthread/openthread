@@ -49,40 +49,96 @@ void Neighbor::GenerateChallenge(void)
     }
 }
 
-otError Child::FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const
+void Child::ClearIp6Addresses(void)
+{
+    memset(mIp6Address, 0, sizeof(mIp6Address));
+}
+
+otError Child::GetNextIp6Address(Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aIterator.Get() < kMaxIp6AddressPerChild, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(!mIp6Address[aIterator.Get()].IsUnspecified(), error = OT_ERROR_NOT_FOUND);
+    aAddress = mIp6Address[aIterator.Get()];
+    aIterator.Increment();
+
+exit:
+    return error;
+}
+
+otError Child::AddIp6Address(const Ip6::Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+
+    for (uint16_t index = 0; index < kMaxIp6AddressPerChild; index++)
+    {
+        if (mIp6Address[index].IsUnspecified())
+        {
+            mIp6Address[index] = aAddress;
+            ExitNow();
+        }
+
+        VerifyOrExit(mIp6Address[index] != aAddress, error = OT_ERROR_ALREADY);
+    }
+
+    error = OT_ERROR_NO_BUFS;
+
+exit:
+    return error;
+}
+
+otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
 {
     otError error = OT_ERROR_NOT_FOUND;
+    uint16_t index;
 
-    for (uint8_t index = 0; index < kMaxIp6AddressPerChild; index++)
+    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+
+    for (index = 0; index < kMaxIp6AddressPerChild; index++)
     {
+        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+
         if (mIp6Address[index] == aAddress)
         {
-            if (aIndex != NULL)
-            {
-                *aIndex = index;
-            }
-
             error = OT_ERROR_NONE;
             break;
         }
     }
 
+    SuccessOrExit(error);
+
+    for (; index < kMaxIp6AddressPerChild - 1; index++)
+    {
+        mIp6Address[index] = mIp6Address[index + 1];
+    }
+
+    mIp6Address[kMaxIp6AddressPerChild - 1].Clear();
+
+exit:
     return error;
 }
 
-void Child::RemoveIp6Address(uint8_t aIndex)
+bool Child::HasIp6Address(const Ip6::Address &aAddress) const
 {
-    VerifyOrExit(aIndex < kMaxIp6AddressPerChild);
+    bool retval = false;
 
-    for (uint8_t i = aIndex; i < kMaxIp6AddressPerChild - 1; i++)
+    VerifyOrExit(!aAddress.IsUnspecified());
+
+    for (uint16_t index = 0; index < kMaxIp6AddressPerChild; index++)
     {
-        mIp6Address[i] = mIp6Address[i + 1];
+        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+
+        if (mIp6Address[index] == aAddress)
+        {
+            ExitNow(retval = true);
+        }
     }
 
-    memset(&mIp6Address[kMaxIp6AddressPerChild - 1], 0, sizeof(Ip6::Address));
-
 exit:
-    return;
+    return retval;
 }
 
 void Child::GenerateChallenge(void)

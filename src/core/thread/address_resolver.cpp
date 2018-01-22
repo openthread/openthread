@@ -581,22 +581,23 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].GetState() != Neighbor::kStateValid || children[i].IsFullThreadDevice())
+        Child &child = children[i];
+
+        if (child.GetState() != Neighbor::kStateValid || child.IsFullThreadDevice())
         {
             continue;
         }
 
-        for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
+        if (child.GetExtAddress() != macAddr)
         {
-            if (children[i].GetIp6Address(j) == targetTlv.GetTarget() &&
-                children[i].GetExtAddress() != macAddr)
-            {
-                // Target EID matches child address and Mesh Local EID differs on child
-                memset(&children[i].GetIp6Address(j), 0, sizeof(children[i].GetIp6Address(j)));
+            // Mesh Local EID differs, so check whether Target EID
+            // matches a child address and if so remove it.
 
+            if (child.RemoveIp6Address(targetTlv.GetTarget()) == OT_ERROR_NONE)
+            {
                 memset(&destination, 0, sizeof(destination));
                 destination.mFields.m16[0] = HostSwap16(0xfe80);
-                destination.SetIid(children[i].GetExtAddress());
+                destination.SetIid(child.GetExtAddress());
 
                 SendAddressError(targetTlv, mlIidTlv, &destination);
                 ExitNow();
@@ -659,22 +660,19 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].GetState() != Neighbor::kStateValid ||
-            children[i].IsFullThreadDevice() ||
-            children[i].GetLinkFailures() >= Mle::kFailedChildTransmissions)
+        Child &child = children[i];
+
+        if (child.GetState() != Neighbor::kStateValid ||
+            child.IsFullThreadDevice() ||
+            child.GetLinkFailures() >= Mle::kFailedChildTransmissions)
         {
             continue;
         }
 
-        for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
+        if (child.HasIp6Address(targetTlv.GetTarget()))
         {
-            if (children[i].GetIp6Address(j) != targetTlv.GetTarget())
-            {
-                continue;
-            }
-
-            mlIidTlv.SetIid(children[i].GetExtAddress());
-            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - children[i].GetLastHeard());
+            mlIidTlv.SetIid(child.GetExtAddress());
+            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - child.GetLastHeard());
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }

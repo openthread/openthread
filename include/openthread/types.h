@@ -937,9 +937,11 @@ typedef struct
     bool           mFullFunction : 1;      ///< Full Function Device
     bool           mFullNetworkData : 1;   ///< Full Network Data
     bool           mIsStateRestoring : 1;  ///< Is in restoring state
-    uint8_t        mIp6AddressesLength;    ///< Number of entries in IPv6 address array.
-    const otIp6Address *mIp6Addresses;     ///< Array of IPv6 addresses (unused entries contain unspecified address).
 } otChildInfo;
+
+#define OT_CHILD_IP6_ADDRESS_ITERATOR_INIT  0   ///< Initializer for otChildIP6AddressIterator
+
+typedef uint16_t otChildIp6AddressIterator;     ///< Used to iterate through IPv6 addresses of a Thread Child entry.
 
 /**
  * This structure holds diagnostic information for a Thread Router

@@ -97,6 +97,12 @@ public:
     };
 
     /**
+     * This method clears the IPv6 address by setting it to the Unspecified Address "::".
+     *
+     */
+    void Clear(void);
+
+    /**
      * This method indicates whether or not the IPv6 address is the Unspecified Address.
      *
      * @retval TRUE   If the IPv6 address is the Unspecified Address.
