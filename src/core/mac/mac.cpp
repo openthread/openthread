@@ -118,7 +118,9 @@ Mac::Mac(Instance &aInstance):
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
     mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance))),
     mOobFrame(NULL),
-    mKeyIdMode2FrameCounter(0)
+    mKeyIdMode2FrameCounter(0),
+    mCcaSuccessRateTracker(),
+    mCcaSampleCount(0)
 {
     GenerateExtAddress(&mExtAddress);
 
@@ -1066,21 +1068,35 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 {
     Frame &sendFrame = *static_cast<Frame *>(aFrame);
     bool framePending = false;
+    bool ccaSuccess = true;
     Address dstAddr;
 
     // Stop the ack timer.
+
     mMacTimer.Stop();
+
+    // Record CCA success or failure status.
 
     switch (aError)
     {
     case OT_ERROR_ABORT:
         mCounters.mTxErrAbort++;
+        break;
+
+    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+        ccaSuccess = false;
 
     // fall through
 
     case OT_ERROR_NONE:
     case OT_ERROR_NO_ACK:
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+
+        if (mCcaSampleCount < kMaxCcaSampleCount)
+        {
+            mCcaSampleCount++;
+        }
+
+        mCcaSuccessRateTracker.AddSample(ccaSuccess, mCcaSampleCount);
         break;
 
     default:

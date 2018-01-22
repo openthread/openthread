@@ -924,6 +924,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW
+ *
+ * OpenThread's MAC implementation maintains the average failure rate of CCA (Clear Channel Assessment) operation on
+ * frame transmissions. This value specifies the window (in terms of number of transmissions or samples) over which the
+ * average rate is maintained. Practically, the average value can be considered as the percentage of CCA failures in
+ * (approximately) last AVERAGING_WINDOW frame transmissions.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW
+#define OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW     512
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_INTERVAL
  *
  * The sample interval in milliseconds used by Channel Monitoring feature.
