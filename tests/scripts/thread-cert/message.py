@@ -443,6 +443,9 @@ class MessageFactory:
         mac_frame.parse(data)
         return mac_frame
 
+    def set_lowpan_context(self, cid, prefix):
+        self._lowpan_parser.set_lowpan_context(cid, prefix)
+
     def create(self, data):
         message = Message()
         message.channel = struct.unpack(">B", data.read(1))
