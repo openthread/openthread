@@ -913,6 +913,7 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
+        with_ncp_vendor_hook_source=none
     ])
 
 AC_MSG_CHECKING([for NCP vendor hook source])
@@ -938,6 +939,7 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
+        with_ncp_spinel_encrypter_libs=none
     ])
 
 AC_MSG_CHECKING([for NCP Spinel Encrypter])
