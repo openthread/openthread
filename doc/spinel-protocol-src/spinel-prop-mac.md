@@ -202,3 +202,9 @@ Structure Parameters:
 * Packed-Encoding: `b`
 * Required capability: `CAP_MAC_WHITELIST`
 
+### PROP 4873: PROP_MAC_CCA_FAILURE_RATE  {#prop-mac-cca-failure-rate}
+ * Type: Read Only
+ * Packed-Encoding: `S`
+
+This property provides the current CCA (Clear Channel Assessment) failure rate.
+Maximum value `0xffff` corresponding to 100% failure rate.

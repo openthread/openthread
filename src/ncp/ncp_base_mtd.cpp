@@ -1518,6 +1518,11 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
+otError NcpBase::GetPropertyHandler_MAC_CCA_FAILURE_RATE(void)
+{
+    return mEncoder.WriteUint16(otLinkGetCcaFailureRate(mInstance));
+}
+
 otError NcpBase::GetPropertyHandler_CNTR_TX_PKT_TOTAL(void)
 {
     return mEncoder.WriteUint32(otLinkGetCounters(mInstance)->mTxTotal);
