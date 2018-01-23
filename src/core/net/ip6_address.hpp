@@ -79,6 +79,7 @@ public:
         kInterfaceIdentifierSize   = 8,  ///< Interface Identifier size in bytes.
         kIp6AddressStringSize      = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
         kMeshLocalPrefixLength     = 64, ///< Length of Thread mesh local prefix.
+        kMeshLocalPrefixSize       = 8,  ///< Mesh local prefix size in bytes.
     };
 
     /**
