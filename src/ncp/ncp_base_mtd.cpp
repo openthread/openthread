@@ -1771,6 +1771,61 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_CNTR_ALL_MAC_COUNTERS(void)
+{
+    otError error = OT_ERROR_NONE;
+    const otMacCounters *counters = otLinkGetCounters(mInstance);
+
+    if (counters == NULL)
+    {
+        error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
+        ExitNow();
+    }
+
+    // Encode Tx related counters
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxTotal));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxUnicast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxBroadcast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxAckRequested));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxAcked));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxNoAckRequested));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxData));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxDataPoll));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxBeacon));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxBeaconRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxOther));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxRetry));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrCca));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrAbort));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrBusyChannel));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+    // Encode Rx related counters
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxTotal));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxUnicast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxBroadcast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxData));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxDataPoll));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxBeacon));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxBeaconRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxOther));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxAddressFiltered));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxDestAddrFiltered));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxDuplicated));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrNoFrame));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrUnknownNeighbor));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrInvalidSrcAddr));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrSec));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrFcs));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrOther));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_ENABLE_MAC_FILTER
 
 otError NcpBase::GetPropertyHandler_MAC_WHITELIST(void)

@@ -1647,6 +1647,53 @@ typedef enum
      */
     SPINEL_PROP_MSG_BUFFER_COUNTERS     = SPINEL_PROP_CNTR__BEGIN + 400,
 
+    /// All MAC related counters.
+    /** Format: t(A(L))t(A(L))  (Read-only)
+     *
+     * The contents include two structs, first one corresponds to
+     * all transmit related MAC counters, second one provides the
+     * receive related counters.
+     *
+     * The transmit structure includes:
+     *
+     *   'L': TxTotal              (The total number of transmissions).
+     *   'L': TxUnicast            (The total number of unicast transmissions).
+     *   'L': TxBroadcast          (The total number of broadcast transmissions).
+     *   'L': TxAckRequested       (The number of transmissions with ack request).
+     *   'L': TxAcked              (The number of transmissions that were acked).
+     *   'L': TxNoAckRequested     (The number of transmissions without ack request).
+     *   'L': TxData               (The number of transmitted data).
+     *   'L': TxDataPoll           (The number of transmitted data poll).
+     *   'L': TxBeacon             (The number of transmitted beacon).
+     *   'L': TxBeaconRequest      (The number of transmitted beacon request).
+     *   'L': TxOther              (The number of transmitted other types of frames).
+     *   'L': TxRetry              (The number of retransmission times).
+     *   'L': TxErrCca             (The number of CCA failure times).
+     *   'L': TxErrAbort           (The number of frame transmission failures due to abort error).
+     *   'L': TxErrBusyChannel     (The number of frames that were dropped due to a busy channel).
+     *
+     * The receive structure includes:
+     *
+     *   'L': RxTotal              (The total number of received packets).
+     *   'L': RxUnicast            (The total number of unicast packets received).
+     *   'L': RxBroadcast          (The total number of broadcast packets received).
+     *   'L': RxData               (The number of received data).
+     *   'L': RxDataPoll           (The number of received data poll).
+     *   'L': RxBeacon             (The number of received beacon).
+     *   'L': RxBeaconRequest      (The number of received beacon request).
+     *   'L': RxOther              (The number of received other types of frames).
+     *   'L': RxAddressFiltered    (The number of received packets filtered by address filter (whitelist or blacklist)).
+     *   'L': RxDestAddrFiltered   (The number of received packets filtered by destination check).
+     *   'L': RxDuplicated         (The number of received duplicated packets).
+     *   'L': RxErrNoFrame         (The number of received packets with no or malformed content).
+     *   'L': RxErrUnknownNeighbor (The number of received packets from unknown neighbor).
+     *   'L': RxErrInvalidSrcAddr  (The number of received packets whose source address is invalid).
+     *   'L': RxErrSec             (The number of received packets with security error).
+     *   'L': RxErrFcs             (The number of received packets with FCS error).
+     *   'L': RxErrOther           (The number of received packets with other error).
+     */
+    SPINEL_PROP_CNTR_ALL_MAC_COUNTERS   =  SPINEL_PROP_CNTR__BEGIN + 401,
+
     SPINEL_PROP_CNTR__END               = 2048,
 
     SPINEL_PROP_NEST__BEGIN             = 15296,
