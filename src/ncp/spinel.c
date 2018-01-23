@@ -1785,6 +1785,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MSG_BUFFER_COUNTERS";
         break;
 
+    case SPINEL_PROP_CNTR_ALL_MAC_COUNTERS:
+        ret = "PROP_CNTR_ALL_MAC_COUNTERS";
+        break;
+
     case SPINEL_PROP_NEST_STREAM_MFG:
         ret = "PROP_NEST_STREAM_MFG";
         break;
