@@ -187,6 +187,11 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
     if ((mSendMessage = GetDirectTransmission()) != NULL)
     {
+        if (mSendMessage->GetOffset() == 0)
+        {
+            mSendMessage->SetTxSuccess(true);
+        }
+
         mSendMessageMaxMacTxAttempts = Mac::kDirectFrameMacTxAttempts;
         GetNetif().GetMac().SendFrameRequest(mMacSender);
         ExitNow();
@@ -962,18 +967,22 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
     if (mSendMessage->GetDirectTransmission())
     {
+        if (aError != OT_ERROR_NONE)
+        {
+            // If the transmission of any fragment frame fails,
+            // the overall message transmission is considered
+            // as failed
+
+            mSendMessage->SetTxSuccess(false);
 
 #if OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
 
-        if (aError != OT_ERROR_NONE)
-        {
             // We set the NextOffset to end of message to avoid sending
             // any remaining fragments in the message.
 
             mMessageNextOffset = mSendMessage->GetLength();
-        }
-
 #endif
+        }
 
         if (mMessageNextOffset < mSendMessage->GetLength())
         {
@@ -983,6 +992,11 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
         {
             mSendMessage->ClearDirectTransmission();
             mSendMessage->SetOffset(0);
+
+            if (neighbor != NULL)
+            {
+                neighbor->GetLinkInfo().AddMessageTxStatus(mSendMessage->GetTxSuccess());
+            }
         }
 
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
