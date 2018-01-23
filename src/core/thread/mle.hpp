@@ -1394,6 +1394,7 @@ protected:
         kReattachPending    = 3,   ///< Reattach using stored Pending Dataset
     };
     ReattachState mReattachState;
+    uint8_t mAnnounceAttachAttempts;
 
     TimerMilli mParentRequestTimer;          ///< The timer for driving the Parent Request process.
     TimerMilli mDelayedResponseTimer;        ///< The timer to delay MLE responses.

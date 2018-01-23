@@ -69,6 +69,7 @@ Mle::Mle(Instance &aInstance) :
     mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest),
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
+    mAnnounceAttachAttempts(0),
     mParentRequestTimer(aInstance, &Mle::HandleParentRequestTimer, this),
     mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this),
     mChildUpdateRequestTimer(aInstance, &Mle::HandleChildUpdateRequestTimer, this),
@@ -253,7 +254,12 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
         mReattachState = kReattachStart;
     }
 
-    if (aAnnounceAttach || (GetRloc16() == Mac::kShortAddrInvalid))
+    if (aAnnounceAttach)
+    {
+        mAnnounceAttachAttempts = 1;
+        BecomeChild(kAttachAny);
+    }
+    else if (GetRloc16() == Mac::kShortAddrInvalid)
     {
         BecomeChild(kAttachAny);
     }
@@ -629,6 +635,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     mParentRequestState = kParentIdle;
     mReattachState = kReattachStop;
     mChildUpdateAttempts = 0;
+    mAnnounceAttachAttempts = 0;
     netif.GetMac().SetBeaconEnabled(false);
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
@@ -1484,11 +1491,18 @@ void Mle::HandleParentRequestTimer(void)
             case kAttachAny:
                 if (mRole != OT_DEVICE_ROLE_CHILD)
                 {
-                    if (mPreviousPanId != Mac::kPanIdBroadcast)
+                    if (mAnnounceAttachAttempts > 0 &&
+                        mAnnounceAttachAttempts < OPENTHREAD_CONFIG_MAX_ANNOUNCE_ATTACH_ATTEMPTS)
+                    {
+                        BecomeChild(kAttachAny);
+                        mAnnounceAttachAttempts++;
+                    }
+                    else if (mPreviousPanId != Mac::kPanIdBroadcast)
                     {
                         netif.GetMac().SetChannel(mPreviousChannel);
                         netif.GetMac().SetPanId(mPreviousPanId);
                         mPreviousPanId = Mac::kPanIdBroadcast;
+                        mAnnounceAttachAttempts = 0;
                         BecomeDetached();
                     }
                     else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
