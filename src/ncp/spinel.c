@@ -1289,6 +1289,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MAC_FIXED_RSS";
         break;
 
+    case SPINEL_PROP_MAC_CCA_FAILURE_RATE:
+        ret = "PROP_MAC_CCA_FAILURE_RATE";
+        break;
+
     case SPINEL_PROP_NET_SAVED:
         ret = "PROP_NET_SAVED";
         break;
