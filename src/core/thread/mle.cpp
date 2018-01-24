@@ -1681,6 +1681,7 @@ otError Mle::SendChildIdRequest(void)
 {
     otError error = OT_ERROR_NONE;
     uint8_t tlvs[] = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
+    uint8_t tlvsLen = sizeof(tlvs);
     Message *message = NULL;
     Ip6::Address destination;
 
@@ -1714,9 +1715,12 @@ otError Mle::SendChildIdRequest(void)
     if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
         SuccessOrExit(error = AppendAddressRegistration(*message));
+
+        // no need to request the last Route64 TLV for MTD
+        tlvsLen -= 1;
     }
 
-    SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
+    SuccessOrExit(error = AppendTlvRequest(*message, tlvs, tlvsLen));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
