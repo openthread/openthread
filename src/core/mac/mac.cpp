@@ -92,7 +92,7 @@ Mac::Mac(Instance &aInstance):
 #endif
     mOperationTask(aInstance, &Mac::PerformOperation, this),
     mMacTimer(aInstance, &Mac::HandleMacTimer, this),
-    mBackoffTimer(aInstance, &Mac::HandleBeginTransmit, this),
+    mBackoffTimer(aInstance, &Mac::HandleBackoffTimer, this),
     mReceiveTimer(aInstance, &Mac::HandleReceiveTimer, this),
     mShortAddress(kShortAddrInvalid),
     mPanId(kPanIdBroadcast),
@@ -290,8 +290,9 @@ void Mac::PerformEnergyScan(void)
     {
         RadioReceive(mScanChannel);
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mOperationTask.Post();
         mMacTimer.Start(mScanDuration);
+        mBackoffTimer.Start(kEnergyScanRssiSampleInterval);
+        SampleRssi();
     }
     else
     {
@@ -361,8 +362,6 @@ void Mac::SampleRssi(void)
             mEnergyScanCurrentMaxRssi = rssi;
         }
     }
-
-    mOperationTask.Post();
 }
 
 otError Mac::RegisterReceiver(Receiver &aReceiver)
@@ -592,17 +591,6 @@ void Mac::PerformOperation(Tasklet &aTasklet)
 
 void Mac::PerformOperation(void)
 {
-    // The `mOperationTask` tasklet serves two purposes:
-    //
-    // (a) it is used to start a pending operation,
-    // (b) while performing Energy Scan, it is used to take RSSI samples.
-
-    if (mOperation == kOperationEnergyScan)
-    {
-        SampleRssi();
-        ExitNow();
-    }
-
     VerifyOrExit(mOperation == kOperationIdle);
 
     // `WaitingForData` should be checked before any other pending
@@ -852,7 +840,7 @@ void Mac::StartCsmaBackoff(void)
     if (RadioSupportsCsmaBackoff())
     {
         // If the radio supports CSMA back off logic, immediately schedule the send.
-        HandleBeginTransmit();
+        BeginTransmit();
     }
     else
     {
@@ -908,9 +896,28 @@ void Mac::StartCsmaBackoff(void)
     }
 }
 
-void Mac::HandleBeginTransmit(Timer &aTimer)
+void Mac::HandleBackoffTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mac>().HandleBeginTransmit();
+    aTimer.GetOwner<Mac>().HandleBackoffTimer();
+}
+
+void Mac::HandleBackoffTimer(void)
+{
+    // The backoff timer serves two purposes:
+    //
+    // (a) It is used to add CSMA backoff delay before a frame transmission.
+    // (b) While performing Energy Scan, it is used to add delay between
+    //     RSSI samples.
+
+    if (mOperation == kOperationEnergyScan)
+    {
+        SampleRssi();
+        mBackoffTimer.StartAt(mBackoffTimer.GetFireTime(), kEnergyScanRssiSampleInterval);
+    }
+    else
+    {
+        BeginTransmit();
+    }
 }
 
 Frame *Mac::GetOperationFrame(void)
@@ -933,7 +940,7 @@ Frame *Mac::GetOperationFrame(void)
     return frame;
 }
 
-void Mac::HandleBeginTransmit(void)
+void Mac::BeginTransmit(void)
 {
     otError error = OT_ERROR_NONE;
     bool applyTransmitSecurity = true;
@@ -1362,6 +1369,7 @@ void Mac::HandleMacTimer(void)
         break;
 
     case kOperationEnergyScan:
+        mBackoffTimer.Stop();
         EnergyScanDone(mEnergyScanCurrentMaxRssi);
         break;
 
