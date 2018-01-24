@@ -252,7 +252,7 @@ public:
      * @returns The RLOC16 value.
      *
      */
-    uint16_t GetRloc16(void) const { return mValidPending.mValid.mRloc16; }
+    uint16_t GetRloc16(void) const { return mRloc16; }
 
     /**
      * This method sets the RLOC16 value.
@@ -260,7 +260,7 @@ public:
      * @param[in]  aRloc16  The RLOC16 value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mValidPending.mValid.mRloc16 = aRloc16; }
+    void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
     /**
      * This method indicates whether an IEEE 802.15.4 Data Request message was received.
@@ -337,16 +337,15 @@ private:
         {
             uint32_t mLinkFrameCounter;  ///< The Link Frame Counter
             uint32_t mMleFrameCounter;   ///< The MLE Frame Counter
-            uint16_t mRloc16;            ///< The RLOC16
         } mValid;
         struct
         {
             uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize];  ///< The challenge value
-            uint8_t mChallengeLength;    ///< The challenge length
         } mPending;
     } mValidPending;
 
     uint32_t        mKeySequence;        ///< Current key sequence
+    uint16_t        mRloc16;             ///< The RLOC16
     uint8_t         mState : 3;          ///< The link state
     uint8_t         mMode : 4;           ///< The MLE device mode
     bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
