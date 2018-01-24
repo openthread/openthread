@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER = 1
@@ -41,9 +42,11 @@ MTDS = [ED1, SED1]
 
 class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,5):
-            self.nodes[i] = node.Node(i, (i in MTDS))
+            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -73,29 +76,30 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(4)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[SED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
 
-        time.sleep(10)
+        self.simulator.go(10)
 
         addrs = self.nodes[ED1].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))

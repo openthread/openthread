@@ -43,9 +43,11 @@ ROUTER_SELECTION_JITTER = 1
 
 class Cert_5_2_5_AddressQuery(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 19):
-            self.nodes[i] = node.Node(i, (i == ED1))
+            self.nodes[i] = node.Node(i, (i == ED1), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid()
         self.nodes[LEADER].set_mode('rsdn')
@@ -72,28 +74,23 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         self.nodes[DUT_REED].enable_whitelist()
         self.nodes[DUT_REED].set_router_selection_jitter(1)
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1. LEADER: DHCPv6 Server for prefix 2001::/64.
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.nodes[LEADER].add_prefix('2001::/64', 'pdros')
         self.nodes[LEADER].register_netdata()
 
         # 2. BR: SLAAC Server for prefix 2002::/64.
         self.nodes[BR].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[BR].get_state(), 'router')
         self.nodes[BR].add_prefix('2002::/64', 'paros')
         self.nodes[BR].register_netdata()
@@ -103,19 +100,19 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
             if i == BR:
                 continue
             self.nodes[i].start()
-            time.sleep(5)
+            self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         # 4. Bring up DUT_REED.
         self.nodes[DUT_REED].start()
-        time.sleep(5)
-        time.sleep(ROUTER_SELECTION_JITTER)
+        self.simulator.go(5)
+        self.simulator.go(ROUTER_SELECTION_JITTER)
 
-        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
 
         # Verify DUT_REED doesn't try to become router.
         msg = reed_messages.does_not_contain_coap_message()
@@ -129,7 +126,7 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         mleid = self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ED1].ping(mleid))
 
-        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
         msg = reed_messages.next_coap_message('0.02')
         command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
 
@@ -145,7 +142,7 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
                 raise "Error: Address is unexpected."
             self.assertTrue(self.nodes[ED1].ping(global_address))
 
-            reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+            reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
             msg = reed_messages.next_coap_message('0.02')
             command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
 

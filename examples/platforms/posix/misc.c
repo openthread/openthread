@@ -34,6 +34,7 @@
 
 #include <openthread/types.h>
 #include <openthread/platform/misc.h>
+#include <openthread/platform/platform.h>
 
 #ifndef _WIN32
 extern int      gArgumentsCount;
@@ -52,7 +53,7 @@ void otPlatReset(otInstance *aInstance)
 
     argv[gArgumentsCount] = NULL;
 
-    platformRadioDeinit();
+    PlatformDeinit();
     platformUartRestore();
 
     alarm(0);

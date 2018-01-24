@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,19 +34,16 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
 
 #include <assert.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifndef _WIN32
-#include <libgen.h>
 #include <syslog.h>
-#endif
 
 #include <openthread/openthread.h>
 #include <openthread/tasklet.h>
@@ -55,10 +52,119 @@
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
-#ifndef _WIN32
 int     gArgumentsCount = 0;
 char  **gArguments = NULL;
-#endif
+
+int sSockFd;
+uint16_t sPortOffset;
+
+static void receiveEvent(otInstance *aInstance)
+{
+    struct Event event;
+    ssize_t rval = recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
+
+    if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
+    {
+        perror("recvfrom");
+        exit(EXIT_FAILURE);
+    }
+
+    platformAlarmAdvanceNow(event.mDelay);
+
+    switch (event.mEvent)
+    {
+    case OT_SIM_EVENT_ALARM_FIRED:
+        break;
+
+    case OT_SIM_EVENT_RADIO_RECEIVED:
+        platformRadioReceive(aInstance, event.mData, event.mDataLength);
+        break;
+    }
+}
+
+static bool processEvent(otInstance *aInstance)
+{
+    const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    struct pollfd pollfd = { sSockFd, flags, 0 };
+    bool rval = false;
+
+    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    {
+        receiveEvent(aInstance);
+        rval = true;
+    }
+
+    return rval;
+}
+
+static void platformSendSleepEvent(void)
+{
+    struct sockaddr_in sockaddr;
+    struct Event event;
+    ssize_t rval;
+
+    assert(platformAlarmGetNext() > 0);
+
+    event.mDelay = (uint64_t)platformAlarmGetNext();
+    event.mEvent = OT_SIM_EVENT_ALARM_FIRED;
+    event.mDataLength = 0;
+
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin_family = AF_INET;
+    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
+    sockaddr.sin_port = htons(9000 + sPortOffset);
+
+    rval = sendto(sSockFd, (const char *)&event, offsetof(struct Event, mData),
+                  0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+
+    if (rval < 0)
+    {
+        perror("sendto");
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void socket_init(void)
+{
+    struct sockaddr_in sockaddr;
+    char *offset;
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin_family = AF_INET;
+
+    offset = getenv("PORT_OFFSET");
+
+    if (offset)
+    {
+        char *endptr;
+
+        sPortOffset = (uint16_t)strtol(offset, &endptr, 0);
+
+        if (*endptr != '\0')
+        {
+            fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
+            exit(EXIT_FAILURE);
+        }
+
+        sPortOffset *= WELLKNOWN_NODE_ID;
+    }
+
+    sockaddr.sin_port = htons(9000 + sPortOffset + NODE_ID);
+    sockaddr.sin_addr.s_addr = INADDR_ANY;
+
+    sSockFd = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+    if (sSockFd == -1)
+    {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
+    {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
+}
 
 void PlatformInit(int argc, char *argv[])
 {
@@ -69,13 +175,11 @@ void PlatformInit(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-#ifndef _WIN32
     openlog(basename(argv[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
     gArgumentsCount = argc;
     gArguments = argv;
-#endif
 
     NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
 
@@ -85,6 +189,8 @@ void PlatformInit(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    socket_init();
+
     platformAlarmInit();
     platformRadioInit();
     platformRandomInit();
@@ -92,7 +198,7 @@ void PlatformInit(int argc, char *argv[])
 
 void PlatformDeinit(void)
 {
-    platformRadioDeinit();
+    close(sSockFd);
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)
@@ -101,31 +207,35 @@ void PlatformProcessDrivers(otInstance *aInstance)
     fd_set write_fds;
     fd_set error_fds;
     int max_fd = -1;
-    struct timeval timeout;
     int rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
     FD_ZERO(&error_fds);
 
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
-    platformAlarmUpdateTimeout(&timeout);
+    FD_SET(sSockFd, &read_fds);
+    max_fd = sSockFd;
 
-    if (!otTaskletsArePending(aInstance))
+    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
+
+    if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0)
     {
-        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+        platformSendSleepEvent();
+
+        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, NULL);
 
         if ((rval < 0) && (errno != EINTR))
         {
             perror("select");
             exit(EXIT_FAILURE);
         }
+
+        processEvent(aInstance);
     }
 
-    platformUartProcess();
-    platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
+    platformRadioProcess(aInstance);
+    platformUartProcess();
 }
 
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME

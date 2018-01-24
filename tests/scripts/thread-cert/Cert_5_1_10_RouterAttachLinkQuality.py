@@ -38,15 +38,16 @@ LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
 ROUTER3 = 4
-SNIFFER = 5
 
 
 class Cert_5_1_10_RouterAttachLinkQuality(unittest.TestCase):
 
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 5):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -75,39 +76,33 @@ class Cert_5_1_10_RouterAttachLinkQuality(unittest.TestCase):
         self.nodes[ROUTER3].enable_whitelist()
         self.nodes[ROUTER3].set_router_selection_jitter(1)
 
-        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
-        time.sleep(4)
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER3].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
-        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
-        router1_messages = self.sniffer.get_messages_sent_by(ROUTER1)
-        router2_messages = self.sniffer.get_messages_sent_by(ROUTER2)
-        router3_messages = self.sniffer.get_messages_sent_by(ROUTER3)
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
+        router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
+        router3_messages = self.simulator.get_messages_sent_by(ROUTER3)
 
         # 1 - Leader, Router1, Router2
         leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)

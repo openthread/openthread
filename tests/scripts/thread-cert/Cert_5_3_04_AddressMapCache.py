@@ -46,9 +46,11 @@ MTDS = [SED1, ED1, ED2, ED3, ED4]
 
 class Cert_5_3_4_AddressMapCache(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,8):
-            self.nodes[i] = node.Node(i, (i in MTDS))
+            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -80,27 +82,22 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
             self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
             self.nodes[ED].enable_whitelist()
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[DUT_ROUTER1].start()
         for i in MTDS:
             self.nodes[i].start()
-        time.sleep(5)
+        self.simulator.go(5)
 
         self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
@@ -108,30 +105,30 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
         # This method flushes the message queue so calling this method again will return only the newly logged messages.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         # 2
         for ED in [ED1, ED2, ED3, ED4]:
             ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
             self.assertTrue(self.nodes[SED1].ping(ed_mleid))
-            time.sleep(5)
+            self.simulator.go(5)
 
             # Verify DUT_ROUTER1 generated an Address Query Request to find each node's RLOC.
-            dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+            dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq')
             command.check_address_query(msg, self.nodes[DUT_ROUTER1], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 3 & 4
         # This method flushes the message queue so calling this method again will return only the newly logged messages.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         for ED in [ED1, ED2, ED3, ED4]:
             ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
             self.assertTrue(self.nodes[SED1].ping(ed_mleid))
-            time.sleep(5)
+            self.simulator.go(5)
 
             # Verify DUT_ROUTER1 didn't generate an Address Query Request.
-            dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+            dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq', False)
             assert msg is None, "Error: The DUT sent an unexpected Address Query Request"
 

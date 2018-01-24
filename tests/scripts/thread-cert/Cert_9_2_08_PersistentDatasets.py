@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 COMMISSIONER = 1
@@ -49,9 +50,11 @@ MTDS = [ED, SED]
 
 class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i in MTDS))
+            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT, channel=CHANNEL_INIT)
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -103,40 +106,40 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[SED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(3)
+        self.simulator.go(3)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=10,
                                                        active_timestamp=70,
                                                        delay_timer=60000,
                                                        channel=COMMISSIONER_PENDING_CHANNEL,
                                                        panid=COMMISSIONER_PENDING_PANID)
-        time.sleep(5)
+        self.simulator.go(5)
 
         self.nodes[ROUTER].reset()
         self.nodes[ED].reset()
         self.nodes[SED].reset()
 
-        time.sleep(60)
+        self.simulator.go(60)
 
         self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
@@ -163,7 +166,7 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         self.assertEqual(self.nodes[ED].get_channel(), CHANNEL_INIT)
         self.assertEqual(self.nodes[SED].get_channel(), CHANNEL_INIT)
 
-        time.sleep(10)
+        self.simulator.go(10)
 
         self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[ED].get_panid(), COMMISSIONER_PENDING_PANID)
@@ -173,7 +176,7 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         self.assertEqual(self.nodes[ED].get_channel(), COMMISSIONER_PENDING_CHANNEL)
         self.assertEqual(self.nodes[SED].get_channel(), COMMISSIONER_PENDING_CHANNEL)
 
-        time.sleep(5)
+        self.simulator.go(5)
 
         ipaddrs = self.nodes[ROUTER].get_addrs()
         for ipaddr in ipaddrs:

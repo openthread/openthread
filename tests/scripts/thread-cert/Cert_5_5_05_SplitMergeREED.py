@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER = 1
@@ -41,9 +42,11 @@ REED1 = 17
 
 class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,18):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -76,30 +79,31 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(ROUTER2, ROUTER15+1):
             self.nodes[i].start()
-            time.sleep(5)
+            self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[REED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[REED1].get_state(), 'child')
 
         self.nodes[ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
         self.nodes[REED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
 
         self.nodes[ROUTER3].stop()
-        time.sleep(140)
+        self.simulator.go(140)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'child')
         self.assertEqual(self.nodes[REED1].get_state(), 'router')

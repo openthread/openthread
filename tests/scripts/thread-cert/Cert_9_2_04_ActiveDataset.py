@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 COMMISSIONER = 1
@@ -37,9 +38,11 @@ LEADER = 2
 
 class Cert_9_2_15_PendingPartition(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,3):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_active_dataset(10, panid=0xface, master_key='000102030405060708090a0b0c0d0e0f')
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -53,24 +56,25 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(3)
+        self.simulator.go(3)
 
         self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=101,
                                                       channel_mask=0x001fffe0,
                                                       extended_panid='000db70000000000',
                                                       network_name='GRL')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 6
@@ -80,7 +84,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       channel_mask=0x001fffe0,
                                                       extended_panid='000db70000000001',
                                                       network_name='threadcert')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 8
@@ -90,7 +94,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       extended_panid='000db70000000000',
                                                       mesh_local='fd00:0db7::',
                                                       network_name='UL')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 10
@@ -101,7 +105,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       master_key='00112233445566778899aabbccddeeff',
                                                       mesh_local='fd00:0db7::',
                                                       network_name='UL')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 12
@@ -113,7 +117,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       mesh_local='fd00:0db7::',
                                                       network_name='UL',
                                                       panid=0xafce)
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 14
@@ -123,7 +127,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       extended_panid='000db70000000000',
                                                       network_name='UL',
                                                       binary='0b02abcd')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 16
@@ -132,7 +136,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       channel_mask=0x001fffe0,
                                                       extended_panid='000db70000000000',
                                                       network_name='UL')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 18
@@ -142,7 +146,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       extended_panid='000db70000000000',
                                                       network_name='UL',
                                                       binary='0806113320440000')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'UL')
 
         # Step 20
@@ -152,7 +156,7 @@ class Cert_9_2_15_PendingPartition(unittest.TestCase):
                                                       extended_panid='000db70000000000',
                                                       network_name='GRL',
                                                       binary='8202aa55')
-        time.sleep(3)
+        self.simulator.go(3)
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         ipaddrs = self.nodes[COMMISSIONER].get_addrs()

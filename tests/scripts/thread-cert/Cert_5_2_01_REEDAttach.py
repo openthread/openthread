@@ -45,9 +45,11 @@ MED1 = 4
 
 class Cert_5_2_01_REEDAttach(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 5):
-            self.nodes[i] = node.Node(i, i == MED1)
+            self.nodes[i] = node.Node(i, i == MED1, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -74,39 +76,34 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         self.nodes[MED1].add_whitelist(self.nodes[REED1].get_addr64())
         self.nodes[MED1].enable_whitelist()
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         # 1 DUT_ROUTER1: Attach to LEADER
         self.nodes[DUT_ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
         # DUT_ROUTER1: Verify MLE advertisements
-        router1_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         command.check_mle_advertisement(msg)
 
         # 2 REED1: Attach to DUT_ROUTER1
         self.nodes[REED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[REED1].get_state(), 'child')
 
         # 3 DUT_ROUTER1: Verify MLE Parent Response
-        router1_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[REED1])
         command.check_parent_response(msg)
@@ -120,18 +117,18 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
 
         # 6 MED1: Attach to REED1
         self.nodes[MED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[MED1].get_state(), 'child')
 
         # 7 REED1: Verify sending Address Solicit Request to DUT_ROUTER1
-        reed1_messages = self.sniffer.get_messages_sent_by(REED1)
+        reed1_messages = self.simulator.get_messages_sent_by(REED1)
         msg = reed1_messages.next_coap_message('0.02')
         reed1_ipv6_address = msg.ipv6_packet.ipv6_header.source_address.compressed
         msg.assertSentToNode(self.nodes[DUT_ROUTER1]);
         msg.assertCoapMessageRequestUriPath('/a/as')
 
         # 8 DUT_ROUTER1: Verify forwarding REED1's Address Solicit Request to LEADER
-        router1_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = router1_messages.next_coap_message('0.02')
         msg.assertSentToNode(self.nodes[LEADER]);
         msg.assertCoapMessageRequestUriPath('/a/as')

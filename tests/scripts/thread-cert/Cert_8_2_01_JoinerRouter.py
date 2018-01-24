@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 COMMISSIONER = 1
@@ -38,6 +39,8 @@ JOINER = 3
 
 class Cert_8_2_01_JoinerRouter(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,4):
             self.nodes[i] = node.Node(i)
@@ -62,31 +65,32 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
         self.nodes[COMMISSIONER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER_ROUTER].get_eui64(), 'OPENTHREAD')
         self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'OPENTHREAD2')
-        time.sleep(5)
+        self.simulator.go(5)
 
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_joiner_id())
         self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
 
         self.nodes[JOINER_ROUTER].interface_up()
         self.nodes[JOINER_ROUTER].joiner_start('OPENTHREAD')
-        time.sleep(10)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
 
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER_ROUTER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_state(), 'router')
 
         self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_joiner_id())
@@ -94,13 +98,13 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('OPENTHREAD2')
-        time.sleep(10)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
 
         self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_addr64())
 
         self.nodes[JOINER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER].get_state(), 'router')
 
 if __name__ == '__main__':

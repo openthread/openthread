@@ -43,9 +43,11 @@ MED1_TIMEOUT = 3
 
 class Cert_5_3_3_AddressQuery(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i == MED1))
+            self.nodes[i] = node.Node(i, (i == MED1), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid()
         self.nodes[LEADER].set_mode('rsdn')
@@ -81,28 +83,23 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[MED1].set_timeout(MED1_TIMEOUT)
         self.nodes[MED1].enable_whitelist()
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
         self.nodes[DUT_ROUTER2].start()
         self.nodes[ROUTER3].start()
         self.nodes[MED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[DUT_ROUTER2].get_state(), 'router')
@@ -112,42 +109,42 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
 
         # 2
         # Flush the message queue to avoid possible impact on follow-up verification.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         router3_mleid = self.nodes[ROUTER3].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[MED1].ping(router3_mleid))
 
         # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
         command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 3
         # Wait the finish of address resolution traffic triggerred by previous ping.
-        time.sleep(5)
+        self.simulator.go(5)
 
         # Flush the message queue to avoid possible impact on follow-up verification.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         med1_mleid = self.nodes[MED1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ROUTER1].ping(med1_mleid))
 
         # Verify DUT_ROUTER2 responded with an Address Notification.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/an')
         command.check_address_notification(msg, self.nodes[DUT_ROUTER2], self.nodes[ROUTER1])
 
         # 4
         # Wait the finish of address resolution traffic triggerred by previous ping.
-        time.sleep(5)
+        self.simulator.go(5)
 
         # Flush the message queue to avoid possible impact on follow-up verification.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertTrue(self.nodes[MED1].ping(router3_mleid))
 
         # Verify DUT_ROUTER2 didn't send an Address Query Request.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/aq', False)
         assert msg is None, "The Address Query Request is not expected."
 
@@ -156,30 +153,30 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
 
         # Wait for the Leader to expire its Router ID.
         # MAX_NEIGHBOR_AGE + INFINITE_COST_TIMEOUT + ID_REUSE_DELAY + propagation time + transmission time ~ 580s.
-        time.sleep(580)
+        self.simulator.go(580)
 
         # Flush the message queue to avoid possible impact on follow-up verification.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertFalse(self.nodes[MED1].ping(router3_mleid))
 
         # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
         command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 6
         self.nodes[MED1].stop()
-        time.sleep(MED1_TIMEOUT)
+        self.simulator.go(MED1_TIMEOUT)
 
         # Flush the message queue to avoid possible impact on follow-up verification.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertFalse(self.nodes[ROUTER1].ping(med1_mleid))
         self.assertFalse(self.nodes[ROUTER1].ping(med1_mleid))
 
         # Verify DUT_ROUTER2 didn't respond with an Address Notification.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER2)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/an', False)
         assert msg is None, "The Address Notification is not expected."
 
