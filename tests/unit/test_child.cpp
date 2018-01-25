@@ -49,6 +49,8 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
     Child::Ip6AddressIterator iterator;
     Ip6::Address address;
     bool addressObserved[kMaxChildIp6Addresses];
+    bool addressIsMeshLocal[kMaxChildIp6Addresses];
+    bool hasMeshLocal = false;
 
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {
@@ -56,6 +58,14 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
     }
 
     memset(addressObserved, 0, sizeof(addressObserved));
+    memset(addressIsMeshLocal, 0, sizeof(addressObserved));
+
+    for (uint8_t index = 0; index < aAddressListLength; index++)
+    {
+        {
+            addressIsMeshLocal[index] = true;
+        }
+    }
 
     while (aChild.GetNextIp6Address(*sInstance, iterator, address) == OT_ERROR_NONE)
     {
@@ -77,6 +87,20 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {
         VerifyOrQuit(addressObserved[index], "Child::GetNextIp6Address() missed an entry from the expected list\n");
+
+        if (sInstance->GetThreadNetif().GetMle().IsMeshLocalAddress(aAddressList[index]))
+        {
+            SuccessOrQuit(aChild.GetMeshLocalIp6Address(*sInstance, address),
+                          "Child::GetMeshLocalIp6Address() failed\n");
+            VerifyOrQuit(address == aAddressList[index], "GetMeshLocalIp6Address() did not return expected address\n");
+            hasMeshLocal = true;
+        }
+    }
+
+    if (!hasMeshLocal)
+    {
+        VerifyOrQuit(aChild.GetMeshLocalIp6Address(*sInstance, address) == OT_ERROR_NOT_FOUND,
+                     "Child::GetMeshLocalIp6Address() returned an address not in the exptect list\n");
     }
 }
 
