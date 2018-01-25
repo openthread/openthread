@@ -207,3 +207,22 @@ def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_d
     check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
     check_mle_optional_tlv(command_msg, active_operational_dataset, mle.ActiveOperationalDataset)
     check_mle_optional_tlv(command_msg, pending_operational_dataset, mle.PendingOperationalDataset)
+
+def check_coap_optional_tlv(coap_msg, type, tlv):
+    if (type == CheckType.CONTAIN):
+        coap_msg.assertCoapMessageContainsTlv(tlv)
+    elif (type == CheckType.NOT_CONTAIN):
+        coap_msg.assertCoapMessageDoesNotContainTlv(tlv)
+    elif (type == CheckType.OPTIONAL):
+        coap_msg.assertCoapMessageContainsOptionalTlv(tlv)
+    else:
+        raise ValueError("Invalid check type")
+
+def check_router_id_cached(node, router_id, cached = True):
+    """Verify if the node has cached any entries based on the router ID
+    """
+    eidcaches = node.get_eidcaches()
+    if cached:
+        assert any(router_id == (int(rloc, 16) >> 10) for (_, rloc) in eidcaches)
+    else:
+        assert any(router_id == (int(rloc, 16) >> 10) for (_, rloc) in eidcaches) is False
