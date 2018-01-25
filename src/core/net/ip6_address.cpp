@@ -141,7 +141,6 @@ bool Address::IsIidReserved(void) const
     return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
 }
 
-
 const uint8_t *Address::GetIid(void) const
 {
     return mFields.m8 + kInterfaceIdentifierOffset;

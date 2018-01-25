@@ -2116,7 +2116,7 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
         // "Child ID/Update Response" will indicate the accepted
         // addresses.
 
-        error = aChild.AddIp6Address(address);
+        error = aChild.AddIp6Address(GetInstance(), address);
 
         if (error == OT_ERROR_NONE)
         {
@@ -2149,7 +2149,7 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
                 continue;
             }
 
-            IgnoreReturnValue(child.RemoveIp6Address(address));
+            IgnoreReturnValue(child.RemoveIp6Address(GetInstance(), address));
         }
     }
 
@@ -3545,7 +3545,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
             ExitNow(rval = child);
         }
 
-        if (child->HasIp6Address(aAddress))
+        if (child->HasIp6Address(GetInstance(), aAddress))
         {
             ExitNow(rval = child);
         }
@@ -3788,7 +3788,7 @@ otError MleRouter::GetChildNextIp6Address(uint8_t aChildIndex, Child::Ip6Address
     VerifyOrExit(aChildIndex < mMaxChildrenAllowed, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mChildren[aChildIndex].IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
 
-    error = mChildren[aChildIndex].GetNextIp6Address(aIterator, aAddress);
+    error = mChildren[aChildIndex].GetNextIp6Address(GetInstance(), aIterator, aAddress);
 
 exit:
     return error;
@@ -4694,7 +4694,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
+    while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
     {
         if (netif.GetNetworkDataLeader().GetContext(address, context) == OT_ERROR_NONE)
         {

@@ -41,7 +41,7 @@ static ot::Instance *sInstance;
 
 enum
 {
-    kMaxChildIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
+    kMaxChildIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
 };
 
 void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, const Ip6::Address aAddressList[])
@@ -52,12 +52,12 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {
-        VerifyOrQuit(aChild.HasIp6Address(aAddressList[index]), "HasIp6Address() failed\n");
+        VerifyOrQuit(aChild.HasIp6Address(*sInstance, aAddressList[index]), "HasIp6Address() failed\n");
     }
 
     memset(addressObserved, 0, sizeof(addressObserved));
 
-    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
+    while (aChild.GetNextIp6Address(*sInstance, iterator, address) == OT_ERROR_NONE)
     {
         bool addressIsInList = false;
 
@@ -84,15 +84,18 @@ void TestChildIp6Address(void)
 {
     Child child;
     Ip6::Address addresses[kMaxChildIp6Addresses];
+    uint8_t numAddresses;
     const char *ip6Addresses[] =
     {
-        "fe80::1234",
+        "fd00:1234::1234",
         "fd6b:e251:52fb:0:12e6:b94c:1c28:c56a",
         "fd00:1234::204c:3d7c:98f6:9a1b",
-        "fd00:cafe::204c:3d7c:98f6:9a1b",
     };
 
-    uint8_t numAddresses = static_cast<uint8_t>(sizeof(ip6Addresses) / sizeof(ip6Addresses[0]));
+    const uint8_t meshLocalIid[] =
+    {
+        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88
+    };
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != NULL, "Null instance");
@@ -101,10 +104,18 @@ void TestChildIp6Address(void)
 
     printf("\nConverting IPv6 addresses from string");
 
-    for (uint8_t index = 0; index < numAddresses; index++)
+    numAddresses = 0;
+
+    // First addresses uses the mesh local prefix (mesh-local address).
+    addresses[numAddresses] = sInstance->GetThreadNetif().GetMle().GetMeshLocal64();
+    addresses[numAddresses].SetIid(meshLocalIid);
+
+    numAddresses++;
+
+    for (uint8_t index = 0; index < static_cast<uint8_t>(sizeof(ip6Addresses) / sizeof(ip6Addresses[0])); index++)
     {
-        VerifyOrQuit(index < kMaxChildIp6Addresses, "Too many IPv6 addresses in the unit test");
-        SuccessOrQuit(addresses[index].FromString(ip6Addresses[index]),
+        VerifyOrQuit(numAddresses < kMaxChildIp6Addresses, "Too many IPv6 addresses in the unit test");
+        SuccessOrQuit(addresses[numAddresses++].FromString(ip6Addresses[index]),
                       "could not convert IPv6 address from string");
     }
 
@@ -121,7 +132,7 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+        SuccessOrQuit(child.AddIp6Address(*sInstance, addresses[index]), "AddIp6Address() failed");
         VerifyChildIp6Addresses(child, 1, &addresses[index]);
 
         child.ClearIp6Addresses();
@@ -135,7 +146,7 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+        SuccessOrQuit(child.AddIp6Address(*sInstance, addresses[index]), "AddIp6Address() failed");
         VerifyChildIp6Addresses(child, index + 1, addresses);
     }
 
@@ -146,7 +157,7 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        VerifyOrQuit(child.AddIp6Address(addresses[index]) == OT_ERROR_ALREADY,
+        VerifyOrQuit(child.AddIp6Address(*sInstance, addresses[index]) == OT_ERROR_ALREADY,
                      "AddIp6Address() did not fail when adding same address");
         VerifyChildIp6Addresses(child, numAddresses, addresses);
     }
@@ -158,10 +169,10 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.RemoveIp6Address(addresses[index]), "RemoveIp6Address() failed");
+        SuccessOrQuit(child.RemoveIp6Address(*sInstance, addresses[index]), "RemoveIp6Address() failed");
         VerifyChildIp6Addresses(child, numAddresses - 1 - index, &addresses[index + 1]);
 
-        VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(child.RemoveIp6Address(*sInstance, addresses[index]) == OT_ERROR_NOT_FOUND,
                      "RemoveIp6Address() did not fail when removing an address not on the list");
     }
 
@@ -173,15 +184,15 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+        SuccessOrQuit(child.AddIp6Address(*sInstance, addresses[index]), "AddIp6Address() failed");
     }
 
     for (uint8_t index = numAddresses - 1; index > 0; index--)
     {
-        SuccessOrQuit(child.RemoveIp6Address(addresses[index]), "RemoveIp6Address() failed");
+        SuccessOrQuit(child.RemoveIp6Address(*sInstance, addresses[index]), "RemoveIp6Address() failed");
         VerifyChildIp6Addresses(child, index, &addresses[0]);
 
-        VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(child.RemoveIp6Address(*sInstance, addresses[index]) == OT_ERROR_NOT_FOUND,
                      "RemoveIp6Address() did not fail when removing an address not on the list");
     }
 
@@ -196,12 +207,12 @@ void TestChildIp6Address(void)
 
         for (uint8_t index = 0; index < numAddresses; index++)
         {
-            SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+            SuccessOrQuit(child.AddIp6Address(*sInstance, addresses[index]), "AddIp6Address() failed");
         }
 
-        SuccessOrQuit(child.RemoveIp6Address(addresses[indexToRemove]), "RemoveIp6Address() failed");
+        SuccessOrQuit(child.RemoveIp6Address(*sInstance, addresses[indexToRemove]), "RemoveIp6Address() failed");
 
-        VerifyOrQuit(child.RemoveIp6Address(addresses[indexToRemove]) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(child.RemoveIp6Address(*sInstance, addresses[indexToRemove]) == OT_ERROR_NOT_FOUND,
                      "RemoveIp6Address() did not fail when removing an address not on the list");
 
         {
