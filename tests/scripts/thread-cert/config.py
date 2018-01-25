@@ -65,6 +65,7 @@ MAX_NEIGHBOR_AGE = 100
 INFINITE_COST_TIMEOUT = 90
 
 MAX_ADVERTISEMENT_INTERVAL = 32
+MLE_END_DEVICE_TIMEOUT = 100
 
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {

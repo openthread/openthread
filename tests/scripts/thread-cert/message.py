@@ -238,6 +238,18 @@ class Message(object):
 
         assert(contains_tlv == True)
 
+    def assertCoapMessageDoesNotContainTlv(self, tlv_class_type):
+        if self.type != MessageType.COAP:
+            raise ValueError("Invalid message type. Expected COAP message.")
+
+        contains_tlv = False
+        for tlv in self.coap.payload:
+            if isinstance(tlv, tlv_class_type):
+                contains_tlv = True
+                break
+
+        assert(contains_tlv == False)
+
     def assertCoapMessageContainsOptionalTlv(self, tlv_class_type):
         if self.type != MessageType.COAP:
             raise ValueError("Invalid message type. Expected CoAP message.")
