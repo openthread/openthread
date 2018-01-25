@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
@@ -51,29 +52,78 @@ void Neighbor::GenerateChallenge(void)
 
 void Child::ClearIp6Addresses(void)
 {
+    memset(mMeshLocalIid, 0, sizeof(mMeshLocalIid));
     memset(mIp6Address, 0, sizeof(mIp6Address));
 }
 
-otError Child::GetNextIp6Address(Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const
+/**
+ * Determines if all elements in an array are zero.
+ *
+ * @param[in]  aArray   A pointer to an array of bytes.
+ * @param[in]  aLength  Array length (number of bytes).
+ *
+ * @returns TRUE if all bytes in the array are zero, FALSE otherwise.
+ *
+ */
+static bool IsAllZero(const uint8_t *aArray, uint8_t aLength)
+{
+    bool retval = true;
+
+    for (; aLength != 0; aArray++, aLength--)
+    {
+        VerifyOrExit(*aArray == 0, retval = false);
+    }
+
+exit:
+    return retval;
+}
+
+otError Child::GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const
 {
     otError error = OT_ERROR_NONE;
+    otChildIp6AddressIterator index;
 
-    VerifyOrExit(aIterator.Get() < kMaxIp6AddressPerChild, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(!mIp6Address[aIterator.Get()].IsUnspecified(), error = OT_ERROR_NOT_FOUND);
-    aAddress = mIp6Address[aIterator.Get()];
+    // Index zero corresponds to the Mesh Local IPv6 address (if any).
+
+    if (aIterator.Get() == 0)
+    {
+        aIterator.Increment();
+
+        if (!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)))
+        {
+            memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix(),
+                   Ip6::Address::kMeshLocalPrefixSize);
+            aAddress.SetIid(mMeshLocalIid);
+            ExitNow();
+        }
+    }
+
+    index = aIterator.Get() - 1;
+
+    VerifyOrExit(index < kNumIp6Addresses, error = OT_ERROR_NOT_FOUND);
+
+    VerifyOrExit(!mIp6Address[index].IsUnspecified(), error = OT_ERROR_NOT_FOUND);
+    aAddress = mIp6Address[index];
     aIterator.Increment();
 
 exit:
     return error;
 }
 
-otError Child::AddIp6Address(const Ip6::Address &aAddress)
+otError Child::AddIp6Address(Instance &aInstance, const Ip6::Address &aAddress)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
 
-    for (uint16_t index = 0; index < kMaxIp6AddressPerChild; index++)
+    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    {
+        VerifyOrExit(IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_ALREADY);
+        memcpy(mMeshLocalIid, aAddress.GetIid(), Ip6::Address::kInterfaceIdentifierSize);
+        ExitNow();
+    }
+
+    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
     {
         if (mIp6Address[index].IsUnspecified())
         {
@@ -90,14 +140,25 @@ exit:
     return error;
 }
 
-otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
+otError Child::RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddress)
 {
     otError error = OT_ERROR_NOT_FOUND;
     uint16_t index;
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
 
-    for (index = 0; index < kMaxIp6AddressPerChild; index++)
+    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    {
+        if (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0)
+        {
+            memset(mMeshLocalIid, 0, sizeof(mMeshLocalIid));
+            error = OT_ERROR_NONE;
+        }
+
+        ExitNow();
+    }
+
+    for (index = 0; index < kNumIp6Addresses; index++)
     {
         VerifyOrExit(!mIp6Address[index].IsUnspecified());
 
@@ -110,24 +171,30 @@ otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
 
     SuccessOrExit(error);
 
-    for (; index < kMaxIp6AddressPerChild - 1; index++)
+    for (; index < kNumIp6Addresses - 1; index++)
     {
         mIp6Address[index] = mIp6Address[index + 1];
     }
 
-    mIp6Address[kMaxIp6AddressPerChild - 1].Clear();
+    mIp6Address[kNumIp6Addresses - 1].Clear();
 
 exit:
     return error;
 }
 
-bool Child::HasIp6Address(const Ip6::Address &aAddress) const
+bool Child::HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) const
 {
     bool retval = false;
 
     VerifyOrExit(!aAddress.IsUnspecified());
 
-    for (uint16_t index = 0; index < kMaxIp6AddressPerChild; index++)
+    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    {
+        retval = (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0);
+        ExitNow();
+    }
+
+    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
     {
         VerifyOrExit(!mIp6Address[index].IsUnspecified());
 

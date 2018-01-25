@@ -46,6 +46,8 @@
 
 namespace ot {
 
+class Instance;
+
 /**
  * This class represents a Thread neighbor.
  *
@@ -421,50 +423,54 @@ public:
     /**
      * This method gets the next IPv6 address in the list.
      *
-     * @param[inout] aIterator   A reference to an IPv6 address iterator.
-     * @param[out]   aAddress    A reference to an IPv6 address to provide the next address (if any).
+     * @param[in]    aInstance           A reference to the OpenThread instance.
+     * @param[inout] aIterator           A reference to an IPv6 address iterator.
+     * @param[out]   aAddress            A reference to an IPv6 address to provide the next address (if any).
      *
-     * @retval OT_ERROR_NONE       Successfully found the next address and updated @p aAddress and @p aIterator.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent IPv6 address exists in the IPv6 address list.
+     * @retval       OT_ERROR_NONE       Successfully found the next address and updated @p aAddress and @p aIterator.
+     * @retval       OT_ERROR_NOT_FOUND  No subsequent IPv6 address exists in the IPv6 address list.
      *
      */
-    otError GetNextIp6Address(Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const;
+    otError GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const;
 
     /**
      * This method adds an IPv6 address to the list.
      *
-     * @param[in]   aAddress    A reference to IPv6 address to be added.
+     * @param[in]  aInstance          A reference to the OpenThread instance.
+     * @param[in]  aAddress           A reference to IPv6 address to be added.
      *
-     * @retval OT_ERROR_NONE         Successfully added the new address.
-     * @retval OT_ERROR_ALREADY      Address is already in the list.
-     * @retval OT_ERROR_NO_BUFS      Already at maximum number of addresses. No entry available to add the new address.
-     * @retval OT_ERROR_INVALID_ARGS Address is invalid (it is the Unspecified Address).
+     * @retval OT_ERROR_NONE          Successfully added the new address.
+     * @retval OT_ERROR_ALREADY       Address is already in the list.
+     * @retval OT_ERROR_NO_BUFS       Already at maximum number of addresses. No entry available to add the new address.
+     * @retval OT_ERROR_INVALID_ARGS  Address is invalid (it is the Unspecified Address).
      *
      */
-    otError AddIp6Address(const Ip6::Address &aAddress);
+    otError AddIp6Address(Instance &aInstance, const Ip6::Address &aAddress);
 
     /**
      * This method removes an IPv6 address from the list.
      *
-     * @param[in]   aAddress    A reference to IPv6 address to be removed.
+     * @param[in]  aInstance              A reference to the OpenThread instance.
+     * @param[in]  aAddress               A reference to IPv6 address to be removed.
      *
-     * @retval OT_ERROR_NONE         Successfully removed the address.
-     * @retval OT_ERROR_NOT_FOUND    Address was not found in the list.
-     * @retval OT_ERROR_INVALID_ARGS Address is invalid (it is the Unspecified Address).
+     * @retval OT_ERROR_NONE              Successfully removed the address.
+     * @retval OT_ERROR_NOT_FOUND         Address was not found in the list.
+     * @retval OT_ERROR_INVALID_ARGS      Address is invalid (it is the Unspecified Address).
      *
      */
-    otError RemoveIp6Address(const Ip6::Address &aAddress);
+    otError RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddress);
 
     /**
      * This method indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
      *
-     * @param[in]   aAddress    A reference to IPv6 address.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     * @param[in]  aAddress   A reference to IPv6 address.
      *
-     * @retval TRUE    The address exists on the list.
-     * @retval FALSE   Address was not found in the list.
+     * @retval TRUE           The address exists on the list.
+     * @retval FALSE          Address was not found in the list.
      *
      */
-    bool HasIp6Address(const Ip6::Address &aAddress) const;
+    bool HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) const;
 
     /**
      * This method gets the child timeout.
@@ -738,13 +744,20 @@ public:
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 private:
+
+#if OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD < 2
+#error OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD should be at least set to 2.
+#endif
+
     enum
     {
-        kMaxIp6AddressPerChild = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
+        kNumIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD - 1,
     };
 
-    Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
-    uint32_t     mTimeout;                             ///< Child timeout
+    uint8_t      mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];   ///< IPv6 address IID for mesh-local address
+    Ip6::Address mIp6Address[kNumIp6Addresses];  ///< Registered IPv6 addresses
+
+    uint32_t     mTimeout;                       ///< Child timeout
 
     union
     {
