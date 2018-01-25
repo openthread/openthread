@@ -184,7 +184,7 @@ void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr);
  * This callback is invoked by the legacy stack to notify that the
  * legacy ULA prefix has changed.
  *
- * param[in]    aUlaPrefix  A pointer to the received ULA prefix.
+ * @param[in]    aUlaPrefix  A pointer to the received ULA prefix.
  *
  */
 void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);

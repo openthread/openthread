@@ -111,6 +111,7 @@ extern "C" {
  *
  * @{
  *
+ * @defgroup api-channel-monitor     Channel Monitoring
  * @defgroup api-child-supervision   Child Supervision
  * @defgroup api-coap                CoAP
  * @defgroup api-cli                 Command Line Interface
