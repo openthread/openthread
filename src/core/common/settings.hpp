@@ -113,6 +113,7 @@ struct ChildInfo
     uint32_t         mTimeout;       ///< Timeout
     uint16_t         mRloc16;        ///< RLOC16
     uint8_t          mMode;          ///< The MLE device mode
+    uint8_t          mMlIid[8];      ///< Mesh Local IID
 };
 
 }  // namespace Settings

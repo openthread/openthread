@@ -2085,9 +2085,15 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
 {
     const AddressRegistrationEntry *entry;
     Ip6::Address address;
+    Ip6::Address mleid;
     Lowpan::Context context;
     uint8_t count;
+    bool withMlEid = false;
     char stringBuffer[Ip6::Address::kIp6AddressStringSize];
+
+    // get Mesh-Local EID
+    mleid.Clear();
+    aChild.GetMeshLocalIp6Address(GetInstance(), mleid);
 
     aChild.ClearIp6Addresses();
 
@@ -2103,6 +2109,11 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
         if (entry->IsCompressed())
         {
             // xxx check if context id exists
+            if (entry->GetContextId() == 0)
+            {
+                withMlEid = true;
+            }
+
             GetNetif().GetNetworkDataLeader().GetContext(entry->GetContextId(), context);
             memcpy(&address, context.mPrefix, BitVectorBytes(context.mPrefixLength));
             address.SetIid(entry->GetIid());
@@ -2151,6 +2162,20 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
 
             IgnoreReturnValue(child.RemoveIp6Address(GetInstance(), address));
         }
+    }
+
+    // write back to the reserved Mesh-Local EID space if no Mesh-Local EID in AddressRegistration TLV
+    if (!withMlEid && !mleid.IsUnspecified())
+    {
+        aChild.AddIp6Address(GetInstance(), mleid);
+        count++;
+
+        otLogInfoMle(GetInstance(), "Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), count,
+                     mleid.ToString(stringBuffer, sizeof(stringBuffer)));
+    }
+    else
+    {
+        otLogWarnMle(GetInstance(), "Child 0x%04x has no Mesh-Local EID", aChild.GetRloc16());
     }
 
     if (count == 0)
@@ -3804,6 +3829,7 @@ void MleRouter::RestoreChildren(void)
     {
         Child *child;
         Settings::ChildInfo childInfo;
+        Ip6::Address mleid;
         uint16_t length;
 
         length = sizeof(childInfo);
@@ -3828,6 +3854,11 @@ void MleRouter::RestoreChildren(void)
         child->SetRloc16(childInfo.mRloc16);
         child->SetTimeout(childInfo.mTimeout);
         child->SetDeviceMode(childInfo.mMode);
+        memcpy(mleid.mFields.m8, GetInstance().GetThreadNetif().GetMle().GetMeshLocalPrefix(),
+               Ip6::Address::kMeshLocalPrefixSize);
+        memcpy(&(mleid.mFields.m8[Ip6::Address::kMeshLocalPrefixSize]), childInfo.mMlIid,
+               Ip6::Address::kInterfaceIdentifierSize);
+        child->AddIp6Address(GetInstance(), mleid);
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
         GetNetif().GetMeshForwarder().GetSourceMatchController().SetSrcMatchAsShort(*child, true);
@@ -3876,6 +3907,7 @@ otError MleRouter::StoreChild(uint16_t aChildRloc16)
     otError error = OT_ERROR_NONE;
     Child *child;
     Settings::ChildInfo childInfo;
+    Ip6::Address mleid;
 
     VerifyOrExit((child = FindChild(GetChildId(aChildRloc16))) != NULL, error = OT_ERROR_NOT_FOUND);
 
@@ -3886,6 +3918,11 @@ otError MleRouter::StoreChild(uint16_t aChildRloc16)
     childInfo.mTimeout = child->GetTimeout();
     childInfo.mRloc16  = child->GetRloc16();
     childInfo.mMode    = child->GetDeviceMode();
+
+    if (child->GetMeshLocalIp6Address(GetInstance(), mleid) == OT_ERROR_NONE)
+    {
+        memcpy(childInfo.mMlIid, mleid.GetIid(), Ip6::Address::kInterfaceIdentifierSize);
+    }
 
     error = otPlatSettingsAdd(&GetInstance(), Settings::kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
@@ -4682,22 +4719,27 @@ exit:
 otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 {
     ThreadNetif &netif = GetNetif();
-    otError error;
+    otError error = OT_ERROR_NONE;
     Ip6::Address address;
     Child::Ip6AddressIterator iterator;
     Tlv tlv;
     AddressRegistrationEntry entry;
     Lowpan::Context context;
     uint8_t length = 0;
+    bool hasAddressToEcho = false;
     uint16_t startOffset = aMessage.GetLength();
-
-    tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
     while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
     {
         if (netif.GetNetworkDataLeader().GetContext(address, context) == OT_ERROR_NONE)
         {
+            // Thread 1.1.1. Specification Section 4.7.1:
+            // The ML-EID address is always registered and does not need to be acknowledged in this fashion
+            if (context.mContextId == 0)
+            {
+                continue;
+            }
+
             // compressed entry
             entry.SetContextId(context.mContextId);
             entry.SetIid(address.GetIid());
@@ -4709,12 +4751,24 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
             entry.SetIp6Address(address);
         }
 
+        if (!hasAddressToEcho)
+        {
+            hasAddressToEcho = true;
+
+            // append AddressRegistration TLV only when there are addresses to echo back
+            tlv.SetType(Tlv::kAddressRegistration);
+            SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+        }
+
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
         length += entry.GetLength();
     }
 
-    tlv.SetLength(length);
-    aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    if (hasAddressToEcho)
+    {
+        tlv.SetLength(length);
+        aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    }
 
 exit:
     return error;

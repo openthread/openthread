@@ -1150,13 +1150,14 @@ protected:
     /**
      * This method appends an Address Registration TLV to a message.
      *
-     * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aMessage    A reference to the message.
+     * @param[in]  aWithMlEid  A boolean indicates whether to append Mesh Local EID.
      *
      * @retval OT_ERROR_NONE     Successfully appended the Address Registration TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
      *
      */
-    otError AppendAddressRegistration(Message &aMessage);
+    otError AppendAddressRegistration(Message &aMessage, bool aWithMlEid);
 
     /**
      * This method appends a Active Timestamp TLV to a message.

@@ -1203,18 +1203,17 @@ otError Mle::AppendVersion(Message &aMessage)
     return aMessage.Append(&tlv, sizeof(tlv));
 }
 
-otError Mle::AppendAddressRegistration(Message &aMessage)
+otError Mle::AppendAddressRegistration(Message &aMessage, bool aWithMlEid)
 {
     ThreadNetif &netif = GetNetif();
-    otError error;
+    otError error = OT_ERROR_NONE;
     Tlv tlv;
     AddressRegistrationEntry entry;
     Lowpan::Context context;
     uint8_t length = 0;
+    bool hasAddressToRegister = false;
     uint16_t startOffset = aMessage.GetLength();
 
-    tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
     // write entries to message
     for (const Ip6::NetifUnicastAddress *addr = netif.GetUnicastAddresses(); addr; addr = addr->GetNext())
@@ -1226,6 +1225,12 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
 
         if (netif.GetNetworkDataLeader().GetContext(addr->GetAddress(), context) == OT_ERROR_NONE)
         {
+            // skip Mesh-Local EID in keep-alive Child Update Request
+            if (!aWithMlEid && context.mContextId == 0)
+            {
+                continue;
+            }
+
             // compressed entry
             entry.SetContextId(context.mContextId);
             entry.SetIid(addr->GetAddress().GetIid());
@@ -1237,12 +1242,24 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
             entry.SetIp6Address(addr->GetAddress());
         }
 
+        if (!hasAddressToRegister)
+        {
+            hasAddressToRegister = true;
+
+            // append AddressRegistration TLV only when there are non-link-local, non-mesh-local addresses configured
+            tlv.SetType(Tlv::kAddressRegistration);
+            SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+        }
+
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
         length += entry.GetLength();
     }
 
-    tlv.SetLength(length);
-    aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    if (hasAddressToRegister)
+    {
+        tlv.SetLength(length);
+        aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    }
 
 exit:
     return error;
@@ -1714,7 +1731,7 @@ otError Mle::SendChildIdRequest(void)
 
     if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
-        SuccessOrExit(error = AppendAddressRegistration(*message));
+        SuccessOrExit(error = AppendAddressRegistration(*message, true));
 
         // no need to request the last Route64 TLV for MTD
         tlvsLen -= 1;
@@ -1846,7 +1863,7 @@ otError Mle::SendChildUpdateRequest(void)
 
     if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
-        SuccessOrExit(error = AppendAddressRegistration(*message));
+        SuccessOrExit(error = AppendAddressRegistration(*message, false));
     }
 
     switch (mRole)
@@ -1923,7 +1940,7 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
         case Tlv::kAddressRegistration:
             if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
             {
-                SuccessOrExit(error = AppendAddressRegistration(*message));
+                SuccessOrExit(error = AppendAddressRegistration(*message, true));
             }
 
             break;
