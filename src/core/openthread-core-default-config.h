@@ -208,6 +208,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ADDRESS_SOLICIT_RETRY_DELAY
+ *
+ * Minimum delay for next address solicit attempt (in seconds).
+ *
+ * Default: 10 seconds
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ADDRESS_SOLICIT_RETRY_DELAY
+#define OPENTHREAD_CONFIG_ADDRESS_SOLICIT_RETRY_DELAY          10
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY
  *
  * Initial retry delay for address query (in seconds).

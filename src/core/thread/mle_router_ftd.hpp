@@ -878,12 +878,12 @@ private:
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled : 1;
-    bool mAddressSolicitPending : 1;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
     uint32_t mPreviousPartitionId;
 
+    uint8_t mAddressSolicitDelayTimer;
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
 

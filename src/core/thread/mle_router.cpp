@@ -76,8 +76,8 @@ MleRouter::MleRouter(Instance &aInstance):
     mLeaderWeight(kLeaderWeight),
     mFixedLeaderPartitionId(0),
     mRouterRoleEnabled(true),
-    mAddressSolicitPending(false),
     mPreviousPartitionId(0),
+    mAddressSolicitDelayTimer(0),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0),
     mParentPriority(kParentPriorityUnspecified)
@@ -571,7 +571,7 @@ otError MleRouter::SendAdvertisement(void)
     //
     // When trying to attach to a new partition, sending out advertisements as a REED can cause already-attached
     // children to detach.
-    VerifyOrExit(!mAddressSolicitPending);
+    VerifyOrExit(mAddressSolicitDelayTimer == 0);
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandAdvertisement));
@@ -1847,6 +1847,11 @@ void MleRouter::HandleStateUpdateTimer(void)
         {
             routerStateUpdate = true;
         }
+    }
+
+    if (mAddressSolicitDelayTimer > 0)
+    {
+        mAddressSolicitDelayTimer--;
     }
 
     switch (mRole)
@@ -4119,7 +4124,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     Ip6::MessageInfo messageInfo;
     Message *message = NULL;
 
-    VerifyOrExit(mAddressSolicitPending == false);
+    VerifyOrExit(mAddressSolicitDelayTimer == 0);
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -4149,7 +4154,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo,
                                                       &MleRouter::HandleAddressSolicitResponse, this));
-    mAddressSolicitPending = true;
+    mAddressSolicitDelayTimer = OPENTHREAD_CONFIG_ADDRESS_SOLICIT_RETRY_DELAY;
 
     LogMleMessage("Send Address Solicit", messageInfo.GetPeerAddr());
 
@@ -4225,7 +4230,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     uint8_t routerId;
     Router *router;
 
-    mAddressSolicitPending = false;
+    mAddressSolicitDelayTimer = 0;
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader != NULL && aMessage != NULL);
 
