@@ -421,6 +421,18 @@ public:
     void ClearIp6Addresses(void);
 
     /**
+     * This method gets the mesh-local IPv6 address.
+     *
+     * @param[in]    aInstance           A reference to the OpenThread instance.
+     * @param[out]   aAddress            A reference to an IPv6 address to provide address (if any).
+     *
+     * @retval       OT_ERROR_NONE       Successfully found the mesh-local address and updated @p aAddress.
+     * @retval       OT_ERROR_NOT_FOUND  No mesh-local IPv6 address in the IPv6 address list.
+     *
+     */
+    otError GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddress) const;
+
+    /**
      * This method gets the next IPv6 address in the list.
      *
      * @param[in]    aInstance           A reference to the OpenThread instance.

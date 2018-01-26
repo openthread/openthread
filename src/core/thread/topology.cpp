@@ -78,6 +78,21 @@ exit:
     return retval;
 }
 
+otError Child::GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddress) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_NOT_FOUND);
+
+    memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix(),
+           Ip6::Address::kMeshLocalPrefixSize);
+
+    aAddress.SetIid(mMeshLocalIid);
+
+exit:
+    return error;
+}
+
 otError Child::GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const
 {
     otError error = OT_ERROR_NONE;
@@ -88,14 +103,7 @@ otError Child::GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aItera
     if (aIterator.Get() == 0)
     {
         aIterator.Increment();
-
-        if (!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)))
-        {
-            memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix(),
-                   Ip6::Address::kMeshLocalPrefixSize);
-            aAddress.SetIid(mMeshLocalIid);
-            ExitNow();
-        }
+        VerifyOrExit(GetMeshLocalIp6Address(aInstance, aAddress) == OT_ERROR_NOT_FOUND);
     }
 
     index = aIterator.Get() - 1;
