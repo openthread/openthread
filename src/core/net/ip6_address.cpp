@@ -94,7 +94,7 @@ bool Address::IsRealmLocalMulticast(void) const
     return IsMulticast() && (GetScope() == kRealmLocalScope);
 }
 
-bool Address::IsMulticastHigherThanRealmLocal(void) const
+bool Address::IsMulticastLargerThanRealmLocal(void) const
 {
     return IsMulticast() && (GetScope() > kRealmLocalScope);
 }

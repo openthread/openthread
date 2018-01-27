@@ -61,11 +61,11 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
         if (ip6Header.GetDestination().IsMulticast())
         {
-            // For traffic destined to multicast address higher than realm local, generally it uses IP-in-IP
+            // For traffic destined to multicast address larger than realm local, generally it uses IP-in-IP
             // encapsulation (RFC2473), with outer destination as ALL_MPL_FORWARDERS. So here if the destination
-            // is multicast address higher than realm local, it should be for indirection transmission for the
+            // is multicast address larger than realm local, it should be for indirection transmission for the
             // device's sleepy child, thus there should be no direct transmission.
-            if (!ip6Header.GetDestination().IsMulticastHigherThanRealmLocal())
+            if (!ip6Header.GetDestination().IsMulticastLargerThanRealmLocal())
             {
                 // schedule direct transmission
                 aMessage.SetDirectTransmission();

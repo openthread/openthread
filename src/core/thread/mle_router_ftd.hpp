@@ -759,7 +759,7 @@ public:
      * @param[in]  aAddress  The reference of the address.
      *
      * @retval TRUE   If the device has any sleepy children subscribed the address @p aAddress.
-     * @retval FLASE  If the device doesn't have any sleepy children subscribed the address @p aAddress.
+     * @retval FALSE  If the device doesn't have any sleepy children subscribed the address @p aAddress.
      *
      */
     bool HasSleepyChildrenSubscribed(const Ip6::Address &aAddress);

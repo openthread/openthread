@@ -208,7 +208,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
     }
     else
     {
-        if (aIp6Header.GetDestination().IsMulticastHigherThanRealmLocal() &&
+        if (aIp6Header.GetDestination().IsMulticastLargerThanRealmLocal() &&
             GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(aIp6Header.GetDestination()))
         {
             Message *messageCopy = NULL;
@@ -406,7 +406,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
         break;
     }
 
-    if (aMessageInfo.GetPeerAddr().IsMulticastHigherThanRealmLocal())
+    if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
         if (GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
         {
@@ -762,7 +762,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceI
                 multicastPromiscuous = true;
             }
 
-            if (header.GetDestination().IsMulticastHigherThanRealmLocal() &&
+            if (header.GetDestination().IsMulticastLargerThanRealmLocal() &&
                 GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
             {
                 forward = true;
