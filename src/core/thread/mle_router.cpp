@@ -5071,7 +5071,7 @@ bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aCh
 
     VerifyOrExit(aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle());
 
-    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
+    while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
     {
         if (address == aAddress)
         {
