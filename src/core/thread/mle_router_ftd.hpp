@@ -765,16 +765,16 @@ public:
     bool HasSleepyChildrenSubscribed(const Ip6::Address &aAddress);
 
     /**
-     * This method returns whether the specific child has subscribed the address.
+     * This method returns whether the specific child subscribed the address.
      *
      * @param[in]  aAddress  The reference of the address.
      * @param[in]  aChild    The reference of the child.
      *
-     * @retval TRUE   If the sleepy child @p aChild has subscribed the address @p aAddress.
-     * @retval FALSE  If the sleepy child @p aChild has not subscribed the address @p aAddress.
+     * @retval TRUE   If the sleepy child @p aChild subscribed the address @p aAddress.
+     * @retval FALSE  If the sleepy child @p aChild did not subscribe the address @p aAddress.
      *
      */
-    bool HasSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
+    bool IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
 
 private:
     enum

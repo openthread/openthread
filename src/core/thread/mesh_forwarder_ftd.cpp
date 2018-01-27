@@ -93,7 +93,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                     // destined for some sleepy children which subscribed the multicast address.
                     for (uint8_t i = 0; i < numChildren; i++, child++)
                     {
-                        if (netif.GetMle().HasSleepyChildSubscribed(ip6Header.GetDestination(), *child))
+                        if (netif.GetMle().IsSleepyChildSubscribed(ip6Header.GetDestination(), *child))
                         {
                             aMessage.SetChildMask(i);
                             mSourceMatchController.IncrementMessageCount(*child);

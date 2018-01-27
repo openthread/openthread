@@ -138,7 +138,7 @@ public:
 
     bool HasSleepyChildrenSubscribed(const Ip6::Address &) { return false; }
 
-    bool HasSleepyChildSubscribed(const Ip6::Address &, Child &) { return false; }
+    bool IsSleepyChildSubscribed(const Ip6::Address &, Child &) { return false; }
 
 private:
     otError HandleDetachStart(void) { return OT_ERROR_NONE; }

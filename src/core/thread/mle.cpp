@@ -1254,7 +1254,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
         Ip6::Address address;
 
         // append external multicast address
-        while (GetNetif().GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE)
+        while (netif.GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE)
         {
             entry.SetUncompressed();
             entry.SetIp6Address(address);

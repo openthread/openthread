@@ -5053,7 +5053,7 @@ bool MleRouter::HasSleepyChildrenSubscribed(const Ip6::Address &aAddress)
             continue;
         }
 
-        if (HasSleepyChildSubscribed(aAddress, mChildren[i]))
+        if (IsSleepyChildSubscribed(aAddress, mChildren[i]))
         {
             ExitNow(rval = true);
         }
@@ -5063,7 +5063,7 @@ exit:
     return rval;
 }
 
-bool MleRouter::HasSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
+bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
 {
     bool rval = false;
     Ip6::Address address;

@@ -388,55 +388,6 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
     SuccessOrExit(error = aMessage.Prepend(&header, sizeof(header)));
 
-    if (aMessageInfo.GetPeerAddr().IsMulticast() &&
-        aMessageInfo.GetPeerAddr().GetScope() > Address::kRealmLocalScope)
-    {
-        if (GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
-        {
-            Message *messageCopy = NULL;
-
-            if ((messageCopy = aMessage.Clone()) != NULL)
-            {
-                otLogInfoIp6(GetInstance(), "Message copy for indirect transmission to sleepy children");
-
-                // compute checksum
-                checksum = ComputePseudoheaderChecksum(header.GetSource(), header.GetDestination(),
-                                                       payloadLength, aIpProto);
-
-                switch (aIpProto)
-                {
-                case kProtoUdp:
-                    error = mUdp.UpdateChecksum(*messageCopy, checksum);
-                    break;
-
-                case kProtoIcmp6:
-                    error = mIcmp.UpdateChecksum(*messageCopy, checksum);
-                    break;
-
-                default:
-                    break;
-                }
-
-                if (error == OT_ERROR_NONE)
-                {
-                    messageCopy->SetInterfaceId(aMessageInfo.GetInterfaceId());
-                    EnqueueDatagram(*messageCopy);
-                }
-                else
-                {
-                    messageCopy->Free();
-                }
-            }
-            else
-            {
-                otLogWarnIp6(GetInstance(),
-                             "No enough buffer for message copy for indirect transmission to sleepy children");
-            }
-        }
-
-        SuccessOrExit(error = AddTunneledMplOption(aMessage, header, aMessageInfo));
-    }
-
     // compute checksum
     checksum = ComputePseudoheaderChecksum(header.GetSource(), header.GetDestination(),
                                            payloadLength, aIpProto);
@@ -453,6 +404,28 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
     default:
         break;
+    }
+
+    if (aMessageInfo.GetPeerAddr().IsMulticastHigherThanRealmLocal())
+    {
+        if (GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
+        {
+            Message *messageCopy = NULL;
+
+            if ((messageCopy = aMessage.Clone()) != NULL)
+            {
+                otLogInfoIp6(GetInstance(), "Message copy for indirect transmission to sleepy children");
+                messageCopy->SetInterfaceId(aMessageInfo.GetInterfaceId());
+                EnqueueDatagram(*messageCopy);
+            }
+            else
+            {
+                otLogWarnIp6(GetInstance(),
+                             "No enough buffer for message copy for indirect transmission to sleepy children");
+            }
+        }
+
+        SuccessOrExit(error = AddTunneledMplOption(aMessage, header, aMessageInfo));
     }
 
 exit:
