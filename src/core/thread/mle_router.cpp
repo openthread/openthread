@@ -3230,13 +3230,16 @@ Child *MleRouter::GetChild(const Mac::ExtAddress &aAddress)
 
 Child *MleRouter::GetChild(const Mac::Address &aAddress)
 {
-    switch (aAddress.mLength)
+    switch (aAddress.GetType())
     {
-    case sizeof(aAddress.mShortAddress):
-        return GetChild(aAddress.mShortAddress);
+    case Mac::Address::kTypeShort:
+        return GetChild(aAddress.GetShort());
 
-    case sizeof(aAddress.mExtAddress):
-        return GetChild(aAddress.mExtAddress);
+    case Mac::Address::kTypeExtended:
+        return GetChild(aAddress.GetExtended());
+
+    default:
+        break;
     }
 
     return NULL;
@@ -3484,14 +3487,14 @@ Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 {
     Neighbor *rval = NULL;
 
-    switch (aAddress.mLength)
+    switch (aAddress.GetType())
     {
-    case sizeof(aAddress.mShortAddress):
-        rval = GetNeighbor(aAddress.mShortAddress);
+    case Mac::Address::kTypeShort:
+        rval = GetNeighbor(aAddress.GetShort());
         break;
 
-    case sizeof(aAddress.mExtAddress):
-        rval = GetNeighbor(aAddress.mExtAddress);
+    case Mac::Address::kTypeExtended:
+        rval = GetNeighbor(aAddress.GetExtended());
         break;
 
     default:
@@ -3503,7 +3506,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 
 Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 {
-    Mac::Address macaddr;
+    Mac::Address macAddr;
     Lowpan::Context context;
     Child *child;
     Router *router;
@@ -3515,16 +3518,14 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
             aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
             aAddress.mFields.m16[6] == HostSwap16(0xfe00))
         {
-            macaddr.mLength = sizeof(macaddr.mShortAddress);
-            macaddr.mShortAddress = HostSwap16(aAddress.mFields.m16[7]);
+            macAddr.SetShort(HostSwap16(aAddress.mFields.m16[7]));
         }
         else
         {
-            macaddr.mLength = sizeof(macaddr.mExtAddress);
-            aAddress.ToExtAddress(macaddr.mExtAddress);
+            aAddress.ToExtAddress(macAddr);
         }
 
-        ExitNow(rval = GetNeighbor(macaddr));
+        ExitNow(rval = GetNeighbor(macAddr));
     }
 
     if (GetNetif().GetNetworkDataLeader().GetContext(aAddress, context) != OT_ERROR_NONE)
@@ -3586,16 +3587,16 @@ Neighbor *MleRouter::GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD, rval = NULL);
 
-    switch (aAddress.mLength)
+    switch (aAddress.GetType())
     {
-    case sizeof(aAddress.mShortAddress):
-        if (IsActiveRouter(aAddress.mShortAddress))
+    case Mac::Address::kTypeShort:
+        if (IsActiveRouter(aAddress.GetShort()))
         {
-            uint8_t routerId = GetRouterId(aAddress.mShortAddress);
+            uint8_t routerId = GetRouterId(aAddress.GetShort());
             Router *router = &mRouters[routerId];
 
             if (router->GetState() == Neighbor::kStateValid &&
-                router->GetRloc16() == aAddress.mShortAddress)
+                router->GetRloc16() == aAddress.GetShort())
             {
                 ExitNow(rval = router);
             }
@@ -3603,7 +3604,7 @@ Neighbor *MleRouter::GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
 
         break;
 
-    case sizeof(aAddress.mExtAddress):
+    case Mac::Address::kTypeExtended:
         for (int i = 0; i <= kMaxRouterId; i++)
         {
             if (i == mRouterId)
@@ -3612,7 +3613,7 @@ Neighbor *MleRouter::GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
             }
 
             if (mRouters[i].GetState() == Neighbor::kStateValid &&
-                mRouters[i].GetExtAddress() == aAddress.mExtAddress)
+                mRouters[i].GetExtAddress() == aAddress.GetExtended())
             {
                 ExitNow(rval = &mRouters[i]);
             }

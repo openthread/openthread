@@ -425,13 +425,11 @@ otError MeshForwarder::GetIndirectTransmission(void)
 
             if (child.IsIndirectSourceMatchShort())
             {
-                mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-                mMacSource.mShortAddress = netif.GetMac().GetShortAddress();
+                mMacSource.SetShort(netif.GetMac().GetShortAddress());
             }
             else
             {
-                mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-                mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
+                mMacSource.SetExtended(netif.GetMac().GetExtAddress());
             }
 
             child.GetMacAddress(mMacDest);
@@ -547,8 +545,8 @@ otError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
 
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
     aFrame.SetDstPanId(netif.GetMac().GetPanId());
-    aFrame.SetDstAddr(mMacDest.mShortAddress);
-    aFrame.SetSrcAddr(mMacSource.mShortAddress);
+    aFrame.SetDstAddr(mMacDest.GetShort());
+    aFrame.SetSrcAddr(mMacSource.GetShort());
 
     // write payload
     assert(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
@@ -729,10 +727,8 @@ otError MeshForwarder::UpdateMeshRoute(Message &aMessage)
         ExitNow(error = OT_ERROR_DROP);
     }
 
-    mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-    mMacDest.mShortAddress = neighbor->GetRloc16();
-    mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-    mMacSource.mShortAddress = netif.GetMac().GetShortAddress();
+    mMacDest.SetShort(neighbor->GetRloc16());
+    mMacSource.SetShort(netif.GetMac().GetShortAddress());
 
     mAddMeshHeader = true;
     mMeshDest = meshHeader.GetDestination();
@@ -824,16 +820,14 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
     VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = OT_ERROR_DROP);
 
     mMeshSource = netif.GetMac().GetShortAddress();
-    mMacDest.mLength = sizeof(mMacDest.mShortAddress);
 
     SuccessOrExit(error = netif.GetMle().CheckReachability(mMeshSource, mMeshDest, ip6Header));
-    mMacDest.mShortAddress = netif.GetMle().GetNextHop(mMeshDest);
+    mMacDest.SetShort(netif.GetMle().GetNextHop(mMeshDest));
 
-    if (mMacDest.mShortAddress != mMeshDest)
+    if (mMacDest.GetShort() != mMeshDest)
     {
         // destination is not neighbor
-        mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-        mMacSource.mShortAddress = mMeshSource;
+        mMacSource.SetShort(mMeshSource);
         mAddMeshHeader = true;
     }
 
@@ -872,7 +866,7 @@ otError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
     VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0,
                  error = OT_ERROR_DROP);
 
-    error = netif.GetMle().CheckReachability(aMeshSource.mShortAddress, aMeshDest.mShortAddress, ip6Header);
+    error = netif.GetMle().CheckReachability(aMeshSource.GetShort(), aMeshDest.GetShort(), ip6Header);
 
 exit:
     return error;
@@ -894,15 +888,13 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     // Security Check: only process Mesh Header frames that had security enabled.
     VerifyOrExit(aLinkInfo.mLinkSecurity && meshHeader.IsValid(), error = OT_ERROR_SECURITY);
 
-    meshSource.mLength = sizeof(meshSource.mShortAddress);
-    meshSource.mShortAddress = meshHeader.GetSource();
-    meshDest.mLength = sizeof(meshDest.mShortAddress);
-    meshDest.mShortAddress = meshHeader.GetDestination();
+    meshSource.SetShort(meshHeader.GetSource());
+    meshDest.SetShort(meshHeader.GetDestination());
 
     UpdateRoutes(aFrame, aFrameLength, meshSource, meshDest);
 
-    if (meshDest.mShortAddress == netif.GetMac().GetShortAddress() ||
-        netif.GetMle().IsMinimalChild(meshDest.mShortAddress))
+    if (meshDest.GetShort() == netif.GetMac().GetShortAddress() ||
+        netif.GetMle().IsMinimalChild(meshDest.GetShort()))
     {
         aFrame += meshHeader.GetHeaderLength();
         aFrameLength -= meshHeader.GetHeaderLength();
@@ -922,7 +914,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     }
     else if (meshHeader.GetHopsLeft() > 0)
     {
-        netif.GetMle().ResolveRoutingLoops(aMacSource.mShortAddress, meshDest.mShortAddress);
+        netif.GetMle().ResolveRoutingLoops(aMacSource.GetShort(), meshDest.GetShort());
 
         SuccessOrExit(error = CheckReachability(aFrame, aFrameLength, meshSource, meshDest));
 

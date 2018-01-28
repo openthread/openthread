@@ -74,8 +74,7 @@ public:
      *
      */
     void SetMacSource(const uint8_t *aAddress) {
-        mMacSource.mLength = OT_EXT_ADDRESS_SIZE;
-        memcpy(&mMacSource.mExtAddress, aAddress, mMacSource.mLength);
+        mMacSource.SetExtended(aAddress, /* reverse */ false);
     }
 
     /**
@@ -85,8 +84,7 @@ public:
      *
      */
     void SetMacSource(uint16_t aAddress) {
-        mMacSource.mLength = 2;
-        mMacSource.mShortAddress = aAddress;
+        mMacSource.SetShort(aAddress);
     }
 
     /**
@@ -96,8 +94,7 @@ public:
      *
      */
     void SetMacDestination(const uint8_t *aAddress) {
-        mMacDestination.mLength = OT_EXT_ADDRESS_SIZE;
-        memcpy(&mMacDestination.mExtAddress, aAddress, mMacDestination.mLength);
+        mMacDestination.SetExtended(aAddress, /* reverse */ false);
     }
 
     /**
@@ -107,8 +104,7 @@ public:
      *
      */
     void SetMacDestination(uint16_t aAddress) {
-        mMacDestination.mLength = 2;
-        mMacDestination.mShortAddress = aAddress;
+        mMacDestination.SetShort(aAddress);
     }
 
     /**

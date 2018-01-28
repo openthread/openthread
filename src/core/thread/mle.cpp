@@ -3427,14 +3427,17 @@ Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
 {
     Neighbor *neighbor = NULL;
 
-    switch (aAddress.mLength)
+    switch (aAddress.GetType())
     {
-    case 2:
-        neighbor = GetNeighbor(aAddress.mShortAddress);
+    case Mac::Address::kTypeShort:
+        neighbor = GetNeighbor(aAddress.GetShort());
         break;
 
-    case 8:
-        neighbor = GetNeighbor(aAddress.mExtAddress);
+    case Mac::Address::kTypeExtended:
+        neighbor = GetNeighbor(aAddress.GetExtended());
+        break;
+
+    default:
         break;
     }
 
