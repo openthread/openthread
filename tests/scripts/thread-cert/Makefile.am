@@ -133,6 +133,7 @@ EXTRA_DIST                                                         = \
     network_layer.py                                                 \
     node.py                                                          \
     node_cli.py                                                      \
+    simulator.py                                                     \
     sniffer.py                                                       \
     sniffer_transport.py                                             \
     test_coap.py                                                     \

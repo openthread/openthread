@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 PANID_INIT = 0xface
@@ -48,9 +49,11 @@ COMMISSIONER_PENDING_PANID = 0xafce
 
 class Cert_9_2_7_DelayTimer(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP)
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -78,26 +81,27 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(3)
+        self.simulator.go(3)
 
         self.nodes[ROUTER].start()
-        time.sleep(10)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
 
-        time.sleep(30)
+        self.simulator.go(30)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
@@ -113,7 +117,7 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
                                                        delay_timer=10000,
                                                        channel=COMMISSIONER_PENDING_CHANNEL,
                                                        panid=COMMISSIONER_PENDING_PANID)
-        time.sleep(40)
+        self.simulator.go(40)
         self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)

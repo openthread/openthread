@@ -46,6 +46,9 @@ libopenthread_posix_a_SOURCES             = \
     random.c                                \
     uart-posix.c                            \
     flash.c                                 \
+    sim/alarm-sim.c                         \
+    sim/platform-sim.c                      \
+    sim/radio-sim.c                         \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG

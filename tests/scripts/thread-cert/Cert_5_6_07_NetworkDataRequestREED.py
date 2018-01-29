@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER = 1
@@ -38,9 +39,11 @@ REED = 3
 
 class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -64,18 +67,19 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(4)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[REED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[LEADER].remove_whitelist(self.nodes[REED].get_addr64())
@@ -84,12 +88,12 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
 
-        time.sleep(2)
+        self.simulator.go(2)
 
         self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
         self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
 
-        time.sleep(35)
+        self.simulator.go(35)
 
         addrs = self.nodes[REED].get_addrs()
         self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
