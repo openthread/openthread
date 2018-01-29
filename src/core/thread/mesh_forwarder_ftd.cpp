@@ -59,23 +59,45 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
         aMessage.Read(0, sizeof(ip6Header), &ip6Header);
 
-        if (ip6Header.GetDestination() == netif.GetMle().GetLinkLocalAllThreadNodesAddress() ||
-            ip6Header.GetDestination() == netif.GetMle().GetRealmLocalAllThreadNodesAddress())
+        if (ip6Header.GetDestination().IsMulticast())
         {
-            // schedule direct transmission
-            aMessage.SetDirectTransmission();
+            // For traffic destined to multicast address larger than realm local, generally it uses IP-in-IP
+            // encapsulation (RFC2473), with outer destination as ALL_MPL_FORWARDERS. So here if the destination
+            // is multicast address larger than realm local, it should be for indirection transmission for the
+            // device's sleepy child, thus there should be no direct transmission.
+            if (!ip6Header.GetDestination().IsMulticastLargerThanRealmLocal())
+            {
+                // schedule direct transmission
+                aMessage.SetDirectTransmission();
+            }
 
             if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
             {
-                // destined for all sleepy children
                 child = netif.GetMle().GetChildren(&numChildren);
 
-                for (uint8_t i = 0; i < numChildren; i++, child++)
+                if (ip6Header.GetDestination() == netif.GetMle().GetLinkLocalAllThreadNodesAddress() ||
+                    ip6Header.GetDestination() == netif.GetMle().GetRealmLocalAllThreadNodesAddress())
                 {
-                    if (child->IsStateValidOrRestoring() && !child->IsRxOnWhenIdle())
+                    // destined for all sleepy children
+                    for (uint8_t i = 0; i < numChildren; i++, child++)
                     {
-                        aMessage.SetChildMask(i);
-                        mSourceMatchController.IncrementMessageCount(*child);
+                        if (child->IsStateValidOrRestoring() && !child->IsRxOnWhenIdle())
+                        {
+                            aMessage.SetChildMask(i);
+                            mSourceMatchController.IncrementMessageCount(*child);
+                        }
+                    }
+                }
+                else
+                {
+                    // destined for some sleepy children which subscribed the multicast address.
+                    for (uint8_t i = 0; i < numChildren; i++, child++)
+                    {
+                        if (netif.GetMle().IsSleepyChildSubscribed(ip6Header.GetDestination(), *child))
+                        {
+                            aMessage.SetChildMask(i);
+                            mSourceMatchController.IncrementMessageCount(*child);
+                        }
                     }
                 }
             }

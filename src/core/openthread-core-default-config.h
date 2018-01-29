@@ -284,11 +284,21 @@
 /**
  * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
  *
- * The minimum number of supported IPv6 address registrations per child.
+ * The maximum number of supported IPv6 address registrations per child.
  *
  */
 #ifndef OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
 #define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD                    4
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER
+ *
+ * The maximum number of IPv6 address registrations for MTD.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER
+#define OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER                  (OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD)
 #endif
 
 /**

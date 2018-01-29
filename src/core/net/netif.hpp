@@ -338,6 +338,20 @@ public:
     otError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
 
     /**
+     * This method provides the next external multicast address that the network interface subscribed.
+     * It is used to iterate through the entries of the external multicast address table.
+     *
+     * @param[inout] aIterator A reference to the iterator context. To get the first
+     *                         external multicast address, it should be set to 0.
+     * @param[out]   aAddress  A reference where to place the external multicast address.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next external multicast address.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent external multicast address.
+     *
+     */
+    otError GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress);
+
+    /**
      * This method subscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.

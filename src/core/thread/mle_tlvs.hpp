@@ -1466,7 +1466,7 @@ public:
     }
 
 private:
-    AddressRegistrationEntry mAddresses[4];
+    AddressRegistrationEntry mAddresses[OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD];
 } OT_TOOL_PACKED_END;
 
 /**

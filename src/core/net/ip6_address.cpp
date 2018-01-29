@@ -94,6 +94,11 @@ bool Address::IsRealmLocalMulticast(void) const
     return IsMulticast() && (GetScope() == kRealmLocalScope);
 }
 
+bool Address::IsMulticastLargerThanRealmLocal(void) const
+{
+    return IsMulticast() && (GetScope() > kRealmLocalScope);
+}
+
 bool Address::IsRealmLocalAllNodesMulticast(void) const
 {
     return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 &&

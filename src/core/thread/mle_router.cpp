@@ -2130,6 +2130,11 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
 
         }
 
+        if (address.IsMulticast())
+        {
+            continue;
+        }
+
         // We check if the same address is in-use by another child, if so
         // remove it. This implements "last-in wins" duplicate address
         // resolution policy.
@@ -4696,17 +4701,18 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 
     while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
     {
-        if (netif.GetNetworkDataLeader().GetContext(address, context) == OT_ERROR_NONE)
-        {
-            // compressed entry
-            entry.SetContextId(context.mContextId);
-            entry.SetIid(address.GetIid());
-        }
-        else
+        if (address.IsMulticast() ||
+            netif.GetNetworkDataLeader().GetContext(address, context) != OT_ERROR_NONE)
         {
             // uncompressed entry
             entry.SetUncompressed();
             entry.SetIp6Address(address);
+        }
+        else
+        {
+            // compressed entry
+            entry.SetContextId(context.mContextId);
+            entry.SetIid(address.GetIid());
         }
 
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
@@ -5034,6 +5040,47 @@ void MleRouter::SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild
         GetNotifier().SetFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
         break;
     }
+}
+
+bool MleRouter::HasSleepyChildrenSubscribed(const Ip6::Address &aAddress)
+{
+    bool rval = false;
+
+    for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
+    {
+        if (!mChildren[i].IsStateValidOrRestoring() || mChildren[i].IsRxOnWhenIdle())
+        {
+            continue;
+        }
+
+        if (IsSleepyChildSubscribed(aAddress, mChildren[i]))
+        {
+            ExitNow(rval = true);
+        }
+    }
+
+exit:
+    return rval;
+}
+
+bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
+{
+    bool rval = false;
+    Ip6::Address address;
+    Child::Ip6AddressIterator iterator;
+
+    VerifyOrExit(aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle());
+
+    while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
+    {
+        if (address == aAddress)
+        {
+            ExitNow(rval = true);
+        }
+    }
+
+exit:
+    return rval;
 }
 
 }  // namespace Mle
