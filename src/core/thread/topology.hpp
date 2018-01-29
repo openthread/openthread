@@ -527,7 +527,7 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mAttachChallenge; }
+    const uint8_t *GetChallenge(void) const { return mShared.mAttachChallenge; }
 
     /**
      * This method gets the challenge size (bytes) used during attach.
@@ -535,7 +535,7 @@ public:
      * @returns The challenge size (bytes).
      *
      */
-    uint8_t GetChallengeSize(void) const { return sizeof(mAttachChallenge); }
+    uint8_t GetChallengeSize(void) const { return sizeof(mShared.mAttachChallenge); }
 
     /**
      * This method gets the IEEE 802.15.4 Frame Counter used during indirect retransmissions.
@@ -543,7 +543,7 @@ public:
      * @returns The IEEE 802.15.4 Frame Counter value.
      *
      */
-    uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
+    uint32_t GetIndirectFrameCounter(void) const { return mShared.mIndirect.mFrameCounter; }
 
     /**
      * This method sets the IEEE 802.15.4 Frame Counter to use during indirect retransmissions.
@@ -551,7 +551,7 @@ public:
      * @param[in]  aFrameCounter  The IEEE 802.15.4 Frame Counter value.
      *
      */
-    void SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
+    void SetIndirectFrameCounter(uint32_t aFrameCounter) { mShared.mIndirect.mFrameCounter = aFrameCounter; }
 
     /**
      * This method gets the message buffer to use for indirect transmissions.
@@ -575,7 +575,7 @@ public:
      * @returns The 6LoWPAN Fragment Offset value.
      *
      */
-    uint16_t GetIndirectFragmentOffset(void) const { return mIndirectFragmentOffset; }
+    uint16_t GetIndirectFragmentOffset(void) const { return mShared.mIndirect.mFragmentOffset; }
 
     /**
      * This method sets the 6LoWPAN Fragment Offset to use for indirect transmissions.
@@ -583,7 +583,7 @@ public:
      * @param[in]  aFragmentOffset  The 6LoWPAN Fragment Offset value to use.
      *
      */
-    void SetIndirectFragmentOffset(uint16_t aFragmentOffset) { mIndirectFragmentOffset = aFragmentOffset; }
+    void SetIndirectFragmentOffset(uint16_t aFragmentOffset) { mShared.mIndirect.mFragmentOffset = aFragmentOffset; }
 
     /**
      * This method gets the IEEE 802.15.4 Key ID to use for indirect retransmissions.
@@ -591,7 +591,7 @@ public:
      * @returns The IEEE 802.15.4 Key ID value.
      *
      */
-    uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
+    uint8_t GetIndirectKeyId(void) const { return mShared.mIndirect.mKeyId; }
 
     /**
      * This method sets the IEEE 802.15.4 Key ID value to use for indirect retransmissions.
@@ -599,7 +599,7 @@ public:
      * @param[in]  aKeyId  The IEEE 802.15.4 Key ID value.
      *
      */
-    void SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
+    void SetIndirectKeyId(uint8_t aKeyId) { mShared.mIndirect.mKeyId = aKeyId; }
 
     /**
      * This method gets the number of indirect transmission attempts for the current message.
@@ -607,19 +607,19 @@ public:
      * @returns The number of indirect transmission attempts.
      *
      */
-    uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
+    uint8_t GetIndirectTxAttempts(void) const { return mShared.mIndirect.mTxAttempts; }
 
     /**
      * This method resets the number of indirect transmission attempts to zero.
      *
      */
-    void ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
+    void ResetIndirectTxAttempts(void) { mShared.mIndirect.mTxAttempts = 0; }
 
     /**
      * This method increments the number of indirect transmission attempts.
      *
      */
-    void IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
+    void IncrementIndirectTxAttempts(void) { mShared.mIndirect.mTxAttempts++; }
 
     /**
      * This method gets the IEEE 802.15.4 Data Sequence Number to use during indirect retransmissions.
@@ -699,7 +699,7 @@ public:
      * This method clears the requested TLV list.
      *
      */
-    void ClearRequestTlvs(void) { memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs)); }
+    void ClearRequestTlvs(void) { memset(mShared.mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mShared.mRequestTlvs)); }
 
     /**
      * This method returns the requested TLV at index @p aIndex.
@@ -709,7 +709,7 @@ public:
      * @returns The requested TLV at index @p aIndex.
      *
      */
-    uint8_t GetRequestTlv(uint8_t aIndex) const { return mRequestTlvs[aIndex]; }
+    uint8_t GetRequestTlv(uint8_t aIndex) const { return mShared.mRequestTlvs[aIndex]; }
 
     /**
      * This method sets the requested TLV at index @p aIndex.
@@ -718,7 +718,7 @@ public:
      * @param[in]  aType   The TLV type.
      *
      */
-    void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
+    void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mShared.mRequestTlvs[aIndex] = aType; }
 
     /**
      * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress` flag).
@@ -774,13 +774,16 @@ private:
     {
         uint8_t mRequestTlvs[kMaxRequestTlvs];                 ///< Requested MLE TLVs
         uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
-    };
+        struct
+        {
+            uint32_t     mFrameCounter;                ///< Frame counter for current indirect message (used for retx).
+            uint16_t     mFragmentOffset;              ///< 6LoWPAN fragment offset for the indirect message.
+            uint8_t      mKeyId;                       ///< Key Id for current indirect message (used for retx).
+            uint8_t      mTxAttempts;                  ///< Number of data poll triggered tx attempts.
+        } mIndirect;
+    } mShared;
 
-    uint32_t     mIndirectFrameCounter;                ///< Frame counter for current indirect message (used fore retx).
     Message     *mIndirectMessage;                     ///< Current indirect message.
-    uint16_t     mIndirectFragmentOffset;              ///< 6LoWPAN fragment offset for the indirect message.
-    uint8_t      mIndirectKeyId;                       ///< Key Id for current indirect message (used for retx).
-    uint8_t      mIndirectTxAttempts;                  ///< Number of data poll triggered tx attempts.
     uint8_t      mIndirectDsn;                         ///< MAC level Data Sequence Number (DSN) for retx attempts.
     uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
     uint16_t     mQueuedMessageCount : 13;             ///< Number of queued indirect messages for the child.

@@ -218,9 +218,9 @@ exit:
 
 void Child::GenerateChallenge(void)
 {
-    for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++)
+    for (uint8_t i = 0; i < sizeof(mShared.mAttachChallenge); i++)
     {
-        mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+        mShared.mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 }
 
