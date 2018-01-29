@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER = 1
@@ -38,9 +39,11 @@ ROUTER2 = 3
 
 class Cert_5_3_6_RouterIdMask(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -64,24 +67,25 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER1].stop()
         self.nodes[ROUTER2].stop()
 
-        time.sleep(300)
+        self.simulator.go(300)
 
 if __name__ == '__main__':
     unittest.main()

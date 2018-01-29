@@ -82,6 +82,22 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 
 #include "openthread-core-config.h"
 
+enum
+{
+    OT_SIM_EVENT_ALARM_FIRED    = 0,
+    OT_SIM_EVENT_RADIO_RECEIVED = 1,
+    OT_EVENT_DATA_MAX_SIZE      = 1024,
+};
+
+OT_TOOL_PACKED_BEGIN
+struct Event
+{
+    uint64_t mDelay;
+    uint8_t mEvent;
+    uint16_t mDataLength;
+    uint8_t mData[OT_EVENT_DATA_MAX_SIZE];
+} OT_TOOL_PACKED_END;
+
 /**
  * Unique node ID.
  *
@@ -117,16 +133,50 @@ void platformAlarmUpdateTimeout(struct timeval *tv);
 void platformAlarmProcess(otInstance *aInstance);
 
 /**
+ * This function returns the next alarm event time.
+ *
+ * @returns The next alarm fire time.
+ *
+ */
+int32_t platformAlarmGetNext(void);
+
+/**
+ * This function returns the current alarm time.
+ *
+ * @returns The current alarm time.
+ *
+ */
+uint64_t platformAlarmGetNow(void);
+
+/**
+ * This function advances the alarm time by @p aDelta.
+ *
+ * @param[in]  aDelta  The amount of time to advance.
+ *
+ */
+void platformAlarmAdvanceNow(uint64_t aDelta);
+
+/**
  * This function initializes the radio service used by OpenThread.
  *
  */
 void platformRadioInit(void);
 
 /**
- * This function deinitializes the radio service used by OpenThread.
+ * This function shuts down the radio service used by OpenThread.
  *
  */
 void platformRadioDeinit(void);
+
+/**
+ * This function inputs a received radio frame.
+ *
+ * @param[in]  aInstance   A pointer to the OpenThread instance.
+ * @param[in]  aBuf        A pointer to the received radio frame.
+ * @param[in]  aBufLength  The size of the received radio frame.
+ *
+ */
+void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.

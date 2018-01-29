@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER1 = 1
@@ -48,9 +49,11 @@ DATASET2_PANID = 0xafce
 
 class Cert_9_2_12_Announce(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i == MED))
+            self.nodes[i] = node.Node(i, (i == MED), simulator=self.simulator)
 
         self.nodes[LEADER1].set_active_dataset(DATASET1_TIMESTAMP, channel=DATASET1_CHANNEL, panid=DATASET1_PANID)
         self.nodes[LEADER1].set_mode('rsdn')
@@ -88,16 +91,17 @@ class Cert_9_2_12_Announce(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER1].start()
-        self.nodes[LEADER1].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
         self.nodes[LEADER1].commissioner_start()
-        time.sleep(3)
+        self.simulator.go(3)
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[LEADER2].start()
@@ -105,11 +109,11 @@ class Cert_9_2_12_Announce(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER2].get_state(), 'leader')
 
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[MED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[MED].get_state(), 'child')
 
         ipaddrs = self.nodes[ROUTER1].get_addrs()
@@ -118,7 +122,7 @@ class Cert_9_2_12_Announce(unittest.TestCase):
                 break
 
         self.nodes[LEADER1].announce_begin(0x1000, 1, 1000, ipaddr)
-        time.sleep(30)
+        self.simulator.go(30)
         self.assertEqual(self.nodes[LEADER2].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
         self.assertEqual(self.nodes[MED].get_state(), 'child')

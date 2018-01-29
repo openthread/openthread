@@ -38,16 +38,17 @@ LEADER = 1
 ROUTER = 2
 ED = 3
 SED = 4
-SNIFFER = 5
 
 MTDS = [ED, SED]
 
 class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
 
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 5):
-            self.nodes[i] = node.Node(i, (i in MTDS))
+            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -74,54 +75,48 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         self.nodes[SED].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[SED].enable_whitelist()
 
-        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
-        time.sleep(4)
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[SED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
         ed_addrs = self.nodes[ED].get_addrs()
         sed_addrs = self.nodes[SED].get_addrs()
 
         self.nodes[ED].stop()
-        time.sleep(5)
+        self.simulator.go(5)
         for addr in ed_addrs:
             if addr[0:4] != 'fe80':
                 self.assertFalse(self.nodes[LEADER].ping(addr))
 
         self.nodes[SED].stop()
-        time.sleep(5)
+        self.simulator.go(5)
         for addr in sed_addrs:
             if addr[0:4] != 'fe80':
                 self.assertFalse(self.nodes[LEADER].ping(addr))
 
-        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
-        router1_messages = self.sniffer.get_messages_sent_by(ROUTER)
-        ed_messages = self.sniffer.get_messages_sent_by(ED)
-        sed_messages = self.sniffer.get_messages_sent_by(SED)
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        router1_messages = self.simulator.get_messages_sent_by(ROUTER)
+        ed_messages = self.simulator.get_messages_sent_by(ED)
+        sed_messages = self.simulator.get_messages_sent_by(SED)
 
         # 1 - All
         leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)

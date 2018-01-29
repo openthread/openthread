@@ -41,9 +41,11 @@ SED1 = 4
 
 class Cert_5_3_2_RealmLocal(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,5):
-            self.nodes[i] = node.Node(i, (i == SED1))
+            self.nodes[i] = node.Node(i, (i == SED1), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -70,33 +72,28 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.nodes[SED1].enable_whitelist()
         self.nodes[SED1].set_timeout(3)
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[DUT_ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[DUT_ROUTER2].get_state(), 'router')
 
         self.nodes[SED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         # 2 & 3
@@ -106,31 +103,31 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
 
         # 4 & 5
         self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256))
-        sed_messages = self.sniffer.get_messages_sent_by(SED1)
+        sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
         self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2))
-        sed_messages = self.sniffer.get_messages_sent_by(SED1)
+        sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 6 & 7
         self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=256))
-        sed_messages = self.sniffer.get_messages_sent_by(SED1)
+        sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
         self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2))
-        sed_messages = self.sniffer.get_messages_sent_by(SED1)
+        sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 8
         self.assertTrue(self.nodes[LEADER].ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, num_responses=3, size=256))
-        time.sleep(2)
-        sed_messages = self.sniffer.get_messages_sent_by(SED1)
+        self.simulator.go(2)
+        sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())
 
         self.assertTrue(self.nodes[LEADER].ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, num_responses=3))
-        time.sleep(2)
-        sed_messages = self.sniffer.get_messages_sent_by(SED1)
+        self.simulator.go(2)
+        sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())
 
 if __name__ == '__main__':

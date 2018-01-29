@@ -168,7 +168,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) > 0); };
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) >= 0); };
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -299,7 +299,7 @@ public:
      * @retval FALSE  Otherwise.
      *
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mDequeueTime) > 0); }
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mDequeueTime) >= 0); }
 
     /**
      * This method returns number of milliseconds in which the message should be sent.
