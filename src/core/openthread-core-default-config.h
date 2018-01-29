@@ -1225,4 +1225,14 @@
 #define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT           0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAX_ANNOUNCE_ATTACH_ATTEMPTS
+ *
+ * Maximum number of attach attempts with the network configurations in the received announce message
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_ANNOUNCE_ATTACH_ATTEMPTS
+#define OPENTHREAD_CONFIG_MAX_ANNOUNCE_ATTACH_ATTEMPTS              4
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
