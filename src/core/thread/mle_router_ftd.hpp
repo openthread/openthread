@@ -753,6 +753,29 @@ public:
      */
     otThreadChildTableCallback GetChildTableChangedCallback(void) const { return mChildTableChangedCallback; }
 
+    /**
+     * This method returns whether the device has any sleepy children subscribed the address.
+     *
+     * @param[in]  aAddress  The reference of the address.
+     *
+     * @retval TRUE   If the device has any sleepy children subscribed the address @p aAddress.
+     * @retval FALSE  If the device doesn't have any sleepy children subscribed the address @p aAddress.
+     *
+     */
+    bool HasSleepyChildrenSubscribed(const Ip6::Address &aAddress);
+
+    /**
+     * This method returns whether the specific child subscribed the address.
+     *
+     * @param[in]  aAddress  The reference of the address.
+     * @param[in]  aChild    The reference of the child.
+     *
+     * @retval TRUE   If the sleepy child @p aChild subscribed the address @p aAddress.
+     * @retval FALSE  If the sleepy child @p aChild did not subscribe the address @p aAddress.
+     *
+     */
+    bool IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
+
 private:
     enum
     {

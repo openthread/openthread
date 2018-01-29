@@ -335,7 +335,7 @@ public:
      * This method returns whether or not the message is of MLE subtype.
      *
      * @retval TRUE   If message is of MLE subtype.
-     * @retval FLASE  If message is not of MLE subtype.
+     * @retval FALSE  If message is not of MLE subtype.
      *
      */
     bool IsSubTypeMle(void) const;

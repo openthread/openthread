@@ -1206,11 +1206,12 @@ otError Mle::AppendVersion(Message &aMessage)
 otError Mle::AppendAddressRegistration(Message &aMessage)
 {
     ThreadNetif &netif = GetNetif();
-    otError error;
+    otError error = OT_ERROR_NONE;
     Tlv tlv;
     AddressRegistrationEntry entry;
     Lowpan::Context context;
     uint8_t length = 0;
+    uint8_t counter = 0;
     uint16_t startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
@@ -1219,7 +1220,9 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
     // write entries to message
     for (const Ip6::NetifUnicastAddress *addr = netif.GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
-        if (addr->GetAddress().IsLinkLocal() || addr->GetAddress() == mMeshLocal16.GetAddress())
+        if (addr->GetAddress().IsLinkLocal() ||
+            IsRoutingLocator(addr->GetAddress()) ||
+            IsAnycastLocator(addr->GetAddress()))
         {
             continue;
         }
@@ -1239,12 +1242,39 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
 
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
         length += entry.GetLength();
+        counter++;
+        // only continue to append if there is available entry.
+        VerifyOrExit(counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER);
     }
 
-    tlv.SetLength(length);
-    aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    // For sleepy end device, register external multicast addresses to the parent for indirect transmission
+    if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+    {
+        uint8_t iterator = 0;
+        Ip6::Address address;
+
+        // append external multicast address
+        while (netif.GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE)
+        {
+            entry.SetUncompressed();
+            entry.SetIp6Address(address);
+            SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+            length += entry.GetLength();
+
+            counter++;
+            // only continue to append if there is available entry.
+            VerifyOrExit(counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER);
+        }
+    }
 
 exit:
+
+    if (error == OT_ERROR_NONE && length > 0)
+    {
+        tlv.SetLength(length);
+        aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    }
+
     return error;
 }
 
@@ -1308,6 +1338,16 @@ void Mle::HandleStateChanged(uint32_t aFlags)
         }
 
         if (mRole == OT_DEVICE_ROLE_CHILD && (mDeviceMode & ModeTlv::kModeFFD) == 0)
+        {
+            mSendChildUpdateRequest.Post();
+        }
+    }
+
+    if ((aFlags & (OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED | OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED)) != 0)
+    {
+        if (mRole == OT_DEVICE_ROLE_CHILD &&
+            (mDeviceMode & ModeTlv::kModeFFD) == 0 &&
+            (mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             mSendChildUpdateRequest.Post();
         }
