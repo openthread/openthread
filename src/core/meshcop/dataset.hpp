@@ -195,6 +195,26 @@ public:
      */
     otError AppendMleDatasetTlv(Message &aMessage) const;
 
+    /**
+     * This method applies the Active or Pending Dataset to the Thread interface.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     *
+     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     *
+     */
+    otError ApplyConfiguration(Instance &aInstance) const;
+
+    /**
+     * This method converts a Pending Dataset to an Active Dataset.
+     *
+     * This method removes the Delay Timer and Pending Timestamp TLVs
+     *
+     * @retval OT_ERROR_NONE  Successfully converted to Active Dataset.
+     *
+     */
+    otError ConvertToActive(void);
+
 private:
     uint16_t GetSettingsKey(void);
 

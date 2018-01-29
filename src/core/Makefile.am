@@ -241,8 +241,6 @@ HEADERS_COMMON                      = \
     meshcop/dataset.hpp               \
     meshcop/dataset_local.hpp         \
     meshcop/dataset_manager.hpp       \
-    meshcop/dataset_manager_ftd.hpp   \
-    meshcop/dataset_manager_mtd.hpp   \
     meshcop/dtls.hpp                  \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
