@@ -170,7 +170,13 @@ void Address::SetIid(const Mac::ExtAddress &aEui64)
 void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
 {
     memcpy(aExtAddress.m8, mFields.m8 + kInterfaceIdentifierOffset, sizeof(aExtAddress.m8));
-    aExtAddress.m8[0] ^= 0x02;
+    aExtAddress.ToggleLocal();
+}
+
+void Address::ToExtAddress(Mac::Address &aMacAddress) const
+{
+    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset, /* reverse */ false);
+    aMacAddress.GetExtended().ToggleLocal();
 }
 
 uint8_t Address::GetScope(void) const

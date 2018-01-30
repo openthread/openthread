@@ -207,8 +207,8 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
 
     VerifyOrExit(aBeaconFrame->GetType() == Frame::kFcfFrameBeacon, error = OT_ERROR_PARSE);
     SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
-    VerifyOrExit(address.mLength == sizeof(address.mExtAddress), error = OT_ERROR_PARSE);
-    aResult.mExtAddress = address.mExtAddress;
+    VerifyOrExit(address.IsExtended(), error = OT_ERROR_PARSE);
+    aResult.mExtAddress = address.GetExtended();
 
     aBeaconFrame->GetSrcPanId(aResult.mPanId);
     aResult.mChannel = aBeaconFrame->GetChannel();
@@ -1178,7 +1178,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         mCounters.mTxErrBusyChannel++;
     }
 
-    if (dstAddr.mShortAddress == kShortAddrBroadcast)
+    if (dstAddr.IsBroadcast())
     {
         mCounters.mTxBroadcast++;
     }
@@ -1449,7 +1449,7 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
     {
     case Frame::kKeyIdMode0:
         VerifyOrExit((macKey = keyManager.GetKek()) != NULL, error = OT_ERROR_SECURITY);
-        extAddress = &aSrcAddr.mExtAddress;
+        extAddress = &aSrcAddr.GetExtended();
         break;
 
     case Frame::kKeyIdMode1:
@@ -1506,7 +1506,7 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
             }
         }
 
-        extAddress = &aSrcAddr.mExtAddress;
+        extAddress = &aSrcAddr.GetExtended();
 
         break;
 
@@ -1620,19 +1620,19 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     neighbor = GetNetif().GetMle().GetNeighbor(srcaddr);
 
     // Destination Address Filtering
-    switch (dstaddr.mLength)
+    switch (dstaddr.GetType())
     {
-    case 0:
+    case Address::kTypeNone:
         break;
 
-    case sizeof(ShortAddress):
+    case Address::kTypeShort:
         aFrame->GetDstPanId(panid);
         VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
-                     ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
-                      dstaddr.mShortAddress == mShortAddress), error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
+                     ((mRxOnWhenIdle && dstaddr.IsBroadcast()) ||
+                      dstaddr.GetShort() == mShortAddress), error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
         // Allow  multicasts from neighbor routers if FFD
-        if (neighbor == NULL && dstaddr.mShortAddress == kShortAddrBroadcast &&
+        if (neighbor == NULL && dstaddr.IsBroadcast() &&
             (GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD))
         {
             neighbor = GetNetif().GetMle().GetRxOnlyNeighborRouter(srcaddr);
@@ -1640,63 +1640,57 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
         break;
 
-    case sizeof(ExtAddress):
+    case Address::kTypeExtended:
         aFrame->GetDstPanId(panid);
-        VerifyOrExit(panid == mPanId && dstaddr.mExtAddress == mExtAddress,
+        VerifyOrExit(panid == mPanId && dstaddr.GetExtended() == mExtAddress,
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
         break;
     }
 
     // Source Address Filtering
-    switch (srcaddr.mLength)
+    switch (srcaddr.GetType())
     {
-    case 0:
+    case Address::kTypeNone:
         break;
 
-    case sizeof(ShortAddress):
-        otLogDebgMac(GetInstance(), "Received frame from short address 0x%04x", srcaddr.mShortAddress);
+    case Address::kTypeShort:
+        otLogDebgMac(GetInstance(), "Received frame from short address 0x%04x", srcaddr.GetShort());
 
         if (neighbor == NULL)
         {
             ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
         }
 
-        srcaddr.mLength = sizeof(srcaddr.mExtAddress);
-        srcaddr.mExtAddress = neighbor->GetExtAddress();
-        break;
+        srcaddr.SetExtended(neighbor->GetExtAddress());
 
-    case sizeof(ExtAddress):
-        break;
+    // fall through
 
-    default:
-        ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
-    }
+    case Address::kTypeExtended:
 
-    // Duplicate Address Protection
-    if (srcaddr.mExtAddress == mExtAddress)
-    {
-        ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
-    }
+        // Duplicate Address Protection
+        if (srcaddr.GetExtended() == mExtAddress)
+        {
+            ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
+        }
 
 #if OPENTHREAD_ENABLE_MAC_FILTER
 
-    // Source filter Processing.
-    if (srcaddr.mLength != 0)
-    {
-        // check if filtered out by whitelist or blacklist.
-        SuccessOrExit(error = mFilter.Apply(srcaddr.mExtAddress, rssi));
+        // Source filter Processing. Check if filtered out by whitelist or blacklist.
+        SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), rssi));
 
         // override with the rssi in setting
         if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
             aFrame->mRssi = rssi;
         }
-    }
 
 #endif  // OPENTHREAD_ENABLE_MAC_FILTER
 
+        break;
+    }
+
     // Increment counters
-    if (dstaddr.mShortAddress == kShortAddrBroadcast)
+    if (dstaddr.IsBroadcast())
     {
         // Broadcast frame
         mCounters.mRxBroadcast++;
@@ -1768,7 +1762,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     case kOperationWaitingForData:
 
-        if (dstaddr.mLength != 0)
+        if (!dstaddr.IsNone())
         {
             mReceiveTimer.Stop();
 

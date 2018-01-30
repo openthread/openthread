@@ -53,22 +53,39 @@ bool ExtAddress::operator!=(const ExtAddress &aOther) const
     return memcmp(m8, aOther.m8, sizeof(ExtAddress)) != 0;
 }
 
+void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
+{
+    mType = kTypeExtended;
+
+    if (aReverse)
+    {
+        for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
+        {
+            mShared.mExtAddress.m8[i] = aBuffer[sizeof(ExtAddress) - 1 - i];
+        }
+    }
+    else
+    {
+        memcpy(mShared.mExtAddress.m8, aBuffer, sizeof(ExtAddress));
+    }
+}
+
 const char *Address::ToString(char *aBuf, uint16_t aSize) const
 {
-    switch (mLength)
+    switch (mType)
     {
-    case sizeof(ShortAddress):
-        snprintf(aBuf, aSize, "0x%04x", mShortAddress);
-        break;
-
-    case sizeof(ExtAddress):
-        snprintf(aBuf, aSize, "%02x%02x%02x%02x%02x%02x%02x%02x",
-                 mExtAddress.m8[0], mExtAddress.m8[1], mExtAddress.m8[2], mExtAddress.m8[3],
-                 mExtAddress.m8[4], mExtAddress.m8[5], mExtAddress.m8[6], mExtAddress.m8[7]);
-        break;
-
-    default:
+    case kTypeNone:
         snprintf(aBuf, aSize, "None");
+        break;
+
+    case kTypeShort:
+        snprintf(aBuf, aSize, "0x%04x", GetShort());
+        break;
+
+    case kTypeExtended:
+        snprintf(aBuf, aSize, "%02x%02x%02x%02x%02x%02x%02x%02x",
+                 GetExtended().m8[0], GetExtended().m8[1], GetExtended().m8[2], GetExtended().m8[3],
+                 GetExtended().m8[4], GetExtended().m8[5], GetExtended().m8[6], GetExtended().m8[7]);
         break;
     }
 
@@ -265,26 +282,15 @@ otError Frame::GetDstAddr(Address &aAddress) const
     switch (GetFrameControlField() & kFcfDstAddrMask)
     {
     case kFcfDstAddrShort:
-        aAddress.mLength = sizeof(ShortAddress);
-        aAddress.mShortAddress = Encoding::LittleEndian::ReadUint16(GetPsdu() + index);
+        aAddress.SetShort(Encoding::LittleEndian::ReadUint16(GetPsdu() + index));
         break;
 
     case kFcfDstAddrExt:
-    {
-        const uint8_t *buf = GetPsdu() + index;
-
-        aAddress.mLength = sizeof(ExtAddress);
-
-        for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
-        {
-            aAddress.mExtAddress.m8[i] = buf[sizeof(ExtAddress) - 1 - i];
-        }
-
+        aAddress.SetExtended(GetPsdu() + index, /* reverse */ true);
         break;
-    }
 
     default:
-        aAddress.mLength = 0;
+        aAddress.SetNone();
         break;
     }
 
@@ -320,14 +326,14 @@ otError Frame::SetDstAddr(const Address &aAddress)
 {
     otError error = OT_ERROR_NONE;
 
-    switch (aAddress.mLength)
+    switch (aAddress.GetType())
     {
-    case sizeof(ShortAddress):
-        error = SetDstAddr(aAddress.mShortAddress);
+    case Address::kTypeShort:
+        error = SetDstAddr(aAddress.GetShort());
         break;
 
-    case sizeof(ExtAddress):
-        error = SetDstAddr(aAddress.mExtAddress);
+    case Address::kTypeExtended:
+        error = SetDstAddr(aAddress.GetExtended());
         break;
 
     default:
@@ -432,26 +438,15 @@ otError Frame::GetSrcAddr(Address &address) const
     switch (fcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrShort:
-        address.mLength = sizeof(ShortAddress);
-        address.mShortAddress = Encoding::LittleEndian::ReadUint16(GetPsdu() + index);
+        address.SetShort(Encoding::LittleEndian::ReadUint16(GetPsdu() + index));
         break;
 
     case kFcfSrcAddrExt:
-    {
-        const uint8_t *buf = GetPsdu() + index;
-
-        address.mLength = sizeof(ExtAddress);
-
-        for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
-        {
-            address.mExtAddress.m8[i] = buf[sizeof(ExtAddress) - 1 - i];
-        }
-
+        address.SetExtended(GetPsdu() + index, /* reverse */ true);
         break;
-    }
 
     default:
-        address.mLength = 0;
+        address.SetNone();
         break;
     }
 
@@ -491,14 +486,14 @@ otError Frame::SetSrcAddr(const Address &aAddress)
 {
     otError error = OT_ERROR_NONE;
 
-    switch (aAddress.mLength)
+    switch (aAddress.GetType())
     {
-    case sizeof(ShortAddress):
-        error = SetSrcAddr(aAddress.mShortAddress);
+    case Address::kTypeShort:
+        error = SetSrcAddr(aAddress.GetShort());
         break;
 
-    case sizeof(ExtAddress):
-        error = SetSrcAddr(aAddress.mExtAddress);
+    case Address::kTypeExtended:
+        error = SetSrcAddr(aAddress.GetExtended());
         break;
 
     default:
@@ -987,15 +982,8 @@ const char *Frame::ToInfoString(char *aBuf, uint16_t aSize) const
         break;
     }
 
-    if (GetSrcAddr(src) != OT_ERROR_NONE)
-    {
-        src.mLength = 0;
-    }
-
-    if (GetDstAddr(dst) != OT_ERROR_NONE)
-    {
-        dst.mLength = 0;
-    }
+    GetSrcAddr(src);
+    GetDstAddr(dst);
 
     snprintf(aBuf, aSize, "len:%d, seqnum:%d, type:%s, src:%s, dst:%s, sec:%s, ackreq:%s", GetLength(), GetSequence(),
              typeStr, src.ToString(srcStringBuffer, sizeof(srcStringBuffer)),

@@ -69,17 +69,17 @@ otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext
 {
     otError error = OT_ERROR_NONE;
 
-    switch (aMacAddr.mLength)
+    switch (aMacAddr.GetType())
     {
-    case 2:
+    case Mac::Address::kTypeShort:
         aIpAddress.mFields.m16[4] = HostSwap16(0x0000);
         aIpAddress.mFields.m16[5] = HostSwap16(0x00ff);
         aIpAddress.mFields.m16[6] = HostSwap16(0xfe00);
-        aIpAddress.mFields.m16[7] = HostSwap16(aMacAddr.mShortAddress);
+        aIpAddress.mFields.m16[7] = HostSwap16(aMacAddr.GetShort());
         break;
 
-    case Ip6::Address::kInterfaceIdentifierSize:
-        aIpAddress.SetIid(aMacAddr.mExtAddress);
+    case Mac::Address::kTypeExtended:
+        aIpAddress.SetIid(aMacAddr.GetExtended());
         break;
 
     default:
@@ -114,8 +114,7 @@ int Lowpan::CompressSourceIid(const Mac::Address &aMacAddr, const Ip6::Address &
     }
     else
     {
-        tmp.mLength = sizeof(tmp.mShortAddress);
-        tmp.mShortAddress = HostSwap16(aIpAddr.mFields.m16[7]);
+        tmp.SetShort(HostSwap16(aIpAddr.mFields.m16[7]));
         ComputeIid(tmp, aContext, ipaddr);
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
@@ -151,8 +150,7 @@ int Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr, const Ip6::Addr
     }
     else
     {
-        tmp.mLength = sizeof(tmp.mShortAddress);
-        tmp.mShortAddress = HostSwap16(aIpAddr.mFields.m16[7]);
+        tmp.SetShort(HostSwap16(aIpAddr.mFields.m16[7]));
         ComputeIid(tmp, aContext, ipaddr);
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
