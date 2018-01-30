@@ -2083,32 +2083,35 @@ exit:
 
 otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild)
 {
+    otError error = OT_ERROR_NONE;
     AddressRegistrationEntry entry;
     Ip6::Address address;
     Lowpan::Context context;
     Tlv tlv;
     uint8_t registeredCount = 0;
     uint8_t storedCount = 0;
-    uint16_t offset = aOffset;
+    uint16_t offset = 0;
     uint16_t end = 0;
     char stringBuffer[Ip6::Address::kIp6AddressStringSize];
 
-    VerifyOrExit(aMessage.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv));
+    VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+    VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
 
-    offset += sizeof(tlv);
+    offset = aOffset + sizeof(tlv);
     end = offset + tlv.GetLength();
-
     aChild.ClearIp6Addresses();
 
     while (offset < end)
     {
         uint8_t len;
-        otError error = OT_ERROR_NONE;
 
         // read out the control field
-        VerifyOrExit(aMessage.Read(offset, 1, &entry) == 1);
+        VerifyOrExit(aMessage.Read(offset, 1, &entry) == 1, error = OT_ERROR_PARSE);
+
         len = entry.GetLength();
-        VerifyOrExit(aMessage.Read(offset, len, &entry) == len);
+
+        VerifyOrExit(aMessage.Read(offset, len, &entry) == len, error = OT_ERROR_PARSE);
+
         offset += len;
 
         if (entry.IsCompressed())
@@ -2171,6 +2174,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         }
     }
 
+
     if (registeredCount == 0)
     {
         otLogInfoMle(GetInstance(), "Child 0x%04x has no registered IPv6 address", aChild.GetRloc16());
@@ -2182,10 +2186,12 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
                      storedCount, (storedCount == 1) ? "" : "es");
     }
 
+    error = OT_ERROR_NONE;
+
 exit:
     OT_UNUSED_VARIABLE(stringBuffer);
 
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
@@ -2278,7 +2284,7 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     if ((mode.GetMode() & ModeTlv::kModeFFD) == 0)
     {
         SuccessOrExit(error = Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset));
-        UpdateChildAddresses(aMessage, addressRegistrationOffset, *child);
+        SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
     }
 
     // Remove from router table
@@ -2420,7 +2426,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::
     // Ip6 Address TLV
     if (Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == OT_ERROR_NONE)
     {
-        UpdateChildAddresses(aMessage, addressRegistrationOffset, *child);
+        SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
         tlvs[tlvslength++] = Tlv::kAddressRegistration;
     }
 
@@ -2557,7 +2563,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
     // Ip6 Address
     if (Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == OT_ERROR_NONE)
     {
-        UpdateChildAddresses(aMessage, addressRegistrationOffset, *child);
+        SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
     }
 
     // Leader Data
