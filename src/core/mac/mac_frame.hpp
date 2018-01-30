@@ -110,6 +110,14 @@ public:
     }
 
     /**
+     * This method toggles the Group bit.
+     *
+     */
+    void ToggleGroup(void) {
+        m8[0] ^= kGroupFlag;
+    }
+
+    /**
      * This method indicates whether or not the Local bit is set.
      *
      * @retval TRUE   If the local bit is set.
@@ -131,6 +139,14 @@ public:
         else {
             m8[0] &= ~kLocalFlag;
         }
+    }
+
+    /**
+     * This method toggles the Local bit.
+     *
+     */
+    void ToggleLocal(void) {
+        m8[0] ^= kLocalFlag;
     }
 
     /**
@@ -164,33 +180,172 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an IEEE 802.15.4 Short or Extended Address.
+ * This class represents an IEEE 802.15.4 Short or Extended Address.
  *
  */
-struct Address
+class Address
 {
+public:
     enum
     {
         kAddressStringSize = 18,     ///< Max chars needed for a string representation of address (@sa ToString()).
     };
 
-    uint8_t mLength;                 ///< Length of address in bytes.
+    /**
+     * This enumeration specifies the IEEE 802.15.4 Address type.
+     *
+     */
+    enum Type
+    {
+        kTypeNone,               ///< No address.
+        kTypeShort,              ///< IEEE 802.15.4 Short Address.
+        kTypeExtended,           ///< IEEE 802.15.4 Extended Address.
+    };
+
+    /**
+     * This constructor initializes an Address.
+     *
+     */
+    Address(void): mType(kTypeNone) { }
+
+    /**
+     * This method gets the address type (Short Address, Extended Address, or none).
+     *
+     * @returns The address type.
+     *
+     */
+    Type GetType(void) const { return mType; }
+
+    /**
+     * This method indicates whether or not there is an address.
+     *
+     * @returns TRUE if there is no address (i.e. address type is `kTypeNone`), FALSE otherwise.
+     *
+     */
+    bool IsNone(void) const { return (mType == kTypeNone); }
+
+    /**
+     * This method indicates whether or not the Address is a Short Address.
+     *
+     * @returns TRUE if it is a Short Address, FALSE otherwise.
+     *
+     */
+    bool IsShort(void) const { return (mType == kTypeShort); }
+
+    /**
+     * This method indicates whether or not the Address is an Extended Address.
+     *
+     * @returns TRUE if it is an Extended Address, FALSE otherwise.
+     *
+     */
+    bool IsExtended(void) const { return (mType == kTypeExtended); }
+
+    /**
+     * This method gets the address as a Short Address.
+     *
+     * This method MUST be used only if the address type is Short Address.
+     *
+     * @returns The Short Address.
+     *
+     */
+    ShortAddress GetShort(void) const { return mShared.mShortAddress; }
+
+    /**
+     * This method gets the address as an Extended Address.
+     *
+     * This method MUST be used only if the address type is Extended Address.
+     *
+     * @returns A constant reference to the Extended Address.
+     *
+     */
+    const ExtAddress &GetExtended(void) const { return mShared.mExtAddress; }
+
+    /**
+     * This method gets the address as an Extended Address.
+     *
+     * This method MUST be used only if the address type is Extended Address.
+     *
+     * @returns A reference to the Extended Address.
+     *
+     */
+    ExtAddress &GetExtended(void) { return mShared.mExtAddress; }
+
+    /**
+     * This method sets the address to none (i.e., clears the address).
+     *
+     * Address type will be updated to `kTypeNone`.
+     *
+     */
+    void SetNone(void) { mType = kTypeNone; }
+
+    /**
+     * This method sets the address with a Short Address.
+     *
+     * The type is also updated to indicate that address is Short.
+     *
+     * @param[in]  aShortAddress  A Short Address
+     *
+     */
+    void SetShort(ShortAddress aShortAddress) { mShared.mShortAddress = aShortAddress; mType = kTypeShort; }
+
+    /**
+     * This method sets the address with an Extended Address.
+     *
+     * The type is also updated to indicate that the address is Extended.
+     *
+     * @param[in]  aExtAddress  An Extended Address
+     *
+     */
+    void SetExtended(const ExtAddress &aExtAddress) { mShared.mExtAddress = aExtAddress; mType = kTypeExtended; }
+
+    /**
+     * This method sets the address with an Extended Address given as byte array.
+     *
+     * The type is also updated to indicate that the address is Extended.
+     *
+     * @param[in]  aBuffer   Pointer to a array containing the Extended Address. `OT_EXT_ADDRESS_SIZE` bytes from buffer
+     *                       are copied to form the Extended Address.
+     * @param[in]  aReverse  If `true` then `OT_EXT_ADDRESS_SIZE` bytes from @p aBuffer are copied in reverse order,
+     *                       otherwise they are copied as provided.
+     *
+     */
+    void SetExtended(const uint8_t *aBuffer, bool aReverse);
+
+    /**
+     * This method indicates whether or not the address is a Short Broadcast Address.
+     *
+     * @returns TRUE if address is Short Broadcast Address, FALSE otherwise.
+     *
+     */
+    bool IsBroadcast(void) const { return ((mType == kTypeShort) && (GetShort() == kShortAddrBroadcast)); }
+
+    /**
+     * This method indicates whether or not the address is a Short Invalid Address.
+     *
+     * @returns TRUE if address is Short Invalid Address, FALSE otherwise.
+     *
+     */
+    bool IsShortAddrInvalid(void) const { return ((mType == kTypeShort) && (GetShort() == kShortAddrInvalid)); }
+
+    /**
+     * This method converts an address to a NULL-terminated string.
+     *
+     * @param[out]  aBuf   A pointer to a character buffer.
+     * @param[in]   aSize  The maximum size of the buffer.
+     *
+     * @returns A pointer to the character string buffer.
+     *
+     */
+    const char *ToString(char *aBuf, uint16_t aSize) const;
+
+private:
     union
     {
         ShortAddress mShortAddress;  ///< The IEEE 802.15.4 Short Address.
         ExtAddress mExtAddress;      ///< The IEEE 802.15.4 Extended Address.
-    };
+    } mShared;
 
-    /**
-     * This method converts an address object to a NULL-terminated string.
-     *
-     * @param[out]  aBuf   A pointer to the buffer.
-     * @param[in]   aSize  The maximum size of the buffer.
-     *
-     * @returns A pointer to the char string buffer.
-     *
-     */
-    const char *ToString(char *aBuf, uint16_t aSize) const;
+    Type mType;                      ///< The address type (Short, Extended, or none).
 };
 
 /**

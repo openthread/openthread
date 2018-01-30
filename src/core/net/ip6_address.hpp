@@ -306,6 +306,14 @@ public:
     void ToExtAddress(Mac::ExtAddress &aExtAddress) const;
 
     /**
+     * This method converts the IPv6 Interface Identifier to an IEEE 802.15.4 MAC Address.
+     *
+     * @param[out]  aMacAddress  A reference to the MAC address.
+     *
+     */
+    void ToExtAddress(Mac::Address &aMacAddress) const;
+
+    /**
      * This method returns the IPv6 address scope.
      *
      * @returns The IPv6 address scope.

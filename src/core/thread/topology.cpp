@@ -228,13 +228,11 @@ const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
 {
     if (mUseShortAddress)
     {
-        aMacAddress.mShortAddress = GetRloc16();
-        aMacAddress.mLength = sizeof(aMacAddress.mShortAddress);
+        aMacAddress.SetShort(GetRloc16());
     }
     else
     {
-        aMacAddress.mExtAddress = GetExtAddress();
-        aMacAddress.mLength = sizeof(aMacAddress.mExtAddress);
+        aMacAddress.SetExtended(GetExtAddress());
     }
 
     return aMacAddress;

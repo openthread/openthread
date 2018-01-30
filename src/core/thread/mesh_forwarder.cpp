@@ -67,8 +67,8 @@ MeshForwarder::MeshForwarder(Instance &aInstance):
     mSendMessage(NULL),
     mSendMessageIsARetransmission(false),
     mSendMessageMaxMacTxAttempts(Mac::kDirectFrameMacTxAttempts),
-    mMeshSource(Mac::kShortAddrInvalid),
-    mMeshDest(Mac::kShortAddrInvalid),
+    mMeshSource(),
+    mMeshDest(),
     mAddMeshHeader(false),
     mSendBusy(false),
     mScheduleTransmissionTask(aInstance, ScheduleTransmissionTask, this),
@@ -89,8 +89,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance):
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
     GetNetif().GetMac().RegisterReceiver(mMacReceiver);
-    mMacSource.mLength = 0;
-    mMacDest.mLength = 0;
 
     mIpCounters.mTxSuccess = 0;
     mIpCounters.mRxSuccess = 0;
@@ -315,17 +313,13 @@ otError MeshForwarder::PrepareDataPoll(void)
 
     if ((shortAddress == Mac::kShortAddrInvalid) || (parent != netif.GetMle().GetParent()))
     {
-        mMacSource.mLength = sizeof(mMacSource.mExtAddress);
-        mMacSource.mExtAddress = netif.GetMac().GetExtAddress();
-        mMacDest.mLength = sizeof(mMacDest.mExtAddress);
-        mMacDest.mExtAddress = parent->GetExtAddress();
+        mMacSource.SetExtended(netif.GetMac().GetExtAddress());
+        mMacDest.SetExtended(parent->GetExtAddress());
     }
     else
     {
-        mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-        mMacSource.mShortAddress = shortAddress;
-        mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-        mMacDest.mShortAddress = parent->GetRloc16();
+        mMacSource.SetShort(shortAddress);
+        mMacDest.SetShort(parent->GetRloc16());
     }
 
 exit:
@@ -366,17 +360,15 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     if (ip6Header.GetDestination().IsMulticast())
     {
-        mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-
         // With the exception of MLE multicasts, a Thread End Device transmits multicasts,
         // as IEEE 802.15.4 unicasts to its parent.
         if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD && !aMessage.IsSubTypeMle())
         {
-            mMacDest.mShortAddress = netif.GetMle().GetNextHop(Mac::kShortAddrBroadcast);
+            mMacDest.SetShort(netif.GetMle().GetNextHop(Mac::kShortAddrBroadcast));
         }
         else
         {
-            mMacDest.mShortAddress = Mac::kShortAddrBroadcast;
+            mMacDest.SetShort(Mac::kShortAddrBroadcast);
         }
     }
     else if (ip6Header.GetDestination().IsLinkLocal())
@@ -385,8 +377,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
     }
     else if (netif.GetMle().IsMinimalEndDevice())
     {
-        mMacDest.mLength       = sizeof(mMacDest.mShortAddress);
-        mMacDest.mShortAddress = netif.GetMle().GetNextHop(Mac::kShortAddrBroadcast);
+        mMacDest.SetShort(netif.GetMle().GetNextHop(Mac::kShortAddrBroadcast));
     }
     else
     {
@@ -437,16 +428,11 @@ otError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Ad
 {
     ThreadNetif &netif = GetNetif();
 
-    aIp6Addr.ToExtAddress(aMacAddr.mExtAddress);
+    aIp6Addr.ToExtAddress(aMacAddr);
 
-    if (aMacAddr.mExtAddress != netif.GetMac().GetExtAddress())
+    if (aMacAddr.GetExtended() != netif.GetMac().GetExtAddress())
     {
-        aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = netif.GetMac().GetShortAddress();
-    }
-    else
-    {
-        aMacAddr.mLength = sizeof(aMacAddr.mExtAddress);
+        aMacAddr.SetShort(netif.GetMac().GetShortAddress());
     }
 
     return OT_ERROR_NONE;
@@ -456,8 +442,7 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
 {
     if (aIp6Addr.IsMulticast())
     {
-        aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = Mac::kShortAddrBroadcast;
+        aMacAddr.SetShort(Mac::kShortAddrBroadcast);
     }
     else if (aIp6Addr.mFields.m16[0] == HostSwap16(0xfe80) &&
              aIp6Addr.mFields.m16[1] == HostSwap16(0x0000) &&
@@ -467,18 +452,15 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
              aIp6Addr.mFields.m16[5] == HostSwap16(0x00ff) &&
              aIp6Addr.mFields.m16[6] == HostSwap16(0xfe00))
     {
-        aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = HostSwap16(aIp6Addr.mFields.m16[7]);
+        aMacAddr.SetShort(HostSwap16(aIp6Addr.mFields.m16[7]));
     }
     else if (GetNetif().GetMle().IsRoutingLocator(aIp6Addr))
     {
-        aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = HostSwap16(aIp6Addr.mFields.m16[7]);
+        aMacAddr.SetShort(HostSwap16(aIp6Addr.mFields.m16[7]));
     }
     else
     {
-        aMacAddr.mLength = sizeof(aMacAddr.mExtAddress);
-        aIp6Addr.ToExtAddress(aMacAddr.mExtAddress);
+        aIp6Addr.ToExtAddress(aMacAddr);
     }
 
     return OT_ERROR_NONE;
@@ -620,7 +602,8 @@ otError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
     // initialize MAC header
     fcf = Mac::Frame::kFcfFrameMacCmd | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfFrameVersion2006;
 
-    if (mMacSource.mLength == sizeof(Mac::ShortAddress))
+
+    if (mMacSource.IsShort())
     {
         fcf |= Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort;
     }
@@ -659,10 +642,8 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
     if (mAddMeshHeader)
     {
-        meshSource.mLength = sizeof(meshSource.mShortAddress);
-        meshSource.mShortAddress = mMeshSource;
-        meshDest.mLength = sizeof(meshDest.mShortAddress);
-        meshDest.mShortAddress = mMeshDest;
+        meshSource.SetShort(mMeshSource);
+        meshDest.SetShort(mMeshDest);
     }
     else
     {
@@ -672,11 +653,11 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
     // initialize MAC header
     fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;
-    fcf |= (mMacDest.mLength == 2) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
-    fcf |= (mMacSource.mLength == 2) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
+    fcf |= (mMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
+    fcf |= (mMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
 
     // all unicast frames request ACK
-    if (mMacDest.mLength == 8 || mMacDest.mShortAddress != Mac::kShortAddrBroadcast)
+    if (mMacDest.IsExtended() || !mMacDest.IsBroadcast())
     {
         fcf |= Mac::Frame::kFcfAckRequest;
     }
@@ -884,21 +865,16 @@ otError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
     uint8_t secCtl;
     Mac::Address macSource;
 
-    macSource.mShortAddress = netif.GetMac().GetShortAddress();
+    macSource.SetShort(netif.GetMac().GetShortAddress());
 
-    if (macSource.mShortAddress != Mac::kShortAddrInvalid)
+    if (macSource.IsShortAddrInvalid())
     {
-        macSource.mLength = sizeof(macSource.mShortAddress);
-    }
-    else
-    {
-        macSource.mLength = sizeof(macSource.mExtAddress);
-        macSource.mExtAddress = netif.GetMac().GetExtAddress();
+        macSource.SetExtended(netif.GetMac().GetExtAddress());
     }
 
     fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;
-    fcf |= (mMacDest.mLength == 2) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
-    fcf |= (macSource.mLength == 2) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
+    fcf |= (mMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
+    fcf |= (macSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
 
     if (aAckRequest)
     {
