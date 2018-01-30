@@ -1872,6 +1872,11 @@ void MleRouter::HandleStateUpdateTimer(void)
                 // upgrade to Router
                 BecomeRouter(ThreadStatusTlv::kTooFewRouters);
             }
+            else
+            {
+                // send announce after decided to stay in REED if needed
+                InformPreviousChannel();
+            }
 
             if (!mAdvertiseTimer.IsRunning())
             {
@@ -4310,6 +4315,9 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
         mRouters[GetLeaderId()].SetAllocated(true);
         mRouters[GetLeaderId()].SetNextHop(GetRouterId(mParent.GetRloc16()));
     }
+
+    // send announce after become Router if needed
+    InformPreviousChannel();
 
     // send link request
     SendLinkRequest(NULL);

@@ -302,6 +302,14 @@ public:
     otError SetRouterSelectionJitter(uint8_t aRouterJitter);
 
     /**
+     * This method returns the current router selection jitter timeout value.
+     *
+     * @returns The current router selection jitter timeout value.
+     *
+     */
+    uint8_t GetRouterSelectionJitterTimeout(void) { return mRouterSelectionJitterTimeout; }
+
+    /**
      * This method returns the current Router ID Sequence value.
      *
      * @returns The current Router ID Sequence value.
