@@ -477,6 +477,7 @@ Message *MeshForwarder::GetIndirectTransmission(Child &aChild)
     aChild.SetIndirectMessage(message);
     aChild.SetIndirectFragmentOffset(0);
     aChild.ResetIndirectTxAttempts();
+    aChild.SetIndirectTxSuccess(true);
 
     if (message != NULL)
     {
@@ -644,6 +645,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
             }
 
             child->ResetIndirectTxAttempts();
+            child->SetIndirectTxSuccess(false);
 
 #if OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
             // We set the NextOffset to end of message, since there is no need to
@@ -670,6 +672,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
         {
             child->SetIndirectFragmentOffset(0);
             child->SetIndirectMessage(NULL);
+            child->GetLinkInfo().AddMessageTxStatus(child->GetIndirectTxSuccess());
 
             // Enable short source address matching after the first indirect
             // message transmission attempt to the child. We intentionally do

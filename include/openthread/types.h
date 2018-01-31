@@ -895,6 +895,8 @@ typedef enum
 /**
  * This structure holds diagnostic information for a neighboring Thread node
  *
+ * `mFrameErrorRate` and `mMessageErrorRate` require `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` feature to be
+ * enabled.
  */
 typedef struct
 {
@@ -906,6 +908,8 @@ typedef struct
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
     int8_t         mLastRssi;              ///< Last observed RSSI
+    uint16_t       mFrameErrorRate;        ///< Frame error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t       mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device
@@ -920,6 +924,9 @@ typedef int16_t otNeighborInfoIterator;    ///< Used to iterate through neighbor
 /**
  * This structure holds diagnostic information for a Thread Child
  *
+ * `mFrameErrorRate` and `mMessageErrorRate` require `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` feature to be
+ * enabled.
+ *
  */
 typedef struct
 {
@@ -932,6 +939,8 @@ typedef struct
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
     int8_t         mLastRssi;              ///< Last observed RSSI
+    uint16_t       mFrameErrorRate;        ///< Frame error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t       mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device

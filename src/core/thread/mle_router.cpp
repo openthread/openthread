@@ -3949,11 +3949,16 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
     aChildInfo.mLastRssi           = aChild.GetLinkInfo().GetLastRss();
 
-    aChildInfo.mRxOnWhenIdle      = aChild.IsRxOnWhenIdle();
-    aChildInfo.mSecureDataRequest = aChild.IsSecureDataRequest();
-    aChildInfo.mFullFunction      = aChild.IsFullThreadDevice();
-    aChildInfo.mFullNetworkData   = aChild.IsFullNetworkData();
-    aChildInfo.mIsStateRestoring  = aChild.IsStateRestoring();
+#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+    aChildInfo.mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
+    aChildInfo.mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
+#endif
+
+    aChildInfo.mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
+    aChildInfo.mSecureDataRequest  = aChild.IsSecureDataRequest();
+    aChildInfo.mFullFunction       = aChild.IsFullThreadDevice();
+    aChildInfo.mFullNetworkData    = aChild.IsFullNetworkData();
+    aChildInfo.mIsStateRestoring   = aChild.IsStateRestoring();
 
 exit:
     return error;
@@ -4049,6 +4054,10 @@ exit:
         aNeighInfo.mLinkQualityIn = neighbor->GetLinkInfo().GetLinkQuality();
         aNeighInfo.mAverageRssi = neighbor->GetLinkInfo().GetAverageRss();
         aNeighInfo.mLastRssi = neighbor->GetLinkInfo().GetLastRss();
+#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+        aNeighInfo.mFrameErrorRate = neighbor->GetLinkInfo().GetFrameErrorRate();
+        aNeighInfo.mMessageErrorRate = neighbor->GetLinkInfo().GetMessageErrorRate();
+#endif
         aNeighInfo.mRxOnWhenIdle = neighbor->IsRxOnWhenIdle();
         aNeighInfo.mSecureDataRequest = neighbor->IsSecureDataRequest();
         aNeighInfo.mFullFunction = neighbor->IsFullThreadDevice();
