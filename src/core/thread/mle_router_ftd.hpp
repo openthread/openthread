@@ -835,7 +835,7 @@ private:
     otError SetStateLeader(uint16_t aRloc16);
     void StopLeader(void);
     void SynchronizeChildNetworkData(void);
-    otError UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild);
+    otError UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild);
     void UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 
     static void HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

@@ -1416,60 +1416,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class AddressRegistrationTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kAddressRegistration); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the i'th Address Entry.
-     *
-     * @param[in]  aIndex  The index.
-     *
-     * @returns A pointer to the i'th Address Entry.
-     *
-     */
-    const AddressRegistrationEntry *GetAddressEntry(uint8_t aIndex) const {
-        const AddressRegistrationEntry *entry = NULL;
-        const uint8_t *cur = reinterpret_cast<const uint8_t *>(mAddresses);
-        const uint8_t *end = cur + GetLength();
-
-        while (cur < end) {
-            entry = reinterpret_cast<const AddressRegistrationEntry *>(cur);
-
-            if (aIndex == 0) {
-                break;
-            }
-
-            cur += entry->GetLength();
-            aIndex--;
-        }
-
-        return (cur < end) ? entry : NULL;
-    }
-
-private:
-    AddressRegistrationEntry mAddresses[OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD];
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements Channel TLV generation and parsing.
  *
  */

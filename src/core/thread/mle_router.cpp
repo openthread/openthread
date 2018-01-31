@@ -2081,46 +2081,62 @@ exit:
     return OT_ERROR_NONE;
 }
 
-otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild)
+otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild)
 {
-    const AddressRegistrationEntry *entry;
+    otError error = OT_ERROR_NONE;
+    AddressRegistrationEntry entry;
     Ip6::Address address;
     Lowpan::Context context;
-    uint8_t count;
+    Tlv tlv;
+    uint8_t registeredCount = 0;
+    uint8_t storedCount = 0;
+    uint16_t offset = 0;
+    uint16_t end = 0;
     char stringBuffer[Ip6::Address::kIp6AddressStringSize];
 
+    VerifyOrExit(aMessage.Read(aOffset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
+    VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = OT_ERROR_PARSE);
+
+    offset = aOffset + sizeof(tlv);
+    end = offset + tlv.GetLength();
     aChild.ClearIp6Addresses();
 
-    for (count = 0; ; count++)
+    while (offset < end)
     {
-        otError error = OT_ERROR_NONE;
+        uint8_t len;
 
-        if ((entry = aTlv.GetAddressEntry(count)) == NULL)
-        {
-            break;
-        }
+        // read out the control field
+        VerifyOrExit(aMessage.Read(offset, 1, &entry) == 1, error = OT_ERROR_PARSE);
 
-        if (entry->IsCompressed())
+        len = entry.GetLength();
+
+        VerifyOrExit(aMessage.Read(offset, len, &entry) == len, error = OT_ERROR_PARSE);
+
+        offset += len;
+
+        if (entry.IsCompressed())
         {
             // xxx check if context id exists
-            GetNetif().GetNetworkDataLeader().GetContext(entry->GetContextId(), context);
+            GetNetif().GetNetworkDataLeader().GetContext(entry.GetContextId(), context);
             memcpy(&address, context.mPrefix, BitVectorBytes(context.mPrefixLength));
-            address.SetIid(entry->GetIid());
+            address.SetIid(entry.GetIid());
         }
         else
         {
-            address = *entry->GetIp6Address();
+            address = *entry.GetIp6Address();
         }
+
+        registeredCount++;
 
         // We try to accept/add as many IPv6 addresses as possible.
         // "Child ID/Update Response" will indicate the accepted
         // addresses.
-
         error = aChild.AddIp6Address(GetInstance(), address);
 
         if (error == OT_ERROR_NONE)
         {
-            otLogInfoMle(GetInstance(), "Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), count,
+            storedCount++;
+            otLogInfoMle(GetInstance(), "Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), storedCount,
                          address.ToString(stringBuffer, sizeof(stringBuffer)));
         }
         else
@@ -2158,19 +2174,24 @@ otError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Chil
         }
     }
 
-    if (count == 0)
+
+    if (registeredCount == 0)
     {
         otLogInfoMle(GetInstance(), "Child 0x%04x has no registered IPv6 address", aChild.GetRloc16());
     }
     else
     {
-        otLogInfoMle(GetInstance(), "Child 0x%04x has %d registered IPv6 address%s", aChild.GetRloc16(), count,
-                     (count == 1) ? "" : "es");
+        otLogInfoMle(GetInstance(), "Child 0x%04x has %d registered IPv6 address%s, %d address%s stored",
+                     aChild.GetRloc16(), registeredCount, (registeredCount == 1) ? "" : "es",
+                     storedCount, (storedCount == 1) ? "" : "es");
     }
 
+    error = OT_ERROR_NONE;
+
+exit:
     OT_UNUSED_VARIABLE(stringBuffer);
 
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
@@ -2185,12 +2206,12 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     MleFrameCounterTlv mleFrameCounter;
     ModeTlv mode;
     TimeoutTlv timeout;
-    AddressRegistrationTlv address;
     TlvRequestTlv tlvRequest;
     ActiveTimestampTlv activeTimestamp;
     PendingTimestampTlv pendingTimestamp;
     Child *child;
     uint8_t numTlvs;
+    uint16_t addressRegistrationOffset = 0;
 
     LogMleMessage("Receive Child ID Request", aMessageInfo.GetPeerAddr());
 
@@ -2239,15 +2260,6 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTimeout, sizeof(timeout), timeout));
     VerifyOrExit(timeout.IsValid(), error = OT_ERROR_PARSE);
 
-    // Ip6 Address
-    address.SetLength(0);
-
-    if ((mode.GetMode() & ModeTlv::kModeFFD) == 0)
-    {
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kAddressRegistration, sizeof(address), address));
-        VerifyOrExit(address.IsValid(), error = OT_ERROR_PARSE);
-    }
-
     // TLV Request
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest));
     VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= Child::kMaxRequestTlvs,
@@ -2267,6 +2279,12 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == OT_ERROR_NONE)
     {
         VerifyOrExit(pendingTimestamp.IsValid(), error = OT_ERROR_PARSE);
+    }
+
+    if ((mode.GetMode() & ModeTlv::kModeFFD) == 0)
+    {
+        SuccessOrExit(error = Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset));
+        SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
     }
 
     // Remove from router table
@@ -2305,8 +2323,6 @@ otError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::Mess
     {
         child->SetNetworkDataVersion(mLeaderData.GetStableDataVersion());
     }
-
-    UpdateChildAddresses(address, *child);
 
     child->ClearRequestTlvs();
 
@@ -2358,13 +2374,13 @@ otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::
     Mac::ExtAddress macAddr;
     ModeTlv mode;
     ChallengeTlv challenge;
-    AddressRegistrationTlv address;
     LeaderDataTlv leaderData;
     TimeoutTlv timeout;
     Child *child;
     TlvRequestTlv tlvRequest;
     uint8_t tlvs[kMaxResponseTlvs];
     uint8_t tlvslength = 0;
+    uint16_t addressRegistrationOffset = 0;
 
     LogMleMessage("Receive Child Update Request from child", aMessageInfo.GetPeerAddr());
 
@@ -2408,10 +2424,9 @@ otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::
     }
 
     // Ip6 Address TLV
-    if (Tlv::GetTlv(aMessage, Tlv::kAddressRegistration, sizeof(address), address) == OT_ERROR_NONE)
+    if (Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == OT_ERROR_NONE)
     {
-        VerifyOrExit(address.IsValid(), error = OT_ERROR_PARSE);
-        UpdateChildAddresses(address, *child);
+        SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
         tlvs[tlvslength++] = Tlv::kAddressRegistration;
     }
 
@@ -2470,13 +2485,13 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
     Mac::ExtAddress macAddr;
     SourceAddressTlv sourceAddress;
     TimeoutTlv timeout;
-    AddressRegistrationTlv address;
     ResponseTlv response;
     StatusTlv status;
     LinkFrameCounterTlv linkFrameCounter;
     MleFrameCounterTlv mleFrameCounter;
     LeaderDataTlv leaderData;
     Child *child;
+    uint16_t addressRegistrationOffset = 0;
 
     // Find Child
     aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
@@ -2546,10 +2561,9 @@ otError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const Ip6:
     }
 
     // Ip6 Address
-    if (Tlv::GetTlv(aMessage, Tlv::kAddressRegistration, sizeof(address), address) == OT_ERROR_NONE)
+    if (Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == OT_ERROR_NONE)
     {
-        VerifyOrExit(address.IsValid(), error = OT_ERROR_PARSE);
-        UpdateChildAddresses(address, *child);
+        SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
     }
 
     // Leader Data
