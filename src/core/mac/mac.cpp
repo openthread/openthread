@@ -1077,6 +1077,8 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
     bool framePending = false;
     bool ccaSuccess = true;
     Address dstAddr;
+    bool ackRequested;
+    Neighbor *neighbor;
 
     // Stop the ack timer.
 
@@ -1127,6 +1129,40 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     mCsmaAttempts = 0;
 
+    sendFrame.GetDstAddr(dstAddr);
+    neighbor = GetNetif().GetMle().GetNeighbor(dstAddr);
+    ackRequested = sendFrame.GetAckRequest();
+
+#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+
+    // Record frame transmission success/failure state (for a neighbor).
+
+    if ((neighbor != NULL) && ackRequested)
+    {
+        bool frameTxSuccess = true;
+
+        // CCA or abort errors are excluded from frame tx error
+        // rate tracking, since when they occur, the frame is
+        // not actually sent over the air.
+
+        switch (aError)
+        {
+        case OT_ERROR_NO_ACK:
+            frameTxSuccess = false;
+
+        // Fall through
+
+        case OT_ERROR_NONE:
+            neighbor->GetLinkInfo().AddFrameTxStatus(frameTxSuccess);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+#endif // OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+
     // Determine whether to re-transmit the frame.
 
     mTransmitAttempts++;
@@ -1154,12 +1190,9 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     // Process the ack frame for "frame pending".
 
-    sendFrame.GetDstAddr(dstAddr);
-
-    if (aError == OT_ERROR_NONE && sendFrame.GetAckRequest() && aAckFrame != NULL)
+    if (aError == OT_ERROR_NONE && ackRequested && aAckFrame != NULL)
     {
         Frame &ackFrame = *static_cast<Frame *>(aAckFrame);
-        Neighbor *neighbor = GetNetif().GetMle().GetNeighbor(dstAddr);
 
         framePending = ackFrame.GetFramePending();
 
@@ -1187,7 +1220,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         mCounters.mTxUnicast++;
     }
 
-    if (sendFrame.GetAckRequest())
+    if (ackRequested)
     {
         mCounters.mTxAckRequested++;
 

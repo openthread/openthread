@@ -947,6 +947,49 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+ *
+ * Define as 1 to enable transmission error rate tracking (for both MAC frames and IPv6 messages)
+ *
+ * When enabled, OpenThread will track average error rate of MAC frame transmissions and IPv6 message error rate for
+ * every neighbor.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+#define OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING         1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_FRAME_TX_ERR_RATE_AVERAGING_WINDOW
+ *
+ * Applicable only if error rate tracking is enabled (i.e., `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` is set).
+ *
+ * OpenThread's MAC implementation maintains the average error rate of MAC frame transmissions per neighbor. This
+ * parameter specifies the window (in terms of number of frames/sample) over which the average error rate is maintained.
+ * Practically, the average value can be considered as the percentage of failed (no ack) MAC frame transmissions  over
+ * (approximately) last AVERAGING_WINDOW frame transmission attempts to a specific neighbor.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_FRAME_TX_ERR_RATE_AVERAGING_WINDOW
+#define OPENTHREAD_CONFIG_FRAME_TX_ERR_RATE_AVERAGING_WINDOW    128
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW
+ *
+ * Applicable only if error rate tracking is enabled (i.e., `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` is set).
+ *
+ * OpenThread maintains the average error rate of IPv6 messages per neighbor. This parameter specifies the
+ * window (in terms of number of messages) over which the average error rate is maintained. Practically, the average
+ * value can be considered as the percentage of failed (no ack) messages over (approximately) last AVERAGING_WINDOW
+ * IPv6 messages sent to a specific neighbor.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW
+#define OPENTHREAD_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW     128
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_INTERVAL
  *
  * The sample interval in milliseconds used by Channel Monitoring feature.

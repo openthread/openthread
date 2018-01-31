@@ -113,6 +113,7 @@ struct MessageInfo
     bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
     uint8_t          mPriority : 2;      ///< Identifies the message priority level (lower value is higher priority).
     bool             mInPriorityQ : 1;   ///< Indicates whether the message is queued in normal or priority queue.
+    bool             mTxSuccess : 1;     ///< Indicates whether the direct tx of the message was successful.
 };
 
 /**
@@ -601,6 +602,24 @@ public:
      *
      */
     void SetDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = true; }
+
+    /**
+     * This methods indicates whether the direct transmission of message was successful.
+     *
+     * @retval TRUE   If direct transmission of message was successful (all fragments were delivered and acked).
+     * @retval FALSE  If direct transmission of message failed (at least one fragment failed).
+     *
+     */
+    bool GetTxSuccess(void) const { return mBuffer.mHead.mInfo.mTxSuccess; }
+
+    /**
+     * This methods sets whether the direct transmission of message was successful.
+     *
+     * @param[in] aTxSuccess   TRUE if the direct transmission is successful, FALSE otherwise (i.e., at least one
+     *                         fragment transmission failed).
+     *
+     */
+    void SetTxSuccess(bool aTxSuccess) { mBuffer.mHead.mInfo.mTxSuccess = aTxSuccess; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.

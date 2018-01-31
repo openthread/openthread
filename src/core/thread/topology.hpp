@@ -586,6 +586,22 @@ public:
     void SetIndirectFragmentOffset(uint16_t aFragmentOffset) { mIndirectFragmentOffset = aFragmentOffset; }
 
     /**
+     * This method gets the transmission status (success/failure) of the indirect transmission.
+     *
+     * @returns The transmission status of indirect transmission, `true` indicating success, `false` indicating failure.
+     *
+     */
+    bool GetIndirectTxSuccess(void) const { return mIndirectTxSuccess; }
+
+    /**
+     * This method sets the transmission status (success/failure) of the indirect transmission.
+     *
+     * @param[in]  aTxStatus    The transmission status, `true` indicating success, `false` indicating failure.
+     *
+     */
+    void SetIndirectTxSuccess(bool aTxStatus) { mIndirectTxSuccess = aTxStatus; }
+
+    /**
      * This method gets the IEEE 802.15.4 Key ID to use for indirect retransmissions.
      *
      * @returns The IEEE 802.15.4 Key ID value.
@@ -778,7 +794,8 @@ private:
 
     uint32_t     mIndirectFrameCounter;                ///< Frame counter for current indirect message (used fore retx).
     Message     *mIndirectMessage;                     ///< Current indirect message.
-    uint16_t     mIndirectFragmentOffset;              ///< 6LoWPAN fragment offset for the indirect message.
+    uint16_t     mIndirectFragmentOffset : 15;         ///< 6LoWPAN fragment offset for the indirect message.
+    bool         mIndirectTxSuccess : 1;               ///< Indicates tx success/failure of current indirect message.
     uint8_t      mIndirectKeyId;                       ///< Key Id for current indirect message (used for retx).
     uint8_t      mIndirectTxAttempts;                  ///< Number of data poll triggered tx attempts.
     uint8_t      mIndirectDsn;                         ///< MAC level Data Sequence Number (DSN) for retx attempts.
