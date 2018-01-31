@@ -74,6 +74,9 @@ Instance::Instance(void) :
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     mChannelMonitor(*this),
 #endif
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    mChannelManager(*this),
+#endif
     mMessagePool(*this),
     mIsInitialized(false)
 {
@@ -399,6 +402,13 @@ template<> Utils::SupervisionListener &Instance::Get(void)
 template<> Utils::ChannelMonitor &Instance::Get(void)
 {
     return GetChannelMonitor();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+template<> Utils::ChannelManager &Instance::Get(void)
+{
+    return GetChannelManager();
 }
 #endif
 
