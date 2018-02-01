@@ -48,13 +48,11 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
                            Handler aIntervalExpiredHandler,
                            void *  aOwner)
     : TimerMilli(aInstance, HandleTimerFired, aOwner)
-    ,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    k(aRedundancyConstant)
+    , k(aRedundancyConstant)
     , c(0)
-    ,
 #endif
-    Imin(0)
+    , Imin(0)
     , Imax(0)
     , mMode(kModeNormal)
     , I(0)

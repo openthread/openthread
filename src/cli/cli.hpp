@@ -379,12 +379,6 @@ private:
 
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-
-    Coap mCoap;
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-
     static const struct Command sCommands[];
     const otCliCommand *        mUserCommands;
     uint8_t                     mUserCommandsLength;
@@ -431,6 +425,12 @@ private:
 #endif
 
     Instance *mInstance;
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+
+    Coap mCoap;
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 };
 
 } // namespace Cli

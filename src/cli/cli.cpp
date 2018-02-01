@@ -261,33 +261,26 @@ typedef otPtr<const uint8_t>        otBufferPtr;
 typedef otPtr<const char>           otStringPtr;
 
 Interpreter::Interpreter(Instance *aInstance)
-    :
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-    mCoap(*this)
-    ,
-#endif
-    mUserCommands(NULL)
+    : mUserCommands(NULL)
     , mUserCommandsLength(0)
     , mServer(NULL)
-    ,
 #ifdef OTDLL
-    mApiInstance(otApiInit())
+    , mApiInstance(otApiInit())
     , mInstanceIndex(0)
-    ,
 #else
-    mLength(8)
+    , mLength(8)
     , mCount(1)
     , mInterval(1000)
     , mPingTimer(*aInstance, &Interpreter::s_HandlePingTimer, this)
-    ,
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    mResolvingInProgress(0)
-    ,
+    , mResolvingInProgress(0)
 #endif
-    mUdp(*this)
-    ,
+    , mUdp(*this)
 #endif
-    mInstance(aInstance)
+    , mInstance(aInstance)
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    , mCoap(*this)
+#endif
 {
 #ifdef OTDLL
     assert(mApiInstance);

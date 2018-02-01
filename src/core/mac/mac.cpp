@@ -84,12 +84,10 @@ Mac::Mac(Instance &aInstance)
     , mPendingWaitingForData(false)
     , mRxOnWhenIdle(false)
     , mBeaconsEnabled(false)
-    ,
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
-    mDelaySleep(false)
-    ,
+    , mDelaySleep(false)
 #endif
-    mOperationTask(aInstance, &Mac::PerformOperation, this)
+    , mOperationTask(aInstance, &Mac::PerformOperation, this)
     , mMacTimer(aInstance, &Mac::HandleMacTimer, this)
     , mBackoffTimer(aInstance, &Mac::HandleBackoffTimer, this)
     , mReceiveTimer(aInstance, &Mac::HandleReceiveTimer, this)
@@ -113,12 +111,10 @@ Mac::Mac(Instance &aInstance)
     , // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
-    ,
 #if OPENTHREAD_ENABLE_MAC_FILTER
-    mFilter()
-    ,
+    , mFilter()
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
-    mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
+    , mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
     , mOobFrame(NULL)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSuccessRateTracker()

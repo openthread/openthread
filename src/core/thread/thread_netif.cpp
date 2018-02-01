@@ -71,67 +71,52 @@ static const otMasterKey kThreadMasterKey = {{
 ThreadNetif::ThreadNetif(Instance &aInstance)
     : Netif(aInstance, OT_NETIF_INTERFACE_ID_THREAD)
     , mCoap(aInstance)
-    ,
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    mDhcp6Client(aInstance)
-    ,
+    , mDhcp6Client(aInstance)
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
-    mDhcp6Server(aInstance)
-    ,
+    , mDhcp6Server(aInstance)
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    mDnsClient(aInstance.GetThreadNetif())
-    ,
+    , mDnsClient(aInstance.GetThreadNetif())
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
-    mActiveDataset(aInstance)
+    , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
     , mKeyManager(aInstance)
     , mLowpan(aInstance)
     , mMac(aInstance)
     , mMeshForwarder(aInstance)
     , mMleRouter(aInstance)
-    ,
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
-    mNetworkDataLocal(aInstance)
-    ,
+    , mNetworkDataLocal(aInstance)
 #endif
-    mNetworkDataLeader(aInstance)
-    ,
+    , mNetworkDataLeader(aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
-    mNetworkDiagnostic(aInstance)
-    ,
+    , mNetworkDiagnostic(aInstance)
 #endif
-    mIsUp(false)
-    ,
+    , mIsUp(false)
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-    mCommissioner(aInstance)
-    ,
+    , mCommissioner(aInstance)
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
-    mDtls(aInstance)
+    , mDtls(aInstance)
     , mCoapSecure(aInstance)
-    ,
 #endif
 #if OPENTHREAD_ENABLE_JOINER
-    mJoiner(aInstance)
-    ,
+    , mJoiner(aInstance)
 #endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_ENABLE_JAM_DETECTION
-    mJamDetector(aInstance)
-    ,
+    , mJamDetector(aInstance)
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
 #if OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_TMF_PROXY
-    mTmfProxy(mMleRouter.GetMeshLocal16(), mCoap)
-    ,
+    , mTmfProxy(mMleRouter.GetMeshLocal16(), mCoap)
 #endif // OPENTHREAD_ENABLE_TMF_PROXY
-    mJoinerRouter(aInstance)
+    , mJoinerRouter(aInstance)
     , mLeader(aInstance)
     , mAddressResolver(aInstance)
-    ,
 #endif // OPENTHREAD_FTD
-    mChildSupervisor(aInstance)
+    , mChildSupervisor(aInstance)
     , mSupervisionListener(aInstance)
     , mAnnounceBegin(aInstance)
     , mPanIdQuery(aInstance)
