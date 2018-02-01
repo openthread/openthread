@@ -58,10 +58,14 @@
 #include <openthread/config.h>
 #include <openthread/types.h>
 
+// clang-format off
+
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8
 #define PENDING_BIT           0x10
 #define US_PER_MS             1000ULL
+
+// clang-format on
 
 enum
 {

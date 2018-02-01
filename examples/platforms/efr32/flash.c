@@ -39,9 +39,11 @@
 
 #include "em_msc.h"
 
+// clang-format off
 #define FLASH_DATA_USED_PAGES   10
 #define FLASH_DATA_END_ADDR     (FLASH_BASE + FLASH_SIZE)
 #define FLASH_DATA_START_ADDR   (FLASH_DATA_END_ADDR - (FLASH_PAGE_SIZE * FLASH_DATA_USED_PAGES))
+// clang-format on
 
 static inline uint32_t mapAddress(uint32_t aAddress)
 {

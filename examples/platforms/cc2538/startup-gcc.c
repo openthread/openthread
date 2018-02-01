@@ -45,9 +45,13 @@ extern uint8_t _init_array;
 extern uint8_t _einit_array;
 
 __extension__ typedef int __guard __attribute__((mode(__DI__)));
+
 int __cxa_guard_acquire(__guard *g) { return !*(char *)(g); }
+
 void __cxa_guard_release(__guard *g) { *(char *)g = 1; }
+
 void __cxa_guard_abort(__guard *g) { (void)g; }
+
 void __cxa_pure_virtual(void) { while (1); }
 
 void IntDefaultHandler(void);
@@ -135,14 +139,18 @@ void IntDefaultHandler(void)
     while (1);
 }
 
-#define FLASH_CCA_BOOTLDR_CFG_DISABLE           0xEFFFFFFF ///< Disable backdoor function
-#define FLASH_CCA_BOOTLDR_CFG_ENABLE            0xF0FFFFFF ///< Enable backdoor function
-#define FLASH_CCA_BOOTLDR_CFG_ACTIVE_HIGH       0x08000000 ///< Selected pin on pad A active high
-#define FLASH_CCA_BOOTLDR_CFG_PORT_A_PIN_M      0x07000000 ///< Selected pin on pad A mask
-#define FLASH_CCA_BOOTLDR_CFG_PORT_A_PIN_S      24         ///< Selected pin on pad A shift
-#define FLASH_CCA_IMAGE_VALID                   0x00000000 ///< Indicates valid image in flash
+// clang-format off
+
+#define FLASH_CCA_BOOTLDR_CFG_DISABLE               0xEFFFFFFF ///< Disable backdoor function
+#define FLASH_CCA_BOOTLDR_CFG_ENABLE                0xF0FFFFFF ///< Enable backdoor function
+#define FLASH_CCA_BOOTLDR_CFG_ACTIVE_HIGH           0x08000000 ///< Selected pin on pad A active high
+#define FLASH_CCA_BOOTLDR_CFG_PORT_A_PIN_M          0x07000000 ///< Selected pin on pad A mask
+#define FLASH_CCA_BOOTLDR_CFG_PORT_A_PIN_S          24         ///< Selected pin on pad A shift
+#define FLASH_CCA_IMAGE_VALID                       0x00000000 ///< Indicates valid image in flash
 
 #define FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN  3      ///< Select Button on SmartRF06 Eval Board
+
+// clang-format on
 
 typedef struct
 {
