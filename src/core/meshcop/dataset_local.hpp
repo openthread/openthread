@@ -72,23 +72,6 @@ public:
     void Clear(void);
 
     /**
-     * This method indicates whether or not the dataset is present in non-volatile memory.
-     *
-     * @retval TRUE   if the dataset is present in non-volatile memory.
-     * @retval FALSE  if the dataset is not present in non-volatile memory.
-     *
-     */
-    bool IsPresent(void) const;
-
-    /**
-     * This method returns a pointer to the Active or Pending Timestamp value.
-     *
-     * @returns  A pointer to the Active or Pending Timestamp value or NULL if the dataset is invalid.
-     *
-     */
-    const Timestamp *GetTimestamp(void) const;
-
-    /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
@@ -97,7 +80,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(Dataset &aDataset);
+    otError Get(Dataset &aDataset) const;
 
     /**
      * This method retrieves the dataset from non-volatile memory.
