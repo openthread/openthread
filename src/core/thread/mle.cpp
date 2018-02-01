@@ -92,20 +92,17 @@ Mle::Mle(Instance &aInstance)
     , mDiscoverContext(NULL)
     , mIsDiscoverInProgress(false)
     , mEnableEui64Filtering(false)
-    ,
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
-    mPreviousParentRloc(Mac::kShortAddrInvalid)
-    ,
+    , mPreviousParentRloc(Mac::kShortAddrInvalid)
 #endif
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
-    mParentSearchIsInBackoff(false)
+    , mParentSearchIsInBackoff(false)
     , mParentSearchBackoffWasCanceled(false)
     , mParentSearchRecentlyDetached(false)
     , mParentSearchBackoffCancelTime(0)
     , mParentSearchTimer(aInstance, &Mle::HandleParentSearchTimer, this)
-    ,
 #endif
-    mAnnounceChannel(OT_RADIO_CHANNEL_MIN)
+    , mAnnounceChannel(OT_RADIO_CHANNEL_MIN)
     , mPreviousChannel(0)
     , mPreviousPanId(Mac::kPanIdBroadcast)
     , mNotifierCallback(&Mle::HandleStateChanged, this)
