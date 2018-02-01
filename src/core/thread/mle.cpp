@@ -390,11 +390,6 @@ otError Mle::Store(void)
     {
         // only update network information while we are attached to avoid losing information when a reboot occurs after
         // a message is sent but before attaching
-        if (netif.GetActiveDataset().GetTimestamp() == NULL)
-        {
-            netif.GetActiveDataset().GenerateLocal();
-        }
-
         networkInfo.mDeviceMode = mDeviceMode;
         networkInfo.mRole = mRole;
         networkInfo.mRloc16 = GetRloc16();

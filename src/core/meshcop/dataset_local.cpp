@@ -63,12 +63,7 @@ void DatasetLocal::Clear(void)
     otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), -1);
 }
 
-bool DatasetLocal::IsPresent(void) const
-{
-    return otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, NULL, NULL) == OT_ERROR_NONE;
-}
-
-otError DatasetLocal::Get(Dataset &aDataset)
+otError DatasetLocal::Get(Dataset &aDataset) const
 {
     DelayTimerTlv *delayTimer;
     uint32_t elapsed;

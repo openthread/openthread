@@ -45,8 +45,6 @@
 #include "meshcop/dataset.hpp"
 #include "meshcop/dataset_local.hpp"
 #include "net/udp6.hpp"
-#include "thread/mle.hpp"
-#include "thread/network_data_leader.hpp"
 
 namespace ot {
 
@@ -64,6 +62,15 @@ public:
      *
      */
     const Timestamp *GetTimestamp(void) const;
+
+    /**
+     * This method restores the Operational Dataset from non-volatile memory.
+     *
+     * @retval OT_ERROR_NONE       Successfully restore the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     *
+     */
+    otError Restore(void);
 
     /**
      * This method compares @p aTimestamp to the dataset's timestamp value.
@@ -95,22 +102,26 @@ public:
     const Tlv *GetTlv(Tlv::Type aType) const;
 
     /**
-     * This method returns the Operational Dataset stored in non-volatile memory.
+     * This method retrieves the dataset from non-volatile memory.
      *
-     * @retval A reference to the Operational Dataset stored in non-volatile memory.
+     * @param[out]  aDataset  Where to place the dataset.
+     *
+     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    DatasetLocal &GetLocal(void) { return mLocal; }
+    otError Get(Dataset &aDataset) const { return mLocal.Get(aDataset); }
 
     /**
-     * This method returns the Operational Dataset for the attached partition.
+     * This method retrieves the dataset from non-volatile memory.
      *
-     * When not attached to a partition, the returned dataset is the one stored in non-volatile memory.
+     * @param[out]  aDataset  Where to place the dataset.
      *
-     * @retval A reference to the Operational Dataset for the attached partition.
+     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    Dataset &GetNetwork(void) { return mNetwork; }
+    otError Get(otOperationalDataset &aDataset) const { return mLocal.Get(aDataset); }
 
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
@@ -118,37 +129,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully applied configuration.
      *
      */
-    otError ApplyConfiguration(void);
-
-protected:
-
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance      A reference to the OpenThread instance.
-     * @param[in]  aType          Identifies Active or Pending Operational Dataset.
-     * @param[in]  aUriSet        The URI-PATH for setting the Operational Dataset.
-     * @param[in]  aUriGet        The URI-PATH for getting the Operational Dataset.
-     * @param[in]  aTimerHandler  The registration timer handler.
-     *
-     */
-    DatasetManager(Instance &aInstance, const Tlv::Type aType, const char *aUriSet, const char *aUriGet,
-                   TimerMilli::Handler aTimerHandler);
-
-    /**
-     * This method restores the Operational Dataset from non-volatile memory.
-     *
-     * @retval OT_ERROR_NONE       Successfully restore the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
-     *
-     */
-    otError Restore(void);
-
-    /**
-     * This method clears the Operational Dataset.
-     *
-     */
-    void Clear(void);
+    otError ApplyConfiguration(void) const;
 
     /**
      * This method updates the Operational Dataset when detaching from the network.
@@ -157,6 +138,27 @@ protected:
      *
      */
     void HandleDetach(void);
+
+protected:
+
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]  aInstance      A reference to the OpenThread instance.
+     * @param[in]  aType          Identifies Active or Pending Operational Dataset.
+     * @param[in]  aUriGet        The URI-PATH for getting the Operational Dataset.
+     * @param[in]  aUriSet        The URI-PATH for setting the Operational Dataset.
+     * @param[in]  aTimerHandler  The registration timer handler.
+     *
+     */
+    DatasetManager(Instance &aInstance, const Tlv::Type aType, const char *aUriGet, const char *aUriSet,
+                   TimerMilli::Handler aTimerHandler);
+
+    /**
+     * This method clears the Operational Dataset.
+     *
+     */
+    void Clear(void);
 
     /**
      * This method sets the Operational Dataset in non-volatile memory.
@@ -204,8 +206,9 @@ protected:
      */
     void HandleTimer(void);
 
-    Dataset mNetwork;
     DatasetLocal mLocal;
+    Timestamp mTimestamp;
+    bool mTimestampValid : 1;
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -217,8 +220,8 @@ private:
 
     TimerMilli mTimer;
 
-    const char *mUriSet;
     const char *mUriGet;
+    const char *mUriSet;
 
 #if OPENTHREAD_FTD
 public:
@@ -244,7 +247,7 @@ public:
      * @retval OT_ERROR_NONE on success.
      *
      */
-    otError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
+    otError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress) const;
 
 protected:
     /**
@@ -273,52 +276,22 @@ private:
 #endif
 };
 
-class ActiveDatasetBase: public DatasetManager
+class ActiveDataset: public DatasetManager
 {
 public:
     /**
      * Constructor.
      *
-     * @param[in]  aInstance      A reference to the OpenThread instance.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    explicit ActiveDatasetBase(Instance &aInstance);
-
-    /**
-     * This method restores the Active Operational Dataset from non-volatile memory.
-     *
-     * This method will also configure the Thread interface using the Active Operational Dataset.
-     *
-     * @retval OT_ERROR_NONE       Successfully restore the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
-     *
-     */
-    otError Restore(void);
+    explicit ActiveDataset(Instance &aInstance);
 
     /**
      * This method clears the Active Operational Dataset.
      *
      */
     void Clear(void);
-
-    /**
-     * This method updates the Operational Dataset when detaching from the network.
-     *
-     * On detach, the Operational Dataset is restored from non-volatile memory and reconfigures the Thread
-     * interface.
-     *
-     */
-    void HandleDetach(void);
-
-#if OPENTHREAD_FTD
-    /**
-     * This method sets the Operational Dataset in non-volatile memory.
-     *
-     * @param[in]  aDataset  The Operational Dataset.
-     *
-     */
-    otError Set(const otOperationalDataset &aDataset);
-#endif
 
     /**
      * This method sets the Operational Dataset in non-volatile memory.
@@ -344,18 +317,61 @@ public:
      */
     otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
-private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#if OPENTHREAD_FTD
+    /**
+     * This method sets the Operational Dataset in non-volatile memory.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     */
+    otError Set(const otOperationalDataset &aDataset);
 
+    /**
+     * This method starts the Leader functions for maintaining the Active Operational Dataset.
+     *
+     */
+    void StartLeader(void);
+
+    /**
+     * This method stops the Leader functions for maintaining the Active Operational Dataset.
+     *
+     */
+    void StopLeader(void);
+
+    /**
+     * This method generate a default Active Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE  Successfully generated an Active Operational Dataset.
+     * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
+     *
+     */
+    otError GenerateLocal(void);
+#endif
+
+private:
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void) { DatasetManager::HandleTimer(); }
 
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                          const otMessageInfo *aMessageInfo);
+    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+
+#if OPENTHREAD_FTD
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                          const otMessageInfo *aMessageInfo);
+    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    bool IsTlvInitialized(Tlv::Type aType);
+#endif
+
     Coap::Resource mResourceGet;
+
+#if OPENTHREAD_FTD
+    Coap::Resource mResourceSet;
+#endif
 };
 
-class PendingDatasetBase: public DatasetManager
+class PendingDataset: public DatasetManager
 {
 public:
     /**
@@ -364,16 +380,7 @@ public:
      * @param[in]  The Thread network interface.
      *
      */
-    explicit PendingDatasetBase(Instance &aInstance);
-
-    /**
-     * This method restores the Operational Dataset from non-volatile memory.
-     *
-     * @retval OT_ERROR_NONE       Successfully restore the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
-     *
-     */
-    otError Restore(void);
+    explicit PendingDataset(Instance &aInstance);
 
     /**
      * This method clears the Pending Operational Dataset.
@@ -392,38 +399,6 @@ public:
     void ClearNetwork(void);
 
     /**
-     * This method updates the Operational Dataset when detaching from the network.
-     *
-     * On detach, the Operational Dataset is restored from non-volatile memory.
-     *
-     * This method also stops the Delay Timer if it was active.
-     *
-     */
-    void HandleDetach(void);
-
-#if OPENTHREAD_FTD
-    /**
-     * This method sets the Operational Dataset in non-volatile memory.
-     *
-     * This method also starts the Delay Timer.
-     *
-     * @param[in]  aDataset  The Operational Dataset.
-     *
-     */
-    otError Set(const otOperationalDataset &aDataset);
-#endif
-
-    /**
-     * This method sets the Operational Dataset in non-volatile memory.
-     *
-     * This method also starts the Delay Timer.
-     *
-     * @param[in]  aDataset  The Operational Dataset.
-     *
-     */
-    void Set(const Dataset &aDataset);
-
-    /**
      * This method sets the Operational Dataset for the partition.
      *
      * This method also updates the non-volatile version if the partition's Operational Dataset is newer.
@@ -438,33 +413,68 @@ public:
      */
     otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
-protected:
-    static void HandleDelayTimer(Timer &aTimer);
-    void HandleDelayTimer(void);
-    void StartDelayTimer(void);
+#if OPENTHREAD_FTD
+    /**
+     * This method sets the Operational Dataset in non-volatile memory.
+     *
+     * This method also starts the Delay Timer.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     */
+    otError Set(const otOperationalDataset &aDataset);
 
-    TimerMilli mDelayTimer;
+    /**
+     * This method starts the Leader functions for maintaining the Active Operational Dataset.
+     *
+     */
+    void StartLeader(void);
+
+    /**
+     * This method stops the Leader functions for maintaining the Active Operational Dataset.
+     *
+     */
+    void StopLeader(void);
+
+    /**
+     * This method generates a Pending Dataset from an Active Dataset.
+     *
+     * @param[in]  aTimestamp  The Active Dataset Timestamp.
+     * @param[in]  aMessage    The MGMT_SET message that contains an Active Dataset.
+     *
+     */
+    void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
+#endif
 
 private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void StartDelayTimer(void);
 
     static void HandleTimer(Timer &aTimer);
     void HandleTimer(void) { DatasetManager::HandleTimer(); }
 
+    static void HandleDelayTimer(Timer &aTimer);
+    void HandleDelayTimer(void);
+
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                          const otMessageInfo *aMessageInfo);
+    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+
+#if OPENTHREAD_FTD
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                          const otMessageInfo *aMessageInfo);
+    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#endif
+
+    TimerMilli mDelayTimer;
+
     Coap::Resource mResourceGet;
+
+#if OPENTHREAD_FTD
+    Coap::Resource mResourceSet;
+#endif
 };
 
 }  // namespace MeshCoP
 }  // namespace ot
-
-#if OPENTHREAD_MTD
-#include "dataset_manager_mtd.hpp"
-#elif OPENTHREAD_FTD
-#include "dataset_manager_ftd.hpp"
-#else
-#error Must define OPENTHREAD_MTD or OPENTHREAD_FTD
-#endif
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

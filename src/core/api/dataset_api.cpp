@@ -61,7 +61,7 @@ otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetActiveDataset().GetLocal().Get(*aDataset);
+    error = instance.GetThreadNetif().GetActiveDataset().Get(*aDataset);
 
 exit:
     return error;
@@ -74,7 +74,7 @@ otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDatase
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetPendingDataset().GetLocal().Get(*aDataset);
+    error = instance.GetThreadNetif().GetPendingDataset().Get(*aDataset);
 
 exit:
     return error;

@@ -314,12 +314,12 @@ template<> Coap::Coap &Instance::Get(void)
     return GetThreadNetif().GetCoap();
 }
 
-template<> MeshCoP::ActiveDatasetBase &Instance::Get(void)
+template<> MeshCoP::ActiveDataset &Instance::Get(void)
 {
     return GetThreadNetif().GetActiveDataset();
 }
 
-template<> MeshCoP::PendingDatasetBase &Instance::Get(void)
+template<> MeshCoP::PendingDataset &Instance::Get(void)
 {
     return GetThreadNetif().GetPendingDataset();
 }
