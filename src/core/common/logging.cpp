@@ -259,6 +259,14 @@ const char *otLogRegionToString(otLogRegion aRegion)
         retval = "-PLAT----";
         break;
 
+    case OT_LOG_REGION_CORE:
+        retval = "-CORE----";
+        break;
+
+    case OT_LOG_REGION_UTIL:
+        retval = "-UTIL----";
+        break;
+
     default:
         retval = "---------";
         break;

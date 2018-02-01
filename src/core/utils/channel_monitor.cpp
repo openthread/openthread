@@ -63,13 +63,13 @@ void ChannelMonitor::Start(void)
 {
     Clear();
     mTimer.Start(kTimerInterval);
-    otLogDebgMac(GetInstance(), "ChannelMonitor: Starting");
+    otLogDebgUtil(GetInstance(), "ChannelMonitor: Starting");
 }
 
 void ChannelMonitor::Stop(void)
 {
     mTimer.Stop();
-    otLogDebgMac(GetInstance(), "ChannelMonitor: Stopping");
+    otLogDebgUtil(GetInstance(), "ChannelMonitor: Stopping");
 }
 
 void ChannelMonitor::Clear(void)
@@ -78,7 +78,7 @@ void ChannelMonitor::Clear(void)
     mSampleCount = 0;
     memset(mChannelQuality, 0, sizeof(mChannelQuality));
 
-    otLogDebgMac(GetInstance(), "ChannelMonitor: Clearing data");
+    otLogDebgUtil(GetInstance(), "ChannelMonitor: Clearing data");
 }
 
 uint16_t ChannelMonitor::GetChannelQuality(uint8_t aChannel) const
@@ -112,7 +112,7 @@ void ChannelMonitor::RestartTimer(void)
     interval += jitter;
     mTimer.StartAt(mTimer.GetFireTime(), interval);
 
-    otLogDebgMac(GetInstance(), "ChannelMonitor: Timer interval %u, jitter %d", interval, jitter);
+    otLogDebgUtil(GetInstance(), "ChannelMonitor: Timer interval %u, jitter %d", interval, jitter);
 }
 
 void ChannelMonitor::HandleTimer(Timer &aTimer)
@@ -156,7 +156,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
         assert(channelIndex < kNumChannels);
 
-        otLogDebgMac(GetInstance(), "ChannelMonitor: channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
+        otLogDebgUtil(GetInstance(), "ChannelMonitor: channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
 
         if (aResult->mMaxRssi != OT_RADIO_RSSI_INVALID)
         {
@@ -191,7 +191,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
 void ChannelMonitor::LogResults(void)
 {
-    otLogInfoMac(
+    otLogInfoUtil(
         GetInstance(),
         "ChannelMonitor: %u [%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x]",
         mSampleCount,

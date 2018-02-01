@@ -1191,6 +1191,8 @@ typedef enum otLogRegion
     OT_LOG_REGION_PLATFORM = 12, ///< Platform
     OT_LOG_REGION_COAP     = 13, ///< CoAP
     OT_LOG_REGION_CLI      = 14, ///< CLI
+    OT_LOG_REGION_CORE     = 15, ///< OpenThread Core
+    OT_LOG_REGION_UTIL     = 16, ///< Utility module
 } otLogRegion;
 
 /**
