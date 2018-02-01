@@ -57,35 +57,27 @@ Instance::Instance(void)
     , mEnergyScanCallbackContext(NULL)
     , mNotifier(*this)
     , mTimerMilliScheduler(*this)
-    ,
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    mTimerMicroScheduler(*this)
-    ,
+    , mTimerMicroScheduler(*this)
 #endif
-    mIp6(*this)
+    , mIp6(*this)
     , mThreadNetif(*this)
-    ,
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    mLinkRaw(*this)
-    ,
+    , mLinkRaw(*this)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    mApplicationCoap(*this)
-    ,
+    , mApplicationCoap(*this)
 #endif
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
-    ,
+    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-    mChannelMonitor(*this)
-    ,
+    , mChannelMonitor(*this)
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
-    mChannelManager(*this)
-    ,
+    , mChannelManager(*this)
 #endif
-    mMessagePool(*this)
+    , mMessagePool(*this)
     , mIsInitialized(false)
 {
 }

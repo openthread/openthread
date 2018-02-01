@@ -78,16 +78,14 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mRestoreChannel(0)
     , mRestorePanId(Mac::kPanIdBroadcast)
     , mScanning(false)
-    ,
 #if OPENTHREAD_FTD
-    mSourceMatchController(aInstance)
+    , mSourceMatchController(aInstance)
     , mSendMessageFrameCounter(0)
     , mSendMessageKeyId(0)
     , mSendMessageDataSequenceNumber(0)
     , mStartChildIndex(0)
-    ,
 #endif
-    mDataPollManager(aInstance)
+    , mDataPollManager(aInstance)
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
     GetNetif().GetMac().RegisterReceiver(mMacReceiver);
