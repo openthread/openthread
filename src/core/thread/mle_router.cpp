@@ -441,7 +441,6 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     netif.GetIp6().SetForwardingEnabled(true);
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
-    netif.GetAddressResolver().Clear();
 
     // clear router table
     for (int i = 0; i <= kMaxRouterId; i++)
