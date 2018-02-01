@@ -714,6 +714,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_CORE
+ *
+ * Define to enable OpenThread Core logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_CORE
+#define OPENTHREAD_CONFIG_LOG_CORE                              1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_UTIL
+ *
+ * Define to enable OpenThread Utility module logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_UTIL
+#define OPENTHREAD_CONFIG_LOG_UTIL                              1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages
