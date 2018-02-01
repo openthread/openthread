@@ -1365,7 +1365,7 @@ protected:
      * attaches and receives the new Active Commissioning Dataset if needed.
      *
      * MTD would send Announce immediately after attached.
-     * FTD would delay to send Announce after it has become Router or it decided to stay in REED role.
+     * FTD would delay to send Announce after tried to become Router or decided to stay in REED role.
      *
      */
     void InformPreviousChannel(void);

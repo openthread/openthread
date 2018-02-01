@@ -4316,9 +4316,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
         mRouters[GetLeaderId()].SetNextHop(GetRouterId(mParent.GetRloc16()));
     }
 
-    // send announce after become Router if needed
-    InformPreviousChannel();
-
     // send link request
     SendLinkRequest(NULL);
 
@@ -4346,6 +4343,10 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     }
 
 exit:
+
+    // send announce after received address solicit reply if needed
+    InformPreviousChannel();
+
     return;
 }
 
