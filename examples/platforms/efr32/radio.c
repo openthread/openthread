@@ -166,15 +166,15 @@ void efr32RadioInit(void)
     assert(status == RAIL_STATUS_NO_ERROR);
 
     status = RAIL_ConfigEvents(sRailHandle, RAIL_EVENTS_ALL,
-                               RAIL_EVENT_RX_ACK_TIMEOUT |
-                               RAIL_EVENT_TX_PACKET_SENT |
-                               RAIL_EVENT_RX_PACKET_RECEIVED |
-                               RAIL_EVENT_TX_CHANNEL_BUSY |
-                               RAIL_EVENT_TX_ABORTED |
-                               RAIL_EVENT_TX_BLOCKED |
-                               RAIL_EVENT_TX_UNDERFLOW |
-                               RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND |
-                               RAIL_EVENT_CAL_NEEDED
+                               RAIL_EVENT_RX_ACK_TIMEOUT | //
+                               RAIL_EVENT_TX_PACKET_SENT | //
+                               RAIL_EVENT_RX_PACKET_RECEIVED | //
+                               RAIL_EVENT_TX_CHANNEL_BUSY | //
+                               RAIL_EVENT_TX_ABORTED | //
+                               RAIL_EVENT_TX_BLOCKED | //
+                               RAIL_EVENT_TX_UNDERFLOW | //
+                               RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND | //
+                               RAIL_EVENT_CAL_NEEDED //
                               );
     assert(status == RAIL_STATUS_NO_ERROR);
 

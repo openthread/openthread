@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 
+// clang-format off
 
 #define PLATFORM_FEM_DEFAULT_PA_PIN                      26  /**< Default Power Amplifier pin. */
 #define PLATFORM_FEM_DEFAULT_LNA_PIN                     27  /**< Default Low Noise Amplifier pin. */
@@ -45,6 +46,8 @@
 #define PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP       4   /**< Default PPI channel group used to disable timer match PPI. */
 #define PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP    5   /**< Default PPI channel group used to disable radio disabled PPI. */
 #define PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL              7   /**< Default GPIOTE channel for FEM control. */
+
+// clang-format on
 
 #define PLATFORM_FEM_DEFAULT_CONFIG                                                  \
     ((PlatformFemConfigParams) {                                                     \
@@ -64,7 +67,6 @@
         .mRadioPpiGrp = PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP,               \
         .mGpioteChId  = PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL,                         \
     })
-
 
 /**
  * @brief Configuration parameters for the PA and LNA.

@@ -56,7 +56,9 @@ typedef struct
     FPTR_MEMMOVE_T      memmove;
 } ROM_API_T;
 
-#define P_ROM_API              ((ROM_API_T*) ROM_API_TABLE_ADDR)
+// clang-format off
+
+#define P_ROM_API               ((ROM_API_T*)ROM_API_TABLE_ADDR)
 
 #define ROM_Crc32(a,b)          P_ROM_API->Crc32(a,b)
 #define ROM_GetFlashSize()      P_ROM_API->GetFlashSize()
@@ -68,5 +70,7 @@ typedef struct
 #define ROM_Memcpy(a,b,c)       P_ROM_API->memcpy(a,b,c)
 #define ROM_Memcmp(a,b,c)       P_ROM_API->memcmp(a,b,c)
 #define ROM_Memmove(a,b,c)      P_ROM_API->memmove(a,b,c)
+
+// clang-format on
 
 #endif  // ROM_UTILITY_H_

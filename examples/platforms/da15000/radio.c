@@ -46,12 +46,14 @@
 #include "hw_rf.h"
 #include "internal.h"
 
+// clang-format off
 #define FACTORY_TEST_TIMESTAMP      (0x7F8EA08) // Register holds a timestamp of facotry test of a chip
 #define FACTORY_TESTER_ID           (0x7F8EA0C) // Register holds test machine ID used for factory test
 
 #define RADIO_DEFAULT_CHANNEL       (11)
 #define RADIO_EUI64_TABLE_SIZE      (8)
 #define RADIO_FRAMES_BUFFER_SIZE    (32)
+// clang-format on
 
 enum
 {
