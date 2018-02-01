@@ -297,6 +297,7 @@ void cc2538DebugUartInit(void)
     b = (((kPlatformClock * 8) / kBaudRate) + 1) / 2;
     a = b / 64;
     b = b % 64;
+
     HWREG(UART1_BASE + UART_O_IBRD) = a;
     HWREG(UART1_BASE + UART_O_FBRD) = b;
     HWREG(UART1_BASE + UART_O_LCRH) = UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE;

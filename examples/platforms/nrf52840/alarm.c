@@ -56,6 +56,7 @@
 #include <openthread/config.h>
 #include <openthread/types.h>
 
+// clang-format off
 #define RTC_FREQUENCY       32768ULL
 
 #define US_PER_MS           1000ULL
@@ -64,6 +65,7 @@
 
 #define MS_PER_S            1000UL
 #define MS_PER_OVERFLOW     (512UL * MS_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
+// clang-format on
 
 typedef enum
 {
@@ -88,8 +90,8 @@ typedef struct
 
 static volatile uint64_t sTimeOffset = 0;  ///< Time offset to keep track of current time (in millisecond).
 static AlarmData sTimerData[kNumTimers];   ///< Data of the timers.
-static const AlarmChannelData sChannelData[kNumTimers] =
-{
+static const AlarmChannelData sChannelData[kNumTimers] = //
+{ //
     [kMsTimer] = {
         .mChannelNumber    = 0,
         .mCompareEventMask = RTC_EVTEN_COMPARE0_Msk,

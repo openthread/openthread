@@ -75,20 +75,20 @@ typedef struct TxPowerTable
 // The transmit power table, the values are from SmartRF Studio 2.4.0
 static const TxPowerTable sTxPowerTable[] =
 {
-    {  7, 0xFF },
-    {  5, 0xED },
-    {  3, 0xD5 },
-    {  1, 0xC5 },
-    {  0, 0xB6 },
-    { -1, 0xB0 },
-    { -3, 0xA1 },
-    { -5, 0x91 },
-    { -7, 0x88 },
-    { -9, 0x72 },
-    { -11, 0x62 },
-    { -13, 0x58 },
-    { -15, 0x42 },
-    { -24, 0x00 },
+    {  7, 0xFF },  //
+    {  5, 0xED },  //
+    {  3, 0xD5 },  //
+    {  1, 0xC5 },  //
+    {  0, 0xB6 },  //
+    { -1, 0xB0 },  //
+    { -3, 0xA1 },  //
+    { -5, 0x91 },  //
+    { -7, 0x88 },  //
+    { -9, 0x72 },  //
+    { -11, 0x62 }, //
+    { -13, 0x58 }, //
+    { -15, 0x42 }, //
+    { -24, 0x00 }, //
 };
 
 static otRadioFrame sTransmitFrame;

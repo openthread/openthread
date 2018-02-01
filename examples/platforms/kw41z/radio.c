@@ -43,6 +43,7 @@
 #include <openthread/platform/diag.h>
 #include <utils/code_utils.h>
 
+// clang-format off
 #define DOUBLE_BUFFERING             (1)
 #define DEFAULT_CHANNEL              (11)
 #define DEFAULT_CCA_MODE             (XCVR_CCA_MODE1_c)
@@ -62,6 +63,7 @@
                                       ZLL_IRQSTS_TMR2MSK_MASK | \
                                       ZLL_IRQSTS_TMR3MSK_MASK | \
                                       ZLL_IRQSTS_TMR4MSK_MASK )
+// clang-format on
 
 typedef enum xcvr_state_tag
 {
@@ -871,19 +873,19 @@ void kw41zRadioInit(void)
     XCVR_Init(ZIGBEE_MODE, DR_500KBPS);
 
     /* Disable all timers, enable AUTOACK and CCA before TX, mask all interrupts */
-    ZLL->PHY_CTRL = ZLL_PHY_CTRL_CCATYPE(DEFAULT_CCA_MODE) |
-                    ZLL_PHY_CTRL_CCABFRTX_MASK             |
-                    ZLL_PHY_CTRL_TSM_MSK_MASK              |
-                    ZLL_PHY_CTRL_WAKE_MSK_MASK             |
-                    ZLL_PHY_CTRL_CRC_MSK_MASK              |
-                    ZLL_PHY_CTRL_PLL_UNLOCK_MSK_MASK       |
-                    ZLL_PHY_CTRL_FILTERFAIL_MSK_MASK       |
-                    ZLL_PHY_CTRL_RX_WMRK_MSK_MASK          |
-                    ZLL_PHY_CTRL_CCAMSK_MASK               |
-                    ZLL_PHY_CTRL_RXMSK_MASK                |
-                    ZLL_PHY_CTRL_TXMSK_MASK                |
-                    ZLL_PHY_CTRL_SEQMSK_MASK               |
-                    ZLL_PHY_CTRL_AUTOACK_MASK              |
+    ZLL->PHY_CTRL = ZLL_PHY_CTRL_CCATYPE(DEFAULT_CCA_MODE) | //
+                    ZLL_PHY_CTRL_CCABFRTX_MASK             | //
+                    ZLL_PHY_CTRL_TSM_MSK_MASK              | //
+                    ZLL_PHY_CTRL_WAKE_MSK_MASK             | //
+                    ZLL_PHY_CTRL_CRC_MSK_MASK              | //
+                    ZLL_PHY_CTRL_PLL_UNLOCK_MSK_MASK       | //
+                    ZLL_PHY_CTRL_FILTERFAIL_MSK_MASK       | //
+                    ZLL_PHY_CTRL_RX_WMRK_MSK_MASK          | //
+                    ZLL_PHY_CTRL_CCAMSK_MASK               | //
+                    ZLL_PHY_CTRL_RXMSK_MASK                | //
+                    ZLL_PHY_CTRL_TXMSK_MASK                | //
+                    ZLL_PHY_CTRL_SEQMSK_MASK               | //
+                    ZLL_PHY_CTRL_AUTOACK_MASK              | //
                     ZLL_PHY_CTRL_TRCV_MSK_MASK;
 
     /* Clear all IRQ flags and disable all timer interrupts */
@@ -892,10 +894,10 @@ void kw41zRadioInit(void)
     /*  Frame Filtering
     FRM_VER[7:6] = b11. Accept FrameVersion 0 and 1 packets, reject all others */
     ZLL->RX_FRAME_FILTER &= ~ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK;
-    ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) |
-                           ZLL_RX_FRAME_FILTER_CMD_FT_MASK       |
-                           ZLL_RX_FRAME_FILTER_DATA_FT_MASK      |
-                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK       |
+    ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | //
+                           ZLL_RX_FRAME_FILTER_CMD_FT_MASK       | //
+                           ZLL_RX_FRAME_FILTER_DATA_FT_MASK      | //
+                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK       | //
                            ZLL_RX_FRAME_FILTER_BEACON_FT_MASK;
 
     /* Set prescaller to obtain 1 symbol (16us) timebase */

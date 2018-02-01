@@ -95,6 +95,7 @@ static uint32_t sRatOffset = 0;
 /*
  * Radio command structures that run on the CM0.
  */
+// clang-format off
 static volatile __attribute__((aligned(4))) rfc_CMD_SYNC_START_RAT_t     sStartRatCmd;
 static volatile __attribute__((aligned(4))) rfc_CMD_RADIO_SETUP_t        sRadioSetupCmd;
 
@@ -115,6 +116,7 @@ static volatile __attribute__((aligned(4))) rfc_CMD_IEEE_RX_ACK_t        sTransm
 
 static volatile __attribute__((aligned(4))) ext_src_match_data_t         sSrcMatchExtData;
 static volatile __attribute__((aligned(4))) short_src_match_data_t       sSrcMatchShortData;
+// clang-format on
 
 /*
  * Structure containing radio statistics.
@@ -176,6 +178,7 @@ static void rfCoreInitBufs(void)
  */
 static void rfCoreInitReceiveParams(void)
 {
+    // clang-format off
     static const rfc_CMD_IEEE_RX_t cReceiveCmd =
     {
         .commandNo                  = CMD_IEEE_RX,
@@ -241,6 +244,7 @@ static void rfCoreInitReceiveParams(void)
         },
         .endTime                    = 0u,
     };
+    // clang-format on
     sReceiveCmd = cReceiveCmd;
 
     sReceiveCmd.pRxQ    = &sRxDataQueue;
@@ -524,6 +528,7 @@ static uint8_t rfCoreFindEmptyExtSrcMatchIdx(void)
  */
 static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
 {
+    // clang-format off
     static const rfc_CMD_IEEE_CSMA_t cCsmacaBackoffCmd =
     {
         .commandNo                  = CMD_IEEE_CSMA,
@@ -585,6 +590,7 @@ static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
         /* number of RAT ticks to wait before claiming we haven't received an ack */
         .endTime                    = ((IEEE802154_MAC_ACK_WAIT_DURATION * CC2650_RAT_TICKS_PER_SEC) / IEEE802154_SYMBOLS_PER_SEC),
     };
+    // clang-format on
 
     /* reset retry count */
     sTransmitRetryCount = 0;
@@ -634,6 +640,7 @@ static uint_fast8_t rfCoreSendReceiveCmd(void)
 
 static uint_fast8_t rfCoreSendEdScanCmd(uint8_t aChannel, uint16_t aDurration)
 {
+    // clang-format off
     static const rfc_CMD_IEEE_ED_SCAN_t cEdScanCmd =
     {
         .commandNo                  = CMD_IEEE_ED_SCAN,
@@ -660,6 +667,7 @@ static uint_fast8_t rfCoreSendEdScanCmd(uint8_t aChannel, uint16_t aDurration)
             .pastTrig               = 1,
         },
     };
+    // clang-format on
     sEdScanCmd = cEdScanCmd;
 
     sEdScanCmd.channel = aChannel;
@@ -876,6 +884,7 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
     bool          interruptsWereDisabled;
     uint_fast16_t ret;
 
+    // clang-format off
     static const rfc_CMD_SYNC_START_RAT_t cStartRatCmd =
     {
         .commandNo                  = CMD_SYNC_START_RAT,
@@ -899,6 +908,7 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
         },
         .mode                       = 1, // IEEE 802.15.4 mode
     };
+    // clang-format on
     /* turn on the clock line to the radio core */
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
 
@@ -949,6 +959,7 @@ static uint_fast16_t rfCoreSendDisableCmd(void)
     bool          interruptsWereDisabled;
     uint_fast16_t ret;
 
+    // clang-format off
     static const rfc_CMD_FS_POWERDOWN_t cFsPowerdownCmd =
     {
         .commandNo                  = CMD_FS_POWERDOWN,
@@ -971,6 +982,7 @@ static uint_fast16_t rfCoreSendDisableCmd(void)
             .rule                   = COND_NEVER,
         },
     };
+    // clang-format on
 
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
 

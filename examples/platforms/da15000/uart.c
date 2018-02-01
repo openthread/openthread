@@ -56,6 +56,7 @@ static void UartSignalRead(void *p, uint16_t transferred)
 
 otError otPlatUartEnable(void)
 {
+    // clang-format off
     uart_config_ex uart_init =
     {
         .baud_rate = HW_UART_BAUDRATE_115200,
@@ -70,6 +71,7 @@ otError otPlatUartEnable(void)
         .tx_dma_channel = HW_DMA_CHANNEL_3,
         .rx_dma_channel = HW_DMA_CHANNEL_2,
     };
+    // clang-format on
 
     hw_uart_init_ex(HW_UART2, &uart_init);
 

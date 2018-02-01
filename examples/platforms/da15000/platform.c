@@ -48,11 +48,13 @@ static bool sBlink = false;
 static int  sMsCounterInit;
 static int  sMsCounter;
 
+// clang-format off
 #define ALIVE_LED_PERIOD      (50000)
 #define ALIVE_LED_DUTY        (500)
 #define LEADER_BLINK_TIME     (200)
 #define ROUTER_BLINK_TIME     (500)
 #define CHILD_BLINK_TIME      (2000)
+// clang-format on
 
 static otInstance *sInstance = NULL;
 
