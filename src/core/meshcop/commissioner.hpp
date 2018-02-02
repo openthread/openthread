@@ -283,7 +283,7 @@ private:
 
     struct Joiner
     {
-        Mac::ExtAddress mJoinerId;
+        Mac::ExtAddress mEui64;
         uint32_t mExpirationTime;
         char mPsk[Dtls::kPskMaxLength + 1];
         bool mValid : 1;
