@@ -1537,6 +1537,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_CHILD_TABLE_ADDRESSES";
         break;
 
+    case SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES:
+        ret = "PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;
@@ -2130,6 +2134,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_CHANNEL_MONITOR:
         ret = "CAP_CHANNEL_MONITOR";
+        break;
+
+    case SPINEL_CAP_ERROR_RATE_TRACKING:
+        ret = "CAP_ERROR_RATE_TRACKING";
         break;
 
     case SPINEL_CAP_THREAD_COMMISSIONER:

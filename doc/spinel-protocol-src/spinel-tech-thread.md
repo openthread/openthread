@@ -539,3 +539,26 @@ Data per item is:
 * `E`: Extended address of the child
 * `S`: RLOC16 of the child
 * `A(6)`: List of IPv6 addresses registered by the child (if any)
+
+### PROP 5410: SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES (#prop-thread-neighbor-table-error-rates)
+
+* Type: Read-Only
+* Packing-Encoding: `A(t(ESSScc))`
+* Required capability: `CAP_ERROR_RATE_TRACKING`
+
+This property provides link quality related info including
+frame and (IPv6) message error rates for all neighbors.
+
+With regards to message error rate, note that a larger (IPv6)
+message can be fragmented and sent as multiple MAC frames. The
+message transmission is considered a failure, if any of its
+fragments fail after all MAC retry attempts.
+
+Data per item is:
+
+* `E`: Extended address of the neighbor
+* `S`: RLOC16 of the neighbor
+* `S`: Frame error rate (0 -> 0%, 0xffff -> 100%)
+* `S`: Message error rate (0 -> 0%, 0xffff -> 100%)
+* `c`: Average RSSI (in dBm)
+* `c`: Last RSSI (in dBm)
