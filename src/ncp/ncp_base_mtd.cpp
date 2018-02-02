@@ -627,6 +627,34 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+
+otError NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE_ERROR_RATES(void)
+{
+    otError error = OT_ERROR_NONE;
+    otNeighborInfoIterator iter = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+    otNeighborInfo neighInfo;
+
+    while (otThreadGetNextNeighborInfo(mInstance, &iter, &neighInfo) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteEui64(neighInfo.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mRloc16));
+        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mFrameErrorRate));
+        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mMessageErrorRate));
+        SuccessOrExit(error = mEncoder.WriteInt8(neighInfo.mAverageRssi));
+        SuccessOrExit(error = mEncoder.WriteInt8(neighInfo.mLastRssi));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+
 otError NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(void)
 {
     otError error = OT_ERROR_NONE;
