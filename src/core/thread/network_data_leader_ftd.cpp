@@ -528,6 +528,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
         case NetworkDataTlv::kTypeService:
         {
             service = static_cast<ServiceTlv *>(cur);
+            VerifyOrExit(service->IsValid(), error = OT_ERROR_PARSE);
 
             subCur = service->GetSubTlvs();
             subEnd = service->GetNext();
