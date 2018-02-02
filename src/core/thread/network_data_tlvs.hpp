@@ -297,8 +297,8 @@ public:
      *
      */
     bool IsValid(void) const {
-        return ((GetLength() >= sizeof(*this) - sizeof(Tlv)) &&
-                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(Tlv)));
+        return ((GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) &&
+                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)));
     }
 
     /**
@@ -711,6 +711,23 @@ public:
      * Initial length is set to 2, to hold S_service_data_length field.
      */
     void Init(void) { NetworkDataTlv::Init(); SetType(kTypeService); SetLength(2); mTResSId = kTMask; SetServiceDataLength(0); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) {
+        uint8_t length = GetLength();
+        return ((length >= (sizeof(*this) - sizeof(NetworkDataTlv))) &&
+                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) +
+                            (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) + sizeof(uint8_t))) &&
+                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) +
+                            (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) + sizeof(uint8_t) +
+                            GetServiceDataLength())));
+    }
 
     /**
      * This method gets Service Data length.
