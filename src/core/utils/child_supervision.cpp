@@ -116,7 +116,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     SuccessOrExit(netif.SendMessage(*message));
     message = NULL;
 
-    otLogInfoMle(GetInstance(), "Sending supervision message to child 0x%04x", aChild.GetRloc16());
+    otLogInfoUtil(GetInstance(), "Sending supervision message to child 0x%04x", aChild.GetRloc16());
 
 exit:
 
@@ -237,7 +237,7 @@ void SupervisionListener::HandleTimer(void)
     VerifyOrExit((netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
                  (netif.GetMeshForwarder().GetRxOnWhenIdle() == false));
 
-    otLogWarnMle(netif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
+    otLogWarnUtil(netif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
 
     netif.GetMle().SendChildUpdateRequest();
 
