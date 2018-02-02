@@ -218,7 +218,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd
 
         if (aEui64 != NULL)
         {
-            memcpy(&mJoiners[i].mEui64, aEui64, sizeof(mJoiners[i].mEui64))
+            memcpy(&mJoiners[i].mEui64, aEui64, sizeof(mJoiners[i].mEui64));
             mJoiners[i].mAny = false;
         }
         else
