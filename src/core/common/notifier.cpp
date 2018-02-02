@@ -219,7 +219,7 @@ void Notifier::LogChangedFlags(uint32_t aFlags) const
 
 exit:
     stringBuffer[sizeof(stringBuffer) - 1] = 0;
-    otLogInfoMle(GetInstance(), "Notifier: StateChanged (0x%04x) [ %s] ", aFlags, stringBuffer);
+    otLogInfoCore(GetInstance(), "Notifier: StateChanged (0x%04x) [ %s] ", aFlags, stringBuffer);
 }
 
 const char *Notifier::FlagToString(uint32_t aFlag) const
