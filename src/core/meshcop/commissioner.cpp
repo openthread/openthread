@@ -784,6 +784,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
             }
 
             ComputeJoinerId(mJoiners[i].mEui64, joinerId);
+
             if (mJoiners[i].mAny || !memcmp(&joinerId, mJoinerIid, sizeof(joinerId)))
             {
 
