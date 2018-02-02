@@ -668,6 +668,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 void Mle::InformPreviousChannel(void)
 {
     VerifyOrExit(mPreviousPanId != Mac::kPanIdBroadcast);
+    VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD || mRole == OT_DEVICE_ROLE_ROUTER);
 
     if ((mDeviceMode & ModeTlv::kModeFFD) == 0 ||
         mRole == OT_DEVICE_ROLE_ROUTER ||
