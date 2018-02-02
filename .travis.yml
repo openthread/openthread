@@ -42,9 +42,14 @@ after_success:
 
 matrix:
   include:
-    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
       os: linux
-      compiler: clang
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
@@ -56,9 +61,14 @@ matrix:
       compiler: gcc
     - env: BUILD_TARGET="pretty-check"
       os: linux
-    - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
+    - env: BUILD_TARGET="scan-build" CC=clang-5.0 CXX=clang++-5.0
       os: linux
-      compiler: clang
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
     - env: BUILD_TARGET="arm-gcc49"
       os: linux
       compiler: gcc
@@ -68,9 +78,14 @@ matrix:
     - env: BUILD_TARGET="arm-gcc63"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix" CC="clang" CXX="clang++"
+    - env: BUILD_TARGET="posix" CC=clang-5.0 CXX=clang++-5.0
       os: linux
-      compiler: clang
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
     - env: BUILD_TARGET="posix" CC="gcc" CXX="g++"
       os: linux
       compiler: gcc
