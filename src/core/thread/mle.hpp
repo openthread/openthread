@@ -1360,6 +1360,16 @@ protected:
      */
     void LogMleMessage(const char *aLogMessage, const Ip6::Address &aAddress, uint16_t aRloc) const;
 
+    /**
+     * This method triggers MLE Announce on previous channel after the Thread device successfully
+     * attaches and receives the new Active Commissioning Dataset if needed.
+     *
+     * MTD would send Announce immediately after attached.
+     * FTD would delay to send Announce after tried to become Router or decided to stay in REED role.
+     *
+     */
+    void InformPreviousChannel(void);
+
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
     bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
 

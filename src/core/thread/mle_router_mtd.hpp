@@ -59,6 +59,7 @@ public:
 
     uint8_t GetActiveRouterCount(void) const { return 0; }
     uint8_t GetActiveNeighborRouterCount(void) const { return 0; }
+    uint8_t GetRouterSelectionJitterTimeout(void) { return 0; }
 
     uint32_t GetLeaderAge(void) const { return 0; }
 

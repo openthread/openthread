@@ -644,13 +644,8 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     netif.GetIp6().SetForwardingEnabled(false);
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
 
-    // Once the Thread device receives the new Active Commissioning Dataset, the device MUST
-    // transmit its own Announce messages on the channel it was on prior to the attachment.
-    if (mPreviousPanId != Mac::kPanIdBroadcast)
-    {
-        mPreviousPanId = Mac::kPanIdBroadcast;
-        netif.GetAnnounceBeginServer().SendAnnounce(1 << mPreviousChannel);
-    }
+    // send announce after attached if needed
+    InformPreviousChannel();
 
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
     UpdateParentSearchState();
@@ -663,6 +658,23 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
     otLogInfoMle(GetInstance(), "Role -> Child");
     return OT_ERROR_NONE;
+}
+
+void Mle::InformPreviousChannel(void)
+{
+    VerifyOrExit(mPreviousPanId != Mac::kPanIdBroadcast);
+    VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD || mRole == OT_DEVICE_ROLE_ROUTER);
+
+    if ((mDeviceMode & ModeTlv::kModeFFD) == 0 ||
+        mRole == OT_DEVICE_ROLE_ROUTER ||
+        GetNetif().GetMle().GetRouterSelectionJitterTimeout() == 0)
+    {
+        mPreviousPanId = Mac::kPanIdBroadcast;
+        GetNetif().GetAnnounceBeginServer().SendAnnounce(1 << mPreviousChannel);
+    }
+
+exit:
+    return;
 }
 
 otError Mle::SetTimeout(uint32_t aTimeout)
