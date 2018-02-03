@@ -38,6 +38,10 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+# Do not enable -Wimplicit-fallthrough for rail
+override CFLAGS                              := $(CFLAGS) -Wimplicit-fallthrough=0
+override CXXFLAGS                            := $(CXXFLAGS) -Wimplicit-fallthrough=0
+
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.1
 
 libopenthread_efr32_a_CPPFLAGS                                                = \
