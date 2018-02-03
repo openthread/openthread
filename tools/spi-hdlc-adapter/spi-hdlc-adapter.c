@@ -67,7 +67,7 @@
 /* ------------------------------------------------------------------------- */
 /* MARK: Macros and Constants */
 
-#define SPI_HDLC_VERSION                "0.06"
+#define SPI_HDLC_VERSION                "0.07"
 
 #define MAX_FRAME_SIZE                  2048
 #define HEADER_LEN                      5
