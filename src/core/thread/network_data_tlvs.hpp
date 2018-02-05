@@ -924,6 +924,17 @@ public:
     void Init(void) { NetworkDataTlv::Init(); SetType(kTypeServer); SetLength(sizeof(*this) - sizeof(NetworkDataTlv)); }
 
     /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const {
+        return GetLength() >= (sizeof(*this) - sizeof(NetworkDataTlv));
+    }
+
+    /**
      * This method returns the S_server_16 value.
      *
      * @returns The S_server_16 value.

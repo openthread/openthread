@@ -543,6 +543,7 @@ otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *
                 {
                 case NetworkDataTlv::kTypeServer:
                     server = static_cast<ServerTlv *>(subCur);
+                    VerifyOrExit(server->IsValid(), error = OT_ERROR_PARSE);
 
                     if (server->GetServer16() == aRloc16)
                     {
