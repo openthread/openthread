@@ -67,7 +67,7 @@
 /* ------------------------------------------------------------------------- */
 /* MARK: Macros and Constants */
 
-#define SPI_HDLC_VERSION                "0.06"
+#define SPI_HDLC_VERSION                "0.07"
 
 #define MAX_FRAME_SIZE                  2048
 #define HEADER_LEN                      5
@@ -95,7 +95,7 @@
 #define GPIO_INT_ASSERT_STATE           0 // I̅N̅T̅ is asserted low
 #define GPIO_RES_ASSERT_STATE           0 // R̅E̅S̅ is asserted low
 
-#define SPI_RX_ALIGN_ALLOWANCE_MAX      6
+#define SPI_RX_ALIGN_ALLOWANCE_MAX      16
 
 #define SOCKET_DEBUG_BYTES_PER_LINE     16
 
@@ -1457,8 +1457,8 @@ static void print_help(void)
     "    --spi-mode[=mode] ............ Specify the SPI mode to use (0-3).\n"
     "    --spi-speed[=hertz] .......... Specify the SPI speed in hertz.\n"
     "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in µsec\n"
-    "    --spi-align-allowance[=n] .... Specify the maximum number of FF bytes to\n"
-    "                                   clip from start of MISO frame. Max value is 3.\n"
+    "    --spi-align-allowance[=n] .... Specify the maximum number of 0xFF bytes to\n"
+    "                                   clip from start of MISO frame. Max value is 16.\n"
     "    --spi-small-packet=[n] ....... Specify the smallest packet we can receive\n"
     "                                   in a single transaction(larger packets will\n"
     "                                   require two transactions). Default value is 32.\n"
