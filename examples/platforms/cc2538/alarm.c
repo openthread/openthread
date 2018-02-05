@@ -39,7 +39,6 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/platform.h>
 
 #include "platform-cc2538.h"
 

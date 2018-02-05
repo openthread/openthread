@@ -29,7 +29,6 @@
 #include <openthread/config.h>
 #include <openthread-core-config.h>
 #include <openthread/platform/misc.h>
-#include <openthread/platform/platform.h>
 
 #include <device/nrf.h>
 
