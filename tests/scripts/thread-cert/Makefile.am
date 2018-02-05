@@ -62,7 +62,7 @@ EXTRA_DIST                                                         = \
     Cert_5_3_09_AddressQuery.py                                      \
     Cert_5_3_10_AddressQuery.py                                      \
     Cert_5_3_11_AddressQueryTimeoutIntervals.py                      \
-    Cert_5_5_01_LeaderReset.py                                       \
+    Cert_5_5_01_LeaderReboot.py                                      \
     Cert_5_5_02_LeaderReboot.py                                      \
     Cert_5_5_03_SplitMergeChildren.py                                \
     Cert_5_5_04_SplitMergeRouters.py                                 \
@@ -193,7 +193,7 @@ check_SCRIPTS                                                      = \
     Cert_5_3_09_AddressQuery.py                                      \
     Cert_5_3_10_AddressQuery.py                                      \
     Cert_5_3_11_AddressQueryTimeoutIntervals.py                      \
-    Cert_5_5_01_LeaderReset.py                                       \
+    Cert_5_5_01_LeaderReboot.py                                      \
     Cert_5_5_02_LeaderReboot.py                                      \
     Cert_5_5_03_SplitMergeChildren.py                                \
     Cert_5_5_04_SplitMergeRouters.py                                 \
