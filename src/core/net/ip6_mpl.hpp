@@ -61,12 +61,12 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class OptionMpl: public OptionHeader
+class OptionMpl : public OptionHeader
 {
 public:
     enum
     {
-        kType = 0x6d,    /* 01 1 01101 */
+        kType      = 0x6d, /* 01 1 01101 */
         kMinLength = 2
     };
 
@@ -74,7 +74,8 @@ public:
      * This method initializes the MPL header.
      *
      */
-    void Init(void) {
+    void Init(void)
+    {
         OptionHeader::SetType(kType);
         OptionHeader::SetLength(sizeof(*this) - sizeof(OptionHeader));
         mControl = 0;
@@ -94,10 +95,10 @@ public:
      */
     enum SeedIdLength
     {
-        kSeedIdLength0  = 0 << 6,  ///< 0-byte MPL Seed Id Length.
-        kSeedIdLength2  = 1 << 6,  ///< 2-byte MPL Seed Id Length.
-        kSeedIdLength8  = 2 << 6,  ///< 8-byte MPL Seed Id Length.
-        kSeedIdLength16 = 3 << 6,  ///< 16-byte MPL Seed Id Length.
+        kSeedIdLength0  = 0 << 6, ///< 0-byte MPL Seed Id Length.
+        kSeedIdLength2  = 1 << 6, ///< 2-byte MPL Seed Id Length.
+        kSeedIdLength8  = 2 << 6, ///< 8-byte MPL Seed Id Length.
+        kSeedIdLength16 = 3 << 6, ///< 16-byte MPL Seed Id Length.
     };
 
     /**
@@ -114,7 +115,10 @@ public:
      * @param[in]  aSeedIdLength  The MPL Seed Length.
      *
      */
-    void SetSeedIdLength(SeedIdLength aSeedIdLength) { mControl = static_cast<uint8_t>((mControl & ~kSeedIdLengthMask) | aSeedIdLength); }
+    void SetSeedIdLength(SeedIdLength aSeedIdLength)
+    {
+        mControl = static_cast<uint8_t>((mControl & ~kSeedIdLengthMask) | aSeedIdLength);
+    }
 
     /**
      * This method indicates whether or not the MPL M flag is set.
@@ -173,7 +177,7 @@ private:
     enum
     {
         kSeedIdLengthMask = 3 << 6,
-        kMaxFlag = 1 << 5
+        kMaxFlag          = 1 << 5
     };
     uint8_t  mControl;
     uint8_t  mSequence;
@@ -253,13 +257,12 @@ public:
      * Default constructor for the object.
      *
      */
-    MplBufferedMessageMetadata(void):
-        mSeedId(0),
-        mSequence(0),
-        mTransmissionCount(0),
-        mTransmissionTime(0),
-        mIntervalOffset(0) {
-    };
+    MplBufferedMessageMetadata(void)
+        : mSeedId(0)
+        , mSequence(0)
+        , mTransmissionCount(0)
+        , mTransmissionTime(0)
+        , mIntervalOffset(0){};
 
     /**
      * This method appends MPL Buffered Message metadata to the message.
@@ -270,9 +273,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const {
-        return aMessage.Append(this, sizeof(*this));
-    };
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
 
     /**
      * This method reads request data from the message.
@@ -282,7 +283,8 @@ public:
      * @returns The number of bytes that have been read.
      *
      */
-    uint16_t ReadFrom(const Message &aMessage) {
+    uint16_t ReadFrom(const Message &aMessage)
+    {
         return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     };
 
@@ -294,9 +296,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully removed the header.
      *
      */
-    otError RemoveFrom(Message &aMessage) {
-        return aMessage.SetLength(aMessage.GetLength() - sizeof(*this));
-    };
+    otError RemoveFrom(Message &aMessage) { return aMessage.SetLength(aMessage.GetLength() - sizeof(*this)); };
 
     /**
      * This method updates MPL Buffered Messsage metadata in the message.
@@ -306,7 +306,8 @@ public:
      * @returns The number of bytes that have been updated.
      *
      */
-    int UpdateIn(Message &aMessage) const {
+    int UpdateIn(Message &aMessage) const
+    {
         return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
@@ -430,7 +431,7 @@ private:
  * This class implements MPL message processing.
  *
  */
-class Mpl: public InstanceLocator
+class Mpl : public InstanceLocator
 {
 public:
     /**
@@ -519,24 +520,24 @@ public:
 private:
     enum
     {
-        kNumSeedEntries = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES,
-        kSeedEntryLifetime = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRY_LIFETIME,
+        kNumSeedEntries      = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES,
+        kSeedEntryLifetime   = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRY_LIFETIME,
         kSeedEntryLifetimeDt = 1000,
         kDataMessageInterval = 64
     };
 
     otError UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
-    void UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence);
-    void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
+    void    UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence);
+    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
     static void HandleSeedSetTimer(Timer &aTimer);
-    void HandleSeedSetTimer(void);
+    void        HandleSeedSetTimer(void);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
-    void HandleRetransmissionTimer(void);
+    void        HandleRetransmissionTimer(void);
 
-    uint8_t mTimerExpirations;
-    uint8_t mSequence;
+    uint8_t  mTimerExpirations;
+    uint8_t  mSequence;
     uint16_t mSeedId;
 
     TimerMilli mSeedSetTimer;
@@ -548,13 +549,12 @@ private:
     MessageQueue mBufferedMessageSet;
 };
 
-
 /**
  * @}
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_IP6_MPL_HPP_
+#endif // NET_IP6_MPL_HPP_

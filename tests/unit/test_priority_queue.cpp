@@ -38,16 +38,16 @@
 #include "test_platform.h"
 #include "test_util.h"
 
-#define kNumTestMessages      3
+#define kNumTestMessages 3
 
 // This function verifies the content of the priority queue to match the passed in messages
 void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
 {
-    va_list args;
+    va_list      args;
     ot::Message *message;
     ot::Message *msgArg;
-    uint8_t curPriority = 0xff;
-    uint16_t msgCount, bufCount;
+    uint8_t      curPriority = 0xff;
+    uint16_t     msgCount, bufCount;
 
     // Check the `GetInfo`
     aPriorityQueue.GetInfo(msgCount, bufCount);
@@ -81,15 +81,12 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
                     // Check the `GetHeadForPriority` is NULL if there are no expected message for this priority level.
                     VerifyOrQuit(
                         aPriorityQueue.GetHeadForPriority(curPriority) == NULL,
-                        "PriorityQueue::GetHeadForPriority is non-NULL when no expected msg for this priority.\n"
-                    );
+                        "PriorityQueue::GetHeadForPriority is non-NULL when no expected msg for this priority.\n");
                 }
 
                 // Check the `GetHeadForPriority`.
-                VerifyOrQuit(
-                    aPriorityQueue.GetHeadForPriority(curPriority) == msgArg,
-                    "PriorityQueue::GetHeadForPriority failed.\n"
-                );
+                VerifyOrQuit(aPriorityQueue.GetHeadForPriority(curPriority) == msgArg,
+                             "PriorityQueue::GetHeadForPriority failed.\n");
             }
 
             // Check the queued message to match the one from argument list
@@ -103,10 +100,8 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
         // Check the `GetHeadForPriority` is NULL if there are no expected message for any remaining priority level.
         for (curPriority++; curPriority < 4; curPriority++)
         {
-            VerifyOrQuit(
-                aPriorityQueue.GetHeadForPriority(curPriority) == NULL,
-                "PriorityQueue::GetHeadForPriority is non-NULL when no expected msg for this priority.\n"
-            );
+            VerifyOrQuit(aPriorityQueue.GetHeadForPriority(curPriority) == NULL,
+                         "PriorityQueue::GetHeadForPriority is non-NULL when no expected msg for this priority.\n");
         }
     }
 
@@ -116,9 +111,9 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
 // This function verifies the content of the all message queue to match the passed in messages
 void VerifyAllMessagesContent(ot::MessagePool *aMessagePool, int aExpectedLength, ...)
 {
-    va_list args;
+    va_list                   args;
     ot::MessagePool::Iterator it;
-    ot::Message *msgArg;
+    ot::Message *             msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -129,7 +124,7 @@ void VerifyAllMessagesContent(ot::MessagePool *aMessagePool, int aExpectedLength
     }
     else
     {
-        for (it = aMessagePool->GetAllMessagesHead(); !it.HasEnded() ; it.GoToNext())
+        for (it = aMessagePool->GetAllMessagesHead(); !it.HasEnded(); it.GoToNext())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
             msgArg = va_arg(args, ot::Message *);
@@ -147,9 +142,9 @@ void VerifyAllMessagesContent(ot::MessagePool *aMessagePool, int aExpectedLength
 // through the AllMessages list in reverse.
 void VerifyAllMessagesContentInReverse(ot::MessagePool *aMessagePool, int aExpectedLength, ...)
 {
-    va_list args;
+    va_list                   args;
     ot::MessagePool::Iterator it;
-    ot::Message *msgArg;
+    ot::Message *             msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -160,7 +155,7 @@ void VerifyAllMessagesContentInReverse(ot::MessagePool *aMessagePool, int aExpec
     }
     else
     {
-        for (it = aMessagePool->GetAllMessagesTail(); !it.HasEnded() ; it.GoToPrev())
+        for (it = aMessagePool->GetAllMessagesTail(); !it.HasEnded(); it.GoToPrev())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
             msgArg = va_arg(args, ot::Message *);
@@ -177,7 +172,7 @@ void VerifyAllMessagesContentInReverse(ot::MessagePool *aMessagePool, int aExpec
 // This function verifies the content of the message queue to match the passed in messages
 void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
-    va_list args;
+    va_list      args;
     ot::Message *message;
     ot::Message *msgArg;
 
@@ -208,14 +203,14 @@ void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength,
 
 void TestPriorityQueue(void)
 {
-    ot::Instance *instance;
-    ot::MessagePool *messagePool;
-    ot::PriorityQueue queue;
-    ot::MessageQueue messageQueue;
-    ot::Message *msgHigh    [kNumTestMessages];
-    ot::Message *msgMed     [kNumTestMessages];
-    ot::Message *msgLow     [kNumTestMessages];
-    ot::Message *msgVeryLow [kNumTestMessages];
+    ot::Instance *            instance;
+    ot::MessagePool *         messagePool;
+    ot::PriorityQueue         queue;
+    ot::MessageQueue          messageQueue;
+    ot::Message *             msgHigh[kNumTestMessages];
+    ot::Message *             msgMed[kNumTestMessages];
+    ot::Message *             msgLow[kNumTestMessages];
+    ot::Message *             msgVeryLow[kNumTestMessages];
     ot::MessagePool::Iterator it;
 
     instance = testInitInstance();
@@ -241,10 +236,8 @@ void TestPriorityQueue(void)
     }
 
     // Check the failure case for `SetPriority` for invalid argument.
-    VerifyOrQuit(
-        msgHigh[2]->SetPriority(ot::Message::kNumPriorities) == OT_ERROR_INVALID_ARGS,
-        "Message::SetPriority() with out of range value did not fail as expected.\n"
-    );
+    VerifyOrQuit(msgHigh[2]->SetPriority(ot::Message::kNumPriorities) == OT_ERROR_INVALID_ARGS,
+                 "Message::SetPriority() with out of range value did not fail as expected.\n");
 
     // Check the `GetPriority()`
     for (int i = 0; i < kNumTestMessages; i++)
@@ -324,14 +317,10 @@ void TestPriorityQueue(void)
     // Check the failure cases: Enqueuing an already queued message, or dequeuing a message not queued.
     SuccessOrQuit(queue.Enqueue(*msgHigh[0]), "PriorityQueue::Enqueue() failed.\n");
     VerifyPriorityQueueContent(queue, 1, msgHigh[0]);
-    VerifyOrQuit(
-        queue.Enqueue(*msgHigh[0]) == OT_ERROR_ALREADY,
-        "Enqueuing an already queued message did not fail as expected.\n"
-    );
-    VerifyOrQuit(
-        queue.Dequeue(*msgMed[0]) == OT_ERROR_NOT_FOUND,
-        "Dequeuing a message not queued, did not fail as expected.\n"
-    );
+    VerifyOrQuit(queue.Enqueue(*msgHigh[0]) == OT_ERROR_ALREADY,
+                 "Enqueuing an already queued message did not fail as expected.\n");
+    VerifyOrQuit(queue.Dequeue(*msgMed[0]) == OT_ERROR_NOT_FOUND,
+                 "Dequeuing a message not queued, did not fail as expected.\n");
     SuccessOrQuit(queue.Dequeue(*msgHigh[0]), "PriorityQueue::Dequeue() failed.\n");
     VerifyPriorityQueueContent(queue, 0);
 

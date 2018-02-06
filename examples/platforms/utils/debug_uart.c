@@ -25,15 +25,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#include <openthread/config.h>
 #include <openthread-core-config.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <openthread/config.h>
 
 #include <openthread/types.h>
-#include <openthread/platform/toolchain.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/debug_uart.h>
+#include <openthread/platform/toolchain.h>
 
 /*
  * Implementation note:
@@ -102,7 +102,6 @@ void otPlatDebugUart_putchar(int c)
     otPlatDebugUart_putchar_raw(c);
 }
 
-
 /* provide WEAK stubs for platforms that do not implement all functions */
 OT_TOOL_WEAK
 void otPlatDebugUart_putchar_raw(int c)
@@ -133,7 +132,7 @@ otError otPlatDebugUart_logfile(const char *filename)
 /* this should not be a WEAK function */
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    va_list ap;
+    va_list  ap;
     uint32_t now;
 
     OT_UNUSED_VARIABLE(aLogLevel);

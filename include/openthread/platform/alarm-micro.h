@@ -89,7 +89,7 @@ extern void otPlatAlarmMicroFired(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // ALARM_MICRO_H_
+#endif // ALARM_MICRO_H_

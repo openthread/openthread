@@ -27,9 +27,9 @@
  */
 
 /**
-* @file alarm.c
-* Platform abstraction for the alarm
-*/
+ * @file alarm.c
+ * Platform abstraction for the alarm
+ */
 
 #include <openthread/platform/alarm-milli.h>
 
@@ -37,10 +37,10 @@
 
 #include "hw_timer0.h"
 
-static bool sIsRunning = false;
-static uint32_t sAlarm = 0;
+static bool     sIsRunning = false;
+static uint32_t sAlarm     = 0;
 static uint32_t sCounter;
-volatile bool sAlarmFired = false;
+volatile bool   sAlarmFired = false;
 
 static void timer0_interrupt_cb(void)
 {
@@ -75,7 +75,7 @@ uint32_t otPlatAlarmMilliGetNow(void)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)aInstance;
-    sAlarm = t0 + dt;
+    sAlarm     = t0 + dt;
     sIsRunning = true;
 
     if (sCounter == 0)

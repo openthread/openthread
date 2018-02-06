@@ -60,7 +60,7 @@ class TaskletScheduler;
  * This class is used to represent a tasklet.
  *
  */
-class Tasklet: public InstanceLocator, public OwnerLocator
+class Tasklet : public InstanceLocator, public OwnerLocator
 {
     friend class TaskletScheduler;
 
@@ -92,8 +92,8 @@ public:
 private:
     void RunTask(void) { mHandler(*this); }
 
-    Handler           mHandler;
-    Tasklet          *mNext;
+    Handler  mHandler;
+    Tasklet *mNext;
 };
 
 /**
@@ -145,6 +145,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // TASKLET_HPP_
+#endif // TASKLET_HPP_

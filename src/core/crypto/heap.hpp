@@ -44,7 +44,6 @@
 namespace ot {
 namespace Crypto {
 
-
 /**
  * This class represents a memory block.
  *
@@ -71,9 +70,7 @@ public:
      * @returns Size of this block.
      *
      */
-    uint16_t GetSize(void) const {
-        return mSize;
-    }
+    uint16_t GetSize(void) const { return mSize; }
 
     /**
      * This method updates the size of this block.
@@ -81,9 +78,7 @@ public:
      * @param[in]   aSize   Size of this block in bytes.
      *
      */
-    void SetSize(uint16_t aSize) {
-        mSize = aSize;
-    }
+    void SetSize(uint16_t aSize) { mSize = aSize; }
 
     /**
      * This method returns the offset of the free block after this block.
@@ -95,7 +90,8 @@ public:
      * @retval  0   This block is not free.
      *
      */
-    uint16_t GetNext(void) const {
+    uint16_t GetNext(void) const
+    {
         return *reinterpret_cast<const uint16_t *>(reinterpret_cast<const uint8_t *>(this) + sizeof(mSize) + mSize);
     }
 
@@ -107,7 +103,8 @@ public:
      * @param[in]   aNext   Offset of the next free block in bytes.
      *
      */
-    void SetNext(uint16_t aNext) {
+    void SetNext(uint16_t aNext)
+    {
         *reinterpret_cast<uint16_t *>(reinterpret_cast<uint8_t *>(this) + sizeof(mSize) + mSize) = aNext;
     }
 
@@ -117,9 +114,7 @@ public:
      * @retval  Pointer to the user memory. The pointer address is aligned to sizeof(long).
      *
      */
-    void *GetPointer(void) {
-        return &mMemory;
-    }
+    void *GetPointer(void) { return &mMemory; }
 
     /**
      * This method returns the offset of the free block after the left neighbor block.
@@ -127,9 +122,7 @@ public:
      * @returns Offset in bytes.
      *
      */
-    uint16_t GetLeftNext(void) const {
-        return *(&mSize - 1);
-    }
+    uint16_t GetLeftNext(void) const { return *(&mSize - 1); }
 
     /**
      * This method returns whether the left neighbor block is a free block.
@@ -138,9 +131,7 @@ public:
      * @retval  false   The left neighbor block is not free.
      *
      */
-    bool IsLeftFree(void) const {
-        return GetLeftNext() != 0;
-    }
+    bool IsLeftFree(void) const { return GetLeftNext() != 0; }
 
     /**
      * This method returns whether the current block is a free block.
@@ -149,9 +140,7 @@ public:
      * @retval  false   The block is not free.
      *
      */
-    bool IsFree(void) const {
-        return mSize != kGuardBlockSize && GetNext() != 0;
-    }
+    bool IsFree(void) const { return mSize != kGuardBlockSize && GetNext() != 0; }
 
 private:
     enum
@@ -166,7 +155,7 @@ private:
      * structure is equal to size of block metadata, i.e. sizeof(mSize) + sizeof(mNext)
      *
      */
-    uint8_t  mMemory[sizeof(uint16_t)];
+    uint8_t mMemory[sizeof(uint16_t)];
 };
 
 /**
@@ -217,7 +206,8 @@ public:
      * This method returns whether the heap is clean.
      *
      */
-    bool IsClean(void) {
+    bool IsClean(void)
+    {
         const Block &super = BlockSuper();
         const Block &first = BlockRight(super);
         return super.GetNext() == BlockOffset(first) && first.GetSize() == kFirstBlockSize;
@@ -227,26 +217,23 @@ public:
      * This method returns the capacity of this heap.
      *
      */
-    size_t GetCapacity(void) const {
-        return kFirstBlockSize;
-    }
+    size_t GetCapacity(void) const { return kFirstBlockSize; }
 
 private:
     enum
     {
 #if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE,          ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE, ///< Size of memory buffer (bytes).
 #else
-        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS,  ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).
 #endif
-        kAlignSize = sizeof(long),                                  ///< The alignment size.
-        kBlockRemainderSize = kAlignSize - sizeof(uint16_t) * 2,    ///< Block unit remainder size.
-        kSuperBlockSize = kAlignSize - sizeof(Block),               ///< Super block size.
-        kFirstBlockSize = kMemorySize - kAlignSize * 3 +
-                          kBlockRemainderSize,                      ///< First block size.
-        kSuperBlockOffset = kAlignSize - sizeof(uint16_t),          ///< Offset of the super block.
-        kFirstBlockOffset = kAlignSize * 2 - sizeof(uint16_t),      ///< Offset of the first block.
-        kGuardBlockOffset = kMemorySize - sizeof(uint16_t),         ///< Offset of the guard block.
+        kAlignSize          = sizeof(long),                                       ///< The alignment size.
+        kBlockRemainderSize = kAlignSize - sizeof(uint16_t) * 2,                  ///< Block unit remainder size.
+        kSuperBlockSize     = kAlignSize - sizeof(Block),                         ///< Super block size.
+        kFirstBlockSize     = kMemorySize - kAlignSize * 3 + kBlockRemainderSize, ///< First block size.
+        kSuperBlockOffset   = kAlignSize - sizeof(uint16_t),                      ///< Offset of the super block.
+        kFirstBlockOffset   = kAlignSize * 2 - sizeof(uint16_t),                  ///< Offset of the first block.
+        kGuardBlockOffset   = kMemorySize - sizeof(uint16_t),                     ///< Offset of the guard block.
     };
 
     /**
@@ -257,9 +244,7 @@ private:
      * @returns A reference to the block.
      *
      */
-    Block &BlockAt(uint16_t aOffset) {
-        return *reinterpret_cast<Block *>(&mMemory.m16[aOffset / 2]);
-    }
+    Block &BlockAt(uint16_t aOffset) { return *reinterpret_cast<Block *>(&mMemory.m16[aOffset / 2]); }
 
     /**
      * This method returns the block of @p aPointer.
@@ -269,7 +254,8 @@ private:
      * @returns A reference to the block.
      *
      */
-    Block &BlockOf(void *aPointer) {
+    Block &BlockOf(void *aPointer)
+    {
         uint16_t offset = static_cast<uint16_t>(reinterpret_cast<uint8_t *>(aPointer) - mMemory.m8);
         offset -= sizeof(uint16_t);
         return BlockAt(offset);
@@ -281,9 +267,7 @@ private:
      * @returns Reference to the super block.
      *
      */
-    Block &BlockSuper(void) {
-        return BlockAt(kSuperBlockOffset);
-    }
+    Block &BlockSuper(void) { return BlockAt(kSuperBlockOffset); }
 
     /**
      * This method returns the free block after @p aBlock in the free block list.
@@ -293,9 +277,7 @@ private:
      * @returns Reference to the free block after this block.
      *
      */
-    Block &BlockNext(const Block &aBlock) {
-        return BlockAt(aBlock.GetNext());
-    }
+    Block &BlockNext(const Block &aBlock) { return BlockAt(aBlock.GetNext()); }
 
     /**
      * This method returns the block on the right side of @p aBlock.
@@ -305,9 +287,7 @@ private:
      * @returns Reference to the block on the right side.
      *
      */
-    Block &BlockRight(const Block &aBlock) {
-        return BlockAt(BlockOffset(aBlock) + sizeof(Block) + aBlock.GetSize());
-    }
+    Block &BlockRight(const Block &aBlock) { return BlockAt(BlockOffset(aBlock) + sizeof(Block) + aBlock.GetSize()); }
 
     /**
      * This method returns the free block before @p aBlock in the free block list.
@@ -323,9 +303,7 @@ private:
      * @param[in]   aBlock  A reference to the block.
      *
      */
-    bool IsLeftFree(const Block &aBlock) {
-        return (BlockOffset(aBlock) != kFirstBlockOffset && aBlock.IsLeftFree());
-    }
+    bool IsLeftFree(const Block &aBlock) { return (BlockOffset(aBlock) != kFirstBlockOffset && aBlock.IsLeftFree()); }
 
     /**
      * This method returns the offset of @p aBlock.
@@ -335,7 +313,8 @@ private:
      * @returns Offset in bytes of @p aBlock.
      *
      */
-    uint16_t BlockOffset(const Block &aBlock) {
+    uint16_t BlockOffset(const Block &aBlock)
+    {
         return static_cast<uint16_t>(reinterpret_cast<const uint8_t *>(&aBlock) - mMemory.m8);
     }
 
@@ -353,13 +332,13 @@ private:
     union
     {
         // Make sure memory is long aligned.
-        long mLong[kMemorySize / sizeof(long)];
-        uint8_t m8[kMemorySize];
+        long     mLong[kMemorySize / sizeof(long)];
+        uint8_t  m8[kMemorySize];
         uint16_t m16[kMemorySize / sizeof(uint16_t)];
     } mMemory;
 };
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
 #endif // OT_HEAP_HPP_

@@ -55,7 +55,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class JoinerRouter: public InstanceLocator
+class JoinerRouter : public InstanceLocator
 {
 public:
     /**
@@ -87,29 +87,36 @@ public:
 private:
     enum
     {
-        kDelayJoinEnt = 50,  ///< milliseconds
+        kDelayJoinEnt = 50, ///< milliseconds
     };
 
     static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void HandleStateChanged(uint32_t aFlags);
+    void        HandleStateChanged(uint32_t aFlags);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleRelayTransmit(void *               aContext,
+                                    otCoapHeader *       aHeader,
+                                    otMessage *          aMessage,
                                     const otMessageInfo *aMessageInfo);
-    void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                            const otMessageInfo *aMessageInfo, otError result);
-    void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
-                                     const Ip6::MessageInfo *aMessageInfo, otError result);
+    static void HandleJoinerEntrustResponse(void *               aContext,
+                                            otCoapHeader *       aHeader,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            otError              result);
+    void        HandleJoinerEntrustResponse(Coap::Header *          aHeader,
+                                            Message *               aMessage,
+                                            const Ip6::MessageInfo *aMessageInfo,
+                                            otError                 result);
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
     otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
-    void SendDelayedJoinerEntrust(void);
+    void    SendDelayedJoinerEntrust(void);
     otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError GetBorderAgentRloc(uint16_t &aRloc);
@@ -117,7 +124,7 @@ private:
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
 
-    TimerMilli mTimer;
+    TimerMilli   mTimer;
     MessageQueue mDelayedJoinEnts;
 
     Notifier::Callback mNotifierCallback;
@@ -148,8 +155,9 @@ public:
      * @param[in]  aDestination  IPv6 address of the message destination.
      *
      */
-    DelayedJoinEntHeader(uint32_t aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek) {
-        mSendTime = aSendTime;
+    DelayedJoinEntHeader(uint32_t aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
+    {
+        mSendTime    = aSendTime;
         mMessageInfo = aMessageInfo;
         memcpy(&mKek, aKek, sizeof(mKek));
     }
@@ -163,9 +171,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) {
-        return aMessage.Append(this, sizeof(*this));
-    }
+    otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); }
 
     /**
      * This method reads delayed response header from the message.
@@ -175,7 +181,8 @@ public:
      * @returns The number of bytes read.
      *
      */
-    uint16_t ReadFrom(Message &aMessage) {
+    uint16_t ReadFrom(Message &aMessage)
+    {
         return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
@@ -187,7 +194,8 @@ public:
      * @retval OT_ERROR_NONE  Successfully removed the header.
      *
      */
-    static otError RemoveFrom(Message &aMessage) {
+    static otError RemoveFrom(Message &aMessage)
+    {
         return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedJoinEntHeader));
     }
 
@@ -236,13 +244,12 @@ public:
     bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
 
 private:
-    Ip6::MessageInfo mMessageInfo;            ///< Message info of the message to send.
-    uint32_t mSendTime;                       ///< Time when the message shall be sent.
-    uint8_t mKek[KeyManager::kMaxKeyLength];  ///< KEK used by MAC layer to encode this message.
+    Ip6::MessageInfo mMessageInfo;                    ///< Message info of the message to send.
+    uint32_t         mSendTime;                       ///< Time when the message shall be sent.
+    uint8_t          mKek[KeyManager::kMaxKeyLength]; ///< KEK used by MAC layer to encode this message.
 };
 
+} // namespace MeshCoP
+} // namespace ot
 
-}  // namespace MeshCoP
-}  // namespace ot
-
-#endif  // JOINER_ROUTER_HPP_
+#endif // JOINER_ROUTER_HPP_

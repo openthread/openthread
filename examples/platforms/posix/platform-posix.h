@@ -35,18 +35,18 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <assert.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #if _WIN32
-#include <WinSock2.h>
 #include <WS2tcpip.h>
+#include <WinSock2.h>
 #include <windows.h>
 #define POLL WSAPoll
 #define ssize_t int
@@ -56,13 +56,13 @@
 __forceinline int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     (void)tz;
-    tv->tv_sec = _time32(NULL);
+    tv->tv_sec  = _time32(NULL);
     tv->tv_usec = 0;
     return 0;
 }
 __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval *res)
 {
-    res->tv_sec = (long)_difftime32(a->tv_sec, b->tv_sec);
+    res->tv_sec  = (long)_difftime32(a->tv_sec, b->tv_sec);
     res->tv_usec = 0;
 }
 #else
@@ -93,9 +93,9 @@ OT_TOOL_PACKED_BEGIN
 struct Event
 {
     uint64_t mDelay;
-    uint8_t mEvent;
+    uint8_t  mEvent;
     uint16_t mDataLength;
-    uint8_t mData[OT_EVENT_DATA_MAX_SIZE];
+    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -224,4 +224,4 @@ void platformUartProcess(void);
  */
 void platformUartRestore(void);
 
-#endif  // PLATFORM_POSIX_H_
+#endif // PLATFORM_POSIX_H_

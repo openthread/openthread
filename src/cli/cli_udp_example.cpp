@@ -44,18 +44,12 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Cli {
 
-const struct UdpExample::Command UdpExample::sCommands[] =
-{
-    { "help", &UdpExample::ProcessHelp },
-    { "bind", &UdpExample::ProcessBind },
-    { "close", &UdpExample::ProcessClose },
-    { "connect", &UdpExample::ProcessConnect },
-    { "open", &UdpExample::ProcessOpen },
-    { "send", &UdpExample::ProcessSend }
-};
+const struct UdpExample::Command UdpExample::sCommands[] = {
+    {"help", &UdpExample::ProcessHelp},       {"bind", &UdpExample::ProcessBind}, {"close", &UdpExample::ProcessClose},
+    {"connect", &UdpExample::ProcessConnect}, {"open", &UdpExample::ProcessOpen}, {"send", &UdpExample::ProcessSend}};
 
-UdpExample::UdpExample(Interpreter &aInterpreter):
-    mInterpreter(aInterpreter)
+UdpExample::UdpExample(Interpreter &aInterpreter)
+    : mInterpreter(aInterpreter)
 {
     memset(&mSocket, 0, sizeof(mSocket));
 }
@@ -75,9 +69,9 @@ otError UdpExample::ProcessHelp(int argc, char *argv[])
 
 otError UdpExample::ProcessBind(int argc, char *argv[])
 {
-    otError error;
+    otError    error;
     otSockAddr sockaddr;
-    long value;
+    long       value;
 
     VerifyOrExit(argc == 2, error = OT_ERROR_PARSE);
 
@@ -89,7 +83,7 @@ otError UdpExample::ProcessBind(int argc, char *argv[])
     error = Interpreter::ParseLong(argv[1], value);
     SuccessOrExit(error);
 
-    sockaddr.mPort = static_cast<uint16_t>(value);
+    sockaddr.mPort    = static_cast<uint16_t>(value);
     sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
 
     error = otUdpBind(&mSocket, &sockaddr);
@@ -100,9 +94,9 @@ exit:
 
 otError UdpExample::ProcessConnect(int argc, char *argv[])
 {
-    otError error;
+    otError    error;
     otSockAddr sockaddr;
-    long value;
+    long       value;
 
     VerifyOrExit(argc == 2, error = OT_ERROR_PARSE);
 
@@ -114,7 +108,7 @@ otError UdpExample::ProcessConnect(int argc, char *argv[])
     error = Interpreter::ParseLong(argv[1], value);
     SuccessOrExit(error);
 
-    sockaddr.mPort = static_cast<uint16_t>(value);
+    sockaddr.mPort    = static_cast<uint16_t>(value);
     sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
 
     error = otUdpConnect(&mSocket, &sockaddr);
@@ -141,10 +135,10 @@ otError UdpExample::ProcessOpen(int argc, char *argv[])
 
 otError UdpExample::ProcessSend(int argc, char *argv[])
 {
-    otError error;
+    otError       error;
     otMessageInfo messageInfo;
-    otMessage *message = NULL;
-    int curArg = 0;
+    otMessage *   message = NULL;
+    int           curArg  = 0;
 
     memset(&messageInfo, 0, sizeof(messageInfo));
 
@@ -160,7 +154,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
         error = Interpreter::ParseLong(argv[curArg++], value);
         SuccessOrExit(error);
 
-        messageInfo.mPeerPort = static_cast<uint16_t>(value);
+        messageInfo.mPeerPort    = static_cast<uint16_t>(value);
         messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
     }
 
@@ -206,25 +200,21 @@ void UdpExample::HandleUdpReceive(void *aContext, otMessage *aMessage, const otM
 void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     uint8_t buf[1500];
-    int length;
+    int     length;
 
     mInterpreter.mServer->OutputFormat("%d bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage));
-    mInterpreter.mServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x %d ",
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[3]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
-                                       HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]),
-                                       aMessageInfo->mPeerPort);
+    mInterpreter.mServer->OutputFormat(
+        "%x:%x:%x:%x:%x:%x:%x:%x %d ", HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]), aMessageInfo->mPeerPort);
 
-    length = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
+    length      = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
 
     mInterpreter.mServer->OutputFormat("%s\r\n", buf);
 }
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot

@@ -54,9 +54,9 @@ namespace ot {
 
 namespace Mle {
 
-#define TLVREQUESTTLV_ITERATOR_INIT  0  ///< Initializer for TlvRequestTlvIterator.
+#define TLVREQUESTTLV_ITERATOR_INIT 0 ///< Initializer for TlvRequestTlvIterator.
 
-typedef uint8_t TlvRequestIterator;      ///< Used to iterate through TlvRequestTlv.
+typedef uint8_t TlvRequestIterator; ///< Used to iterate through TlvRequestTlv.
 
 /**
  * @addtogroup core-mle-tlvs
@@ -82,33 +82,33 @@ public:
      */
     enum Type
     {
-        kSourceAddress       = 0,    ///< Source Address TLV
-        kMode                = 1,    ///< Mode TLV
-        kTimeout             = 2,    ///< Timeout TLV
-        kChallenge           = 3,    ///< Challenge TLV
-        kResponse            = 4,    ///< Response TLV
-        kLinkFrameCounter    = 5,    ///< Link-Layer Frame Counter TLV
-        kLinkQuality         = 6,    ///< Link Quality TLV
-        kNetworkParameter    = 7,    ///< Network Parameter TLV
-        kMleFrameCounter     = 8,    ///< MLE Frame Counter TLV
-        kRoute               = 9,    ///< Route64 TLV
-        kAddress16           = 10,   ///< Address16 TLV
-        kLeaderData          = 11,   ///< Leader Data TLV
-        kNetworkData         = 12,   ///< Network Data TLV
-        kTlvRequest          = 13,   ///< TLV Request TLV
-        kScanMask            = 14,   ///< Scan Mask TLV
-        kConnectivity        = 15,   ///< Connectivity TLV
-        kLinkMargin          = 16,   ///< Link Margin TLV
-        kStatus              = 17,   ///< Status TLV
-        kVersion             = 18,   ///< Version TLV
-        kAddressRegistration = 19,   ///< Address Registration TLV
-        kChannel             = 20,   ///< Channel TLV
-        kPanId               = 21,   ///< PAN ID TLV
-        kActiveTimestamp     = 22,   ///< Active Timestamp TLV
-        kPendingTimestamp    = 23,   ///< Pending Timestamp TLV
-        kActiveDataset       = 24,   ///< Active Operational Dataset TLV
-        kPendingDataset      = 25,   ///< Pending Operational Dataset TLV
-        kDiscovery           = 26,   ///< Thread Discovery TLV
+        kSourceAddress       = 0,  ///< Source Address TLV
+        kMode                = 1,  ///< Mode TLV
+        kTimeout             = 2,  ///< Timeout TLV
+        kChallenge           = 3,  ///< Challenge TLV
+        kResponse            = 4,  ///< Response TLV
+        kLinkFrameCounter    = 5,  ///< Link-Layer Frame Counter TLV
+        kLinkQuality         = 6,  ///< Link Quality TLV
+        kNetworkParameter    = 7,  ///< Network Parameter TLV
+        kMleFrameCounter     = 8,  ///< MLE Frame Counter TLV
+        kRoute               = 9,  ///< Route64 TLV
+        kAddress16           = 10, ///< Address16 TLV
+        kLeaderData          = 11, ///< Leader Data TLV
+        kNetworkData         = 12, ///< Network Data TLV
+        kTlvRequest          = 13, ///< TLV Request TLV
+        kScanMask            = 14, ///< Scan Mask TLV
+        kConnectivity        = 15, ///< Connectivity TLV
+        kLinkMargin          = 16, ///< Link Margin TLV
+        kStatus              = 17, ///< Status TLV
+        kVersion             = 18, ///< Version TLV
+        kAddressRegistration = 19, ///< Address Registration TLV
+        kChannel             = 20, ///< Channel TLV
+        kPanId               = 21, ///< PAN ID TLV
+        kActiveTimestamp     = 22, ///< Active Timestamp TLV
+        kPendingTimestamp    = 23, ///< Pending Timestamp TLV
+        kActiveDataset       = 24, ///< Active Operational Dataset TLV
+        kPendingDataset      = 25, ///< Pending Operational Dataset TLV
+        kDiscovery           = 26, ///< Thread Discovery TLV
         kInvalid             = 255,
     };
 
@@ -140,7 +140,8 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+    static otError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
+    {
         return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
@@ -155,7 +156,8 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
+    static otError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
+    {
         return ot::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
     }
 
@@ -166,14 +168,18 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class SourceAddressTlv: public Tlv
+class SourceAddressTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kSourceAddress); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kSourceAddress);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -209,14 +215,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ModeTlv: public Tlv
+class ModeTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kMode); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kMode);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -260,14 +270,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class TimeoutTlv: public Tlv
+class TimeoutTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kTimeout); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kTimeout);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -303,19 +317,23 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChallengeTlv: public Tlv
+class ChallengeTlv : public Tlv
 {
 public:
     enum
     {
-        kMaxSize = 8,  ///< Maximum size in bytes (Thread Specification).
+        kMaxSize = 8, ///< Maximum size in bytes (Thread Specification).
     };
 
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kChallenge); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kChallenge);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -351,19 +369,23 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ResponseTlv: public Tlv
+class ResponseTlv : public Tlv
 {
 public:
     enum
     {
-        kMaxSize = 8,  ///< Maximum size in bytes (Thread Specification).
+        kMaxSize = 8, ///< Maximum size in bytes (Thread Specification).
     };
 
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kResponse); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kResponse);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -399,14 +421,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LinkFrameCounterTlv: public Tlv
+class LinkFrameCounterTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kLinkFrameCounter); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kLinkFrameCounter);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -442,14 +468,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class RouteTlv: public Tlv
+class RouteTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kRoute); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kRoute);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -458,7 +488,8 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const {
+    bool IsValid(void) const
+    {
         return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) &&
                GetLength() <= sizeof(*this) - sizeof(Tlv);
     }
@@ -494,7 +525,8 @@ public:
      * @retval FALSE  If the Router ID bit is not set.
      *
      */
-    bool IsRouterIdSet(uint8_t aRouterId) const {
+    bool IsRouterIdSet(uint8_t aRouterId) const
+    {
         return (mRouterIdMask[aRouterId / 8] & (0x80 >> (aRouterId % 8))) != 0;
     }
 
@@ -520,9 +552,7 @@ public:
      * @param[in]  aLength  The Route Data Length value.
      *
      */
-    void SetRouteDataLength(uint8_t aLength) {
-        SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength);
-    }
+    void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength); }
 
     /**
      * This method returns the Route Cost value for a given Router ID.
@@ -530,9 +560,7 @@ public:
      * @returns The Route Cost value for a given Router ID.
      *
      */
-    uint8_t GetRouteCost(uint8_t aRouterId) const {
-        return mRouteData[aRouterId] & kRouteCostMask;
-    }
+    uint8_t GetRouteCost(uint8_t aRouterId) const { return mRouteData[aRouterId] & kRouteCostMask; }
 
     /**
      * This method sets the Route Cost value for a given Router ID.
@@ -541,7 +569,8 @@ public:
      * @param[in]  aRouteCost  The Route Cost value.
      *
      */
-    void SetRouteCost(uint8_t aRouterId, uint8_t aRouteCost) {
+    void SetRouteCost(uint8_t aRouterId, uint8_t aRouteCost)
+    {
         mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kRouteCostMask) | aRouteCost;
     }
 
@@ -551,7 +580,8 @@ public:
      * @returns The Link Quality In value for a given Router ID.
      *
      */
-    uint8_t GetLinkQualityIn(uint8_t aRouterId) const {
+    uint8_t GetLinkQualityIn(uint8_t aRouterId) const
+    {
         return (mRouteData[aRouterId] & kLinkQualityInMask) >> kLinkQualityInOffset;
     }
 
@@ -562,10 +592,10 @@ public:
      * @param[in]  aLinkQuality  The Link Quality In value for a given Router ID.
      *
      */
-    void SetLinkQualityIn(uint8_t aRouterId, uint8_t aLinkQuality) {
-        mRouteData[aRouterId] =
-            (mRouteData[aRouterId] & ~kLinkQualityInMask) |
-            ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
+    void SetLinkQualityIn(uint8_t aRouterId, uint8_t aLinkQuality)
+    {
+        mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kLinkQualityInMask) |
+                                ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
     }
 
     /**
@@ -574,7 +604,8 @@ public:
      * @returns The Link Quality Out value for a given Router ID.
      *
      */
-    uint8_t GetLinkQualityOut(uint8_t aRouterId) const {
+    uint8_t GetLinkQualityOut(uint8_t aRouterId) const
+    {
         return (mRouteData[aRouterId] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
     }
 
@@ -585,21 +616,21 @@ public:
      * @param[in]  aLinkQuality  The Link Quality Out value for a given Router ID.
      *
      */
-    void SetLinkQualityOut(uint8_t aRouterId, uint8_t aLinkQuality) {
-        mRouteData[aRouterId] =
-            (mRouteData[aRouterId] & ~kLinkQualityOutMask) |
-            ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
+    void SetLinkQualityOut(uint8_t aRouterId, uint8_t aLinkQuality)
+    {
+        mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kLinkQualityOutMask) |
+                                ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
     }
 
 private:
     enum
     {
         kLinkQualityOutOffset = 6,
-        kLinkQualityOutMask = 3 << kLinkQualityOutOffset,
-        kLinkQualityInOffset = 4,
-        kLinkQualityInMask = 3 << kLinkQualityInOffset,
-        kRouteCostOffset = 0,
-        kRouteCostMask = 0xf << kRouteCostOffset,
+        kLinkQualityOutMask   = 3 << kLinkQualityOutOffset,
+        kLinkQualityInOffset  = 4,
+        kLinkQualityInMask    = 3 << kLinkQualityInOffset,
+        kRouteCostOffset      = 0,
+        kRouteCostMask        = 0xf << kRouteCostOffset,
     };
     uint8_t mRouterIdSequence;
     uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
@@ -611,14 +642,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MleFrameCounterTlv: public Tlv
+class MleFrameCounterTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kMleFrameCounter); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kMleFrameCounter);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -654,14 +689,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address16Tlv: public Tlv
+class Address16Tlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kAddress16); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kAddress16);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -697,14 +736,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv: public Tlv
+class LeaderDataTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kLeaderData); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kLeaderData);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -761,7 +804,7 @@ public:
      * @param[in]  aVersion  The Data Version value.
      *
      */
-    void SetDataVersion(uint8_t aVersion)  { mDataVersion = aVersion; }
+    void SetDataVersion(uint8_t aVersion) { mDataVersion = aVersion; }
 
     /**
      * This method returns the Stable Data Version value.
@@ -797,10 +840,10 @@ public:
 
 private:
     uint32_t mPartitionId;
-    uint8_t mWeighting;
-    uint8_t mDataVersion;
-    uint8_t mStableDataVersion;
-    uint8_t mLeaderRouterId;
+    uint8_t  mWeighting;
+    uint8_t  mDataVersion;
+    uint8_t  mStableDataVersion;
+    uint8_t  mLeaderRouterId;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -808,14 +851,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkDataTlv: public Tlv
+class NetworkDataTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kNetworkData); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kNetworkData);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -851,14 +898,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class TlvRequestTlv: public Tlv
+class TlvRequestTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kTlvRequest); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kTlvRequest);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -884,13 +935,15 @@ public:
      * @retval OT_ERROR_NOT_FOUND   No subsequent Tlv exists in TlvRequestTlv.
      *
      */
-    otError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv) {
+    otError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv)
+    {
         otError error = OT_ERROR_NOT_FOUND;
 
-        if (aIterator < GetLength()) {
-            aTlv = mTlvs[aIterator];
+        if (aIterator < GetLength())
+        {
+            aTlv      = mTlvs[aIterator];
             aIterator = static_cast<TlvRequestIterator>(aIterator + sizeof(uint8_t));
-            error = OT_ERROR_NONE;
+            error     = OT_ERROR_NONE;
         }
 
         return error;
@@ -917,14 +970,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ScanMaskTlv: public Tlv
+class ScanMaskTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kScanMask); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kScanMask);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -937,7 +994,7 @@ public:
 
     enum
     {
-        kRouterFlag = 1 << 7,
+        kRouterFlag    = 1 << 7,
         kEndDeviceFlag = 1 << 6,
     };
 
@@ -998,14 +1055,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ConnectivityTlv: public Tlv
+class ConnectivityTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kConnectivity); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kConnectivity);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1014,7 +1075,8 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const {
+    bool IsValid(void) const
+    {
         return (GetLength() == sizeof(*this) - sizeof(Tlv) ||
                 GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
     }
@@ -1025,7 +1087,10 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const { return (static_cast<int8_t>(mParentPriority & kParentPriorityMask)) >> kParentPriorityOffset; }
+    int8_t GetParentPriority(void) const
+    {
+        return (static_cast<int8_t>(mParentPriority & kParentPriorityMask)) >> kParentPriorityOffset;
+    }
 
     /**
      * This method sets the Parent Priority value.
@@ -1033,7 +1098,8 @@ public:
      * @param[in] aParentPriority  The Parent Priority value.
      *
      */
-    void SetParentPriority(int8_t aParentPriority) {
+    void SetParentPriority(int8_t aParentPriority)
+    {
         mParentPriority = (aParentPriority << kParentPriorityOffset) & kParentPriorityMask;
     }
 
@@ -1169,7 +1235,7 @@ private:
     enum
     {
         kParentPriorityOffset = 6,
-        kParentPriorityMask = 3 << kParentPriorityOffset,
+        kParentPriorityMask   = 3 << kParentPriorityOffset,
     };
 
     uint8_t  mParentPriority;
@@ -1181,21 +1247,25 @@ private:
     uint8_t  mActiveRouters;
     uint16_t mSedBufferSize;
     uint8_t  mSedDatagramCount;
-}  OT_TOOL_PACKED_END;
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LinkMarginTlv: public Tlv
+class LinkMarginTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kLinkMargin); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kLinkMargin);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1231,14 +1301,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class StatusTlv: public Tlv
+class StatusTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kStatus); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kStatus);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1254,7 +1328,7 @@ public:
      */
     enum Status
     {
-        kError = 1,   ///< Error.
+        kError = 1, ///< Error.
     };
 
     /**
@@ -1282,14 +1356,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class VersionTlv: public Tlv
+class VersionTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kVersion); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kVersion);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1404,13 +1482,13 @@ private:
     enum
     {
         kCompressed = 1 << 7,
-        kCidMask = 0xf,
+        kCidMask    = 0xf,
     };
 
     uint8_t mControl;
     union
     {
-        uint8_t mIid[Ip6::Address::kInterfaceIdentifierSize];
+        uint8_t      mIid[Ip6::Address::kInterfaceIdentifierSize];
         Ip6::Address mIp6Address;
     } OT_TOOL_PACKED_FIELD;
 } OT_TOOL_PACKED_END;
@@ -1420,14 +1498,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelTlv: public Tlv
+class ChannelTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kChannel); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kChannel);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1471,7 +1553,7 @@ public:
     void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
 
 private:
-    uint8_t mChannelPage;
+    uint8_t  mChannelPage;
     uint16_t mChannel;
 } OT_TOOL_PACKED_END;
 
@@ -1480,14 +1562,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PanIdTlv: public Tlv
+class PanIdTlv : public Tlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kPanId); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kPanId);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1530,7 +1616,8 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) {
+    void Init(void)
+    {
         SetType(Mle::Tlv::kActiveTimestamp);
         SetLength(sizeof(*this) - sizeof(Tlv));
         Timestamp::Init();
@@ -1558,7 +1645,8 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) {
+    void Init(void)
+    {
         SetType(Mle::Tlv::kPendingTimestamp);
         SetLength(sizeof(*this) - sizeof(Tlv));
         Timestamp::Init();
@@ -1579,9 +1667,8 @@ public:
  *
  */
 
-}  // namespace Mle
+} // namespace Mle
 
+} // namespace ot
 
-}  // namespace ot
-
-#endif  // MLE_TLVS_HPP_
+#endif // MLE_TLVS_HPP_

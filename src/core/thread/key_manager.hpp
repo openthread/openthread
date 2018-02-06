@@ -55,7 +55,7 @@ namespace ot {
  * @{
  */
 
-class KeyManager: public InstanceLocator
+class KeyManager : public InstanceLocator
 {
 public:
     enum
@@ -328,23 +328,23 @@ public:
 private:
     enum
     {
-        kMinKeyRotationTime = 1,
-        kDefaultKeyRotationTime = 672,
+        kMinKeyRotationTime        = 1,
+        kDefaultKeyRotationTime    = 672,
         kDefaultKeySwitchGuardTime = 624,
-        kMacKeyOffset = 16,
-        kOneHourIntervalInMsec = 3600u * 1000u,
+        kMacKeyOffset              = 16,
+        kOneHourIntervalInMsec     = 3600u * 1000u,
     };
 
     otError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
-    void StartKeyRotationTimer(void);
+    void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
-    void HandleKeyRotationTimer(void);
+    void        HandleKeyRotationTimer(void);
 
     otMasterKey mMasterKey;
 
     uint32_t mKeySequence;
-    uint8_t mKey[Crypto::HmacSha256::kHashSize];
+    uint8_t  mKey[Crypto::HmacSha256::kHashSize];
 
     uint8_t mTemporaryKey[Crypto::HmacSha256::kHashSize];
 
@@ -353,16 +353,16 @@ private:
     uint32_t mStoredMacFrameCounter;
     uint32_t mStoredMleFrameCounter;
 
-    uint32_t mHoursSinceKeyRotation;
-    uint32_t mKeyRotationTime;
-    uint32_t mKeySwitchGuardTime;
-    bool     mKeySwitchGuardEnabled;
+    uint32_t   mHoursSinceKeyRotation;
+    uint32_t   mKeyRotationTime;
+    uint32_t   mKeySwitchGuardTime;
+    bool       mKeySwitchGuardEnabled;
     TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_FTD
     uint8_t mPSKc[kMaxKeyLength];
 #endif
-    uint8_t mKek[kMaxKeyLength];
+    uint8_t  mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
 
     uint8_t mSecurityPolicyFlags;
@@ -372,6 +372,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // KEY_MANAGER_HPP_
+#endif // KEY_MANAGER_HPP_

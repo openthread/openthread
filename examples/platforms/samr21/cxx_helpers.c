@@ -49,6 +49,6 @@ void __cxa_guard_abort(__guard *g)
 
 void __cxa_pure_virtual(void)
 {
-    while (1);
+    while (1)
+        ;
 }
-

@@ -45,15 +45,18 @@ otError AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
     return OT_ERROR_NONE;
 }
 
-otError AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,
-                     const void *aNonce, uint8_t aNonceLength)
+otError AesCcm::Init(uint32_t    aHeaderLength,
+                     uint32_t    aPlainTextLength,
+                     uint8_t     aTagLength,
+                     const void *aNonce,
+                     uint8_t     aNonceLength)
 {
-    const uint8_t *nonceBytes = reinterpret_cast<const uint8_t *>(aNonce);
-    otError error = OT_ERROR_NONE;
-    uint8_t blockLength = 0;
-    uint32_t len;
-    uint8_t L;
-    uint8_t i;
+    const uint8_t *nonceBytes  = reinterpret_cast<const uint8_t *>(aNonce);
+    otError        error       = OT_ERROR_NONE;
+    uint8_t        blockLength = 0;
+    uint32_t       len;
+    uint8_t        L;
+    uint8_t        i;
 
     // aTagLength must be even
     aTagLength &= ~1;
@@ -99,8 +102,7 @@ otError AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t 
     // setup initial block
 
     // write flags
-    mBlock[0] = (static_cast<uint8_t>((aHeaderLength != 0) << 6) |
-                 static_cast<uint8_t>(((aTagLength - 2) >> 1) << 3) |
+    mBlock[0] = (static_cast<uint8_t>((aHeaderLength != 0) << 6) | static_cast<uint8_t>(((aTagLength - 2) >> 1) << 3) |
                  static_cast<uint8_t>(L - 1));
 
     // write nonce
@@ -154,14 +156,14 @@ otError AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t 
         mCtr[i] = 0;
     }
 
-    mNonceLength = aNonceLength;
-    mHeaderLength = aHeaderLength;
-    mHeaderCur = 0;
+    mNonceLength     = aNonceLength;
+    mHeaderLength    = aHeaderLength;
+    mHeaderCur       = 0;
     mPlainTextLength = aPlainTextLength;
-    mPlainTextCur = 0;
-    mBlockLength = blockLength;
-    mCtrLength = sizeof(mCtrPad);
-    mTagLength = aTagLength;
+    mPlainTextCur    = 0;
+    mBlockLength     = blockLength;
+    mCtrLength       = sizeof(mCtrPad);
+    mTagLength       = aTagLength;
 
 exit:
     return error;
@@ -201,9 +203,9 @@ void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
 
 void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncrypt)
 {
-    uint8_t *plaintextBytes = reinterpret_cast<uint8_t *>(plaintext);
+    uint8_t *plaintextBytes  = reinterpret_cast<uint8_t *>(plaintext);
     uint8_t *ciphertextBytes = reinterpret_cast<uint8_t *>(ciphertext);
-    uint8_t byte;
+    uint8_t  byte;
 
     assert(mPlainTextCur + len <= mPlainTextLength);
 
@@ -225,12 +227,12 @@ void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncr
 
         if (aEncrypt)
         {
-            byte = plaintextBytes[i];
+            byte               = plaintextBytes[i];
             ciphertextBytes[i] = byte ^ mCtrPad[mCtrLength++];
         }
         else
         {
-            byte = ciphertextBytes[i] ^ mCtrPad[mCtrLength++];
+            byte              = ciphertextBytes[i] ^ mCtrPad[mCtrLength++];
             plaintextBytes[i] = byte;
         }
 
@@ -282,5 +284,5 @@ void AesCcm::Finalize(void *tag, uint8_t *aTagLength)
     }
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot

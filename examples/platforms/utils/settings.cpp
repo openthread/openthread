@@ -32,15 +32,15 @@
  *
  */
 
-#include <stdlib.h>
-#include <stddef.h>
-#include "utils/wrap_string.h"
 #include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include "utils/wrap_string.h"
 
 #include <openthread-core-config.h>
 
-#include "openthread/types.h"
 #include "openthread/platform/settings.h"
+#include "openthread/types.h"
 
 #include <utils/code_utils.h>
 
@@ -52,19 +52,19 @@ extern "C" {
 
 enum
 {
-    kBlockAddBeginFlag = 0x1,
+    kBlockAddBeginFlag    = 0x1,
     kBlockAddCompleteFlag = 0x02,
-    kBlockDeleteFlag = 0x04,
-    kBlockIndex0Flag = 0x08,
+    kBlockDeleteFlag      = 0x04,
+    kBlockIndex0Flag      = 0x08,
 };
 
 enum
 {
-    kSettingsFlagSize = 4,
+    kSettingsFlagSize      = 4,
     kSettingsBlockDataSize = 255,
 
     kSettingsInSwap = 0xbe5cc5ef,
-    kSettingsInUse = 0xbe5cc5ee,
+    kSettingsInUse  = 0xbe5cc5ee,
     kSettingsNotUse = 0xbe5cc5ec,
 };
 
@@ -77,7 +77,6 @@ struct settingsBlock
     uint16_t reserved;
 } OT_TOOL_PACKED_END;
 
-
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
  *
@@ -85,8 +84,8 @@ struct settingsBlock
  *
  */
 #ifndef SETTINGS_CONFIG_BASE_ADDRESS
-#define SETTINGS_CONFIG_BASE_ADDRESS                 0x39000
-#endif  // SETTINGS_CONFIG_BASE_ADDRESS
+#define SETTINGS_CONFIG_BASE_ADDRESS 0x39000
+#endif // SETTINGS_CONFIG_BASE_ADDRESS
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -95,8 +94,8 @@ struct settingsBlock
  *
  */
 #ifndef SETTINGS_CONFIG_PAGE_SIZE
-#define SETTINGS_CONFIG_PAGE_SIZE                    0x800
-#endif  // SETTINGS_CONFIG_PAGE_SIZE
+#define SETTINGS_CONFIG_PAGE_SIZE 0x800
+#endif // SETTINGS_CONFIG_PAGE_SIZE
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
@@ -105,8 +104,8 @@ struct settingsBlock
  *
  */
 #ifndef SETTINGS_CONFIG_PAGE_NUM
-#define SETTINGS_CONFIG_PAGE_NUM                     2
-#endif  // SETTINGS_CONFIG_PAGE_NUM
+#define SETTINGS_CONFIG_PAGE_NUM 2
+#endif // SETTINGS_CONFIG_PAGE_NUM
 
 static uint32_t sSettingsBaseAddress;
 static uint32_t sSettingsUsedSize;
@@ -123,10 +122,9 @@ static void setSettingsFlag(uint32_t aBase, uint32_t aFlag)
 
 static void initSettings(uint32_t aBase, uint32_t aFlag)
 {
-    uint32_t address = aBase;
-    uint32_t settingsSize = SETTINGS_CONFIG_PAGE_NUM > 1 ?
-                            SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2 :
-                            SETTINGS_CONFIG_PAGE_SIZE;
+    uint32_t address      = aBase;
+    uint32_t settingsSize = SETTINGS_CONFIG_PAGE_NUM > 1 ? SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2
+                                                         : SETTINGS_CONFIG_PAGE_SIZE;
 
     while (address < (aBase + settingsSize))
     {
@@ -140,20 +138,18 @@ static void initSettings(uint32_t aBase, uint32_t aFlag)
 
 static uint32_t swapSettingsBlock(otInstance *aInstance)
 {
-    uint32_t oldBase = sSettingsBaseAddress;
-    uint32_t swapAddress = oldBase;
-    uint32_t usedSize = sSettingsUsedSize;
-    uint8_t pageNum = SETTINGS_CONFIG_PAGE_NUM;
-    uint32_t settingsSize = pageNum > 1 ? SETTINGS_CONFIG_PAGE_SIZE * pageNum / 2 :
-                            SETTINGS_CONFIG_PAGE_SIZE;
+    uint32_t oldBase      = sSettingsBaseAddress;
+    uint32_t swapAddress  = oldBase;
+    uint32_t usedSize     = sSettingsUsedSize;
+    uint8_t  pageNum      = SETTINGS_CONFIG_PAGE_NUM;
+    uint32_t settingsSize = pageNum > 1 ? SETTINGS_CONFIG_PAGE_SIZE * pageNum / 2 : SETTINGS_CONFIG_PAGE_SIZE;
 
     (void)aInstance;
 
     otEXPECT(pageNum > 1);
 
-    sSettingsBaseAddress = (swapAddress == SETTINGS_CONFIG_BASE_ADDRESS) ?
-                           (swapAddress + settingsSize) :
-                           SETTINGS_CONFIG_BASE_ADDRESS;
+    sSettingsBaseAddress =
+        (swapAddress == SETTINGS_CONFIG_BASE_ADDRESS) ? (swapAddress + settingsSize) : SETTINGS_CONFIG_BASE_ADDRESS;
 
     initSettings(sSettingsBaseAddress, static_cast<uint32_t>(kSettingsInSwap));
     sSettingsUsedSize = kSettingsFlagSize;
@@ -165,9 +161,9 @@ static uint32_t swapSettingsBlock(otInstance *aInstance)
         struct addSettingsBlock
         {
             struct settingsBlock block;
-            uint8_t data[kSettingsBlockDataSize];
+            uint8_t              data[kSettingsBlockDataSize];
         } OT_TOOL_PACKED_END addBlock;
-        bool valid = true;
+        bool                 valid = true;
 
         utilsFlashRead(swapAddress, reinterpret_cast<uint8_t *>(&addBlock.block), sizeof(struct settingsBlock));
         swapAddress += sizeof(struct settingsBlock);
@@ -195,8 +191,7 @@ static uint32_t swapSettingsBlock(otInstance *aInstance)
             if (valid)
             {
                 utilsFlashRead(swapAddress, addBlock.data, getAlignLength(addBlock.block.length));
-                utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize,
-                                reinterpret_cast<uint8_t *>(&addBlock),
+                utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize, reinterpret_cast<uint8_t *>(&addBlock),
                                 getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock));
                 sSettingsUsedSize += (sizeof(struct settingsBlock) + getAlignLength(addBlock.block.length));
             }
@@ -216,22 +211,24 @@ exit:
     return settingsSize - sSettingsUsedSize;
 }
 
-static otError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0, const uint8_t *aValue,
-                          uint16_t aValueLength)
+static otError addSetting(otInstance *   aInstance,
+                          uint16_t       aKey,
+                          bool           aIndex0,
+                          const uint8_t *aValue,
+                          uint16_t       aValueLength)
 {
     otError error = OT_ERROR_NONE;
     OT_TOOL_PACKED_BEGIN
     struct addSettingsBlock
     {
         struct settingsBlock block;
-        uint8_t data[kSettingsBlockDataSize];
+        uint8_t              data[kSettingsBlockDataSize];
     } OT_TOOL_PACKED_END addBlock;
-    uint32_t settingsSize = SETTINGS_CONFIG_PAGE_NUM > 1 ?
-                            SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2 :
-                            SETTINGS_CONFIG_PAGE_SIZE;
+    uint32_t settingsSize = SETTINGS_CONFIG_PAGE_NUM > 1 ? SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2
+                                                         : SETTINGS_CONFIG_PAGE_SIZE;
 
     addBlock.block.flag = 0xff;
-    addBlock.block.key = aKey;
+    addBlock.block.key  = aKey;
 
     if (aIndex0)
     {
@@ -241,15 +238,14 @@ static otError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0, co
     addBlock.block.flag &= (~kBlockAddBeginFlag);
     addBlock.block.length = aValueLength;
 
-    if ((sSettingsUsedSize + getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)) >=
-        settingsSize)
+    if ((sSettingsUsedSize + getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)) >= settingsSize)
     {
-        otEXPECT_ACTION(swapSettingsBlock(aInstance) >= (getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)),
+        otEXPECT_ACTION(swapSettingsBlock(aInstance) >=
+                            (getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)),
                         error = OT_ERROR_NO_BUFS);
     }
 
-    utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize,
-                    reinterpret_cast<uint8_t *>(&addBlock.block),
+    utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize, reinterpret_cast<uint8_t *>(&addBlock.block),
                     sizeof(struct settingsBlock));
 
     memset(addBlock.data, 0xff, kSettingsBlockDataSize);
@@ -259,8 +255,7 @@ static otError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0, co
                     reinterpret_cast<uint8_t *>(addBlock.data), getAlignLength(addBlock.block.length));
 
     addBlock.block.flag &= (~kBlockAddCompleteFlag);
-    utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize,
-                    reinterpret_cast<uint8_t *>(&addBlock.block),
+    utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize, reinterpret_cast<uint8_t *>(&addBlock.block),
                     sizeof(struct settingsBlock));
     sSettingsUsedSize += (sizeof(struct settingsBlock) + getAlignLength(addBlock.block.length));
 
@@ -271,10 +266,9 @@ exit:
 // settings API
 void otPlatSettingsInit(otInstance *aInstance)
 {
-    uint8_t index;
-    uint32_t settingsSize = SETTINGS_CONFIG_PAGE_NUM > 1 ?
-                            SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2 :
-                            SETTINGS_CONFIG_PAGE_SIZE;
+    uint8_t  index;
+    uint32_t settingsSize = SETTINGS_CONFIG_PAGE_NUM > 1 ? SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2
+                                                         : SETTINGS_CONFIG_PAGE_SIZE;
 
     (void)aInstance;
 
@@ -306,8 +300,7 @@ void otPlatSettingsInit(otInstance *aInstance)
     {
         struct settingsBlock block;
 
-        utilsFlashRead(sSettingsBaseAddress + sSettingsUsedSize,
-                       reinterpret_cast<uint8_t *>(&block), sizeof(block));
+        utilsFlashRead(sSettingsBaseAddress + sSettingsUsedSize, reinterpret_cast<uint8_t *>(&block), sizeof(block));
 
         if (!(block.flag & kBlockAddBeginFlag))
         {
@@ -340,10 +333,10 @@ otError otPlatSettingsAbandonChange(otInstance *aInstance)
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
-    otError error = OT_ERROR_NOT_FOUND;
-    uint32_t address = sSettingsBaseAddress + kSettingsFlagSize;
+    otError  error       = OT_ERROR_NOT_FOUND;
+    uint32_t address     = sSettingsBaseAddress + kSettingsFlagSize;
     uint16_t valueLength = 0;
-    int index = 0;
+    int      index       = 0;
 
     (void)aInstance;
 
@@ -379,7 +372,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
                     }
 
                     valueLength = block.length;
-                    error = OT_ERROR_NONE;
+                    error       = OT_ERROR_NONE;
                 }
 
                 index++;
@@ -405,7 +398,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     uint16_t length;
-    bool index0;
+    bool     index0;
 
     index0 = (otPlatSettingsGet(aInstance, aKey, 0, NULL, &length) == OT_ERROR_NOT_FOUND ? true : false);
     return addSetting(aInstance, aKey, index0, aValue, aValueLength);
@@ -413,9 +406,9 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error   = OT_ERROR_NOT_FOUND;
     uint32_t address = sSettingsBaseAddress + kSettingsFlagSize;
-    int index = 0;
+    int      index   = 0;
 
     (void)aInstance;
 

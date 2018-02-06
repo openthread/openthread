@@ -41,7 +41,6 @@
 extern "C" {
 #endif
 
-
 /**
  * @addtogroup api-jam-detection
  *
@@ -194,7 +193,7 @@ uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_JAM_DETECTION_H_
+#endif // OPENTHREAD_JAM_DETECTION_H_

@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 
 #include <openthread/types.h>
 #include <openthread/platform/logging.h>
@@ -45,8 +45,8 @@
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 #include "api/link_raw.hpp"
 #endif
-#include "common/code_utils.hpp"
 #include "coap/coap.hpp"
+#include "common/code_utils.hpp"
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #include "crypto/heap.hpp"
 #include "crypto/mbedtls.hpp"
@@ -91,8 +91,7 @@ namespace ot {
 class Instance : public otInstance
 {
 public:
-
-#if  OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     /**
       * This static method initializes the OpenThread instance.
       *
@@ -350,57 +349,56 @@ public:
      * @returns A reference to the `Type` object of the instance.
      *
      */
-    template <typename Type>
-    Type &Get(void);
+    template <typename Type> Type &Get(void);
 
 private:
     Instance(void);
     void AfterInit(void);
 
-    otHandleActiveScanResult    mActiveScanCallback;
-    void                       *mActiveScanCallbackContext;
-    otHandleEnergyScanResult    mEnergyScanCallback;
-    void                       *mEnergyScanCallbackContext;
+    otHandleActiveScanResult mActiveScanCallback;
+    void *                   mActiveScanCallbackContext;
+    otHandleEnergyScanResult mEnergyScanCallback;
+    void *                   mEnergyScanCallbackContext;
 
-    Notifier                    mNotifier;
+    Notifier mNotifier;
 
-    TaskletScheduler            mTaskletScheduler;
-    TimerMilliScheduler         mTimerMilliScheduler;
+    TaskletScheduler    mTaskletScheduler;
+    TimerMilliScheduler mTimerMilliScheduler;
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    TimerMicroScheduler         mTimerMicroScheduler;
+    TimerMicroScheduler mTimerMicroScheduler;
 #endif
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Crypto::MbedTls             mMbedTls;
-    Crypto::Heap                mMbedTlsHeap;
+    Crypto::MbedTls mMbedTls;
+    Crypto::Heap    mMbedTlsHeap;
 #endif
 
-    Ip6::Ip6                    mIp6;
-    ThreadNetif                 mThreadNetif;
+    Ip6::Ip6    mIp6;
+    ThreadNetif mThreadNetif;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw                     mLinkRaw;
+    LinkRaw mLinkRaw;
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    Coap::ApplicationCoap       mApplicationCoap;
+    Coap::ApplicationCoap mApplicationCoap;
 #endif
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    otLogLevel                  mLogLevel;
+    otLogLevel mLogLevel;
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-    Utils::ChannelMonitor       mChannelMonitor;
+    Utils::ChannelMonitor mChannelMonitor;
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
-    Utils::ChannelManager       mChannelManager;
+    Utils::ChannelManager mChannelManager;
 #endif
 
-    MessagePool                 mMessagePool;
-    bool                        mIsInitialized;
+    MessagePool mMessagePool;
+    bool        mIsInitialized;
 };
 
 /**
@@ -408,6 +406,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // INSTANCE_HPP_
+#endif // INSTANCE_HPP_

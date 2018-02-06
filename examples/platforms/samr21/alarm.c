@@ -60,7 +60,6 @@ uint32_t otPlatAlarmMilliGetNow(void)
     return sTime;
 }
 
-
 void SysTick_Handler(void)
 {
     sTime++;

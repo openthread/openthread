@@ -52,8 +52,11 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetManager::DatasetManager(Instance &aInstance, const Tlv::Type aType, const char *aUriGet,
-                               const char *aUriSet, Timer::Handler aTimerHandler)
+DatasetManager::DatasetManager(Instance &      aInstance,
+                               const Tlv::Type aType,
+                               const char *    aUriGet,
+                               const char *    aUriSet,
+                               Timer::Handler  aTimerHandler)
     : InstanceLocator(aInstance)
     , mLocal(aInstance, aType)
     , mTimestampValid(false)
@@ -72,7 +75,7 @@ const Timestamp *DatasetManager::GetTimestamp(void) const
 int DatasetManager::Compare(const Timestamp &aTimestamp) const
 {
     const Timestamp *timestamp = GetTimestamp();
-    int rval = 1;
+    int              rval      = 1;
 
     if (timestamp)
     {
@@ -102,8 +105,8 @@ const Tlv *DatasetManager::GetTlv(Tlv::Type aType) const
 
 otError DatasetManager::Restore(void)
 {
-    otError error;
-    Dataset dataset(mLocal.GetType());
+    otError          error;
+    Dataset          dataset(mLocal.GetType());
     const Timestamp *timestamp;
 
     mTimer.Stop();
@@ -114,7 +117,7 @@ otError DatasetManager::Restore(void)
 
     if (timestamp != NULL)
     {
-        mTimestamp = *timestamp;
+        mTimestamp      = *timestamp;
         mTimestampValid = true;
 
         if (mLocal.GetType() == Tlv::kActiveTimestamp)
@@ -155,13 +158,13 @@ void DatasetManager::HandleDetach(void)
 void DatasetManager::Set(const Dataset &aDataset)
 {
     const Timestamp *timestamp;
-    int compare;
+    int              compare;
 
     timestamp = aDataset.GetTimestamp();
 
     if (timestamp != NULL)
     {
-        mTimestamp = *timestamp;
+        mTimestamp      = *timestamp;
         mTimestampValid = true;
 
         if (mLocal.GetType() == Tlv::kActiveTimestamp)
@@ -200,12 +203,11 @@ void DatasetManager::HandleTimer(void)
 
     if (mLocal.GetType() == Tlv::kActiveTimestamp)
     {
-        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(netif.GetPendingDataset().GetTlv(
-                                                                                    Tlv::kActiveTimestamp));
+        const ActiveTimestampTlv *tlv =
+            static_cast<const ActiveTimestampTlv *>(netif.GetPendingDataset().GetTlv(Tlv::kActiveTimestamp));
         const Timestamp *pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
-        if (pendingActiveTimestamp != NULL &&
-            mLocal.Compare(pendingActiveTimestamp) >= 0)
+        if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) >= 0)
         {
             // stop registration attempts during dataset transition
             ExitNow();
@@ -221,12 +223,12 @@ exit:
 
 otError DatasetManager::Register(void)
 {
-    ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
-    Coap::Header header;
-    Message *message;
+    ThreadNetif &    netif = GetNetif();
+    otError          error = OT_ERROR_NONE;
+    Coap::Header     header;
+    Message *        message;
     Ip6::MessageInfo messageInfo;
-    Dataset dataset(mLocal.GetType());
+    Dataset          dataset(mLocal.GetType());
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -255,13 +257,14 @@ exit:
     return error;
 }
 
-void DatasetManager::Get(const Coap::Header &aHeader, const Message &aMessage,
+void DatasetManager::Get(const Coap::Header &    aHeader,
+                         const Message &         aMessage,
                          const Ip6::MessageInfo &aMessageInfo) const
 {
-    Tlv tlv;
+    Tlv      tlv;
     uint16_t offset = aMessage.GetOffset();
-    uint8_t tlvs[Dataset::kMaxSize];
-    uint8_t length = 0;
+    uint8_t  tlvs[Dataset::kMaxSize];
+    uint8_t  length = 0;
 
     while (offset < aMessage.GetLength())
     {
@@ -299,14 +302,16 @@ void DatasetManager::Get(const Coap::Header &aHeader, const Message &aMessage,
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
-void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                     uint8_t *aTlvs, uint8_t aLength) const
+void DatasetManager::SendGetResponse(const Coap::Header &    aRequestHeader,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     uint8_t *               aTlvs,
+                                     uint8_t                 aLength) const
 {
     ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     Coap::Header responseHeader;
-    Message *message;
-    Dataset dataset(mLocal.GetType());
+    Message *    message;
+    Dataset      dataset(mLocal.GetType());
 
     mLocal.Get(dataset);
 
@@ -369,7 +374,10 @@ exit:
 }
 
 ActiveDataset::ActiveDataset(Instance &aInstance)
-    : DatasetManager(aInstance, Tlv::kActiveTimestamp, OT_URI_PATH_ACTIVE_GET, OT_URI_PATH_ACTIVE_SET,
+    : DatasetManager(aInstance,
+                     Tlv::kActiveTimestamp,
+                     OT_URI_PATH_ACTIVE_GET,
+                     OT_URI_PATH_ACTIVE_SET,
                      &ActiveDataset::HandleTimer)
     , mResourceGet(OT_URI_PATH_ACTIVE_GET, &ActiveDataset::HandleGet, this)
 #if OPENTHREAD_FTD
@@ -389,8 +397,7 @@ void ActiveDataset::Set(const Dataset &aDataset)
     DatasetManager::Set(aDataset);
 }
 
-otError ActiveDataset::Set(const Timestamp &aTimestamp, const Message &aMessage,
-                           uint16_t aOffset, uint8_t aLength)
+otError ActiveDataset::Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
     Dataset dataset(mLocal.GetType());
@@ -403,12 +410,14 @@ exit:
     return error;
 }
 
-void ActiveDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void ActiveDataset::HandleGet(void *               aContext,
+                              otCoapHeader *       aHeader,
+                              otMessage *          aMessage,
                               const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleGet(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<ActiveDataset *>(aContext)->HandleGet(*static_cast<Coap::Header *>(aHeader),
+                                                      *static_cast<Message *>(aMessage),
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void ActiveDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
@@ -422,7 +431,10 @@ void ActiveDataset::HandleTimer(Timer &aTimer)
 }
 
 PendingDataset::PendingDataset(Instance &aInstance)
-    : DatasetManager(aInstance, Tlv::kPendingTimestamp, OT_URI_PATH_PENDING_GET, OT_URI_PATH_PENDING_SET,
+    : DatasetManager(aInstance,
+                     Tlv::kPendingTimestamp,
+                     OT_URI_PATH_PENDING_GET,
+                     OT_URI_PATH_PENDING_SET,
                      &PendingDataset::HandleTimer)
     , mDelayTimer(aInstance, &PendingDataset::HandleDelayTimer, this)
     , mResourceGet(OT_URI_PATH_PENDING_GET, &PendingDataset::HandleGet, this)
@@ -444,8 +456,7 @@ void PendingDataset::ClearNetwork(void)
     Restore();
 }
 
-otError PendingDataset::Set(const Timestamp &aTimestamp, const Message &aMessage,
-                            uint16_t aOffset, uint8_t aLength)
+otError PendingDataset::Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
     Dataset dataset(mLocal.GetType());
@@ -462,7 +473,7 @@ exit:
 void PendingDataset::StartDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
-    Dataset dataset(mLocal.GetType());
+    Dataset        dataset(mLocal.GetType());
 
     mLocal.Get(dataset);
 
@@ -491,7 +502,7 @@ void PendingDataset::HandleDelayTimer(Timer &aTimer)
 void PendingDataset::HandleDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
-    Dataset dataset(mLocal.GetType());
+    Dataset        dataset(mLocal.GetType());
 
     mLocal.Get(dataset);
 
@@ -500,7 +511,7 @@ void PendingDataset::HandleDelayTimer(void)
     if ((delayTimer = static_cast<DelayTimerTlv *>(dataset.Get(Tlv::kDelayTimer))) != NULL)
     {
         uint32_t elapsed = mDelayTimer.GetFireTime() - dataset.GetUpdateTime();
-        uint32_t delay = delayTimer->GetDelayTimer();
+        uint32_t delay   = delayTimer->GetDelayTimer();
 
         if (elapsed < delay)
         {
@@ -520,12 +531,14 @@ exit:
     return;
 }
 
-void PendingDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void PendingDataset::HandleGet(void *               aContext,
+                               otCoapHeader *       aHeader,
+                               otMessage *          aMessage,
                                const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleGet(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<PendingDataset *>(aContext)->HandleGet(*static_cast<Coap::Header *>(aHeader),
+                                                       *static_cast<Message *>(aMessage),
+                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void PendingDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
@@ -538,5 +551,5 @@ void PendingDataset::HandleTimer(Timer &aTimer)
     aTimer.GetOwner<PendingDataset>().HandleTimer();
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot

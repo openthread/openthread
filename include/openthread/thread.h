@@ -112,9 +112,13 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  * @retval OT_ERROR_BUSY  Already performing an Thread Discovery.
  *
  */
-OTAPI otError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
-                                      bool aEnableEui64Filtering, otHandleActiveScanResult aCallback,
-                                      void *aCallbackContext);
+OTAPI otError OTCALL otThreadDiscover(otInstance *             aInstance,
+                                      uint32_t                 aScanChannels,
+                                      uint16_t                 aPanId,
+                                      bool                     aJoiner,
+                                      bool                     aEnableEui64Filtering,
+                                      otHandleActiveScanResult aCallback,
+                                      void *                   aCallbackContext);
 
 /**
  * This function determines if an MLE Thread Discovery is currently in progress.
@@ -390,8 +394,9 @@ OTAPI otError OTCALL otThreadBecomeChild(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  @p aIterator or @p aInfo was NULL.
  *
  */
-OTAPI otError OTCALL otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator,
-                                                 otNeighborInfo *aInfo);
+OTAPI otError OTCALL otThreadGetNextNeighborInfo(otInstance *            aInstance,
+                                                 otNeighborInfoIterator *aIterator,
+                                                 otNeighborInfo *        aInfo);
 
 /**
  * Get the device role.
@@ -494,8 +499,7 @@ OTAPI otError OTCALL otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aL
  * @param[in]  aContext      A pointer to application-specific context.
  *
  */
-typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                                               void *aContext);
+typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
 /**
  * This function registers a callback to provide received raw Network Diagnostic Get response payload.
@@ -506,8 +510,9 @@ typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMess
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  */
-void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
-                                             void *aCallbackContext);
+void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
+                                             otReceiveDiagnosticGetCallback aCallback,
+                                             void *                         aCallbackContext);
 
 /**
  * Send a Network Diagnostic Get request.
@@ -518,8 +523,10 @@ void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDia
  * @param[in]  aCount         Number of types in aTlvTypes
  *
  */
-OTAPI otError OTCALL otThreadSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination,
-                                               const uint8_t aTlvTypes[], uint8_t aCount);
+OTAPI otError OTCALL otThreadSendDiagnosticGet(otInstance *        aInstance,
+                                               const otIp6Address *aDestination,
+                                               const uint8_t       aTlvTypes[],
+                                               uint8_t             aCount);
 
 /**
  * Send a Network Diagnostic Reset request.
@@ -530,8 +537,10 @@ OTAPI otError OTCALL otThreadSendDiagnosticGet(otInstance *aInstance, const otIp
  * @param[in]  aCount         Number of types in aTlvTypes
  *
  */
-OTAPI otError OTCALL otThreadSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination,
-                                                 const uint8_t aTlvTypes[], uint8_t aCount);
+OTAPI otError OTCALL otThreadSendDiagnosticReset(otInstance *        aInstance,
+                                                 const otIp6Address *aDestination,
+                                                 const uint8_t       aTlvTypes[],
+                                                 uint8_t             aCount);
 
 /**
  * Get the IPv6 counters.
@@ -549,7 +558,7 @@ OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_THREAD_H_
+#endif // OPENTHREAD_THREAD_H_

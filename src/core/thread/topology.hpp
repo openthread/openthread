@@ -61,14 +61,14 @@ public:
      */
     enum State
     {
-        kStateInvalid,                   ///< Neighbor link is invalid
-        kStateRestored,                  ///< Neighbor is restored from non-volatile memory
-        kStateParentRequest,             ///< Received an MLE Parent Request message
-        kStateParentResponse,            ///< Received an MLE Parent Response message
-        kStateChildIdRequest,            ///< Received an MLE Child ID Request message
-        kStateLinkRequest,               ///< Sent an MLE Link Request message
-        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message (trying to restore the child)
-        kStateValid,                     ///< Link is valid
+        kStateInvalid,            ///< Neighbor link is invalid
+        kStateRestored,           ///< Neighbor is restored from non-volatile memory
+        kStateParentRequest,      ///< Received an MLE Parent Request message
+        kStateParentResponse,     ///< Received an MLE Parent Response message
+        kStateChildIdRequest,     ///< Received an MLE Child ID Request message
+        kStateLinkRequest,        ///< Sent an MLE Link Request message
+        kStateChildUpdateRequest, ///< Sent an MLE Child Update Request message (trying to restore the child)
+        kStateValid,              ///< Link is valid
     };
 
     /**
@@ -329,28 +329,28 @@ public:
     uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
 
 private:
-    Mac::ExtAddress mMacAddr;            ///< The IEEE 802.15.4 Extended Address
-    uint32_t        mLastHeard;          ///< Time when last heard.
+    Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
+    uint32_t        mLastHeard; ///< Time when last heard.
     union
     {
         struct
         {
-            uint32_t mLinkFrameCounter;  ///< The Link Frame Counter
-            uint32_t mMleFrameCounter;   ///< The MLE Frame Counter
+            uint32_t mLinkFrameCounter; ///< The Link Frame Counter
+            uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
         } mValid;
         struct
         {
-            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize];  ///< The challenge value
+            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
         } mPending;
     } mValidPending;
 
-    uint32_t        mKeySequence;        ///< Current key sequence
-    uint16_t        mRloc16;             ///< The RLOC16
-    uint8_t         mState : 3;          ///< The link state
-    uint8_t         mMode : 4;           ///< The MLE device mode
-    bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
-    uint8_t         mLinkFailures;       ///< Consecutive link failure count
-    LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
+    uint32_t        mKeySequence;     ///< Current key sequence
+    uint16_t        mRloc16;          ///< The RLOC16
+    uint8_t         mState : 3;       ///< The link state
+    uint8_t         mMode : 4;        ///< The MLE device mode
+    bool            mDataRequest : 1; ///< Indicates whether or not a Data Poll was received
+    uint8_t         mLinkFailures;    ///< Consecutive link failure count
+    LinkQualityInfo mLinkInfo;        ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
 /**
@@ -362,7 +362,7 @@ class Child : public Neighbor
 public:
     enum
     {
-        kMaxRequestTlvs        = 5,
+        kMaxRequestTlvs = 5,
     };
 
     /**
@@ -374,14 +374,16 @@ public:
         friend class Child;
 
     public:
-
         /**
          * This constructor initializes the iterator object.
          *
          * After initialization a call to `GetNextIp6Address()` would start at the first IPv6 address entry in the list.
          *
          */
-        Ip6AddressIterator(void): mIndex(0) { }
+        Ip6AddressIterator(void)
+            : mIndex(0)
+        {
+        }
 
         /**
          * This method resets the iterator.
@@ -737,7 +739,8 @@ public:
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
     /**
-     * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress` flag).
+     * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress`
+     * flag).
      *
      * @param[out] aMacAddress A reference to a mac address object to which the child's address is copied.
      *
@@ -771,7 +774,6 @@ public:
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 private:
-
 #if OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD < 2
 #error OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD should be at least set to 2.
 #endif
@@ -781,10 +783,10 @@ private:
         kNumIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD - 1,
     };
 
-    uint8_t      mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];   ///< IPv6 address IID for mesh-local address
-    Ip6::Address mIp6Address[kNumIp6Addresses];  ///< Registered IPv6 addresses
+    uint8_t      mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize]; ///< IPv6 address IID for mesh-local address
+    Ip6::Address mIp6Address[kNumIp6Addresses];                         ///< Registered IPv6 addresses
 
-    uint32_t     mTimeout;                       ///< Child timeout
+    uint32_t mTimeout; ///< Child timeout
 
     union
     {
@@ -792,22 +794,21 @@ private:
         uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
     };
 
-    uint32_t     mIndirectFrameCounter;                ///< Frame counter for current indirect message (used fore retx).
-    Message     *mIndirectMessage;                     ///< Current indirect message.
-    uint16_t     mIndirectFragmentOffset : 15;         ///< 6LoWPAN fragment offset for the indirect message.
-    bool         mIndirectTxSuccess : 1;               ///< Indicates tx success/failure of current indirect message.
-    uint8_t      mIndirectKeyId;                       ///< Key Id for current indirect message (used for retx).
-    uint8_t      mIndirectTxAttempts;                  ///< Number of data poll triggered tx attempts.
-    uint8_t      mIndirectDsn;                         ///< MAC level Data Sequence Number (DSN) for retx attempts.
-    uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
-    uint16_t     mQueuedMessageCount : 13;             ///< Number of queued indirect messages for the child.
-    bool         mUseShortAddress : 1;                 ///< Indicates whether to use short or extended address.
-    bool         mSourceMatchPending : 1;              ///< Indicates whether or not pending to add to src match table.
+    uint32_t mIndirectFrameCounter;        ///< Frame counter for current indirect message (used fore retx).
+    Message *mIndirectMessage;             ///< Current indirect message.
+    uint16_t mIndirectFragmentOffset : 15; ///< 6LoWPAN fragment offset for the indirect message.
+    bool     mIndirectTxSuccess : 1;       ///< Indicates tx success/failure of current indirect message.
+    uint8_t  mIndirectKeyId;               ///< Key Id for current indirect message (used for retx).
+    uint8_t  mIndirectTxAttempts;          ///< Number of data poll triggered tx attempts.
+    uint8_t  mIndirectDsn;                 ///< MAC level Data Sequence Number (DSN) for retx attempts.
+    uint8_t  mNetworkDataVersion;          ///< Current Network Data version
+    uint16_t mQueuedMessageCount : 13;     ///< Number of queued indirect messages for the child.
+    bool     mUseShortAddress : 1;         ///< Indicates whether to use short or extended address.
+    bool     mSourceMatchPending : 1;      ///< Indicates whether or not pending to add to src match table.
 
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
-    uint16_t     mSecondsSinceSupervision;             ///< Number of seconds since last supervision of the child.
-#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
-
+    uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
+#endif                                 // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 };
 
 /**
@@ -898,13 +899,13 @@ public:
     void SetReclaimDelay(bool aReclaimDelay) { mReclaimDelay = aReclaimDelay; }
 
 private:
-    uint8_t mNextHop;             ///< The next hop towards this router
-    uint8_t mLinkQualityOut : 2;  ///< The link quality out for this router
-    uint8_t mCost : 4;            ///< The cost to this router via neighbor router
-    bool    mAllocated : 1;       ///< Indicates whether or not this entry is allocated
-    bool    mReclaimDelay : 1;    ///< Indicates whether or not this entry is waiting to be reclaimed
+    uint8_t mNextHop;            ///< The next hop towards this router
+    uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
+    uint8_t mCost : 4;           ///< The cost to this router via neighbor router
+    bool    mAllocated : 1;      ///< Indicates whether or not this entry is allocated
+    bool    mReclaimDelay : 1;   ///< Indicates whether or not this entry is waiting to be reclaimed
 };
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // TOPOLOGY_HPP_
+#endif // TOPOLOGY_HPP_

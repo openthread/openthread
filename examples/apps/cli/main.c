@@ -26,9 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-#include <openthread-core-config.h>
 #include <assert.h>
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <openthread/cli.h>
 #include <openthread/diag.h>
@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     otInstance *sInstance;
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    size_t otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer = NULL;
+    size_t   otInstanceBufferLength = 0;
+    uint8_t *otInstanceBuffer       = NULL;
 #endif
 
     PlatformInit(argc, argv);
@@ -92,9 +92,9 @@ int main(int argc, char *argv[])
         PlatformProcessDrivers(sInstance);
     }
 
-    // otInstanceFinalize(sInstance);
+        // otInstanceFinalize(sInstance);
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    // free(otInstanceBuffer);
+        // free(otInstanceBuffer);
 #endif
 
     return 0;

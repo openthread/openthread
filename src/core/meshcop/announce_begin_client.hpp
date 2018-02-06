@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include "common/locator.hpp"
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 
@@ -47,7 +47,7 @@ namespace ot {
  * This class implements handling Announce Begin Requests.
  *
  */
-class AnnounceBeginClient: public InstanceLocator
+class AnnounceBeginClient : public InstanceLocator
 {
 public:
     /**
@@ -74,6 +74,6 @@ public:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // ANNOUNCE_BEGIN_CLIENT_HPP_
+#endif // ANNOUNCE_BEGIN_CLIENT_HPP_

@@ -38,10 +38,10 @@
 
 #include <stdarg.h>
 
-#include <openthread/openthread.h>
-#include <openthread/ip6.h>
-#include <openthread/udp.h>
 #include <openthread/cli.h>
+#include <openthread/ip6.h>
+#include <openthread/openthread.h>
+#include <openthread/udp.h>
 
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
@@ -84,8 +84,8 @@ class Interpreter;
  */
 struct Command
 {
-    const char *mName;                         ///< A pointer to the command string.
-    void (Interpreter::*mCommand)(int argc, char *argv[]);  ///< A function pointer to process the command.
+    const char *mName;                                     ///< A pointer to the command string.
+    void (Interpreter::*mCommand)(int argc, char *argv[]); ///< A function pointer to process the command.
 };
 
 /**
@@ -98,7 +98,6 @@ class Interpreter
     friend class UdpExample;
 
 public:
-
     /**
      * Constructor
      *
@@ -177,11 +176,10 @@ public:
 private:
     enum
     {
-        kMaxArgs = 32,
-        kMaxAutoAddresses = 8,
-        kDefaultJoinerTimeout = 120,    ///< Default timeout for Joiners, in seconds.
+        kMaxArgs              = 32,
+        kMaxAutoAddresses     = 8,
+        kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
     };
-
 
     void ProcessHelp(int argc, char *argv[]);
     void ProcessAutoStart(int argc, char *argv[]);
@@ -194,10 +192,10 @@ private:
     void ProcessChildTimeout(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessCoap(int argc, char *argv[]);
-#endif  //OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_FTD
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
@@ -208,7 +206,7 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_DIAG
     void ProcessDiag(int argc, char *argv[]);
-#endif  // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_ENABLE_DIAG
     void ProcessDiscover(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void ProcessDns(int argc, char *argv[]);
@@ -223,14 +221,14 @@ private:
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
     void ProcessLogFilename(int argc, char *argv[]);
 #endif
-    void ProcessExtAddress(int argc, char *argv[]);
-    void ProcessExtPanId(int argc, char *argv[]);
-    void ProcessFactoryReset(int argc, char *argv[]);
-    void ProcessIfconfig(int argc, char *argv[]);
-    void ProcessIpAddr(int argc, char *argv[]);
+    void    ProcessExtAddress(int argc, char *argv[]);
+    void    ProcessExtPanId(int argc, char *argv[]);
+    void    ProcessFactoryReset(int argc, char *argv[]);
+    void    ProcessIfconfig(int argc, char *argv[]);
+    void    ProcessIpAddr(int argc, char *argv[]);
     otError ProcessIpAddrAdd(int argc, char *argv[]);
     otError ProcessIpAddrDel(int argc, char *argv[]);
-    void ProcessIpMulticastAddr(int argc, char *argv[]);
+    void    ProcessIpMulticastAddr(int argc, char *argv[]);
 #ifndef OTDLL
     otError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
     otError ProcessIpMulticastAddrDel(int argc, char *argv[]);
@@ -239,7 +237,7 @@ private:
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
     void ProcessJoinerId(int argc, char *argv[]);
-#endif  // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_FTD
     void ProcessJoinerPort(int argc, char *argv[]);
 #endif
@@ -276,7 +274,7 @@ private:
     void ProcessPing(int argc, char *argv[]);
     void ProcessPollPeriod(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
-    void ProcessPrefix(int argc, char *argv[]);
+    void    ProcessPrefix(int argc, char *argv[]);
     otError ProcessPrefixAdd(int argc, char *argv[]);
     otError ProcessPrefixRemove(int argc, char *argv[]);
     otError ProcessPrefixList(void);
@@ -288,7 +286,7 @@ private:
 #endif
     void ProcessReset(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
-    void ProcessRoute(int argc, char *argv[]);
+    void    ProcessRoute(int argc, char *argv[]);
     otError ProcessRouteAdd(int argc, char *argv[]);
     otError ProcessRouteRemove(int argc, char *argv[]);
 #endif
@@ -310,13 +308,13 @@ private:
 #endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
-    void ProcessMacFilter(int argc, char *argv[]);
-    void PrintMacFilter(void);
+    void    ProcessMacFilter(int argc, char *argv[]);
+    void    PrintMacFilter(void);
     otError ProcessMacFilterAddress(int argc, char *argv[]);
 #ifndef OTDLL
     otError ProcessMacFilterRss(int argc, char *argv[]);
-#endif  // OTDLL
-#endif  // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OTDLL
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);
@@ -324,7 +322,9 @@ private:
 #endif
 
 #ifndef OTDLL
-    static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
+    static void s_HandleIcmpReceive(void *               aContext,
+                                    otMessage *          aMessage,
+                                    const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
     static void s_HandlePingTimer(Timer &aTimer);
 #endif
@@ -333,23 +333,28 @@ private:
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext);
 #endif
-    static void OTCALL s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
-                                            void *aContext);
+    static void OTCALL s_HandleEnergyReport(uint32_t       aChannelMask,
+                                            const uint8_t *aEnergyList,
+                                            uint8_t        aEnergyListLength,
+                                            void *         aContext);
     static void OTCALL s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 #ifndef OTDLL
-    static void OTCALL s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                                                     void *aContext);
+    static void OTCALL s_HandleDiagnosticGetResponse(otMessage *          aMessage,
+                                                     const otMessageInfo *aMessageInfo,
+                                                     void *               aContext);
 #endif
     static void OTCALL s_HandleJoinerCallback(otError aError, void *aContext);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    static void s_HandleDnsResponse(void *aContext, const char *aHostname, otIp6Address *aAddress,
-                                    uint32_t aTtl, otError aResult);
+    static void s_HandleDnsResponse(void *        aContext,
+                                    const char *  aHostname,
+                                    otIp6Address *aAddress,
+                                    uint32_t      aTtl,
+                                    otError       aResult);
 #endif
 
 #ifndef OTDLL
-    void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                           const otIcmp6Header &aIcmpHeader);
+    void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const otIcmp6Header &aIcmpHeader);
     void HandlePingTimer();
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
@@ -381,8 +386,8 @@ private:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
     static const struct Command sCommands[];
-    const otCliCommand *mUserCommands;
-    uint8_t mUserCommandsLength;
+    const otCliCommand *        mUserCommands;
+    uint8_t                     mUserCommandsLength;
 
     Server *mServer;
 
@@ -395,30 +400,30 @@ private:
     struct otCliContext
     {
         Interpreter *mInterpreter;
-        Instance    *mInstance;
+        Instance *   mInstance;
     };
     otCliContext mInstances[MAX_CLI_OT_INSTANCES];
-    uint8_t mInstancesLength;
-    uint8_t mInstanceIndex;
+    uint8_t      mInstancesLength;
+    uint8_t      mInstanceIndex;
 
 #else
 
     Ip6::MessageInfo mMessageInfo;
 
-    uint16_t mLength;
-    uint16_t mCount;
-    uint32_t mInterval;
+    uint16_t   mLength;
+    uint16_t   mCount;
+    uint32_t   mInterval;
     TimerMilli mPingTimer;
 
-    otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+    otNetifAddress mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     otDhcpAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otIcmp6Handler mIcmpHandler;
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    bool mResolvingInProgress;
-    char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
+    bool           mResolvingInProgress;
+    char           mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
 
     UdpExample mUdp;
@@ -428,7 +433,7 @@ private:
     Instance *mInstance;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_HPP_
+#endif // CLI_HPP_

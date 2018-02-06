@@ -76,11 +76,11 @@ uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance)
     return instance.GetChannelManager().GetSupportedChannels();
 }
 
-void  otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask)
+void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetChannelManager().SetSupportedChannels(aChannelMask);
 }
 
-#endif  // OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD

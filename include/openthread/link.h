@@ -60,7 +60,7 @@ extern "C" {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
+typedef void(OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Active Scan
@@ -75,8 +75,11 @@ typedef void (OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, voi
  * @retval OT_ERROR_BUSY  Already performing an Active Scan.
  *
  */
-OTAPI otError OTCALL otLinkActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                                      otHandleActiveScanResult aCallback, void *aCallbackContext);
+OTAPI otError OTCALL otLinkActiveScan(otInstance *             aInstance,
+                                      uint32_t                 aScanChannels,
+                                      uint16_t                 aScanDuration,
+                                      otHandleActiveScanResult aCallback,
+                                      void *                   aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
@@ -95,7 +98,7 @@ OTAPI bool OTCALL otLinkIsActiveScanInProgress(otInstance *aInstance);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
+typedef void(OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Energy Scan
@@ -110,8 +113,11 @@ typedef void (OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, voi
  * @retval OT_ERROR_BUSY  Could not start the energy scan.
  *
  */
-OTAPI otError OTCALL otLinkEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                                      otHandleEnergyScanResult aCallback, void *aCallbackContext);
+OTAPI otError OTCALL otLinkEnergyScan(otInstance *             aInstance,
+                                      uint32_t                 aScanChannels,
+                                      uint16_t                 aScanDuration,
+                                      otHandleEnergyScanResult aCallback,
+                                      void *                   aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
@@ -416,8 +422,9 @@ OTAPI void OTCALL otLinkFilterClearAddresses(otInstance *aInstance);
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *aInstance,
-                                                otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
+OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *         aInstance,
+                                                otMacFilterIterator *aIterator,
+                                                otMacFilterEntry *   aEntry);
 
 /**
  * This method sets the received signal strength (in dBm) for the messages from the Extended Address.
@@ -512,8 +519,9 @@ OTAPI void OTCALL otLinkFilterClearRssIn(otInstance *aInstance);
  * @sa otLinkFilterClearRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterGetNextRssIn(otInstance *aInstance,
-                                              otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
+OTAPI otError OTCALL otLinkFilterGetNextRssIn(otInstance *         aInstance,
+                                              otMacFilterIterator *aIterator,
+                                              otMacFilterEntry *   aEntry);
 
 /**
  * This method converts received signal strength to link quality.
@@ -597,7 +605,6 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
  */
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 
-
 /**
  * This function returns the current CCA (Clear Channel Assessment) failure rate.
  *
@@ -615,7 +622,7 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_LINK_H_
+#endif // OPENTHREAD_LINK_H_

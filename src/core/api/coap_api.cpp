@@ -35,8 +35,8 @@
 
 #include <openthread/coap.h>
 
-#include "common/instance.hpp"
 #include "coap/coap_header.hpp"
+#include "common/instance.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
@@ -140,7 +140,7 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
-    Message *message;
+    Message * message;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aHeader != NULL, message = NULL);
@@ -149,15 +149,16 @@ exit:
     return message;
 }
 
-otError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                          otCoapResponseHandler aHandler, void *aContext)
+otError otCoapSendRequest(otInstance *          aInstance,
+                          otMessage *           aMessage,
+                          const otMessageInfo * aMessageInfo,
+                          otCoapResponseHandler aHandler,
+                          void *                aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoap().SendMessage(
-               *static_cast<Message *>(aMessage),
-               *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-               aHandler, aContext);
+        *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler, aContext);
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)
@@ -199,8 +200,8 @@ otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otM
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoap().SendMessage(
-               *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    return instance.GetApplicationCoap().SendMessage(*static_cast<Message *>(aMessage),
+                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP

@@ -56,7 +56,7 @@ exit:
 
 bool otTaskletsArePending(otInstance *aInstance)
 {
-    bool retval = false;
+    bool      retval   = false;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
@@ -71,4 +71,3 @@ OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
 {
 }
 #endif
-

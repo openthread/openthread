@@ -42,11 +42,11 @@
 
 static uint64_t sNow = 0; // microseconds
 
-static bool sIsMsRunning = false;
-static uint32_t sMsAlarm = 0;
+static bool     sIsMsRunning = false;
+static uint32_t sMsAlarm     = 0;
 
-static bool sIsUsRunning = false;
-static uint32_t sUsAlarm = 0;
+static bool     sIsUsRunning = false;
+static uint32_t sUsAlarm     = 0;
 
 void platformAlarmInit(void)
 {
@@ -71,7 +71,7 @@ uint32_t otPlatAlarmMilliGetNow(void)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
-    sMsAlarm = aT0 + aDt;
+    sMsAlarm     = aT0 + aDt;
     sIsMsRunning = true;
 }
 
@@ -89,7 +89,7 @@ uint32_t otPlatAlarmMicroGetNow(void)
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
-    sUsAlarm = aT0 + aDt;
+    sUsAlarm     = aT0 + aDt;
     sIsUsRunning = true;
 }
 

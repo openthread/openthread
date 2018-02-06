@@ -31,8 +31,8 @@
 #include <openthread/config.h>
 #include <openthread/openthread.h>
 
-#include "common/instance.hpp"
 #include "test_util.h"
+#include "common/instance.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -47,10 +47,10 @@ enum
 void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, const Ip6::Address aAddressList[])
 {
     Child::Ip6AddressIterator iterator;
-    Ip6::Address address;
-    bool addressObserved[kMaxChildIp6Addresses];
-    bool addressIsMeshLocal[kMaxChildIp6Addresses];
-    bool hasMeshLocal = false;
+    Ip6::Address              address;
+    bool                      addressObserved[kMaxChildIp6Addresses];
+    bool                      addressIsMeshLocal[kMaxChildIp6Addresses];
+    bool                      hasMeshLocal = false;
 
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {
@@ -75,7 +75,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
         {
             if (address == aAddressList[index])
             {
-                addressIsInList = true;
+                addressIsInList        = true;
                 addressObserved[index] = true;
                 break;
             }
@@ -106,20 +106,16 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
 void TestChildIp6Address(void)
 {
-    Child child;
+    Child        child;
     Ip6::Address addresses[kMaxChildIp6Addresses];
-    uint8_t numAddresses;
-    const char *ip6Addresses[] =
-    {
+    uint8_t      numAddresses;
+    const char * ip6Addresses[] = {
         "fd00:1234::1234",
         "fd6b:e251:52fb:0:12e6:b94c:1c28:c56a",
         "fd00:1234::204c:3d7c:98f6:9a1b",
     };
 
-    const uint8_t meshLocalIid[] =
-    {
-        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88
-    };
+    const uint8_t meshLocalIid[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != NULL, "Null instance");
@@ -241,7 +237,7 @@ void TestChildIp6Address(void)
 
         {
             Ip6::Address updatedAddressList[kMaxChildIp6Addresses];
-            uint8_t updatedListIndex = 0;
+            uint8_t      updatedListIndex = 0;
 
             for (uint8_t index = 0; index < numAddresses; index++)
             {
@@ -260,7 +256,7 @@ void TestChildIp6Address(void)
     testFreeInstance(sInstance);
 }
 
-}  // namespace ot
+} // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

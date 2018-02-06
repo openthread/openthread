@@ -69,11 +69,9 @@ otError otCommissionerStop(otInstance *aInstance)
     return error;
 }
 
-otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPSKd,
-                                uint32_t aTimeout)
+otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
-
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -122,7 +120,10 @@ otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aPro
     return error;
 }
 
-otError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
+otError otCommissionerAnnounceBegin(otInstance *        aInstance,
+                                    uint32_t            aChannelMask,
+                                    uint8_t             aCount,
+                                    uint16_t            aPeriod,
                                     const otIp6Address *aAddress)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
@@ -131,7 +132,7 @@ otError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.GetThreadNetif().GetCommissioner().GetAnnounceBeginClient().SendRequest(
-                aChannelMask, aCount, aPeriod, *static_cast<const Ip6::Address *>(aAddress));
+        aChannelMask, aCount, aPeriod, *static_cast<const Ip6::Address *>(aAddress));
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannelMask);
@@ -143,9 +144,14 @@ otError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask
     return error;
 }
 
-otError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
-                                 uint16_t aScanDuration, const otIp6Address *aAddress,
-                                 otCommissionerEnergyReportCallback aCallback, void *aContext)
+otError otCommissionerEnergyScan(otInstance *                       aInstance,
+                                 uint32_t                           aChannelMask,
+                                 uint8_t                            aCount,
+                                 uint16_t                           aPeriod,
+                                 uint16_t                           aScanDuration,
+                                 const otIp6Address *               aAddress,
+                                 otCommissionerEnergyReportCallback aCallback,
+                                 void *                             aContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
@@ -153,8 +159,8 @@ otError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, u
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.GetThreadNetif().GetCommissioner().GetEnergyScanClient().SendQuery(
-                aChannelMask, aCount, aPeriod, aScanDuration, *static_cast<const Ip6::Address *>(aAddress),
-                aCallback, aContext);
+        aChannelMask, aCount, aPeriod, aScanDuration, *static_cast<const Ip6::Address *>(aAddress), aCallback,
+        aContext);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannelMask);
@@ -169,9 +175,12 @@ otError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, u
     return error;
 }
 
-otError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
-                                 const otIp6Address *aAddress,
-                                 otCommissionerPanIdConflictCallback aCallback, void *aContext)
+otError otCommissionerPanIdQuery(otInstance *                        aInstance,
+                                 uint16_t                            aPanId,
+                                 uint32_t                            aChannelMask,
+                                 const otIp6Address *                aAddress,
+                                 otCommissionerPanIdConflictCallback aCallback,
+                                 void *                              aContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
@@ -179,7 +188,7 @@ otError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.GetThreadNetif().GetCommissioner().GetPanIdQueryClient().SendQuery(
-                aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
+        aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPanId);
@@ -209,8 +218,10 @@ otError otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, u
     return error;
 }
 
-otError otCommissionerSendMgmtSet(otInstance *aInstance, const otCommissioningDataset *aDataset,
-                                  const uint8_t *aTlvs, uint8_t aLength)
+otError otCommissionerSendMgmtSet(otInstance *                  aInstance,
+                                  const otCommissioningDataset *aDataset,
+                                  const uint8_t *               aTlvs,
+                                  uint8_t                       aLength)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
@@ -258,8 +269,11 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
     return state;
 }
 
-otError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase, const char *aNetworkName,
-                                   const uint8_t *aExtPanId, uint8_t *aPSKc)
+otError otCommissionerGeneratePSKc(otInstance *   aInstance,
+                                   const char *   aPassPhrase,
+                                   const char *   aNetworkName,
+                                   const uint8_t *aExtPanId,
+                                   uint8_t *      aPSKc)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 

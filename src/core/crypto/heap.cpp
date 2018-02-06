@@ -59,9 +59,9 @@ Heap::Heap(void)
 
 void *Heap::CAlloc(size_t aCount, size_t aSize)
 {
-    void *ret = NULL;
-    Block *prev = NULL;
-    Block *curr = NULL;
+    void *   ret  = NULL;
+    Block *  prev = NULL;
+    Block *  curr = NULL;
     uint16_t size = static_cast<uint16_t>(aCount * aSize);
 
     VerifyOrExit(size);
@@ -115,9 +115,7 @@ void Heap::BlockInsert(Block &aPrev, Block &aBlock)
 {
     Block *prev = &aPrev;
 
-    for (Block *block = &BlockNext(*prev);
-         block->GetSize() < aBlock.GetSize();
-         block = &BlockNext(*block))
+    for (Block *block = &BlockNext(*prev); block->GetSize() < aBlock.GetSize(); block = &BlockNext(*block))
     {
         prev = block;
     }
@@ -166,7 +164,8 @@ void Heap::Free(void *aPointer)
         {
             if (right.GetSize() > left->GetSize())
             {
-                for (const uint16_t offset = BlockOffset(right); prev->GetNext() != offset; prev = &BlockNext(*prev));
+                for (const uint16_t offset = BlockOffset(right); prev->GetNext() != offset; prev = &BlockNext(*prev))
+                    ;
             }
             else
             {
@@ -192,7 +191,7 @@ void Heap::Free(void *aPointer)
         {
             Block &prev = BlockPrev(right);
             prev.SetNext(right.GetNext());
-            block.SetSize(block.GetSize()  + right.GetSize() + sizeof(Block));
+            block.SetSize(block.GetSize() + right.GetSize() + sizeof(Block));
             BlockInsert(prev, block);
         }
         else
@@ -202,6 +201,5 @@ void Heap::Free(void *aPointer)
     }
 }
 
-}  // namespace Crypto
-}  // namespace ot
-
+} // namespace Crypto
+} // namespace ot

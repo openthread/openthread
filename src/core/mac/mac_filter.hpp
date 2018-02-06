@@ -209,9 +209,9 @@ private:
     Entry *FindAvailEntry(void);
     Entry *FindEntry(const ExtAddress &aExtAddress);
 
-    Entry mEntries[kMaxEntries];
+    Entry                  mEntries[kMaxEntries];
     otMacFilterAddressMode mAddressMode;
-    int8_t mRssIn;
+    int8_t                 mRssIn;
 };
 
 /**
@@ -219,9 +219,9 @@ private:
  *
  */
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
-#endif  // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
-#endif  // MAC_FILTER_HPP_
+#endif // MAC_FILTER_HPP_

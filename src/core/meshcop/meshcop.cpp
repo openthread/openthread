@@ -40,7 +40,7 @@ namespace MeshCoP {
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 {
     Crypto::Sha256 sha256;
-    uint8_t hash[Crypto::Sha256::kHashSize];
+    uint8_t        hash[Crypto::Sha256::kHashSize];
 
     sha256.Start();
     sha256.Update(aEui64.m8, sizeof(aEui64));
@@ -50,5 +50,5 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
     aJoinerId.SetLocal(true);
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot

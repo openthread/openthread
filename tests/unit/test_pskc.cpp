@@ -28,28 +28,22 @@
 #include <openthread/config.h>
 #include <openthread/openthread.h>
 
+#include "common/logging.hpp"
 #include "meshcop/commissioner.hpp"
 #include "utils/wrap_string.h"
-#include "common/logging.hpp"
 
 #include "test_platform.h"
 #include "test_util.h"
 
-static const uint8_t sXPanId[] =
-{
-    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
-};
+static const uint8_t sXPanId[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
 void TestMinimumPassphrase(void)
 {
-    uint8_t pskc[OT_PSKC_MAX_SIZE];
-    const uint8_t expectedPskc[] =
-    {
-        0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
-        0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8
-    };
-    const char passphrase[] = "123456";
-    otInstance *instance = testInitInstance();
+    uint8_t       pskc[OT_PSKC_MAX_SIZE];
+    const uint8_t expectedPskc[] = {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
+                                    0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
+    const char    passphrase[]   = "123456";
+    otInstance *  instance       = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread", sXPanId, pskc),
                   "TestMinimumPassphrase failed to generate PSKc");
     VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
@@ -58,17 +52,25 @@ void TestMinimumPassphrase(void)
 
 void TestMaximumPassphrase(void)
 {
-    uint8_t pskc[OT_PSKC_MAX_SIZE];
-    const uint8_t expectedPskc[] =
-    {
-        0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
-        0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9
-    };
-    const char passphrase[] =
-        "1234567812345678" "1234567812345678" "1234567812345678" "1234567812345678"
-        "1234567812345678" "1234567812345678" "1234567812345678" "1234567812345678"
-        "1234567812345678" "1234567812345678" "1234567812345678" "1234567812345678"
-        "1234567812345678" "1234567812345678" "1234567812345678" "123456781234567";
+    uint8_t       pskc[OT_PSKC_MAX_SIZE];
+    const uint8_t expectedPskc[] = {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
+                                    0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9};
+    const char    passphrase[]   = "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "1234567812345678"
+                              "123456781234567";
 
     otInstance *instance = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread", sXPanId, pskc),

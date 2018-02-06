@@ -32,11 +32,11 @@
  *
  */
 
-#include <openthread/config.h>
-#include <openthread-core-config.h>
 #include "openthread/platform/logging.h"
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT ==  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     (void)aLogLevel;

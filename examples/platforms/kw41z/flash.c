@@ -26,12 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
 #include "fsl_device_registers.h"
 #include "fsl_flash.h"
-#include "openthread/platform/alarm-milli.h"
-#include <utils/flash.h>
+#include <stdint.h>
 #include <utils/code_utils.h>
+#include <utils/flash.h>
+#include "openthread/platform/alarm-milli.h"
 
 static flash_config_t sFlashConfig;
 
@@ -54,7 +54,7 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    otError error;
+    otError  error;
     status_t status;
 
     status = FLASH_Erase(&sFlashConfig, aAddress, FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE, kFLASH_ApiEraseKey);
@@ -77,7 +77,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_BUSY;
+    otError  error = OT_ERROR_BUSY;
     uint32_t start = otPlatAlarmMilliGetNow();
 
     do
@@ -87,8 +87,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
             error = OT_ERROR_NONE;
             break;
         }
-    }
-    while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
+    } while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
 
     return error;
 }

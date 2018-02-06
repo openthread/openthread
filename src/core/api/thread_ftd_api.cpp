@@ -47,7 +47,7 @@ using namespace ot;
 
 uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
 {
-    uint8_t aNumChildren;
+    uint8_t   aNumChildren;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     (void)instance.GetThreadNetif().GetMle().GetChildren(&aNumChildren);
@@ -176,7 +176,7 @@ otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
 
 otError otThreadBecomeRouter(otInstance *aInstance)
 {
-    otError error = OT_ERROR_INVALID_STATE;
+    otError   error    = OT_ERROR_INVALID_STATE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     switch (instance.GetThreadNetif().GetMle().GetRole())
@@ -235,7 +235,7 @@ void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitt
 
 otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -248,7 +248,7 @@ exit:
 
 otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -259,13 +259,15 @@ exit:
     return error;
 }
 
-otError otThreadGetChildNextIp6Address(otInstance *aInstance, uint8_t aChildIndex, otChildIp6AddressIterator *aIterator,
-                                       otIp6Address *aAddress)
+otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
+                                       uint8_t                    aChildIndex,
+                                       otChildIp6AddressIterator *aIterator,
+                                       otIp6Address *             aAddress)
 {
-    otError error = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    otError                   error    = OT_ERROR_NONE;
+    Instance &                instance = *static_cast<Instance *>(aInstance);
     Child::Ip6AddressIterator iterator;
-    Ip6::Address *address;
+    Ip6::Address *            address;
 
     VerifyOrExit(aIterator != NULL && aAddress != NULL, error = OT_ERROR_INVALID_ARGS);
 
@@ -295,7 +297,7 @@ uint8_t otThreadGetMaxRouterId(otInstance *aInstance)
 
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aRouterInfo != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -308,7 +310,7 @@ exit:
 
 otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
 {
-    otError error;
+    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -345,7 +347,7 @@ const uint8_t *otThreadGetPSKc(otInstance *aInstance)
 
 otError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,

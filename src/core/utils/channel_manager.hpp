@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/platform/radio.h>
 #include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
@@ -143,7 +143,8 @@ public:
      * @param[in]  aChannelMask  A channel mask.
      *
      */
-    void SetSupportedChannels(uint32_t aChannelMask) {
+    void SetSupportedChannels(uint32_t aChannelMask)
+    {
         mSupportedChannels = (aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
     }
 
@@ -152,9 +153,9 @@ private:
     {
         kDefaultSupprotedChannelMask   = OT_RADIO_SUPPORTED_CHANNELS,
         kMaxTimestampIncrease          = 128,
-        kPendingDatasetTxRetryInterval = 20000,    // in ms
-        kChangeCheckWaitInterval       = 30000,    // in ms
-        kRequestStartJitterInterval    = 10000,    // in ms
+        kPendingDatasetTxRetryInterval = 20000, // in ms
+        kChangeCheckWaitInterval       = 30000, // in ms
+        kRequestStartJitterInterval    = 10000, // in ms
     };
 
     enum State
@@ -165,10 +166,10 @@ private:
     };
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
     static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aChangedFlags);
-    void HandleStateChanged(uint32_t aChangedFlags);
-    void PreparePendingDataset(void);
+    void        HandleStateChanged(uint32_t aChangedFlags);
+    void        PreparePendingDataset(void);
 
     uint32_t           mSupportedChannels;
     uint64_t           mActiveTimestamp;
@@ -184,7 +185,7 @@ private:
 class ChannelManager
 {
 public:
-    explicit ChannelManager(Instance &) { }
+    explicit ChannelManager(Instance &) {}
 };
 
 #endif // OPENTHREAD_FTD
@@ -195,7 +196,7 @@ public:
  *
  */
 
-}  // namespace Utils
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
-#endif  // CHANNEL_MANAGER_HPP_
+#endif // CHANNEL_MANAGER_HPP_

@@ -64,7 +64,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data maintained by the Leader.
  *
  */
-class LeaderBase: public NetworkData
+class LeaderBase : public NetworkData
 {
 public:
     /**
@@ -144,8 +144,10 @@ public:
      * @retval OT_ERROR_NO_ROUTE  No valid route was found.
      *
      */
-    otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination,
-                        uint8_t *aPrefixMatch, uint16_t *aRloc16);
+    otError RouteLookup(const Ip6::Address &aSource,
+                        const Ip6::Address &aDestination,
+                        uint8_t *           aPrefixMatch,
+                        uint16_t *          aRloc16);
 
     /**
      * This method is used by non-Leader devices to set newly received Network Data from the Leader.
@@ -157,8 +159,11 @@ public:
      * @param[in]  aDataLength     The length of the Network Data in bytes.
      *
      */
-    void SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool aStableOnly, const uint8_t *aData,
-                        uint8_t aDataLength);
+    void SetNetworkData(uint8_t        aVersion,
+                        uint8_t        aStableVersion,
+                        bool           aStableOnly,
+                        const uint8_t *aData,
+                        uint8_t        aDataLength);
 
     /**
      * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
@@ -223,17 +228,19 @@ public:
      *
      */
     otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 protected:
-    uint8_t         mStableVersion;
-    uint8_t         mVersion;
+    uint8_t mStableVersion;
+    uint8_t mVersion;
 
 private:
     otError RemoveCommissioningData(void);
 
-    otError ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination,
-                                uint8_t *aPrefixMatch, uint16_t *aRloc16);
+    otError ExternalRouteLookup(uint8_t             aDomainId,
+                                const Ip6::Address &aDestination,
+                                uint8_t *           aPrefixMatch,
+                                uint16_t *          aRloc16);
     otError DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16);
 };
 
@@ -241,8 +248,8 @@ private:
  * @}
  */
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
 #if OPENTHREAD_MTD
 #include "network_data_leader_mtd.hpp"
@@ -252,4 +259,4 @@ private:
 #error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
 
-#endif  // NETWORK_DATA_LEADER_HPP_
+#endif // NETWORK_DATA_LEADER_HPP_

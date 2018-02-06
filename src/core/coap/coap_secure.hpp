@@ -45,16 +45,16 @@ class ThreadNetif;
 
 namespace Coap {
 
-class CoapSecure: public CoapBase
+class CoapSecure : public CoapBase
 {
 public:
     /**
-      * This function pointer is called once DTLS connection is established.
-      *
-      * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
-      * @param[in]  aContext    A pointer to arbitrary context information.
-      *
-      */
+     * This function pointer is called once DTLS connection is established.
+     *
+     * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
+     * @param[in]  aContext    A pointer to arbitrary context information.
+     *
+     */
     typedef void (*ConnectedCallback)(bool aConnected, void *aContext);
 
     /**
@@ -65,7 +65,7 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    typedef otError(*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError (*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This constructor initializes the object.
@@ -188,8 +188,10 @@ public:
      * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
      *
      */
-    otError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                        otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
+    otError SendMessage(Message &               aMessage,
+                        const Ip6::MessageInfo &aMessageInfo,
+                        otCoapResponseHandler   aHandler = NULL,
+                        void *                  aContext = NULL);
 
     /**
      * This method is used to pass messages to the secure CoAP server.
@@ -205,30 +207,30 @@ private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);
-    void HandleDtlsConnected(bool aConnected);
+    void        HandleDtlsConnected(bool aConnected);
 
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
-    void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
+    void        HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
 
     static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
-    otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    otError        HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     static void HandleUdpTransmit(Tasklet &aTasklet);
-    void HandleUdpTransmit(void);
+    void        HandleUdpTransmit(void);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
 
-    Ip6::MessageInfo mPeerAddress;
+    Ip6::MessageInfo  mPeerAddress;
     ConnectedCallback mConnectedCallback;
-    void *mConnectedContext;
+    void *            mConnectedContext;
     TransportCallback mTransportCallback;
-    void *mTransportContext;
-    Message *mTransmitMessage;
-    Tasklet mTransmitTask;
+    void *            mTransportContext;
+    Message *         mTransmitMessage;
+    Tasklet           mTransmitTask;
 };
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot
 
-#endif  // COAP_SECURE_HPP_
+#endif // COAP_SECURE_HPP_

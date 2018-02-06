@@ -46,15 +46,15 @@
 namespace ot {
 namespace Utils {
 
-ChannelManager::ChannelManager(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mSupportedChannels(kDefaultSupprotedChannelMask),
-    mActiveTimestamp(0),
-    mNotifierCallback(&ChannelManager::HandleStateChanged, this),
-    mDelay(kMinimumDelay),
-    mChannel(0),
-    mState(kStateIdle),
-    mTimer(aInstance, &ChannelManager::HandleTimer, this)
+ChannelManager::ChannelManager(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mSupportedChannels(kDefaultSupprotedChannelMask)
+    , mActiveTimestamp(0)
+    , mNotifierCallback(&ChannelManager::HandleStateChanged, this)
+    , mDelay(kMinimumDelay)
+    , mChannel(0)
+    , mState(kStateIdle)
+    , mTimer(aInstance, &ChannelManager::HandleTimer, this)
 {
 }
 
@@ -74,8 +74,8 @@ otError ChannelManager::RequestChannelChange(uint8_t aChannel)
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    mState = kStateChangeRequested;
-    mChannel = aChannel;
+    mState           = kStateChangeRequested;
+    mChannel         = aChannel;
     mActiveTimestamp = 0;
 
     mTimer.Start((otPlatRandomGet() % kRequestStartJitterInterval) + 1);
@@ -97,12 +97,12 @@ exit:
 
 void ChannelManager::PreparePendingDataset(void)
 {
-    ThreadNetif &netif = GetInstance().GetThreadNetif();
-    uint64_t pendingTimestamp = 0;
-    uint64_t pendingActiveTimestamp = 0;
-    uint32_t delayInMs = TimerMilli::SecToMsec(static_cast<uint32_t>(mDelay));
+    ThreadNetif &        netif                  = GetInstance().GetThreadNetif();
+    uint64_t             pendingTimestamp       = 0;
+    uint64_t             pendingActiveTimestamp = 0;
+    uint32_t             delayInMs              = TimerMilli::SecToMsec(static_cast<uint32_t>(mDelay));
     otOperationalDataset dataset;
-    otError error;
+    otError              error;
 
     VerifyOrExit(mState == kStateChangeRequested);
 
@@ -128,9 +128,8 @@ void ChannelManager::PreparePendingDataset(void)
         // should match and delay should be less than the requested
         // delay).
 
-        if (dataset.mIsChannelSet && (mChannel == dataset.mChannel) &&
-            dataset.mIsDelaySet && (dataset.mDelay <= delayInMs) &&
-            dataset.mIsActiveTimestampSet)
+        if (dataset.mIsChannelSet && (mChannel == dataset.mChannel) && dataset.mIsDelaySet &&
+            (dataset.mDelay <= delayInMs) && dataset.mIsActiveTimestampSet)
         {
             // We save the active timestamp to later check and ensure it
             // is ahead of current ActiveDataset timestamp.
@@ -202,19 +201,19 @@ void ChannelManager::PreparePendingDataset(void)
     }
     else
     {
-        mActiveTimestamp =  dataset.mActiveTimestamp + 1 + (otPlatRandomGet() % kMaxTimestampIncrease);
+        mActiveTimestamp = dataset.mActiveTimestamp + 1 + (otPlatRandomGet() % kMaxTimestampIncrease);
     }
 
-    dataset.mActiveTimestamp = mActiveTimestamp;
+    dataset.mActiveTimestamp      = mActiveTimestamp;
     dataset.mIsActiveTimestampSet = true;
 
-    dataset.mChannel = mChannel;
+    dataset.mChannel      = mChannel;
     dataset.mIsChannelSet = true;
 
-    dataset.mPendingTimestamp = pendingTimestamp;
+    dataset.mPendingTimestamp      = pendingTimestamp;
     dataset.mIsPendingTimestampSet = true;
 
-    dataset.mDelay = delayInMs;
+    dataset.mDelay      = delayInMs;
     dataset.mIsDelaySet = true;
 
     error = netif.GetPendingDataset().SendSetRequest(dataset, NULL, 0);
@@ -254,7 +253,7 @@ void ChannelManager::HandleTimer(void)
         otLogInfoUtil(GetInstance(), "ChannelManager: Timed out waiting for change to %d, trying again.", mChannel);
         mState = kStateChangeRequested;
 
-    // fall through
+        // fall through
 
     case kStateChangeRequested:
         PreparePendingDataset();
@@ -281,7 +280,7 @@ exit:
     return;
 }
 
-}  // namespace Utils
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
 #endif // #if OPENTHREAD_ENABLE_CHANNEL_MANAGER

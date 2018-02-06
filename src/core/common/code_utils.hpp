@@ -39,12 +39,11 @@
 #include "utils/wrap_stdbool.h"
 
 // Calculates the aligned variable size.
-#define otALIGNED_VAR_SIZE(size, align_type)            \
-    (((size) + (sizeof (align_type) - 1)) / sizeof (align_type))
+#define otALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
 
 // Allocate the structure using "raw" storage.
-#define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
-    align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
+#define otDEFINE_ALIGNED_VAR(name, size, align_type) \
+    align_type name[(((size) + (sizeof(align_type) - 1)) / sizeof(align_type))]
 
 /**
  *  This checks for the specified status, which is expected to
@@ -54,13 +53,13 @@
  *  @param[in]  aStatus     A scalar status to be evaluated against zero (0).
  *
  */
-#define SuccessOrExit(aStatus)                      \
-    do                                              \
-    {                                               \
-        if ((aStatus) != 0)                         \
-        {                                           \
-            goto exit;                              \
-        }                                           \
+#define SuccessOrExit(aStatus) \
+    do                         \
+    {                          \
+        if ((aStatus) != 0)    \
+        {                      \
+            goto exit;         \
+        }                      \
     } while (false)
 
 /**
@@ -73,14 +72,14 @@
  *                          assertion fails.
  *
  */
-#define VerifyOrExit(aCondition, ...)                 \
-    do                                                \
-    {                                                 \
-        if (!(aCondition))                            \
-        {                                             \
-            __VA_ARGS__;                              \
-            goto exit;                                \
-        }                                             \
+#define VerifyOrExit(aCondition, ...) \
+    do                                \
+    {                                 \
+        if (!(aCondition))            \
+        {                             \
+            __VA_ARGS__;              \
+            goto exit;                \
+        }                             \
     } while (false)
 
 /**
@@ -95,11 +94,11 @@
  *                          when the assertion fails.
  *
  */
-#define ExitNow(...)                            \
-    do                                          \
-    {                                           \
-        __VA_ARGS__;                            \
-        goto exit;                              \
+#define ExitNow(...) \
+    do               \
+    {                \
+        __VA_ARGS__; \
+        goto exit;   \
     } while (false)
 
 /*
@@ -111,10 +110,12 @@
  * @param[in]  aStatement  The function/method to execute.
  *
  */
-#define IgnoreReturnValue(aStatement)          \
-    do                                         \
-    {                                          \
-        if (aStatement) {}                     \
+#define IgnoreReturnValue(aStatement) \
+    do                                \
+    {                                 \
+        if (aStatement)               \
+        {                             \
+        }                             \
     } while (false)
 
-#endif  // CODE_UTILS_HPP_
+#endif // CODE_UTILS_HPP_

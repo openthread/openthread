@@ -62,7 +62,7 @@ void otDhcp6ServerUpdate(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
-#endif  // OPENTHREAD_DHCP6_SERVER_H_
+#endif // OPENTHREAD_DHCP6_SERVER_H_

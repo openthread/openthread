@@ -56,48 +56,37 @@ namespace Ip6 {
  */
 
 // "ff03::fc"
-const otNetifMulticastAddress Netif::kRealmLocalAllMplForwardersMulticastAddress =
-{
-    {{{ 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc }}},
-    NULL
-};
+const otNetifMulticastAddress Netif::kRealmLocalAllMplForwardersMulticastAddress = {
+    {{{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc}}},
+    NULL};
 
 // "ff03::01"
-const otNetifMulticastAddress Netif::kRealmLocalAllNodesMulticastAddress =
-{
-    {{{ 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}},
-    &Netif::kRealmLocalAllMplForwardersMulticastAddress
-};
+const otNetifMulticastAddress Netif::kRealmLocalAllNodesMulticastAddress = {
+    {{{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}},
+    &Netif::kRealmLocalAllMplForwardersMulticastAddress};
 
 // "ff02::01"
-const otNetifMulticastAddress Netif::kLinkLocalAllNodesMulticastAddress =
-{
-    {{{ 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}},
-    &Netif::kRealmLocalAllNodesMulticastAddress
-};
+const otNetifMulticastAddress Netif::kLinkLocalAllNodesMulticastAddress = {
+    {{{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}},
+    &Netif::kRealmLocalAllNodesMulticastAddress};
 
 // "ff03:02"
-const otNetifMulticastAddress Netif::kRealmLocalAllRoutersMulticastAddress =
-{
-    {{{ 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 }}},
-    &Netif::kLinkLocalAllNodesMulticastAddress
-};
+const otNetifMulticastAddress Netif::kRealmLocalAllRoutersMulticastAddress = {
+    {{{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}}},
+    &Netif::kLinkLocalAllNodesMulticastAddress};
 
 // "ff02:02"
-const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress =
-{
-    {{{ 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 }}},
-    &Netif::kRealmLocalAllRoutersMulticastAddress
-};
+const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
+    {{{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}}},
+    &Netif::kRealmLocalAllRoutersMulticastAddress};
 
-
-Netif::Netif(Instance &aInstance, int8_t aInterfaceId):
-    InstanceLocator(aInstance),
-    mUnicastAddresses(NULL),
-    mMulticastAddresses(NULL),
-    mInterfaceId(aInterfaceId),
-    mMulticastPromiscuous(false),
-    mNext(NULL)
+Netif::Netif(Instance &aInstance, int8_t aInterfaceId)
+    : InstanceLocator(aInstance)
+    , mUnicastAddresses(NULL)
+    , mMulticastAddresses(NULL)
+    , mInterfaceId(aInterfaceId)
+    , mMulticastPromiscuous(false)
+    , mNext(NULL)
 {
     for (size_t i = 0; i < sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]); i++)
     {
@@ -112,7 +101,7 @@ Netif::Netif(Instance &aInstance, int8_t aInterfaceId):
     }
 
     mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-                              const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
+        const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
 }
 
 bool Netif::IsMulticastSubscribed(const Address &aAddress) const
@@ -138,7 +127,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
     if (mMulticastAddresses == &kLinkLocalAllNodesMulticastAddress)
     {
         mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-                                  const_cast<otNetifMulticastAddress *>(&kLinkLocalAllRoutersMulticastAddress));
+            const_cast<otNetifMulticastAddress *>(&kLinkLocalAllRoutersMulticastAddress));
     }
     else
     {
@@ -170,7 +159,7 @@ otError Netif::UnsubscribeAllRoutersMulticast(void)
     if (mMulticastAddresses == &kLinkLocalAllRoutersMulticastAddress)
     {
         mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-                                  const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
+            const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
         ExitNow();
     }
 
@@ -195,7 +184,6 @@ exit:
     return error;
 }
 
-
 otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 {
     otError error = OT_ERROR_NONE;
@@ -208,7 +196,7 @@ otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
         }
     }
 
-    aAddress.mNext = mMulticastAddresses;
+    aAddress.mNext      = mMulticastAddresses;
     mMulticastAddresses = &aAddress;
     GetNotifier().SetFlags(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
@@ -251,8 +239,8 @@ exit:
 
 otError Netif::GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress)
 {
-    otError error = OT_ERROR_NOT_FOUND;
-    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    otError                error = OT_ERROR_NOT_FOUND;
+    size_t                 num   = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
     NetifMulticastAddress *entry;
 
     VerifyOrExit(aIterator < num);
@@ -265,7 +253,7 @@ otError Netif::GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress)
         // In an unused/available entry, `mNext` points back to the entry itself.
         if (entry->mNext != entry)
         {
-            aAddress = entry->GetAddress();
+            aAddress  = entry->GetAddress();
             aIterator = i + 1;
             ExitNow(error = OT_ERROR_NONE);
         }
@@ -277,9 +265,9 @@ exit:
 
 otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
-    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t                 num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
 
     if (IsMulticastSubscribed(aAddress))
     {
@@ -299,8 +287,8 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     VerifyOrExit(num > 0, error = OT_ERROR_NO_BUFS);
 
     // Copy the address into the available entry and add it to linked-list.
-    entry->mAddress = aAddress;
-    entry->mNext = mMulticastAddresses;
+    entry->mAddress     = aAddress;
+    entry->mNext        = mMulticastAddresses;
     mMulticastAddresses = entry;
     GetNotifier().SetFlags(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
@@ -310,10 +298,10 @@ exit:
 
 otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
     NetifMulticastAddress *last = NULL;
-    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t                 num  = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
 
     for (entry = mMulticastAddresses; entry; entry = entry->GetNext())
     {
@@ -374,7 +362,7 @@ otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
         }
     }
 
-    aAddress.mNext = mUnicastAddresses;
+    aAddress.mNext    = mUnicastAddresses;
     mUnicastAddresses = &aAddress;
 
     GetNotifier().SetFlags(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_ADDED : OT_CHANGED_IP6_ADDRESS_ADDED);
@@ -410,8 +398,7 @@ exit:
 
     if (error != OT_ERROR_NOT_FOUND)
     {
-        GetNotifier().SetFlags(aAddress.mRloc ?
-                               OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
+        GetNotifier().SetFlags(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
     }
 
     return error;
@@ -419,9 +406,9 @@ exit:
 
 otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+    size_t               num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
@@ -431,8 +418,8 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
                          error = OT_ERROR_INVALID_ARGS);
 
             entry->mPrefixLength = aAddress.mPrefixLength;
-            entry->mPreferred = aAddress.mPreferred;
-            entry->mValid = aAddress.mValid;
+            entry->mPreferred    = aAddress.mPreferred;
+            entry->mValid        = aAddress.mValid;
             ExitNow();
         }
     }
@@ -450,8 +437,8 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     VerifyOrExit(num > 0, error = OT_ERROR_NO_BUFS);
 
     // Copy the new address into the available entry and insert it in linked-list.
-    *entry = aAddress;
-    entry->mNext = mUnicastAddresses;
+    *entry            = aAddress;
+    entry->mNext      = mUnicastAddresses;
     mUnicastAddresses = entry;
 
     GetNotifier().SetFlags(OT_CHANGED_IP6_ADDRESS_ADDED);
@@ -462,10 +449,10 @@ exit:
 
 otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
     NetifUnicastAddress *last = NULL;
-    size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+    size_t               num  = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
@@ -530,5 +517,5 @@ exit:
     return rval;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

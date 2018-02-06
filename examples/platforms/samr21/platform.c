@@ -50,11 +50,11 @@ samr21UserRow *sUserRow = (samr21UserRow *)SAMR21_USER_ROW;
 
 #ifdef CONF_KIT_DATA_EXIST
 
-#define EDBG_ADDRESS            0x28
+#define EDBG_ADDRESS 0x28
 
-#define EDBG_KIT_DATA_TOKEN     0xD2;
+#define EDBG_KIT_DATA_TOKEN 0xD2;
 
-#define KIT_DATA_MAX_RETRY      1000
+#define KIT_DATA_MAX_RETRY 1000
 
 static uint8_t sIeeeEui64[OT_EXT_ADDRESS_SIZE];
 
@@ -67,8 +67,8 @@ static void configureI2cMaster()
     i2c_master_get_config_defaults(&configI2c);
 
     /* Change pins */
-    configI2c.pinmux_pad0  = EDBG_I2C_SERCOM_PINMUX_PAD0;
-    configI2c.pinmux_pad1  = EDBG_I2C_SERCOM_PINMUX_PAD1;
+    configI2c.pinmux_pad0 = EDBG_I2C_SERCOM_PINMUX_PAD0;
+    configI2c.pinmux_pad1 = EDBG_I2C_SERCOM_PINMUX_PAD1;
 
     /* Initialize and enable device with config */
     i2c_master_init(&sI2cMasterInstance, EDBG_I2C_MODULE, &configI2c);
@@ -78,8 +78,8 @@ static void configureI2cMaster()
 
 static void getKitData()
 {
-    uint8_t requestToken = EDBG_KIT_DATA_TOKEN;
-    uint32_t timeout;
+    uint8_t                  requestToken = EDBG_KIT_DATA_TOKEN;
+    uint32_t                 timeout;
     struct i2c_master_packet masterPacket;
 
     /** Send the request token */
@@ -92,21 +92,19 @@ static void getKitData()
 
     timeout = 0;
 
-    while (i2c_master_write_packet_wait_no_stop(&sI2cMasterInstance, &masterPacket) !=
-           STATUS_OK)
+    while (i2c_master_write_packet_wait_no_stop(&sI2cMasterInstance, &masterPacket) != STATUS_OK)
     {
         /* Increment timeout counter and check if timed out. */
         otEXPECT(timeout++ < KIT_DATA_MAX_RETRY);
     }
 
     /** Get the extension boards info */
-    masterPacket.data_length     = OT_EXT_ADDRESS_SIZE;
-    masterPacket.data            = sIeeeEui64;
+    masterPacket.data_length = OT_EXT_ADDRESS_SIZE;
+    masterPacket.data        = sIeeeEui64;
 
     timeout = 0;
 
-    while (i2c_master_read_packet_wait(&sI2cMasterInstance, &masterPacket) !=
-           STATUS_OK)
+    while (i2c_master_read_packet_wait(&sI2cMasterInstance, &masterPacket) != STATUS_OK)
     {
         /* Increment timeout counter and check if timed out. */
         otEXPECT(timeout++ < KIT_DATA_MAX_RETRY);
@@ -126,19 +124,19 @@ void boardInit(void)
     struct port_config pin_conf;
 
     port_get_config_defaults(&pin_conf);
-    pin_conf.direction  = PORT_PIN_DIR_OUTPUT;
-    port_pin_set_config(AT86RFX_SPI_SCK,  &pin_conf);
+    pin_conf.direction = PORT_PIN_DIR_OUTPUT;
+    port_pin_set_config(AT86RFX_SPI_SCK, &pin_conf);
     port_pin_set_config(AT86RFX_SPI_MOSI, &pin_conf);
-    port_pin_set_config(AT86RFX_SPI_CS,   &pin_conf);
-    port_pin_set_config(AT86RFX_RST_PIN,  &pin_conf);
-    port_pin_set_config(AT86RFX_SLP_PIN,  &pin_conf);
-    port_pin_set_output_level(AT86RFX_SPI_SCK,  true);
+    port_pin_set_config(AT86RFX_SPI_CS, &pin_conf);
+    port_pin_set_config(AT86RFX_RST_PIN, &pin_conf);
+    port_pin_set_config(AT86RFX_SLP_PIN, &pin_conf);
+    port_pin_set_output_level(AT86RFX_SPI_SCK, true);
     port_pin_set_output_level(AT86RFX_SPI_MOSI, true);
-    port_pin_set_output_level(AT86RFX_SPI_CS,   true);
-    port_pin_set_output_level(AT86RFX_RST_PIN,  true);
-    port_pin_set_output_level(AT86RFX_SLP_PIN,  true);
+    port_pin_set_output_level(AT86RFX_SPI_CS, true);
+    port_pin_set_output_level(AT86RFX_RST_PIN, true);
+    port_pin_set_output_level(AT86RFX_SLP_PIN, true);
 
-    pin_conf.direction  = PORT_PIN_DIR_INPUT;
+    pin_conf.direction = PORT_PIN_DIR_INPUT;
     port_pin_set_config(AT86RFX_SPI_MISO, &pin_conf);
 }
 

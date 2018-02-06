@@ -60,12 +60,13 @@ otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
     return instance.GetIp6().GetIcmp().RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
 }
 
-otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
-                               const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
+otError otIcmp6SendEchoRequest(otInstance *         aInstance,
+                               otMessage *          aMessage,
+                               const otMessageInfo *aMessageInfo,
+                               uint16_t             aIdentifier)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetIp6().GetIcmp().SendEchoRequest(*static_cast<Message *>(aMessage),
-                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                       aIdentifier);
+    return instance.GetIp6().GetIcmp().SendEchoRequest(
+        *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aIdentifier);
 }

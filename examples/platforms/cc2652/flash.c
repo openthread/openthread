@@ -33,8 +33,8 @@
 #include <driverlib/interrupt.h>
 #include <driverlib/vims.h>
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 
 #include <utils/code_utils.h>
@@ -48,7 +48,7 @@
  */
 #ifndef SETTINGS_CONFIG_BASE_ADDRESS
 #error "SETTINGS_CONFIG_BASE_ADDRESS not defined in the OpenThread Core Config"
-#endif  /* SETTINGS_CONFIG_BASE_ADDRESS */
+#endif /* SETTINGS_CONFIG_BASE_ADDRESS */
 
 /*
  * The settings configuration page size *MUST* be defined in the core config
@@ -64,14 +64,14 @@
  */
 #ifndef SETTINGS_CONFIG_PAGE_NUM
 #warn "SETTINGS_CONFIG_PAGE_NUM not defined in the OpenThread Core Config"
-#endif  /* SETTINGS_CONFIG_PAGE_NUM */
+#endif /* SETTINGS_CONFIG_PAGE_NUM */
 
 enum
 {
-    MIN_VDD_FLASH = 0x18,    /* 1.50 volts (0.50=128/256 -> 128=0x80) */
-    MAX_WRITE_INCREMENT = 8, /* maximum number of bytes to write at a time to
-                              * avoid interrupt latency while in ROM
-                              */
+    MIN_VDD_FLASH       = 0x18, /* 1.50 volts (0.50=128/256 -> 128=0x80) */
+    MAX_WRITE_INCREMENT = 8,    /* maximum number of bytes to write at a time to
+                                 * avoid interrupt latency while in ROM
+                                 */
 };
 
 /**
@@ -84,10 +84,8 @@ enum
 static bool isBatMonOn(void)
 {
     uint32_t batMonCtl = HWREG(AON_BATMON_BASE + AON_BATMON_O_CTL);
-    return ((batMonCtl & AON_BATMON_CTL_CALC_EN_M)
-            == AON_BATMON_CTL_CALC_EN
-            && (batMonCtl & AON_BATMON_CTL_MEAS_EN_M)
-            == AON_BATMON_CTL_MEAS_EN);
+    return ((batMonCtl & AON_BATMON_CTL_CALC_EN_M) == AON_BATMON_CTL_CALC_EN &&
+            (batMonCtl & AON_BATMON_CTL_MEAS_EN_M) == AON_BATMON_CTL_MEAS_EN);
 }
 
 /**
@@ -138,7 +136,8 @@ static uint32_t disableFlashCache(void)
     {
         VIMSModeSet(VIMS_BASE, VIMS_MODE_DISABLED);
 
-        while (VIMSModeGet(VIMS_BASE) != VIMS_MODE_DISABLED);
+        while (VIMSModeGet(VIMS_BASE) != VIMS_MODE_DISABLED)
+            ;
     }
 
     return mode;
@@ -151,7 +150,6 @@ static uint32_t disableFlashCache(void)
  */
 static void restoreFlashCache(uint32_t mode)
 {
-
     if (mode != VIMS_MODE_DISABLED)
     {
         VIMSModeSet(VIMS_BASE, mode);
@@ -238,7 +236,7 @@ exit:
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
     uint32_t start = otPlatAlarmMilliGetNow();
-    otError ret = OT_ERROR_BUSY;
+    otError  ret   = OT_ERROR_BUSY;
 
     while ((otPlatAlarmMilliGetNow() - start) < aTimeout)
     {
@@ -267,10 +265,10 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     while (written < aSize)
     {
         uint32_t toWrite = aSize - written;
-        uint8_t *data = aData + written;
+        uint8_t *data    = aData + written;
         uint32_t address = aAddress + written;
         uint32_t fsmRet;
-        bool interruptsWereDisabled;
+        bool     interruptsWereDisabled;
 
         if (toWrite > MAX_WRITE_INCREMENT)
         {
@@ -313,4 +311,3 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     return aSize;
 }
-

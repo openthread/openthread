@@ -51,7 +51,7 @@ class ThreadNetif;
  * This class implements handling PANID Query Requests.
  *
  */
-class EnergyScanClient: public InstanceLocator
+class EnergyScanClient : public InstanceLocator
 {
 public:
     /**
@@ -75,16 +75,23 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate an Energy Scan Query message.
      *
      */
-    otError SendQuery(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod, uint16_t aScanDuration,
-                      const Ip6::Address &aAddress, otCommissionerEnergyReportCallback aCallback, void *aContext);
+    otError SendQuery(uint32_t                           aChannelMask,
+                      uint8_t                            aCount,
+                      uint16_t                           aPeriod,
+                      uint16_t                           aScanDuration,
+                      const Ip6::Address &               aAddress,
+                      otCommissionerEnergyReportCallback aCallback,
+                      void *                             aContext);
 
 private:
-    static void HandleReport(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleReport(void *               aContext,
+                             otCoapHeader *       aHeader,
+                             otMessage *          aMessage,
                              const otMessageInfo *aMessageInfo);
-    void HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerEnergyReportCallback mCallback;
-    void *mContext;
+    void *                             mContext;
 
     Coap::Resource mEnergyScan;
 };
@@ -93,6 +100,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // ENERGY_SCAN_CLIENT_HPP_
+#endif // ENERGY_SCAN_CLIENT_HPP_

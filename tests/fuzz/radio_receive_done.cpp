@@ -45,9 +45,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance *instance = NULL;
+    otInstance * instance = NULL;
     otRadioFrame frame;
-    uint8_t *buf = NULL;
+    uint8_t *    buf = NULL;
 
     VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
 
@@ -62,9 +62,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     buf = static_cast<uint8_t *>(malloc(size));
 
     memset(&frame, 0, sizeof(frame));
-    frame.mPsdu = buf;
+    frame.mPsdu    = buf;
     frame.mChannel = 11;
-    frame.mLength = static_cast<uint8_t>(size);
+    frame.mLength  = static_cast<uint8_t>(size);
 
     memcpy(buf, data, frame.mLength);
 

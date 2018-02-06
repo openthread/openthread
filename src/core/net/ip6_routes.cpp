@@ -42,9 +42,9 @@
 namespace ot {
 namespace Ip6 {
 
-Routes::Routes(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mRoutes(NULL)
+Routes::Routes(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mRoutes(NULL)
 {
 }
 
@@ -58,7 +58,7 @@ otError Routes::Add(Route &aRoute)
     }
 
     aRoute.mNext = mRoutes;
-    mRoutes = &aRoute;
+    mRoutes      = &aRoute;
 
 exit:
     return error;
@@ -89,9 +89,9 @@ otError Routes::Remove(Route &aRoute)
 
 int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
 {
-    int8_t maxPrefixMatch = -1;
+    int8_t  maxPrefixMatch = -1;
     uint8_t prefixMatch;
-    int8_t rval = -1;
+    int8_t  rval = -1;
 
     for (Route *cur = mRoutes; cur; cur = cur->mNext)
     {
@@ -113,7 +113,7 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
         }
 
         maxPrefixMatch = static_cast<int8_t>(prefixMatch);
-        rval = cur->mInterfaceId;
+        rval           = cur->mInterfaceId;
     }
 
     for (Netif *netif = GetIp6().GetNetifList(); netif; netif = netif->GetNext())
@@ -122,12 +122,12 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
             static_cast<int8_t>(prefixMatch) > maxPrefixMatch)
         {
             maxPrefixMatch = static_cast<int8_t>(prefixMatch);
-            rval = netif->GetInterfaceId();
+            rval           = netif->GetInterfaceId();
         }
     }
 
     return rval;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

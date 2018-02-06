@@ -94,7 +94,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_BUSY;
+    otError  error = OT_ERROR_BUSY;
     uint32_t start = otPlatAlarmMilliGetNow();
 
     do
@@ -104,8 +104,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
             error = OT_ERROR_NONE;
             break;
         }
-    }
-    while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
+    } while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
 
     return error;
 }
@@ -113,11 +112,10 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t rval = aSize;
-    int32_t status;
+    int32_t  status;
 
     otEXPECT_ACTION(aData, rval = 0);
-    otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) &&
-                    (!(aAddress & 3)) && (!(aSize & 3)), rval = 0);
+    otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) && (!(aAddress & 3)) && (!(aSize & 3)), rval = 0);
 
     status = MSC_WriteWord((uint32_t *)mapAddress(aAddress), aData, aSize);
     otEXPECT_ACTION(returnTypeConvert(status) == OT_ERROR_NONE, rval = 0);
@@ -128,9 +126,9 @@ exit:
 
 uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    uint32_t rval = aSize;
+    uint32_t rval     = aSize;
     uint32_t pAddress = mapAddress(aAddress);
-    uint8_t *byte = aData;
+    uint8_t *byte     = aData;
 
     otEXPECT_ACTION(aData, rval = 0);
     otEXPECT_ACTION((aAddress + aSize) < utilsFlashGetSize(), rval = 0);

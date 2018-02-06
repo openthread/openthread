@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/platform/radio.h>
 #include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 namespace ot {
 
@@ -62,7 +62,7 @@ class SuccessRateTracker
 public:
     enum
     {
-        kMaxRateValue = 0xffff,    ///< Indicates value corresponding to maximum (failure/success) rate of 100%.
+        kMaxRateValue = 0xffff, ///< Indicates value corresponding to maximum (failure/success) rate of 100%.
     };
 
     /**
@@ -71,7 +71,10 @@ public:
      * After initialization the tracker starts with success rate 100% (failure rate 0%).
      *
      */
-    SuccessRateTracker(void): mFailureRate(0) { }
+    SuccessRateTracker(void)
+        : mFailureRate(0)
+    {
+    }
 
     /**
      * This method resets the tracker to its initialized state, setting success rate to 100%.
@@ -124,7 +127,7 @@ class RssAverager
 public:
     enum
     {
-        kStringSize = 10,    ///< Max chars needed for a string representation of average (@sa ToString()).
+        kStringSize = 10, ///< Max chars needed for a string representation of average (@sa ToString()).
     };
 
     /**
@@ -201,17 +204,17 @@ private:
 
     enum
     {
-        kPrecisionBitShift      = 3,    // Precision multiple for RSS average (1 << PrecisionBitShift).
-        kPrecision              = (1 << kPrecisionBitShift),
-        kPrecisionBitMask       = (kPrecision - 1),
+        kPrecisionBitShift = 3, // Precision multiple for RSS average (1 << PrecisionBitShift).
+        kPrecision         = (1 << kPrecisionBitShift),
+        kPrecisionBitMask  = (kPrecision - 1),
 
-        kCoeffBitShift          = 3,    // Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
+        kCoeffBitShift = 3, // Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
     };
 
     // Member variables fit into two bytes.
 
-    uint16_t mAverage   : 11; // The raw average signal strength value (stored as RSS times precision multiple).
-    uint16_t mCount     : 5;  // Number of RSS values added to averager so far (limited to 2^kCoeffBitShift-1).
+    uint16_t mAverage : 11; // The raw average signal strength value (stored as RSS times precision multiple).
+    uint16_t mCount : 5;    // Number of RSS values added to averager so far (limited to 2^kCoeffBitShift-1).
 };
 
 /**
@@ -221,11 +224,10 @@ private:
  */
 class LinkQualityInfo
 {
-
 public:
     enum
     {
-        kInfoStringSize = 50,    ///< Max chars needed for the info string representation (@sa ToInfoString())
+        kInfoStringSize = 50, ///< Max chars needed for the info string representation (@sa ToInfoString())
     };
 
     /**
@@ -322,7 +324,8 @@ public:
      * @param[in]  aTxStatus   Success/Failure of MAC frame transmission (`true` -> success, `false` -> failure).
      *
      */
-    void AddFrameTxStatus(bool aTxStatus) {
+    void AddFrameTxStatus(bool aTxStatus)
+    {
         mFrameErrorRate.AddSample(aTxStatus, OPENTHREAD_CONFIG_FRAME_TX_ERR_RATE_AVERAGING_WINDOW);
     }
 
@@ -335,7 +338,8 @@ public:
      *                         attempts.
      *
      */
-    void AddMessageTxStatus(bool aTxStatus) {
+    void AddMessageTxStatus(bool aTxStatus)
+    {
         mMessageErrorRate.AddSample(aTxStatus, OPENTHREAD_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW);
     }
 
@@ -415,19 +419,19 @@ private:
     {
         // Constants for obtaining link quality from link margin:
 
-        kThreshold3             = 20,   ///< Link margin threshold for quality 3 link.
-        kThreshold2             = 10,   ///< Link margin threshold for quality 2 link.
-        kThreshold1             = 2,    ///< Link margin threshold for quality 1 link.
-        kHysteresisThreshold    = 2,    ///< Link margin hysteresis threshold.
+        kThreshold3          = 20, ///< Link margin threshold for quality 3 link.
+        kThreshold2          = 10, ///< Link margin threshold for quality 2 link.
+        kThreshold1          = 2,  ///< Link margin threshold for quality 1 link.
+        kHysteresisThreshold = 2,  ///< Link margin hysteresis threshold.
 
         // constants for test:
 
-        kLinkQuality3LinkMargin = 50,   ///< link margin for Link Quality 3 (21 - 255)
-        kLinkQuality2LinkMargin = 15,   ///< link margin for Link Quality 3 (21 - 255)
-        kLinkQuality1LinkMargin = 5,    ///< link margin for Link Quality 3 (21 - 255)
-        kLinkQuality0LinkMargin = 0,    ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality3LinkMargin = 50, ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality2LinkMargin = 15, ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality1LinkMargin = 5,  ///< link margin for Link Quality 3 (21 - 255)
+        kLinkQuality0LinkMargin = 0,  ///< link margin for Link Quality 3 (21 - 255)
 
-        kNoLinkQuality          = 0xff, // Used to indicate that there is no previous/last link quality.
+        kNoLinkQuality = 0xff, // Used to indicate that there is no previous/last link quality.
     };
 
     void SetLinkQuality(uint8_t aLinkQuality) { mLinkQuality = aLinkQuality; }
@@ -452,6 +456,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
 #endif // LINK_QUALITY_HPP_

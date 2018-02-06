@@ -34,55 +34,55 @@
 
 #include <assert.h>
 
-#include <openthread/types.h>
 #include <openthread/config.h>
+#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
 #include "em_core.h"
 #include "em_system.h"
+#include "openthread-core-efr32-config.h"
 #include "pa_conversions_efr32.h"
 #include "rail.h"
 #include "rail_config.h"
 #include "rail_ieee802154.h"
-#include "openthread-core-efr32-config.h"
 
 enum
 {
-    IEEE802154_MIN_LENGTH                = 5,
-    IEEE802154_MAX_LENGTH                = 127,
-    IEEE802154_ACK_LENGTH                = 5,
-    IEEE802154_FRAME_TYPE_MASK           = 0x7,
-    IEEE802154_FRAME_TYPE_ACK            = 0x2,
-    IEEE802154_FRAME_PENDING             = 1 << 4,
-    IEEE802154_ACK_REQUEST               = 1 << 5,
-    IEEE802154_DSN_OFFSET                = 2,
+    IEEE802154_MIN_LENGTH      = 5,
+    IEEE802154_MAX_LENGTH      = 127,
+    IEEE802154_ACK_LENGTH      = 5,
+    IEEE802154_FRAME_TYPE_MASK = 0x7,
+    IEEE802154_FRAME_TYPE_ACK  = 0x2,
+    IEEE802154_FRAME_PENDING   = 1 << 4,
+    IEEE802154_ACK_REQUEST     = 1 << 5,
+    IEEE802154_DSN_OFFSET      = 2,
 };
 
 enum
 {
-    EFR32_RECEIVE_SENSITIVITY = -100,  // dBm
+    EFR32_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
-static uint16_t       sPanId             = 0;
-static bool           sTransmitBusy      = false;
-static bool           sPromiscuous       = false;
-static bool           sIsSrcMatchEnabled = false;
-static otRadioState   sState             = OT_RADIO_STATE_DISABLED;
+static uint16_t     sPanId             = 0;
+static bool         sTransmitBusy      = false;
+static bool         sPromiscuous       = false;
+static bool         sIsSrcMatchEnabled = false;
+static otRadioState sState             = OT_RADIO_STATE_DISABLED;
 
-static uint8_t        sReceivePsdu[IEEE802154_MAX_LENGTH];
-static otRadioFrame   sReceiveFrame;
-static otError        sReceiveError;
+static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
+static otRadioFrame sReceiveFrame;
+static otError      sReceiveError;
 
-static otRadioFrame   sTransmitFrame;
-static uint8_t        sTransmitPsdu[IEEE802154_MAX_LENGTH];
-static otError        sTransmitError;
+static otRadioFrame sTransmitFrame;
+static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static otError      sTransmitError;
 
-typedef struct        srcMatchEntry
+typedef struct srcMatchEntry
 {
     uint16_t checksum;
     bool     allocated;
@@ -95,43 +95,41 @@ static uint8_t sRailTxFifo[1 + IEEE802154_MAX_LENGTH];
 
 static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents);
 
-static RAIL_Config_t sRailConfig =
-{
+static RAIL_Config_t sRailConfig = {
     .eventsCallback = &RAILCb_Generic,
-    .protocol = NULL,
-    .scheduler = NULL,
+    .protocol       = NULL,
+    .scheduler      = NULL,
 };
 
-static const RAIL_IEEE802154_Config_t sRailIeee802154Config =
-{
-    NULL,                                    // addresses
+static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
+    NULL, // addresses
     {
         // ackConfig
-        true,                                // ackConfig.enable
-        894,                                 // ackConfig.ackTimeout
+        true, // ackConfig.enable
+        894,  // ackConfig.ackTimeout
         {
             // ackConfig.rxTransitions
-            RAIL_RF_STATE_RX,                // ackConfig.rxTransitions.success
-            RAIL_RF_STATE_RX,                // ackConfig.rxTransitions.error
+            RAIL_RF_STATE_RX, // ackConfig.rxTransitions.success
+            RAIL_RF_STATE_RX, // ackConfig.rxTransitions.error
         },
         {
             // ackConfig.txTransitions
-            RAIL_RF_STATE_RX,                // ackConfig.txTransitions.success
-            RAIL_RF_STATE_RX,                // ackConfig.txTransitions.error
+            RAIL_RF_STATE_RX, // ackConfig.txTransitions.success
+            RAIL_RF_STATE_RX, // ackConfig.txTransitions.error
         },
     },
     {
         // timings
-        100,                                 // timings.idleToRx
-        192 - 10,                            // timings.txToRx
-        100,                                 // timings.idleToTx
-        192,                                 // timings.rxToTx
-        0,                                   // timings.rxSearchTimeout
-        0,                                   // timings.txToRxSearchTimeout
+        100,      // timings.idleToRx
+        192 - 10, // timings.txToRx
+        100,      // timings.idleToTx
+        192,      // timings.rxToTx
+        0,        // timings.rxSearchTimeout
+        0,        // timings.txToRxSearchTimeout
     },
-    RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES,  // framesMask
-    false,                                   // promiscuousMode
-    false,                                   // isPanCoordinator
+    RAIL_IEEE802154_ACCEPT_STANDARD_FRAMES, // framesMask
+    false,                                  // promiscuousMode
+    false,                                  // isPanCoordinator
 };
 
 static RAIL_Handle_t sRailHandle = NULL;
@@ -145,8 +143,7 @@ void efr32RadioInit(void)
     sRailHandle = RAIL_Init(&sRailConfig, NULL);
     assert(sRailHandle != NULL);
 
-    RAIL_DataConfig_t railDataConfig =
-    {
+    RAIL_DataConfig_t railDataConfig = {
         TX_PACKET_DATA,
         RX_PACKET_DATA,
         PACKET_MODE,
@@ -166,24 +163,24 @@ void efr32RadioInit(void)
     assert(status == RAIL_STATUS_NO_ERROR);
 
     status = RAIL_ConfigEvents(sRailHandle, RAIL_EVENTS_ALL,
-                               RAIL_EVENT_RX_ACK_TIMEOUT | //
-                               RAIL_EVENT_TX_PACKET_SENT | //
-                               RAIL_EVENT_RX_PACKET_RECEIVED | //
-                               RAIL_EVENT_TX_CHANNEL_BUSY | //
-                               RAIL_EVENT_TX_ABORTED | //
-                               RAIL_EVENT_TX_BLOCKED | //
-                               RAIL_EVENT_TX_UNDERFLOW | //
-                               RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND | //
-                               RAIL_EVENT_CAL_NEEDED //
-                              );
+                               RAIL_EVENT_RX_ACK_TIMEOUT |                      //
+                                   RAIL_EVENT_TX_PACKET_SENT |                  //
+                                   RAIL_EVENT_RX_PACKET_RECEIVED |              //
+                                   RAIL_EVENT_TX_CHANNEL_BUSY |                 //
+                                   RAIL_EVENT_TX_ABORTED |                      //
+                                   RAIL_EVENT_TX_BLOCKED |                      //
+                                   RAIL_EVENT_TX_UNDERFLOW |                    //
+                                   RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND | //
+                                   RAIL_EVENT_CAL_NEEDED                        //
+    );
     assert(status == RAIL_STATUS_NO_ERROR);
 
-    RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = { curves24Hp, curvesSg, curves24Lp, piecewiseSegments };
-    status = RAIL_InitTxPowerCurves(&txPowerCurvesConfig);
+    RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = {curves24Hp, curvesSg, curves24Lp, piecewiseSegments};
+    status                                         = RAIL_InitTxPowerCurves(&txPowerCurvesConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
 
-    RAIL_TxPowerConfig_t txPowerConfig = { RAIL_TX_POWER_MODE_2P4_HP, 3300, 10 };
-    status = RAIL_ConfigTxPower(sRailHandle, &txPowerConfig);
+    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_HP, 3300, 10};
+    status                             = RAIL_ConfigTxPower(sRailHandle, &txPowerConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
 
     status = RAIL_SetTxPowerDbm(sRailHandle, ((RAIL_TxPower_t)OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER) * 10);
@@ -215,7 +212,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     uint8_t *eui64Ptr = NULL;
     (void)aInstance;
 
-    eui64 = SYSTEM_GetUnique();
+    eui64    = SYSTEM_GetUnique();
     eui64Ptr = (uint8_t *)&eui64;
 
     for (uint8_t i = 0; i < OT_EXT_ADDRESS_SIZE; i++)
@@ -243,9 +240,8 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
 
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "ExtAddr=%X%X%X%X%X%X%X%X",
-                  aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
-                  aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
+    otLogInfoPlat(sInstance, "ExtAddr=%X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5],
+                  aAddress->m8[4], aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
     status = RAIL_IEEE802154_SetLongAddress(sRailHandle, (uint8_t *)aAddress->m8, 0);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -310,7 +306,7 @@ exit:
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    otError error = OT_ERROR_NONE;
+    otError       error = OT_ERROR_NONE;
     RAIL_Status_t status;
     (void)aInstance;
 
@@ -320,7 +316,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
     otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_RECEIVE", NULL);
-    sState = OT_RADIO_STATE_RECEIVE;
+    sState                 = OT_RADIO_STATE_RECEIVE;
     sReceiveFrame.mChannel = aChannel;
 
 exit:
@@ -329,18 +325,18 @@ exit:
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError error = OT_ERROR_NONE;
+    otError           error      = OT_ERROR_NONE;
     RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
-    RAIL_TxOptions_t txOptions = RAIL_TX_OPTIONS_NONE;
-    RAIL_Status_t status;
+    RAIL_TxOptions_t  txOptions  = RAIL_TX_OPTIONS_NONE;
+    RAIL_Status_t     status;
     (void)aInstance;
 
     otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
                     error = OT_ERROR_INVALID_STATE);
 
-    sState = OT_RADIO_STATE_TRANSMIT;
+    sState         = OT_RADIO_STATE_TRANSMIT;
     sTransmitError = OT_ERROR_NONE;
-    sTransmitBusy = true;
+    sTransmitBusy  = true;
 
     RAIL_WriteTxFifo(sRailHandle, &aFrame->mLength, sizeof(aFrame->mLength), true);
     RAIL_WriteTxFifo(sRailHandle, aFrame->mPsdu, aFrame->mLength - 2, false);
@@ -390,7 +386,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     (void)aInstance;
 
     sPromiscuous = aEnable;
-    status = RAIL_IEEE802154_SetPromiscuousMode(sRailHandle, aEnable);
+    status       = RAIL_IEEE802154_SetPromiscuousMode(sRailHandle, aEnable);
     assert(status == RAIL_STATUS_NO_ERROR);
 }
 
@@ -426,13 +422,12 @@ int8_t findSrcMatchAvailEntry(bool aShortAddress)
 
 int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
 {
-    int8_t entry = -1;
+    int8_t   entry    = -1;
     uint16_t checksum = aShortAddress + sPanId;
 
     for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM; i++)
     {
-        if (checksum == srcMatchShortEntry[i].checksum &&
-            srcMatchShortEntry[i].allocated)
+        if (checksum == srcMatchShortEntry[i].checksum && srcMatchShortEntry[i].allocated)
         {
             entry = i;
             break;
@@ -444,7 +439,7 @@ int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
 
 int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
 {
-    int8_t entry = -1;
+    int8_t   entry    = -1;
     uint16_t checksum = sPanId;
 
     checksum += (uint16_t)aExtAddress->m8[0] | (uint16_t)(aExtAddress->m8[1] << 8);
@@ -454,8 +449,7 @@ int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
 
     for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM; i++)
     {
-        if (checksum == srcMatchExtEntry[i].checksum &&
-            srcMatchExtEntry[i].allocated)
+        if (checksum == srcMatchExtEntry[i].checksum && srcMatchExtEntry[i].allocated)
         {
             entry = i;
             break;
@@ -469,7 +463,7 @@ void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
 {
     uint16_t checksum = aShortAddress + sPanId;
 
-    srcMatchShortEntry[entry].checksum = checksum;
+    srcMatchShortEntry[entry].checksum  = checksum;
     srcMatchShortEntry[entry].allocated = true;
 }
 
@@ -482,7 +476,7 @@ void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
     checksum += (uint16_t)aExtAddress->m8[4] | (uint16_t)(aExtAddress->m8[5] << 8);
     checksum += (uint16_t)aExtAddress->m8[6] | (uint16_t)(aExtAddress->m8[7] << 8);
 
-    srcMatchExtEntry[entry].checksum = checksum;
+    srcMatchExtEntry[entry].checksum  = checksum;
     srcMatchExtEntry[entry].allocated = true;
 }
 
@@ -510,13 +504,12 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 {
     (void)aInstance;
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
 
     entry = findSrcMatchAvailEntry(true);
     otLogDebgPlat(sInstance, "Add ShortAddr entry: %d", entry);
 
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM,
-                    error = OT_ERROR_NO_BUFS);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
 
     addToSrcMatchShortIndirect(entry, aShortAddress);
 
@@ -527,14 +520,13 @@ exit:
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
     (void)aInstance;
 
     entry = findSrcMatchAvailEntry(false);
     otLogDebgPlat(sInstance, "Add ExtAddr entry: %d", entry);
 
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM,
-                    error = OT_ERROR_NO_BUFS);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
 
     addToSrcMatchExtIndirect(entry, aExtAddress);
 
@@ -545,14 +537,13 @@ exit:
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
     (void)aInstance;
 
     entry = findSrcMatchShortEntry(aShortAddress);
     otLogDebgPlat(sInstance, "Clear ShortAddr entry: %d", entry);
 
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM,
-                    error = OT_ERROR_NO_ADDRESS);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
 
     removeFromSrcMatchShortIndirect(entry);
 
@@ -563,14 +554,13 @@ exit:
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    int8_t entry = -1;
+    int8_t  entry = -1;
     (void)aInstance;
 
     entry = findSrcMatchExtEntry(aExtAddress);
     otLogDebgPlat(sInstance, "Clear ExtAddr entry: %d", entry);
 
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM,
-                    error = OT_ERROR_NO_ADDRESS);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
 
     removeFromSrcMatchExtIndirect(entry);
 
@@ -598,19 +588,19 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 
 static void checkForAck(RAIL_Handle_t aRailHandle)
 {
-    RAIL_RxPacketHandle_t packetHandle;
-    RAIL_RxPacketInfo_t packetInfo;
+    RAIL_RxPacketHandle_t  packetHandle;
+    RAIL_RxPacketInfo_t    packetInfo;
     RAIL_RxPacketDetails_t packetDetails;
-    RAIL_Status_t status;
-    uint8_t frame[IEEE802154_ACK_LENGTH];
-    uint16_t length;
+    RAIL_Status_t          status;
+    uint8_t                frame[IEEE802154_ACK_LENGTH];
+    uint16_t               length;
 
     packetHandle = RAIL_GetRxPacketInfo(aRailHandle, RAIL_RX_PACKET_HANDLE_NEWEST, &packetInfo);
     assert(packetInfo.packetStatus == RAIL_RX_PACKET_READY_SUCCESS);
 
-    packetDetails.timeReceived.timePosition = RAIL_PACKET_TIME_INVALID;
+    packetDetails.timeReceived.timePosition     = RAIL_PACKET_TIME_INVALID;
     packetDetails.timeReceived.totalPacketBytes = 0;
-    status = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
+    status                                      = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
     assert(status == RAIL_STATUS_NO_ERROR);
     otEXPECT(packetDetails.isAck);
 
@@ -627,8 +617,7 @@ static void checkForAck(RAIL_Handle_t aRailHandle)
 
     // read packet
     memcpy(frame, packetInfo.firstPortionData, packetInfo.firstPortionBytes);
-    memcpy(frame + packetInfo.firstPortionBytes,
-           packetInfo.lastPortionData,
+    memcpy(frame + packetInfo.firstPortionBytes, packetInfo.lastPortionData,
            packetInfo.packetBytes - packetInfo.firstPortionBytes);
 
     assert((frame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK);
@@ -651,19 +640,19 @@ exit:
 
 static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle)
 {
-    RAIL_RxPacketHandle_t packetHandle = RAIL_RX_PACKET_HANDLE_INVALID;
-    RAIL_RxPacketInfo_t packetInfo;
+    RAIL_RxPacketHandle_t  packetHandle = RAIL_RX_PACKET_HANDLE_INVALID;
+    RAIL_RxPacketInfo_t    packetInfo;
     RAIL_RxPacketDetails_t packetDetails;
-    RAIL_Status_t status;
-    uint16_t length;
+    RAIL_Status_t          status;
+    uint16_t               length;
 
     packetHandle = RAIL_GetRxPacketInfo(aRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST, &packetInfo);
     otEXPECT_ACTION(packetInfo.packetStatus == RAIL_RX_PACKET_READY_SUCCESS,
                     packetHandle = RAIL_RX_PACKET_HANDLE_INVALID);
 
-    packetDetails.timeReceived.timePosition = RAIL_PACKET_TIME_INVALID;
+    packetDetails.timeReceived.timePosition     = RAIL_PACKET_TIME_INVALID;
     packetDetails.timeReceived.totalPacketBytes = 0;
-    status = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
+    status                                      = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
     otEXPECT(status != RAIL_STATUS_INVALID_STATE);
     assert(status == RAIL_STATUS_NO_ERROR);
     length = packetInfo.packetBytes + 1;
@@ -687,13 +676,12 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
 
     // read packet
     memcpy(sReceiveFrame.mPsdu, packetInfo.firstPortionData, packetInfo.firstPortionBytes);
-    memcpy(sReceiveFrame.mPsdu + packetInfo.firstPortionBytes,
-           packetInfo.lastPortionData,
+    memcpy(sReceiveFrame.mPsdu + packetInfo.firstPortionBytes, packetInfo.lastPortionData,
            packetInfo.packetBytes - packetInfo.firstPortionBytes);
 
     sReceiveFrame.mLength = length;
-    sReceiveFrame.mRssi = packetDetails.rssi;
-    sReceiveFrame.mLqi = packetDetails.lqi;
+    sReceiveFrame.mRssi   = packetDetails.rssi;
+    sReceiveFrame.mLqi    = packetDetails.lqi;
 
     // TODO: grab timestamp and handle conversion to msec/usec
     // sReceiveFrame.mMsec = packetDetails.packetTime;
@@ -759,13 +747,13 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
     if (aEvents & (RAIL_EVENT_TX_ABORTED | RAIL_EVENT_TX_BLOCKED | RAIL_EVENT_TX_UNDERFLOW))
     {
         sTransmitError = OT_ERROR_ABORT;
-        sTransmitBusy = false;
+        sTransmitBusy  = false;
     }
 
     if (aEvents & RAIL_EVENT_RX_ACK_TIMEOUT)
     {
         sTransmitError = OT_ERROR_NO_ACK;
-        sTransmitBusy = false;
+        sTransmitBusy  = false;
     }
 
     if (aEvents & RAIL_EVENT_RX_PACKET_RECEIVED)
@@ -784,14 +772,14 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
         if ((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
             sTransmitError = OT_ERROR_NONE;
-            sTransmitBusy = false;
+            sTransmitBusy  = false;
         }
     }
 
     if (aEvents & RAIL_EVENT_TX_CHANNEL_BUSY)
     {
         sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-        sTransmitBusy = false;
+        sTransmitBusy  = false;
     }
 
     if (aEvents & RAIL_EVENT_CAL_NEEDED)
