@@ -55,6 +55,9 @@
 #include "net/ip6.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#include "utils/channel_manager.hpp"
+#endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 #include "utils/channel_monitor.hpp"
 #endif
@@ -314,6 +317,16 @@ public:
     Utils::ChannelMonitor &GetChannelMonitor(void) { return mChannelMonitor; }
 #endif
 
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    /**
+     * This method returns a reference to ChannelManager object.
+     *
+     * @returns A reference to the ChannelManager object.
+     *
+     */
+    Utils::ChannelManager &GetChannelManager(void) { return mChannelManager; }
+#endif
+
     /**
      * This method returns a reference to message pool object.
      *
@@ -380,6 +393,10 @@ private:
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     Utils::ChannelMonitor       mChannelMonitor;
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    Utils::ChannelManager       mChannelManager;
 #endif
 
     MessagePool                 mMessagePool;

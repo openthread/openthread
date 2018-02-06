@@ -1057,6 +1057,21 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
+ *
+ * The minimum delay in seconds used by Channel Manager module for performing a channel change.
+ *
+ * The minimum delay should preferably be longer than maximum data poll interval used by all sleepy-end-devices within
+ * the Thread network.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY         120
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL
  *
  * The default supervision interval in seconds used by parent. Set to zero to disable the supervision process on the
