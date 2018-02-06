@@ -43,16 +43,16 @@
 namespace ot {
 namespace Mac {
 
-Filter::Filter(void) :
-    mAddressMode(OT_MAC_FILTER_ADDRESS_MODE_DISABLED),
-    mRssIn(OT_MAC_FILTER_FIXED_RSS_DISABLED)
+Filter::Filter(void)
+    : mAddressMode(OT_MAC_FILTER_ADDRESS_MODE_DISABLED)
+    , mRssIn(OT_MAC_FILTER_FIXED_RSS_DISABLED)
 {
     for (int i = 0; i < GetMaxEntries(); i++)
     {
         memset(&mEntries[i], 0, sizeof(Entry));
 
         mEntries[i].mFiltered = false;
-        mEntries[i].mRssIn = OT_MAC_FILTER_FIXED_RSS_DISABLED;
+        mEntries[i].mRssIn    = OT_MAC_FILTER_FIXED_RSS_DISABLED;
     }
 }
 
@@ -93,9 +93,8 @@ otError Filter::SetAddressMode(otMacFilterAddressMode aMode)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aMode == OT_MAC_FILTER_ADDRESS_MODE_DISABLED ||
-                 aMode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST ||
-                 aMode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST,
+    VerifyOrExit(aMode == OT_MAC_FILTER_ADDRESS_MODE_DISABLED || aMode == OT_MAC_FILTER_ADDRESS_MODE_WHITELIST ||
+                     aMode == OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST,
                  error = OT_ERROR_INVALID_ARGS);
 
     mAddressMode = aMode;
@@ -107,7 +106,7 @@ exit:
 otError Filter::AddAddress(const ExtAddress &aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    Entry *entry = FindEntry(aExtAddress);
+    Entry * entry = FindEntry(aExtAddress);
 
     if (entry == NULL)
     {
@@ -129,7 +128,7 @@ exit:
 otError Filter::RemoveAddress(const ExtAddress &aExtAddress)
 {
     otError error = OT_ERROR_NONE;
-    Entry *entry = FindEntry(aExtAddress);
+    Entry * entry = FindEntry(aExtAddress);
 
     if (entry == NULL || !entry->mFiltered)
     {
@@ -153,13 +152,13 @@ void Filter::ClearAddresses(void)
 otError Filter::GetNextAddress(otMacFilterIterator &aIterator, Entry &aEntry)
 {
     otError error = OT_ERROR_NOT_FOUND;
-    uint8_t i = *reinterpret_cast<uint8_t *>(&aIterator);
+    uint8_t i     = *reinterpret_cast<uint8_t *>(&aIterator);
 
     for (; i < GetMaxEntries(); i++)
     {
         if (mEntries[i].mFiltered)
         {
-            aEntry = mEntries[i];
+            aEntry    = mEntries[i];
             aIterator = *reinterpret_cast<otMacFilterIterator *>(&(++i));
             ExitNow(error = OT_ERROR_NONE);
         }
@@ -168,7 +167,6 @@ otError Filter::GetNextAddress(otMacFilterIterator &aIterator, Entry &aEntry)
 exit:
     return error;
 }
-
 
 otError Filter::AddRssIn(const ExtAddress *aExtAddress, int8_t aRss)
 {
@@ -229,13 +227,13 @@ void Filter::ClearRssIn(void)
 otError Filter::GetNextRssIn(otMacFilterIterator &aIterator, Entry &aEntry)
 {
     otError error = OT_ERROR_NOT_FOUND;
-    uint8_t i = *reinterpret_cast<uint8_t *>(&aIterator);
+    uint8_t i     = *reinterpret_cast<uint8_t *>(&aIterator);
 
     for (; i < GetMaxEntries(); i++)
     {
         if (mEntries[i].mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
-            aEntry = mEntries[i];
+            aEntry    = mEntries[i];
             aIterator = *reinterpret_cast<otMacFilterIterator *>(&(++i));
             ExitNow(error = OT_ERROR_NONE);
         }
@@ -246,7 +244,7 @@ otError Filter::GetNextRssIn(otMacFilterIterator &aIterator, Entry &aEntry)
     {
         memset(&aEntry.mExtAddress, 0xff, OT_EXT_ADDRESS_SIZE);
         aEntry.mRssIn = mRssIn;
-        aIterator = *reinterpret_cast<otMacFilterIterator *>(&(++i));
+        aIterator     = *reinterpret_cast<otMacFilterIterator *>(&(++i));
         ExitNow(error = OT_ERROR_NONE);
     }
 
@@ -283,7 +281,7 @@ exit:
     return error;
 }
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
-#endif  // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_ENABLE_MAC_FILTER

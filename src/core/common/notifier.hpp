@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 
 #include <openthread/instance.h>
 #include <openthread/types.h>
@@ -63,15 +63,14 @@ namespace ot {
  * It can be used to register callbacks to be notified of state or configuration changes within OpenThread.
  *
  */
-class Notifier: public InstanceLocator
+class Notifier : public InstanceLocator
 {
 public:
-
     /**
      * This class defines a callback instance that can be registered with the `Notifier`.
      *
      */
-    class Callback: public OwnerLocator
+    class Callback : public OwnerLocator
     {
         friend class Notifier;
 
@@ -96,7 +95,7 @@ public:
         Callback(Handler aHandler, void *aOwner);
 
     private:
-        Handler mHandler;
+        Handler   mHandler;
         Callback *mNext;
     };
 
@@ -170,25 +169,25 @@ public:
 private:
     enum
     {
-        kMaxExternalHandlers = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS,
+        kMaxExternalHandlers   = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS,
         kFlagsStringBufferSize = 128,
     };
 
     struct ExternalCallback
     {
         otStateChangedCallback mHandler;
-        void *mContext;
+        void *                 mContext;
     };
 
     static void HandleStateChanged(Tasklet &aTasklet);
-    void HandleStateChanged(void);
+    void        HandleStateChanged(void);
 
-    void LogChangedFlags(uint32_t aFlags) const;
+    void        LogChangedFlags(uint32_t aFlags) const;
     const char *FlagToString(uint32_t aFlag) const;
 
-    uint32_t mFlags;
-    Tasklet  mTask;
-    Callback *mCallbacks;
+    uint32_t         mFlags;
+    Tasklet          mTask;
+    Callback *       mCallbacks;
     ExternalCallback mExternalCallbacks[kMaxExternalHandlers];
 };
 
@@ -197,6 +196,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // NOTIFIER_HPP_
+#endif // NOTIFIER_HPP_

@@ -42,19 +42,18 @@
 namespace ot {
 namespace Utils {
 
-const uint32_t ChannelMonitor::mScanChannelMasks[kNumChannelMasks] =
-{
+const uint32_t ChannelMonitor::mScanChannelMasks[kNumChannelMasks] = {
     OT_CHANNEL_11_MASK | OT_CHANNEL_15_MASK | OT_CHANNEL_19_MASK | OT_CHANNEL_23_MASK,
     OT_CHANNEL_12_MASK | OT_CHANNEL_16_MASK | OT_CHANNEL_20_MASK | OT_CHANNEL_24_MASK,
     OT_CHANNEL_13_MASK | OT_CHANNEL_17_MASK | OT_CHANNEL_21_MASK | OT_CHANNEL_25_MASK,
     OT_CHANNEL_14_MASK | OT_CHANNEL_18_MASK | OT_CHANNEL_22_MASK | OT_CHANNEL_26_MASK,
 };
 
-ChannelMonitor::ChannelMonitor(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mChannelMaskIndex(0),
-    mSampleCount(0),
-    mTimer(aInstance, &ChannelMonitor::HandleTimer, this)
+ChannelMonitor::ChannelMonitor(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mChannelMaskIndex(0)
+    , mSampleCount(0)
+    , mTimer(aInstance, &ChannelMonitor::HandleTimer, this)
 {
     memset(mChannelQuality, 0, sizeof(mChannelQuality));
 }
@@ -75,7 +74,7 @@ void ChannelMonitor::Stop(void)
 void ChannelMonitor::Clear(void)
 {
     mChannelMaskIndex = 0;
-    mSampleCount = 0;
+    mSampleCount      = 0;
     memset(mChannelQuality, 0, sizeof(mChannelQuality));
 
     otLogDebgUtil(GetInstance(), "ChannelMonitor: Clearing data");
@@ -95,7 +94,7 @@ exit:
 void ChannelMonitor::RestartTimer(void)
 {
     uint16_t interval = kTimerInterval;
-    int16_t jitter;
+    int16_t  jitter;
 
     jitter = (otPlatRandomGet() % (2 * kMaxJitterInterval)) - kMaxJitterInterval;
 
@@ -150,8 +149,8 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
     else
     {
         uint8_t  channelIndex = (aResult->mChannel - OT_RADIO_CHANNEL_MIN);
-        uint32_t newAverage = mChannelQuality[channelIndex];
-        uint32_t newValue = 0;
+        uint32_t newAverage   = mChannelQuality[channelIndex];
+        uint32_t newValue     = 0;
         uint32_t weight;
 
         assert(channelIndex < kNumChannels);
@@ -194,15 +193,14 @@ void ChannelMonitor::LogResults(void)
     otLogInfoUtil(
         GetInstance(),
         "ChannelMonitor: %u [%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x]",
-        mSampleCount,
-        mChannelQuality[0] >> 8,  mChannelQuality[1] >> 8,  mChannelQuality[2] >> 8,  mChannelQuality[3] >> 8,
-        mChannelQuality[4] >> 8,  mChannelQuality[5] >> 8,  mChannelQuality[6] >> 8,  mChannelQuality[7] >> 8,
-        mChannelQuality[8] >> 8,  mChannelQuality[9] >> 8,  mChannelQuality[10] >> 8, mChannelQuality[11] >> 8,
-        mChannelQuality[12] >> 8, mChannelQuality[13] >> 8, mChannelQuality[14] >> 8, mChannelQuality[15] >> 8
-    );
+        mSampleCount, mChannelQuality[0] >> 8, mChannelQuality[1] >> 8, mChannelQuality[2] >> 8,
+        mChannelQuality[3] >> 8, mChannelQuality[4] >> 8, mChannelQuality[5] >> 8, mChannelQuality[6] >> 8,
+        mChannelQuality[7] >> 8, mChannelQuality[8] >> 8, mChannelQuality[9] >> 8, mChannelQuality[10] >> 8,
+        mChannelQuality[11] >> 8, mChannelQuality[12] >> 8, mChannelQuality[13] >> 8, mChannelQuality[14] >> 8,
+        mChannelQuality[15] >> 8);
 }
 
-}  // namespace Utils
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
 #endif // #if OPENTHREAD_ENABLE_CHANNEL_MONITOR

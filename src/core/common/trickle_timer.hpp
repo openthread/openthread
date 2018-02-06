@@ -54,18 +54,16 @@ namespace ot {
  * This class implements a trickle timer.
  *
  */
-class TrickleTimer: public TimerMilli
+class TrickleTimer : public TimerMilli
 {
 public:
-
     /**
      * Represents the modes of operation for the TrickleTimer
      */
-    typedef enum Mode
-    {
-        kModeNormal     = 0,  ///< Runs the normal trickle logic.
-        kModePlainTimer = 1,  ///< Runs a normal timer between Imin and Imax.
-        kModeMPL        = 2,  ///< Runs the trickle logic modified for MPL.
+    typedef enum Mode {
+        kModeNormal     = 0, ///< Runs the normal trickle logic.
+        kModePlainTimer = 1, ///< Runs a normal timer between Imin and Imax.
+        kModeMPL        = 2, ///< Runs the trickle logic modified for MPL.
     } Mode;
 
     /**
@@ -92,7 +90,9 @@ public:
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
                  uint32_t aRedundancyConstant,
 #endif
-                 Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aOwner);
+                 Handler aTransmitHandler,
+                 Handler aIntervalExpiredHandler,
+                 void *  aOwner);
 
     /**
      * This method indicates whether or not the trickle timer instance is running.
@@ -150,19 +150,18 @@ private:
     void StartNewInterval(void);
 
     static void HandleTimerFired(Timer &aTimer);
-    void HandleTimerFired(void);
+    void        HandleTimerFired(void);
 
     // Shadow base class method to ensure it is hidden.
-    void StartAt(void) { }
+    void StartAt(void) {}
 
-    typedef enum Phase
-    {
+    typedef enum Phase {
         ///< Indicates we are currently not running
-        kPhaseDormant    = 1,
+        kPhaseDormant = 1,
         ///< Indicates that when the timer expires, it should evaluate for transmit callbacks
-        kPhaseTransmit   = 2,
+        kPhaseTransmit = 2,
         ///< Indicates that when the timer expires, it should process interval expiration callbacks
-        kPhaseInterval   = 3,
+        kPhaseInterval = 3,
     } Phase;
 
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
@@ -198,6 +197,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // TRICKLE_TIMER_HPP_
+#endif // TRICKLE_TIMER_HPP_

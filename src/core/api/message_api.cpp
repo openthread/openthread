@@ -119,22 +119,22 @@ void otMessageQueueInit(otMessageQueue *aQueue)
 
 otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+    Message &     message = *static_cast<Message *>(aMessage);
+    MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
     return queue.Enqueue(message);
 }
 
 otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+    Message &     message = *static_cast<Message *>(aMessage);
+    MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
     return queue.Enqueue(message, MessageQueue::kQueuePositionHead);
 }
 
 otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+    Message &     message = *static_cast<Message *>(aMessage);
+    MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
     return queue.Dequeue(message);
 }
 
@@ -152,7 +152,7 @@ otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessa
 
     {
         const Message &message = *static_cast<const Message *>(aMessage);
-        MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
+        MessageQueue & queue   = *static_cast<MessageQueue *>(aQueue);
 
         VerifyOrExit(message.GetMessageQueue() == &queue, next = NULL);
         next = message.GetNext();
@@ -164,7 +164,7 @@ exit:
 
 void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 {
-    uint16_t messages, buffers;
+    uint16_t  messages, buffers;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
@@ -182,17 +182,15 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
                                                                              aBufferInfo->mArpBuffers);
 #else
     aBufferInfo->mArpMessages = 0;
-    aBufferInfo->mArpBuffers = 0;
+    aBufferInfo->mArpBuffers  = 0;
 #endif
 
-    instance.GetThreadNetif().GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages,
-                                                              aBufferInfo->mIp6Buffers);
+    instance.GetThreadNetif().GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages, aBufferInfo->mIp6Buffers);
 
     instance.GetThreadNetif().GetIp6().GetMpl().GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
                                                                                 aBufferInfo->mMplBuffers);
 
-    instance.GetThreadNetif().GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages,
-                                                                 aBufferInfo->mMleBuffers);
+    instance.GetThreadNetif().GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages, aBufferInfo->mMleBuffers);
 
     instance.GetThreadNetif().GetCoap().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages,
                                                                      aBufferInfo->mCoapBuffers);
@@ -207,8 +205,8 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mCoapSecureMessages += messages;
     aBufferInfo->mCoapSecureBuffers += buffers;
 #else
-    aBufferInfo->mCoapSecureMessages = 0;
-    aBufferInfo->mCoapSecureBuffers = 0;
+    aBufferInfo->mCoapSecureMessages      = 0;
+    aBufferInfo->mCoapSecureBuffers       = 0;
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -219,6 +217,6 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mApplicationCoapBuffers += buffers;
 #else
     aBufferInfo->mApplicationCoapMessages = 0;
-    aBufferInfo->mApplicationCoapBuffers = 0;
+    aBufferInfo->mApplicationCoapBuffers  = 0;
 #endif
 }

@@ -41,10 +41,11 @@
 
 using namespace ot::Crypto;
 
-void otCryptoHmacSha256(
-    const uint8_t *aKey, uint16_t aKeyLength,
-    const uint8_t *aBuf, uint16_t aBufLength,
-    uint8_t *aHash)
+void otCryptoHmacSha256(const uint8_t *aKey,
+                        uint16_t       aKeyLength,
+                        const uint8_t *aBuf,
+                        uint16_t       aBufLength,
+                        uint8_t *      aHash)
 {
     HmacSha256 hmac;
 
@@ -55,15 +56,20 @@ void otCryptoHmacSha256(
     hmac.Finish(aHash);
 }
 
-void otCryptoAesCcm(
-    const uint8_t *aKey, uint16_t aKeyLength,
-    uint8_t aTagLength,
-    const void *aNonce, uint8_t aNonceLength,
-    const void *aHeader, uint32_t aHeaderLength,
-    void *aPlainText, void *aCipherText, uint32_t aLength, bool aEncrypt,
-    void *aTag)
+void otCryptoAesCcm(const uint8_t *aKey,
+                    uint16_t       aKeyLength,
+                    uint8_t        aTagLength,
+                    const void *   aNonce,
+                    uint8_t        aNonceLength,
+                    const void *   aHeader,
+                    uint32_t       aHeaderLength,
+                    void *         aPlainText,
+                    void *         aCipherText,
+                    uint32_t       aLength,
+                    bool           aEncrypt,
+                    void *         aTag)
 {
-    AesCcm aesCcm;
+    AesCcm  aesCcm;
     uint8_t tagLength;
 
     assert((aKey != NULL) && (aNonce != NULL) && (aPlainText != NULL) && (aCipherText != NULL) && (aTag != NULL));

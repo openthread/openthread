@@ -37,9 +37,9 @@
 
 #include <utils/code_utils.h>
 
-#include "openthread/platform/random.h"
-#include "openthread/platform/radio.h"
 #include "platform-emsk.h"
+#include "openthread/platform/radio.h"
+#include "openthread/platform/random.h"
 
 #include <stdlib.h>
 
@@ -60,14 +60,13 @@ void emskRandomInit(void)
 
 uint32_t otPlatRandomGet(void)
 {
-
     return (uint32_t)rand();
 }
 
 otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t channel = 0;
+    otError     error     = OT_ERROR_NONE;
+    uint8_t     channel   = 0;
     otInstance *aInstance = NULL;
 
     otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);

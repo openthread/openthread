@@ -118,4 +118,4 @@ uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance)
     return instance.GetThreadNetif().GetJamDetector().GetHistoryBitmap();
 }
 
-#endif  // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION

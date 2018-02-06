@@ -63,7 +63,7 @@ class NetworkDiagnosticTlv;
  * This class implements the Network Diagnostic processing.
  *
  */
-class NetworkDiagnostic: public InstanceLocator
+class NetworkDiagnostic : public InstanceLocator
 {
 public:
     /**
@@ -104,31 +104,43 @@ public:
     otError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
 private:
-
     otError AppendIp6AddressList(Message &aMessage);
     otError AppendChildTable(Message &aMessage);
     otError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
-    static void HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleDiagnosticGetRequest(void *               aContext,
+                                           otCoapHeader *       aHeader,
+                                           otMessage *          aMessage,
                                            const otMessageInfo *aMessageInfo);
     void HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleDiagnosticGetQuery(void *               aContext,
+                                         otCoapHeader *       aHeader,
+                                         otMessage *          aMessage,
                                          const otMessageInfo *aMessageInfo);
     void HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                            const otMessageInfo *aMessageInfo, otError aResult);
-    void HandleDiagnosticGetResponse(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                     otError aResult);
+    static void HandleDiagnosticGetResponse(void *               aContext,
+                                            otCoapHeader *       aHeader,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            otError              aResult);
+    void        HandleDiagnosticGetResponse(Coap::Header &          aHeader,
+                                            Message &               aMessage,
+                                            const Ip6::MessageInfo &aMessageInfo,
+                                            otError                 aResult);
 
-    static void HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleDiagnosticGetAnswer(void *               aContext,
+                                          otCoapHeader *       aHeader,
+                                          otMessage *          aMessage,
                                           const otMessageInfo *aMessageInfo);
     void HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleDiagnosticReset(void *               aContext,
+                                      otCoapHeader *       aHeader,
+                                      otMessage *          aMessage,
                                       const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Coap::Resource mDiagnosticGetRequest;
     Coap::Resource mDiagnosticGetQuery;
@@ -136,7 +148,7 @@ private:
     Coap::Resource mDiagnosticReset;
 
     otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
-    void *mReceiveDiagnosticGetCallbackContext;
+    void *                         mReceiveDiagnosticGetCallbackContext;
 };
 
 /**
@@ -144,6 +156,6 @@ private:
  */
 } // namespace NetworkDiagnostic
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // NETWORK_DIAGNOSTIC_HPP_
+#endif // NETWORK_DIAGNOSTIC_HPP_

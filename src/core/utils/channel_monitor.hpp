@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/platform/radio.h>
 #include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"
@@ -65,13 +65,13 @@ namespace Utils {
  * When Channel Monitoring is active, every `kSampleInterval`, a zero-duration Energy Scan is performed on every
  * channel collecting a single RSSI  sample per channel. The RSSI samples are compared with a pre-specified RSSI
  * threshold `kRssiThreshold`. As an indicator of channel quality, the `ChannelMonitor` maintains and provides the
- * average rate/percentage of RSSI samples that are above the threshold within (approximately) a specified sample window.
+ * average rate/percentage of RSSI samples that are above the threshold within (approximately) a specified sample
+ * window.
  *
  */
 class ChannelMonitor : public InstanceLocator
 {
 public:
-
     enum
     {
         /**
@@ -157,25 +157,25 @@ public:
 private:
     enum
     {
-        kNumChannels = (OT_RADIO_CHANNEL_MAX - OT_RADIO_CHANNEL_MIN + 1),
-        kNumChannelMasks = 4,
-        kTimerInterval = (kSampleInterval / kNumChannelMasks),
-        kMaxJitterInterval = 4096,
+        kNumChannels         = (OT_RADIO_CHANNEL_MAX - OT_RADIO_CHANNEL_MIN + 1),
+        kNumChannelMasks     = 4,
+        kTimerInterval       = (kSampleInterval / kNumChannelMasks),
+        kMaxJitterInterval   = 4096,
         kMaxQualityIndicator = 0xffff,
     };
 
-    void RestartTimer(void);
+    void        RestartTimer(void);
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
     static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
-    void HandleEnergyScanResult(otEnergyScanResult *aResult);
-    void LogResults(void);
+    void        HandleEnergyScanResult(otEnergyScanResult *aResult);
+    void        LogResults(void);
 
     static const uint32_t mScanChannelMasks[kNumChannelMasks];
 
-    uint8_t  mChannelMaskIndex : 2;
-    uint32_t mSampleCount      : 30;
-    uint16_t mChannelQuality[kNumChannels];
+    uint8_t    mChannelMaskIndex : 2;
+    uint32_t   mSampleCount : 30;
+    uint16_t   mChannelQuality[kNumChannels];
     TimerMilli mTimer;
 };
 
@@ -186,7 +186,7 @@ private:
  *
  */
 
-}  // namespace Utils
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
-#endif  // CHANNEL_MONITOR_HPP_
+#endif // CHANNEL_MONITOR_HPP_

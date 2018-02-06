@@ -40,7 +40,8 @@
 
 #include "common/timer.hpp"
 
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT || \
+    OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 #define OPENTHREAD_LINKRAW_TIMER_REQUIRED 1
 #else
 #define OPENTHREAD_LINKRAW_TIMER_REQUIRED 0
@@ -114,7 +115,7 @@ public:
 private:
     otError DoTransmit(otRadioFrame *aFrame);
 
-    otInstance             &mInstance;
+    otInstance &            mInstance;
     bool                    mEnabled;
     uint8_t                 mReceiveChannel;
     otLinkRawReceiveDone    mReceiveDoneCallback;
@@ -131,21 +132,21 @@ private:
         kTimerReasonEnergyScanComplete,
     };
 
-    TimerMilli              mTimer;
-    TimerReason             mTimerReason;
+    TimerMilli  mTimer;
+    TimerReason mTimerReason;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    TimerMicro              mTimerMicro;
+    TimerMicro mTimerMicro;
 #endif
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
-    uint8_t                 mTransmitAttempts;
-    uint8_t                 mCsmaAttempts;
+    uint8_t mTransmitAttempts;
+    uint8_t mCsmaAttempts;
 
     void StartCsmaBackoff(void);
 
@@ -158,15 +159,15 @@ private:
         kInvalidRssiValue = 127
     };
 
-    Tasklet                 mEnergyScanTask;
-    int8_t                  mEnergyScanRssi;
+    Tasklet mEnergyScanTask;
+    int8_t  mEnergyScanRssi;
 
     static void HandleEnergyScanTask(Tasklet &aTasklet);
-    void HandleEnergyScanTask(void);
+    void        HandleEnergyScanTask(void);
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 };
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // LINK_RAW_HPP_
+#endif // LINK_RAW_HPP_

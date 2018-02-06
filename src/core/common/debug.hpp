@@ -48,10 +48,7 @@
 
 #include <wdm.h>
 
-#define assert(exp) \
-    ((!(exp)) ? \
-        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
-        TRUE)
+#define assert(exp) ((!(exp)) ? (RtlAssert(#exp, __FILE__, __LINE__, NULL), FALSE) : TRUE)
 
 #elif defined(_WIN32)
 
@@ -61,23 +58,31 @@
 
 #include "openthread/platform/misc.h"
 
-#define assert(cond)                            \
-  do {                                          \
-    if (!(cond)) {                              \
-      otPlatAssertFail(__FILE__, __LINE__);     \
-      while (1) {}                              \
-    }                                           \
-  } while (0)
+#define assert(cond)                              \
+    do                                            \
+    {                                             \
+        if (!(cond))                              \
+        {                                         \
+            otPlatAssertFail(__FILE__, __LINE__); \
+            while (1)                             \
+            {                                     \
+            }                                     \
+        }                                         \
+    } while (0)
 
 #else
 
-#define assert(cond)                            \
-  do {                                          \
-    if (!(cond)) {                              \
-      while (1) {}                              \
-    }                                           \
-  } while (0)
+#define assert(cond)  \
+    do                \
+    {                 \
+        if (!(cond))  \
+        {             \
+            while (1) \
+            {         \
+            }         \
+        }             \
+    } while (0)
 
 #endif
 
-#endif  // DEBUG_HPP_
+#endif // DEBUG_HPP_

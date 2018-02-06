@@ -74,7 +74,6 @@ OT_TOOL_PACKED_BEGIN
 class Header
 {
 public:
-
     /**
      * Default constructor for DNS Header.
      *
@@ -103,7 +102,7 @@ public:
      */
     enum Type
     {
-        kTypeQuery = 0,
+        kTypeQuery    = 0,
         kTypeResponse = 1,
     };
 
@@ -120,7 +119,8 @@ public:
      * @param[in]  aType The type of the message.
      *
      */
-    void SetType(Type aType) {
+    void SetType(Type aType)
+    {
         mFlags[0] &= ~kQrFlagMask;
         mFlags[0] |= static_cast<uint8_t>(aType) << kQrFlagOffset;
     }
@@ -151,7 +151,8 @@ public:
      * @param[in]  aType The type of the query.
      *
      */
-    void SetQueryType(QueryType aType) {
+    void SetQueryType(QueryType aType)
+    {
         mFlags[0] &= ~kOpCodeMask;
         mFlags[0] |= static_cast<uint8_t>(aType) << kOpCodeOffset;
     }
@@ -266,7 +267,8 @@ public:
      * @param[in]  aResponse The type of the response.
      *
      */
-    void SetResponseCode(Response aResponse) {
+    void SetResponseCode(Response aResponse)
+    {
         mFlags[1] &= ~kRCodeMask;
         mFlags[1] |= static_cast<uint8_t>(aResponse) << kRCodeOffset;
     }
@@ -342,29 +344,30 @@ private:
      */
     enum
     {
-        kQrFlagOffset = 7,                       ///< QR Flag offset.
-        kQrFlagMask   = 0x01 << kQrFlagOffset,   ///< QR Flag mask.
-        kOpCodeOffset = 3,                       ///< OpCode field offset.
-        kOpCodeMask   = 0x0f << kOpCodeOffset,   ///< OpCode field mask.
-        kAaFlagOffset = 2,                       ///< AA Flag offset.
-        kAaFlagMask   = 0x01 << kAaFlagOffset,   ///< AA Flag mask.
-        kTcFlagOffset = 1,                       ///< TC Flag offset.
-        kTcFlagMask   = 0x01 << kTcFlagOffset,   ///< TC Flag mask.
-        kRdFlagOffset = 0,                       ///< RD Flag offset.
-        kRdFlagMask   = 0x01 << kRdFlagOffset,   ///< RD Flag mask.
+        kQrFlagOffset = 7,                     ///< QR Flag offset.
+        kQrFlagMask   = 0x01 << kQrFlagOffset, ///< QR Flag mask.
+        kOpCodeOffset = 3,                     ///< OpCode field offset.
+        kOpCodeMask   = 0x0f << kOpCodeOffset, ///< OpCode field mask.
+        kAaFlagOffset = 2,                     ///< AA Flag offset.
+        kAaFlagMask   = 0x01 << kAaFlagOffset, ///< AA Flag mask.
+        kTcFlagOffset = 1,                     ///< TC Flag offset.
+        kTcFlagMask   = 0x01 << kTcFlagOffset, ///< TC Flag mask.
+        kRdFlagOffset = 0,                     ///< RD Flag offset.
+        kRdFlagMask   = 0x01 << kRdFlagOffset, ///< RD Flag mask.
 
-        kRaFlagOffset = 7,                       ///< RA Flag offset.
-        kRaFlagMask   = 0x01 << kRaFlagOffset,   ///< RA Flag mask.
-        kRCodeOffset  = 0,                       ///< RCODE field offset.
-        kRCodeMask    = 0x0f << kRCodeOffset,    ///< RCODE field mask.
+        kRaFlagOffset = 7,                     ///< RA Flag offset.
+        kRaFlagMask   = 0x01 << kRaFlagOffset, ///< RA Flag mask.
+        kRCodeOffset  = 0,                     ///< RCODE field offset.
+        kRCodeMask    = 0x0f << kRCodeOffset,  ///< RCODE field mask.
     };
 
-    uint16_t mMessageId;  ///< A message identifier that is used by the requester to match up replies to outstanding queries.
-    uint8_t  mFlags[2];   ///< DNS header flags.
-    uint16_t mQdCount;    ///< A number specifying the number of entries in the question section.
-    uint16_t mAnCount;    ///< A number specifying the number of entries in the answer section.
-    uint16_t mNsCount;    ///< A number specifying the number of entries in the authority records section.
-    uint16_t mArCount;    ///< A number specifying the number of entries in the additional records section.
+    uint16_t
+             mMessageId; ///< A message identifier that is used by the requester to match up replies to outstanding queries.
+    uint8_t  mFlags[2]; ///< DNS header flags.
+    uint16_t mQdCount;  ///< A number specifying the number of entries in the question section.
+    uint16_t mAnCount;  ///< A number specifying the number of entries in the answer section.
+    uint16_t mNsCount;  ///< A number specifying the number of entries in the authority records section.
+    uint16_t mArCount;  ///< A number specifying the number of entries in the additional records section.
 
 } OT_TOOL_PACKED_END;
 
@@ -437,10 +440,10 @@ public:
     void SetLength(uint16_t aLength) { mLength = HostSwap16(aLength); }
 
 private:
-    uint16_t mType;    ///< The type of the data in RDATA section.
-    uint16_t mClass;   ///< The class of the data in RDATA section.
-    uint32_t mTtl;     ///< Specifies the maximum time that the resource record may be cached.
-    uint16_t mLength;  ///< The length of RDATA section in bytes.
+    uint16_t mType;   ///< The type of the data in RDATA section.
+    uint16_t mClass;  ///< The class of the data in RDATA section.
+    uint32_t mTtl;    ///< Specifies the maximum time that the resource record may be cached.
+    uint16_t mLength; ///< The length of RDATA section in bytes.
 
 } OT_TOOL_PACKED_END;
 
@@ -449,21 +452,22 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ResourceRecordAaaa: public ResourceRecord
+class ResourceRecordAaaa : public ResourceRecord
 {
 public:
     enum
     {
-        kType   = 0x1C,  ///< AAAA Resource Record type.
-        kClass  = 0x01,  ///< The value of the Internet class.
-        kLength = 16,    ///< Size of the AAAA Resource Record type.
+        kType   = 0x1C, ///< AAAA Resource Record type.
+        kClass  = 0x01, ///< The value of the Internet class.
+        kLength = 16,   ///< Size of the AAAA Resource Record type.
     };
 
     /**
      * This method initializes the AAAA Resource Record.
      *
      */
-    void Init(void) {
+    void Init(void)
+    {
         ResourceRecord::SetType(kType);
         ResourceRecord::SetClass(kClass);
         ResourceRecord::SetTtl(0);
@@ -487,7 +491,7 @@ public:
     otIp6Address &GetAddress(void) { return mAddress; }
 
 private:
-    otIp6Address mAddress;  ///< Ipv6 Address of AAAA Resource Record.
+    otIp6Address mAddress; ///< Ipv6 Address of AAAA Resource Record.
 
 } OT_TOOL_PACKED_END;
 
@@ -503,7 +507,8 @@ public:
      * Constructor for Question.
      *
      */
-    Question(uint16_t aType, uint16_t aClass) {
+    Question(uint16_t aType, uint16_t aClass)
+    {
         SetType(aType);
         SetClass(aClass);
     };
@@ -539,30 +544,30 @@ public:
     void SetClass(uint16_t aClass) { mClass = HostSwap16(aClass); }
 
 private:
-    uint16_t mType;      ///< The type of the data in question section.
-    uint16_t mClass;     ///< The class of the data in question section.
+    uint16_t mType;  ///< The type of the data in question section.
+    uint16_t mClass; ///< The class of the data in question section.
 
 } OT_TOOL_PACKED_END;
-
 
 /**
  * This class implements Question format of AAAA type.
  *
  */
-class QuestionAaaa: public Question
+class QuestionAaaa : public Question
 {
 public:
     enum
     {
-        kType  = 0x1C,  ///< AAAA Resource Record type.
-        kClass = 0x01,  ///< The value of the Internet class.
+        kType  = 0x1C, ///< AAAA Resource Record type.
+        kClass = 0x01, ///< The value of the Internet class.
     };
 
     /**
      * Default constructor for AAAA Question.
      *
      */
-    QuestionAaaa(void) : Question(kType, kClass) {};
+    QuestionAaaa(void)
+        : Question(kType, kClass){};
 
     /**
      * This method appends request data to the message.
@@ -573,10 +578,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const {
-        return aMessage.Append(this, sizeof(*this));
-    };
-
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
 };
 
 /**
@@ -584,7 +586,7 @@ public:
  *
  */
 
-}  // namespace Dns
-}  // namespace ot
+} // namespace Dns
+} // namespace ot
 
-#endif  // DNS_HEADER_HPP_
+#endif // DNS_HEADER_HPP_

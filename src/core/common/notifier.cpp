@@ -41,18 +41,18 @@
 
 namespace ot {
 
-Notifier::Callback::Callback(Handler aHandler, void *aOwner):
-    OwnerLocator(aOwner),
-    mHandler(aHandler),
-    mNext(this)
+Notifier::Callback::Callback(Handler aHandler, void *aOwner)
+    : OwnerLocator(aOwner)
+    , mHandler(aHandler)
+    , mNext(this)
 {
 }
 
-Notifier::Notifier(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mFlags(0),
-    mTask(aInstance, &Notifier::HandleStateChanged, this),
-    mCallbacks(NULL)
+Notifier::Notifier(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mFlags(0)
+    , mTask(aInstance, &Notifier::HandleStateChanged, this)
+    , mCallbacks(NULL)
 {
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -68,7 +68,7 @@ otError Notifier::RegisterCallback(Callback &aCallback)
     VerifyOrExit(aCallback.mNext == &aCallback, error = OT_ERROR_ALREADY);
 
     aCallback.mNext = mCallbacks;
-    mCallbacks = &aCallback;
+    mCallbacks      = &aCallback;
 
 exit:
     return error;
@@ -99,7 +99,7 @@ exit:
 
 otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    otError error = OT_ERROR_NONE;
+    otError           error          = OT_ERROR_NONE;
     ExternalCallback *unusedCallback = NULL;
 
     VerifyOrExit(aCallback != NULL);
@@ -197,10 +197,10 @@ exit:
 void Notifier::LogChangedFlags(uint32_t aFlags) const
 {
     uint32_t flags = aFlags;
-    char stringBuffer[kFlagsStringBufferSize];
-    char *buf = stringBuffer;
-    int len = sizeof(stringBuffer) - 1;
-    int charsWritten;
+    char     stringBuffer[kFlagsStringBufferSize];
+    char *   buf = stringBuffer;
+    int      len = sizeof(stringBuffer) - 1;
+    int      charsWritten;
 
     for (uint8_t bit = 0; bit < 32; bit++)
     {
@@ -342,4 +342,4 @@ const char *Notifier::FlagToString(uint32_t aFlag) const
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-}  // namespace ot
+} // namespace ot

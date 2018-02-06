@@ -42,8 +42,8 @@
 #include "em_chip.h"
 #include "hal_common.h"
 
-#include "platform-efr32.h"
 #include "openthread-core-efr32-config.h"
+#include "platform-efr32.h"
 
 void halInitChipSpecific(void);
 

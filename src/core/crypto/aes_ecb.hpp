@@ -57,7 +57,7 @@ class AesEcb
 public:
     enum
     {
-        kBlockSize = 16,  ///< AES-128 block size (bytes).
+        kBlockSize = 16, ///< AES-128 block size (bytes).
     };
 
     /**
@@ -99,7 +99,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
-#endif  // AES_ECB_HPP_
+#endif // AES_ECB_HPP_

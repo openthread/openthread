@@ -50,19 +50,19 @@
 
 namespace ot {
 
-DataPollManager::DataPollManager(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mTimerStartTime(0),
-    mExternalPollPeriod(0),
-    mPollPeriod(0),
-    mTimer(aInstance, &DataPollManager::HandlePollTimer, this),
-    mEnabled(false),
-    mAttachMode(false),
-    mRetxMode(false),
-    mNoBufferRetxMode(false),
-    mPollTimeoutCounter(0),
-    mPollTxFailureCounter(0),
-    mRemainingFastPolls(0)
+DataPollManager::DataPollManager(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimerStartTime(0)
+    , mExternalPollPeriod(0)
+    , mPollPeriod(0)
+    , mTimer(aInstance, &DataPollManager::HandlePollTimer, this)
+    , mEnabled(false)
+    , mAttachMode(false)
+    , mRetxMode(false)
+    , mNoBufferRetxMode(false)
+    , mPollTimeoutCounter(0)
+    , mPollTxFailureCounter(0)
+    , mRemainingFastPolls(0)
 {
 }
 
@@ -71,8 +71,7 @@ otError DataPollManager::StartPolling(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit((GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0,
-                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit((GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0, error = OT_ERROR_INVALID_STATE);
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
@@ -84,21 +83,21 @@ exit:
 void DataPollManager::StopPolling(void)
 {
     mTimer.Stop();
-    mAttachMode = false;
-    mRetxMode = false;
-    mNoBufferRetxMode = false;
-    mPollTimeoutCounter = 0;
+    mAttachMode           = false;
+    mRetxMode             = false;
+    mNoBufferRetxMode     = false;
+    mPollTimeoutCounter   = 0;
     mPollTxFailureCounter = 0;
-    mRemainingFastPolls = 0;
-    mEnabled = false;
+    mRemainingFastPolls   = 0;
+    mEnabled              = false;
 }
 
 otError DataPollManager::SendDataPoll(void)
 {
     ThreadNetif &netif = GetNetif();
-    otError error;
-    Message *message;
-    Neighbor *parent;
+    otError      error;
+    Message *    message;
+    Neighbor *   parent;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!netif.GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
@@ -209,8 +208,8 @@ void DataPollManager::HandlePollSent(otError aError)
 
         if (mRetxMode == true)
         {
-            mRetxMode = false;
-            mPollTxFailureCounter = 0;
+            mRetxMode                   = false;
+            mPollTxFailureCounter       = 0;
             shouldRecalculatePollPeriod = true;
         }
 
@@ -221,21 +220,21 @@ void DataPollManager::HandlePollSent(otError aError)
     default:
         mPollTxFailureCounter++;
 
-        otLogInfoMac(GetInstance(), "Failed to send data poll, error:%s, retx:%d/%d",
-                     otThreadErrorToString(aError), mPollTxFailureCounter, kMaxPollRetxAttempts);
+        otLogInfoMac(GetInstance(), "Failed to send data poll, error:%s, retx:%d/%d", otThreadErrorToString(aError),
+                     mPollTxFailureCounter, kMaxPollRetxAttempts);
 
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
         {
             if (mRetxMode == false)
             {
-                mRetxMode = true;
+                mRetxMode                   = true;
                 shouldRecalculatePollPeriod = true;
             }
         }
         else
         {
-            mRetxMode = false;
-            mPollTxFailureCounter = 0;
+            mRetxMode                   = false;
+            mPollTxFailureCounter       = 0;
             shouldRecalculatePollPeriod = true;
         }
 
@@ -420,4 +419,4 @@ uint32_t DataPollManager::GetDefaultPollPeriod(void) const
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 
-}  // namespace ot
+} // namespace ot

@@ -67,8 +67,8 @@ inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHe
  */
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 
-}  // namespace MeshCoP
+} // namespace MeshCoP
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // MESHCOP_HPP_
+#endif // MESHCOP_HPP_

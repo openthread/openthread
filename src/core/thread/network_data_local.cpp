@@ -45,21 +45,20 @@
 namespace ot {
 namespace NetworkData {
 
-Local::Local(Instance &aInstance):
-    NetworkData(aInstance, true),
-    mOldRloc(Mac::kShortAddrInvalid)
+Local::Local(Instance &aInstance)
+    : NetworkData(aInstance, true)
+    , mOldRloc(Mac::kShortAddrInvalid)
 {
 }
 
-otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf,
-                               uint8_t aFlags, bool aStable)
+otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags, bool aStable)
 {
-    otError error = OT_ERROR_NONE;
-    PrefixTlv *prefixTlv;
+    otError          error = OT_ERROR_NONE;
+    PrefixTlv *      prefixTlv;
     BorderRouterTlv *brTlv;
 
-    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, GetNetif().GetMle().GetMeshLocalPrefix(),
-                                           (aPrefixLength + 7) / 8) < Ip6::Address::kMeshLocalPrefixLength,
+    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, GetNetif().GetMle().GetMeshLocalPrefix(), (aPrefixLength + 7) / 8) <
+                     Ip6::Address::kMeshLocalPrefixLength,
                  error = OT_ERROR_INVALID_ARGS);
 
     RemoveOnMeshPrefix(aPrefix, aPrefixLength);
@@ -93,7 +92,7 @@ exit:
 
 otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
     PrefixTlv *tlv;
 
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
@@ -108,7 +107,7 @@ exit:
 
 otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable)
 {
-    PrefixTlv *prefixTlv;
+    PrefixTlv *  prefixTlv;
     HasRouteTlv *hasRouteTlv;
 
     RemoveHasRoutePrefix(aPrefix, aPrefixLength);
@@ -139,7 +138,7 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
 
 otError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
     PrefixTlv *tlv;
 
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
@@ -153,16 +152,19 @@ exit:
 }
 
 #if OPENTHREAD_ENABLE_SERVICE
-otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
-                          bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength)
+otError Local::AddService(uint32_t       aEnterpriseNumber,
+                          const uint8_t *aServiceData,
+                          uint8_t        aServiceDataLength,
+                          bool           aServerStable,
+                          const uint8_t *aServerData,
+                          uint8_t        aServerDataLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     ServiceTlv *serviceTlv;
-    ServerTlv *serverTlv;
-    uint8_t serviceTlvLength = (sizeof(ServiceTlv) - sizeof(NetworkDataTlv)) + aServiceDataLength +
-                               sizeof(uint8_t)/*mServiceDataLength*/ +
-                               ServiceTlv::GetEnterpriseNumberFieldLength(aEnterpriseNumber) +
-                               aServerDataLength + sizeof(ServerTlv);
+    ServerTlv * serverTlv;
+    uint8_t     serviceTlvLength =
+        (sizeof(ServiceTlv) - sizeof(NetworkDataTlv)) + aServiceDataLength + sizeof(uint8_t) /*mServiceDataLength*/ +
+        ServiceTlv::GetEnterpriseNumberFieldLength(aEnterpriseNumber) + aServerDataLength + sizeof(ServerTlv);
 
     RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
 
@@ -194,13 +196,13 @@ otError Local::AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceDat
 
     otDumpDebgNetData(GetInstance(), "add service done", mTlvs, mLength);
 
-//exit:
+    // exit:
     return error;
 }
 
 otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     ServiceTlv *tlv;
 
     VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
@@ -216,9 +218,8 @@ exit:
 
 otError Local::UpdateRloc(void)
 {
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {
@@ -336,18 +337,16 @@ bool Local::IsServiceConsistent(void)
 
 otError Local::SendServerDataNotification(void)
 {
-    ThreadNetif &netif = GetNetif();
-    Mle::MleRouter &mle = netif.GetMle();
-    otError error = OT_ERROR_NONE;
-    uint16_t rloc = mle.GetRloc16();
+    ThreadNetif &   netif = GetNetif();
+    Mle::MleRouter &mle   = netif.GetMle();
+    otError         error = OT_ERROR_NONE;
+    uint16_t        rloc  = mle.GetRloc16();
 
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if ((mle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
-        (mle.IsRouterRoleEnabled()) &&
-        (mle.GetRole() < OT_DEVICE_ROLE_ROUTER) &&
-        (mle.GetActiveRouterCount() < mle.GetRouterUpgradeThreshold()))
+    if ((mle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 && (mle.IsRouterRoleEnabled()) &&
+        (mle.GetRole() < OT_DEVICE_ROLE_ROUTER) && (mle.GetActiveRouterCount() < mle.GetRouterUpgradeThreshold()))
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);
     }
@@ -357,8 +356,8 @@ otError Local::SendServerDataNotification(void)
     UpdateRloc();
 
 #if OPENTHREAD_ENABLE_SERVICE
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() ||
-                 !IsServiceConsistent(), ClearResubmitDelayTimer());
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() || !IsServiceConsistent(),
+                 ClearResubmitDelayTimer());
 #else
     VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), ClearResubmitDelayTimer());
 #endif
@@ -375,7 +374,7 @@ exit:
     return error;
 }
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE

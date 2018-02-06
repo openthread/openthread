@@ -33,7 +33,6 @@
 
 #if OPENTHREAD_FTD
 
-
 #define WPP_NAME "network_data_leader_ftd.tmh"
 
 #include "network_data_leader.hpp"
@@ -62,12 +61,12 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace NetworkData {
 
-Leader::Leader(Instance &aInstance):
-    LeaderBase(aInstance),
-    mTimer(aInstance, &Leader::HandleTimer, this),
-    mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this),
-    mCommissioningDataGet(OT_URI_PATH_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this),
-    mCommissioningDataSet(OT_URI_PATH_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)
+Leader::Leader(Instance &aInstance)
+    : LeaderBase(aInstance)
+    , mTimer(aInstance, &Leader::HandleTimer, this)
+    , mServerData(OT_URI_PATH_SERVER_DATA, &Leader::HandleServerData, this)
+    , mCommissioningDataGet(OT_URI_PATH_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this)
+    , mCommissioningDataSet(OT_URI_PATH_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)
 {
     Reset();
 }
@@ -77,7 +76,7 @@ void Leader::Reset(void)
     LeaderBase::Reset();
 
     memset(mContextLastUsed, 0, sizeof(mContextLastUsed));
-    mContextUsed = 0;
+    mContextUsed         = 0;
     mContextIdReuseDelay = kContextIdReuseDelay;
 }
 
@@ -129,7 +128,7 @@ otError Leader::SetContextIdReuseDelay(uint32_t aDelay)
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16)
 {
-    bool rlocIn = false;
+    bool rlocIn     = false;
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
@@ -149,19 +148,20 @@ exit:
     return;
 }
 
-void Leader::HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void Leader::HandleServerData(void *               aContext,
+                              otCoapHeader *       aHeader,
+                              otMessage *          aMessage,
                               const otMessageInfo *aMessageInfo)
 {
-    static_cast<Leader *>(aContext)->HandleServerData(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Leader *>(aContext)->HandleServerData(*static_cast<Coap::Header *>(aHeader),
+                                                      *static_cast<Message *>(aMessage),
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
-                              const Ip6::MessageInfo &aMessageInfo)
+void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetworkDataTlv networkData;
-    ThreadRloc16Tlv rloc16;
+    ThreadRloc16Tlv      rloc16;
 
     otLogInfoNetData(GetInstance(), "Received network data registration");
 
@@ -171,12 +171,11 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
         RemoveBorderRouter(rloc16.GetRloc16());
     }
 
-    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
-        OT_ERROR_NONE)
+    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
     {
         VerifyOrExit(networkData.IsValid());
-        RegisterNetworkData(HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]),
-                            networkData.GetTlvs(), networkData.GetLength());
+        RegisterNetworkData(HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]), networkData.GetTlvs(),
+                            networkData.GetLength());
     }
 
     SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, aMessageInfo));
@@ -187,23 +186,25 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void Leader::HandleCommissioningSet(void *               aContext,
+                                    otCoapHeader *       aHeader,
+                                    otMessage *          aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
-    static_cast<Leader *>(aContext)->HandleCommissioningSet(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Leader *>(aContext)->HandleCommissioningSet(*static_cast<Coap::Header *>(aHeader),
+                                                            *static_cast<Message *>(aMessage),
+                                                            *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
-    uint8_t tlvs[NetworkData::kMaxSize];
-    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kReject;
-    bool hasSessionId = false;
-    bool hasValidTlv = false;
-    uint16_t sessionId = 0;
+    uint16_t                 offset = aMessage.GetOffset();
+    uint16_t                 length = aMessage.GetLength() - aMessage.GetOffset();
+    uint8_t                  tlvs[NetworkData::kMaxSize];
+    MeshCoP::StateTlv::State state        = MeshCoP::StateTlv::kReject;
+    bool                     hasSessionId = false;
+    bool                     hasValidTlv  = false;
+    uint16_t                 sessionId    = 0;
 
     MeshCoP::Tlv *cur;
     MeshCoP::Tlv *end;
@@ -239,7 +240,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
             MeshCoP::CommissionerSessionIdTlv *tlv = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur);
 
             VerifyOrExit(tlv->IsValid());
-            sessionId = tlv->GetCommissionerSessionId();
+            sessionId    = tlv->GetCommissionerSessionId();
             hasSessionId = true;
         }
         else
@@ -258,8 +259,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
 
     // Find Commissioning Data TLV
     for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         netDataTlv < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         netDataTlv = netDataTlv->GetNext())
+         netDataTlv < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); netDataTlv = netDataTlv->GetNext())
     {
         if (netDataTlv->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
@@ -297,20 +297,22 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void Leader::HandleCommissioningGet(void *               aContext,
+                                    otCoapHeader *       aHeader,
+                                    otMessage *          aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
-    static_cast<Leader *>(aContext)->HandleCommissioningGet(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Leader *>(aContext)->HandleCommissioningGet(*static_cast<Coap::Header *>(aHeader),
+                                                            *static_cast<Message *>(aMessage),
+                                                            *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Leader::HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     MeshCoP::Tlv tlv;
-    uint16_t offset = aMessage.GetOffset();
-    uint8_t tlvs[NetworkData::kMaxSize];
-    uint8_t length = 0;
+    uint16_t     offset = aMessage.GetOffset();
+    uint8_t      tlvs[NetworkData::kMaxSize];
+    uint8_t      length = 0;
 
     while (offset < aMessage.GetLength())
     {
@@ -329,16 +331,18 @@ void Leader::HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, co
     SendCommissioningGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
-void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                          uint8_t *aTlvs, uint8_t aLength)
+void Leader::SendCommissioningGetResponse(const Coap::Header &    aRequestHeader,
+                                          const Ip6::MessageInfo &aMessageInfo,
+                                          uint8_t *               aTlvs,
+                                          uint8_t                 aLength)
 {
     ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     Coap::Header responseHeader;
-    Message *message;
-    uint8_t index;
-    uint8_t *data = NULL;
-    uint8_t length = 0;
+    Message *    message;
+    uint8_t      index;
+    uint8_t *    data   = NULL;
+    uint8_t      length = 0;
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
@@ -346,13 +350,12 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap(), responseHeader)) != NULL,
                  error = OT_ERROR_NO_BUFS);
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
     {
         if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
-            data = cur->GetValue();
+            data   = cur->GetValue();
             length = cur->GetLength();
             break;
         }
@@ -368,9 +371,8 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
     {
         for (index = 0; index < aLength; index++)
         {
-            for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(data);
-                 cur < reinterpret_cast<MeshCoP::Tlv *>(data + length);
-                 cur = cur->GetNext())
+            for (MeshCoP::Tlv *cur                                          = reinterpret_cast<MeshCoP::Tlv *>(data);
+                 cur < reinterpret_cast<MeshCoP::Tlv *>(data + length); cur = cur->GetNext())
             {
                 if (cur->GetType() == aTlvs[index])
                 {
@@ -399,13 +401,14 @@ exit:
     }
 }
 
-void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+void Leader::SendCommissioningSetResponse(const Coap::Header &     aRequestHeader,
+                                          const Ip6::MessageInfo & aMessageInfo,
                                           MeshCoP::StateTlv::State aState)
 {
-    ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
-    Coap::Header responseHeader;
-    Message *message;
+    ThreadNetif &     netif = GetNetif();
+    otError           error = OT_ERROR_NONE;
+    Coap::Header      responseHeader;
+    Message *         message;
     MeshCoP::StateTlv state;
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
@@ -432,19 +435,19 @@ exit:
 
 otError Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
-    otError error = OT_ERROR_NONE;
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
-    NetworkDataTlv *subCur;
-    NetworkDataTlv *subEnd;
-    PrefixTlv *prefix;
-    BorderRouterTlv *borderRouter;
-    HasRouteTlv *hasRoute;
+    otError            error = OT_ERROR_NONE;
+    NetworkDataTlv *   cur   = reinterpret_cast<NetworkDataTlv *>(aTlvs);
+    NetworkDataTlv *   end   = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    NetworkDataTlv *   subCur;
+    NetworkDataTlv *   subEnd;
+    PrefixTlv *        prefix;
+    BorderRouterTlv *  borderRouter;
+    HasRouteTlv *      hasRoute;
     BorderRouterEntry *borderRouterEntry;
-    HasRouteEntry *hasRouteEntry;
+    HasRouteEntry *    hasRouteEntry;
 #if OPENTHREAD_ENABLE_SERVICE
     ServiceTlv *service;
-    ServerTlv *server;
+    ServerTlv * server;
 #endif
 
     while (cur < end)
@@ -587,9 +590,9 @@ exit:
 
 bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength)
 {
-    bool rval = false;
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    bool            rval = false;
+    NetworkDataTlv *cur  = reinterpret_cast<NetworkDataTlv *>(aTlvs);
+    NetworkDataTlv *end  = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
 #if OPENTHREAD_ENABLE_SERVICE
     ServiceTlv *service;
 #endif
@@ -602,15 +605,15 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
-            ContextTlv *context = FindContext(*prefix);
+            PrefixTlv *      prefix       = static_cast<PrefixTlv *>(cur);
+            ContextTlv *     context      = FindContext(*prefix);
             BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, true);
-            HasRouteTlv *hasRoute = FindHasRoute(*prefix, true);
+            HasRouteTlv *    hasRoute     = FindHasRoute(*prefix, true);
 
             if (cur->IsStable() && (!context || borderRouter))
             {
-                PrefixTlv *prefixBase = FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(),
-                                                   aTlvsBase, aTlvsBaseLength);
+                PrefixTlv *prefixBase =
+                    FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvsBase, aTlvsBaseLength);
 
                 if (!prefixBase)
                 {
@@ -621,8 +624,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                 {
                     BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
 
-                    if (!borderRouterBase ||
-                        memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
+                    if (!borderRouterBase || memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
                     {
                         ExitNow(rval = true);
                     }
@@ -653,8 +655,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                 NetworkDataTlv *endInner;
 
                 ServiceTlv *serviceBase = FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
-                                                      service->GetServiceDataLength(),
-                                                      aTlvsBase, aTlvsBaseLength);
+                                                      service->GetServiceDataLength(), aTlvsBase, aTlvsBaseLength);
 
                 if (!serviceBase || !serviceBase->IsStable())
                 {
@@ -672,8 +673,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                         {
                         case NetworkDataTlv::kTypeServer:
                         {
-                            bool foundInBase = false;
-                            ServerTlv *server = reinterpret_cast<ServerTlv *>(curInner);
+                            bool       foundInBase = false;
+                            ServerTlv *server      = reinterpret_cast<ServerTlv *>(curInner);
 
                             NetworkDataTlv *curServerBase = service->GetSubTlvs();
                             NetworkDataTlv *endServerBase = service->GetNext();
@@ -682,9 +683,10 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                             {
                                 ServerTlv *serverBase = reinterpret_cast<ServerTlv *>(curServerBase);
 
-                                if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16())
-                                    && (server->GetServerDataLength() == serverBase->GetServerDataLength())
-                                    && (memcmp(server->GetServerData(), serverBase->GetServerData(), server->GetServerDataLength()) == 0))
+                                if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
+                                    (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
+                                    (memcmp(server->GetServerData(), serverBase->GetServerData(),
+                                            server->GetServerDataLength()) == 0))
                                 {
                                     foundInBase = true;
                                     break;
@@ -726,10 +728,10 @@ exit:
 
 otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
-    otError error = OT_ERROR_NONE;
-    bool rlocIn = false;
-    bool rlocStable = false;
-    bool stableUpdated = false;
+    otError error         = OT_ERROR_NONE;
+    bool    rlocIn        = false;
+    bool    rlocStable    = false;
+    bool    stableUpdated = false;
     uint8_t oldTlvs[NetworkData::kMaxSize];
     uint8_t oldTlvsLength = NetworkData::kMaxSize;
 
@@ -737,8 +739,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
 
     if (rlocIn)
     {
-        if (IsStableUpdated(aTlvs, aTlvsLength, mTlvs, mLength) ||
-            IsStableUpdated(mTlvs, mLength, aTlvs, aTlvsLength))
+        if (IsStableUpdated(aTlvs, aTlvsLength, mTlvs, mLength) || IsStableUpdated(mTlvs, mLength, aTlvs, aTlvsLength))
         {
             stableUpdated = true;
         }
@@ -779,9 +780,9 @@ exit:
 
 otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
-    otError error = OT_ERROR_NONE;
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    otError         error = OT_ERROR_NONE;
+    NetworkDataTlv *cur   = reinterpret_cast<NetworkDataTlv *>(aTlvs);
+    NetworkDataTlv *end   = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
 
     while (cur < end)
     {
@@ -822,7 +823,7 @@ exit:
 
 otError Leader::AddPrefix(PrefixTlv &aPrefix)
 {
-    otError error = OT_ERROR_NONE;
+    otError         error = OT_ERROR_NONE;
     NetworkDataTlv *cur;
     NetworkDataTlv *end;
 
@@ -858,7 +859,7 @@ exit:
 #if OPENTHREAD_ENABLE_SERVICE
 otError Leader::AddService(ServiceTlv &aService, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError         error = OT_ERROR_NONE;
     NetworkDataTlv *cur;
     NetworkDataTlv *end;
 
@@ -890,10 +891,10 @@ exit:
 
 otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
 {
-    otError error = OT_ERROR_NONE;
-    PrefixTlv *dstPrefix = NULL;
-    HasRouteTlv *dstHasRoute = NULL;
-    uint16_t appendLength = 0;
+    otError      error        = OT_ERROR_NONE;
+    PrefixTlv *  dstPrefix    = NULL;
+    HasRouteTlv *dstHasRoute  = NULL;
+    uint16_t     appendLength = 0;
 
     VerifyOrExit(aHasRoute.GetNumEntries() > 0, error = OT_ERROR_PARSE);
 
@@ -944,8 +945,7 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
     Insert(reinterpret_cast<uint8_t *>(dstHasRoute->GetNext()), sizeof(HasRouteEntry));
     dstHasRoute->SetLength(dstHasRoute->GetLength() + sizeof(HasRouteEntry));
     dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(HasRouteEntry));
-    memcpy(dstHasRoute->GetEntry(dstHasRoute->GetNumEntries() - 1), aHasRoute.GetEntry(0),
-           sizeof(HasRouteEntry));
+    memcpy(dstHasRoute->GetEntry(dstHasRoute->GetNumEntries() - 1), aHasRoute.GetEntry(0), sizeof(HasRouteEntry));
 
 exit:
     return error;
@@ -954,17 +954,18 @@ exit:
 #if OPENTHREAD_ENABLE_SERVICE
 otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
-    otError error = OT_ERROR_NONE;
-    ServiceTlv *dstService = NULL;
-    ServiceTlv *oldService = NULL;
-    ServerTlv *dstServer = NULL;
-    uint16_t appendLength = 0;
-    uint8_t serviceID = 0;
-    uint8_t serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t)/*mServiceDataLength*/ +
+    otError     error               = OT_ERROR_NONE;
+    ServiceTlv *dstService          = NULL;
+    ServiceTlv *oldService          = NULL;
+    ServerTlv * dstServer           = NULL;
+    uint16_t    appendLength        = 0;
+    uint8_t     serviceID           = 0;
+    uint8_t     serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t) /*mServiceDataLength*/ +
                                   ServiceTlv::GetEnterpriseNumberFieldLength(aService.GetEnterpriseNumber()) +
                                   aService.GetServiceDataLength();
 
-    dstService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
+    dstService =
+        FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
 
     if (dstService == NULL)
     {
@@ -978,22 +979,22 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
     if (dstService == NULL)
     {
         // Try to preserve old Service ID, if existing
-        oldService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength(),
-                                 aOldTlvs, aOldTlvsLength);
+        oldService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(),
+                                 aService.GetServiceDataLength(), aOldTlvs, aOldTlvsLength);
 
         if (oldService != NULL)
         {
-            // The same service is not found in current data, but was in old data. So, it had to be just removed by RemoveRloc()
-            // Lets use the same ServiceID
+            // The same service is not found in current data, but was in old data. So, it had to be just removed by
+            // RemoveRloc() Lets use the same ServiceID
             serviceID = oldService->GetServiceID();
         }
         else
         {
             uint8_t i;
 
-            // This seems like completely new service. Lets try to find new ServiceID for it. If all are taken, error out.
-            // Since we call FindServiceById() on mTlv, we need to execute this before Insert() call, otherwise we'll find
-            // uninitialized service as well.
+            // This seems like completely new service. Lets try to find new ServiceID for it. If all are taken, error
+            // out. Since we call FindServiceById() on mTlv, we need to execute this before Insert() call, otherwise
+            // we'll find uninitialized service as well.
             for (i = Mle::kServiceMinId; i <= Mle::kServiceMaxId; i++)
             {
                 if (FindServiceById(i) == NULL)
@@ -1038,9 +1039,9 @@ exit:
 
 ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-    ServiceTlv *compare = NULL;
+    NetworkDataTlv *cur     = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+    NetworkDataTlv *end     = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    ServiceTlv *    compare = NULL;
 
     while (cur < end)
     {
@@ -1066,18 +1067,18 @@ exit:
 
 otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter)
 {
-    otError error = OT_ERROR_NONE;
-    PrefixTlv *dstPrefix = NULL;
-    ContextTlv *dstContext = NULL;
+    otError          error           = OT_ERROR_NONE;
+    PrefixTlv *      dstPrefix       = NULL;
+    ContextTlv *     dstContext      = NULL;
     BorderRouterTlv *dstBorderRouter = NULL;
-    int contextId = -1;
-    uint16_t appendLength = 0;
+    int              contextId       = -1;
+    uint16_t         appendLength    = 0;
 
     VerifyOrExit(aBorderRouter.GetNumEntries() > 0, error = OT_ERROR_PARSE);
 
     if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) != NULL)
     {
-        dstContext = FindContext(*dstPrefix);
+        dstContext      = FindContext(*dstPrefix);
         dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable());
     }
 
@@ -1184,9 +1185,9 @@ otError Leader::FreeContext(uint8_t aContextId)
 
 otError Leader::SendServerDataNotification(uint16_t aRloc16)
 {
-    otError error = OT_ERROR_NONE;
-    bool rlocIn = false;
-    bool rlocStable = false;
+    otError error      = OT_ERROR_NONE;
+    bool    rlocIn     = false;
+    bool    rlocStable = false;
 
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
@@ -1202,7 +1203,7 @@ otError Leader::RemoveRloc(uint16_t aRloc16)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
     NetworkDataTlv *end;
-    PrefixTlv *prefix;
+    PrefixTlv *     prefix;
 #if OPENTHREAD_ENABLE_SERVICE
     ServiceTlv *service;
 #endif
@@ -1269,7 +1270,7 @@ otError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
 {
     NetworkDataTlv *cur = prefix.GetSubTlvs();
     NetworkDataTlv *end;
-    ContextTlv *context;
+    ContextTlv *    context;
 
     while (1)
     {
@@ -1344,8 +1345,8 @@ otError Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16)
 {
     NetworkDataTlv *cur = service.GetSubTlvs();
     NetworkDataTlv *end;
-    ServerTlv *server;
-    uint8_t removeLength;
+    ServerTlv *     server;
+    uint8_t         removeLength;
 
     while (1)
     {
@@ -1432,7 +1433,7 @@ otError Leader::RemoveContext(uint8_t aContextId)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
     NetworkDataTlv *end;
-    PrefixTlv *prefix;
+    PrefixTlv *     prefix;
 
     while (1)
     {
@@ -1476,8 +1477,8 @@ otError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 {
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
     NetworkDataTlv *end;
-    ContextTlv *context;
-    uint8_t length;
+    ContextTlv *    context;
+    uint8_t         length;
 
     while (1)
     {
@@ -1548,8 +1549,7 @@ void Leader::HandleTimer(void)
     }
 }
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
 #endif // OPENTHREAD_FTD
-

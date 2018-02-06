@@ -103,7 +103,7 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit = 64,
+        kDefaultHopLimit   = 64,
         kMaxDatagramLength = 1280,
     };
 
@@ -163,9 +163,11 @@ public:
      * @retval OT_ERROR_DROP   Message processing failed and the message should be dropped.
      *
      */
-    otError HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId,
-                           const void *aLinkMessageInfo, bool aFromNcpHost);
-
+    otError HandleDatagram(Message &   aMessage,
+                           Netif *     aNetif,
+                           int8_t      aInterfaceId,
+                           const void *aLinkMessageInfo,
+                           bool        aFromNcpHost);
 
     /**
      * This methods adds a full IPv6 packet to the transmit queue.
@@ -196,8 +198,10 @@ public:
      * @returns The pseudoheader checksum.
      *
      */
-    static uint16_t ComputePseudoheaderChecksum(const Address &aSource, const Address &aDestination,
-                                                uint16_t aLength, IpProto aProto);
+    static uint16_t ComputePseudoheaderChecksum(const Address &aSource,
+                                                const Address &aDestination,
+                                                uint16_t       aLength,
+                                                IpProto        aProto);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -376,12 +380,17 @@ public:
 
 private:
     static void HandleSendQueue(Tasklet &aTasklet);
-    void HandleSendQueue(void);
+    void        HandleSendQueue(void);
 
-    otError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
-                                   bool aFromNcpHost);
-    otError HandleExtensionHeaders(Message &aMessage, Header &aHeader, uint8_t &aNextHeader, bool aForward,
-                                   bool aReceive);
+    otError ProcessReceiveCallback(const Message &    aMessage,
+                                   const MessageInfo &aMessageInfo,
+                                   uint8_t            aIpProto,
+                                   bool               aFromNcpHost);
+    otError HandleExtensionHeaders(Message &aMessage,
+                                   Header & aHeader,
+                                   uint8_t &aNextHeader,
+                                   bool     aForward,
+                                   bool     aReceive);
     otError HandleFragment(Message &aMessage);
     otError AddMplOption(Message &aMessage, Header &aHeader);
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
@@ -389,22 +398,21 @@ private:
     otError RemoveMplOption(Message &aMessage);
     otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
-    int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
+    int8_t  FindForwardInterfaceId(const MessageInfo &aMessageInfo);
 
-    bool mForwardingEnabled;
-    bool mIsReceiveIp6FilterEnabled;
+    bool                 mForwardingEnabled;
+    bool                 mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
-    void *mReceiveIp6DatagramCallbackContext;
-    Netif *mNetifListHead;
+    void *               mReceiveIp6DatagramCallbackContext;
+    Netif *              mNetifListHead;
 
     PriorityQueue mSendQueue;
-    Tasklet mSendQueueTask;
+    Tasklet       mSendQueueTask;
 
     Routes mRoutes;
-    Icmp mIcmp;
-    Udp mUdp;
-    Mpl mMpl;
-
+    Icmp   mIcmp;
+    Udp    mUdp;
+    Mpl    mMpl;
 };
 
 /**
@@ -412,7 +420,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_IP6_HPP_
+#endif // NET_IP6_HPP_

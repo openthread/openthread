@@ -61,7 +61,6 @@
 extern "C" {
 #endif
 
-
 /**
  * @def OT_TOOL_PACKED_BEGIN
  *
@@ -120,9 +119,9 @@ extern "C" {
 // http://www.keil.com/support/man/docs/armcc/armcc_chr1359124973480.htm
 
 #define OT_TOOL_PACKED_BEGIN
-#define OT_TOOL_PACKED_FIELD                __attribute__((packed))
-#define OT_TOOL_PACKED_END                  __attribute__((packed))
-#define OT_TOOL_WEAK                        __attribute__((weak))
+#define OT_TOOL_PACKED_FIELD __attribute__((packed))
+#define OT_TOOL_PACKED_END __attribute__((packed))
+#define OT_TOOL_WEAK __attribute__((weak))
 
 #define OT_TOOL_ALIGN(X)
 
@@ -132,23 +131,21 @@ extern "C" {
 
 #include "intrinsics.h"
 
-#define OT_TOOL_PACKED_BEGIN                __packed
+#define OT_TOOL_PACKED_BEGIN __packed
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
-#define OT_TOOL_WEAK                        __weak
-
+#define OT_TOOL_WEAK __weak
 
 #define OT_TOOL_ALIGN(X)
 
 #elif defined(_MSC_VER)
 
-#define OT_TOOL_PACKED_BEGIN                __pragma(pack(push,1))
+#define OT_TOOL_PACKED_BEGIN __pragma(pack(push, 1))
 #define OT_TOOL_PACKED_FIELD
-#define OT_TOOL_PACKED_END                  __pragma(pack(pop))
+#define OT_TOOL_PACKED_END __pragma(pack(pop))
 #define OT_TOOL_WEAK
 
-
-#define OT_TOOL_ALIGN(X)                    __declspec(align(4))
+#define OT_TOOL_ALIGN(X) __declspec(align(4))
 
 #elif defined(__SDCC)
 
@@ -235,40 +232,41 @@ extern "C" {
 
 #include <stddef.h>
 
-#define OT_UNUSED_VARIABLE(VARIABLE)    \
-    do                                  \
-    {                                   \
-        if (&VARIABLE == NULL) {}       \
+#define OT_UNUSED_VARIABLE(VARIABLE) \
+    do                               \
+    {                                \
+        if (&VARIABLE == NULL)       \
+        {                            \
+        }                            \
     } while (false)
 
-#define OT_UNREACHABLE_CODE(CODE)       \
-    _Pragma("diag_suppress=Pe111")      \
-    _Pragma("diag_suppress=Pe128")      \
-    CODE                                \
-    _Pragma("diag_default=Pe111")       \
-    _Pragma("diag_default=Pe128")
+#define OT_UNREACHABLE_CODE(CODE)                                                                    \
+    _Pragma("diag_suppress=Pe111") _Pragma("diag_suppress=Pe128") CODE _Pragma("diag_default=Pe111") \
+        _Pragma("diag_default=Pe128")
 
 #elif defined(__CC_ARM)
 
 #include <stddef.h>
 
-#define OT_UNUSED_VARIABLE(VARIABLE)    \
-    do                                  \
-    {                                   \
-        if (&VARIABLE == NULL) {}       \
+#define OT_UNUSED_VARIABLE(VARIABLE) \
+    do                               \
+    {                                \
+        if (&VARIABLE == NULL)       \
+        {                            \
+        }                            \
     } while (false)
 
-#define OT_UNREACHABLE_CODE(CODE)  CODE
+#define OT_UNREACHABLE_CODE(CODE) CODE
 
 #else
 
-#define OT_UNUSED_VARIABLE(VARIABLE)    \
-    do                                  \
-    {                                   \
-        (void)(VARIABLE);               \
+#define OT_UNUSED_VARIABLE(VARIABLE) \
+    do                               \
+    {                                \
+        (void)(VARIABLE);            \
     } while (false)
 
-#define OT_UNREACHABLE_CODE(CODE)  CODE
+#define OT_UNREACHABLE_CODE(CODE) CODE
 
 #endif
 
@@ -278,7 +276,7 @@ extern "C" {
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif // TOOLCHAIN_H_

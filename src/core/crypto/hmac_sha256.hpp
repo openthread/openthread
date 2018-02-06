@@ -59,7 +59,7 @@ class HmacSha256
 public:
     enum
     {
-        kHashSize = 32,  ///< SHA-256 hash size (bytes)
+        kHashSize = 32, ///< SHA-256 hash size (bytes)
     };
 
     /**
@@ -109,7 +109,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
-#endif  // HMAC_SHA256_HPP_
+#endif // HMAC_SHA256_HPP_

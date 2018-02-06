@@ -38,32 +38,32 @@ namespace ot {
 
 enum
 {
-    kMaxRssValue        = 0,
-    kMinRssValue        = -128,
+    kMaxRssValue = 0,
+    kMinRssValue = -128,
 
-    kStringBuffferSize  = 80,
+    kStringBuffferSize = 80,
 
-    kRssAverageMaxDiff  = 16,
-    kNumRssAdds         = 300,
+    kRssAverageMaxDiff = 16,
+    kNumRssAdds        = 300,
 
     kRawAverageBitShift = 3,
     kRawAverageMultiple = (1 << kRawAverageBitShift),
     kRawAverageBitMask  = (1 << kRawAverageBitShift) - 1,
 };
 
-#define MIN_RSS(_rss1, _rss2)   (((_rss1) < (_rss2)) ? (_rss1) : (_rss2))
-#define MAX_RSS(_rss1, _rss2)   (((_rss1) < (_rss2)) ? (_rss2) : (_rss1))
-#define ABS(value)              (((value) >= 0) ? (value) : -(value))
+#define MIN_RSS(_rss1, _rss2) (((_rss1) < (_rss2)) ? (_rss1) : (_rss2))
+#define MAX_RSS(_rss1, _rss2) (((_rss1) < (_rss2)) ? (_rss2) : (_rss1))
+#define ABS(value) (((value) >= 0) ? (value) : -(value))
 
 // This struct contains RSS values and test data for checking link quality info calss.
 struct RssTestData
 {
-    const int8_t *mRssList;                 // Array of RSS values.
-    size_t        mRssListSize;             // Size of RSS list.
-    uint8_t       mExpectedLinkQuality;     // Expected final link quality value.
+    const int8_t *mRssList;             // Array of RSS values.
+    size_t        mRssListSize;         // Size of RSS list.
+    uint8_t       mExpectedLinkQuality; // Expected final link quality value.
 };
 
-int8_t sNoiseFloor = -100;  // dBm
+int8_t sNoiseFloor = -100; // dBm
 
 // Check and verify the raw average RSS value to match the value from GetAverage().
 void VerifyRawRssValue(int8_t aAverage, uint16_t aRawValue)
@@ -95,8 +95,8 @@ void PrintOutcome(LinkQualityInfo &aLinkInfo)
 void TestLinkQualityData(RssTestData aRssData)
 {
     LinkQualityInfo linkInfo;
-    int8_t rss, ave, min, max;
-    size_t i;
+    int8_t          rss, ave, min, max;
+    size_t          i;
 
     printf("- - - - - - - - - - - - - - - - - -\n");
     min = kMinRssValue;
@@ -124,7 +124,7 @@ void TestLinkQualityData(RssTestData aRssData)
 // Check and verify the raw average RSS value to match the value from GetAverage().
 void VerifyRawRssValue(RssAverager &aRssAverager)
 {
-    int8_t average = aRssAverager.GetAverage();
+    int8_t   average  = aRssAverager.GetAverage();
     uint16_t rawValue = aRssAverager.GetRaw();
 
     if (average != OT_RADIO_RSSI_INVALID)
@@ -150,7 +150,6 @@ void PrintOutcome(RssAverager &aRssAverager)
     printf(" -> PASS\n");
 }
 
-
 int8_t GetRandomRss(void)
 {
     uint32_t value;
@@ -161,12 +160,12 @@ int8_t GetRandomRss(void)
 
 void TestRssAveraging(void)
 {
-    RssAverager     rssAverager;
-    int8_t          rss, rss2, ave;
-    int16_t         diff;
-    size_t          i, j, k;
-    const int8_t    rssValues[] = { kMinRssValue, -70, -40, -41, -10, kMaxRssValue};
-    int16_t         sum;
+    RssAverager  rssAverager;
+    int8_t       rss, rss2, ave;
+    int16_t      diff;
+    size_t       i, j, k;
+    const int8_t rssValues[] = {kMinRssValue, -70, -40, -41, -10, kMaxRssValue};
+    int16_t      sum;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Values after initialization/reset.
@@ -184,8 +183,7 @@ void TestRssAveraging(void)
     rss = -70;
     printf("AddRss(%d): ", rss);
     rssAverager.Add(rss);
-    VerifyOrQuit(rssAverager.GetAverage() == rss,
-                 "TestLinkQualityInfo - GetAverage() failed after a single AddRss().");
+    VerifyOrQuit(rssAverager.GetAverage() == rss, "TestLinkQualityInfo - GetAverage() failed after a single AddRss().");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -219,7 +217,6 @@ void TestRssAveraging(void)
         }
 
         PrintOutcome(rssAverager);
-
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -316,8 +313,7 @@ void TestRssAveraging(void)
                              "TestLinkQualityInfo failed - GetAverage() is larger than min value.");
                 diff = ave;
                 diff -= (rss + rss2) >> 1;
-                VerifyOrQuit(ABS(diff) <= kRssAverageMaxDiff,
-                             "TestLinkQualityInfo failed - GetAverage() is incorrect");
+                VerifyOrQuit(ABS(diff) <= kRssAverageMaxDiff, "TestLinkQualityInfo failed - GetAverage() is incorrect");
                 VerifyRawRssValue(rssAverager);
             }
 
@@ -356,36 +352,32 @@ void TestRssAveraging(void)
 
 void TestLinkQualityCalculations(void)
 {
-    const int8_t  rssList1[] = { -81, -80, -79, -78, -76, -80, -77, -75, -77, -76, -77, -74};
-    const RssTestData rssData1 =
-    {
-        rssList1,           // mRssList
-        sizeof(rssList1),   // mRssListSize
-        3                   // mExpectedLinkQuality
+    const int8_t      rssList1[] = {-81, -80, -79, -78, -76, -80, -77, -75, -77, -76, -77, -74};
+    const RssTestData rssData1   = {
+        rssList1,         // mRssList
+        sizeof(rssList1), // mRssListSize
+        3                 // mExpectedLinkQuality
     };
 
-    const int8_t  rssList2[] = { -90, -80, -85 };
-    const RssTestData rssData2 =
-    {
-        rssList2,           // mRssList
-        sizeof(rssList2),   // mRssListSize
-        2                   // mExpectedLinkQuality
+    const int8_t      rssList2[] = {-90, -80, -85};
+    const RssTestData rssData2   = {
+        rssList2,         // mRssList
+        sizeof(rssList2), // mRssListSize
+        2                 // mExpectedLinkQuality
     };
 
-    const int8_t  rssList3[] = { -95, -96, -98, -99, -100, -100, -98, -99, -100, -100, -100, -100, -100 };
-    const RssTestData rssData3 =
-    {
-        rssList3,           // mRssList
-        sizeof(rssList3),   // mRssListSize
-        0                   // mExpectedLinkQuality
+    const int8_t      rssList3[] = {-95, -96, -98, -99, -100, -100, -98, -99, -100, -100, -100, -100, -100};
+    const RssTestData rssData3   = {
+        rssList3,         // mRssList
+        sizeof(rssList3), // mRssListSize
+        0                 // mExpectedLinkQuality
     };
 
-    const int8_t  rssList4[] = { -75, -100, -100, -100, -100, -100, -95, -92, -93, -94, -93, -93 };
-    const RssTestData rssData4 =
-    {
-        rssList4,           // mRssList
-        sizeof(rssList4),   // mRssListSize
-        1                   // mExpectedLinkQuality
+    const int8_t      rssList4[] = {-75, -100, -100, -100, -100, -100, -95, -92, -93, -94, -93, -93};
+    const RssTestData rssData4   = {
+        rssList4,         // mRssList
+        sizeof(rssList4), // mRssListSize
+        1                 // mExpectedLinkQuality
     };
 
     TestLinkQualityData(rssData1);
@@ -397,13 +389,13 @@ void TestLinkQualityCalculations(void)
 void TestSuccessRateTracker(void)
 {
     SuccessRateTracker rateTracker;
-    uint16_t sampleCount;
+    uint16_t           sampleCount;
 
     const uint16_t kMaxSamples = 5000;
 
-    const uint16_t kMaxRate = SuccessRateTracker::kMaxRateValue;
-    const double kMaxError = 1.0;  // Max permitted error in percentage
-    const uint16_t kWeightLimit[] = { 64, 128, 256, 300, 512, 810, 900 };
+    const uint16_t kMaxRate       = SuccessRateTracker::kMaxRateValue;
+    const double   kMaxError      = 1.0; // Max permitted error in percentage
+    const uint16_t kWeightLimit[] = {64, 128, 256, 300, 512, 810, 900};
 
     printf("\nTesting SuccessRateTracker\n");
 
@@ -429,7 +421,8 @@ void TestSuccessRateTracker(void)
         rateTracker.AddSample(false, sampleCount);
 
         VerifyOrQuit(rateTracker.GetSuccessRate() == 0, "SuccessRateTracker: rate incorrect all failure case");
-        VerifyOrQuit(rateTracker.GetFailureRate() == kMaxRate, "SuccessRateTracker: rate incorrect in all failure case");
+        VerifyOrQuit(rateTracker.GetFailureRate() == kMaxRate,
+                     "SuccessRateTracker: rate incorrect in all failure case");
     }
 
     // Adding success/failure at different rates and checking the RateTracker rate for every sample
@@ -437,8 +430,8 @@ void TestSuccessRateTracker(void)
     for (uint16_t testRound = 0; testRound < sizeof(kWeightLimit) / sizeof(kWeightLimit[0]) * 2; testRound++)
     {
         uint16_t weightLimit;
-        bool reverseLogic;
-        double maxDiff = 0;
+        bool     reverseLogic;
+        double   maxDiff = 0;
 
         // Reverse the logic (add success instead of failure) on even test rounds
         reverseLogic = ((testRound % 2) == 0);
@@ -456,10 +449,10 @@ void TestSuccessRateTracker(void)
 
             for (sampleCount = 1; sampleCount < kMaxSamples; sampleCount++)
             {
-                double expectedRate;
-                double failureRate;
-                double diff;
-                bool isSuccess = ((sampleCount % period) == 0);
+                double   expectedRate;
+                double   failureRate;
+                double   diff;
+                bool     isSuccess = ((sampleCount % period) == 0);
                 uint16_t weight;
 
                 if (reverseLogic)
@@ -483,8 +476,8 @@ void TestSuccessRateTracker(void)
 
                 // Calculate the failure rate from rateTracker and expected rate.
 
-                failureRate = static_cast<double>(rateTracker.GetFailureRate()) * 100.0 / kMaxRate;  // in percent
-                expectedRate = static_cast<double>(failureCount) * 100.0 / sampleCount;  // in percent
+                failureRate  = static_cast<double>(rateTracker.GetFailureRate()) * 100.0 / kMaxRate; // in percent
+                expectedRate = static_cast<double>(failureCount) * 100.0 / sampleCount;              // in percent
 
                 diff = failureRate - expectedRate;
                 diff = ABS(diff);
@@ -502,7 +495,7 @@ void TestSuccessRateTracker(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

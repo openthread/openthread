@@ -32,7 +32,7 @@
 
 #define FLASH_BUFFER_SIZE 0x2000
 #define FLASH_SECTOR_SIZE 0x1000
-#define FLASH_PAGE_SIZE   0x0100
+#define FLASH_PAGE_SIZE 0x0100
 
 /*
  * In case that user tries to write data to flash passing as source QSPI mapped flash address
@@ -72,19 +72,19 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
 
 static inline bool FlashQspiAddress(const void *aBuf)
 {
-    if (((uint32_t) aBuf >= MEMORY_QSPIF_BASE) && ((uint32_t) aBuf < MEMORY_QSPIF_END))
+    if (((uint32_t)aBuf >= MEMORY_QSPIF_BASE) && ((uint32_t)aBuf < MEMORY_QSPIF_END))
     {
         return true;
     }
 
-    return ((uint32_t) aBuf >= MEMORY_REMAPPED_BASE) && ((uint32_t) aBuf < MEMORY_REMAPPED_END)
-           && (REG_GETF(CRG_TOP, SYS_CTRL_REG, REMAP_ADR0) == 2);
+    return ((uint32_t)aBuf >= MEMORY_REMAPPED_BASE) && ((uint32_t)aBuf < MEMORY_REMAPPED_END) &&
+           (REG_GETF(CRG_TOP, SYS_CTRL_REG, REMAP_ADR0) == 2);
 }
 
 static size_t FlashWriteFromQspi(uint32_t aAddress, const uint8_t *aQspiBuf, size_t aSize)
 {
-    size_t written;
-    size_t offset = 0;
+    size_t  written;
+    size_t  offset = 0;
     uint8_t buf[ON_STACK_BUFFER_SIZE];
 
     /*
@@ -107,8 +107,8 @@ static size_t FlashWriteFromQspi(uint32_t aAddress, const uint8_t *aQspiBuf, siz
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     size_t written;
-    size_t offset = 0;
-    bool buf_from_flash = FlashQspiAddress(aData);
+    size_t offset         = 0;
+    bool   buf_from_flash = FlashQspiAddress(aData);
 
     while (offset < aSize)
     {
@@ -118,8 +118,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
          */
         if (buf_from_flash)
         {
-            written = FlashWriteFromQspi(aAddress + offset, aData + offset,
-                                         aSize - offset);
+            written = FlashWriteFromQspi(aAddress + offset, aData + offset, aSize - offset);
         }
         else
         {
@@ -127,8 +126,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
              * Try write everything, lower driver will reduce this value to accommodate
              * page boundary and and maximum write size limitation
              */
-            written = qspi_automode_write_flash_page(aAddress + offset, aData + offset,
-                                                     aSize - offset);
+            written = qspi_automode_write_flash_page(aAddress + offset, aData + offset, aSize - offset);
         }
 
         offset += written;
@@ -141,5 +139,6 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
 uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    return qspi_automode_read(aAddress, aData, aSize);;
+    return qspi_automode_read(aAddress, aData, aSize);
+    ;
 }

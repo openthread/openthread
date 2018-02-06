@@ -40,21 +40,23 @@
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
-void otPbkdf2Cmac(
-    const uint8_t *aPassword, uint16_t aPasswordLen,
-    const uint8_t *aSalt, uint16_t aSaltLen,
-    uint32_t aIterationCounter, uint16_t aKeyLen,
-    uint8_t *aKey)
+void otPbkdf2Cmac(const uint8_t *aPassword,
+                  uint16_t       aPasswordLen,
+                  const uint8_t *aSalt,
+                  uint16_t       aSaltLen,
+                  uint32_t       aIterationCounter,
+                  uint16_t       aKeyLen,
+                  uint8_t *      aKey)
 {
     const size_t kBlockSize = MBEDTLS_CIPHER_BLKSIZE_MAX;
-    uint8_t prfInput[OT_PBKDF2_SALT_MAX_LEN + 4]; // Salt || INT(), for U1 calculation
-    long prfOne[kBlockSize / sizeof(long)];
-    long prfTwo[kBlockSize / sizeof(long)];
-    long keyBlock[kBlockSize / sizeof(long)];
-    uint32_t blockCounter = 0;
-    uint8_t *key = aKey;
-    uint16_t keyLen = aKeyLen;
-    uint16_t useLen = 0;
+    uint8_t      prfInput[OT_PBKDF2_SALT_MAX_LEN + 4]; // Salt || INT(), for U1 calculation
+    long         prfOne[kBlockSize / sizeof(long)];
+    long         prfTwo[kBlockSize / sizeof(long)];
+    long         keyBlock[kBlockSize / sizeof(long)];
+    uint32_t     blockCounter = 0;
+    uint8_t *    key          = aKey;
+    uint16_t     keyLen       = aKeyLen;
+    uint16_t     useLen       = 0;
 
     memcpy(prfInput, aSalt, aSaltLen);
     assert(aIterationCounter % 2 == 0);
@@ -73,8 +75,8 @@ void otPbkdf2Cmac(
                                  reinterpret_cast<uint8_t *>(keyBlock));
 
         // Calculate U_2
-        mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(keyBlock),
-                                 kBlockSize, reinterpret_cast<uint8_t *>(prfOne));
+        mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(keyBlock), kBlockSize,
+                                 reinterpret_cast<uint8_t *>(prfOne));
 
         for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
         {
@@ -84,11 +86,11 @@ void otPbkdf2Cmac(
         for (uint32_t i = 1; i < aIterationCounter; ++i)
         {
             // Calculate U_{2 * i - 1}
-            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfOne),
-                                     kBlockSize, reinterpret_cast<uint8_t *>(prfTwo));
+            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfOne), kBlockSize,
+                                     reinterpret_cast<uint8_t *>(prfTwo));
             // Calculate U_{2 * i}
-            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfTwo),
-                                     kBlockSize, reinterpret_cast<uint8_t *>(prfOne));
+            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfTwo), kBlockSize,
+                                     reinterpret_cast<uint8_t *>(prfOne));
 
             for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
             {

@@ -39,8 +39,8 @@
 
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -51,14 +51,14 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
 
-AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance) :
-    InstanceLocator(aInstance),
-    mChannelMask(0),
-    mPeriod(0),
-    mCount(0),
-    mChannel(0),
-    mTimer(aInstance, &AnnounceBeginServer::HandleTimer, this),
-    mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
+AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mChannelMask(0)
+    , mPeriod(0)
+    , mCount(0)
+    , mChannel(0)
+    , mTimer(aInstance, &AnnounceBeginServer::HandleTimer, this)
+    , mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
     GetNetif().GetCoap().AddResource(mAnnounceBegin);
 }
@@ -73,9 +73,9 @@ otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount,
     otError error = OT_ERROR_NONE;
 
     mChannelMask = aChannelMask;
-    mCount = aCount;
-    mPeriod = aPeriod;
-    mChannel = OT_RADIO_CHANNEL_MIN;
+    mCount       = aCount;
+    mPeriod      = aPeriod;
+    mChannel     = OT_RADIO_CHANNEL_MIN;
 
     while ((mChannelMask & (1 << mChannel)) == 0)
     {
@@ -89,19 +89,21 @@ exit:
     return error;
 }
 
-void AnnounceBeginServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void AnnounceBeginServer::HandleRequest(void *               aContext,
+                                        otCoapHeader *       aHeader,
+                                        otMessage *          aMessage,
                                         const otMessageInfo *aMessageInfo)
 {
-    static_cast<AnnounceBeginServer *>(aContext)->HandleRequest(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<AnnounceBeginServer *>(aContext)->HandleRequest(*static_cast<Coap::Header *>(aHeader),
+                                                                *static_cast<Message *>(aMessage),
+                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
+    MeshCoP::CountTlv        count;
+    MeshCoP::PeriodTlv       period;
+    Ip6::MessageInfo         responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
@@ -153,4 +155,4 @@ void AnnounceBeginServer::HandleTimer(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot

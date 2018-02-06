@@ -64,5 +64,5 @@ void HmacSha256::Finish(uint8_t aHash[kHashSize])
     mbedtls_md_hmac_finish(&mContext, aHash);
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot

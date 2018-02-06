@@ -33,12 +33,12 @@
  *
  */
 
+#include "platform-emsk.h"
 #include "openthread/openthread.h"
 #include "openthread/platform/uart.h"
-#include "platform-emsk.h"
 
 #include <stdio.h>
-#define DBG(fmt, ...)   printf(fmt, ##__VA_ARGS__)
+#define DBG(fmt, ...) printf(fmt, ##__VA_ARGS__)
 
 void PlatformInit(int argc, char *argv[])
 {

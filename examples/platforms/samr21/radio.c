@@ -46,13 +46,13 @@
 
 enum
 {
-    IEEE802154_ACK_LENGTH      = 5,
-    IEEE802154_FCS_SIZE        = 2
+    IEEE802154_ACK_LENGTH = 5,
+    IEEE802154_FCS_SIZE   = 2
 };
 
 enum
 {
-    SAMR21_RECEIVE_SENSITIVITY = -99  // dBm
+    SAMR21_RECEIVE_SENSITIVITY = -99 // dBm
 };
 
 static otRadioFrame sTransmitFrame;
@@ -60,40 +60,22 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 
 static otRadioFrame sReceiveFrame;
 
-static bool         sSleep          = false;
-static bool         sRxEnable       = false;
-static bool         sTxDone         = false;
-static bool         sRxDone         = false;
-static otError      sTxStatus       = OT_ERROR_NONE;
-static int8_t       sPower          = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
-static otRadioState sState          = OT_RADIO_STATE_DISABLED;
-static bool         sPromiscuous    = false;
-static uint8_t      sChannel        = 0xFF;
+static bool         sSleep       = false;
+static bool         sRxEnable    = false;
+static bool         sTxDone      = false;
+static bool         sRxDone      = false;
+static otError      sTxStatus    = OT_ERROR_NONE;
+static int8_t       sPower       = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
+static otRadioState sState       = OT_RADIO_STATE_DISABLED;
+static bool         sPromiscuous = false;
+static uint8_t      sChannel     = 0xFF;
 
-static int8_t       sMaxRssi;
-static uint32_t     sScanStartTime;
-static uint16_t     sScanDuration;
-static bool         sStartScan      = false;
+static int8_t   sMaxRssi;
+static uint32_t sScanStartTime;
+static uint16_t sScanDuration;
+static bool     sStartScan = false;
 
-static int8_t       sTxPowerTable[] =
-{
-    4,
-    4,
-    3,
-    3,
-    3,
-    2,
-    1,
-    0,
-    -1,
-    -2,
-    -3,
-    -4,
-    -6,
-    -8,
-    -12,
-    -17
-};
+static int8_t sTxPowerTable[] = {4, 4, 3, 3, 3, 2, 1, 0, -1, -2, -3, -4, -6, -8, -12, -17};
 
 /*******************************************************************************
  * Static
@@ -106,7 +88,7 @@ static void radioSleep()
         PHY_SetRxState(false);
         PHY_Sleep();
 
-        sSleep = true;
+        sSleep    = true;
         sRxEnable = false;
     }
 }
@@ -235,7 +217,7 @@ static void handleRx(void)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
         // Timestamp
         sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
+        sReceiveFrame.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
@@ -251,8 +233,7 @@ static void handleRx(void)
             // otherwise only signal MAC layer for non-ACK frame
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {
-                otLogDebgPlat(sInstance, "Radio receive done, rssi: %d",
-                              sReceiveFrame.mRssi);
+                otLogDebgPlat(sInstance, "Radio receive done, rssi: %d", sReceiveFrame.mRssi);
 
                 otPlatRadioReceiveDone(sInstance, &sReceiveFrame, OT_ERROR_NONE);
             }
@@ -275,8 +256,7 @@ static void handleTx(void)
         else
 #endif
         {
-            otLogDebgPlat(sInstance, "Radio transmit done, status: %d",
-                          sTxStatus);
+            otLogDebgPlat(sInstance, "Radio transmit done, status: %d", sTxStatus);
 
             otPlatRadioTxDone(sInstance, &sTransmitFrame, NULL, sTxStatus);
         }
@@ -289,9 +269,9 @@ static void handleTx(void)
 
 void PHY_DataInd(PHY_DataInd_t *ind)
 {
-    sReceiveFrame.mPsdu = ind->data;
+    sReceiveFrame.mPsdu   = ind->data;
     sReceiveFrame.mLength = ind->size + IEEE802154_FCS_SIZE;
-    sReceiveFrame.mRssi = ind->rssi;
+    sReceiveFrame.mRssi   = ind->rssi;
 
     sRxDone = true;
 }
@@ -469,9 +449,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP ||
-                    sState == OT_RADIO_STATE_RECEIVE,
-                    error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE, error = OT_ERROR_INVALID_STATE);
 
     radioSleep();
 
@@ -490,8 +468,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED,
-                    error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     setChannel(aChannel);
 
@@ -512,8 +489,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE,
-                    error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE, error = OT_ERROR_INVALID_STATE);
 
     uint8_t frame[OT_RADIO_FRAME_MAX_SIZE + 1];
 
@@ -547,8 +523,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    return OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES |
-           OT_RADIO_CAPS_ACK_TIMEOUT;
+    return OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_ACK_TIMEOUT;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -606,7 +581,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     (void)aInstance;
 
     sScanStartTime = otPlatAlarmMilliGetNow();
-    sScanDuration = aScanDuration;
+    sScanDuration  = aScanDuration;
 
     sMaxRssi = PHY_EdReq();
 

@@ -156,7 +156,7 @@ otError otLinkRawSleep(otInstance *aInstance);
  *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
  *
  */
-typedef void (OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+typedef void(OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * Transitioning the radio from Sleep to Receive.
@@ -199,8 +199,10 @@ otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance);
  *                              OT_ERROR_ABORT when transmission was aborted for other reasons.
  *
  */
-typedef void (*otLinkRawTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame,
-                                      otRadioFrame *aAckFrame, otError aError);
+typedef void (*otLinkRawTransmitDone)(otInstance *  aInstance,
+                                      otRadioFrame *aFrame,
+                                      otRadioFrame *aAckFrame,
+                                      otError       aError);
 
 /**
  * This method begins the transmit sequence on the radio.
@@ -264,7 +266,9 @@ typedef void (*otLinkRawEnergyScanDone)(otInstance *aInstance, int8_t aEnergySca
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration,
+otError otLinkRawEnergyScan(otInstance *            aInstance,
+                            uint8_t                 aScanChannel,
+                            uint16_t                aScanDuration,
                             otLinkRawEnergyScanDone aCallback);
 
 /**
@@ -359,7 +363,7 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // LINK_RAW_H_
+#endif // LINK_RAW_H_

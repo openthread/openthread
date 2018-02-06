@@ -37,8 +37,8 @@
 
 #include <openthread/types.h>
 
-#include "common/instance.hpp"
 #include "coap/coap_header.hpp"
+#include "common/instance.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -47,12 +47,12 @@
 
 namespace ot {
 
-TmfProxy::TmfProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap):
-    mRelayReceive(OT_URI_PATH_RELAY_RX, &TmfProxy::HandleRelayReceive, this),
-    mStreamHandler(NULL),
-    mContext(NULL),
-    mMeshLocal16(aMeshLocal16),
-    mCoap(aCoap)
+TmfProxy::TmfProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap)
+    : mRelayReceive(OT_URI_PATH_RELAY_RX, &TmfProxy::HandleRelayReceive, this)
+    , mStreamHandler(NULL)
+    , mContext(NULL)
+    , mMeshLocal16(aMeshLocal16)
+    , mCoap(aCoap)
 {
 }
 
@@ -64,7 +64,7 @@ otError TmfProxy::Start(otTmfProxyStreamHandler aStreamHandler, void *aContext)
 
     mCoap.AddResource(mRelayReceive);
     mStreamHandler = aStreamHandler;
-    mContext = aContext;
+    mContext       = aContext;
 
 exit:
     return error;
@@ -89,16 +89,21 @@ bool TmfProxy::IsEnabled(void) const
     return mStreamHandler != NULL;
 }
 
-void TmfProxy::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void TmfProxy::HandleRelayReceive(void *               aContext,
+                                  otCoapHeader *       aHeader,
+                                  otMessage *          aMessage,
                                   const otMessageInfo *aMessageInfo)
 {
-    static_cast<TmfProxy *>(aContext)->DeliverMessage(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<TmfProxy *>(aContext)->DeliverMessage(*static_cast<Coap::Header *>(aHeader),
+                                                      *static_cast<Message *>(aMessage),
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void TmfProxy::HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                              const otMessageInfo *aMessageInfo, otError aResult)
+void TmfProxy::HandleResponse(void *               aContext,
+                              otCoapHeader *       aHeader,
+                              otMessage *          aMessage,
+                              const otMessageInfo *aMessageInfo,
+                              otError              aResult)
 {
     VerifyOrExit(aResult == OT_ERROR_NONE);
 
@@ -109,10 +114,9 @@ exit:
     return;
 }
 
-void TmfProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage,
-                              const Ip6::MessageInfo &aMessageInfo)
+void TmfProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t rloc;
     uint16_t port;
     Message *message = NULL;
@@ -136,7 +140,7 @@ exit:
 
 otError TmfProxy::Send(Message &aMessage, uint16_t aLocator, uint16_t aPort)
 {
-    otError error = OT_ERROR_NONE;
+    otError          error = OT_ERROR_NONE;
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit(mStreamHandler != NULL, error = OT_ERROR_INVALID_STATE);
@@ -166,6 +170,6 @@ exit:
     return error;
 }
 
-}  // namespace ot
+} // namespace ot
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY

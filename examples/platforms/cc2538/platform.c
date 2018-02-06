@@ -31,8 +31,8 @@
  * @brief
  *   This file includes the platform-specific initializers.
  */
-#include <openthread/config.h>
 #include "platform-cc2538.h"
+#include <openthread/config.h>
 
 otInstance *sInstance;
 

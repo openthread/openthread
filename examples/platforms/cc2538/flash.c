@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -42,7 +42,7 @@
 #include "utils/flash.h"
 #include "utils/wrap_string.h"
 
-#define FLASH_CTRL_FCTL_BUSY   0x00000080
+#define FLASH_CTRL_FCTL_BUSY 0x00000080
 
 #if SETTINGS_CONFIG_PAGE_SIZE != 2048
 #error FLASH page size is 2048 on this chip
@@ -102,16 +102,16 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    otError error = OT_ERROR_NONE;
-    int32_t status;
+    otError  error = OT_ERROR_NONE;
+    int32_t  status;
     uint32_t address;
 
     otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = OT_ERROR_INVALID_ARGS);
 
     address = aAddress - (aAddress & (SETTINGS_CONFIG_PAGE_SIZE - 1));
     address = flashPhysAddr(address);
-    status = ROM_PageErase(address, SETTINGS_CONFIG_PAGE_SIZE);
-    error = romStatusToThread(status);
+    status  = ROM_PageErase(address, SETTINGS_CONFIG_PAGE_SIZE);
+    error   = romStatusToThread(status);
 
 exit:
     return error;
@@ -119,9 +119,9 @@ exit:
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint32_t start = otPlatAlarmMilliGetNow();
-    uint32_t busy = 1;
+    uint32_t busy  = 1;
 
     while (busy && ((otPlatAlarmMilliGetNow() - start) < aTimeout))
     {
@@ -136,13 +136,12 @@ exit:
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    int32_t status;
-    uint32_t busy = 1;
+    int32_t   status;
+    uint32_t  busy = 1;
     uint32_t *data;
-    uint32_t size = 0;
+    uint32_t  size = 0;
 
-    otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) &&
-                    (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
+    otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) && (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
 
     data = (uint32_t *)(aData);
 
@@ -173,8 +172,8 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     while (size < aSize)
     {
-        uint8_t *byte = (uint8_t *)flashPhysAddr(aAddress);
-        uint8_t maxIndex = 4;
+        uint8_t *byte     = (uint8_t *)flashPhysAddr(aAddress);
+        uint8_t  maxIndex = 4;
 
         if (size == (aSize - aSize % 4))
         {

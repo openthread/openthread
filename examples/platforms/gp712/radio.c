@@ -36,8 +36,8 @@
 
 #include <openthread/openthread.h>
 
-#include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
 #include "utils/code_utils.h"
 
@@ -45,7 +45,7 @@
 
 enum
 {
-    GP712_RECEIVE_SENSITIVITY  = -100,  // dBm
+    GP712_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
 enum
@@ -62,15 +62,15 @@ enum
 
 enum
 {
-    QORVO_RSSI_OFFSET          = 73,
-    QORVO_CRC_BIT_MASK         = 0x80,
-    QORVO_LQI_BIT_MASK         = 0x7f,
+    QORVO_RSSI_OFFSET  = 73,
+    QORVO_CRC_BIT_MASK = 0x80,
+    QORVO_LQI_BIT_MASK = 0x7f,
 };
 
-extern otRadioFrame  sTransmitFrame;
+extern otRadioFrame sTransmitFrame;
 
-static otRadioState  sState;
-static otInstance   *pQorvoInstance;
+static otRadioState sState;
+static otInstance * pQorvoInstance;
 
 typedef struct otCachedSettings_s
 {
@@ -79,8 +79,8 @@ typedef struct otCachedSettings_s
 
 static otCachedSettings_t otCachedSettings;
 
-static uint8_t  sScanstate          = 0;
-static int8_t   sLastReceivedPower  = 127;
+static uint8_t sScanstate         = 0;
+static int8_t  sLastReceivedPower = 127;
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -150,7 +150,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
         qorvoRadioSetRxOnWhenIdle(false);
-        error = OT_ERROR_NONE;
+        error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
     }
 
@@ -159,7 +159,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    otError error = OT_ERROR_INVALID_STATE;
+    otError error  = OT_ERROR_INVALID_STATE;
     pQorvoInstance = aInstance;
 
     if ((sState != OT_RADIO_STATE_DISABLED) && (sScanstate == 0))
@@ -171,12 +171,11 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     if (sState == OT_RADIO_STATE_SLEEP)
     {
         qorvoRadioSetRxOnWhenIdle(true);
-        error = OT_ERROR_NONE;
+        error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_RECEIVE;
     }
 
     return error;
-
 }
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aPacket)
@@ -197,10 +196,10 @@ void cbQorvoRadioTransmitDone(otRadioFrame *aPacket, bool aFramePending, otError
 {
     // TODO: pass received ACK frame instead of generating one.
     otRadioFrame ackFrame;
-    uint8_t psdu[IEEE802154_ACK_LENGTH];
+    uint8_t      psdu[IEEE802154_ACK_LENGTH];
 
-    ackFrame.mPsdu = psdu;
-    ackFrame.mLength = IEEE802154_ACK_LENGTH;
+    ackFrame.mPsdu    = psdu;
+    ackFrame.mLength  = IEEE802154_ACK_LENGTH;
     ackFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
 
     if (aFramePending)
@@ -253,7 +252,6 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     (void)aInstance;
     (void)aEnable;
 }
-
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {

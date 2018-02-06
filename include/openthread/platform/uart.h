@@ -104,7 +104,7 @@ extern void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // UART_H_
+#endif // UART_H_

@@ -54,7 +54,7 @@ namespace Ip6 {
  * This class implements message information for an IPv6 message.
  *
  */
-class MessageInfo: public otMessageInfo
+class MessageInfo : public otMessageInfo
 {
 public:
     /**
@@ -69,7 +69,7 @@ public:
      * @returns A reference to the local socket address.
      *
      */
-    const Address &GetSockAddr(void) const { return *static_cast<const Address *>(&mSockAddr);}
+    const Address &GetSockAddr(void) const { return *static_cast<const Address *>(&mSockAddr); }
 
     /**
      * This method sets the local socket address.
@@ -101,7 +101,7 @@ public:
      * @returns A reference to the peer socket address.
      *
      */
-    Address &GetPeerAddr(void) { return *static_cast<Address *>(&mPeerAddr);}
+    Address &GetPeerAddr(void) { return *static_cast<Address *>(&mPeerAddr); }
 
     /**
      * This method returns a reference to the peer socket address.
@@ -109,7 +109,7 @@ public:
      * @returns A reference to the peer socket address.
      *
      */
-    const Address &GetPeerAddr(void) const { return *static_cast<const Address *>(&mPeerAddr);}
+    const Address &GetPeerAddr(void) const { return *static_cast<const Address *>(&mPeerAddr); }
 
     /**
      * This method sets the peer's socket address.
@@ -188,7 +188,7 @@ public:
  * This class implements a socket address.
  *
  */
-class SockAddr: public otSockAddr
+class SockAddr : public otSockAddr
 {
 public:
     /**
@@ -218,7 +218,7 @@ public:
  * @}
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_SOCKET_HPP_
+#endif // NET_SOCKET_HPP_

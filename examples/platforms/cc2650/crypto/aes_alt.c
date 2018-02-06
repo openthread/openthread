@@ -26,18 +26,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mbedtls/aes.h"
 #include "aes_alt.h"
+#include "mbedtls/aes.h"
 
 #ifdef MBEDTLS_AES_ALT
 
-#include <string.h>
 #include <driverlib/crypto.h>
 #include <driverlib/prcm.h>
+#include <string.h>
 #include <utils/code_utils.h>
 
 #define CC2650_AES_KEY_UNUSED (-1)
-#define CC2650_AES_CTX_MAGIC  (0x7E)
+#define CC2650_AES_CTX_MAGIC (0x7E)
 
 /**
  * bitmap of which key stores are currently used
@@ -66,11 +66,11 @@ void mbedtls_aes_init(mbedtls_aes_context *ctx)
         PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_CRYPTO);
         PRCMLoadSet();
 
-        while (!PRCMLoadGet());
-
+        while (!PRCMLoadGet())
+            ;
     }
 
-    ctx->magic = CC2650_AES_CTX_MAGIC;
+    ctx->magic   = CC2650_AES_CTX_MAGIC;
     ctx->key_idx = CC2650_AES_KEY_UNUSED;
 }
 
@@ -98,8 +98,8 @@ void mbedtls_aes_free(mbedtls_aes_context *ctx)
         PRCMPeripheralDeepSleepDisable(PRCM_PERIPH_CRYPTO);
         PRCMLoadSet();
 
-        while (!PRCMLoadGet());
-
+        while (!PRCMLoadGet())
+            ;
     }
 
     memset((void *)ctx, 0x00, sizeof(ctx));
@@ -111,7 +111,7 @@ exit:
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits)
 {
     unsigned char key_idx;
-    int retval = 0;
+    int           retval = 0;
 
     otEXPECT_ACTION(ctx->magic == CC2650_AES_CTX_MAGIC, retval = -1);
 
@@ -123,7 +123,8 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
     /* our hardware only supports 128 bit keys */
     otEXPECT_ACTION(keybits == 128u, retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 
-    for (key_idx = 0; ((sUsedKeys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++);
+    for (key_idx = 0; ((sUsedKeys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++)
+        ;
 
     /* we have no more room for this key */
     otEXPECT_ACTION(key_idx < 8, retval = -2);
@@ -140,7 +141,7 @@ exit:
 int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits)
 {
     unsigned char key_idx;
-    int retval = 0;
+    int           retval = 0;
 
     otEXPECT_ACTION(ctx->magic == CC2650_AES_CTX_MAGIC, retval = -1);
 
@@ -152,7 +153,8 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, u
     /* our hardware only supports 128 bit keys */
     otEXPECT_ACTION(keybits == 128u, retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 
-    for (key_idx = 0; ((sUsedKeys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++);
+    for (key_idx = 0; ((sUsedKeys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++)
+        ;
 
     /* we have no more room for this key */
     otEXPECT_ACTION(key_idx < 8, retval = -2);
@@ -183,7 +185,8 @@ int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned cha
     retval = CRYPTOAesEcb((uint32_t *)input, (uint32_t *)output, ctx->key_idx, mode == MBEDTLS_AES_ENCRYPT, false);
     otEXPECT(retval == AES_SUCCESS);
 
-    while ((retval = CRYPTOAesEcbStatus()) ==  AES_DMA_BSY);
+    while ((retval = CRYPTOAesEcbStatus()) == AES_DMA_BSY)
+        ;
 
     CRYPTOAesEcbFinish();
 

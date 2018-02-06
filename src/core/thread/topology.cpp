@@ -95,7 +95,7 @@ exit:
 
 otError Child::GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const
 {
-    otError error = OT_ERROR_NONE;
+    otError                   error = OT_ERROR_NONE;
     otChildIp6AddressIterator index;
 
     // Index zero corresponds to the Mesh Local IPv6 address (if any).
@@ -150,7 +150,7 @@ exit:
 
 otError Child::RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddress)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error = OT_ERROR_NOT_FOUND;
     uint16_t index;
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
@@ -238,4 +238,4 @@ const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
     return aMacAddress;
 }
 
-}  // namespace ot
+} // namespace ot

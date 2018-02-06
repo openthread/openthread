@@ -51,7 +51,7 @@ class ThreadNetif;
  * This class implements handling PANID Query Requests.
  *
  */
-class PanIdQueryClient: public InstanceLocator
+class PanIdQueryClient : public InstanceLocator
 {
 public:
     /**
@@ -73,16 +73,21 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a PAN ID Query message.
      *
      */
-    otError SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
-                      otCommissionerPanIdConflictCallback aCallback, void *aContext);
+    otError SendQuery(uint16_t                            aPanId,
+                      uint32_t                            aChannelMask,
+                      const Ip6::Address &                aAddress,
+                      otCommissionerPanIdConflictCallback aCallback,
+                      void *                              aContext);
 
 private:
-    static void HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleConflict(void *               aContext,
+                               otCoapHeader *       aHeader,
+                               otMessage *          aMessage,
                                const otMessageInfo *aMessageInfo);
-    void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerPanIdConflictCallback mCallback;
-    void *mContext;
+    void *                              mContext;
 
     Coap::Resource mPanIdQuery;
 };
@@ -91,6 +96,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // PANID_QUERY_CLIENT_HPP_
+#endif // PANID_QUERY_CLIENT_HPP_

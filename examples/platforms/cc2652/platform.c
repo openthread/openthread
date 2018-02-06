@@ -34,13 +34,13 @@
 
 #include <openthread/config.h>
 
+#include "platform-cc2652.h"
 #include <stdio.h>
 #include <openthread/types.h>
-#include "platform-cc2652.h"
 
-#include "inc/hw_types.h"
 #include "inc/hw_ccfg.h"
 #include "inc/hw_ccfg_simple_struct.h"
+#include "inc/hw_types.h"
 
 extern const ccfg_t __ccfg;
 
@@ -51,8 +51,8 @@ const char *dummy_ccfg_ref = ((const char *)(&(__ccfg)));
  */
 void PlatformInit(int argc, char *argv[])
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
 
     while (dummy_ccfg_ref == NULL)
     {
@@ -82,4 +82,3 @@ void PlatformProcessDrivers(otInstance *aInstance)
     cc2652RadioProcess(aInstance);
     cc2652AlarmProcess(aInstance);
 }
-

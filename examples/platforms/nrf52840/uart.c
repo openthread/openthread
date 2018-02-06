@@ -32,23 +32,23 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stddef.h>
 #include <stdint.h>
 
+#include <utils/code_utils.h>
 #include <openthread/types.h>
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/uart.h>
-#include <utils/code_utils.h>
 
 #include "platform.h"
 
-#include <drivers/clock/nrf_drv_clock.h>
-#include <hal/nrf_uart.h>
-#include <hal/nrf_gpio.h>
 #include "platform-nrf5.h"
+#include <drivers/clock/nrf_drv_clock.h>
+#include <hal/nrf_gpio.h>
+#include <hal/nrf_uart.h>
 
 #if (USB_CDC_AS_SERIAL_TRANSPORT == 0)
 
@@ -58,13 +58,13 @@ bool sUartEnabled = false;
  *  UART TX buffer variables.
  */
 static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t sTransmitLength = 0;
-static bool sTransmitDone = 0;
+static uint16_t       sTransmitLength = 0;
+static bool           sTransmitDone   = 0;
 
 /**
  *  UART RX ring buffer variables.
  */
-static uint8_t sReceiveBuffer[UART_RX_BUFFER_SIZE];
+static uint8_t  sReceiveBuffer[UART_RX_BUFFER_SIZE];
 static uint16_t sReceiveHead = 0;
 static uint16_t sReceiveTail = 0;
 
@@ -105,16 +105,14 @@ static void processReceive(void)
     // bytes from the end of the buffer.
     if (head < sReceiveTail)
     {
-        otPlatUartReceived(&sReceiveBuffer[sReceiveTail],
-                           (UART_RX_BUFFER_SIZE - sReceiveTail));
+        otPlatUartReceived(&sReceiveBuffer[sReceiveTail], (UART_RX_BUFFER_SIZE - sReceiveTail));
         sReceiveTail = 0;
     }
 
     // Notify about received bytes.
     if (head > sReceiveTail)
     {
-        otPlatUartReceived(&sReceiveBuffer[sReceiveTail],
-                           (head - sReceiveTail));
+        otPlatUartReceived(&sReceiveBuffer[sReceiveTail], (head - sReceiveTail));
         sReceiveTail = head;
     }
 
@@ -134,7 +132,7 @@ static void processTransmit(void)
         // Clear Transmition transaction and notify application.
         sTransmitBuffer = NULL;
         sTransmitLength = 0;
-        sTransmitDone = false;
+        sTransmitDone   = false;
         otPlatUartSendDone();
     }
 
@@ -206,7 +204,9 @@ otError otPlatUartEnable(void)
     // Start HFCLK
     nrf_drv_clock_hfclk_request(NULL);
 
-    while (!nrf_drv_clock_hfclk_is_running()) {}
+    while (!nrf_drv_clock_hfclk_is_running())
+    {
+    }
 
     // Enable UART instance, and start RX on it.
     nrf_uart_enable(UART_INSTANCE);
@@ -289,7 +289,7 @@ void UARTE0_UART0_IRQHandler(void)
         if (!isRxBufferFull())
         {
             sReceiveBuffer[sReceiveHead] = byte;
-            sReceiveHead = (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
+            sReceiveHead                 = (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
             PlatformEventSignalPending();
         }
     }

@@ -33,8 +33,8 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -45,17 +45,17 @@
 
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
-int posix_openpt(int oflag);
-int grantpt(int fildes);
-int unlockpt(int fd);
+int   posix_openpt(int oflag);
+int   grantpt(int fildes);
+int   unlockpt(int fd);
 char *ptsname(int fd);
-#endif  // OPENTHREAD_TARGET_LINUX
+#endif // OPENTHREAD_TARGET_LINUX
 
-static uint8_t s_receive_buffer[128];
+static uint8_t        s_receive_buffer[128];
 static const uint8_t *s_write_buffer;
-static uint16_t s_write_length;
-static int s_in_fd;
-static int s_out_fd;
+static uint16_t       s_write_length;
+static int            s_in_fd;
+static int            s_out_fd;
 
 static struct termios original_stdin_termios;
 static struct termios original_stdout_termios;
@@ -79,7 +79,7 @@ void platformUartRestore(void)
 
 otError otPlatUartEnable(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
     struct termios termios;
 
 #ifdef OPENTHREAD_TARGET_LINUX
@@ -88,7 +88,7 @@ otError otPlatUartEnable(void)
     prctl(PR_SET_PDEATHSIG, SIGHUP);
 #endif
 
-    s_in_fd = dup(STDIN_FILENO);
+    s_in_fd  = dup(STDIN_FILENO);
     s_out_fd = dup(STDOUT_FILENO);
     dup2(STDERR_FILENO, STDOUT_FILENO);
 
@@ -121,7 +121,7 @@ otError otPlatUartEnable(void)
         termios.c_cflag |= HUPCL | CREAD | CLOCAL;
 
         // "Minimum number of characters for noncanonical read"
-        termios.c_cc[VMIN]  = 1;
+        termios.c_cc[VMIN] = 1;
 
         // "Timeout in deciseconds for noncanonical read"
         termios.c_cc[VTIME] = 0;
@@ -221,12 +221,11 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 
 void platformUartProcess(void)
 {
-    ssize_t rval;
-    const int error_flags = POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd[] =
-    {
-        { s_in_fd,  POLLIN  | error_flags, 0 },
-        { s_out_fd, POLLOUT | error_flags, 0 },
+    ssize_t       rval;
+    const int     error_flags = POLLERR | POLLNVAL | POLLHUP;
+    struct pollfd pollfd[]    = {
+        {s_in_fd, POLLIN | error_flags, 0},
+        {s_out_fd, POLLOUT | error_flags, 0},
     };
 
     errno = 0;
@@ -287,7 +286,7 @@ void platformUartProcess(void)
     }
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART && (OPENTHREAD_CONFIG_LOG_OUTPUT==OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART && (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
 
 static FILE *posix_logfile;
 
@@ -331,4 +330,3 @@ int otPlatDebugUart_getc(void)
 }
 
 #endif
-

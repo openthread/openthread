@@ -39,8 +39,8 @@
 #include <openthread/types.h>
 
 #include "common/locator.hpp"
-#include "mac/mac_frame.hpp"
 #include "mac/mac.hpp"
+#include "mac/mac_frame.hpp"
 #include "net/dhcp6.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_leader.hpp"
@@ -48,7 +48,9 @@
 namespace ot {
 
 class ThreadNetif;
-namespace NetworkData { class Leader; }
+namespace NetworkData {
+class Leader;
+}
 
 namespace Dhcp6 {
 
@@ -62,15 +64,14 @@ namespace Dhcp6 {
  *
  */
 
-
 /**
  * DHCPv6 default constant
  *
  */
-#define OT_DHCP6_DEFAULT_IA_NA_T1            0xffffffffU
-#define OT_DHCP6_DEFAULT_IA_NA_T2            0xffffffffU
-#define OT_DHCP6_DEFAULT_PREFERRED_LIFETIME  0xffffffffU
-#define OT_DHCP6_DEFAULT_VALID_LIFETIME      0xffffffffU
+#define OT_DHCP6_DEFAULT_IA_NA_T1 0xffffffffU
+#define OT_DHCP6_DEFAULT_IA_NA_T2 0xffffffffU
+#define OT_DHCP6_DEFAULT_PREFERRED_LIFETIME 0xffffffffU
+#define OT_DHCP6_DEFAULT_VALID_LIFETIME 0xffffffffU
 
 /**
  * This class implements prefix agent.
@@ -81,7 +82,6 @@ OT_TOOL_PACKED_BEGIN
 class PrefixAgent
 {
 public:
-
     /**
      * This method returns the reference to the IPv6 prefix.
      *
@@ -99,10 +99,10 @@ public:
     void SetPrefix(otIp6Prefix &aIp6Prefix) { memcpy(&mIp6Prefix, &aIp6Prefix, sizeof(otIp6Prefix)); }
 
 private:
-    otIp6Prefix mIp6Prefix;                  ///< prefix
+    otIp6Prefix mIp6Prefix; ///< prefix
 } OT_TOOL_PACKED_END;
 
-class Dhcp6Server: public InstanceLocator
+class Dhcp6Server : public InstanceLocator
 {
 public:
     /**
@@ -138,27 +138,27 @@ private:
     otError AddIaAddress(Message &aMessage, otIp6Prefix &aIp6Prefix, ClientIdentifier &aClient);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t *aTransactionId);
 
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    otError ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClient);
-    otError ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa);
-    otError ProcessIaAddress(Message &aMessage, uint16_t aOffset);
-    otError ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
+    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClient);
+    otError  ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa);
+    otError  ProcessIaAddress(Message &aMessage, uint16_t aOffset);
+    otError  ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
 
     otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientIdentifier, IaNa &aIaNa);
 
     Ip6::UdpSocket mSocket;
 
     Ip6::NetifUnicastAddress mAgentsAloc[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-    uint8_t mPrefixAgentsMask;
-    uint8_t mPrefixAgentsCount;
+    PrefixAgent              mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    uint8_t                  mPrefixAgentsMask;
+    uint8_t                  mPrefixAgentsCount;
 };
 
-}  // namespace Dhcp6
-}  // namespace ot
+} // namespace Dhcp6
+} // namespace ot
 
-#endif  // DHCP6_SERVER_HPP_
+#endif // DHCP6_SERVER_HPP_

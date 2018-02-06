@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/udp.h>
 #include <openthread/types.h>
+#include <openthread/udp.h>
 
 namespace ot {
 namespace Cli {
@@ -72,7 +72,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError(UdpExample::*mCommand)(int argc, char *argv[]);
+        otError (UdpExample::*mCommand)(int argc, char *argv[]);
     };
 
     otError ProcessHelp(int argc, char *argv[]);
@@ -83,15 +83,15 @@ private:
     otError ProcessSend(int argc, char *argv[]);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     static const Command sCommands[];
-    Interpreter &mInterpreter;
+    Interpreter &        mInterpreter;
 
     otUdpSocket mSocket;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_UDP_EXAMPLE_HPP_
+#endif // CLI_UDP_EXAMPLE_HPP_
