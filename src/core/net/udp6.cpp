@@ -97,9 +97,9 @@ exit:
 
 otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
-    UdpHeader udpHeader;
+    UdpHeader   udpHeader;
 
     messageInfoLocal = aMessageInfo;
 
@@ -139,10 +139,10 @@ exit:
     return error;
 }
 
-Udp::Udp(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mEphemeralPort(kDynamicPortMin),
-    mSockets(NULL)
+Udp::Udp(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mEphemeralPort(kDynamicPortMin)
+    , mSockets(NULL)
 {
 }
 
@@ -214,10 +214,10 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
 otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error = OT_ERROR_NONE;
     UdpHeader udpHeader;
-    uint16_t payloadLength;
-    uint16_t checksum;
+    uint16_t  payloadLength;
+    uint16_t  checksum;
 
     payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
@@ -225,8 +225,8 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     VerifyOrExit(payloadLength >= sizeof(UdpHeader), error = OT_ERROR_PARSE);
 
     // verify checksum
-    checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
-                                                payloadLength, kProtoUdp);
+    checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), payloadLength,
+                                                kProtoUdp);
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -247,14 +247,12 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
             continue;
         }
 
-        if (socket->GetSockName().mScopeId != 0 &&
-            socket->GetSockName().mScopeId != aMessageInfo.mInterfaceId)
+        if (socket->GetSockName().mScopeId != 0 && socket->GetSockName().mScopeId != aMessageInfo.mInterfaceId)
         {
             continue;
         }
 
-        if (!aMessageInfo.GetSockAddr().IsMulticast() &&
-            !socket->GetSockName().GetAddress().IsUnspecified() &&
+        if (!aMessageInfo.GetSockAddr().IsMulticast() && !socket->GetSockName().GetAddress().IsUnspecified() &&
             socket->GetSockName().GetAddress() != aMessageInfo.GetSockAddr())
         {
             continue;
@@ -296,5 +294,5 @@ otError Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
     return OT_ERROR_NONE;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

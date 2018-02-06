@@ -32,21 +32,21 @@
  *
  */
 
-#include <stdint.h>
-#include "fsl_device_registers.h"
-#include "openthread/types.h"
-#include "openthread/platform/uart.h"
-#include "platform-kw41z.h"
-#include "fsl_clock.h"
-#include "fsl_port.h"
 #include "clock_config.h"
+#include "fsl_clock.h"
+#include "fsl_device_registers.h"
+#include "fsl_port.h"
+#include "platform-kw41z.h"
+#include <stdint.h>
+#include "openthread/platform/uart.h"
+#include "openthread/types.h"
 
 otInstance *sInstance;
 
 void PlatformInit(int argc, char *argv[])
 {
     uint32_t temp, tempTrim;
-    uint8_t revId;
+    uint8_t  revId;
 
     /* enable clock for PORTs */
     CLOCK_EnableClock(kCLOCK_PortA);
@@ -74,7 +74,9 @@ void PlatformInit(int argc, char *argv[])
     RSIM->RF_OSC_CTRL |= RSIM_RF_OSC_CTRL_RADIO_EXT_OSC_OVRD_EN_MASK;
 
     /* wait for RF_OSC_READY */
-    while ((RSIM->CONTROL & RSIM_CONTROL_RF_OSC_READY_MASK) == 0) {}
+    while ((RSIM->CONTROL & RSIM_CONTROL_RF_OSC_READY_MASK) == 0)
+    {
+    }
 
     if (revId == 0)
     {
@@ -83,7 +85,7 @@ void PlatformInit(int argc, char *argv[])
                            XCVR_TSM_OVRD0_BB_LDO_ADCDAC_EN_OVRD_MASK; /* Force ADC DAC LDO on to prevent BGAP failure */
         /* Reset LDO trim settings */
         RSIM->ANA_TRIM = tempTrim;
-    }/* Workaround for Rev 1.0 XTAL startup and ADC analog diagnostics circuitry */
+    } /* Workaround for Rev 1.0 XTAL startup and ADC analog diagnostics circuitry */
 
     /* Init board clock */
     BOARD_BootClockRUN();

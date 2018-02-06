@@ -32,18 +32,22 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <openthread/platform/logging.h>
 
+#include "platform-nrf5.h"
 #include <device/nrf.h>
 #include <drivers/clock/nrf_drv_clock.h>
-#include "platform-nrf5.h"
 
 #include <openthread/config.h>
 
-void __cxa_pure_virtual(void) { while (1); }
+void __cxa_pure_virtual(void)
+{
+    while (1)
+        ;
+}
 
 void PlatformInit(int argc, char *argv[])
 {

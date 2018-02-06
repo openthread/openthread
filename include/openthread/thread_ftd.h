@@ -382,8 +382,10 @@ OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t 
  * @sa otThreadGetChildInfoByIndex
  *
  */
-otError otThreadGetChildNextIp6Address(otInstance *aInstance, uint8_t aChildIndex, otChildIp6AddressIterator *aIterator,
-                                       otIp6Address *aAddress);
+otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
+                                       uint8_t                    aChildIndex,
+                                       otChildIp6AddressIterator *aIterator,
+                                       otIp6Address *             aAddress);
 
 /**
  * Get the current Router ID Sequence.
@@ -489,10 +491,9 @@ OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aPa
  * removed.
  *
  */
-typedef enum otThreadChildTableEvent
-{
-    OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,        ///< A child is being added.
-    OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED,      ///< A child is being removed.
+typedef enum otThreadChildTableEvent {
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,   ///< A child is being added.
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, ///< A child is being removed.
 } otThreadChildTableEvent;
 
 /**
@@ -533,7 +534,7 @@ void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCall
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_THREAD_FTD_H_
+#endif // OPENTHREAD_THREAD_FTD_H_

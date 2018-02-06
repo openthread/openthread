@@ -97,24 +97,27 @@ public:
     bool IsEnabled(void) const;
 
 private:
-
-    static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleRelayReceive(void *               aContext,
+                                   otCoapHeader *       aHeader,
+                                   otMessage *          aMessage,
                                    const otMessageInfo *aMessageInfo);
 
-    static void HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                               const otMessageInfo *aMessageInfo, otError aResult);
+    static void HandleResponse(void *               aContext,
+                               otCoapHeader *       aHeader,
+                               otMessage *          aMessage,
+                               const otMessageInfo *aMessageInfo,
+                               otError              aResult);
 
     void DeliverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-
-    Coap::Resource mRelayReceive;
+    Coap::Resource          mRelayReceive;
     otTmfProxyStreamHandler mStreamHandler;
-    void *mContext;
+    void *                  mContext;
 
     const Ip6::Address &mMeshLocal16;
-    Coap::Coap &mCoap;
+    Coap::Coap &        mCoap;
 };
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // TMF_PROXY_HPP_
+#endif // TMF_PROXY_HPP_

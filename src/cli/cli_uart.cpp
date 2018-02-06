@@ -44,11 +44,11 @@
 #include "cli/cli.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
+#include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
-#include "common/logging.hpp"
 
-#if  OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #include <openthread/platform/debug_uart.h>
 #endif
 
@@ -56,9 +56,9 @@ namespace ot {
 namespace Cli {
 
 static const char sCommandPrompt[] = {'>', ' '};
-static const char sEraseString[] = {'\b', ' ', '\b'};
-static const char CRNL[] = {'\r', '\n'};
-Uart *Uart::sUartServer;
+static const char sEraseString[]   = {'\b', ' ', '\b'};
+static const char CRNL[]           = {'\r', '\n'};
+Uart *            Uart::sUartServer;
 
 static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
@@ -66,7 +66,7 @@ extern "C" void otCliUartInit(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    Uart::sUartServer = new(&sCliUartRaw) Uart(instance);
+    Uart::sUartServer = new (&sCliUartRaw) Uart(instance);
 }
 
 extern "C" void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
@@ -92,12 +92,12 @@ extern "C" void otCliUartAppendResult(otError aError)
     Uart::sUartServer->GetInterpreter().AppendResult(aError);
 }
 
-Uart::Uart(Instance *aInstance):
-    mInterpreter(aInstance)
+Uart::Uart(Instance *aInstance)
+    : mInterpreter(aInstance)
 {
-    mRxLength = 0;
-    mTxHead = 0;
-    mTxLength = 0;
+    mRxLength   = 0;
+    mTxHead     = 0;
+    mTxLength   = 0;
     mSendLength = 0;
 
     otPlatUartEnable();
@@ -176,32 +176,32 @@ otError Uart::ProcessCommand(void)
         mRxBuffer[--mRxLength] = '\0';
     }
 
-#if  OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
-    /*
-     * Note this is here for this reason:
-     *
-     * TEXT (command) input ... in a test automation script occurs
-     * rapidly and often without gaps between the command and the
-     * terminal CR
-     *
-     * In contrast as a human is typing there is a delay between the
-     * last character of a command and the terminal CR which executes
-     * a command.
-     *
-     * During that human induced delay a tasklet may be scheduled and
-     * the LOG becomes confusing and it is hard to determine when
-     * something happened.  Which happened first? the command-CR or
-     * the tasklet.
-     *
-     * Yes, while rare it is a race condition that is hard to debug.
-     *
-     * Thus this is here to affirmatively LOG exactly when the CLI
-     * command is being executed.
-     */
+#if OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
+        /*
+         * Note this is here for this reason:
+         *
+         * TEXT (command) input ... in a test automation script occurs
+         * rapidly and often without gaps between the command and the
+         * terminal CR
+         *
+         * In contrast as a human is typing there is a delay between the
+         * last character of a command and the terminal CR which executes
+         * a command.
+         *
+         * During that human induced delay a tasklet may be scheduled and
+         * the LOG becomes confusing and it is hard to determine when
+         * something happened.  Which happened first? the command-CR or
+         * the tasklet.
+         *
+         * Yes, while rare it is a race condition that is hard to debug.
+         *
+         * Thus this is here to affirmatively LOG exactly when the CLI
+         * command is being executed.
+         */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    /* TODO: how exactly do we get the instance here? */
+        /* TODO: how exactly do we get the instance here? */
 #else
-    otLogInfoCli(&Instance::Get(),  "execute command: %s", mRxBuffer);
+    otLogInfoCli(&Instance::Get(), "execute command: %s", mRxBuffer);
 #endif
 #endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
@@ -223,7 +223,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
 
     for (int i = 0; i < aBufLength; i++)
     {
-        tail = (mTxHead + mTxLength) % kTxBufferSize;
+        tail            = (mTxHead + mTxLength) % kTxBufferSize;
         mTxBuffer[tail] = *aBuf++;
         mTxLength++;
     }
@@ -235,7 +235,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
 
 int Uart::OutputFormat(const char *fmt, ...)
 {
-    char buf[kMaxLineLength];
+    char    buf[kMaxLineLength];
     va_list ap;
 
     va_start(ap, fmt);
@@ -308,5 +308,5 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogRegion);
 }
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot

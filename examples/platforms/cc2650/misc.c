@@ -26,9 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <driverlib/sys_ctrl.h>
 #include <openthread/types.h>
 #include <openthread/platform/misc.h>
-#include <driverlib/sys_ctrl.h>
 
 /**
  * Function documented in platform/misc.h

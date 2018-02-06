@@ -35,7 +35,6 @@
 #ifndef OPENTHREAD_CHILD_SUPERVISION_H_
 #define OPENTHREAD_CHILD_SUPERVISION_H_
 
-
 #include "openthread/types.h"
 
 #ifdef __cplusplus
@@ -106,7 +105,7 @@ void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_CHILD_SUPERVISION_H_
+#endif // OPENTHREAD_CHILD_SUPERVISION_H_

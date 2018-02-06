@@ -79,13 +79,13 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
 {
     struct Node
     {
-        Node *mNext;
+        Node * mNext;
         size_t mSize;
     };
 
     ot::Crypto::Heap heap;
-    Node head;
-    size_t nnodes = 0;
+    Node             head;
+    size_t           nnodes = 0;
 
     srand(aSeed);
 
@@ -104,7 +104,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
         }
 
         VerifyOrQuit(last->mNext->mNext == NULL, "TestAllocateRandomly memory not initialized to zero!\n");
-        last = last->mNext;
+        last        = last->mNext;
         last->mSize = size;
         ++nnodes;
 
@@ -134,8 +134,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
 
             --nnodes;
         }
-    }
-    while (true);
+    } while (true);
 
     last = head.mNext;
 

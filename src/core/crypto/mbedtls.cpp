@@ -58,7 +58,7 @@ MbedTls::MbedTls(void)
     mbedtls_platform_set_calloc_free(CAlloc, Free);
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
 #endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES

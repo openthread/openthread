@@ -30,9 +30,9 @@
 
 #include <stddef.h>
 
-#include <openthread/platform/random.h>
-#include <openthread/types.h>
 #include <utils/code_utils.h>
+#include <openthread/types.h>
+#include <openthread/platform/random.h>
 
 #include <driverlib/prcm.h>
 #include <driverlib/trng.h>
@@ -56,7 +56,8 @@ void cc2652RandomInit(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_PERIPH);
 
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON);
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON)
+        ;
 
     PRCMPeripheralRunEnable(PRCM_PERIPH_TRNG);
     PRCMPeripheralSleepEnable(PRCM_DOMAIN_PERIPH);
@@ -71,7 +72,8 @@ void cc2652RandomInit(void)
  */
 uint32_t otPlatRandomGet(void)
 {
-    while (!(TRNGStatusGet() & TRNG_NUMBER_READY));
+    while (!(TRNGStatusGet() & TRNG_NUMBER_READY))
+        ;
 
     return TRNGNumberGet(TRNG_LOW_WORD);
 }
@@ -92,7 +94,7 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen)
     union
     {
         uint32_t u32[2];
-        uint8_t u8[8];
+        uint8_t  u8[8];
     } buffer;
 
     while (length < aLen)
@@ -100,14 +102,15 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen)
         if (length % 8 == 0)
         {
             /* we've run to the end of the buffer */
-            while (!(TRNGStatusGet() & TRNG_NUMBER_READY));
+            while (!(TRNGStatusGet() & TRNG_NUMBER_READY))
+                ;
 
             /*
              * don't use TRNGNumberGet here because it will tell the TRNG to
              * refill the entropy pool, instead we do it ourself.
              */
-            buffer.u32[0] = HWREG(TRNG_BASE + TRNG_O_OUT0);
-            buffer.u32[1] = HWREG(TRNG_BASE + TRNG_O_OUT1);
+            buffer.u32[0]                        = HWREG(TRNG_BASE + TRNG_O_OUT0);
+            buffer.u32[1]                        = HWREG(TRNG_BASE + TRNG_O_OUT1);
             HWREG(TRNG_BASE + TRNG_O_IRQFLAGCLR) = 0x1;
         }
 
@@ -119,14 +122,13 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen)
     return 0;
 }
 
-
 /**
  * Function documented in platform/random.h
  */
 otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    otError error = OT_ERROR_NONE;
-    size_t length = aOutputLength;
+    otError error  = OT_ERROR_NONE;
+    size_t  length = aOutputLength;
 
     otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 

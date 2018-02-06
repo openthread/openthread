@@ -44,9 +44,9 @@
 
 namespace ot {
 
-SourceMatchController::SourceMatchController(Instance &aInstance) :
-    InstanceLocator(aInstance),
-    mEnabled(false)
+SourceMatchController::SourceMatchController(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mEnabled(false)
 {
     ClearTable();
 }
@@ -147,8 +147,8 @@ otError SourceMatchController::AddAddress(const Child &aChild)
     {
         error = otPlatRadioAddSrcMatchShortEntry(&GetInstance(), aChild.GetRloc16());
 
-        otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)",
-                     aChild.GetRloc16(), otThreadErrorToString(error), error);
+        otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
+                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -184,8 +184,8 @@ void SourceMatchController::ClearEntry(Child &aChild)
     {
         error = otPlatRadioClearSrcMatchShortEntry(&GetInstance(), aChild.GetRloc16());
 
-        otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing short address: 0x%04x -- %s (%d)",
-                     aChild.GetRloc16(), otThreadErrorToString(error), error);
+        otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing short address: 0x%04x -- %s (%d)", aChild.GetRloc16(),
+                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -219,7 +219,7 @@ otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
     uint8_t numChildren;
-    Child *child;
+    Child * child;
 
     child = GetNetif().GetMle().GetChildren(&numChildren);
 
@@ -236,4 +236,4 @@ exit:
     return error;
 }
 
-}  // namespace ot
+} // namespace ot

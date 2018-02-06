@@ -45,7 +45,7 @@ using namespace ot;
 
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     if (aEnabled)
@@ -88,7 +88,7 @@ otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAdd
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetThreadNetif().AddExternalUnicastAddress(
-               *static_cast<const Ip6::NetifUnicastAddress *>(aAddress));
+        *static_cast<const Ip6::NetifUnicastAddress *>(aAddress));
 }
 
 otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
@@ -133,8 +133,11 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled)
     instance.GetThreadNetif().SetMulticastPromiscuous(aEnabled);
 }
 
-void otIp6SlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                      otIp6SlaacIidCreate aIidCreate, void *aContext)
+void otIp6SlaacUpdate(otInstance *        aInstance,
+                      otNetifAddress *    aAddresses,
+                      uint32_t            aNumAddresses,
+                      otIp6SlaacIidCreate aIidCreate,
+                      void *              aContext)
 {
     Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
 }
@@ -183,11 +186,10 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
-    otError error;
+    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetIp6().SendRaw(*static_cast<Message *>(aMessage),
-                                      instance.GetThreadNetif().GetInterfaceId());
+    error = instance.GetIp6().SendRaw(*static_cast<Message *>(aMessage), instance.GetThreadNetif().GetInterfaceId());
 
     return error;
 }
@@ -195,7 +197,7 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message *message = instance.GetMessagePool().New(Message::kTypeIp6, 0);
+    Message * message  = instance.GetMessagePool().New(Message::kTypeIp6, 0);
 
     if (message)
     {

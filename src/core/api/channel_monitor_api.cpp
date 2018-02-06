@@ -75,4 +75,4 @@ uint16_t otChannelMonitorGetChannelQuality(otInstance *aInstance, uint8_t aChann
     return instance.GetChannelMonitor().GetChannelQuality(aChannel);
 }
 
-#endif  // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR

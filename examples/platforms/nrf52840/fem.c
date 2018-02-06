@@ -32,8 +32,8 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stdint.h>
 #include <string.h>

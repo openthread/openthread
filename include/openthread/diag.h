@@ -94,7 +94,7 @@ bool otDiagIsEnabled(void);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_DIAG_H_
+#endif // OPENTHREAD_DIAG_H_

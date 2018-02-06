@@ -36,8 +36,8 @@
 #ifndef DIAG_H_
 #define DIAG_H_
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <openthread/types.h>
 #include <openthread/platform/radio.h>
@@ -124,7 +124,7 @@ void otPlatDiagAlarmCallback(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
 #endif

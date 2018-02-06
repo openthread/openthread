@@ -60,7 +60,11 @@ public:
      * This method initializes the Timestamp
      *
      */
-    void Init(void) { memset(mSeconds, 0, sizeof(mSeconds)); mTicks = 0; }
+    void Init(void)
+    {
+        memset(mSeconds, 0, sizeof(mSeconds));
+        mTicks = 0;
+    }
 
     /**
      * This method compares this timestamp to another.
@@ -80,10 +84,12 @@ public:
      * @returns The Seconds value.
      *
      */
-    uint64_t GetSeconds(void) const {
+    uint64_t GetSeconds(void) const
+    {
         uint64_t seconds = 0;
 
-        for (size_t i = 0; i < sizeof(mSeconds); i++) {
+        for (size_t i = 0; i < sizeof(mSeconds); i++)
+        {
             seconds = (seconds << 8) | mSeconds[i];
         }
 
@@ -96,8 +102,10 @@ public:
      * @param[in]  aSeconds  The Seconds value.
      *
      */
-    void SetSeconds(uint64_t aSeconds) {
-        for (size_t i = 0; i < sizeof(mSeconds); i++, aSeconds >>= 8) {
+    void SetSeconds(uint64_t aSeconds)
+    {
+        for (size_t i = 0; i < sizeof(mSeconds); i++, aSeconds >>= 8)
+        {
             mSeconds[sizeof(mSeconds) - 1 - i] = aSeconds & 0xff;
         }
     }
@@ -116,7 +124,8 @@ public:
      * @param[in]  aTicks  The Ticks value.
      *
      */
-    void SetTicks(uint16_t aTicks) {
+    void SetTicks(uint16_t aTicks)
+    {
         mTicks = HostSwap16((HostSwap16(mTicks) & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask));
     }
 
@@ -134,9 +143,10 @@ public:
      * @param[in]  aAuthoritative  The Authoritative value.
      *
      */
-    void SetAuthoritative(bool aAuthoritative) {
-        mTicks = HostSwap16((HostSwap16(mTicks) & kTicksMask) | ((aAuthoritative << kAuthoritativeOffset) &
-                                                                 kAuthoritativeMask));
+    void SetAuthoritative(bool aAuthoritative)
+    {
+        mTicks = HostSwap16((HostSwap16(mTicks) & kTicksMask) |
+                            ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask));
     }
 
 private:
@@ -152,7 +162,7 @@ private:
     uint16_t mTicks;
 } OT_TOOL_PACKED_END;
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_TIMESTAMP_HPP_
+#endif // MESHCOP_TIMESTAMP_HPP_

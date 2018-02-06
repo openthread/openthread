@@ -52,7 +52,7 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class DatasetManager: public InstanceLocator
+class DatasetManager : public InstanceLocator
 {
 public:
     /**
@@ -140,7 +140,6 @@ public:
     void HandleDetach(void);
 
 protected:
-
     /**
      * This constructor initializes the object.
      *
@@ -151,7 +150,10 @@ protected:
      * @param[in]  aTimerHandler  The registration timer handler.
      *
      */
-    DatasetManager(Instance &aInstance, const Tlv::Type aType, const char *aUriGet, const char *aUriSet,
+    DatasetManager(Instance &          aInstance,
+                   const Tlv::Type     aType,
+                   const char *        aUriGet,
+                   const char *        aUriSet,
                    TimerMilli::Handler aTimerHandler);
 
     /**
@@ -207,16 +209,18 @@ protected:
     void HandleTimer(void);
 
     DatasetLocal mLocal;
-    Timestamp mTimestamp;
-    bool mTimestampValid : 1;
+    Timestamp    mTimestamp;
+    bool         mTimestampValid : 1;
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError Register(void);
-    void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                         uint8_t *aTlvs, uint8_t aLength) const;
+    void    SendGetResponse(const Coap::Header &    aRequestHeader,
+                            const Ip6::MessageInfo &aMessageInfo,
+                            uint8_t *               aTlvs,
+                            uint8_t                 aLength) const;
 
     TimerMilli mTimer;
 
@@ -272,11 +276,13 @@ protected:
     otError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
+    void SendSetResponse(const Coap::Header &    aRequestHeader,
+                         const Ip6::MessageInfo &aMessageInfo,
+                         StateTlv::State         aState);
 #endif
 };
 
-class ActiveDataset: public DatasetManager
+class ActiveDataset : public DatasetManager
 {
 public:
     /**
@@ -350,16 +356,20 @@ public:
 
 private:
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void) { DatasetManager::HandleTimer(); }
+    void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleGet(void *               aContext,
+                          otCoapHeader *       aHeader,
+                          otMessage *          aMessage,
                           const otMessageInfo *aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void        HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
 #if OPENTHREAD_FTD
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleSet(void *               aContext,
+                          otCoapHeader *       aHeader,
+                          otMessage *          aMessage,
                           const otMessageInfo *aMessageInfo);
-    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     bool IsTlvInitialized(Tlv::Type aType);
 #endif
@@ -371,7 +381,7 @@ private:
 #endif
 };
 
-class PendingDataset: public DatasetManager
+class PendingDataset : public DatasetManager
 {
 public:
     /**
@@ -450,19 +460,23 @@ private:
     void StartDelayTimer(void);
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void) { DatasetManager::HandleTimer(); }
+    void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     static void HandleDelayTimer(Timer &aTimer);
-    void HandleDelayTimer(void);
+    void        HandleDelayTimer(void);
 
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleGet(void *               aContext,
+                          otCoapHeader *       aHeader,
+                          otMessage *          aMessage,
                           const otMessageInfo *aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void        HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
 #if OPENTHREAD_FTD
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleSet(void *               aContext,
+                          otCoapHeader *       aHeader,
+                          otMessage *          aMessage,
                           const otMessageInfo *aMessageInfo);
-    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     TimerMilli mDelayTimer;
@@ -474,7 +488,7 @@ private:
 #endif
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_DATASET_MANAGER_HPP_
+#endif // MESHCOP_DATASET_MANAGER_HPP_

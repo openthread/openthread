@@ -45,12 +45,15 @@
 namespace ot {
 namespace Mle {
 
-class MleRouter: public Mle
+class MleRouter : public Mle
 {
     friend class Mle;
 
 public:
-    explicit MleRouter(Instance &aInstance) : Mle(aInstance) { }
+    explicit MleRouter(Instance &aInstance)
+        : Mle(aInstance)
+    {
+    }
 
     bool IsSingleton(void) { return false; }
 
@@ -64,8 +67,8 @@ public:
     uint32_t GetLeaderAge(void) const { return 0; }
 
     uint32_t GetPreviousPartitionId(void) const { return 0; }
-    void SetPreviousPartitionId(uint32_t) { }
-    void SetRouterId(uint8_t) { }
+    void     SetPreviousPartitionId(uint32_t) {}
+    void     SetRouterId(uint8_t) {}
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
 
@@ -86,8 +89,10 @@ public:
 
     uint8_t GetChildIndex(const Child &) { return 0; }
 
-    Child *GetChildren(uint8_t *aNumChildren) {
-        if (aNumChildren != NULL) {
+    Child *GetChildren(uint8_t *aNumChildren)
+    {
+        if (aNumChildren != NULL)
+        {
             *aNumChildren = 0;
         }
 
@@ -96,20 +101,26 @@ public:
 
     bool IsMinimalChild(uint16_t) { return false; }
 
-    void RestoreChildren(void) { }
-    otError RemoveStoredChild(uint16_t) {return OT_ERROR_NOT_IMPLEMENTED; }
-    otError StoreChild(uint16_t) {return OT_ERROR_NOT_IMPLEMENTED; }
+    void    RestoreChildren(void) {}
+    otError RemoveStoredChild(uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError StoreChild(uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     Neighbor *GetNeighbor(uint16_t aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Ip6::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
-    Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress) { OT_UNUSED_VARIABLE(aAddress); return NULL; }
+    Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
+    {
+        OT_UNUSED_VARIABLE(aAddress);
+        return NULL;
+    }
 
     otError GetNextNeighborInfo(otNeighborInfoIterator &, otNeighborInfo &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
-    Router *GetRouters(uint8_t *aNumRouters) {
-        if (aNumRouters != NULL) {
+    Router *GetRouters(uint8_t *aNumRouters)
+    {
+        if (aNumRouters != NULL)
+        {
             *aNumRouters = 0;
         }
 
@@ -118,16 +129,17 @@ public:
 
     static int ComparePartitions(bool, const LeaderDataTlv &, bool, const LeaderDataTlv &) { return 0; }
 
-    void ResolveRoutingLoops(uint16_t, uint16_t) { }
+    void ResolveRoutingLoops(uint16_t, uint16_t) {}
 
-    otError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header) {
+    otError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
+    {
         return Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);
     }
 
     static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
 
-    void FillConnectivityTlv(ConnectivityTlv &) { }
-    void FillRouteTlv(RouteTlv &) { }
+    void FillConnectivityTlv(ConnectivityTlv &) {}
+    void FillRouteTlv(RouteTlv &) {}
 
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
@@ -156,13 +168,17 @@ private:
     otError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     otError HandleNetworkDataUpdateRouter(void) { return OT_ERROR_NONE; }
     otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
-    void HandlePartitionChange(void) { }
+    void    HandlePartitionChange(void) {}
 
-    void StopAdvertiseTimer(void) { }
-    otError ProcessRouteTlv(const RouteTlv &aRoute) { OT_UNUSED_VARIABLE(aRoute); return OT_ERROR_NONE; }
+    void    StopAdvertiseTimer(void) {}
+    otError ProcessRouteTlv(const RouteTlv &aRoute)
+    {
+        OT_UNUSED_VARIABLE(aRoute);
+        return OT_ERROR_NONE;
+    }
 };
 
-}  // namespace Mle
-}  // namespace ot
+} // namespace Mle
+} // namespace ot
 
-#endif  // MLE_ROUTER_MTD_HPP_
+#endif // MLE_ROUTER_MTD_HPP_

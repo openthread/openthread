@@ -50,18 +50,18 @@ OT_TOOL_PACKED_BEGIN
 class CommissioningData
 {
 public:
-    uint8_t GetLength(void) const {
-        return sizeof(Tlv) + mBorderAgentLocator.GetLength() +
-               sizeof(Tlv) + mCommissionerSessionId.GetLength() +
+    uint8_t GetLength(void) const
+    {
+        return sizeof(Tlv) + mBorderAgentLocator.GetLength() + sizeof(Tlv) + mCommissionerSessionId.GetLength() +
                sizeof(Tlv) + mSteeringData.GetLength();
     }
 
-    BorderAgentLocatorTlv mBorderAgentLocator;
+    BorderAgentLocatorTlv    mBorderAgentLocator;
     CommissionerSessionIdTlv mCommissionerSessionId;
-    SteeringDataTlv mSteeringData;
+    SteeringDataTlv          mSteeringData;
 } OT_TOOL_PACKED_END;
 
-class Leader: public InstanceLocator
+class Leader : public InstanceLocator
 {
 public:
     /**
@@ -115,19 +115,25 @@ private:
     };
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
-    static void HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandlePetition(void *               aContext,
+                               otCoapHeader *       aHeader,
+                               otMessage *          aMessage,
                                const otMessageInfo *aMessageInfo);
-    void HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendPetitionResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                 StateTlv::State aState);
+    void        HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError     SendPetitionResponse(const Coap::Header &    aRequestHeader,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     StateTlv::State         aState);
 
-    static void HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleKeepAlive(void *               aContext,
+                                otCoapHeader *       aHeader,
+                                otMessage *          aMessage,
                                 const otMessageInfo *aMessageInfo);
-    void HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                  StateTlv::State aState);
+    void        HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError     SendKeepAliveResponse(const Coap::Header &    aRequestHeader,
+                                      const Ip6::MessageInfo &aMessageInfo,
+                                      StateTlv::State         aState);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
@@ -135,15 +141,15 @@ private:
 
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
-    TimerMilli mTimer;
+    TimerMilli     mTimer;
 
     uint32_t mDelayTimerMinimal;
 
     CommissionerIdTlv mCommissionerId;
-    uint16_t mSessionId;
+    uint16_t          mSessionId;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_LEADER_HPP_
+#endif // MESHCOP_LEADER_HPP_

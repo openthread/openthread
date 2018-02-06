@@ -38,49 +38,49 @@
 
 enum
 {
-    IEEE802154_MIN_LENGTH         = 5,
-    IEEE802154_MAX_LENGTH         = 127,
-    IEEE802154_ACK_LENGTH         = 5,
+    IEEE802154_MIN_LENGTH = 5,
+    IEEE802154_MAX_LENGTH = 127,
+    IEEE802154_ACK_LENGTH = 5,
 
-    IEEE802154_BROADCAST          = 0xffff,
+    IEEE802154_BROADCAST = 0xffff,
 
-    IEEE802154_FRAME_TYPE_ACK     = 2 << 0,
-    IEEE802154_FRAME_TYPE_MACCMD  = 3 << 0,
-    IEEE802154_FRAME_TYPE_MASK    = 7 << 0,
+    IEEE802154_FRAME_TYPE_ACK    = 2 << 0,
+    IEEE802154_FRAME_TYPE_MACCMD = 3 << 0,
+    IEEE802154_FRAME_TYPE_MASK   = 7 << 0,
 
-    IEEE802154_SECURITY_ENABLED   = 1 << 3,
-    IEEE802154_FRAME_PENDING      = 1 << 4,
-    IEEE802154_ACK_REQUEST        = 1 << 5,
-    IEEE802154_PANID_COMPRESSION  = 1 << 6,
+    IEEE802154_SECURITY_ENABLED  = 1 << 3,
+    IEEE802154_FRAME_PENDING     = 1 << 4,
+    IEEE802154_ACK_REQUEST       = 1 << 5,
+    IEEE802154_PANID_COMPRESSION = 1 << 6,
 
-    IEEE802154_DST_ADDR_NONE      = 0 << 2,
-    IEEE802154_DST_ADDR_SHORT     = 2 << 2,
-    IEEE802154_DST_ADDR_EXT       = 3 << 2,
-    IEEE802154_DST_ADDR_MASK      = 3 << 2,
+    IEEE802154_DST_ADDR_NONE  = 0 << 2,
+    IEEE802154_DST_ADDR_SHORT = 2 << 2,
+    IEEE802154_DST_ADDR_EXT   = 3 << 2,
+    IEEE802154_DST_ADDR_MASK  = 3 << 2,
 
-    IEEE802154_SRC_ADDR_NONE      = 0 << 6,
-    IEEE802154_SRC_ADDR_SHORT     = 2 << 6,
-    IEEE802154_SRC_ADDR_EXT       = 3 << 6,
-    IEEE802154_SRC_ADDR_MASK      = 3 << 6,
+    IEEE802154_SRC_ADDR_NONE  = 0 << 6,
+    IEEE802154_SRC_ADDR_SHORT = 2 << 6,
+    IEEE802154_SRC_ADDR_EXT   = 3 << 6,
+    IEEE802154_SRC_ADDR_MASK  = 3 << 6,
 
-    IEEE802154_DSN_OFFSET         = 2,
-    IEEE802154_DSTPAN_OFFSET      = 3,
-    IEEE802154_DSTADDR_OFFSET     = 5,
+    IEEE802154_DSN_OFFSET     = 2,
+    IEEE802154_DSTPAN_OFFSET  = 3,
+    IEEE802154_DSTADDR_OFFSET = 5,
 
-    IEEE802154_SEC_LEVEL_MASK     = 7 << 0,
+    IEEE802154_SEC_LEVEL_MASK = 7 << 0,
 
-    IEEE802154_KEY_ID_MODE_0      = 0 << 3,
-    IEEE802154_KEY_ID_MODE_1      = 1 << 3,
-    IEEE802154_KEY_ID_MODE_2      = 2 << 3,
-    IEEE802154_KEY_ID_MODE_3      = 3 << 3,
-    IEEE802154_KEY_ID_MODE_MASK   = 3 << 3,
+    IEEE802154_KEY_ID_MODE_0    = 0 << 3,
+    IEEE802154_KEY_ID_MODE_1    = 1 << 3,
+    IEEE802154_KEY_ID_MODE_2    = 2 << 3,
+    IEEE802154_KEY_ID_MODE_3    = 3 << 3,
+    IEEE802154_KEY_ID_MODE_MASK = 3 << 3,
 
-    IEEE802154_MACCMD_DATA_REQ    = 4,
+    IEEE802154_MACCMD_DATA_REQ = 4,
 };
 
 enum
 {
-    POSIX_RECEIVE_SENSITIVITY = -100,  // dBm
+    POSIX_RECEIVE_SENSITIVITY   = -100, // dBm
     POSIX_MAX_SRC_MATCH_ENTRIES = OPENTHREAD_CONFIG_MAX_CHILDREN,
 };
 
@@ -96,27 +96,27 @@ static void radioSendMessage(otInstance *aInstance);
 static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
 
-static otRadioState sState = OT_RADIO_STATE_DISABLED;
+static otRadioState        sState = OT_RADIO_STATE_DISABLED;
 static struct RadioMessage sReceiveMessage;
 static struct RadioMessage sTransmitMessage;
 static struct RadioMessage sAckMessage;
-static otRadioFrame sReceiveFrame;
-static otRadioFrame sTransmitFrame;
-static otRadioFrame sAckFrame;
+static otRadioFrame        sReceiveFrame;
+static otRadioFrame        sTransmitFrame;
+static otRadioFrame        sAckFrame;
 
-static uint8_t sExtendedAddress[OT_EXT_ADDRESS_SIZE];
+static uint8_t  sExtendedAddress[OT_EXT_ADDRESS_SIZE];
 static uint16_t sShortAddress;
 static uint16_t sPanid;
 static uint16_t sPortOffset = 0;
-static int sSockFd;
-static bool sPromiscuous = false;
-static bool sAckWait = false;
+static int      sSockFd;
+static bool     sPromiscuous = false;
+static bool     sAckWait     = false;
 
-static uint8_t sShortAddressMatchTableCount = 0;
-static uint8_t sExtAddressMatchTableCount = 0;
-static uint16_t sShortAddressMatchTable[POSIX_MAX_SRC_MATCH_ENTRIES];
+static uint8_t      sShortAddressMatchTableCount = 0;
+static uint8_t      sExtAddressMatchTableCount   = 0;
+static uint16_t     sShortAddressMatchTable[POSIX_MAX_SRC_MATCH_ENTRIES];
 static otExtAddress sExtAddressMatchTable[POSIX_MAX_SRC_MATCH_ENTRIES];
-static bool sSrcMatchEnabled = false;
+static bool         sSrcMatchEnabled = false;
 
 static bool findShortAddress(uint16_t aShortAddress)
 {
@@ -176,9 +176,9 @@ static inline bool isPanIdCompressed(const uint8_t *frame)
 static inline bool isDataRequestAndHasFramePending(const uint8_t *frame)
 {
     const uint8_t *cur = frame;
-    uint8_t securityControl;
-    bool isDataRequest = false;
-    bool hasFramePending = false;
+    uint8_t        securityControl;
+    bool           isDataRequest   = false;
+    bool           hasFramePending = false;
 
     // FCF + DSN
     cur += 2 + 1;
@@ -302,41 +302,26 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
     // CRC-16/CCITT, CRC-16/CCITT-TRUE, CRC-CCITT
     // width=16 poly=0x1021 init=0x0000 refin=true refout=true xorout=0x0000 check=0x2189 name="KERMIT"
     // http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit
-    static const uint16_t sFcsTable[256] =
-    {
-        0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf,
-        0x8c48, 0x9dc1, 0xaf5a, 0xbed3, 0xca6c, 0xdbe5, 0xe97e, 0xf8f7,
-        0x1081, 0x0108, 0x3393, 0x221a, 0x56a5, 0x472c, 0x75b7, 0x643e,
-        0x9cc9, 0x8d40, 0xbfdb, 0xae52, 0xdaed, 0xcb64, 0xf9ff, 0xe876,
-        0x2102, 0x308b, 0x0210, 0x1399, 0x6726, 0x76af, 0x4434, 0x55bd,
-        0xad4a, 0xbcc3, 0x8e58, 0x9fd1, 0xeb6e, 0xfae7, 0xc87c, 0xd9f5,
-        0x3183, 0x200a, 0x1291, 0x0318, 0x77a7, 0x662e, 0x54b5, 0x453c,
-        0xbdcb, 0xac42, 0x9ed9, 0x8f50, 0xfbef, 0xea66, 0xd8fd, 0xc974,
-        0x4204, 0x538d, 0x6116, 0x709f, 0x0420, 0x15a9, 0x2732, 0x36bb,
-        0xce4c, 0xdfc5, 0xed5e, 0xfcd7, 0x8868, 0x99e1, 0xab7a, 0xbaf3,
-        0x5285, 0x430c, 0x7197, 0x601e, 0x14a1, 0x0528, 0x37b3, 0x263a,
-        0xdecd, 0xcf44, 0xfddf, 0xec56, 0x98e9, 0x8960, 0xbbfb, 0xaa72,
-        0x6306, 0x728f, 0x4014, 0x519d, 0x2522, 0x34ab, 0x0630, 0x17b9,
-        0xef4e, 0xfec7, 0xcc5c, 0xddd5, 0xa96a, 0xb8e3, 0x8a78, 0x9bf1,
-        0x7387, 0x620e, 0x5095, 0x411c, 0x35a3, 0x242a, 0x16b1, 0x0738,
-        0xffcf, 0xee46, 0xdcdd, 0xcd54, 0xb9eb, 0xa862, 0x9af9, 0x8b70,
-        0x8408, 0x9581, 0xa71a, 0xb693, 0xc22c, 0xd3a5, 0xe13e, 0xf0b7,
-        0x0840, 0x19c9, 0x2b52, 0x3adb, 0x4e64, 0x5fed, 0x6d76, 0x7cff,
-        0x9489, 0x8500, 0xb79b, 0xa612, 0xd2ad, 0xc324, 0xf1bf, 0xe036,
-        0x18c1, 0x0948, 0x3bd3, 0x2a5a, 0x5ee5, 0x4f6c, 0x7df7, 0x6c7e,
-        0xa50a, 0xb483, 0x8618, 0x9791, 0xe32e, 0xf2a7, 0xc03c, 0xd1b5,
-        0x2942, 0x38cb, 0x0a50, 0x1bd9, 0x6f66, 0x7eef, 0x4c74, 0x5dfd,
-        0xb58b, 0xa402, 0x9699, 0x8710, 0xf3af, 0xe226, 0xd0bd, 0xc134,
-        0x39c3, 0x284a, 0x1ad1, 0x0b58, 0x7fe7, 0x6e6e, 0x5cf5, 0x4d7c,
-        0xc60c, 0xd785, 0xe51e, 0xf497, 0x8028, 0x91a1, 0xa33a, 0xb2b3,
-        0x4a44, 0x5bcd, 0x6956, 0x78df, 0x0c60, 0x1de9, 0x2f72, 0x3efb,
-        0xd68d, 0xc704, 0xf59f, 0xe416, 0x90a9, 0x8120, 0xb3bb, 0xa232,
-        0x5ac5, 0x4b4c, 0x79d7, 0x685e, 0x1ce1, 0x0d68, 0x3ff3, 0x2e7a,
-        0xe70e, 0xf687, 0xc41c, 0xd595, 0xa12a, 0xb0a3, 0x8238, 0x93b1,
-        0x6b46, 0x7acf, 0x4854, 0x59dd, 0x2d62, 0x3ceb, 0x0e70, 0x1ff9,
-        0xf78f, 0xe606, 0xd49d, 0xc514, 0xb1ab, 0xa022, 0x92b9, 0x8330,
-        0x7bc7, 0x6a4e, 0x58d5, 0x495c, 0x3de3, 0x2c6a, 0x1ef1, 0x0f78
-    };
+    static const uint16_t sFcsTable[256] = {
+        0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf, 0x8c48, 0x9dc1, 0xaf5a, 0xbed3, 0xca6c, 0xdbe5,
+        0xe97e, 0xf8f7, 0x1081, 0x0108, 0x3393, 0x221a, 0x56a5, 0x472c, 0x75b7, 0x643e, 0x9cc9, 0x8d40, 0xbfdb, 0xae52,
+        0xdaed, 0xcb64, 0xf9ff, 0xe876, 0x2102, 0x308b, 0x0210, 0x1399, 0x6726, 0x76af, 0x4434, 0x55bd, 0xad4a, 0xbcc3,
+        0x8e58, 0x9fd1, 0xeb6e, 0xfae7, 0xc87c, 0xd9f5, 0x3183, 0x200a, 0x1291, 0x0318, 0x77a7, 0x662e, 0x54b5, 0x453c,
+        0xbdcb, 0xac42, 0x9ed9, 0x8f50, 0xfbef, 0xea66, 0xd8fd, 0xc974, 0x4204, 0x538d, 0x6116, 0x709f, 0x0420, 0x15a9,
+        0x2732, 0x36bb, 0xce4c, 0xdfc5, 0xed5e, 0xfcd7, 0x8868, 0x99e1, 0xab7a, 0xbaf3, 0x5285, 0x430c, 0x7197, 0x601e,
+        0x14a1, 0x0528, 0x37b3, 0x263a, 0xdecd, 0xcf44, 0xfddf, 0xec56, 0x98e9, 0x8960, 0xbbfb, 0xaa72, 0x6306, 0x728f,
+        0x4014, 0x519d, 0x2522, 0x34ab, 0x0630, 0x17b9, 0xef4e, 0xfec7, 0xcc5c, 0xddd5, 0xa96a, 0xb8e3, 0x8a78, 0x9bf1,
+        0x7387, 0x620e, 0x5095, 0x411c, 0x35a3, 0x242a, 0x16b1, 0x0738, 0xffcf, 0xee46, 0xdcdd, 0xcd54, 0xb9eb, 0xa862,
+        0x9af9, 0x8b70, 0x8408, 0x9581, 0xa71a, 0xb693, 0xc22c, 0xd3a5, 0xe13e, 0xf0b7, 0x0840, 0x19c9, 0x2b52, 0x3adb,
+        0x4e64, 0x5fed, 0x6d76, 0x7cff, 0x9489, 0x8500, 0xb79b, 0xa612, 0xd2ad, 0xc324, 0xf1bf, 0xe036, 0x18c1, 0x0948,
+        0x3bd3, 0x2a5a, 0x5ee5, 0x4f6c, 0x7df7, 0x6c7e, 0xa50a, 0xb483, 0x8618, 0x9791, 0xe32e, 0xf2a7, 0xc03c, 0xd1b5,
+        0x2942, 0x38cb, 0x0a50, 0x1bd9, 0x6f66, 0x7eef, 0x4c74, 0x5dfd, 0xb58b, 0xa402, 0x9699, 0x8710, 0xf3af, 0xe226,
+        0xd0bd, 0xc134, 0x39c3, 0x284a, 0x1ad1, 0x0b58, 0x7fe7, 0x6e6e, 0x5cf5, 0x4d7c, 0xc60c, 0xd785, 0xe51e, 0xf497,
+        0x8028, 0x91a1, 0xa33a, 0xb2b3, 0x4a44, 0x5bcd, 0x6956, 0x78df, 0x0c60, 0x1de9, 0x2f72, 0x3efb, 0xd68d, 0xc704,
+        0xf59f, 0xe416, 0x90a9, 0x8120, 0xb3bb, 0xa232, 0x5ac5, 0x4b4c, 0x79d7, 0x685e, 0x1ce1, 0x0d68, 0x3ff3, 0x2e7a,
+        0xe70e, 0xf687, 0xc41c, 0xd595, 0xa12a, 0xb0a3, 0x8238, 0x93b1, 0x6b46, 0x7acf, 0x4854, 0x59dd, 0x2d62, 0x3ceb,
+        0x0e70, 0x1ff9, 0xf78f, 0xe606, 0xd49d, 0xc514, 0xb1ab, 0xa022, 0x92b9, 0x8330, 0x7bc7, 0x6a4e, 0x58d5, 0x495c,
+        0x3de3, 0x2c6a, 0x1ef1, 0x0f78};
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
@@ -384,7 +369,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 void platformRadioInit(void)
 {
     struct sockaddr_in sockaddr;
-    char *offset;
+    char *             offset;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
@@ -430,9 +415,9 @@ void platformRadioInit(void)
         exit(EXIT_FAILURE);
     }
 
-    sReceiveFrame.mPsdu = sReceiveMessage.mPsdu;
+    sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
-    sAckFrame.mPsdu = sAckMessage.mPsdu;
+    sAckFrame.mPsdu      = sAckMessage.mPsdu;
 }
 
 void platformRadioDeinit(void)
@@ -473,7 +458,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
-        error = OT_ERROR_NONE;
+        error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
     }
 
@@ -487,9 +472,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (sState != OT_RADIO_STATE_DISABLED)
     {
-        error = OT_ERROR_NONE;
-        sState = OT_RADIO_STATE_RECEIVE;
-        sAckWait = false;
+        error                  = OT_ERROR_NONE;
+        sState                 = OT_RADIO_STATE_RECEIVE;
+        sAckWait               = false;
         sReceiveFrame.mChannel = aChannel;
     }
 
@@ -504,7 +489,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
-        error = OT_ERROR_NONE;
+        error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_TRANSMIT;
     }
 
@@ -548,17 +533,15 @@ void radioReceive(otInstance *aInstance)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     // Timestamp
     sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-    sReceiveFrame.mUsec = 0;  // Don't support microsecond timer for now.
+    sReceiveFrame.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
     sReceiveFrame.mLength = (uint8_t)(rval - 1);
 
-    if (sAckWait &&
-        sTransmitFrame.mChannel == sReceiveMessage.mChannel &&
-        isFrameTypeAck(sReceiveFrame.mPsdu) &&
+    if (sAckWait && sTransmitFrame.mChannel == sReceiveMessage.mChannel && isFrameTypeAck(sReceiveFrame.mPsdu) &&
         getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu))
     {
-        sState = OT_RADIO_STATE_RECEIVE;
+        sState   = OT_RADIO_STATE_RECEIVE;
         sAckWait = false;
 
         otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
@@ -622,8 +605,8 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 
 void platformRadioProcess(otInstance *aInstance)
 {
-    const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd = { sSockFd, flags, 0 };
+    const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    struct pollfd pollfd = {sSockFd, flags, 0};
 
     if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
@@ -638,10 +621,10 @@ void platformRadioProcess(otInstance *aInstance)
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-    uint32_t i;
+    uint32_t           i;
     struct sockaddr_in sockaddr;
 
-    uint16_t crc = 0;
+    uint16_t crc        = 0;
     uint16_t crc_offset = aFrame->mLength - sizeof(uint16_t);
 
     for (i = 0; i < crc_offset; i++)
@@ -649,7 +632,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
         crc = crc16_citt(crc, aMessage->mPsdu[i]);
     }
 
-    aMessage->mPsdu[crc_offset] = crc & 0xff;
+    aMessage->mPsdu[crc_offset]     = crc & 0xff;
     aMessage->mPsdu[crc_offset + 1] = crc >> 8;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
@@ -666,8 +649,8 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
         }
 
         sockaddr.sin_port = htons(9000 + sPortOffset + i);
-        rval = sendto(sSockFd, (const char *)aMessage, 1 + aFrame->mLength,
-                      0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        rval = sendto(sSockFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr,
+                      sizeof(sockaddr));
 
         if (rval < 0)
         {
@@ -679,7 +662,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 
 void radioSendAck(void)
 {
-    sAckFrame.mLength = IEEE802154_ACK_LENGTH;
+    sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
     sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
 
     if (isDataRequestAndHasFramePending(sReceiveFrame.mPsdu))
@@ -697,10 +680,10 @@ void radioSendAck(void)
 
 void radioProcessFrame(otInstance *aInstance)
 {
-    otError error = OT_ERROR_NONE;
-    otPanId dstpan;
+    otError        error = OT_ERROR_NONE;
+    otPanId        dstpan;
     otShortAddress short_address;
-    otExtAddress ext_address;
+    otExtAddress   ext_address;
 
     otEXPECT_ACTION(sPromiscuous == false, error = OT_ERROR_NONE);
 
@@ -710,10 +693,10 @@ void radioProcessFrame(otInstance *aInstance)
         break;
 
     case IEEE802154_DST_ADDR_SHORT:
-        dstpan = getDstPan(sReceiveFrame.mPsdu);
+        dstpan        = getDstPan(sReceiveFrame.mPsdu);
         short_address = getShortAddress(sReceiveFrame.mPsdu);
         otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
-                        (short_address == IEEE802154_BROADCAST || short_address == sShortAddress),
+                            (short_address == IEEE802154_BROADCAST || short_address == sShortAddress),
                         error = OT_ERROR_ABORT);
         break;
 
@@ -721,7 +704,7 @@ void radioProcessFrame(otInstance *aInstance)
         dstpan = getDstPan(sReceiveFrame.mPsdu);
         getExtAddress(sReceiveFrame.mPsdu, &ext_address);
         otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
-                        memcmp(&ext_address, sExtendedAddress, sizeof(ext_address)) == 0,
+                            memcmp(&ext_address, sExtendedAddress, sizeof(ext_address)) == 0,
                         error = OT_ERROR_ABORT);
         break;
 
@@ -731,7 +714,7 @@ void radioProcessFrame(otInstance *aInstance)
     }
 
     sReceiveFrame.mRssi = -20;
-    sReceiveFrame.mLqi = OT_RADIO_LQI_NONE;
+    sReceiveFrame.mLqi  = OT_RADIO_LQI_NONE;
 
     // generate acknowledgment
     if (isAckRequested(sReceiveFrame.mPsdu))
@@ -808,7 +791,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
         if (sShortAddressMatchTable[i] == aShortAddress)
         {
             sShortAddressMatchTable[i] = sShortAddressMatchTable[--sShortAddressMatchTableCount];
-            error = OT_ERROR_NONE;
+            error                      = OT_ERROR_NONE;
             goto exit;
         }
     }
@@ -829,7 +812,7 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
         if (!memcmp(&sExtAddressMatchTable[i], aExtAddress, sizeof(otExtAddress)))
         {
             sExtAddressMatchTable[i] = sExtAddressMatchTable[--sExtAddressMatchTableCount];
-            error = OT_ERROR_NONE;
+            error                    = OT_ERROR_NONE;
             goto exit;
         }
     }

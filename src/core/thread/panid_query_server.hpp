@@ -56,7 +56,7 @@ class ThreadTargetTlv;
  * This class implements handling PANID Query Requests.
  *
  */
-class PanIdQueryServer: public InstanceLocator
+class PanIdQueryServer : public InstanceLocator
 {
 public:
     /**
@@ -68,25 +68,28 @@ public:
 private:
     enum
     {
-        kScanDelay = 1000,  ///< SCAN_DELAY (milliseconds)
+        kScanDelay = 1000, ///< SCAN_DELAY (milliseconds)
     };
 
-    static void HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleQuery(void *               aContext,
+                            otCoapHeader *       aHeader,
+                            otMessage *          aMessage,
+                            const otMessageInfo *aMessageInfo);
+    void        HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
-    void HandleScanResult(Mac::Frame *aFrame);
+    void        HandleScanResult(Mac::Frame *aFrame);
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     otError SendConflict(void);
 
     Ip6::Address mCommissioner;
-    uint32_t mChannelMask;
-    uint16_t mPanId;
+    uint32_t     mChannelMask;
+    uint16_t     mPanId;
 
     TimerMilli mTimer;
 
@@ -97,6 +100,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // PANID_QUERY_SERVER_HPP_
+#endif // PANID_QUERY_SERVER_HPP_

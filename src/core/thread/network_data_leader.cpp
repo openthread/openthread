@@ -46,8 +46,8 @@
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
-#include "thread/mle_router.hpp"
 #include "thread/lowpan.hpp"
+#include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -57,39 +57,38 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace NetworkData {
 
-LeaderBase::LeaderBase(Instance &aInstance):
-    NetworkData(aInstance, false)
+LeaderBase::LeaderBase(Instance &aInstance)
+    : NetworkData(aInstance, false)
 {
     Reset();
 }
 
 void LeaderBase::Reset(void)
 {
-    mVersion = static_cast<uint8_t>(otPlatRandomGet());
+    mVersion       = static_cast<uint8_t>(otPlatRandomGet());
     mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
-    mLength = 0;
+    mLength        = 0;
     GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
 {
     ThreadNetif &netif = GetNetif();
-    PrefixTlv *prefix;
-    ContextTlv *contextTlv;
+    PrefixTlv *  prefix;
+    ContextTlv * contextTlv;
 
     aContext.mPrefixLength = 0;
 
     if (PrefixMatch(netif.GetMle().GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
     {
-        aContext.mPrefix = netif.GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix       = netif.GetMle().GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
-        aContext.mContextId = 0;
+        aContext.mContextId    = 0;
         aContext.mCompressFlag = true;
     }
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -112,9 +111,9 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
         if (prefix->GetPrefixLength() > aContext.mPrefixLength)
         {
-            aContext.mPrefix = prefix->GetPrefix();
+            aContext.mPrefix       = prefix->GetPrefix();
             aContext.mPrefixLength = prefix->GetPrefixLength();
-            aContext.mContextId = contextTlv->GetContextId();
+            aContext.mContextId    = contextTlv->GetContextId();
             aContext.mCompressFlag = contextTlv->IsCompress();
         }
     }
@@ -124,29 +123,28 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
 otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
 {
-    otError error = OT_ERROR_NOT_FOUND;
-    PrefixTlv *prefix;
+    otError     error = OT_ERROR_NOT_FOUND;
+    PrefixTlv * prefix;
     ContextTlv *contextTlv;
 
     if (aContextId == 0)
     {
-        aContext.mPrefix = GetNetif().GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix       = GetNetif().GetMle().GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
-        aContext.mContextId = 0;
+        aContext.mContextId    = 0;
         aContext.mCompressFlag = true;
         ExitNow(error = OT_ERROR_NONE);
     }
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
             continue;
         }
 
-        prefix = static_cast<PrefixTlv *>(cur);
+        prefix     = static_cast<PrefixTlv *>(cur);
         contextTlv = FindContext(*prefix);
 
         if (contextTlv == NULL)
@@ -159,9 +157,9 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
             continue;
         }
 
-        aContext.mPrefix = prefix->GetPrefix();
+        aContext.mPrefix       = prefix->GetPrefix();
         aContext.mPrefixLength = prefix->GetPrefixLength();
-        aContext.mContextId = contextTlv->GetContextId();
+        aContext.mContextId    = contextTlv->GetContextId();
         aContext.mCompressFlag = contextTlv->IsCompress();
         ExitNow(error = OT_ERROR_NONE);
     }
@@ -173,18 +171,18 @@ exit:
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError         error = OT_ERROR_NOT_FOUND;
     Lowpan::Context lowpanContext;
 
     if ((GetContext(aContextId, lowpanContext)) == OT_ERROR_NONE)
     {
         otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-        otBorderRouterConfig config;
+        otBorderRouterConfig  config;
 
         while (GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
         {
-            if (otIp6PrefixMatch(&(config.mPrefix.mPrefix),
-                                 reinterpret_cast<const otIp6Address *>(lowpanContext.mPrefix)) >= config.mPrefix.mLength)
+            if (otIp6PrefixMatch(&(config.mPrefix.mPrefix), reinterpret_cast<const otIp6Address *>(
+                                                                lowpanContext.mPrefix)) >= config.mPrefix.mLength)
             {
                 aRloc16 = config.mRloc16;
                 ExitNow(error = OT_ERROR_NONE);
@@ -195,21 +193,20 @@ otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 exit:
     return error;
 }
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
 {
     PrefixTlv *prefix;
-    bool rval = false;
+    bool       rval = false;
 
     if (memcmp(aAddress.mFields.m8, GetNetif().GetMle().GetMeshLocalPrefix(), 8) == 0)
     {
         ExitNow(rval = true);
     }
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -235,15 +232,16 @@ exit:
     return rval;
 }
 
-otError LeaderBase::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination,
-                                uint8_t *aPrefixMatch, uint16_t *aRloc16)
+otError LeaderBase::RouteLookup(const Ip6::Address &aSource,
+                                const Ip6::Address &aDestination,
+                                uint8_t *           aPrefixMatch,
+                                uint16_t *          aRloc16)
 {
-    otError error = OT_ERROR_NO_ROUTE;
+    otError    error = OT_ERROR_NO_ROUTE;
     PrefixTlv *prefix;
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -275,22 +273,23 @@ exit:
     return error;
 }
 
-otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination,
-                                        uint8_t *aPrefixMatch, uint16_t *aRloc16)
+otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
+                                        const Ip6::Address &aDestination,
+                                        uint8_t *           aPrefixMatch,
+                                        uint16_t *          aRloc16)
 {
-    ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NO_ROUTE;
-    PrefixTlv *prefix;
-    HasRouteTlv *hasRoute;
-    HasRouteEntry *entry;
-    HasRouteEntry *rvalRoute = NULL;
-    uint8_t rval_plen = 0;
-    int8_t plen;
+    ThreadNetif &   netif = GetNetif();
+    otError         error = OT_ERROR_NO_ROUTE;
+    PrefixTlv *     prefix;
+    HasRouteTlv *   hasRoute;
+    HasRouteEntry * entry;
+    HasRouteEntry * rvalRoute = NULL;
+    uint8_t         rval_plen = 0;
+    int8_t          plen;
     NetworkDataTlv *cur;
     NetworkDataTlv *subCur;
 
-    for (cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    for (cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
          cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
@@ -323,8 +322,7 @@ otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
                 {
                     entry = hasRoute->GetEntry(i);
 
-                    if (rvalRoute == NULL ||
-                        entry->GetPreference() > rvalRoute->GetPreference() ||
+                    if (rvalRoute == NULL || entry->GetPreference() > rvalRoute->GetPreference() ||
                         (entry->GetPreference() == rvalRoute->GetPreference() &&
                          (entry->GetRloc() == netif.GetMle().GetRloc16() ||
                           (rvalRoute->GetRloc() != netif.GetMle().GetRloc16() &&
@@ -334,7 +332,6 @@ otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
                         rval_plen = static_cast<uint8_t>(plen);
                     }
                 }
-
             }
         }
     }
@@ -359,9 +356,9 @@ otError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
 
 otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 {
-    ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NO_ROUTE;
-    BorderRouterTlv *borderRouter;
+    ThreadNetif &      netif = GetNetif();
+    otError            error = OT_ERROR_NO_ROUTE;
+    BorderRouterTlv *  borderRouter;
     BorderRouterEntry *entry;
     BorderRouterEntry *route = NULL;
 
@@ -383,8 +380,7 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
                 continue;
             }
 
-            if (route == NULL ||
-                entry->GetPreference() > route->GetPreference() ||
+            if (route == NULL || entry->GetPreference() > route->GetPreference() ||
                 (entry->GetPreference() == route->GetPreference() &&
                  (entry->GetRloc() == netif.GetMle().GetRloc16() ||
                   (route->GetRloc() != netif.GetMle().GetRloc16() &&
@@ -408,10 +404,13 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
     return error;
 }
 
-void LeaderBase::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool aStable,
-                                const uint8_t *aData, uint8_t aDataLength)
+void LeaderBase::SetNetworkData(uint8_t        aVersion,
+                                uint8_t        aStableVersion,
+                                bool           aStable,
+                                const uint8_t *aData,
+                                uint8_t        aDataLength)
 {
-    mVersion = aVersion;
+    mVersion       = aVersion;
     mStableVersion = aStableVersion;
     memcpy(mTlvs, aData, aDataLength);
     mLength = aDataLength;
@@ -428,8 +427,8 @@ void LeaderBase::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool a
 
 otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t remaining = kMaxSize - mLength;
+    otError               error     = OT_ERROR_NONE;
+    uint8_t               remaining = kMaxSize - mLength;
     CommissioningDataTlv *commissioningDataTlv;
 
     VerifyOrExit(sizeof(NetworkDataTlv) + aValueLength < remaining, error = OT_ERROR_NO_BUFS);
@@ -473,10 +472,10 @@ exit:
 
 MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
 {
-    MeshCoP::Tlv *rval = NULL;
+    MeshCoP::Tlv *  rval = NULL;
     NetworkDataTlv *commissioningDataTlv;
-    MeshCoP::Tlv *cur;
-    MeshCoP::Tlv *end;
+    MeshCoP::Tlv *  cur;
+    MeshCoP::Tlv *  end;
 
     commissioningDataTlv = GetCommissioningData();
     VerifyOrExit(commissioningDataTlv != NULL);
@@ -499,7 +498,7 @@ exit:
 bool LeaderBase::IsJoiningEnabled(void)
 {
     MeshCoP::Tlv *steeringData;
-    bool rval = false;
+    bool          rval = false;
 
     VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != NULL);
 
@@ -522,9 +521,8 @@ otError LeaderBase::RemoveCommissioningData(void)
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
     {
         if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
@@ -537,5 +535,5 @@ exit:
     return error;
 }
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot

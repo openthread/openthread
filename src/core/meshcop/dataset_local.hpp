@@ -44,7 +44,7 @@
 namespace ot {
 namespace MeshCoP {
 
-class DatasetLocal: public InstanceLocator
+class DatasetLocal : public InstanceLocator
 {
 public:
     /**
@@ -133,13 +133,13 @@ public:
 
 private:
     uint16_t GetSettingsKey(void) const;
-    void SetTimestamp(const Dataset &aDataset);
+    void     SetTimestamp(const Dataset &aDataset);
 
-    uint32_t    mUpdateTime;      ///< Local time last updated
-    Tlv::Type   mType;            ///< Active or Pending
+    uint32_t  mUpdateTime; ///< Local time last updated
+    Tlv::Type mType;       ///< Active or Pending
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_DATASET_LOCAL_HPP_
+#endif // MESHCOP_DATASET_LOCAL_HPP_

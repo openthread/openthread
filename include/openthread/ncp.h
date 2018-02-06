@@ -35,8 +35,8 @@
 #ifndef NCP_H_
 #define NCP_H_
 
-#include <openthread/types.h>
 #include <stdarg.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,7 +81,7 @@ void otNcpInit(otInstance *aInstance);
  * @retval OT_ERROR_BUSY         There are not enough resources to complete this
  *                               request. This is usually a temporary condition.
  * @retval OT_ERROR_INVALID_ARGS The given aStreamId was invalid.
-*/
+ */
 otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
 //-----------------------------------------------------------------------------------------
@@ -120,7 +120,7 @@ otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDele
 //-----------------------------------------------------------------------------------------
 // Legacy network APIs
 
-#define OT_NCP_LEGACY_ULA_PREFIX_LENGTH    8   ///< Legacy ULA size (in bytes)
+#define OT_NCP_LEGACY_ULA_PREFIX_LENGTH 8 ///< Legacy ULA size (in bytes)
 
 /**
  * Defines handler (function pointer) type for starting legacy network
@@ -165,10 +165,10 @@ typedef void (*otNcpHandlerSetLegacyUlaPrefix)(const uint8_t *aUlaPrefix);
  */
 typedef struct otNcpLegacyHandlers
 {
-    otNcpHandlerStartLegacy         mStartLegacy;         ///< Start handler
-    otNcpHandlerStopLegacy          mStopLegacy;          ///< Stop handler
-    otNcpHandlerJoinLegacyNode      mJoinLegacyNode;      ///< Join handler
-    otNcpHandlerSetLegacyUlaPrefix  mSetLegacyUlaPrefix;  ///< Set ULA handler
+    otNcpHandlerStartLegacy        mStartLegacy;        ///< Start handler
+    otNcpHandlerStopLegacy         mStopLegacy;         ///< Stop handler
+    otNcpHandlerJoinLegacyNode     mJoinLegacyNode;     ///< Join handler
+    otNcpHandlerSetLegacyUlaPrefix mSetLegacyUlaPrefix; ///< Set ULA handler
 } otNcpLegacyHandlers;
 
 /**
@@ -218,7 +218,7 @@ void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif

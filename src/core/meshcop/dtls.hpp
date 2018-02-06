@@ -38,12 +38,12 @@
 
 #include <openthread/types.h>
 
-#include <mbedtls/ssl.h>
+#include <mbedtls/certs.h>
+#include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/entropy_poll.h>
-#include <mbedtls/ctr_drbg.h>
 #include <mbedtls/error.h>
-#include <mbedtls/certs.h>
+#include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
 #include "common/locator.hpp"
@@ -58,12 +58,12 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-class Dtls: public InstanceLocator
+class Dtls : public InstanceLocator
 {
 public:
     enum
     {
-        kPskMaxLength = 32,
+        kPskMaxLength             = 32,
         kApplicationDataMaxLength = 128,
     };
 
@@ -103,7 +103,7 @@ public:
      * @param[in]  aMessageSubtype  A message sub type information for the sender.
      *
      */
-    typedef otError(*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    typedef otError (*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     /**
      * This method starts the DTLS service.
@@ -117,8 +117,11 @@ public:
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
      */
-    otError Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
-                  SendHandler aSendHandler, void *aContext);
+    otError Start(bool             aClient,
+                  ConnectedHandler aConnectedHandler,
+                  ReceiveHandler   aReceiveHandler,
+                  SendHandler      aSendHandler,
+                  void *           aContext);
 
     /**
      * This method stops the DTLS service.
@@ -212,25 +215,31 @@ private:
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 
     static int HandleMbedtlsGetTimer(void *aContext);
-    int HandleMbedtlsGetTimer(void);
+    int        HandleMbedtlsGetTimer(void);
 
     static void HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_t aFinish);
-    void HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
+    void        HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
 
     static int HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, size_t aLength);
-    int HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
+    int        HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
 
     static int HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
-    int HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
+    int        HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
 
-    static int HandleMbedtlsExportKeys(void *aContext, const unsigned char *aMasterSecret,
+    static int HandleMbedtlsExportKeys(void *               aContext,
+                                       const unsigned char *aMasterSecret,
                                        const unsigned char *aKeyBlock,
-                                       size_t aMacLength, size_t aKeyLength, size_t aIvLength);
-    int HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsigned char *aKeyBlock,
-                                size_t aMacLength, size_t aKeyLength, size_t aIvLength);
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
+    int        HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
+                                       const unsigned char *aKeyBlock,
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
     static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
 
@@ -240,32 +249,32 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
-    mbedtls_entropy_context mEntropy;
+    mbedtls_entropy_context  mEntropy;
     mbedtls_ctr_drbg_context mCtrDrbg;
-    mbedtls_ssl_context mSsl;
-    mbedtls_ssl_config mConf;
-    mbedtls_ssl_cookie_ctx mCookieCtx;
-    bool mStarted;
+    mbedtls_ssl_context      mSsl;
+    mbedtls_ssl_config       mConf;
+    mbedtls_ssl_cookie_ctx   mCookieCtx;
+    bool                     mStarted;
 
     TimerMilli mTimer;
-    uint32_t mTimerIntermediate;
-    bool mTimerSet;
+    uint32_t   mTimerIntermediate;
+    bool       mTimerSet;
 
     Message *mReceiveMessage;
     uint16_t mReceiveOffset;
     uint16_t mReceiveLength;
 
     ConnectedHandler mConnectedHandler;
-    ReceiveHandler mReceiveHandler;
-    SendHandler mSendHandler;
-    void *mContext;
-    bool mClient;
+    ReceiveHandler   mReceiveHandler;
+    SendHandler      mSendHandler;
+    void *           mContext;
+    bool             mClient;
 
     uint8_t mMessageSubType;
     uint8_t mMessageDefaultSubType;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // DTLS_HPP_
+#endif // DTLS_HPP_

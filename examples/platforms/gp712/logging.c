@@ -26,15 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-#include <openthread-core-config.h>
 #include "platform_qorvo.h"
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #ifndef _WIN32
@@ -47,13 +47,13 @@
 
 // Macro to append content to end of the log string.
 
-#define LOG_PRINTF(...)                                                                     \
-    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset , __VA_ARGS__);  \
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                              \
-    offset += (unsigned int)charsWritten;                                                   \
-    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
+#define LOG_PRINTF(...)                                                                   \
+    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset, __VA_ARGS__); \
+    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                            \
+    offset += (unsigned int)charsWritten;                                                 \
+    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0)
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT ==  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 
 int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
 {

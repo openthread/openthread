@@ -49,19 +49,19 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint32_t NODE_ID = 1;
+uint32_t NODE_ID           = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
-int     gArgumentsCount = 0;
-char  **gArguments = NULL;
+int    gArgumentsCount = 0;
+char **gArguments      = NULL;
 
-int sSockFd;
+int      sSockFd;
 uint16_t sPortOffset;
 
 static void receiveEvent(otInstance *aInstance)
 {
     struct Event event;
-    ssize_t rval = recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
+    ssize_t      rval = recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
@@ -84,9 +84,9 @@ static void receiveEvent(otInstance *aInstance)
 
 static bool processEvent(otInstance *aInstance)
 {
-    const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd = { sSockFd, flags, 0 };
-    bool rval = false;
+    const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    struct pollfd pollfd = {sSockFd, flags, 0};
+    bool          rval   = false;
 
     if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
@@ -100,13 +100,13 @@ static bool processEvent(otInstance *aInstance)
 static void platformSendSleepEvent(void)
 {
     struct sockaddr_in sockaddr;
-    struct Event event;
-    ssize_t rval;
+    struct Event       event;
+    ssize_t            rval;
 
     assert(platformAlarmGetNext() > 0);
 
-    event.mDelay = (uint64_t)platformAlarmGetNext();
-    event.mEvent = OT_SIM_EVENT_ALARM_FIRED;
+    event.mDelay      = (uint64_t)platformAlarmGetNext();
+    event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
@@ -114,8 +114,8 @@ static void platformSendSleepEvent(void)
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
     sockaddr.sin_port = htons(9000 + sPortOffset);
 
-    rval = sendto(sSockFd, (const char *)&event, offsetof(struct Event, mData),
-                  0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+    rval = sendto(sSockFd, (const char *)&event, offsetof(struct Event, mData), 0, (struct sockaddr *)&sockaddr,
+                  sizeof(sockaddr));
 
     if (rval < 0)
     {
@@ -127,7 +127,7 @@ static void platformSendSleepEvent(void)
 static void socket_init(void)
 {
     struct sockaddr_in sockaddr;
-    char *offset;
+    char *             offset;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
@@ -148,7 +148,7 @@ static void socket_init(void)
         sPortOffset *= WELLKNOWN_NODE_ID;
     }
 
-    sockaddr.sin_port = htons(9000 + sPortOffset + NODE_ID);
+    sockaddr.sin_port        = htons(9000 + sPortOffset + NODE_ID);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     sSockFd = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -179,7 +179,7 @@ void PlatformInit(int argc, char *argv[])
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
     gArgumentsCount = argc;
-    gArguments = argv;
+    gArguments      = argv;
 
     NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
 
@@ -206,8 +206,8 @@ void PlatformProcessDrivers(otInstance *aInstance)
     fd_set read_fds;
     fd_set write_fds;
     fd_set error_fds;
-    int max_fd = -1;
-    int rval;
+    int    max_fd = -1;
+    int    rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);

@@ -60,9 +60,11 @@ public:
      * Default constructor.
      *
      */
-    Tlv(void):
-        mType(0),
-        mLength(0) {}
+    Tlv(void)
+        : mType(0)
+        , mLength(0)
+    {
+    }
 
     /**
      * This method returns the Type value.
@@ -126,9 +128,7 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    Tlv *GetNext(void) {
-        return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this) + mLength);
-    }
+    Tlv *GetNext(void) { return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this) + mLength); }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -136,7 +136,8 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    const Tlv *GetNext(void) const {
+    const Tlv *GetNext(void) const
+    {
         return reinterpret_cast<const Tlv *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this) + mLength);
     }
 
@@ -197,7 +198,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 OT_TOOL_PACKED_BEGIN
-class ExtendedTlv: public Tlv
+class ExtendedTlv : public Tlv
 {
 public:
     /**
@@ -212,12 +213,16 @@ public:
      * @param[in]  aLength  The Length value.
      *
      */
-    void SetLength(uint16_t aLength) { Tlv::SetLength(kExtendedLength); mLength = HostSwap16(aLength); }
+    void SetLength(uint16_t aLength)
+    {
+        Tlv::SetLength(kExtendedLength);
+        mLength = HostSwap16(aLength);
+    }
 
 private:
     uint16_t mLength;
 } OT_TOOL_PACKED_END;
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // TLVS_HPP_
+#endif // TLVS_HPP_

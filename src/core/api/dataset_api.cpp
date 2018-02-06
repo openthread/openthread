@@ -45,8 +45,8 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 
     otDatasetGetActive(aInstance, &dataset);
 
-    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) &&
-        (dataset.mIsExtendedPanIdSet) && (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
+    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) && (dataset.mIsExtendedPanIdSet) &&
+        (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
     {
         return true;
     }
@@ -56,7 +56,7 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -69,7 +69,7 @@ exit:
 
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);

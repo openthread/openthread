@@ -70,7 +70,11 @@ public:
      * This method initializes TLV.
      *
      */
-    void Init(void) { mType = 0; mLength = 0; }
+    void Init(void)
+    {
+        mType   = 0;
+        mLength = 0;
+    }
 
     /**
      * Thread Network Data Type values.
@@ -78,13 +82,13 @@ public:
      */
     enum Type
     {
-        kTypeHasRoute          = 0,  ///< Has Route TLV
-        kTypePrefix            = 1,  ///< Prefix TLV
-        kTypeBorderRouter      = 2,  ///< Border Router TLV
-        kTypeContext           = 3,  ///< Context TLV
-        kTypeCommissioningData = 4,  ///< Commissioning Dataset TLV
-        kTypeService           = 5,  ///< Service TLV
-        kTypeServer            = 6,  ///< Server TLV
+        kTypeHasRoute          = 0, ///< Has Route TLV
+        kTypePrefix            = 1, ///< Prefix TLV
+        kTypeBorderRouter      = 2, ///< Border Router TLV
+        kTypeContext           = 3, ///< Context TLV
+        kTypeCommissioningData = 4, ///< Commissioning Dataset TLV
+        kTypeService           = 5, ///< Service TLV
+        kTypeServer            = 6, ///< Server TLV
     };
 
     /**
@@ -101,9 +105,7 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) {
-        mType = (mType & ~kTypeMask) | ((aType << kTypeOffset) & kTypeMask);
-    }
+    void SetType(Type aType) { mType = (mType & ~kTypeMask) | ((aType << kTypeOffset) & kTypeMask); }
 
     /**
      * This method returns the Length value.
@@ -135,7 +137,8 @@ public:
      * @returns A pointer to the next Network Data TLV.
      *
      */
-    NetworkDataTlv *GetNext(void) {
+    NetworkDataTlv *GetNext(void)
+    {
         return reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this) + mLength);
     }
 
@@ -164,7 +167,7 @@ private:
     enum
     {
         kTypeOffset = 1,
-        kTypeMask = 0x7f << kTypeOffset,
+        kTypeMask   = 0x7f << kTypeOffset,
         kStableMask = 1 << 0,
     };
     uint8_t mType;
@@ -183,7 +186,11 @@ public:
      * This method initializes the header.
      *
      */
-    void Init(void) { SetRloc(Mac::kShortAddrInvalid); mFlags = 0; }
+    void Init(void)
+    {
+        SetRloc(Mac::kShortAddrInvalid);
+        mFlags = 0;
+    }
 
     /**
      * This method returns the RLOC16 value.
@@ -214,7 +221,8 @@ public:
      * @param[in]  aPrf  The Preference value.
      *
      */
-    void SetPreference(int8_t aPrf) {
+    void SetPreference(int8_t aPrf)
+    {
         mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
     }
 
@@ -222,11 +230,11 @@ private:
     enum
     {
         kPreferenceOffset = 6,
-        kPreferenceMask = 3 << kPreferenceOffset,
+        kPreferenceMask   = 3 << kPreferenceOffset,
     };
 
     uint16_t mRloc;
-    uint8_t mFlags;
+    uint8_t  mFlags;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -234,14 +242,19 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class HasRouteTlv: public NetworkDataTlv
+class HasRouteTlv : public NetworkDataTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeHasRoute); SetLength(0); }
+    void Init(void)
+    {
+        NetworkDataTlv::Init();
+        SetType(kTypeHasRoute);
+        SetLength(0);
+    }
 
     /**
      * This method returns the number of HasRoute entries.
@@ -259,7 +272,8 @@ public:
      * @returns A pointer to the i'th HasRoute entry.
      *
      */
-    HasRouteEntry *GetEntry(uint8_t i) {
+    HasRouteEntry *GetEntry(uint8_t i)
+    {
         return reinterpret_cast<HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
     }
 } OT_TOOL_PACKED_END;
@@ -269,7 +283,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PrefixTlv: public NetworkDataTlv
+class PrefixTlv : public NetworkDataTlv
 {
 public:
     /**
@@ -280,10 +294,11 @@ public:
      * @param[in]  aPrefix        A pointer to the prefix.
      *
      */
-    void Init(uint8_t aDomainId, uint8_t aPrefixLength, const uint8_t *aPrefix) {
+    void Init(uint8_t aDomainId, uint8_t aPrefixLength, const uint8_t *aPrefix)
+    {
         NetworkDataTlv::Init();
         SetType(kTypePrefix);
-        mDomainId = aDomainId;
+        mDomainId     = aDomainId;
         mPrefixLength = aPrefixLength;
         memcpy(GetPrefix(), aPrefix, BitVectorBytes(aPrefixLength));
         SetSubTlvsLength(0);
@@ -296,7 +311,8 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const {
+    bool IsValid(void) const
+    {
         return ((GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) &&
                 (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)));
     }
@@ -331,9 +347,9 @@ public:
      * @returns A pointer to the Sub-TLVs.
      *
      */
-    NetworkDataTlv *GetSubTlvs(void) {
-        return reinterpret_cast<NetworkDataTlv *>(GetPrefix() +
-                                                  BitVectorBytes(mPrefixLength));
+    NetworkDataTlv *GetSubTlvs(void)
+    {
+        return reinterpret_cast<NetworkDataTlv *>(GetPrefix() + BitVectorBytes(mPrefixLength));
     }
 
     /**
@@ -342,7 +358,8 @@ public:
      * @returns The Sub-TLVs length in bytes.
      *
      */
-    uint8_t GetSubTlvsLength(void) const {
+    uint8_t GetSubTlvsLength(void) const
+    {
         return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength));
     }
 
@@ -352,7 +369,8 @@ public:
      * @param[in]  aLength  The Sub-TLVs length in bytes.
      *
      */
-    void SetSubTlvsLength(uint8_t aLength) {
+    void SetSubTlvsLength(uint8_t aLength)
+    {
         SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength) + aLength);
     }
 
@@ -372,20 +390,25 @@ public:
     enum
     {
         kPreferenceOffset = 6,
-        kPreferenceMask = 3 << kPreferenceOffset,
-        kPreferredFlag = 1 << 5,
-        kSlaacFlag = 1 << 4,
-        kDhcpFlag = 1 << 3,
-        kConfigureFlag = 1 << 2,
+        kPreferenceMask   = 3 << kPreferenceOffset,
+        kPreferredFlag    = 1 << 5,
+        kSlaacFlag        = 1 << 4,
+        kDhcpFlag         = 1 << 3,
+        kConfigureFlag    = 1 << 2,
         kDefaultRouteFlag = 1 << 1,
-        kOnMeshFlag = 1 << 0,
+        kOnMeshFlag       = 1 << 0,
     };
 
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetRloc(Mac::kShortAddrInvalid); mFlags = 0; mReserved = 0; }
+    void Init(void)
+    {
+        SetRloc(Mac::kShortAddrInvalid);
+        mFlags    = 0;
+        mReserved = 0;
+    }
 
     /**
      * This method returns the RLOC16 value.
@@ -432,7 +455,8 @@ public:
      * @param[in]  aPrf  The Preference value.
      *
      */
-    void SetPreference(int8_t aPrf) {
+    void SetPreference(int8_t aPrf)
+    {
         mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
     }
 
@@ -564,8 +588,8 @@ public:
 
 private:
     uint16_t mRloc;
-    uint8_t mFlags;
-    uint8_t mReserved;
+    uint8_t  mFlags;
+    uint8_t  mReserved;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -573,14 +597,19 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class BorderRouterTlv: public NetworkDataTlv
+class BorderRouterTlv : public NetworkDataTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeBorderRouter); SetLength(0); }
+    void Init(void)
+    {
+        NetworkDataTlv::Init();
+        SetType(kTypeBorderRouter);
+        SetLength(0);
+    }
 
     /**
      * This method returns the number of Border Router entries.
@@ -598,7 +627,8 @@ public:
      * @returns A pointer to the i'th Border Router entry.
      *
      */
-    BorderRouterEntry *GetEntry(uint8_t i) {
+    BorderRouterEntry *GetEntry(uint8_t i)
+    {
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
     }
 } OT_TOOL_PACKED_END;
@@ -608,14 +638,21 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ContextTlv: public NetworkDataTlv
+class ContextTlv : public NetworkDataTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeContext); SetLength(2); mFlags = 0; mContextLength = 0; }
+    void Init(void)
+    {
+        NetworkDataTlv::Init();
+        SetType(kTypeContext);
+        SetLength(2);
+        mFlags         = 0;
+        mContextLength = 0;
+    }
 
     /**
      * This method indicates whether or not the Compress flag is set.
@@ -652,7 +689,8 @@ public:
      * @param[in]  aContextId  The Context ID value.
      *
      */
-    void SetContextId(uint8_t aContextId) {
+    void SetContextId(uint8_t aContextId)
+    {
         mFlags = (mFlags & ~kContextIdMask) | ((aContextId << kContextIdOffset) & kContextIdMask);
     }
 
@@ -675,9 +713,9 @@ public:
 private:
     enum
     {
-        kCompressFlag = 1 << 4,
+        kCompressFlag    = 1 << 4,
         kContextIdOffset = 0,
-        kContextIdMask = 0xf << kContextIdOffset,
+        kContextIdMask   = 0xf << kContextIdOffset,
     };
     uint8_t mFlags;
     uint8_t mContextLength;
@@ -688,14 +726,19 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class CommissioningDataTlv: public NetworkDataTlv
+class CommissioningDataTlv : public NetworkDataTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeCommissioningData); SetLength(0); }
+    void Init(void)
+    {
+        NetworkDataTlv::Init();
+        SetType(kTypeCommissioningData);
+        SetLength(0);
+    }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -703,14 +746,21 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ServiceTlv: public NetworkDataTlv
+class ServiceTlv : public NetworkDataTlv
 {
 public:
     /**
      * This method initializes the TLV.
      * Initial length is set to 2, to hold S_service_data_length field.
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeService); SetLength(2); mTResSId = kTMask; SetServiceDataLength(0); }
+    void Init(void)
+    {
+        NetworkDataTlv::Init();
+        SetType(kTypeService);
+        SetLength(2);
+        mTResSId = kTMask;
+        SetServiceDataLength(0);
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -719,14 +769,14 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) {
+    bool IsValid(void)
+    {
         uint8_t length = GetLength();
         return ((length >= (sizeof(*this) - sizeof(NetworkDataTlv))) &&
-                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) +
-                            (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) + sizeof(uint8_t))) &&
-                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) +
-                            (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) + sizeof(uint8_t) +
-                            GetServiceDataLength())));
+                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) +
+                            sizeof(uint8_t))) &&
+                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) +
+                            sizeof(uint8_t) + GetServiceDataLength())));
     }
 
     /**
@@ -734,18 +784,14 @@ public:
      *
      * @returns length of the Service Data field in bytes.
      */
-    uint8_t GetServiceDataLength(void) {
-        return *GetServiceDataLengthLocation();
-    }
+    uint8_t GetServiceDataLength(void) { return *GetServiceDataLengthLocation(); }
 
     /**
      * This method sets Service Data length.
      *
      * @param aServiceDataLength desired length of the Service Data field in bytes.
      */
-    void SetServiceDataLength(uint8_t aServiceDataLength) {
-        *GetServiceDataLengthLocation() = aServiceDataLength;
-    }
+    void SetServiceDataLength(uint8_t aServiceDataLength) { *GetServiceDataLengthLocation() = aServiceDataLength; }
 
     /**
      * This method returns a pointer to the Service Data.
@@ -762,7 +808,8 @@ public:
      * @param aServiceData       pointer to the service data to use
      * @param aServiceDataLength length of the provided service data in bytes
      */
-    void SetServiceData(const uint8_t *aServiceData, uint8_t aServiceDataLength) {
+    void SetServiceData(const uint8_t *aServiceData, uint8_t aServiceDataLength)
+    {
         SetServiceDataLength(aServiceDataLength);
 
         memcpy(GetServiceData(), aServiceData, aServiceDataLength);
@@ -773,11 +820,14 @@ public:
      *
      * @returns Enterprise Number
      */
-    uint32_t GetEnterpriseNumber(void) {
-        if (IsThreadEnterprise()) {
+    uint32_t GetEnterpriseNumber(void)
+    {
+        if (IsThreadEnterprise())
+        {
             return THREAD_ENTERPRISE_NUMBER;
         }
-        else {
+        else
+        {
             // This memory access most likely will not be aligned to 4 bytes
             return HostSwap32(*reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()));
         }
@@ -788,9 +838,7 @@ public:
      *
      * @returns Flag whether Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER
      */
-    bool IsThreadEnterprise(void) const {
-        return (mTResSId & kTMask) != 0;
-    }
+    bool IsThreadEnterprise(void) const { return (mTResSId & kTMask) != 0; }
 
     /**
      * This method sets Enterprise Number and updates the T flag.
@@ -801,11 +849,14 @@ public:
      *
      * @param [in] aEnterpriseNumber Enterprise Number
      */
-    void SetEnterpriseNumber(uint32_t aEnterpriseNumber) {
-        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) {
+    void SetEnterpriseNumber(uint32_t aEnterpriseNumber)
+    {
+        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER)
+        {
             mTResSId |= kTMask;
         }
-        else {
+        else
+        {
             mTResSId &= ~kTMask;
 
             // This memory access most likely will not be aligned to 4 bytes
@@ -818,11 +869,14 @@ public:
      *
      * @returns length of the S_enterprise_number field in bytes
      */
-    static uint8_t GetEnterpriseNumberFieldLength(uint32_t aEnterpriseNumber) {
-        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER) {
+    static uint8_t GetEnterpriseNumberFieldLength(uint32_t aEnterpriseNumber)
+    {
+        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER)
+        {
             return 0;
         }
-        else {
+        else
+        {
             return (sizeof(aEnterpriseNumber));
         }
     }
@@ -832,16 +886,15 @@ public:
      *
      * @returns Service ID
      */
-    uint8_t GetServiceID(void) const {
-        return (mTResSId & kSIdMask) >> kSIdOffset;
-    }
+    uint8_t GetServiceID(void) const { return (mTResSId & kSIdMask) >> kSIdOffset; }
 
     /**
      * This method sets Service ID.
      *
      * @param [in] aServiceID Service ID to be set. Expected range: 0x00-0x0f.
      */
-    void SetServiceID(uint8_t aServiceID) {
+    void SetServiceID(uint8_t aServiceID)
+    {
         mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceID << kSIdOffset));
     }
 
@@ -851,9 +904,10 @@ public:
      * @returns The Sub-TLVs length in bytes.
      *
      */
-    uint8_t GetSubTlvsLength(void) {
-        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv)) - (IsThreadEnterprise() ? 0 : sizeof(uint32_t))
-               - sizeof(uint8_t)/* mServiceDataLength */ - GetServiceDataLength();
+    uint8_t GetSubTlvsLength(void)
+    {
+        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv)) - (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) -
+               sizeof(uint8_t) /* mServiceDataLength */ - GetServiceDataLength();
     }
 
     /**
@@ -862,9 +916,10 @@ public:
      * @param[in]  aLength  The Sub-TLVs length in bytes.
      *
      */
-    void SetSubTlvsLength(uint8_t aLength) {
-        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))
-                  + sizeof(uint8_t)/* mServiceDataLength */ + GetServiceDataLength() + aLength);
+    void SetSubTlvsLength(uint8_t aLength)
+    {
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) +
+                  sizeof(uint8_t) /* mServiceDataLength */ + GetServiceDataLength() + aLength);
     }
 
     /**
@@ -873,8 +928,10 @@ public:
      * @returns A pointer to the Sub-TLVs.
      *
      */
-    NetworkDataTlv *GetSubTlvs(void) {
-        return reinterpret_cast<NetworkDataTlv *>(GetServiceDataLengthLocation() + sizeof(uint8_t) + GetServiceDataLength());
+    NetworkDataTlv *GetSubTlvs(void)
+    {
+        return reinterpret_cast<NetworkDataTlv *>(GetServiceDataLengthLocation() + sizeof(uint8_t) +
+                                                  GetServiceDataLength());
     }
 
 private:
@@ -883,7 +940,8 @@ private:
      *
      * @returns pointer to service data length location
      */
-    uint8_t *GetServiceDataLengthLocation(void) {
+    uint8_t *GetServiceDataLengthLocation(void)
+    {
         return GetEnterpriseNumberLocation() + (IsThreadEnterprise() ? 0 : sizeof(uint32_t));
     }
 
@@ -894,16 +952,14 @@ private:
      *
      * @returns pointer to enterprise number location
      */
-    uint8_t *GetEnterpriseNumberLocation(void) {
-        return &mTResSId + sizeof(mTResSId);
-    }
+    uint8_t *GetEnterpriseNumberLocation(void) { return &mTResSId + sizeof(mTResSId); }
 
     enum
     {
-        kTOffset = 7,
-        kTMask = 0x1 << kTOffset,
+        kTOffset   = 7,
+        kTMask     = 0x1 << kTOffset,
         kSIdOffset = 0,
-        kSIdMask = 0xf << kSIdOffset,
+        kSIdMask   = 0xf << kSIdOffset,
     };
 
     uint8_t mTResSId;
@@ -914,14 +970,19 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ServerTlv: public NetworkDataTlv
+class ServerTlv : public NetworkDataTlv
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { NetworkDataTlv::Init(); SetType(kTypeServer); SetLength(sizeof(*this) - sizeof(NetworkDataTlv)); }
+    void Init(void)
+    {
+        NetworkDataTlv::Init();
+        SetType(kTypeServer);
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -930,9 +991,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const {
-        return GetLength() >= (sizeof(*this) - sizeof(NetworkDataTlv));
-    }
+    bool IsValid(void) const { return GetLength() >= (sizeof(*this) - sizeof(NetworkDataTlv)); }
 
     /**
      * This method returns the S_server_16 value.
@@ -964,7 +1023,8 @@ public:
      * @param aServerData       pointer to the server data to use
      * @param aServerDataLength length of the provided server data in bytes
      */
-    void SetServerData(const uint8_t *aServerData, uint8_t aServerDataLength) {
+    void SetServerData(const uint8_t *aServerData, uint8_t aServerDataLength)
+    {
         SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
         memcpy(reinterpret_cast<uint8_t *>(this) + sizeof(*this), aServerData, aServerDataLength);
     }
@@ -975,9 +1035,7 @@ public:
      * @returns The Server Data length in bytes.
      *
      */
-    uint8_t GetServerDataLength(void) const {
-        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv));
-    }
+    uint8_t GetServerDataLength(void) const { return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv)); }
 
 private:
     uint16_t mServer16;
@@ -988,7 +1046,7 @@ private:
  *
  */
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
-#endif  // NETWORK_DATA_TLVS_HPP_
+#endif // NETWORK_DATA_TLVS_HPP_

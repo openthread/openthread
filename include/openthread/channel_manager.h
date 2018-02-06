@@ -35,7 +35,6 @@
 #ifndef OPENTHREAD_CHANNEL_MANAGER_H_
 #define OPENTHREAD_CHANNEL_MANAGER_H_
 
-
 #include "openthread/types.h"
 
 #ifdef __cplusplus
@@ -122,7 +121,7 @@ uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance);
  * @param[in]  aChannelMask  A channel mask.
  *
  */
-void  otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask);
+void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
  * @}
@@ -130,7 +129,7 @@ void  otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChan
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_CHANNEL_MANAGER_H_
+#endif // OPENTHREAD_CHANNEL_MANAGER_H_

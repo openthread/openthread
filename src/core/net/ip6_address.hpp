@@ -57,7 +57,7 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address: public otIp6Address
+class Address : public otIp6Address
 {
 public:
     /**
@@ -66,8 +66,8 @@ public:
      */
     enum
     {
-        kAloc16Mask                 = 0xfc, ///< The mask for Aloc16.
-        kRloc16ReservedBitMask      = 0x02, ///< The mask for the reserved bit of Rloc16.
+        kAloc16Mask            = 0xfc, ///< The mask for Aloc16.
+        kRloc16ReservedBitMask = 0x02, ///< The mask for the reserved bit of Rloc16.
     };
 
     /**
@@ -76,10 +76,10 @@ public:
      */
     enum
     {
-        kInterfaceIdentifierSize   = 8,  ///< Interface Identifier size in bytes.
-        kIp6AddressStringSize      = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
-        kMeshLocalPrefixLength     = 64, ///< Length of Thread mesh local prefix.
-        kMeshLocalPrefixSize       = 8,  ///< Mesh local prefix size in bytes.
+        kInterfaceIdentifierSize = 8,  ///< Interface Identifier size in bytes.
+        kIp6AddressStringSize    = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
+        kMeshLocalPrefixLength   = 64, ///< Length of Thread mesh local prefix.
+        kMeshLocalPrefixSize     = 8,  ///< Mesh local prefix size in bytes.
     };
 
     /**
@@ -390,7 +390,7 @@ public:
 private:
     enum
     {
-        kInterfaceIdentifierOffset = 8,  ///< Interface Identifier offset in bytes.
+        kInterfaceIdentifierOffset = 8, ///< Interface Identifier offset in bytes.
     };
 } OT_TOOL_PACKED_END;
 
@@ -399,7 +399,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_IP6_ADDRESS_HPP_
+#endif // NET_IP6_ADDRESS_HPP_

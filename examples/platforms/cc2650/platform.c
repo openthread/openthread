@@ -26,9 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-cc2650.h"
 #include <stdio.h>
 #include <openthread/types.h>
-#include "platform-cc2650.h"
 #include "inc/hw_ccfg_simple_struct.h"
 
 extern const ccfg_t __ccfg;
@@ -40,16 +40,16 @@ void *dummy_ccfg_ref = ((void *)(&(__ccfg)));
  */
 void PlatformInit(int argc, char *argv[])
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
 
     while (dummy_ccfg_ref == NULL)
     {
         /*
-          * This provides a code reference to the customer configuration
-          * area of the flash, otherwise the data is skipped by the
-          * linker and not put into the final flash image.
-          */
+         * This provides a code reference to the customer configuration
+         * area of the flash, otherwise the data is skipped by the
+         * linker and not put into the final flash image.
+         */
     }
 
     cc2650AlarmInit();

@@ -49,23 +49,25 @@
 
 // clang-format on
 
-#define PLATFORM_FEM_DEFAULT_CONFIG                                                  \
-    ((PlatformFemConfigParams) {                                                     \
-        .mPaCfg = {                                                                  \
-                .mEnable      = 1,                                                   \
-                .mActiveHigh = 1,                                                    \
-                .mGpioPin    = PLATFORM_FEM_DEFAULT_PA_PIN,                          \
-        },                                                                           \
-        .mLnaCfg = {                                                                 \
-                .mEnable      = 1,                                                   \
-                .mActiveHigh = 1,                                                    \
-                .mGpioPin    = PLATFORM_FEM_DEFAULT_LNA_PIN,                         \
-        },                                                                           \
-        .mPpiChIdClr = PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL,                         \
-        .mPpiChIdSet = PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL,                         \
-        .mTimerPpiGrp = PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP,                  \
-        .mRadioPpiGrp = PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP,               \
-        .mGpioteChId  = PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL,                         \
+#define PLATFORM_FEM_DEFAULT_CONFIG                                    \
+    ((PlatformFemConfigParams){                                        \
+        .mPaCfg =                                                      \
+            {                                                          \
+                .mEnable     = 1,                                      \
+                .mActiveHigh = 1,                                      \
+                .mGpioPin    = PLATFORM_FEM_DEFAULT_PA_PIN,            \
+            },                                                         \
+        .mLnaCfg =                                                     \
+            {                                                          \
+                .mEnable     = 1,                                      \
+                .mActiveHigh = 1,                                      \
+                .mGpioPin    = PLATFORM_FEM_DEFAULT_LNA_PIN,           \
+            },                                                         \
+        .mPpiChIdClr  = PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL,          \
+        .mPpiChIdSet  = PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL,          \
+        .mTimerPpiGrp = PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP,    \
+        .mRadioPpiGrp = PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP, \
+        .mGpioteChId  = PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL,           \
     })
 
 /**
@@ -73,9 +75,9 @@
  */
 typedef struct
 {
-    uint8_t mEnable : 1;        /**< Enable toggling for this amplifier */
-    uint8_t mActiveHigh : 1;    /**< Set the pin to be active high */
-    uint8_t mGpioPin : 6;       /**< The GPIO pin to toggle for this amplifier */
+    uint8_t mEnable : 1;     /**< Enable toggling for this amplifier */
+    uint8_t mActiveHigh : 1; /**< Set the pin to be active high */
+    uint8_t mGpioPin : 6;    /**< The GPIO pin to toggle for this amplifier */
 } PlatformFemConfigPaLna;
 
 /**
@@ -107,4 +109,4 @@ typedef struct
  */
 void PlatformFemSetConfigParams(const PlatformFemConfigParams *aConfig);
 
-#endif  // PLATFORM_FEM_H_
+#endif // PLATFORM_FEM_H_

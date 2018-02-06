@@ -46,9 +46,9 @@ namespace Mle {
 
 enum
 {
-    kMaxChildren                = OPENTHREAD_CONFIG_MAX_CHILDREN,
-    kMaxChildKeepAliveAttempts  = 4,    ///< Maximum keep alive attempts before attempting to reattach to a new Parent
-    kFailedChildTransmissions   = 4,    ///< FAILED_CHILD_TRANSMISSIONS
+    kMaxChildren               = OPENTHREAD_CONFIG_MAX_CHILDREN,
+    kMaxChildKeepAliveAttempts = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
+    kFailedChildTransmissions  = 4, ///< FAILED_CHILD_TRANSMISSIONS
 };
 
 /**
@@ -69,15 +69,15 @@ enum
     kMaxChildIdRequestTimeout      = 5000,  ///< Maximum delay for receiving a Child ID Request
     kMaxChildUpdateResponseTimeout = 2000,  ///< Maximum delay for receiving a Child Update Response
     kMaxLinkRequestTimeout         = 2000,  ///< Maximum delay for receiving a Link Accept
-    kMinTimeout                    = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000),  ///< Minimum timeout(s)
+    kMinTimeout = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000), ///< Minimum timeout(s)
 };
 
 enum
 {
-    kMinChildId                 = 1,     ///< Minimum Child ID
-    kMaxChildId                 = 511,   ///< Maximum Child ID
-    kRouterIdOffset             = 10,    ///< Bit offset of Router ID in RLOC16
-    kRlocPrefixLength           = 14,    ///< Prefix length of RLOC in bytes
+    kMinChildId       = 1,   ///< Minimum Child ID
+    kMaxChildId       = 511, ///< Maximum Child ID
+    kRouterIdOffset   = 10,  ///< Bit offset of Router ID in RLOC16
+    kRlocPrefixLength = 14,  ///< Prefix length of RLOC in bytes
 };
 
 /**
@@ -106,7 +106,7 @@ enum
     kReedAdvertiseInterval      = 570,              ///< REED_ADVERTISEMENT_INTERVAL (seconds)
     kReedAdvertiseJitter        = 60,               ///< REED_ADVERTISEMENT_JITTER (seconds)
     kLeaderWeight               = 64,               ///< Default leader weight for the Thread Network Partition
-    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT,  ///< MLE_END_DEVICE_TIMEOUT (seconds)
+    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (seconds)
 };
 
 /**
@@ -115,18 +115,18 @@ enum
  */
 enum
 {
-    kParentPriorityHigh        = 1,    // Parent Priority High
-    kParentPriorityMedium      = 0,    // Parent Priority Medium (default)
-    kParentPriorityLow         = -1,   // Parent Priority Low
-    kParentPriorityUnspecified = -2,   // Parent Priority Unspecified
+    kParentPriorityHigh        = 1,  // Parent Priority High
+    kParentPriorityMedium      = 0,  // Parent Priority Medium (default)
+    kParentPriorityLow         = -1, // Parent Priority Low
+    kParentPriorityUnspecified = -2, // Parent Priority Unspecified
 };
 
 enum
 {
-    kLinkQuality3LinkCost       = 1,    ///< Link Cost for Link Quality 3
-    kLinkQuality2LinkCost       = 2,    ///< Link Cost for Link Quality 2
-    kLinkQuality1LinkCost       = 4,    ///< Link Cost for Link Quality 1
-    kLinkQuality0LinkCost       = 16,   ///< Link Cost for Link Quality 0
+    kLinkQuality3LinkCost = 1,  ///< Link Cost for Link Quality 3
+    kLinkQuality2LinkCost = 2,  ///< Link Cost for Link Quality 2
+    kLinkQuality1LinkCost = 4,  ///< Link Cost for Link Quality 1
+    kLinkQuality0LinkCost = 16, ///< Link Cost for Link Quality 0
 };
 
 /**
@@ -139,13 +139,13 @@ enum
     kMplRouterDataMessageTimerExpirations = 2, ///< Number of MPL retransmissions for Routers.
 };
 
-}  // namespace Mle
+} // namespace Mle
 
 /**
  * @}
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // MLE_CONSTANTS_HPP_
+#endif // MLE_CONSTANTS_HPP_

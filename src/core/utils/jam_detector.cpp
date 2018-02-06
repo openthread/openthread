@@ -46,20 +46,20 @@
 namespace ot {
 namespace Utils {
 
-JamDetector::JamDetector(Instance &aInstance) :
-    InstanceLocator(aInstance),
-    mHandler(NULL),
-    mContext(NULL),
-    mRssiThreshold(kDefaultRssiThreshold),
-    mTimer(aInstance, &JamDetector::HandleTimer, this),
-    mHistoryBitmap(0),
-    mCurSecondStartTime(0),
-    mSampleInterval(0),
-    mWindow(kMaxWindow),
-    mBusyPeriod(kMaxWindow),
-    mEnabled(false),
-    mAlwaysAboveThreshold(false),
-    mJamState(false)
+JamDetector::JamDetector(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mHandler(NULL)
+    , mContext(NULL)
+    , mRssiThreshold(kDefaultRssiThreshold)
+    , mTimer(aInstance, &JamDetector::HandleTimer, this)
+    , mHistoryBitmap(0)
+    , mCurSecondStartTime(0)
+    , mSampleInterval(0)
+    , mWindow(kMaxWindow)
+    , mBusyPeriod(kMaxWindow)
+    , mEnabled(false)
+    , mAlwaysAboveThreshold(false)
+    , mJamState(false)
 {
 }
 
@@ -75,11 +75,11 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
 
     mEnabled = true;
 
-    mCurSecondStartTime = TimerMilli::GetNow();
+    mCurSecondStartTime   = TimerMilli::GetNow();
     mAlwaysAboveThreshold = true;
-    mHistoryBitmap = 0;
-    mJamState = false;
-    mSampleInterval = kMaxSampleInterval;
+    mHistoryBitmap        = 0;
+    mJamState             = false;
+    mSampleInterval       = kMaxSampleInterval;
 
     mTimer.Start(kMinSampleInterval);
 
@@ -93,7 +93,7 @@ otError JamDetector::Stop(void)
 
     VerifyOrExit(mEnabled, error = OT_ERROR_ALREADY);
 
-    mEnabled = false;
+    mEnabled  = false;
     mJamState = false;
 
     mTimer.Stop();
@@ -143,7 +143,7 @@ void JamDetector::HandleTimer(Timer &aTimer)
 void JamDetector::HandleTimer(void)
 {
     int8_t rssi;
-    bool didExceedThreshold = true;
+    bool   didExceedThreshold = true;
 
     VerifyOrExit(mEnabled);
 
@@ -215,9 +215,9 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 
 void JamDetector::UpdateJamState(void)
 {
-    uint8_t numJammedSeconds = 0;
-    uint64_t bitmap = mHistoryBitmap;
-    bool oldJamState = mJamState;
+    uint8_t  numJammedSeconds = 0;
+    uint64_t bitmap           = mHistoryBitmap;
+    bool     oldJamState      = mJamState;
 
     // Clear all history bits beyond the current window size
     bitmap &= (static_cast<uint64_t>(1) << mWindow) - 1;
@@ -239,7 +239,7 @@ void JamDetector::UpdateJamState(void)
     }
 }
 
-}  // namespace Utils
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION

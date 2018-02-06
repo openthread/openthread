@@ -36,10 +36,10 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+#include "alarm_qorvo.h"
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include "alarm_qorvo.h"
 
 void qorvoAlarmInit(void)
 {
