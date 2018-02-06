@@ -32,6 +32,9 @@
 
 #include "ncp_base.hpp"
 
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#include <openthread/channel_manager.h>
+#endif
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
@@ -855,6 +858,63 @@ otError NcpBase::SetPropertyHandler_THREAD_MGMT_PENDING_DATASET(void)
 exit:
     return error;
 }
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
+{
+    return mEncoder.WriteUint8(otChannelManagerGetRequestedChannel(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
+{
+    uint8_t channel;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+
+    error = otChannelManagerRequestChannelChange(mInstance, channel);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_DELAY(void)
+{
+    return mEncoder.WriteUint16(otChannelManagerGetDelay(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_DELAY(void)
+{
+    uint16_t delay;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(delay));
+
+    error = otChannelManagerSetDelay(mInstance, delay);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_SUPPORTED_CHANNELS(void)
+{
+    return EncodeChannelMask(otChannelManagerGetSupportedChannels(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_SUPPORTED_CHANNELS(void)
+{
+    uint32_t channelMask = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = DecodeChannelMask(channelMask));
+    otChannelManagerSetSupportedChannels(mInstance, channelMask);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
 
 }  // namespace Ncp
 }  // namespace ot
