@@ -862,6 +862,7 @@ otError Leader::AddService(ServiceTlv &aService, uint8_t *aOldTlvs, uint8_t aOld
     NetworkDataTlv *cur;
     NetworkDataTlv *end;
 
+    VerifyOrExit(aService.IsValid(), error = OT_ERROR_PARSE);
     cur = aService.GetSubTlvs();
     end = aService.GetNext();
 
