@@ -73,11 +73,11 @@ def check_tlv_request_tlv(command_msg, check_type, tlv_id):
 
     if check_type == CheckType.CONTAIN:
         assert tlv_request_tlv is not None, "Error: The msg doesn't contain TLV Request TLV"
-        assert any(tlv_id == tlv for tlv in tlv_request_tlv.tlvs)
+        assert any(tlv_id == tlv for tlv in tlv_request_tlv.tlvs), "Error: The msg doesn't contain TLV Request TLV ID: {}".format(tlv_id)
 
     elif check_type == CheckType.NOT_CONTAIN:
         if tlv_request_tlv is not None:
-            assert any(tlv_id == tlv for tlv in tlv_request_tlv.tlvs) is False
+            assert any(tlv_id == tlv for tlv in tlv_request_tlv.tlvs) is False, "Error: The msg contains TLV Request TLV ID: {}".format(tlv_id)
 
     elif check_type == CheckType.OPTIONAL:
         if tlv_request_tlv is not None:
@@ -86,7 +86,7 @@ def check_tlv_request_tlv(command_msg, check_type, tlv_id):
             else:
                 print("TLV Request TLV doesn't contain TLV ID: {}".format(tlv_id))
         else:
-            print("TLV Request TLV doesn't contain TLV ID: {}".format(tlv_id))
+            print("The msg doesn't contain TLV Request TLV")
 
     else:
         raise ValueError("Invalid check type")
