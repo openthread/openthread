@@ -344,7 +344,7 @@ set -x
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
-    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
+    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-5.0` || die
     export ASAN_OPTIONS=symbolize=1 || die
     export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_POSIX_VIRTUAL_TIME=1 || die
     ./bootstrap || die
