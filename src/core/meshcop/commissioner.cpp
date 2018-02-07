@@ -716,7 +716,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message 
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == OT_COAP_CODE_CHANGED,
                  mState = OT_COMMISSIONER_STATE_DISABLED);
 
-    otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
+    otLogInfoMeshCoP(GetInstance(), "received Leader keep-alive response");
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid());
