@@ -86,6 +86,13 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
         msg = router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         command.check_mle_advertisement(msg)
 
+        # Send a harness helper ping to the DUT
+        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.RLOC)
+        self.assertTrue(self.nodes[DUT_LEADER].ping(router1_rloc))
+
+        leader_rloc = self.nodes[DUT_LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)
+        self.assertTrue(self.nodes[DUT_ROUTER1].ping(leader_rloc))
+
         # 3 DUT_LEADER: Reset DUT_LEADER
         leader_rloc16 = self.nodes[DUT_LEADER].get_addr16()
         self.nodes[DUT_LEADER].reset()
@@ -112,7 +119,7 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
 
         # 4 DUT_LEADER: Verify DUT_LEADER sent a multicast Link Request message
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
-        leader_messages_temp1 = copy.deepcopy(leader_messages)
+        leader_messages_temp = copy.deepcopy(leader_messages)
 
         msg = leader_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
         command.check_link_request(msg, tlv_request_address16 = command.CheckType.CONTAIN, \
@@ -120,20 +127,20 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
 
         # 5 DUT_ROUTER1: Verify DUT_ROUTER1 replied with Link Accept message
         router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
-        router1_messages_temp1 = copy.deepcopy(router1_messages)
+        router1_messages_temp = copy.deepcopy(router1_messages)
         msg = router1_messages.next_mle_message(mle.CommandType.LINK_ACCEPT)
         if msg is not None:
           command.check_link_accept(msg, self.nodes[DUT_LEADER], address16 = command.CheckType.CONTAIN, \
               leader_data = command.CheckType.CONTAIN, route64 = command.CheckType.CONTAIN)
         else:
-          msg = router1_messages_temp1.next_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)
+          msg = router1_messages_temp.next_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)
           self.assertTrue(msg is not None)
           command.check_link_accept(msg, self.nodes[DUT_LEADER], address16 = command.CheckType.CONTAIN, \
               leader_data = command.CheckType.CONTAIN, route64 = command.CheckType.CONTAIN, \
               challenge = command.CheckType.CONTAIN)
 
         # 6 DUT_LEADER: Verify DUT_LEADER didn't send a Parent Request message
-        msg = leader_messages_temp1.next_mle_message(mle.CommandType.PARENT_REQUEST, False)
+        msg = leader_messages_temp.next_mle_message(mle.CommandType.PARENT_REQUEST, False)
         self.assertTrue(msg is None)
 
         # 7 ALL: Verify connectivity by sending an ICMPv6 Echo Request from DUT_LEADER to DUT_ROUTER1 link local address
