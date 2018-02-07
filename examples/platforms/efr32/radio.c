@@ -608,6 +608,8 @@ static void checkForAck(RAIL_Handle_t aRailHandle)
     packetHandle = RAIL_GetRxPacketInfo(aRailHandle, RAIL_RX_PACKET_HANDLE_NEWEST, &packetInfo);
     assert(packetInfo.packetStatus == RAIL_RX_PACKET_READY_SUCCESS);
 
+    packetDetails.timeReceived.timePosition = RAIL_PACKET_TIME_INVALID;
+    packetDetails.timeReceived.totalPacketBytes = 0;
     status = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
     assert(status == RAIL_STATUS_NO_ERROR);
     otEXPECT(packetDetails.isAck);
@@ -661,6 +663,8 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
     otEXPECT_ACTION(packetInfo.packetStatus == RAIL_RX_PACKET_READY_SUCCESS,
                     packetHandle = RAIL_RX_PACKET_HANDLE_INVALID);
 
+    packetDetails.timeReceived.timePosition = RAIL_PACKET_TIME_INVALID;
+    packetDetails.timeReceived.totalPacketBytes = 0;
     status = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
     assert(status == RAIL_STATUS_NO_ERROR);
     length = packetInfo.packetBytes + 1;
