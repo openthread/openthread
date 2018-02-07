@@ -33,7 +33,8 @@
 #include <openthread/diag.h>
 #include <openthread/ncp.h>
 #include <openthread/openthread.h>
-#include <openthread/platform/platform.h>
+
+#include "platform.h"
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)

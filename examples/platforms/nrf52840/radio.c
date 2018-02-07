@@ -46,9 +46,9 @@
 #include <platform-config.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
 
+#include "platform.h"
 #include "platform-nrf5.h"
 
 #include <device/nrf.h>

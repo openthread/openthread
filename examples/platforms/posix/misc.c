@@ -34,7 +34,8 @@
 
 #include <openthread/types.h>
 #include <openthread/platform/misc.h>
-#include <openthread/platform/platform.h>
+
+#include "platform.h"
 
 #ifndef _WIN32
 extern int      gArgumentsCount;
