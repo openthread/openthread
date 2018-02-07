@@ -262,6 +262,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_ROUTERS
+ *
+ * The maximum number of routers in a Thread network.
+ *
+ * @note Thread specifies this value to be 32.  Changing this value may cause interoperability issues with standard
+ *       Thread 1.1 devices.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_ROUTERS
+#define OPENTHREAD_CONFIG_MAX_ROUTERS 32
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAX_CHILDREN
  *
  * The maximum number of children.

@@ -86,27 +86,27 @@ enum
  */
 enum
 {
-    kAdvertiseIntervalMin       = 1,                ///< ADVERTISEMENT_I_MIN (seconds)
-    kAdvertiseIntervalMax       = 32,               ///< ADVERTISEMENT_I_MAX (seconds)
-    kFailedRouterTransmissions  = 4,                ///< FAILED_ROUTER_TRANSMISSIONS
-    kRouterIdReuseDelay         = 100,              ///< ID_REUSE_DELAY (seconds)
-    kRouterIdSequencePeriod     = 10,               ///< ID_SEQUENCE_PERIOD (seconds)
-    kMaxNeighborAge             = 100,              ///< MAX_NEIGHBOR_AGE (seconds)
-    kMaxRouteCost               = 16,               ///< MAX_ROUTE_COST
-    kMaxRouterId                = 62,               ///< MAX_ROUTER_ID
-    kInvalidRouterId            = kMaxRouterId + 1, ///< Value indicating incorrect Router Id
-    kMaxRouters                 = 32,               ///< MAX_ROUTERS
-    kMinDowngradeNeighbors      = 7,                ///< MIN_DOWNGRADE_NEIGHBORS
-    kNetworkIdTimeout           = 120,              ///< NETWORK_ID_TIMEOUT (seconds)
-    kParentRouteToLeaderTimeout = 20,               ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (seconds)
-    kRouterSelectionJitter      = 120,              ///< ROUTER_SELECTION_JITTER (seconds)
-    kRouterDowngradeThreshold   = 23,               ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreshold     = 16,               ///< ROUTER_UPGRADE_THRESHOLD (routers)
-    kMaxLeaderToRouterTimeout   = 90,               ///< INFINITE_COST_TIMEOUT (seconds)
-    kReedAdvertiseInterval      = 570,              ///< REED_ADVERTISEMENT_INTERVAL (seconds)
-    kReedAdvertiseJitter        = 60,               ///< REED_ADVERTISEMENT_JITTER (seconds)
-    kLeaderWeight               = 64,               ///< Default leader weight for the Thread Network Partition
-    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (seconds)
+    kAdvertiseIntervalMin       = 1,                                       ///< ADVERTISEMENT_I_MIN (sec)
+    kAdvertiseIntervalMax       = 32,                                      ///< ADVERTISEMENT_I_MAX (sec)
+    kFailedRouterTransmissions  = 4,                                       ///< FAILED_ROUTER_TRANSMISSIONS
+    kRouterIdReuseDelay         = 100,                                     ///< ID_REUSE_DELAY (sec)
+    kRouterIdSequencePeriod     = 10,                                      ///< ID_SEQUENCE_PERIOD (sec)
+    kMaxNeighborAge             = 100,                                     ///< MAX_NEIGHBOR_AGE (sec)
+    kMaxRouteCost               = 16,                                      ///< MAX_ROUTE_COST
+    kMaxRouterId                = 62,                                      ///< MAX_ROUTER_ID
+    kInvalidRouterId            = kMaxRouterId + 1,                        ///< Value indicating incorrect Router Id
+    kMaxRouters                 = OPENTHREAD_CONFIG_MAX_ROUTERS,           ///< MAX_ROUTERS
+    kMinDowngradeNeighbors      = 7,                                       ///< MIN_DOWNGRADE_NEIGHBORS
+    kNetworkIdTimeout           = 120,                                     ///< NETWORK_ID_TIMEOUT (sec)
+    kParentRouteToLeaderTimeout = 20,                                      ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (sec)
+    kRouterSelectionJitter      = 120,                                     ///< ROUTER_SELECTION_JITTER (sec)
+    kRouterDowngradeThreshold   = 23,                                      ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
+    kRouterUpgradeThreshold     = 16,                                      ///< ROUTER_UPGRADE_THRESHOLD (routers)
+    kMaxLeaderToRouterTimeout   = 90,                                      ///< INFINITE_COST_TIMEOUT (sec)
+    kReedAdvertiseInterval      = 570,                                     ///< REED_ADVERTISEMENT_INTERVAL (sec)
+    kReedAdvertiseJitter        = 60,                                      ///< REED_ADVERTISEMENT_JITTER (sec)
+    kLeaderWeight               = 64,                                      ///< Default leader weight
+    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (sec)
 };
 
 /**
