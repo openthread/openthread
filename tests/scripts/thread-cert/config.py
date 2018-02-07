@@ -68,6 +68,9 @@ INFINITE_COST_TIMEOUT = 90
 MAX_ADVERTISEMENT_INTERVAL = 32
 MLE_END_DEVICE_TIMEOUT = 100
 
+AQ_TIMEOUT = 3 
+ADDRESS_QUERY_INITIAL_RETRY_DELAY = 15
+
 VIRTUAL_TIME = bool(os.getenv('VIRTUAL_TIME', False))
 
 def create_default_network_data_prefix_sub_tlvs_factories():
