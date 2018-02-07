@@ -35,7 +35,6 @@
 #include <string.h>
 
 #include <openthread/openthread.h>
-#include <openthread/platform/platform.h>
 
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>

@@ -95,6 +95,10 @@ if OPENTHREAD_EXAMPLES_SAMR21
 SUBDIRS                                += samr21
 endif
 
+noinst_HEADERS                          = \
+    platform.h                            \
+    $(NULL)
+
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \

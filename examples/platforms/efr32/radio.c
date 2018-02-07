@@ -37,7 +37,6 @@
 #include <openthread/types.h>
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
 

@@ -34,7 +34,7 @@
 
 #include "asf.h"
 
-#include <openthread/platform/platform.h>
+#include "platform.h"
 
 #include "platform-samr21.h"
 

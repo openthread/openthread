@@ -43,7 +43,8 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/platform.h>
+
+#include "platform.h"
 
 #include "platform-config.h"
 #include "platform-nrf5.h"

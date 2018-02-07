@@ -27,11 +27,11 @@
  */
 
 #include <openthread/diag.h>
-#include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
 
 #include "utils/wrap_string.h"
 
+#include "platform.h"
 #include "test_util.h"
 
 extern "C" void otTaskletsSignalPending(otInstance *)

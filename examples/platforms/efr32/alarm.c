@@ -38,7 +38,6 @@
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/platform.h>
 
 #include "utils/code_utils.h"
 

@@ -39,10 +39,11 @@
 #include <stdint.h>
 
 #include <openthread/types.h>
-#include <openthread/platform/platform.h>
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/uart.h>
 #include <utils/code_utils.h>
+
+#include "platform.h"
 
 #include <drivers/clock/nrf_drv_clock.h>
 #include <hal/nrf_uart.h>
