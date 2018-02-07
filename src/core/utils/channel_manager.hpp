@@ -100,7 +100,15 @@ public:
     otError RequestChannelChange(uint8_t aChannel);
 
     /**
-     * This method gets the  delay (in seconds) used for a channel change.
+     * This method gets the channel from the last successful call to `RequestChannelChange()`.
+     *
+     * @returns The last requested channel, or zero if there has been no channel change request yet.
+     *
+     */
+    uint8_t GetRequestedChannel(void) const { return mChannel; }
+
+    /**
+     * This method gets the delay (in seconds) used for a channel change.
      *
      * @returns The delay (in seconds)
      *
