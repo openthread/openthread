@@ -97,6 +97,29 @@ cd /tmp || die
     [ $BUILD_TARGET != posix -o $CC != clang ] || {
         sudo apt-get install clang || die
     }
+
+    [ $BUILD_TARGET != toranj-test-framework ] || {
+        pip install --upgrade pip || die
+
+        # packages for wpantund
+        sudo apt-get install dbus || die
+        sudo apt-get install gcc g++ libdbus-1-dev || die
+        sudo apt-get install autoconf-archive || die
+        sudo apt-get install bsdtar || die
+        sudo apt-get install libtool || die
+        sudo apt-get install libglib2.0-dev || die
+        sudo apt-get install libboost-dev || die
+        sudo apt-get install libboost-signals-dev || die
+
+        # clone and build wpantund
+        git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
+        cd wpantund || die
+        ./bootstrap.sh || die
+        ./configure || die
+        sudo make install -j 8 || die
+        cd .. || die
+    }
+
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {
