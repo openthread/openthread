@@ -86,7 +86,8 @@ class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
         # 3. DUT_REED: Verify sent a Link Request to at least 3 neighboring Routers.
         for i in range(0, 3):
             msg = reed_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-            command.check_link_request(msg)
+            command.check_link_request(msg, source_address = command.CheckType.CONTAIN, \
+                leader_data = command.CheckType.CONTAIN)
 
         # 4. DUT_ROUTER1: Verify sent a Link Accept to DUT_REED.
         self.simulator.go(30)
