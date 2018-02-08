@@ -91,6 +91,7 @@ libopenthread_samr21_a_CPPFLAGS                                                 
     -Werror                                                                                                    \
     -Wno-unused-parameter                                                                                      \
     -Wno-implicit-function-declaration                                                                         \
+    -Wno-expansion-to-defined                                                                                  \
     -fno-strict-aliasing                                                                                       \
     $(NULL)
 
