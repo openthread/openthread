@@ -657,8 +657,6 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
     RAIL_Status_t status;
     uint16_t length;
 
-    otEXPECT(sState == OT_RADIO_STATE_RECEIVE);
-
     packetHandle = RAIL_GetRxPacketInfo(aRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST, &packetInfo);
     otEXPECT_ACTION(packetInfo.packetStatus == RAIL_RX_PACKET_READY_SUCCESS,
                     packetHandle = RAIL_RX_PACKET_HANDLE_INVALID);
@@ -666,6 +664,7 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
     packetDetails.timeReceived.timePosition = RAIL_PACKET_TIME_INVALID;
     packetDetails.timeReceived.totalPacketBytes = 0;
     status = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
+    otEXPECT(status != RAIL_STATUS_INVALID_STATE);
     assert(status == RAIL_STATUS_NO_ERROR);
     length = packetInfo.packetBytes + 1;
 
