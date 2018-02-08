@@ -73,6 +73,14 @@ extern "C" {
 otError otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel);
 
 /**
+ * This function gets the channel from the last successful call to `otChannelManagerRequestChannelChange()`
+ *
+ * @returns The last requested channel or zero if there has been no channel change request yet.
+ *
+ */
+uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance);
+
+/**
  * This function gets the delay (in seconds) used by Channel Manager for a channel change.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.

@@ -48,6 +48,13 @@ otError otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aCha
     return instance.GetChannelManager().RequestChannelChange(aChannel);
 }
 
+uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelManager().GetRequestedChannel();
+}
+
 uint16_t otChannelManagerGetDelay(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
