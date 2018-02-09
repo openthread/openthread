@@ -2525,6 +2525,23 @@ exit:
     return error;
 }
 
+otError NcpBase::DecodeChannelMask(uint32_t &aChannelMask)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t channel;
+
+    aChannelMask = 0;
+
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUint8(channel));
+        VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
+        aChannelMask |= (1U << channel);
+    }
+
+exit:
+    return error;
+}
 
 otError NcpBase::GetPropertyHandler_MAC_SCAN_MASK(void)
 {
@@ -2535,18 +2552,9 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_MASK(void)
 {
     uint32_t newMask = 0;
     otError error = OT_ERROR_NONE;
-    const uint8_t *valuePtr;
-    uint16_t valueLen;
 
-    SuccessOrExit(error = mDecoder.ReadData(valuePtr, valueLen));
-
-    for (; valueLen != 0; valueLen--, valuePtr++)
-    {
-        VerifyOrExit(valuePtr[0] <= 31, error = OT_ERROR_INVALID_ARGS);
-        VerifyOrExit((mSupportedChannelMask & (1 << valuePtr[0])) != 0, error = OT_ERROR_INVALID_ARGS);
-
-        newMask |= (1 << valuePtr[0]);
-    }
+    SuccessOrExit(error = DecodeChannelMask(newMask));
+    VerifyOrExit((~mSupportedChannelMask & newMask) == 0, error = OT_ERROR_INVALID_ARGS);
 
     mChannelMask = newMask;
 
