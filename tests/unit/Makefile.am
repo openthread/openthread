@@ -85,7 +85,6 @@ endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 check_PROGRAMS                                                      = \
     test-aes                                                          \
     test-child                                                        \
-    test-fuzz                                                         \
     test-heap                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
@@ -147,9 +146,6 @@ test_aes_SOURCES             = test_platform.cpp test_aes.cpp
 
 test_child_LDADD             = $(COMMON_LDADD)
 test_child_SOURCES           = test_platform.cpp test_child.cpp
-
-test_fuzz_LDADD              = $(COMMON_LDADD)
-test_fuzz_SOURCES            = test_platform.cpp test_fuzz.cpp
 
 test_heap_LDADD              = $(COMMON_LDADD)
 test_heap_SOURCES            = test_platform.cpp test_heap.cpp
