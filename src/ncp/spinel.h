@@ -419,6 +419,7 @@ enum
     SPINEL_CAP_OOB_STEERING_DATA        = (SPINEL_CAP_OPENTHREAD__BEGIN + 2),
     SPINEL_CAP_CHANNEL_MONITOR          = (SPINEL_CAP_OPENTHREAD__BEGIN + 3),
     SPINEL_CAP_ERROR_RATE_TRACKING      = (SPINEL_CAP_OPENTHREAD__BEGIN + 4),
+    SPINEL_CAP_CHANNEL_MANAGER          = (SPINEL_CAP_OPENTHREAD__BEGIN + 5),
     SPINEL_CAP_OPENTHREAD__END          = 640,
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
@@ -1419,6 +1420,53 @@ typedef enum
     SPINEL_PROP_STREAM_NET              = SPINEL_PROP_STREAM__BEGIN + 2, ///< [dD]
     SPINEL_PROP_STREAM_NET_INSECURE     = SPINEL_PROP_STREAM__BEGIN + 3, ///< [dD]
     SPINEL_PROP_STREAM__END             = 0x80,
+
+    SPINEL_PROP_OPENTHREAD__BEGIN       = 0x1900,
+
+    /// Channel Manager - Channel Change New Channel
+    /** Format: `C` (read-write)
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * Setting this property triggers the Channel Manager to start
+     * a channel change process. The network switches to the given
+     * channel after the specified delay (see `CHANNEL_MANAGER_DELAY`).
+     *
+     * A subsequent write to this property will cancel an ongoing
+     * (previously requested) channel change.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 0,
+
+    /// Channel Manager - Channel Change Delay
+    /** Format 'S'
+     *  Units: seconds
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * This property specifies the delay (in seconds) to be used for
+     * a channel change request.
+     *
+     * The delay should preferably be longer than maximum data poll
+     * interval used by all sleepy-end-devices within the Thread
+     * network.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_DELAY   = SPINEL_PROP_OPENTHREAD__BEGIN + 1,
+
+    /// Channel Manager Supported Channels
+    /** Format 'A(C)'
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * This property specifies the list of supported channels.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 2,
+
+    SPINEL_PROP_OPENTHREAD__END         = 0x2000,
 
     /// UART Bitrate
     /** Format: `L`

@@ -276,7 +276,8 @@ protected:
     static void SendDoneTask(void *aContext);
     void SendDoneTask(void);
 
-    otError EncodeChannelMask(uint32_t channel_mask);
+    otError EncodeChannelMask(uint32_t aChannelMask);
+    otError DecodeChannelMask(uint32_t &aChannelMask);
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
 #if OPENTHREAD_FTD
@@ -659,6 +660,14 @@ protected:
     NCP_SET_PROP_HANDLER(THREAD_PENDING_DATASET);
     NCP_SET_PROP_HANDLER(THREAD_MGMT_ACTIVE_DATASET);
     NCP_SET_PROP_HANDLER(THREAD_MGMT_PENDING_DATASET);
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_NEW_CHANNEL);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_NEW_CHANNEL);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_DELAY);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_DELAY);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_SUPPORTED_CHANNELS);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_SUPPORTED_CHANNELS);
+#endif
 
 #endif // OPENTHREAD_FTD
 
