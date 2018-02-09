@@ -120,12 +120,6 @@ public:
     void HandleResolved(const Ip6::Address &aEid, otError aError);
 
     /**
-     * This method sets the radio receiver and polling timer off.
-     *
-     */
-    void SetRxOff(void);
-
-    /**
      * This method indicates whether or not rx-on-when-idle mode is enabled.
      *
      * @retval TRUE   The rx-on-when-idle mode is enabled.

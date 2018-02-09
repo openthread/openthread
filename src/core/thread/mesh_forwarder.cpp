@@ -396,15 +396,6 @@ exit:
     return error;
 }
 
-void MeshForwarder::SetRxOff(void)
-{
-    ThreadNetif &netif = GetNetif();
-
-    netif.GetMac().SetRxOnWhenIdle(false);
-    mDataPollManager.StopPolling();
-    netif.GetSupervisionListener().Stop();
-}
-
 bool MeshForwarder::GetRxOnWhenIdle(void)
 {
     return GetNetif().GetMac().GetRxOnWhenIdle();
