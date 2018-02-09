@@ -150,11 +150,11 @@ public:
 private:
     enum
     {
-        kDefaultSupprotedChannelMask = OT_RADIO_SUPPORTED_CHANNELS,
-        kMaxTimestampIncrease = 128,
-
+        kDefaultSupprotedChannelMask   = OT_RADIO_SUPPORTED_CHANNELS,
+        kMaxTimestampIncrease          = 128,
         kPendingDatasetTxRetryInterval = 20000,    // in ms
-        kChangeCheckWaitInterval = 30000,          // in ms
+        kChangeCheckWaitInterval       = 30000,    // in ms
+        kRequestStartJitterInterval    = 10000,    // in ms
     };
 
     enum State
