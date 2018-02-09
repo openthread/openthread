@@ -77,7 +77,8 @@ otError ChannelManager::RequestChannelChange(uint8_t aChannel)
     mState = kStateChangeRequested;
     mChannel = aChannel;
     mActiveTimestamp = 0;
-    PreparePendingDataset();
+
+    mTimer.Start((otPlatRandomGet() % kRequestStartJitterInterval) + 1);
 
 exit:
     return error;
@@ -98,17 +99,43 @@ void ChannelManager::PreparePendingDataset(void)
 {
     ThreadNetif &netif = GetInstance().GetThreadNetif();
     uint64_t pendingTimestamp = 0;
+    uint64_t pendingActiveTimestamp = 0;
+    uint32_t delayInMs = TimerMilli::SecToMsec(static_cast<uint32_t>(mDelay));
     otOperationalDataset dataset;
-    uint32_t delayInMs;
     otError error;
 
     VerifyOrExit(mState == kStateChangeRequested);
+
+    VerifyOrExit(mChannel != GetInstance().Get<Mac::Mac>().GetChannel());
+
+    if ((mSupportedChannels & (1U << mChannel)) == 0)
+    {
+        otLogInfoUtil(GetInstance(), "ChannelManager: Request rejected! Channel %d not in supported mask 0x%x",
+                      mChannel, mSupportedChannels);
+        mState = kStateIdle;
+        ExitNow();
+    }
 
     if (netif.GetPendingDataset().Get(dataset) == OT_ERROR_NONE)
     {
         if (dataset.mIsPendingTimestampSet)
         {
             pendingTimestamp = dataset.mPendingTimestamp;
+        }
+
+        // We check whether the Pending Dataset is changing the
+        // channel to same one as the current request (i.e., channel
+        // should match and delay should be less than the requested
+        // delay).
+
+        if (dataset.mIsChannelSet && (mChannel == dataset.mChannel) &&
+            dataset.mIsDelaySet && (dataset.mDelay <= delayInMs) &&
+            dataset.mIsActiveTimestampSet)
+        {
+            // We save the active timestamp to later check and ensure it
+            // is ahead of current ActiveDataset timestamp.
+
+            pendingActiveTimestamp = dataset.mActiveTimestamp;
         }
     }
 
@@ -135,6 +162,23 @@ void ChannelManager::PreparePendingDataset(void)
         }
 
         ExitNow();
+    }
+
+    // `pendingActiveTimestamp` will be non-zero if the Pending
+    // Dataset is valid and is performing the same channel change.
+    // We check to ensure its timestamp is indeed ahead of current
+    // Active Dataset's timestamp, and if so, we skip updating
+    // the Pending Dataset.
+
+    if (pendingActiveTimestamp != 0)
+    {
+        if (dataset.mActiveTimestamp < pendingActiveTimestamp)
+        {
+            otLogInfoUtil(GetInstance(), "ChannelManager: Pending Dataset is valid for change channel to %d", mChannel);
+            mState = kStateSentMgmtPendingDataset;
+            mTimer.Start(delayInMs + kChangeCheckWaitInterval);
+            ExitNow();
+        }
     }
 
     // A non-zero `mActiveTimestamp` indicates that this is not the first
@@ -170,7 +214,6 @@ void ChannelManager::PreparePendingDataset(void)
     dataset.mPendingTimestamp = pendingTimestamp;
     dataset.mIsPendingTimestampSet = true;
 
-    delayInMs = TimerMilli::SecToMsec(static_cast<uint32_t>(mDelay));
     dataset.mDelay = delayInMs;
     dataset.mIsDelaySet = true;
 
@@ -187,6 +230,8 @@ void ChannelManager::PreparePendingDataset(void)
     {
         otLogInfoUtil(GetInstance(), "ChannelManager: %s error in dataset update (channel change %d), retry in %d sec",
                       otThreadErrorToString(error), mChannel, TimerMilli::MsecToSec(kPendingDatasetTxRetryInterval));
+
+        mTimer.Start(kPendingDatasetTxRetryInterval);
     }
 
 exit:
@@ -206,7 +251,8 @@ void ChannelManager::HandleTimer(void)
         break;
 
     case kStateSentMgmtPendingDataset:
-        otLogInfoUtil(GetInstance(), "ChannelManager: Timed out waiting for channel change to %d", mChannel);
+        otLogInfoUtil(GetInstance(), "ChannelManager: Timed out waiting for change to %d, trying again.", mChannel);
+        mState = kStateChangeRequested;
 
     // fall through
 
