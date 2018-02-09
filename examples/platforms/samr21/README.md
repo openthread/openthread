@@ -36,21 +36,17 @@ $ ./script/bootstrap
 $ unzip asf-standalone-archive-3.35.1.54.zip 
 $ cp xdk-asf-3.35.1 -rf  <path-to-openthread>/third_party/microchip/asf
 ```
-3. SAM R21 Xplained Pro board doesn't have IEEE extended address assigned. It should be
-assigned before build. In this example IEEE address is assigned by setting 
-CONF_IEEE_ADDRESS macro in `conf_board.h`. If you use few SAM R21 Xplained Pro boards
-for test, make sure that each board has individual IEEE address.
-
-4. This example can be built for other SAMR21 based modules. For example [ATSAMR21G18-MR21][MODULE-MR21],
+3. This example can be built for other SAMR21 based modules. For example [ATSAMR21G18-MR21][MODULE-MR21],
 [ATSAMR21B18-MZ21][MODULE-MZ21]. To build for these modules set
 SAMR21_BOARD=USER_BOARD and SAMR21_CPU=\_\_SAMR21XXXX\_\_ in `examples/samr21/Makefile.am`. Then
-configure peripherals in `user_board.h`. For these modules IEEE address is stored at special
-address in ROM. IEEE address is read from this location if CONF_IEEE_ADDRESS macro is not set.
+configure peripherals in `third_party/microchip/include/user_board.h`.
+For these modules IEEE address is stored at special address in ROM and retreived
+from this location if CONF_IEEE_ADDRESS macro is not set.
 
 [MODULE-MR21]: http://www.atmel.com/Images/Atmel-42475-ATSAMR21G18-MR210UA_Datasheet.pdf
 [MODULE-MZ21]: http://www.atmel.com/images/Atmel-42486-atsamr21b18-mz210pa_datasheet.pdf
 
-5. Build OpenThread Firmware (CLI example) on SAMR21 platform.
+4. Build OpenThread Firmware (CLI example) on SAMR21 platform.
 
 ```bash
 $ cd <path-to-openthread>
