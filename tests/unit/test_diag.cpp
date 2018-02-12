@@ -61,7 +61,7 @@ extern "C" void otPlatAlarmMicroFired(otInstance *)
 {
 }
 
-extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *aFrame, otRadioFrame *aAckFrame,  otError aError)
+extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
     (void)aFrame;
     (void)aAckFrame;
@@ -76,7 +76,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *aFrame, otErr
 
 extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *aFrame)
 {
-    (void) aFrame;
+    (void)aFrame;
 }
 
 /**
@@ -98,7 +98,7 @@ const char *MakePrintable(const char *aString)
         // two for encoding the current char (in case it needs a backslash)
         // and two for the ending `"` and null char.
 
-        char c = *aString++;
+        char c            = *aString++;
         bool addBackslash = true;
 
         switch (c)
@@ -140,7 +140,7 @@ const char *MakePrintable(const char *aString)
     }
 
     *ptr++ = '\"';
-    *ptr = 0;
+    *ptr   = 0;
 
     return printableString;
 }
@@ -153,8 +153,7 @@ void TestDiag(void)
         const char *mExpectedOutput;
     };
 
-    static const TestCommand tests[] =
-    {
+    static const TestCommand tests[] = {
 
         {
             "diag\n",
@@ -205,16 +204,14 @@ void TestDiag(void)
             "sending 0x14 packet(s), length 0x64\r\nstatus 0x00\r\n",
         },
         {
-            "  diag \t send    \t 20\t100",           // Check parsing of extra space chars between args
+            "  diag \t send    \t 20\t100", // Check parsing of extra space chars between args
             "sending 0x14 packet(s), length 0x64\r\nstatus 0x00\r\n",
         },
-        {
-            "diag repeat 100 100\n",
-            "sending packets of length 0x64 at the delay of 0x64 ms\r\nstatus 0x00\r\n"
-        },
+        {"diag repeat 100 100\n", "sending packets of length 0x64 at the delay of 0x64 ms\r\nstatus 0x00\r\n"},
         {
             "diag stop\n",
-            "received packets: 0\r\nsent packets: 0\r\nfirst received packet: rssi=0, lqi=0\r\n\nstop diagnostics mode\r\nstatus 0x00\r\n",
+            "received packets: 0\r\nsent packets: 0\r\nfirst received packet: rssi=0, lqi=0\r\n\nstop diagnostics "
+            "mode\r\nstatus 0x00\r\n",
         },
         {
             "diag",
@@ -227,11 +224,10 @@ void TestDiag(void)
         {
             NULL,
             NULL,
-        }
-    };
+        }};
 
     // initialize platform layer
-    int argc = 2;
+    int   argc    = 2;
     char *argv[8] = {(char *)"test_diag", (char *)"1"};
     PlatformInit(argc, argv);
 

@@ -37,7 +37,8 @@
 // Spi-slave stubs
 
 otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
-                             otPlatSpiSlaveTransactionProcessCallback aProcessCallback, void *aContext)
+                             otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
+                             void *                                    aContext)
 {
     (void)aCompleteCallback;
     (void)aProcessCallback;
@@ -53,8 +54,11 @@ void otPlatSpiSlaveDisable(void)
 {
 }
 
-otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
-                                         uint16_t aInputBufLen, bool aRequestTransactionFlag)
+otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
+                                         uint16_t aOutputBufLen,
+                                         uint8_t *aInputBuf,
+                                         uint16_t aInputBufLen,
+                                         bool     aRequestTransactionFlag)
 {
     (void)aOutputBuf;
     (void)aOutputBufLen;
