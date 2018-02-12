@@ -43,6 +43,8 @@
 
 #include "platform-efr32.h"
 
+#if OPENTHREAD_ENABLE_DIAG
+
 /**
  * Diagnostics mode variables.
  *
@@ -88,3 +90,5 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     (void)aInstance;
 }
+
+#endif // #if OPENTHREAD_ENABLE_DIAG

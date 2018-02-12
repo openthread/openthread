@@ -34,7 +34,10 @@
 
 #include <stdio.h>
 
+#include <openthread/config.h>
 #include <openthread/platform/diag.h>
+
+#if OPENTHREAD_ENABLE_DIAG
 
 /**
  * Diagnostics mode variables.
@@ -82,3 +85,5 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     (void)aInstance;
 }
+
+#endif // OPENTHREAD_ENABLE_DIAG
