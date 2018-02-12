@@ -310,6 +310,7 @@ set -x
         --enable-legacy                     \
         --enable-mac-filter                 \
         --enable-service                    \
+        --enable-channel-manager            \
         --enable-channel-monitor            \
         --disable-docs                      \
         --disable-test || die
