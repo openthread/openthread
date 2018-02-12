@@ -29,7 +29,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <openthread/config.h>
 #include <openthread/platform/diag.h>
+
+#if OPENTHREAD_ENABLE_DIAG
 
 /**
  * Diagnostics mode variables.
@@ -39,7 +42,7 @@ static bool sDiagMode = false;
 
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    // Add more plarform specific diagnostics features here.
+    // Add more platform specific diagnostics features here.
     if (argc > 1)
     {
         snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
@@ -80,3 +83,5 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     (void)aInstance;
 }
+
+#endif // OPENTHREAD_ENABLE_DIAG

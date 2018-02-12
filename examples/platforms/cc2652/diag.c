@@ -32,11 +32,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openthread/config.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
 #include "platform-cc2652.h"
+
+#if OPENTHREAD_ENABLE_DIAG
 
 /**
  * Diagnostics mode variables.
@@ -86,3 +89,5 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     (void)aInstance;
 }
+
+#endif // OPENTHREAD_ENABLE_DIAG

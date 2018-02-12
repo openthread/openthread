@@ -34,7 +34,6 @@ lib_LIBRARIES                                         = libopenthread-cc2650.a
 override CFLAGS                                      := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                                    := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-
 libopenthread_cc2650_a_CPPFLAGS                       = \
     -I$(top_srcdir)/include                             \
     -I$(top_srcdir)/src                                 \
@@ -46,8 +45,9 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
     $(MBEDTLS_CPPFLAGS)                                 \
     $(NULL)
 
-libopenthread_cc2650_a_SOURCES                        = \
+PLATFORM_SOURCES                                      = \
     alarm.c                                             \
+    diag.c                                              \
     flash.c                                             \
     misc.c                                              \
     logging.c                                           \
@@ -62,18 +62,21 @@ libopenthread_cc2650_a_SOURCES                        = \
     cc2650_startup.c                                    \
     $(NULL)
 
+libopenthread_cc2650_a_SOURCES                        = \
+   $(PLATFORM_SOURCES)                                  \
+   $(NULL)
+
 libopenthread_cc2650_a_DEPENDENCIES                   =                       \
     $(top_srcdir)/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
-if OPENTHREAD_ENABLE_DIAG
-libopenthread_cc2650_a_SOURCES                       += \
-    diag.c                                              \
-    $(NULL)
-endif
-
 noinst_HEADERS                                        = \
     platform-cc2650.h                                   \
+    $(NULL)
+
+PRETTY_FILES                                          = \
+    $(PLATFORM_SOURCES)                                 \
+    $(noinst_HEADERS)                                   \
     $(NULL)
 
 Dash                                                  = -

@@ -38,6 +38,8 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
+#if OPENTHREAD_ENABLE_DIAG
+
 /**
  * Diagnostics mode variables.
  *
@@ -83,3 +85,5 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     (void)aInstance;
 }
+
+#endif // OPENTHREAD_ENABLE_DIAG
