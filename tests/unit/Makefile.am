@@ -208,6 +208,31 @@ test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a    
 test_diag_SOURCES            = test_diag.cpp
 endif
 
+PRETTY_FILES                                                        = \
+    $(test_address_sanitizer_SOURCES)                                 \
+    $(test_aes_SOURCES)                                               \
+    $(test_child_SOURCES)                                             \
+    $(test_heap_SOURCES)                                              \
+    $(test_hmac_sha256_SOURCES)                                       \
+    $(test_link_quality_SOURCES)                                      \
+    $(test_lowpan_SOURCES)                                            \
+    $(test_network_data_SOURCES)                                      \
+    $(test_mac_frame_SOURCES)                                         \
+    $(test_message_SOURCES)                                           \
+    $(test_message_queue_SOURCES)                                     \
+    $(test_ncp_buffer_SOURCES)                                        \
+    $(test_priority_queue_SOURCES)                                    \
+    $(test_pskc_SOURCES)                                              \
+    $(test_strlcat_SOURCES)                                           \
+    $(test_strlcpy_SOURCES)                                           \
+    $(test_strnlen_SOURCES)                                           \
+    $(test_spinel_decoder_SOURCES)                                    \
+    $(test_spinel_encoder_SOURCES)                                    \
+    $(test_timer_SOURCES)                                             \
+    $(test_toolchain_SOURCES)                                         \
+    $(test_diag_SOURCES)                                              \
+    $(NULL)
+
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                   = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE

@@ -73,6 +73,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
 
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
+    diag.c                                                                      \
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
@@ -82,12 +83,6 @@ PLATFORM_SOURCES                                                              = 
     startup-gcc.c                                                               \
     uart.c                                                                      \
     $(NULL)
-
-if OPENTHREAD_ENABLE_DIAG
-PLATFORM_SOURCES                                                             += \
-    diag.c                                                                      \
-    $(NULL)
-endif
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/hardware/kit/common/bsp/bsp_bcc.c                                      \
@@ -129,6 +124,7 @@ libopenthread_efr32_a_SOURCES                                                 = 
 
 PRETTY_FILES                                                                  = \
     $(PLATFORM_SOURCES)                                                         \
+    $(noinst_HEADERS)                                                           \
     $(NULL)
 
 Dash                                                                          = -

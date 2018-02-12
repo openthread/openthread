@@ -50,6 +50,7 @@ libopenthread_kw41z_a_CPPFLAGS                                                  
 
 PLATFORM_SOURCES                                                                                   = \
     alarm.c                                                                                          \
+    diag.c                                                                                           \
     flash.c                                                                                          \
     logging.c                                                                                        \
     misc.c                                                                                           \
@@ -86,12 +87,6 @@ libopenthread_kw41z_a_SOURCES                                                   
     @top_builddir@/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_msk_config.c                \
     @top_builddir@/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_zgbe_config.c               \
     $(NULL)
-
-if OPENTHREAD_ENABLE_DIAG
-PLATFORM_SOURCES                                                                                  += \
-    diag.c                                                                                           \
-    $(NULL)
-endif
 
 libopenthread_kw41z_a_SOURCES                                                                     += \
     $(PLATFORM_SOURCES)                                                                              \
