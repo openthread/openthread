@@ -41,7 +41,6 @@ override CXXFLAGS                            := $(filter-out -pedantic-errors,$(
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.0
 
 libopenthread_efr32_a_CPPFLAGS                                                = \
-    -D$(MCU)                                                  \
     -D__START=main                                                              \
     -D__STARTUP_CLEAR_BSS                                                       \
     -I$(top_srcdir)/include                                                     \
