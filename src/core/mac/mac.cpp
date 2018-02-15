@@ -73,6 +73,27 @@ const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYM
 static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
 #endif
 
+otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
+{
+    otError error = OT_ERROR_NOT_FOUND;
+
+    if (aChannel == kChannelIteratorFirst)
+    {
+        aChannel = (OT_RADIO_CHANNEL_MIN - 1);
+    }
+
+    for (aChannel++; aChannel <= OT_RADIO_CHANNEL_MAX; aChannel++)
+    {
+        if (ContainsChannel(aChannel))
+        {
+            ExitNow(error = OT_ERROR_NONE);
+        }
+    }
+
+exit:
+    return error;
+}
+
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mOperation(kOperationIdle)
@@ -102,7 +123,7 @@ Mac::Mac(Instance &aInstance)
     , mDataSequence(static_cast<uint8_t>(otPlatRandomGet()))
     , mCsmaAttempts(0)
     , mTransmitAttempts(0)
-    , mScanChannels(0xff)
+    , mScanChannelMask()
     , mScanDuration(0)
     , mScanChannel(OT_RADIO_CHANNEL_MIN)
     , mEnergyScanCurrentMaxRssi(kInvalidRssiValue)
@@ -169,8 +190,8 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 {
     mScanContext  = aContext;
     mScanDuration = aScanDuration;
-    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
-    mScanChannel  = OT_RADIO_CHANNEL_MIN - 1;
+    mScanChannel  = ChannelMask::kChannelIteratorFirst;
+    mScanChannelMask.SetMask((aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels);
     StartOperation(aScanOperation);
 }
 
@@ -237,17 +258,7 @@ exit:
 
 otError Mac::UpdateScanChannel(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    do
-    {
-        mScanChannel++;
-        VerifyOrExit(mScanChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_NOT_FOUND);
-
-    } while ((mScanChannels & (1U << mScanChannel)) == 0);
-
-exit:
-    return error;
+    return mScanChannelMask.GetNextChannel(mScanChannel);
 }
 
 void Mac::PerformActiveScan(void)
