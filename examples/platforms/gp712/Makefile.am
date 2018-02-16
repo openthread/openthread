@@ -58,7 +58,7 @@ libopenthread_gp712_a_LIBADD              = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_gp712_a_SOURCES             = \
-    $(PLATFORM_SORUCES)                     \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
 
 PRETTY_FILES                              = \
