@@ -765,6 +765,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
                 neighbor->GetLinkInfo().Clear();
                 neighbor->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
                 neighbor->ResetLinkFailures();
+                neighbor->SetLastHeard(TimerMilli::GetNow());
                 neighbor->SetState(Neighbor::kStateLinkRequest);
             }
             else
@@ -863,6 +864,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
 
         SuccessOrExit(error = AppendChallenge(*message, aNeighbor->GetChallenge(), aNeighbor->GetChallengeSize()));
         SuccessOrExit(error = AppendTlvRequest(*message, routerTlvs, sizeof(routerTlvs)));
+        aNeighbor->SetLastHeard(TimerMilli::GetNow());
         aNeighbor->SetState(Neighbor::kStateLinkRequest);
     }
 
@@ -1518,6 +1520,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             router->GetLinkInfo().Clear();
             router->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), linkInfo->mRss);
             router->ResetLinkFailures();
+            router->SetLastHeard(TimerMilli::GetNow());
             router->SetState(Neighbor::kStateLinkRequest);
             SendLinkRequest(router);
             ExitNow(error = OT_ERROR_NO_ROUTE);
@@ -1565,6 +1568,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             router->GetLinkInfo().Clear();
             router->GetLinkInfo().AddRss(netif.GetMac().GetNoiseFloor(), linkInfo->mRss);
             router->ResetLinkFailures();
+            router->SetLastHeard(TimerMilli::GetNow());
             router->SetState(Neighbor::kStateLinkRequest);
             router->SetDataRequestPending(false);
             SendLinkRequest(router);
