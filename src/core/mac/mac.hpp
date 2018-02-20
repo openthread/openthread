@@ -102,6 +102,136 @@ enum
 };
 
 /**
+ * This class defines a channel mask.
+ *
+ * It is a wrapper class around a `uint32_t` bit vector representing a set of channels.
+ *
+ */
+class ChannelMask
+{
+public:
+    enum
+    {
+        kChannelIteratorFirst = 0xff, ///< Value to pass in `GetNextChannel()` to get the first channel in the mask.
+    };
+
+    /**
+     * This constructor initializes a `ChannelMask` instance.
+     *
+     */
+    ChannelMask(void)
+        : mMask(0)
+    {
+    }
+
+    /**
+     * This constructor initializes a `ChannelMask` instance with a given mask.
+     *
+     * @param[in]  aMask   A channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
+     *
+     */
+    ChannelMask(uint32_t aMask)
+        : mMask(aMask)
+    {
+    }
+
+    /**
+     * This method clears the channel mask.
+     *
+     */
+    void Clear(void) { mMask = 0; }
+
+    /**
+     * This method gets the channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
+     *
+     * @returns The channel mask.
+     *
+     */
+    uint32_t GetMask(void) const { return mMask; }
+
+    /**
+     * This method sets the channel mask.
+     *
+     * @param[in]  aMask   A channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
+     *
+     */
+    void SetMask(uint32_t aMask) { mMask = aMask; }
+
+    /**
+     * This method indicates if the mask is empty.
+     *
+     * @returns TRUE if the mask is empty, FALSE otherwise.
+     *
+     */
+    bool IsEmpty(void) const { return (mMask == 0); }
+
+    /**
+     * This method indicates if the mask contains only a single channel.
+     *
+     * @returns TRUE if channel mask contains a single channel, FALSE otherwise
+     *
+     */
+    bool IsSingleChannel(void) const { return ((mMask != 0) && ((mMask & (mMask - 1)) == 0)); }
+
+    /**
+     * This method indicates if the mask contains a given channel.
+     *
+     * @param[in]  aChannel  A channel.
+     *
+     * @returns TRUE if the channel @p aChannel is included in the mask, FALSE otherwise.
+     *
+     */
+    bool ContainsChannel(uint8_t aChannel) const { return ((1U << aChannel) & mMask) != 0; }
+
+    /**
+     * This method adds a channel to the channel mask.
+     *
+     * @param[in]  aChannel  A channel
+     *
+     */
+    void AddChannel(uint8_t aChannel) { mMask |= (1U << aChannel); }
+
+    /**
+     * This method removes a channel from the channel mask.
+     *
+     * @param[in]  aChannel  A channel
+     *
+     */
+    void RemoveChannel(uint8_t aChannel) { mMask &= ~(1U << aChannel); }
+
+    /**
+     * This method updates the channel mask by intersecting it with another mask.
+     *
+     * @param[in]  aOtherMask  Another channel mask.
+     *
+     */
+    void Intersect(const ChannelMask &aOtherMask) { mMask &= aOtherMask.mMask; }
+
+    /**
+     * This method gets the next channel in the channel mask.
+     *
+     * This method can be used to iterate over all channels in the channel mask. To get the first channel (channel with
+     * lowest number) in the mask the @p aChannel should be set to `kChannelIteratorFirst`.
+     *
+     * @param[inout] aChannel        A reference to a `uint8_t`.
+     *                               On entry it should contain the previous channel or `kChannelIteratorFirst`.
+     *                               On exit it contains the next channel.
+     *
+     * @retval  OT_ERROR_NONE        Got the next channel, @p aChannel updated successfully.
+     * @retval  OT_ERROR_NOT_FOUND   No next channel in the channel mask (note: @p aChannel may be changed).
+     *
+     */
+    otError GetNextChannel(uint8_t &aChannel) const;
+
+private:
+#if (OT_RADIO_CHANNEL_MIN >= 32) || (OT_RADIO_CHANNEL_MAX >= 32)
+#error `OT_RADIO_CHANNEL_MAX` or `OT_RADIO_CHANNEL_MIN` are larger than 32. `ChannelMask` uses 32 bit mask.
+#endif
+
+    uint32_t mMask;
+};
+
+/**
  * This class implements a MAC receiver client.
  *
  */
@@ -749,11 +879,11 @@ private:
     uint8_t mCsmaAttempts;
     uint8_t mTransmitAttempts;
 
-    uint32_t mScanChannels;
-    uint16_t mScanDuration;
-    uint8_t  mScanChannel;
-    int8_t   mEnergyScanCurrentMaxRssi;
-    void *   mScanContext;
+    ChannelMask mScanChannelMask;
+    uint16_t    mScanDuration;
+    uint8_t     mScanChannel;
+    int8_t      mEnergyScanCurrentMaxRssi;
+    void *      mScanContext;
     union
     {
         ActiveScanHandler mActiveScanHandler;
