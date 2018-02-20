@@ -39,27 +39,19 @@ LEADER = 1
 ROUTER = 2
 
 def wait_for_output(testcase, get_output, desired, timeout=10):
-    time_to_sleep = 0.1
-    start_secs = time.time()
-    elapsed = 0
-    while elapsed < timeout :
-        current = get_output()
-        if current == desired:
-            break
-        time.sleep(time_to_sleep)
-        time_to_sleep *= 2
-        elapsed = time.time() - start_secs 
-
-    print str(get_output) + " == " + str(desired) + " elapsed = " + str(time.time() - start_secs) 
+    testcase.simulator.go(timeout)
+    current = get_output()
     testcase.assertEqual(current, desired)
 
 
 class RouterAttach_fault_injection(unittest.TestCase):
 
     def __setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 3):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -76,6 +68,7 @@ class RouterAttach_fault_injection(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
 
