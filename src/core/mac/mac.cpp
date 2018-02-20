@@ -1741,7 +1741,35 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     }
 
     // Security Processing
-    SuccessOrExit(error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
+    error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor);
+
+    switch (error)
+    {
+    case OT_ERROR_DUPLICATED:
+
+        // Allow a duplicate received frame pass, only if the
+        // current operation is `kOperationWaitingForData` (i.e.,
+        // the sleepy device is waiting to receive a frame after
+        // a data poll ack from parent indicating there is a
+        // pending frame for it). This ensures that the sleepy
+        // device goes to sleep faster and avoids a data poll
+        // timeout.
+        //
+        // Note that `error` is checked again later after the
+        // operation `kOperationWaitingForData` is processed
+        // so the duplicate frame will not be passed to any
+        // registered `Receiver`.
+
+        VerifyOrExit(mOperation == kOperationWaitingForData);
+
+        // Fall through
+
+    case OT_ERROR_NONE:
+        break;
+
+    default:
+        ExitNow();
+    }
 
     if (neighbor != NULL)
     {
@@ -1810,6 +1838,8 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 #endif
             FinishOperation();
         }
+
+        SuccessOrExit(error);
 
         break;
 
