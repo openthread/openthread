@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 
+// clang-format off
 
 #define PLATFORM_FEM_DEFAULT_PA_PIN                      26  /**< Default Power Amplifier pin. */
 #define PLATFORM_FEM_DEFAULT_LNA_PIN                     27  /**< Default Low Noise Amplifier pin. */
@@ -46,34 +47,37 @@
 #define PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP    5   /**< Default PPI channel group used to disable radio disabled PPI. */
 #define PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL              7   /**< Default GPIOTE channel for FEM control. */
 
-#define PLATFORM_FEM_DEFAULT_CONFIG                                                  \
-    ((PlatformFemConfigParams) {                                                     \
-        .mPaCfg = {                                                                  \
-                .mEnable      = 1,                                                   \
-                .mActiveHigh = 1,                                                    \
-                .mGpioPin    = PLATFORM_FEM_DEFAULT_PA_PIN,                          \
-        },                                                                           \
-        .mLnaCfg = {                                                                 \
-                .mEnable      = 1,                                                   \
-                .mActiveHigh = 1,                                                    \
-                .mGpioPin    = PLATFORM_FEM_DEFAULT_LNA_PIN,                         \
-        },                                                                           \
-        .mPpiChIdClr = PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL,                         \
-        .mPpiChIdSet = PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL,                         \
-        .mTimerPpiGrp = PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP,                  \
-        .mRadioPpiGrp = PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP,               \
-        .mGpioteChId  = PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL,                         \
-    })
+// clang-format on
 
+#define PLATFORM_FEM_DEFAULT_CONFIG                                    \
+    ((PlatformFemConfigParams){                                        \
+        .mPaCfg =                                                      \
+            {                                                          \
+                .mEnable     = 1,                                      \
+                .mActiveHigh = 1,                                      \
+                .mGpioPin    = PLATFORM_FEM_DEFAULT_PA_PIN,            \
+            },                                                         \
+        .mLnaCfg =                                                     \
+            {                                                          \
+                .mEnable     = 1,                                      \
+                .mActiveHigh = 1,                                      \
+                .mGpioPin    = PLATFORM_FEM_DEFAULT_LNA_PIN,           \
+            },                                                         \
+        .mPpiChIdClr  = PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL,          \
+        .mPpiChIdSet  = PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL,          \
+        .mTimerPpiGrp = PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP,    \
+        .mRadioPpiGrp = PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP, \
+        .mGpioteChId  = PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL,           \
+    })
 
 /**
  * @brief Configuration parameters for the PA and LNA.
  */
 typedef struct
 {
-    uint8_t mEnable : 1;        /**< Enable toggling for this amplifier */
-    uint8_t mActiveHigh : 1;    /**< Set the pin to be active high */
-    uint8_t mGpioPin : 6;       /**< The GPIO pin to toggle for this amplifier */
+    uint8_t mEnable : 1;     /**< Enable toggling for this amplifier */
+    uint8_t mActiveHigh : 1; /**< Set the pin to be active high */
+    uint8_t mGpioPin : 6;    /**< The GPIO pin to toggle for this amplifier */
 } PlatformFemConfigPaLna;
 
 /**
@@ -105,4 +109,4 @@ typedef struct
  */
 void PlatformFemSetConfigParams(const PlatformFemConfigParams *aConfig);
 
-#endif  // PLATFORM_FEM_H_
+#endif // PLATFORM_FEM_H_

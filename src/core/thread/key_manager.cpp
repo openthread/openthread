@@ -35,33 +35,32 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/timer.hpp"
 #include "common/owner-locator.hpp"
+#include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 
-static const uint8_t kThreadString[] =
-{
+static const uint8_t kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-KeyManager::KeyManager(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mKeySequence(0),
-    mMacFrameCounter(0),
-    mMleFrameCounter(0),
-    mStoredMacFrameCounter(0),
-    mStoredMleFrameCounter(0),
-    mHoursSinceKeyRotation(0),
-    mKeyRotationTime(kDefaultKeyRotationTime),
-    mKeySwitchGuardTime(kDefaultKeySwitchGuardTime),
-    mKeySwitchGuardEnabled(false),
-    mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this),
-    mKekFrameCounter(0),
-    mSecurityPolicyFlags(0xff)
+KeyManager::KeyManager(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mKeySequence(0)
+    , mMacFrameCounter(0)
+    , mMleFrameCounter(0)
+    , mStoredMacFrameCounter(0)
+    , mStoredMleFrameCounter(0)
+    , mHoursSinceKeyRotation(0)
+    , mKeyRotationTime(kDefaultKeyRotationTime)
+    , mKeySwitchGuardTime(kDefaultKeySwitchGuardTime)
+    , mKeySwitchGuardEnabled(false)
+    , mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this)
+    , mKekFrameCounter(0)
+    , mSecurityPolicyFlags(0xff)
 {
 }
 
@@ -84,7 +83,11 @@ const uint8_t *KeyManager::GetPSKc(void) const
 
 void KeyManager::SetPSKc(const uint8_t *aPSKc)
 {
-    memcpy(mPSKc, aPSKc, sizeof(mPSKc));
+    if (memcmp(mPSKc, aPSKc, sizeof(mPSKc)) != 0)
+    {
+        memcpy(mPSKc, aPSKc, sizeof(mPSKc));
+        GetNotifier().SetFlags(OT_CHANGED_PSKC);
+    }
 }
 #endif
 
@@ -97,12 +100,12 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
     otError error = OT_ERROR_NONE;
     Router *routers;
-    Child *children;
+    Child * children;
     uint8_t num;
 
     VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0);
 
-    mMasterKey = aKey;
+    mMasterKey   = aKey;
     mKeySequence = 0;
     ComputeKey(mKeySequence, mKey);
 
@@ -132,7 +135,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
         children[i].SetMleFrameCounter(0);
     }
 
-    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);
 
 exit:
     return error;
@@ -141,7 +144,7 @@ exit:
 otError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     Crypto::HmacSha256 hmac;
-    uint8_t keySequenceBytes[4];
+    uint8_t            keySequenceBytes[4];
 
     hmac.Start(mMasterKey.m8, sizeof(mMasterKey.m8));
 
@@ -165,9 +168,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     }
 
     // Check if the guard timer has expired if key rotation is requested.
-    if ((aKeySequence == (mKeySequence + 1)) &&
-        (mKeySwitchGuardTime != 0) &&
-        mKeyRotationTimer.IsRunning() &&
+    if ((aKeySequence == (mKeySequence + 1)) && (mKeySwitchGuardTime != 0) && mKeyRotationTimer.IsRunning() &&
         mKeySwitchGuardEnabled)
     {
         VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
@@ -185,7 +186,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         StartKeyRotationTimer();
     }
 
-    GetNetif().SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
 exit:
     return;
@@ -241,6 +242,15 @@ exit:
     return result;
 }
 
+void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
+{
+    if (mSecurityPolicyFlags != aSecurityPolicyFlags)
+    {
+        mSecurityPolicyFlags = aSecurityPolicyFlags;
+        GetNotifier().SetFlags(OT_CHANGED_SECURITY_POLICY);
+    }
+}
+
 void KeyManager::StartKeyRotationTimer(void)
 {
     mHoursSinceKeyRotation = 0;
@@ -271,4 +281,4 @@ void KeyManager::HandleKeyRotationTimer(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot

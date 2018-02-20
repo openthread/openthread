@@ -34,18 +34,18 @@
 
 #include <stddef.h>
 
-#include "openthread/types.h"
+#include "platform-emsk.h"
 #include <utils/code_utils.h>
 #include "openthread/platform/uart.h"
-#include "platform-emsk.h"
+#include "openthread/types.h"
 
 #include <stdio.h>
-#define DBG(fmt, ...)   printf(fmt, ##__VA_ARGS__)
+#define DBG(fmt, ...) printf(fmt, ##__VA_ARGS__)
 
 enum
 {
-    kUartId = BOARD_CONSOLE_UART_ID,
-    kBaudRate = BOARD_CONSOLE_UART_BAUD,
+    kUartId            = BOARD_CONSOLE_UART_ID,
+    kBaudRate          = BOARD_CONSOLE_UART_BAUD,
     kReceiveBufferSize = 128,
 };
 
@@ -53,9 +53,9 @@ static void processReceive(void);
 static void processTransmit(void);
 
 static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t sTransmitLength = 0;
+static uint16_t       sTransmitLength = 0;
 
-static uint8_t sReceiveBuffer[kReceiveBufferSize];
+static uint8_t  sReceiveBuffer[kReceiveBufferSize];
 static uint16_t sReceiveHead = 0;
 
 static DEV_UART *consoleUart;
@@ -63,7 +63,7 @@ static DEV_UART *consoleUart;
 otError otPlatUartEnable(void)
 {
     int32_t stateUart = 0;
-    otError error = OT_ERROR_DROP;
+    otError error     = OT_ERROR_DROP;
 
     /* UART in embARC */
     consoleUart = uart_get_dev(BOARD_CONSOLE_UART_ID);
@@ -91,7 +91,6 @@ otError otPlatUartEnable(void)
 exit:
 
     return error;
-
 }
 
 otError otPlatUartDisable(void)
@@ -114,8 +113,7 @@ exit:
 
 void processReceive(void)
 {
-
-    int32_t rdAvail = 0;
+    int32_t  rdAvail = 0;
     uint16_t remaining;
 
     consoleUart->uart_control(UART_CMD_GET_RXAVAIL, (void *)(&rdAvail));
@@ -167,4 +165,3 @@ void emskUartProcess(void)
     processReceive();
     processTransmit();
 }
-

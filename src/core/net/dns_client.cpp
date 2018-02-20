@@ -51,7 +51,7 @@ namespace Dns {
 
 otError Client::Start(void)
 {
-    otError error;
+    otError       error;
     Ip6::SockAddr addr;
 
     SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
@@ -63,15 +63,15 @@ exit:
 
 otError Client::Stop(void)
 {
-    Message *message = mPendingQueries.GetHead();
-    Message *messageToRemove;
+    Message *     message = mPendingQueries.GetHead();
+    Message *     messageToRemove;
     QueryMetadata queryMetadata;
 
     // Remove all pending queries.
     while (message != NULL)
     {
         messageToRemove = message;
-        message = message->GetNext();
+        message         = message->GetNext();
 
         queryMetadata.ReadFrom(*messageToRemove);
         FinalizeDnsTransaction(*messageToRemove, queryMetadata, NULL, 0, OT_ERROR_ABORT);
@@ -82,16 +82,15 @@ otError Client::Stop(void)
 
 otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
 {
-    otError error;
-    QueryMetadata queryMetadata(aHandler, aContext);
-    Message *message = NULL;
-    Message *messageCopy = NULL;
-    Header header;
-    QuestionAaaa question;
+    otError                 error;
+    QueryMetadata           queryMetadata(aHandler, aContext);
+    Message *               message     = NULL;
+    Message *               messageCopy = NULL;
+    Header                  header;
+    QuestionAaaa            question;
     const Ip6::MessageInfo *messageInfo;
 
-    VerifyOrExit(aQuery->mHostname != NULL && aQuery->mMessageInfo != NULL,
-                 error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aQuery->mHostname != NULL && aQuery->mMessageInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
     header.SetMessageId(mMessageId++);
     header.SetType(Header::kTypeQuery);
@@ -118,8 +117,7 @@ otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, v
     queryMetadata.mDestinationAddress  = messageInfo->GetPeerAddr();
     queryMetadata.mRetransmissionCount = 0;
 
-    VerifyOrExit((messageCopy = CopyAndEnqueueMessage(*message, queryMetadata)) != NULL,
-                 error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((messageCopy = CopyAndEnqueueMessage(*message, queryMetadata)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = SendMessage(*message, *messageInfo));
 
 exit:
@@ -154,8 +152,8 @@ exit:
 
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
-    otError error = OT_ERROR_NONE;
-    uint32_t now = TimerMilli::GetNow();
+    otError  error       = OT_ERROR_NONE;
+    uint32_t now         = TimerMilli::GetNow();
     Message *messageCopy = NULL;
     uint32_t nextTransmissionTime;
 
@@ -214,7 +212,7 @@ otError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageI
 
 otError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error;
+    otError  error;
     Message *messageCopy = NULL;
 
     // Create a message copy for lower layers.
@@ -236,10 +234,10 @@ exit:
 
 otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostname)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t index = 0;
+    otError error         = OT_ERROR_NONE;
+    uint8_t index         = 0;
     uint8_t labelPosition = 0;
-    uint8_t labelSize = 0;
+    uint8_t labelSize     = 0;
 
     while (true)
     {
@@ -251,7 +249,7 @@ otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostnam
             SuccessOrExit(error = aMessage.Append(&aHostname[labelPosition], labelSize));
 
             labelPosition += labelSize + 1;
-            labelSize      = 0;
+            labelSize = 0;
 
             if (aHostname[index] == kLabelTerminator)
             {
@@ -276,29 +274,27 @@ exit:
 
 otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t bufQuery[kBufSize];
-    uint8_t bufResponse[kBufSize];
+    otError  error = OT_ERROR_NONE;
+    uint8_t  bufQuery[kBufSize];
+    uint8_t  bufResponse[kBufSize];
     uint16_t read = 0;
 
     // Compare question section of the query with the response.
-    uint16_t length = aMessageQuery.GetLength() - aMessageQuery.GetOffset() -
-                      sizeof(Header) - sizeof(QueryMetadata);
+    uint16_t length = aMessageQuery.GetLength() - aMessageQuery.GetOffset() - sizeof(Header) - sizeof(QueryMetadata);
     uint16_t offset = aMessageQuery.GetOffset() + sizeof(Header);
 
     while (length > 0)
     {
-        VerifyOrExit((read = aMessageQuery.Read(offset,
-                                                length < sizeof(bufQuery) ? length : sizeof(bufQuery),
-                                                bufQuery)) > 0, error = OT_ERROR_PARSE);
-        VerifyOrExit(aMessageResponse.Read(aOffset, read, bufResponse) == read,
-                     error = OT_ERROR_PARSE);
+        VerifyOrExit(
+            (read = aMessageQuery.Read(offset, length < sizeof(bufQuery) ? length : sizeof(bufQuery), bufQuery)) > 0,
+            error = OT_ERROR_PARSE);
+        VerifyOrExit(aMessageResponse.Read(aOffset, read, bufResponse) == read, error = OT_ERROR_PARSE);
 
         VerifyOrExit(memcmp(bufResponse, bufQuery, read) == 0, error = OT_ERROR_NOT_FOUND);
 
         aOffset += read;
-        offset  += read;
-        length  -= read;
+        offset += read;
+        length -= read;
     }
 
 exit:
@@ -307,17 +303,16 @@ exit:
 
 otError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t buf[kBufSize];
+    otError  error = OT_ERROR_NONE;
+    uint8_t  buf[kBufSize];
     uint16_t index;
-    uint16_t read = 0;
+    uint16_t read   = 0;
     uint16_t offset = aOffset;
     uint16_t length = aMessage.GetLength() - aOffset;
 
     while (length > 0)
     {
-        VerifyOrExit((read = aMessage.Read(offset, sizeof(buf), buf)) > 0,
-                     error = OT_ERROR_PARSE);
+        VerifyOrExit((read = aMessage.Read(offset, sizeof(buf), buf)) > 0, error = OT_ERROR_PARSE);
 
         index = 0;
 
@@ -370,16 +365,18 @@ exit:
     return message;
 }
 
-void Client::FinalizeDnsTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata,
-                                    otIp6Address *aAddress, uint32_t aTtl,
-                                    otError aResult)
+void Client::FinalizeDnsTransaction(Message &            aQuery,
+                                    const QueryMetadata &aQueryMetadata,
+                                    otIp6Address *       aAddress,
+                                    uint32_t             aTtl,
+                                    otError              aResult)
 {
     DequeueMessage(aQuery);
 
     if (aQueryMetadata.mResponseHandler != NULL)
     {
-        aQueryMetadata.mResponseHandler(aQueryMetadata.mResponseContext, aQueryMetadata.mHostname,
-                                        aAddress, aTtl, aResult);
+        aQueryMetadata.mResponseHandler(aQueryMetadata.mResponseContext, aQueryMetadata.mHostname, aAddress, aTtl,
+                                        aResult);
     }
 }
 
@@ -390,11 +387,11 @@ void Client::HandleRetransmissionTimer(Timer &aTimer)
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t now = TimerMilli::GetNow();
-    uint32_t nextDelta = 0xffffffff;
-    QueryMetadata queryMetadata;
-    Message *message = mPendingQueries.GetHead();
-    Message *nextMessage = NULL;
+    uint32_t         now       = TimerMilli::GetNow();
+    uint32_t         nextDelta = 0xffffffff;
+    QueryMetadata    queryMetadata;
+    Message *        message     = mPendingQueries.GetHead();
+    Message *        nextMessage = NULL;
     Ip6::MessageInfo messageInfo;
 
     while (message != NULL)
@@ -453,12 +450,12 @@ void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessa
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    Header responseHeader;
-    QueryMetadata queryMetadata;
+    otError            error = OT_ERROR_NONE;
+    Header             responseHeader;
+    QueryMetadata      queryMetadata;
     ResourceRecordAaaa record;
-    Message *message = NULL;
-    uint16_t offset;
+    Message *          message = NULL;
+    uint16_t           offset;
 
     // RFC1035 7.3. Resolver cannot rely that a response will come from the same address
     // which it sent the corresponding query to.
@@ -466,8 +463,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
                  sizeof(responseHeader));
-    VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse &&
-                 responseHeader.GetQuestionCount() == 1 &&
+    VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
                  responseHeader.IsTruncationFlagSet() == false);
 
     aMessage.MoveOffset(sizeof(responseHeader));
@@ -494,8 +490,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         }
 
         if (aMessage.Read(offset, sizeof(record), &record) != sizeof(record) ||
-            record.GetType() != ResourceRecordAaaa::kType ||
-            record.GetClass() != ResourceRecordAaaa::kClass)
+            record.GetType() != ResourceRecordAaaa::kType || record.GetClass() != ResourceRecordAaaa::kClass)
         {
             offset += sizeof(ResourceRecord) + record.GetLength();
 
@@ -520,7 +515,7 @@ exit:
     return;
 }
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Dns
+} // namespace ot
 
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT

@@ -35,6 +35,9 @@
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 #include <openthread/border_router.h>
 #endif
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#include <openthread/channel_monitor.h>
+#endif
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -227,17 +230,17 @@ otError NcpBase::GetPropertyHandler_PHY_RSSI(void)
 
 otError NcpBase::CommandHandler_NET_SAVE(uint8_t aHeader)
 {
-    return SendLastStatus(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
+    return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
 otError NcpBase::CommandHandler_NET_CLEAR(uint8_t aHeader)
 {
-    return SendLastStatus(aHeader, ThreadErrorToSpinelStatus(otInstanceErasePersistentInfo(mInstance)));
+    return PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(otInstanceErasePersistentInfo(mInstance)));
 }
 
 otError NcpBase::CommandHandler_NET_RECALL(uint8_t aHeader)
 {
-    return SendLastStatus(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
+    return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
 otError NcpBase::GetPropertyHandler_NET_SAVED(void)
@@ -624,6 +627,34 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+
+otError NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE_ERROR_RATES(void)
+{
+    otError error = OT_ERROR_NONE;
+    otNeighborInfoIterator iter = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+    otNeighborInfo neighInfo;
+
+    while (otThreadGetNextNeighborInfo(mInstance, &iter, &neighInfo) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteEui64(neighInfo.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mRloc16));
+        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mFrameErrorRate));
+        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mMessageErrorRate));
+        SuccessOrExit(error = mEncoder.WriteInt8(neighInfo.mAverageRssi));
+        SuccessOrExit(error = mEncoder.WriteInt8(neighInfo.mLastRssi));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+
 otError NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(void)
 {
     otError error = OT_ERROR_NONE;
@@ -668,7 +699,7 @@ exit:
         // the state of these ports, so we need to report
         // those incomplete changes via an asynchronous
         // change event.
-        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_THREAD_ASSISTING_PORTS);
+        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_THREAD_ASSISTING_PORTS);
     }
 
     return error;
@@ -1339,7 +1370,7 @@ otError NcpBase::SetPropertyHandler_STREAM_NET(void)
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     error = otIp6Send(mInstance, message);
 
@@ -1396,17 +1427,7 @@ otError NcpBase::GetPropertyHandler_JAM_DETECT_BUSY(void)
 
 otError NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP(void)
 {
-    otError error = OT_ERROR_NONE;
-    uint64_t historyBitmap = otJamDetectionGetHistoryBitmap(mInstance);
-
-    // History bitmap - bits 0-31
-    SuccessOrExit(error = mEncoder.WriteUint32(static_cast<uint32_t>(historyBitmap & 0xffffffff)));
-
-    // // History bitmap - bits 32-63
-    SuccessOrExit(error = mEncoder.WriteUint32(static_cast<uint32_t>(historyBitmap >> 32)));
-
-exit:
-    return error;
+    return mEncoder.WriteUint64(otJamDetectionGetHistoryBitmap(mInstance));
 }
 
 otError NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE(void)
@@ -1482,6 +1503,53 @@ void NcpBase::HandleJamStateChange(bool aJamState)
 }
 
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_INTERVAL(void)
+{
+    return mEncoder.WriteUint32(otChannelMonitorGetSampleInterval(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_RSSI_THRESHOLD(void)
+{
+    return mEncoder.WriteInt8(otChannelMonitorGetRssiThreshold(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_WINDOW(void)
+{
+    return mEncoder.WriteUint32(otChannelMonitorGetSampleWindow(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_COUNT(void)
+{
+    return mEncoder.WriteUint32(otChannelMonitorGetSampleCount(mInstance));
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteUint8(channel));
+        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelQuality(mInstance, channel)));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+
+otError NcpBase::GetPropertyHandler_MAC_CCA_FAILURE_RATE(void)
+{
+    return mEncoder.WriteUint16(otLinkGetCcaFailureRate(mInstance));
+}
 
 otError NcpBase::GetPropertyHandler_CNTR_TX_PKT_TOTAL(void)
 {
@@ -1736,6 +1804,61 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_CNTR_ALL_MAC_COUNTERS(void)
+{
+    otError error = OT_ERROR_NONE;
+    const otMacCounters *counters = otLinkGetCounters(mInstance);
+
+    if (counters == NULL)
+    {
+        error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
+        ExitNow();
+    }
+
+    // Encode Tx related counters
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxTotal));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxUnicast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxBroadcast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxAckRequested));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxAcked));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxNoAckRequested));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxData));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxDataPoll));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxBeacon));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxBeaconRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxOther));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxRetry));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrCca));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrAbort));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrBusyChannel));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+    // Encode Rx related counters
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxTotal));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxUnicast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxBroadcast));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxData));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxDataPoll));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxBeacon));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxBeaconRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxOther));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxAddressFiltered));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxDestAddrFiltered));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxDuplicated));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrNoFrame));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrUnknownNeighbor));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrInvalidSrcAddr));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrSec));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrFcs));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxErrOther));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_ENABLE_MAC_FILTER
 
 otError NcpBase::GetPropertyHandler_MAC_WHITELIST(void)
@@ -1854,7 +1977,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_WHITELIST);
+        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_WHITELIST);
     }
 
     return error;
@@ -1912,7 +2035,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-       HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_BLACKLIST);
+       WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_BLACKLIST);
     }
 
     return error;
@@ -1975,7 +2098,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_FIXED_RSS);
+        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_MAC_FIXED_RSS);
     }
 
     return error;
@@ -2058,7 +2181,7 @@ otError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(void)
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     // Ensure the insecure message is forwarded using direct transmission.
     otMessageSetDirectTransmission(message, true);
@@ -2110,15 +2233,14 @@ exit:
 otError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader)
 {
     const char *string = NULL;
-    char *output = NULL;
+    const char *output = NULL;
     otError error = OT_ERROR_NONE;
 
     error = mDecoder.ReadUtf8(string);
 
-    VerifyOrExit(error == OT_ERROR_NONE, error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error)));
+    VerifyOrExit(error == OT_ERROR_NONE, error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
 
-    // All diagnostics related features are processed within diagnostics module
-    output = otDiagProcessCmdLine(const_cast<char *>(string));
+    output = otDiagProcessCmdLine(string);
 
     // Prepare the response
     SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_NEST_STREAM_MFG));
@@ -2403,6 +2525,23 @@ exit:
     return error;
 }
 
+otError NcpBase::DecodeChannelMask(uint32_t &aChannelMask)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t channel;
+
+    aChannelMask = 0;
+
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUint8(channel));
+        VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
+        aChannelMask |= (1U << channel);
+    }
+
+exit:
+    return error;
+}
 
 otError NcpBase::GetPropertyHandler_MAC_SCAN_MASK(void)
 {
@@ -2413,18 +2552,9 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_MASK(void)
 {
     uint32_t newMask = 0;
     otError error = OT_ERROR_NONE;
-    const uint8_t *valuePtr;
-    uint16_t valueLen;
 
-    SuccessOrExit(error = mDecoder.ReadData(valuePtr, valueLen));
-
-    for (; valueLen != 0; valueLen--, valuePtr++)
-    {
-        VerifyOrExit(valuePtr[0] <= 31, error = OT_ERROR_INVALID_ARGS);
-        VerifyOrExit((mSupportedChannelMask & (1 << valuePtr[0])) != 0, error = OT_ERROR_INVALID_ARGS);
-
-        newMask |= (1 << valuePtr[0]);
-    }
+    SuccessOrExit(error = DecodeChannelMask(newMask));
+    VerifyOrExit((~mSupportedChannelMask & newMask) == 0, error = OT_ERROR_INVALID_ARGS);
 
     mChannelMask = newMask;
 
@@ -2695,13 +2825,20 @@ void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
     VerifyOrExit(aMessage != NULL);
 
     SuccessOrExit(otMessageQueueEnqueue(&mMessageQueue, aMessage));
-    SuccessOrExit(SendQueuedDatagramMessages());
+
+    // If there is no queued spinel command response, try to write/send
+    // the datagram message immediately. If there is a queued response
+    // or if currently out of buffer space, the IPv6 datagram message
+    // will be sent from `HandleFrameRemovedFromNcpBuffer()` when buffer
+    //  space becomes available and after any pending spinel command
+    // response.
+
+    if (IsResponseQueueEmpty())
+    {
+        IgnoreReturnValue(SendQueuedDatagramMessages());
+    }
 
 exit:
-    // If the queued message can not be sent now (out of buffer),
-    // it will be sent once spinel buffer becomes available from
-    // `HandleFrameRemovedFromNcpBuffer()` callback.
-
     return;
 }
 
@@ -2766,7 +2903,7 @@ exit:
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void NcpBase::HandleStateChanged(uint32_t aFlags, void *aContext)
 {
     NcpBase *ncp = static_cast<NcpBase *>(aContext);
 
@@ -2794,6 +2931,12 @@ void NcpBase::ProcessThreadChangedFlags(void)
         { OT_CHANGED_THREAD_CHILD_REMOVED,        SPINEL_PROP_THREAD_CHILD_TABLE             },
         { OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED,   SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
         { OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE   },
+        { OT_CHANGED_THREAD_CHANNEL,              SPINEL_PROP_PHY_CHAN                       },
+        { OT_CHANGED_THREAD_PANID,                SPINEL_PROP_MAC_15_4_PANID                 },
+        { OT_CHANGED_THREAD_NETWORK_NAME,         SPINEL_PROP_NET_NETWORK_NAME               },
+        { OT_CHANGED_THREAD_EXT_PANID,            SPINEL_PROP_NET_XPANID                     },
+        { OT_CHANGED_MASTER_KEY,                  SPINEL_PROP_NET_MASTER_KEY                 },
+        { OT_CHANGED_PSKC,                        SPINEL_PROP_NET_PSKC                       },
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

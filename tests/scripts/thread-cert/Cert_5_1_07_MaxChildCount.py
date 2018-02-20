@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER = 1
@@ -38,9 +39,11 @@ SED1 = 7
 
 class Cert_5_1_07_MaxChildCount(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 13):
-            self.nodes[i] = node.Node(i, (i >= 3))
+            self.nodes[i] = node.Node(i, (i >= 3), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -69,20 +72,20 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
-        time.sleep(4)
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         for i in range(3, 13):
             self.nodes[i].start()
-            time.sleep(7)
+            self.simulator.go(7)
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
         ipaddrs = self.nodes[SED1].get_addrs()

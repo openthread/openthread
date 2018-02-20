@@ -46,17 +46,20 @@
 namespace ot {
 namespace Utils {
 
-void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                            IidCreator aIidCreator, void *aContext)
+void Slaac::UpdateAddresses(otInstance *    aInstance,
+                            otNetifAddress *aAddresses,
+                            uint32_t        aNumAddresses,
+                            IidCreator      aIidCreator,
+                            void *          aContext)
 {
     otNetworkDataIterator iterator;
-    otBorderRouterConfig config;
+    otBorderRouterConfig  config;
 
     // remove addresses
     for (size_t i = 0; i < aNumAddresses; i++)
     {
         otNetifAddress *address = &aAddresses[i];
-        bool found = false;
+        bool            found   = false;
 
         if (!address->mValid)
         {
@@ -131,8 +134,8 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
                 memcpy(&address->mAddress, &config.mPrefix.mPrefix, 8);
 
                 address->mPrefixLength = config.mPrefix.mLength;
-                address->mPreferred = config.mPreferred;
-                address->mValid = true;
+                address->mPreferred    = config.mPreferred;
+                address->mValid        = true;
 
                 if (aIidCreator(aInstance, address, aContext) != OT_ERROR_NONE)
                 {
@@ -174,10 +177,10 @@ exit:
 
 otError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
     Crypto::Sha256 sha256;
-    uint8_t hash[Crypto::Sha256::kHashSize];
-    Ip6::Address *address = static_cast<Ip6::Address *>(&aAddress->mAddress);
+    uint8_t        hash[Crypto::Sha256::kHashSize];
+    Ip6::Address * address = static_cast<Ip6::Address *>(&aAddress->mAddress);
 
     sha256.Start();
 
@@ -199,8 +202,8 @@ otError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance, otN
 
     sha256.Finish(hash);
 
-    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
-           &hash[sizeof(hash) - OT_IP6_IID_SIZE], OT_IP6_IID_SIZE);
+    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE], &hash[sizeof(hash) - OT_IP6_IID_SIZE],
+           OT_IP6_IID_SIZE);
 
     VerifyOrExit(!IsAddressRegistered(aInstance, aAddress), error = OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
     VerifyOrExit(!address->IsIidReserved(), error = OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
@@ -211,7 +214,7 @@ exit:
 
 bool SemanticallyOpaqueIidGenerator::IsAddressRegistered(otInstance *aInstance, otNetifAddress *aCreatedAddress)
 {
-    bool result = false;
+    bool                  result  = false;
     const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance);
 
     while (address != NULL)
@@ -229,6 +232,5 @@ exit:
     return result;
 }
 
-
-}  // namespace Slaac
-}  // namespace ot
+} // namespace Utils
+} // namespace ot

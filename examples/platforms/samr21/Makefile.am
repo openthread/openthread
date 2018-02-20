@@ -91,11 +91,13 @@ libopenthread_samr21_a_CPPFLAGS                                                 
     -Werror                                                                                                    \
     -Wno-unused-parameter                                                                                      \
     -Wno-implicit-function-declaration                                                                         \
+    -Wno-expansion-to-defined                                                                                  \
     -fno-strict-aliasing                                                                                       \
     $(NULL)
 
 PLATFORM_SOURCES                                                                                             = \
     alarm.c                                                                                                    \
+    diag.c                                                                                                     \
     cxx_helpers.c                                                                                              \
     flash.c                                                                                                    \
     logging.c                                                                                                  \
@@ -105,12 +107,6 @@ PLATFORM_SOURCES                                                                
     random.c                                                                                                   \
     uart.c                                                                                                     \
     $(NULL)
-
-if OPENTHREAD_ENABLE_DIAG
-PLATFORM_SOURCES                                                                                            += \
-    diag.c                                                                                                     \
-    $(NULL)
-endif
 
 libopenthread_samr21_a_SOURCES                                                                               = \
     $(PLATFORM_SOURCES)                                                                                        \

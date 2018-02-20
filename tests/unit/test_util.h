@@ -43,23 +43,25 @@ extern "C" {
 // Enable main functions
 #define ENABLE_TEST_MAIN
 
-#define SuccessOrQuit(ERR, MSG)                                                 \
-  do {                                                                          \
-    if ((ERR) != OT_ERROR_NONE)                                                 \
-    {                                                                           \
-      fprintf(stderr, "\nFAILED %s:%d - %s\n", __FUNCTION__, __LINE__, MSG);    \
-      exit(-1);                                                                 \
-    }                                                                           \
-  } while (false)
+#define SuccessOrQuit(ERR, MSG)                                                    \
+    do                                                                             \
+    {                                                                              \
+        if ((ERR) != OT_ERROR_NONE)                                                \
+        {                                                                          \
+            fprintf(stderr, "\nFAILED %s:%d - %s\n", __FUNCTION__, __LINE__, MSG); \
+            exit(-1);                                                              \
+        }                                                                          \
+    } while (false)
 
-#define VerifyOrQuit(TST, MSG)                                                  \
-  do {                                                                          \
-    if (!(TST))                                                                 \
-    {                                                                           \
-      fprintf(stderr, "\nFAILED %s:%d - %s\n", __FUNCTION__, __LINE__, MSG);    \
-      exit(-1);                                                                 \
-    }                                                                           \
-  } while (false)
+#define VerifyOrQuit(TST, MSG)                                                     \
+    do                                                                             \
+    {                                                                              \
+        if (!(TST))                                                                \
+        {                                                                          \
+            fprintf(stderr, "\nFAILED %s:%d - %s\n", __FUNCTION__, __LINE__, MSG); \
+            exit(-1);                                                              \
+        }                                                                          \
+    } while (false)
 
 //#define CompileTimeAssert(COND, MSG) typedef char __C_ASSERT__[(COND)?1:-1]
 
@@ -70,7 +72,7 @@ extern "C" {
 //
 #define CompileTimeAssert(COND, MSG)
 
-#define Log(aFormat, ...) printf(aFormat "\n", ## __VA_ARGS__)
+#define Log(aFormat, ...) printf(aFormat "\n", ##__VA_ARGS__)
 
 #ifdef __cplusplus
 }
@@ -90,7 +92,7 @@ extern utLogMessage s_LogMessage;
 
 #define CompileTimeAssert(COND, MSG) static_assert(COND, MSG)
 
-#define Log(aFormat, ...) s_LogMessage(aFormat, ## __VA_ARGS__)
+#define Log(aFormat, ...) s_LogMessage(aFormat, ##__VA_ARGS__)
 
 #endif
 

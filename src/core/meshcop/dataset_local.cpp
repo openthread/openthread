@@ -41,8 +41,8 @@
 #include <openthread/platform/settings.h>
 
 #include "common/code_utils.hpp"
-#include "common/logging.hpp"
 #include "common/instance.hpp"
+#include "common/logging.hpp"
 #include "common/settings.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -51,10 +51,10 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetLocal::DatasetLocal(Instance &aInstance, const Tlv::Type aType) :
-    InstanceLocator(aInstance),
-    mUpdateTime(0),
-    mType(aType)
+DatasetLocal::DatasetLocal(Instance &aInstance, const Tlv::Type aType)
+    : InstanceLocator(aInstance)
+    , mUpdateTime(0)
+    , mType(aType)
 {
 }
 
@@ -63,19 +63,14 @@ void DatasetLocal::Clear(void)
     otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), -1);
 }
 
-bool DatasetLocal::IsPresent(void) const
-{
-    return otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, NULL, NULL) == OT_ERROR_NONE;
-}
-
-otError DatasetLocal::Get(Dataset &aDataset)
+otError DatasetLocal::Get(Dataset &aDataset) const
 {
     DelayTimerTlv *delayTimer;
-    uint32_t elapsed;
-    otError error;
+    uint32_t       elapsed;
+    otError        error;
 
     aDataset.mLength = sizeof(aDataset.mTlvs);
-    error = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
+    error            = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
     VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
     delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
@@ -108,7 +103,7 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
     memset(&aDataset, 0, sizeof(aDataset));
 
     dataset.mLength = sizeof(dataset.mTlvs);
-    error = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
+    error           = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
     SuccessOrExit(error);
 
     cur = reinterpret_cast<const Tlv *>(dataset.mTlvs);
@@ -118,42 +113,41 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
     {
         switch (cur->GetType())
         {
-
         case Tlv::kActiveTimestamp:
         {
-            const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(cur);
-            aDataset.mActiveTimestamp = tlv->GetSeconds();
+            const ActiveTimestampTlv *tlv  = static_cast<const ActiveTimestampTlv *>(cur);
+            aDataset.mActiveTimestamp      = tlv->GetSeconds();
             aDataset.mIsActiveTimestampSet = true;
             break;
         }
 
         case Tlv::kChannel:
         {
-            const ChannelTlv *tlv = static_cast<const ChannelTlv *>(cur);
-            aDataset.mChannel = tlv->GetChannel();
+            const ChannelTlv *tlv  = static_cast<const ChannelTlv *>(cur);
+            aDataset.mChannel      = tlv->GetChannel();
             aDataset.mIsChannelSet = true;
             break;
         }
 
         case Tlv::kChannelMask:
         {
-            uint8_t tlvLength = cur->GetLength();
-            const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
-            const uint8_t *entryEnd =  entry + tlvLength;
+            uint8_t        tlvLength = cur->GetLength();
+            const uint8_t *entry     = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
+            const uint8_t *entryEnd  = entry + tlvLength;
 
             while (entry < entryEnd)
             {
                 if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
                 {
-                    uint8_t i = sizeof(ChannelMaskEntry);
-                    aDataset.mChannelMaskPage0 = static_cast<uint32_t>(entry[i] | (entry[i + 1] << 8) |
+                    uint8_t i                       = sizeof(ChannelMaskEntry);
+                    aDataset.mChannelMaskPage0      = static_cast<uint32_t>(entry[i] | (entry[i + 1] << 8) |
                                                                        (entry[i + 2] << 16) | (entry[i + 3] << 24));
                     aDataset.mIsChannelMaskPage0Set = true;
                     break;
                 }
 
-                entry += (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() +
-                          sizeof(ChannelMaskEntry));
+                entry +=
+                    (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry));
             }
 
             break;
@@ -162,8 +156,8 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
         case Tlv::kDelayTimer:
         {
             const DelayTimerTlv *tlv = static_cast<const DelayTimerTlv *>(cur);
-            aDataset.mDelay = tlv->GetDelayTimer();
-            aDataset.mIsDelaySet = true;
+            aDataset.mDelay          = tlv->GetDelayTimer();
+            aDataset.mIsDelaySet     = true;
             break;
         }
 
@@ -186,15 +180,15 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
         case Tlv::kNetworkMasterKey:
         {
             const NetworkMasterKeyTlv *tlv = static_cast<const NetworkMasterKeyTlv *>(cur);
-            aDataset.mMasterKey = tlv->GetNetworkMasterKey();
-            aDataset.mIsMasterKeySet = true;
+            aDataset.mMasterKey            = tlv->GetNetworkMasterKey();
+            aDataset.mIsMasterKeySet       = true;
             break;
         }
 
         case Tlv::kNetworkName:
         {
-            const NetworkNameTlv *tlv = static_cast<const NetworkNameTlv *>(cur);
-            uint8_t length = tlv->GetLength();
+            const NetworkNameTlv *tlv    = static_cast<const NetworkNameTlv *>(cur);
+            uint8_t               length = tlv->GetLength();
 
             if (length > sizeof(aDataset.mNetworkName) - 1)
             {
@@ -203,22 +197,22 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
 
             memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), length);
             aDataset.mNetworkName.m8[length] = '\0';
-            aDataset.mIsNetworkNameSet = true;
+            aDataset.mIsNetworkNameSet       = true;
             break;
         }
 
         case Tlv::kPanId:
         {
             const PanIdTlv *panid = static_cast<const PanIdTlv *>(cur);
-            aDataset.mPanId = panid->GetPanId();
-            aDataset.mIsPanIdSet = true;
+            aDataset.mPanId       = panid->GetPanId();
+            aDataset.mIsPanIdSet  = true;
             break;
         }
 
         case Tlv::kPendingTimestamp:
         {
-            const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(cur);
-            aDataset.mPendingTimestamp = tlv->GetSeconds();
+            const PendingTimestampTlv *tlv  = static_cast<const PendingTimestampTlv *>(cur);
+            aDataset.mPendingTimestamp      = tlv->GetSeconds();
             aDataset.mIsPendingTimestampSet = true;
             break;
         }
@@ -233,10 +227,10 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kSecurityPolicy:
         {
-            const SecurityPolicyTlv *tlv = static_cast<const SecurityPolicyTlv *>(cur);
+            const SecurityPolicyTlv *tlv           = static_cast<const SecurityPolicyTlv *>(cur);
             aDataset.mSecurityPolicy.mRotationTime = tlv->GetRotationTime();
-            aDataset.mSecurityPolicy.mFlags = tlv->GetFlags();
-            aDataset.mIsSecurityPolicySet = true;
+            aDataset.mSecurityPolicy.mFlags        = tlv->GetFlags();
+            aDataset.mIsSecurityPolicySet          = true;
             break;
         }
 
@@ -257,8 +251,8 @@ exit:
 
 otError DatasetLocal::Set(const otOperationalDataset &aDataset)
 {
-    otError error = OT_ERROR_NONE;
-    Dataset dataset(mType);
+    otError                     error = OT_ERROR_NONE;
+    Dataset                     dataset(mType);
     MeshCoP::ActiveTimestampTlv activeTimestampTlv;
 
     VerifyOrExit(aDataset.mIsActiveTimestampSet, error = OT_ERROR_INVALID_ARGS);
@@ -377,7 +371,7 @@ exit:
     return error;
 }
 
-#endif  // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD
 
 otError DatasetLocal::Set(const Dataset &aDataset)
 {
@@ -428,8 +422,8 @@ uint16_t DatasetLocal::GetSettingsKey(void) const
 int DatasetLocal::Compare(const Timestamp *aCompareTimestamp)
 {
     const Timestamp *thisTimestamp;
-    Dataset dataset(mType);
-    int rval = 1;
+    Dataset          dataset(mType);
+    int              rval = 1;
 
     SuccessOrExit(Get(dataset));
 
@@ -456,5 +450,5 @@ exit:
     return rval;
 }
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot

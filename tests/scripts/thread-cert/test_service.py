@@ -50,9 +50,11 @@ SRV_1_SERVER_DATA = 'qux'
 
 class Test_Service(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -84,6 +86,7 @@ class Test_Service(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def hasAloc(self, node_id, service_id):
         for addr in self.nodes[node_id].get_ip6_address(config.ADDRESS_TYPE.ALOC):
@@ -100,16 +103,16 @@ class Test_Service(unittest.TestCase):
 
     def failToPingFromAll(self, addr):
         for node in list(self.nodes.values()):
-            self.assertFalse(node.ping(addr, timeout=3000))
+            self.assertFalse(node.ping(addr, timeout=3))
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
@@ -122,7 +125,7 @@ class Test_Service(unittest.TestCase):
 
         self.nodes[ROUTER1].add_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA, SRV_0_SERVER_DATA)
         self.nodes[ROUTER1].register_netdata()
-        time.sleep(2)
+        self.simulator.go(2)
 
         self.assertEqual(self.hasAloc(LEADER, SRV_0_ID), False)
         self.assertEqual(self.hasAloc(LEADER, SRV_1_ID), False)
@@ -136,7 +139,7 @@ class Test_Service(unittest.TestCase):
 
         self.nodes[LEADER].add_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA, SRV_0_SERVER_DATA)
         self.nodes[LEADER].register_netdata()
-        time.sleep(2)
+        self.simulator.go(2)
 
         self.assertEqual(self.hasAloc(LEADER, SRV_0_ID), True)
         self.assertEqual(self.hasAloc(LEADER, SRV_1_ID), False)
@@ -149,7 +152,7 @@ class Test_Service(unittest.TestCase):
 
         self.nodes[ROUTER2].add_service(SRV_1_ENT_NUMBER, SRV_1_SERVICE_DATA, SRV_1_SERVER_DATA)
         self.nodes[ROUTER2].register_netdata()
-        time.sleep(2)
+        self.simulator.go(2)
 
         self.assertEqual(self.hasAloc(LEADER, SRV_0_ID), True)
         self.assertEqual(self.hasAloc(LEADER, SRV_1_ID), False)
@@ -164,7 +167,7 @@ class Test_Service(unittest.TestCase):
 
         self.nodes[ROUTER1].remove_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA)
         self.nodes[ROUTER1].register_netdata()
-        time.sleep(2)
+        self.simulator.go(2)
 
         self.assertEqual(self.hasAloc(LEADER, SRV_0_ID), True)
         self.assertEqual(self.hasAloc(LEADER, SRV_1_ID), False)
@@ -178,7 +181,7 @@ class Test_Service(unittest.TestCase):
 
         self.nodes[LEADER].remove_service(SRV_0_ENT_NUMBER, SRV_0_SERVICE_DATA)
         self.nodes[LEADER].register_netdata()
-        time.sleep(2)
+        self.simulator.go(2)
 
         self.assertEqual(self.hasAloc(LEADER, SRV_0_ID), False)
         self.assertEqual(self.hasAloc(LEADER, SRV_1_ID), False)
@@ -192,7 +195,7 @@ class Test_Service(unittest.TestCase):
 
         self.nodes[ROUTER2].remove_service(SRV_1_ENT_NUMBER, SRV_1_SERVICE_DATA)
         self.nodes[ROUTER2].register_netdata()
-        time.sleep(2)
+        self.simulator.go(2)
 
         self.assertEqual(self.hasAloc(LEADER, SRV_0_ID), False)
         self.assertEqual(self.hasAloc(LEADER, SRV_1_ID), False)

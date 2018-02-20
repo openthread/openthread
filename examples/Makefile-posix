@@ -42,6 +42,37 @@ RM_F                           := rm -f
 
 BuildJobs                      ?= 10
 
+# If the user has asserted COVERAGE, alter the configuration options
+# accordingly.
+
+configure_OPTIONS                   = \
+    --enable-application-coap         \
+    --enable-border-router            \
+    --enable-cert-log                 \
+    --enable-child-supervision        \
+    --enable-cli-app=all              \
+    --enable-commissioner             \
+    --enable-dhcp6-client             \
+    --enable-dhcp6-server             \
+    --enable-diag                     \
+    --enable-dns-client               \
+    --enable-jam-detection            \
+    --enable-joiner                   \
+    --enable-legacy                   \
+    --enable-mac-filter               \
+    --enable-mtd-network-diagnostic   \
+    --enable-ncp-app=all              \
+    --enable-raw-link-api             \
+    --enable-service                  \
+    --enable-tmf-proxy                \
+    --with-examples=posix             \
+    --with-ncp-bus=uart               \
+    $(NULL)
+
+ifeq ($(FAULTINJECTION),1)
+	configure_OPTIONS += --enable-fault-injection
+endif
+
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
@@ -54,6 +85,12 @@ COMMONCFLAGS                   := \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
+
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
+
+ifeq ($(VIRTUAL_TIME),1)
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
+endif
 
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
@@ -87,38 +124,6 @@ AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
 TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild-autotools/repo/autoconf/config.guess | sed -e 's/[[:digit:].]*$$//g')
 
-# If the user has asserted COVERAGE, alter the configuration options
-# accordingly.
-
-configure_OPTIONS                   = \
-    --enable-application-coap         \
-    --enable-border-router            \
-    --enable-cert-log                 \
-    --enable-child-supervision        \
-    --enable-cli-app=all              \
-    --enable-commissioner             \
-    --enable-dhcp6-client             \
-    --enable-dhcp6-server             \
-    --enable-diag                     \
-    --enable-dns-client               \
-    --enable-jam-detection            \
-    --enable-joiner                   \
-    --enable-legacy                   \
-    --enable-mac-filter               \
-    --enable-mtd-network-diagnostic   \
-    --enable-ncp-app=all              \
-    --enable-raw-link-api             \
-    --enable-service                  \
-    --enable-tmf-proxy                \
-    --with-examples=posix             \
-    --with-ncp-bus=uart               \
-    $(NULL)
-
-ifeq ($(FAULTINJECTION),1)
-	configure_OPTIONS += --enable-fault-injection
-endif
-
-include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)

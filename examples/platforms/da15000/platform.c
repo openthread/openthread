@@ -48,11 +48,13 @@ static bool sBlink = false;
 static int  sMsCounterInit;
 static int  sMsCounter;
 
+// clang-format off
 #define ALIVE_LED_PERIOD      (50000)
 #define ALIVE_LED_DUTY        (500)
 #define LEADER_BLINK_TIME     (200)
 #define ROUTER_BLINK_TIME     (500)
 #define CHILD_BLINK_TIME      (2000)
+// clang-format on
 
 static otInstance *sInstance = NULL;
 
@@ -64,16 +66,16 @@ static otInstance *sInstance = NULL;
  */
 static void ExampleProcess(otInstance *aInstance)
 {
-    static int    aliveLEDcounter = 0;
-    otDeviceRole  devRole;
-    static int    thrValue;
+    static int   aliveLEDcounter = 0;
+    otDeviceRole devRole;
+    static int   thrValue;
 
     devRole = otThreadGetDeviceRole(aInstance);
 
     if (sBlink == false && otPlatAlarmMilliGetNow() != 0)
     {
         sMsCounterInit = otPlatAlarmMilliGetNow();
-        sBlink = true;
+        sBlink         = true;
     }
 
     sMsCounter = otPlatAlarmMilliGetNow() - sMsCounterInit;
@@ -138,8 +140,8 @@ void PlatformInit(int argc, char *argv[])
 
 static sys_clk_t ClkGet(void)
 {
-    sys_clk_t clk = sysclk_RC16;
-    uint32_t hw_clk = hw_cpm_get_sysclk();
+    sys_clk_t clk    = sysclk_RC16;
+    uint32_t  hw_clk = hw_cpm_get_sysclk();
 
     switch (hw_clk)
     {
@@ -173,7 +175,7 @@ static sys_clk_t ClkGet(void)
 
     case SYS_CLK_IS_LP:
 
-    // fall-through
+        // fall-through
 
     default:
         ASSERT_WARNING(0);
@@ -190,16 +192,17 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_XTAL16M:
         if (!hw_cpm_check_xtal16m_status()) // XTAL16M disabled
         {
-            hw_cpm_enable_xtal16m();        // Enable XTAL16M
+            hw_cpm_enable_xtal16m(); // Enable XTAL16M
         }
 
-        hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M);  // Set XTAL16 as sys_clk
-        hw_watchdog_unfreeze();                 // Start watchdog
+        hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M); // Set XTAL16 as sys_clk
+        hw_watchdog_unfreeze();                // Start watchdog
 
-        while (!hw_cpm_is_xtal16m_started());   // Block until XTAL16M starts
+        while (!hw_cpm_is_xtal16m_started())
+            ; // Block until XTAL16M starts
 
         hw_qspi_set_div(HW_QSPI_DIV_1);
-        hw_watchdog_freeze();                   // Stop watchdog
+        hw_watchdog_freeze(); // Stop watchdog
         hw_cpm_set_hclk_div(0);
         hw_cpm_set_pclk_div(0);
         break;
@@ -207,10 +210,10 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_PLL48:
         if (hw_cpm_is_pll_locked() == 0)
         {
-            hw_cpm_pll_sys_on();            // Turn on PLL
+            hw_cpm_pll_sys_on(); // Turn on PLL
         }
 
-        hw_cpm_enable_pll_divider();        // Enable divider (div by 2)
+        hw_cpm_enable_pll_divider(); // Enable divider (div by 2)
         hw_qspi_set_div(HW_QSPI_DIV_1);
         hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
         hw_cpm_set_hclk_div(0);
@@ -220,10 +223,10 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_PLL96:
         if (hw_cpm_is_pll_locked() == 0)
         {
-            hw_cpm_pll_sys_on();            // Turn on PLL
+            hw_cpm_pll_sys_on(); // Turn on PLL
         }
 
-        hw_cpm_disable_pll_divider();       // Disable divider (div by 1)
+        hw_cpm_disable_pll_divider(); // Disable divider (div by 1)
         hw_qspi_set_div(HW_QSPI_DIV_2);
         hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
         hw_cpm_set_hclk_div(0);
@@ -243,7 +246,7 @@ static void ClkChange(sys_clk_t lastClock, sys_clk_t newClock)
     }
 }
 
-static void StateChangedCallback(uint32_t aFlags,  void *aContext)
+static void StateChangedCallback(uint32_t aFlags, void *aContext)
 {
     if ((aFlags & OT_CHANGED_COMMISSIONER_STATE) != 0)
     {

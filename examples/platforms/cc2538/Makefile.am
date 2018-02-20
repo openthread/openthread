@@ -36,8 +36,9 @@ libopenthread_cc2538_a_CPPFLAGS           = \
     -I$(top_srcdir)/src/core                \
     $(NULL)
 
-libopenthread_cc2538_a_SOURCES            = \
+PLATFORM_SOURCES                          = \
     alarm.c                                 \
+    diag.c                                  \
     flash.c                                 \
     misc.c                                  \
     platform.c                              \
@@ -48,16 +49,19 @@ libopenthread_cc2538_a_SOURCES            = \
     uart.c                                  \
     $(NULL)
 
-if OPENTHREAD_ENABLE_DIAG
-libopenthread_cc2538_a_SOURCES           += \
-    diag.c                                  \
+libopenthread_cc2538_a_SOURCES            = \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
-endif
 
 noinst_HEADERS                            = \
     cc2538-reg.h                            \
     platform-cc2538.h                       \
     rom-utility.h                           \
+    $(NULL)
+
+PRETTY_FILES                             = \
+    $(PLATFORM_SOURCES)                    \
+    $(noinst_HEADERS)                      \
     $(NULL)
 
 Dash                                      = -

@@ -26,10 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <driverlib/aon_rtc.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <openthread/types.h>
-#include <driverlib/aon_rtc.h>
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -75,7 +75,7 @@ uint32_t otPlatAlarmMilliGetNow(void)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
-    sTime0 = aT0;
+    sTime0     = aT0;
     sAlarmTime = aDt;
     sIsRunning = true;
 }
@@ -118,4 +118,3 @@ void cc2650AlarmProcess(otInstance *aInstance)
         }
     }
 }
-

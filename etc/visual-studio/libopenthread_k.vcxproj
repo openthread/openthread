@@ -90,6 +90,7 @@
     <ClCompile Include="..\..\src\core\common\locator.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
+    <ClCompile Include="..\..\src\core\common\notifier.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
     <ClCompile Include="..\..\src\core\common\timer.cpp" />
     <ClCompile Include="..\..\src\core\common\tlvs.cpp" />
@@ -136,6 +137,8 @@
     <ClCompile Include="..\..\src\core\thread\link_quality.cpp" />
     <ClCompile Include="..\..\src\core\thread\lowpan.cpp" />
     <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_ftd.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_mtd.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle_router.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data.cpp" />
@@ -192,6 +195,7 @@
     <ClInclude Include="..\..\src\core\common\locator.hpp" />
     <ClInclude Include="..\..\src\core\common\logging.hpp" />
     <ClInclude Include="..\..\src\core\common\message.hpp" />
+    <ClInclude Include="..\..\src\core\common\notifier.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />
     <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
     <ClInclude Include="..\..\src\core\common\timer.hpp" />

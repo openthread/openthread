@@ -40,26 +40,26 @@
 
 namespace ot {
 
-TrickleTimer::TrickleTimer(
-    Instance &aInstance,
+TrickleTimer::TrickleTimer(Instance &aInstance,
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    uint32_t aRedundancyConstant,
+                           uint32_t aRedundancyConstant,
 #endif
-    Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aOwner)
-    :
-    TimerMilli(aInstance, HandleTimerFired, aOwner),
+                           Handler aTransmitHandler,
+                           Handler aIntervalExpiredHandler,
+                           void *  aOwner)
+    : TimerMilli(aInstance, HandleTimerFired, aOwner)
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    k(aRedundancyConstant),
-    c(0),
+    , k(aRedundancyConstant)
+    , c(0)
 #endif
-    Imin(0),
-    Imax(0),
-    mMode(kModeNormal),
-    I(0),
-    t(0),
-    mPhase(kPhaseDormant),
-    mTransmitHandler(aTransmitHandler),
-    mIntervalExpiredHandler(aIntervalExpiredHandler)
+    , Imin(0)
+    , Imax(0)
+    , mMode(kModeNormal)
+    , I(0)
+    , t(0)
+    , mPhase(kPhaseDormant)
+    , mTransmitHandler(aTransmitHandler)
+    , mIntervalExpiredHandler(aIntervalExpiredHandler)
 {
 }
 
@@ -73,8 +73,8 @@ void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMod
     assert(!IsRunning());
 
     // Set the interval limits and mode
-    Imin = aIntervalMin;
-    Imax = aIntervalMax;
+    Imin  = aIntervalMin;
+    Imax  = aIntervalMax;
     mMode = aMode;
 
     // Initialize I to [Imin, Imax]
@@ -123,7 +123,7 @@ void TrickleTimer::IndicateInconsistent(void)
 
 void TrickleTimer::StartNewInterval(void)
 {
-    // Reset the counter and timer phase
+// Reset the counter and timer phase
 
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     c = 0;
@@ -163,8 +163,8 @@ void TrickleTimer::HandleTimerFired(Timer &aTimer)
 
 void TrickleTimer::HandleTimerFired(void)
 {
-    Phase curPhase = mPhase;
-    bool shouldContinue = true;
+    Phase curPhase       = mPhase;
+    bool  shouldContinue = true;
 
     // Default the current state to Dormant
     mPhase = kPhaseDormant;
@@ -174,7 +174,7 @@ void TrickleTimer::HandleTimerFired(void)
     // We have just reached time 't'
     case kPhaseTransmit:
     {
-        // Are we not using redundancy or is the counter still less than it?
+    // Are we not using redundancy or is the counter still less than it?
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
         if (k == 0 || c < k)
 #endif
@@ -214,7 +214,10 @@ void TrickleTimer::HandleTimerFired(void)
         // Double 'I' to get the new interval length
         uint32_t newI = I == 0 ? 1 : I << 1;
 
-        if (newI > Imax) { newI = Imax; }
+        if (newI > Imax)
+        {
+            newI = Imax;
+        }
 
         I = newI;
 
@@ -235,4 +238,4 @@ void TrickleTimer::HandleTimerFired(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot

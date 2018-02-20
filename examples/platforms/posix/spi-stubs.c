@@ -31,13 +31,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <openthread/config.h>
 #include <openthread/platform/spi-slave.h>
 #include <openthread/platform/uart.h>
+
+#if OPENTHREAD_ENABLE_NCP_SPI
 
 // Spi-slave stubs
 
 otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
-                             otPlatSpiSlaveTransactionProcessCallback aProcessCallback, void *aContext)
+                             otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
+                             void *                                    aContext)
 {
     (void)aCompleteCallback;
     (void)aProcessCallback;
@@ -53,8 +57,11 @@ void otPlatSpiSlaveDisable(void)
 {
 }
 
-otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
-                                         uint16_t aInputBufLen, bool aRequestTransactionFlag)
+otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
+                                         uint16_t aOutputBufLen,
+                                         uint8_t *aInputBuf,
+                                         uint16_t aInputBufLen,
+                                         bool     aRequestTransactionFlag)
 {
     (void)aOutputBuf;
     (void)aOutputBufLen;
@@ -76,3 +83,5 @@ void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBuf;
     (void)aBufLength;
 }
+
+#endif // OPENTHREAD_ENABLE_NCP_SPI

@@ -42,33 +42,30 @@ DUT_REED = 17
 
 class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 18):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
             self.nodes[i].set_panid(0xface)
             self.nodes[i].set_mode('rsdn')
             self.nodes[i].set_router_selection_jitter(1)
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1. Ensure topology is formed correctly without DUT_ROUTER1.
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 17):
             self.nodes[i].start()
-        time.sleep(5)
+        self.simulator.go(5)
 
         for i in range(2, 17):
             self.assertEqual(self.nodes[i].get_state(), 'router')
@@ -78,22 +75,23 @@ class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
         self.nodes[DUT_REED].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_1'])
 
         self.nodes[DUT_REED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[DUT_REED].get_state(), 'child')
 
         # The DUT_REED must not send a coap message here.
-        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
         msg = reed_messages.does_not_contain_coap_message()
         assert msg is True, "Error: The DUT_REED sent an Address Solicit Request"
 
         # 3. DUT_REED: Verify sent a Link Request to at least 3 neighboring Routers.
         for i in range(0, 3):
             msg = reed_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-            command.check_link_request(msg)
+            command.check_link_request(msg, source_address = command.CheckType.CONTAIN, \
+                leader_data = command.CheckType.CONTAIN)
 
         # 4. DUT_ROUTER1: Verify sent a Link Accept to DUT_REED.
-        time.sleep(30)
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        self.simulator.go(30)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         flag_link_accept = False
         while True:
             msg = dut_messages.next_mle_message(mle.CommandType.LINK_ACCEPT, False)

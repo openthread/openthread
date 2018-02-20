@@ -32,25 +32,25 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include <openthread/types.h>
 #include <openthread/platform/debug_uart.h>
-#include <openthread/platform/uart.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/uart.h>
 
 #include "platform-cc2538.h"
 #include "utils/code_utils.h"
 
 enum
 {
-    kPlatformClock = 32000000,
-    kBaudRate = 115200,
+    kPlatformClock     = 32000000,
+    kBaudRate          = 115200,
     kReceiveBufferSize = 128,
 };
 
@@ -60,7 +60,7 @@ static void processReceive(void);
 static void processTransmit(void);
 
 static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t sTransmitLength = 0;
+static uint16_t       sTransmitLength = 0;
 
 typedef struct RecvBuffer
 {
@@ -109,19 +109,19 @@ otError otPlatUartEnable(void)
     HWREG(UART0_BASE + UART_O_CC) = 0;
 
     // tx pin
-    HWREG(IOC_PA1_SEL) = IOC_MUX_OUT_SEL_UART0_TXD;
+    HWREG(IOC_PA1_SEL)  = IOC_MUX_OUT_SEL_UART0_TXD;
     HWREG(IOC_PA1_OVER) = IOC_OVERRIDE_OE;
     HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_1;
 
     // rx pin
-    HWREG(IOC_PA0_SEL) = IOC_UARTRXD_UART0;
+    HWREG(IOC_PA0_SEL)  = IOC_UARTRXD_UART0;
     HWREG(IOC_PA0_OVER) = IOC_OVERRIDE_DIS;
     HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_0;
 
     HWREG(UART0_BASE + UART_O_CTL) = 0;
 
     // baud rate
-    div = (((kPlatformClock * 8) / kBaudRate) + 1) / 2;
+    div                             = (((kPlatformClock * 8) / kBaudRate) + 1) / 2;
     HWREG(UART0_BASE + UART_O_IBRD) = div / 64;
     HWREG(UART0_BASE + UART_O_FBRD) = div % 64;
     HWREG(UART0_BASE + UART_O_LCRH) = UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE;
@@ -186,7 +186,8 @@ void processTransmit(void)
 
     for (; sTransmitLength > 0; sTransmitLength--)
     {
-        while (HWREG(UART0_BASE + UART_O_FR) & UART_FR_TXFF);
+        while (HWREG(UART0_BASE + UART_O_FR) & UART_FR_TXFF)
+            ;
 
         HWREG(UART0_BASE + UART_O_DR) = *sTransmitBuffer++;
     }
@@ -207,9 +208,9 @@ void cc2538UartProcess(void)
 void UART0IntHandler(void)
 {
     uint32_t mis;
-    uint8_t byte;
+    uint8_t  byte;
 
-    mis = HWREG(UART0_BASE + UART_O_MIS);
+    mis                            = HWREG(UART0_BASE + UART_O_MIS);
     HWREG(UART0_BASE + UART_O_ICR) = mis;
 
     if (mis & (UART_IM_RXIM | UART_IM_RTIM))
@@ -222,7 +223,7 @@ void UART0IntHandler(void)
             if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)
             {
                 sReceive.mBuffer[sReceive.mTail] = byte;
-                sReceive.mTail = (sReceive.mTail + 1) % kReceiveBufferSize;
+                sReceive.mTail                   = (sReceive.mTail + 1) % kReceiveBufferSize;
             }
         }
     }
@@ -260,12 +261,12 @@ int otPlatDebugUart_getc(void)
 void otPlatDebugUart_putchar_raw(int b)
 {
     /* wait till not busy */
-    while (HWREG(UART1_BASE + UART_O_FR) & UART_FR_TXFF);
+    while (HWREG(UART1_BASE + UART_O_FR) & UART_FR_TXFF)
+        ;
 
     /* write byte */
     HWREG(UART1_BASE + UART_O_DR) = ((uint32_t)(b & 0x0ff));
 }
-
 
 void cc2538DebugUartInit(void)
 {
@@ -281,13 +282,13 @@ void cc2538DebugUartInit(void)
     // http://www.ti.com/tool/cc2538dk
     // PA3 => is jumper position RF1.14
     // To use these, you will require a "flying-lead" UART adapter
-    HWREG(IOC_PA3_SEL) = IOC_MUX_OUT_SEL_UART1_TXD;
+    HWREG(IOC_PA3_SEL)  = IOC_MUX_OUT_SEL_UART1_TXD;
     HWREG(IOC_PA3_OVER) = IOC_OVERRIDE_OE;
     HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_3;
 
     // UART1 - rx pin we don't really use but we setup anyway
     // PA2 => is jumper position RF1.16
-    HWREG(IOC_PA2_SEL) = IOC_UARTRXD_UART1;
+    HWREG(IOC_PA2_SEL)  = IOC_UARTRXD_UART1;
     HWREG(IOC_PA2_OVER) = IOC_OVERRIDE_DIS;
     HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_2;
 
@@ -297,6 +298,7 @@ void cc2538DebugUartInit(void)
     b = (((kPlatformClock * 8) / kBaudRate) + 1) / 2;
     a = b / 64;
     b = b % 64;
+
     HWREG(UART1_BASE + UART_O_IBRD) = a;
     HWREG(UART1_BASE + UART_O_FBRD) = b;
     HWREG(UART1_BASE + UART_O_LCRH) = UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE;

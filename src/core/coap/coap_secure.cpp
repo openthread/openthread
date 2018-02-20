@@ -46,22 +46,22 @@
 namespace ot {
 namespace Coap {
 
-CoapSecure::CoapSecure(Instance &aInstance):
-    CoapBase(aInstance, &CoapSecure::HandleRetransmissionTimer, &CoapSecure::HandleResponsesQueueTimer),
-    mConnectedCallback(NULL),
-    mConnectedContext(NULL),
-    mTransportCallback(NULL),
-    mTransportContext(NULL),
-    mTransmitMessage(NULL),
-    mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
+CoapSecure::CoapSecure(Instance &aInstance)
+    : CoapBase(aInstance, &CoapSecure::HandleRetransmissionTimer, &CoapSecure::HandleResponsesQueueTimer)
+    , mConnectedCallback(NULL)
+    , mConnectedContext(NULL)
+    , mTransportCallback(NULL)
+    , mTransportContext(NULL)
+    , mTransmitMessage(NULL)
+    , mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
 {
 }
 
 otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aContext)
 {
-    otError error = OT_ERROR_NONE;
+    otError error      = OT_ERROR_NONE;
     mTransportCallback = aCallback;
-    mTransportContext = aContext;
+    mTransportContext  = aContext;
 
     // Passing mTransportCallback means that we do not want to use socket
     // to transmit/receive messages, so do not open it in that case.
@@ -87,16 +87,16 @@ otError CoapSecure::Stop(void)
     }
 
     mTransportCallback = NULL;
-    mTransportContext = NULL;
+    mTransportContext  = NULL;
 
     return CoapBase::Stop();
 }
 
 otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext)
 {
-    mPeerAddress = aMessageInfo;
+    mPeerAddress       = aMessageInfo;
     mConnectedCallback = aCallback;
-    mConnectedContext = aContext;
+    mConnectedContext  = aContext;
 
     return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
                                       &CoapSecure::HandleDtlsSend, this);
@@ -131,19 +131,18 @@ otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandle
 {
     otError error = OT_ERROR_NONE;
 
-    otLogFuncEntry();
-
     VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
 
     error = CoapBase::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
 
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
-otError CoapSecure::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                otCoapResponseHandler aHandler, void *aContext)
+otError CoapSecure::SendMessage(Message &               aMessage,
+                                const Ip6::MessageInfo &aMessageInfo,
+                                otCoapResponseHandler   aHandler,
+                                void *                  aContext)
 {
     return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
@@ -158,13 +157,11 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 {
     ThreadNetif &netif = GetNetif();
 
-    otLogFuncEntry();
-
     if (!netif.GetDtls().IsStarted())
     {
         Ip6::SockAddr sockAddr;
         sockAddr.mAddress = aMessageInfo.GetPeerAddr();
-        sockAddr.mPort = aMessageInfo.GetPeerPort();
+        sockAddr.mPort    = aMessageInfo.GetPeerPort();
         mSocket.Connect(sockAddr);
 
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
@@ -178,8 +175,8 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 
         mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
-        netif.GetDtls().Start(false, &CoapSecure::HandleDtlsConnected,
-                              &CoapSecure::HandleDtlsReceive, CoapSecure::HandleDtlsSend, this);
+        netif.GetDtls().Start(false, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+                              CoapSecure::HandleDtlsSend, this);
     }
     else
     {
@@ -188,12 +185,11 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
                      (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()));
     }
 
-    netif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8,
-                                sizeof(mPeerAddress.GetPeerAddr().mFields));
+    netif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8, sizeof(mPeerAddress.GetPeerAddr().mFields));
     netif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
@@ -218,8 +214,6 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     Message *message = NULL;
 
-    otLogFuncEntry();
-
     VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
@@ -231,8 +225,6 @@ exit:
     {
         message->Free();
     }
-
-    otLogFuncExit();
 }
 
 otError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
@@ -243,8 +235,6 @@ otError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t
 otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
     otError error = OT_ERROR_NONE;
-
-    otLogFuncEntry();
 
     if (mTransmitMessage == NULL)
     {
@@ -271,8 +261,6 @@ exit:
         mTransmitMessage = NULL;
     }
 
-    otLogFuncExitErr(error);
-
     return error;
 }
 
@@ -284,8 +272,6 @@ void CoapSecure::HandleUdpTransmit(Tasklet &aTasklet)
 void CoapSecure::HandleUdpTransmit(void)
 {
     otError error = OT_ERROR_NONE;
-
-    otLogFuncEntry();
 
     VerifyOrExit(mTransmitMessage != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -306,8 +292,6 @@ exit:
     }
 
     mTransmitMessage = NULL;
-
-    otLogFuncExit();
 }
 
 void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
@@ -320,7 +304,7 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
     aTimer.GetOwner<CoapSecure>().CoapBase::HandleResponsesQueueTimer();
 }
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot
 
 #endif // OPENTHREAD_ENABLE_DTLS

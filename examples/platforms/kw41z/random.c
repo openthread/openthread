@@ -32,24 +32,24 @@
  *
  */
 
-#include <stdint.h>
-#include <stdlib.h>
+#include "openthread/platform/random.h"
 #include "fsl_device_registers.h"
 #include "fsl_trng.h"
-#include "openthread/types.h"
-#include "openthread/platform/random.h"
+#include <stdint.h>
+#include <stdlib.h>
 #include <utils/code_utils.h>
+#include "openthread/types.h"
 
 void kw41zRandomInit(void)
 {
     trng_config_t config;
-    uint32_t seed;
+    uint32_t      seed;
 
     TRNG_GetDefaultConfig(&config);
     config.frequencyCountLimit.minimum = 0x00000100;
     config.frequencyCountLimit.maximum = 0x000F0000;
-    config.ringOscDiv = kTRNG_RingOscDiv0;
-    config.entropyDelay = 1200;
+    config.ringOscDiv                  = kTRNG_RingOscDiv0;
+    config.entropyDelay                = 1200;
 
     otEXPECT(TRNG_Init(TRNG0, &config) == kStatus_Success);
 

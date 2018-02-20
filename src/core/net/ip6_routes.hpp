@@ -61,17 +61,17 @@ class Ip6;
  */
 struct Route
 {
-    Address       mPrefix;        ///< The IPv6 prefix.
-    uint8_t       mPrefixLength;  ///< The IPv6 prefix length.
-    int8_t        mInterfaceId;   ///< The interface identifier.
-    struct Route *mNext;          ///< A pointer to the next IPv6 route.
+    Address       mPrefix;       ///< The IPv6 prefix.
+    uint8_t       mPrefixLength; ///< The IPv6 prefix length.
+    int8_t        mInterfaceId;  ///< The interface identifier.
+    struct Route *mNext;         ///< A pointer to the next IPv6 route.
 };
 
 /**
  * This class implements IPv6 route management.
  *
  */
-class Routes: public InstanceLocator
+class Routes : public InstanceLocator
 {
 public:
     /**
@@ -80,7 +80,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    Routes(Instance &aInstance);
+    explicit Routes(Instance &aInstance);
 
     /**
      * This method adds an IPv6 route.
@@ -124,7 +124,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_IP6_ROUTES_HPP_
+#endif // NET_IP6_ROUTES_HPP_

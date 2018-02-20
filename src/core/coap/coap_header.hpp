@@ -133,7 +133,8 @@ public:
      * @param[in]  aVersion  The Version value.
      *
      */
-    void SetVersion(uint8_t aVersion) {
+    void SetVersion(uint8_t aVersion)
+    {
         mHeader.mFields.mVersionTypeToken &= ~kVersionMask;
         mHeader.mFields.mVersionTypeToken |= aVersion << kVersionOffset;
     }
@@ -152,7 +153,8 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) {
+    void SetType(Type aType)
+    {
         mHeader.mFields.mVersionTypeToken &= ~kTypeMask;
         mHeader.mFields.mVersionTypeToken |= aType;
     }
@@ -195,7 +197,10 @@ public:
      * @returns The Token length.
      *
      */
-    uint8_t GetTokenLength(void) const { return (mHeader.mFields.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset; }
+    uint8_t GetTokenLength(void) const
+    {
+        return (mHeader.mFields.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset;
+    }
 
     /**
      * This method returns a pointer to the Token value.
@@ -212,7 +217,8 @@ public:
      * @param[in]  aTokenLength  The Length of @p aToken.
      *
      */
-    void SetToken(const uint8_t *aToken, uint8_t aTokenLength) {
+    void SetToken(const uint8_t *aToken, uint8_t aTokenLength)
+    {
         mHeader.mFields.mVersionTypeToken = (mHeader.mFields.mVersionTypeToken & ~kTokenLengthMask) |
                                             ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
         memcpy(mHeader.mBytes + kTokenOffset, aToken, aTokenLength);
@@ -236,7 +242,8 @@ public:
      * @retval FALSE  If Tokens differ in length or value.
      *
      */
-    bool IsTokenEqual(const Header &aHeader) const {
+    bool IsTokenEqual(const Header &aHeader) const
+    {
         return ((this->GetTokenLength() == aHeader.GetTokenLength()) &&
                 (memcmp(this->GetToken(), aHeader.GetToken(), this->GetTokenLength()) == 0));
     }
@@ -253,8 +260,8 @@ public:
          */
         enum
         {
-            kOptionDeltaOffset   = 4,                          ///< Delta Offset
-            kOptionDeltaMask     = 0xf << kOptionDeltaOffset,  ///< Delta Mask
+            kOptionDeltaOffset = 4,                         ///< Delta Offset
+            kOptionDeltaMask   = 0xf << kOptionDeltaOffset, ///< Delta Mask
         };
 
         /**
@@ -456,7 +463,7 @@ public:
      * @retval FALSE  Header is not is a RST message header.
      *
      */
-    bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET);  };
+    bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET); };
 
 private:
     /**
@@ -465,23 +472,23 @@ private:
      */
     enum
     {
-        kVersionMask                = 0xc0,  ///< Version mask as specified (RFC 7252).
-        kVersionOffset              = 6,     ///< Version offset as specified (RFC 7252).
+        kVersionMask   = 0xc0, ///< Version mask as specified (RFC 7252).
+        kVersionOffset = 6,    ///< Version offset as specified (RFC 7252).
 
-        kTypeMask                   = 0x30,  ///< Type mask as specified (RFC 7252).
+        kTypeMask = 0x30, ///< Type mask as specified (RFC 7252).
 
-        kTokenLengthMask            = 0x0f,  ///< Token Length mask as specified (RFC 7252).
-        kTokenLengthOffset          = 0,     ///< Token Length offset as specified (RFC 7252).
-        kTokenOffset                = 4,     ///< Token offset as specified (RFC 7252).
-        kMaxTokenLength             = 8,     ///< Max token length as specified (RFC 7252).
+        kTokenLengthMask   = 0x0f, ///< Token Length mask as specified (RFC 7252).
+        kTokenLengthOffset = 0,    ///< Token Length offset as specified (RFC 7252).
+        kTokenOffset       = 4,    ///< Token offset as specified (RFC 7252).
+        kMaxTokenLength    = 8,    ///< Max token length as specified (RFC 7252).
 
-        kMaxOptionHeaderSize        = 5,     ///< Maximum size of an Option header
+        kMaxOptionHeaderSize = 5, ///< Maximum size of an Option header
 
-        kOption1ByteExtension       = 13,    ///< Indicates a 1 byte extension (RFC 7252).
-        kOption2ByteExtension       = 14,    ///< Indicates a 1 byte extension (RFC 7252).
+        kOption1ByteExtension = 13, ///< Indicates a 1 byte extension (RFC 7252).
+        kOption2ByteExtension = 14, ///< Indicates a 1 byte extension (RFC 7252).
 
-        kOption1ByteExtensionOffset = 13,    ///< Delta/Length offset as specified (RFC 7252).
-        kOption2ByteExtensionOffset = 269,   ///< Delta/Length offset as specified (RFC 7252).
+        kOption1ByteExtensionOffset = 13,  ///< Delta/Length offset as specified (RFC 7252).
+        kOption2ByteExtensionOffset = 269, ///< Delta/Length offset as specified (RFC 7252).
     };
 };
 
@@ -490,7 +497,7 @@ private:
  *
  */
 
-}  // namespace Coap
-}  // namespace ot
+} // namespace Coap
+} // namespace ot
 
-#endif  // COAP_HEADER_HPP_
+#endif // COAP_HEADER_HPP_

@@ -51,7 +51,7 @@ class Dataset
 public:
     enum
     {
-        kMaxSize = 256,      ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxSize      = 256, ///< Maximum size of MeshCoP Dataset (bytes)
         kMaxValueSize = 16,  /// < Maximum size of each Dataset TLV value (bytes)
     };
 
@@ -195,18 +195,38 @@ public:
      */
     otError AppendMleDatasetTlv(Message &aMessage) const;
 
+    /**
+     * This method applies the Active or Pending Dataset to the Thread interface.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     *
+     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     *
+     */
+    otError ApplyConfiguration(Instance &aInstance) const;
+
+    /**
+     * This method converts a Pending Dataset to an Active Dataset.
+     *
+     * This method removes the Delay Timer and Pending Timestamp TLVs
+     *
+     * @retval OT_ERROR_NONE  Successfully converted to Active Dataset.
+     *
+     */
+    otError ConvertToActive(void);
+
 private:
     uint16_t GetSettingsKey(void);
 
     void Remove(uint8_t *aStart, uint8_t aLength);
 
-    uint8_t    mTlvs[kMaxSize];  ///< The Dataset buffer
-    uint32_t   mUpdateTime;      ///< Local time last updated
-    uint16_t   mLength;          ///< The number of valid bytes in @var mTlvs
-    Tlv::Type  mType;            ///< Active or Pending
+    uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
+    uint32_t  mUpdateTime;     ///< Local time last updated
+    uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
+    Tlv::Type mType;           ///< Active or Pending
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_DATASET_HPP_
+#endif // MESHCOP_DATASET_HPP_

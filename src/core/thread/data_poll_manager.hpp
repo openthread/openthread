@@ -59,13 +59,13 @@ namespace ot {
  *
  */
 
-class DataPollManager: public InstanceLocator
+class DataPollManager : public InstanceLocator
 {
 public:
     enum
     {
-        kDefaultFastPolls   = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
-        kMaxFastPolls       = 15, ///< Maximum number of fast poll transmissions allowed.
+        kDefaultFastPolls = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
+        kMaxFastPolls     = 15, ///< Maximum number of fast poll transmissions allowed.
     };
 
     /**
@@ -195,19 +195,19 @@ public:
     uint32_t GetKeepAlivePollPeriod(void) const;
 
 private:
-    enum  // Poll period under different conditions (in milliseconds).
+    enum // Poll period under different conditions (in milliseconds).
     {
-        kAttachDataPollPeriod   = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD,  ///< Poll period during attach.
-        kRetxPollPeriod         = 1000,                                       ///< Poll retx period due to tx failure.
-        kNoBufferRetxPollPeriod = 200,                                        ///< Poll retx due to no buffer space.
-        kFastPollPeriod         = 188,                                        ///< Period used for fast polls.
-        kMinPollPeriod          = 10,                                         ///< Minimum allowed poll period.
+        kAttachDataPollPeriod   = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD, ///< Poll period during attach.
+        kRetxPollPeriod         = 1000,                                      ///< Poll retx period due to tx failure.
+        kNoBufferRetxPollPeriod = 200,                                       ///< Poll retx due to no buffer space.
+        kFastPollPeriod         = 188,                                       ///< Period used for fast polls.
+        kMinPollPeriod          = 10,                                        ///< Minimum allowed poll period.
     };
 
     enum
     {
-        kQuickPollsAfterTimeout = 5,  ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
-        kMaxPollRetxAttempts    = 5,  ///< Maximum number of retransmit attempts of data poll (mac data request).
+        kQuickPollsAfterTimeout = 5, ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
+        kMaxPollRetxAttempts    = 5, ///< Maximum number of retransmit attempts of data poll (mac data request).
     };
 
     enum PollPeriodSelector
@@ -216,24 +216,24 @@ private:
         kRecalculatePollPeriod,
     };
 
-    void ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
-    uint32_t CalculatePollPeriod(void) const;
+    void        ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
+    uint32_t    CalculatePollPeriod(void) const;
     static void HandlePollTimer(Timer &aTimer);
-    uint32_t GetDefaultPollPeriod(void) const;
+    uint32_t    GetDefaultPollPeriod(void) const;
 
-    uint32_t    mTimerStartTime;
-    uint32_t    mExternalPollPeriod;
-    uint32_t    mPollPeriod;
+    uint32_t mTimerStartTime;
+    uint32_t mExternalPollPeriod;
+    uint32_t mPollPeriod;
 
-    TimerMilli  mTimer;
+    TimerMilli mTimer;
 
-    bool        mEnabled: 1;               //< Indicates whether data polling is enabled/started.
-    bool        mAttachMode: 1;            //< Indicates whether in attach mode (to use attach poll period).
-    bool        mRetxMode: 1;              //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
-    bool        mNoBufferRetxMode: 1;      //< Indicates whether last poll tx failed due to insufficient buffer.
-    uint8_t     mPollTimeoutCounter: 4;    //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
-    uint8_t     mPollTxFailureCounter: 4;  //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
-    uint8_t     mRemainingFastPolls: 4;    //< Number of remaining fast polls when in transient fast polling mode.
+    bool    mEnabled : 1;              //< Indicates whether data polling is enabled/started.
+    bool    mAttachMode : 1;           //< Indicates whether in attach mode (to use attach poll period).
+    bool    mRetxMode : 1;             //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
+    bool    mNoBufferRetxMode : 1;     //< Indicates whether last poll tx failed due to insufficient buffer.
+    uint8_t mPollTimeoutCounter : 4;   //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
+    uint8_t mPollTxFailureCounter : 4; //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
+    uint8_t mRemainingFastPolls : 4;   //< Number of remaining fast polls when in transient fast polling mode.
 };
 
 /**
@@ -241,6 +241,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // DATA_POLL_MANAGER_HPP_
+#endif // DATA_POLL_MANAGER_HPP_

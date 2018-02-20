@@ -43,7 +43,6 @@
 #include "common/instance.hpp"
 #include "common/tasklet.hpp"
 
-
 namespace ot {
 namespace Cli {
 
@@ -51,7 +50,7 @@ namespace Cli {
  * This class implements the CLI server on top of the UART platform abstraction.
  *
  */
-class Uart: public Server
+class Uart : public Server
 {
 public:
     /**
@@ -111,18 +110,18 @@ public:
 private:
     enum
     {
-        kRxBufferSize = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
-        kTxBufferSize = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
+        kRxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+        kTxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
         kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
     otError ProcessCommand(void);
-    void Send(void);
+    void    Send(void);
 
-    char mRxBuffer[kRxBufferSize];
+    char     mRxBuffer[kRxBufferSize];
     uint16_t mRxLength;
 
-    char mTxBuffer[kTxBufferSize];
+    char     mTxBuffer[kTxBufferSize];
     uint16_t mTxHead;
     uint16_t mTxLength;
 
@@ -133,7 +132,7 @@ private:
     friend class Interpreter;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_UART_HPP_
+#endif // CLI_UART_HPP_

@@ -40,6 +40,7 @@ RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
 BuildJobs                      ?= 10
+GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
 configure_OPTIONS                                 = \
     --enable-cli-app=all                            \
@@ -50,8 +51,6 @@ configure_OPTIONS                                 = \
     --enable-linker-map                             \
     MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)
-
-include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 ifdef SRC_PATH
 configure_OPTIONS              += --srcdir="$(SRC_PATH)"
@@ -79,14 +78,18 @@ COMMONCFLAGS                   := \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
 
-ifeq ($(CERT_LOG),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-else
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
+
+ifneq ($(CERT_LOG),1)
 COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 endif
 
 ifeq ($(USB),1)
 COMMONCFLAGS += -DUSB_CDC_AS_SERIAL_TRANSPORT=1
+endif
+
+ifeq ($(shell expr $(GCCVersion) \>= 7), 1)
+    COMMONCFLAGS += -Wno-expansion-to-defined
 endif
 
 CPPFLAGS                       += \

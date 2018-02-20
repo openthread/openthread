@@ -42,13 +42,13 @@
  *  @param[in]  aCondition  A Boolean expression to be evaluated.
  *
  */
-#define otEXPECT(aCondition)                    \
-    do                                          \
-    {                                           \
-        if (!(aCondition))                      \
-        {                                       \
-            goto exit;                          \
-        }                                       \
+#define otEXPECT(aCondition) \
+    do                       \
+    {                        \
+        if (!(aCondition))   \
+        {                    \
+            goto exit;       \
+        }                    \
     } while (0)
 
 /**
@@ -61,14 +61,14 @@
  *                          assertion fails.
  *
  */
-#define otEXPECT_ACTION(aCondition, aAction)    \
-    do                                          \
-    {                                           \
-        if (!(aCondition))                      \
-        {                                       \
-            aAction;                            \
-            goto exit;                          \
-        }                                       \
+#define otEXPECT_ACTION(aCondition, aAction) \
+    do                                       \
+    {                                        \
+        if (!(aCondition))                   \
+        {                                    \
+            aAction;                         \
+            goto exit;                       \
+        }                                    \
     } while (0)
 
-#endif  // CODE_UTILS_H
+#endif // CODE_UTILS_H

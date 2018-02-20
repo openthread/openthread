@@ -191,14 +191,19 @@ exit:
     return;
 }
 
+otError NcpBase::GetPropertyHandler_MAC_SRC_MATCH_ENABLED(void)
+{
+    // TODO: Would be good to add an `otLinkRaw` API to give the the status of source match.
+    return mEncoder.WriteBool(mSrcMatchEnabled);
+}
+
 otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_ENABLED(void)
 {
-    bool enabled;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    SuccessOrExit(error = mDecoder.ReadBool(mSrcMatchEnabled));
 
-    error = otLinkRawSrcMatchEnable(mInstance, enabled);
+    error = otLinkRawSrcMatchEnable(mInstance, mSrcMatchEnabled);
 
 exit:
     return error;
@@ -381,7 +386,7 @@ exit:
     }
     else
     {
-        error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
+        error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error));
     }
 
     return error;

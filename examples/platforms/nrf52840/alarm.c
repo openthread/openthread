@@ -32,8 +32,8 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <assert.h>
 #include <stdbool.h>
@@ -43,7 +43,8 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/platform.h>
+
+#include "platform.h"
 
 #include "platform-config.h"
 #include "platform-nrf5.h"
@@ -55,6 +56,7 @@
 #include <openthread/config.h>
 #include <openthread/types.h>
 
+// clang-format off
 #define RTC_FREQUENCY       32768ULL
 
 #define US_PER_MS           1000ULL
@@ -63,18 +65,14 @@
 
 #define MS_PER_S            1000UL
 #define MS_PER_OVERFLOW     (512UL * MS_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
+// clang-format on
 
-typedef enum
-{
-    kMsTimer,
-    kUsTimer,
-    kNumTimers
-} AlarmIndex;
+typedef enum { kMsTimer, kUsTimer, kNumTimers } AlarmIndex;
 
 typedef struct
 {
-    volatile bool mFireAlarm;   ///< Information for processing function, that alarm should fire.
-    uint64_t      mTargetTime;  ///< Alarm fire time (in millisecond for MsTimer, in microsecond for UsTimer)
+    volatile bool mFireAlarm;  ///< Information for processing function, that alarm should fire.
+    uint64_t      mTargetTime; ///< Alarm fire time (in millisecond for MsTimer, in microsecond for UsTimer)
 } AlarmData;
 
 typedef struct
@@ -85,23 +83,23 @@ typedef struct
     nrf_rtc_int_t   mCompareInt;
 } AlarmChannelData;
 
-static volatile uint64_t sTimeOffset = 0;  ///< Time offset to keep track of current time (in millisecond).
-static AlarmData sTimerData[kNumTimers];   ///< Data of the timers.
-static const AlarmChannelData sChannelData[kNumTimers] =
-{
-    [kMsTimer] = {
-        .mChannelNumber    = 0,
-        .mCompareEventMask = RTC_EVTEN_COMPARE0_Msk,
-        .mCompareEvent     = NRF_RTC_EVENT_COMPARE_0,
-        .mCompareInt       = NRF_RTC_INT_COMPARE0_MASK,
-    },
-    [kUsTimer] = {
-        .mChannelNumber    = 1,
-        .mCompareEventMask = RTC_EVTEN_COMPARE1_Msk,
-        .mCompareEvent     = NRF_RTC_EVENT_COMPARE_1,
-        .mCompareInt       = NRF_RTC_INT_COMPARE1_MASK,
-    }
-};
+static volatile uint64_t      sTimeOffset = 0;        ///< Time offset to keep track of current time (in millisecond).
+static AlarmData              sTimerData[kNumTimers]; ///< Data of the timers.
+static const AlarmChannelData sChannelData[kNumTimers] = //
+    {                                                    //
+        [kMsTimer] =
+            {
+                .mChannelNumber    = 0,
+                .mCompareEventMask = RTC_EVTEN_COMPARE0_Msk,
+                .mCompareEvent     = NRF_RTC_EVENT_COMPARE_0,
+                .mCompareInt       = NRF_RTC_INT_COMPARE0_MASK,
+            },
+        [kUsTimer] = {
+            .mChannelNumber    = 1,
+            .mCompareEventMask = RTC_EVTEN_COMPARE1_Msk,
+            .mCompareEvent     = NRF_RTC_EVENT_COMPARE_1,
+            .mCompareInt       = NRF_RTC_INT_COMPARE1_MASK,
+        }};
 
 static void HandleOverflow(void);
 
@@ -115,7 +113,7 @@ static inline uint32_t TimeToTicks(uint64_t aTime, AlarmIndex aIndex)
     }
     else
     {
-        ticks = (uint32_t)CEIL_DIV((aTime *  RTC_FREQUENCY), US_PER_S) & RTC_CC_COMPARE_Msk;
+        ticks = (uint32_t)CEIL_DIV((aTime * RTC_FREQUENCY), US_PER_S) & RTC_CC_COMPARE_Msk;
     }
 
     return ticks;
@@ -241,7 +239,9 @@ void nrf5AlarmInit(void)
     // Setup low frequency clock.
     nrf_drv_clock_lfclk_request(NULL);
 
-    while (!nrf_drv_clock_lfclk_is_running()) {}
+    while (!nrf_drv_clock_lfclk_is_running())
+    {
+    }
 
     // Setup RTC timer.
     NVIC_SetPriority(RTC_IRQN, RTC_IRQ_PRIORITY);

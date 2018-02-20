@@ -71,7 +71,8 @@ public:
      * @param[in]  aContext  Context for the handler function.
      *
      */
-    QueryMetadata(otDnsResponseHandler aHandler, void *aContext) {
+    QueryMetadata(otDnsResponseHandler aHandler, void *aContext)
+    {
         memset(this, 0, sizeof(*this));
         mResponseHandler = aHandler;
         mResponseContext = aContext;
@@ -86,9 +87,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const {
-        return aMessage.Append(this, sizeof(*this));
-    };
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
 
     /**
      * This method reads request data from the message.
@@ -98,7 +97,8 @@ public:
      * @returns The number of bytes read.
      *
      */
-    uint16_t ReadFrom(const Message &aMessage) {
+    uint16_t ReadFrom(const Message &aMessage)
+    {
         return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     };
 
@@ -110,7 +110,8 @@ public:
      * @returns The number of bytes updated.
      *
      */
-    int UpdateIn(Message &aMessage) const {
+    int UpdateIn(Message &aMessage) const
+    {
         return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
@@ -135,14 +136,14 @@ public:
     bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); };
 
 private:
-    const char            *mHostname;             ///< A hostname to be find.
-    otDnsResponseHandler   mResponseHandler;      ///< A function pointer that is called on response reception.
-    void                  *mResponseContext;      ///< A pointer to arbitrary context information.
-    uint32_t               mTransmissionTime;     ///< Time when the timer should shoot for this message.
-    Ip6::Address           mSourceAddress;        ///< IPv6 address of the message source.
-    Ip6::Address           mDestinationAddress;   ///< IPv6 address of the message destination.
-    uint16_t               mDestinationPort;      ///< UDP port of the message destination.
-    uint8_t                mRetransmissionCount;  ///< Number of retransmissions.
+    const char *         mHostname;            ///< A hostname to be find.
+    otDnsResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
+    void *               mResponseContext;     ///< A pointer to arbitrary context information.
+    uint32_t             mTransmissionTime;    ///< Time when the timer should shoot for this message.
+    Ip6::Address         mSourceAddress;       ///< IPv6 address of the message source.
+    Ip6::Address         mDestinationAddress;  ///< IPv6 address of the message destination.
+    uint16_t             mDestinationPort;     ///< UDP port of the message destination.
+    uint8_t              mRetransmissionCount; ///< Number of retransmissions.
 } OT_TOOL_PACKED_END;
 
 /**
@@ -158,11 +159,10 @@ public:
      * @param[in]  aNetif    A reference to the network interface that DNS client should be assigned to.
      *
      */
-    Client(Ip6::Netif &aNetif):
-        mSocket(aNetif.GetIp6().GetUdp()),
-        mMessageId(0),
-        mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this) {
-    };
+    Client(Ip6::Netif &aNetif)
+        : mSocket(aNetif.GetIp6().GetUdp())
+        , mMessageId(0)
+        , mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this){};
 
     /**
      * This method starts the DNS client.
@@ -233,33 +233,35 @@ private:
 
     Message *NewMessage(const Header &aHeader);
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
-    void DequeueMessage(Message &aMessage);
-    otError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void     DequeueMessage(Message &aMessage);
+    otError  SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError  SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError AppendCompressedHostname(Message &aMessage, const char *aHostname);
     otError CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset);
     otError SkipHostname(Message &aMessage, uint16_t &aOffset);
 
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
-    void FinalizeDnsTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata,
-                                otIp6Address *aAddress, uint32_t aTtl,
-                                otError aResult);
+    void     FinalizeDnsTransaction(Message &            aQuery,
+                                    const QueryMetadata &aQueryMetadata,
+                                    otIp6Address *       aAddress,
+                                    uint32_t             aTtl,
+                                    otError              aResult);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
-    void HandleRetransmissionTimer(void);
+    void        HandleRetransmissionTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Ip6::UdpSocket mSocket;
 
-    uint16_t mMessageId;
+    uint16_t     mMessageId;
     MessageQueue mPendingQueries;
-    TimerMilli mRetransmissionTimer;
+    TimerMilli   mRetransmissionTimer;
 };
 
-}  // namespace Dns
-}  // namespace ot
+} // namespace Dns
+} // namespace ot
 
-#endif  // DNS_CLIENT_HPP_
+#endif // DNS_CLIENT_HPP_

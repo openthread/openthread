@@ -40,11 +40,11 @@
 #include "hw_trng.h"
 #include "sdk_defs.h"
 
-#define RANDOM_SIZE_OF_BUFFER         32
+#define RANDOM_SIZE_OF_BUFFER 32
 
 static uint32_t sRandomNumbers[RANDOM_SIZE_OF_BUFFER];
-static uint8_t sRandomNextNumberIndex = 0;
-static bool sRandomGeneratorStarted = false;
+static uint8_t  sRandomNextNumberIndex  = 0;
+static bool     sRandomGeneratorStarted = false;
 
 static void RandomCallback(void)
 {
@@ -70,7 +70,7 @@ void da15000RandomInit(void)
 uint32_t otPlatRandomGet(void)
 {
     uint32_t randomNumber;
-    bool randomGet = false;
+    bool     randomGet = false;
 
     do
     {
@@ -79,7 +79,7 @@ uint32_t otPlatRandomGet(void)
         if (sRandomNextNumberIndex < RANDOM_SIZE_OF_BUFFER)
         {
             randomNumber = sRandomNumbers[sRandomNextNumberIndex++];
-            randomGet = true;
+            randomGet    = true;
 
             if (sRandomNextNumberIndex == RANDOM_SIZE_OF_BUFFER)
             {
@@ -89,7 +89,7 @@ uint32_t otPlatRandomGet(void)
         else if (hw_trng_get_fifo_level() > 0)
         {
             randomNumber = hw_trng_get_number();
-            randomGet = true;
+            randomGet    = true;
         }
         else if (!sRandomGeneratorStarted)
         {
@@ -97,8 +97,7 @@ uint32_t otPlatRandomGet(void)
         }
 
         GLOBAL_INT_RESTORE();
-    }
-    while (!randomGet);
+    } while (!randomGet);
 
     return randomNumber;
 }

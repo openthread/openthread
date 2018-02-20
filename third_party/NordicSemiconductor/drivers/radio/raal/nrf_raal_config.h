@@ -31,6 +31,10 @@
 #ifndef NRF_RAAL_CONFIG_H__
 #define NRF_RAAL_CONFIG_H__
 
+#ifdef NRF_DRV_RADIO802154_PROJECT_CONFIG
+#include NRF_DRV_RADIO802154_PROJECT_CONFIG
+#endif
+
 #include <nrf.h>
 
 #ifdef __cplusplus
@@ -54,30 +58,6 @@ extern "C" {
 #ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
 #define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
 #endif
-
-/**
- * @def NRF_RAAL_HFCLK_START
- *
- * Macro to request High Frequency Clock start. It may use external driver or OS function.
- *
- */
-#define NRF_RAAL_HFCLK_START()                                                                     \
-    do {                                                                                           \
-        NRF_CLOCK->TASKS_HFCLKSTART = 1;                                                           \
-                                                                                                   \
-        while(NRF_CLOCK->HFCLKSTAT != (CLOCK_HFCLKSTAT_SRC_Msk | CLOCK_HFCLKSTAT_STATE_Msk)) {}    \
-    } while(0);
-
-/**
- * @def NRF_RAAL_HFCLK_STOP
- *
- * Macro to release High Frequency Clock. It may use external driver or OS function.
- *
- */
-#define NRF_RAAL_HFCLK_STOP()                                                                      \
-    do {                                                                                           \
-        NRF_CLOCK->TASKS_HFCLKSTOP = 1;                                                            \
-    } while(0);
 
 /**
  *@}

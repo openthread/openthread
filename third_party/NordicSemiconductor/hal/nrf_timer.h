@@ -1,4 +1,42 @@
-/*$$$LICENCE_NORDIC_STANDARD<2014>$$$*/
+/**
+ * Copyright (c) 2014 - 2017, Nordic Semiconductor ASA
+ * 
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ * 
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ * 
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
 /**
  * @defgroup nrf_timer_hal Timer HAL
  * @{
@@ -16,6 +54,7 @@
 
 #include "nrf_peripherals.h"
 #include "nrf.h"
+#include "nrf_assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -565,6 +604,7 @@ __STATIC_INLINE uint32_t nrf_timer_us_to_ticks(uint32_t time_us,
     // The "frequency" parameter here is actually the prescaler value, and the
     // timer runs at the following frequency: f = 16 MHz / 2^prescaler.
     uint32_t prescaler = (uint32_t)frequency;
+    ASSERT(time_us <= (UINT32_MAX / 16UL));
     return ((time_us * 16UL) >> prescaler);
 }
 
@@ -574,6 +614,7 @@ __STATIC_INLINE uint32_t nrf_timer_ms_to_ticks(uint32_t time_ms,
     // The "frequency" parameter here is actually the prescaler value, and the
     // timer runs at the following frequency: f = 16000 kHz / 2^prescaler.
     uint32_t prescaler = (uint32_t)frequency;
+    ASSERT(time_ms <= (UINT32_MAX / 16000UL));
     return ((time_ms * 16000UL) >> prescaler);
 }
 

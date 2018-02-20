@@ -41,17 +41,11 @@ install_packages_apt()
 {
     # apt update and install dependencies
     sudo apt-get update
-    sudo apt-get install -y build-essential git make autoconf \
-        autoconf-archive automake dbus libtool gcc \
-        g++ gperf flex bison texinfo ncurses-dev \
-        libexpat-dev python sed python-pip gawk \
-        libreadline6-dev libreadline6 libdbus-1-dev \
-        libboost-dev
+    sudo apt-get install automake g++ libtool make
 
     # add gcc-arm-embedded ppa
     sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
     sudo apt-get update
-
     sudo apt-get install gcc-arm-embedded
 }
 
@@ -67,7 +61,18 @@ install_packages_rpm()
 
 install_packages_brew()
 {
-    echo 'macOS not supported currently' && false
+    # add autotools
+    brew install automake libtool
+
+    # add ARM toolchain
+    brew tap PX4/homebrew-px4
+    brew install gcc-arm-none-eabi
+
+    # check for gcc for posix examples
+    if ! which gcc; then
+        echo 'warning: clang/gcc needed for posix examples'
+        echo 'warning: please install Command Line Tools from https://developer.apple.com/download/more/'
+    fi
 }
 
 install_packages_source()
@@ -92,9 +97,7 @@ install_packages()
 
 main()
 {
-    . $BEFORE_HOOK
     install_packages
-    . $AFTER_HOOK
 }
 
 main

@@ -32,6 +32,9 @@
 
 #include "ncp_base.hpp"
 
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#include <openthread/channel_manager.h>
+#endif
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
@@ -210,6 +213,43 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE_ADDRESSES(void)
+{
+    otError error = OT_ERROR_NONE;
+    otChildInfo childInfo;
+    uint8_t maxChildren;
+    otIp6Address ip6Address;
+    otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
+
+    maxChildren = otThreadGetMaxAllowedChildren(mInstance);
+
+    for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    {
+        if ((otThreadGetChildInfoByIndex(mInstance, childIndex, &childInfo) != OT_ERROR_NONE) ||
+            childInfo.mIsStateRestoring)
+        {
+            continue;
+        }
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteEui64(childInfo.mExtAddress));
+        SuccessOrExit(error = mEncoder.WriteUint16(childInfo.mRloc16));
+
+        iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
+
+        while (otThreadGetChildNextIp6Address(mInstance, childIndex, &iterator, &ip6Address) == OT_ERROR_NONE)
+        {
+            SuccessOrExit(error = mEncoder.WriteIp6Address(ip6Address));
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
 otError NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(void)
 {
     return mEncoder.WriteBool(otThreadIsRouterRoleEnabled(mInstance));
@@ -380,7 +420,7 @@ otError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader)
     }
 
 exit:
-    return SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
+    return PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(error));
 }
 
 otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
@@ -390,8 +430,6 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
     const char *aPSKd = NULL;
     uint32_t joinerTimeout = 0;
 
-    VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
-
     SuccessOrExit(error = mDecoder.ReadUtf8(aPSKd));
     SuccessOrExit(error = mDecoder.ReadUint32(joinerTimeout));
 
@@ -400,13 +438,11 @@ otError NcpBase::InsertPropertyHandler_THREAD_JOINERS(void)
         eui64 = NULL;
     }
 
-
     error = otCommissionerAddJoiner(mInstance, eui64, aPSKd, joinerTimeout);
 
 exit:
     return error;
 }
-
 #endif // OPENTHREAD_ENABLE_COMMISSIONER
 
 otError NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(void)
@@ -423,18 +459,19 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
+otError NcpBase::GetPropertyHandler_THREAD_STEERING_DATA(void)
+{
+    return mEncoder.WriteEui64(mSteeringDataAddress);
+}
+
 otError NcpBase::SetPropertyHandler_THREAD_STEERING_DATA(void)
 {
-    const otExtAddress *extAddress;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
+    SuccessOrExit(error = mDecoder.ReadEui64(mSteeringDataAddress));
 
-    SuccessOrExit(error = otThreadSetSteeringData(mInstance, extAddress));
-
-    // Note that there is no get handler for this property
-    // so the response becomes `VALUE_IS` echo of the
-    // received content.
+    SuccessOrExit(error = otThreadSetSteeringData(mInstance, &mSteeringDataAddress));
 
 exit:
     return error;
@@ -454,18 +491,18 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(void)
+{
+    return mEncoder.WriteUint8(mPreferredRouteId);
+}
+
 otError NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(void)
 {
-    uint8_t routerId = 0;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadUint8(routerId));
+    SuccessOrExit(error = mDecoder.ReadUint8(mPreferredRouteId));
 
-    SuccessOrExit(error = otThreadSetPreferredRouterId(mInstance, routerId));
-
-    // Note that there is no get handler for this property
-    // so the response becomes `VALUE_IS` echo of the
-    // received content.
+    SuccessOrExit(error = otThreadSetPreferredRouterId(mInstance, mPreferredRouteId));
 
 exit:
     return error;
@@ -821,6 +858,63 @@ otError NcpBase::SetPropertyHandler_THREAD_MGMT_PENDING_DATASET(void)
 exit:
     return error;
 }
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
+{
+    return mEncoder.WriteUint8(otChannelManagerGetRequestedChannel(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
+{
+    uint8_t channel;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+
+    error = otChannelManagerRequestChannelChange(mInstance, channel);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_DELAY(void)
+{
+    return mEncoder.WriteUint16(otChannelManagerGetDelay(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_DELAY(void)
+{
+    uint16_t delay;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(delay));
+
+    error = otChannelManagerSetDelay(mInstance, delay);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_SUPPORTED_CHANNELS(void)
+{
+    return EncodeChannelMask(otChannelManagerGetSupportedChannels(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_SUPPORTED_CHANNELS(void)
+{
+    uint32_t channelMask = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = DecodeChannelMask(channelMask));
+    otChannelManagerSetSupportedChannels(mInstance, channelMask);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
 
 }  // namespace Ncp
 }  // namespace ot

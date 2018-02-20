@@ -60,8 +60,10 @@ extern "C" {
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-OTAPI otError OTCALL otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData,
-                                              uint8_t *aDataLength);
+OTAPI otError OTCALL otBorderRouterGetNetData(otInstance *aInstance,
+                                              bool        aStable,
+                                              uint8_t *   aData,
+                                              uint8_t *   aDataLength);
 
 /**
  * Add a border router configuration to the local network data.
@@ -104,8 +106,9 @@ OTAPI otError OTCALL otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, con
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-OTAPI otError OTCALL otBorderRouterGetNextOnMeshPrefix(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                                                       otBorderRouterConfig *aConfig);
+OTAPI otError OTCALL otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
+                                                       otNetworkDataIterator *aIterator,
+                                                       otBorderRouterConfig * aConfig);
 
 /**
  * Add an external route configuration to the local network data.
@@ -148,7 +151,8 @@ OTAPI otError OTCALL otBorderRouterRemoveRoute(otInstance *aInstance, const otIp
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
  *
  */
-otError otBorderRouterGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator,
+otError otBorderRouterGetNextRoute(otInstance *           aInstance,
+                                   otNetworkDataIterator *aIterator,
                                    otExternalRouteConfig *aConfig);
 
 /**
@@ -171,7 +175,7 @@ OTAPI otError OTCALL otBorderRouterRegister(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_BORDER_ROUTER_H_
+#endif // OPENTHREAD_BORDER_ROUTER_H_

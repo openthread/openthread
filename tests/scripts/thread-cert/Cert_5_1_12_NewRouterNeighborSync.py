@@ -37,15 +37,16 @@ import node
 LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
-SNIFFER = 4
 
 
 class Cert_5_1_12_NewRouterSync(unittest.TestCase):
 
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -65,16 +66,11 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
-        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def verify_step_4(self, router1_messages, router2_messages, req_receiver, accept_receiver):
         if router2_messages.contains_mle_message(mle.CommandType.LINK_REQUEST) and \
@@ -113,23 +109,22 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
-        time.sleep(4)
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        time.sleep(10)
+        self.simulator.go(10)
 
-        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
-        router1_messages = self.sniffer.get_messages_sent_by(ROUTER1)
-        router2_messages = self.sniffer.get_messages_sent_by(ROUTER2)
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
+        router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
 
         # 2 - Router1
         msg = router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
@@ -142,11 +137,11 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
 
-        time.sleep(35)
+        self.simulator.go(35)
 
-        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
-        router1_messages = self.sniffer.get_messages_sent_by(ROUTER1)
-        router2_messages = self.sniffer.get_messages_sent_by(ROUTER2)
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
+        router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
 
         # 4 - Router1, Router2
         self.assertTrue(self.verify_step_4(router1_messages, router2_messages, ROUTER1, ROUTER2) or

@@ -45,8 +45,8 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 
     otDatasetGetActive(aInstance, &dataset);
 
-    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) &&
-        (dataset.mIsExtendedPanIdSet) && (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
+    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) && (dataset.mIsExtendedPanIdSet) &&
+        (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
     {
         return true;
     }
@@ -56,12 +56,12 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetActiveDataset().GetLocal().Get(*aDataset);
+    error = instance.GetThreadNetif().GetActiveDataset().Get(*aDataset);
 
 exit:
     return error;
@@ -69,12 +69,12 @@ exit:
 
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetPendingDataset().GetLocal().Get(*aDataset);
+    error = instance.GetThreadNetif().GetPendingDataset().Get(*aDataset);
 
 exit:
     return error;

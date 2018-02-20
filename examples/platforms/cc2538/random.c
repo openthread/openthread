@@ -44,12 +44,14 @@ static void generateRandom(uint8_t *aOutput, uint16_t aOutputLength)
     HWREG(SOC_ADC_ADCCON1) &= ~(SOC_ADC_ADCCON1_RCTRL1 | SOC_ADC_ADCCON1_RCTRL0);
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
 
-    while (HWREG(SYS_CTRL_RCGCRFC) != SYS_CTRL_RCGCRFC_RFC0);
+    while (HWREG(SYS_CTRL_RCGCRFC) != SYS_CTRL_RCGCRFC_RFC0)
+        ;
 
     HWREG(RFCORE_XREG_FRMCTRL0) = RFCORE_XREG_FRMCTRL0_INFINITY_RX;
-    HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RXON;
+    HWREG(RFCORE_SFR_RFST)      = RFCORE_SFR_RFST_INSTR_RXON;
 
-    while (!HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID);
+    while (!HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID)
+        ;
 
     for (uint16_t index = 0; index < aOutputLength; index++)
     {
@@ -93,7 +95,7 @@ uint32_t otPlatRandomGet(void)
 
 otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError error   = OT_ERROR_NONE;
     uint8_t channel = 0;
 
     otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);

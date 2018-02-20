@@ -47,17 +47,16 @@ void otTaskletsProcess(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
     VerifyOrExit(otInstanceIsInitialized(aInstance));
     instance.GetTaskletScheduler().ProcessQueuedTasklets();
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 bool otTaskletsArePending(otInstance *aInstance)
 {
-    bool retval = false;
+    bool      retval   = false;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
@@ -72,4 +71,3 @@ OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
 {
 }
 #endif
-

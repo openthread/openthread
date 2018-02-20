@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 
 #include <openthread/types.h>
 #include <openthread/platform/logging.h>
@@ -45,15 +45,22 @@
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 #include "api/link_raw.hpp"
 #endif
-#include "common/code_utils.hpp"
 #include "coap/coap.hpp"
+#include "common/code_utils.hpp"
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #include "crypto/heap.hpp"
 #include "crypto/mbedtls.hpp"
 #endif
+#include "common/notifier.hpp"
 #include "net/ip6.hpp"
+#include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
-
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#include "utils/channel_manager.hpp"
+#endif
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#include "utils/channel_monitor.hpp"
+#endif
 
 /**
  * @addtogroup core-instance
@@ -84,8 +91,7 @@ namespace ot {
 class Instance : public otInstance
 {
 public:
-
-#if  OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     /**
       * This static method initializes the OpenThread instance.
       *
@@ -137,27 +143,6 @@ public:
      *
      */
     void Finalize(void);
-
-    /**
-     * This method registers a callback to indicate when certain configuration or state changes within OpenThread.
-     *
-     * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
-     * @param[in]  aContext   A pointer to application-specific context.
-     *
-     * @retval OT_ERROR_NONE     Added the callback to the list of callbacks and registered it with OpenThread.
-     * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
-     *
-     */
-    otError RegisterStateChangedCallback(otStateChangedCallback aCallback, void *aContext);
-
-    /**
-     * This method removes/unregisters a previously registered "state changed" callback.
-     *
-     * @param[in]  aCallback         A pointer to the callback function pointer.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
-     */
-    void RemoveStateChangedCallback(otStateChangedCallback aCallback, void *aCallbackContext);
 
     /**
      * This method triggers a platform reset.
@@ -242,6 +227,14 @@ public:
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
 
     /**
+     * This method returns a reference to the `Notifier` object.
+     *
+     * @returns A reference to the `Notifier` object.
+     *
+     */
+    Notifier &GetNotifier(void) { return mNotifier; }
+
+    /**
      * This method returns a reference to the tasklet scheduler object.
      *
      * @returns A reference to the tasklet scheduler object.
@@ -313,6 +306,26 @@ public:
     Coap::ApplicationCoap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
 
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    /**
+     * This method returns a reference to ChannelMonitor object.
+     *
+     * @returns A reference to the ChannelMonitor object.
+     *
+     */
+    Utils::ChannelMonitor &GetChannelMonitor(void) { return mChannelMonitor; }
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    /**
+     * This method returns a reference to ChannelManager object.
+     *
+     * @returns A reference to the ChannelManager object.
+     *
+     */
+    Utils::ChannelManager &GetChannelManager(void) { return mChannelManager; }
+#endif
+
     /**
      * This method returns a reference to message pool object.
      *
@@ -336,53 +349,56 @@ public:
      * @returns A reference to the `Type` object of the instance.
      *
      */
-    template <typename Type>
-    Type &Get(void);
+    template <typename Type> Type &Get(void);
 
 private:
     Instance(void);
     void AfterInit(void);
 
-    enum
-    {
-        kMaxNetifCallbacks = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS,
-    };
+    otHandleActiveScanResult mActiveScanCallback;
+    void *                   mActiveScanCallbackContext;
+    otHandleEnergyScanResult mEnergyScanCallback;
+    void *                   mEnergyScanCallbackContext;
 
-    Ip6::NetifCallback          mNetifCallback[kMaxNetifCallbacks];
-    otHandleActiveScanResult    mActiveScanCallback;
-    void                       *mActiveScanCallbackContext;
-    otHandleEnergyScanResult    mEnergyScanCallback;
-    void                       *mEnergyScanCallbackContext;
+    Notifier mNotifier;
 
-    TaskletScheduler            mTaskletScheduler;
-    TimerMilliScheduler         mTimerMilliScheduler;
+    TaskletScheduler    mTaskletScheduler;
+    TimerMilliScheduler mTimerMilliScheduler;
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    TimerMicroScheduler         mTimerMicroScheduler;
+    TimerMicroScheduler mTimerMicroScheduler;
 #endif
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Crypto::MbedTls             mMbedTls;
-    Crypto::Heap                mMbedTlsHeap;
+    Crypto::MbedTls mMbedTls;
+    Crypto::Heap    mMbedTlsHeap;
 #endif
 
-    Ip6::Ip6                    mIp6;
-    ThreadNetif                 mThreadNetif;
+    Ip6::Ip6    mIp6;
+    ThreadNetif mThreadNetif;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw                     mLinkRaw;
+    LinkRaw mLinkRaw;
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    Coap::ApplicationCoap       mApplicationCoap;
+    Coap::ApplicationCoap mApplicationCoap;
 #endif
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    otLogLevel                  mLogLevel;
+    otLogLevel mLogLevel;
 #endif
 
-    MessagePool                 mMessagePool;
-    bool                        mIsInitialized;
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    Utils::ChannelMonitor mChannelMonitor;
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    Utils::ChannelManager mChannelManager;
+#endif
+
+    MessagePool mMessagePool;
+    bool        mIsInitialized;
 };
 
 /**
@@ -390,6 +406,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // INSTANCE_HPP_
+#endif // INSTANCE_HPP_

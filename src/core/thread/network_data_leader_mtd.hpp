@@ -44,21 +44,24 @@ class ThreadNetif;
 
 namespace NetworkData {
 
-class Leader: public LeaderBase
+class Leader : public LeaderBase
 {
 public:
-    explicit Leader(Instance &aInstance) : LeaderBase(aInstance) { }
+    explicit Leader(Instance &aInstance)
+        : LeaderBase(aInstance)
+    {
+    }
 
-    void Start(void) { }
-    void Stop(void) { }
+    void Start(void) {}
+    void Stop(void) {}
 
-    void IncrementVersion(void) { }
-    void IncrementStableVersion(void) { }
+    void IncrementVersion(void) {}
+    void IncrementStableVersion(void) {}
 
     otError SendServerDataNotification(uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 };
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
-#endif  // NETWORK_DATA_LEADER_MTD_HPP_
+#endif // NETWORK_DATA_LEADER_MTD_HPP_

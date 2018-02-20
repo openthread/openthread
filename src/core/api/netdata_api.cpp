@@ -41,7 +41,7 @@ using namespace ot;
 
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -52,10 +52,11 @@ exit:
     return error;
 }
 
-otError otNetDataGetNextOnMeshPrefix(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                                     otBorderRouterConfig *aConfig)
+otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
+                                     otNetworkDataIterator *aIterator,
+                                     otBorderRouterConfig * aConfig)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
@@ -66,10 +67,9 @@ exit:
     return error;
 }
 
-otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                              otExternalRouteConfig *aConfig)
+otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig)
 {
-    otError error = OT_ERROR_NONE;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);

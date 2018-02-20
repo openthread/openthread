@@ -1,10 +1,10 @@
 diff --git a/third_party/mbedtls/repo.patched/library/ssl_srv.c b/third_party/mbedtls/repo.patched/library/ssl_srv.c
-index fc0d2d7b..fad54dd8 100644
+index 37f415dd1..cdbbaf3aa 100644
 --- a/third_party/mbedtls/repo.patched/library/ssl_srv.c
 +++ b/third_party/mbedtls/repo.patched/library/ssl_srv.c
-@@ -3017,6 +3017,9 @@ curve_matching_done:
-           MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
+@@ -3227,6 +3227,9 @@ curve_matching_done:
+ 
+     /* Done with actual work; add header and send. */
  
 +    // mask dead store of p
 +    (void)p;

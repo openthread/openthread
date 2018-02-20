@@ -67,9 +67,9 @@ public:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
 #endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
-#endif  // OT_MBEDTLS_HPP_
+#endif // OT_MBEDTLS_HPP_

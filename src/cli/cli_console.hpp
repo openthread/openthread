@@ -48,7 +48,7 @@ namespace Cli {
  * This class implements the CLI server on top of the CONSOLE platform abstraction.
  *
  */
-class Console: public Server
+class Console : public Server
 {
 public:
     /**
@@ -106,13 +106,12 @@ private:
     };
 
     otCliConsoleOutputCallback mCallback;
-    void *mContext;
+    void *                     mContext;
 
     Interpreter mInterpreter;
-
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_CONSOLE_HPP_
+#endif // CLI_CONSOLE_HPP_

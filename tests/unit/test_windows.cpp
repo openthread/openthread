@@ -90,9 +90,6 @@ void test_packed_enum();
 void test_addr_sizes();
 void test_addr_bitfield();
 
-// test_fuzz.cpp
-void TestFuzz(uint32_t aSeconds);
-
 #pragma endregion
 
 utAssertTrue s_AssertTrue;
@@ -172,8 +169,5 @@ namespace ot
         TEST_METHOD(test_packed_enum) { ::test_packed_enum(); }
         TEST_METHOD(test_addr_sizes) { ::test_addr_sizes(); }
         TEST_METHOD(test_addr_bitfield) { ::test_addr_bitfield(); }
-
-        // test_settings.cpp
-        TEST_METHOD(RunTestFuzz) { ::TestFuzz(30); }
     };
 }

@@ -38,12 +38,9 @@ libopenthread_gp712_a_CPPFLAGS            = \
     -lpthread                               \
     $(NULL)
 
-Dash                                      = -
-libopenthread_gp712_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
-
-libopenthread_gp712_a_SOURCES             = \
+PLATFORM_SOURCES                          = \
     alarm.c                                 \
+    diag.c                                  \
     misc.c                                  \
     logging.c                               \
     platform.c                              \
@@ -53,15 +50,20 @@ libopenthread_gp712_a_SOURCES             = \
     flash.c                                 \
     $(NULL)
 
-#    uart-socket.c                           \
+#    uart-socket.c                          \
 #
 
-if OPENTHREAD_ENABLE_DIAG
-libopenthread_gp712_a_SOURCES            += \
-    diag.c                                  \
-    $(NULL)
-endif
+Dash                                      = -
+libopenthread_gp712_a_LIBADD              = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
+libopenthread_gp712_a_SOURCES             = \
+    $(PLATFORM_SOURCES)                     \
+    $(NULL)
+
+PRETTY_FILES                              = \
+    $(PLATFORM_SOURCES)                     \
+    $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)

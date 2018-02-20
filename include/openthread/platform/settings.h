@@ -172,8 +172,7 @@ otError otPlatSettingsAbandonChange(otInstance *aInstance);
  *  @retval OT_ERROR_NOT_IMPLEMENTED
  *          This function is not implemented on this platform.
  */
-otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
-                          uint16_t *aValueLength);
+otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength);
 
 /// Sets or replaces the value of a setting
 /** This function sets or replaces the value of a setting
@@ -276,7 +275,7 @@ void otPlatSettingsWipe(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OT_PLATFORM_SETTINGS_H
+#endif // OT_PLATFORM_SETTINGS_H

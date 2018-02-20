@@ -42,12 +42,24 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <hal/nrf_timer.h>
 #include <nrf_raal_api.h>
 #include <nrf_drv_radio802154.h>
 #include <nrf_drv_radio802154_debug.h>
-#include <hal/nrf_timer.h>
-#include <nrf_drv_clock.h>
-#include <softdevice.h>
+#include <platform/clock/nrf_drv_radio802154_clock.h>
+
+#if defined(__GNUC__)
+    _Pragma("GCC diagnostic push")
+    _Pragma("GCC diagnostic ignored \"-Wreturn-type\"")
+    _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+    _Pragma("GCC diagnostic ignored \"-Wpedantic\"")
+#endif
+
+#include <nrf_soc.h>
+
+#if defined(__GNUC__)
+    _Pragma("GCC diagnostic pop")
+#endif
 
 /**@brief Enable Request and End on timeslot safety interrupt. */
 #define ENABLE_REQUEST_AND_END_ON_TIMESLOT_END 0
@@ -189,8 +201,6 @@ static void timeslot_request_prepare(void)
 /**@brief Request earliest timeslot. */
 static void timeslot_request(void)
 {
-    assert(!m_in_timeslot);
-
     timeslot_request_prepare();
     sd_radio_request(&m_request);
 }
@@ -517,14 +527,6 @@ void nrf_raal_softdevice_soc_evt_handler(uint32_t evt_id)
 {
     switch (evt_id)
     {
-    case NRF_EVT_HFCLKSTARTED:
-        if (m_continuous)
-        {
-            timeslot_request();
-        }
-
-        break;
-
     case NRF_EVT_RADIO_BLOCKED:
     case NRF_EVT_RADIO_CANCELED:
     {
@@ -591,7 +593,8 @@ void nrf_raal_init(void)
     m_config.timeslot_max_length  = NRF_RAAL_TIMESLOT_DEFAULT_MAX_LENGTH;
     m_config.timeslot_timeout     = NRF_RAAL_TIMESLOT_DEFAULT_TIMEOUT;
 
-    assert(sd_radio_session_open(signal_handler) == NRF_SUCCESS);
+    uint32_t err_code = sd_radio_session_open(signal_handler);
+    assert(err_code == NRF_SUCCESS);
 
     m_initialize = true;
 }
@@ -599,7 +602,9 @@ void nrf_raal_init(void)
 void nrf_raal_uninit(void)
 {
     assert(m_initialize);
-    assert(sd_radio_session_close() == NRF_SUCCESS);
+
+    uint32_t err_code = sd_radio_session_close();
+    assert(err_code == NRF_SUCCESS);
 
     m_continuous  = false;
     m_in_timeslot = false;
@@ -618,12 +623,7 @@ void nrf_raal_continuous_mode_enter(void)
     m_timeslot_length = m_config.timeslot_length;
     m_continuous      = true;
 
-    nrf_drv_clock_hfclk_request(NULL);
-
-    if (NRF_CLOCK->HFCLKSTAT == (CLOCK_HFCLKSTAT_SRC_Msk | CLOCK_HFCLKSTAT_STATE_Msk))
-    {
-        timeslot_request();
-    }
+    nrf_drv_radio802154_clock_hfclk_start();
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_CONTINUOUS_ENTER);
 }
@@ -643,7 +643,7 @@ void nrf_raal_continuous_mode_exit(void)
         NVIC_SetPendingIRQ(RAAL_TIMER_IRQn);
     }
 
-    nrf_drv_clock_hfclk_release();
+    nrf_drv_radio802154_clock_hfclk_stop();
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_CONTINUOUS_EXIT);
 }
@@ -706,4 +706,12 @@ void nrf_raal_critical_section_exit(void)
     timeslot_critical_section_exit();
 
     nrf_drv_radio802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_CRIT_SECT_EXIT);
+}
+
+void nrf_drv_radio802154_clock_hfclk_ready(void)
+{
+    if (m_continuous && !m_in_timeslot)
+    {
+        timeslot_request();
+    }
 }

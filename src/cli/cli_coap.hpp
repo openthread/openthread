@@ -60,7 +60,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    Coap(Interpreter &aInterpreter): mInterpreter(aInterpreter) { }
+    Coap(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.
@@ -74,7 +74,7 @@ public:
 private:
     enum
     {
-        kMaxUriLength = 32,
+        kMaxUriLength  = 32,
         kMaxBufferSize = 16
     };
 
@@ -82,24 +82,31 @@ private:
 
     otError ProcessRequest(int argc, char *argv[]);
 
-    static void OTCALL HandleServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void OTCALL HandleServerResponse(void *               aContext,
+                                            otCoapHeader *       aHeader,
+                                            otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo);
     void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void OTCALL HandleClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                            const otMessageInfo *aMessageInfo, otError aError);
-    void HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                              otError aError);
+    static void OTCALL HandleClientResponse(void *               aContext,
+                                            otCoapHeader *       aHeader,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            otError              aError);
+    void               HandleClientResponse(otCoapHeader *       aHeader,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            otError              aError);
 
     otCoapResource mResource;
-    char mUriPath[kMaxUriLength];
+    char           mUriPath[kMaxUriLength];
 
     Interpreter &mInterpreter;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
-#endif  // CLI_COAP_HPP_
+#endif // CLI_COAP_HPP_

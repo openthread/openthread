@@ -50,7 +50,9 @@
 namespace ot {
 
 class ThreadNetif;
-namespace Mle { class MleRouter; }
+namespace Mle {
+class MleRouter;
+}
 
 namespace Dhcp6 {
 
@@ -63,7 +65,6 @@ namespace Dhcp6 {
  * @{
  *
  */
-
 
 /**
  * Some constants
@@ -83,13 +84,11 @@ OT_TOOL_PACKED_BEGIN
 class IdentityAssociation
 {
 public:
-
     /**
      * Status of IdentityAssociation
      *
      */
-    typedef enum Status
-    {
+    typedef enum Status {
         kStatusInvalid,
         kStatusSolicit,
         kStatusSoliciting,
@@ -159,18 +158,17 @@ public:
     void SetNext(IdentityAssociation *aNext) { mNext = aNext; }
 
 private:
-    uint8_t       mStatus;                         ///< Status of IdentityAssocation
-    uint16_t      mPrefixAgentRloc;                ///< Rloc of Prefix Agent
-    otIp6Prefix   mIp6Prefix;                      ///< Prefix
-    IdentityAssociation *mNext;                    ///< Pointer to next IdentityAssocation
+    uint8_t              mStatus;          ///< Status of IdentityAssocation
+    uint16_t             mPrefixAgentRloc; ///< Rloc of Prefix Agent
+    otIp6Prefix          mIp6Prefix;       ///< Prefix
+    IdentityAssociation *mNext;            ///< Pointer to next IdentityAssocation
 } OT_TOOL_PACKED_END;
-
 
 /**
  * This class implements DHCPv6 Client.
  *
  */
-class Dhcp6Client: public InstanceLocator
+class Dhcp6Client : public InstanceLocator
 {
 public:
     /**
@@ -211,34 +209,34 @@ private:
     otError AppendRapidCommit(Message &aMessage);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void ProcessReply(Message &aMessage);
+    void     ProcessReply(Message &aMessage);
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    otError ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
-    otError ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
-    otError ProcessIaNa(Message &aMessage, uint16_t aOffset);
-    otError ProcessStatusCode(Message &aMessage, uint16_t aOffset);
-    otError ProcessIaAddress(Message &aMessage, uint16_t aOffset);
+    otError  ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
+    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
+    otError  ProcessIaNa(Message &aMessage, uint16_t aOffset);
+    otError  ProcessStatusCode(Message &aMessage, uint16_t aOffset);
+    otError  ProcessIaAddress(Message &aMessage, uint16_t aOffset);
 
     static bool HandleTrickleTimer(TrickleTimer &aTrickleTimer);
-    bool HandleTrickleTimer(void);
+    bool        HandleTrickleTimer(void);
 
     Ip6::UdpSocket mSocket;
 
     TrickleTimer mTrickleTimer;
 
-    uint8_t mTransactionId[kTransactionIdSize];
-    uint32_t mStartTime;
+    uint8_t        mTransactionId[kTransactionIdSize];
+    uint32_t       mStartTime;
     otDhcpAddress *mAddresses;
-    uint32_t mNumAddresses;
+    uint32_t       mNumAddresses;
 
-    IdentityAssociation mIdentityAssociations[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
     IdentityAssociation *mIdentityAssociationHead;
     IdentityAssociation *mIdentityAssociationAvail;
 };
 
-}  // namespace Dhcp6
-}  // namespace ot
+} // namespace Dhcp6
+} // namespace ot
 
-# endif  // DHCP6_CLIENT_HPP_
+#endif // DHCP6_CLIENT_HPP_

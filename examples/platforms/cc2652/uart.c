@@ -32,12 +32,12 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include <openthread/types.h>
 #include <openthread/platform/debug_uart.h>
@@ -68,9 +68,9 @@ enum
 static uint8_t const *sSendBuffer = NULL;
 static uint16_t       sSendLen    = 0;
 
-static uint8_t        sReceiveBuffer[CC2652_RECV_CIRC_BUFF_SIZE];
-static uint16_t       sReceiveHeadIdx = 0;
-static uint16_t       sReceiveTailIdx = 0;
+static uint8_t  sReceiveBuffer[CC2652_RECV_CIRC_BUFF_SIZE];
+static uint16_t sReceiveHeadIdx = 0;
+static uint16_t sReceiveTailIdx = 0;
 
 void UART0_intHandler(void);
 
@@ -87,7 +87,8 @@ static void uart_power_control(uint32_t who_base, int turnon)
         value = (who_base == UART0_BASE) ? PRCM_DOMAIN_SERIAL : PRCM_DOMAIN_PERIPH;
         PRCMPowerDomainOn(value);
 
-        while (PRCMPowerDomainStatus(value) != PRCM_DOMAIN_POWER_ON);
+        while (PRCMPowerDomainStatus(value) != PRCM_DOMAIN_POWER_ON)
+            ;
 
         value = (who_base == UART0_BASE) ? PRCM_PERIPH_UART0 : PRCM_PERIPH_UART1;
         PRCMPeripheralRunEnable(value);
@@ -95,7 +96,8 @@ static void uart_power_control(uint32_t who_base, int turnon)
         PRCMPeripheralDeepSleepEnable(value);
         PRCMLoadSet();
 
-        while (!PRCMLoadGet());
+        while (!PRCMLoadGet())
+            ;
     }
     else
     {
@@ -113,7 +115,6 @@ static void uart_power_control(uint32_t who_base, int turnon)
         }
     }
 }
-
 
 /**
  * Function documented in platform/uart.h
@@ -162,7 +163,7 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     otEXPECT_ACTION(sSendBuffer == NULL, error = OT_ERROR_BUSY);
 
     sSendBuffer = aBuf;
-    sSendLen = aBufLength;
+    sSendLen    = aBufLength;
 
 exit:
     return error;
@@ -206,7 +207,7 @@ static void processTransmit(void)
     }
 
     sSendBuffer = NULL;
-    sSendLen = 0;
+    sSendLen    = 0;
     otPlatUartSendDone();
 
 exit:
@@ -246,8 +247,7 @@ void UART0_intHandler(void)
 /*
  *  Documented in platform-cc2652.h
  */
-void
-cc2652DebugUartInit(void)
+void cc2652DebugUartInit(void)
 {
     uart_power_control(UART1_BASE, true);
     /*
@@ -279,7 +279,7 @@ int otPlatDebugUart_getc(void)
     if (otPlatDebugUart_kbhit())
     {
         /* get & clear 0x100 bit used below as flag */
-        ch = debug_uart_ungetbuf & 0x0ff;
+        ch                  = debug_uart_ungetbuf & 0x0ff;
         debug_uart_ungetbuf = 0;
     }
 

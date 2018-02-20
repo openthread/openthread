@@ -50,39 +50,40 @@
 
 namespace ot {
 
-EnergyScanServer::EnergyScanServer(Instance &aInstance) :
-    InstanceLocator(aInstance),
-    mChannelMask(0),
-    mChannelMaskCurrent(0),
-    mPeriod(0),
-    mScanDuration(0),
-    mCount(0),
-    mActive(false),
-    mScanResultsLength(0),
-    mTimer(aInstance, &EnergyScanServer::HandleTimer, this),
-    mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
+EnergyScanServer::EnergyScanServer(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mChannelMask(0)
+    , mChannelMaskCurrent(0)
+    , mPeriod(0)
+    , mScanDuration(0)
+    , mCount(0)
+    , mActive(false)
+    , mScanResultsLength(0)
+    , mTimer(aInstance, &EnergyScanServer::HandleTimer, this)
+    , mNotifierCallback(&EnergyScanServer::HandleStateChanged, this)
+    , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
-    mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
-    GetNetif().RegisterCallback(mNetifCallback);
-
+    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
     GetNetif().GetCoap().AddResource(mEnergyScan);
 }
 
-void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+void EnergyScanServer::HandleRequest(void *               aContext,
+                                     otCoapHeader *       aHeader,
+                                     otMessage *          aMessage,
                                      const otMessageInfo *aMessageInfo)
 {
-    static_cast<EnergyScanServer *>(aContext)->HandleRequest(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<EnergyScanServer *>(aContext)->HandleRequest(*static_cast<Coap::Header *>(aHeader),
+                                                             *static_cast<Message *>(aMessage),
+                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
+    MeshCoP::CountTlv        count;
+    MeshCoP::PeriodTlv       period;
     MeshCoP::ScanDurationTlv scanDuration;
     MeshCoP::ChannelMask0Tlv channelMask;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
+    Ip6::MessageInfo         responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
@@ -98,13 +99,13 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
     VerifyOrExit(channelMask.IsValid());
 
-    mChannelMask = channelMask.GetMask();
+    mChannelMask        = channelMask.GetMask();
     mChannelMaskCurrent = mChannelMask;
-    mCount = count.GetCount();
-    mPeriod = period.GetPeriod();
-    mScanDuration = scanDuration.GetScanDuration();
-    mScanResultsLength = 0;
-    mActive = true;
+    mCount              = count.GetCount();
+    mPeriod             = period.GetPeriod();
+    mScanDuration       = scanDuration.GetScanDuration();
+    mScanResultsLength  = 0;
+    mActive             = true;
     mTimer.Start(kScanDelay);
 
     mCommissioner = aMessageInfo.GetPeerAddr();
@@ -183,12 +184,12 @@ exit:
 
 otError EnergyScanServer::SendReport(void)
 {
-    otError error = OT_ERROR_NONE;
-    Coap::Header header;
+    otError                  error = OT_ERROR_NONE;
+    Coap::Header             header;
     MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::EnergyListTlv energyList;
-    Ip6::MessageInfo messageInfo;
-    Message *message;
+    MeshCoP::EnergyListTlv   energyList;
+    Ip6::MessageInfo         messageInfo;
+    Message *                message;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -226,15 +227,14 @@ exit:
     return error;
 }
 
-void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void EnergyScanServer::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
 {
-    static_cast<EnergyScanServer *>(aContext)->HandleNetifStateChanged(aFlags);
+    aCallback.GetOwner<EnergyScanServer>().HandleStateChanged(aFlags);
 }
 
-void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
+void EnergyScanServer::HandleStateChanged(uint32_t aFlags)
 {
-    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0 &&
-        !mActive &&
+    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0 && !mActive &&
         GetNetif().GetNetworkDataLeader().GetCommissioningData() == NULL)
     {
         mActive = false;
@@ -242,4 +242,4 @@ void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
     }
 }
 
-}  // namespace ot
+} // namespace ot

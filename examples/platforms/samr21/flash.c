@@ -40,7 +40,7 @@
 
 otError utilsFlashInit(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError           error = OT_ERROR_NONE;
     struct nvm_config configNvm;
 
     nvm_get_config_defaults(&configNvm);
@@ -49,7 +49,8 @@ otError utilsFlashInit(void)
 
     enum status_code status;
 
-    while ((status = nvm_set_config(&configNvm)) == STATUS_BUSY);
+    while ((status = nvm_set_config(&configNvm)) == STATUS_BUSY)
+        ;
 
     if (status != STATUS_OK)
     {
@@ -78,7 +79,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    otError error = OT_ERROR_BUSY;
+    otError  error = OT_ERROR_BUSY;
     uint32_t start = otPlatAlarmMilliGetNow();
 
     do
@@ -88,8 +89,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
             error = OT_ERROR_NONE;
             break;
         }
-    }
-    while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
+    } while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
 
     return error;
 }
@@ -100,8 +100,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     otEXPECT_ACTION(aData, rval = 0);
     otEXPECT_ACTION(aAddress >= SETTINGS_CONFIG_BASE_ADDRESS, rval = 0);
-    otEXPECT_ACTION((aAddress - SETTINGS_CONFIG_BASE_ADDRESS + aSize) <=
-                    utilsFlashGetSize(), rval = 0);
+    otEXPECT_ACTION((aAddress - SETTINGS_CONFIG_BASE_ADDRESS + aSize) <= utilsFlashGetSize(), rval = 0);
     otEXPECT_ACTION(((aAddress & 3) == 0) && ((aSize & 3) == 0), rval = 0);
 
     for (uint32_t i = 0; i < (aSize / sizeof(uint32_t)); i++)
@@ -116,8 +115,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     {
         enum status_code status;
 
-        status = nvm_execute_command(NVM_COMMAND_WRITE_PAGE,
-                                     aAddress & (~(NVMCTRL_PAGE_SIZE - 1)), 0);
+        status = nvm_execute_command(NVM_COMMAND_WRITE_PAGE, aAddress & (~(NVMCTRL_PAGE_SIZE - 1)), 0);
 
         otEXPECT_ACTION(status == STATUS_OK, rval = 0);
     }
@@ -132,8 +130,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     otEXPECT_ACTION(aData, rval = 0);
     otEXPECT_ACTION(aAddress >= SETTINGS_CONFIG_BASE_ADDRESS, rval = 0);
-    otEXPECT_ACTION((aAddress - SETTINGS_CONFIG_BASE_ADDRESS + aSize) <=
-                    utilsFlashGetSize(), rval = 0);
+    otEXPECT_ACTION((aAddress - SETTINGS_CONFIG_BASE_ADDRESS + aSize) <= utilsFlashGetSize(), rval = 0);
 
     while (aSize--)
     {

@@ -106,7 +106,7 @@ void mbedtls_sha256_finish(mbedtls_sha256_context *ctx, unsigned char output[32]
      *    Make a 64byte buffer on the stack..
      *    And force the compiler to think it requires this buffer.
      */
-    char buffer[ 64 ];
+    char buffer[64];
     workaround_cc2650_rom = &buffer[0];
     SHA256_output(ctx, (uint8_t *)output);
     return;

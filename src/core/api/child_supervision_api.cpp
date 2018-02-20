@@ -68,4 +68,4 @@ void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
     instance.GetThreadNetif().GetSupervisionListener().SetTimeout(aTimeout);
 }
 
-#endif  // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION

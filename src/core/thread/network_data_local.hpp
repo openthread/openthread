@@ -57,7 +57,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data contributed by the local device.
  *
  */
-class Local: public NetworkData
+class Local : public NetworkData
 {
 public:
     /**
@@ -82,8 +82,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS The prefix is mesh local prefix.
      *
      */
-    otError AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags,
-                            bool aStable);
+    otError AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags, bool aStable);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
@@ -138,8 +137,12 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Service entry.
      *
      */
-    otError AddService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
-                       bool aServerStable, const uint8_t *aServerData, uint8_t aServerDataLength);
+    otError AddService(uint32_t       aEnterpriseNumber,
+                       const uint8_t *aServiceData,
+                       uint8_t        aServiceDataLength,
+                       bool           aServerStable,
+                       const uint8_t *aServerData,
+                       uint8_t        aServerDataLength);
 
     /**
      * This method removes a Service entry from the Thread Network local data.
@@ -183,12 +186,12 @@ private:
     uint16_t mOldRloc;
 };
 
-}  // namespace NetworkData
+} // namespace NetworkData
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // NETWORK_DATA_LOCAL_HPP_
+#endif // NETWORK_DATA_LOCAL_HPP_

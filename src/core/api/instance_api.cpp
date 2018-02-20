@@ -50,10 +50,8 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     Instance *instance;
 
-    otLogFuncEntry();
     instance = Instance::Init(aInstanceBuffer, aInstanceBufferSize);
     otLogInfoApi(*instance, "otInstance Initialized");
-    otLogFuncExit();
 
     return instance;
 }
@@ -63,7 +61,6 @@ otInstance *otInstanceInitSingle(void)
     return &Instance::InitSingle();
 }
 #endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
 
 bool otInstanceIsInitialized(otInstance *aInstance)
 {
@@ -76,23 +73,21 @@ void otInstanceFinalize(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    otLogFuncEntry();
     instance.Finalize();
-    otLogFuncExit();
 }
 
-otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.RegisterStateChangedCallback(aCallback, aCallbackContext);
+    return instance.GetNotifier().RegisterCallback(aCallback, aContext);
 }
 
-void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.RemoveStateChangedCallback(aCallback, aCallbackContext);
+    instance.GetNotifier().RemoveCallback(aCallback, aContext);
 }
 
 void otInstanceReset(otInstance *aInstance)

@@ -49,14 +49,14 @@ namespace ot {
  * This class implements handling Announce Begin Requests.
  *
  */
-class AnnounceBeginServer: public InstanceLocator
+class AnnounceBeginServer : public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    AnnounceBeginServer(Instance &aInstance);
+    explicit AnnounceBeginServer(Instance &aInstance);
 
     /**
      * This method begins the MLE Announce transmission process using Count=3 and Period=1s.
@@ -87,17 +87,19 @@ private:
         kDefaultPeriod = 1000,
     };
 
-    static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleRequest(void *               aContext,
+                              otCoapHeader *       aHeader,
+                              otMessage *          aMessage,
                               const otMessageInfo *aMessageInfo);
-    void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
     uint32_t mChannelMask;
     uint16_t mPeriod;
-    uint8_t mCount;
-    uint8_t mChannel;
+    uint8_t  mCount;
+    uint8_t  mChannel;
 
     TimerMilli mTimer;
 
@@ -108,6 +110,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // ANNOUNCE_BEGIN_SERVER_HPP_
+#endif // ANNOUNCE_BEGIN_SERVER_HPP_

@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 KEY1 = '00112233445566778899aabbccddeeff'
@@ -49,9 +50,11 @@ MTDS = [ED1, SED1]
 
 class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,7):
-            self.nodes[i] = node.Node(i, (i in MTDS))
+            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_active_dataset(1, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1)
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -104,43 +107,43 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(3)
+        self.simulator.go(3)
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[SED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=20000,
                                                       network_name='GRL')
-        time.sleep(5)
+        self.simulator.go(5)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=20,
                                                        active_timestamp=20,
                                                        delay_timer=20000,
                                                        network_name='Shouldnotbe')
-        time.sleep(5)
+        self.simulator.go(5)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=20,
                                                        active_timestamp=20,
                                                        delay_timer=20000,
                                                        network_name='MyHouse',
                                                        master_key=KEY2)
-        time.sleep(310)
+        self.simulator.go(310)
 
         self.assertEqual(self.nodes[COMMISSIONER].get_masterkey(), KEY2)
         self.assertEqual(self.nodes[LEADER].get_masterkey(), KEY2)
@@ -150,7 +153,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
         self.assertEqual(self.nodes[ROUTER2].get_masterkey(), KEY1)
 
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
 
 if __name__ == '__main__':
