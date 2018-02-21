@@ -114,6 +114,8 @@
 
 - OpenThread uses the `make pretty` build target to reformat code and enforce code format and style.  The `make pretty-check` build target is included in OpenThread's continuous integration and must pass before a pull request is merged.
 
+- The `make pretty` and `make pretty-check` build targets require [clang-format v5.0.1](http://releases.llvm.org/download.html#5.0.1).
+
 ### File Names
 - File names should match the names and types of what is described in the file.  If a file contains many declarations and definitions, the author should choose the one that predominantly describes or that makes the most sense.
 - File contents and names should be limited in the scope of what they contain. It may also be possible that there is too much stuff in one file and you need to break it up into multiple files.
