@@ -104,8 +104,7 @@ Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
 
-    OT_FAULT_INJECT(OT_FAULT_ID_ALLOC_BUFFER,
-                    otLogInfoMem(GetInstance(), "No available message buffer"); return NULL);
+    OT_FAULT_INJECT(OT_FAULT_ID_ALLOC_BUFFER, otLogInfoMem(GetInstance(), "No available message buffer"); return NULL);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 

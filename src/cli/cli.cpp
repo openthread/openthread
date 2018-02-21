@@ -1003,10 +1003,10 @@ void Interpreter::ProcessFactoryReset(int argc, char *argv[])
 #if OPENTHREAD_ENABLE_FAULT_INJECTION
 void Interpreter::ProcessFIPrintCounters(int argc, char *argv[])
 {
-    int id;
-    const char *mgrName = otFIGetManagerName();
-    const char *faultName = NULL;
-    uint32_t faultCounter = 0;
+    int         id;
+    const char *mgrName      = otFIGetManagerName();
+    const char *faultName    = NULL;
+    uint32_t    faultCounter = 0;
 
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);

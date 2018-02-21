@@ -221,14 +221,14 @@ private:
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
     void ProcessLogFilename(int argc, char *argv[]);
 #endif
-    void    ProcessExtAddress(int argc, char *argv[]);
-    void    ProcessExtPanId(int argc, char *argv[]);
-    void    ProcessFactoryReset(int argc, char *argv[]);
+    void ProcessExtAddress(int argc, char *argv[]);
+    void ProcessExtPanId(int argc, char *argv[]);
+    void ProcessFactoryReset(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_FAULT_INJECTION
-    void    ProcessFIPrintCounters(int argc, char *argv[]);
-    void    ProcessFIResetCounters(int argc, char *argv[]);
-    void    ProcessFIConfigure(int argc, char *argv[]);
-    void    ProcessFIResetConfiguration(int argc, char *argv[]);
+    void ProcessFIPrintCounters(int argc, char *argv[]);
+    void ProcessFIResetCounters(int argc, char *argv[]);
+    void ProcessFIConfigure(int argc, char *argv[]);
+    void ProcessFIResetConfiguration(int argc, char *argv[]);
 #endif
     void    ProcessIfconfig(int argc, char *argv[]);
     void    ProcessIpAddr(int argc, char *argv[]);

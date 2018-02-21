@@ -54,13 +54,11 @@ extern "C" {
 /**
  * This enumeration lists the IDs of the faults that can be injected into OpenThread.
  */
-typedef enum
-{
-    OT_FAULT_ID_ALLOC_BUFFER,         /**< Fail the allocation of a Buffer */
-    OT_FAULT_ID_RADIO_RX_DROP,        /**< Drop radio frames in input */
+typedef enum {
+    OT_FAULT_ID_ALLOC_BUFFER,  /**< Fail the allocation of a Buffer */
+    OT_FAULT_ID_RADIO_RX_DROP, /**< Drop radio frames in input */
     OT_FAULT_ID_NUM_FAULT_IDS,
 } otFaultId;
-
 
 /**
  * Configure a fault to trigger a given number of times, at some point in the future.
@@ -134,7 +132,7 @@ int otFIGetFaultCounterValue(otFaultId aId, uint32_t *aValue);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_FAULT_INJECTION_H_
+#endif // OPENTHREAD_FAULT_INJECTION_H_

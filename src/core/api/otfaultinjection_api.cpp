@@ -38,17 +38,13 @@
 
 #include <common/otfaultinjection.hpp>
 
-
 using namespace ot;
 
-static nl::FaultInjection::GetManagerFn sFaultMgrTable[] =
-{
-    ot::FaultInjection::GetManager
-};
+static nl::FaultInjection::GetManagerFn sFaultMgrTable[] = {ot::FaultInjection::GetManager};
 
 otError otFIFailAtFault(otFaultId aId, uint32_t aNumCallsToSkip, uint32_t aNumCallsToFail)
 {
-    int retval;
+    int     retval;
     otError otRetval;
 
     nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager();
@@ -108,8 +104,7 @@ int otFIGetFaultCounterValue(otFaultId aId, uint32_t *aValue)
 
 bool otFIParseFaultInjectionStr(char *aStr)
 {
-    return nl::FaultInjection::ParseFaultInjectionStr(aStr,
-                                                      sFaultMgrTable,
+    return nl::FaultInjection::ParseFaultInjectionStr(aStr, sFaultMgrTable,
                                                       sizeof(sFaultMgrTable) / sizeof(sFaultMgrTable[0]));
 }
 

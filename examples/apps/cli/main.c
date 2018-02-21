@@ -33,8 +33,8 @@
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
-#include <openthread/platform/logging.h>
 #include <openthread/otfaultinjection.h>
+#include <openthread/platform/logging.h>
 
 #include "platform.h"
 
@@ -62,10 +62,6 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     size_t   otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer       = NULL;
-#endif
-
-#if OPENTHREAD_ENABLE_FAULT_INJECTION
-    //otFIFailAtFault(kFault_AllocBuffer, 0 /* skip */, 2 /* fail */);
 #endif
 
     PlatformInit(argc, argv);

@@ -57,8 +57,7 @@ nl::FaultInjection::Manager &GetManager(void);
  * @param[in] aFaultID      An OT fault-injection id
  * @param[in] aStatements   Statements to be executed if the fault is enabled.
  */
-#define OT_FAULT_INJECT( aFaultID, aStatements ) \
-        nlFAULT_INJECT(ot::FaultInjection::GetManager(), aFaultID, aStatements)
+#define OT_FAULT_INJECT(aFaultID, aStatements) nlFAULT_INJECT(ot::FaultInjection::GetManager(), aFaultID, aStatements)
 
 /**
  * Execute the statements included if the fault is
@@ -73,16 +72,17 @@ nl::FaultInjection::Manager &GetManager(void);
  * @param[in] aUnprotectedStatements   Statements to be executed if the fault is enabled without holding the
  *                          Manager's lock
  */
-#define OT_FAULT_INJECT_MAX_ARG( aFaultID, aMaxArg, aProtectedStatements, aUnprotectedStatements ) \
-    do { \
-        nl::FaultInjection::Manager &mgr = ot::FaultInjection::GetManager(); \
-        const nl::FaultInjection::Record *records = mgr.GetFaultRecords(); \
-        if (records[aFaultID].mNumArguments == 0) \
-        { \
-            int32_t arg = aMaxArg; \
-            mgr.StoreArgsAtFault(aFaultID, 1, &arg); \
-        } \
-        nlFAULT_INJECT_WITH_ARGS(mgr, aFaultID, aProtectedStatements, aUnprotectedStatements ); \
+#define OT_FAULT_INJECT_MAX_ARG(aFaultID, aMaxArg, aProtectedStatements, aUnprotectedStatements) \
+    do                                                                                           \
+    {                                                                                            \
+        nl::FaultInjection::Manager &     mgr     = ot::FaultInjection::GetManager();            \
+        const nl::FaultInjection::Record *records = mgr.GetFaultRecords();                       \
+        if (records[aFaultID].mNumArguments == 0)                                                \
+        {                                                                                        \
+            int32_t arg = aMaxArg;                                                               \
+            mgr.StoreArgsAtFault(aFaultID, 1, &arg);                                             \
+        }                                                                                        \
+        nlFAULT_INJECT_WITH_ARGS(mgr, aFaultID, aProtectedStatements, aUnprotectedStatements);   \
     } while (0)
 
 /**
@@ -96,17 +96,15 @@ nl::FaultInjection::Manager &GetManager(void);
  * @param[in] aUnprotectedStatements   Statements to be executed if the fault is enabled without holding the
  *                          Manager's lock
  */
-#define OT_FAULT_INJECT_WITH_ARGS( aFaultID, aProtectedStatements, aUnprotectedStatements ) \
-        nlFAULT_INJECT_WITH_ARGS(ot::FaultInjection::GetManager(), aFaultID,  \
-                                 aProtectedStatements, aUnprotectedStatements ); \
+#define OT_FAULT_INJECT_WITH_ARGS(aFaultID, aProtectedStatements, aUnprotectedStatements) \
+    nlFAULT_INJECT_WITH_ARGS(ot::FaultInjection::GetManager(), aFaultID, aProtectedStatements, aUnprotectedStatements);
 
 #else // OPENTHREAD_ENABLE_FAULT_INJECTION
 
-#define OT_FAULT_INJECT( aFaultID, aStatements )
-#define OT_FAULT_INJECT_WITH_ARGS( aFaultID, aProtectedStatements, aUnprotectedStatements )
-#define OT_FAULT_INJECT_MAX_ARG( aFaultID, aMaxArg, aProtectedStatements, aUnprotectedStatements )
+#define OT_FAULT_INJECT(aFaultID, aStatements)
+#define OT_FAULT_INJECT_WITH_ARGS(aFaultID, aProtectedStatements, aUnprotectedStatements)
+#define OT_FAULT_INJECT_MAX_ARG(aFaultID, aMaxArg, aProtectedStatements, aUnprotectedStatements)
 
 #endif // OPENTHREAD_ENABLE_FAULT_INJECTION
-
 
 #endif // OT_FAULT_INJECTION_H_
