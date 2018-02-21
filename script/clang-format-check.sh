@@ -43,4 +43,4 @@ set -x
 # from `man diff`:
 # Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
 
-clang-format -style=file $@  | diff $@ -
+clang-format -style=file $@  | diff -u $@ -
