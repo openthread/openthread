@@ -30,13 +30,12 @@
 
 #include "coap.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
@@ -62,7 +61,7 @@ CoapBase::CoapBase(Instance &     aInstance,
     , mDefaultHandler(NULL)
     , mDefaultHandlerContext(NULL)
 {
-    mMessageId = static_cast<uint16_t>(otPlatRandomGet());
+    mMessageId = Random::GetUint16();
 }
 
 otError CoapBase::Start(uint16_t aPort)
@@ -739,9 +738,9 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     mResponseContext       = aContext;
     mRetransmissionCount   = 0;
     mRetransmissionTimeout = TimerMilli::SecToMsec(kAckTimeout);
-    mRetransmissionTimeout += otPlatRandomGet() % (TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator /
-                                                       kAckRandomFactorDenominator -
-                                                   TimerMilli::SecToMsec(kAckTimeout) + 1);
+    mRetransmissionTimeout += Random::GetUint32InRange(
+        0, TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
+               TimerMilli::SecToMsec(kAckTimeout) + 1);
 
     if (aConfirmable)
     {

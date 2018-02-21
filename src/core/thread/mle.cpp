@@ -36,7 +36,6 @@
 #include "mle.hpp"
 
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
 
 #include "common/code_utils.hpp"
@@ -45,6 +44,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "mac/mac_frame.hpp"
@@ -108,7 +108,6 @@ Mle::Mle(Instance &aInstance)
     , mNotifierCallback(&Mle::HandleStateChanged, this)
 {
     uint8_t meshLocalPrefix[8];
-    size_t  i = 0;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
@@ -140,7 +139,7 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_ENABLE_SERVICE
 
     // Service Alocs
-    for (i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
+    for (size_t i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
     {
         memset(&mServiceAlocs[i], 0, sizeof(mServiceAlocs[i]));
 
@@ -161,10 +160,8 @@ Mle::Mle(Instance &aInstance)
     meshLocalPrefix[7] = 0x00;
 
     // mesh-local 64
-    for (i = OT_IP6_PREFIX_SIZE; i < OT_IP6_ADDRESS_SIZE; i++)
-    {
-        mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
+                       OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
     mMeshLocal64.mPrefixLength       = 64;
     mMeshLocal64.mPreferred          = true;
@@ -569,7 +566,7 @@ otError Mle::BecomeChild(AttachMode aMode)
 
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
 
-    mParentRequestTimer.Start((otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
+    mParentRequestTimer.Start(1 + Random::GetUint32InRange(0, kParentRequestRouterTimeout));
 
 exit:
     return error;
@@ -1336,10 +1333,8 @@ void Mle::HandleStateChanged(uint32_t aFlags)
         if (!netif.IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
             // Mesh Local EID was removed, choose a new one and add it back
-            for (int i = 8; i < 16; i++)
-            {
-                mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
-            }
+            Random::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
+                               OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
             netif.AddUnicastAddress(mMeshLocal64);
             GetNotifier().SetFlags(OT_CHANGED_THREAD_ML_ADDR);
@@ -1656,10 +1651,7 @@ otError Mle::SendParentRequest(void)
     uint8_t      scanMask = 0;
     Ip6::Address destination;
 
-    for (uint8_t i = 0; i < sizeof(mParentRequest.mChallenge); i++)
-    {
-        mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
 
     switch (mParentRequestState)
     {
@@ -1900,11 +1892,7 @@ otError Mle::SendChildUpdateRequest(void)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
-        for (uint8_t i = 0; i < sizeof(mParentRequest.mChallenge); i++)
-        {
-            mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
-
+        Random::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
         SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
         break;
 
@@ -2540,7 +2528,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         if (mRetrieveNewNetworkData ||
             (static_cast<int8_t>(leaderData.GetDataVersion() - netif.GetNetworkDataLeader().GetVersion()) > 0))
         {
-            delay = otPlatRandomGet() % kMleMaxResponseDelay;
+            delay = Random::GetUint16InRange(0, kMleMaxResponseDelay);
             SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
         }
     }
@@ -2699,7 +2687,7 @@ exit:
 
         if (aMessageInfo.GetSockAddr().IsMulticast())
         {
-            delay = otPlatRandomGet() % kMleMaxResponseDelay;
+            delay = Random::GetUint16InRange(0, kMleMaxResponseDelay);
         }
         else
         {
@@ -3594,7 +3582,7 @@ void Mle::StartParentSearchTimer(void)
 {
     uint32_t interval;
 
-    interval = (otPlatRandomGet() % kParentSearchJitterInterval);
+    interval = Random::GetUint32InRange(0, kParentSearchJitterInterval);
 
     if (mParentSearchIsInBackoff)
     {

@@ -37,14 +37,13 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
@@ -119,8 +118,8 @@ Mac::Mac(Instance &aInstance)
     , mSendTail(NULL)
     , mReceiveHead(NULL)
     , mReceiveTail(NULL)
-    , mBeaconSequence(static_cast<uint8_t>(otPlatRandomGet()))
-    , mDataSequence(static_cast<uint8_t>(otPlatRandomGet()))
+    , mBeaconSequence(Random::GetUint8())
+    , mDataSequence(Random::GetUint8())
     , mCsmaAttempts(0)
     , mTransmitAttempts(0)
     , mScanChannelMask()
@@ -419,10 +418,7 @@ exit:
 
 void Mac::GenerateExtAddress(ExtAddress *aExtAddress)
 {
-    for (size_t i = 0; i < sizeof(ExtAddress); i++)
-    {
-        aExtAddress->m8[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(aExtAddress->m8, sizeof(ExtAddress));
 
     aExtAddress->SetGroup(false);
     aExtAddress->SetLocal(true);
@@ -861,7 +857,7 @@ void Mac::StartCsmaBackoff(void)
             backoffExponent = kMaxBE;
         }
 
-        backoff = (otPlatRandomGet() % (1UL << backoffExponent));
+        backoff = Random::GetUint32InRange(0, 1U << backoffExponent);
         backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
         // Put the radio in either sleep or receive mode depending on

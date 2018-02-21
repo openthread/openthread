@@ -33,12 +33,11 @@
 
 #include "ip6_mpl.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -47,7 +46,7 @@ namespace Ip6 {
 void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval)
 {
     // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = aInterval == 0 ? aInterval : otPlatRandomGet() % aInterval;
+    uint8_t t = aInterval == 0 ? aInterval : Random::GetUint8InRange(0, aInterval);
 
     // Set transmission time at the beginning of the next interval.
     SetTransmissionTime(aCurrentTime + GetIntervalOffset() + t);

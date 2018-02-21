@@ -33,10 +33,9 @@
 
 #include "trickle_timer.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 
@@ -84,7 +83,7 @@ void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMod
     }
     else
     {
-        I = Imin + otPlatRandomGet() % (Imax - Imin);
+        I = Random::GetUint32InRange(Imin, Imax);
     }
 
     // Start a new interval
@@ -139,7 +138,7 @@ void TrickleTimer::StartNewInterval(void)
     else if (mMode == kModeMPL)
     {
         // Initialize t to random value between (0, I]
-        t = otPlatRandomGet() % I;
+        t = Random::GetUint32InRange(0, I);
     }
     else if (mMode == kModePlainTimer)
     {
@@ -149,7 +148,7 @@ void TrickleTimer::StartNewInterval(void)
     else
     {
         // Initialize t to random value between (I/2, I]
-        t = (I / 2) + otPlatRandomGet() % (I / 2);
+        t = Random::GetUint32InRange(I / 2, I);
     }
 
     // Start the timer for 't' milliseconds from now
@@ -190,7 +189,7 @@ void TrickleTimer::HandleTimerFired(void)
             if (mMode == kModePlainTimer)
             {
                 // Initialize I to [Imin, Imax]
-                I = Imin + otPlatRandomGet() % (Imax - Imin);
+                I = Random::GetUint32InRange(Imin, Imax);
 
                 // Start a new interval
                 StartNewInterval();

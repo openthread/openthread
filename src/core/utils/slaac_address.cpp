@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/random.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
@@ -151,11 +152,7 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
 
 otError Slaac::CreateRandomIid(otInstance *, otNetifAddress *aAddress, void *)
 {
-    for (size_t i = sizeof(aAddress[i].mAddress) - OT_IP6_IID_SIZE; i < sizeof(aAddress[i].mAddress); i++)
-    {
-        aAddress->mAddress.mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
+    Random::FillBuffer(aAddress->mAddress.mFields.m8 + OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE, OT_IP6_IID_SIZE);
     return OT_ERROR_NONE;
 }
 
