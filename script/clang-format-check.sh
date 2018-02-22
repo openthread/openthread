@@ -40,4 +40,7 @@ die() {
 
 set -x
 
-[ -z "`clang-format -style=file -output-replacements-xml $@ | grep \"<replacement \"`" ] || die
+# from `man diff`:
+# Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
+
+clang-format -style=file $@  | diff -u $@ -
