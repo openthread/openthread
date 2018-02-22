@@ -137,6 +137,8 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         msg = router1_messages.next_coap_message('2.04')
         msg.assertSentToDestinationAddress(reed1_ipv6_address)
 
+        self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
+
         # 9 LEADER: Verify connectivity by sending an ICMPv6 Echo Request to REED1
         for addr in self.nodes[REED1].get_addrs():
             if addr[0:4] != 'fe80':
