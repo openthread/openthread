@@ -36,7 +36,6 @@
 
 #include "mle_router.hpp"
 
-#include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
 
 #include "common/code_utils.hpp"
@@ -45,6 +44,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "common/settings.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
@@ -152,7 +152,7 @@ uint8_t MleRouter::AllocateRouterId(void)
 
     // choose available router id at random
     uint8_t freeBit;
-    freeBit = otPlatRandomGet() % numAvailable;
+    freeBit = Random::GetUint8InRange(0, numAvailable);
 
     // allocate router id
     for (uint8_t i = 0; i <= kMaxRouterId; i++)
@@ -307,10 +307,10 @@ otError MleRouter::BecomeLeader(void)
     }
     else
     {
-        SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+        SetLeaderData(Random::GetUint32(), mLeaderWeight, mRouterId);
     }
 
-    mRouterIdSequence = static_cast<uint8_t>(otPlatRandomGet());
+    mRouterIdSequence = Random::GetUint8();
 
     netif.GetNetworkDataLeader().Reset();
     netif.GetLeader().SetEmptyCommissionerData();
@@ -355,7 +355,7 @@ otError MleRouter::HandleChildStart(AttachMode aMode)
     ThreadNetif &netif            = GetNetif();
     otError      error            = OT_ERROR_NONE;
     mRouterIdSequenceLastUpdated  = TimerMilli::GetNow();
-    mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
+    mRouterSelectionJitterTimeout = 1 + Random::GetUint8InRange(0, mRouterSelectionJitter);
 
     StopLeader();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
@@ -652,10 +652,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     if (aNeighbor == NULL)
     {
-        for (uint8_t i = 0; i < sizeof(mChallenge); i++)
-        {
-            mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
+        Random::FillBuffer(mChallenge, sizeof(mChallenge));
 
         mChallengeTimeout = (((2 * kMaxResponseDelay) + kStateUpdatePeriod - 1) / kStateUpdatePeriod);
 
@@ -675,11 +672,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         {
             uint8_t challenge[ChallengeTlv::kMaxSize];
 
-            for (uint8_t i = 0; i < sizeof(challenge); i++)
-            {
-                challenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-            }
-
+            Random::FillBuffer(challenge, sizeof(challenge));
             SuccessOrExit(error = AppendChallenge(*message, challenge, sizeof(challenge)));
         }
 
@@ -871,7 +864,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     if (aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(error = AddDelayedResponse(*message, aMessageInfo.GetPeerAddr(),
-                                                 (otPlatRandomGet() % kMaxResponseDelay) + 1));
+                                                 1 + Random::GetUint16InRange(0, kMaxResponseDelay)));
 
         LogMleMessage("Delay Link Accept", aMessageInfo.GetPeerAddr());
     }
@@ -1469,7 +1462,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             (mDeviceMode & ModeTlv::kModeFFD) && (mRouterSelectionJitterTimeout == 0) &&
             (GetActiveRouterCount() < mRouterUpgradeThreshold))
         {
-            mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
+            mRouterSelectionJitterTimeout = 1 + Random::GetUint8InRange(0, mRouterSelectionJitter);
             ExitNow();
         }
 
@@ -1546,7 +1539,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             HasMinDowngradeNeighborRouters() && HasSmallNumberOfChildren() &&
             HasOneNeighborwithComparableConnectivity(route, routerId))
         {
-            mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
+            mRouterSelectionJitterTimeout = 1 + Random::GetUint8InRange(0, mRouterSelectionJitter);
         }
 
         // fall through
@@ -2045,11 +2038,11 @@ otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChalle
 
     if (aRoutersOnlyRequest)
     {
-        delay = (otPlatRandomGet() % kParentResponseMaxDelayRouters) + 1;
+        delay = 1 + Random::GetUint16InRange(0, kParentResponseMaxDelayRouters);
     }
     else
     {
-        delay = (otPlatRandomGet() % kParentResponseMaxDelayAll) + 1;
+        delay = 1 + Random::GetUint16InRange(0, kParentResponseMaxDelayAll);
     }
 
     SuccessOrExit(error = AddDelayedResponse(*message, destination, delay));
@@ -2634,7 +2627,7 @@ otError MleRouter::HandleNetworkDataUpdateRouter(void)
     destination.mFields.m16[0] = HostSwap16(0xff02);
     destination.mFields.m16[7] = HostSwap16(0x0001);
 
-    delay = (mRole == OT_DEVICE_ROLE_LEADER) ? 0 : (otPlatRandomGet() % kUnsolicitedDataResponseJitter);
+    delay = (mRole == OT_DEVICE_ROLE_LEADER) ? 0 : Random::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
     SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
 
     SynchronizeChildNetworkData();
@@ -2871,7 +2864,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
-    delay = otPlatRandomGet() % (kDiscoveryMaxJitter + 1);
+    delay = Random::GetUint16InRange(0, kDiscoveryMaxJitter + 1);
 
     SuccessOrExit(error = AddDelayedResponse(*message, aDestination, delay));
 

@@ -35,8 +35,6 @@
 
 #include "mesh_forwarder.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -44,6 +42,7 @@
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
@@ -87,7 +86,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 #endif
     , mDataPollManager(aInstance)
 {
-    mFragTag = static_cast<uint16_t>(otPlatRandomGet());
+    mFragTag = Random::GetUint16();
     GetNetif().GetMac().RegisterReceiver(mMacReceiver);
 
     mIpCounters.mTxSuccess = 0;
@@ -498,7 +497,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
                 do
                 {
-                    panid = static_cast<uint16_t>(otPlatRandomGet());
+                    panid = Random::GetUint16();
                 } while (panid == Mac::kPanIdBroadcast);
 
                 netif.GetMac().SetPanId(panid);

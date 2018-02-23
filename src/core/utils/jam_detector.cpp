@@ -34,11 +34,11 @@
 #include "jam_detector.hpp"
 
 #include <openthread/openthread.h>
-#include <openthread/platform/random.h>
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -175,7 +175,7 @@ void JamDetector::HandleTimer(void)
         }
     }
 
-    mTimer.Start(mSampleInterval + (otPlatRandomGet() % kMaxRandomDelay));
+    mTimer.Start(mSampleInterval + Random::GetUint32InRange(0, kMaxRandomDelay));
 
 exit:
     return;

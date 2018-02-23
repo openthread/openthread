@@ -222,6 +222,7 @@ HEADERS_COMMON                      = \
     common/message.hpp                \
     common/notifier.hpp               \
     common/owner-locator.hpp          \
+    common/random.hpp                 \
     common/settings.hpp               \
     common/new.hpp                    \
     common/tasklet.hpp                \

@@ -33,12 +33,11 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/platform/random.h>
-
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 
 using namespace ot;
 
@@ -585,7 +584,7 @@ void LinkRaw::StartCsmaBackoff(void)
         backoffExponent = Mac::kMaxBE;
     }
 
-    backoff = (otPlatRandomGet() % (1UL << backoffExponent));
+    backoff = Random::GetUint32InRange(0, 1U << backoffExponent);
     backoff *= (static_cast<uint32_t>(Mac::kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
     otLogDebgPlat(&mInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);

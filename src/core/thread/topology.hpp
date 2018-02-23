@@ -36,9 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/platform/random.h>
-
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 #include "thread/link_quality.hpp"

@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
@@ -96,7 +97,7 @@ void ChannelMonitor::RestartTimer(void)
     uint16_t interval = kTimerInterval;
     int16_t  jitter;
 
-    jitter = (otPlatRandomGet() % (2 * kMaxJitterInterval)) - kMaxJitterInterval;
+    jitter = static_cast<int16_t>(Random::GetUint16InRange(0, 2 * kMaxJitterInterval)) - kMaxJitterInterval;
 
     if (jitter >= kTimerInterval)
     {
