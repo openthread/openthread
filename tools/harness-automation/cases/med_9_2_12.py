@@ -35,7 +35,7 @@ from autothreadharness.harness_case import HarnessCase
 class MED_9_2_12(HarnessCase):
     role = HarnessCase.ROLE_MED
     case = '9 2 12'
-    golden_devices_required = 5
+    golden_devices_required = 3
     def on_dialog(self, dialog, title):
         pass
 
