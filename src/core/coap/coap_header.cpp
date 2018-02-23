@@ -33,13 +33,12 @@
 
 #include "coap_header.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace Coap {
@@ -417,14 +416,11 @@ exit:
 
 void Header::SetToken(uint8_t aTokenLength)
 {
-    assert(aTokenLength <= kMaxTokenLength);
-
     uint8_t token[kMaxTokenLength] = {0};
 
-    for (uint8_t i = 0; i < aTokenLength; i++)
-    {
-        token[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    assert(aTokenLength <= kMaxTokenLength);
+
+    Random::FillBuffer(token, aTokenLength);
 
     SetToken(token, aTokenLength);
 }

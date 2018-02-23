@@ -36,13 +36,13 @@
 #include "dhcp6_client.hpp"
 
 #include <openthread/types.h>
-#include <openthread/platform/random.h>
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
@@ -307,10 +307,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         }
 
         // new transaction id
-        for (uint8_t i = 0; i < kTransactionIdSize; i++)
-        {
-            mTransactionId[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
+        Random::FillBuffer(mTransactionId, kTransactionIdSize);
 
         // ensure mIdentityAssociationHead is the prefix agent to solicit.
         if (prevIdentityAssociation)

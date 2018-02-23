@@ -44,10 +44,7 @@ namespace ot {
 
 void Neighbor::GenerateChallenge(void)
 {
-    for (uint8_t i = 0; i < sizeof(mValidPending.mPending.mChallenge); i++)
-    {
-        mValidPending.mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
 }
 
 void Child::ClearIp6Addresses(void)
@@ -218,10 +215,7 @@ exit:
 
 void Child::GenerateChallenge(void)
 {
-    for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++)
-    {
-        mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
 }
 
 const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const

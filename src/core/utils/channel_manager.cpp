@@ -40,6 +40,7 @@
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
 
@@ -78,7 +79,7 @@ otError ChannelManager::RequestChannelChange(uint8_t aChannel)
     mChannel         = aChannel;
     mActiveTimestamp = 0;
 
-    mTimer.Start((otPlatRandomGet() % kRequestStartJitterInterval) + 1);
+    mTimer.Start(1 + Random::GetUint32InRange(0, kRequestStartJitterInterval));
 
 exit:
     return error;
@@ -138,7 +139,7 @@ void ChannelManager::PreparePendingDataset(void)
         }
     }
 
-    pendingTimestamp += (otPlatRandomGet() % kMaxTimestampIncrease) + 1;
+    pendingTimestamp += 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
 
     error = netif.GetActiveDataset().Get(dataset);
 
@@ -201,7 +202,7 @@ void ChannelManager::PreparePendingDataset(void)
     }
     else
     {
-        mActiveTimestamp = dataset.mActiveTimestamp + 1 + (otPlatRandomGet() % kMaxTimestampIncrease);
+        mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
     }
 
     dataset.mActiveTimestamp      = mActiveTimestamp;
