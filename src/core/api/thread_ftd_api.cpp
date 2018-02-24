@@ -47,19 +47,16 @@ using namespace ot;
 
 uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
 {
-    uint8_t   aNumChildren;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    (void)instance.GetThreadNetif().GetMle().GetChildren(&aNumChildren);
-
-    return aNumChildren;
+    return instance.GetThreadNetif().GetMle().GetChildTable().GetMaxChildrenAllowed();
 }
 
 otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().SetMaxAllowedChildren(aMaxChildren);
+    return instance.GetThreadNetif().GetMle().GetChildTable().SetMaxChildrenAllowed(aMaxChildren);
 }
 
 bool otThreadIsRouterRoleEnabled(otInstance *aInstance)

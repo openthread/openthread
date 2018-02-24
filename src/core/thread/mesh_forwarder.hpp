@@ -378,7 +378,7 @@ private:
     uint32_t              mSendMessageFrameCounter;
     uint8_t               mSendMessageKeyId;
     uint8_t               mSendMessageDataSequenceNumber;
-    uint8_t               mStartChildIndex;
+    Child *               mIndirectStartingChild;
 #endif
 
     DataPollManager mDataPollManager;

@@ -85,6 +85,7 @@ endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 check_PROGRAMS                                                      = \
     test-aes                                                          \
     test-child                                                        \
+    test-child-table                                                  \
     test-heap                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
@@ -146,6 +147,9 @@ test_aes_SOURCES             = test_platform.cpp test_aes.cpp
 
 test_child_LDADD             = $(COMMON_LDADD)
 test_child_SOURCES           = test_platform.cpp test_child.cpp
+
+test_child_table_LDADD       = $(COMMON_LDADD)
+test_child_table_SOURCES     = test_platform.cpp test_child_table.cpp
 
 test_heap_LDADD              = $(COMMON_LDADD)
 test_heap_SOURCES            = test_platform.cpp test_heap.cpp
@@ -212,6 +216,7 @@ PRETTY_FILES                                                        = \
     $(test_address_sanitizer_SOURCES)                                 \
     $(test_aes_SOURCES)                                               \
     $(test_child_SOURCES)                                             \
+    $(test_child_table_SOURCES)                                       \
     $(test_heap_SOURCES)                                              \
     $(test_hmac_sha256_SOURCES)                                       \
     $(test_link_quality_SOURCES)                                      \
