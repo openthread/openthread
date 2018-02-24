@@ -71,6 +71,9 @@ TESTER_NAME = 'Thread Open'
 TESTER_REMARKS = 'OpenThread is great'
 """str: Any comments in the final PDF"""
 
+GOLDEN_DEVICE_TYPE = 'Mixed'
+"""str: Mixed for testbeds with mixed-type devices according to TopologyConfig.txt"""
+
 GOLDEN_DEVICES = []
 """[(str, str)]: devices list.
 
