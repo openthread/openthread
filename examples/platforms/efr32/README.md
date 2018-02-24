@@ -1,10 +1,11 @@
 # OpenThread on EFR32 Example
 
 This directory contains example platform drivers for the [Silicon Labs EFR32][efr32mg]
-based on [EFR32™ Mighty Gecko Wireless Starter Kit][SLWSTK6000B].
+based on [EFR32™ Mighty Gecko Wireless Starter Kit][SLWSTK6000B] or [Thunderboard™ Sense 2 Sensor-to-Cloud Advanced IoT Development Kit][SLTB004A].
 
 [efr32mg]: http://www.silabs.com/products/wireless/mesh-networking/efr32mg-mighty-gecko-zigbee-thread-soc
 [SLWSTK6000B]: http://www.silabs.com/products/development-tools/wireless/mesh-networking/mighty-gecko-starter-kit
+[SLTB004A]: https://www.silabs.com/products/development-tools/thunderboard/thunderboard-sense-two-kit
 
 The example platform drivers are intended to present the minimal code
 necessary to support OpenThread. [EFR32MG12P SoC][efr32mg12p]
@@ -58,7 +59,15 @@ $ cp -rf gecko_sdk_suite <path-to-openthread>/third_party/silabs/
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-efr32
+```
+For EFR32™ Mighty Gecko Wireless Starter Kit:
+```bash
+$ make -f examples/Makefile-efr32 BOARD=BRD4161A
+```
+or alternatively for the Thunderboard™ Sense 2:
+
+```bash
+$ make -f examples/Makefile-efr32 BOARD=BRD4166A
 ```
 
 After a successful build, the `elf` files are found in
