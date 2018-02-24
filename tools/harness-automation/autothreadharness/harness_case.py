@@ -483,8 +483,8 @@ class HarnessCase(unittest.TestCase):
         logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
         golden_devices_required = self.golden_devices_required
 
-        #for mixed test bed
-        if settings.GOLDEN_DEVICE_TYPE and re.match('mixed', settings.GOLDEN_DEVICE_TYPE, re.M | re.I):
+        #for test bed with mixed devices
+        if settings.MIXED_DEVICE_TYPE:
             topo_file = settings.HARNESS_HOME+"\\Thread_Harness\\TestScripts\\TopologyConfig.txt"
             try:
                 f_topo = open(topo_file, 'r')

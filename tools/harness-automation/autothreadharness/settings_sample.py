@@ -71,9 +71,6 @@ TESTER_NAME = 'Thread Open'
 TESTER_REMARKS = 'OpenThread is great'
 """str: Any comments in the final PDF"""
 
-GOLDEN_DEVICE_TYPE = 'Mixed'
-"""str: Mixed for testbeds with mixed-type devices according to TopologyConfig.txt"""
-
 GOLDEN_DEVICES = []
 """[(str, str)]: devices list.
 
@@ -82,6 +79,9 @@ It should be something like [('COM1', 'OpenThread'), ('COM2', 'ARM')] for device
 For OpenThread golden devices, ser2net is also supported, just use IP:PORT for the name. For example,
 ('192.168.1.2:5001', 'OpenThread').
 """
+
+MIXED_DEVICE_TYPE = 'True'
+"""bool: Whether golden devices are mixed-type. Must put TopologyConfig.txt under HARNESS_HOME\Thread_Harness\TestScripts before testing if True"""
 
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""
