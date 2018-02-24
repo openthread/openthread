@@ -484,22 +484,22 @@ class HarnessCase(unittest.TestCase):
         golden_devices_required = self.golden_devices_required
 
         #for mixed test bed
-        if settings.GOLDEN_DEVICE_TYPE and re.match('mixed', settings.GOLDEN_DEVICE_TYPE, re.M|re.I):
+        if settings.GOLDEN_DEVICE_TYPE and re.match('mixed', settings.GOLDEN_DEVICE_TYPE, re.M | re.I):
             topo_file = settings.HARNESS_HOME+"\\Thread_Harness\\TestScripts\\TopologyConfig.txt"
             try:
-                f_topo = open(topo_file,'r')
-            except IOError,e:
-                logger.info('%s can NOT be found',topo_file)
+                f_topo = open(topo_file, 'r')
+            except IOError as e:
+                logger.info('%s can NOT be found', topo_file)
                 raise GoldenDeviceNotEnoughError()
             topo_mixed_devices=[]
             try:
                 while 1:
                     topo_line = f_topo.readline().strip()
-                    logger.info('%s',topo_line)
+                    logger.info('%s', topo_line)
                     match_line = re.match(r'(.*)-(.*)', topo_line, re.M | re.I)
                     case_id = match_line.group(1)
 
-                    if re.sub(r'\.',' ',case_id) == self.case:
+                    if re.sub(r'\.', ' ', case_id) == self.case:
                         topo_device_list = re.split(',', match_line.group(2))
                         for i in range(len(topo_device_list)):
                             topo_device = re.split(':', topo_device_list[i])
@@ -510,7 +510,7 @@ class HarnessCase(unittest.TestCase):
             except:
                 logger.info('Get devices from topology config file error')
                 raise GoldenDeviceNotEnoughError()
-            logger.info('Topology config devices for case %s: %s',case_id, topo_mixed_devices)
+            logger.info('Topology config devices for case %s: %s', case_id, topo_mixed_devices)
             f_topo.close()
             needed_golden_devices = []
             # mapping topology config devices with devices in settings
@@ -520,14 +520,12 @@ class HarnessCase(unittest.TestCase):
                         needed_golden_devices.append(temp_device)
                         devices.remove(temp_device)
                         break
-            logger.info('Needed golden devices can be found in settings : %s',needed_golden_devices)
+            logger.info('Needed golden devices can be found in settings : %s', needed_golden_devices)
             if len(topo_mixed_devices) != len(needed_golden_devices):
                 raise GoldenDeviceNotEnoughError()
             else:
-                del devices[:]
                 devices = needed_golden_devices
-            if len(devices) == golden_devices_required + 1:
-                golden_devices_required += 1
+		golden_devices_required = len(devices)
                 logger.info('Only-needed golden devices: %s', json.dumps(devices, indent=2))
 
         if self.auto_dut and not settings.DUT_DEVICE:
