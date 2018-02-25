@@ -44,14 +44,9 @@
 #include "mac/mac.hpp"
 #include "net/icmp6.hpp"
 #include "net/udp6.hpp"
+#include "thread/thread_tlvs.hpp"
 
 namespace ot {
-
-class MeshForwarder;
-class ThreadLastTransactionTimeTlv;
-class ThreadMeshLocalEidTlv;
-class ThreadNetif;
-class ThreadTargetTlv;
 
 /**
  * @addtogroup core-arp

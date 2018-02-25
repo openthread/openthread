@@ -51,8 +51,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace MeshCoP {
 
 class JoinerRouter : public InstanceLocator

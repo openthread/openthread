@@ -56,8 +56,6 @@ enum
     kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT,
 };
 
-class MleRouter;
-
 /**
  * @addtogroup core-mesh-forwarding
  *

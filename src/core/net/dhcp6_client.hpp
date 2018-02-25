@@ -49,11 +49,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-namespace Mle {
-class MleRouter;
-}
-
 namespace Dhcp6 {
 
 /**

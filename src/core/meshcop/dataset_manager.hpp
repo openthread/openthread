@@ -48,8 +48,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace MeshCoP {
 
 class DatasetManager : public InstanceLocator

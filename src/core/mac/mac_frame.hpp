@@ -47,10 +47,6 @@
 
 namespace ot {
 
-namespace Ip6 {
-class Address;
-}
-
 namespace Mac {
 
 /**

@@ -41,8 +41,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace Coap {
 
 class CoapSecure : public CoapBase

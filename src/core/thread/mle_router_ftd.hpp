@@ -56,10 +56,6 @@
 namespace ot {
 namespace Mle {
 
-class AddressResolver;
-class MeshForwarder;
-class NetworkDataLeader;
-
 /**
  * @addtogroup core-mle-router
  *

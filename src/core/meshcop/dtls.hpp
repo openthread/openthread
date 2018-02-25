@@ -54,8 +54,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace MeshCoP {
 
 class Dtls : public InstanceLocator
