@@ -125,20 +125,24 @@ void VerifyChannelMaskContent(const Mac::ChannelMask &aMask, uint8_t *aChannels,
 void TestMacChannelMask(void)
 {
     uint8_t all_channels[] = {11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
-    uint8_t channels1[]    = {11, 14, 15, 20, 21, 26};
-    uint8_t channels2[]    = {14, 21, 25};
+    uint8_t channels1[]    = {11, 14, 15, 16, 17, 20, 21, 22, 24, 25};
+    uint8_t channels2[]    = {14, 21, 26};
     uint8_t channels3[]    = {14, 21};
     uint8_t channles4[]    = {20};
 
     Mac::ChannelMask mask1;
     Mac::ChannelMask mask2(OT_RADIO_SUPPORTED_CHANNELS);
 
+    char stringBuffer[Mac::ChannelMask::kInfoStringSize];
+
     printf("Testing Mac::ChannelMask\n");
 
     VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
+    printf("empty = %s\n", mask1.ToString(stringBuffer, sizeof(stringBuffer)));
 
     VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed\n");
     VerifyOrQuit(mask2.GetMask() == OT_RADIO_SUPPORTED_CHANNELS, "ChannelMask.GetMask() failed\n");
+    printf("all_channels = %s\n", mask2.ToString(stringBuffer, sizeof(stringBuffer)));
 
     mask1.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
     VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
@@ -162,6 +166,8 @@ void TestMacChannelMask(void)
         mask1.AddChannel(channels1[index]);
     }
 
+    printf("channels1 = %s\n", mask1.ToString(stringBuffer, sizeof(stringBuffer)));
+
     VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
     VerifyChannelMaskContent(mask1, channels1, sizeof(channels1));
 
@@ -172,6 +178,8 @@ void TestMacChannelMask(void)
         mask2.AddChannel(channels2[index]);
     }
 
+    printf("channels2 = %s\n", mask2.ToString(stringBuffer, sizeof(stringBuffer)));
+
     VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed\n");
     VerifyChannelMaskContent(mask2, channels2, sizeof(channels2));
 
@@ -181,6 +189,8 @@ void TestMacChannelMask(void)
     mask2.Clear();
     mask2.AddChannel(channles4[0]);
     VerifyChannelMaskContent(mask2, channles4, sizeof(channles4));
+
+    printf("channels4 = %s\n", mask2.ToString(stringBuffer, sizeof(stringBuffer)));
 }
 
 } // namespace ot
