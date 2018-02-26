@@ -5059,22 +5059,8 @@ exit:
 
 bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
 {
-    bool                      rval = false;
-    Ip6::Address              address;
-    Child::Ip6AddressIterator iterator;
-
-    VerifyOrExit(aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle());
-
-    while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
-    {
-        if (address == aAddress)
-        {
-            ExitNow(rval = true);
-        }
-    }
-
-exit:
-    return rval;
+    return aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle() &&
+           aChild.HasIp6Address(GetInstance(), aAddress);
 }
 
 } // namespace Mle
