@@ -46,12 +46,6 @@
 
 namespace ot {
 
-class MeshForwarder;
-class ThreadLastTransactionTimeTlv;
-class ThreadMeshLocalEidTlv;
-class ThreadNetif;
-class ThreadTargetTlv;
-
 /**
  * This class implements handling PANID Query Requests.
  *

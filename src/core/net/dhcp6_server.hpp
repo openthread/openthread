@@ -47,11 +47,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-namespace NetworkData {
-class Leader;
-}
-
 namespace Dhcp6 {
 
 /**

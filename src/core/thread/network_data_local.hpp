@@ -40,8 +40,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 /**
  * @addtogroup core-netdata-local
  *

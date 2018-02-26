@@ -50,10 +50,6 @@
 
 namespace ot {
 
-namespace Mle {
-class MleRouter;
-}
-
 /**
  * @addtogroup core-mac
  *

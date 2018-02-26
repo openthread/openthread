@@ -49,8 +49,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace Coap {
 
 /**

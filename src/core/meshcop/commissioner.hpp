@@ -52,8 +52,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace MeshCoP {
 
 class Commissioner : public InstanceLocator
