@@ -54,9 +54,25 @@ configure_OPTIONS               = \
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
+
+#
+# Differentiate between boards
+# - BRD4161A / SLWSTK6000B / Wireless Starter Kit
+# - BRD4166A / SLTB004A / Thunderboard Sense 2
+#
+ifeq ($(BOARD),BRD4161A)
+MCU = EFR32MG12P432F1024GL125
+else
+ifeq ($(BOARD),BRD4166A)
+MCU = EFR32MG12P332F1024GL125
+else
+$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4161A or BRD4166A) )
+endif
+endif
+
 EFR32_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 EFR32_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"efr32-mbedtls-config.h\"'
-EFR32_MBEDTLS_CPPFLAGS += -DEFR32MG12P432F1024GL125
+EFR32_MBEDTLS_CPPFLAGS += -D$(MCU)
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/efr32/crypto
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/configs
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.0/platform/CMSIS/Include
@@ -77,6 +93,7 @@ COMMONCFLAGS                   := \
     -g                            \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
+    -D$(MCU)                      \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
