@@ -40,8 +40,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace NetworkData {
 
 class Leader : public LeaderBase

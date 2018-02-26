@@ -44,14 +44,9 @@
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
+#include "thread/thread_tlvs.hpp"
 
 namespace ot {
-
-class MeshForwarder;
-class ThreadLastTransactionTimeTlv;
-class ThreadMeshLocalEidTlv;
-class ThreadNetif;
-class ThreadTargetTlv;
 
 /**
  * This class implements handling Energy Scan Requests.

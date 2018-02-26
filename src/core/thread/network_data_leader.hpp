@@ -46,8 +46,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace NetworkData {
 
 /**
