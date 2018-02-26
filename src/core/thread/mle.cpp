@@ -283,6 +283,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     netif.GetNetworkDataLocal().Clear();
 #endif
     netif.GetNetworkDataLeader().Clear();
+    memset(&mLeaderData, 0, sizeof(mLeaderData));
 
     if (aClearNetworkDatasets)
     {
