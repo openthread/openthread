@@ -35,6 +35,7 @@
 
 #include "mac.hpp"
 
+#include <stdio.h>
 #include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
@@ -91,6 +92,60 @@ otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 
 exit:
     return error;
+}
+
+const char *ChannelMask::ToString(char *aBuffer, uint16_t aSize) const
+{
+    uint8_t channel  = kChannelIteratorFirst;
+    bool    addComma = false;
+    char *  bufPtr   = aBuffer;
+    size_t  bufLen   = aSize;
+    int     len;
+    otError error;
+
+    len = snprintf(bufPtr, bufLen, "{");
+    VerifyOrExit((len >= 0) && (static_cast<size_t>(len) < bufLen));
+    bufPtr += len;
+    bufLen -= static_cast<uint16_t>(len);
+
+    error = GetNextChannel(channel);
+
+    while (error == OT_ERROR_NONE)
+    {
+        uint8_t rangeStart = channel;
+        uint8_t rangeEnd   = channel;
+
+        while ((error = GetNextChannel(channel)) == OT_ERROR_NONE)
+        {
+            if (channel != rangeEnd + 1)
+            {
+                break;
+            }
+
+            rangeEnd = channel;
+        }
+
+        len = snprintf(bufPtr, bufLen, "%s%d", addComma ? ", " : " ", rangeStart);
+        VerifyOrExit((len >= 0) && (static_cast<size_t>(len) < bufLen));
+        bufPtr += len;
+        bufLen -= static_cast<uint16_t>(len);
+
+        addComma = true;
+
+        if (rangeStart < rangeEnd)
+        {
+            len = snprintf(bufPtr, bufLen, "%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd);
+            VerifyOrExit((len >= 0) && (static_cast<size_t>(len) < bufLen));
+            bufPtr += len;
+            bufLen -= static_cast<uint16_t>(len);
+        }
+    }
+
+    len = snprintf(bufPtr, bufLen, " }");
+    VerifyOrExit((len >= 0) && (static_cast<size_t>(len) < bufLen));
+
+exit:
+    return aBuffer;
 }
 
 Mac::Mac(Instance &aInstance)
