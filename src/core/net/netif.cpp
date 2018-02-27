@@ -410,6 +410,8 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     NetifUnicastAddress *entry;
     size_t               num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
 
+    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
+
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress.GetAddress())
