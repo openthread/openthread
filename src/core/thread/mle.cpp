@@ -279,10 +279,6 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     netif.GetKeyManager().Stop();
     SetStateDetached();
     netif.RemoveUnicastAddress(mMeshLocal16);
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
-    netif.GetNetworkDataLocal().Clear();
-#endif
-    netif.GetNetworkDataLeader().Clear();
 
     if (aClearNetworkDatasets)
     {
