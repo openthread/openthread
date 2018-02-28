@@ -1443,7 +1443,7 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
     const char * actionText;
     const char * priorityText;
     bool         shouldLogRss             = false;
-    bool         shouldLogSrcDstAddresses = true;
+    bool         shouldLogSrcDstAddresses = (OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES != 0);
     char         stringBuffer[Ip6::Address::kIp6AddressStringSize];
     char         rssString[RssAverager::kStringSize];
 
