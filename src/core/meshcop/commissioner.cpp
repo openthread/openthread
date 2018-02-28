@@ -56,8 +56,6 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
 
-using ot::Encoding::BigEndian::HostSwap64;
-
 namespace ot {
 namespace MeshCoP {
 
@@ -203,9 +201,6 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    otLogInfoMeshCoP(GetInstance(), "AddJoiner() %llX, %s",
-                     (aEui64 ? HostSwap64(*reinterpret_cast<const uint64_t *>(aEui64)) : 0), aPSKd);
-
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
     RemoveJoiner(aEui64, 0); // remove immediately
 
@@ -238,6 +233,23 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd
     }
 
 exit:
+    if (error == OT_ERROR_NONE)
+    {
+        if (aEui64)
+        {
+            char logString[Mac::Address::kAddressStringSize];
+
+            otLogInfoMeshCoP(GetInstance(), "Added Joiner (%s, %s)", aEui64->ToString(logString, sizeof(logString)),
+                             aPSKd);
+
+            OT_UNUSED_VARIABLE(logString);
+        }
+        else
+        {
+            otLogInfoMeshCoP(GetInstance(), "Added Joiner (*, %s)", aPSKd);
+        }
+    }
+
     return error;
 }
 
@@ -246,9 +258,6 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
     otError error = OT_ERROR_NOT_FOUND;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
-
-    otLogInfoMeshCoP(GetInstance(), "RemoveJoiner() %llX",
-                     (aEui64 ? HostSwap64(*reinterpret_cast<const uint64_t *>(aEui64)) : 0));
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
@@ -291,6 +300,22 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
     }
 
 exit:
+    if (error == OT_ERROR_NONE)
+    {
+        if (aEui64)
+        {
+            char logString[Mac::Address::kAddressStringSize];
+
+            otLogInfoMeshCoP(GetInstance(), "Removed Joiner (%s)", aEui64->ToString(logString, sizeof(logString)));
+
+            OT_UNUSED_VARIABLE(logString);
+        }
+        else
+        {
+            otLogInfoMeshCoP(GetInstance(), "Removed Joiner (*)");
+        }
+    }
+
     return error;
 }
 
@@ -828,7 +853,9 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     mJoinerPort = joinerPort.GetUdpPort();
     mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
-    otLogInfoMeshCoP(GetInstance(), "Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
+    otLogInfoMeshCoP(GetInstance(), "Remove Relay Receive (%02x%02x%02x%02x%02x%02x%02x%02x, 0x%04x)", mJoinerIid[0],
+                     mJoinerIid[1], mJoinerIid[2], mJoinerIid[3], mJoinerIid[4], mJoinerIid[5], mJoinerIid[6],
+                     mJoinerIid[7], mJoinerRloc);
 
     aMessage.SetOffset(offset);
     SuccessOrExit(error = aMessage.SetLength(offset + length));

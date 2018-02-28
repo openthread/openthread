@@ -318,11 +318,7 @@ private:
     };
     Joiner mJoiners[OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES];
 
-    union
-    {
-        uint8_t  mJoinerIid[8];
-        uint64_t mJoinerIid64;
-    };
+    uint8_t    mJoinerIid[8];
     uint16_t   mJoinerPort;
     uint16_t   mJoinerRloc;
     TimerMilli mJoinerExpirationTimer;

@@ -171,6 +171,17 @@ public:
      */
     bool operator!=(const ExtAddress &aOther) const;
 
+    /**
+     * This method converts an address to a NULL-terminated string.
+     *
+     * @param[out]  aBuf   A pointer to a character buffer.
+     * @param[in]   aSize  The maximum size of the buffer.
+     *
+     * @returns A pointer to the character string buffer.
+     *
+     */
+    const char *ToString(char *aBuf, uint16_t aSize) const;
+
 private:
     enum
     {
