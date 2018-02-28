@@ -55,12 +55,40 @@ DatasetLocal::DatasetLocal(Instance &aInstance, const Tlv::Type aType)
     : InstanceLocator(aInstance)
     , mUpdateTime(0)
     , mType(aType)
+    , mTimestampPresent(false)
 {
+    mTimestamp.Init();
 }
 
 void DatasetLocal::Clear(void)
 {
+    mTimestamp.Init();
+    mTimestampPresent = false;
     otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), -1);
+}
+
+otError DatasetLocal::Restore(Dataset &aDataset)
+{
+    const Timestamp *timestamp;
+    otError          error;
+
+    error = Get(aDataset);
+    SuccessOrExit(error);
+
+    timestamp = aDataset.GetTimestamp();
+
+    if (timestamp != NULL)
+    {
+        mTimestamp        = *timestamp;
+        mTimestampPresent = true;
+    }
+    else
+    {
+        mTimestampPresent = false;
+    }
+
+exit:
+    return error;
 }
 
 otError DatasetLocal::Get(Dataset &aDataset) const
@@ -375,8 +403,9 @@ exit:
 
 otError DatasetLocal::Set(const Dataset &aDataset)
 {
-    Dataset dataset(aDataset);
-    otError error;
+    Dataset          dataset(aDataset);
+    const Timestamp *timestamp;
+    otError          error;
 
     if (mType == Tlv::kActiveTimestamp)
     {
@@ -396,6 +425,18 @@ otError DatasetLocal::Set(const Dataset &aDataset)
     }
 
     SuccessOrExit(error);
+
+    timestamp = dataset.GetTimestamp();
+
+    if (timestamp != NULL)
+    {
+        mTimestamp        = *timestamp;
+        mTimestampPresent = true;
+    }
+    else
+    {
+        mTimestampPresent = false;
+    }
 
     mUpdateTime = TimerMilli::GetNow();
 
@@ -421,32 +462,31 @@ uint16_t DatasetLocal::GetSettingsKey(void) const
 
 int DatasetLocal::Compare(const Timestamp *aCompareTimestamp)
 {
-    const Timestamp *thisTimestamp;
-    Dataset          dataset(mType);
-    int              rval = 1;
+    int rval = 1;
 
-    SuccessOrExit(Get(dataset));
-
-    thisTimestamp = dataset.GetTimestamp();
-
-    if (aCompareTimestamp == NULL && thisTimestamp == NULL)
+    if (aCompareTimestamp == NULL)
     {
-        rval = 0;
-    }
-    else if (aCompareTimestamp == NULL && thisTimestamp != NULL)
-    {
-        rval = -1;
-    }
-    else if (aCompareTimestamp != NULL && thisTimestamp == NULL)
-    {
-        rval = 1;
+        if (!mTimestampPresent)
+        {
+            rval = 0;
+        }
+        else
+        {
+            rval = -1;
+        }
     }
     else
     {
-        rval = thisTimestamp->Compare(*aCompareTimestamp);
+        if (!mTimestampPresent)
+        {
+            rval = 1;
+        }
+        else
+        {
+            rval = mTimestamp.Compare(*aCompareTimestamp);
+        }
     }
 
-exit:
     return rval;
 }
 
