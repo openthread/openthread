@@ -764,6 +764,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
+ *
+ * If defined as 1 when IPv6 message info is logged in mesh-forwarder, the source and destination IPv6 addresses of
+ * messages are also included.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
+#define OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
  *
  * Defines the name of function/macro used for logging inside OpenThread, by default it is set to `otPlatLog()`.
