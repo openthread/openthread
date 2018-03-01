@@ -1370,14 +1370,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
     int          headerLength;
 
 #if OPENTHREAD_FTD
-    if (!aMacDest.IsBroadcast() && aMacSource.IsShort())
-    {
-        Ip6::Header ip6header;
-
-        VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6header, aMacSource, aMacDest, aFrame, aFrameLength) > 0,
-                     error = OT_ERROR_PARSE);
-        netif.GetAddressResolver().UpdateCacheEntry(ip6header.GetSource(), aMacSource.GetShort());
-    }
+    UpdateRoutes(aFrame, aFrameLength, aMacSource, aMacDest);
 #endif
 
     VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
