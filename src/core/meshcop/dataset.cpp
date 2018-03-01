@@ -138,9 +138,8 @@ void Dataset::Get(otOperationalDataset &aDataset) const
             {
                 if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
                 {
-                    uint8_t i                       = sizeof(ChannelMaskEntry);
-                    aDataset.mChannelMaskPage0      = static_cast<uint32_t>(entry[i] | (entry[i + 1] << 8) |
-                                                                       (entry[i + 2] << 16) | (entry[i + 3] << 24));
+                    const ChannelMask0Tlv *tlv      = static_cast<const ChannelMask0Tlv *>(cur);
+                    aDataset.mChannelMaskPage0      = tlv->GetMask();
                     aDataset.mIsChannelMaskPage0Set = true;
                     break;
                 }
