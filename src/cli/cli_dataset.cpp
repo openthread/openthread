@@ -104,7 +104,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mIsChannelMaskPage0Set)
     {
-        sServer->OutputFormat("Channel Mask Page 0: %x\r\n", aDataset.mChannelMaskPage0);
+        sServer->OutputFormat("Channel Mask Page 0: %08x\r\n", aDataset.mChannelMaskPage0);
     }
 
     if (aDataset.mIsDelaySet)
