@@ -53,6 +53,12 @@ bool ExtAddress::operator!=(const ExtAddress &aOther) const
     return memcmp(m8, aOther.m8, sizeof(ExtAddress)) != 0;
 }
 
+const char *ExtAddress::ToString(char *aBuf, uint16_t aSize) const
+{
+    snprintf(aBuf, aSize, "%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
+    return aBuf;
+}
+
 void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
 {
     mType = kTypeExtended;
@@ -72,6 +78,8 @@ void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
 
 const char *Address::ToString(char *aBuf, uint16_t aSize) const
 {
+    const char *rval = aBuf;
+
     switch (mType)
     {
     case kTypeNone:
@@ -83,13 +91,11 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
         break;
 
     case kTypeExtended:
-        snprintf(aBuf, aSize, "%02x%02x%02x%02x%02x%02x%02x%02x", GetExtended().m8[0], GetExtended().m8[1],
-                 GetExtended().m8[2], GetExtended().m8[3], GetExtended().m8[4], GetExtended().m8[5],
-                 GetExtended().m8[6], GetExtended().m8[7]);
+        rval = GetExtended().ToString(aBuf, aSize);
         break;
     }
 
-    return aBuf;
+    return rval;
 }
 
 otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
