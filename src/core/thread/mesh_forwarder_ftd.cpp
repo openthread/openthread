@@ -953,16 +953,18 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
                                  const Mac::Address &aMeshSource,
                                  const Mac::Address &aMeshDest)
 {
-    ThreadNetif &      netif = GetNetif();
-    Lowpan::MeshHeader meshHeader;
-    Ip6::Header        ip6Header;
-    Neighbor *         neighbor;
+    ThreadNetif &netif = GetNetif();
+    Ip6::Header  ip6Header;
+    Neighbor *   neighbor;
 
-    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE);
+    VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
 
     // skip mesh header
-    aFrame += meshHeader.GetHeaderLength();
-    aFrameLength -= meshHeader.GetHeaderLength();
+    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader())
+    {
+        aFrame += reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->GetHeaderLength();
+        aFrameLength -= reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->GetHeaderLength();
+    }
 
     // skip fragment header
     if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
@@ -979,12 +981,12 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
 
     VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0);
 
-    netif.GetAddressResolver().UpdateCacheEntry(ip6Header.GetSource(), meshHeader.GetSource());
+    netif.GetAddressResolver().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
 
     neighbor = netif.GetMle().GetNeighbor(ip6Header.GetSource());
     VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
 
-    if (Mle::Mle::GetRouterId(meshHeader.GetSource()) != Mle::Mle::GetRouterId(GetNetif().GetMac().GetShortAddress()))
+    if (Mle::Mle::GetRouterId(aMeshSource.GetShort()) != Mle::Mle::GetRouterId(GetNetif().GetMac().GetShortAddress()))
     {
         netif.GetMle().RemoveNeighbor(*neighbor);
     }
