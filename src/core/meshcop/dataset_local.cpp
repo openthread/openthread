@@ -95,10 +95,8 @@ exit:
 
 otError DatasetLocal::Get(otOperationalDataset &aDataset) const
 {
-    Dataset    dataset(mType);
-    otError    error;
-    const Tlv *cur;
-    const Tlv *end;
+    Dataset dataset(mType);
+    otError error;
 
     memset(&aDataset, 0, sizeof(aDataset));
 
@@ -106,141 +104,7 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
     error           = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
     SuccessOrExit(error);
 
-    cur = reinterpret_cast<const Tlv *>(dataset.mTlvs);
-    end = reinterpret_cast<const Tlv *>(dataset.mTlvs + dataset.mLength);
-
-    while (cur < end)
-    {
-        switch (cur->GetType())
-        {
-        case Tlv::kActiveTimestamp:
-        {
-            const ActiveTimestampTlv *tlv  = static_cast<const ActiveTimestampTlv *>(cur);
-            aDataset.mActiveTimestamp      = tlv->GetSeconds();
-            aDataset.mIsActiveTimestampSet = true;
-            break;
-        }
-
-        case Tlv::kChannel:
-        {
-            const ChannelTlv *tlv  = static_cast<const ChannelTlv *>(cur);
-            aDataset.mChannel      = tlv->GetChannel();
-            aDataset.mIsChannelSet = true;
-            break;
-        }
-
-        case Tlv::kChannelMask:
-        {
-            uint8_t        tlvLength = cur->GetLength();
-            const uint8_t *entry     = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
-            const uint8_t *entryEnd  = entry + tlvLength;
-
-            while (entry < entryEnd)
-            {
-                if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
-                {
-                    const ChannelMask0Tlv *tlv      = static_cast<const ChannelMask0Tlv *>(cur);
-                    aDataset.mChannelMaskPage0      = tlv->GetMask();
-                    aDataset.mIsChannelMaskPage0Set = true;
-                    break;
-                }
-
-                entry +=
-                    (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry));
-            }
-
-            break;
-        }
-
-        case Tlv::kDelayTimer:
-        {
-            const DelayTimerTlv *tlv = static_cast<const DelayTimerTlv *>(cur);
-            aDataset.mDelay          = tlv->GetDelayTimer();
-            aDataset.mIsDelaySet     = true;
-            break;
-        }
-
-        case Tlv::kExtendedPanId:
-        {
-            const ExtendedPanIdTlv *tlv = static_cast<const ExtendedPanIdTlv *>(cur);
-            memcpy(aDataset.mExtendedPanId.m8, tlv->GetExtendedPanId(), sizeof(aDataset.mExtendedPanId));
-            aDataset.mIsExtendedPanIdSet = true;
-            break;
-        }
-
-        case Tlv::kMeshLocalPrefix:
-        {
-            const MeshLocalPrefixTlv *tlv = static_cast<const MeshLocalPrefixTlv *>(cur);
-            memcpy(aDataset.mMeshLocalPrefix.m8, tlv->GetMeshLocalPrefix(), sizeof(aDataset.mMeshLocalPrefix));
-            aDataset.mIsMeshLocalPrefixSet = true;
-            break;
-        }
-
-        case Tlv::kNetworkMasterKey:
-        {
-            const NetworkMasterKeyTlv *tlv = static_cast<const NetworkMasterKeyTlv *>(cur);
-            aDataset.mMasterKey            = tlv->GetNetworkMasterKey();
-            aDataset.mIsMasterKeySet       = true;
-            break;
-        }
-
-        case Tlv::kNetworkName:
-        {
-            const NetworkNameTlv *tlv    = static_cast<const NetworkNameTlv *>(cur);
-            uint8_t               length = tlv->GetLength();
-
-            if (length > sizeof(aDataset.mNetworkName) - 1)
-            {
-                length = sizeof(aDataset.mNetworkName) - 1;
-            }
-
-            memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), length);
-            aDataset.mNetworkName.m8[length] = '\0';
-            aDataset.mIsNetworkNameSet       = true;
-            break;
-        }
-
-        case Tlv::kPanId:
-        {
-            const PanIdTlv *panid = static_cast<const PanIdTlv *>(cur);
-            aDataset.mPanId       = panid->GetPanId();
-            aDataset.mIsPanIdSet  = true;
-            break;
-        }
-
-        case Tlv::kPendingTimestamp:
-        {
-            const PendingTimestampTlv *tlv  = static_cast<const PendingTimestampTlv *>(cur);
-            aDataset.mPendingTimestamp      = tlv->GetSeconds();
-            aDataset.mIsPendingTimestampSet = true;
-            break;
-        }
-
-        case Tlv::kPSKc:
-        {
-            const PSKcTlv *tlv = static_cast<const PSKcTlv *>(cur);
-            memcpy(aDataset.mPSKc.m8, tlv->GetPSKc(), tlv->GetLength());
-            aDataset.mIsPSKcSet = true;
-            break;
-        }
-
-        case Tlv::kSecurityPolicy:
-        {
-            const SecurityPolicyTlv *tlv           = static_cast<const SecurityPolicyTlv *>(cur);
-            aDataset.mSecurityPolicy.mRotationTime = tlv->GetRotationTime();
-            aDataset.mSecurityPolicy.mFlags        = tlv->GetFlags();
-            aDataset.mIsSecurityPolicySet          = true;
-            break;
-        }
-
-        default:
-        {
-            break;
-        }
-        }
-
-        cur = cur->GetNext();
-    }
+    dataset.Get(aDataset);
 
 exit:
     return error;
@@ -250,121 +114,14 @@ exit:
 
 otError DatasetLocal::Set(const otOperationalDataset &aDataset)
 {
-    otError                     error = OT_ERROR_NONE;
-    Dataset                     dataset(mType);
-    MeshCoP::ActiveTimestampTlv activeTimestampTlv;
+    otError error = OT_ERROR_NONE;
+    Dataset dataset(mType);
 
-    VerifyOrExit(aDataset.mIsActiveTimestampSet, error = OT_ERROR_INVALID_ARGS);
+    error = dataset.Set(aDataset);
+    SuccessOrExit(error);
 
-    activeTimestampTlv.Init();
-    activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
-    activeTimestampTlv.SetTicks(0);
-    dataset.Set(activeTimestampTlv);
-
-    if (mType == Tlv::kPendingTimestamp)
-    {
-        MeshCoP::PendingTimestampTlv pendingTimestampTlv;
-
-        VerifyOrExit(aDataset.mIsPendingTimestampSet, error = OT_ERROR_INVALID_ARGS);
-
-        pendingTimestampTlv.Init();
-        pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
-        pendingTimestampTlv.SetTicks(0);
-        dataset.Set(pendingTimestampTlv);
-
-        if (aDataset.mIsDelaySet)
-        {
-            MeshCoP::DelayTimerTlv tlv;
-            tlv.Init();
-            tlv.SetDelayTimer(aDataset.mDelay);
-            dataset.Set(tlv);
-        }
-    }
-
-    if (aDataset.mIsChannelSet)
-    {
-        MeshCoP::ChannelTlv tlv;
-        tlv.Init();
-        tlv.SetChannelPage(0);
-        tlv.SetChannel(aDataset.mChannel);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsChannelMaskPage0Set)
-    {
-        MeshCoP::ChannelMask0Tlv tlv;
-        tlv.Init();
-        tlv.SetMask(aDataset.mChannelMaskPage0);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsExtendedPanIdSet)
-    {
-        MeshCoP::ExtendedPanIdTlv tlv;
-        tlv.Init();
-        tlv.SetExtendedPanId(aDataset.mExtendedPanId.m8);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsMeshLocalPrefixSet)
-    {
-        MeshCoP::MeshLocalPrefixTlv tlv;
-        tlv.Init();
-        tlv.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix.m8);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsMasterKeySet)
-    {
-        MeshCoP::NetworkMasterKeyTlv tlv;
-        tlv.Init();
-        tlv.SetNetworkMasterKey(aDataset.mMasterKey);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsNetworkNameSet)
-    {
-        MeshCoP::NetworkNameTlv tlv;
-        tlv.Init();
-        tlv.SetNetworkName(aDataset.mNetworkName.m8);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsPanIdSet)
-    {
-        MeshCoP::PanIdTlv tlv;
-        tlv.Init();
-        tlv.SetPanId(aDataset.mPanId);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsPSKcSet)
-    {
-        MeshCoP::PSKcTlv tlv;
-        tlv.Init();
-        tlv.SetPSKc(aDataset.mPSKc.m8);
-        dataset.Set(tlv);
-    }
-
-    if (aDataset.mIsSecurityPolicySet)
-    {
-        MeshCoP::SecurityPolicyTlv tlv;
-        tlv.Init();
-        tlv.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
-        tlv.SetFlags(aDataset.mSecurityPolicy.mFlags);
-        dataset.Set(tlv);
-    }
-
-    if (dataset.GetSize() == 0)
-    {
-        error = otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), 0);
-        otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
-    }
-    else
-    {
-        error = otPlatSettingsSet(&GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
-        otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
-    }
+    error = Set(dataset);
+    SuccessOrExit(error);
 
 exit:
     return error;
