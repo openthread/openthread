@@ -227,7 +227,13 @@ class HarnessCase(unittest.TestCase):
         harness_config.read('%s\\Config\\Configuration.ini' % settings.HARNESS_HOME)
         if harness_config.has_option('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate') and \
                 harness_config.getboolean('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'):
-            os.system('taskkill /t /f /im chrome.exe')
+            logger.error('BrowserAutoNavigate in Configuration.ini should be false')
+            raise FailError('BrowserAutoNavigate in Configuration.ini should be false')
+        if settings.MIXED_DEVICE_TYPE:
+            if harness_config.has_option('THREAD_HARNESS_CONFIG', 'EnableDeviceSelection') and \
+                    not harness_config.getboolean('THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'):
+                logger.error('EnableDeviceSelection in Configuration.ini should be true')
+                raise FailError('EnableDeviceSelection in Configuration.ini should be true')
 
     def _destroy_harness(self):
         """Stop harness backend service
@@ -483,7 +489,7 @@ class HarnessCase(unittest.TestCase):
         logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
         golden_devices_required = self.golden_devices_required
 
-        #for test bed with mixed devices
+        # for test bed with mixed devices
         if settings.MIXED_DEVICE_TYPE:
             topo_file = settings.HARNESS_HOME+"\\Thread_Harness\\TestScripts\\TopologyConfig.txt"
             try:
@@ -491,7 +497,7 @@ class HarnessCase(unittest.TestCase):
             except IOError as e:
                 logger.info('%s can NOT be found', topo_file)
                 raise GoldenDeviceNotEnoughError()
-            topo_mixed_devices=[]
+            topo_mixed_devices = []
             try:
                 while 1:
                     topo_line = f_topo.readline().strip()
@@ -507,8 +513,8 @@ class HarnessCase(unittest.TestCase):
                         break
                     else:
                         continue
-            except:
-                logger.info('Get devices from topology config file error')
+            except Exception as e:
+                logger.info('Get devices from topology config file error: %s', e)
                 raise GoldenDeviceNotEnoughError()
             logger.info('Topology config devices for case %s: %s', case_id, topo_mixed_devices)
             f_topo.close()
@@ -516,7 +522,7 @@ class HarnessCase(unittest.TestCase):
             # mapping topology config devices with devices in settings
             for temp_mixed_device in topo_mixed_devices:
                 for temp_device in devices:
-                    if (temp_mixed_device[1] == temp_device[1]):
+                    if temp_mixed_device[1] == temp_device[1]:
                         needed_golden_devices.append(temp_device)
                         devices.remove(temp_device)
                         break
@@ -525,7 +531,7 @@ class HarnessCase(unittest.TestCase):
                 raise GoldenDeviceNotEnoughError()
             else:
                 devices = needed_golden_devices
-		golden_devices_required = len(devices)
+                golden_devices_required = len(devices)
                 logger.info('Only-needed golden devices: %s', json.dumps(devices, indent=2))
 
         if self.auto_dut and not settings.DUT_DEVICE:
@@ -533,7 +539,6 @@ class HarnessCase(unittest.TestCase):
 
         if len(devices) < golden_devices_required:
             raise GoldenDeviceNotEnoughError()
-
 
         # add golden devices
         number_of_devices_to_add = len(devices) if self.add_all_devices else golden_devices_required
