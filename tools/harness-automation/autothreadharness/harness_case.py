@@ -227,13 +227,13 @@ class HarnessCase(unittest.TestCase):
         harness_config.read('%s\\Config\\Configuration.ini' % settings.HARNESS_HOME)
         if harness_config.has_option('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate') and \
                 harness_config.getboolean('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'):
-            logger.error('BrowserAutoNavigate in Configuration.ini should be false')
-            raise FailError('BrowserAutoNavigate in Configuration.ini should be false')
+            logger.error('BrowserAutoNavigate in Configuration.ini should be False')
+            raise FailError('BrowserAutoNavigate in Configuration.ini should be False')
         if settings.MIXED_DEVICE_TYPE:
             if harness_config.has_option('THREAD_HARNESS_CONFIG', 'EnableDeviceSelection') and \
                     not harness_config.getboolean('THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'):
-                logger.error('EnableDeviceSelection in Configuration.ini should be true')
-                raise FailError('EnableDeviceSelection in Configuration.ini should be true')
+                logger.error('EnableDeviceSelection in Configuration.ini should be True')
+                raise FailError('EnableDeviceSelection in Configuration.ini should be True')
 
     def _destroy_harness(self):
         """Stop harness backend service
