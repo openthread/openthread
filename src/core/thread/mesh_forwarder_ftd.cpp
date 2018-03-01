@@ -979,10 +979,10 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
 
     VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0);
 
+    netif.GetAddressResolver().UpdateCacheEntry(ip6Header.GetSource(), meshHeader.GetSource());
+
     neighbor = netif.GetMle().GetNeighbor(ip6Header.GetSource());
     VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
-
-    netif.GetAddressResolver().UpdateCacheEntry(ip6Header.GetSource(), meshHeader.GetSource());
 
     if (Mle::Mle::GetRouterId(meshHeader.GetSource()) != Mle::Mle::GetRouterId(GetNetif().GetMac().GetShortAddress()))
     {
