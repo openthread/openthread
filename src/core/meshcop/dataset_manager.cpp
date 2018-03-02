@@ -111,7 +111,7 @@ otError DatasetManager::Restore(void)
 
     mTimer.Stop();
 
-    SuccessOrExit(error = mLocal.Get(dataset));
+    SuccessOrExit(error = mLocal.Restore(dataset));
 
     timestamp = dataset.GetTimestamp();
 
