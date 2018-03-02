@@ -519,20 +519,23 @@ class HarnessCase(unittest.TestCase):
             logger.info('Topology config devices for case %s: %s', case_id, topo_mixed_devices)
             f_topo.close()
             needed_golden_devices = []
+            missing_golden_devices = topo_mixed_devices
             # mapping topology config devices with devices in settings
             for temp_mixed_device in topo_mixed_devices:
                 for temp_device in devices:
                     if temp_mixed_device[1] == temp_device[1]:
                         needed_golden_devices.append(temp_device)
                         devices.remove(temp_device)
+                        missing_golden_devices.remove(temp_mixed_device)
                         break
-            logger.info('Needed golden devices can be found in settings : %s', needed_golden_devices)
+            logger.info('Case-needed golden devices can be found in settings : %s', needed_golden_devices)
             if len(topo_mixed_devices) != len(needed_golden_devices):
+                logger.info('Missing golden devices : %s', missing_golden_devices)
                 raise GoldenDeviceNotEnoughError()
             else:
                 devices = needed_golden_devices
                 golden_devices_required = len(devices)
-                logger.info('Only-needed golden devices: %s', json.dumps(devices, indent=2))
+                logger.info('All case-needed golden devices: %s', json.dumps(devices, indent=2))
 
         if self.auto_dut and not settings.DUT_DEVICE:
             golden_devices_required += 1
