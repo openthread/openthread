@@ -28,43 +28,87 @@
  *
  */
 
-#ifndef NRF_RAAL_CONFIG_H__
-#define NRF_RAAL_CONFIG_H__
-
-#ifdef NRF_802154_PROJECT_CONFIG
-#include NRF_802154_PROJECT_CONFIG
-#endif
-
-#include <nrf.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * @defgroup nrf_raal_config RAAL configuration
- * @{
- * @ingroup nrf_802154
- * @brief Configuration of Radio Arbiter Abstraction Layer.
+ * @file
+ *   This file implements the nrf 802.15.4 HF Clock abstraction with SDK driver.
+ *
+ * This implementation uses clock driver implementation from SDK.
  */
 
-/**
- * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
- *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
- *
- */
-#ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
-#endif
+#include "nrf_802154_clock.h"
 
-/**
- *@}
- **/
+#include <stddef.h>
 
-#ifdef __cplusplus
+#include <compiler_abstraction.h>
+#include <nrf_drv_clock.h>
+
+static void clock_handler(nrf_drv_clock_evt_type_t event);
+
+static nrf_drv_clock_handler_item_t m_clock_handler =
+{
+    .p_next        = NULL,
+    .event_handler = clock_handler,
+};
+
+static void clock_handler(nrf_drv_clock_evt_type_t event)
+{
+    if (event == NRF_DRV_CLOCK_EVT_HFCLK_STARTED)
+    {
+        nrf_802154_clock_hfclk_ready();
+    }
+
+    if (event == NRF_DRV_CLOCK_EVT_LFCLK_STARTED)
+    {
+        nrf_802154_clock_lfclk_ready();
+    }
 }
-#endif
 
-#endif // NRF_RAAL_CONFIG_H__
+void nrf_802154_clock_init(void)
+{
+    nrf_drv_clock_init();
+}
+
+void nrf_802154_clock_deinit(void)
+{
+    nrf_drv_clock_uninit();
+}
+
+void nrf_802154_clock_hfclk_start(void)
+{
+    nrf_drv_clock_hfclk_request(&m_clock_handler);
+}
+
+void nrf_802154_clock_hfclk_stop(void)
+{
+    nrf_drv_clock_hfclk_release();
+}
+
+bool nrf_802154_clock_hfclk_is_running(void)
+{
+    return nrf_drv_clock_hfclk_is_running();
+}
+
+void nrf_802154_clock_lfclk_start(void)
+{
+    nrf_drv_clock_lfclk_request(&m_clock_handler);
+}
+
+void nrf_802154_clock_lfclk_stop(void)
+{
+    nrf_drv_clock_lfclk_release();
+}
+
+bool nrf_802154_clock_lfclk_is_running(void)
+{
+    return nrf_drv_clock_lfclk_is_running();
+}
+
+__WEAK void nrf_802154_clock_hfclk_ready(void)
+{
+    // Intentionally empty.
+}
+
+__WEAK void nrf_802154_clock_lfclk_ready(void)
+{
+    // Intentionally empty.
+}

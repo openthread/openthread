@@ -46,7 +46,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include <common/logging.hpp>
-#include <drivers/radio/nrf_drv_radio802154.h>
+#include <drivers/radio/nrf_802154.h>
 #include <utils/code_utils.h>
 
 typedef enum { kDiagTransmitModeIdle, kDiagTransmitModePackets, kDiagTransmitModeCarrier } DiagTrasmitMode;
@@ -100,10 +100,10 @@ static void appendErrorResult(otError aError, char *aOutput, size_t aOutputMaxLe
 
 static bool startCarrierTransmision(void)
 {
-    nrf_drv_radio802154_channel_set(sChannel);
-    nrf_drv_radio802154_tx_power_set(sTxPower);
+    nrf_802154_channel_set(sChannel);
+    nrf_802154_tx_power_set(sTxPower);
 
-    return nrf_drv_radio802154_continuous_carrier();
+    return nrf_802154_continuous_carrier();
 }
 
 static void processListen(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
@@ -333,14 +333,14 @@ static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], c
 {
     (void)aInstance;
 
-    otError                       error = OT_ERROR_NONE;
-    nrf_drv_radio802154_cca_cfg_t ccaConfig;
+    otError              error = OT_ERROR_NONE;
+    nrf_802154_cca_cfg_t ccaConfig;
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
     if (argc == 0)
     {
-        nrf_drv_radio802154_cca_cfg_get(&ccaConfig);
+        nrf_802154_cca_cfg_get(&ccaConfig);
 
         snprintf(aOutput, aOutputMaxLen, "cca threshold: %u\r\n", ccaConfig.ed_threshold);
     }
@@ -355,7 +355,7 @@ static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], c
         ccaConfig.mode         = NRF_RADIO_CCA_MODE_ED;
         ccaConfig.ed_threshold = (uint8_t)value;
 
-        nrf_drv_radio802154_cca_cfg_set(&ccaConfig);
+        nrf_802154_cca_cfg_set(&ccaConfig);
         snprintf(aOutput, aOutputMaxLen, "set cca threshold to %u\r\nstatus 0x%02x\r\n", ccaConfig.ed_threshold, error);
     }
 

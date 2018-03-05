@@ -38,7 +38,7 @@ COMMONCPPFLAGS                                                                  
     -DCONFIG_GPIO_AS_PINRESET                                                                                \
     -DNRF52840_XXAA                                                                                          \
     -DENABLE_FEM=1                                                                                           \
-    -DNRF_DRV_RADIO802154_PROJECT_CONFIG=\"platform-config.h\"                                               \
+    -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"                                                        \
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
     -I$(top_srcdir)/src/core                                                                                 \
@@ -83,10 +83,9 @@ PLATFORM_COMMON_SOURCES                                                         
 
 SINGLEPHY_SOURCES                                                                                          = \
     flash_nosd.c                                                                                             \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_notification_direct.c   \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_priority_drop_direct.c  \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_request_direct.c        \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_direct.c                \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification_direct.c            \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop_direct.c           \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request_direct.c                 \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/raal/single_phy/single_phy.c                \
     $(NULL)
 
@@ -98,11 +97,10 @@ SOFTDEVICE_SOURCES                                                              
     flash_sd.c                                                                                               \
     softdevice.c                                                                                             \
     softdevice.h                                                                                             \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_notification_swi.c      \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_priority_drop_swi.c     \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_request_swi.c           \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_swi.c                   \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_softdevice.c            \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification_swi.c               \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop_swi.c              \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request_swi.c                    \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_swi.c                            \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/raal/softdevice/nrf_raal_softdevice.c       \
     $(NULL)
 
@@ -129,17 +127,19 @@ PLATFORM_SOURCES                                                                
 endif
 
 RADIO_DRIVER_SOURCES                                                                                       = \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154.c                       \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_ack_pending_bit.c       \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_critical_section.c      \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_debug.c                 \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_fsm.c                   \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_pib.c                   \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_revision.c              \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_rx_buffer.c             \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_common.c                \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_drv_radio802154_clock_sdk.c  \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_drv_radio802154_timer_none.c  \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154.c                                \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_ack_pending_bit.c                \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core.c                           \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core_hooks.c                     \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_critical_section.c               \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_debug.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_pib.c                            \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_revision.c                       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.c                      \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control.c                       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.c            \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock_sdk.c       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_802154_timer_none.c      \
     $(NULL)
 
 NORDICSEMI_SOURCES                                                                                         = \
@@ -212,29 +212,34 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/device/nrf52840_peripherals.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/device/system_nrf52840.h                                   \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_ack_pending_bit.h        \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_config.h                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_const.h                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_critical_section.h       \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_debug.h                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_fsm.h                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_notification.h           \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_pib.h                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_priority_drop.h          \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_procedures_duration.h    \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_request.h                \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_revision.h               \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_drv_radio802154_rx_buffer.h              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154.h                                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_ack_pending_bit.h                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core_hooks.h                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_config.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_const.h                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_critical_section.h                \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_debug.h                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification.h                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_pib.h                             \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop.h                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_procedures_duration.h             \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request.h                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_revision.h                        \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.h                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_swi.h                             \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_api.h                    \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_config.h                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_internal.h               \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal/nrf_radio.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_drv_radio802154_clock.h   \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_drv_radio802154_timer.h   \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_ack_timeout.h        \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_csma_ca.h            \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.h             \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock.h            \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_802154_timer.h            \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_api.h                          \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_config.h                       \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/softdevice/nrf_raal_softdevice.h        \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.h     \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_assert.h                                           \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_clock.h                                            \
     $(top_srcdir)/third_party/NordicSemiconductor/hal/nrf_gpio.h                                             \

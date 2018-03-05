@@ -28,43 +28,56 @@
  *
  */
 
-#ifndef NRF_RAAL_CONFIG_H__
-#define NRF_RAAL_CONFIG_H__
+/**
+ * @brief This module contains buffer for frames received by nRF 802.15.4 radio driver.
+ *
+ */
 
-#ifdef NRF_802154_PROJECT_CONFIG
-#include NRF_802154_PROJECT_CONFIG
-#endif
+#ifndef NRF_802154_RX_BUFFER_H_
+#define NRF_802154_RX_BUFFER_H_
 
-#include <nrf.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "nrf_802154_const.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_raal_config RAAL configuration
- * @{
- * @ingroup nrf_802154
- * @brief Configuration of Radio Arbiter Abstraction Layer.
+ * @brief Structure containing received frame.
  */
+typedef struct
+{
+    uint8_t psdu[MAX_PACKET_SIZE + 1];
+    bool    free;                      // If this buffer is free or contains a frame.
+} rx_buffer_t;
 
 /**
- * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
+ * @brief Array containing all buffers used to receive frame.
  *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
+ * This array is in global scope to allow optimizations in Core module in case there is only
+ * one buffer provided by this module.
  *
  */
-#ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
-#endif
+extern rx_buffer_t nrf_802154_rx_buffers[];
 
 /**
- *@}
- **/
+ * @brief Initialize buffer for received frames.
+ */
+void nrf_802154_rx_buffer_init(void);
+
+/**
+ * @brief Get free buffer to receive a frame.
+ *
+ * @return  Pointer to free buffer of NULL if no free buffer is available.
+ */
+rx_buffer_t * nrf_802154_rx_buffer_free_find(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // NRF_RAAL_CONFIG_H__
+#endif /* NRF_802154_RX_BUFFER_H_ */
+
