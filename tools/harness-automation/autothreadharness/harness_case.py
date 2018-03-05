@@ -350,7 +350,7 @@ class HarnessCase(unittest.TestCase):
         if not self.started:
             self.started = time.time()
 
-        if time.time() - self.started > 150:
+        if time.time() - self.started > 5*len(settings.GOLDEN_DEVICES):
             self._browser.refresh()
             return
 
@@ -501,11 +501,11 @@ class HarnessCase(unittest.TestCase):
             try:
                 while 1:
                     topo_line = f_topo.readline().strip()
-                    logger.info('%s', topo_line)
                     match_line = re.match(r'(.*)-(.*)', topo_line, re.M | re.I)
                     case_id = match_line.group(1)
 
                     if re.sub(r'\.', ' ', case_id) == self.case:
+                        logger.info('Get line by case %s: %s', case_id, topo_line)
                         topo_device_list = re.split(',', match_line.group(2))
                         for i in range(len(topo_device_list)):
                             topo_device = re.split(':', topo_device_list[i])
@@ -516,28 +516,37 @@ class HarnessCase(unittest.TestCase):
             except Exception as e:
                 logger.info('Get devices from topology config file error: %s', e)
                 raise GoldenDeviceNotEnoughError()
-            logger.info('Topology config devices for case %s: %s', case_id, topo_mixed_devices)
+            logger.info('Golden devices in topology config file for case %s: %s', case_id, topo_mixed_devices)
             f_topo.close()
-            needed_golden_devices = []
-            missing_golden_devices = topo_mixed_devices
+            golden_device_candidates = []
+            missing_golden_devices = topo_mixed_devices[:]
             # mapping topology config devices with devices in settings
-            for temp_mixed_device in topo_mixed_devices:
-                for temp_device in devices:
-                    if temp_mixed_device[1] == temp_device[1]:
-                        needed_golden_devices.append(temp_device)
-                        devices.remove(temp_device)
-                        missing_golden_devices.remove(temp_mixed_device)
+            for mixed_device_item in topo_mixed_devices:
+                for device_item in devices:
+                    if mixed_device_item[1] == device_item[1]:
+                        golden_device_candidates.append(device_item)
+                        devices.remove(device_item)
+                        missing_golden_devices.remove(mixed_device_item)
                         break
-            logger.info('Case-needed golden devices can be found in settings : %s', needed_golden_devices)
-            if len(topo_mixed_devices) != len(needed_golden_devices):
-                logger.info('Missing golden devices : %s', missing_golden_devices)
+            logger.info('Golden devices in topology config file mapped in settings : %s', golden_device_candidates)
+            if len(topo_mixed_devices) != len(golden_device_candidates):
+                device_dict = dict()
+                for missing_device in missing_golden_devices:
+                    if missing_device[1] in device_dict:
+                        device_dict[missing_device[1]] += 1
+                    else:
+                        device_dict[missing_device[1]] = 1
+                logger.info('Missing Devices: %s', device_dict)
                 raise GoldenDeviceNotEnoughError()
             else:
-                devices = needed_golden_devices
+                devices = golden_device_candidates
                 golden_devices_required = len(devices)
                 logger.info('All case-needed golden devices: %s', json.dumps(devices, indent=2))
 
         if self.auto_dut and not settings.DUT_DEVICE:
+            if settings.MIXED_DEVICE_TYPE:
+                logger.info('Must set DUT_DEVICE')
+                raise FailError('DUT_DEVICE must be set for mixed testbed')
             golden_devices_required += 1
 
         if len(devices) < golden_devices_required:
