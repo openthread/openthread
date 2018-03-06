@@ -41,7 +41,6 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
-#include "common/settings.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 
@@ -507,22 +506,6 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
 exit:
     return error;
-}
-
-uint16_t Dataset::GetSettingsKey(void)
-{
-    uint16_t rval;
-
-    if (mType == Tlv::kActiveTimestamp)
-    {
-        rval = static_cast<uint16_t>(Settings::kKeyActiveDataset);
-    }
-    else
-    {
-        rval = static_cast<uint16_t>(Settings::kKeyPendingDataset);
-    }
-
-    return rval;
 }
 
 void Dataset::Remove(uint8_t *aStart, uint8_t aLength)

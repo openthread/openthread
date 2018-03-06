@@ -951,6 +951,12 @@ public:
      */
     void RemoveDelayedDataResponseMessage(void);
 
+    /**
+     * This method converts a device role into a human-readable string.
+     *
+     */
+    static const char *RoleToString(otDeviceRole aRole);
+
 protected:
     enum
     {

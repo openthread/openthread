@@ -123,6 +123,7 @@ SOURCES_COMMON                      = \
     common/locator.cpp                \
     common/notifier.cpp               \
     common/message.cpp                \
+    common/settings.cpp               \
     common/tasklet.cpp                \
     common/timer.cpp                  \
     common/tlvs.cpp                   \

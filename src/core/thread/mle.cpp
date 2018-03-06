@@ -36,7 +36,6 @@
 #include "mle.hpp"
 
 #include <openthread/platform/radio.h>
-#include <openthread/platform/settings.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -293,19 +292,16 @@ otError Mle::Stop(bool aClearNetworkDatasets)
 
 otError Mle::Restore(void)
 {
-    ThreadNetif &         netif = GetNetif();
-    otError               error = OT_ERROR_NONE;
+    ThreadNetif &         netif    = GetNetif();
+    Settings &            settings = GetInstance().GetSettings();
+    otError               error    = OT_ERROR_NONE;
     Settings::NetworkInfo networkInfo;
     Settings::ParentInfo  parentInfo;
-    uint16_t              length;
 
     netif.GetActiveDataset().Restore();
     netif.GetPendingDataset().Restore();
 
-    length = sizeof(networkInfo);
-    SuccessOrExit(error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
-                                            reinterpret_cast<uint8_t *>(&networkInfo), &length));
-    VerifyOrExit(length >= sizeof(networkInfo), error = OT_ERROR_NOT_FOUND);
+    SuccessOrExit(error = settings.ReadNetworkInfo(networkInfo));
 
     netif.GetKeyManager().SetCurrentKeySequence(networkInfo.mKeySequence);
     netif.GetKeyManager().SetMleFrameCounter(networkInfo.mMleFrameCounter);
@@ -328,10 +324,7 @@ otError Mle::Restore(void)
 
     if (!IsActiveRouter(networkInfo.mRloc16))
     {
-        length = sizeof(parentInfo);
-
-        error = otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyParentInfo, 0,
-                                  reinterpret_cast<uint8_t *>(&parentInfo), &length);
+        error = settings.ReadParentInfo(parentInfo);
 
         if (error != OT_ERROR_NONE)
         {
@@ -345,8 +338,6 @@ otError Mle::Restore(void)
                          networkInfo.mRloc16);
             ExitNow();
         }
-
-        VerifyOrExit(length >= sizeof(parentInfo), error = OT_ERROR_PARSE);
 
         memset(&mParent, 0, sizeof(mParent));
         mParent.SetExtAddress(*static_cast<Mac::ExtAddress *>(&parentInfo.mExtAddress));
@@ -372,8 +363,9 @@ exit:
 
 otError Mle::Store(void)
 {
-    ThreadNetif &         netif = GetNetif();
-    otError               error = OT_ERROR_NONE;
+    ThreadNetif &         netif    = GetNetif();
+    Settings &            settings = GetInstance().GetSettings();
+    otError               error    = OT_ERROR_NONE;
     Settings::NetworkInfo networkInfo;
 
     memset(&networkInfo, 0, sizeof(networkInfo));
@@ -396,16 +388,13 @@ otError Mle::Store(void)
             memset(&parentInfo, 0, sizeof(parentInfo));
             parentInfo.mExtAddress = mParent.GetExtAddress();
 
-            SuccessOrExit(error = otPlatSettingsSet(&netif.GetInstance(), Settings::kKeyParentInfo,
-                                                    reinterpret_cast<uint8_t *>(&parentInfo), sizeof(parentInfo)));
+            SuccessOrExit(error = settings.SaveParentInfo(parentInfo));
         }
     }
     else
     {
         // when not attached, read out any existing values so that we do not change them
-        uint16_t length = sizeof(networkInfo);
-        IgnoreReturnValue(otPlatSettingsGet(&netif.GetInstance(), Settings::kKeyNetworkInfo, 0,
-                                            reinterpret_cast<uint8_t *>(&networkInfo), &length));
+        IgnoreReturnValue(settings.ReadNetworkInfo(networkInfo));
     }
 
     // update MAC and MLE Frame Counters even when we are not attached MLE messages are sent before a device attached
@@ -415,8 +404,7 @@ otError Mle::Store(void)
     networkInfo.mMacFrameCounter =
         netif.GetKeyManager().GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
 
-    SuccessOrExit(error = otPlatSettingsSet(&netif.GetInstance(), Settings::kKeyNetworkInfo,
-                                            reinterpret_cast<uint8_t *>(&networkInfo), sizeof(networkInfo)));
+    SuccessOrExit(error = settings.SaveNetworkInfo(networkInfo));
 
     netif.GetKeyManager().SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);
     netif.GetKeyManager().SetStoredMacFrameCounter(networkInfo.mMacFrameCounter);
@@ -3659,6 +3647,36 @@ void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, ui
     OT_UNUSED_VARIABLE(aLogString);
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aRloc);
+}
+
+const char *Mle::RoleToString(otDeviceRole aRole)
+{
+    const char *roleString = "Unknown";
+
+    switch (aRole)
+    {
+    case OT_DEVICE_ROLE_DISABLED:
+        roleString = "Disabled";
+        break;
+
+    case OT_DEVICE_ROLE_DETACHED:
+        roleString = "Detached";
+        break;
+
+    case OT_DEVICE_ROLE_CHILD:
+        roleString = "Child";
+        break;
+
+    case OT_DEVICE_ROLE_ROUTER:
+        roleString = "Router";
+        break;
+
+    case OT_DEVICE_ROLE_LEADER:
+        roleString = "Leader";
+        break;
+    }
+
+    return roleString;
 }
 
 } // namespace Mle

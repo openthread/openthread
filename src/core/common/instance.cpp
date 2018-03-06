@@ -36,7 +36,6 @@
 #include "instance.hpp"
 
 #include <openthread/platform/misc.h>
-#include <openthread/platform/settings.h>
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
@@ -56,6 +55,7 @@ Instance::Instance(void)
     , mEnergyScanCallback(NULL)
     , mEnergyScanCallbackContext(NULL)
     , mNotifier(*this)
+    , mSettings(*this)
     , mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     , mTimerMicroScheduler(*this)
@@ -134,7 +134,7 @@ void Instance::AfterInit(void)
 
     // Restore datasets and network information
 
-    otPlatSettingsInit(this);
+    GetSettings().Init();
     mThreadNetif.GetMle().Restore();
 
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
@@ -175,7 +175,7 @@ void Instance::Reset(void)
 
 void Instance::FactoryReset(void)
 {
-    otPlatSettingsWipe(this);
+    GetSettings().Wipe();
     otPlatReset(this);
 }
 
@@ -184,7 +184,7 @@ otError Instance::ErasePersistentInfo(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    otPlatSettingsWipe(this);
+    GetSettings().Wipe();
 
 exit:
     return error;
