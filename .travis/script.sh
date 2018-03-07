@@ -370,3 +370,7 @@ set -x
     ./bootstrap || die
     COVERAGE=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
+
+[ $BUILD_TARGET != toranj-test-framework ] || {
+    ./tests/toranj/start.sh
+}
