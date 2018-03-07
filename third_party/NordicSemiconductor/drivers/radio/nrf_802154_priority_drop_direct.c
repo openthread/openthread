@@ -28,43 +28,24 @@
  *
  */
 
-#ifndef NRF_RAAL_CONFIG_H__
-#define NRF_RAAL_CONFIG_H__
-
-#ifdef NRF_802154_PROJECT_CONFIG
-#include NRF_802154_PROJECT_CONFIG
-#endif
-
-#include <nrf.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * @defgroup nrf_raal_config RAAL configuration
- * @{
- * @ingroup nrf_802154
- * @brief Configuration of Radio Arbiter Abstraction Layer.
- */
-
-/**
- * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
- *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
+ * @file
+ *   This file implements procedures that should be called with lower priority than caller in
+ *   the nrf 802.15.4 radio driver.
  *
  */
-#ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
-#endif
 
-/**
- *@}
- **/
+#include "nrf_802154_priority_drop.h"
 
-#ifdef __cplusplus
+#include "raal/nrf_raal_api.h"
+
+void nrf_802154_priority_drop_init(void)
+{
+    // Intentionally empty
 }
-#endif
 
-#endif // NRF_RAAL_CONFIG_H__
+void nrf_802154_priority_drop_timeslot_exit(void)
+{
+    nrf_raal_continuous_mode_exit();
+}
+

@@ -28,36 +28,32 @@
  *
  */
 
-#ifndef NRF_RAAL_CONFIG_H__
-#define NRF_RAAL_CONFIG_H__
-
-#ifdef NRF_802154_PROJECT_CONFIG
-#include NRF_802154_PROJECT_CONFIG
-#endif
-
-#include <nrf.h>
+#ifndef NRF_802154_PRIORITY_DROP_H__
+#define NRF_802154_PRIORITY_DROP_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_raal_config RAAL configuration
+ * @defgroup nrf_802154_priority_drop 802.15.4 driver procedures with lower priority.
  * @{
  * @ingroup nrf_802154
- * @brief Configuration of Radio Arbiter Abstraction Layer.
+ * @brief Internal procedures of 802.15.4 driver that should be called with lower priority than
+ *        the caller's priority.
  */
 
 /**
- * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
- *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
- *
+ * @brief Initialize notification module.
  */
-#ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
-#endif
+void nrf_802154_priority_drop_init(void);
+
+/**
+ * @brief Request discarding of the timeslot.
+ *
+ * @note This function should be called through this module to prevent calling it from arbiter context.
+ */
+void nrf_802154_priority_drop_timeslot_exit(void);
 
 /**
  *@}
@@ -67,4 +63,5 @@ extern "C" {
 }
 #endif
 
-#endif // NRF_RAAL_CONFIG_H__
+#endif // NRF_802154_PRIORITY_DROP_H__
+

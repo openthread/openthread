@@ -94,13 +94,12 @@ typedef struct
  */
 typedef struct
 {
-    PlatformFemConfigPaLna mPaCfg;       /**< Power Amplifier configuration */
-    PlatformFemConfigPaLna mLnaCfg;      /**< Low Noise Amplifier configuration */
-    uint8_t                mPpiChIdSet;  /**< PPI channel used for radio pin setting */
-    uint8_t                mPpiChIdClr;  /**< PPI channel used for radio pin clearing */
-    uint8_t                mTimerPpiGrp; /**< PPI group used for disabling timer match PPI. */
-    uint8_t                mRadioPpiGrp; /**< PPI group used for disabling radio disabled PPI. */
-    uint8_t                mGpioteChId;  /**< GPIOTE channel used for radio pin toggling */
+    PlatformFemConfigPaLna mPaCfg;         /**< Power Amplifier configuration */
+    PlatformFemConfigPaLna mLnaCfg;        /**< Low Noise Amplifier configuration */
+    uint8_t                mPpiChIdSet;    /**< PPI channel used for radio pin setting */
+    uint8_t                mPpiChIdClr;    /**< PPI channel used for radio pin clearing */
+    uint8_t                mGpiotePaChId;  /**< GPIOTE channel used for radio PA pin toggling */
+    uint8_t                mGpioteLnaChId; /**< GPIOTE channel used for radio LNA pin toggling */
 } PlatformFemConfigParams;
 
 /**

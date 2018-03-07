@@ -352,23 +352,44 @@
  ******************************************************************************/
 
 /**
- * @def NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES
+ * @def NRF_802154_PENDING_SHORT_ADDRESSES
  *
  * Number of slots containing short addresses of nodes for which pending data is stored.
  *
  */
-#ifndef NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES
-#define NRF_DRV_RADIO802154_PENDING_SHORT_ADDRESSES OPENTHREAD_CONFIG_MAX_CHILDREN
+#ifndef NRF_802154_PENDING_SHORT_ADDRESSES
+#define NRF_802154_PENDING_SHORT_ADDRESSES OPENTHREAD_CONFIG_MAX_CHILDREN
 #endif
 
 /**
- * @def NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES
+ * @def NRF_802154_PENDING_EXTENDED_ADDRESSES
  *
  * Number of slots containing extended addresses of nodes for which pending data is stored.
  *
  */
-#ifndef NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES
-#define NRF_DRV_RADIO802154_PENDING_EXTENDED_ADDRESSES OPENTHREAD_CONFIG_MAX_CHILDREN
+#ifndef NRF_802154_PENDING_EXTENDED_ADDRESSES
+#define NRF_802154_PENDING_EXTENDED_ADDRESSES OPENTHREAD_CONFIG_MAX_CHILDREN
+#endif
+
+/**
+ * @def NRF_802154_CSMA_CA_ENABLED
+ *
+ * If CSMA-CA procedure should be enabled by the driver. Disabling CSMA-CA procedure improves
+ * driver performance.
+ *
+ */
+#ifndef NRF_802154_CSMA_CA_ENABLED
+#define NRF_802154_CSMA_CA_ENABLED 0
+#endif
+
+/**
+ * @def NRF_802154_ACK_TIMEOUT_ENABLED
+ *
+ * If ACK timeout feature should be enabled in the driver.
+ *
+ */
+#ifndef NRF_802154_ACK_TIMEOUT_ENABLED
+#define NRF_802154_ACK_TIMEOUT_ENABLED 0
 #endif
 
 #endif // PLATFORM_CONFIG_H_
