@@ -41,11 +41,11 @@
 #include "platform-fem.h"
 
 #define ENABLE_FEM 1
-#include <nrf_drv_radio802154.h>
+#include <nrf_802154.h>
 
 void PlatformFemSetConfigParams(const PlatformFemConfigParams *aConfig)
 {
-    nrf_drv_radio802154_fem_control_cfg_t cfg;
+    nrf_802154_fem_control_cfg_t cfg;
 
     memset(&cfg, 0, sizeof(cfg));
 
@@ -57,9 +57,8 @@ void PlatformFemSetConfigParams(const PlatformFemConfigParams *aConfig)
     cfg.lna_cfg.gpio_pin    = aConfig->mLnaCfg.mGpioPin;
     cfg.ppi_ch_id_clr       = aConfig->mPpiChIdClr;
     cfg.ppi_ch_id_set       = aConfig->mPpiChIdSet;
-    cfg.radio_ppi_grp       = aConfig->mRadioPpiGrp;
-    cfg.timer_ppi_grp       = aConfig->mTimerPpiGrp;
-    cfg.gpiote_ch_id        = aConfig->mGpioteChId;
+    cfg.pa_gpiote_ch_id     = aConfig->mGpiotePaChId;
+    cfg.lna_gpiote_ch_id    = aConfig->mGpioteLnaChId;
 
-    nrf_drv_radio802154_fem_control_cfg_set(&cfg);
+    nrf_802154_fem_control_cfg_set(&cfg);
 }

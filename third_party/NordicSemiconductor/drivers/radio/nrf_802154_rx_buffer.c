@@ -28,43 +28,41 @@
  *
  */
 
-#ifndef NRF_RAAL_CONFIG_H__
-#define NRF_RAAL_CONFIG_H__
-
-#ifdef NRF_802154_PROJECT_CONFIG
-#include NRF_802154_PROJECT_CONFIG
-#endif
-
-#include <nrf.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * @defgroup nrf_raal_config RAAL configuration
- * @{
- * @ingroup nrf_802154
- * @brief Configuration of Radio Arbiter Abstraction Layer.
- */
-
-/**
- * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
- *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
+ * @file
+ *   This file implements buffer management for frames received by nRF 802.15.4 radio driver.
  *
  */
-#ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US
-#define NRF_RAAL_MAX_CLEAN_UP_TIME_US  91
+
+#include "nrf_802154_rx_buffer.h"
+
+#include <stddef.h>
+
+#include "nrf_802154_config.h"
+
+#if NRF_802154_RX_BUFFERS < 1
+#error Not enough rx buffers in the 802.15.4 radio driver.
 #endif
 
-/**
- *@}
- **/
+rx_buffer_t nrf_802154_rx_buffers[NRF_802154_RX_BUFFERS]; ///< Receive buffers.
 
-#ifdef __cplusplus
+void nrf_802154_rx_buffer_init(void)
+{
+    for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
+    {
+        nrf_802154_rx_buffers[i].free = true;
+    }
 }
-#endif
 
-#endif // NRF_RAAL_CONFIG_H__
+rx_buffer_t * nrf_802154_rx_buffer_free_find(void)
+{
+    for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
+    {
+        if (nrf_802154_rx_buffers[i].free)
+        {
+            return &nrf_802154_rx_buffers[i];
+        }
+    }
+
+    return NULL;
+}
