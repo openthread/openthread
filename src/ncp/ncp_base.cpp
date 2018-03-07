@@ -2163,7 +2163,7 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 
 extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
-    char logString[128];
+    char logString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE];
     int charsWritten;
 
     if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, aArgs)) > 0)
