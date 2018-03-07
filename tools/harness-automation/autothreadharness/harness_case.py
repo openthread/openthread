@@ -40,6 +40,7 @@ from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException
+from selenium.common.exceptions import NoSuchElementException
 
 from autothreadharness import settings
 from autothreadharness.exceptions import FailError, FatalError, GoldenDeviceNotEnoughError
@@ -226,7 +227,13 @@ class HarnessCase(unittest.TestCase):
         harness_config.read('%s\\Config\\Configuration.ini' % settings.HARNESS_HOME)
         if harness_config.has_option('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate') and \
                 harness_config.getboolean('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'):
-            os.system('taskkill /t /f /im chrome.exe')
+            logger.error('BrowserAutoNavigate in Configuration.ini should be False')
+            raise FailError('BrowserAutoNavigate in Configuration.ini should be False')
+        if settings.MIXED_DEVICE_TYPE:
+            if harness_config.has_option('THREAD_HARNESS_CONFIG', 'EnableDeviceSelection') and \
+                    not harness_config.getboolean('THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'):
+                logger.error('EnableDeviceSelection in Configuration.ini should be True')
+                raise FailError('EnableDeviceSelection in Configuration.ini should be True')
 
     def _destroy_harness(self):
         """Stop harness backend service
@@ -262,6 +269,7 @@ class HarnessCase(unittest.TestCase):
         """
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-infobars')
         chrome_options.add_argument('--ignore-certificate-errors')
         chrome_options.add_experimental_option('prefs', {
             'profile.managed_default_content_settings.notifications': 1
@@ -342,7 +350,7 @@ class HarnessCase(unittest.TestCase):
         if not self.started:
             self.started = time.time()
 
-        if time.time() - self.started > 30:
+        if time.time() - self.started > 5*len(settings.GOLDEN_DEVICES):
             self._browser.refresh()
             return
 
@@ -353,7 +361,7 @@ class HarnessCase(unittest.TestCase):
             logger.exception('Failed to get dialog.')
         else:
             if dialog and dialog.get_attribute('aria-hidden') == 'false':
-                times = 60
+                times = 100
                 while times:
                     status = dialog.find_element_by_class_name('status-notify').text
                     if 'Searching' in status:
@@ -399,6 +407,7 @@ class HarnessCase(unittest.TestCase):
         # General Setup
         try:
             if self.child_timeout or self.sed_polling_interval:
+                logger.info('finding general Setup button')
                 button = self._browser.find_element_by_id('general-Setup')
                 button.click()
                 time.sleep(2)
@@ -422,6 +431,7 @@ class HarnessCase(unittest.TestCase):
                 time.sleep(1)
 
         except:
+            logger.info('general setup exception')
             logger.exception('Failed to do general setup')
             return
 
@@ -476,16 +486,71 @@ class HarnessCase(unittest.TestCase):
         devices = [device for device in settings.GOLDEN_DEVICES
                    if not self.history.is_bad_golden_device(device[0]) and \
                    not (settings.DUT_DEVICE and device[0] == settings.DUT_DEVICE[0])]
-
         logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
         golden_devices_required = self.golden_devices_required
 
+        # for test bed with mixed devices
+        if settings.MIXED_DEVICE_TYPE:
+            topo_file = settings.HARNESS_HOME+"\\Thread_Harness\\TestScripts\\TopologyConfig.txt"
+            try:
+                f_topo = open(topo_file, 'r')
+            except IOError as e:
+                logger.info('%s can NOT be found', topo_file)
+                raise GoldenDeviceNotEnoughError()
+            topo_mixed_devices = []
+            try:
+                while 1:
+                    topo_line = f_topo.readline().strip()
+                    match_line = re.match(r'(.*)-(.*)', topo_line, re.M | re.I)
+                    case_id = match_line.group(1)
+
+                    if re.sub(r'\.', ' ', case_id) == self.case:
+                        logger.info('Get line by case %s: %s', case_id, topo_line)
+                        topo_device_list = re.split(',', match_line.group(2))
+                        for i in range(len(topo_device_list)):
+                            topo_device = re.split(':', topo_device_list[i])
+                            topo_mixed_devices.append(tuple(topo_device))
+                        break
+                    else:
+                        continue
+            except Exception as e:
+                logger.info('Get devices from topology config file error: %s', e)
+                raise GoldenDeviceNotEnoughError()
+            logger.info('Golden devices in topology config file for case %s: %s', case_id, topo_mixed_devices)
+            f_topo.close()
+            golden_device_candidates = []
+            missing_golden_devices = topo_mixed_devices[:]
+            # mapping topology config devices with devices in settings
+            for mixed_device_item in topo_mixed_devices:
+                for device_item in devices:
+                    if mixed_device_item[1] == device_item[1]:
+                        golden_device_candidates.append(device_item)
+                        devices.remove(device_item)
+                        missing_golden_devices.remove(mixed_device_item)
+                        break
+            logger.info('Golden devices in topology config file mapped in settings : %s', golden_device_candidates)
+            if len(topo_mixed_devices) != len(golden_device_candidates):
+                device_dict = dict()
+                for missing_device in missing_golden_devices:
+                    if missing_device[1] in device_dict:
+                        device_dict[missing_device[1]] += 1
+                    else:
+                        device_dict[missing_device[1]] = 1
+                logger.info('Missing Devices: %s', device_dict)
+                raise GoldenDeviceNotEnoughError()
+            else:
+                devices = golden_device_candidates
+                golden_devices_required = len(devices)
+                logger.info('All case-needed golden devices: %s', json.dumps(devices, indent=2))
+
         if self.auto_dut and not settings.DUT_DEVICE:
+            if settings.MIXED_DEVICE_TYPE:
+                logger.info('Must set DUT_DEVICE')
+                raise FailError('DUT_DEVICE must be set for mixed testbed')
             golden_devices_required += 1
 
         if len(devices) < golden_devices_required:
             raise GoldenDeviceNotEnoughError()
-
 
         # add golden devices
         number_of_devices_to_add = len(devices) if self.add_all_devices else golden_devices_required
@@ -666,6 +731,7 @@ class HarnessCase(unittest.TestCase):
         done = False
         error = False
 
+        logger.info("self timeout %d",self.timeout)
         while not done and self.timeout:
             try:
                 dialog = self._browser.find_element_by_id('RemoteConfirm')
@@ -696,8 +762,8 @@ class HarnessCase(unittest.TestCase):
                     stop_button.click()
                     # wait for stop procedure end
                     time.sleep(10)
-            except:
-                logger.exception('Test stopped')
+            except NoSuchElementException:
+                logger.info('Test stopped')
                 time.sleep(5)
                 done = True
 
@@ -881,6 +947,7 @@ class HarnessCase(unittest.TestCase):
 
         self._select_case(self.role, self.case)
 
+        logger.info("start to wait test process end")
         self._wait_dialog()
 
         try:

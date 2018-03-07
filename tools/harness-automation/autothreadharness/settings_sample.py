@@ -80,6 +80,9 @@ For OpenThread golden devices, ser2net is also supported, just use IP:PORT for t
 ('192.168.1.2:5001', 'OpenThread').
 """
 
+MIXED_DEVICE_TYPE = True
+"""bool: Whether golden devices are mixed-type. Must put TopologyConfig.txt under HARNESS_HOME\Thread_Harness\TestScripts before testing if True"""
+
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""
 
