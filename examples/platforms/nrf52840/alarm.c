@@ -62,9 +62,9 @@
 #define US_PER_MS           1000ULL
 #define US_PER_S            1000000ULL
 #define US_PER_TICK         CEIL_DIV(US_PER_S, RTC_FREQUENCY)
+#define US_PER_OVERFLOW     (512UL * US_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
 
 #define MS_PER_S            1000UL
-#define MS_PER_OVERFLOW     (512UL * MS_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
 // clang-format on
 
 typedef enum { kMsTimer, kUsTimer, kNumTimers } AlarmIndex;
@@ -83,8 +83,10 @@ typedef struct
     nrf_rtc_int_t   mCompareInt;
 } AlarmChannelData;
 
-static volatile uint64_t      sTimeOffset = 0;        ///< Time offset to keep track of current time (in millisecond).
-static AlarmData              sTimerData[kNumTimers]; ///< Data of the timers.
+static volatile uint32_t sOverflowCounter; ///< Counter of RTC overflowCounter, incremented by 2 on each OVERFLOW event.
+static volatile uint8_t  sMutex;           ///< Mutex for write access to @ref sOverflowCounter.
+static volatile uint64_t sTimeOffset = 0;  ///< Time overflowCounter to keep track of current time (in millisecond).
+static AlarmData         sTimerData[kNumTimers];         ///< Data of the timers.
 static const AlarmChannelData sChannelData[kNumTimers] = //
     {                                                    //
         [kMsTimer] =
@@ -101,7 +103,38 @@ static const AlarmChannelData sChannelData[kNumTimers] = //
             .mCompareInt       = NRF_RTC_INT_COMPARE1_MASK,
         }};
 
-static void HandleOverflow(void);
+static uint32_t OverflowCounterGet(void);
+
+static inline bool MutexGet(void)
+{
+    do
+    {
+        volatile uint8_t mutexValue = __LDREXB(&sMutex);
+
+        if (mutexValue)
+        {
+            __CLREX();
+            return false;
+        }
+    } while (__STREXB(1, &sMutex));
+
+    // Disable OVERFLOW interrupt to prevent lock-up in interrupt context while mutex is locked from lower priority
+    // context and OVERFLOW event flag is stil up.
+    nrf_rtc_int_disable(RTC_INSTANCE, NRF_RTC_INT_OVERFLOW_MASK);
+
+    __DMB();
+
+    return true;
+}
+
+static inline void MutexRelease(void)
+{
+    // Re-enable OVERFLOW interrupt.
+    nrf_rtc_int_enable(RTC_INSTANCE, NRF_RTC_INT_OVERFLOW_MASK);
+
+    __DMB();
+    sMutex = 0;
+}
 
 static inline uint32_t TimeToTicks(uint64_t aTime, AlarmIndex aIndex)
 {
@@ -169,12 +202,67 @@ static void HandleCompareMatch(AlarmIndex aIndex, bool aSkipCheck)
     }
 }
 
-static void HandleOverflow(void)
+static uint32_t OverflowCounterGet(void)
 {
-    nrf_rtc_event_clear(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW);
+    uint32_t overflowCounter;
 
-    // Increment counter on overflow.
-    sTimeOffset += MS_PER_OVERFLOW;
+    // Get mutual access for writing to sOverflowCounter variable.
+    if (MutexGet())
+    {
+        bool increasing = false;
+
+        // Check if interrupt was handled already.
+        if (nrf_rtc_event_pending(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW))
+        {
+            sOverflowCounter++;
+            increasing = true;
+
+            __DMB();
+
+            // Mark that interrupt was handled.
+            nrf_rtc_event_clear(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW);
+
+            // Result should be incremented. sOverflowCounter will be incremented after mutex is released.
+        }
+        else
+        {
+            // Either overflow handling is not needed OR we acquired the mutex just after it was released.
+            // Overflow is handled after mutex is released, but it cannot be assured that sOverflowCounter
+            // was incremented for the second time, so we increment the result here.
+        }
+
+        overflowCounter = (sOverflowCounter + 1) / 2;
+
+        MutexRelease();
+
+        if (increasing)
+        {
+            // It's virtually impossible that overflow event is pending again before next instruction is performed. It
+            // is an error condition.
+            assert(sOverflowCounter & 0x01);
+
+            // Increment the counter for the second time, to allow instructions from other context get correct value of
+            // the counter.
+            sOverflowCounter++;
+        }
+    }
+    else
+    {
+        // Failed to acquire mutex.
+        if (nrf_rtc_event_pending(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW) || (sOverflowCounter & 0x01))
+        {
+            // Lower priority context is currently incrementing sOverflowCounter variable.
+            overflowCounter = (sOverflowCounter + 2) / 2;
+        }
+        else
+        {
+            // Lower priority context has already incremented sOverflowCounter variable or incrementing is not needed
+            // now.
+            overflowCounter = sOverflowCounter / 2;
+        }
+    }
+
+    return overflowCounter;
 }
 
 static void AlarmStartAt(uint32_t aT0, uint32_t aDt, AlarmIndex aIndex)
@@ -315,44 +403,28 @@ void nrf5AlarmProcess(otInstance *aInstance)
 
 inline uint64_t nrf5AlarmGetCurrentTime(void)
 {
-    uint32_t rtcValue1;
-    uint32_t rtcValue2;
-    uint64_t offset;
-
-    rtcValue1 = nrf_rtc_counter_get(RTC_INSTANCE);
+    uint32_t offset1 = OverflowCounterGet();
 
     __DMB();
 
-    offset = sTimeOffset;
+    uint32_t rtcValue1 = nrf_rtc_counter_get(RTC_INSTANCE);
 
     __DMB();
 
-    rtcValue2 = nrf_rtc_counter_get(RTC_INSTANCE);
+    uint32_t offset2 = OverflowCounterGet();
 
-    if ((rtcValue2 < rtcValue1) || (rtcValue1 == 0))
+    __DMB();
+
+    uint32_t rtcValue2 = nrf_rtc_counter_get(RTC_INSTANCE);
+
+    if (offset1 == offset2)
     {
-        // Overflow detected. Additional condition (rtcValue1 == 0) covers situation when overflow occurred in
-        // interrupt state, before this function was entered. But in general, this function shall not be called
-        // from interrupt other than alarm interrupt.
-
-        // Wait at least 20 cycles, to ensure that if interrupt is going to be called, it will be called now.
-        for (uint32_t i = 0; i < 4; i++)
-        {
-            __NOP();
-            __NOP();
-            __NOP();
-        }
-
-        // If the event flag is still on, it means that the interrupt was not called, as we are in interrupt state.
-        if (nrf_rtc_event_pending(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW))
-        {
-            HandleOverflow();
-        }
-
-        offset = sTimeOffset;
+        return (uint64_t)offset1 * US_PER_OVERFLOW + TicksToTime(rtcValue1);
     }
-
-    return US_PER_MS * offset + TicksToTime(rtcValue2);
+    else
+    {
+        return (uint64_t)offset2 * US_PER_OVERFLOW + TicksToTime(rtcValue2);
+    }
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
@@ -398,7 +470,13 @@ void RTC_IRQ_HANDLER(void)
     // Handle overflow.
     if (nrf_rtc_event_pending(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW))
     {
-        HandleOverflow();
+        // Disable OVERFLOW interrupt to prevent lock-up in interrupt context while mutex is locked from lower priority
+        // context and OVERFLOW event flag is stil up. OVERFLOW interrupt will be re-enabled when mutex is released -
+        // either from this handler, or from lower priority context, that locked the mutex.
+        nrf_rtc_int_disable(RTC_INSTANCE, NRF_RTC_INT_OVERFLOW_MASK);
+
+        // Handle OVERFLOW event by reading current value of overflow counter.
+        (void)OverflowCounterGet();
     }
 
     // Handle compare match.
