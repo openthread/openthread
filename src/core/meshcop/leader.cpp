@@ -201,6 +201,22 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     }
     else
     {
+        NetworkData::Leader &  netdata = GetNetif().GetNetworkDataLeader();
+        BorderAgentLocatorTlv *borderAgentLocator;
+        uint16_t               rloc;
+
+        borderAgentLocator =
+            static_cast<BorderAgentLocatorTlv *>(netdata.GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
+        assert(borderAgentLocator != NULL);
+
+        rloc = HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]);
+
+        if (borderAgentLocator->GetBorderAgentLocator() != rloc)
+        {
+            borderAgentLocator->SetBorderAgentLocator(HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+            netdata.IncrementVersion();
+        }
+
         responseState = StateTlv::kAccept;
         mTimer.Start(TimerMilli::SecToMsec(kTimeoutLeaderPetition));
     }
