@@ -856,6 +856,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE
+ *
+ * The maximum OpenThread log string size (number of chars) supported by NCP using Spinel `StreamWrite`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE
+#define OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE 150
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
  *
  * The assert is managed by platform defined logic when this flag is set.
