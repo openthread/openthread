@@ -2091,11 +2091,17 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         VerifyOrExit(aMessage.Read(offset, len, &entry) == len, error = OT_ERROR_PARSE);
 
         offset += len;
+        registeredCount++;
 
         if (entry.IsCompressed())
         {
-            // xxx check if context id exists
-            GetNetif().GetNetworkDataLeader().GetContext(entry.GetContextId(), context);
+            if (GetNetif().GetNetworkDataLeader().GetContext(entry.GetContextId(), context) != OT_ERROR_NONE)
+            {
+                otLogWarnMle(GetInstance(), "Failed to get context %d for compressed address from child 0x%04x",
+                             entry.GetContextId(), aChild.GetRloc16());
+                continue;
+            }
+
             memcpy(&address, context.mPrefix, BitVectorBytes(context.mPrefixLength));
             address.SetIid(entry.GetIid());
         }
@@ -2103,8 +2109,6 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         {
             address = *entry.GetIp6Address();
         }
-
-        registeredCount++;
 
         // We try to accept/add as many IPv6 addresses as possible.
         // "Child ID/Update Response" will indicate the accepted
