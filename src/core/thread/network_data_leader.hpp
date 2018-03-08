@@ -153,15 +153,18 @@ public:
      * @param[in]  aVersion        The Version value.
      * @param[in]  aStableVersion  The Stable Version value.
      * @param[in]  aStableOnly     TRUE if storing only the stable data, FALSE otherwise.
-     * @param[in]  aData           A pointer to the Network Data.
-     * @param[in]  aDataLength     The length of the Network Data in bytes.
+     * @param[in]  aMessage        A reference to the MLE message.
+     * @param[in]  aMessageOffset  The offset in @p aMessage for the Network Data TLV.
+     *
+     * @retval OT_ERROR_NONE   Successfully set the network data.
+     * @retval OT_ERROR_PARSE  Network Data TLV in @p aMessage is not valid.
      *
      */
-    void SetNetworkData(uint8_t        aVersion,
-                        uint8_t        aStableVersion,
-                        bool           aStableOnly,
-                        const uint8_t *aData,
-                        uint8_t        aDataLength);
+    otError SetNetworkData(uint8_t        aVersion,
+                           uint8_t        aStableVersion,
+                           bool           aStableOnly,
+                           const Message &aMessage,
+                           uint16_t       aMessageOffset);
 
     /**
      * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
