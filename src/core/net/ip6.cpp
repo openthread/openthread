@@ -616,7 +616,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
         switch (aIpProto)
         {
         case kProtoIcmp6:
-            if (mIcmp.IsEchoEnabled())
+            if (mIcmp.ShouldHandleEchoRequest(aMessageInfo))
             {
                 IcmpHeader icmp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
