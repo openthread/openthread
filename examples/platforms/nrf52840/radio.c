@@ -91,7 +91,7 @@ typedef enum {
     kPendingEventTransmit,             // Frame is queued for transmission.
     kPendingEventFrameTransmitted,     // Transmitted frame and received ACK (if requested).
     kPendingEventChannelAccessFailure, // Failed to transmit frame (channel busy).
-    kPendingEventInvalidAck,           // Failed to transmit frame (received invalid ACK).
+    kPendingEventInvalidOrNoAck,       // Failed to transmit frame (received invalid or no ACK).
     kPendingEventReceiveFailed,        // Failed to receive a valid frame.
     kPendingEventEnergyDetectionStart, // Requested to start Energy Detection procedure.
     kPendingEventEnergyDetected,       // Energy Detection finished.
@@ -160,7 +160,7 @@ static inline void clearPendingEvents(void)
 
     bitsToRemain &= ~(1UL << kPendingEventFrameTransmitted);
     bitsToRemain &= ~(1UL << kPendingEventChannelAccessFailure);
-    bitsToRemain &= ~(1UL << kPendingEventInvalidAck);
+    bitsToRemain &= ~(1UL << kPendingEventInvalidOrNoAck);
 
     bitsToRemain &= ~(1UL << kPendingEventSleep);
 
@@ -363,7 +363,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
 
-    return OT_RADIO_CAPS_ENERGY_SCAN;
+    return OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -605,7 +605,7 @@ void nrf5RadioProcess(otInstance *aInstance)
         resetPendingEvent(kPendingEventChannelAccessFailure);
     }
 
-    if (isPendingEventSet(kPendingEventInvalidAck))
+    if (isPendingEventSet(kPendingEventInvalidOrNoAck))
     {
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -619,7 +619,7 @@ void nrf5RadioProcess(otInstance *aInstance)
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NO_ACK);
         }
 
-        resetPendingEvent(kPendingEventInvalidAck);
+        resetPendingEvent(kPendingEventInvalidOrNoAck);
     }
 
     if (isPendingEventSet(kPendingEventReceiveFailed))
@@ -756,8 +756,9 @@ void nrf_802154_transmit_failed(const uint8_t *aFrame, nrf_802154_tx_error_t err
         break;
 
     case NRF_802154_TX_ERROR_INVALID_ACK:
+    case NRF_802154_TX_ERROR_NO_ACK:
     case NRF_802154_TX_ERROR_NO_MEM:
-        setPendingEvent(kPendingEventInvalidAck);
+        setPendingEvent(kPendingEventInvalidOrNoAck);
         break;
     }
 }

@@ -149,6 +149,7 @@ RADIO_DRIVER_SOURCES                                                            
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.c                      \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control.c                       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.c            \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_ack_timeout.c       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock_sdk.c       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.c    \
     $(NULL)
