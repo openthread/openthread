@@ -38,8 +38,8 @@
 #include <openthread/platform/logging.h>
 
 #include "platform-nrf5.h"
-#include <device/nrf.h>
 #include <drivers/clock/nrf_drv_clock.h>
+#include <nrf.h>
 
 #include <openthread/config.h>
 

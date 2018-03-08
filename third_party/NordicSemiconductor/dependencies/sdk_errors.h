@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2013 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -71,7 +71,6 @@
 
 #include <stdint.h>
 #include "nrf_error.h"
-#include "sdk_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,9 +88,11 @@ extern "C" {
  * @defgroup sdk_module_codes Codes reserved as identification for module where the error occurred.
  * @{
  */
-#define NRF_ERROR_MEMORY_MANAGER_ERR_BASE   (0x8100)
-#define NRF_ERROR_PERIPH_DRIVERS_ERR_BASE   (0x8200)
-#define NRF_ERROR_GAZELLE_ERR_BASE          (0x8300)
+#define NRF_ERROR_MEMORY_MANAGER_ERR_BASE   (0x8100)    /**< Base address for Memory Manager related errors. */
+#define NRF_ERROR_PERIPH_DRIVERS_ERR_BASE   (0x8200)    /**< Base address for Peripheral drivers related errors. */
+#define NRF_ERROR_GAZELLE_ERR_BASE          (0x8300)    /**< Base address for Gazelle related errors. */
+#define NRF_ERROR_BLE_IPSP_ERR_BASE         (0x8400)    /**< Base address for BLE IPSP related errors. */
+#define NRF_ERROR_CRYPTO_ERR_BASE           (0x8500)    /**< Base address for crypto related errors. */
 /** @} */
 
 
@@ -108,15 +109,16 @@ extern "C" {
  * @defgroup sdk_common_errors Codes reserved as identification for common errors.
  * @{
  */
-#define NRF_ERROR_MODULE_NOT_INITIALZED      (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0000)
-#define NRF_ERROR_MUTEX_INIT_FAILED          (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0001)
-#define NRF_ERROR_MUTEX_LOCK_FAILED          (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0002)
-#define NRF_ERROR_MUTEX_UNLOCK_FAILED        (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0003)
-#define NRF_ERROR_MUTEX_COND_INIT_FAILED     (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0004)
-#define NRF_ERROR_MODULE_ALREADY_INITIALIZED (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0005)
-#define NRF_ERROR_STORAGE_FULL               (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0006)
-#define NRF_ERROR_API_NOT_IMPLEMENTED        (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0010)
-#define NRF_ERROR_FEATURE_NOT_ENABLED        (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0011)
+#define NRF_ERROR_MODULE_NOT_INITIALZED      (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0000) ///< Module not initialized
+#define NRF_ERROR_MUTEX_INIT_FAILED          (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0001) ///< Mutex initialization failed
+#define NRF_ERROR_MUTEX_LOCK_FAILED          (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0002) ///< Mutex lock failed
+#define NRF_ERROR_MUTEX_UNLOCK_FAILED        (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0003) ///< Mutex unlock failed
+#define NRF_ERROR_MUTEX_COND_INIT_FAILED     (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0004) ///< Mutex conditional initialization failed
+#define NRF_ERROR_MODULE_ALREADY_INITIALIZED (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0005) ///< Module already initialized
+#define NRF_ERROR_STORAGE_FULL               (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0006) ///< Storage full
+#define NRF_ERROR_API_NOT_IMPLEMENTED        (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0010) ///< API not implemented
+#define NRF_ERROR_FEATURE_NOT_ENABLED        (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0011) ///< Feature not enabled
+#define NRF_ERROR_IO_PENDING                 (NRF_ERROR_SDK_COMMON_ERROR_BASE + 0x0012) ///< Input/Output pending
 /** @} */
 
 
@@ -124,10 +126,23 @@ extern "C" {
  * @defgroup drv_specific_errors Error / status codes specific to drivers.
  * @{
  */
-#define NRF_ERROR_DRV_TWI_ERR_OVERRUN              (NRF_ERROR_PERIPH_DRIVERS_ERR_BASE + 0x0000)
-#define NRF_ERROR_DRV_TWI_ERR_ANACK                (NRF_ERROR_PERIPH_DRIVERS_ERR_BASE + 0x0001)
-#define NRF_ERROR_DRV_TWI_ERR_DNACK                (NRF_ERROR_PERIPH_DRIVERS_ERR_BASE + 0x0002)
+#define NRF_ERROR_DRV_TWI_ERR_OVERRUN        (NRF_ERROR_PERIPH_DRIVERS_ERR_BASE + 0x0000)
+#define NRF_ERROR_DRV_TWI_ERR_ANACK          (NRF_ERROR_PERIPH_DRIVERS_ERR_BASE + 0x0001)
+#define NRF_ERROR_DRV_TWI_ERR_DNACK          (NRF_ERROR_PERIPH_DRIVERS_ERR_BASE + 0x0002)
 /** @} */
+
+
+/**
+ * @defgroup ble_ipsp_errors IPSP codes
+ * @brief Error and status codes specific to IPSP.
+ * @{
+ */
+#define NRF_ERROR_BLE_IPSP_RX_PKT_TRUNCATED       (NRF_ERROR_BLE_IPSP_ERR_BASE + 0x0000)
+#define NRF_ERROR_BLE_IPSP_CHANNEL_ALREADY_EXISTS (NRF_ERROR_BLE_IPSP_ERR_BASE + 0x0001)
+#define NRF_ERROR_BLE_IPSP_LINK_DISCONNECTED      (NRF_ERROR_BLE_IPSP_ERR_BASE + 0x0002)
+#define NRF_ERROR_BLE_IPSP_PEER_REJECTED          (NRF_ERROR_BLE_IPSP_ERR_BASE + 0x0003)
+/* @} */
+
 
 /**
  * @brief API Result.

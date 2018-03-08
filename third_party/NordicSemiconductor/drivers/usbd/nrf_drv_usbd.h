@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -41,13 +41,16 @@
 #ifndef NRF_DRV_USBD_H__
 #define NRF_DRV_USBD_H__
 
-#include "nrf_drv_common.h"
 #include "sdk_errors.h"
 #include "nrf_usbd.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "app_util.h"
 #include "nrf_drv_usbd_errata.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup nrf_drv_usbd USB Device HAL and driver
@@ -713,6 +716,13 @@ void nrf_drv_usbd_ep_enable(nrf_drv_usbd_ep_t ep);
 void nrf_drv_usbd_ep_disable(nrf_drv_usbd_ep_t ep);
 
 /**
+ * @brief Disable all endpoints except for EP0
+ *
+ * Disable all endpoints that can be disabled in USB device while it is still active.
+ */
+void nrf_drv_usbd_ep_default_config(void);
+
+/**
  * @brief Start sending data over endpoint
  *
  * Function initializes endpoint transmission.
@@ -856,6 +866,13 @@ void nrf_drv_usbd_ep_stall_clear(nrf_drv_usbd_ep_t ep);
 bool nrf_drv_usbd_ep_stall_check(nrf_drv_usbd_ep_t ep);
 
 /**
+ * @brief Clear current endpoint data toggle
+ *
+ * @param ep Endpoint number to clear
+ */
+void nrf_drv_usbd_ep_dtoggle_clear(nrf_drv_usbd_ep_t ep);
+
+/**
  * @brief Get parsed setup data
  *
  * Function fills the parsed setup data structure.
@@ -902,7 +919,7 @@ void nrf_drv_usbd_setup_stall(void);
 * @endcode
 * This function would check it again, but it makes it inside critical section.
 */
-void usbd_drv_ep_abort(nrf_drv_usbd_ep_t ep);
+void nrf_drv_usbd_ep_abort(nrf_drv_usbd_ep_t ep);
 
 /**
  * @brief Get the information about expected transfer SETUP data direction
@@ -920,6 +937,10 @@ nrf_drv_usbd_ep_t nrf_drv_usbd_last_setup_dir_get(void);
  * @param[in] ep  OUT endpoint ID
  */
 void nrf_drv_usbd_transfer_out_drop(nrf_drv_usbd_ep_t ep);
+
+#ifdef __cplusplus
+}
+#endif
 
 /** @} */
 #endif /* NRF_DRV_USBD_H__ */

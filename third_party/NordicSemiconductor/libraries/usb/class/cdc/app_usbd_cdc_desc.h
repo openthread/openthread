@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -40,15 +40,15 @@
 #ifndef APP_USBD_CDC_DESC_H__
 #define APP_USBD_CDC_DESC_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "app_usbd_descriptor.h"
 #include "app_usbd_cdc_types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup app_usbd_cdc_desc CDC class descriptors

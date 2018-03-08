@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2013 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -49,9 +49,49 @@
 #ifndef SDK_MACROS_H__
 #define SDK_MACROS_H__
 
+#include "nrf_assert.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+/**@brief   Macro for parameter checking.
+ *
+ * If @p _cond evaluates to true, does nothing. Otherwise,
+ * if @p _module ## _PARAM_CHECK_DISABLED is @e not set (default), prints an error message
+ * if @p _printfn is provided, and returns from the calling function context with code @p _err.
+ * If @p _module ## _PARAM_CHECK_DISABLED is set, behaves like the ASSERT macro.
+ *
+ * Parameter checking implemented using this macro can be optionally turned off for release code.
+ * Only disable runtime parameter checks if size if a major concern.
+ *
+ * @param _module   The module name.
+ * @param _cond     The condition to be evaluated.
+ * @param _err      The error to be returned.
+ * @param _printfn  A printf-compatible function used to log the error.
+ *                  Leave empty if no logging is needed.
+ *
+ * @hideinitializer
+ */
+/*lint -esym(666, NRF_PARAM_CHECK*) : Expression with side effects passed to macro */
+#define NRF_PARAM_CHECK(_module, _cond, _err, _printfn)                                             \
+    do                                                                                              \
+    {                                                                                               \
+        if ((_cond))                                                                                \
+        {                                                                                           \
+            /* Do nothing. */                                                                       \
+        }                                                                                           \
+        else if (!(_module ## _PARAM_CHECK_DISABLED))                                               \
+        {                                                                                           \
+            _printfn("%s check failed in %s() with value 0x%x.", #_cond, __func__, _err);           \
+            return (_err);                                                                          \
+        }                                                                                           \
+        else                                                                                        \
+        {                                                                                           \
+            ASSERT((_cond));                                                                        \
+        }                                                                                           \
+    } while (0);
 
 
 /**@brief Macro for verifying statement to be true. It will cause the exterior function to return
@@ -109,15 +149,19 @@ do                                          \
 
 
 /**@brief Macro for verifying that a function returned NRF_SUCCESS. It will cause the exterior
- *        function to return err_code if the err_code is not @ref NRF_SUCCESS.
+ *        function to return error code of statement if it is not @ref NRF_SUCCESS.
  *
- * @param[in] err_code The error code to check.
+ * @param[in] statement     Statement to check against NRF_SUCCESS.
  */
-#ifdef DISABLE_PARAM_CHECK
-#define VERIFY_SUCCESS()
-#else
-#define VERIFY_SUCCESS(err_code) VERIFY_TRUE((err_code) == NRF_SUCCESS, (err_code))
-#endif /* DISABLE_PARAM_CHECK */
+#define VERIFY_SUCCESS(statement)                       \
+do                                                      \
+{                                                       \
+    uint32_t _err_code = (uint32_t) (statement);        \
+    if (_err_code != NRF_SUCCESS)                       \
+    {                                                   \
+        return _err_code;                               \
+    }                                                   \
+} while(0)
 
 
 /**@brief Macro for verifying that a function returned NRF_SUCCESS. It will cause the exterior
@@ -125,11 +169,7 @@ do                                          \
  *
  * @param[in] err_code The error code to check.
  */
-#ifdef DISABLE_PARAM_CHECK
-#define VERIFY_SUCCESS_VOID()
-#else
 #define VERIFY_SUCCESS_VOID(err_code) VERIFY_TRUE_VOID((err_code) == NRF_SUCCESS)
-#endif /* DISABLE_PARAM_CHECK */
 
 
 /**@brief Macro for verifying that the module is initialized. It will cause the exterior function to
@@ -138,11 +178,7 @@ do                                          \
  * @note MODULE_INITIALIZED must be defined in each module using this macro. MODULE_INITIALIZED
  *       should be true if the module is initialized, false if not.
  */
-#ifdef DISABLE_PARAM_CHECK
-#define VERIFY_MODULE_INITIALIZED()
-#else
 #define VERIFY_MODULE_INITIALIZED() VERIFY_TRUE((MODULE_INITIALIZED), NRF_ERROR_INVALID_STATE)
-#endif /* DISABLE_PARAM_CHECK */
 
 
 /**@brief Macro for verifying that the module is initialized. It will cause the exterior function to
@@ -151,11 +187,7 @@ do                                          \
  * @note MODULE_INITIALIZED must be defined in each module using this macro. MODULE_INITIALIZED
  *       should be true if the module is initialized, false if not.
  */
-#ifdef DISABLE_PARAM_CHECK
-#define VERIFY_MODULE_INITIALIZED_VOID()
-#else
 #define VERIFY_MODULE_INITIALIZED_VOID() VERIFY_TRUE_VOID((MODULE_INITIALIZED))
-#endif /* DISABLE_PARAM_CHECK */
 
 
 /**@brief Macro for verifying that the module is initialized. It will cause the exterior function to
@@ -163,11 +195,7 @@ do                                          \
  *
  * @param[in] param  The variable to check if is NULL.
  */
-#ifdef DISABLE_PARAM_CHECK
-#define VERIFY_PARAM_NOT_NULL()
-#else
 #define VERIFY_PARAM_NOT_NULL(param) VERIFY_FALSE(((param) == NULL), NRF_ERROR_NULL)
-#endif /* DISABLE_PARAM_CHECK */
 
 
 /**@brief Macro for verifying that the module is initialized. It will cause the exterior function to
@@ -175,11 +203,7 @@ do                                          \
  *
  * @param[in] param  The variable to check if is NULL.
  */
-#ifdef DISABLE_PARAM_CHECK
-#define VERIFY_PARAM_NOT_NULL_VOID()
-#else
 #define VERIFY_PARAM_NOT_NULL_VOID(param) VERIFY_FALSE_VOID(((param) == NULL))
-#endif /* DISABLE_PARAM_CHECK */
 
 /** @} */
 
