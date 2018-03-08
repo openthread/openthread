@@ -404,7 +404,7 @@ class Node(object):
     # class methods
 
     @classmethod
-    def init_all_nodes(cls, wait_time=20):
+    def init_all_nodes(cls, wait_time=15):
         """Issues a `wpanctl.leave` on all `Node` objects and waits for them to be ready"""
         random.seed(12345)
         time.sleep(0.5)
@@ -422,7 +422,7 @@ class Node(object):
                     raise
                 else:
                     break
-                time.sleep(0.1)
+                time.sleep(0.4)
 
     #------------------------------------------------------------------------------------------------------------------
     # IPv6 message Sender and Receiver class
