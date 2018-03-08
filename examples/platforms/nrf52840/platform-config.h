@@ -379,7 +379,7 @@
  *
  */
 #ifndef NRF_802154_CSMA_CA_ENABLED
-#define NRF_802154_CSMA_CA_ENABLED 0
+#define NRF_802154_CSMA_CA_ENABLED 1
 #endif
 
 /**
