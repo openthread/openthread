@@ -101,18 +101,26 @@ otError DatasetLocal::Get(Dataset &aDataset) const
     error            = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
     VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
-    delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
-    VerifyOrExit(delayTimer);
-
-    elapsed = TimerMilli::GetNow() - mUpdateTime;
-
-    if (delayTimer->GetDelayTimer() > elapsed)
+    if (mType == Tlv::kActiveTimestamp)
     {
-        delayTimer->SetDelayTimer(delayTimer->GetDelayTimer() - elapsed);
+        aDataset.Remove(Tlv::kPendingTimestamp);
+        aDataset.Remove(Tlv::kDelayTimer);
     }
     else
     {
-        delayTimer->SetDelayTimer(0);
+        delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
+        VerifyOrExit(delayTimer);
+
+        elapsed = TimerMilli::GetNow() - mUpdateTime;
+
+        if (delayTimer->GetDelayTimer() > elapsed)
+        {
+            delayTimer->SetDelayTimer(delayTimer->GetDelayTimer() - elapsed);
+        }
+        else
+        {
+            delayTimer->SetDelayTimer(0);
+        }
     }
 
     aDataset.mUpdateTime = TimerMilli::GetNow();
@@ -128,8 +136,7 @@ otError DatasetLocal::Get(otOperationalDataset &aDataset) const
 
     memset(&aDataset, 0, sizeof(aDataset));
 
-    dataset.mLength = sizeof(dataset.mTlvs);
-    error           = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, dataset.mTlvs, &dataset.mLength);
+    error = Get(dataset);
     SuccessOrExit(error);
 
     dataset.Get(aDataset);
@@ -159,30 +166,23 @@ exit:
 
 otError DatasetLocal::Set(const Dataset &aDataset)
 {
-    Dataset          dataset(aDataset);
     const Timestamp *timestamp;
     otError          error;
 
-    if (mType == Tlv::kActiveTimestamp)
-    {
-        dataset.Remove(Tlv::kPendingTimestamp);
-        dataset.Remove(Tlv::kDelayTimer);
-    }
-
-    if (dataset.GetSize() == 0)
+    if (aDataset.GetSize() == 0)
     {
         error = otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), 0);
         otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
-        error = otPlatSettingsSet(&GetInstance(), GetSettingsKey(), dataset.GetBytes(), dataset.GetSize());
+        error = otPlatSettingsSet(&GetInstance(), GetSettingsKey(), aDataset.GetBytes(), aDataset.GetSize());
         otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 
     SuccessOrExit(error);
 
-    timestamp = dataset.GetTimestamp();
+    timestamp = aDataset.GetTimestamp();
 
     if (timestamp != NULL)
     {
