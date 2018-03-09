@@ -326,6 +326,18 @@ private:
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress, otError aError);
+    void LogFrame(const char *aActionText, const Mac::Frame &aFrame, otError aError);
+    void LogFragmentFrameDrop(otError                       aError,
+                              uint8_t                       aFrameLength,
+                              const Mac::Address &          aMacSource,
+                              const Mac::Address &          aMacDest,
+                              const Lowpan::FragmentHeader &aFragmentHeader,
+                              bool                          aIsSecure);
+    void LogLowpanHcFrameDrop(otError             aError,
+                              uint8_t             aFrameLength,
+                              const Mac::Address &aMacSource,
+                              const Mac::Address &aMacDest,
+                              bool                aIsSecure);
 
     Mac::Receiver mMacReceiver;
     Mac::Sender   mMacSender;
