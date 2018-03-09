@@ -1234,7 +1234,7 @@ public:
      * @returns A pointer to the char string buffer.
      *
      */
-    const char *ToInfoString(char *aBuf, uint16_t aSize);
+    const char *ToInfoString(char *aBuf, uint16_t aSize) const;
 
 private:
     uint8_t mProtocolId;
