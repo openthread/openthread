@@ -165,11 +165,13 @@ void nrf_802154_init(void)
     nrf_802154_revision_init();
     nrf_802154_rx_buffer_init();
     nrf_802154_timer_init();
+    nrf_802154_timer_sched_init();
     nrf_raal_init();
 }
 
 void nrf_802154_deinit(void)
 {
+    nrf_802154_timer_sched_deinit();
     nrf_802154_timer_deinit();
     nrf_802154_clock_deinit();
     nrf_802154_core_deinit();
