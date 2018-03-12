@@ -51,6 +51,8 @@
 #include "cmsis/core_cmFunc.h"
 
 #include <drivers/clock/nrf_drv_clock.h>
+#include <drivers/radio/platform/timer/nrf_802154_timer.h>
+
 #include <hal/nrf_rtc.h>
 
 #include <openthread/config.h>
@@ -67,7 +69,7 @@
 #define MS_PER_S            1000UL
 // clang-format on
 
-typedef enum { kMsTimer, kUsTimer, kNumTimers } AlarmIndex;
+typedef enum { kMsTimer, kUsTimer, k802154Timer, kNumTimers } AlarmIndex;
 
 typedef struct
 {
@@ -96,11 +98,18 @@ static const AlarmChannelData sChannelData[kNumTimers] = //
                 .mCompareEvent     = NRF_RTC_EVENT_COMPARE_0,
                 .mCompareInt       = NRF_RTC_INT_COMPARE0_MASK,
             },
-        [kUsTimer] = {
-            .mChannelNumber    = 1,
-            .mCompareEventMask = RTC_EVTEN_COMPARE1_Msk,
-            .mCompareEvent     = NRF_RTC_EVENT_COMPARE_1,
-            .mCompareInt       = NRF_RTC_INT_COMPARE1_MASK,
+        [kUsTimer] =
+            {
+                .mChannelNumber    = 1,
+                .mCompareEventMask = RTC_EVTEN_COMPARE1_Msk,
+                .mCompareEvent     = NRF_RTC_EVENT_COMPARE_1,
+                .mCompareInt       = NRF_RTC_INT_COMPARE1_MASK,
+            },
+        [k802154Timer] = {
+            .mChannelNumber    = 2,
+            .mCompareEventMask = RTC_EVTEN_COMPARE2_Msk,
+            .mCompareEvent     = NRF_RTC_EVENT_COMPARE_2,
+            .mCompareInt       = NRF_RTC_INT_COMPARE2_MASK,
         }};
 
 static uint32_t OverflowCounterGet(void);
@@ -197,8 +206,15 @@ static void HandleCompareMatch(AlarmIndex aIndex, bool aSkipCheck)
         nrf_rtc_event_disable(RTC_INSTANCE, sChannelData[aIndex].mCompareEventMask);
         nrf_rtc_int_disable(RTC_INSTANCE, sChannelData[aIndex].mCompareInt);
 
-        sTimerData[aIndex].mFireAlarm = true;
-        PlatformEventSignalPending();
+        if (aIndex == k802154Timer)
+        {
+            nrf_802154_timer_fired();
+        }
+        else
+        {
+            sTimerData[aIndex].mFireAlarm = true;
+            PlatformEventSignalPending();
+        }
     }
 }
 
@@ -464,6 +480,61 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
     AlarmStop(kUsTimer);
 }
+
+/**
+ * Radio driver timer abstraction API
+ */
+
+void nrf_802154_timer_init(void)
+{
+    // Intentionally empty
+}
+
+void nrf_802154_timer_deinit(void)
+{
+    // Intentionally empty
+}
+
+void nrf_802154_timer_critical_section_enter(void)
+{
+    nrf_rtc_int_disable(RTC_INSTANCE, sChannelData[k802154Timer].mCompareInt);
+    __DSB();
+    __ISB();
+}
+
+void nrf_802154_timer_critical_section_exit(void)
+{
+    nrf_rtc_int_enable(RTC_INSTANCE, sChannelData[k802154Timer].mCompareInt);
+}
+
+uint32_t nrf_802154_timer_time_get(void)
+{
+    return (uint32_t)nrf5AlarmGetCurrentTime();
+}
+
+uint32_t nrf_802154_timer_granularity_get(void)
+{
+    return US_PER_TICK;
+}
+
+void nrf_802154_timer_start(uint32_t t0, uint32_t dt)
+{
+    AlarmStartAt(t0, dt, k802154Timer);
+}
+
+void nrf_802154_timer_stop(void)
+{
+    AlarmStop(k802154Timer);
+}
+
+bool nrf_802154_timer_is_running(void)
+{
+    return nrf_rtc_int_is_enabled(RTC_INSTANCE, sChannelData[k802154Timer].mCompareInt);
+}
+
+/**
+ * RTC IRQ handler
+ */
 
 void RTC_IRQ_HANDLER(void)
 {
