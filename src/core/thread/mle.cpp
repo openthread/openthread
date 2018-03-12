@@ -2554,9 +2554,9 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     ThreadNetif &       netif = GetNetif();
     otError             error = OT_ERROR_NONE;
     LeaderDataTlv       leaderData;
-    NetworkDataTlv      networkData;
     ActiveTimestampTlv  activeTimestamp;
     PendingTimestampTlv pendingTimestamp;
+    uint16_t            networkDataOffset    = 0;
     uint16_t            activeDatasetOffset  = 0;
     uint16_t            pendingDatasetOffset = 0;
     bool                dataRequest          = false;
@@ -2638,13 +2638,12 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         pendingTimestamp.SetLength(0);
     }
 
-    if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
+    if (Tlv::GetOffset(aMessage, Tlv::kNetworkData, networkDataOffset) == OT_ERROR_NONE)
     {
-        VerifyOrExit(networkData.IsValid(), error = OT_ERROR_PARSE);
-
-        netif.GetNetworkDataLeader().SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                                    (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                                    networkData.GetNetworkData(), networkData.GetLength());
+        error = netif.GetNetworkDataLeader().SetNetworkData(
+            leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+            (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0, aMessage, networkDataOffset);
+        SuccessOrExit(error);
     }
     else
     {
@@ -2912,11 +2911,11 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     LeaderDataTlv       leaderData;
     SourceAddressTlv    sourceAddress;
     Address16Tlv        shortAddress;
-    NetworkDataTlv      networkData;
     RouteTlv            route;
     ActiveTimestampTlv  activeTimestamp;
     PendingTimestampTlv pendingTimestamp;
     Tlv                 tlv;
+    uint16_t            networkDataOffset;
     uint16_t            offset;
 
     // Source Address
@@ -2936,7 +2935,8 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     VerifyOrExit(shortAddress.IsValid(), error = OT_ERROR_PARSE);
 
     // Network Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
+    error = Tlv::GetOffset(aMessage, Tlv::kNetworkData, networkDataOffset);
+    SuccessOrExit(error);
 
     // Active Timestamp
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == OT_ERROR_NONE)
@@ -3003,8 +3003,8 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     mParent.SetRloc16(sourceAddress.GetRloc16());
 
     netif.GetNetworkDataLeader().SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                                (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                                networkData.GetNetworkData(), networkData.GetLength());
+                                                (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0, aMessage,
+                                                networkDataOffset);
 
     netif.GetActiveDataset().ApplyConfiguration();
 
@@ -3029,7 +3029,6 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
     Mac::ExtAddress  srcAddr;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv    leaderData;
-    NetworkDataTlv   networkData;
     ChallengeTlv     challenge;
     StatusTlv        status;
     TlvRequestTlv    tlvRequest;
