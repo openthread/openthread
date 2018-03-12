@@ -404,16 +404,25 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
     return error;
 }
 
-void LeaderBase::SetNetworkData(uint8_t        aVersion,
-                                uint8_t        aStableVersion,
-                                bool           aStable,
-                                const uint8_t *aData,
-                                uint8_t        aDataLength)
+otError LeaderBase::SetNetworkData(uint8_t        aVersion,
+                                   uint8_t        aStableVersion,
+                                   bool           aStable,
+                                   const Message &aMessage,
+                                   uint16_t       aMessageOffset)
 {
+    otError  error = OT_ERROR_NONE;
+    Mle::Tlv tlv;
+    uint16_t length;
+
+    length = aMessage.Read(aMessageOffset, sizeof(tlv), &tlv);
+    VerifyOrExit(length == sizeof(tlv), error = OT_ERROR_PARSE);
+
+    length = aMessage.Read(aMessageOffset + sizeof(tlv), tlv.GetLength(), mTlvs);
+    VerifyOrExit(length == tlv.GetLength(), error = OT_ERROR_PARSE);
+
+    mLength        = tlv.GetLength();
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
-    memcpy(mTlvs, aData, aDataLength);
-    mLength = aDataLength;
 
     if (aStable)
     {
@@ -423,6 +432,9 @@ void LeaderBase::SetNetworkData(uint8_t        aVersion,
     otDumpDebgNetData(GetInstance(), "set network data", mTlvs, mLength);
 
     GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
+
+exit:
+    return error;
 }
 
 otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)

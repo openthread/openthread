@@ -865,15 +865,6 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() < sizeof(*this) - sizeof(Tlv); }
-
-    /**
      * This method returns a pointer to the Network Data.
      *
      * @returns A pointer to the Network Data.
