@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -71,6 +71,12 @@ extern "C" {
     #define NRF_LOG_LEVEL NRF_LOG_DEFAULT_LEVEL
 #endif
 
+/** @brief Initial severity if filtering is enabled.
+ */
+#ifndef NRF_LOG_INITIAL_LEVEL
+    #define NRF_LOG_INITIAL_LEVEL NRF_LOG_LEVEL
+#endif
+
 
 #include "nrf_log_internal.h"
 
@@ -107,14 +113,54 @@ extern "C" {
 #define NRF_LOG_INFO(...)                      NRF_LOG_INTERNAL_INFO( __VA_ARGS__)
 #define NRF_LOG_DEBUG(...)                     NRF_LOG_INTERNAL_DEBUG( __VA_ARGS__)
 
+/** @def NRF_LOG_INST_ERROR
+ *  @brief Macro for logging error messages for a given module instance. It takes a printf-like, formatted
+ *  string with up to seven arguments.
+ *
+ *  @param p_inst Pointer to the instance with logging support.
+ *
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ */
+
+/** @def NRF_LOG_INST_WARNING
+ *  @brief Macro for logging error messages for a given module instance. It takes a printf-like, formatted
+ *  string with up to seven arguments.
+ *
+ *  @param p_inst Pointer to the instance with logging support.
+ *
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ */
+
+/** @def NRF_LOG_INST_INFO
+ *  @brief Macro for logging error messages for a given module instance. It takes a printf-like, formatted
+ *  string with up to seven arguments.
+ *
+ *  @param p_inst Pointer to the instance with logging support.
+ *
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ */
+
+/** @def NRF_LOG_INST_DEBUG
+ *  @brief Macro for logging error messages for given module instance. It takes a printf-like, formatted
+ *  string with up to seven arguments.
+ *
+ *  @param p_inst Pointer to the instance with logging support.
+ *
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ */
+#define NRF_LOG_INST_ERROR(p_inst,...)         NRF_LOG_INTERNAL_INST_ERROR(p_inst,__VA_ARGS__)
+#define NRF_LOG_INST_WARNING(p_inst,...)       NRF_LOG_INTERNAL_INST_WARNING(p_inst,__VA_ARGS__)
+#define NRF_LOG_INST_INFO(p_inst,...)          NRF_LOG_INTERNAL_INST_INFO(p_inst, __VA_ARGS__)
+#define NRF_LOG_INST_DEBUG(p_inst,...)         NRF_LOG_INTERNAL_INST_DEBUG(p_inst, __VA_ARGS__)
+
 /**
- * @brief A macro for logging a formatted string without any prefix or timestamp.
+ * @brief Macro for logging a formatted string without any prefix or timestamp.
  */
 #define NRF_LOG_RAW_INFO(...)                  NRF_LOG_INTERNAL_RAW_INFO( __VA_ARGS__)
 
 /** @def NRF_LOG_HEXDUMP_ERROR
  *  @brief Macro for logging raw bytes.
- *  @details It is compiled in only if @ref NRF_LOG_LEVEL includes error logs.
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
  *
  * @param p_data     Pointer to data.
  * @param len        Data length in bytes.
@@ -145,20 +191,51 @@ extern "C" {
 #define NRF_LOG_HEXDUMP_INFO(p_data, len)    NRF_LOG_INTERNAL_HEXDUMP_INFO(p_data, len)
 #define NRF_LOG_HEXDUMP_DEBUG(p_data, len)   NRF_LOG_INTERNAL_HEXDUMP_DEBUG(p_data, len)
 
+/** @def NRF_LOG_HEXDUMP_INST_ERROR
+ *  @brief Macro for logging raw bytes for a specific module instance.
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ *
+ * @param p_inst     Pointer to the instance with logging support.
+ * @param p_data     Pointer to data.
+ * @param len        Data length in bytes.
+ */
+/** @def NRF_LOG_HEXDUMP_INST_WARNING
+ *  @brief Macro for logging raw bytes for a specific module instance.
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ *
+ * @param p_inst     Pointer to the instance with logging support.
+ * @param p_data     Pointer to data.
+ * @param len        Data length in bytes.
+ */
+/** @def NRF_LOG_HEXDUMP_INST_INFO
+ *  @brief Macro for logging raw bytes for a specific module instance.
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ *
+ * @param p_inst     Pointer to the instance with logging support.
+ * @param p_data     Pointer to data.
+ * @param len        Data length in bytes.
+ */
+/** @def NRF_LOG_HEXDUMP_INST_DEBUG
+ *  @brief Macro for logging raw bytes for a specific module instance.
+ *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes error logs.
+ *
+ * @param p_inst     Pointer to the instance with logging support.
+ * @param p_data     Pointer to data.
+ * @param len        Data length in bytes.
+ */
+#define NRF_LOG_HEXDUMP_INST_ERROR(p_inst, p_data, len)   NRF_LOG_INTERNAL_HEXDUMP_INST_ERROR(p_inst, p_data, len)
+#define NRF_LOG_HEXDUMP_INST_WARNING(p_inst, p_data, len) NRF_LOG_INTERNAL_HEXDUMP_INST_WARNING(p_inst, p_data, len)
+#define NRF_LOG_HEXDUMP_INST_INFO(p_inst, p_data, len)    NRF_LOG_INTERNAL_HEXDUMP_INST_INFO(p_inst, p_data, len)
+#define NRF_LOG_HEXDUMP_INST_DEBUG(p_inst, p_data, len)   NRF_LOG_INTERNAL_HEXDUMP_INST_DEBUG(p_inst, p_data, len)
+
 /**
  * @brief Macro for logging hexdump without any prefix or timestamp.
  */
 #define NRF_LOG_RAW_HEXDUMP_INFO(p_data, len) NRF_LOG_INTERNAL_RAW_HEXDUMP_INFO(p_data, len)
 
-/**
- * @brief A macro for blocking reading from bidirectional backend used for logging.
- *
- * Macro call is blocking and returns when single byte is received.
- */
-#define NRF_LOG_GETCHAR()                    NRF_LOG_INTERNAL_GETCHAR()
 
 /**
- * @brief A macro for copying a string to internal logger buffer if logs are deferred.
+ * @brief Macro for copying a string to internal logger buffer if logs are deferred.
  *
  * @param _str  String.
  */
@@ -182,7 +259,7 @@ uint32_t nrf_log_push(char * const p_str);
 /**
  * @brief Macro to be used in a formatted string to a pass float number to the log.
  *
- * Macro should be used in formatted string instead of the %f specifier together with
+ * Use this macro in a formatted string instead of the %f specifier together with
  * @ref NRF_LOG_FLOAT macro.
  * Example: NRF_LOG_INFO("My float number" NRF_LOG_FLOAT_MARKER "\r\n", NRF_LOG_FLOAT(f)))
  */
@@ -197,33 +274,13 @@ uint32_t nrf_log_push(char * const p_str);
                                                 : (int32_t)(val) - (val))*100)
 
 
-
 /**
- * @def NRF_LOG_MODULE_REGISTER
  * @brief Macro for registering an independent module.
+ *
+ * Registration creates set of dynamic (RAM) and constant variables associated with the module.
  */
-#if NRF_LOG_ENABLED
+#define NRF_LOG_MODULE_REGISTER() NRF_LOG_INTERNAL_MODULE_REGISTER()
 
-#ifdef UNIT_TEST
-#define _CONST
-#define COMPILED_LOG_LEVEL 4
-#else
-#define _CONST const
-#define COMPILED_LOG_LEVEL NRF_LOG_LEVEL
-#endif
-#define NRF_LOG_MODULE_REGISTER()                                                             \
-    NRF_SECTION_ITEM_REGISTER(log_const_data,                                                 \
-                            _CONST nrf_log_module_const_data_t NRF_LOG_MODULE_DATA_CONST) = { \
-            .p_module_name = STRINGIFY(NRF_LOG_MODULE_NAME),                                  \
-            .info_color_id = NRF_LOG_INFO_COLOR,                                              \
-            .debug_color_id = NRF_LOG_DEBUG_COLOR,                                            \
-            .compiled_lvl   = COMPILED_LOG_LEVEL,                                             \
-    };                                                                                        \
-    NRF_SECTION_ITEM_REGISTER(log_dynamic_data,                                               \
-                          nrf_log_module_dynamic_data_t NRF_LOG_MODULE_DATA_DYNAMIC)
-#else
-#define NRF_LOG_MODULE_REGISTER() /*lint -save -e19*/ /*lint -restore*/
-#endif
 
 #ifdef __cplusplus
 }

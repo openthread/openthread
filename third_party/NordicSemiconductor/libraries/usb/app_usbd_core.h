@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -41,16 +41,16 @@
 #ifndef APP_USBD_CORE_H__
 #define APP_USBD_CORE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 #include "sdk_common.h"
 #include "nrf_drv_usbd.h"
 #include "app_usbd_types.h"
 #include "app_usbd_class_base.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /**
@@ -70,35 +70,18 @@ extern "C" {
 #define APP_USBD_CORE_CLASS_CONFIGURATION ((0, NRF_DRV_USBD_EPOUT0, NRF_DRV_USBD_EPIN0))
 
 /**
- * @brief Suspend state mask
- *
- * Mask used to mark suspended state, suspended state remembers also the target state after wake up
- */
-#define APP_USBD_STATE_SUSPENDED_MASK 0x80
-
-/**
- * @brief Remove @ref APP_USBD_STATE_SUSPENDED_MASK bit from core state
- */
-#define APP_USB_STATE_BASE(state) ((app_usbd_state_t)((uint32_t)(state) & (~APP_USBD_STATE_SUSPENDED_MASK)))
-
-/**
  * @brief USB Device state
  *
  * Possible USB Device states according to specification.
  */
 typedef enum
 {
-    APP_USBD_STATE_Disabled   = 0x00, /**< The whole USBD library is disabled */
-    APP_USBD_STATE_Unattached = 0x01, /**< Device is currently not connected to the host */
-    APP_USBD_STATE_Powered    = 0x02, /**< Device is connected to the host but has not been enumerated */
-    APP_USBD_STATE_Default    = 0x03, /**< USB Reset condition detected, waiting for the address */
-    APP_USBD_STATE_Addressed  = 0x04, /**< Device has been addressed but have not been configured */
-    APP_USBD_STATE_Configured = 0x05, /**< Device is addressed and configured */
-
-    APP_USBD_STATE_SuspendedPowered    = APP_USBD_STATE_SUSPENDED_MASK | APP_USBD_STATE_Powered,    /**< Device is Suspended and on wakeup it will return to Powered state */
-    APP_USBD_STATE_SuspendedDefault    = APP_USBD_STATE_SUSPENDED_MASK | APP_USBD_STATE_Default,    /**< Device is Suspended and on wakeup it will return to Default state */
-    APP_USBD_STATE_SuspendedAddressed  = APP_USBD_STATE_SUSPENDED_MASK | APP_USBD_STATE_Addressed,  /**< Device is Suspended and on wakeup it will return to Addressed state */
-    APP_USBD_STATE_SuspendedConfigured = APP_USBD_STATE_SUSPENDED_MASK | APP_USBD_STATE_Configured  /**< Device is Suspended and on wakeup it will return to Configured state */
+    APP_USBD_STATE_Disabled  , /**< The whole USBD library is disabled */
+    APP_USBD_STATE_Unattached, /**< Device is currently not connected to the host */
+    APP_USBD_STATE_Powered   , /**< Device is connected to the host but has not been enumerated */
+    APP_USBD_STATE_Default   , /**< USB Reset condition detected, waiting for the address */
+    APP_USBD_STATE_Addressed , /**< Device has been addressed but has not been configured */
+    APP_USBD_STATE_Configured, /**< Device is addressed and configured */
 }app_usbd_state_t;
 
 /**
@@ -184,80 +167,6 @@ ret_code_t app_usbd_core_setup_rsp(app_usbd_setup_t const * p_setup,
 ret_code_t app_usbd_core_setup_data_handler_set(
     nrf_drv_usbd_ep_t ep,
     app_usbd_core_setup_data_handler_desc_t const * const p_handler_desc);
-
-/**
- * @brief Endpoint transfer
- *
- * @param ep         Endpoint number
- * @param p_transfer Description of the transfer to be performed.
- *                   The direction of the transfer is determined by the
- *                   endpoint number.
- *
- * @retval NRF_ERROR_INVALID_STATE The state of the USB device does not allow
- *                                 data transfer on the endpoint.
- *
- * @return Values returned by @ref nrf_drv_usbd_ep_transfer
- *
- * @note This function can work only if the USB is in Configured state.
- *       See @ref app_usbd_core_setup_data_transfer for transfers before
- *       device configuration is done.
- * @sa app_usbd_core_setup_data_transfer
- */
-ret_code_t app_usbd_core_ep_transfer(
-    nrf_drv_usbd_ep_t                                  ep,
-    nrf_drv_usbd_transfer_t              const * const p_transfer);
-
-/**
- * @brief Setup data transfer
- *
- * Function similar to @ref app_usbd_core_ep_transfer.
- * The only technical diference is that it should be used with setup transfers
- * that are going to be performed before device is configured.
- *
- * @param ep         See @ref app_usbd_core_ep_transfer.
- * @param p_transfer See @ref app_usbd_core_ep_transfer.
- *
- * @return The same values like @ref app_usbd_core_ep_transfer
- */
-ret_code_t app_usbd_core_setup_data_transfer(
-    nrf_drv_usbd_ep_t                                  ep,
-    nrf_drv_usbd_transfer_t              const * const p_transfer);
-
-/**
- * @brief Set up an endpoint-handled transfer.
- *
- * Configures a transfer handled by the feedback function.
- *
- * @param ep        Endpoint number.
- * @param p_handler Function called when the next chunk of data is requested.
- *
- * @retval NRF_ERROR_INVALID_STATE The state of the USB device does not allow
- *                                 data transfer on the endpoint.
- *
- * @return Values returned by @ref nrf_drv_usbd_ep_handled_transfer.
- */
-ret_code_t app_usbd_ep_handled_transfer(
-    nrf_drv_usbd_ep_t                         ep,
-    nrf_drv_usbd_handler_desc_t const * const p_handler);
-
-/**
- * @brief Set up a data-handled transfer.
- *
- * Function similar to @ref app_usbd_ep_handled_transfer.
- * The only technical diference is that it should be used with setup transfers
- * that are performed before the device is configured.
- *
- * @param ep        Endpoint number
- * @param p_handler Function called when the next chunk of data is requested.
- *
- * @retval NRF_ERROR_INVALID_STATE The state of the USB device does not allow
- *                                 data transfer on the endpoint.
- *
- * @return Values returned by @ref nrf_drv_usbd_ep_handled_transfer.
- */
-ret_code_t app_usbd_setup_data_handled_transfer(
-    nrf_drv_usbd_ep_t                         ep,
-    nrf_drv_usbd_handler_desc_t const * const p_handler);
 
 /**
  * @brief Set up a data transfer buffer.
