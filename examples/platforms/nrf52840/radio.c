@@ -50,7 +50,7 @@
 #include "platform-nrf5.h"
 #include "platform.h"
 
-#include <device/nrf.h>
+#include <nrf.h>
 #include <nrf_802154.h>
 
 #include <openthread-core-config.h>

@@ -30,7 +30,7 @@
 #include <openthread/config.h>
 #include <openthread/platform/misc.h>
 
-#include <device/nrf.h>
+#include <nrf.h>
 
 #include "platform-nrf5.h"
 

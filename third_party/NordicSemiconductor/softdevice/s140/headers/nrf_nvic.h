@@ -1,38 +1,41 @@
 /*
- * Copyright (c) Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
- *   1. Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
- *   2. Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
  *
- *   3. Neither the name of Nordic Semiconductor ASA nor the names of other
- *   contributors to this software may be used to endorse or promote products
- *   derived from this software without specific prior written permission.
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
  *
- *   4. This software must only be used in a processor manufactured by Nordic
- *   Semiconductor ASA, or in a processor manufactured by a third party that
- *   is used in combination with a processor manufactured by Nordic Semiconductor.
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
  *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
  * @defgroup nrf_nvic_api SoftDevice NVIC API
  * @{
@@ -54,7 +57,8 @@
 
 #include <stdint.h>
 #include "nrf.h"
-
+#include "nrf_svc.h"
+#include "nrf_error.h"
 #include "nrf_error_soc.h"
 
 #ifdef __cplusplus
@@ -69,49 +73,31 @@ extern "C" {
 
 #define __NRF_NVIC_NVMC_IRQn (30) /**< The peripheral ID of the NVMC. IRQ numbers are used to identify peripherals, but the NVMC doesn't have an IRQ number in the MDK. */
 
-#ifdef NRF51
-  #define __NRF_NVIC_ISER_COUNT (1) /**< The number of ISER/ICER registers in the NVIC that are used. */
+#define __NRF_NVIC_ISER_COUNT (2) /**< The number of ISER/ICER registers in the NVIC that are used. */
 
-  /**@brief Interrupts used by the SoftDevice. */
-  #define __NRF_NVIC_SD_IRQS_0 ((uint32_t)( \
-        (1U << POWER_CLOCK_IRQn) \
-      | (1U << RADIO_IRQn) \
-      | (1U << RTC0_IRQn) \
-      | (1U << TIMER0_IRQn) \
-      | (1U << RNG_IRQn) \
-      | (1U << ECB_IRQn) \
-      | (1U << CCM_AAR_IRQn) \
-      | (1U << TEMP_IRQn) \
-      | (1U << __NRF_NVIC_NVMC_IRQn) \
-      | (1U << (uint32_t)SWI5_IRQn) \
-    ))
+/**@brief Interrupts used by the SoftDevice, with IRQn in the range 0-31. */
+#define __NRF_NVIC_SD_IRQS_0 ((uint32_t)( \
+      (1U << POWER_CLOCK_IRQn) \
+    | (1U << RADIO_IRQn) \
+    | (1U << RTC0_IRQn) \
+    | (1U << TIMER0_IRQn) \
+    | (1U << RNG_IRQn) \
+    | (1U << ECB_IRQn) \
+    | (1U << CCM_AAR_IRQn) \
+    | (1U << TEMP_IRQn) \
+    | (1U << __NRF_NVIC_NVMC_IRQn) \
+    | (1U << (uint32_t)SWI5_IRQn) \
+  ))
 
-  /**@brief Interrupts available for to application. */
-  #define __NRF_NVIC_APP_IRQS_0 (~__NRF_NVIC_SD_IRQS_0)
-#endif
+/**@brief Interrupts used by the SoftDevice, with IRQn in the range 32-63. */
+#define __NRF_NVIC_SD_IRQS_1 ((uint32_t)0)
 
-#if defined(NRF52) || defined(NRF52840_XXAA)
-  #define __NRF_NVIC_ISER_COUNT (2) /**< The number of ISER/ICER registers in the NVIC that are used. */
+/**@brief Interrupts available for to application, with IRQn in the range 0-31. */
+#define __NRF_NVIC_APP_IRQS_0 (~__NRF_NVIC_SD_IRQS_0)
 
-  /**@brief Interrupts used by the SoftDevice. */
-  #define __NRF_NVIC_SD_IRQS_0 ((uint32_t)( \
-        (1U << POWER_CLOCK_IRQn) \
-      | (1U << RADIO_IRQn) \
-      | (1U << RTC0_IRQn) \
-      | (1U << TIMER0_IRQn) \
-      | (1U << RNG_IRQn) \
-      | (1U << ECB_IRQn) \
-      | (1U << CCM_AAR_IRQn) \
-      | (1U << TEMP_IRQn) \
-      | (1U << __NRF_NVIC_NVMC_IRQn) \
-      | (1U << (uint32_t)SWI5_EGU5_IRQn) \
-    ))
-  #define __NRF_NVIC_SD_IRQS_1 ((uint32_t)0)
+/**@brief Interrupts available for to application, with IRQn in the range 32-63. */
+#define __NRF_NVIC_APP_IRQS_1 (~__NRF_NVIC_SD_IRQS_1)
 
-  /**@brief Interrupts available for to application. */
-  #define __NRF_NVIC_APP_IRQS_0 (~__NRF_NVIC_SD_IRQS_0)
-  #define __NRF_NVIC_APP_IRQS_1 (~__NRF_NVIC_SD_IRQS_1)
-#endif
 /**@} */
 
 /**@} */
@@ -307,12 +293,10 @@ __STATIC_INLINE uint32_t __sd_nvic_app_accessible_irq(IRQn_Type IRQn)
   {
     return ((1UL<<IRQn) & __NRF_NVIC_APP_IRQS_0) != 0;
   }
-#if defined(NRF52) || defined(NRF52840_XXAA)
   else if (IRQn < 64)
   {
     return ((1UL<<(IRQn-32)) & __NRF_NVIC_APP_IRQS_1) != 0;
   }
-#endif
   else
   {
     return 1;
@@ -325,24 +309,13 @@ __STATIC_INLINE uint32_t __sd_nvic_is_app_accessible_priority(uint32_t priority)
   {
     return 0;
   }
-#ifdef NRF51
-  if(   priority == 0
-     || priority == 2
-     )
-  {
-    return 0;
-  }
-#endif
-#if defined(NRF52) || defined(NRF52840_XXAA)
   if(   priority == 0
      || priority == 1
      || priority == 4
-     || priority == 5
      )
   {
     return 0;
   }
-#endif
   return 1;
 }
 
@@ -470,10 +443,8 @@ __STATIC_INLINE uint32_t sd_nvic_critical_region_enter(uint8_t * p_is_nested_cri
     nrf_nvic_state.__cr_flag = 1;
     nrf_nvic_state.__irq_masks[0] = ( NVIC->ICER[0] & __NRF_NVIC_APP_IRQS_0 );
     NVIC->ICER[0] = __NRF_NVIC_APP_IRQS_0;
-    #if defined(NRF52) || defined(NRF52840_XXAA)
     nrf_nvic_state.__irq_masks[1] = ( NVIC->ICER[1] & __NRF_NVIC_APP_IRQS_1 );
     NVIC->ICER[1] = __NRF_NVIC_APP_IRQS_1;
-    #endif
     *p_is_nested_critical_region = 0;
   }
   else
@@ -493,9 +464,7 @@ __STATIC_INLINE uint32_t sd_nvic_critical_region_exit(uint8_t is_nested_critical
   {
     int was_masked = __sd_nvic_irq_disable();
     NVIC->ISER[0] = nrf_nvic_state.__irq_masks[0];
-    #if defined(NRF52) || defined(NRF52840_XXAA)
     NVIC->ISER[1] = nrf_nvic_state.__irq_masks[1];
-    #endif
     nrf_nvic_state.__cr_flag = 0;
     if (!was_masked)
     {

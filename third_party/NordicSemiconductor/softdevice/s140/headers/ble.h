@@ -1,37 +1,39 @@
 /*
- * Copyright (c) Nordic Semiconductor ASA
+ * Copyright (c) 2012 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
- *   1. Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
- *   2. Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
  *
- *   3. Neither the name of Nordic Semiconductor ASA nor the names of other
- *   contributors to this software may be used to endorse or promote products
- *   derived from this software without specific prior written permission.
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
  *
- *   4. This software must only be used in a processor manufactured by Nordic
- *   Semiconductor ASA, or in a processor manufactured by a third party that
- *   is used in combination with a processor manufactured by Nordic Semiconductor.
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
  *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -47,8 +49,10 @@
 #ifndef BLE_H__
 #define BLE_H__
 
-#include "ble_ranges.h"
-#include "ble_types.h"
+#include <stdint.h>
+#include "nrf_svc.h"
+#include "nrf_error.h"
+#include "ble_err.h"
 #include "ble_gap.h"
 #include "ble_l2cap.h"
 #include "ble_gatt.h"
@@ -84,8 +88,8 @@ enum BLE_COMMON_SVCS
  */
 enum BLE_COMMON_EVTS
 {
-  BLE_EVT_USER_MEM_REQUEST = BLE_EVT_BASE,   /**< User Memory request. @ref ble_evt_user_mem_request_t */
-  BLE_EVT_USER_MEM_RELEASE,                  /**< User Memory release. @ref ble_evt_user_mem_release_t */
+  BLE_EVT_USER_MEM_REQUEST = BLE_EVT_BASE + 0,   /**< User Memory request. @ref ble_evt_user_mem_request_t */
+  BLE_EVT_USER_MEM_RELEASE = BLE_EVT_BASE + 1,   /**< User Memory release. @ref ble_evt_user_mem_release_t */
 };
 
 /**@brief BLE Connection Configuration IDs.
@@ -94,10 +98,11 @@ enum BLE_COMMON_EVTS
  */
 enum BLE_CONN_CFGS
 {
-    BLE_CONN_CFG_GAP = BLE_CONN_CFG_BASE,  /**< BLE GAP specific connection configuration. */
-    BLE_CONN_CFG_GATTC,                    /**< BLE GATTC specific connection configuration. */
-    BLE_CONN_CFG_GATTS,                    /**< BLE GATTS specific connection configuration. */
-    BLE_CONN_CFG_GATT,                     /**< BLE GATT specific connection configuration. */
+    BLE_CONN_CFG_GAP   = BLE_CONN_CFG_BASE + 0, /**< BLE GAP specific connection configuration. */
+    BLE_CONN_CFG_GATTC = BLE_CONN_CFG_BASE + 1, /**< BLE GATTC specific connection configuration. */
+    BLE_CONN_CFG_GATTS = BLE_CONN_CFG_BASE + 2, /**< BLE GATTS specific connection configuration. */
+    BLE_CONN_CFG_GATT  = BLE_CONN_CFG_BASE + 3, /**< BLE GATT specific connection configuration. */
+    BLE_CONN_CFG_L2CAP = BLE_CONN_CFG_BASE + 4, /**< BLE L2CAP specific connection configuration. */
 };
 
 /**@brief BLE Common Configuration IDs.
@@ -114,8 +119,8 @@ enum BLE_COMMON_CFGS
  */
 enum BLE_COMMON_OPTS
 {
-  BLE_COMMON_OPT_PA_LNA = BLE_OPT_BASE,      /**< PA and LNA options */
-  BLE_COMMON_OPT_CONN_EVT_EXT,               /**< Extended connection events option */
+  BLE_COMMON_OPT_PA_LNA       = BLE_OPT_BASE + 0, /**< PA and LNA options */
+  BLE_COMMON_OPT_CONN_EVT_EXT = BLE_OPT_BASE + 1, /**< Extended connection events option */
 };
 
 /** @} */
@@ -135,13 +140,9 @@ enum BLE_COMMON_OPTS
  * @note The highest value used for @ref ble_gatt_conn_cfg_t::att_mtu in any connection configuration shall be used as a parameter.
  * If that value has not been configured for any connections then @ref BLE_GATT_ATT_MTU_DEFAULT must be used instead.
 */
-#define BLE_EVT_LEN_MAX(ATT_MTU) (BLE_MAX( \
-  sizeof(ble_evt_t), \
-  BLE_MAX( \
-    offsetof(ble_evt_t, evt.gattc_evt.params.rel_disc_rsp.includes) + ((ATT_MTU) - 2) / 6 * sizeof(ble_gattc_include_t), \
-    offsetof(ble_evt_t, evt.gattc_evt.params.attr_info_disc_rsp.info.attr_info16) + ((ATT_MTU) - 2) / 4 * sizeof(ble_gattc_attr_info16_t) \
-  ) \
-))
+#define BLE_EVT_LEN_MAX(ATT_MTU) ( \
+    offsetof(ble_evt_t, evt.gattc_evt.params.prim_srvc_disc_rsp.services) + ((ATT_MTU) - 1) / 4 * sizeof(ble_gattc_service_t) \
+)
 
 /** @defgroup BLE_USER_MEM_TYPES User Memory Types
  * @{ */
@@ -216,6 +217,7 @@ typedef struct
     ble_gap_evt_t     gap_evt;    /**< GAP originated event, evt_id in BLE_GAP_EVT_* series. */
     ble_gattc_evt_t   gattc_evt;  /**< GATT client originated event, evt_id in BLE_GATTC_EVT* series. */
     ble_gatts_evt_t   gatts_evt;  /**< GATT server originated event, evt_id in BLE_GATTS_EVT* series. */
+    ble_l2cap_evt_t   l2cap_evt;  /**< L2CAP originated event, evt_id in BLE_L2CAP_EVT* series. */
   } evt;                          /**< Event union. */
 } ble_evt_t;
 
@@ -225,7 +227,7 @@ typedef struct
  */
 typedef struct
 {
-  uint8_t   version_number;    /**< Link Layer Version number for BT 4.1 spec is 7 (https://www.bluetooth.org/en-us/specification/assigned-numbers/link-layer). */
+  uint8_t   version_number;    /**< Link Layer Version number. See https://www.bluetooth.org/en-us/specification/assigned-numbers/link-layer for assigned values. */
   uint16_t  company_id;        /**< Company ID, Nordic Semiconductor's company ID is 89 (0x0059) (https://www.bluetooth.org/apps/content/Default.aspx?doc_id=49708). */
   uint16_t  subversion_number; /**< Link Layer Sub Version number, corresponds to the SoftDevice Config ID or Firmware ID (FWID). */
 } ble_version_t;
@@ -250,7 +252,6 @@ typedef struct
  * by the application and should be regarded as reserved as long as any PA/LNA toggling is enabled.
  *
  * @note  @ref sd_ble_opt_get is not supported for this option.
- * @note  This feature is only supported for nRF52, on nRF51 @ref NRF_ERROR_NOT_SUPPORTED will always be returned.
  * @note  Setting this option while the radio is in use (i.e. any of the roles are active) may have undefined consequences
  * and must be avoided by the application.
  */
@@ -301,7 +302,10 @@ typedef union
  * In the case that no configurations has been set, or fewer connection configurations has been set than enabled connections,
  * the default connection configuration will be automatically added for the remaining connections.
  * When creating connections with the default configuration, @ref BLE_CONN_CFG_TAG_DEFAULT should be used in
- * place of @ref ble_conn_cfg_t::conn_cfg_tag. See @ref sd_ble_gap_adv_start() and @ref sd_ble_gap_connect()"
+ * place of @ref ble_conn_cfg_t::conn_cfg_tag.
+ *
+ * @sa sd_ble_gap_adv_start()
+ * @sa sd_ble_gap_connect()
  *
  * @mscs
  * @mmsc{@ref BLE_CONN_CFG}
@@ -310,14 +314,16 @@ typedef union
  */
 typedef struct
 {
-  uint8_t              conn_cfg_tag;        /**< The application chosen tag it can use with the @ref sd_ble_gap_adv_start() and @ref sd_ble_gap_connect()
-                                                 calls to select this configuration when creating a connection.
+  uint8_t              conn_cfg_tag;        /**< The application chosen tag it can use with the
+                                                 @ref sd_ble_gap_adv_start() and @ref sd_ble_gap_connect() calls
+                                                 to select this configuration when creating a connection.
                                                  Must be different for all connection configurations added and not @ref BLE_CONN_CFG_TAG_DEFAULT. */
   union {
     ble_gap_conn_cfg_t   gap_conn_cfg;      /**< GAP connection configuration, cfg_id is @ref BLE_CONN_CFG_GAP. */
     ble_gattc_conn_cfg_t gattc_conn_cfg;    /**< GATTC connection configuration, cfg_id is @ref BLE_CONN_CFG_GATTC. */
-    ble_gatts_conn_cfg_t gatts_conn_cfg;    /**< GATTS this connection configuration, cfg_id is @ref BLE_CONN_CFG_GATTS. */
-    ble_gatt_conn_cfg_t  gatt_conn_cfg;     /**< GATT this connection configuration, cfg_id is @ref BLE_CONN_CFG_GATT. */
+    ble_gatts_conn_cfg_t gatts_conn_cfg;    /**< GATTS connection configuration, cfg_id is @ref BLE_CONN_CFG_GATTS. */
+    ble_gatt_conn_cfg_t  gatt_conn_cfg;     /**< GATT connection configuration, cfg_id is @ref BLE_CONN_CFG_GATT. */
+    ble_l2cap_conn_cfg_t l2cap_conn_cfg;    /**< L2CAP connection configuration, cfg_id is @ref BLE_CONN_CFG_L2CAP. */
   } params;                                 /**< Connection configuration union. */
 } ble_conn_cfg_t;
 
@@ -478,7 +484,7 @@ SVCALL(SD_BLE_EVT_GET, uint32_t, sd_ble_evt_get(uint8_t *p_dest, uint16_t *p_len
  * the 16-bit uuid field in @ref ble_uuid_t.
  *
  * @note If a UUID is already present in the BLE stack's internal table, the corresponding index will be returned in
- * p_uuid_type along with an NRF_SUCCESS error code.
+ * p_uuid_type along with an @ref NRF_SUCCESS error code.
  *
  * @param[in]  p_vs_uuid    Pointer to a 16-octet (128-bit) little endian Vendor Specific UUID disregarding
  *                          bytes 12 and 13.
@@ -548,7 +554,7 @@ SVCALL(SD_BLE_VERSION_GET, uint32_t, sd_ble_version_get(ble_version_t *p_version
  * @param[in] p_block Pointer to a user memory block structure or NULL if memory is managed by the application.
  *
  * @mscs
- * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_NOBUF_PEER_CANCEL_MSC}
+ * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_PEER_CANCEL_MSC}
  * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_NOBUF_AUTH_MSC}
  * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_NOBUF_NOAUTH_MSC}
  * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_BUF_AUTH_MSC}
@@ -558,6 +564,7 @@ SVCALL(SD_BLE_VERSION_GET, uint32_t, sd_ble_version_get(ble_version_t *p_version
  *
  * @retval ::NRF_SUCCESS Successfully queued a response to the peer.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
+ * @retval ::NRF_ERROR_BUSY The stack is busy, process pending events and retry.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid Connection Handle.
  * @retval ::NRF_ERROR_INVALID_LENGTH Invalid user memory block length supplied.
  * @retval ::NRF_ERROR_INVALID_STATE Invalid Connection state or no user memory request pending.

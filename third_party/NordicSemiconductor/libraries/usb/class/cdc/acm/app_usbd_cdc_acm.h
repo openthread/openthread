@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -65,9 +65,9 @@ extern "C" {
  *
  * @details References:
  * - "Universal Serial Bus Class Definitions for Communications Devices"
- *  	Revision 1.2, November 3, 2010
+ *      Revision 1.2, November 3, 2010
  * - "Universal Serial Bus Communications Class Subclass Specification for PSTN Devices"
- *  	Revision 1.2, February 9, 2007
+ *      Revision 1.2, February 9, 2007
  *
  * @{
  */
@@ -144,21 +144,33 @@ typedef enum app_usbd_cdc_acm_user_event_e {
  * @brief Global definition of app_usbd_cdc_acm_t class instance.
  *
  * @param instance_name             Name of global instance.
- * @param interfaces_configs        Interfaces configurations.
  * @param user_ev_handler           User event handler (optional).
- * @param raw_descriptors           Raw descriptor table.
+ * @param comm_ifc                  Interface number of cdc_acm control.
+ * @param data_ifc                  Interface number of cdc_acm DATA.
+ * @param comm_ein                  COMM subclass IN endpoint.
+ * @param data_ein                  DATA subclass IN endpoint.
+ * @param data_eout                 DATA subclass OUT endpoint.
+ * @param cdc_protocol              CDC protocol @ref app_usbd_cdc_comm_protocol_t
  *
  * @note This macro is just simplified version of @ref APP_USBD_CDC_ACM_GLOBAL_DEF_INTERNAL.
  *
  */
-#define APP_USBD_CDC_ACM_GLOBAL_DEF(instance_name,              \
-                                    interfaces_configs,         \
-                                    user_ev_handler,            \
-                                    raw_descriptors)            \
-    APP_USBD_CDC_ACM_GLOBAL_DEF_INTERNAL(instance_name,         \
-                                         interfaces_configs,    \
-                                         user_ev_handler,       \
-                                         raw_descriptors)
+#define APP_USBD_CDC_ACM_GLOBAL_DEF(instance_name,                              \
+                                    user_ev_handler,                            \
+                                    comm_ifc,                                   \
+                                    data_ifc,                                   \
+                                    comm_ein,                                   \
+                                    data_ein,                                   \
+                                    data_eout,                                  \
+                                    cdc_protocol)                               \
+    APP_USBD_CDC_ACM_GLOBAL_DEF_INTERNAL(instance_name,                         \
+                                         user_ev_handler,                       \
+                                         comm_ifc,                              \
+                                         data_ifc,                              \
+                                         comm_ein,                              \
+                                         data_ein,                              \
+                                         data_eout,                             \
+                                         cdc_protocol)                          \
 
 /**
  * @brief Helper function to get class instance from CDC ACM class.
@@ -217,10 +229,10 @@ ret_code_t app_usbd_cdc_acm_write(app_usbd_cdc_acm_t const * p_cdc_acm,
                                   size_t                     length);
 
 /**
- * @brief Returns the amount of data to be read.
+ * @brief Returns the amount of data that was read.
  *
  * This function should be used on @ref APP_USBD_CDC_ACM_USER_EVT_RX_DONE event to get
- * information how many bytes have been transfered.
+ * information how many bytes have been transfered into user buffer.
  *
  * @param[in] p_cdc_acm CDC ACM class instance (defined by @ref APP_USBD_CDC_ACM_GLOBAL_DEF).
  *
@@ -229,17 +241,72 @@ ret_code_t app_usbd_cdc_acm_write(app_usbd_cdc_acm_t const * p_cdc_acm,
 size_t app_usbd_cdc_acm_rx_size(app_usbd_cdc_acm_t const * p_cdc_acm);
 
 /**
+ * @brief Returns the amount of data that was stored into internal buffer
+ *
+ * This function should be used on @ref APP_USBD_CDC_ACM_USER_EVT_RX_DONE event to get
+ * information how many bytes are waiting in internal buffer.
+ *
+ * @param[in] p_cdc_acm CDC ACM class instance (defined by @ref APP_USBD_CDC_ACM_GLOBAL_DEF).
+ *
+ * @return Amount of data waiting.
+ */
+size_t app_usbd_cdc_acm_bytes_stored(app_usbd_cdc_acm_t const * p_cdc_acm);
+
+/**
  * @brief Reads data from CDC ACM serial port.
+ *
+ * This function uses internal buffer and double buffering for continuous transmission.
+ *
+ * If there is enough data in internal buffer to fill user buffer, NRF_SUCCESS is
+ * returned and data is immediately available in the user buffer.
+ *
+ * If not, up to two user buffers can be scheduled, function returns NRF_ERROR_IO_PENDING
+ * when first buffer is filled and @ref APP_USBD_CDC_ACM_USER_EVT_RX_DONE event is generated.
+ *
+ * @sa app_usbd_cdc_acm_read_any
+ * @sa app_usbd_cdc_acm_rx_size
  *
  * @param[in]  p_cdc_acm CDC ACM class instance (defined by @ref APP_USBD_CDC_ACM_GLOBAL_DEF).
  * @param[out] p_buf     Output buffer.
- * @param[in]  length    Output buffer length (must by multiple of @ref NRF_DRV_USBD_EPSIZE).
+ * @param[in]  length    Number of bytes to read.
  *
- * @return Standard error code.
+ * @retval NRF_SUCCESS          Data is stored into user buffer.
+ * @retval NRF_ERROR_IO_PENDING Awaiting transmission, when data is stored into user buffer,
+ *                              @ref APP_USBD_CDC_ACM_USER_EVT_RX_DONE event will be raised.
+ * @retval NRF_ERROR_BUSY       There are already 2 buffers queued for transfers.
+ * @retval other                Standard error code.
  */
 ret_code_t app_usbd_cdc_acm_read(app_usbd_cdc_acm_t const * p_cdc_acm,
                                  void *                     p_buf,
                                  size_t                     length);
+
+/**
+ * @brief Read any data from CDC ACM port up to given buffer size
+ *
+ * This function is very similar to the @ref app_usbd_cdc_acm_read but it returns
+ * data as quick as any data is available, even if the given buffer was not totally full.
+ *
+ * @note This function cannot use double buffering.
+ * @note To check the number of bytes really read use @ref app_usbd_cdc_acm_rx_size
+ * function.
+ *
+ * @sa app_usbd_cdc_acm_read
+ * @sa app_usbd_cdc_acm_rx_size
+ *
+ * @param p_cdc_acm CDC ACM class instance (defined by @ref APP_USBD_CDC_ACM_GLOBAL_DEF).
+ * @param[out] p_buf     Output buffer.
+ * @param[in]  length    Maximum number of bytes to read.
+ *
+ * @retval NRF_SUCCESS          Data is stored into user buffer.
+ * @retval NRF_ERROR_IO_PENDING Awaiting transmission, when data is stored into user buffer,
+ *                              @ref APP_USBD_CDC_ACM_USER_EVT_RX_DONE event will be raised.
+ * @retval NRF_ERROR_BUSY       There is already buffer set for a transfer.
+ * @retval other                Standard error code.
+ */
+ret_code_t app_usbd_cdc_acm_read_any(app_usbd_cdc_acm_t const * p_cdc_acm,
+                                     void *                     p_buf,
+                                     size_t                     length);
+
 /**
  * @brief Serial state notifications.
  * */
