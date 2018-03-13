@@ -34,24 +34,13 @@
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
-
-#include <openthread/cli.h>
 #include <openthread/platform/logging.h>
-
-#include "utils/code_utils.h"
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-    va_list args;
-    va_start(args, aFormat);
-    otCliLog(aLogLevel, aLogRegion, aFormat, args);
-    va_end(args);
-#else
     (void)aLogLevel;
     (void)aLogRegion;
     (void)aFormat;
-#endif // OPENTHREAD_ENABLE_CLI_LOGGING
 }
 #endif
