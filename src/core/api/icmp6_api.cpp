@@ -39,18 +39,18 @@
 
 using namespace ot;
 
-bool otIcmp6IsEchoEnabled(otInstance *aInstance)
+otIcmp6EchoMode otIcmp6GetEchoMode(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetIp6().GetIcmp().IsEchoEnabled();
+    return instance.GetIp6().GetIcmp().GetEchoMode();
 }
 
-void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled)
+void otIcmp6SetEchoMode(otInstance *aInstance, otIcmp6EchoMode aMode)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetIp6().GetIcmp().SetEchoEnabled(aEnabled);
+    instance.GetIp6().GetIcmp().SetEchoMode(aMode);
 }
 
 otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)

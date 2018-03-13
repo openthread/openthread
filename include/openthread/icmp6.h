@@ -124,24 +124,37 @@ typedef struct otIcmp6Handler
 } otIcmp6Handler;
 
 /**
+ * ICMPv6 Echo Reply Modes
+ *
+ */
+typedef enum otIcmp6EchoMode {
+    OT_ICMP6_ECHO_HANDLER_DISABLED       = 0, ///< ICMPv6 Echo processing disabled
+    OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY   = 1, ///< ICMPv6 Echo processing enabled only for unicast requests only
+    OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY = 2, ///< ICMPv6 Echo processing enabled only for multicast requests only
+    OT_ICMP6_ECHO_HANDLER_ALL            = 3, ///< ICMPv6 Echo processing enabled for unicast and multicast requests
+} otIcmp6EchoMode;
+
+/**
  * This function indicates whether or not ICMPv6 Echo processing is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval TRUE   ICMPv6 Echo processing is enabled.
- * @retval FALSE  ICMPv6 Echo processing is disabled.
+ * @retval OT_ICMP6_ECHO_HANDLER_DISABLED        ICMPv6 Echo processing is disabled.
+ * @retval OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY    ICMPv6 Echo processing enabled for unicast requests only
+ * @retval OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY  ICMPv6 Echo processing enabled for multicast requests only
+ * @retval OT_ICMP6_ECHO_HANDLER_ALL             ICMPv6 Echo processing enabled for unicast and multicast requests
  *
  */
-bool otIcmp6IsEchoEnabled(otInstance *aInstance);
+otIcmp6EchoMode otIcmp6GetEchoMode(otInstance *aInstance);
 
 /**
  * This function sets whether or not ICMPv6 Echo processing is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
+ * @param[in]  aMode     The ICMPv6 Echo processing mode.
  *
  */
-void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled);
+void otIcmp6SetEchoMode(otInstance *aInstance, otIcmp6EchoMode aMode);
 
 /**
  * This function registers a handler to provide received ICMPv6 messages.
@@ -150,7 +163,7 @@ void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled);
  *       OpenThread does not make a copy of handler structure.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aHandler  A pointer to a handler conitaining callback that is called when
+ * @param[in]  aHandler  A pointer to a handler containing callback that is called when
  *                       an ICMPv6 message is received.
  *
  */

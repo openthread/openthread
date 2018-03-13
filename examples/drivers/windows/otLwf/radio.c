@@ -82,7 +82,7 @@ otPlatReset(
     NT_ASSERT(otCtxToFilter(pFilter->otCtx) == pFilter);
 
     // Disable Icmp (ping) handling
-    otIcmp6SetEchoEnabled(pFilter->otCtx, FALSE);
+    otIcmp6SetEchoMode(pFilter->otCtx, OT_ICMP6_ECHO_HANDLER_DISABLED);
 
     // Register callbacks with OpenThread
     otSetStateChangedCallback(pFilter->otCtx, otLwfStateChangedCallback, pFilter);

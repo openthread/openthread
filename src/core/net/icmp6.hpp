@@ -325,7 +325,7 @@ public:
      * @retval FALSE  ICMPv6 Echo processing is disabled.
      *
      */
-    bool IsEchoEnabled(void) { return mIsEchoEnabled; }
+    otIcmp6EchoMode GetEchoMode(void) const { return mEchoMode; }
 
     /**
      * This method sets whether or not ICMPv6 Echo processing is enabled.
@@ -333,15 +333,24 @@ public:
      * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
      *
      */
-    void SetEchoEnabled(bool aEnabled) { mIsEchoEnabled = aEnabled; }
+    void SetEchoMode(otIcmp6EchoMode aMode) { mEchoMode = aMode; }
+
+    /**
+     * This method indicates whether or not the ICMPv6 Echo Request should be handled.
+     *
+     * @retval TRUE if OpenThread should respond with an ICMPv6 Echo Reply.
+     * @retval FALSE if OpenThread should not respond with an ICMPv6 Echo Reply.
+     *
+     */
+    bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
 
 private:
     otError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
 
     IcmpHandler *mHandlers;
 
-    uint16_t mEchoSequence;
-    bool     mIsEchoEnabled;
+    uint16_t        mEchoSequence;
+    otIcmp6EchoMode mEchoMode;
 };
 
 /**
