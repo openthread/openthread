@@ -53,7 +53,7 @@ Icmp::Icmp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mHandlers(NULL)
     , mEchoSequence(1)
-    , mIsEchoEnabled(true)
+    , mEchoMode(OT_ICMP6_ECHO_HANDLER_ALL)
 {
 }
 
@@ -157,7 +157,7 @@ otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
     VerifyOrExit(checksum == 0xffff, error = OT_ERROR_PARSE);
 
-    if (mIsEchoEnabled && (icmp6Header.GetType() == IcmpHeader::kTypeEchoRequest))
+    if (icmp6Header.GetType() == IcmpHeader::kTypeEchoRequest)
     {
         HandleEchoRequest(aMessage, aMessageInfo);
     }
@@ -173,6 +173,29 @@ exit:
     return error;
 }
 
+bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
+{
+    bool rval = false;
+
+    switch (mEchoMode)
+    {
+    case OT_ICMP6_ECHO_HANDLER_DISABLED:
+        rval = false;
+        break;
+    case OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY:
+        rval = !aMessageInfo.GetSockAddr().IsMulticast();
+        break;
+    case OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY:
+        rval = aMessageInfo.GetSockAddr().IsMulticast();
+        break;
+    case OT_ICMP6_ECHO_HANDLER_ALL:
+        rval = true;
+        break;
+    }
+
+    return rval;
+}
+
 otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
 {
     otError     error = OT_ERROR_NONE;
@@ -180,6 +203,8 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     Message *   replyMessage = NULL;
     MessageInfo replyMessageInfo;
     uint16_t    payloadLength;
+
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo));
 
     otLogInfoIcmp(GetInstance(), "Received Echo Request");
 

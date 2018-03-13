@@ -1136,7 +1136,7 @@ otError NcpBase::GetPropertyHandler_IPV6_ROUTE_TABLE(void)
 
 otError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(void)
 {
-    return mEncoder.WriteBool(otIcmp6IsEchoEnabled(mInstance));
+    return mEncoder.WriteBool(otIcmp6GetEchoMode(mInstance) != OT_ICMP6_ECHO_HANDLER_DISABLED);
 }
 
 otError NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(void)
@@ -1146,7 +1146,7 @@ otError NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(void)
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
-    otIcmp6SetEchoEnabled(mInstance, enabled);
+    otIcmp6SetEchoMode(mInstance, enabled ? OT_ICMP6_ECHO_HANDLER_ALL : OT_ICMP6_ECHO_HANDLER_DISABLED);
 
 exit:
     return error;
@@ -1201,6 +1201,59 @@ otError NcpBase::RemovePropertyHandler_IPV6_MULTICAST_ADDRESS_TABLE(void)
     {
         error = OT_ERROR_NONE;
     }
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD_MODE(void)
+{
+    spinel_ipv6_icmp_ping_offload_mode_t mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED;
+
+    switch (otIcmp6GetEchoMode(mInstance))
+    {
+    case OT_ICMP6_ECHO_HANDLER_DISABLED:
+        mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED;
+        break;
+    case OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY:
+        mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_UNICAST_ONLY;
+        break;
+    case OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY:
+        mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_MULTICAST_ONLY;
+        break;
+    case OT_ICMP6_ECHO_HANDLER_ALL:
+        mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL;
+        break;
+    };
+
+    return mEncoder.WriteUint8(mode);
+}
+
+otError NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD_MODE(void)
+{
+    otError error = OT_ERROR_NONE;
+    otIcmp6EchoMode mode = OT_ICMP6_ECHO_HANDLER_DISABLED;
+    uint8_t spinelMode;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(spinelMode));
+
+    switch (spinelMode)
+    {
+    case SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED:
+        mode = OT_ICMP6_ECHO_HANDLER_DISABLED;
+        break;
+    case SPINEL_IPV6_ICMP_PING_OFFLOAD_UNICAST_ONLY:
+        mode = OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY;
+        break;
+    case SPINEL_IPV6_ICMP_PING_OFFLOAD_MULTICAST_ONLY:
+        mode = OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY;
+        break;
+    case SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL:
+        mode = OT_ICMP6_ECHO_HANDLER_ALL;
+        break;
+    };
+
+    otIcmp6SetEchoMode(mInstance, mode);
 
 exit:
     return error;

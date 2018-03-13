@@ -145,6 +145,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(THREAD_PENDING_DATASET),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ADDRESS_TABLE),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD),
+    NCP_GET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD_MODE),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_LL_ADDR),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ML_PREFIX),
     NCP_GET_PROP_HANDLER_ENTRY(IPV6_ML_ADDR),
@@ -292,6 +293,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(STREAM_NET),
     NCP_SET_PROP_HANDLER_ENTRY(IPV6_ML_PREFIX),
     NCP_SET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD),
+    NCP_SET_PROP_HANDLER_ENTRY(IPV6_ICMP_PING_OFFLOAD_MODE),
     NCP_SET_PROP_HANDLER_ENTRY(THREAD_RLOC16_DEBUG_PASSTHRU),
 #if OPENTHREAD_ENABLE_MAC_FILTER
     NCP_SET_PROP_HANDLER_ENTRY(MAC_WHITELIST),
@@ -604,7 +606,7 @@ NcpBase::NcpBase(Instance *aInstance):
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
     otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void *>(this));
-    otIcmp6SetEchoEnabled(mInstance, false);
+    otIcmp6SetEchoMode(mInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #if OPENTHREAD_FTD
     otThreadSetChildTableCallback(mInstance, &NcpBase::HandleChildTableChanged);
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB

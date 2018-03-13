@@ -202,6 +202,14 @@ typedef enum
 
 typedef enum
 {
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED       = 0,
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_UNICAST_ONLY   = 1,
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_MULTICAST_ONLY = 2,
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL            = 3,
+} spinel_ipv6_icmp_ping_offload_mode_t;
+
+typedef enum
+{
     SPINEL_SCAN_STATE_IDLE              = 0,
     SPINEL_SCAN_STATE_BEACON            = 1,
     SPINEL_SCAN_STATE_ENERGY            = 2,
@@ -1411,6 +1419,20 @@ typedef enum
 
     SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE
                                         = SPINEL_PROP_IPV6__BEGIN + 6, ///< [A(t(6))]
+
+    /// IPv6 ICMP Ping Offload
+    /** Format: `C`
+     *
+     * Allow the NCP to directly respond to ICMP ping requests. If this is
+     * turned on, ping request ICMP packets will not be passed to the host.
+     *
+     * This property allows enabling responses sent to unicast only, multicast
+     * only, or both.
+     *
+     * Default value is `NET_IPV6_ICMP_PING_OFFLOAD_DISABLED`.
+     */
+    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE
+                                        = SPINEL_PROP_IPV6__BEGIN + 7, ///< [b]
 
     SPINEL_PROP_IPV6__END               = 0x70,
 
