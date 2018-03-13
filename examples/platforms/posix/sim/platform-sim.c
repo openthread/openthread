@@ -199,7 +199,7 @@ void PlatformInit(int argc, char *argv[])
 
     socket_init();
 
-    platformAlarmInit();
+    platformAlarmInit(1);
     platformRadioInit();
     platformRandomInit();
 }

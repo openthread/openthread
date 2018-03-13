@@ -50,10 +50,13 @@ static uint32_t sMsAlarm     = 0;
 static bool     sIsUsRunning = false;
 static uint32_t sUsAlarm     = 0;
 
+static uint32_t sSpeedUpFactor = 1;
+
 static struct timeval sStart;
 
-void platformAlarmInit(void)
+void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
+    sSpeedUpFactor = aSpeedUpFactor;
     gettimeofday(&sStart, NULL);
 }
 
@@ -64,7 +67,7 @@ uint32_t otPlatAlarmMilliGetNow(void)
     gettimeofday(&tv, NULL);
     timersub(&tv, &sStart, &tv);
 
-    return (uint32_t)((tv.tv_sec * MS_PER_S) + (tv.tv_usec / US_PER_MS));
+    return (uint32_t)((tv.tv_sec * sSpeedUpFactor * MS_PER_S) + (tv.tv_usec * sSpeedUpFactor / US_PER_MS));
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -87,7 +90,7 @@ uint32_t otPlatAlarmMicroGetNow(void)
     gettimeofday(&tv, NULL);
     timersub(&tv, &sStart, &tv);
 
-    return (uint32_t)(tv.tv_sec * US_PER_S + tv.tv_usec);
+    return (uint32_t)(tv.tv_sec * US_PER_S + tv.tv_usec) * sSpeedUpFactor;
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -128,15 +131,24 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
         aTimeout->tv_sec  = 0;
         aTimeout->tv_usec = 0;
     }
-    else if (msRemaining * US_PER_MS < usRemaining)
-    {
-        aTimeout->tv_sec  = msRemaining / MS_PER_S;
-        aTimeout->tv_usec = (msRemaining % MS_PER_S) * US_PER_MS;
-    }
     else
     {
-        aTimeout->tv_sec  = usRemaining / US_PER_S;
-        aTimeout->tv_usec = usRemaining % US_PER_S;
+        int64_t remaining = ((int64_t)msRemaining) * US_PER_MS;
+
+        if (usRemaining < remaining)
+        {
+            remaining = usRemaining;
+        }
+
+        remaining /= sSpeedUpFactor;
+
+        if (remaining == 0)
+        {
+            remaining = 1;
+        }
+
+        aTimeout->tv_sec  = remaining / US_PER_S;
+        aTimeout->tv_usec = remaining % US_PER_S;
     }
 }
 
