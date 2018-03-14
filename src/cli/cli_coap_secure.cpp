@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements a simple CLI for the CoAP service.
+ *   This file implements a simple CLI for the CoAP Secure service.
  */
 
 #include "cli_coap_secure.hpp"
@@ -360,4 +360,4 @@ void CoapSecureCli::HandleClientResponse(otCoapHeader *       aHeader,
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

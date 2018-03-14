@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI CoAP server and client.
+ *   This file contains definitions for a simple CLI CoAP Secure server and client.
  */
 
 #ifndef CLI_COAP_SECURE_HPP_
