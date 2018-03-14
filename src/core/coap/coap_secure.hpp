@@ -34,6 +34,8 @@
 #include "coap/coap.hpp"
 #include "meshcop/dtls.hpp"
 
+#include <openthread/coap_secure.h>
+
 /**
  * @file
  *   This file includes definitions for the secure CoAP agent.
@@ -72,6 +74,18 @@ public:
      *
      */
     explicit CoapSecure(Instance &aInstance);
+
+    // ToDo: Remove testfunction before a bull request (only for evaluations)
+    /**
+     * This method increase the count value at two.
+     * Is only for test the access to the coap secure and can
+     * remove later.
+     *
+     * @param[inout]	count	A value who increase at two.
+     *
+     * @retval	OT_ERROR_NONE	Successfully call this function.
+     */
+    otError TestIntegration(uint8_t* count);
 
     /**
      * This method starts the secure CoAP agent.

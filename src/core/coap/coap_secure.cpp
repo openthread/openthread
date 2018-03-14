@@ -57,6 +57,13 @@ CoapSecure::CoapSecure(Instance &aInstance)
 {
 }
 
+// ToDo: Remove test function before a bull request (only for evaluations)
+otError CoapSecure::TestIntegration(uint8_t* count)
+{
+	count[0] += 2;
+	return OT_ERROR_NONE;
+}
+
 otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aContext)
 {
     otError error      = OT_ERROR_NONE;
