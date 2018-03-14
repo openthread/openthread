@@ -81,11 +81,17 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     if (strcmp(argv[0], "test") == 0)
-          {
-       	mInterpreter.mServer->OutputFormat("Test CLI CoAPS ");
-              return OT_ERROR_NONE;
-          }
-       else if (strcmp(argv[0], "start") == 0)
+    {
+        mInterpreter.mServer->OutputFormat("Test CLI CoAPS ");
+    }
+    else if (strcmp(argv[0], "help") == 0)
+    {
+    	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\n\r");
+    	mInterpreter.mServer->OutputFormat("coaps test: test access to coaps implementation.\n\r");
+    	mInterpreter.mServer->OutputFormat("no more functions at moment.\n\r");
+
+    }
+    else if (strcmp(argv[0], "start") == 0)
     {
         SuccessOrExit(error = otCoapStart(mInterpreter.mInstance, OT_DEFAULT_COAP_PORT));
         mInterpreter.mServer->OutputFormat("Coap service started: ");
