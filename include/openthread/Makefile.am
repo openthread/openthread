@@ -51,6 +51,7 @@ openthread_headers                      = \
     channel_monitor.h                     \
     child_supervision.h                   \
     cli.h                                 \
+    coap_secure.h                         \
     coap.h                                \
     commissioner.h                        \
     config.h                              \

@@ -1132,6 +1132,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DNS_CLIENT], [test "${enable_dns_client}" = "y
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DNS_CLIENT],[${OPENTHREAD_ENABLE_DNS_CLIENT}],[Define to 1 if you want to enable DNS Client])
 
 #
+# Application CoAP Secure
+#
+
+AC_ARG_ENABLE(application_coap_secure,
+    [AS_HELP_STRING([--enable-application-coap-secure],[Enable CoAP Secure to an application.@<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_application_coap_secure=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_application_coap_secure} for --enable-application-coap_secure])
+            ;;
+        esac
+    ],
+    [enable_application_coap_secure=yes])
+
+if test "$enable_application_coap_secure" = "yes"; then
+    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=1
+else
+    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE], [test "${enable_application_coap_secure}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE],[${OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE}],[Define to 1 if you want to enable CoAP Secure to an application.])
+
+# ToDo:	Check, if is neccessary to activate also MBED DTLS or/and CoAP Secure in core, if APP CoAPs is activated!								<-!!
+
+#
 # Application CoAP
 #
 

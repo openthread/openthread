@@ -88,6 +88,7 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #
 
 SOURCES_COMMON                      = \
+    api/coap_secure_api.cpp           \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
     api/channel_manager_api.cpp       \

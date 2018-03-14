@@ -36,6 +36,8 @@
 #include <openthread/platform/logging.h>
 
 #include "platform.h"
+// todo: remove after testing
+#include <openthread/coap_secure.h>
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)
@@ -85,6 +87,10 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_ENABLE_DIAG
     otDiagInit(sInstance);
 #endif
+
+    //todo: remove test integr.
+    uint8_t cnt = 0;
+    otCoapSecureTestIntegration(&cnt);
 
     while (1)
     {
