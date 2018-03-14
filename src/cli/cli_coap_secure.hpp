@@ -41,6 +41,7 @@
 #include <openthread/types.h>
 
 #include "coap/coap_header.hpp"
+#include "coap/coap_secure.hpp"		// include the core coap secure implementation ToDo: remove this comment later
 
 namespace ot {
 namespace Cli {

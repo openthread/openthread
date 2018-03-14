@@ -39,6 +39,7 @@
 
 #include "cli/cli.hpp"
 #include "coap/coap_header.hpp"
+#include "coap/coap_secure.hpp"		// include the core coap secure implementation ToDo: remove this comment later
 
 namespace ot {
 namespace Cli {
@@ -82,39 +83,18 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     if (strcmp(argv[0], "test") == 0)
     {
-        mInterpreter.mServer->OutputFormat("Test CLI CoAPS ");
+        mInterpreter.mServer->OutputFormat("Test Access to CoAPS implementation.\r\n");
+        uint8_t count = 23;
+        mInterpreter.mServer->OutputFormat("Count before: %d | Count after: ", count);
+        SuccessOrExit( error = otCoapSecureTestIntegration(&count) );					// function out of the coaps api
+        mInterpreter.mServer->OutputFormat("%d (should be two greater than input)\r\n", count);
     }
     else if (strcmp(argv[0], "help") == 0)
     {
-    	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\n\r");
-    	mInterpreter.mServer->OutputFormat("coaps test: test access to coaps implementation.\n\r");
-    	mInterpreter.mServer->OutputFormat("no more functions at moment.\n\r");
+    	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n");
+    	mInterpreter.mServer->OutputFormat(">'coaps test': test access to coaps implementation.\r\n");
+    	mInterpreter.mServer->OutputFormat("\r\nno more functions at moment.\r\n");
 
-    }
-    else if (strcmp(argv[0], "start") == 0)
-    {
-        SuccessOrExit(error = otCoapStart(mInterpreter.mInstance, OT_DEFAULT_COAP_PORT));
-        mInterpreter.mServer->OutputFormat("Coap service started: ");
-    }
-    else if (strcmp(argv[0], "stop") == 0)
-    {
-        otCoapRemoveResource(mInterpreter.mInstance, &mResource);
-        SuccessOrExit(error = otCoapStop(mInterpreter.mInstance));
-        mInterpreter.mServer->OutputFormat("Coap service stopped: ");
-    }
-    else if (strcmp(argv[0], "resource") == 0)
-    {
-        mResource.mUriPath = mUriPath;
-        mResource.mContext = this;
-        mResource.mHandler = &CoapSecureCli::HandleServerResponse;
-
-        if (argc > 1)
-        {
-            strlcpy(mUriPath, argv[1], kMaxUriLength);
-            SuccessOrExit(error = otCoapAddResource(mInterpreter.mInstance, &mResource));
-        }
-
-        mInterpreter.mServer->OutputFormat("Resource name is '%s': ", mResource.mUriPath);
     }
     else
     {
