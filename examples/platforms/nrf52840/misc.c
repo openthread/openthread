@@ -40,6 +40,8 @@
 
 static uint32_t sResetReason;
 
+bool gPlatformPseudoResetWasRequested;
+
 __WEAK void nrf5CryptoInit(void)
 {
     // This function is defined as weak so it could be overridden with external implementation.
@@ -69,8 +71,12 @@ void nrf5MiscDeinit(void)
 void otPlatReset(otInstance *aInstance)
 {
     (void)aInstance;
-
+#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    gPlatformPseudoResetWasRequested = true;
+    sResetReason                     = POWER_RESETREAS_SREQ_Msk;
+#else  // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     NVIC_SystemReset();
+#endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)

@@ -51,6 +51,18 @@ void __cxa_pure_virtual(void)
 
 void PlatformInit(int argc, char *argv[])
 {
+    extern bool gPlatformPseudoResetWasRequested;
+
+    if (gPlatformPseudoResetWasRequested)
+    {
+        nrf5AlarmDeinit();
+        nrf5AlarmInit();
+
+        gPlatformPseudoResetWasRequested = false;
+
+        return;
+    }
+
     (void)argc;
     (void)argv;
 
@@ -85,6 +97,12 @@ void PlatformDeinit(void)
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
     nrf5LogDeinit();
 #endif
+}
+
+bool PlatformPseudoResetWasRequested(void)
+{
+    extern bool gPlatformPseudoResetWasRequested;
+    return gPlatformPseudoResetWasRequested;
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)

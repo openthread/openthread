@@ -76,6 +76,11 @@ void PlatformInit(int argc, char *argv[])
     qorvoRadioInit();
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 void PlatformProcessDrivers(otInstance *aInstance)
 {
     if (localInstance == NULL)
