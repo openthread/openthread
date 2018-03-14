@@ -67,9 +67,9 @@ extern "C" {
  *
  * @param[inout]  aCount           	A pointer to a value. Will increment at one.
  *
- * @retval 1          			  Successfully call this function.
+ * @retval 		OT_ERROR_NONE     	Successfully call this function.
  */
-uint8_t otCoapSecureTestIntegration(uint8_t * aCount);
+otError otCoapSecureTestIntegration(uint8_t * aCount);
 
 /**
  * @}

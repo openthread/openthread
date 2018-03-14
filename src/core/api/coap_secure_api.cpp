@@ -44,12 +44,11 @@
 
 using namespace ot;
 
-uint8_t otCoapSecureTestIntegration(uint8_t * aCount)
+otError otCoapSecureTestIntegration(uint8_t * aCount)
 {
-//    Coap::CoapSecure *coaps = static_cast<Coap::CoapSecure *>(aHeader)
-//    return coaps->TestIntegration(aCount);
-	aCount[0] += 1;
-	return 1;
+	void * aHeader = NULL;
+    Coap::CoapSecure *coaps = static_cast<Coap::CoapSecure *>(aHeader);
+    return coaps->TestIntegration(aCount);
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
