@@ -77,6 +77,10 @@
 #include "cli_coap.hpp"
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#include "cli_coap_secure.hpp"
+#endif
+
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
 #include <openthread/platform/debug_uart.h>
 #endif
@@ -105,7 +109,7 @@ const struct Command Interpreter::sCommands[] = {
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 	{"coaps", &Interpreter::ProcessCoapSecure},
-	#endif
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     {"commissioner", &Interpreter::ProcessCommissioner},
 #endif
@@ -664,7 +668,7 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
     AppendResult(error);
 }
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
