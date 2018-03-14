@@ -41,3 +41,9 @@ libtool
 Makefile
 Makefile.in
 output
+..gitignore.swp
+.autotools
+.cproject
+.project
+.settings/
+
