@@ -712,13 +712,46 @@ else
     OPENTHREAD_ENABLE_JOINER=0
 fi
 
+#
+# Application CoAP Secure
+#
+
+AC_ARG_ENABLE(application_coap_secure,
+    [AS_HELP_STRING([--enable-application-coap-secure],[Enable CoAP Secure to an application.@<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_application_coap_secure=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_application_coap_secure} for --enable-application-coap_secure])
+            ;;
+        esac
+    ],
+    [enable_application_coap_secure=yes])
+
+if test "$enable_application_coap_secure" = "yes"; then
+    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=1
+    enable_application_coap="yes"
+else
+    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE], [test "${enable_application_coap_secure}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE],[${OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE}],[Define to 1 if you want to enable CoAP Secure to an application.])
+
+# ToDo:	Check, if is neccessary to activate also MBED DTLS or/and CoAP Secure in core, if APP CoAPs is activated!								<-!!
+
 AC_MSG_CHECKING([whether to enable the joiner feature])
 AC_MSG_RESULT(${enable_joiner})
 AC_SUBST(OPENTHREAD_ENABLE_JOINER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JOINER],[${OPENTHREAD_ENABLE_JOINER}],[Define to 1 to enable the joiner role.])
 
-if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes"; then
+if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes" -o "${enable_application_coap_secure}" = "yes"; then
     enable_dtls="yes"
     OPENTHREAD_ENABLE_DTLS=1
 else
@@ -1130,38 +1163,6 @@ fi
 AC_SUBST(OPENTHREAD_ENABLE_DNS_CLIENT)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DNS_CLIENT], [test "${enable_dns_client}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DNS_CLIENT],[${OPENTHREAD_ENABLE_DNS_CLIENT}],[Define to 1 if you want to enable DNS Client])
-
-#
-# Application CoAP Secure
-#
-
-AC_ARG_ENABLE(application_coap_secure,
-    [AS_HELP_STRING([--enable-application-coap-secure],[Enable CoAP Secure to an application.@<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_application_coap_secure=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_application_coap_secure} for --enable-application-coap_secure])
-            ;;
-        esac
-    ],
-    [enable_application_coap_secure=yes])
-
-if test "$enable_application_coap_secure" = "yes"; then
-    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=1
-else
-    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE], [test "${enable_application_coap_secure}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE],[${OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE}],[Define to 1 if you want to enable CoAP Secure to an application.])
-
-# ToDo:	Check, if is neccessary to activate also MBED DTLS or/and CoAP Secure in core, if APP CoAPs is activated!								<-!!
 
 #
 # Application CoAP
@@ -1675,6 +1676,7 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread Application CoAP support       : ${enable_application_coap}
+  OpenThread Application CoAP Secure support: ${enable_application_coap_secure}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}

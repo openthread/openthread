@@ -137,6 +137,7 @@ SOURCES_COMMON =                      \
     cli_dataset.cpp                   \
     cli_uart.cpp                      \
     cli_coap.cpp                      \
+    cli_coap_secure.cpp               \
     cli_udp_example.cpp               \
     $(NULL)
 
@@ -155,6 +156,7 @@ noinst_HEADERS                      = \
     cli_uart.hpp                      \
     cli_server.hpp                    \
     cli_coap.hpp                      \
+    cli_coap_secure.hpp               \
     cli_udp_example.hpp               \
     $(NULL)
 

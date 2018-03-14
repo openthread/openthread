@@ -103,6 +103,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     {"coap", &Interpreter::ProcessCoap},
 #endif
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+	{"coaps", &Interpreter::ProcessCoapSecure},
+	#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     {"commissioner", &Interpreter::ProcessCommissioner},
 #endif
@@ -280,6 +283,9 @@ Interpreter::Interpreter(Instance *aInstance)
     , mInstance(aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mCoap(*this)
+#endif
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    , mCoapSecure(*this)
 #endif
 {
 #ifdef OTDLL
@@ -644,6 +650,17 @@ void Interpreter::ProcessCoap(int argc, char *argv[])
 {
     otError error;
     error = mCoap.Process(argc, argv);
+    AppendResult(error);
+}
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+void Interpreter::ProcessCoapSecure(int argc, char *argv[])
+{
+    otError error;
+    error = mCoapSecure.Process(argc, argv);
     AppendResult(error);
 }
 
