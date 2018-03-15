@@ -54,6 +54,14 @@ void PlatformInit(int argc, char *argv[]);
 void PlatformDeinit(void);
 
 /**
+ * This function returns true is a pseudo-reset was requested.
+ * In such a case, the main loop should shut down and re-initialize
+ * the OpenThread instance.
+ *
+ */
+bool PlatformPseudoResetWasRequested(void);
+
+/**
  * This function performs all platform-specific processing.
  *
  * @param[in]  aInstance  The OpenThread instance structure.

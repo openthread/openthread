@@ -63,6 +63,8 @@ int main(int argc, char *argv[])
     uint8_t *otInstanceBuffer       = NULL;
 #endif
 
+pseudo_reset:
+
     PlatformInit(argc, argv);
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
@@ -86,16 +88,18 @@ int main(int argc, char *argv[])
     otDiagInit(sInstance);
 #endif
 
-    while (1)
+    while (!PlatformPseudoResetWasRequested())
     {
         otTaskletsProcess(sInstance);
         PlatformProcessDrivers(sInstance);
     }
 
-        // otInstanceFinalize(sInstance);
+    otInstanceFinalize(sInstance);
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-        // free(otInstanceBuffer);
+    free(otInstanceBuffer);
 #endif
+
+    goto pseudo_reset;
 
     return 0;
 }
