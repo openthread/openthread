@@ -100,6 +100,11 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 void PlatformDeinit(void)
 {
 }

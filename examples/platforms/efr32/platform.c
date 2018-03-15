@@ -66,6 +66,11 @@ void PlatformInit(int argc, char *argv[])
     efr32RandomInit();
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 void PlatformDeinit(void)
 {
     efr32RadioDeinit();

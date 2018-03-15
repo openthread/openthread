@@ -71,6 +71,11 @@ void PlatformInit(int argc, char *argv[])
     cc2652RadioInit();
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 /**
  * Function documented in platform-cc2652.h
  */

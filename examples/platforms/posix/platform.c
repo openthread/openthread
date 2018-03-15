@@ -55,6 +55,8 @@
 uint32_t NODE_ID           = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
+extern bool gPlatformPseudoResetWasRequested;
+
 #ifndef _WIN32
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
@@ -63,6 +65,12 @@ char **gArguments      = NULL;
 void PlatformInit(int argc, char *argv[])
 {
     char *endptr;
+
+    if (gPlatformPseudoResetWasRequested)
+    {
+        gPlatformPseudoResetWasRequested = false;
+        return;
+    }
 
     if (argc != 2)
     {
@@ -88,6 +96,11 @@ void PlatformInit(int argc, char *argv[])
     platformAlarmInit();
     platformRadioInit();
     platformRandomInit();
+}
+
+bool PlatformPseudoResetWasRequested(void)
+{
+    return gPlatformPseudoResetWasRequested;
 }
 
 void PlatformDeinit(void)

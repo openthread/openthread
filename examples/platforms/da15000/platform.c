@@ -138,6 +138,11 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 static sys_clk_t ClkGet(void)
 {
     sys_clk_t clk    = sysclk_RC16;

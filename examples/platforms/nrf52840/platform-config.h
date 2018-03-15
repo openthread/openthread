@@ -347,6 +347,16 @@
 #define USB_CDC_AS_SERIAL_TRANSPORT 0
 #endif
 
+/**
+ * @def OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+ *
+ * Reset the application, not the chip, when a software reset is requested.
+ * via `otPlatReset()`.
+ */
+#ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+#define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET USB_CDC_AS_SERIAL_TRANSPORT
+#endif
+
 /*******************************************************************************
  * @section Radio driver configuration.
  ******************************************************************************/

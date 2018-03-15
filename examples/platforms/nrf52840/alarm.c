@@ -339,6 +339,9 @@ static void AlarmStop(AlarmIndex aIndex)
 void nrf5AlarmInit(void)
 {
     memset(sTimerData, 0, sizeof(sTimerData));
+    sOverflowCounter = 0;
+    sMutex           = 0;
+    sTimeOffset      = 0;
 
     // Setup low frequency clock.
     nrf_drv_clock_lfclk_request(NULL);
