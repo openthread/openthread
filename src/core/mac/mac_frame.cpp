@@ -998,7 +998,7 @@ const char *Frame::ToInfoString(char *aBuf, uint16_t aSize) const
     return aBuf;
 }
 
-const char *BeaconPayload::ToInfoString(char *aBuf, uint16_t aSize)
+const char *BeaconPayload::ToInfoString(char *aBuf, uint16_t aSize) const
 {
     const uint8_t *xpanid = GetExtendedPanId();
 

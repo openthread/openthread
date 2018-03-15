@@ -272,7 +272,6 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
     Beacon *       beacon        = NULL;
     BeaconPayload *beaconPayload = NULL;
     uint8_t        payloadLength;
-    char           stringBuffer[BeaconPayload::kInfoStringSize];
 
     memset(&aResult, 0, sizeof(otActiveScanResult));
 
@@ -302,9 +301,7 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
         memcpy(&aResult.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(aResult.mExtendedPanId));
     }
 
-    otLogInfoMac(GetInstance(), "Received Beacon, %s", beaconPayload->ToInfoString(stringBuffer, sizeof(stringBuffer)));
-
-    OT_UNUSED_VARIABLE(stringBuffer);
+    LogBeacon("Received", *beaconPayload);
 
 exit:
     return error;
@@ -761,7 +758,6 @@ void Mac::SendBeacon(Frame &aFrame)
     uint16_t       fcf;
     Beacon *       beacon        = NULL;
     BeaconPayload *beaconPayload = NULL;
-    char           stringBuffer[BeaconPayload::kInfoStringSize];
 
     // initialize MAC header
     fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
@@ -800,9 +796,7 @@ void Mac::SendBeacon(Frame &aFrame)
 
     aFrame.SetPayloadLength(beaconLength);
 
-    otLogInfoMac(GetInstance(), "Sending Beacon, %s", beaconPayload->ToInfoString(stringBuffer, sizeof(stringBuffer)));
-
-    OT_UNUSED_VARIABLE(stringBuffer);
+    LogBeacon("Sending", *beaconPayload);
 }
 
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
@@ -1227,11 +1221,8 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     if (aError != OT_ERROR_NONE)
     {
-        char stringBuffer[Frame::kInfoStringSize];
+        LogFrameTxFailure(sendFrame, aError);
 
-        otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, attempt:%d/%d, %s", otThreadErrorToString(aError),
-                     mTransmitAttempts, sendFrame.GetMaxTxAttempts(),
-                     sendFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
         otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() && mTransmitAttempts < sendFrame.GetMaxTxAttempts())
@@ -1240,8 +1231,6 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
             StartCsmaBackoff();
             ExitNow();
         }
-
-        OT_UNUSED_VARIABLE(stringBuffer);
     }
 
     mTransmitAttempts = 0;
@@ -1938,19 +1927,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        if (aFrame == NULL)
-        {
-            otLogInfoMac(GetInstance(), "Frame rx failed, error:%s", otThreadErrorToString(error));
-        }
-        else
-        {
-            char stringBuffer[Frame::kInfoStringSize];
-
-            otLogInfoMac(GetInstance(), "Frame rx failed, error:%s, %s", otThreadErrorToString(error),
-                         aFrame->ToInfoString(stringBuffer, sizeof(stringBuffer)));
-
-            OT_UNUSED_VARIABLE(stringBuffer);
-        }
+        LogFrameRxFailure(aFrame, error);
 
         switch (error)
         {
@@ -2148,6 +2125,54 @@ const char *Mac::OperationToString(Operation aOperation)
 
     return retval;
 }
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+void Mac::LogFrameRxFailure(const Frame *aFrame, otError aError) const
+{
+    char string[Frame::kInfoStringSize];
+
+    if (aFrame == NULL)
+    {
+        otLogInfoMac(GetInstance(), "Frame rx failed, error:%s", otThreadErrorToString(aError));
+    }
+    else
+    {
+        otLogInfoMac(GetInstance(), "Frame rx failed, error:%s, %s", otThreadErrorToString(aError),
+                     aFrame->ToInfoString(string, sizeof(string)));
+    }
+}
+
+void Mac::LogFrameTxFailure(const Frame &aFrame, otError aError) const
+{
+    char string[Frame::kInfoStringSize];
+
+    otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, attempt:%d/%d, %s", otThreadErrorToString(aError),
+                 mTransmitAttempts, aFrame.GetMaxTxAttempts(), aFrame.ToInfoString(string, sizeof(string)));
+}
+
+void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const
+{
+    char string[BeaconPayload::kInfoStringSize];
+
+    otLogInfoMac(GetInstance(), "%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString(string, sizeof(string)));
+}
+
+#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+void Mac::LogFrameRxFailure(const Frame *, otError) const
+{
+}
+
+void Mac::LogBeacon(const char *, const BeaconPayload &) const
+{
+}
+
+void Mac::LogFrameTxFailure(const Frame &, otError) const
+{
+}
+
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 } // namespace Mac
 } // namespace ot
