@@ -289,6 +289,7 @@ private:
     void    ProcessRoute(int argc, char *argv[]);
     otError ProcessRouteAdd(int argc, char *argv[]);
     otError ProcessRouteRemove(int argc, char *argv[]);
+    otError ProcessRouteList(void);
 #endif
 #if OPENTHREAD_FTD
     void ProcessRouter(int argc, char *argv[]);

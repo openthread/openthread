@@ -1289,6 +1289,16 @@ Set the customized data poll period for sleepy end device (seconds). Only for ce
 Done
 ```
 
+### prefix
+
+Get the prefix list in the local Network Data.
+
+```bash
+> prefix
+2001:dead:beef:cafe::/64 paros med
+Done
+```
+
 ### prefix add \<prefix\> [pvdcsr] [prf]
 
 Add a valid prefix to the Network Data.
@@ -1369,9 +1379,19 @@ Get the Thread RLOC16 value.
 Done
 ```
 
+### route
+
+Get the external route list in the local Network Data.
+
+```bash
+> route
+2001:dead:beef:cafe::/64 s med
+Done
+```
+
 ### route add \<prefix\> [s] [prf]
 
-Add a valid prefix to the Network Data.
+Add a valid external route to the Network Data.
 
 * s: Stable flag
 * prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
@@ -1383,7 +1403,7 @@ Done
 
 ### route remove \<prefix\>
 
-Invalidate a prefix in the Network Data.
+Invalidate a external route in the Network Data.
 
 ```bash
 > route remove 2001:dead:beef:cafe::/64
