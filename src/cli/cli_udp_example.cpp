@@ -73,7 +73,7 @@ otError UdpExample::ProcessBind(int argc, char *argv[])
     otSockAddr sockaddr;
     long       value;
 
-    VerifyOrExit(argc == 2, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
 
@@ -98,7 +98,7 @@ otError UdpExample::ProcessConnect(int argc, char *argv[])
     otSockAddr sockaddr;
     long       value;
 
-    VerifyOrExit(argc == 2, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
 
@@ -142,7 +142,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
 
     memset(&messageInfo, 0, sizeof(messageInfo));
 
-    VerifyOrExit(argc == 1 || argc == 3, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc == 1 || argc == 3, error = OT_ERROR_INVALID_ARGS);
 
     if (argc == 3)
     {
