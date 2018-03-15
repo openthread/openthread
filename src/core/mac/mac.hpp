@@ -852,6 +852,10 @@ private:
     otError RadioReceive(uint8_t aChannel);
     otError RadioSleep(void);
 
+    void LogFrameRxFailure(const Frame *aFrame, otError aError) const;
+    void LogFrameTxFailure(const Frame &aFrame, otError aError) const;
+    void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+
     static const char *OperationToString(Operation aOperation);
 
     Operation mOperation;
