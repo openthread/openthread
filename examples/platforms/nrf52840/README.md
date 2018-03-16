@@ -39,13 +39,13 @@ $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
 
 ## Native USB support
 
-You can build the libraries with support for native USB CDC ACM as a serial transport. 
+You can build the libraries with support for native USB CDC ACM as a serial transport.
 To do so, build the libraries with the following parameter:
 ```
 $ make -f examples/Makefile-nrf52840 USB=1
 ```
 
-Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to be loaded. 
+Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to be loaded.
 It can be found in third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf
 
 ## Flashing the binaries
@@ -197,8 +197,11 @@ The <i>nRF5 SDK for Thread</i> includes:
  - range of PC tools including a Thread Topology Monitor,
  - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
 
-#### Important notice
+#### CryptoCell 310 support
 
-Due to legal restrictions support for hardware-accelerated cryptography utilizing ARM CryptoCell-310 is only available in mbedTLS library (libmbedcrypto.a) provided with the <i>nRF5 SDK for Thread</i>. The library available in OpenThread repository does not support hardware acceleration. You can still use it, but the commissioning procedure takes much more time in such case. For the best performance and user experience, use the library provided with the SDK.
+By default, mbedTLS library is built with support for CryptoCell 310 hardware acceleration of cryptographic operations used in OpenThread. You can disable CryptoCell 310 and use software cryptography instead by building OpenThread with the following parameter:
+```
+$ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
+```
 
 [nRF5-SDK-Thread]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread
