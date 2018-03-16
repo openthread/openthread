@@ -40,6 +40,20 @@ using namespace ot;
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
+otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled)
+{
+    Utils::ChannelMonitor monitor = static_cast<Instance *>(aInstance)->GetChannelMonitor();
+
+    return aEnabled ? monitor.Start() : monitor.Stop();
+}
+
+bool otChannelMonitorIsEnabled(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelMonitor().IsRunning();
+}
+
 uint32_t otChannelMonitorGetSampleInterval(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);

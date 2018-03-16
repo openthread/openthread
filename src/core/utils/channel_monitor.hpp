@@ -106,18 +106,32 @@ public:
     /**
      * This method starts the Channel Monitoring operation.
      *
-     * All previous data is cleared when the Channel Monitoring operation starts.
+     * Once started, any previously collected data is cleared.
+     *
+     * @retval OT_ERROR_NONE      Channel Monitoring started successfully.
+     * @retval OT_ERROR_ALREADY   Channel Monitoring has already been started.
      *
      */
-    void Start(void);
+    otError Start(void);
 
     /**
      * This method stops the Channel Monitoring operation.
      *
-     * The previous data is still valid and can be read while the operation is stopped.
+     * @note After `Stop()`, the previous data is still valid and can be read.
+     *
+     * @retval OT_ERROR_NONE      Channel Monitoring stopped successfully.
+     * @retval OT_ERROR_ALREADY   Channel Monitoring has already been stopped.
      *
      */
-    void Stop(void);
+    otError Stop(void);
+
+    /**
+     * This method indicates whether the Channel Monitoring operation is started and running.
+     *
+     * @returns TRUE if the Channel Monitoring operation is running, FALSE otherwise.
+     *
+     */
+    bool IsRunning(void) const { return mTimer.IsRunning(); }
 
     /**
      * This method clears all currently stored data.
