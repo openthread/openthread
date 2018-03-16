@@ -122,8 +122,14 @@ void ChannelMonitor::HandleTimer(Timer &aTimer)
 
 void ChannelMonitor::HandleTimer(void)
 {
-    GetInstance().Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0,
-                                             &ChannelMonitor::HandleEnergyScanResult, this);
+    Instance &instance = GetInstance();
+
+    if (instance.Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED)
+    {
+        instance.Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0,
+                                            &ChannelMonitor::HandleEnergyScanResult, this);
+    }
+
     RestartTimer();
 }
 
