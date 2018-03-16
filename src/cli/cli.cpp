@@ -2246,13 +2246,51 @@ exit:
     return error;
 }
 
+otError Interpreter::ProcessRouteList(void)
+{
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otExternalRouteConfig config;
+
+    while (otBorderRouterGetNextRoute(mInstance, &iterator, &config) == OT_ERROR_NONE)
+    {
+        mServer->OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[2]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[3]), config.mPrefix.mLength);
+
+        if (config.mStable)
+        {
+            mServer->OutputFormat("s");
+        }
+
+        switch (config.mPreference)
+        {
+        case OT_ROUTE_PREFERENCE_LOW:
+            mServer->OutputFormat(" low\r\n");
+            break;
+
+        case OT_ROUTE_PREFERENCE_MED:
+            mServer->OutputFormat(" med\r\n");
+            break;
+
+        case OT_ROUTE_PREFERENCE_HIGH:
+            mServer->OutputFormat(" high\r\n");
+            break;
+        }
+    }
+
+    return OT_ERROR_NONE;
+}
+
 void Interpreter::ProcessRoute(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
-
-    if (strcmp(argv[0], "add") == 0)
+    if (argc == 0)
+    {
+        SuccessOrExit(error = ProcessRouteList());
+    }
+    else if (strcmp(argv[0], "add") == 0)
     {
         SuccessOrExit(error = ProcessRouteAdd(argc - 1, argv + 1));
     }
