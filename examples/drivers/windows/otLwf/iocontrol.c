@@ -145,6 +145,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_REMOVE_MAC_FIXED_RSS",        REF_IOCTL_FUNC_WITH_TUN(otRemoveMacFixedRss) },
     { "IOCTL_OTLWF_OT_NEXT_MAC_FIXED_RSS",          REF_IOCTL_FUNC(otNextMacFixedRss) },
     { "IOCTL_OTLWF_OT_CLEAR_MAC_FIXED_RSS",         REF_IOCTL_FUNC_WITH_TUN(otClearMacFixedRss) },
+    { "IOCTL_OTLWF_OT_NEXT_ROUTE",                  REF_IOCTL_FUNC(otNextRoute) },
 };
 
 // intentionally -1 in the end due to that IOCTL_OTLWF_OT_ASSIGN_LINK_QUALITY (#161) is removed now.
@@ -4855,6 +4856,58 @@ otLwfIoCtl_otNextOnMeshPrefix(
                 );
         }
         *OutBufferLength = sizeof(uint8_t) + sizeof(otBorderRouterConfig);
+        if (status == STATUS_SUCCESS)
+        {
+            *(uint32_t*)OutBuffer = aIterator;
+        }
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfIoCtl_otNextRoute(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    if (InBufferLength >= sizeof(BOOLEAN) + sizeof(uint32_t) &&
+        *OutBufferLength >= sizeof(uint32_t) + sizeof(otExternalRouteConfig))
+    {
+        BOOLEAN aLocal = *(BOOLEAN*)InBuffer;
+        uint32_t aIterator = *(uint32_t*)(InBuffer + sizeof(BOOLEAN));
+        otExternalRouteConfig* aConfig = (otExternalRouteConfig*)((PUCHAR)OutBuffer + sizeof(uint32_t));
+        if (aLocal)
+        {
+            status = ThreadErrorToNtstatus(
+                otBorderRouterGetNextRoute(
+                    pFilter->otCtx,
+                    &aIterator,
+                    aConfig)
+                );
+        }
+        else
+        {
+            status = ThreadErrorToNtstatus(
+                otNetDataGetNextRoute(
+                    pFilter->otCtx,
+                    &aIterator,
+                    aConfig)
+                );
+        }
+        *OutBufferLength = sizeof(uint8_t) + sizeof(otExternalRouteConfig);
         if (status == STATUS_SUCCESS)
         {
             *(uint32_t*)OutBuffer = aIterator;
