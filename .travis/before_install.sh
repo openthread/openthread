@@ -116,7 +116,8 @@ cd /tmp || die
         cd wpantund || die
         ./bootstrap.sh || die
         ./configure || die
-        sudo make install -j 8 || die
+        sudo make -j 8 || die
+        sudo make install || die
         cd .. || die
     }
 
