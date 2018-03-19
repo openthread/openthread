@@ -36,8 +36,6 @@
 
 #include "mle_router.hpp"
 
-#include <openthread/platform/settings.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -3787,20 +3785,14 @@ void MleRouter::RestoreChildren(void)
 {
     otError error          = OT_ERROR_NONE;
     bool    foundDuplicate = false;
-    uint8_t index;
+    uint8_t numChildren    = 0;
 
-    for (index = 0;; index++)
+    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
     {
-        Child *             child;
-        Settings::ChildInfo childInfo;
-        uint16_t            length;
+        Child *                    child;
+        const Settings::ChildInfo &childInfo = iter.GetChildInfo();
 
-        length = sizeof(childInfo);
-        SuccessOrExit(otPlatSettingsGet(&GetInstance(), Settings::kKeyChildInfo, index,
-                                        reinterpret_cast<uint8_t *>(&childInfo), &length));
-        VerifyOrExit(length >= sizeof(childInfo), error = OT_ERROR_PARSE);
-
-        child = FindChild(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));
+        child = FindChild(*static_cast<const Mac::ExtAddress *>(&childInfo.mExtAddress));
 
         if (child == NULL)
         {
@@ -3813,18 +3805,19 @@ void MleRouter::RestoreChildren(void)
 
         memset(child, 0, sizeof(*child));
 
-        child->SetExtAddress(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));
+        child->SetExtAddress(*static_cast<const Mac::ExtAddress *>(&childInfo.mExtAddress));
         child->SetRloc16(childInfo.mRloc16);
         child->SetTimeout(childInfo.mTimeout);
         child->SetDeviceMode(childInfo.mMode);
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
         GetNetif().GetMeshForwarder().GetSourceMatchController().SetSrcMatchAsShort(*child, true);
+        numChildren++;
     }
 
 exit:
 
-    if (foundDuplicate || (index > kMaxChildren) || (error != OT_ERROR_NONE))
+    if (foundDuplicate || (numChildren > kMaxChildren) || (error != OT_ERROR_NONE))
     {
         // If there is any error, e.g., there are more saved children
         // in non-volatile settings than could be restored or there are
@@ -3840,18 +3833,11 @@ otError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    for (uint8_t i = 0; i < kMaxChildren; i++)
+    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
     {
-        Settings::ChildInfo childInfo;
-        uint16_t            length = sizeof(childInfo);
-
-        SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), Settings::kKeyChildInfo, i,
-                                                reinterpret_cast<uint8_t *>(&childInfo), &length));
-        VerifyOrExit(length >= sizeof(childInfo), error = OT_ERROR_PARSE);
-
-        if (childInfo.mRloc16 == aChildRloc16)
+        if (iter.GetChildInfo().mRloc16 == aChildRloc16)
         {
-            error = otPlatSettingsDelete(&GetInstance(), Settings::kKeyChildInfo, i);
+            error = iter.Delete();
             ExitNow();
         }
     }
@@ -3876,8 +3862,7 @@ otError MleRouter::StoreChild(uint16_t aChildRloc16)
     childInfo.mRloc16     = child->GetRloc16();
     childInfo.mMode       = child->GetDeviceMode();
 
-    error = otPlatSettingsAdd(&GetInstance(), Settings::kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
-                              sizeof(childInfo));
+    error = GetInstance().GetSettings().AddChildInfo(childInfo);
 
 exit:
     return error;
@@ -3887,7 +3872,7 @@ otError MleRouter::RefreshStoredChildren(void)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = otPlatSettingsDelete(&GetInstance(), Settings::kKeyChildInfo, -1));
+    SuccessOrExit(error = GetInstance().GetSettings().DeleteChildInfo());
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {

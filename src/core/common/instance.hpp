@@ -52,6 +52,7 @@
 #include "crypto/mbedtls.hpp"
 #endif
 #include "common/notifier.hpp"
+#include "common/settings.hpp"
 #include "net/ip6.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
@@ -235,6 +236,14 @@ public:
     Notifier &GetNotifier(void) { return mNotifier; }
 
     /**
+     * This method returns a reference to the `Settings` object.
+     *
+     * @returns A reference to the `Settings` object.
+     *
+     */
+    Settings &GetSettings(void) { return mSettings; }
+
+    /**
      * This method returns a reference to the tasklet scheduler object.
      *
      * @returns A reference to the tasklet scheduler object.
@@ -361,6 +370,7 @@ private:
     void *                   mEnergyScanCallbackContext;
 
     Notifier mNotifier;
+    Settings mSettings;
 
     TaskletScheduler    mTaskletScheduler;
     TimerMilliScheduler mTimerMilliScheduler;

@@ -36,7 +36,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread.h>
-#include <openthread/platform/settings.h>
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -497,10 +496,10 @@ exit:
 bool otThreadGetAutoStart(otInstance *aInstance)
 {
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-    uint8_t  autoStart       = 0;
-    uint16_t autoStartLength = sizeof(autoStart);
+    uint8_t   autoStart = 0;
+    Instance &instance  = *static_cast<Instance *>(aInstance);
 
-    if (otPlatSettingsGet(aInstance, Settings::kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != OT_ERROR_NONE)
+    if (instance.GetSettings().ReadThreadAutoStart(autoStart) != OT_ERROR_NONE)
     {
         autoStart = 0;
     }
@@ -515,8 +514,10 @@ bool otThreadGetAutoStart(otInstance *aInstance)
 otError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically)
 {
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-    uint8_t autoStart = aStartAutomatically ? 1 : 0;
-    return otPlatSettingsSet(aInstance, Settings::kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+    uint8_t   autoStart = aStartAutomatically ? 1 : 0;
+    Instance &instance  = *static_cast<Instance *>(aInstance);
+
+    return instance.GetSettings().SaveThreadAutoStart(autoStart);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aStartAutomatically);
