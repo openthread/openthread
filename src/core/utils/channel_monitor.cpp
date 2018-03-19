@@ -59,17 +59,29 @@ ChannelMonitor::ChannelMonitor(Instance &aInstance)
     memset(mChannelQuality, 0, sizeof(mChannelQuality));
 }
 
-void ChannelMonitor::Start(void)
+otError ChannelMonitor::Start(void)
 {
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!IsRunning(), error = OT_ERROR_ALREADY);
     Clear();
     mTimer.Start(kTimerInterval);
     otLogDebgUtil(GetInstance(), "ChannelMonitor: Starting");
+
+exit:
+    return error;
 }
 
-void ChannelMonitor::Stop(void)
+otError ChannelMonitor::Stop(void)
 {
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsRunning(), error = OT_ERROR_ALREADY);
     mTimer.Stop();
     otLogDebgUtil(GetInstance(), "ChannelMonitor: Stopping");
+
+exit:
+    return error;
 }
 
 void ChannelMonitor::Clear(void)
