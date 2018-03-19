@@ -91,6 +91,14 @@ public:
      * @returns A pointer to the byte representation of the Dataset.
      *
      */
+    uint8_t *GetBytes(void) { return mTlvs; }
+
+    /**
+     * This method returns a pointer to the byte representation of the Dataset.
+     *
+     * @returns A pointer to the byte representation of the Dataset.
+     *
+     */
     const uint8_t *GetBytes(void) const { return mTlvs; }
 
     /**
@@ -106,6 +114,14 @@ public:
      *
      */
     uint16_t GetSize(void) const { return mLength; }
+
+    /**
+     * This method sets the Dataset size in bytes.
+     *
+     * @param[in] aSize  The Dataset size in bytes.
+     *
+     */
+    void SetSize(uint16_t aSize) { mLength = aSize; }
 
     /**
      * This method returns the local time the dataset was last updated.
@@ -216,8 +232,6 @@ public:
     otError ConvertToActive(void);
 
 private:
-    uint16_t GetSettingsKey(void);
-
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer

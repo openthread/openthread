@@ -145,8 +145,8 @@ public:
     int Compare(const Timestamp *aCompare);
 
 private:
-    uint16_t GetSettingsKey(void) const;
-    void     SetTimestamp(const Dataset &aDataset);
+    bool IsActive(void) const { return (mType == Tlv::kActiveTimestamp); }
+    void SetTimestamp(const Dataset &aDataset);
 
     Timestamp mTimestamp;            ///< Active or Pending Timestamp
     uint32_t  mUpdateTime;           ///< Local time last updated
