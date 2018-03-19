@@ -63,6 +63,34 @@ extern "C" {
  */
 
 /**
+ * This function enables/disables the Channel Monitoring operation.
+ *
+ * Once operation starts, any previously collected data is cleared. However, after operation is disabled, the previous
+ * collected data is still valid and can be read.
+ *
+ * @note OpenThread core internally enables/disables the Channel Monitoring operation when the IPv6 interface is
+ * brought up/down (i.e., call to `otIp6SetEnabled()`).
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aEnabled        TRUE to enable/start Channel Monitoring operation, FALSE to disable/stop it.
+ *
+ * @retval OT_ERROR_NONE      Channel Monitoring state changed successfully
+ * @retval OT_ERROR_ALREADY   Channel Monitoring is already in the same state.
+ *
+ */
+otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function indicates whether the Channel Monitoring operation is enabled and running.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if the Channel Monitoring operation is enabled, FALSE otherwise.
+ *
+ */
+bool otChannelMonitorIsEnabled(otInstance *aInstance);
+
+/**
  * Get channel monitoring sample interval in milliseconds.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
