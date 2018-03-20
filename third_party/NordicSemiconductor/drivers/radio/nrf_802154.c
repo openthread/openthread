@@ -53,9 +53,11 @@
 #include "nrf_802154_priority_drop.h"
 #include "nrf_802154_request.h"
 #include "nrf_802154_revision.h"
+#include "nrf_802154_rssi.h"
 #include "nrf_802154_rx_buffer.h"
 #include "hal/nrf_radio.h"
 #include "platform/clock/nrf_802154_clock.h"
+#include "platform/temperature/nrf_802154_temperature.h"
 #include "platform/timer/nrf_802154_timer.h"
 #include "raal/nrf_raal_api.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
@@ -123,6 +125,11 @@ int8_t nrf_802154_tx_power_get(void)
     return nrf_802154_pib_tx_power_get();
 }
 
+void nrf_802154_temperature_changed(void)
+{
+    nrf_802154_request_cca_cfg_update();
+}
+
 void nrf_802154_pan_id_set(const uint8_t * p_pan_id)
 {
     nrf_802154_pib_pan_id_set(p_pan_id);
@@ -164,6 +171,7 @@ void nrf_802154_init(void)
     nrf_802154_request_init();
     nrf_802154_revision_init();
     nrf_802154_rx_buffer_init();
+    nrf_802154_temperature_init();
     nrf_802154_timer_init();
     nrf_802154_timer_sched_init();
     nrf_raal_init();
@@ -173,6 +181,7 @@ void nrf_802154_deinit(void)
 {
     nrf_802154_timer_sched_deinit();
     nrf_802154_timer_deinit();
+    nrf_802154_temperature_deinit();
     nrf_802154_clock_deinit();
     nrf_802154_core_deinit();
 }
@@ -356,42 +365,10 @@ void nrf_802154_buffer_free(uint8_t * p_data)
 int8_t nrf_802154_rssi_last_get(void)
 {
     uint8_t minus_dbm = nrf_radio_rssi_sample_get();
+
+    minus_dbm = nrf_802154_rssi_sample_corrected_get(minus_dbm);
+
     return - (int8_t)minus_dbm;
-}
-
-int8_t nrf_802154_rssi_corrected_get(int8_t rssi, int8_t temp)
-{
-    if (temp <= -30)
-    {
-        return rssi + 3;
-    }
-
-    if (temp <= -10)
-    {
-        return rssi + 2;
-    }
-
-    if (temp <= 10)
-    {
-        return rssi + 1;
-    }
-
-    if (temp <= 30)
-    {
-        return rssi;
-    }
-
-    if (temp <= 50)
-    {
-        return rssi - 1;
-    }
-
-    if (temp <= 70)
-    {
-        return rssi - 2;
-    }
-
-    return rssi - 3;
 }
 
 bool nrf_802154_promiscuous_get(void)

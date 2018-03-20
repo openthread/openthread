@@ -402,4 +402,18 @@
 #define NRF_802154_ACK_TIMEOUT_ENABLED 0
 #endif
 
+/*******************************************************************************
+ * @section Temperature sensor driver configuration.
+ ******************************************************************************/
+
+/**
+ * @def TEMP_MEASUREMENT_INTERVAL
+ *
+ * Interval of consecutive temperature measurements [s].
+ *
+ */
+#ifndef TEMP_MEASUREMENT_INTERVAL
+#define TEMP_MEASUREMENT_INTERVAL 30
+#endif
+
 #endif // PLATFORM_CONFIG_H_

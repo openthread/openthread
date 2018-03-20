@@ -180,6 +180,12 @@ void nrf5TempInit(void);
 void nrf5TempDeinit(void);
 
 /**
+ * Function for processing temperature controller.
+ *
+ */
+void nrf5TempProcess(void);
+
+/**
  * Function for measuring internal temperature.
  *
  * @return Temperature value measured.
