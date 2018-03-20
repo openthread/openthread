@@ -243,7 +243,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
     // Destination IPv6 address
