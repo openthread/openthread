@@ -1032,11 +1032,11 @@ otError NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(void)
 {
     otError error = OT_ERROR_NONE;
     const uint8_t *meshLocalPrefix;
-    uint16_t prefixLength;
+    uint8_t prefixLength;
 
-    SuccessOrExit(error = mDecoder.ReadData(meshLocalPrefix, prefixLength));
-
-    VerifyOrExit(prefixLength >= 8, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadIp6Address(meshLocalPrefix));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
+    VerifyOrExit(prefixLength == 64, error = OT_ERROR_INVALID_ARGS);
 
     error = otThreadSetMeshLocalPrefix(mInstance, meshLocalPrefix);
 
