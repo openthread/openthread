@@ -51,6 +51,7 @@ if OPENTHREAD_BUILD_TESTS
 
 AM_CPPFLAGS                                                         = \
     -DOPENTHREAD_FTD=1                                                \
+    -I$(top_srcdir)/examples/platforms                                \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \
@@ -83,7 +84,7 @@ endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 check_PROGRAMS                                                      = \
     test-aes                                                          \
-    test-fuzz                                                         \
+    test-child                                                        \
     test-heap                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
@@ -143,8 +144,8 @@ TESTS_ENVIRONMENT                                                   = \
 test_aes_LDADD               = $(COMMON_LDADD)
 test_aes_SOURCES             = test_platform.cpp test_aes.cpp
 
-test_fuzz_LDADD              = $(COMMON_LDADD)
-test_fuzz_SOURCES            = test_platform.cpp test_fuzz.cpp
+test_child_LDADD             = $(COMMON_LDADD)
+test_child_SOURCES           = test_platform.cpp test_child.cpp
 
 test_heap_LDADD              = $(COMMON_LDADD)
 test_heap_SOURCES            = test_platform.cpp test_heap.cpp
@@ -206,6 +207,31 @@ test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a    
                                $(NULL)
 test_diag_SOURCES            = test_diag.cpp
 endif
+
+PRETTY_FILES                                                        = \
+    $(test_address_sanitizer_SOURCES)                                 \
+    $(test_aes_SOURCES)                                               \
+    $(test_child_SOURCES)                                             \
+    $(test_heap_SOURCES)                                              \
+    $(test_hmac_sha256_SOURCES)                                       \
+    $(test_link_quality_SOURCES)                                      \
+    $(test_lowpan_SOURCES)                                            \
+    $(test_network_data_SOURCES)                                      \
+    $(test_mac_frame_SOURCES)                                         \
+    $(test_message_SOURCES)                                           \
+    $(test_message_queue_SOURCES)                                     \
+    $(test_ncp_buffer_SOURCES)                                        \
+    $(test_priority_queue_SOURCES)                                    \
+    $(test_pskc_SOURCES)                                              \
+    $(test_strlcat_SOURCES)                                           \
+    $(test_strlcpy_SOURCES)                                           \
+    $(test_strnlen_SOURCES)                                           \
+    $(test_spinel_decoder_SOURCES)                                    \
+    $(test_spinel_encoder_SOURCES)                                    \
+    $(test_timer_SOURCES)                                             \
+    $(test_toolchain_SOURCES)                                         \
+    $(test_diag_SOURCES)                                              \
+    $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                   = $(wildcard *.gcda *.gcno)

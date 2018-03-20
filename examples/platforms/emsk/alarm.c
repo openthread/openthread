@@ -32,14 +32,14 @@
  *
  */
 
+#include "platform-emsk.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include "openthread/platform/alarm-milli.h"
-#include "platform-emsk.h"
 
 static uint32_t sCounter = 0;
 static uint32_t expires;
-static bool sIsRunning = false;
+static bool     sIsRunning = false;
 
 void emskAlarmInit(void)
 {
@@ -54,7 +54,7 @@ uint32_t otPlatAlarmMilliGetNow(void)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)aInstance;
-    expires = t0 + dt;
+    expires    = t0 + dt;
     sIsRunning = true;
 }
 
@@ -90,7 +90,6 @@ void emskAlarmUpdateTimeout(int32_t *aTimeout)
 
 exit:
     return;
-
 }
 
 void emskAlarmProcess(otInstance *aInstance)
@@ -106,7 +105,5 @@ void emskAlarmProcess(otInstance *aInstance)
             sIsRunning = false;
             otPlatAlarmMilliFired(aInstance);
         }
-
     }
-
 }

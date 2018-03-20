@@ -31,8 +31,8 @@
  * @brief
  *   This file includes the platform-specific initializers.
  */
-#include <openthread/config.h>
 #include "platform-cc2538.h"
+#include <openthread/config.h>
 
 otInstance *sInstance;
 
@@ -47,6 +47,11 @@ void PlatformInit(int argc, char *argv[])
 
     (void)argc;
     (void)argv;
+}
+
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)

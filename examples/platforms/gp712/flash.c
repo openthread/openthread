@@ -45,9 +45,9 @@
 static int sFlashFd;
 uint32_t   sEraseAddress;
 
-#define FLASH_SIZE      0x40000
+#define FLASH_SIZE 0x40000
 #define FLASH_PAGE_SIZE 0x800
-#define FLASH_PAGE_NUM  128
+#define FLASH_PAGE_NUM 128
 
 otError utilsFlashInit(void)
 {
@@ -95,10 +95,10 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    otError   error = OT_ERROR_NONE;
-    uint32_t  address;
-    uint8_t   dummyPage[ FLASH_SIZE ];
-    ssize_t   r;
+    otError  error = OT_ERROR_NONE;
+    uint32_t address;
+    uint8_t  dummyPage[FLASH_SIZE];
+    ssize_t  r;
 
     otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
     otEXPECT_ACTION(aAddress < FLASH_SIZE, error = OT_ERROR_INVALID_ARGS);
@@ -110,9 +110,8 @@ otError utilsFlashErasePage(uint32_t aAddress)
     memset((void *)(&dummyPage[0]), 0xff, FLASH_PAGE_SIZE);
 
     // Write the page
-    r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, (off_t)address);
+    r = pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, (off_t)address);
     otEXPECT_ACTION((r) == ((FLASH_PAGE_SIZE)), error = OT_ERROR_FAILED);
-
 
 exit:
     return error;
@@ -126,9 +125,9 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    uint32_t ret = 0;
+    uint32_t ret   = 0;
     uint32_t index = 0;
-    uint8_t byte;
+    uint8_t  byte;
 
     otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
 

@@ -5,9 +5,8 @@ in process of building the OpenThread's nRF52840 platform.
 Directory consists of following folders:
  - /cmsis        - Core Peripheral Access Layer Headers files
  - /dependencies - Dependencies for drivers and libraries from nrf5 SDK
- - /device       - MDK for the nRF52840 chip
  - /drivers      - Drivers for the nRF52840 that are used in the platform
- - /hal          - Hardware Access Layer for the nRF52840 chip
  - /libraries    - Libraries for the nRF52840 chip
+ - /nrfx         - Standalone drivers for peripherals present in Nordic SoCs (https://github.com/NordicSemiconductor/nrfx)
  - /segger_rtt   - Library for the RTT communication
  - /softdevice   - SoftDevice s140 headers

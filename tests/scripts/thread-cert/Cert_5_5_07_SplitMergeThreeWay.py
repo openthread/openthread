@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER1 = 1
@@ -39,9 +40,11 @@ ROUTER3 = 4
 
 class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,5):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER1].set_panid(0xface)
         self.nodes[LEADER1].set_mode('rsdn')
@@ -76,30 +79,31 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER1].start()
-        self.nodes[LEADER1].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER3].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
         self.nodes[LEADER1].reset()
         self._setUpLeader1()
-        time.sleep(140)
+        self.simulator.go(140)
 
         self.nodes[LEADER1].start()
-        time.sleep(30)
+        self.simulator.go(30)
 
         addrs = self.nodes[LEADER1].get_addrs()
         for addr in addrs:

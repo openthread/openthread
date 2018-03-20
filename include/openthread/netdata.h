@@ -57,8 +57,7 @@ extern "C" {
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-OTAPI otError OTCALL otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData,
-                                  uint8_t *aDataLength);
+OTAPI otError OTCALL otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
 /**
  * This function gets the next On Mesh Prefix in the partition's Network Data.
@@ -72,8 +71,9 @@ OTAPI otError OTCALL otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-OTAPI otError OTCALL otNetDataGetNextOnMeshPrefix(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                                                  otBorderRouterConfig *aConfig);
+OTAPI otError OTCALL otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
+                                                  otNetworkDataIterator *aIterator,
+                                                  otBorderRouterConfig * aConfig);
 
 /**
  * This function gets the next external route in the partition's Network Data.
@@ -87,8 +87,7 @@ OTAPI otError OTCALL otNetDataGetNextOnMeshPrefix(otInstance *aInstance, otNetwo
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
  *
  */
-otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                              otExternalRouteConfig *aConfig);
+otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig);
 
 /**
  * Get the Network Data Version.
@@ -114,7 +113,7 @@ OTAPI uint8_t OTCALL otNetDataGetStableVersion(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_NETDATA_H_
+#endif // OPENTHREAD_NETDATA_H_

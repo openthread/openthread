@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2012 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -38,14 +38,22 @@
  * 
  */
 /* Header guard */
+
+#ifndef SOFTDEVICE_PRESENT
+
+/**
+  @defgroup nrf_error Global Error Codes
+  @{
+
+  @brief Global Error definitions
+*/
+
 #ifndef NRF_ERROR_H__
 #define NRF_ERROR_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/// @cond Make doxygen skip this file
 
 /** @defgroup NRF_ERRORS_BASE Error Codes Base number definitions
  * @{ */
@@ -74,14 +82,14 @@ extern "C" {
 #define NRF_ERROR_INVALID_ADDR                (NRF_ERROR_BASE_NUM + 16) ///< Bad Memory Address
 #define NRF_ERROR_BUSY                        (NRF_ERROR_BASE_NUM + 17) ///< Busy
 
-
 #ifdef __cplusplus
 }
 #endif
 
 #endif // NRF_ERROR_H__
 
-/// @endcond
 /**
   @}
 */
+
+#endif // SOFTDEVICE_PRESENT

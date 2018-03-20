@@ -42,9 +42,11 @@ ROUTER24 = 24
 
 class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 25):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
             self.nodes[i].set_panid()
             self.nodes[i].set_mode('rsdn')
             self.nodes[i].set_router_selection_jitter(1)
@@ -52,44 +54,39 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
                 self.nodes[i].set_router_upgrade_threshold(32)
                 self.nodes[i].set_router_downgrade_threshold(32)
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1 Ensure topology is formed correctly without ROUTER24.
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 24):
             self.nodes[i].start()
-            time.sleep(5)
+            self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         # This method flushes the message queue so calling this method again will return only the newly logged messages.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         # 2 ROUTER24: Attach to network.
         # All reference testbed devices have been configured with downgrade threshold as 32 except DUT_ROUTER1,
         # so we don't need to ensure ROUTER24 has a better link quality on posix.
         self.nodes[ROUTER24].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER24].get_state(), 'router')
 
         # 3 DUT_ROUTER1:
-        time.sleep(10)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'child')
 
         # Verify it sent a Parent Request and Child ID Request.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_ROUTER1)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         dut_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         dut_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -41,15 +41,15 @@
 #ifndef APP_USBD_TYPES_H__
 #define APP_USBD_TYPES_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 #include "sdk_errors.h"
 #include "nrf_drv_usbd.h"
 #include "app_usbd_request.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup app_usbd_types USB Device high level library variable types definition
@@ -101,6 +101,12 @@ typedef enum
     APP_USBD_EVT_DRV_SETUP      = NRF_DRV_USBD_EVT_SETUP,      /**< This event type has special structure. See @ref app_usbd_setup_evt_t */
     APP_USBD_EVT_DRV_EPTRANSFER = NRF_DRV_USBD_EVT_EPTRANSFER, /**< See documentation for @ref NRF_DRV_USBD_EVT_EPTRANSFER */
 
+    APP_USBD_EVT_FIRST_POWER,                                  /**< First power event code - for internal static assert checking */
+
+    APP_USBD_EVT_POWER_DETECTED,                               /**< See documentation for @ref NRF_DRV_POWER_USB_EVT_DETECTED        */
+    APP_USBD_EVT_POWER_REMOVED,                                /**< See documentation for @ref NRF_DRV_POWER_USB_EVT_REMOVED         */
+    APP_USBD_EVT_POWER_READY,                                  /**< See documentation for @ref NRF_DRV_POWER_USB_EVT_READY           */
+
 
     APP_USBD_EVT_FIRST_APP,                                    /**< First application event code - for internal static assert checking */
 
@@ -109,6 +115,9 @@ typedef enum
                                                                 *   This removing cannot be stopped. */
     APP_USBD_EVT_STARTED,                                      /**< USBD library has just been started and functional - event passed to all instances, before USBD interrupts have been enabled */
     APP_USBD_EVT_STOPPED,                                      /**< USBD library has just been stopped and is not functional - event passed to all instances, after USBD interrupts have been disabled*/
+
+    APP_USBD_EVT_STATE_CHANGED,                                /**< Informs all the classes that base state has been changed.
+                                                                *   This event is processed before setup stage that caused the state change finishes (before acknowledging it). */
 
     APP_USBD_EVT_FIRST_INTERNAL = 0x80,                        /**< First internal event, used by the APP library internally. */
 
@@ -119,6 +128,8 @@ typedef enum
     APP_USBD_EVT_WAKEUP_REQ,                                   /**< Wakeup request - start the whole wakeup generation. */
 
 } app_usbd_event_type_t;
+
+
 
 /**
  * @brief Specific application event structure
@@ -165,6 +176,7 @@ typedef union
                                       */
 } app_usbd_complex_evt_t;
 
+
 /**
  * @brief Internal event variable type
  *
@@ -187,6 +199,7 @@ typedef union
                                       *   type >= @ref APP_USBD_EVT_FIRST_APP
                                       */
 } app_usbd_internal_evt_t;
+
 
 #ifdef DOXYGEN
 /**
@@ -229,4 +242,3 @@ typedef ret_code_t (*app_usbd_ep_event_handler_t)(
 #endif
 
 #endif /* APP_USBD_TYPES_H__ */
-

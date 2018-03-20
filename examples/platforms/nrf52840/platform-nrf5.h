@@ -201,4 +201,4 @@ otError nrf5SdErrorToOtError(uint32_t aSdError);
 void nrf5SdSocFlashProcess(uint32_t aEvtId);
 #endif // SOFTDEVICE_PRESENT
 
-#endif  // PLATFORM_NRF5_H_
+#endif // PLATFORM_NRF5_H_

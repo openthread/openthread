@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -41,10 +41,6 @@
 #ifndef APP_USBD_CLASS_BASE_H__
 #define APP_USBD_CLASS_BASE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stddef.h>
 
@@ -52,6 +48,10 @@ extern "C" {
 #include "nrf_drv_usbd.h"
 #include "nrf_assert.h"
 #include "app_util.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup app_usbd_class_base USBD Class Base module
@@ -95,6 +95,14 @@ typedef struct
     app_usbd_class_inst_t const * p_sof_next;   //!< Pointer to the next SOF event requiring instance
 } app_usbd_class_data_t;
 
+/**
+ * @brief Class descriptor context
+ */
+typedef struct
+{
+    uint32_t line;       //!< Number of line to resume writing descriptors from
+} app_usbd_class_descriptor_ctx_t;
+
 
 /**
  * @brief   Class interface function set
@@ -107,22 +115,102 @@ typedef struct {
      * @param[in,out] p_inst  Instance of the class
      * @param[in]     p_event Event to process
      *
+     * @return Standard error code
+     *
      * @note If given event is not supported by class, return @ref NRF_ERROR_NOT_SUPPORTED
      */
-    ret_code_t   (* event_handler)(app_usbd_class_inst_t const * const p_inst,
-                                   app_usbd_complex_evt_t const * const p_event);
+    ret_code_t (* event_handler)(app_usbd_class_inst_t const * const p_inst,
+                                 app_usbd_complex_evt_t const * const p_event);
 
     /**
-     * @brief Instance get descriptors
+     * @brief Instance feed descriptors
      *
-     * The function used by every class instance.
-     * @param[in,out] p_inst  Instance of the class
-     * @param[out]    p_size  Descriptor size
+     * Feeds whole descriptor of the instance
+     * @param[in]     p_ctx     Class descriptor context
+     * @param[in,out] p_inst    Instance of the class
+     * @param[out]    p_buff    Buffer for descriptor
+     * @param[in]     max_size  Requested size of the descriptor
      *
-     * @return Class descriptors start address
+     * @return True if not finished feeding the descriptor, false if done
      */
-    const void * (* get_descriptors)(app_usbd_class_inst_t const * const p_inst,
-                                     size_t * p_size);
+    bool (* feed_descriptors)(app_usbd_class_descriptor_ctx_t  * p_ctx,
+                              app_usbd_class_inst_t const      * p_inst,
+                              uint8_t                          * p_buff,
+                              size_t                             max_size);
+
+
+    /**
+     * @brief Select interface
+     *
+     * Function called when class interface has to be selected.
+     *
+     * This function would be called for every interface when:
+     * - SET_INTERFACE command is processed by the default handler
+     * - SET_CONFIG(1) command is processed by the default handler
+     *
+     * @note Remember to disable all the endpoints that are not used
+     *       in the selected configuration.
+     * @note If this function pointer is NULL default procedure would
+     *       just enable all the interface endpoints and selecting
+     *       alternate configurations other than 0 would generate error.
+     * @note Calling the function with alternate setting 0 has to always succeed.
+     *
+     * @param[in,out] p_inst    Instance of the class
+     * @param[in]     iface_idx Index of the interface inside class structure
+     * @param[in]     alternate Alternate setting that should be selected
+     *
+     * @return Function has to return @ref NRF_SUCCESS when it has successfully proceed
+     *         interface selection.
+     *         If it returns @ref NRF_ERROR_NOT_SUPPORTED, default function would be used
+     *         to proceed the request - just like there would be NULL pointer in this field.
+     *         Any other kind of error would make library to STALL the request.
+     */
+    ret_code_t (* iface_select)(app_usbd_class_inst_t const * const p_inst,
+                                uint8_t iface_idx,
+                                uint8_t alternate);
+
+    /**
+     * @brief Deselect interface
+     *
+     * Function called when the class interface has to be deselected.
+     *
+     * This function would be called for every interface when:
+     * - Library start internal event is processed by the default handler
+     * - RESET event is processed by the default handler
+     * - SET_ADDRESS is processed by the default handler
+     * - SET_CONFIG(0) is processed by the default handler
+     *
+     * @note Just after this function is called all the interface
+     *       endpoints would be disabled.
+     *       This function does not has to take care about it.
+     * @note If this function pointer is NULL default procedure would
+     *       just disable all the interface endpoints.
+     *
+     * @param[in,out] p_inst    Instance of the class
+     * @param[in]     iface_idx Index of the interface inside class structure
+     */
+    void (* iface_deselect)(app_usbd_class_inst_t const * const p_inst, uint8_t iface_idx);
+
+    /**
+     * @brief Get current interface
+     *
+     * Function called when class interface has to return its alternate settings
+     * in reaction on GET_INTERFACE command.
+     * It should be defined in a pair with @ref app_usbd_class_methods_t::iface_select.
+     *
+     * @param[in]  p_inst     Instance of the class
+     * @param[in]  iface_idx  Index of the interface inside class structure
+     *
+     * @return Current alternate setting of the selected interface.
+     *
+     * @note For the classes that support this function, when an interface that has not alternate
+     *       configurations has been selected this function has to return 0 - default alternate setting.
+     *
+     * @note If this function pointer it NULL default procedure would return alternate interface
+     *       value 0.
+     */
+    uint8_t (* iface_selection_get)(app_usbd_class_inst_t const * const p_inst, uint8_t iface_idx);
+
 } app_usbd_class_methods_t;
 
 /**
@@ -589,6 +677,27 @@ static inline app_usbd_class_data_t * app_usbd_class_data_access(
     } APP_USBD_CLASS_INSTANCE_TYPE(type_name)
 
 /**
+ * @brief Same as @ref APP_USBD_CLASS_INSTANCE_TYPEDEF but for class with EP0 only.
+ */
+#define APP_USBD_CLASS_INSTANCE_NO_EP_TYPEDEF(type_name, interfaces_configs, class_config_dec)  \
+    typedef union CONCAT_2(type_name, _u)                                                       \
+    {                                                                                           \
+        app_usbd_class_inst_t base;                                                             \
+        struct                                                                                  \
+        {                                                                                       \
+            APP_USBD_CLASS_DATA_TYPE(type_name) * p_data;                                       \
+            app_usbd_class_methods_t const * p_class_methods;                                   \
+            struct                                                                              \
+            {                                                                                   \
+                uint8_t cnt;                                                                    \
+                app_usbd_class_iface_conf_t                                                     \
+                                config[NUM_VA_ARGS(BRACKET_EXTRACT(interfaces_configs))];       \
+            } iface;                                                                            \
+            class_config_dec                                                                    \
+        } specific;                                                                             \
+    } APP_USBD_CLASS_INSTANCE_TYPE(type_name)
+
+/**
  * @brief Writable data structure declaration
  *
  * The macro that declares a variable type that would be used to store given class writable data.
@@ -638,6 +747,16 @@ static inline app_usbd_class_data_t * app_usbd_class_data_access(
     APP_USBD_CLASS_INSTANCE_TYPEDEF(type_name, interface_configs, class_config_dec)
 
 /**
+ * @brief Same as @ref APP_USBD_CLASS_TYPEDEF but for class with EP0 only.
+ */
+#define APP_USBD_CLASS_NO_EP_TYPEDEF(type_name,                                                \
+                                     interface_configs,                                        \
+                                     class_config_dec,                                         \
+                                     class_data_dec)                                           \
+    APP_USBD_CLASS_DATA_TYPEDEF(type_name, class_data_dec);                                    \
+    APP_USBD_CLASS_INSTANCE_NO_EP_TYPEDEF(type_name, interface_configs, class_config_dec)
+
+/**
  * @brief Forward declaration of type defined by @ref APP_USBD_CLASS_TYPEDEF
  *
  * @param type_name          The name of the type without _t postfix.
@@ -675,6 +794,24 @@ static inline app_usbd_class_data_t * app_usbd_class_data_access(
         }                                                                               \
     }
 
+/**
+ * @brief Same as @ref APP_USBD_CLASS_INSTANCE_INITVAL but for class with EP0 only.
+ */
+#define APP_USBD_CLASS_INSTANCE_NO_EP_INITVAL(p_ram_data,                               \
+                                              class_methods,                            \
+                                              interfaces_configs,                       \
+                                              class_config_part)                        \
+    {                                                                                   \
+        .specific = {                                                                   \
+            .p_data = p_ram_data,                                                       \
+            .p_class_methods = class_methods,                                           \
+            .iface = {                                                                  \
+                .cnt    = NUM_VA_ARGS(BRACKET_EXTRACT(interfaces_configs)),             \
+                .config = { APP_USBD_CLASS_IFACES_CONFIG_EXTRACT(interfaces_configs) }  \
+            },                                                                          \
+            BRACKET_EXTRACT(class_config_part)                                          \
+        }                                                                               \
+    }
 
 /**
  * @brief Define the base class instance
@@ -684,7 +821,7 @@ static inline app_usbd_class_data_t * app_usbd_class_data_access(
  * The tricky part is @c class_config_part.
  * The configuration data here has to be placed inside brackets.
  * Then any type of values can be used depending on the type used in @ref APP_USBD_CLASS_TYPEDEF.
- * If instance does not have any specyfic data, use just empty bracket here.
+ * If instance does not has any specyfic data, use just empty bracket here.
  * @code
  * APP_USBD_CLASS_TYPEDEF(
  *      some_base_class,
@@ -793,6 +930,21 @@ static inline app_usbd_class_data_t * app_usbd_class_data_access(
             class_config_part)
 
 /**
+ * @brief Same as @ref APP_USBD_CLASS_INST_GLOBAL_DEF but for class with EP0 only.
+ */
+#define APP_USBD_CLASS_INST_NO_EP_GLOBAL_DEF(instance_name,                     \
+                                             type_name,                         \
+                                             class_methods,                     \
+                                             interfaces_configs,                \
+                                             class_config_part)                 \
+    static APP_USBD_CLASS_DATA_TYPE(type_name) CONCAT_2(instance_name, _data);  \
+    const APP_USBD_CLASS_INSTANCE_TYPE(type_name) instance_name =               \
+        APP_USBD_CLASS_INSTANCE_NO_EP_INITVAL(                                  \
+            &CONCAT_2(instance_name, _data),                                    \
+            class_methods,                                                      \
+            interfaces_configs,                                                 \
+            class_config_part)
+/**
  * @brief Access class specific configuration
  *
  * Macro that returns class specific configuration.
@@ -827,10 +979,95 @@ static inline app_usbd_class_data_t * app_usbd_class_data_access(
  * but then we would totally lost type safety.
  *
  * A little more safe is to use pointer to base member of class instance.
- * This would generate an error when used on any variable that have no base member
+ * This would generate an error when used on any variable that has no base member
  * and would generate also error if this base member is wrong type.
  */
 #define APP_USBD_CLASS_BASE_INSTANCE(p_inst) (&((p_inst)->base))
+
+/*lint -emacro(142 438 616 646, APP_USBD_CLASS_DESCRIPTOR_INIT, APP_USBD_CLASS_DESCRIPTOR_BEGIN, APP_USBD_CLASS_DESCRIPTOR_YIELD, APP_USBD_CLASS_DESCRIPTOR_END, APP_USBD_CLASS_DESCRIPTOR_WRITE)*/
+
+/**
+ * @brief Initialize class descriptor
+ *
+ * @param[in] p_ctx Class descriptor context
+ */
+
+#define APP_USBD_CLASS_DESCRIPTOR_INIT(p_ctx)       \
+    (p_ctx)->line = 0;
+
+/**
+ * @brief Begin class descriptor
+ *
+ * @param[in] p_ctx Class descriptor context
+ */
+
+#define APP_USBD_CLASS_DESCRIPTOR_BEGIN(p_ctx)      \
+    switch ((p_ctx)->line)                          \
+    {                                               \
+        case 0:                                     \
+            ;
+
+/**
+ * @brief Yield class descriptor
+ *
+ * @param[in] p_ctx Class descriptor context
+ */
+
+#define APP_USBD_CLASS_DESCRIPTOR_YIELD(p_ctx)      \
+do                                                  \
+{                                                   \
+        (p_ctx)->line = __LINE__;                   \
+        return true;                                \
+        case __LINE__:                              \
+            ;                                       \
+} while (0)
+
+/*lint -emacro(438 527, APP_USBD_CLASS_DESCRIPTOR_END)*/
+
+/**
+ * @brief End class descriptor
+ *
+ * This function has to be called at the end of class descriptor feeder function.
+ * No other operations in feeder function can be done after calling it.
+ *
+ * @param[in] p_ctx Class descriptor context
+ */
+
+#define APP_USBD_CLASS_DESCRIPTOR_END(p_ctx)        \
+    }                                               \
+    (p_ctx)->line = 0;                              \
+    return false;
+
+
+/**
+ * @brief Write descriptor using protothreads
+ *
+ * This function writes one byte to the buffer with offset. If buffer is full
+ * it yields.
+ *
+ * It is used by the class descriptor feeders internally.
+ *
+ * @ref APP_USBD_CLASS_DESCRIPTOR_BEGIN has to be called before using this function.
+ * @ref APP_USBD_CLASS_DESCRIPTOR_END has to be called after last use of this function.
+ *
+ * @param data Byte to be written to buffer
+ * @param buff Buffer to write into
+ * @param cur_size Offset
+ * @param max_size Size of the buffer
+ */
+#define APP_USBD_CLASS_DESCRIPTOR_WRITE(data, buff, cur_size, max_size) \
+do                                                                      \
+{                                                                       \
+    if(buff != NULL)                                                    \
+    {                                                                   \
+        *(buff + cur_size) = data;                                      \
+    }                                                                   \
+    cur_size++;                                                         \
+    if (cur_size >= max_size)                                           \
+    {                                                                   \
+        APP_USBD_CLASS_DESCRIPTOR_YIELD(p_ctx);                         \
+    }                                                                   \
+} while(0);
 
 /** @} */
 

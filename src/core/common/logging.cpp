@@ -49,8 +49,8 @@
 #endif
 
 #ifndef WINDOWS_LOGGING
-#define otLogDump(aFormat, ...)                                             \
-    _otDynamicLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+#define otLogDump(aFormat, ...) \
+    _otDynamicLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ##__VA_ARGS__)
 #endif
 
 #ifdef __cplusplus
@@ -67,10 +67,13 @@ extern "C" {
  * @param[in]  aLength     Number of bytes in the buffer.
  *
  */
-static void DumpLine(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion, const void *aBuf,
+static void DumpLine(otInstance * aInstance,
+                     otLogLevel   aLogLevel,
+                     otLogRegion  aLogRegion,
+                     const void * aBuf,
                      const size_t aLength)
 {
-    char buf[80];
+    char  buf[80];
     char *cur = buf;
 
     snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "|");
@@ -120,13 +123,17 @@ static void DumpLine(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aL
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otDump(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf,
+void otDump(otInstance * aInstance,
+            otLogLevel   aLogLevel,
+            otLogRegion  aLogRegion,
+            const char * aId,
+            const void * aBuf,
             const size_t aLength)
 {
-    size_t idlen = strlen(aId);
+    size_t       idlen = strlen(aId);
     const size_t width = 72;
-    char buf[80];
-    char *cur = buf;
+    char         buf[80];
+    char *       cur = buf;
 
     for (size_t i = 0; i < (width - idlen) / 2 - 5; i++)
     {
@@ -160,8 +167,10 @@ void otDump(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion,
 
     otLogDump("%s", buf);
 }
-#else // OPENTHREAD_CONFIG_LOG_PKT_DUMP
-void otDump(otInstance *, otLogLevel, otLogRegion, const char *, const void *, const size_t) {}
+#else  // OPENTHREAD_CONFIG_LOG_PKT_DUMP
+void otDump(otInstance *, otLogLevel, otLogRegion, const char *, const void *, const size_t)
+{
+}
 #endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
 #ifdef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
@@ -257,6 +266,14 @@ const char *otLogRegionToString(otLogRegion aRegion)
 
     case OT_LOG_REGION_PLATFORM:
         retval = "-PLAT----";
+        break;
+
+    case OT_LOG_REGION_CORE:
+        retval = "-CORE----";
+        break;
+
+    case OT_LOG_REGION_UTIL:
+        retval = "-UTIL----";
         break;
 
     default:

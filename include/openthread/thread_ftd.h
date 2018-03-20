@@ -366,6 +366,28 @@ OTAPI otError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aC
 OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
 
 /**
+ * This function gets the next IPv6 address (using an iterator) for a given child.
+ *
+ * @param[in]     aInstance    A pointer to an OpenThread instance.
+ * @param[in]     aChildIndex  The child index.
+ * @param[inout]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
+ *                             entry in the list. To get the first IPv6 address the iterator should be set to
+ *                             OT_CHILD_IP6_ADDRESS_ITERATOR_INIT.
+ * @param[out]    aAddress     A pointer to an IPv6 address where the child's next address is placed (on success).
+ *
+ * @retval OT_ERROR_NONE          Successfully found the next IPv6 address (@p aAddress was successfully updated).
+ * @retval OT_ERROR_NOT_FOUND     The child has no subsequent IPv6 address entry.
+ * @retval OT_ERROR_INVALID_ARGS  @p aIterator or @p aAddress are NULL, or child at @p aChildIndex is not valid.
+ *
+ * @sa otThreadGetChildInfoByIndex
+ *
+ */
+otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
+                                       uint8_t                    aChildIndex,
+                                       otChildIp6AddressIterator *aIterator,
+                                       otIp6Address *             aAddress);
+
+/**
  * Get the current Router ID Sequence.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -469,10 +491,9 @@ OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aPa
  * removed.
  *
  */
-typedef enum otThreadChildTableEvent
-{
-    OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,        ///< A child is being added.
-    OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED,      ///< A child is being removed.
+typedef enum otThreadChildTableEvent {
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,   ///< A child is being added.
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, ///< A child is being removed.
 } otThreadChildTableEvent;
 
 /**
@@ -513,7 +534,7 @@ void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCall
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_THREAD_FTD_H_
+#endif // OPENTHREAD_THREAD_FTD_H_

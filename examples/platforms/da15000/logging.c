@@ -27,10 +27,10 @@
  */
 
 /**
-* @file logging.c
-* Platform abstraction for the logging
-*
-*/
+ * @file logging.c
+ * Platform abstraction for the logging
+ *
+ */
 
 #include <openthread/platform/logging.h>
 

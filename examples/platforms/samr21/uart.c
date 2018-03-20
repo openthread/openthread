@@ -45,7 +45,7 @@ enum
 typedef struct RecvBuffer
 {
     // The data buffer
-    uint8_t  mBuffer[kReceiveBufferSize];
+    uint8_t mBuffer[kReceiveBufferSize];
     // The offset of the first item written to the list.
     uint16_t mHead;
     // The offset of the next item to be written to the list.
@@ -65,8 +65,7 @@ static void usartReadCallback(struct usart_module *const usartModule)
         sReceive.mTail = (sReceive.mTail + 1) % kReceiveBufferSize;
     }
 
-    usart_read_job(&sUsartInstance,
-                   (uint16_t *)&sReceive.mBuffer[sReceive.mTail]);
+    usart_read_job(&sUsartInstance, (uint16_t *)&sReceive.mBuffer[sReceive.mTail]);
 }
 
 static void usartWriteCallback(struct usart_module *const usartModule)
@@ -126,24 +125,21 @@ otError otPlatUartEnable(void)
     configUsart.pinmux_pad2 = UART_SERCOM_PINMUX_PAD2;
     configUsart.pinmux_pad3 = UART_SERCOM_PINMUX_PAD3;
 
-    while (usart_init(&sUsartInstance, UART_SERCOM_MODULE, &configUsart)
-           != STATUS_OK);
+    while (usart_init(&sUsartInstance, UART_SERCOM_MODULE, &configUsart) != STATUS_OK)
+        ;
 
     usart_enable(&sUsartInstance);
 
     sReceive.mHead = 0;
     sReceive.mTail = 0;
 
-    usart_register_callback(&sUsartInstance, usartWriteCallback,
-                            USART_CALLBACK_BUFFER_TRANSMITTED);
-    usart_register_callback(&sUsartInstance, usartReadCallback,
-                            USART_CALLBACK_BUFFER_RECEIVED);
+    usart_register_callback(&sUsartInstance, usartWriteCallback, USART_CALLBACK_BUFFER_TRANSMITTED);
+    usart_register_callback(&sUsartInstance, usartReadCallback, USART_CALLBACK_BUFFER_RECEIVED);
 
     usart_enable_callback(&sUsartInstance, USART_CALLBACK_BUFFER_TRANSMITTED);
     usart_enable_callback(&sUsartInstance, USART_CALLBACK_BUFFER_RECEIVED);
 
-    usart_read_job(&sUsartInstance,
-                   (uint16_t *)&sReceive.mBuffer[sReceive.mTail]);
+    usart_read_job(&sUsartInstance, (uint16_t *)&sReceive.mBuffer[sReceive.mTail]);
 
     return OT_ERROR_NONE;
 }
@@ -159,12 +155,10 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
 
-    if (usart_write_buffer_job(&sUsartInstance, (uint8_t *)aBuf,
-                               aBufLength) != STATUS_OK)
+    if (usart_write_buffer_job(&sUsartInstance, (uint8_t *)aBuf, aBufLength) != STATUS_OK)
     {
         error = OT_ERROR_FAILED;
     }
 
     return error;
 }
-

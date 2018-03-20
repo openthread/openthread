@@ -29,7 +29,6 @@
 #ifndef TEST_LOWPAN_HPP
 #define TEST_LOWPAN_HPP
 
-
 #include <openthread/openthread.h>
 
 #include "common/instance.hpp"
@@ -46,13 +45,13 @@ class TestIphcVector
 public:
     enum
     {
-        kContextUnused = 255,
+        kContextUnused    = 255,
         kPayloadMaxLength = 512
     };
 
     struct Payload
     {
-        uint8_t mData[kPayloadMaxLength];
+        uint8_t  mData[kPayloadMaxLength];
         uint16_t mLength;
     };
 
@@ -60,9 +59,10 @@ public:
      * Default constructor for the object.
      *
      */
-    TestIphcVector(const char *aTestName) {
+    TestIphcVector(const char *aTestName)
+    {
         memset(this, 0, sizeof(*this));
-        mTestName = aTestName;
+        mTestName              = aTestName;
         mSrcContext.mContextId = kContextUnused;
         mDstContext.mContextId = kContextUnused;
     }
@@ -73,10 +73,7 @@ public:
      * @param aAddress Pointer to the long MAC address.
      *
      */
-    void SetMacSource(const uint8_t *aAddress) {
-        mMacSource.mLength = OT_EXT_ADDRESS_SIZE;
-        memcpy(&mMacSource.mExtAddress, aAddress, mMacSource.mLength);
-    }
+    void SetMacSource(const uint8_t *aAddress) { mMacSource.SetExtended(aAddress, /* reverse */ false); }
 
     /**
      * This method sets short MAC source address.
@@ -84,10 +81,7 @@ public:
      * @param aAddress Short MAC address.
      *
      */
-    void SetMacSource(uint16_t aAddress) {
-        mMacSource.mLength = 2;
-        mMacSource.mShortAddress = aAddress;
-    }
+    void SetMacSource(uint16_t aAddress) { mMacSource.SetShort(aAddress); }
 
     /**
      * This method sets long MAC destination address.
@@ -95,10 +89,7 @@ public:
      * @param aAddress Pointer to the long MAC address.
      *
      */
-    void SetMacDestination(const uint8_t *aAddress) {
-        mMacDestination.mLength = OT_EXT_ADDRESS_SIZE;
-        memcpy(&mMacDestination.mExtAddress, aAddress, mMacDestination.mLength);
-    }
+    void SetMacDestination(const uint8_t *aAddress) { mMacDestination.SetExtended(aAddress, /* reverse */ false); }
 
     /**
      * This method sets short MAC destination address.
@@ -106,10 +97,7 @@ public:
      * @param aAddress Short MAC address.
      *
      */
-    void SetMacDestination(uint16_t aAddress) {
-        mMacDestination.mLength = 2;
-        mMacDestination.mShortAddress = aAddress;
-    }
+    void SetMacDestination(uint16_t aAddress) { mMacDestination.SetShort(aAddress); }
 
     /**
      * This method initializes IPv6 Header.
@@ -122,9 +110,13 @@ public:
      * @param aDestination      String represents IPv6 destination address.
      *
      */
-    void SetIpHeader(uint32_t aVersionClassFlow, uint16_t aPayloadLength,
-                     Ip6::IpProto aNextHeader, uint8_t aHopLimit,
-                     const char *aSource, const char *aDestination) {
+    void SetIpHeader(uint32_t     aVersionClassFlow,
+                     uint16_t     aPayloadLength,
+                     Ip6::IpProto aNextHeader,
+                     uint8_t      aHopLimit,
+                     const char * aSource,
+                     const char * aDestination)
+    {
         mIpHeader.Init(aVersionClassFlow);
         mIpHeader.SetPayloadLength(aPayloadLength);
         mIpHeader.SetNextHeader(aNextHeader);
@@ -144,9 +136,13 @@ public:
      * @param aDestination      String represents IPv6 destination address.
      *
      */
-    void SetIpTunneledHeader(uint32_t aVersionClassFlow, uint16_t aPayloadLength,
-                             Ip6::IpProto aNextHeader, uint8_t aHopLimit,
-                             const char *aSource, const char *aDestination) {
+    void SetIpTunneledHeader(uint32_t     aVersionClassFlow,
+                             uint16_t     aPayloadLength,
+                             Ip6::IpProto aNextHeader,
+                             uint8_t      aHopLimit,
+                             const char * aSource,
+                             const char * aDestination)
+    {
         mIpTunneledHeader.Init(aVersionClassFlow);
         mIpTunneledHeader.SetPayloadLength(aPayloadLength);
         mIpTunneledHeader.SetNextHeader(aNextHeader);
@@ -162,7 +158,8 @@ public:
      * @param aExtHeaderLength  Length of the extension header data.
      *
      */
-    void SetExtHeader(const uint8_t *aExtHeader, uint16_t aExtHeaderLength) {
+    void SetExtHeader(const uint8_t *aExtHeader, uint16_t aExtHeaderLength)
+    {
         memcpy(mExtHeader.mData, aExtHeader, aExtHeaderLength);
         mExtHeader.mLength = aExtHeaderLength;
     }
@@ -176,8 +173,8 @@ public:
      * @param aChecksum     Value of the checksum field.
      *
      */
-    void SetUDPHeader(uint16_t aSource, uint16_t aDestination, uint16_t aLength,
-                      uint16_t aChecksum) {
+    void SetUDPHeader(uint16_t aSource, uint16_t aDestination, uint16_t aLength, uint16_t aChecksum)
+    {
         mUdpHeader.SetSourcePort(aSource);
         mUdpHeader.SetDestinationPort(aDestination);
         mUdpHeader.SetLength(aLength);
@@ -191,7 +188,8 @@ public:
      * @param aIphcLength  Length of the LOWPAN_IPHC header.
      *
      */
-    void SetIphcHeader(const uint8_t *aIphc, uint16_t aIphcLength) {
+    void SetIphcHeader(const uint8_t *aIphc, uint16_t aIphcLength)
+    {
         memcpy(mIphcHeader.mData, aIphc, aIphcLength);
         mIphcHeader.mLength = aIphcLength;
     }
@@ -211,7 +209,8 @@ public:
      * @param aLength   Length of the payload data.
      *
      */
-    void SetPayload(const uint8_t *aPayload, uint16_t aLength) {
+    void SetPayload(const uint8_t *aPayload, uint16_t aLength)
+    {
         memcpy(mPayload.mData, aPayload, aLength);
         mPayload.mLength = aLength;
     }
@@ -265,20 +264,20 @@ public:
      * This fields represent compressed IPv6 packet.
      *
      */
-    Payload           mIphcHeader;
-    uint16_t          mPayloadOffset;
-    Lowpan::Context   mSrcContext;
-    Lowpan::Context   mDstContext;
+    Payload         mIphcHeader;
+    uint16_t        mPayloadOffset;
+    Lowpan::Context mSrcContext;
+    Lowpan::Context mDstContext;
 
     /**
      * General purpose fields.
      *
      */
-    Payload           mPayload;
-    otError       mError;
-    const char       *mTestName;
+    Payload     mPayload;
+    otError     mError;
+    const char *mTestName;
 };
 
-}  // namespace ot
+} // namespace ot
 
 #endif // TEST_LOWPAN_HPP

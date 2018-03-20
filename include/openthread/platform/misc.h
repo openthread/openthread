@@ -67,17 +67,16 @@ void otPlatReset(otInstance *aInstance);
  * These are in the same order as the Spinel reset reason codes.
  *
  */
-typedef enum
-{
-    OT_PLAT_RESET_REASON_POWER_ON       = 0,
-    OT_PLAT_RESET_REASON_EXTERNAL       = 1,
-    OT_PLAT_RESET_REASON_SOFTWARE       = 2,
-    OT_PLAT_RESET_REASON_FAULT          = 3,
-    OT_PLAT_RESET_REASON_CRASH          = 4,
-    OT_PLAT_RESET_REASON_ASSERT         = 5,
-    OT_PLAT_RESET_REASON_OTHER          = 6,
-    OT_PLAT_RESET_REASON_UNKNOWN        = 7,
-    OT_PLAT_RESET_REASON_WATCHDOG       = 8,
+typedef enum {
+    OT_PLAT_RESET_REASON_POWER_ON = 0,
+    OT_PLAT_RESET_REASON_EXTERNAL = 1,
+    OT_PLAT_RESET_REASON_SOFTWARE = 2,
+    OT_PLAT_RESET_REASON_FAULT    = 3,
+    OT_PLAT_RESET_REASON_CRASH    = 4,
+    OT_PLAT_RESET_REASON_ASSERT   = 5,
+    OT_PLAT_RESET_REASON_OTHER    = 6,
+    OT_PLAT_RESET_REASON_UNKNOWN  = 7,
+    OT_PLAT_RESET_REASON_WATCHDOG = 8,
 
     OT_PLAT_RESET_REASON_COUNT,
 } otPlatResetReason;
@@ -112,7 +111,7 @@ void otPlatWakeHost(void);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OT_PLATFORM_MISC_H
+#endif // OT_PLATFORM_MISC_H

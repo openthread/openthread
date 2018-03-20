@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 
 #include <openthread/types.h>
 #include <openthread/platform/logging.h>
@@ -45,16 +45,20 @@
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 #include "api/link_raw.hpp"
 #endif
-#include "common/code_utils.hpp"
 #include "coap/coap.hpp"
+#include "common/code_utils.hpp"
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #include "crypto/heap.hpp"
 #include "crypto/mbedtls.hpp"
 #endif
 #include "common/notifier.hpp"
+#include "common/settings.hpp"
 #include "net/ip6.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#include "utils/channel_manager.hpp"
+#endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 #include "utils/channel_monitor.hpp"
 #endif
@@ -88,8 +92,7 @@ namespace ot {
 class Instance : public otInstance
 {
 public:
-
-#if  OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     /**
       * This static method initializes the OpenThread instance.
       *
@@ -233,6 +236,14 @@ public:
     Notifier &GetNotifier(void) { return mNotifier; }
 
     /**
+     * This method returns a reference to the `Settings` object.
+     *
+     * @returns A reference to the `Settings` object.
+     *
+     */
+    Settings &GetSettings(void) { return mSettings; }
+
+    /**
      * This method returns a reference to the tasklet scheduler object.
      *
      * @returns A reference to the tasklet scheduler object.
@@ -314,6 +325,16 @@ public:
     Utils::ChannelMonitor &GetChannelMonitor(void) { return mChannelMonitor; }
 #endif
 
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    /**
+     * This method returns a reference to ChannelManager object.
+     *
+     * @returns A reference to the ChannelManager object.
+     *
+     */
+    Utils::ChannelManager &GetChannelManager(void) { return mChannelManager; }
+#endif
+
     /**
      * This method returns a reference to message pool object.
      *
@@ -337,53 +358,57 @@ public:
      * @returns A reference to the `Type` object of the instance.
      *
      */
-    template <typename Type>
-    Type &Get(void);
+    template <typename Type> Type &Get(void);
 
 private:
     Instance(void);
     void AfterInit(void);
 
-    otHandleActiveScanResult    mActiveScanCallback;
-    void                       *mActiveScanCallbackContext;
-    otHandleEnergyScanResult    mEnergyScanCallback;
-    void                       *mEnergyScanCallbackContext;
+    otHandleActiveScanResult mActiveScanCallback;
+    void *                   mActiveScanCallbackContext;
+    otHandleEnergyScanResult mEnergyScanCallback;
+    void *                   mEnergyScanCallbackContext;
 
-    Notifier                    mNotifier;
+    Notifier mNotifier;
+    Settings mSettings;
 
-    TaskletScheduler            mTaskletScheduler;
-    TimerMilliScheduler         mTimerMilliScheduler;
+    TaskletScheduler    mTaskletScheduler;
+    TimerMilliScheduler mTimerMilliScheduler;
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    TimerMicroScheduler         mTimerMicroScheduler;
+    TimerMicroScheduler mTimerMicroScheduler;
 #endif
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Crypto::MbedTls             mMbedTls;
-    Crypto::Heap                mMbedTlsHeap;
+    Crypto::MbedTls mMbedTls;
+    Crypto::Heap    mMbedTlsHeap;
 #endif
 
-    Ip6::Ip6                    mIp6;
-    ThreadNetif                 mThreadNetif;
+    Ip6::Ip6    mIp6;
+    ThreadNetif mThreadNetif;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw                     mLinkRaw;
+    LinkRaw mLinkRaw;
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    Coap::ApplicationCoap       mApplicationCoap;
+    Coap::ApplicationCoap mApplicationCoap;
 #endif
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    otLogLevel                  mLogLevel;
+    otLogLevel mLogLevel;
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-    Utils::ChannelMonitor       mChannelMonitor;
+    Utils::ChannelMonitor mChannelMonitor;
 #endif
 
-    MessagePool                 mMessagePool;
-    bool                        mIsInitialized;
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    Utils::ChannelManager mChannelManager;
+#endif
+
+    MessagePool mMessagePool;
+    bool        mIsInitialized;
 };
 
 /**
@@ -391,6 +416,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // INSTANCE_HPP_
+#endif // INSTANCE_HPP_

@@ -26,22 +26,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
 
+#include <utils/code_utils.h>
+#include <utils/flash.h>
 #include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
-#include <utils/flash.h>
-#include <utils/code_utils.h>
 
 #include "platform-nrf5.h"
 
 #define FLASH_PAGE_ADDR_MASK 0xFFFFF000
-#define FLASH_PAGE_SIZE      4096
+#define FLASH_PAGE_SIZE 4096
 
 static uint32_t sFlashDataStart;
 static uint32_t sFlashDataEnd;
@@ -124,8 +124,7 @@ otError utilsFlashStatusWait(uint32_t aTimeout)
                 error = OT_ERROR_NONE;
                 break;
             }
-        }
-        while (otPlatAlarmMilliGetNow() - startTime < aTimeout);
+        } while (otPlatAlarmMilliGetNow() - startTime < aTimeout);
     }
 
     return error;

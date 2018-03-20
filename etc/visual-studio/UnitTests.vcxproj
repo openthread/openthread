@@ -64,7 +64,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\tests\unit\test_aes.cpp" />
-    <ClCompile Include="..\..\tests\unit\test_fuzz.cpp" />
     <ClCompile Include="..\..\tests\unit\test_hmac_sha256.cpp" />
     <ClCompile Include="..\..\tests\unit\test_link_quality.cpp" />
     <ClCompile Include="..\..\tests\unit\test_lowpan.cpp" />

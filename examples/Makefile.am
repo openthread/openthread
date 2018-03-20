@@ -44,7 +44,7 @@ EXTRA_DIST                              = \
 SUBDIRS                                 = \
     platforms                             \
     $(NULL)
-    
+
 if OPENTHREAD_EXAMPLES
 SUBDIRS                                += \
     apps                                  \

@@ -30,8 +30,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <utils/code_utils.h>
 #include <hal/nrf_temp.h>
+#include <utils/code_utils.h>
 
 #include "platform-nrf5.h"
 
@@ -43,7 +43,7 @@
 __STATIC_INLINE void dataReadyEventClear(void)
 {
     NRF_TEMP->EVENTS_DATARDY = 0;
-    volatile uint32_t dummy = NRF_TEMP->EVENTS_DATARDY;
+    volatile uint32_t dummy  = NRF_TEMP->EVENTS_DATARDY;
     (void)dummy;
 }
 #endif
@@ -66,7 +66,7 @@ int32_t nrf5TempGet(void)
 {
 #if SOFTDEVICE_PRESENT
     int32_t temperature;
-    (void) sd_temp_get(&temperature);
+    (void)sd_temp_get(&temperature);
 #else
     NRF_TEMP->TASKS_START = 1;
 

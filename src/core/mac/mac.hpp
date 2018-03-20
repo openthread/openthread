@@ -41,15 +41,14 @@
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
 #include "mac/mac_filter.hpp"
+#include "mac/mac_frame.hpp"
 #include "thread/key_manager.hpp"
+#include "thread/link_quality.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
-
-namespace Mle { class MleRouter; }
 
 /**
  * @addtogroup core-mac
@@ -69,26 +68,26 @@ namespace Mac {
  */
 enum
 {
-    kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE                = 5,                     ///< macMaxBE (IEEE 802.15.4-2006)
-    kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
+    kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006)
+    kMaxBE             = 5,  ///< macMaxBE (IEEE 802.15.4-2006)
+    kMaxCSMABackoffs   = 4,  ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
+    kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006)
 
-    kMinBackoff           = 1,                     ///< Minimum backoff (milliseconds).
+    kMinBackoff = 1, ///< Minimum backoff (milliseconds).
 
-    kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).
-    kDataPollTimeout      = 100,                   ///< Timeout for receiving Data Frame (milliseconds).
-    kSleepDelay           = 300,                   ///< Max sleep delay when frame is pending (milliseconds).
-    kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
+    kAckTimeout      = 16,  ///< Timeout for waiting on an ACK (milliseconds).
+    kDataPollTimeout = 100, ///< Timeout for receiving Data Frame (milliseconds).
+    kSleepDelay      = 300, ///< Max sleep delay when frame is pending (milliseconds).
+    kNonceSize       = 13,  ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelsAll      = OT_CHANNEL_ALL,        ///< All channels.
-    kScanDurationDefault  = 300,                   ///< Default interval between channels (milliseconds).
+    kScanChannelsAll     = OT_CHANNEL_ALL, ///< All channels.
+    kScanDurationDefault = 300,            ///< Default interval between channels (milliseconds).
 
     /**
      * Maximum number of MAC layer tx attempts for an outbound direct frame.
      *
      */
-    kDirectFrameMacTxAttempts   = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT,
+    kDirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT,
 
     /**
      * Maximum number of MAC layer tx attempts for an outbound indirect frame (for a sleepy child) after receiving
@@ -99,10 +98,159 @@ enum
 };
 
 /**
+ * This class defines a channel mask.
+ *
+ * It is a wrapper class around a `uint32_t` bit vector representing a set of channels.
+ *
+ */
+class ChannelMask
+{
+public:
+    enum
+    {
+        kChannelIteratorFirst = 0xff, ///< Value to pass in `GetNextChannel()` to get the first channel in the mask.
+        kInfoStringSize       = 45,   ///< Recommended buffer size to use with `ToString()`.
+    };
+
+    /**
+     * This constructor initializes a `ChannelMask` instance.
+     *
+     */
+    ChannelMask(void)
+        : mMask(0)
+    {
+    }
+
+    /**
+     * This constructor initializes a `ChannelMask` instance with a given mask.
+     *
+     * @param[in]  aMask   A channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
+     *
+     */
+    ChannelMask(uint32_t aMask)
+        : mMask(aMask)
+    {
+    }
+
+    /**
+     * This method clears the channel mask.
+     *
+     */
+    void Clear(void) { mMask = 0; }
+
+    /**
+     * This method gets the channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
+     *
+     * @returns The channel mask.
+     *
+     */
+    uint32_t GetMask(void) const { return mMask; }
+
+    /**
+     * This method sets the channel mask.
+     *
+     * @param[in]  aMask   A channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
+     *
+     */
+    void SetMask(uint32_t aMask) { mMask = aMask; }
+
+    /**
+     * This method indicates if the mask is empty.
+     *
+     * @returns TRUE if the mask is empty, FALSE otherwise.
+     *
+     */
+    bool IsEmpty(void) const { return (mMask == 0); }
+
+    /**
+     * This method indicates if the mask contains only a single channel.
+     *
+     * @returns TRUE if channel mask contains a single channel, FALSE otherwise
+     *
+     */
+    bool IsSingleChannel(void) const { return ((mMask != 0) && ((mMask & (mMask - 1)) == 0)); }
+
+    /**
+     * This method indicates if the mask contains a given channel.
+     *
+     * @param[in]  aChannel  A channel.
+     *
+     * @returns TRUE if the channel @p aChannel is included in the mask, FALSE otherwise.
+     *
+     */
+    bool ContainsChannel(uint8_t aChannel) const { return ((1U << aChannel) & mMask) != 0; }
+
+    /**
+     * This method adds a channel to the channel mask.
+     *
+     * @param[in]  aChannel  A channel
+     *
+     */
+    void AddChannel(uint8_t aChannel) { mMask |= (1U << aChannel); }
+
+    /**
+     * This method removes a channel from the channel mask.
+     *
+     * @param[in]  aChannel  A channel
+     *
+     */
+    void RemoveChannel(uint8_t aChannel) { mMask &= ~(1U << aChannel); }
+
+    /**
+     * This method updates the channel mask by intersecting it with another mask.
+     *
+     * @param[in]  aOtherMask  Another channel mask.
+     *
+     */
+    void Intersect(const ChannelMask &aOtherMask) { mMask &= aOtherMask.mMask; }
+
+    /**
+     * This method gets the next channel in the channel mask.
+     *
+     * This method can be used to iterate over all channels in the channel mask. To get the first channel (channel with
+     * lowest number) in the mask the @p aChannel should be set to `kChannelIteratorFirst`.
+     *
+     * @param[inout] aChannel        A reference to a `uint8_t`.
+     *                               On entry it should contain the previous channel or `kChannelIteratorFirst`.
+     *                               On exit it contains the next channel.
+     *
+     * @retval  OT_ERROR_NONE        Got the next channel, @p aChannel updated successfully.
+     * @retval  OT_ERROR_NOT_FOUND   No next channel in the channel mask (note: @p aChannel may be changed).
+     *
+     */
+    otError GetNextChannel(uint8_t &aChannel) const;
+
+    /**
+     * This method converts the channel mask into a human-readable NULL-terminated string.
+     *
+     * Examples of possible output:
+     *  -  empty mask      ->  "{ }"
+     *  -  all channels    ->  "{ 11-26 }"
+     *  -  single channel  ->  "{ 20 }"
+     *  -  multiple ranges ->  "{ 11, 14-17, 20-22, 24, 25 }"
+     *  -  no range        ->  "{ 14, 21, 26 }"
+     *
+     * @param[out] aBuffer  A pointer to a char buffer to output the string.
+     * @param[in]  aSize    Size of the buffer (number of bytes).
+     *
+     * @returns  A pointer to the @p aBuffer.
+     *
+     */
+    const char *ToString(char *aBuffer, uint16_t aSize) const;
+
+private:
+#if (OT_RADIO_CHANNEL_MIN >= 32) || (OT_RADIO_CHANNEL_MAX >= 32)
+#error `OT_RADIO_CHANNEL_MAX` or `OT_RADIO_CHANNEL_MIN` are larger than 32. `ChannelMask` uses 32 bit mask.
+#endif
+
+    uint32_t mMask;
+};
+
+/**
  * This class implements a MAC receiver client.
  *
  */
-class Receiver: public OwnerLocator
+class Receiver : public OwnerLocator
 {
     friend class Mac;
 
@@ -133,32 +281,35 @@ public:
      * @param[in]  aOwner                A pointer to owner of this object.
      *
      */
-    Receiver(ReceiveFrameHandler aReceiveFrameHandler, DataPollTimeoutHandler aPollTimeoutHandler, void *aOwner):
-        OwnerLocator(aOwner),
-        mReceiveFrameHandler(aReceiveFrameHandler),
-        mPollTimeoutHandler(aPollTimeoutHandler),
-        mNext(NULL) {
+    Receiver(ReceiveFrameHandler aReceiveFrameHandler, DataPollTimeoutHandler aPollTimeoutHandler, void *aOwner)
+        : OwnerLocator(aOwner)
+        , mReceiveFrameHandler(aReceiveFrameHandler)
+        , mPollTimeoutHandler(aPollTimeoutHandler)
+        , mNext(NULL)
+    {
     }
 
 private:
     void HandleReceivedFrame(Frame &aFrame) { mReceiveFrameHandler(*this, aFrame); }
 
-    void HandleDataPollTimeout(void) {
-        if (mPollTimeoutHandler != NULL) {
+    void HandleDataPollTimeout(void)
+    {
+        if (mPollTimeoutHandler != NULL)
+        {
             mPollTimeoutHandler(*this);
         }
     }
 
-    ReceiveFrameHandler mReceiveFrameHandler;
+    ReceiveFrameHandler    mReceiveFrameHandler;
     DataPollTimeoutHandler mPollTimeoutHandler;
-    Receiver *mNext;
+    Receiver *             mNext;
 };
 
 /**
  * This class implements a MAC sender client.
  *
  */
-class Sender: public OwnerLocator
+class Sender : public OwnerLocator
 {
     friend class Mac;
 
@@ -171,7 +322,7 @@ public:
      * @param[in]  aFrame    A reference to the MAC frame buffer.
      *
      */
-    typedef otError(*FrameRequestHandler)(Sender &aSender, Frame &aFrame);
+    typedef otError (*FrameRequestHandler)(Sender &aSender, Frame &aFrame);
 
     /**
      * This function pointer is called when the MAC is done sending the frame.
@@ -191,27 +342,28 @@ public:
      * @param[in]  aOwner                A pointer to owner of this object.
      *
      */
-    Sender(FrameRequestHandler aFrameRequestHandler, SentFrameHandler aSentFrameHandler, void *aOwner):
-        OwnerLocator(aOwner),
-        mFrameRequestHandler(aFrameRequestHandler),
-        mSentFrameHandler(aSentFrameHandler),
-        mNext(NULL) {
+    Sender(FrameRequestHandler aFrameRequestHandler, SentFrameHandler aSentFrameHandler, void *aOwner)
+        : OwnerLocator(aOwner)
+        , mFrameRequestHandler(aFrameRequestHandler)
+        , mSentFrameHandler(aSentFrameHandler)
+        , mNext(NULL)
+    {
     }
 
 private:
     otError HandleFrameRequest(Frame &aFrame) { return mFrameRequestHandler(*this, aFrame); }
-    void HandleSentFrame(Frame &aFrame, otError aError) { mSentFrameHandler(*this, aFrame, aError); }
+    void    HandleSentFrame(Frame &aFrame, otError aError) { mSentFrameHandler(*this, aFrame, aError); }
 
     FrameRequestHandler mFrameRequestHandler;
-    SentFrameHandler mSentFrameHandler;
-    Sender *mNext;
+    SentFrameHandler    mSentFrameHandler;
+    Sender *            mNext;
 };
 
 /**
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
-class Mac: public InstanceLocator
+class Mac : public InstanceLocator
 {
 public:
     /**
@@ -348,6 +500,18 @@ public:
     otError SendFrameRequest(Sender &aSender);
 
     /**
+     * This method registers a Out of Band frame for MAC Transmission.
+     * An Out of Band frame is one that was generated outside of OpenThread.
+     *
+     * @param[in]  aOobFrame  A pointer to the frame.
+     *
+     * @retval OT_ERROR_NONE     Successfully registered the frame.
+     * @retval OT_ERROR_ALREADY  MAC layer is busy sending a previously registered frame.
+     *
+     */
+    otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
+
+    /**
      * This method generates a random IEEE 802.15.4 Extended Address.
      *
      * @param[out]  aExtAddress  A pointer to where the generated Extended Address is placed.
@@ -469,7 +633,7 @@ public:
      *
      */
     Filter &GetFilter(void) { return mFilter; }
-#endif  // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
     /**
      * This method is called to handle a received frame.
@@ -526,8 +690,8 @@ public:
     /**
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
-     *                               NULL to disable the callback.
+     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
+     * or NULL to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
@@ -611,10 +775,35 @@ public:
      */
     bool RadioSupportsRetries(void);
 
+    /**
+     * This method returns the current CCA (Clear Channel Assessment) failure rate.
+     *
+     * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW`
+     * frame transmissions.
+     *
+     * @returns The CCA failure rate with maximum value `0xffff` corresponding to 100% failure rate.
+     *
+     */
+    uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
+
 private:
     enum
     {
-        kInvalidRssiValue = 127
+        kInvalidRssiValue  = 127,
+        kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
+
+    /**
+     * Interval between RSSI samples when performing Energy Scan.
+     *
+     * `mBackoffTimer` is used for adding delay between RSSI samples. If microsecond timer is supported, 128 usec
+     * time between samples is used, otherwise with a millisecond timer the minimum value of 1 msec is used.
+     *
+     */
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        kEnergyScanRssiSampleInterval = 128,
+#else
+        kEnergyScanRssiSampleInterval = 1,
+#endif
     };
 
     enum Operation
@@ -625,54 +814,62 @@ private:
         kOperationTransmitBeacon,
         kOperationTransmitData,
         kOperationWaitingForData,
+        kOperationTransmitOutOfBandFrame,
     };
 
-    void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
-    void ProcessTransmitSecurity(Frame &aFrame);
+    void    GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
+    void    ProcessTransmitSecurity(Frame &aFrame);
     otError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
-    void UpdateIdleMode(void);
-    void StartOperation(Operation aOperation);
-    void FinishOperation(void);
-    void SendBeaconRequest(Frame &aFrame);
-    void SendBeacon(Frame &aFrame);
-    void StartBackoff(void);
+    void    UpdateIdleMode(void);
+    void    StartOperation(Operation aOperation);
+    void    FinishOperation(void);
+    void    SendBeaconRequest(Frame &aFrame);
+    void    SendBeacon(Frame &aFrame);
+    void    StartBackoff(void);
+    void    BeginTransmit(void);
     otError HandleMacCommand(Frame &aFrame);
+    Frame * GetOperationFrame(void);
 
     static void HandleMacTimer(Timer &aTimer);
-    void HandleMacTimer(void);
-    static void HandleBeginTransmit(Timer &aTimer);
-    void HandleBeginTransmit(void);
+    void        HandleMacTimer(void);
+    static void HandleBackoffTimer(Timer &aTimer);
+    void        HandleBackoffTimer(void);
     static void HandleReceiveTimer(Timer &aTimer);
-    void HandleReceiveTimer(void);
+    void        HandleReceiveTimer(void);
     static void PerformOperation(Tasklet &aTasklet);
-    void PerformOperation(void);
+    void        PerformOperation(void);
 
     void StartCsmaBackoff(void);
 
-    void Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
+    void    Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
     otError UpdateScanChannel(void);
-    void PerformActiveScan(void);
-    void PerformEnergyScan(void);
-    void ReportEnergyScanResult(int8_t aRssi);
-    void SampleRssi(void);
+    void    PerformActiveScan(void);
+    void    PerformEnergyScan(void);
+    void    ReportEnergyScanResult(int8_t aRssi);
+    void    SampleRssi(void);
 
     otError RadioTransmit(Frame *aSendFrame);
     otError RadioReceive(uint8_t aChannel);
     otError RadioSleep(void);
 
+    void LogFrameRxFailure(const Frame *aFrame, otError aError) const;
+    void LogFrameTxFailure(const Frame &aFrame, otError aError) const;
+    void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+
     static const char *OperationToString(Operation aOperation);
 
     Operation mOperation;
 
-    bool mPendingActiveScan       : 1;
-    bool mPendingEnergyScan       : 1;
-    bool mPendingTransmitBeacon   : 1;
-    bool mPendingTransmitData     : 1;
-    bool mPendingWaitingForData   : 1;
-    bool mRxOnWhenIdle            : 1;
-    bool mBeaconsEnabled          : 1;
+    bool mPendingActiveScan : 1;
+    bool mPendingEnergyScan : 1;
+    bool mPendingTransmitBeacon : 1;
+    bool mPendingTransmitData : 1;
+    bool mPendingTransmitOobFrame : 1;
+    bool mPendingWaitingForData : 1;
+    bool mRxOnWhenIdle : 1;
+    bool mBeaconsEnabled : 1;
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
-    bool mDelaySleep              : 1;
+    bool mDelaySleep : 1;
 #endif
 
     Tasklet mOperationTask;
@@ -685,15 +882,15 @@ private:
 #endif
     TimerMilli mReceiveTimer;
 
-    ExtAddress mExtAddress;
+    ExtAddress   mExtAddress;
     ShortAddress mShortAddress;
-    PanId mPanId;
-    uint8_t mChannel;
+    PanId        mPanId;
+    uint8_t      mChannel;
 
-    otNetworkName mNetworkName;
+    otNetworkName   mNetworkName;
     otExtendedPanId mExtendedPanId;
 
-    Sender *mSendHead, *mSendTail;
+    Sender *  mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
 
     uint8_t mBeaconSequence;
@@ -701,11 +898,11 @@ private:
     uint8_t mCsmaAttempts;
     uint8_t mTransmitAttempts;
 
-    uint32_t mScanChannels;
-    uint16_t mScanDuration;
-    uint8_t mScanChannel;
-    int8_t mEnergyScanCurrentMaxRssi;
-    void *mScanContext;
+    ChannelMask mScanChannelMask;
+    uint16_t    mScanDuration;
+    uint8_t     mScanChannel;
+    int8_t      mEnergyScanCurrentMaxRssi;
+    void *      mScanContext;
     union
     {
         ActiveScanHandler mActiveScanHandler;
@@ -713,16 +910,20 @@ private:
     };
 
     otLinkPcapCallback mPcapCallback;
-    void *mPcapCallbackContext;
+    void *             mPcapCallbackContext;
 
 #if OPENTHREAD_ENABLE_MAC_FILTER
     Filter mFilter;
-#endif  // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
     Frame *mTxFrame;
+    Frame *mOobFrame;
 
     otMacCounters mCounters;
-    uint32_t mKeyIdMode2FrameCounter;
+    uint32_t      mKeyIdMode2FrameCounter;
+
+    SuccessRateTracker mCcaSuccessRateTracker;
+    uint16_t           mCcaSampleCount;
 };
 
 /**
@@ -730,7 +931,7 @@ private:
  *
  */
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
-#endif  // MAC_HPP_
+#endif // MAC_HPP_

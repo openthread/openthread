@@ -47,3 +47,23 @@ Default value is `false`.
 Array of structures containing:
 
 * `6`: Multicast IPv6 Address
+
+### PROP 103: PROP_IPv6_ICMP_PING_OFFLOAD_MODE
+* Type: Read-Write
+* Packed-Encoding: `C`
+* Unit: Enumeration
+
+Allow the NCP to directly respond to ICMP ping requests. If this is
+turned on, ping request ICMP packets will not be passed to the host.
+
+This property allows enabling responses sent to unicast only, multicast
+only, or both.
+
+Values:
+
+* 0: `IPV6_ICMP_PING_OFFLOAD_DISABLED`
+* 1: `IPV6_ICMP_PING_OFFLOAD_UNICAST_ONLY`
+* 2: `IPV6_ICMP_PING_OFFLOAD_MULTICAST_ONLY`
+* 3: `IPV6_ICMP_PING_OFFLOAD_ALL`
+
+Default value is `IPV6_ICMP_PING_OFFLOAD_DISABLED`.

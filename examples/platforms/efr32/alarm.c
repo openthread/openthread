@@ -38,18 +38,17 @@
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/platform.h>
 
 #include "utils/code_utils.h"
 
 #include "em_core.h"
 #include "rail.h"
 
-static uint32_t sTimerHi = 0;
-static uint32_t sTimerLo = 0;
-static uint32_t sAlarmT0 = 0;
-static uint32_t sAlarmDt = 0;
-static bool sIsRunning   = false;
+static uint32_t sTimerHi   = 0;
+static uint32_t sTimerLo   = 0;
+static uint32_t sAlarmT0   = 0;
+static uint32_t sAlarmDt   = 0;
+static bool     sIsRunning = false;
 
 void efr32AlarmInit(void)
 {
@@ -82,8 +81,8 @@ uint32_t otPlatAlarmMilliGetNow(void)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)aInstance;
-    sAlarmT0 = t0;
-    sAlarmDt = dt;
+    sAlarmT0   = t0;
+    sAlarmDt   = dt;
     sIsRunning = true;
 }
 
@@ -97,7 +96,7 @@ void efr32AlarmProcess(otInstance *aInstance)
 {
     uint32_t now = otPlatAlarmMilliGetNow();
     uint32_t expires;
-    bool fire = false;
+    bool     fire = false;
 
     otEXPECT(sIsRunning);
 

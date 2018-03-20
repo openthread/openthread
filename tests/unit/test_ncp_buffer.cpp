@@ -46,9 +46,9 @@ namespace Ncp {
 // Test related constants:
 enum
 {
-    kTestBufferSize = 800,
+    kTestBufferSize       = 800,
     kTestIterationAttemps = 10000,
-    kTagArraySize = 1000,
+    kTagArraySize         = 1000,
 };
 
 //  Messages used for building frames...
@@ -59,19 +59,19 @@ static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 static const uint8_t sHexText[]        = "0123456789abcdef";
 
 static ot::Instance *sInstance;
-static MessagePool *sMessagePool;
+static MessagePool * sMessagePool;
 
 struct CallbackContext
 {
-    uint32_t mFrameAddedCount;           // Number of times FrameAddedCallback is invoked.
-    uint32_t mFrameRemovedCount;         // Number of times FrameRemovedCallback is invoked.
+    uint32_t mFrameAddedCount;   // Number of times FrameAddedCallback is invoked.
+    uint32_t mFrameRemovedCount; // Number of times FrameRemovedCallback is invoked.
 };
 
 CallbackContext sContext;
 
 enum
 {
-    kNumPrios = 2,    // Number of priority levels.
+    kNumPrios = 2, // Number of priority levels.
 
     kTestFrame1Size = sizeof(sMottoText) + sizeof(sMysteryText) + sizeof(sMottoText) + sizeof(sHelloText),
     kTestFrame2Size = sizeof(sMysteryText) + sizeof(sHelloText) + sizeof(sOpenThreadText),
@@ -80,9 +80,9 @@ enum
 };
 
 NcpFrameBuffer::FrameTag sTagHistoryArray[kNumPrios][kTagArraySize];
-uint32_t sTagHistoryHead[kNumPrios] = {0};
-uint32_t sTagHistoryTail[kNumPrios] = {0};
-NcpFrameBuffer::FrameTag sExpectedRemovedTag = NcpFrameBuffer::kInvalidTag;
+uint32_t                 sTagHistoryHead[kNumPrios] = {0};
+uint32_t                 sTagHistoryTail[kNumPrios] = {0};
+NcpFrameBuffer::FrameTag sExpectedRemovedTag        = NcpFrameBuffer::kInvalidTag;
 
 void ClearTagHistory(void)
 {
@@ -112,7 +112,8 @@ void VerifyAndRemoveTagFromHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer
     uint8_t priority = static_cast<uint8_t>(aPriority);
 
     VerifyOrQuit(sTagHistoryHead[priority] != sTagHistoryTail[priority], "Tag history is empty,");
-    VerifyOrQuit(aTag == sTagHistoryArray[priority][sTagHistoryHead[priority]], "Removed tag does not match the added one");
+    VerifyOrQuit(aTag == sTagHistoryArray[priority][sTagHistoryHead[priority]],
+                 "Removed tag does not match the added one");
 
     if (++sTagHistoryHead[priority] == kTagArraySize)
     {
@@ -126,8 +127,10 @@ void VerifyAndRemoveTagFromHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer
     }
 }
 
-void FrameAddedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority,
-                        NcpFrameBuffer *aNcpBuffer)
+void FrameAddedCallback(void *                   aContext,
+                        NcpFrameBuffer::FrameTag aTag,
+                        NcpFrameBuffer::Priority aPriority,
+                        NcpFrameBuffer *         aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
@@ -141,8 +144,10 @@ void FrameAddedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameB
     callbackContext->mFrameAddedCount++;
 }
 
-void FrameRemovedCallback(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority,
-                          NcpFrameBuffer *aNcpBuffer)
+void FrameRemovedCallback(void *                   aContext,
+                          NcpFrameBuffer::FrameTag aTag,
+                          NcpFrameBuffer::Priority aPriority,
+                          NcpFrameBuffer *         aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
@@ -160,12 +165,12 @@ void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLeng
 {
     enum
     {
-        kBytesPerLine = 32,    // Number of bytes per line.
+        kBytesPerLine = 32, // Number of bytes per line.
     };
 
-    char charBuff[kBytesPerLine + 1];
+    char     charBuff[kBytesPerLine + 1];
     uint16_t counter;
-    uint8_t byte;
+    uint8_t  byte;
 
     printf("\n%s - len = %u\n    ", aTextMessage, aBufferLength);
 
@@ -210,7 +215,7 @@ void ReadAndVerifyContent(NcpFrameBuffer &aNcpBuffer, const uint8_t *aContentBuf
 
 void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
-    Message *message;
+    Message *       message;
     CallbackContext oldContext;
 
     message = sMessagePool->New(Message::kTypeIp6, 0);
@@ -253,8 +258,8 @@ void VerifyAndRemoveFrame1(NcpFrameBuffer &aNcpBuffer)
 
 void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
-    Message *message1;
-    Message *message2;
+    Message *       message1;
+    Message *       message2;
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool->New(Message::kTypeIp6, 0);
@@ -299,7 +304,7 @@ void VerifyAndRemoveFrame2(NcpFrameBuffer &aNcpBuffer)
 
 void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
-    Message *message1;
+    Message *       message1;
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool->New(Message::kTypeIp6, 0);
@@ -368,16 +373,16 @@ void VerifyAndRemoveFrame4(NcpFrameBuffer &aNcpBuffer)
 // This function implements the NcpFrameBuffer tests
 void TestNcpFrameBuffer(void)
 {
-    unsigned i, j;
-    uint8_t buffer[kTestBufferSize];
+    unsigned       i, j;
+    uint8_t        buffer[kTestBufferSize];
     NcpFrameBuffer ncpBuffer(buffer, kTestBufferSize);
 
-    Message *message;
-    uint8_t readBuffer[16];
-    uint16_t readLen, readOffset;
+    Message *                     message;
+    uint8_t                       readBuffer[16];
+    uint16_t                      readLen, readOffset;
     NcpFrameBuffer::WritePosition pos1, pos2;
 
-    sInstance = testInitInstance();
+    sInstance    = testInitInstance();
     sMessagePool = &sInstance->GetMessagePool();
 
     for (i = 0; i < sizeof(buffer); i++)
@@ -385,7 +390,7 @@ void TestNcpFrameBuffer(void)
         buffer[i] = 0;
     }
 
-    sContext.mFrameAddedCount = 0;
+    sContext.mFrameAddedCount   = 0;
     sContext.mFrameRemovedCount = 0;
     ClearTagHistory();
 
@@ -571,8 +576,7 @@ void TestNcpFrameBuffer(void)
         ncpBuffer.InFrameFeedMessage(message);
 
         // Start writing a new frame in middle of an unfinished frame. Ensure the first one is discarded.
-        WriteTestFrame1(ncpBuffer,
-                        frame1IsHighPriority ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame1(ncpBuffer, frame1IsHighPriority ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
 
         // Note that message will not be freed by the NCP buffer since the frame associated with it was discarded and
         // not yet finished/ended.
@@ -598,7 +602,6 @@ void TestNcpFrameBuffer(void)
             VerifyAndRemoveFrame1(ncpBuffer);
         }
 
-
         VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
     }
 
@@ -618,7 +621,8 @@ void TestNcpFrameBuffer(void)
     VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "OutFrameHasEnded() is incorrect when no data in buffer.");
     VerifyOrQuit(ncpBuffer.OutFrameRemove() == OT_ERROR_NOT_FOUND,
                  "Remove() returned incorrect error status when buffer is empty.");
-    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0, "OutFrameGetLength() returned non-zero length when buffer is empty.");
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0,
+                 "OutFrameGetLength() returned non-zero length when buffer is empty.");
 
     WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
     VerifyAndRemoveFrame1(ncpBuffer);
@@ -627,7 +631,8 @@ void TestNcpFrameBuffer(void)
     VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "OutFrameHasEnded() is incorrect when no data in buffer.");
     VerifyOrQuit(ncpBuffer.OutFrameRemove() == OT_ERROR_NOT_FOUND,
                  "Remove() returned incorrect error status when buffer is empty.");
-    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0, "OutFrameGetLength() returned non-zero length when buffer is empty.");
+    VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0,
+                 "OutFrameGetLength() returned non-zero length when buffer is empty.");
 
     printf(" -- PASS\n");
 
@@ -811,13 +816,13 @@ void TestNcpFrameBuffer(void)
 
     for (j = 0; j < kTestIterationAttemps; j++)
     {
-        uint16_t index;
-        bool addExtra = ((j % 7) != 0);
+        uint16_t                 index;
+        bool                     addExtra = ((j % 7) != 0);
         NcpFrameBuffer::Priority priority;
 
         printf("*");
         priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
-        index = static_cast<uint16_t>(j % sizeof(sHexText));
+        index    = static_cast<uint16_t>(j % sizeof(sHexText));
         SuccessOrQuit(ncpBuffer.InFrameBegin(priority), "InFrameBegin() failed");
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
         SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
@@ -831,7 +836,8 @@ void TestNcpFrameBuffer(void)
 
         SuccessOrQuit(ncpBuffer.InFrameOverwrite(pos1, sHexText + index, sizeof(sHexText) - index),
                       "InFrameOverwrite() failed.");
-        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index + (addExtra ? sizeof(sHelloText) : 0),
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) ==
+                         sizeof(sHexText) - index + (addExtra ? sizeof(sHelloText) : 0),
                      "InFrameGetDistance() failed");
         SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
         VerifyOrQuit(ncpBuffer.InFrameGetPosition(pos2) == OT_ERROR_INVALID_STATE, "GetPosition failed.");
@@ -856,13 +862,13 @@ void TestNcpFrameBuffer(void)
 
     for (j = 0; j < kTestIterationAttemps; j++)
     {
-        uint16_t index;
-        bool addExtra = ((j % 7) != 0);
+        uint16_t                 index;
+        bool                     addExtra = ((j % 7) != 0);
         NcpFrameBuffer::Priority priority;
 
         printf("*");
         priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
-        index = static_cast<uint16_t>(j % sizeof(sHexText));
+        index    = static_cast<uint16_t>(j % sizeof(sHexText));
         SuccessOrQuit(ncpBuffer.InFrameBegin(priority), "InFrameBegin() failed");
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
         SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
@@ -883,11 +889,9 @@ void TestNcpFrameBuffer(void)
             SuccessOrQuit(ncpBuffer.InFrameReset(pos1), "InFrameReset() failed.");
             SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText + index, sizeof(sHexText) - index),
                           "InFrameOverwrite() failed.");
-
         }
 
-        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index,
-                     "InFrameGetDistance() failed");
+        VerifyOrQuit(ncpBuffer.InFrameGetDistance(pos1) == sizeof(sHexText) - index, "InFrameGetDistance() failed");
         SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
         SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed");
         ReadAndVerifyContent(ncpBuffer, sHexText, sizeof(sHexText));
@@ -913,16 +917,16 @@ void TestNcpFrameBuffer(void)
 
 enum
 {
-    kFuzTestBufferSize = 2000,             // Size of the buffer used during fuzz testing
-    kFuzTestIterationAttempts = 500000,    // Number of iterations  to run
-    kLensArraySize = 500,                  // Size of "Lengths" array.
-    kMaxFrameLen = 400,                    // Maximum frame length
-    kReadProbability = 50,                 // Probability (in percent) to randomly choose to read vs write frame
-    kHighPriorityProbablity = 20,          // Probability (in percent) to write a high priority frame
-    kUseTrueRandomNumberGenerator = 1,     // To use true random number generator or not.
+    kFuzTestBufferSize            = 2000,   // Size of the buffer used during fuzz testing
+    kFuzTestIterationAttempts     = 500000, // Number of iterations  to run
+    kLensArraySize                = 500,    // Size of "Lengths" array.
+    kMaxFrameLen                  = 400,    // Maximum frame length
+    kReadProbability              = 50,     // Probability (in percent) to randomly choose to read vs write frame
+    kHighPriorityProbablity       = 20,     // Probability (in percent) to write a high priority frame
+    kUseTrueRandomNumberGenerator = 1,      // To use true random number generator or not.
 };
 
-uint8_t sFrameBuffer[kNumPrios][kFuzTestBufferSize];
+uint8_t  sFrameBuffer[kNumPrios][kFuzTestBufferSize];
 uint32_t sFrameBufferTailIndex[kNumPrios] = {0};
 
 uint32_t GetRandom(uint32_t max)
@@ -943,11 +947,11 @@ uint32_t GetRandom(uint32_t max)
 
 otError WriteRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
 {
-    otError error;
-    uint8_t byte;
-    uint8_t priority = static_cast<uint8_t>(aPriority);
+    otError         error;
+    uint8_t         byte;
+    uint8_t         priority   = static_cast<uint8_t>(aPriority);
     CallbackContext oldContext = sContext;
-    uint32_t tail = sFrameBufferTailIndex[priority];
+    uint32_t        tail       = sFrameBufferTailIndex[priority];
 
     SuccessOrExit(error = aNcpBuffer.InFrameBegin(aPriority));
 
@@ -993,18 +997,17 @@ otError ReadRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, uint8_t pr
     return OT_ERROR_NONE;
 }
 
-
 // This runs a fuzz test of NCP buffer
 void TestFuzzNcpFrameBuffer(void)
 {
-    uint8_t buffer[kFuzTestBufferSize];
+    uint8_t        buffer[kFuzTestBufferSize];
     NcpFrameBuffer ncpBuffer(buffer, kFuzTestBufferSize);
 
-    uint32_t lensArray[kNumPrios][kLensArraySize];          // Keeps track of length of written frames so far
+    uint32_t lensArray[kNumPrios][kLensArraySize]; // Keeps track of length of written frames so far
     uint32_t lensArrayStart[kNumPrios];
     uint32_t lensArrayCount[kNumPrios];
 
-    sInstance = testInitInstance();
+    sInstance    = testInitInstance();
     sMessagePool = &sInstance->GetMessagePool();
 
     memset(buffer, 0, sizeof(buffer));
@@ -1013,7 +1016,7 @@ void TestFuzzNcpFrameBuffer(void)
     memset(lensArrayStart, 0, sizeof(lensArrayStart));
     memset(lensArrayCount, 0, sizeof(lensArrayCount));
 
-    sContext.mFrameAddedCount = 0;
+    sContext.mFrameAddedCount   = 0;
     sContext.mFrameRemovedCount = 0;
     ClearTagHistory();
 
@@ -1041,12 +1044,12 @@ void TestFuzzNcpFrameBuffer(void)
         if (shouldRead)
         {
             uint32_t len;
-            uint8_t priority;
+            uint8_t  priority;
 
-            priority = (lensArrayCount[NcpFrameBuffer::kPriorityHigh] != 0) ?
-                       NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
+            priority = (lensArrayCount[NcpFrameBuffer::kPriorityHigh] != 0) ? NcpFrameBuffer::kPriorityHigh
+                                                                            : NcpFrameBuffer::kPriorityLow;
 
-            len = lensArray[priority][lensArrayStart[priority]];
+            len                      = lensArray[priority][lensArrayStart[priority]];
             lensArrayStart[priority] = (lensArrayStart[priority] + 1) % kLensArraySize;
             lensArrayCount[priority]--;
 
@@ -1056,7 +1059,7 @@ void TestFuzzNcpFrameBuffer(void)
         }
         else
         {
-            uint32_t len = GetRandom(kMaxFrameLen) + 1;
+            uint32_t                 len = GetRandom(kMaxFrameLen) + 1;
             NcpFrameBuffer::Priority priority;
 
             if (GetRandom(100) < kHighPriorityProbablity)
@@ -1086,7 +1089,6 @@ void TestFuzzNcpFrameBuffer(void)
             VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty failed.");
             printf("EMPTY ");
         }
-
     }
 
     printf("\n -- PASS\n");
@@ -1094,8 +1096,8 @@ void TestFuzzNcpFrameBuffer(void)
     testFreeInstance(sInstance);
 }
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

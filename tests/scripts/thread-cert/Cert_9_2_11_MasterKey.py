@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 KEY1 = '000102030405060708090a0b0c0d0e0f'
@@ -48,9 +49,11 @@ MTDS = [ED1, SED1]
 
 class Cert_9_2_11_MasterKey(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i in MTDS))
+            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_active_dataset(10, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1)
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -92,35 +95,36 @@ class Cert_9_2_11_MasterKey(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(3)
+        self.simulator.go(3)
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[SED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=10,
                                                        active_timestamp=70,
                                                        delay_timer=10000,
                                                        master_key=KEY2)
-        time.sleep(310)
+        self.simulator.go(310)
 
         print(self.nodes[COMMISSIONER].get_masterkey())
         print(self.nodes[LEADER].get_masterkey())
@@ -143,7 +147,7 @@ class Cert_9_2_11_MasterKey(unittest.TestCase):
                                                        active_timestamp=30,
                                                        delay_timer=10000,
                                                        master_key=KEY1)
-        time.sleep(310)
+        self.simulator.go(310)
 
         print(self.nodes[COMMISSIONER].get_masterkey())
         print(self.nodes[LEADER].get_masterkey())

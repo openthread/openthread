@@ -39,10 +39,15 @@
 
 using namespace ot;
 
-otError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
-                      const char *aVendorName, const char *aVendorModel,
-                      const char *aVendorSwVersion, const char *aVendorData,
-                      otJoinerCallback aCallback, void *aContext)
+otError otJoinerStart(otInstance *     aInstance,
+                      const char *     aPSKd,
+                      const char *     aProvisioningUrl,
+                      const char *     aVendorName,
+                      const char *     aVendorModel,
+                      const char *     aVendorSwVersion,
+                      const char *     aVendorData,
+                      otJoinerCallback aCallback,
+                      void *           aContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 #if OPENTHREAD_ENABLE_JOINER

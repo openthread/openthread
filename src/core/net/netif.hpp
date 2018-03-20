@@ -64,7 +64,7 @@ class Ip6;
  */
 class LinkAddress
 {
-public :
+public:
     /**
      * Hardware types.
      *
@@ -73,16 +73,16 @@ public :
     {
         kEui64 = 27,
     };
-    HardwareType   mType;       ///< Link address type.
-    uint8_t        mLength;     ///< Length of link address.
-    Mac::ExtAddress mExtAddress;  ///< Link address.
+    HardwareType    mType;       ///< Link address type.
+    uint8_t         mLength;     ///< Length of link address.
+    Mac::ExtAddress mExtAddress; ///< Link address.
 };
 
 /**
  * This class implements an IPv6 network interface unicast address.
  *
  */
-class NetifUnicastAddress: public otNetifAddress
+class NetifUnicastAddress : public otNetifAddress
 {
     friend class Netif;
 
@@ -109,7 +109,8 @@ public:
      * @returns The IPv6 scope value.
      *
      */
-    uint8_t GetScope(void) const {
+    uint8_t GetScope(void) const
+    {
         return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
     }
 
@@ -134,7 +135,7 @@ public:
  * This class implements an IPv6 network interface multicast address.
  *
  */
-class NetifMulticastAddress: public otNetifMulticastAddress
+class NetifMulticastAddress : public otNetifMulticastAddress
 {
     friend class Netif;
 
@@ -169,7 +170,8 @@ public:
      * @returns A pointer to the next multicast address.
      *
      */
-    NetifMulticastAddress *GetNext(void) {
+    NetifMulticastAddress *GetNext(void)
+    {
         return static_cast<NetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
     }
 };
@@ -178,7 +180,7 @@ public:
  * This class implements an IPv6 network interface.
  *
  */
-class Netif: public InstanceLocator
+class Netif : public InstanceLocator
 {
     friend class Ip6;
 
@@ -338,6 +340,20 @@ public:
     otError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
 
     /**
+     * This method provides the next external multicast address that the network interface subscribed.
+     * It is used to iterate through the entries of the external multicast address table.
+     *
+     * @param[inout] aIterator A reference to the iterator context. To get the first
+     *                         external multicast address, it should be set to 0.
+     * @param[out]   aAddress  A reference where to place the external multicast address.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next external multicast address.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent external multicast address.
+     *
+     */
+    otError GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress);
+
+    /**
      * This method subscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
@@ -415,17 +431,16 @@ public:
      * @retval OT_ERROR_NO_ROUTE  No route to destination.
      *
      */
-    virtual otError RouteLookup(const Address &aSource, const Address &aDestination,
-                                uint8_t *aPrefixMatch) = 0;
+    virtual otError RouteLookup(const Address &aSource, const Address &aDestination, uint8_t *aPrefixMatch) = 0;
 
 private:
-    NetifUnicastAddress *mUnicastAddresses;
+    NetifUnicastAddress *  mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
-    int8_t mInterfaceId;
-    bool mMulticastPromiscuous;
-    Netif *mNext;
+    int8_t                 mInterfaceId;
+    bool                   mMulticastPromiscuous;
+    Netif *                mNext;
 
-    NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
+    NetifUnicastAddress   mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
     NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
@@ -440,7 +455,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_NETIF_HPP_
+#endif // NET_NETIF_HPP_

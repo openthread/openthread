@@ -49,67 +49,78 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-static const otMasterKey kThreadMasterKey =
-{
-    {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
-    }
-};
+static const otMasterKey kThreadMasterKey = {{
+    0x00,
+    0x11,
+    0x22,
+    0x33,
+    0x44,
+    0x55,
+    0x66,
+    0x77,
+    0x88,
+    0x99,
+    0xaa,
+    0xbb,
+    0xcc,
+    0xdd,
+    0xee,
+    0xff,
+}};
 
-ThreadNetif::ThreadNetif(Instance &aInstance):
-    Netif(aInstance, OT_NETIF_INTERFACE_ID_THREAD),
-    mCoap(aInstance),
+ThreadNetif::ThreadNetif(Instance &aInstance)
+    : Netif(aInstance, OT_NETIF_INTERFACE_ID_THREAD)
+    , mCoap(aInstance)
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    mDhcp6Client(aInstance),
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+    , mDhcp6Client(aInstance)
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
-    mDhcp6Server(aInstance),
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+    , mDhcp6Server(aInstance)
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    mDnsClient(aInstance.GetThreadNetif()),
-#endif  // OPENTHREAD_ENABLE_DNS_CLIENT
-    mActiveDataset(aInstance),
-    mPendingDataset(aInstance),
-    mKeyManager(aInstance),
-    mLowpan(aInstance),
-    mMac(aInstance),
-    mMeshForwarder(aInstance),
-    mMleRouter(aInstance),
+    , mDnsClient(aInstance.GetThreadNetif())
+#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+    , mActiveDataset(aInstance)
+    , mPendingDataset(aInstance)
+    , mKeyManager(aInstance)
+    , mLowpan(aInstance)
+    , mMac(aInstance)
+    , mMeshForwarder(aInstance)
+    , mMleRouter(aInstance)
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
-    mNetworkDataLocal(aInstance),
+    , mNetworkDataLocal(aInstance)
 #endif
-    mNetworkDataLeader(aInstance),
+    , mNetworkDataLeader(aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
-    mNetworkDiagnostic(aInstance),
+    , mNetworkDiagnostic(aInstance)
 #endif
-    mIsUp(false),
+    , mIsUp(false)
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-    mCommissioner(aInstance),
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    , mCommissioner(aInstance)
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
-    mDtls(aInstance),
-    mCoapSecure(aInstance),
+    , mDtls(aInstance)
+    , mCoapSecure(aInstance)
 #endif
 #if OPENTHREAD_ENABLE_JOINER
-    mJoiner(aInstance),
-#endif  // OPENTHREAD_ENABLE_JOINER
+    , mJoiner(aInstance)
+#endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_ENABLE_JAM_DETECTION
-    mJamDetector(aInstance),
+    , mJamDetector(aInstance)
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
 #if OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_TMF_PROXY
-    mTmfProxy(mMleRouter.GetMeshLocal16(), mCoap),
+    , mTmfProxy(mMleRouter.GetMeshLocal16(), mCoap)
 #endif // OPENTHREAD_ENABLE_TMF_PROXY
-    mJoinerRouter(aInstance),
-    mLeader(aInstance),
-    mAddressResolver(aInstance),
-#endif  // OPENTHREAD_FTD
-    mChildSupervisor(aInstance),
-    mSupervisionListener(aInstance),
-    mAnnounceBegin(aInstance),
-    mPanIdQuery(aInstance),
-    mEnergyScan(aInstance)
+    , mJoinerRouter(aInstance)
+    , mLeader(aInstance)
+    , mAddressResolver(aInstance)
+#endif // OPENTHREAD_FTD
+    , mChildSupervisor(aInstance)
+    , mSupervisionListener(aInstance)
+    , mAnnounceBegin(aInstance)
+    , mPanIdQuery(aInstance)
+    , mEnergyScan(aInstance)
 
 {
     mKeyManager.SetMasterKey(kThreadMasterKey);
@@ -163,15 +174,15 @@ otError ThreadNetif::Down(void)
 
 otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 {
-    address.mType = Ip6::LinkAddress::kEui64;
-    address.mLength = sizeof(address.mExtAddress);
+    address.mType       = Ip6::LinkAddress::kEui64;
+    address.mLength     = sizeof(address.mExtAddress);
     address.mExtAddress = mMac.GetExtAddress();
     return OT_ERROR_NONE;
 }
 
 otError ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch)
 {
-    otError error;
+    otError  error;
     uint16_t rloc;
 
     SuccessOrExit(error = mNetworkDataLeader.RouteLookup(aSource, aDestination, aPrefixMatch, &rloc));
@@ -200,14 +211,14 @@ bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
     // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
     //    and the source is a Mesh Local Address.
     // 2. Both the destination and the source are Link-Local Addresses.
-    VerifyOrExit(((mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-                   aMessageInfo.GetSockAddr().IsLinkLocalMulticast() ||
-                   aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-                  mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-                 (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()),
-                 rval = false);
+    VerifyOrExit(
+        ((mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
+          aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
+         mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
+            (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()),
+        rval = false);
 exit:
     return rval;
 }
 
-}  // namespace ot
+} // namespace ot

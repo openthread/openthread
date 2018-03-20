@@ -42,11 +42,11 @@
 
 namespace ot {
 
-Tasklet::Tasklet(Instance &aInstance, Handler aHandler, void *aOwner):
-    InstanceLocator(aInstance),
-    OwnerLocator(aOwner),
-    mHandler(aHandler),
-    mNext(NULL)
+Tasklet::Tasklet(Instance &aInstance, Handler aHandler, void *aOwner)
+    : InstanceLocator(aInstance)
+    , OwnerLocator(aOwner)
+    , mHandler(aHandler)
+    , mNext(NULL)
 {
 }
 
@@ -55,9 +55,9 @@ otError Tasklet::Post(void)
     return GetInstance().GetTaskletScheduler().Post(*this);
 }
 
-TaskletScheduler::TaskletScheduler(void):
-    mHead(NULL),
-    mTail(NULL)
+TaskletScheduler::TaskletScheduler(void)
+    : mHead(NULL)
+    , mTail(NULL)
 {
 }
 
@@ -78,7 +78,7 @@ otError TaskletScheduler::Post(Tasklet &aTasklet)
     else
     {
         mTail->mNext = &aTasklet;
-        mTail = &aTasklet;
+        mTail        = &aTasklet;
     }
 
 exit:
@@ -126,4 +126,4 @@ void TaskletScheduler::ProcessQueuedTasklets(void)
     }
 }
 
-}  // namespace ot
+} // namespace ot

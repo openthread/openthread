@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -45,6 +45,8 @@
 #include "app_util.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "nrf_log_instance.h"
+#include "nrf_log_types.h"
 
 #ifndef NRF_LOG_ERROR_COLOR
     #define NRF_LOG_ERROR_COLOR NRF_LOG_COLOR_DEFAULT
@@ -87,36 +89,30 @@
     #define NRF_LOG_MODULE_NAME app
 #endif
 
-#define NRF_LOG_LEVEL_ERROR        1UL
-#define NRF_LOG_LEVEL_WARNING      2UL
-#define NRF_LOG_LEVEL_INFO         3UL
-#define NRF_LOG_LEVEL_DEBUG        4UL
-#define NRF_LOG_LEVEL_INTERNAL     5UL
 #define NRF_LOG_LEVEL_BITS         3
 #define NRF_LOG_LEVEL_MASK         ((1UL << NRF_LOG_LEVEL_BITS) - 1)
-#define NRF_LOG_RAW_POS            4U
-#define NRF_LOG_RAW                (1UL << NRF_LOG_RAW_POS)
 #define NRF_LOG_MODULE_ID_BITS     16
 #define NRF_LOG_MODULE_ID_POS      16
-#define NRF_LOG_LEVEL_INFO_RAW     (NRF_LOG_RAW | NRF_LOG_LEVEL_INFO)
+
 
 #define NRF_LOG_MAX_NUM_OF_ARGS         6
 
-#define NRF_LOG_MODULE_DATA CONCAT_3(m_nrf_log_,NRF_LOG_MODULE_NAME,_logs_data)
-#define NRF_LOG_MODULE_DATA_DYNAMIC  CONCAT_2(NRF_LOG_MODULE_DATA,_dynamic)
-#define NRF_LOG_MODULE_DATA_CONST  CONCAT_2(NRF_LOG_MODULE_DATA,_const)
 
 #if NRF_LOG_FILTERS_ENABLED && NRF_LOG_ENABLED
-    #define NRF_LOG_FILTER      NRF_LOG_MODULE_DATA_DYNAMIC.filter
+    #define NRF_LOG_FILTER              NRF_LOG_ITEM_DATA_DYNAMIC(NRF_LOG_MODULE_NAME).filter
+    #define NRF_LOG_INST_FILTER(p_inst) (p_inst)->filter
 #else
     #undef NRF_LOG_FILTER
-    #define NRF_LOG_FILTER      NRF_LOG_LEVEL_DEBUG
+    #define NRF_LOG_FILTER              NRF_LOG_SEVERITY_DEBUG
+    #define NRF_LOG_INST_FILTER(p_inst) NRF_LOG_SEVERITY_DEBUG
 #endif
 
 #if NRF_LOG_ENABLED
-#define NRF_LOG_MODULE_ID   NRF_LOG_MODULE_DATA_DYNAMIC.module_id
+#define NRF_LOG_MODULE_ID        NRF_LOG_ITEM_DATA_DYNAMIC(NRF_LOG_MODULE_NAME).module_id
+#define NRF_LOG_INST_ID(p_inst)  (p_inst)->module_id
 #else
-#define NRF_LOG_MODULE_ID 0
+#define NRF_LOG_MODULE_ID       0
+#define NRF_LOG_INST_ID(p_inst) 0
 #endif
 
 
@@ -162,9 +158,10 @@
                (void)(_type); (void)(_str); (void)(_arg0); (void)(_arg1); (void)(_arg2); (void)(_arg3); (void)(_arg4)
 #define LOG_INTERNAL_6(_type, _str, _arg0, _arg1, _arg2, _arg3, _arg4, _arg5) \
                (void)(_type); (void)(_str); (void)(_arg0); (void)(_arg1); (void)(_arg2); (void)(_arg3); (void)(_arg4); (void)(_arg5)
-#endif //NRF_LOG_ENABLED && (NRF_LOG_DEFAULT_LEVEL >= NRF_LOG_LEVEL_ERROR)
+#endif //NRF_LOG_ENABLED
 
 #define LOG_SEVERITY_MOD_ID(severity) ((severity) | NRF_LOG_MODULE_ID << NRF_LOG_MODULE_ID_POS)
+#define LOG_SEVERITY_INST_ID(severity,p_inst) ((severity) | NRF_LOG_INST_ID(p_inst) << NRF_LOG_MODULE_ID_POS)
 
 #if NRF_LOG_ENABLED
 #define LOG_HEXDUMP(_severity, _p_data, _length) \
@@ -174,132 +171,125 @@
              (void)(_severity); (void)(_p_data); (void)_length
 #endif
 
-#define NRF_LOG_INTERNAL_ERROR(...)                                                \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_ERROR) &&               \
-        (NRF_LOG_LEVEL_ERROR <= NRF_LOG_DEFAULT_LEVEL))                            \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_ERROR)                                 \
-        {                                                                          \
-            LOG_INTERNAL(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_ERROR), __VA_ARGS__);   \
-        }                                                                          \
-    }
-#define NRF_LOG_INTERNAL_HEXDUMP_ERROR(p_data, len)                                \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_ERROR) &&               \
-        (NRF_LOG_LEVEL_ERROR <= NRF_LOG_DEFAULT_LEVEL))                            \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_ERROR)                                 \
-        {                                                                          \
-            LOG_HEXDUMP(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_ERROR),                  \
-                                       (p_data), (len));                           \
-        }                                                                          \
+#define NRF_LOG_INTERNAL_INST(level, level_id, p_inst, ...)                              \
+    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= level) &&                                   \
+        (level <= NRF_LOG_DEFAULT_LEVEL))                                                \
+    {                                                                                    \
+        if (NRF_LOG_INST_FILTER(p_inst) >= level)                                        \
+        {                                                                                \
+            LOG_INTERNAL(LOG_SEVERITY_INST_ID(level_id, p_inst), __VA_ARGS__);           \
+        }                                                                                \
     }
 
-#define NRF_LOG_INTERNAL_WARNING(...)                                              \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_WARNING) &&             \
-        (NRF_LOG_LEVEL_WARNING <= NRF_LOG_DEFAULT_LEVEL))                          \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_WARNING)                               \
-        {                                                                          \
-            LOG_INTERNAL(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_WARNING), __VA_ARGS__); \
-        }                                                                          \
+#define NRF_LOG_INTERNAL_MODULE(level, level_id, ...)                                    \
+    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= level) &&                                   \
+        (level <= NRF_LOG_DEFAULT_LEVEL))                                                \
+    {                                                                                    \
+        if (NRF_LOG_FILTER >= level)                                                     \
+        {                                                                                \
+            LOG_INTERNAL(LOG_SEVERITY_MOD_ID(level_id), __VA_ARGS__);                    \
+        }                                                                                \
     }
-#define NRF_LOG_INTERNAL_HEXDUMP_WARNING(p_data, len)                              \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_WARNING) &&             \
-        (NRF_LOG_LEVEL_WARNING <= NRF_LOG_DEFAULT_LEVEL))                          \
+
+#define NRF_LOG_INTERNAL_HEXDUMP_INST(level, level_id, p_inst, p_data, len)        \
+    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= level) &&                             \
+        (level <= NRF_LOG_DEFAULT_LEVEL))                                          \
     {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_WARNING)                               \
+        if (NRF_LOG_INST_FILTER(p_inst) >= level)                                  \
         {                                                                          \
-            LOG_HEXDUMP(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_WARNING,                 \
+            LOG_HEXDUMP(LOG_SEVERITY_INST_ID(level_id, p_inst),                    \
                                      (p_data), (len));                             \
         }                                                                          \
     }
 
-#define NRF_LOG_INTERNAL_INFO(...)                                                 \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_INFO) &&                \
-        (NRF_LOG_LEVEL_INFO <= NRF_LOG_DEFAULT_LEVEL))                             \
+#define NRF_LOG_INTERNAL_HEXDUMP_MODULE(level, level_id, p_data, len)              \
+    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= level) &&                             \
+        (level <= NRF_LOG_DEFAULT_LEVEL))                                          \
     {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_INFO)                                  \
+        if (NRF_LOG_FILTER >= level)                                               \
         {                                                                          \
-            LOG_INTERNAL(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_INFO), __VA_ARGS__);    \
-        }                                                                          \
-    }
-
-#define NRF_LOG_INTERNAL_RAW_INFO(...)                                             \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_INFO) &&                \
-        (NRF_LOG_LEVEL_INFO <= NRF_LOG_DEFAULT_LEVEL))                             \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_INFO)                                  \
-        {                                                                          \
-            LOG_INTERNAL(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_INFO | NRF_LOG_RAW),    \
-                                 __VA_ARGS__);                                     \
-        }                                                                          \
-    }
-
-#define NRF_LOG_INTERNAL_HEXDUMP_INFO(p_data, len)                                 \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_INFO) &&                \
-        (NRF_LOG_LEVEL_INFO <= NRF_LOG_DEFAULT_LEVEL))                             \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_INFO)                                  \
-        {                                                                          \
-            LOG_HEXDUMP(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_INFO),                   \
+            LOG_HEXDUMP(LOG_SEVERITY_MOD_ID(level_id),                             \
                                      (p_data), (len));                             \
         }                                                                          \
     }
 
-#define NRF_LOG_INTERNAL_RAW_HEXDUMP_INFO(p_data, len)                             \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_INFO) &&                \
-        (NRF_LOG_LEVEL_INFO <= NRF_LOG_DEFAULT_LEVEL))                             \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_INFO)                                  \
-        {                                                                          \
-            LOG_HEXDUMP(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_INFO_RAW),               \
-                                     (p_data), (len));                             \
-        }                                                                          \
-    }
+#define NRF_LOG_INTERNAL_INST_ERROR(p_inst, ...) \
+                NRF_LOG_INTERNAL_INST(NRF_LOG_SEVERITY_ERROR, NRF_LOG_SEVERITY_ERROR, p_inst, __VA_ARGS__)
 
-#define NRF_LOG_INTERNAL_DEBUG(...)                                                \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_DEBUG) &&               \
-        (NRF_LOG_LEVEL_DEBUG <= NRF_LOG_DEFAULT_LEVEL))                            \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_DEBUG)                                 \
-        {                                                                          \
-            LOG_INTERNAL(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_DEBUG), __VA_ARGS__);   \
-        }                                                                          \
-    }
-#define NRF_LOG_INTERNAL_HEXDUMP_DEBUG(p_data, len)                                \
-    if (NRF_LOG_ENABLED && (NRF_LOG_LEVEL >= NRF_LOG_LEVEL_DEBUG) &&               \
-        (NRF_LOG_LEVEL_DEBUG <= NRF_LOG_DEFAULT_LEVEL))                            \
-    {                                                                              \
-        if (NRF_LOG_FILTER >= NRF_LOG_LEVEL_DEBUG)                                 \
-        {                                                                          \
-            LOG_HEXDUMP(LOG_SEVERITY_MOD_ID(NRF_LOG_LEVEL_DEBUG),                  \
-                     (p_data), (len));                                             \
-        }                                                                          \
-    }
+#define NRF_LOG_INTERNAL_ERROR(...) \
+                NRF_LOG_INTERNAL_MODULE(NRF_LOG_SEVERITY_ERROR, NRF_LOG_SEVERITY_ERROR,__VA_ARGS__)
 
-#if NRF_MODULE_ENABLED(NRF_LOG)
-#define NRF_LOG_INTERNAL_GETCHAR()  nrf_log_getchar()
+#define NRF_LOG_INTERNAL_HEXDUMP_INST_ERROR(p_inst, p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_INST(NRF_LOG_SEVERITY_ERROR, NRF_LOG_SEVERITY_ERROR, p_inst, p_data, len)
+
+#define NRF_LOG_INTERNAL_HEXDUMP_ERROR(p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_MODULE(NRF_LOG_SEVERITY_ERROR, NRF_LOG_SEVERITY_ERROR, p_data, len)
+
+#define NRF_LOG_INTERNAL_INST_WARNING(p_inst, ...) \
+            NRF_LOG_INTERNAL_INST(NRF_LOG_SEVERITY_WARNING, NRF_LOG_SEVERITY_WARNING, p_inst, __VA_ARGS__)
+
+#define NRF_LOG_INTERNAL_WARNING(...) \
+            NRF_LOG_INTERNAL_MODULE(NRF_LOG_SEVERITY_WARNING, NRF_LOG_SEVERITY_WARNING,__VA_ARGS__)
+
+#define NRF_LOG_INTERNAL_HEXDUMP_INST_WARNING(p_inst, p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_INST(NRF_LOG_SEVERITY_WARNING, NRF_LOG_SEVERITY_WARNING, p_inst, p_data, len)
+
+#define NRF_LOG_INTERNAL_HEXDUMP_WARNING(p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_(NRF_LOG_SEVERITY_WARNING, NRF_LOG_SEVERITY_WARNING, p_data, len)
+
+#define NRF_LOG_INTERNAL_INST_INFO(p_inst, ...) \
+        NRF_LOG_INTERNAL_INST(NRF_LOG_SEVERITY_INFO, NRF_LOG_SEVERITY_INFO, p_inst, __VA_ARGS__)
+
+#define NRF_LOG_INTERNAL_INFO(...) \
+        NRF_LOG_INTERNAL_MODULE(NRF_LOG_SEVERITY_INFO, NRF_LOG_SEVERITY_INFO, __VA_ARGS__)
+
+#define NRF_LOG_INTERNAL_HEXDUMP_INST_INFO(p_inst, p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_INST(NRF_LOG_SEVERITY_INFO, NRF_LOG_SEVERITY_INFO, p_inst, p_data, len)
+
+#define NRF_LOG_INTERNAL_HEXDUMP_INFO(p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_MODULE(NRF_LOG_SEVERITY_INFO, NRF_LOG_SEVERITY_INFO, p_data, len)
+
+#define NRF_LOG_INTERNAL_RAW_INFO(...) \
+        NRF_LOG_INTERNAL_MODULE(NRF_LOG_SEVERITY_INFO, NRF_LOG_SEVERITY_INFO_RAW, __VA_ARGS__)
+
+#define NRF_LOG_INTERNAL_RAW_HEXDUMP_INFO(p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_MODULE(NRF_LOG_SEVERITY_INFO, NRF_LOG_SEVERITY_INFO_RAW, p_data, len)
+
+#define NRF_LOG_INTERNAL_INST_DEBUG(p_inst, ...) \
+        NRF_LOG_INTERNAL_INST(NRF_LOG_SEVERITY_DEBUG, NRF_LOG_SEVERITY_DEBUG, p_inst, __VA_ARGS__)
+
+#define NRF_LOG_INTERNAL_DEBUG(...) \
+        NRF_LOG_INTERNAL_MODULE(NRF_LOG_SEVERITY_DEBUG, NRF_LOG_SEVERITY_DEBUG, __VA_ARGS__)
+
+#define NRF_LOG_INTERNAL_HEXDUMP_INST_DEBUG(p_inst, p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_INST(NRF_LOG_SEVERITY_DEBUG, NRF_LOG_SEVERITY_DEBUG, p_inst, p_data, len)
+
+#define NRF_LOG_INTERNAL_HEXDUMP_DEBUG(p_data, len) \
+        NRF_LOG_INTERNAL_HEXDUMP_MODULE(NRF_LOG_SEVERITY_DEBUG, NRF_LOG_SEVERITY_DEBUG, p_data, len)
+
+
+#if NRF_LOG_ENABLED
+
+#ifdef UNIT_TEST
+#define COMPILED_LOG_LEVEL 4
 #else
-#define NRF_LOG_INTERNAL_GETCHAR()  (void)
+#define COMPILED_LOG_LEVEL NRF_LOG_LEVEL
 #endif
 
-typedef struct
-{
-    uint16_t     module_id;
-    uint16_t     order_idx;
-    uint32_t     filter;
-    uint32_t     filter_lvls;
-} nrf_log_module_dynamic_data_t;
 
-typedef struct
-{
-    const char * p_module_name;
-    uint8_t      info_color_id;
-    uint8_t      debug_color_id;
-    uint8_t      compiled_lvl;
-} nrf_log_module_const_data_t;
+#define NRF_LOG_INTERNAL_MODULE_REGISTER() \
+                   NRF_LOG_INTERNAL_ITEM_REGISTER(NRF_LOG_MODULE_NAME,                 \
+                                                  STRINGIFY(NRF_LOG_MODULE_NAME),      \
+                                                  NRF_LOG_INFO_COLOR,                  \
+                                                  NRF_LOG_DEBUG_COLOR,                 \
+                                                  NRF_LOG_INITIAL_LEVEL,               \
+                                                  COMPILED_LOG_LEVEL)
 
-extern nrf_log_module_dynamic_data_t NRF_LOG_MODULE_DATA_DYNAMIC;
+#else
+#define NRF_LOG_INTERNAL_MODULE_REGISTER() /*lint -save -e19*/ /*lint -restore*/
+#endif
+
+extern NRF_LOG_DYNAMIC_STRUCT_NAME NRF_LOG_ITEM_DATA_DYNAMIC(NRF_LOG_MODULE_NAME);
 
 /**
  * Set of macros for encoding and decoding header for log entries.
@@ -367,18 +357,19 @@ extern nrf_log_module_dynamic_data_t NRF_LOG_MODULE_DATA_DYNAMIC;
 #define HEADER_TYPE_STD     1U
 #define HEADER_TYPE_HEXDUMP 2U
 #define HEADER_TYPE_PUSHED  0U
+#define HEADER_TYPE_INVALID 3U
 
 typedef struct
 {
     uint32_t type       : 2;
-    uint32_t raw        : 1;
+    uint32_t in_progress: 1;
     uint32_t data       : 29;
 } nrf_log_generic_header_t;
 
 typedef struct
 {
     uint32_t type       : 2;
-    uint32_t raw        : 1;
+    uint32_t in_progress: 1;
     uint32_t severity   : 3;
     uint32_t nargs      : 4;
     uint32_t addr       : 22;
@@ -387,7 +378,7 @@ typedef struct
 typedef struct
 {
     uint32_t type       : 2;
-    uint32_t raw        : 1;
+    uint32_t in_progress: 1;
     uint32_t severity   : 3;
     uint32_t offset     : 10;
     uint32_t reserved   : 6;
@@ -403,15 +394,18 @@ typedef struct
     uint32_t len        : 10;
 } nrf_log_pushed_header_t;
 
+typedef union
+{
+    nrf_log_generic_header_t generic;
+    nrf_log_std_header_t     std;
+    nrf_log_hexdump_header_t hexdump;
+    nrf_log_pushed_header_t  pushed;
+    uint32_t                 raw;
+} nrf_log_main_header_t;
+
 typedef struct
 {
-    union {
-        nrf_log_generic_header_t generic;
-        nrf_log_std_header_t     std;
-        nrf_log_hexdump_header_t hexdump;
-        nrf_log_pushed_header_t  pushed;
-        uint32_t                 raw;
-    } base;
+    nrf_log_main_header_t base;
     uint32_t module_id;
     uint32_t timestamp;
 } nrf_log_header_t;

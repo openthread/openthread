@@ -34,6 +34,11 @@ dist: trusty
 before_install:
   - .travis/before_install.sh
 
+before_script:
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+      sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
+    fi
+
 script:
   - .travis/script.sh
 
@@ -42,23 +47,39 @@ after_success:
 
 matrix:
   include:
-    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1
+    - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
       os: linux
-      compiler: clang
-    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-ncp" VERBOSE=1
+    - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-mtd" VERBOSE=1
+    - env: BUILD_TARGET="posix-mtd" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="pretty-check"
       os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
     - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
       os: linux
-      compiler: clang
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
     - env: BUILD_TARGET="arm-gcc49"
       os: linux
       compiler: gcc
@@ -68,9 +89,14 @@ matrix:
     - env: BUILD_TARGET="arm-gcc63"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix" CC="clang" CXX="clang++"
+    - env: BUILD_TARGET="posix" CC=clang-5.0 CXX=clang++-5.0
       os: linux
-      compiler: clang
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
     - env: BUILD_TARGET="posix" CC="gcc" CXX="g++"
       os: linux
       compiler: gcc
@@ -95,5 +121,8 @@ matrix:
             - gcc-6
             - g++-6
     - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1
       os: linux
       compiler: gcc

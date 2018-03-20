@@ -40,7 +40,7 @@ namespace Ip6 {
 
 otError Header::Init(const Message &aMessage)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t length;
 
     // check aMessage length
@@ -57,5 +57,5 @@ exit:
     return error;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

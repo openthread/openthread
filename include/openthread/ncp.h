@@ -35,8 +35,8 @@
 #ifndef NCP_H_
 #define NCP_H_
 
-#include <openthread/types.h>
 #include <stdarg.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,8 +81,18 @@ void otNcpInit(otInstance *aInstance);
  * @retval OT_ERROR_BUSY         There are not enough resources to complete this
  *                               request. This is usually a temporary condition.
  * @retval OT_ERROR_INVALID_ARGS The given aStreamId was invalid.
-*/
+ */
 otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
+
+/**
+ * Writes OpenThread Log using `otNcpStreamWrite`.
+ *
+ * @param[in]  aLogLevel   The log level.
+ * @param[in]  aLogRegion  The log region.
+ * @param[in]  aFormat     A pointer to the format string.
+ * @param[in]  aArgs       va_list matching aFormat.
+ */
+void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
 
 //-----------------------------------------------------------------------------------------
 // Peek/Poke memory access control delegates
@@ -120,7 +130,7 @@ otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDele
 //-----------------------------------------------------------------------------------------
 // Legacy network APIs
 
-#define OT_NCP_LEGACY_ULA_PREFIX_LENGTH    8   ///< Legacy ULA size (in bytes)
+#define OT_NCP_LEGACY_ULA_PREFIX_LENGTH 8 ///< Legacy ULA size (in bytes)
 
 /**
  * Defines handler (function pointer) type for starting legacy network
@@ -165,10 +175,10 @@ typedef void (*otNcpHandlerSetLegacyUlaPrefix)(const uint8_t *aUlaPrefix);
  */
 typedef struct otNcpLegacyHandlers
 {
-    otNcpHandlerStartLegacy         mStartLegacy;         ///< Start handler
-    otNcpHandlerStopLegacy          mStopLegacy;          ///< Stop handler
-    otNcpHandlerJoinLegacyNode      mJoinLegacyNode;      ///< Join handler
-    otNcpHandlerSetLegacyUlaPrefix  mSetLegacyUlaPrefix;  ///< Set ULA handler
+    otNcpHandlerStartLegacy        mStartLegacy;        ///< Start handler
+    otNcpHandlerStopLegacy         mStopLegacy;         ///< Stop handler
+    otNcpHandlerJoinLegacyNode     mJoinLegacyNode;     ///< Join handler
+    otNcpHandlerSetLegacyUlaPrefix mSetLegacyUlaPrefix; ///< Set ULA handler
 } otNcpLegacyHandlers;
 
 /**
@@ -184,7 +194,7 @@ void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr);
  * This callback is invoked by the legacy stack to notify that the
  * legacy ULA prefix has changed.
  *
- * param[in]    aUlaPrefix  A pointer to the received ULA prefix.
+ * @param[in]    aUlaPrefix  A pointer to the received ULA prefix.
  *
  */
 void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
@@ -203,22 +213,12 @@ void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
 void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
 
 /**
- * Callback to write the OpenThread Log to the NCP Spinel Tunnel.
- *
- * @param[in]  aLogLevel   The log level.
- * @param[in]  aLogRegion  The log region.
- * @param[in]  aFormat     A pointer to the format string.
- * @param[in]  aArgs       va_list matching aFormat.
- */
-void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
-
-/**
  * @}
  *
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif

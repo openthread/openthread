@@ -62,23 +62,23 @@ void otDiagInit(otInstance *aInstance);
 /**
  * This function processes a factory diagnostics command line.
  *
- * @param[in]  aArgc  The argument counter of diagnostics command line.
- * @param[in]  aArgv  The argument vector of diagnostics command line.
+ * @param[in]  aArgCount   The argument counter of diagnostics command line.
+ * @param[in]  aArgVector  The argument vector of diagnostics command line.
  *
  * @returns A pointer to the output string.
  *
  */
-char *otDiagProcessCmd(int aArgc, char *aArgv[]);
+const char *otDiagProcessCmd(int aArgCount, char *aArgVector[]);
 
 /**
  * This function processes a factory diagnostics command line.
  *
- * @param[in]  aString  A NULL-terminated string.
+ * @param[in]  aString  A NULL-terminated input string.
  *
  * @returns A pointer to the output string.
  *
  */
-char *otDiagProcessCmdLine(char *aString);
+const char *otDiagProcessCmdLine(const char *aString);
 
 /**
  * This function indicates whether or not the factory diagnostics mode is enabled.
@@ -94,7 +94,7 @@ bool otDiagIsEnabled(void);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_DIAG_H_
+#endif // OPENTHREAD_DIAG_H_

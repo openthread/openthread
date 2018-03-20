@@ -202,6 +202,14 @@ typedef enum
 
 typedef enum
 {
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED       = 0,
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_UNICAST_ONLY   = 1,
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_MULTICAST_ONLY = 2,
+    SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL            = 3,
+} spinel_ipv6_icmp_ping_offload_mode_t;
+
+typedef enum
+{
     SPINEL_SCAN_STATE_IDLE              = 0,
     SPINEL_SCAN_STATE_BEACON            = 1,
     SPINEL_SCAN_STATE_ENERGY            = 2,
@@ -417,6 +425,9 @@ enum
     SPINEL_CAP_MAC_WHITELIST            = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                  = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
     SPINEL_CAP_OOB_STEERING_DATA        = (SPINEL_CAP_OPENTHREAD__BEGIN + 2),
+    SPINEL_CAP_CHANNEL_MONITOR          = (SPINEL_CAP_OPENTHREAD__BEGIN + 3),
+    SPINEL_CAP_ERROR_RATE_TRACKING      = (SPINEL_CAP_OPENTHREAD__BEGIN + 4),
+    SPINEL_CAP_CHANNEL_MANAGER          = (SPINEL_CAP_OPENTHREAD__BEGIN + 5),
     SPINEL_CAP_OPENTHREAD__END          = 640,
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
@@ -685,6 +696,87 @@ typedef enum
     SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 5,
 
+    /// Channel monitoring sample interval
+    /** Format: `L` (read-only)
+     *  Units: Milliseconds
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * If channel monitoring is enabled and active, every sample interval, a
+     * zero-duration Energy Scan is performed, collecting a single RSSI sample
+     * per channel. The RSSI samples are compared with a pre-specified RSSI
+     * threshold.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 6,
+
+    /// Channel monitoring RSSI threshold
+    /** Format: `c` (read-only)
+     *  Units: dBm
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * This value specifies the threshold used by channel monitoring module.
+     * Channel monitoring maintains the average rate of RSSI samples that
+     * are above the threshold within (approximately) a pre-specified number
+     * of samples (sample window).
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_RSSI_THRESHOLD
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 7,
+
+    /// Channel monitoring sample window
+    /** Format: `L` (read-only)
+     *  Units: Number of samples
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * The averaging sample window length (in units of number of channel
+     * samples) used by channel monitoring module. Channel monitoring will
+     * sample all channels every sample interval. It maintains the average rate
+     * of RSSI samples that are above the RSSI threshold within (approximately)
+     * the sample window.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_WINDOW
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 8,
+
+    /// Channel monitoring sample count
+    /** Format: `L` (read-only)
+     *  Units: Number of samples
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * Total number of RSSI samples (per channel) taken by the channel
+     * monitoring module since its start (since Thread network interface
+     * was enabled).
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_COUNT
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 9,
+
+    /// Channel monitoring channel quality
+    /** Format: `A(t(CU))` (read-only)
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MONITOR
+     *
+     * Data per item is:
+     *
+     *  `C`: Channel
+     *  `U`: Channel quality indicator
+     *
+     * The channel quality value represents the average rate/percentage of
+     * RSSI samples that were above RSSI threshold ("bad" RSSI samples) within
+     * (approximately) sample window latest RSSI samples.
+     *
+     * Max value of `0xffff` indicates all RSSI samples were above RSSI
+     * threshold (i.e. 100% of samples were "bad").
+     *
+     */
+    SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 10,
+
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN              = 0x30,
@@ -763,7 +855,17 @@ typedef enum
      * * `E`: Optional EUI64 address of node. Set default RSS if not included.
      * * `c`: Fixed RSS. OT_MAC_FILTER_FIXED_RSS_OVERRIDE_DISABLED(127) means not set.
      */
-    SPINEL_PROP_MAC_FIXED_RSS            = SPINEL_PROP_MAC_EXT__BEGIN + 8,
+    SPINEL_PROP_MAC_FIXED_RSS           = SPINEL_PROP_MAC_EXT__BEGIN + 8,
+
+    /// The CCA failure rate
+    /** Format: `S`
+     *
+     * This property provides the current CCA (Clear Channel Assessment) failure rate.
+     *
+     * Maximum value `0xffff` corresponding to 100% failure rate.
+     *
+     */
+    SPINEL_PROP_MAC_CCA_FAILURE_RATE    = SPINEL_PROP_MAC_EXT__BEGIN + 9,
 
     SPINEL_PROP_MAC_EXT__END            = 0x1400,
 
@@ -1254,6 +1356,32 @@ typedef enum
      */
     SPINEL_PROP_THREAD_CHILD_TABLE_ADDRESSES
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 33,
+
+    /// Neighbor Table Frame and Message Error Rates
+    /** Format: `A(t(ESSScc))`
+     *  Required capability: `CAP_ERROR_RATE_TRACKING`
+     *
+     * This property provides link quality related info including
+     * frame and (IPv6) message error rates for all neighbors.
+     *
+     * With regards to message error rate, note that a larger (IPv6)
+     * message can be fragmented and sent as multiple MAC frames. The
+     * message transmission is considered a failure, if any of its
+     * fragments fail after all MAC retry attempts.
+     *
+     * Data per item is:
+     *
+     *  `E`: Extended address of the neighbor
+     *  `S`: RLOC16 of the neighbor
+     *  `S`: Frame error rate (0 -> 0%, 0xffff -> 100%)
+     *  `S`: Message error rate (0 -> 0%, 0xffff -> 100%)
+     *  `c`: Average RSSI (in dBm)
+     *  `c`: Last RSSI (in dBm)
+     *
+     */
+    SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 34,
+
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN             = 0x60,
@@ -1292,6 +1420,20 @@ typedef enum
     SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE
                                         = SPINEL_PROP_IPV6__BEGIN + 6, ///< [A(t(6))]
 
+    /// IPv6 ICMP Ping Offload
+    /** Format: `C`
+     *
+     * Allow the NCP to directly respond to ICMP ping requests. If this is
+     * turned on, ping request ICMP packets will not be passed to the host.
+     *
+     * This property allows enabling responses sent to unicast only, multicast
+     * only, or both.
+     *
+     * Default value is `NET_IPV6_ICMP_PING_OFFLOAD_DISABLED`.
+     */
+    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE
+                                        = SPINEL_PROP_IPV6__BEGIN + 7, ///< [b]
+
     SPINEL_PROP_IPV6__END               = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN           = 0x70,
@@ -1300,6 +1442,53 @@ typedef enum
     SPINEL_PROP_STREAM_NET              = SPINEL_PROP_STREAM__BEGIN + 2, ///< [dD]
     SPINEL_PROP_STREAM_NET_INSECURE     = SPINEL_PROP_STREAM__BEGIN + 3, ///< [dD]
     SPINEL_PROP_STREAM__END             = 0x80,
+
+    SPINEL_PROP_OPENTHREAD__BEGIN       = 0x1900,
+
+    /// Channel Manager - Channel Change New Channel
+    /** Format: `C` (read-write)
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * Setting this property triggers the Channel Manager to start
+     * a channel change process. The network switches to the given
+     * channel after the specified delay (see `CHANNEL_MANAGER_DELAY`).
+     *
+     * A subsequent write to this property will cancel an ongoing
+     * (previously requested) channel change.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 0,
+
+    /// Channel Manager - Channel Change Delay
+    /** Format 'S'
+     *  Units: seconds
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * This property specifies the delay (in seconds) to be used for
+     * a channel change request.
+     *
+     * The delay should preferably be longer than maximum data poll
+     * interval used by all sleepy-end-devices within the Thread
+     * network.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_DELAY   = SPINEL_PROP_OPENTHREAD__BEGIN + 1,
+
+    /// Channel Manager Supported Channels
+    /** Format 'A(C)'
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * This property specifies the list of supported channels.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 2,
+
+    SPINEL_PROP_OPENTHREAD__END         = 0x2000,
 
     /// UART Bitrate
     /** Format: `L`
@@ -1564,6 +1753,53 @@ typedef enum
      *      `S`, (CoapBuffers)            The number of buffers in the CoAP send queue.
      */
     SPINEL_PROP_MSG_BUFFER_COUNTERS     = SPINEL_PROP_CNTR__BEGIN + 400,
+
+    /// All MAC related counters.
+    /** Format: t(A(L))t(A(L))  (Read-only)
+     *
+     * The contents include two structs, first one corresponds to
+     * all transmit related MAC counters, second one provides the
+     * receive related counters.
+     *
+     * The transmit structure includes:
+     *
+     *   'L': TxTotal              (The total number of transmissions).
+     *   'L': TxUnicast            (The total number of unicast transmissions).
+     *   'L': TxBroadcast          (The total number of broadcast transmissions).
+     *   'L': TxAckRequested       (The number of transmissions with ack request).
+     *   'L': TxAcked              (The number of transmissions that were acked).
+     *   'L': TxNoAckRequested     (The number of transmissions without ack request).
+     *   'L': TxData               (The number of transmitted data).
+     *   'L': TxDataPoll           (The number of transmitted data poll).
+     *   'L': TxBeacon             (The number of transmitted beacon).
+     *   'L': TxBeaconRequest      (The number of transmitted beacon request).
+     *   'L': TxOther              (The number of transmitted other types of frames).
+     *   'L': TxRetry              (The number of retransmission times).
+     *   'L': TxErrCca             (The number of CCA failure times).
+     *   'L': TxErrAbort           (The number of frame transmission failures due to abort error).
+     *   'L': TxErrBusyChannel     (The number of frames that were dropped due to a busy channel).
+     *
+     * The receive structure includes:
+     *
+     *   'L': RxTotal              (The total number of received packets).
+     *   'L': RxUnicast            (The total number of unicast packets received).
+     *   'L': RxBroadcast          (The total number of broadcast packets received).
+     *   'L': RxData               (The number of received data).
+     *   'L': RxDataPoll           (The number of received data poll).
+     *   'L': RxBeacon             (The number of received beacon).
+     *   'L': RxBeaconRequest      (The number of received beacon request).
+     *   'L': RxOther              (The number of received other types of frames).
+     *   'L': RxAddressFiltered    (The number of received packets filtered by address filter (whitelist or blacklist)).
+     *   'L': RxDestAddrFiltered   (The number of received packets filtered by destination check).
+     *   'L': RxDuplicated         (The number of received duplicated packets).
+     *   'L': RxErrNoFrame         (The number of received packets with no or malformed content).
+     *   'L': RxErrUnknownNeighbor (The number of received packets from unknown neighbor).
+     *   'L': RxErrInvalidSrcAddr  (The number of received packets whose source address is invalid).
+     *   'L': RxErrSec             (The number of received packets with security error).
+     *   'L': RxErrFcs             (The number of received packets with FCS error).
+     *   'L': RxErrOther           (The number of received packets with other error).
+     */
+    SPINEL_PROP_CNTR_ALL_MAC_COUNTERS   =  SPINEL_PROP_CNTR__BEGIN + 401,
 
     SPINEL_PROP_CNTR__END               = 2048,
 

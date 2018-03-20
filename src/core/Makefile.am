@@ -90,6 +90,8 @@ libopenthread_mtd_a_CPPFLAGS        = \
 SOURCES_COMMON                      = \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
+    api/channel_manager_api.cpp       \
+    api/channel_monitor_api.cpp       \
     api/child_supervision_api.cpp     \
     api/crypto_api.cpp                \
     api/border_router_api.cpp         \
@@ -121,6 +123,7 @@ SOURCES_COMMON                      = \
     common/locator.cpp                \
     common/notifier.cpp               \
     common/message.cpp                \
+    common/settings.cpp               \
     common/tasklet.cpp                \
     common/timer.cpp                  \
     common/tlvs.cpp                   \
@@ -170,6 +173,8 @@ SOURCES_COMMON                      = \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
     thread/mesh_forwarder.cpp         \
+    thread/mesh_forwarder_ftd.cpp     \
+    thread/mesh_forwarder_mtd.cpp     \
     thread/mle.cpp                    \
     thread/mle_router.cpp             \
     thread/network_data.cpp           \
@@ -182,6 +187,7 @@ SOURCES_COMMON                      = \
     thread/thread_netif.cpp           \
     thread/tmf_proxy.cpp              \
     thread/topology.cpp               \
+    utils/channel_manager.cpp         \
     utils/channel_monitor.cpp         \
     utils/child_supervision.cpp       \
     utils/jam_detector.cpp            \
@@ -217,6 +223,7 @@ HEADERS_COMMON                      = \
     common/message.hpp                \
     common/notifier.hpp               \
     common/owner-locator.hpp          \
+    common/random.hpp                 \
     common/settings.hpp               \
     common/new.hpp                    \
     common/tasklet.hpp                \
@@ -238,8 +245,6 @@ HEADERS_COMMON                      = \
     meshcop/dataset.hpp               \
     meshcop/dataset_local.hpp         \
     meshcop/dataset_manager.hpp       \
-    meshcop/dataset_manager_ftd.hpp   \
-    meshcop/dataset_manager_mtd.hpp   \
     meshcop/dtls.hpp                  \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
@@ -294,6 +299,7 @@ HEADERS_COMMON                      = \
     thread/thread_uri_paths.hpp       \
     thread/tmf_proxy.hpp              \
     thread/topology.hpp               \
+    utils/channel_manager.hpp         \
     utils/channel_monitor.hpp         \
     utils/child_supervision.hpp       \
     utils/slaac_address.hpp           \

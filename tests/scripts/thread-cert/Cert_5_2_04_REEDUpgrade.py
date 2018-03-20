@@ -39,7 +39,6 @@ LEADER = 1
 ROUTER = 16
 DUT_REED = 17
 ED = 18
-SNIFFER = 19
 MESH_LOCAL_PREFIX = 'fdde:ad00:beef:0:'
 ROUTING_LACATOR = ':0:ff:fe00'
 REED_ADVERTISEMENT_INTERVAL = 570
@@ -48,9 +47,11 @@ ROUTER_SELECTION_JITTER = 1
 
 class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1, 19):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -77,34 +78,29 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         self.nodes[ED].add_whitelist(self.nodes[DUT_REED].get_addr64())
         self.nodes[ED].enable_whitelist()
 
-        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1 Ensure topology is formed correctly without the DUT_REED.
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 17):
             self.nodes[i].start()
-            time.sleep(5)
+            self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         # 2 DUT_REED: Attach to ROUTER, 2-hops from the Leader.
         self.nodes[DUT_REED].start()
-        time.sleep(5)
-        time.sleep(ROUTER_SELECTION_JITTER)
+        self.simulator.go(5)
+        self.simulator.go(ROUTER_SELECTION_JITTER)
 
-        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
 
         # The DUT_REED must not send a coap message here.
         msg = reed_messages.does_not_contain_coap_message()
@@ -119,18 +115,18 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         msg.assertMleMessageDoesNotContainTlv(mle.Route64)
 
         # 4 Wait for DUT_REED to send the second packet.
-        time.sleep(REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER)
+        self.simulator.go(REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER)
 
         # 5 DUT_REED: Verify the second MLE Advertisement.
-        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
         msg = reed_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
 
         # 6 ED
         self.nodes[ED].start()
-        time.sleep(5)
+        self.simulator.go(5)
 
         # 7 DUT_REED: Verify MLE Parent Response.
-        reed_messages = self.sniffer.get_messages_sent_by(DUT_REED)
+        reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
         msg = reed_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[ED])
         msg.assertMleMessageContainsTlv(mle.SourceAddress)

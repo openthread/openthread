@@ -46,7 +46,7 @@ void Crc16::Update(uint8_t aByte)
     uint8_t i;
 
     mCrc = mCrc ^ static_cast<uint16_t>(aByte << 8);
-    i = 8;
+    i    = 8;
 
     do
     {
@@ -58,8 +58,7 @@ void Crc16::Update(uint8_t aByte)
         {
             mCrc = static_cast<uint16_t>(mCrc << 1);
         }
-    }
-    while (--i);
+    } while (--i);
 }
 
-}  // namespace ot
+} // namespace ot

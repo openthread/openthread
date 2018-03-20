@@ -1,37 +1,39 @@
 /*
- * Copyright (c) Nordic Semiconductor ASA
+ * Copyright (c) 2011 - 2017, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
- *   1. Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
- *   2. Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
  *
- *   3. Neither the name of Nordic Semiconductor ASA nor the names of other
- *   contributors to this software may be used to endorse or promote products
- *   derived from this software without specific prior written permission.
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
  *
- *   4. This software must only be used in a processor manufactured by Nordic
- *   Semiconductor ASA, or in a processor manufactured by a third party that
- *   is used in combination with a processor manufactured by Nordic Semiconductor.
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
  *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -43,12 +45,15 @@
 #ifndef BLE_GATTS_H__
 #define BLE_GATTS_H__
 
-#include "ble_types.h"
-#include "ble_ranges.h"
-#include "ble_l2cap.h"
-#include "ble_gap.h"
-#include "ble_gatt.h"
+#include <stdint.h>
 #include "nrf_svc.h"
+#include "nrf_error.h"
+#include "ble_hci.h"
+#include "ble_ranges.h"
+#include "ble_types.h"
+#include "ble_err.h"
+#include "ble_gatt.h"
+#include "ble_gap.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -284,7 +289,7 @@ typedef struct
   uint16_t          handle;             /**< Characteristic Value Handle. */
   uint8_t           type;               /**< Indication or Notification, see @ref BLE_GATT_HVX_TYPES. */
   uint16_t          offset;             /**< Offset within the attribute value. */
-  uint16_t         *p_len;              /**< Length in bytes to be written, length in bytes written after successful return. */
+  uint16_t         *p_len;              /**< Length in bytes to be written, length in bytes written after return. */
   uint8_t const    *p_data;             /**< Actual data content, use NULL to use the current attribute value. */
 } ble_gatts_hvx_params_t;
 
@@ -544,8 +549,8 @@ SVCALL(SD_BLE_GATTS_VALUE_SET, uint32_t, sd_ble_gatts_value_set(uint16_t conn_ha
 /**@brief Get the value of a given attribute.
  *
  * @note                 If the attribute value is longer than the size of the supplied buffer,
- *                       p_len will return the total attribute value length (excluding offset),
- *                       and not the number of bytes actually returned in p_data.
+ *                       @ref ble_gatts_value_t::len will return the total attribute value length (excluding offset),
+ *                       and not the number of bytes actually returned in @ref ble_gatts_value_t::p_value.
  *                       The application may use this information to allocate a suitable buffer size.
  *
  * @note                 When retrieving system attribute values with this function, the connection handle
@@ -574,7 +579,7 @@ SVCALL(SD_BLE_GATTS_VALUE_GET, uint32_t, sd_ble_gatts_value_get(uint16_t conn_ha
  * @note    The local attribute value may be updated even if an outgoing packet is not sent to the peer due to an error during execution.
  *          The Attribute Table has been updated if one of the following error codes is returned: @ref NRF_ERROR_INVALID_STATE, @ref NRF_ERROR_BUSY,
  *          @ref NRF_ERROR_FORBIDDEN, @ref BLE_ERROR_GATTS_SYS_ATTR_MISSING and @ref NRF_ERROR_RESOURCES.
- *          The caller can check whether the value has been updated by looking at the contents of *(p_hvx_params->p_len).
+ *          The caller can check whether the value has been updated by looking at the contents of *(@ref ble_gatts_hvx_params_t::p_len).
  *
  * @note    Only one indication procedure can be ongoing per connection at a time.
  *          If the application tries to indicate an attribute value while another indication procedure is ongoing,
@@ -602,9 +607,12 @@ SVCALL(SD_BLE_GATTS_VALUE_GET, uint32_t, sd_ble_gatts_value_get(uint16_t conn_ha
  * @mmsc{@ref BLE_GATTS_HVX_DISABLED_MSC}
  * @endmscs
  *
- * @param[in] conn_handle  Connection handle.
- * @param[in] p_hvx_params Pointer to an HVx parameters structure. If the p_data member contains a non-NULL pointer the attribute value will be updated with
- *                         the contents pointed by it before sending the notification or indication.
+ * @param[in] conn_handle      Connection handle.
+ * @param[in,out] p_hvx_params Pointer to an HVx parameters structure. If @ref ble_gatts_hvx_params_t::p_data
+ *                             contains a non-NULL pointer the attribute value will be updated with the contents
+ *                             pointed by it before sending the notification or indication. If the attribute value
+ *                             is updated, @ref ble_gatts_hvx_params_t::p_len is updated by the SoftDevice to
+ *                             contain the number of actual bytes written, else it will be set to 0.
  *
  * @retval ::NRF_SUCCESS Successfully queued a notification or indication for transmission, and optionally updated the attribute value.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid Connection Handle.
@@ -623,6 +631,7 @@ SVCALL(SD_BLE_GATTS_VALUE_GET, uint32_t, sd_ble_gatts_value_get(uint16_t conn_ha
  * @retval ::BLE_ERROR_GATTS_SYS_ATTR_MISSING System attributes missing, use @ref sd_ble_gatts_sys_attr_set to set them to a known value.
  * @retval ::NRF_ERROR_RESOURCES Too many notifications queued.
  *                               Wait for a @ref BLE_GATTS_EVT_HVN_TX_COMPLETE event and retry.
+ * @retval ::NRF_ERROR_TIMEOUT There has been a GATT procedure timeout. No new GATT procedure can be performed without reestablishing the connection.
  */
 SVCALL(SD_BLE_GATTS_HVX, uint32_t, sd_ble_gatts_hvx(uint16_t conn_handle, ble_gatts_hvx_params_t const *p_hvx_params));
 
@@ -658,6 +667,7 @@ SVCALL(SD_BLE_GATTS_HVX, uint32_t, sd_ble_gatts_hvx(uint16_t conn_handle, ble_ga
  * @retval ::BLE_ERROR_INVALID_ATTR_HANDLE Invalid attribute handle(s) supplied, handles must be in the range populated by the application.
  * @retval ::NRF_ERROR_BUSY Procedure already in progress.
  * @retval ::BLE_ERROR_GATTS_SYS_ATTR_MISSING System attributes missing, use @ref sd_ble_gatts_sys_attr_set to set them to a known value.
+ * @retval ::NRF_ERROR_TIMEOUT There has been a GATT procedure timeout. No new GATT procedure can be performed without reestablishing the connection.
  */
 SVCALL(SD_BLE_GATTS_SERVICE_CHANGED, uint32_t, sd_ble_gatts_service_changed(uint16_t conn_handle, uint16_t start_handle, uint16_t end_handle));
 
@@ -672,7 +682,7 @@ SVCALL(SD_BLE_GATTS_SERVICE_CHANGED, uint32_t, sd_ble_gatts_service_changed(uint
  * @mmsc{@ref BLE_GATTS_READ_REQ_AUTH_MSC}
  * @mmsc{@ref BLE_GATTS_WRITE_REQ_AUTH_MSC}
  * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_QUEUE_FULL_MSC}
- * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_NOBUF_PEER_CANCEL_MSC}
+ * @mmsc{@ref BLE_GATTS_QUEUED_WRITE_PEER_CANCEL_MSC}
  * @endmscs
  *
  * @param[in] conn_handle                 Connection handle.
@@ -684,11 +694,13 @@ SVCALL(SD_BLE_GATTS_SERVICE_CHANGED, uint32_t, sd_ble_gatts_service_changed(uint
  *
  * @retval ::NRF_SUCCESS               Successfully queued a response to the peer, and in the case of a write operation, Attribute Table updated.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid Connection Handle.
+ * @retval ::NRF_ERROR_BUSY            The stack is busy, process pending events and retry.
  * @retval ::NRF_ERROR_INVALID_ADDR    Invalid pointer supplied.
  * @retval ::NRF_ERROR_INVALID_STATE   Invalid Connection State or no authorization request pending.
  * @retval ::NRF_ERROR_INVALID_PARAM   Authorization op invalid,
  *                                         handle supplied does not match requested handle,
  *                                         or invalid data to be written provided by the application.
+ * @retval ::NRF_ERROR_TIMEOUT There has been a GATT procedure timeout. No new GATT procedure can be performed without reestablishing the connection.
  */
 SVCALL(SD_BLE_GATTS_RW_AUTHORIZE_REPLY, uint32_t, sd_ble_gatts_rw_authorize_reply(uint16_t conn_handle, ble_gatts_rw_authorize_reply_params_t const *p_rw_authorize_reply_params));
 
@@ -810,7 +822,7 @@ SVCALL(SD_BLE_GATTS_ATTR_GET, uint32_t, sd_ble_gatts_attr_get(uint16_t handle, b
  * @param[in] server_rx_mtu  Server RX MTU size.
  *                           - The minimum value is @ref BLE_GATT_ATT_MTU_DEFAULT.
  *                           - The maximum value is @ref ble_gatt_conn_cfg_t::att_mtu in the connection configuration
-                               used for this connection.
+ *                             used for this connection.
  *                           - The value must be equal to Client RX MTU size given in @ref sd_ble_gattc_exchange_mtu_request
  *                             if an ATT_MTU exchange has already been performed in the other direction.
  *
@@ -818,6 +830,7 @@ SVCALL(SD_BLE_GATTS_ATTR_GET, uint32_t, sd_ble_gatts_attr_get(uint16_t handle, b
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid Connection Handle.
  * @retval ::NRF_ERROR_INVALID_STATE Invalid Connection State or no ATT_MTU exchange request pending.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid Server RX MTU size supplied.
+ * @retval ::NRF_ERROR_TIMEOUT There has been a GATT procedure timeout. No new GATT procedure can be performed without reestablishing the connection.
  */
 SVCALL(SD_BLE_GATTS_EXCHANGE_MTU_REPLY, uint32_t, sd_ble_gatts_exchange_mtu_reply(uint16_t conn_handle, uint16_t server_rx_mtu));
 /** @} */

@@ -36,13 +36,14 @@ import node
 
 LEADER = 1
 ED = 2
-SNIFFER = 3
 
 class Cert_6_1_1_RouterAttach(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,3):
-            self.nodes[i] = node.Node(i, (i == ED))
+            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -54,28 +55,23 @@ class Cert_6_1_1_RouterAttach(unittest.TestCase):
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ED].enable_whitelist()
 
-        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
-        ed_messages = self.sniffer.get_messages_sent_by(ED)
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        ed_messages = self.simulator.get_messages_sent_by(ED)
 
         # 1 - leader
         msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)

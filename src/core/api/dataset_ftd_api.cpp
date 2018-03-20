@@ -43,7 +43,7 @@ using namespace ot;
 
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    otError error;
+    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -56,7 +56,7 @@ exit:
 
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    otError error;
+    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -67,7 +67,9 @@ exit:
     return error;
 }
 
-otError otDatasetSendMgmtActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+otError otDatasetSendMgmtActiveGet(otInstance *        aInstance,
+                                   const uint8_t *     aTlvTypes,
+                                   uint8_t             aLength,
                                    const otIp6Address *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -75,15 +77,19 @@ otError otDatasetSendMgmtActiveGet(otInstance *aInstance, const uint8_t *aTlvTyp
     return instance.GetThreadNetif().GetActiveDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
-otError otDatasetSendMgmtActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset,
-                                   const uint8_t *aTlvs, uint8_t aLength)
+otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
+                                   const otOperationalDataset *aDataset,
+                                   const uint8_t *             aTlvs,
+                                   uint8_t                     aLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetThreadNetif().GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
-otError otDatasetSendMgmtPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+otError otDatasetSendMgmtPendingGet(otInstance *        aInstance,
+                                    const uint8_t *     aTlvTypes,
+                                    uint8_t             aLength,
                                     const otIp6Address *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -91,8 +97,10 @@ otError otDatasetSendMgmtPendingGet(otInstance *aInstance, const uint8_t *aTlvTy
     return instance.GetThreadNetif().GetPendingDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
-otError otDatasetSendMgmtPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset,
-                                    const uint8_t *aTlvs, uint8_t aLength)
+otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
+                                    const otOperationalDataset *aDataset,
+                                    const uint8_t *             aTlvs,
+                                    uint8_t                     aLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
@@ -113,4 +121,4 @@ otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTime
     return instance.GetThreadNetif().GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
 }
 
-#endif  // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD

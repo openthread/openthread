@@ -125,7 +125,8 @@ OTAPI const otNetifAddress *OTCALL otIp6GetUnicastAddresses(otInstance *aInstanc
  * @retval OT_ERROR_NONE          Successfully subscribed to the Network Interface Multicast Address.
  * @retval OT_ERROR_ALREADY       The multicast address is already subscribed.
  * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is invalid address.
- * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external multicast addresses.
+ * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external multicast
+ * addresses.
  *
  */
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
@@ -181,7 +182,7 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
  * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Creation of valid IID for given IPv6 address failed.
  *
  */
-typedef otError(*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+typedef otError (*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
 
 /**
  * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
@@ -193,8 +194,11 @@ typedef otError(*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAd
  * @param[in]     aContext       A pointer to data passed to aIidCreate function.
  *
  */
-void otIp6SlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                      otIp6SlaacIidCreate aIidCreate, void *aContext);
+void otIp6SlaacUpdate(otInstance *        aInstance,
+                      otNetifAddress *    aAddresses,
+                      uint32_t            aNumAddresses,
+                      otIp6SlaacIidCreate aIidCreate,
+                      void *              aContext);
 
 /**
  * Create random IID for given IPv6 address.
@@ -394,7 +398,7 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_IP6_H_
+#endif // OPENTHREAD_IP6_H_

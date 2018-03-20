@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -37,16 +37,17 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
-
-#include "sdk_config.h"
-#if APP_USBD_ENABLED
 #include "sdk_common.h"
+#if NRF_MODULE_ENABLED(APP_USBD)
+
 #include "app_usbd.h"
 #include "app_usbd_core.h"
 #include "nrf_power.h"
 #include "nrf_drv_clock.h"
-#if APP_USBD_EVENT_QUEUE_ENABLE
+#include "nrf_drv_power.h"
+#if APP_USBD_CONFIG_EVENT_QUEUE_ENABLE
 #include "nrf_atfifo.h"
+#include "nrf_atomic.h"
 #endif
 
 #define NRF_LOG_MODULE_NAME app_usbd
@@ -59,11 +60,13 @@
 #define NRF_LOG_LEVEL       0
 #endif //APP_USBD_CONFIG_LOG_ENABLED
 #include "nrf_log.h"
+NRF_LOG_MODULE_REGISTER();
+
 
 /* Base variables tests */
 
 /* Check event of app_usbd_event_type_t enumerator */
-STATIC_ASSERT((int32_t)APP_USBD_EVT_FIRST_APP == (int32_t)NRF_DRV_USBD_EVT_CNT);
+STATIC_ASSERT((int32_t)APP_USBD_EVT_FIRST_POWER == (int32_t)NRF_DRV_USBD_EVT_CNT);
 STATIC_ASSERT(sizeof(app_usbd_event_type_t) == sizeof(nrf_drv_usbd_event_type_t));
 
 STATIC_ASSERT(sizeof(app_usbd_descriptor_header_t) == 2);
@@ -83,6 +86,13 @@ STATIC_ASSERT(sizeof(app_usbd_setup_t) == sizeof(nrf_drv_usbd_setup_t));
  * Internal variables, auxiliary macros and functions of USBD library.
  * @{
  */
+
+#if (APP_USBD_PROVIDE_SOF_TIMESTAMP) || defined(__SDK_DOXYGEN__)
+/**
+ * @brief The last received frame number.
+ */
+static uint16_t m_last_frame;
+#endif
 
 /**
  * @brief Variable type for endpoint configuration
@@ -109,13 +119,41 @@ typedef struct
     app_usbd_ep_event_handler_t event_handler;
 }app_usbd_ep_conf_t;
 
-#if (APP_USBD_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
+
+/**
+ * @brief Internal event with SOF counter.
+ */
+typedef struct
+{
+    app_usbd_internal_evt_t evt;     //!< Internal event type
+
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE) \
+     || defined(__SDK_DOXYGEN__)
+    uint16_t                sof_cnt; //!< Number of the SOF events that appears before current event
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+
+} app_usbd_internal_queue_evt_t;
+
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
 /**
  * @brief Event queue
  *
  * The queue with events to be processed
  */
-NRF_ATFIFO_DEF(m_event_queue, app_usbd_internal_evt_t, APP_USBD_EVENT_QUEUE_SIZE);
+NRF_ATFIFO_DEF(m_event_queue, app_usbd_internal_queue_evt_t, APP_USBD_CONFIG_EVENT_QUEUE_SIZE);
+
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE) \
+     || defined(__SDK_DOXYGEN__)
+/**
+ * @brief SOF events counter.
+ */
+static nrf_atomic_u32_t m_sof_events_cnt;
+
+// Limit of SOF events stacked until warning message.
+#define APP_USBD_SOF_WARNING_LIMIT 500
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+       //  || defined(__SDK_DOXYGEN__)
+
 #endif
 
 /**
@@ -155,10 +193,10 @@ static app_usbd_class_inst_t const * m_p_first_sof_cinst;
  * @brief Default configuration (when NULL is passed to @ref app_usbd_init).
  */
 static const app_usbd_config_t m_default_conf = {
-#if (!(APP_USBD_EVENT_QUEUE_ENABLE)) || defined(__SDK_DOXYGEN__)
+#if (!(APP_USBD_CONFIG_EVENT_QUEUE_ENABLE)) || defined(__SDK_DOXYGEN__)
     .ev_handler = app_usbd_event_execute,
 #endif
-#if (APP_USBD_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
     .ev_isr_handler = NULL,
 #endif
     .ev_state_proc = NULL,
@@ -225,7 +263,7 @@ static inline ret_code_t class_event_handler(app_usbd_class_inst_t  const * cons
     return p_cinst->p_class_methods->event_handler(p_cinst, p_event);
 }
 
-#if (APP_USBD_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
 /**
  * @brief User event handler call (passed via configuration).
  *
@@ -255,56 +293,83 @@ static inline void user_event_state_proc(app_usbd_event_type_t event)
 }
 
 /**
- * @brief Class interface call: get descriptors
+ * @brief Find a specified descriptor
  *
- * @ref app_usbd_class_interface_t::get_descriptors
+ * @param[in] p_cinst Class instance
+ * @param[in] desc_type Descriptor type @ref app_usbd_descriptor_t
+ * @param[in] desc_index Descriptor index
+ * @param[out] p_desc Pointer to escriptor
+ * @param[out] p_desc_len Length of descriptor
  *
- * @param[in]  p_inst Class instance
- * @param[out] p_size Descriptors size
- *
- * @return Class descriptors start address
+ * @return Standard error code @ref ret_code_t
+ * @retval NRF_SUCCESS descriptor successfully found
+ * @retval NRF_ERROR_NOT_FOUND descriptor not found
  * */
-static inline const void * class_get_descriptors(app_usbd_class_inst_t const * const p_cinst,
-                                                 size_t * p_size)
+ret_code_t app_usbd_class_descriptor_find(app_usbd_class_inst_t const * const p_cinst,
+                                          uint8_t                             desc_type,
+                                          uint8_t                             desc_index,
+                                          uint8_t                           * p_desc,
+                                          size_t                            * p_desc_len)
 {
-    ASSERT(p_cinst != NULL);
-    ASSERT(p_cinst->p_class_methods != NULL);
-    ASSERT(p_cinst->p_class_methods->get_descriptors != NULL);
-    return p_cinst->p_class_methods->get_descriptors(p_cinst, p_size);
-}
-
-const void * app_usbd_class_descriptor_find(app_usbd_class_inst_t const * const p_cinst,
-                                            uint8_t  desc_type,
-                                            uint8_t  desc_index,
-                                            size_t * p_desc_len)
-{
-    app_usbd_descriptor_header_t const * p_header;
-    uint8_t const * p_raw = class_get_descriptors(p_cinst, p_desc_len);
-    if (p_raw == NULL)
+    app_usbd_class_descriptor_ctx_t siz;
+    APP_USBD_CLASS_DESCRIPTOR_INIT(&siz);
+    uint32_t total_size = 0;
+    while(p_cinst->p_class_methods->feed_descriptors(&siz, p_cinst, NULL, sizeof(uint8_t)))
     {
-        return NULL;
+        total_size++;
     }
 
-    size_t pos = 0;
+    uint8_t cur_len = 0;
+    uint32_t cur_size = 0;
+
     uint8_t index = 0;
-    while (pos < *p_desc_len)
+    app_usbd_class_descriptor_ctx_t descr;
+    APP_USBD_CLASS_DESCRIPTOR_INIT(&descr);
+
+    while(cur_size < total_size)
     {
-        p_header = (app_usbd_descriptor_header_t const *)(p_raw + pos);
-        if (p_header->bDescriptorType == desc_type)
+        /* First byte of a descriptor is its size */
+        UNUSED_RETURN_VALUE(p_cinst->p_class_methods->feed_descriptors(&descr,
+                                                                       p_cinst,
+                                                                       &cur_len,
+                                                                       sizeof(uint8_t)));
+
+        /* Second byte is type of the descriptor */
+        uint8_t type;
+        UNUSED_RETURN_VALUE(p_cinst->p_class_methods->feed_descriptors(&descr,
+                                                                       p_cinst,
+                                                                       &type,
+                                                                       sizeof(uint8_t)));
+
+        if(type == desc_type)
         {
-            if (desc_index == index)
+            if(index == desc_index)
             {
-                *p_desc_len = p_header->bLength;
-                return p_header;
+                /* Copy the length of descriptor to *p_desc_len */
+                *p_desc_len = cur_len;
+                /* Two first bytes of descriptor have already been fed - copy them to *p_desc */
+                *p_desc++ = cur_len;
+                *p_desc++ = desc_type;
+                /* Copy the rest of descriptor to *p_desc */
+                UNUSED_RETURN_VALUE(p_cinst->p_class_methods->feed_descriptors(&descr,
+                                                                               p_cinst,
+                                                                               p_desc,
+                                                                               cur_len-2));
+                return NRF_SUCCESS;
             }
-
-            index++;
+            else
+            {
+                index++;
+            }
         }
-
-        pos += p_header->bLength;
+        /* Fast-forward through unmatched descriptor */
+        UNUSED_RETURN_VALUE(p_cinst->p_class_methods->feed_descriptors(&descr,
+                                                                       p_cinst,
+                                                                       NULL,
+                                                                       cur_len-2));
+        cur_size += cur_len;
     }
-
-    return NULL;
+    return NRF_ERROR_NOT_FOUND;
 }
 
 /**
@@ -386,6 +451,8 @@ static inline ret_code_t app_usbd_core_handler_call(app_usbd_internal_evt_t cons
         (app_usbd_complex_evt_t const *)p_event);
 }
 
+
+
 /**
  * @brief Add event for execution
  *
@@ -396,24 +463,95 @@ static inline ret_code_t app_usbd_core_handler_call(app_usbd_internal_evt_t cons
  */
 static inline void app_usbd_event_add(app_usbd_internal_evt_t const * const p_event)
 {
-#if (APP_USBD_EVENT_QUEUE_ENABLE)
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE)
+
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+    if (p_event->app_evt.type == APP_USBD_EVT_DRV_SOF)
+    {
+        UNUSED_RETURN_VALUE(nrf_atomic_u32_add(&m_sof_events_cnt, 1));
+        user_event_handler(p_event, true);
+        if (m_sof_events_cnt == APP_USBD_SOF_WARNING_LIMIT)
+        {
+            NRF_LOG_WARNING("Stacked over %d SOF events.", APP_USBD_SOF_WARNING_LIMIT);
+        }
+        return;
+    }
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+
+    if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_INTERRUPT)
+    {
+        if (p_event->app_evt.type == APP_USBD_EVT_DRV_SOF)
+        {
+            user_event_handler(p_event, false);
+            app_usbd_event_execute(p_event);
+            return;
+        }
+    }
+
     nrf_atfifo_item_put_t cx;
-    app_usbd_internal_evt_t * p_event_item = nrf_atfifo_item_alloc(m_event_queue, &cx);
+    app_usbd_internal_queue_evt_t * p_event_item = nrf_atfifo_item_alloc(m_event_queue, &cx);
+
     if (NULL != p_event_item)
     {
-       bool visible;
-       *p_event_item = *p_event;
-       visible = nrf_atfifo_item_put(m_event_queue, &cx);
-       user_event_handler(p_event, visible);
+        bool visible;
+        p_event_item->evt = *p_event;
+
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+        p_event_item->sof_cnt = nrf_atomic_u32_fetch_store(&m_sof_events_cnt, 0);
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+
+        visible = nrf_atfifo_item_put(m_event_queue, &cx);
+        user_event_handler(p_event, visible);
     }
     else
     {
-       NRF_LOG_ERROR("Event queue full.");
+        NRF_LOG_ERROR("Event queue full.");
     }
 #else
     m_current_conf.ev_handler(p_event);
 #endif
 }
+
+/**
+ * @brief Power event handler
+ *
+ * The function that pushes power events into the queue
+ * @param p_event
+ */
+#if APP_USBD_CONFIG_POWER_EVENTS_PROCESS
+static void app_usbd_power_event_handler(nrf_drv_power_usb_evt_t event)
+{
+    switch(event)
+    {
+        case NRF_DRV_POWER_USB_EVT_DETECTED:
+        {
+            static const app_usbd_internal_evt_t ev = {
+                .type = APP_USBD_EVT_POWER_DETECTED
+            };
+            app_usbd_event_add(&ev);
+            break;
+        }
+        case NRF_DRV_POWER_USB_EVT_REMOVED:
+        {
+            static const app_usbd_internal_evt_t ev = {
+                .type = APP_USBD_EVT_POWER_REMOVED
+            };
+            app_usbd_event_add(&ev);
+            break;
+        }
+        case NRF_DRV_POWER_USB_EVT_READY:
+        {
+            static const app_usbd_internal_evt_t ev = {
+                .type = APP_USBD_EVT_POWER_READY
+            };
+            app_usbd_event_add(&ev);
+            break;
+        }
+        default:
+            ASSERT(false);
+    }
+}
+#endif
 
 /**
  * @brief Event handler
@@ -541,15 +679,81 @@ static inline void sustate_set(app_usbd_sustate_t sustate)
     m_sustate = sustate;
 }
 
+/**
+ * @brief Default selection function for interface
+ *
+ * This function just enables and clears interface endpoints
+ *
+ * @param p_inst    See the documentation for @ref app_usbd_iface_select
+ * @param iface_idx See the documentation for @ref app_usbd_iface_select
+ * @param alternate See the documentation for @ref app_usbd_iface_select
+ * @return
+ */
+static inline ret_code_t default_iface_select(
+    app_usbd_class_inst_t const * const p_inst,
+    uint8_t                             iface_idx,
+    uint8_t                             alternate)
+{
+    ASSERT(iface_idx <= app_usbd_class_iface_count_get(p_inst));
+
+    if (alternate != 0)
+    {
+        return NRF_ERROR_INVALID_PARAM;
+    }
+
+    app_usbd_class_iface_conf_t const * p_iface  = app_usbd_class_iface_get(p_inst, iface_idx);
+    uint8_t ep_count = app_usbd_class_iface_ep_count_get(p_iface);
+
+    for (uint8_t i = 0; i < ep_count; ++i)
+    {
+        /* Enable every endpoint */
+        app_usbd_class_ep_conf_t const * p_ep = app_usbd_class_iface_ep_get(p_iface, i);
+        app_usbd_ep_enable(p_ep->address);
+    }
+    return NRF_SUCCESS;
+}
+
+/**
+ * @brief Default deselection function for interface
+ *
+ * This function just disables all interface endpoints.
+ *
+ * @param p_inst    See the documentation for @ref app_usbd_iface_deselect
+ * @param iface_idx See the documentation for @ref app_usbd_iface_deselect
+ */
+static inline void default_iface_deselect(
+    app_usbd_class_inst_t const * const p_inst,
+    uint8_t                             iface_idx)
+{
+    ASSERT(iface_idx <= app_usbd_class_iface_count_get(p_inst));
+
+    app_usbd_class_iface_conf_t const * p_iface  = app_usbd_class_iface_get(p_inst, iface_idx);
+    uint8_t ep_count = app_usbd_class_iface_ep_count_get(p_iface);
+
+    for (uint8_t i = 0; i < ep_count; ++i)
+    {
+        /* Disable every endpoint */
+        app_usbd_class_ep_conf_t const * p_ep = app_usbd_class_iface_ep_get(p_iface, i);
+        app_usbd_ep_disable(p_ep->address);
+    }
+}
+
 
 /** @} */
 
+#if (APP_USBD_PROVIDE_SOF_TIMESTAMP) || defined(__SDK_DOXYGEN__)
+uint32_t app_usbd_sof_timestamp_get(void)
+{
+    return m_last_frame;
+}
+#endif
 
 ret_code_t app_usbd_init(app_usbd_config_t const * p_config)
 {
+    ASSERT(nrf_drv_clock_init_check());
     ret_code_t ret;
 
-#if (APP_USBD_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
     ret = NRF_ATFIFO_INIT(m_event_queue);
     if (NRF_SUCCESS != ret)
     {
@@ -557,14 +761,20 @@ ret_code_t app_usbd_init(app_usbd_config_t const * p_config)
     }
 #endif
 
-    UNUSED_RETURN_VALUE(nrf_drv_clock_init());
-
+    /* This is called at the beginning to secure multiple calls to init function */
     ret = nrf_drv_usbd_init(app_usbd_event_handler);
     if (NRF_SUCCESS != ret)
     {
         return ret;
     }
 
+    /* Clear the variables */
+    m_sustate = SUSTATE_STOPPED;
+    m_p_first_cinst = NULL;
+    m_p_first_sof_cinst = NULL;
+    memset(m_epin_conf , 0, sizeof(m_epin_conf ));
+    memset(m_epout_conf, 0, sizeof(m_epout_conf));
+    /* Save the new configuration */
     if (p_config == NULL)
     {
         m_current_conf = m_default_conf;
@@ -574,12 +784,21 @@ ret_code_t app_usbd_init(app_usbd_config_t const * p_config)
         m_current_conf = *p_config;
     }
 
-    /* Clear variables */
-    m_sustate = SUSTATE_STOPPED;
-    m_p_first_cinst = NULL;
-    m_p_first_sof_cinst = NULL;
-    memset(m_epin_conf , 0, sizeof(m_epin_conf ));
-    memset(m_epout_conf, 0, sizeof(m_epout_conf));
+#if (!(APP_USBD_CONFIG_EVENT_QUEUE_ENABLE))
+    if(m_current_conf.ev_handler == NULL)
+    {
+        m_current_conf.ev_handler = m_default_conf.ev_handler;
+    }
+#endif
+
+#if APP_USBD_CONFIG_POWER_EVENTS_PROCESS
+    ret = nrf_drv_power_init(NULL);
+    if ((ret != NRF_SUCCESS) && (ret != NRF_ERROR_MODULE_ALREADY_INITIALIZED))
+    {
+        /* This should never happen */
+        APP_ERROR_HANDLER(ret);
+    }
+#endif
 
     /*Pin core class to required endpoints*/
     uint8_t iface_idx;
@@ -601,17 +820,25 @@ ret_code_t app_usbd_init(app_usbd_config_t const * p_config)
         .type = APP_USBD_EVT_INST_APPEND
     };
 
-    return class_event_handler(p_inst, (app_usbd_complex_evt_t const *)(&evt_data));
+    ret = class_event_handler(p_inst, (app_usbd_complex_evt_t const *)(&evt_data));
+    if (NRF_SUCCESS != ret)
+    {
+        UNUSED_RETURN_VALUE(nrf_drv_usbd_uninit());
+        return ret;
+    }
+
+    return NRF_SUCCESS;
 }
 
 
 ret_code_t app_usbd_uninit(void)
 {
-    ret_code_t ret;
+#if APP_USBD_CONFIG_POWER_EVENTS_PROCESS
+    nrf_drv_power_usbevt_uninit();
+#endif
 
-    ret = nrf_drv_usbd_uninit();
-    if (NRF_SUCCESS != ret)
-        return ret;
+    /* We get this error at very beginning but it would be used at the end of the function */
+    const ret_code_t ret = nrf_drv_usbd_uninit();
 
     /* Unchain instance list */
     app_usbd_class_inst_t const * * pp_inst;
@@ -642,6 +869,30 @@ ret_code_t app_usbd_uninit(void)
 }
 
 
+#if APP_USBD_CONFIG_POWER_EVENTS_PROCESS
+ret_code_t app_usbd_power_events_enable(void)
+{
+    if (!nrf_drv_usbd_is_initialized() || nrf_drv_usbd_is_enabled())
+    {
+        return NRF_ERROR_INVALID_STATE;
+    }
+
+    ASSERT((!APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || (USBD_CONFIG_IRQ_PRIORITY == POWER_CONFIG_IRQ_PRIORITY));
+
+    ret_code_t ret;
+    static const nrf_drv_power_usbevt_config_t config =
+    {
+        .handler = app_usbd_power_event_handler
+    };
+
+    ret = nrf_drv_power_usbevt_init(&config);
+    APP_ERROR_CHECK(ret);
+
+    return NRF_SUCCESS;
+}
+#endif /* APP_USBD_CONFIG_POWER_EVENTS_PROCESS */
+
+
 void app_usbd_enable(void)
 {
     nrf_drv_usbd_enable();
@@ -658,6 +909,29 @@ void app_usbd_disable(void)
 void app_usbd_start(void)
 {
     ASSERT(nrf_drv_usbd_is_enabled());
+
+    /* Check if interface numbers are in correct order */
+    if (APP_USBD_CONFIG_LOG_ENABLED)
+    {
+        uint8_t next_iface = 0;
+        for (app_usbd_class_inst_t const * * pp_inst = &m_p_first_cinst;
+             (*pp_inst) != NULL;
+             pp_inst = &(app_usbd_class_data_access(*pp_inst)->p_next))
+        {
+            uint8_t iface_idx = 0;
+            app_usbd_class_iface_conf_t const * p_iface;
+            while (NULL != (p_iface = app_usbd_class_iface_get(*pp_inst, iface_idx++)))
+            {
+                if (p_iface->number != next_iface)
+                {
+                    NRF_LOG_WARNING("Unexpected interface number, expected %d, got %d",
+                                    next_iface,
+                                    p_iface->number);
+                }
+                ++next_iface;
+            }
+        }
+    }
 
     /* Power should be already enabled - wait just in case if user calls
      * app_usbd_start just after app_usbd_enable without waiting for the event. */
@@ -704,6 +978,10 @@ bool app_usbd_wakeup_req(void)
     return true;
 }
 
+bool app_usbd_active_check(void)
+{
+    return (sustate_get() == SUSTATE_ACTIVE);
+}
 
 void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
 {
@@ -724,29 +1002,14 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
             static const app_usbd_evt_t evt_data = {
                 .type = APP_USBD_EVT_STARTED
             };
-            /* Enable all connected endpoints */
-            uint8_t n;
-            for (n = 1; n < ARRAY_SIZE(m_epin_conf); ++n)
-            {
-                if (NULL != m_epin_conf[n].p_cinst)
-                {
-                    nrf_drv_usbd_ep_enable(NRF_DRV_USBD_EPIN(n));
-                }
-            }
-            for (n = 1; n < ARRAY_SIZE(m_epout_conf); ++n)
-            {
-                if (NULL != m_epout_conf[n].p_cinst)
-                {
-                    nrf_drv_usbd_ep_enable(NRF_DRV_USBD_EPOUT(n));
-                }
-            }
 
             /* Send event to all classes */
             UNUSED_RETURN_VALUE(app_usbd_core_handler_call((app_usbd_internal_evt_t const * )&evt_data));
             app_usbd_all_call((app_usbd_complex_evt_t const *)&evt_data);
             user_event_state_proc(APP_USBD_EVT_STARTED);
 
-            nrf_drv_usbd_start((NULL != m_p_first_sof_cinst) || (m_current_conf.enable_sof));
+            nrf_drv_usbd_start((NULL != m_p_first_sof_cinst) || (m_current_conf.enable_sof) || (APP_USBD_PROVIDE_SOF_TIMESTAMP));
+            app_usbd_all_iface_deselect();
             sustate_set(SUSTATE_STARTED);
             break;
         }
@@ -756,6 +1019,7 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
                 .type = APP_USBD_EVT_STOPPED
             };
 
+            app_usbd_all_iface_deselect();
             nrf_drv_usbd_stop();
             sustate_set(SUSTATE_STOPPED);
 
@@ -826,6 +1090,9 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
 
         case APP_USBD_EVT_DRV_SOF:
         {
+            #if (APP_USBD_PROVIDE_SOF_TIMESTAMP) || defined(__SDK_DOXYGEN__)
+                m_last_frame = p_event->drv_evt.data.sof.framecnt;
+            #endif
             user_event_state_proc(APP_USBD_EVT_DRV_SOF);
 
             app_usbd_class_inst_t const * p_inst = app_usbd_class_sof_first_get();
@@ -840,8 +1107,9 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
 
         case APP_USBD_EVT_DRV_RESET:
         {
+            app_usbd_all_iface_deselect();
             sustate_set(SUSTATE_ACTIVE);
-            user_event_state_proc(APP_USBD_EVT_DRV_RESUME);
+            user_event_state_proc(APP_USBD_EVT_DRV_RESET);
             /* Processing core interface (connected only to EP0) and then all instances from the list */
             UNUSED_RETURN_VALUE(app_usbd_core_handler_call(p_event));
             app_usbd_all_call((app_usbd_complex_evt_t const *)p_event);
@@ -895,6 +1163,14 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
             break;
         }
 
+        case APP_USBD_EVT_STATE_CHANGED:
+        {
+            user_event_state_proc(APP_USBD_EVT_STATE_CHANGED);
+            /* Processing all instances from the list and then core interface (connected only to EP0) */
+            app_usbd_all_call((app_usbd_complex_evt_t const *)p_event);
+            break;
+        }
+
         case APP_USBD_EVT_DRV_SETUP:
         {
             UNUSED_RETURN_VALUE(app_usbd_core_handler_call(p_event));
@@ -920,7 +1196,26 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
             }
             break;
         }
-
+#if APP_USBD_CONFIG_POWER_EVENTS_PROCESS
+        case APP_USBD_EVT_POWER_DETECTED:
+        {
+            user_event_state_proc(APP_USBD_EVT_POWER_DETECTED);
+            app_usbd_all_call((app_usbd_complex_evt_t const *)p_event);
+            break;
+        }
+        case APP_USBD_EVT_POWER_REMOVED:
+        {
+            user_event_state_proc(APP_USBD_EVT_POWER_REMOVED);
+            app_usbd_all_call((app_usbd_complex_evt_t const *)p_event);
+            break;
+        }
+        case APP_USBD_EVT_POWER_READY:
+        {
+            user_event_state_proc(APP_USBD_EVT_POWER_READY);
+            app_usbd_all_call((app_usbd_complex_evt_t const *)p_event);
+            break;
+        }
+#endif
         default:
             ASSERT(0);
             break;
@@ -928,17 +1223,46 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
 }
 
 
-#if (APP_USBD_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
 bool app_usbd_event_queue_process(void)
 {
-    nrf_atfifo_item_get_t cx;
-    app_usbd_internal_evt_t const * p_event_item = nrf_atfifo_item_get(m_event_queue, &cx);
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+    static app_usbd_internal_evt_t const sof_event = {
+        .app_evt.type = APP_USBD_EVT_DRV_SOF
+    };
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+    static nrf_atfifo_item_get_t cx;
+    static app_usbd_internal_queue_evt_t * p_event_item = NULL;
+    if (NULL == p_event_item)
+    {
+        p_event_item = nrf_atfifo_item_get(m_event_queue, &cx);
+    }
+
     if (NULL != p_event_item)
     {
-        app_usbd_event_execute(p_event_item);
+
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+        if (p_event_item->sof_cnt > 0)
+        {
+            app_usbd_event_execute(&sof_event);
+            --(p_event_item->sof_cnt);
+            return true;
+        }
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+
+        app_usbd_event_execute(&(p_event_item->evt));
         UNUSED_RETURN_VALUE(nrf_atfifo_item_free(m_event_queue, &cx));
+        p_event_item = NULL;
         return true;
     }
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+    else if (m_sof_events_cnt > 0)
+    {
+        UNUSED_RETURN_VALUE(nrf_atomic_u32_sub_hs(&m_sof_events_cnt, 1));
+        app_usbd_event_execute(&sof_event);
+        return true;
+    }
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
     else
     {
         return false;
@@ -1170,74 +1494,8 @@ bool app_usbd_class_rwu_enabled_check(void)
     return (m_rwu_registered_counter != 0);
 }
 
-ret_code_t app_usbd_interface_std_req_handle(app_usbd_setup_evt_t  const * p_setup_ev)
-{
-    switch (p_setup_ev->setup.bmRequest)
-    {
-        case APP_USBD_SETUP_STDREQ_GET_STATUS:
-        {
-            size_t tx_size;
-            uint16_t * p_tx_buff = app_usbd_core_setup_transfer_buff_get(&tx_size);
-
-            p_tx_buff[0] = 0;
-            return app_usbd_core_setup_rsp(&(p_setup_ev->setup), p_tx_buff, sizeof(uint16_t));
-        }
-        default:
-            break;
-    }
-
-    return NRF_ERROR_NOT_SUPPORTED;
-}
-
-ret_code_t app_usbd_endpoint_std_req_handle(app_usbd_setup_evt_t const * p_setup_ev)
-{
-    nrf_drv_usbd_ep_t ep_addr = (nrf_drv_usbd_ep_t)(p_setup_ev->setup.wIndex.lb);
-    switch (p_setup_ev->setup.bmRequest)
-    {
-        case APP_USBD_SETUP_STDREQ_GET_STATUS:
-        {
-            size_t tx_size;
-            uint16_t * p_tx_buff = app_usbd_core_setup_transfer_buff_get(&tx_size);
-
-            p_tx_buff[0] = nrf_drv_usbd_ep_stall_check(ep_addr) ? 1 : 0;
-            return app_usbd_core_setup_rsp(&(p_setup_ev->setup), p_tx_buff, sizeof(uint16_t));
-        }
-        case APP_USBD_SETUP_STDREQ_SET_FEATURE:
-        {
-            if (p_setup_ev->setup.wValue.w != APP_USBD_SETUP_STDFEATURE_ENDPOINT_HALT)
-             {
-                 return NRF_ERROR_NOT_SUPPORTED;
-             }
-
-            nrf_drv_usbd_ep_stall(ep_addr);
-            return NRF_SUCCESS;
-        }
-        case APP_USBD_SETUP_STDREQ_CLEAR_FEATURE:
-        {
-            if (p_setup_ev->setup.wValue.w != APP_USBD_SETUP_STDFEATURE_ENDPOINT_HALT)
-            {
-                return NRF_ERROR_NOT_SUPPORTED;
-            }
-
-            if (nrf_usbd_dtoggle_get(ep_addr) != NRF_USBD_DTOGGLE_DATA0)
-            {
-                nrf_usbd_dtoggle_set(ep_addr, NRF_USBD_DTOGGLE_DATA0);
-            }
-
-            if (NRF_USBD_EPISO_CHECK(ep_addr) == 0)
-            {
-                nrf_drv_usbd_ep_stall_clear(ep_addr);
-            }
-
-            return NRF_SUCCESS;
-        }
-        default:
-            return NRF_ERROR_NOT_SUPPORTED;
-    }
-}
-
-ret_code_t app_usbd_req_std_set_interface(app_usbd_class_inst_t const * const p_cinst,
-                                          app_usbd_setup_evt_t  const * const p_setup_ev)
+ret_code_t app_usbd_interface_ep_reset(app_usbd_class_inst_t const * const p_cinst,
+                                       uint8_t iface)
 {
     uint8_t iface_count = app_usbd_class_iface_count_get(p_cinst);
 
@@ -1245,7 +1503,7 @@ ret_code_t app_usbd_req_std_set_interface(app_usbd_class_inst_t const * const p_
     for (uint8_t j = 0; j < iface_count; ++j)
     {
         p_iface = app_usbd_class_iface_get(p_cinst, j);
-        if (p_iface->number == p_setup_ev->setup.wIndex.lb)
+        if (app_usbd_class_iface_number_get(p_iface) == iface)
         {
             break;
         }
@@ -1263,13 +1521,9 @@ ret_code_t app_usbd_req_std_set_interface(app_usbd_class_inst_t const * const p_
         /*Clear stall for every endpoint*/
         app_usbd_class_ep_conf_t const * p_ep = app_usbd_class_iface_ep_get(p_iface, j);
 
-        if (nrf_usbd_dtoggle_get(p_ep->address) != NRF_USBD_DTOGGLE_DATA0)
+        if (!NRF_USBD_EPISO_CHECK(p_ep->address))
         {
-            nrf_usbd_dtoggle_set(p_ep->address, NRF_USBD_DTOGGLE_DATA0);
-        }
-
-        if (NRF_USBD_EPISO_CHECK(p_ep->address) == 0)
-        {
+            nrf_drv_usbd_ep_dtoggle_clear(p_ep->address);
             nrf_drv_usbd_ep_stall_clear(p_ep->address);
         }
 
@@ -1277,6 +1531,22 @@ ret_code_t app_usbd_req_std_set_interface(app_usbd_class_inst_t const * const p_
 
     return NRF_SUCCESS;
 }
+
+void app_usbd_ep_enable(nrf_drv_usbd_ep_t ep)
+{
+    if (!NRF_USBD_EPISO_CHECK(ep))
+    {
+        nrf_drv_usbd_ep_dtoggle_clear(ep);
+        nrf_drv_usbd_ep_stall_clear(ep);
+    }
+    nrf_drv_usbd_ep_enable(ep);
+}
+
+void app_usbd_ep_disable(nrf_drv_usbd_ep_t ep)
+{
+    nrf_drv_usbd_ep_disable(ep);
+}
+
 
 app_usbd_class_inst_t const * app_usbd_class_first_get(void)
 {
@@ -1288,38 +1558,50 @@ app_usbd_class_inst_t const * app_usbd_class_sof_first_get(void)
     return m_p_first_sof_cinst;
 }
 
-ret_code_t app_usbd_iface_call(uint8_t iface, app_usbd_complex_evt_t const * const p_event)
+app_usbd_class_inst_t const * app_usbd_iface_find(uint8_t iface, uint8_t * p_iface_idx)
 {
-    ASSERT(NULL != m_p_first_cinst);
-    /*Iterate over classes*/
     app_usbd_class_inst_t const * p_inst = app_usbd_class_first_get();
     while (p_inst != NULL)
     {
         uint8_t iface_count = app_usbd_class_iface_count_get(p_inst);
-        /*Iterate over interfaces*/
+        /* Iterate over interfaces */
         for (uint8_t i = 0; i < iface_count; ++i)
         {
             app_usbd_class_iface_conf_t const * p_iface;
             p_iface = app_usbd_class_iface_get(p_inst, i);
             if (app_usbd_class_iface_number_get(p_iface) == iface)
             {
-                return class_event_handler(p_inst, p_event);
+                if (p_iface_idx != NULL)
+                {
+                    (*p_iface_idx) = i;
+                }
+                return p_inst;
             }
         }
         p_inst = app_usbd_class_next_get(p_inst);
     }
+    return NULL;
+}
 
-    return NRF_ERROR_INVALID_ADDR;
+ret_code_t app_usbd_iface_call(
+    app_usbd_class_inst_t const * const p_class_inst,
+    uint8_t iface_idx,
+    app_usbd_complex_evt_t const * const p_event)
+{
+    UNUSED_PARAMETER(iface_idx);
+    return class_event_handler(p_class_inst, p_event);
 }
 
 ret_code_t app_usbd_ep_call(nrf_drv_usbd_ep_t ep, app_usbd_complex_evt_t const * const p_event)
 {
-    app_usbd_class_inst_t const * p_inst = app_usbd_ep_conf_access(ep)->p_cinst;
-    if (p_inst != NULL)
+    if (NRF_USBD_EP_VALIDATE(ep))
     {
-       return class_event_handler(p_inst, p_event);
+        app_usbd_class_inst_t const * p_inst = app_usbd_ep_conf_access(ep)->p_cinst;
+        if (p_inst != NULL)
+        {
+           return class_event_handler(p_inst, p_event);
+        }
     }
-
     return NRF_ERROR_INVALID_ADDR;
 }
 
@@ -1353,4 +1635,107 @@ ret_code_t app_usbd_all_until_served_call(app_usbd_complex_evt_t const * const p
     return ret;
 }
 
-#endif // APP_USBD_ENABLED
+ret_code_t app_usbd_ep_transfer(
+    nrf_drv_usbd_ep_t                     ep,
+    nrf_drv_usbd_transfer_t const * const p_transfer)
+{
+    if (!nrf_drv_usbd_ep_enable_check(ep))
+    {
+        return NRF_ERROR_INVALID_STATE;
+    }
+    if (m_sustate != SUSTATE_ACTIVE)
+    {
+        return NRF_ERROR_INVALID_STATE;
+    }
+    return nrf_drv_usbd_ep_transfer(ep, p_transfer);
+}
+
+ret_code_t app_usbd_ep_handled_transfer(
+    nrf_drv_usbd_ep_t                         ep,
+    nrf_drv_usbd_handler_desc_t const * const p_handler)
+{
+    if (!nrf_drv_usbd_ep_enable_check(ep))
+    {
+        return NRF_ERROR_INVALID_STATE;
+    }
+    if (m_sustate != SUSTATE_ACTIVE)
+    {
+        return NRF_ERROR_INVALID_STATE;
+    }
+    return nrf_drv_usbd_ep_handled_transfer(ep, p_handler);
+}
+
+ret_code_t app_usbd_iface_select(
+    app_usbd_class_inst_t const * const p_inst,
+    uint8_t                             iface_idx,
+    uint8_t                             alternate)
+{
+    ret_code_t ret = NRF_ERROR_NOT_SUPPORTED;
+
+    if (p_inst->p_class_methods->iface_select != NULL)
+    {
+        ret = p_inst->p_class_methods->iface_select(p_inst, iface_idx, alternate);
+    }
+
+    if(ret == NRF_ERROR_NOT_SUPPORTED)
+    {
+        ret = default_iface_select(p_inst, iface_idx, alternate);
+    }
+    return ret;
+}
+
+void app_usbd_iface_deselect(
+    app_usbd_class_inst_t const * const p_inst,
+    uint8_t                             iface_idx)
+{
+    if (p_inst->p_class_methods->iface_deselect != NULL)
+    {
+        p_inst->p_class_methods->iface_deselect(p_inst, iface_idx);
+    }
+    default_iface_deselect(p_inst, iface_idx);
+}
+
+uint8_t app_usbd_iface_selection_get(
+    app_usbd_class_inst_t const * const p_inst,
+    uint8_t                             iface_idx)
+{
+    uint8_t alt = 0;
+    if (p_inst->p_class_methods->iface_selection_get != NULL)
+    {
+        alt = p_inst->p_class_methods->iface_selection_get(p_inst, iface_idx);
+    }
+    return alt;
+}
+
+void app_usbd_all_iface_select_0(void)
+{
+    app_usbd_class_inst_t const * p_inst = app_usbd_class_first_get();
+    while (p_inst != NULL)
+    {
+        uint8_t iface_count = app_usbd_class_iface_count_get(p_inst);
+        for (uint8_t i = 0; i < iface_count; ++i)
+        {
+            ret_code_t ret;
+            ret = app_usbd_iface_select(p_inst, i, 0);
+            ASSERT(ret == NRF_SUCCESS);
+            UNUSED_VARIABLE(ret);
+        }
+        p_inst = app_usbd_class_next_get(p_inst);
+    }
+}
+
+void app_usbd_all_iface_deselect(void)
+{
+    app_usbd_class_inst_t const * p_inst = app_usbd_class_first_get();
+    while (p_inst != NULL)
+    {
+        uint8_t iface_count = app_usbd_class_iface_count_get(p_inst);
+        for (uint8_t i = 0; i < iface_count; ++i)
+        {
+            app_usbd_iface_deselect(p_inst, i);
+        }
+        p_inst = app_usbd_class_next_get(p_inst);
+    }
+}
+
+#endif //NRF_MODULE_ENABLED(APP_USBD)

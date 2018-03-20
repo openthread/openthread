@@ -62,14 +62,20 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IcmpHeader: public otIcmp6Header
+class IcmpHeader : public otIcmp6Header
 {
 public:
     /**
      * This method initializes the ICMPv6 header to all zeros.
      *
      */
-    void Init(void) { mType = 0; mCode = 0; mChecksum = 0; mData.m32[0] = 0; }
+    void Init(void)
+    {
+        mType        = 0;
+        mCode        = 0;
+        mChecksum    = 0;
+        mData.m32[0] = 0;
+    }
 
     /**
      * ICMPv6 Message Types
@@ -77,9 +83,9 @@ public:
      */
     enum Type
     {
-        kTypeDstUnreach  = OT_ICMP6_TYPE_DST_UNREACH,   ///< Destination Unreachable
-        kTypeEchoRequest = OT_ICMP6_TYPE_ECHO_REQUEST,  ///< Echo Request
-        kTypeEchoReply   = OT_ICMP6_TYPE_ECHO_REPLY,    ///< Echo Reply
+        kTypeDstUnreach  = OT_ICMP6_TYPE_DST_UNREACH,  ///< Destination Unreachable
+        kTypeEchoRequest = OT_ICMP6_TYPE_ECHO_REQUEST, ///< Echo Request
+        kTypeEchoReply   = OT_ICMP6_TYPE_ECHO_REPLY,   ///< Echo Reply
     };
 
     /**
@@ -88,7 +94,7 @@ public:
      */
     enum Code
     {
-        kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE,  ///< Destination Unreachable No Route
+        kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
     };
 
     /**
@@ -204,14 +210,16 @@ public:
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
      */
-    IcmpHandler(otIcmp6ReceiveCallback aCallback, void *aContext) {
+    IcmpHandler(otIcmp6ReceiveCallback aCallback, void *aContext)
+    {
         mReceiveCallback = aCallback;
         mContext         = aContext;
         mNext            = NULL;
     }
 
 private:
-    void HandleReceiveMessage(Message &aMessage, const MessageInfo &aMessageInfo, const IcmpHeader &aIcmp6Header) {
+    void HandleReceiveMessage(Message &aMessage, const MessageInfo &aMessageInfo, const IcmpHeader &aIcmp6Header)
+    {
         mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
     }
 
@@ -222,7 +230,7 @@ private:
  * This class implements ICMPv6.
  *
  */
-class Icmp: public InstanceLocator
+class Icmp : public InstanceLocator
 {
 public:
     /**
@@ -280,8 +288,10 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available.
      *
      */
-    otError SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
-                      const Header &aHeader);
+    otError SendError(IcmpHeader::Type   aType,
+                      IcmpHeader::Code   aCode,
+                      const MessageInfo &aMessageInfo,
+                      const Header &     aHeader);
 
     /**
      * This method handles an ICMPv6 message.
@@ -315,7 +325,7 @@ public:
      * @retval FALSE  ICMPv6 Echo processing is disabled.
      *
      */
-    bool IsEchoEnabled(void) { return mIsEchoEnabled; }
+    otIcmp6EchoMode GetEchoMode(void) const { return mEchoMode; }
 
     /**
      * This method sets whether or not ICMPv6 Echo processing is enabled.
@@ -323,15 +333,24 @@ public:
      * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
      *
      */
-    void SetEchoEnabled(bool aEnabled) { mIsEchoEnabled = aEnabled; }
+    void SetEchoMode(otIcmp6EchoMode aMode) { mEchoMode = aMode; }
+
+    /**
+     * This method indicates whether or not the ICMPv6 Echo Request should be handled.
+     *
+     * @retval TRUE if OpenThread should respond with an ICMPv6 Echo Reply.
+     * @retval FALSE if OpenThread should not respond with an ICMPv6 Echo Reply.
+     *
+     */
+    bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
 
 private:
     otError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
 
     IcmpHandler *mHandlers;
 
-    uint16_t mEchoSequence;
-    bool mIsEchoEnabled;
+    uint16_t        mEchoSequence;
+    otIcmp6EchoMode mEchoMode;
 };
 
 /**
@@ -339,7 +358,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_ICMP6_HPP_
+#endif // NET_ICMP6_HPP_

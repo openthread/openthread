@@ -37,76 +37,199 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
 
 void Neighbor::GenerateChallenge(void)
 {
-    for (uint8_t i = 0; i < sizeof(mValidPending.mPending.mChallenge); i++)
-    {
-        mValidPending.mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
 }
 
-otError Child::FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const
+void Child::ClearIp6Addresses(void)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    memset(mMeshLocalIid, 0, sizeof(mMeshLocalIid));
+    memset(mIp6Address, 0, sizeof(mIp6Address));
+}
 
-    for (uint8_t index = 0; index < kMaxIp6AddressPerChild; index++)
+/**
+ * Determines if all elements in an array are zero.
+ *
+ * @param[in]  aArray   A pointer to an array of bytes.
+ * @param[in]  aLength  Array length (number of bytes).
+ *
+ * @returns TRUE if all bytes in the array are zero, FALSE otherwise.
+ *
+ */
+static bool IsAllZero(const uint8_t *aArray, uint8_t aLength)
+{
+    bool retval = true;
+
+    for (; aLength != 0; aArray++, aLength--)
     {
+        VerifyOrExit(*aArray == 0, retval = false);
+    }
+
+exit:
+    return retval;
+}
+
+otError Child::GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddress) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_NOT_FOUND);
+
+    memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix(),
+           Ip6::Address::kMeshLocalPrefixSize);
+
+    aAddress.SetIid(mMeshLocalIid);
+
+exit:
+    return error;
+}
+
+otError Child::GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const
+{
+    otError                   error = OT_ERROR_NONE;
+    otChildIp6AddressIterator index;
+
+    // Index zero corresponds to the Mesh Local IPv6 address (if any).
+
+    if (aIterator.Get() == 0)
+    {
+        aIterator.Increment();
+        VerifyOrExit(GetMeshLocalIp6Address(aInstance, aAddress) == OT_ERROR_NOT_FOUND);
+    }
+
+    index = aIterator.Get() - 1;
+
+    VerifyOrExit(index < kNumIp6Addresses, error = OT_ERROR_NOT_FOUND);
+
+    VerifyOrExit(!mIp6Address[index].IsUnspecified(), error = OT_ERROR_NOT_FOUND);
+    aAddress = mIp6Address[index];
+    aIterator.Increment();
+
+exit:
+    return error;
+}
+
+otError Child::AddIp6Address(Instance &aInstance, const Ip6::Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+
+    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    {
+        VerifyOrExit(IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_ALREADY);
+        memcpy(mMeshLocalIid, aAddress.GetIid(), Ip6::Address::kInterfaceIdentifierSize);
+        ExitNow();
+    }
+
+    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    {
+        if (mIp6Address[index].IsUnspecified())
+        {
+            mIp6Address[index] = aAddress;
+            ExitNow();
+        }
+
+        VerifyOrExit(mIp6Address[index] != aAddress, error = OT_ERROR_ALREADY);
+    }
+
+    error = OT_ERROR_NO_BUFS;
+
+exit:
+    return error;
+}
+
+otError Child::RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddress)
+{
+    otError  error = OT_ERROR_NOT_FOUND;
+    uint16_t index;
+
+    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+
+    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    {
+        if (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0)
+        {
+            memset(mMeshLocalIid, 0, sizeof(mMeshLocalIid));
+            error = OT_ERROR_NONE;
+        }
+
+        ExitNow();
+    }
+
+    for (index = 0; index < kNumIp6Addresses; index++)
+    {
+        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+
         if (mIp6Address[index] == aAddress)
         {
-            if (aIndex != NULL)
-            {
-                *aIndex = index;
-            }
-
             error = OT_ERROR_NONE;
             break;
         }
     }
 
+    SuccessOrExit(error);
+
+    for (; index < kNumIp6Addresses - 1; index++)
+    {
+        mIp6Address[index] = mIp6Address[index + 1];
+    }
+
+    mIp6Address[kNumIp6Addresses - 1].Clear();
+
+exit:
     return error;
 }
 
-void Child::RemoveIp6Address(uint8_t aIndex)
+bool Child::HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) const
 {
-    VerifyOrExit(aIndex < kMaxIp6AddressPerChild);
+    bool retval = false;
 
-    for (uint8_t i = aIndex; i < kMaxIp6AddressPerChild - 1; i++)
+    VerifyOrExit(!aAddress.IsUnspecified());
+
+    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
     {
-        mIp6Address[i] = mIp6Address[i + 1];
+        retval = (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0);
+        ExitNow();
     }
 
-    memset(&mIp6Address[kMaxIp6AddressPerChild - 1], 0, sizeof(Ip6::Address));
+    for (uint16_t index = 0; index < kNumIp6Addresses; index++)
+    {
+        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+
+        if (mIp6Address[index] == aAddress)
+        {
+            ExitNow(retval = true);
+        }
+    }
 
 exit:
-    return;
+    return retval;
 }
 
 void Child::GenerateChallenge(void)
 {
-    for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++)
-    {
-        mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
 }
 
 const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
 {
     if (mUseShortAddress)
     {
-        aMacAddress.mShortAddress = GetRloc16();
-        aMacAddress.mLength = sizeof(aMacAddress.mShortAddress);
+        aMacAddress.SetShort(GetRloc16());
     }
     else
     {
-        aMacAddress.mExtAddress = GetExtAddress();
-        aMacAddress.mLength = sizeof(aMacAddress.mExtAddress);
+        aMacAddress.SetExtended(GetExtAddress());
     }
 
     return aMacAddress;
 }
 
-}  // namespace ot
+} // namespace ot

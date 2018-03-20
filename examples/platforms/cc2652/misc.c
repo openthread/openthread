@@ -29,8 +29,8 @@
 #include <openthread/config.h>
 
 #include <driverlib/sys_ctrl.h>
-#include <openthread/platform/misc.h>
 #include <openthread/types.h>
+#include <openthread/platform/misc.h>
 
 /*
  * NOTE: if the system is flashed with Flash Programmer 2 or Uniflash, this
@@ -91,4 +91,3 @@ void otPlatWakeHost(void)
 {
     // TODO: implement an operation to wake the host from sleep state.
 }
-

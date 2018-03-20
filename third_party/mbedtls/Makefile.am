@@ -50,7 +50,8 @@ libmbedcrypto_a_SOURCES                       = \
 
 if OPENTHREAD_EXAMPLES_EFR32
 nodist_libmbedcrypto_a_SOURCES                = \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/util/third_party/mbedtls/sl_crypto/src/sl_aes.c \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/sl_crypto/src/crypto_management.c \
     $(NULL)
 else
 libmbedcrypto_a_SOURCES                      += \
@@ -81,8 +82,8 @@ libmbedcrypto_a_SOURCES                      += \
 
 if OPENTHREAD_EXAMPLES_EFR32
 nodist_libmbedcrypto_a_SOURCES               += \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/util/third_party/mbedtls/library/ecp.c \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/util/third_party/mbedtls/sl_crypto/src/sl_ecp.c \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/library/ecp.c \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c \
     $(NULL)
 else
 libmbedcrypto_a_SOURCES                      += \

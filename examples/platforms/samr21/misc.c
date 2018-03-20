@@ -41,7 +41,9 @@ void otPlatReset(otInstance *aInstance)
 
     system_reset();
 
-    while (1) {}
+    while (1)
+    {
+    }
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)

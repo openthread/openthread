@@ -38,9 +38,11 @@ import unittest
 import config
 
 class Node:
-    def __init__(self, nodeid, is_mtd=False):
+    def __init__(self, nodeid, is_mtd=False, simulator=None):
+        self.simulator = simulator
+
         if sys.platform != 'win32':
-            self.interface = node_cli.otCli(nodeid, is_mtd)
+            self.interface = node_cli.otCli(nodeid, is_mtd, simulator=simulator)
         else:
             self.interface = node_api.otApi(nodeid)
 
@@ -194,6 +196,12 @@ class Node:
     def get_addrs(self):
         return self.interface.get_addrs()
 
+    def get_addr(self, prefix):
+        return self.interface.get_addr(prefix)
+
+    def get_eidcaches(self):
+        return self.interface.get_eidcaches()
+
     def add_service(self, enterpriseNumber, serviceData, serverData):
         self.interface.add_service(enterpriseNumber, serviceData, serverData)
 
@@ -233,7 +241,7 @@ class Node:
     def scan(self):
         return self.interface.scan()
 
-    def ping(self, ipaddr, num_responses=1, size=None, timeout=5000):
+    def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
         return self.interface.ping(ipaddr, num_responses, size, timeout)
 
     def reset(self):

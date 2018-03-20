@@ -47,8 +47,6 @@
 
 namespace ot {
 
-namespace Ip6 { class Address; }
-
 namespace Mac {
 
 /**
@@ -61,8 +59,8 @@ namespace Mac {
 enum
 {
     kShortAddrBroadcast = 0xffff,
-    kShortAddrInvalid = 0xfffe,
-    kPanIdBroadcast = 0xffff,
+    kShortAddrInvalid   = 0xfffe,
+    kPanIdBroadcast     = 0xffff,
 };
 
 /**
@@ -82,7 +80,7 @@ typedef otShortAddress ShortAddress;
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtAddress: public otExtAddress
+class ExtAddress : public otExtAddress
 {
 public:
     /**
@@ -100,14 +98,23 @@ public:
      * @param[in]  aLocal  TRUE if group address, FALSE otherwise.
      *
      */
-    void SetGroup(bool aGroup) {
-        if (aGroup) {
+    void SetGroup(bool aGroup)
+    {
+        if (aGroup)
+        {
             m8[0] |= kGroupFlag;
         }
-        else {
+        else
+        {
             m8[0] &= ~kGroupFlag;
         }
     }
+
+    /**
+     * This method toggles the Group bit.
+     *
+     */
+    void ToggleGroup(void) { m8[0] ^= kGroupFlag; }
 
     /**
      * This method indicates whether or not the Local bit is set.
@@ -124,14 +131,23 @@ public:
      * @param[in]  aLocal  TRUE if locally administered, FALSE otherwise.
      *
      */
-    void SetLocal(bool aLocal) {
-        if (aLocal) {
+    void SetLocal(bool aLocal)
+    {
+        if (aLocal)
+        {
             m8[0] |= kLocalFlag;
         }
-        else {
+        else
+        {
             m8[0] &= ~kLocalFlag;
         }
     }
+
+    /**
+     * This method toggles the Local bit.
+     *
+     */
+    void ToggleLocal(void) { m8[0] ^= kLocalFlag; }
 
     /**
      * This method evaluates whether or not the Extended Addresses match.
@@ -155,6 +171,17 @@ public:
      */
     bool operator!=(const ExtAddress &aOther) const;
 
+    /**
+     * This method converts an address to a NULL-terminated string.
+     *
+     * @param[out]  aBuf   A pointer to a character buffer.
+     * @param[in]   aSize  The maximum size of the buffer.
+     *
+     * @returns A pointer to the character string buffer.
+     *
+     */
+    const char *ToString(char *aBuf, uint16_t aSize) const;
+
 private:
     enum
     {
@@ -164,112 +191,262 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an IEEE 802.15.4 Short or Extended Address.
+ * This class represents an IEEE 802.15.4 Short or Extended Address.
  *
  */
-struct Address
+class Address
 {
+public:
     enum
     {
-        kAddressStringSize = 18,     ///< Max chars needed for a string representation of address (@sa ToString()).
-    };
-
-    uint8_t mLength;                 ///< Length of address in bytes.
-    union
-    {
-        ShortAddress mShortAddress;  ///< The IEEE 802.15.4 Short Address.
-        ExtAddress mExtAddress;      ///< The IEEE 802.15.4 Extended Address.
+        kAddressStringSize = 18, ///< Max chars needed for a string representation of address (@sa ToString()).
     };
 
     /**
-     * This method converts an address object to a NULL-terminated string.
+     * This enumeration specifies the IEEE 802.15.4 Address type.
      *
-     * @param[out]  aBuf   A pointer to the buffer.
+     */
+    enum Type
+    {
+        kTypeNone,     ///< No address.
+        kTypeShort,    ///< IEEE 802.15.4 Short Address.
+        kTypeExtended, ///< IEEE 802.15.4 Extended Address.
+    };
+
+    /**
+     * This constructor initializes an Address.
+     *
+     */
+    Address(void)
+        : mType(kTypeNone)
+    {
+    }
+
+    /**
+     * This method gets the address type (Short Address, Extended Address, or none).
+     *
+     * @returns The address type.
+     *
+     */
+    Type GetType(void) const { return mType; }
+
+    /**
+     * This method indicates whether or not there is an address.
+     *
+     * @returns TRUE if there is no address (i.e. address type is `kTypeNone`), FALSE otherwise.
+     *
+     */
+    bool IsNone(void) const { return (mType == kTypeNone); }
+
+    /**
+     * This method indicates whether or not the Address is a Short Address.
+     *
+     * @returns TRUE if it is a Short Address, FALSE otherwise.
+     *
+     */
+    bool IsShort(void) const { return (mType == kTypeShort); }
+
+    /**
+     * This method indicates whether or not the Address is an Extended Address.
+     *
+     * @returns TRUE if it is an Extended Address, FALSE otherwise.
+     *
+     */
+    bool IsExtended(void) const { return (mType == kTypeExtended); }
+
+    /**
+     * This method gets the address as a Short Address.
+     *
+     * This method MUST be used only if the address type is Short Address.
+     *
+     * @returns The Short Address.
+     *
+     */
+    ShortAddress GetShort(void) const { return mShared.mShortAddress; }
+
+    /**
+     * This method gets the address as an Extended Address.
+     *
+     * This method MUST be used only if the address type is Extended Address.
+     *
+     * @returns A constant reference to the Extended Address.
+     *
+     */
+    const ExtAddress &GetExtended(void) const { return mShared.mExtAddress; }
+
+    /**
+     * This method gets the address as an Extended Address.
+     *
+     * This method MUST be used only if the address type is Extended Address.
+     *
+     * @returns A reference to the Extended Address.
+     *
+     */
+    ExtAddress &GetExtended(void) { return mShared.mExtAddress; }
+
+    /**
+     * This method sets the address to none (i.e., clears the address).
+     *
+     * Address type will be updated to `kTypeNone`.
+     *
+     */
+    void SetNone(void) { mType = kTypeNone; }
+
+    /**
+     * This method sets the address with a Short Address.
+     *
+     * The type is also updated to indicate that address is Short.
+     *
+     * @param[in]  aShortAddress  A Short Address
+     *
+     */
+    void SetShort(ShortAddress aShortAddress)
+    {
+        mShared.mShortAddress = aShortAddress;
+        mType                 = kTypeShort;
+    }
+
+    /**
+     * This method sets the address with an Extended Address.
+     *
+     * The type is also updated to indicate that the address is Extended.
+     *
+     * @param[in]  aExtAddress  An Extended Address
+     *
+     */
+    void SetExtended(const ExtAddress &aExtAddress)
+    {
+        mShared.mExtAddress = aExtAddress;
+        mType               = kTypeExtended;
+    }
+
+    /**
+     * This method sets the address with an Extended Address given as byte array.
+     *
+     * The type is also updated to indicate that the address is Extended.
+     *
+     * @param[in]  aBuffer   Pointer to a array containing the Extended Address. `OT_EXT_ADDRESS_SIZE` bytes from buffer
+     *                       are copied to form the Extended Address.
+     * @param[in]  aReverse  If `true` then `OT_EXT_ADDRESS_SIZE` bytes from @p aBuffer are copied in reverse order,
+     *                       otherwise they are copied as provided.
+     *
+     */
+    void SetExtended(const uint8_t *aBuffer, bool aReverse);
+
+    /**
+     * This method indicates whether or not the address is a Short Broadcast Address.
+     *
+     * @returns TRUE if address is Short Broadcast Address, FALSE otherwise.
+     *
+     */
+    bool IsBroadcast(void) const { return ((mType == kTypeShort) && (GetShort() == kShortAddrBroadcast)); }
+
+    /**
+     * This method indicates whether or not the address is a Short Invalid Address.
+     *
+     * @returns TRUE if address is Short Invalid Address, FALSE otherwise.
+     *
+     */
+    bool IsShortAddrInvalid(void) const { return ((mType == kTypeShort) && (GetShort() == kShortAddrInvalid)); }
+
+    /**
+     * This method converts an address to a NULL-terminated string.
+     *
+     * @param[out]  aBuf   A pointer to a character buffer.
      * @param[in]   aSize  The maximum size of the buffer.
      *
-     * @returns A pointer to the char string buffer.
+     * @returns A pointer to the character string buffer.
      *
      */
     const char *ToString(char *aBuf, uint16_t aSize) const;
+
+private:
+    union
+    {
+        ShortAddress mShortAddress; ///< The IEEE 802.15.4 Short Address.
+        ExtAddress   mExtAddress;   ///< The IEEE 802.15.4 Extended Address.
+    } mShared;
+
+    Type mType; ///< The address type (Short, Extended, or none).
 };
 
 /**
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.
  *
  */
-class Frame: public otRadioFrame
+class Frame : public otRadioFrame
 {
 public:
     enum
     {
-        kMTU                  = 127,
-        kFcfSize              = sizeof(uint16_t),
-        kDsnSize              = sizeof(uint8_t),
-        kSecurityControlSize  = sizeof(uint8_t),
-        kFrameCounterSize     = sizeof(uint32_t),
-        kCommandIdSize        = sizeof(uint8_t),
-        kFcsSize              = sizeof(uint16_t),
+        kMTU                 = 127,
+        kFcfSize             = sizeof(uint16_t),
+        kDsnSize             = sizeof(uint8_t),
+        kSecurityControlSize = sizeof(uint8_t),
+        kFrameCounterSize    = sizeof(uint32_t),
+        kCommandIdSize       = sizeof(uint8_t),
+        kFcsSize             = sizeof(uint16_t),
 
-        kFcfFrameBeacon       = 0 << 0,
-        kFcfFrameData         = 1 << 0,
-        kFcfFrameAck          = 2 << 0,
-        kFcfFrameMacCmd       = 3 << 0,
-        kFcfFrameTypeMask     = 7 << 0,
-        kFcfSecurityEnabled   = 1 << 3,
-        kFcfFramePending      = 1 << 4,
-        kFcfAckRequest        = 1 << 5,
-        kFcfPanidCompression  = 1 << 6,
-        kFcfDstAddrNone       = 0 << 10,
-        kFcfDstAddrShort      = 2 << 10,
-        kFcfDstAddrExt        = 3 << 10,
-        kFcfDstAddrMask       = 3 << 10,
-        kFcfFrameVersion2006  = 1 << 12,
-        kFcfFrameVersionMask  = 3 << 13,
-        kFcfSrcAddrNone       = 0 << 14,
-        kFcfSrcAddrShort      = 2 << 14,
-        kFcfSrcAddrExt        = 3 << 14,
-        kFcfSrcAddrMask       = 3 << 14,
+        kFcfFrameBeacon      = 0 << 0,
+        kFcfFrameData        = 1 << 0,
+        kFcfFrameAck         = 2 << 0,
+        kFcfFrameMacCmd      = 3 << 0,
+        kFcfFrameTypeMask    = 7 << 0,
+        kFcfSecurityEnabled  = 1 << 3,
+        kFcfFramePending     = 1 << 4,
+        kFcfAckRequest       = 1 << 5,
+        kFcfPanidCompression = 1 << 6,
+        kFcfDstAddrNone      = 0 << 10,
+        kFcfDstAddrShort     = 2 << 10,
+        kFcfDstAddrExt       = 3 << 10,
+        kFcfDstAddrMask      = 3 << 10,
+        kFcfFrameVersion2006 = 1 << 12,
+        kFcfFrameVersionMask = 3 << 13,
+        kFcfSrcAddrNone      = 0 << 14,
+        kFcfSrcAddrShort     = 2 << 14,
+        kFcfSrcAddrExt       = 3 << 14,
+        kFcfSrcAddrMask      = 3 << 14,
 
-        kSecNone              = 0 << 0,
-        kSecMic32             = 1 << 0,
-        kSecMic64             = 2 << 0,
-        kSecMic128            = 3 << 0,
-        kSecEnc               = 4 << 0,
-        kSecEncMic32          = 5 << 0,
-        kSecEncMic64          = 6 << 0,
-        kSecEncMic128         = 7 << 0,
-        kSecLevelMask         = 7 << 0,
+        kSecNone      = 0 << 0,
+        kSecMic32     = 1 << 0,
+        kSecMic64     = 2 << 0,
+        kSecMic128    = 3 << 0,
+        kSecEnc       = 4 << 0,
+        kSecEncMic32  = 5 << 0,
+        kSecEncMic64  = 6 << 0,
+        kSecEncMic128 = 7 << 0,
+        kSecLevelMask = 7 << 0,
 
-        kMic0Size             = 0,
-        kMic32Size            = 32 / CHAR_BIT,
-        kMic64Size            = 64 / CHAR_BIT,
-        kMic128Size           = 128 / CHAR_BIT,
-        kMaxMicSize           = kMic128Size,
+        kMic0Size   = 0,
+        kMic32Size  = 32 / CHAR_BIT,
+        kMic64Size  = 64 / CHAR_BIT,
+        kMic128Size = 128 / CHAR_BIT,
+        kMaxMicSize = kMic128Size,
 
-        kKeyIdMode0           = 0 << 3,
-        kKeyIdMode1           = 1 << 3,
-        kKeyIdMode2           = 2 << 3,
-        kKeyIdMode3           = 3 << 3,
-        kKeyIdModeMask        = 3 << 3,
+        kKeyIdMode0    = 0 << 3,
+        kKeyIdMode1    = 1 << 3,
+        kKeyIdMode2    = 2 << 3,
+        kKeyIdMode3    = 3 << 3,
+        kKeyIdModeMask = 3 << 3,
 
-        kKeySourceSizeMode0   = 0,
-        kKeySourceSizeMode1   = 0,
-        kKeySourceSizeMode2   = 4,
-        kKeySourceSizeMode3   = 8,
+        kKeySourceSizeMode0 = 0,
+        kKeySourceSizeMode1 = 0,
+        kKeySourceSizeMode2 = 4,
+        kKeySourceSizeMode3 = 8,
 
-        kKeyIndexSize         = sizeof(uint8_t),
+        kKeyIndexSize = sizeof(uint8_t),
 
-        kMacCmdAssociationRequest          = 1,
-        kMacCmdAssociationResponse         = 2,
-        kMacCmdDisassociationNotification  = 3,
-        kMacCmdDataRequest                 = 4,
-        kMacCmdPanidConflictNotification   = 5,
-        kMacCmdOrphanNotification          = 6,
-        kMacCmdBeaconRequest               = 7,
-        kMacCmdCoordinatorRealignment      = 8,
-        kMacCmdGtsRequest                  = 9,
+        kMacCmdAssociationRequest         = 1,
+        kMacCmdAssociationResponse        = 2,
+        kMacCmdDisassociationNotification = 3,
+        kMacCmdDataRequest                = 4,
+        kMacCmdPanidConflictNotification  = 5,
+        kMacCmdOrphanNotification         = 6,
+        kMacCmdBeaconRequest              = 7,
+        kMacCmdCoordinatorRealignment     = 8,
+        kMacCmdGtsRequest                 = 9,
 
-        kInfoStringSize =  110,   ///< Max chars needed for the info string representation (@sa ToInfoString()).
+        kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
     };
 
     /**
@@ -600,7 +777,11 @@ public:
      * @retval OT_ERROR_NONE          Successfully set the MAC Frame Length.
      *
      */
-    otError SetLength(uint8_t aLength) { SetPsduLength(aLength); return OT_ERROR_NONE; }
+    otError SetLength(uint8_t aLength)
+    {
+        SetPsduLength(aLength);
+        return OT_ERROR_NONE;
+    }
 
     /**
      * This method returns the MAC header size.
@@ -835,20 +1016,19 @@ public:
 private:
     enum
     {
-        kInvalidIndex = 0xff,
+        kInvalidIndex  = 0xff,
         kSequenceIndex = kFcfSize,
     };
 
     uint16_t GetFrameControlField(void) const;
-    uint8_t FindDstPanIdIndex(void) const;
-    uint8_t FindDstAddrIndex(void) const;
-    uint8_t FindSrcPanIdIndex(void) const;
-    uint8_t FindSrcAddrIndex(void) const;
-    uint8_t FindSecurityHeaderIndex(void) const;
-    uint8_t FindPayloadIndex(void) const;
+    uint8_t  FindDstPanIdIndex(void) const;
+    uint8_t  FindDstAddrIndex(void) const;
+    uint8_t  FindSrcPanIdIndex(void) const;
+    uint8_t  FindSrcAddrIndex(void) const;
+    uint8_t  FindSecurityHeaderIndex(void) const;
+    uint8_t  FindPayloadIndex(void) const;
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
-
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -857,16 +1037,17 @@ class Beacon
 public:
     enum
     {
-        kSuperFrameSpec   = 0x0fff,                 ///< Superframe Specification value.
+        kSuperFrameSpec = 0x0fff, ///< Superframe Specification value.
     };
 
     /**
      * This method initializes the Beacon message.
      *
      */
-    void Init(void) {
-        mSuperframeSpec = ot::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec);
-        mGtsSpec = 0;
+    void Init(void)
+    {
+        mSuperframeSpec     = ot::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec);
+        mGtsSpec            = 0;
         mPendingAddressSpec = 0;
     }
 
@@ -877,9 +1058,10 @@ public:
      * @retval FALSE if the beacon does not appear to be a valid Thread Beacon message.
      *
      */
-    bool IsValid(void) {
-        return (mSuperframeSpec == ot::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec)) &&
-               (mGtsSpec == 0) && (mPendingAddressSpec == 0);
+    bool IsValid(void)
+    {
+        return (mSuperframeSpec == ot::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec)) && (mGtsSpec == 0) &&
+               (mPendingAddressSpec == 0);
     }
 
     /**
@@ -906,28 +1088,29 @@ class BeaconPayload
 public:
     enum
     {
-        kProtocolId       = 3,                      ///< Thread Protocol ID.
-        kNetworkNameSize  = 16,                     ///< Size of Thread Network Name (bytes).
-        kExtPanIdSize     = 8,                      ///< Size of Thread Extended PAN ID.
-        kInfoStringSize   = 92,                     ///< Max chars for the info string (@sa ToInfoString()).
+        kProtocolId      = 3,  ///< Thread Protocol ID.
+        kNetworkNameSize = 16, ///< Size of Thread Network Name (bytes).
+        kExtPanIdSize    = 8,  ///< Size of Thread Extended PAN ID.
+        kInfoStringSize  = 92, ///< Max chars for the info string (@sa ToInfoString()).
     };
 
     enum
     {
-        kProtocolVersion  = 2,                      ///< Thread Protocol version.
-        kVersionOffset    = 4,                      ///< Version field bit offset.
-        kVersionMask      = 0xf << kVersionOffset,  ///< Version field mask.
-        kNativeFlag       = 1 << 3,                 ///< Native Commissioner flag.
-        kJoiningFlag      = 1 << 0,                 ///< Joining Permitted flag.
+        kProtocolVersion = 2,                     ///< Thread Protocol version.
+        kVersionOffset   = 4,                     ///< Version field bit offset.
+        kVersionMask     = 0xf << kVersionOffset, ///< Version field mask.
+        kNativeFlag      = 1 << 3,                ///< Native Commissioner flag.
+        kJoiningFlag     = 1 << 0,                ///< Joining Permitted flag.
     };
 
     /**
      * This method initializes the Beacon Payload.
      *
      */
-    void Init(void) {
+    void Init(void)
+    {
         mProtocolId = kProtocolId;
-        mFlags = kProtocolVersion << kVersionOffset;
+        mFlags      = kProtocolVersion << kVersionOffset;
     }
 
     /**
@@ -937,9 +1120,7 @@ public:
      * @retval FALSE if the beacon does not appear to be a valid Thread Beacon Payload.
      *
      */
-    bool IsValid(void) {
-        return (mProtocolId == kProtocolId);
-    }
+    bool IsValid(void) { return (mProtocolId == kProtocolId); }
 
     /**
      * This method returns the Protocol ID value.
@@ -997,12 +1178,13 @@ public:
      * This method sets the Joining Permitted flag.
      *
      */
-    void SetJoiningPermitted(void) {
+    void SetJoiningPermitted(void)
+    {
         mFlags |= kJoiningFlag;
 
 #if OPENTHREAD_CONFIG_JOIN_BEACON_VERSION != kProtocolVersion
         mFlags &= ~kVersionMask;
-        mFlags |=  OPENTHREAD_CONFIG_JOIN_BEACON_VERSION << kVersionOffset;
+        mFlags |= OPENTHREAD_CONFIG_JOIN_BEACON_VERSION << kVersionOffset;
 #endif
     }
 
@@ -1020,7 +1202,8 @@ public:
      * @param[in]  aNetworkName  A pointer to the Network Name.
      *
      */
-    void SetNetworkName(const char *aNetworkName) {
+    void SetNetworkName(const char *aNetworkName)
+    {
         size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
         memset(mNetworkName, 0, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
@@ -1051,13 +1234,13 @@ public:
      * @returns A pointer to the char string buffer.
      *
      */
-    const char *ToInfoString(char *aBuf, uint16_t aSize);
+    const char *ToInfoString(char *aBuf, uint16_t aSize) const;
 
 private:
-    uint8_t  mProtocolId;
-    uint8_t  mFlags;
-    char     mNetworkName[kNetworkNameSize];
-    uint8_t  mExtendedPanId[kExtPanIdSize];
+    uint8_t mProtocolId;
+    uint8_t mFlags;
+    char    mNetworkName[kNetworkNameSize];
+    uint8_t mExtendedPanId[kExtPanIdSize];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1065,7 +1248,7 @@ private:
  *
  */
 
-}  // namespace Mac
-}  // namespace ot
+} // namespace Mac
+} // namespace ot
 
-#endif  // MAC_FRAME_HPP_
+#endif // MAC_FRAME_HPP_

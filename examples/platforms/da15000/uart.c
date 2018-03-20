@@ -33,9 +33,9 @@
 #include "hw_gpio.h"
 #include "hw_uart.h"
 
-static bool sUartWriteDone = false;
-static bool sUartReadDone  = false;
-static char *sInitBuf = NULL;
+static bool    sUartWriteDone = false;
+static bool    sUartReadDone  = false;
+static char *  sInitBuf       = NULL;
 static uint8_t sUartBuf;
 
 static void UartSignalWrite(void *p, uint16_t transferred)
@@ -56,6 +56,7 @@ static void UartSignalRead(void *p, uint16_t transferred)
 
 otError otPlatUartEnable(void)
 {
+    // clang-format off
     uart_config_ex uart_init =
     {
         .baud_rate = HW_UART_BAUDRATE_115200,
@@ -70,15 +71,13 @@ otError otPlatUartEnable(void)
         .tx_dma_channel = HW_DMA_CHANNEL_3,
         .rx_dma_channel = HW_DMA_CHANNEL_2,
     };
+    // clang-format on
 
     hw_uart_init_ex(HW_UART2, &uart_init);
 
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_3,
-                             HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART2_TX);
-    hw_gpio_set_pin_function(HW_GPIO_PORT_2, HW_GPIO_PIN_3,
-                             HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART2_RX);
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT,
-                             HW_GPIO_FUNC_GPIO);
+    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART2_TX);
+    hw_gpio_set_pin_function(HW_GPIO_PORT_2, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART2_RX);
+    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_GPIO);
 
     hw_uart_receive(HW_UART2, &sUartBuf, 1, UartSignalRead, NULL);
 

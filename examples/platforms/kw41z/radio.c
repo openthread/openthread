@@ -32,17 +32,18 @@
  *
  */
 
+#include "fsl_device_registers.h"
+#include "fsl_xcvr.h"
+#include "openthread-core-kw41z-config.h"
 #include <stdint.h>
 #include <string.h>
-#include "fsl_device_registers.h"
-#include "openthread-core-kw41z-config.h"
-#include "fsl_xcvr.h"
 
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/radio.h>
-#include <openthread/platform/diag.h>
 #include <utils/code_utils.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
+// clang-format off
 #define DOUBLE_BUFFERING             (1)
 #define DEFAULT_CHANNEL              (11)
 #define DEFAULT_CCA_MODE             (XCVR_CCA_MODE1_c)
@@ -62,9 +63,9 @@
                                       ZLL_IRQSTS_TMR2MSK_MASK | \
                                       ZLL_IRQSTS_TMR3MSK_MASK | \
                                       ZLL_IRQSTS_TMR4MSK_MASK )
+// clang-format on
 
-typedef enum xcvr_state_tag
-{
+typedef enum xcvr_state_tag {
     XCVR_Idle_c,
     XCVR_RX_c,
     XCVR_TX_c,
@@ -73,31 +74,30 @@ typedef enum xcvr_state_tag
     XCVR_CCCA_c,
 } xcvr_state_t;
 
-typedef enum xcvr_cca_type_tag
-{
-    XCVR_ED_c,            /* energy detect - CCA bit not active, not to be used for T and CCCA sequences */
-    XCVR_CCA_MODE1_c,     /* energy detect - CCA bit ACTIVE */
-    SCVR_CCA_MODE2_c,     /* 802.15.4 compliant signal detect - CCA bit ACTIVE */
-    XCVR_CCA_MODE3_c      /* 802.15.4 compliant signal detect and energy detect - CCA bit ACTIVE */
+typedef enum xcvr_cca_type_tag {
+    XCVR_ED_c,        /* energy detect - CCA bit not active, not to be used for T and CCCA sequences */
+    XCVR_CCA_MODE1_c, /* energy detect - CCA bit ACTIVE */
+    SCVR_CCA_MODE2_c, /* 802.15.4 compliant signal detect - CCA bit ACTIVE */
+    XCVR_CCA_MODE3_c  /* 802.15.4 compliant signal detect and energy detect - CCA bit ACTIVE */
 } xcvr_cca_type_t;
 
-static otRadioState  sState = OT_RADIO_STATE_DISABLED;
-static uint16_t      sPanId;
-static uint8_t       sExtSrcAddrBitmap[(RADIO_CONFIG_SRC_MATCH_ENTRY_NUM + 7) / 8];
-static uint8_t       sChannel;
-static int8_t        sMaxED;
-static int8_t        sAutoTxPwrLevel = 0;
+static otRadioState sState = OT_RADIO_STATE_DISABLED;
+static uint16_t     sPanId;
+static uint8_t      sExtSrcAddrBitmap[(RADIO_CONFIG_SRC_MATCH_ENTRY_NUM + 7) / 8];
+static uint8_t      sChannel;
+static int8_t       sMaxED;
+static int8_t       sAutoTxPwrLevel = 0;
 
 /* ISR Signaling Flags */
-static bool          sTxDone     = false;
-static bool          sRxDone     = false;
-static bool          sEdScanDone = false;
-static otError       sTxStatus;
+static bool    sTxDone     = false;
+static bool    sRxDone     = false;
+static bool    sEdScanDone = false;
+static otError sTxStatus;
 
-static otRadioFrame  sTxFrame;
-static otRadioFrame  sRxFrame;
+static otRadioFrame sTxFrame;
+static otRadioFrame sRxFrame;
 #if DOUBLE_BUFFERING
-static uint8_t       sRxData[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t sRxData[OT_RADIO_FRAME_MAX_SIZE];
 #endif
 
 /* Private functions */
@@ -144,7 +144,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     sPanId = aPanId;
     ZLL->MACSHORTADDRS0 &= ~ZLL_MACSHORTADDRS0_MACPANID0_MASK;
@@ -153,7 +153,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
     uint32_t addrLo;
     uint32_t addrHi;
 
@@ -166,7 +166,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     ZLL->MACSHORTADDRS0 &= ~ZLL_MACSHORTADDRS0_MACSHORTADDRS0_MASK;
     ZLL->MACSHORTADDRS0 |= ZLL_MACSHORTADDRS0_MACSHORTADDRS0(aShortAddress);
@@ -200,17 +200,17 @@ exit:
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
     return sState != OT_RADIO_STATE_DISABLED;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError status = OT_ERROR_NONE;
-    (void) aInstance;
+    (void)aInstance;
 
-    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
-                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
+                    status = OT_ERROR_INVALID_STATE);
 
     rf_abort();
     sState = OT_RADIO_STATE_SLEEP;
@@ -222,10 +222,10 @@ exit:
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError status = OT_ERROR_NONE;
-    (void) aInstance;
+    (void)aInstance;
 
-    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
-                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
+                    status = OT_ERROR_INVALID_STATE);
 
     sState = OT_RADIO_STATE_RECEIVE;
 
@@ -241,7 +241,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     /* Clear all IRQ flags */
     ZLL->IRQSTS = ZLL->IRQSTS;
     /* Start the RX sequence */
-    ZLL->PHY_CTRL |= XCVR_RX_c ;
+    ZLL->PHY_CTRL |= XCVR_RX_c;
 
     /* Unmask SEQ interrupt */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
@@ -252,7 +252,7 @@ exit:
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     if (aEnable)
     {
@@ -266,7 +266,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
     uint16_t checksum = sPanId + aShortAddress;
 
     return rf_add_addr_table_entry(checksum, false);
@@ -274,7 +274,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
     uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress->m8, true, sPanId);
 
     return rf_add_addr_table_entry(checksum, true);
@@ -282,7 +282,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
     uint16_t checksum = sPanId + aShortAddress;
 
     return rf_remove_addr_table_entry(checksum);
@@ -290,7 +290,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
     uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress->m8, true, sPanId);
 
     return rf_remove_addr_table_entry(checksum);
@@ -298,7 +298,7 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
     uint32_t i;
 
     for (i = 0; i < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM; i++)
@@ -313,7 +313,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
     uint32_t i;
 
     for (i = 0; i < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM; i++)
@@ -334,11 +334,11 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError status = OT_ERROR_NONE;
+    otError  status = OT_ERROR_NONE;
     uint32_t timeout;
 
-    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
-                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
+                    status = OT_ERROR_INVALID_STATE);
 
     if (rf_get_state() != XCVR_Idle_c)
     {
@@ -361,9 +361,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     {
         ZLL->PHY_CTRL |= XCVR_TR_c;
         /* Set ACK wait time-out */
-        timeout  = rf_get_timestamp();
+        timeout = rf_get_timestamp();
         timeout += (((XCVR_TSM->END_OF_SEQ & XCVR_TSM_END_OF_SEQ_END_OF_TX_WU_MASK) >>
-                     XCVR_TSM_END_OF_SEQ_END_OF_TX_WU_SHIFT) >> 4);
+                     XCVR_TSM_END_OF_SEQ_END_OF_TX_WU_SHIFT) >>
+                    4);
         timeout += IEEE802154_CCA_LEN + IEEE802154_TURNAROUND_LEN + IEEE802154_PHY_SHR_LEN +
                    (1 + aFrame->mLength) * OT_RADIO_SYMBOLS_PER_OCTET + IEEE802154_ACK_WAIT;
         rf_set_timeout(timeout);
@@ -374,7 +375,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
 
     sTxStatus = OT_ERROR_NONE;
-    sState = OT_RADIO_STATE_TRANSMIT;
+    sState    = OT_RADIO_STATE_TRANSMIT;
     /* Unmask SEQ interrupt */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
 
@@ -386,7 +387,7 @@ exit:
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
     return (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_RSSI_MASK) >> ZLL_LQI_AND_RSSI_RSSI_SHIFT;
 }
 
@@ -398,20 +399,19 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
     return (ZLL->PHY_CTRL & ZLL_PHY_CTRL_PROMISCUOUS_MASK) == ZLL_PHY_CTRL_PROMISCUOUS_MASK;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     if (aEnable)
     {
         ZLL->PHY_CTRL |= ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b1111. Any FrameVersion accepted */
-        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK |
-                                 ZLL_RX_FRAME_FILTER_ACK_FT_MASK         |
+        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
                                  ZLL_RX_FRAME_FILTER_NS_FT_MASK);
     }
     else
@@ -419,22 +419,20 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b0011. Accept FrameVersion 0 and 1 packets, reject all others */
         /* Beacon, Data and MAC command frame types accepted */
-        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK    |
-                                  ZLL_RX_FRAME_FILTER_ACK_FT_MASK            |
-                                  ZLL_RX_FRAME_FILTER_NS_FT_MASK             |
-                                  ZLL_RX_FRAME_FILTER_ACTIVE_PROMISCUOUS_MASK);
+        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
+                                  ZLL_RX_FRAME_FILTER_NS_FT_MASK | ZLL_RX_FRAME_FILTER_ACTIVE_PROMISCUOUS_MASK);
         ZLL->RX_FRAME_FILTER |= ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3);
     }
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    otError status = OT_ERROR_NONE;
+    otError  status = OT_ERROR_NONE;
     uint32_t timeout;
-    (void) aInstance;
+    (void)aInstance;
 
-    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
-                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
+                    status = OT_ERROR_INVALID_STATE);
 
     if (rf_get_state() != XCVR_Idle_c)
     {
@@ -453,7 +451,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     /* Unmask SEQ interrupt */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
     /* Set Scan time-out */
-    timeout  = rf_get_timestamp();
+    timeout = rf_get_timestamp();
     timeout += (aScanDuration * 1000) / OT_RADIO_SYMBOL_TIME;
     rf_set_timeout(timeout);
 
@@ -533,7 +531,7 @@ static void rf_set_channel(uint8_t channel)
     if (sChannel != channel)
     {
         ZLL->CHANNEL_NUM0 = channel;
-        sChannel = channel;
+        sChannel          = channel;
     }
 }
 
@@ -590,7 +588,7 @@ static uint16_t rf_get_addr_checksum(uint8_t *pAddr, bool ExtendedAddr, uint16_t
     uint16_t checksum;
 
     /* Short address */
-    checksum  = PanId;
+    checksum = PanId;
     checksum += *pAddr++;
     checksum += (uint16_t)(*pAddr++) << 8;
 
@@ -625,9 +623,9 @@ static otError rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr)
     otEXPECT_ACTION((index < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM), status = OT_ERROR_NO_BUFS);
 
     /* Insert the checksum at the index found */
-    ZLL->SAM_TABLE = ((uint32_t)index << ZLL_SAM_TABLE_SAM_INDEX_SHIFT)       |
-                     ((uint32_t)checksum << ZLL_SAM_TABLE_SAM_CHECKSUM_SHIFT) |
-                     ZLL_SAM_TABLE_SAM_INDEX_WR_MASK | ZLL_SAM_TABLE_SAM_INDEX_EN_MASK;
+    ZLL->SAM_TABLE = ((uint32_t)index << ZLL_SAM_TABLE_SAM_INDEX_SHIFT) |
+                     ((uint32_t)checksum << ZLL_SAM_TABLE_SAM_CHECKSUM_SHIFT) | ZLL_SAM_TABLE_SAM_INDEX_WR_MASK |
+                     ZLL_SAM_TABLE_SAM_INDEX_EN_MASK;
 
     if (extendedAddr)
     {
@@ -643,7 +641,7 @@ exit:
 
 static otError rf_remove_addr_table_entry(uint16_t checksum)
 {
-    otError status = OT_ERROR_NO_ADDRESS;
+    otError  status = OT_ERROR_NO_ADDRESS;
     uint32_t i, temp;
 
     /* Search for an entry to match the provided checksum */
@@ -671,8 +669,8 @@ static otError rf_remove_addr_table_entry_index(uint8_t index)
     otEXPECT_ACTION(index < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM, status = OT_ERROR_NO_ADDRESS);
 
     ZLL->SAM_TABLE = ((uint32_t)0xFFFF << ZLL_SAM_TABLE_SAM_CHECKSUM_SHIFT) |
-                     ((uint32_t)index << ZLL_SAM_TABLE_SAM_INDEX_SHIFT) |
-                     ZLL_SAM_TABLE_SAM_INDEX_INV_MASK | ZLL_SAM_TABLE_SAM_INDEX_WR_MASK;
+                     ((uint32_t)index << ZLL_SAM_TABLE_SAM_INDEX_SHIFT) | ZLL_SAM_TABLE_SAM_INDEX_INV_MASK |
+                     ZLL_SAM_TABLE_SAM_INDEX_WR_MASK;
 
     /* Clear bitmap */
     /* Optimization: sExtSrcAddrBitmap[index / 8] &= ~(1 << (index % 8)); */
@@ -717,7 +715,7 @@ static void rf_set_timeout(uint32_t abs_timeout)
     /* Set time-out value */
     ZLL->T3CMP = abs_timeout;
     /* Aknowledge and unmask TMR3 IRQ */
-    irqSts  = ZLL->IRQSTS & ZLL_IRQSTS_TMR_ALL_MSK_MASK;
+    irqSts = ZLL->IRQSTS & ZLL_IRQSTS_TMR_ALL_MSK_MASK;
     irqSts &= ~ZLL_IRQSTS_TMR3MSK_MASK;
     irqSts |= ZLL_IRQSTS_TMR3IRQ_MASK;
     ZLL->IRQSTS = irqSts;
@@ -728,7 +726,7 @@ static void rf_set_timeout(uint32_t abs_timeout)
 static bool rf_process_rx_frame(void)
 {
     uint8_t temp;
-    bool status = true;
+    bool    status = true;
 
     /* Get Rx length */
     temp = (ZLL->IRQSTS & ZLL_IRQSTS_RX_FRAME_LENGTH_MASK) >> ZLL_IRQSTS_RX_FRAME_LENGTH_SHIFT;
@@ -739,13 +737,13 @@ static bool rf_process_rx_frame(void)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     // Timestamp
     sRxFrame.mMsec = otPlatAlarmMilliGetNow();
-    sRxFrame.mUsec = 0;  // Don't support microsecond timer for now.
+    sRxFrame.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
     sRxFrame.mLength = temp;
-    temp = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
-    sRxFrame.mLqi = rf_lqi_adjust(temp);
-    sRxFrame.mRssi = rf_lqi_to_rssi(sRxFrame.mLqi);
+    temp             = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
+    sRxFrame.mLqi    = rf_lqi_adjust(temp);
+    sRxFrame.mRssi   = rf_lqi_to_rssi(sRxFrame.mLqi);
 #if DOUBLE_BUFFERING
 
     for (temp = 0; temp < sRxFrame.mLength - 2; temp++)
@@ -761,9 +759,9 @@ exit:
 
 void Radio_1_IRQHandler(void)
 {
-    xcvr_state_t state = rf_get_state();
-    uint32_t irqStatus = ZLL->IRQSTS;
-    int8_t temp;
+    xcvr_state_t state     = rf_get_state();
+    uint32_t     irqStatus = ZLL->IRQSTS;
+    int8_t       temp;
 
     ZLL->IRQSTS = irqStatus;
 
@@ -782,9 +780,9 @@ void Radio_1_IRQHandler(void)
         else if ((state == XCVR_TR_c) && !(irqStatus & ZLL_IRQSTS_RXIRQ_MASK))
         {
             rf_abort();
-            sState = OT_RADIO_STATE_RECEIVE;
+            sState    = OT_RADIO_STATE_RECEIVE;
             sTxStatus = OT_ERROR_NO_ACK;
-            sTxDone = true;
+            sTxDone   = true;
         }
     }
 
@@ -806,16 +804,16 @@ void Radio_1_IRQHandler(void)
             {
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
             }
-            else if (!(irqStatus & ZLL_IRQSTS_RXIRQ_MASK) ||
-                     (rf_process_rx_frame() == false) ||
+            else if (!(irqStatus & ZLL_IRQSTS_RXIRQ_MASK) || (rf_process_rx_frame() == false) ||
                      (sRxFrame.mLength != IEEE802154_ACK_LENGTH) ||
-                     ((sRxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FRM_TYPE_MASK) != IEEE802154_FRM_TYPE_ACK) ||
+                     ((sRxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FRM_TYPE_MASK) !=
+                      IEEE802154_FRM_TYPE_ACK) ||
                      (sRxFrame.mPsdu[IEEE802154_DSN_OFFSET] != sTxFrame.mPsdu[IEEE802154_DSN_OFFSET]))
             {
                 sTxStatus = OT_ERROR_NO_ACK;
             }
 
-            sState = OT_RADIO_STATE_RECEIVE;
+            sState  = OT_RADIO_STATE_RECEIVE;
             sTxDone = true;
             break;
 
@@ -825,7 +823,7 @@ void Radio_1_IRQHandler(void)
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
             }
 
-            sState = OT_RADIO_STATE_RECEIVE;
+            sState  = OT_RADIO_STATE_RECEIVE;
             sTxDone = true;
             break;
 
@@ -840,7 +838,9 @@ void Radio_1_IRQHandler(void)
             if (!sEdScanDone)
             {
                 /* Restart ED */
-                while (ZLL->SEQ_STATE & ZLL_SEQ_STATE_SEQ_STATE_MASK) {}
+                while (ZLL->SEQ_STATE & ZLL_SEQ_STATE_SEQ_STATE_MASK)
+                {
+                }
 
                 ZLL->IRQSTS = (ZLL->IRQSTS & ZLL_IRQSTS_TMR_ALL_MSK_MASK) | ZLL_IRQSTS_SEQIRQ_MASK;
                 ZLL->PHY_CTRL |= XCVR_CCA_c;
@@ -858,7 +858,9 @@ void Radio_1_IRQHandler(void)
     if ((sState == OT_RADIO_STATE_RECEIVE) && (rf_get_state() == XCVR_Idle_c))
     {
         /* Restart RX */
-        while (ZLL->SEQ_STATE & ZLL_SEQ_STATE_SEQ_STATE_MASK) {}
+        while (ZLL->SEQ_STATE & ZLL_SEQ_STATE_SEQ_STATE_MASK)
+        {
+        }
 
         ZLL->IRQSTS = ZLL->IRQSTS;
         ZLL->PHY_CTRL |= XCVR_RX_c;
@@ -871,19 +873,19 @@ void kw41zRadioInit(void)
     XCVR_Init(ZIGBEE_MODE, DR_500KBPS);
 
     /* Disable all timers, enable AUTOACK and CCA before TX, mask all interrupts */
-    ZLL->PHY_CTRL = ZLL_PHY_CTRL_CCATYPE(DEFAULT_CCA_MODE) |
-                    ZLL_PHY_CTRL_CCABFRTX_MASK             |
-                    ZLL_PHY_CTRL_TSM_MSK_MASK              |
-                    ZLL_PHY_CTRL_WAKE_MSK_MASK             |
-                    ZLL_PHY_CTRL_CRC_MSK_MASK              |
-                    ZLL_PHY_CTRL_PLL_UNLOCK_MSK_MASK       |
-                    ZLL_PHY_CTRL_FILTERFAIL_MSK_MASK       |
-                    ZLL_PHY_CTRL_RX_WMRK_MSK_MASK          |
-                    ZLL_PHY_CTRL_CCAMSK_MASK               |
-                    ZLL_PHY_CTRL_RXMSK_MASK                |
-                    ZLL_PHY_CTRL_TXMSK_MASK                |
-                    ZLL_PHY_CTRL_SEQMSK_MASK               |
-                    ZLL_PHY_CTRL_AUTOACK_MASK              |
+    ZLL->PHY_CTRL = ZLL_PHY_CTRL_CCATYPE(DEFAULT_CCA_MODE) | //
+                    ZLL_PHY_CTRL_CCABFRTX_MASK |             //
+                    ZLL_PHY_CTRL_TSM_MSK_MASK |              //
+                    ZLL_PHY_CTRL_WAKE_MSK_MASK |             //
+                    ZLL_PHY_CTRL_CRC_MSK_MASK |              //
+                    ZLL_PHY_CTRL_PLL_UNLOCK_MSK_MASK |       //
+                    ZLL_PHY_CTRL_FILTERFAIL_MSK_MASK |       //
+                    ZLL_PHY_CTRL_RX_WMRK_MSK_MASK |          //
+                    ZLL_PHY_CTRL_CCAMSK_MASK |               //
+                    ZLL_PHY_CTRL_RXMSK_MASK |                //
+                    ZLL_PHY_CTRL_TXMSK_MASK |                //
+                    ZLL_PHY_CTRL_SEQMSK_MASK |               //
+                    ZLL_PHY_CTRL_AUTOACK_MASK |              //
                     ZLL_PHY_CTRL_TRCV_MSK_MASK;
 
     /* Clear all IRQ flags and disable all timer interrupts */
@@ -892,10 +894,10 @@ void kw41zRadioInit(void)
     /*  Frame Filtering
     FRM_VER[7:6] = b11. Accept FrameVersion 0 and 1 packets, reject all others */
     ZLL->RX_FRAME_FILTER &= ~ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK;
-    ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) |
-                           ZLL_RX_FRAME_FILTER_CMD_FT_MASK       |
-                           ZLL_RX_FRAME_FILTER_DATA_FT_MASK      |
-                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK       |
+    ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | //
+                           ZLL_RX_FRAME_FILTER_CMD_FT_MASK |       //
+                           ZLL_RX_FRAME_FILTER_DATA_FT_MASK |      //
+                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK |       //
                            ZLL_RX_FRAME_FILTER_BEACON_FT_MASK;
 
     /* Set prescaller to obtain 1 symbol (16us) timebase */
@@ -920,7 +922,7 @@ void kw41zRadioInit(void)
     rf_set_tx_power(0);
 
     sTxFrame.mLength = 0;
-    sTxFrame.mPsdu = (uint8_t *)ZLL->PKT_BUFFER_TX + 1;
+    sTxFrame.mPsdu   = (uint8_t *)ZLL->PKT_BUFFER_TX + 1;
     sRxFrame.mLength = 0;
 #if DOUBLE_BUFFERING
     sRxFrame.mPsdu = sRxData;

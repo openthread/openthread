@@ -35,8 +35,8 @@
 #ifndef CLI_H_
 #define CLI_H_
 
-#include <stdint.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <openthread/types.h>
 
 #ifdef __cplusplus
@@ -49,8 +49,8 @@ extern "C" {
  */
 typedef struct otCliCommand
 {
-    const char *mName;                         ///< A pointer to the command string.
-    void (*mCommand)(int argc, char *argv[]);  ///< A function pointer to process the command.
+    const char *mName;                        ///< A pointer to the command string.
+    void (*mCommand)(int argc, char *argv[]); ///< A function pointer to process the command.
 } otCliCommand;
 
 /**
@@ -73,8 +73,7 @@ typedef struct otCliCommand
  * @returns                Number of bytes processed by the callback.
  *
  */
-typedef int (*otCliConsoleOutputCallback)(const char *aBuf,
-                                          uint16_t aBufLength, void *aContext);
+typedef int (*otCliConsoleOutputCallback)(const char *aBuf, uint16_t aBufLength, void *aContext);
 
 /**
  * Initialize the CLI CONSOLE module.
@@ -150,7 +149,7 @@ void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif

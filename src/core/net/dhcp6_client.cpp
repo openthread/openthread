@@ -36,17 +36,16 @@
 #include "dhcp6_client.hpp"
 
 #include <openthread/types.h>
-#include <openthread/platform/random.h>
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
-
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
 
@@ -57,13 +56,13 @@ namespace ot {
 
 namespace Dhcp6 {
 
-Dhcp6Client::Dhcp6Client(Instance &aInstance) :
-    InstanceLocator(aInstance),
-    mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp()),
-    mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this),
-    mStartTime(0),
-    mAddresses(NULL),
-    mNumAddresses(0)
+Dhcp6Client::Dhcp6Client(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
+    , mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this)
+    , mStartTime(0)
+    , mAddresses(NULL)
+    , mNumAddresses(0)
 {
     memset(mIdentityAssociations, 0, sizeof(IdentityAssociation));
 
@@ -72,21 +71,23 @@ Dhcp6Client::Dhcp6Client(Instance &aInstance) :
         mIdentityAssociations[i].SetNext(&(mIdentityAssociations[i + 1]));
     }
 
-    mIdentityAssociationHead = NULL;
+    mIdentityAssociationHead  = NULL;
     mIdentityAssociationAvail = &mIdentityAssociations[0];
 }
 
-void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses,
-                                  void *aContext)
+void Dhcp6Client::UpdateAddresses(otInstance *   aInstance,
+                                  otDhcpAddress *aAddresses,
+                                  uint32_t       aNumAddresses,
+                                  void *         aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
-    bool found = false;
-    bool newAgent = false;
-    otDhcpAddress *address = NULL;
+    bool                  found    = false;
+    bool                  newAgent = false;
+    otDhcpAddress *       address  = NULL;
     otNetworkDataIterator iterator;
-    otBorderRouterConfig config;
+    otBorderRouterConfig  config;
 
-    mAddresses = aAddresses;
+    mAddresses    = aAddresses;
     mNumAddresses = aNumAddresses;
 
     // remove addresses directly if prefix not valid in network data
@@ -99,7 +100,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
             continue;
         }
 
-        found = false;
+        found    = false;
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
         while ((otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config)) == OT_ERROR_NONE)
@@ -192,12 +193,12 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
 
 void Dhcp6Client::AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix)
 {
-    IdentityAssociation *identityAssociation = NULL;
+    IdentityAssociation *identityAssociation       = NULL;
     IdentityAssociation *identityAssociationCursor = NULL;
 
     VerifyOrExit(mIdentityAssociationAvail);
 
-    identityAssociation = mIdentityAssociationAvail;
+    identityAssociation       = mIdentityAssociationAvail;
     mIdentityAssociationAvail = mIdentityAssociationAvail->GetNext();
 
     identityAssociation->SetPrefixAgentRloc(aRloc16);
@@ -210,7 +211,9 @@ void Dhcp6Client::AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Pref
     {
         // append the new identityassociation to the tail of used list
         for (identityAssociationCursor = mIdentityAssociationHead; identityAssociationCursor->GetNext();
-             identityAssociationCursor = identityAssociationCursor->GetNext()) {}
+             identityAssociationCursor = identityAssociationCursor->GetNext())
+        {
+        }
 
         identityAssociationCursor->SetNext(identityAssociation);
     }
@@ -226,11 +229,11 @@ exit:
 void Dhcp6Client::RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix)
 {
     IdentityAssociation *prevIdentityAssociation = NULL;
-    IdentityAssociation *identityAssociation = NULL;
+    IdentityAssociation *identityAssociation     = NULL;
 
     VerifyOrExit(mIdentityAssociationHead);
 
-    for (identityAssociation = mIdentityAssociationHead; identityAssociation;
+    for (identityAssociation     = mIdentityAssociationHead; identityAssociation;
          prevIdentityAssociation = identityAssociation, identityAssociation = identityAssociation->GetNext())
     {
         if (identityAssociation->GetPrefixAgentRloc() != aRloc16)
@@ -285,9 +288,9 @@ otError Dhcp6Client::Stop(void)
 
 bool Dhcp6Client::ProcessNextIdentityAssociation()
 {
-    bool rval = false;
+    bool                 rval                    = false;
     IdentityAssociation *prevIdentityAssociation = NULL;
-    IdentityAssociation *identityAssociation = NULL;
+    IdentityAssociation *identityAssociation     = NULL;
 
     VerifyOrExit(mIdentityAssociationHead);
     // not interrupt in-progress solicit
@@ -295,7 +298,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
     mTrickleTimer.Stop();
 
-    for (identityAssociation = mIdentityAssociationHead; identityAssociation;
+    for (identityAssociation     = mIdentityAssociationHead; identityAssociation;
          prevIdentityAssociation = identityAssociation, identityAssociation = identityAssociation->GetNext())
     {
         if (identityAssociation->GetStatus() != IdentityAssociation::kStatusSolicit)
@@ -304,10 +307,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         }
 
         // new transaction id
-        for (uint8_t i = 0; i < kTransactionIdSize; i++)
-        {
-            mTransactionId[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
+        Random::FillBuffer(mTransactionId, kTransactionIdSize);
 
         // ensure mIdentityAssociationHead is the prefix agent to solicit.
         if (prevIdentityAssociation)
@@ -317,10 +317,8 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
             mIdentityAssociationHead = identityAssociation;
         }
 
-        mTrickleTimer.Start(
-            TimerMilli::SecToMsec(kTrickleTimerImin),
-            TimerMilli::SecToMsec(kTrickleTimerImax),
-            TrickleTimer::kModeNormal);
+        mTrickleTimer.Start(TimerMilli::SecToMsec(kTrickleTimerImin), TimerMilli::SecToMsec(kTrickleTimerImax),
+                            TrickleTimer::kModeNormal);
 
         mTrickleTimer.IndicateInconsistent();
 
@@ -348,7 +346,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
         mStartTime = TimerMilli::GetNow();
         mIdentityAssociationHead->SetStatus(IdentityAssociation::kStatusSoliciting);
 
-    // fall through
+        // fall through
 
     case IdentityAssociation::kStatusSoliciting:
         Solicit(mIdentityAssociationHead->GetPrefixAgentRloc());
@@ -374,9 +372,9 @@ exit:
 
 otError Dhcp6Client::Solicit(uint16_t aRloc16)
 {
-    ThreadNetif &netif = GetNetif();
-    otError error = OT_ERROR_NONE;
-    Message *message;
+    ThreadNetif &    netif = GetNetif();
+    otError          error = OT_ERROR_NONE;
+    Message *        message;
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
@@ -396,7 +394,7 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc16);
     messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
-    messageInfo.mPeerPort = kDhcpServerPort;
+    messageInfo.mPeerPort    = kDhcpServerPort;
     messageInfo.mInterfaceId = netif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
@@ -444,11 +442,11 @@ otError Dhcp6Client::AppendClientIdentifier(Message &aMessage)
 
 otError Dhcp6Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t count = 0;
-    uint16_t length = 0;
+    otError              error               = OT_ERROR_NONE;
+    uint8_t              count               = 0;
+    uint16_t             length              = 0;
     IdentityAssociation *identityAssociation = NULL;
-    IaNa option;
+    IaNa                 option;
 
     VerifyOrExit(mIdentityAssociationHead, error = OT_ERROR_DROP);
 
@@ -482,9 +480,9 @@ exit:
 
 otError Dhcp6Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error               = OT_ERROR_NONE;
     IdentityAssociation *identityAssociation = NULL;
-    IaAddress option;
+    IaAddress            option;
 
     VerifyOrExit(mIdentityAssociationHead, error = OT_ERROR_DROP);
 
@@ -588,12 +586,11 @@ exit:
 
 otError Dhcp6Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
+    otError          error = OT_ERROR_NONE;
     ServerIdentifier option;
 
     VerifyOrExit(((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
-                  (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
-                  (option.GetDuidType() == kDuidLL) &&
+                  (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) && (option.GetDuidType() == kDuidLL) &&
                   (option.GetDuidHardwareType() == kHardwareTypeEui64)),
                  error = OT_ERROR_PARSE);
 exit:
@@ -602,24 +599,23 @@ exit:
 
 otError Dhcp6Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
+    otError          error = OT_ERROR_NONE;
     ClientIdentifier option;
 
-    VerifyOrExit((((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
-                   (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
-                   (option.GetDuidType() == kDuidLL) &&
-                   (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
-                  (!memcmp(option.GetDuidLinkLayerAddress(), &GetNetif().GetMac().GetExtAddress(),
-                           sizeof(Mac::ExtAddress)))),
-                 error = OT_ERROR_PARSE);
+    VerifyOrExit(
+        (((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
+          (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) && (option.GetDuidType() == kDuidLL) &&
+          (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
+         (!memcmp(option.GetDuidLinkLayerAddress(), &GetNetif().GetMac().GetExtAddress(), sizeof(Mac::ExtAddress)))),
+        error = OT_ERROR_PARSE);
 exit:
     return error;
 }
 
 otError Dhcp6Client::ProcessIaNa(Message &aMessage, uint16_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
-    IaNa option;
+    otError  error = OT_ERROR_NONE;
+    IaNa     option;
     uint16_t optionOffset;
     uint16_t length;
 
@@ -654,7 +650,7 @@ exit:
 
 otError Dhcp6Client::ProcessStatusCode(Message &aMessage, uint16_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
     StatusCode option;
 
     VerifyOrExit(((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
@@ -668,10 +664,10 @@ exit:
 
 otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error               = OT_ERROR_NONE;
     IdentityAssociation *identityAssociation = NULL;
-    otDhcpAddress *address = NULL;
-    otIp6Prefix *prefix  = NULL;
+    otDhcpAddress *      address             = NULL;
+    otIp6Prefix *        prefix              = NULL;
 
     IaAddress option;
 
@@ -691,10 +687,10 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
         if (otIp6PrefixMatch(&(address->mAddress.mAddress), option.GetAddress()) >= address->mAddress.mPrefixLength)
         {
             memcpy(address->mAddress.mAddress.mFields.m8, option.GetAddress()->mFields.m8, sizeof(otIp6Address));
-            address->mPreferredLifetime = option.GetPreferredLifetime();
-            address->mValidLifetime = option.GetValidLifetime();
+            address->mPreferredLifetime  = option.GetPreferredLifetime();
+            address->mValidLifetime      = option.GetValidLifetime();
             address->mAddress.mPreferred = address->mPreferredLifetime != 0;
-            address->mAddress.mValid = address->mValidLifetime != 0;
+            address->mAddress.mValid     = address->mValidLifetime != 0;
             otIp6AddUnicastAddress(&GetNetif().GetInstance(), &address->mAddress);
             break;
         }
@@ -717,8 +713,7 @@ exit:
     return error;
 }
 
-}  // namespace Dhcp6
-}  // namespace ot
+} // namespace Dhcp6
+} // namespace ot
 
-#endif //OPENTHREAD_ENABLE_DHCP6_CLIENT
-
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT

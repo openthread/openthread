@@ -36,6 +36,8 @@
 
 #include "bsp_definitions.h"
 
+// clang-format off
+
 #define dg_configBLACK_ORCA_IC_REV                     BLACK_ORCA_IC_REV_B
 #define dg_configBLACK_ORCA_IC_STEP                    BLACK_ORCA_IC_STEP_B
 
@@ -117,5 +119,7 @@
 
 /* Include bsp default values */
 #include "bsp_defaults.h"
+
+// clang-format on
 
 #endif /* CUSTOM_CONFIG_QSPI_H_ */

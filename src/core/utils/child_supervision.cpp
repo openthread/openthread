@@ -49,10 +49,10 @@ namespace Utils {
 
 #if OPENTHREAD_FTD
 
-ChildSupervisor::ChildSupervisor(Instance &aInstance) :
-    InstanceLocator(aInstance),
-    mSupervisionInterval(kDefaultSupervisionInterval),
-    mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
+ChildSupervisor::ChildSupervisor(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mSupervisionInterval(kDefaultSupervisionInterval)
+    , mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
 {
 }
 
@@ -79,7 +79,7 @@ void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child *child = NULL;
+    Child * child = NULL;
     uint8_t childIndex;
     uint8_t numChildren;
 
@@ -96,9 +96,9 @@ exit:
 
 void ChildSupervisor::SendMessage(Child &aChild)
 {
-    ThreadNetif &netif = GetNetif();
-    Message *message = NULL;
-    uint8_t childIndex;
+    ThreadNetif &netif   = GetNetif();
+    Message *    message = NULL;
+    uint8_t      childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
@@ -116,7 +116,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     SuccessOrExit(netif.SendMessage(*message));
     message = NULL;
 
-    otLogInfoMle(GetInstance(), "Sending supervision message to child 0x%04x", aChild.GetRloc16());
+    otLogInfoUtil(GetInstance(), "Sending supervision message to child 0x%04x", aChild.GetRloc16());
 
 exit:
 
@@ -138,7 +138,7 @@ void ChildSupervisor::HandleTimer(Timer &aTimer)
 
 void ChildSupervisor::HandleTimer(void)
 {
-    Child *child;
+    Child * child;
     uint8_t numChildren;
 
     VerifyOrExit(mSupervisionInterval != 0);
@@ -168,10 +168,10 @@ exit:
 
 #endif // #if OPENTHREAD_FTD
 
-SupervisionListener::SupervisionListener(Instance &aInstance) :
-    InstanceLocator(aInstance),
-    mTimeout(0),
-    mTimer(aInstance, &SupervisionListener::HandleTimer, this)
+SupervisionListener::SupervisionListener(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimeout(0)
+    , mTimer(aInstance, &SupervisionListener::HandleTimer, this)
 {
     SetTimeout(kDefaultTimeout);
 }
@@ -201,7 +201,7 @@ void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bo
 
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure  && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
+    VerifyOrExit(mTimer.IsRunning() && aIsSecure && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
                  (netif.GetMle().GetNeighbor(aSourceAddress) == netif.GetMle().GetParent()));
 
     RestartTimer();
@@ -237,7 +237,7 @@ void SupervisionListener::HandleTimer(void)
     VerifyOrExit((netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
                  (netif.GetMeshForwarder().GetRxOnWhenIdle() == false));
 
-    otLogWarnMle(netif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
+    otLogWarnUtil(netif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
 
     netif.GetMle().SendChildUpdateRequest();
 

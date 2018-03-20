@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -41,18 +41,18 @@
 #ifndef APP_USBD_REQUEST_H__
 #define APP_USBD_REQUEST_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "sdk_common.h"
 #include "nrf.h"
 #include "nrf_drv_usbd.h"
 #include "app_usbd_descriptor.h"
 #include "app_util_platform.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Compiler support for anonymous unions */
-ANON_UNIONS_ENABLE
+ANON_UNIONS_ENABLE;
 
 #pragma pack(push, 1)
 
@@ -345,7 +345,7 @@ static inline uint8_t app_usbd_setup_req_val(app_usbd_setup_reqrec_t  rec,
 }
 
 
-ANON_UNIONS_DISABLE
+ANON_UNIONS_DISABLE;
 /** @} */
 
 #ifdef __cplusplus

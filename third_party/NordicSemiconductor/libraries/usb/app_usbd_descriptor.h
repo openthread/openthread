@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
  * 
  * All rights reserved.
  * 
@@ -41,17 +41,17 @@
 #ifndef APP_USBD_DESCRIPTOR_H__
 #define APP_USBD_DESCRIPTOR_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "nrf.h"
 #include "nrf_drv_usbd.h"
 #include "app_usbd_langid.h"
 #include "app_util_platform.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Compiler support for anonymous unions */
-ANON_UNIONS_ENABLE
+ANON_UNIONS_ENABLE;
 
 /**
  * @defgroup app_usbd_descriptor USB standard descriptors
@@ -122,12 +122,14 @@ typedef enum
     APP_USBD_DESCRIPTOR_INTERFACE_POWER           =  8, /**< @note Not supported */
     APP_USBD_DESCRIPTOR_OTG                       =  9, /**< @note Not supported - Our USB have not OTG functionality */
     APP_USBD_DESCRIPTOR_DEBUG                     = 10, /**< Debug channel descriptor if available, can be only reached by GetDescriptor */
-    APP_USBD_DESCRIPTOR_INTERFACE_ASSOCIATION     = 11  /**<
+    APP_USBD_DESCRIPTOR_INTERFACE_ASSOCIATION     = 11, /**<
                                                          * Descriptor used to describe that two or more interfaces are associated to the same function.
                                                          *
                                                          * @note It is returned together with @ref APP_USBD_DESCRIPTOR_CONFIGURATION.
                                                          *       Cannot be accessed by GetDescriptor or SetDescriptor
                                                          */
+    APP_USBD_DESCRIPTOR_REPORT                    = 34, /**< HID Report descriptor. */
+    APP_USBD_DESCRIPTOR_PHYSICAL                  = 35  /**< HID Physical descriptor. */
 
 } app_usbd_descriptor_t;
 
@@ -325,7 +327,7 @@ typedef struct
 } app_usbd_descriptor_iad_t;
 
 #pragma pack(pop)
-ANON_UNIONS_DISABLE
+ANON_UNIONS_DISABLE;
 
 #ifdef __cplusplus
 }

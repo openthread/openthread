@@ -86,7 +86,7 @@ namespace Utils {
  * This class implements a child supervisor.
  *
  */
-class ChildSupervisor: public InstanceLocator
+class ChildSupervisor : public InstanceLocator
 {
 public:
     /**
@@ -150,30 +150,30 @@ public:
 private:
     enum
     {
-        kDefaultSupervisionInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL,  // (seconds)
-        kOneSecond = 1000,                                                           // One second interval (in ms).
+        kDefaultSupervisionInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL, // (seconds)
+        kOneSecond                  = 1000,                                         // One second interval (in ms).
     };
 
-    void SendMessage(Child &aChild);
+    void        SendMessage(Child &aChild);
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
-    uint16_t     mSupervisionInterval;
-    TimerMilli   mTimer;
+    uint16_t   mSupervisionInterval;
+    TimerMilli mTimer;
 };
 
-#else  // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
 
 class ChildSupervisor
 {
 public:
-    explicit ChildSupervisor(otInstance &) { }
-    void Start(void) { }
-    void Stop(void) { }
-    void SetSupervisionInterval(uint16_t) { }
+    explicit ChildSupervisor(otInstance &) {}
+    void     Start(void) {}
+    void     Stop(void) {}
+    void     SetSupervisionInterval(uint16_t) {}
     uint16_t GetSupervisionInterval(void) const { return 0; }
-    Child *GetDestination(const Message &) const { return NULL; }
-    void UpdateOnSend(Child &) { }
+    Child *  GetDestination(const Message &) const { return NULL; }
+    void     UpdateOnSend(Child &) {}
 };
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
@@ -184,7 +184,7 @@ public:
  * This class implements a child supervision listener.
  *
  */
-class SupervisionListener: public InstanceLocator
+class SupervisionListener : public InstanceLocator
 {
 public:
     /**
@@ -228,7 +228,7 @@ public:
      * @returns   The check timeout interval (in seconds) or zero if the supervision check on the child is disabled.
      *
      */
-    uint16_t GetTimeout(void) const  { return mTimeout; }
+    uint16_t GetTimeout(void) const { return mTimeout; }
 
     /**
      * This method updates the supervision listener state. It informs the listener of a received frame.
@@ -242,14 +242,14 @@ public:
 private:
     enum
     {
-        kDefaultTimeout = OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT,   // (seconds)
+        kDefaultTimeout = OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT, // (seconds)
     };
 
-    void RestartTimer(void);
+    void        RestartTimer(void);
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
-    uint16_t mTimeout;
+    uint16_t   mTimeout;
     TimerMilli mTimer;
 };
 
@@ -258,12 +258,12 @@ private:
 class SupervisionListener
 {
 public:
-    SupervisionListener(otInstance &) { }
-    void Start(void) { }
-    void Stop(void) { }
-    void SetTimeout(uint16_t) { }
-    uint16_t GetTimeout(void) const  { return 0; }
-    void UpdateOnReceive(const Mac::Address &, bool) { }
+    SupervisionListener(otInstance &) {}
+    void     Start(void) {}
+    void     Stop(void) {}
+    void     SetTimeout(uint16_t) {}
+    uint16_t GetTimeout(void) const { return 0; }
+    void     UpdateOnReceive(const Mac::Address &, bool) {}
 };
 
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
@@ -276,4 +276,4 @@ public:
 } // namespace Utils
 } // namespace ot
 
-#endif  // CHILD_SUPERVISION_HPP_
+#endif // CHILD_SUPERVISION_HPP_

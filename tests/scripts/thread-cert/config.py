@@ -37,6 +37,7 @@ import mle
 import net_crypto
 import network_data
 import network_layer
+import simulator
 import sniffer
 
 MESH_LOCAL_PREFIX = 'fdde:ad00:beef::/64'
@@ -50,6 +51,7 @@ LINK_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff32:40:fdde:ad00:beef:0:0:1'
 REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS = 'ff33:40:fdde:ad00:beef:0:0:1'
 REALM_LOCAL_ALL_ROUTERS_ADDRESS = 'ff03::2'
 LINK_LOCAL_ALL_NODES_ADDRESS = 'ff02::1'
+LINK_LOCAL_ALL_ROUTERS_ADDRESS = 'ff02::2'
 
 DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
@@ -64,6 +66,12 @@ MAX_NEIGHBOR_AGE = 100
 INFINITE_COST_TIMEOUT = 90
 
 MAX_ADVERTISEMENT_INTERVAL = 32
+MLE_END_DEVICE_TIMEOUT = 100
+
+AQ_TIMEOUT = 3 
+ADDRESS_QUERY_INITIAL_RETRY_DELAY = 15
+
+VIRTUAL_TIME = bool(os.getenv('VIRTUAL_TIME', False))
 
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
@@ -194,7 +202,7 @@ def create_deafult_network_tlvs_factories():
         network_layer.TlvType.ROUTER_MASK: network_layer.RouterMaskFactory(),
         network_layer.TlvType.ND_OPTION: network_layer.NdOptionFactory(),
         network_layer.TlvType.ND_DATA: network_layer.NdDataFactory(),
-        network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(create_default_network_data_tlvs_factory),
+        network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(create_default_network_data_tlvs_factory()),
 
         # Routing information are distributed in a Thread network by MLE Routing TLV
         # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20
@@ -215,7 +223,8 @@ def create_default_uri_path_based_payload_factories():
         "/a/aq": network_layer_tlvs_factory,
         "/a/ar": network_layer_tlvs_factory,
         "/a/ae": network_layer_tlvs_factory,
-        "/a/an": network_layer_tlvs_factory
+        "/a/an": network_layer_tlvs_factory,
+        "/a/sd": network_layer_tlvs_factory
     }
 
 
@@ -328,3 +337,9 @@ def create_default_thread_message_factory(master_key=DEFAULT_MASTER_KEY):
 
 def create_default_thread_sniffer(nodeid=SNIFFER_ID):
     return sniffer.Sniffer(nodeid, create_default_thread_message_factory())
+
+
+def create_default_simulator():
+    if VIRTUAL_TIME:
+        return simulator.VirtualTime()
+    return simulator.RealTime()

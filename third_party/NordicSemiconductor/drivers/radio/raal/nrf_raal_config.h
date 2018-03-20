@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
 #ifndef NRF_RAAL_CONFIG_H__
 #define NRF_RAAL_CONFIG_H__
 
-#ifdef NRF_DRV_RADIO802154_PROJECT_CONFIG
-#include NRF_DRV_RADIO802154_PROJECT_CONFIG
+#ifdef NRF_802154_PROJECT_CONFIG
+#include NRF_802154_PROJECT_CONFIG
 #endif
 
 #include <nrf.h>
@@ -44,7 +44,7 @@ extern "C" {
 /**
  * @defgroup nrf_raal_config RAAL configuration
  * @{
- * @ingroup nrf_driver_radio802154
+ * @ingroup nrf_802154
  * @brief Configuration of Radio Arbiter Abstraction Layer.
  */
 

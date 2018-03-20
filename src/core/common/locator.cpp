@@ -62,4 +62,4 @@ Notifier &InstanceLocator::GetNotifier(void) const
     return GetInstance().GetNotifier();
 }
 
-}  // namespace ot
+} // namespace ot

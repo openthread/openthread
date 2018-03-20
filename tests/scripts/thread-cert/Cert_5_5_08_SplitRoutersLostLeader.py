@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER1 = 1
@@ -40,9 +41,11 @@ ED1 = 5
 
 class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,6):
-            self.nodes[i] = node.Node(i, (i == ED1))
+            self.nodes[i] = node.Node(i, (i == ED1), simulator=self.simulator)
 
         self.nodes[LEADER1].set_panid(0xface)
         self.nodes[LEADER1].set_mode('rsdn')
@@ -88,23 +91,23 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
 
     def test(self):
         self.nodes[LEADER1].start()
-        self.nodes[LEADER1].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[ROUTER3].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         addrs = self.nodes[ED1].get_addrs()
@@ -114,10 +117,10 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
 
         self.nodes[ROUTER3].reset()
         self._setUpRouter3()
-        time.sleep(140)
+        self.simulator.go(140)
 
         self.nodes[ROUTER3].start()        
-        time.sleep(60)
+        self.simulator.go(60)
 
         addrs = self.nodes[ED1].get_addrs()
         for addr in addrs:

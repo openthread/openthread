@@ -42,21 +42,31 @@
 namespace ot {
 
 // This array gives the decimal point digits representing 0/8, 1/8, ..., 7/8 (does not include the '.').
-static const char *const kDigitsString[8] =
-{
+static const char *const kDigitsString[8] = {
     // 0/8,  1/8,   2/8,   3/8,   4/8,   5/8,   6/8,   7/8
-    "0",     "125", "25",  "375", "5",   "625", "75",  "875"
-};
+    "0", "125", "25", "375", "5", "625", "75", "875"};
+
+void SuccessRateTracker::AddSample(bool aSuccess, uint16_t aWeight)
+{
+    uint32_t oldAverage = mFailureRate;
+    uint32_t newValue   = (aSuccess) ? 0 : kMaxRateValue;
+    uint32_t n          = aWeight;
+
+    // `n/2` is added to the sum to ensure rounding the value to the nearest integer when dividing by `n`
+    // (e.g., 1.2 -> 1, 3.5 -> 4).
+
+    mFailureRate = static_cast<uint16_t>(((oldAverage * (n - 1)) + newValue + (n / 2)) / n);
+}
 
 void RssAverager::Reset(void)
 {
     mAverage = 0;
-    mCount = 0;
+    mCount   = 0;
 }
 
 otError RssAverager::Add(int8_t aRss)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t newValue;
     uint16_t oldAverage;
 
@@ -135,8 +145,8 @@ exit:
     return aBuf;
 }
 
-LinkQualityInfo::LinkQualityInfo(void):
-    mLastRss(OT_RADIO_RSSI_INVALID)
+LinkQualityInfo::LinkQualityInfo(void)
+    : mLastRss(OT_RADIO_RSSI_INVALID)
 {
     mRssAverager.Reset();
     SetLinkQuality(0);
@@ -174,8 +184,8 @@ const char *LinkQualityInfo::ToInfoString(char *aBuf, uint16_t aSize) const
 {
     char rssString[RssAverager::kStringSize];
 
-    snprintf(aBuf, aSize, "aveRss:%s, lastRss:%d, linkQuality:%d",
-             mRssAverager.ToString(rssString, sizeof(rssString)), GetLastRss(), GetLinkQuality());
+    snprintf(aBuf, aSize, "aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString(rssString, sizeof(rssString)),
+             GetLastRss(), GetLinkQuality());
 
     return aBuf;
 }
@@ -244,17 +254,17 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     case 0:
         threshold1 += kHysteresisThreshold;
 
-    // fall-through
+        // fall-through
 
     case 1:
         threshold2 += kHysteresisThreshold;
 
-    // fall-through
+        // fall-through
 
     case 2:
         threshold3 += kHysteresisThreshold;
 
-    // fall-through
+        // fall-through
 
     default:
         break;
@@ -276,4 +286,4 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     return linkQuality;
 }
 
-}  // namespace ot
+} // namespace ot

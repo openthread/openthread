@@ -33,12 +33,11 @@
 
 #include "ip6_mpl.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -47,21 +46,21 @@ namespace Ip6 {
 void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval)
 {
     // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = aInterval == 0 ? aInterval : otPlatRandomGet() % aInterval;
+    uint8_t t = aInterval == 0 ? aInterval : Random::GetUint8InRange(0, aInterval);
 
     // Set transmission time at the beginning of the next interval.
     SetTransmissionTime(aCurrentTime + GetIntervalOffset() + t);
     SetIntervalOffset(aInterval - t);
 }
 
-Mpl::Mpl(Instance &aInstance):
-    InstanceLocator(aInstance),
-    mTimerExpirations(0),
-    mSequence(0),
-    mSeedId(0),
-    mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this),
-    mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this),
-    mMatchingAddress(NULL)
+Mpl::Mpl(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimerExpirations(0)
+    , mSequence(0)
+    , mSeedId(0)
+    , mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this)
+    , mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this)
+    , mMatchingAddress(NULL)
 {
     memset(mSeedSet, 0, sizeof(mSeedSet));
 }
@@ -88,9 +87,9 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
 
 otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 {
-    otError error = OT_ERROR_NONE;
+    otError       error = OT_ERROR_NONE;
     MplSeedEntry *entry = NULL;
-    int8_t diff;
+    int8_t        diff;
 
     for (uint32_t i = 0; i < kNumSeedEntries; i++)
     {
@@ -105,7 +104,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         else if (mSeedSet[i].GetSeedId() == aSeedId)
         {
             entry = &mSeedSet[i];
-            diff = static_cast<int8_t>(aSequence - entry->GetSequence());
+            diff  = static_cast<int8_t>(aSequence - entry->GetSequence());
 
             VerifyOrExit(diff > 0, error = OT_ERROR_DROP);
 
@@ -126,10 +125,10 @@ exit:
 
 void Mpl::UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence)
 {
-    int8_t diff;
+    int8_t                     diff;
     MplBufferedMessageMetadata messageMetadata;
 
-    Message *message = mBufferedMessageSet.GetHead();
+    Message *message     = mBufferedMessageSet.GetHead();
     Message *nextMessage = NULL;
 
     // Check if multicast forwarding is enabled.
@@ -163,12 +162,12 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t now = TimerMilli::GetNow();
-    otError error = OT_ERROR_NONE;
-    Message *messageCopy = NULL;
+    uint32_t                   now         = TimerMilli::GetNow();
+    otError                    error       = OT_ERROR_NONE;
+    Message *                  messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
-    uint32_t nextTransmissionTime;
-    uint8_t hopLimit = 0;
+    uint32_t                   nextTransmissionTime;
+    uint8_t                    hopLimit = 0;
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
     // adjust the first MPL forward interval dynamically according to the network scale
@@ -223,12 +222,12 @@ exit:
 
 otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
 {
-    otError error;
+    otError   error;
     OptionMpl option;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
-                 (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
-                  option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
+                     (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
+                      option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
                  error = OT_ERROR_DROP);
 
     if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
@@ -265,11 +264,11 @@ void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    uint32_t now = TimerMilli::GetNow();
-    uint32_t nextDelta = 0xffffffff;
+    uint32_t                   now       = TimerMilli::GetNow();
+    uint32_t                   nextDelta = 0xffffffff;
     MplBufferedMessageMetadata messageMetadata;
 
-    Message *message = mBufferedMessageSet.GetHead();
+    Message *message     = mBufferedMessageSet.GetHead();
     Message *nextMessage = NULL;
 
     while (message != NULL)
@@ -369,5 +368,5 @@ void Mpl::HandleSeedSetTimer(void)
     }
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

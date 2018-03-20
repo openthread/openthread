@@ -46,8 +46,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace NetworkData {
 
 /**
@@ -64,7 +62,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data maintained by the Leader.
  *
  */
-class LeaderBase: public NetworkData
+class LeaderBase : public NetworkData
 {
 public:
     /**
@@ -144,8 +142,10 @@ public:
      * @retval OT_ERROR_NO_ROUTE  No valid route was found.
      *
      */
-    otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination,
-                        uint8_t *aPrefixMatch, uint16_t *aRloc16);
+    otError RouteLookup(const Ip6::Address &aSource,
+                        const Ip6::Address &aDestination,
+                        uint8_t *           aPrefixMatch,
+                        uint16_t *          aRloc16);
 
     /**
      * This method is used by non-Leader devices to set newly received Network Data from the Leader.
@@ -153,12 +153,18 @@ public:
      * @param[in]  aVersion        The Version value.
      * @param[in]  aStableVersion  The Stable Version value.
      * @param[in]  aStableOnly     TRUE if storing only the stable data, FALSE otherwise.
-     * @param[in]  aData           A pointer to the Network Data.
-     * @param[in]  aDataLength     The length of the Network Data in bytes.
+     * @param[in]  aMessage        A reference to the MLE message.
+     * @param[in]  aMessageOffset  The offset in @p aMessage for the Network Data TLV.
+     *
+     * @retval OT_ERROR_NONE   Successfully set the network data.
+     * @retval OT_ERROR_PARSE  Network Data TLV in @p aMessage is not valid.
      *
      */
-    void SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool aStableOnly, const uint8_t *aData,
-                        uint8_t aDataLength);
+    otError SetNetworkData(uint8_t        aVersion,
+                           uint8_t        aStableVersion,
+                           bool           aStableOnly,
+                           const Message &aMessage,
+                           uint16_t       aMessageOffset);
 
     /**
      * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
@@ -223,17 +229,19 @@ public:
      *
      */
     otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 protected:
-    uint8_t         mStableVersion;
-    uint8_t         mVersion;
+    uint8_t mStableVersion;
+    uint8_t mVersion;
 
 private:
     otError RemoveCommissioningData(void);
 
-    otError ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination,
-                                uint8_t *aPrefixMatch, uint16_t *aRloc16);
+    otError ExternalRouteLookup(uint8_t             aDomainId,
+                                const Ip6::Address &aDestination,
+                                uint8_t *           aPrefixMatch,
+                                uint16_t *          aRloc16);
     otError DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16);
 };
 
@@ -241,8 +249,8 @@ private:
  * @}
  */
 
-}  // namespace NetworkData
-}  // namespace ot
+} // namespace NetworkData
+} // namespace ot
 
 #if OPENTHREAD_MTD
 #include "network_data_leader_mtd.hpp"
@@ -252,4 +260,4 @@ private:
 #error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
 
-#endif  // NETWORK_DATA_LEADER_HPP_
+#endif // NETWORK_DATA_LEADER_HPP_

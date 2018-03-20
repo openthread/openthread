@@ -32,21 +32,37 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <openthread/platform/logging.h>
 
-#include <device/nrf.h>
-#include <drivers/clock/nrf_drv_clock.h>
 #include "platform-nrf5.h"
+#include <drivers/clock/nrf_drv_clock.h>
+#include <nrf.h>
 
 #include <openthread/config.h>
 
-void __cxa_pure_virtual(void) { while (1); }
+void __cxa_pure_virtual(void)
+{
+    while (1)
+        ;
+}
 
 void PlatformInit(int argc, char *argv[])
 {
+    extern bool gPlatformPseudoResetWasRequested;
+
+    if (gPlatformPseudoResetWasRequested)
+    {
+        nrf5AlarmDeinit();
+        nrf5AlarmInit();
+
+        gPlatformPseudoResetWasRequested = false;
+
+        return;
+    }
+
     (void)argc;
     (void)argv;
 
@@ -81,6 +97,12 @@ void PlatformDeinit(void)
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
     nrf5LogDeinit();
 #endif
+}
+
+bool PlatformPseudoResetWasRequested(void)
+{
+    extern bool gPlatformPseudoResetWasRequested;
+    return gPlatformPseudoResetWasRequested;
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)

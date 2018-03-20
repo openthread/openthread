@@ -32,9 +32,8 @@
  *
  */
 
-#include <openthread/config.h>
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <assert.h>
 #include <stdbool.h>
@@ -46,45 +45,48 @@
 #include <platform-config.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
 
 #include "platform-nrf5.h"
+#include "platform.h"
 
-#include <device/nrf.h>
-#include <nrf_drv_radio802154.h>
+#include <nrf.h>
+#include <nrf_802154.h>
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 #include <openthread/types.h>
+
+// clang-format off
 
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8
 #define PENDING_BIT           0x10
 #define US_PER_MS             1000ULL
 
+// clang-format on
+
 enum
 {
-    NRF52840_RECEIVE_SENSITIVITY = -100,  // dBm
+    NRF52840_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
 static bool sDisabled;
 
 static otError      sReceiveError = OT_ERROR_NONE;
-static otRadioFrame sReceivedFrames[NRF_DRV_RADIO802154_RX_BUFFERS];
+static otRadioFrame sReceivedFrames[NRF_802154_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 static otRadioFrame sAckFrame;
 
-static int8_t       sDefaultTxPower;
+static int8_t sDefaultTxPower;
 
-static uint32_t     sEnergyDetectionTime;
-static uint8_t      sEnergyDetectionChannel;
-static int8_t       sEnergyDetected;
+static uint32_t sEnergyDetectionTime;
+static uint8_t  sEnergyDetectionChannel;
+static int8_t   sEnergyDetected;
 
-typedef enum
-{
+typedef enum {
     kPendingEventSleep,                // Requested to enter Sleep state.
     kPendingEventTransmit,             // Frame is queued for transmission.
     kPendingEventFrameTransmitted,     // Transmitted frame and received ACK (if requested).
@@ -105,7 +107,7 @@ static void dataInit(void)
 
     sReceiveError = OT_ERROR_NONE;
 
-    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
     {
         sReceivedFrames[i].mPsdu = NULL;
     }
@@ -115,7 +117,7 @@ static void dataInit(void)
 
 static void convertShortAddress(uint8_t *aTo, uint16_t aFrom)
 {
-    aTo[0] = (uint8_t) aFrom;
+    aTo[0] = (uint8_t)aFrom;
     aTo[1] = (uint8_t)(aFrom >> 8);
 }
 
@@ -133,8 +135,7 @@ static void setPendingEvent(RadioPendingEvents aEvent)
     {
         pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
         pendingEvents |= bitToSet;
-    }
-    while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
+    } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 
     PlatformEventSignalPending();
 }
@@ -148,8 +149,7 @@ static void resetPendingEvent(RadioPendingEvents aEvent)
     {
         pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
         pendingEvents &= bitsToRemain;
-    }
-    while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
+    } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 }
 
 static inline void clearPendingEvents(void)
@@ -168,77 +168,76 @@ static inline void clearPendingEvents(void)
     {
         pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
         pendingEvents &= bitsToRemain;
-    }
-    while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
+    } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     uint64_t factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
-    factoryAddress |=  NRF_FICR->DEVICEID[1];
+    factoryAddress |= NRF_FICR->DEVICEID[1];
 
     memcpy(aIeeeEui64, &factoryAddress, sizeof(factoryAddress));
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aPanId);
 
-    nrf_drv_radio802154_pan_id_set(address);
+    nrf_802154_pan_id_set(address);
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    nrf_drv_radio802154_extended_address_set(aExtAddress->m8);
+    nrf_802154_extended_address_set(aExtAddress->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aShortAddress);
 
-    nrf_drv_radio802154_short_address_set(address);
+    nrf_802154_short_address_set(address);
 }
 
 void nrf5RadioInit(void)
 {
     dataInit();
-    nrf_drv_radio802154_init();
+    nrf_802154_init();
 }
 
 void nrf5RadioDeinit(void)
 {
-    nrf_drv_radio802154_deinit();
+    nrf_802154_deinit();
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     if (sDisabled)
     {
         return OT_RADIO_STATE_DISABLED;
     }
 
-    switch (nrf_drv_radio802154_state_get())
+    switch (nrf_802154_state_get())
     {
-    case NRF_DRV_RADIO802154_STATE_SLEEP:
+    case NRF_802154_STATE_SLEEP:
         return OT_RADIO_STATE_SLEEP;
 
-    case NRF_DRV_RADIO802154_STATE_RECEIVE:
-    case NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION:
+    case NRF_802154_STATE_RECEIVE:
+    case NRF_802154_STATE_ENERGY_DETECTION:
         return OT_RADIO_STATE_RECEIVE;
 
-    case NRF_DRV_RADIO802154_STATE_TRANSMIT:
+    case NRF_802154_STATE_TRANSMIT:
         return OT_RADIO_STATE_TRANSMIT;
 
     default:
@@ -250,14 +249,14 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     otError error;
 
     if (sDisabled)
     {
         sDisabled = false;
-        error = OT_ERROR_NONE;
+        error     = OT_ERROR_NONE;
     }
     else
     {
@@ -269,14 +268,14 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     otError error;
 
     if (!sDisabled)
     {
         sDisabled = true;
-        error = OT_ERROR_NONE;
+        error     = OT_ERROR_NONE;
     }
     else
     {
@@ -288,16 +287,16 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     return !sDisabled;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    if (nrf_drv_radio802154_sleep())
+    if (nrf_802154_sleep())
     {
         clearPendingEvents();
     }
@@ -312,25 +311,27 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    nrf_drv_radio802154_channel_set(aChannel);
-    nrf_drv_radio802154_tx_power_set(sDefaultTxPower);
-    nrf_drv_radio802154_receive();
+    bool result;
+
+    nrf_802154_channel_set(aChannel);
+    nrf_802154_tx_power_set(sDefaultTxPower);
+    result = nrf_802154_receive();
     clearPendingEvents();
 
-    return OT_ERROR_NONE;
+    return result ? OT_ERROR_NONE : OT_ERROR_INVALID_STATE;
 }
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     aFrame->mPsdu[-1] = aFrame->mLength;
 
-    nrf_drv_radio802154_channel_set(aFrame->mChannel);
+    nrf_802154_channel_set(aFrame->mChannel);
 
-    if (nrf_drv_radio802154_transmit_raw(&aFrame->mPsdu[-1], true))
+    if (nrf_802154_transmit_raw(&aFrame->mPsdu[-1], true))
     {
         clearPendingEvents();
         otPlatRadioTxStarted(aInstance, aFrame);
@@ -346,56 +347,56 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    return nrf_drv_radio802154_rssi_last_get();
+    return nrf_802154_rssi_last_get();
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     return OT_RADIO_CAPS_ENERGY_SCAN;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    return nrf_drv_radio802154_promiscuous_get();
+    return nrf_802154_promiscuous_get();
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    nrf_drv_radio802154_promiscuous_set(aEnable);
+    nrf_802154_promiscuous_set(aEnable);
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    nrf_drv_radio802154_auto_pending_bit_set(aEnable);
+    nrf_802154_auto_pending_bit_set(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     otError error;
 
     uint8_t shortAddress[SHORT_ADDRESS_SIZE];
     convertShortAddress(shortAddress, aShortAddress);
 
-    if (nrf_drv_radio802154_pending_bit_for_addr_set(shortAddress, false))
+    if (nrf_802154_pending_bit_for_addr_set(shortAddress, false))
     {
         error = OT_ERROR_NONE;
     }
@@ -409,11 +410,11 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     otError error;
 
-    if (nrf_drv_radio802154_pending_bit_for_addr_set(aExtAddress->m8, true))
+    if (nrf_802154_pending_bit_for_addr_set(aExtAddress->m8, true))
     {
         error = OT_ERROR_NONE;
     }
@@ -427,14 +428,14 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     otError error;
 
     uint8_t shortAddress[SHORT_ADDRESS_SIZE];
     convertShortAddress(shortAddress, aShortAddress);
 
-    if (nrf_drv_radio802154_pending_bit_for_addr_clear(shortAddress, false))
+    if (nrf_802154_pending_bit_for_addr_clear(shortAddress, false))
     {
         error = OT_ERROR_NONE;
     }
@@ -448,11 +449,11 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void) aInstance;
+    (void)aInstance;
 
     otError error;
 
-    if (nrf_drv_radio802154_pending_bit_for_addr_clear(aExtAddress->m8, true))
+    if (nrf_802154_pending_bit_for_addr_clear(aExtAddress->m8, true))
     {
         error = OT_ERROR_NONE;
     }
@@ -466,30 +467,30 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    nrf_drv_radio802154_pending_bit_for_addr_reset(false);
+    nrf_802154_pending_bit_for_addr_reset(false);
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    nrf_drv_radio802154_pending_bit_for_addr_reset(true);
+    nrf_802154_pending_bit_for_addr_reset(true);
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void) aInstance;
+    (void)aInstance;
 
-    sEnergyDetectionTime    = (uint32_t) aScanDuration * 1000UL;
+    sEnergyDetectionTime    = (uint32_t)aScanDuration * 1000UL;
     sEnergyDetectionChannel = aScanChannel;
 
     clearPendingEvents();
 
-    nrf_drv_radio802154_channel_set(aScanChannel);
+    nrf_802154_channel_set(aScanChannel);
 
-    if (nrf_drv_radio802154_energy_detection(sEnergyDetectionTime))
+    if (nrf_802154_energy_detection(sEnergyDetectionTime))
     {
         resetPendingEvent(kPendingEventEnergyDetectionStart);
     }
@@ -523,14 +524,14 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     (void)aInstance;
 
     sDefaultTxPower = aPower;
-    nrf_drv_radio802154_tx_power_set(aPower);
+    nrf_802154_tx_power_set(aPower);
 
     return OT_ERROR_NONE;
 }
 
 void nrf5RadioProcess(otInstance *aInstance)
 {
-    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
         {
@@ -546,17 +547,17 @@ void nrf5RadioProcess(otInstance *aInstance)
                 otPlatRadioReceiveDone(aInstance, &sReceivedFrames[i], OT_ERROR_NONE);
             }
 
-            uint8_t *bufferAddress = &sReceivedFrames[i].mPsdu[-1];
+            uint8_t *bufferAddress   = &sReceivedFrames[i].mPsdu[-1];
             sReceivedFrames[i].mPsdu = NULL;
-            nrf_drv_radio802154_buffer_free_raw(bufferAddress);
+            nrf_802154_buffer_free_raw(bufferAddress);
         }
     }
 
     if (isPendingEventSet(kPendingEventTransmit))
     {
-        nrf_drv_radio802154_channel_set(sTransmitFrame.mChannel);
+        nrf_802154_channel_set(sTransmitFrame.mChannel);
 
-        if (nrf_drv_radio802154_transmit_raw(sTransmitPsdu, true))
+        if (nrf_802154_transmit_raw(sTransmitPsdu, true))
         {
             resetPendingEvent(kPendingEventTransmit);
             otPlatRadioTxStarted(aInstance, &sTransmitFrame);
@@ -580,7 +581,7 @@ void nrf5RadioProcess(otInstance *aInstance)
 
         if (sAckFrame.mPsdu != NULL)
         {
-            nrf_drv_radio802154_buffer_free_raw(sAckFrame.mPsdu - 1);
+            nrf_802154_buffer_free_raw(sAckFrame.mPsdu - 1);
             sAckFrame.mPsdu = NULL;
         }
 
@@ -647,7 +648,7 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventSleep))
     {
-        if (nrf_drv_radio802154_sleep())
+        if (nrf_802154_sleep())
         {
             resetPendingEvent(kPendingEventSleep);
         }
@@ -655,20 +656,20 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventEnergyDetectionStart))
     {
-        nrf_drv_radio802154_channel_set(sEnergyDetectionChannel);
+        nrf_802154_channel_set(sEnergyDetectionChannel);
 
-        if (nrf_drv_radio802154_energy_detection(sEnergyDetectionTime))
+        if (nrf_802154_energy_detection(sEnergyDetectionTime))
         {
             resetPendingEvent(kPendingEventEnergyDetectionStart);
         }
     }
 }
 
-void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
+void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
 {
     otRadioFrame *receivedFrame = NULL;
 
-    for (uint32_t i = 0; i < NRF_DRV_RADIO802154_RX_BUFFERS; i++)
+    for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu == NULL)
         {
@@ -685,34 +686,34 @@ void nrf_drv_radio802154_received_raw(uint8_t *p_data, int8_t power, int8_t lqi)
     receivedFrame->mLength  = p_data[0];
     receivedFrame->mRssi    = power;
     receivedFrame->mLqi     = lqi;
-    receivedFrame->mChannel = nrf_drv_radio802154_channel_get();
+    receivedFrame->mChannel = nrf_802154_channel_get();
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    uint64_t timestamp      = nrf5AlarmGetCurrentTime();
-    receivedFrame->mMsec    = timestamp / US_PER_MS;
-    receivedFrame->mUsec    = timestamp - receivedFrame->mMsec * US_PER_MS;
+    uint64_t timestamp   = nrf5AlarmGetCurrentTime();
+    receivedFrame->mMsec = timestamp / US_PER_MS;
+    receivedFrame->mUsec = timestamp - receivedFrame->mMsec * US_PER_MS;
 #endif
 
     PlatformEventSignalPending();
 }
 
-void nrf_drv_radio802154_receive_failed(nrf_drv_radio802154_rx_error_t error)
+void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
 {
     switch (error)
     {
-    case NRF_DRV_RADIO802154_RX_ERROR_INVALID_FRAME:
+    case NRF_802154_RX_ERROR_INVALID_FRAME:
         sReceiveError = OT_ERROR_NO_FRAME_RECEIVED;
         break;
 
-    case NRF_DRV_RADIO802154_RX_ERROR_INVALID_FCS:
+    case NRF_802154_RX_ERROR_INVALID_FCS:
         sReceiveError = OT_ERROR_FCS;
         break;
 
-    case NRF_DRV_RADIO802154_RX_ERROR_INVALID_DEST_ADDR:
+    case NRF_802154_RX_ERROR_INVALID_DEST_ADDR:
         sReceiveError = OT_ERROR_DESTINATION_ADDRESS_FILTERED;
         break;
 
-    case NRF_DRV_RADIO802154_RX_ERROR_RUNTIME:
-    case NRF_DRV_RADIO802154_RX_ERROR_TIMESLOT_ENDED:
+    case NRF_802154_RX_ERROR_RUNTIME:
+    case NRF_802154_RX_ERROR_TIMESLOT_ENDED:
         sReceiveError = OT_ERROR_FAILED;
         break;
 
@@ -723,8 +724,10 @@ void nrf_drv_radio802154_receive_failed(nrf_drv_radio802154_rx_error_t error)
     setPendingEvent(kPendingEventReceiveFailed);
 }
 
-void nrf_drv_radio802154_transmitted_raw(uint8_t *aAckPsdu, int8_t aPower, int8_t aLqi)
+void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t aPower, uint8_t aLqi)
 {
+    assert(aFrame == sTransmitPsdu);
+
     if (aAckPsdu == NULL)
     {
         sAckFrame.mPsdu = NULL;
@@ -735,31 +738,33 @@ void nrf_drv_radio802154_transmitted_raw(uint8_t *aAckPsdu, int8_t aPower, int8_
         sAckFrame.mLength  = aAckPsdu[0];
         sAckFrame.mRssi    = aPower;
         sAckFrame.mLqi     = aLqi;
-        sAckFrame.mChannel = nrf_drv_radio802154_channel_get();
+        sAckFrame.mChannel = nrf_802154_channel_get();
     }
 
     setPendingEvent(kPendingEventFrameTransmitted);
 }
 
-void nrf_drv_radio802154_transmit_failed(nrf_drv_radio802154_tx_error_t error)
+void nrf_802154_transmit_failed(const uint8_t *aFrame, nrf_802154_tx_error_t error)
 {
+    assert(aFrame == sTransmitPsdu);
+
     switch (error)
     {
-    case NRF_DRV_RADIO802154_TX_ERROR_BUSY_CHANNEL:
-    case NRF_DRV_RADIO802154_TX_ERROR_TIMESLOT_ENDED:
+    case NRF_802154_TX_ERROR_BUSY_CHANNEL:
+    case NRF_802154_TX_ERROR_TIMESLOT_ENDED:
         setPendingEvent(kPendingEventChannelAccessFailure);
         break;
 
-    case NRF_DRV_RADIO802154_TX_ERROR_INVALID_ACK:
-    case NRF_DRV_RADIO802154_TX_ERROR_NO_MEM:
+    case NRF_802154_TX_ERROR_INVALID_ACK:
+    case NRF_802154_TX_ERROR_NO_MEM:
         setPendingEvent(kPendingEventInvalidAck);
         break;
     }
 }
 
-void nrf_drv_radio802154_energy_detected(uint8_t result)
+void nrf_802154_energy_detected(uint8_t result)
 {
-    sEnergyDetected = nrf_drv_radio802154_dbm_from_energy_level_calculate(result);
+    sEnergyDetected = nrf_802154_dbm_from_energy_level_calculate(result);
 
     setPendingEvent(kPendingEventEnergyDetected);
 }

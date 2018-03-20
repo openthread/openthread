@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 COMMISSIONER = 1
@@ -37,9 +38,11 @@ JOINER = 2
 
 class Cert_8_1_01_Commissioning(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,3):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -53,23 +56,24 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
         self.nodes[COMMISSIONER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(3)
+        self.simulator.go(3)
         self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'OPENTHREAD')
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('OPENTHREAD')
-        time.sleep(10)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
 
         self.nodes[JOINER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER].get_state(), 'router')
 
 if __name__ == '__main__':

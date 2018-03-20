@@ -32,6 +32,9 @@
 
 #include "ncp_base.hpp"
 
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#include <openthread/channel_manager.h>
+#endif
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
@@ -215,7 +218,8 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE_ADDRESSES(void)
     otError error = OT_ERROR_NONE;
     otChildInfo childInfo;
     uint8_t maxChildren;
-    const otIp6Address *ip6Address;
+    otIp6Address ip6Address;
+    otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
@@ -232,14 +236,11 @@ otError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE_ADDRESSES(void)
         SuccessOrExit(error = mEncoder.WriteEui64(childInfo.mExtAddress));
         SuccessOrExit(error = mEncoder.WriteUint16(childInfo.mRloc16));
 
-        ip6Address = childInfo.mIp6Addresses;
+        iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
 
-        for (uint8_t num = childInfo.mIp6AddressesLength; num > 0; num--, ip6Address++)
+        while (otThreadGetChildNextIp6Address(mInstance, childIndex, &iterator, &ip6Address) == OT_ERROR_NONE)
         {
-            if (!otIp6IsAddressUnspecified(ip6Address))
-            {
-                SuccessOrExit(error = mEncoder.WriteIp6Address(*ip6Address));
-            }
+            SuccessOrExit(error = mEncoder.WriteIp6Address(ip6Address));
         }
 
         SuccessOrExit(error = mEncoder.CloseStruct());
@@ -857,6 +858,63 @@ otError NcpBase::SetPropertyHandler_THREAD_MGMT_PENDING_DATASET(void)
 exit:
     return error;
 }
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
+{
+    return mEncoder.WriteUint8(otChannelManagerGetRequestedChannel(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
+{
+    uint8_t channel;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+
+    error = otChannelManagerRequestChannelChange(mInstance, channel);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_DELAY(void)
+{
+    return mEncoder.WriteUint16(otChannelManagerGetDelay(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_DELAY(void)
+{
+    uint16_t delay;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(delay));
+
+    error = otChannelManagerSetDelay(mInstance, delay);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_SUPPORTED_CHANNELS(void)
+{
+    return EncodeChannelMask(otChannelManagerGetSupportedChannels(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_SUPPORTED_CHANNELS(void)
+{
+    uint32_t channelMask = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = DecodeChannelMask(channelMask));
+    otChannelManagerSetSupportedChannels(mInstance, channelMask);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
 
 }  // namespace Ncp
 }  // namespace ot

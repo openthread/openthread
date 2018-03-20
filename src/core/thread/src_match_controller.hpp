@@ -65,7 +65,7 @@ namespace ot {
  * address or an extended/long address can be added to the source address match table.
  *
  */
-class SourceMatchController: public InstanceLocator
+class SourceMatchController : public InstanceLocator
 {
 public:
     /**
@@ -191,6 +191,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // SOURCE_MATCH_CONTROLLER_HPP_
+#endif // SOURCE_MATCH_CONTROLLER_HPP_

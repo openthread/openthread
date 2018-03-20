@@ -40,15 +40,15 @@
 
 #include "test_util.h"
 
-#define kNumTestMessages      5
+#define kNumTestMessages 5
 
-static ot::Instance *sInstance;
+static ot::Instance *   sInstance;
 static ot::MessagePool *sMessagePool;
 
 // This function verifies the content of the message queue to match the passed in messages
 void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
-    va_list args;
+    va_list      args;
     ot::Message *message;
     ot::Message *msgArg;
 
@@ -80,9 +80,9 @@ void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLen
 void TestMessageQueue(void)
 {
     ot::MessageQueue messageQueue;
-    ot::Message *msg[kNumTestMessages];
-    otError error;
-    uint16_t msgCount, bufferCount;
+    ot::Message *    msg[kNumTestMessages];
+    otError          error;
+    uint16_t         msgCount, bufferCount;
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != NULL, "Null instance");
@@ -187,8 +187,7 @@ void TestMessageQueue(void)
     error = messageQueue.Enqueue(*msg[0]);
     VerifyOrQuit(error == OT_ERROR_ALREADY, "Enqueuing an already queued message did not fail as expected.\n");
     error = messageQueue.Dequeue(*msg[1]);
-    VerifyOrQuit(error == OT_ERROR_NOT_FOUND,
-                 "Dequeuing a message not in the queue did not fail as expected.\n");
+    VerifyOrQuit(error == OT_ERROR_NOT_FOUND, "Dequeuing a message not in the queue did not fail as expected.\n");
 
     testFreeInstance(sInstance);
 }
@@ -196,7 +195,7 @@ void TestMessageQueue(void)
 // This function verifies the content of the message queue to match the passed in messages
 void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLength, ...)
 {
-    va_list args;
+    va_list    args;
     otMessage *message;
     otMessage *msgArg;
 
@@ -209,10 +208,7 @@ void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLe
     }
     else
     {
-        for (message = otMessageQueueGetHead(aQueue);
-             message != NULL;
-             message = otMessageQueueGetNext(aQueue, message)
-            )
+        for (message = otMessageQueueGetHead(aQueue); message != NULL; message = otMessageQueueGetNext(aQueue, message))
         {
             VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected\n");
 
@@ -231,9 +227,9 @@ void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLe
 // This test checks all the OpenThread C APIs for `otMessageQueue`
 void TestMessageQueueOtApis(void)
 {
-    otMessage *msg[kNumTestMessages];
-    otError error;
-    otMessage *message;
+    otMessage *    msg[kNumTestMessages];
+    otError        error;
+    otMessage *    message;
     otMessageQueue queue, queue2;
 
     sInstance = testInitInstance();
@@ -273,8 +269,7 @@ void TestMessageQueueOtApis(void)
     error = otMessageQueueEnqueue(&queue, msg[2]);
     VerifyOrQuit(error == OT_ERROR_ALREADY, "Enqueuing an already queued message did not fail as expected.\n");
     error = otMessageQueueDequeue(&queue, msg[0]);
-    VerifyOrQuit(error == OT_ERROR_NOT_FOUND,
-                 "Dequeuing a message not in the queue did not fail as expected.\n");
+    VerifyOrQuit(error == OT_ERROR_NOT_FOUND, "Dequeuing a message not in the queue did not fail as expected.\n");
 
     // Check the failure cases for otMessageQueueGetNext()
     message = otMessageQueueGetNext(&queue, NULL);

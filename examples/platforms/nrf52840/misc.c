@@ -26,12 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 #include <openthread/platform/misc.h>
-#include <openthread/platform/platform.h>
 
-#include <device/nrf.h>
+#include <nrf.h>
 
 #include "platform-nrf5.h"
 
@@ -40,6 +39,8 @@
 #endif
 
 static uint32_t sResetReason;
+
+bool gPlatformPseudoResetWasRequested;
 
 __WEAK void nrf5CryptoInit(void)
 {
@@ -57,9 +58,9 @@ void nrf5MiscInit(void)
     sd_power_reset_reason_get(&sResetReason);
     sd_power_reset_reason_clr(0xFFFFFFFF);
 #else
-    sResetReason = NRF_POWER->RESETREAS;
+    sResetReason         = NRF_POWER->RESETREAS;
     NRF_POWER->RESETREAS = 0xFFFFFFFF;
-#endif // SOFTDEVICE_PRESENT 
+#endif // SOFTDEVICE_PRESENT
 }
 
 void nrf5MiscDeinit(void)
@@ -70,8 +71,12 @@ void nrf5MiscDeinit(void)
 void otPlatReset(otInstance *aInstance)
 {
     (void)aInstance;
-
+#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    gPlatformPseudoResetWasRequested = true;
+    sResetReason                     = POWER_RESETREAS_SREQ_Msk;
+#else  // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     NVIC_SystemReset();
+#endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
@@ -95,10 +100,8 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         reason = OT_PLAT_RESET_REASON_FAULT;
     }
-    else if ((sResetReason & POWER_RESETREAS_OFF_Msk)    ||
-             (sResetReason & POWER_RESETREAS_LPCOMP_Msk) ||
-             (sResetReason & POWER_RESETREAS_DIF_Msk)    ||
-             (sResetReason & POWER_RESETREAS_NFC_Msk)    ||
+    else if ((sResetReason & POWER_RESETREAS_OFF_Msk) || (sResetReason & POWER_RESETREAS_LPCOMP_Msk) ||
+             (sResetReason & POWER_RESETREAS_DIF_Msk) || (sResetReason & POWER_RESETREAS_NFC_Msk) ||
              (sResetReason & POWER_RESETREAS_VBUS_Msk))
     {
         reason = OT_PLAT_RESET_REASON_OTHER;

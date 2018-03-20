@@ -46,9 +46,11 @@ MTDS = [MED1, SED1, MED3]
 
 class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,7):
-            self.nodes[i] = node.Node(i, (i in MTDS))
+            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[DUT_LEADER].set_panid(0xface)
         self.nodes[DUT_LEADER].set_mode('rsdn')
@@ -86,27 +88,22 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[MED3].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
         self.nodes[MED3].enable_whitelist()
 
-        self.sniffer = config.create_default_thread_sniffer()
-        self.sniffer.start()
-
     def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         # 1
         self.nodes[DUT_LEADER].start()
-        self.nodes[DUT_LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
         for i in range(ROUTER1, MED3 + 1):
             self.nodes[i].start()
 
-        time.sleep(5)
+        self.simulator.go(5)
 
         for i in [ROUTER1, ROUTER2]:
             self.assertEqual(self.nodes[i].get_state(), 'router')
@@ -115,7 +112,7 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
         # 2
-        leader_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         command.check_mle_advertisement(msg)
 
@@ -126,23 +123,23 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[MED1].add_ipaddr('2001:2:0:1::1234')
         self.nodes[SED1].add_ipaddr('2001:2:0:1::1234')
 
-        time.sleep(5)
+        self.simulator.go(5)
 
         # 4
         # Flush the message queue to avoid possible impact on follow-up verification.
-        self.sniffer.get_messages_sent_by(DUT_LEADER)
+        self.simulator.get_messages_sent_by(DUT_LEADER)
 
         self.nodes[MED3].ping('2001:2:0:1::1234')
 
         # Verify DUT_LEADER sent an Address Query Request to the Realm local address.
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
         command.check_address_query(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 5 & 6
         # Verify DUT_LEADER sent an Address Error Notification to the Realm local address.
-        time.sleep(5)
-        dut_messages = self.sniffer.get_messages_sent_by(DUT_LEADER)
+        self.simulator.go(5)
+        dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = dut_messages.next_coap_message('0.02', '/a/ae')
         command.check_address_error_notification(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 

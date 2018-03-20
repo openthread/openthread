@@ -36,11 +36,12 @@
 
 namespace ot {
 
-class TestNetworkData: public NetworkData::NetworkData
+class TestNetworkData : public NetworkData::NetworkData
 {
 public:
-    TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength):
-        NetworkData::NetworkData(*aInstance, false) {
+    TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength)
+        : NetworkData::NetworkData(*aInstance, false)
+    {
         memcpy(mTlvs, aTlvs, aTlvsLength);
         mLength = aTlvsLength;
     }
@@ -55,8 +56,8 @@ void PrintExternalRouteConfig(const otExternalRouteConfig &aConfig)
         printf("%02x", aConfig.mPrefix.mPrefix.mFields.m8[i]);
     }
 
-    printf(", length:%d, rloc16:%04x, preference:%d, stable:%d, nexthop:%d", aConfig.mPrefix.mLength,
-           aConfig.mRloc16, aConfig.mPreference, aConfig.mStable, aConfig.mNextHopIsThisDevice);
+    printf(", length:%d, rloc16:%04x, preference:%d, stable:%d, nexthop:%d", aConfig.mPrefix.mLength, aConfig.mRloc16,
+           aConfig.mPreference, aConfig.mStable, aConfig.mNextHopIsThisDevice);
 }
 
 // Returns true if the two given otExternalRouteConfig match (intentionally ignoring mNextHopIsThisDevice).
@@ -64,15 +65,13 @@ bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otE
 {
     return (memcmp(aConfig1.mPrefix.mPrefix.mFields.m8, aConfig2.mPrefix.mPrefix.mFields.m8,
                    sizeof(aConfig1.mPrefix.mPrefix)) == 0) &&
-           (aConfig1.mPrefix.mLength == aConfig2.mPrefix.mLength) &&
-           (aConfig1.mRloc16 == aConfig2.mRloc16) &&
-           (aConfig1.mPreference == aConfig2.mPreference) &&
-           (aConfig1.mStable == aConfig2.mStable);
+           (aConfig1.mPrefix.mLength == aConfig2.mPrefix.mLength) && (aConfig1.mRloc16 == aConfig2.mRloc16) &&
+           (aConfig1.mPreference == aConfig2.mPreference) && (aConfig1.mStable == aConfig2.mStable);
 }
 
 void TestNetworkDataIterator(void)
 {
-    ot::Instance *instance;
+    ot::Instance *        instance;
     otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
 
@@ -80,35 +79,27 @@ void TestNetworkDataIterator(void)
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
     {
-        const uint8_t kNetworkData[] =
-        {
-            0x08, 0x04, 0x0B, 0x02, 0x00, 0x00, 0x03, 0x14, 0x00, 0x40, 0xFD, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x03, 0xC8, 0x00, 0x40, 0x01, 0x03, 0x54, 0x00, 0x00
-        };
+        const uint8_t kNetworkData[] = {0x08, 0x04, 0x0B, 0x02, 0x00, 0x00, 0x03, 0x14, 0x00, 0x40,
+                                        0xFD, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,
+                                        0xC8, 0x00, 0x40, 0x01, 0x03, 0x54, 0x00, 0x00};
 
-        otExternalRouteConfig routes[] =
-        {
+        otExternalRouteConfig routes[] = {
             {
-                {
-                    {{{ 0xfd, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}},
-                    64
-                },
+                {{{{0xfd, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}},
+                 64},
                 0xc800,
                 1,
                 false,
                 false,
             },
             {
-                {
-                    {{{ 0xfd, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}},
-                    64
-                },
+                {{{{0xfd, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}},
+                 64},
                 0x5400,
                 0,
                 true,
                 false,
-            }
-        };
+            }};
 
         TestNetworkData netData(instance, kNetworkData, sizeof(kNetworkData));
 
@@ -127,67 +118,38 @@ void TestNetworkDataIterator(void)
     }
 
     {
-        const uint8_t kNetworkData[] =
-        {
+        const uint8_t kNetworkData[] = {
             0x08, 0x04, 0x0B, 0x02, 0x00, 0x00, 0x03, 0x1E, 0x00, 0x40, 0xFD, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00,
             0x07, 0x02, 0x11, 0x40, 0x00, 0x03, 0x10, 0x00, 0x40, 0x01, 0x03, 0x54, 0x00, 0x00, 0x05, 0x04, 0x54, 0x00,
             0x31, 0x00, 0x02, 0x0F, 0x00, 0x40, 0xFD, 0x00, 0xAB, 0xBA, 0xCD, 0xDC, 0x00, 0x00, 0x00, 0x03, 0x10, 0x00,
-            0x00, 0x03, 0x0E, 0x00, 0x20, 0xFD, 0x00, 0xAB, 0xBA, 0x01, 0x06, 0x54, 0x00, 0x00, 0x04, 0x00, 0x00
-        };
+            0x00, 0x03, 0x0E, 0x00, 0x20, 0xFD, 0x00, 0xAB, 0xBA, 0x01, 0x06, 0x54, 0x00, 0x00, 0x04, 0x00, 0x00};
 
-        otExternalRouteConfig routes[] =
-        {
-            {
-                {
-                    {{{ 0xfd, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}},
-                    64
-                },
-                0x1000,
-                1,
-                false,
-                false
-            },
-            {
-                {
-                    {{{ 0xfd, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}},
-                    64
-                },
-                0x5400,
-                0,
-                true,
-                false
-            },
-            {
-                {
-                    {{{ 0xfd, 0x00, 0xab, 0xba, 0xcd, 0xdc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}},
-                    64
-                },
-                0x1000,
-                0,
-                false,
-                false
-            },
-            {
-                {
-                    {{{ 0xfd, 0x00, 0xab, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}},
-                    32
-                },
-                0x5400,
-                0,
-                true,
-                false
-            },
-            {
-                {
-                    {{{ 0xfd, 0x00, 0xab, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}},
-                    32
-                },
-                0x0400,
-                0,
-                true,
-                false
-            }
-        };
+        otExternalRouteConfig routes[] = {
+            {{{{{0xfd, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}}, 64},
+             0x1000,
+             1,
+             false,
+             false},
+            {{{{{0xfd, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}}, 64},
+             0x5400,
+             0,
+             true,
+             false},
+            {{{{{0xfd, 0x00, 0xab, 0xba, 0xcd, 0xdc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}}, 64},
+             0x1000,
+             0,
+             false,
+             false},
+            {{{{{0xfd, 0x00, 0xab, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}}, 32},
+             0x5400,
+             0,
+             true,
+             false},
+            {{{{{0xfd, 0x00, 0xab, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}}, 32},
+             0x0400,
+             0,
+             true,
+             false}};
 
         TestNetworkData netData(instance, kNetworkData, sizeof(kNetworkData));
 
@@ -208,7 +170,7 @@ void TestNetworkDataIterator(void)
     testFreeInstance(instance);
 }
 
-}  // namespace ot
+} // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

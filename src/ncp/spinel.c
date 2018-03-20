@@ -1189,6 +1189,26 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_JAM_DETECT_HISTORY_BITMAP";
         break;
 
+    case SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL:
+        ret = "PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_RSSI_THRESHOLD:
+        ret = "PROP_CHANNEL_MONITOR_RSSI_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_WINDOW:
+        ret = "PROP_CHANNEL_MONITOR_SAMPLE_WINDOW";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_COUNT:
+        ret = "PROP_CHANNEL_MONITOR_SAMPLE_COUNT";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY:
+        ret = "PROP_CHANNEL_MONITOR_CHANNEL_QUALITY";
+        break;
+
     case SPINEL_PROP_MAC_SCAN_STATE:
         ret = "PROP_MAC_SCAN_STATE";
         break;
@@ -1267,6 +1287,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_MAC_FIXED_RSS:
         ret = "PROP_MAC_FIXED_RSS";
+        break;
+
+    case SPINEL_PROP_MAC_CCA_FAILURE_RATE:
+        ret = "PROP_MAC_CCA_FAILURE_RATE";
         break;
 
     case SPINEL_PROP_NET_SAVED:
@@ -1513,6 +1537,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_CHILD_TABLE_ADDRESSES";
         break;
 
+    case SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES:
+        ret = "PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;
@@ -1541,6 +1569,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_IPV6_MULTICAST_ADDRESS_TABLE";
         break;
 
+    case SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE:
+        ret = "PROP_IPV6_ICMP_PING_OFFLOAD_MODE";
+        break;
+
     case SPINEL_PROP_STREAM_DEBUG:
         ret = "PROP_STREAM_DEBUG";
         break;
@@ -1555,6 +1587,18 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_STREAM_NET_INSECURE:
         ret = "PROP_STREAM_NET_INSECURE";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
+        ret = "PROP_CHANNEL_MANAGER_NEW_CHANNEL";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_DELAY:
+        ret = "PROP_CHANNEL_MANAGER_DELAY";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS:
+        ret = "PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS";
         break;
 
     case SPINEL_PROP_UART_BITRATE:
@@ -1763,6 +1807,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_MSG_BUFFER_COUNTERS:
         ret = "PROP_MSG_BUFFER_COUNTERS";
+        break;
+
+    case SPINEL_PROP_CNTR_ALL_MAC_COUNTERS:
+        ret = "PROP_CNTR_ALL_MAC_COUNTERS";
         break;
 
     case SPINEL_PROP_NEST_STREAM_MFG:
@@ -2098,6 +2146,18 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_OOB_STEERING_DATA:
         ret = "CAP_OOB_STEERING_DATA";
+        break;
+
+    case SPINEL_CAP_CHANNEL_MONITOR:
+        ret = "CAP_CHANNEL_MONITOR";
+        break;
+
+    case SPINEL_CAP_CHANNEL_MANAGER:
+        ret = "CAP_CHANNEL_MANAGER";
+        break;
+
+    case SPINEL_CAP_ERROR_RATE_TRACKING:
+        ret = "CAP_ERROR_RATE_TRACKING";
         break;
 
     case SPINEL_CAP_THREAD_COMMISSIONER:

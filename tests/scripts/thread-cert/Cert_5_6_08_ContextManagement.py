@@ -30,6 +30,7 @@
 import time
 import unittest
 
+import config
 import node
 
 LEADER = 1
@@ -38,9 +39,11 @@ ED = 3
 
 class Cert_5_6_8_ContextManagement(unittest.TestCase):
     def setUp(self):
+        self.simulator = config.create_default_simulator()
+
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i, (i == ED))
+            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -64,23 +67,24 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
+        del self.simulator
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(4)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(2)
+        self.simulator.go(2)
 
         addrs = self.nodes[LEADER].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
@@ -90,7 +94,7 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
 
         self.nodes[ROUTER].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(5)
+        self.simulator.go(5)
 
         addrs = self.nodes[LEADER].get_addrs()
         self.assertFalse(any('2001:2:0:1' in addr[0:10] for addr in addrs))
@@ -100,7 +104,7 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
 
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(5)
+        self.simulator.go(5)
 
         addrs = self.nodes[LEADER].get_addrs()
         self.assertFalse(any('2001:2:0:1' in addr[0:10] for addr in addrs))
@@ -109,10 +113,10 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[ED].ping(addr))
 
-        time.sleep(5)
+        self.simulator.go(5)
         self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(5)
+        self.simulator.go(5)
 
         addrs = self.nodes[LEADER].get_addrs()
         self.assertFalse(any('2001:2:0:1' in addr[0:10] for addr in addrs))

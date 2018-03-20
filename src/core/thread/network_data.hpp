@@ -86,12 +86,12 @@ namespace NetworkData {
  * This class implements Network Data processing.
  *
  */
-class NetworkData: public InstanceLocator
+class NetworkData : public InstanceLocator
 {
 public:
     enum
     {
-        kMaxSize = 255,  ///< Maximum size of Thread Network Data in bytes.
+        kMaxSize = 255, ///< Maximum size of Thread Network Data in bytes.
     };
 
     /**
@@ -171,8 +171,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No subsequent external route exists in the Thread Network Data.
      *
      */
-    otError GetNextExternalRoute(otNetworkDataIterator *aIterator, uint16_t aRloc16,
-                                 otExternalRouteConfig *aConfig);
+    otError GetNextExternalRoute(otNetworkDataIterator *aIterator, uint16_t aRloc16, otExternalRouteConfig *aConfig);
 
 #if OPENTHREAD_ENABLE_SERVICE
     /**
@@ -198,8 +197,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextService(otNetworkDataIterator *aIterator, uint16_t aRloc16,
-                           otServiceConfig *aConfig);
+    otError GetNextService(otNetworkDataIterator *aIterator, uint16_t aRloc16, otServiceConfig *aConfig);
 
     /**
      * This method provides the next service ID in the Thread Network Data for a given RLOC16.
@@ -212,8 +210,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextServiceId(otNetworkDataIterator *aIterator, uint16_t aRloc16,
-                             uint8_t *aServiceId);
+    otError GetNextServiceId(otNetworkDataIterator *aIterator, uint16_t aRloc16, uint8_t *aServiceId);
 #endif
 
     /**
@@ -378,8 +375,11 @@ protected:
      * @returns A pointer to the Service TLV is one is found or NULL if no matching Service TLV exists.
      *
      */
-    ServiceTlv *FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength,
-                            uint8_t *aTlvs, uint8_t aTlvsLength);
+    ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
+                            const uint8_t *aServiceData,
+                            uint8_t        aServiceDataLength,
+                            uint8_t *      aTlvs,
+                            uint8_t        aTlvsLength);
 #endif
 
     /**
@@ -462,13 +462,13 @@ protected:
      */
     otError SendServerDataNotification(uint16_t aRloc16);
 
-    uint8_t mTlvs[kMaxSize];  ///< The Network Data buffer.
-    uint8_t mLength;          ///< The number of valid bytes in @var mTlvs.
+    uint8_t mTlvs[kMaxSize]; ///< The Network Data buffer.
+    uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
 
 private:
     enum
     {
-        kDataResubmitDelay = 300000,  ///< DATA_RESUBMIT_DELAY (milliseconds)
+        kDataResubmitDelay = 300000, ///< DATA_RESUBMIT_DELAY (milliseconds)
     };
 
     class NetworkDataIterator
@@ -482,21 +482,25 @@ private:
         };
 
     public:
-        NetworkDataIterator(otNetworkDataIterator *aIterator):
-            mIteratorBuffer(reinterpret_cast<uint8_t *>(aIterator)) { }
+        NetworkDataIterator(otNetworkDataIterator *aIterator)
+            : mIteratorBuffer(reinterpret_cast<uint8_t *>(aIterator))
+        {
+        }
 
-        uint8_t GetTlvOffset(void) const         { return mIteratorBuffer[kTlvPosition];       }
-        uint8_t GetSubTlvOffset(void) const      { return mIteratorBuffer[kSubTlvPosition];    }
-        uint8_t GetEntryIndex(void) const        { return mIteratorBuffer[kEntryPosition];     }
-        void    SetTlvOffset(uint8_t aOffset)    { mIteratorBuffer[kTlvPosition] = aOffset;    }
+        uint8_t GetTlvOffset(void) const { return mIteratorBuffer[kTlvPosition]; }
+        uint8_t GetSubTlvOffset(void) const { return mIteratorBuffer[kSubTlvPosition]; }
+        uint8_t GetEntryIndex(void) const { return mIteratorBuffer[kEntryPosition]; }
+        void    SetTlvOffset(uint8_t aOffset) { mIteratorBuffer[kTlvPosition] = aOffset; }
         void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
-        void    SetEntryIndex(uint8_t aIndex)    { mIteratorBuffer[kEntryPosition]  = aIndex;  }
+        void    SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[kEntryPosition] = aIndex; }
 
-        void SaveTlvOffset(const NetworkDataTlv *aTlv, const uint8_t *aTlvs) {
+        void SaveTlvOffset(const NetworkDataTlv *aTlv, const uint8_t *aTlvs)
+        {
             SetTlvOffset(static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(aTlv) - aTlvs));
         }
 
-        void SaveSubTlvOffset(const NetworkDataTlv *aSubTlv, const NetworkDataTlv *aSubTlvs) {
+        void SaveSubTlvOffset(const NetworkDataTlv *aSubTlv, const NetworkDataTlv *aSubTlvs)
+        {
             SetSubTlvOffset(static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(aSubTlv) -
                                                  reinterpret_cast<const uint8_t *>(aSubTlvs)));
         }
@@ -505,17 +509,17 @@ private:
         uint8_t *mIteratorBuffer;
     };
 
-    const bool      mLocal;
-    bool            mLastAttemptWait;
-    uint32_t        mLastAttempt;
+    const bool mLocal;
+    bool       mLastAttemptWait;
+    uint32_t   mLastAttempt;
 };
 
-}  // namespace NetworkData
+} // namespace NetworkData
 
 /**
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // NETWORK_DATA_HPP_
+#endif // NETWORK_DATA_HPP_

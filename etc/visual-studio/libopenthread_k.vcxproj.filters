@@ -144,6 +144,9 @@
     <ClCompile Include="..\..\src\core\common\notifier.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\settings.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\common\tasklet.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -217,6 +220,12 @@
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_ftd.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_mtd.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\mle.cpp">

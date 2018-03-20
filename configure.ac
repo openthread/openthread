@@ -357,10 +357,10 @@ fi
 # Code style
 #
 
-AC_SUBST(PRETTY, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts"])
-AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts --dry-run"])
+AC_SUBST(PRETTY, ["clang-format"])
+AC_SUBST(PRETTY_ARGS, ["-style=file -i"])
+AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/script/clang-format-check.sh"])
+AC_SUBST(PRETTY_CHECK_ARGS, [""])
 
 #
 # Tests
@@ -797,6 +797,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CHANNEL_MONITOR], [test "${enable_channel_moni
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHANNEL_MONITOR],[${OPENTHREAD_ENABLE_CHANNEL_MONITOR}],[Define to 1 if you want to use channel monitor feature])
 
 #
+# Channel Manager
+#
+
+AC_ARG_ENABLE(channel_manager,
+    [AS_HELP_STRING([--enable-channel-manager],[Enable Channel Manager support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_channel_manager=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_channel_manager} for --enable-channel-manager])
+            ;;
+        esac
+    ],
+    [enable_channel_manager=no])
+
+if test "$enable_channel_manager" = "yes"; then
+    OPENTHREAD_ENABLE_CHANNEL_MANAGER=1
+else
+    OPENTHREAD_ENABLE_CHANNEL_MANAGER=0
+fi
+
+AC_MSG_CHECKING([whether to enable channel manager])
+AC_MSG_RESULT(${enable_channel_manager})
+AC_SUBST(OPENTHREAD_ENABLE_CHANNEL_MANAGER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CHANNEL_MANAGER], [test "${enable_channel_manager}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHANNEL_MANAGER],[${OPENTHREAD_ENABLE_CHANNEL_MANAGER}],[Define to 1 if you want to enable channel manager feature])
+
+#
 # MAC Filter (include AddressFilter and RssInFilter)
 #
 
@@ -913,6 +945,7 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
+        with_ncp_vendor_hook_source=none
     ])
 
 AC_MSG_CHECKING([for NCP vendor hook source])
@@ -938,6 +971,7 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
+        with_ncp_spinel_encrypter_libs=none
     ])
 
 AC_MSG_CHECKING([for NCP Spinel Encrypter])
@@ -1599,6 +1633,7 @@ AC_MSG_NOTICE([
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread Channel Monitor support        : ${enable_channel_monitor}
+  OpenThread Channel Manager support        : ${enable_channel_manager}
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Child Supervision support      : ${enable_child_supervision}
