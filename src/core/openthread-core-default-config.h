@@ -922,6 +922,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
+ *
+ * Allows to define custom otPlatRadioGetIeeeEui64 function to get EUI-64.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
  *
  * Define to 1 if you want to enable auto start logic.
