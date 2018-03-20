@@ -866,17 +866,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
- *
- *  The size of extra data to be allocated in UART buffer,
- *  needed by NCP Spinel Encrypter.
- *
- */
-#ifndef OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
-#define OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE  0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
  *
  * The assert is managed by platform defined logic when this flag is set.
