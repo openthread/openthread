@@ -53,28 +53,15 @@ ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupervisionInterval(kDefaultSupervisionInterval)
     , mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
+    , mNotifierCallback(&ChildSupervisor::HandleStateChanged, this)
 {
-}
-
-void ChildSupervisor::Start(void)
-{
-    VerifyOrExit(mSupervisionInterval != 0);
-    VerifyOrExit(!mTimer.IsRunning());
-    mTimer.Start(kOneSecond);
-
-exit:
-    return;
-}
-
-void ChildSupervisor::Stop(void)
-{
-    mTimer.Stop();
+    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 {
     mSupervisionInterval = aInterval;
-    Start();
+    CheckState();
 }
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
@@ -147,7 +134,7 @@ void ChildSupervisor::HandleTimer(void)
 
     for (uint8_t i = 0; i < numChildren; i++, child++)
     {
-        if (!child->IsStateValidOrRestoring())
+        if (child->GetState() != Child::kStateValid)
         {
             continue;
         }
@@ -164,6 +151,52 @@ void ChildSupervisor::HandleTimer(void)
 
 exit:
     return;
+}
+
+void ChildSupervisor::CheckState(void)
+{
+    bool            shouldRun   = false;
+    uint8_t         numChildren = 0;
+    Mle::MleRouter &mle         = GetInstance().Get<Mle::MleRouter>();
+
+    // Child Supervision should run if `mSupervisionInterval` is not
+    // zero, Thread MLE operation is enabled, and there is at least one
+    // "valid" child in the child table.
+
+    VerifyOrExit(mSupervisionInterval != 0);
+    VerifyOrExit(mle.GetRole() != OT_DEVICE_ROLE_DISABLED);
+
+    for (Child *child = mle.GetChildren(&numChildren); numChildren > 0; child++, numChildren--)
+    {
+        VerifyOrExit(child->GetState() != Child::kStateValid, shouldRun = true);
+    }
+
+exit:
+
+    if (shouldRun && !mTimer.IsRunning())
+    {
+        mTimer.Start(kOneSecond);
+        otLogInfoUtil(GetInstance(), "Starting Child Supervision");
+    }
+
+    if (!shouldRun && mTimer.IsRunning())
+    {
+        mTimer.Stop();
+        otLogInfoUtil(GetInstance(), "Stopping Child Supervision");
+    }
+}
+
+void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+{
+    aCallback.GetOwner<ChildSupervisor>().HandleStateChanged(aFlags);
+}
+
+void ChildSupervisor::HandleStateChanged(uint32_t aFlags)
+{
+    if ((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
+    {
+        CheckState();
+    }
 }
 
 #endif // #if OPENTHREAD_FTD

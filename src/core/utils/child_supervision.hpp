@@ -39,6 +39,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/topology.hpp"
@@ -155,11 +156,15 @@ private:
     };
 
     void        SendMessage(Child &aChild);
+    void        CheckState(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
+    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
+    void        HandleStateChanged(uint32_t aFlags);
 
-    uint16_t   mSupervisionInterval;
-    TimerMilli mTimer;
+    uint16_t           mSupervisionInterval;
+    TimerMilli         mTimer;
+    Notifier::Callback mNotifierCallback;
 };
 
 #else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
