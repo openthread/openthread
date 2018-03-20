@@ -140,7 +140,6 @@ otError ThreadNetif::Up(void)
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
         GetInstance().GetChannelMonitor().Start();
 #endif
-        mChildSupervisor.Start();
         mMleRouter.Enable();
         mIsUp = true;
     }
@@ -157,7 +156,6 @@ otError ThreadNetif::Down(void)
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     GetInstance().GetChannelMonitor().Stop();
 #endif
-    mChildSupervisor.Stop();
     mMleRouter.Disable();
     mMeshForwarder.Stop();
     GetIp6().RemoveNetif(*this);
