@@ -1605,6 +1605,22 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS";
         break;
 
+    case SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS:
+        ret = "PROP_CHANNEL_MANAGER_FAVORED_CHANNELS";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT:
+        ret = "PROP_CHANNEL_MANAGER_CHANNEL_SELECT";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED:
+        ret = "PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL:
+        ret = "PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL";
+        break;
+
     case SPINEL_PROP_UART_BITRATE:
         ret = "PROP_UART_BITRATE";
         break;

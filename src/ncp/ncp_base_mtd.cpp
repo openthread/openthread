@@ -2969,6 +2969,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         { OT_CHANGED_THREAD_EXT_PANID,            SPINEL_PROP_NET_XPANID                     },
         { OT_CHANGED_MASTER_KEY,                  SPINEL_PROP_NET_MASTER_KEY                 },
         { OT_CHANGED_PSKC,                        SPINEL_PROP_NET_PSKC                       },
+        { OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL    },
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);
