@@ -170,6 +170,7 @@ static inline void clearPendingEvents(void)
     } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 }
 
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     (void)aInstance;
@@ -179,6 +180,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
     memcpy(aIeeeEui64, &factoryAddress, sizeof(factoryAddress));
 }
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
