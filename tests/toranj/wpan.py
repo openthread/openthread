@@ -123,6 +123,14 @@ WPAN_CHANNEL_MONITOR_SAMPLE_COUNT              = "ChannelMonitor:SampleCount"
 WPAN_CHANNEL_MONITOR_CHANNEL_QUALITY           = "ChannelMonitor:ChannelQuality"
 WPAN_CHANNEL_MONITOR_CHANNEL_QUALITY_ASVALMAP  = "ChannelMonitor:ChannelQuality:AsValMap"
 
+WPAN_CHANNEL_MANAGER_NEW_CHANNEL               = "ChannelManager:NewChannel"
+WPAN_CHANNEL_MANAGER_DELAY                     = "ChannelManager:Delay"
+WPAN_CHANNEL_MANAGER_CHANNEL_SELECT            = "ChannelManager:ChannelSelect"
+WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED       = "ChannelManager:AutoSelect:Enabled"
+WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL      = "ChannelManager:AutoSelect:Interval"
+WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK    = "ChannelManager:SupportedChannelMask"
+WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK      = "ChannelManager:FavoredChannelMask"
+
 #----------------------------------------------------------------------------------------------------------------------
 # Valid state values
 
