@@ -586,58 +586,6 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     memset(srcMatchExtEntry, 0, sizeof(srcMatchExtEntry));
 }
 
-static void checkForAck(RAIL_Handle_t aRailHandle)
-{
-    RAIL_RxPacketHandle_t  packetHandle;
-    RAIL_RxPacketInfo_t    packetInfo;
-    RAIL_RxPacketDetails_t packetDetails;
-    RAIL_Status_t          status;
-    uint8_t                frame[IEEE802154_ACK_LENGTH];
-    uint16_t               length;
-
-    packetHandle = RAIL_GetRxPacketInfo(aRailHandle, RAIL_RX_PACKET_HANDLE_NEWEST, &packetInfo);
-    assert(packetInfo.packetStatus == RAIL_RX_PACKET_READY_SUCCESS);
-
-    packetDetails.timeReceived.timePosition     = RAIL_PACKET_TIME_INVALID;
-    packetDetails.timeReceived.totalPacketBytes = 0;
-    status                                      = RAIL_GetRxPacketDetails(aRailHandle, packetHandle, &packetDetails);
-    assert(status == RAIL_STATUS_NO_ERROR);
-    otEXPECT(packetDetails.isAck);
-
-    sTransmitBusy = false;
-
-    length = packetInfo.packetBytes + 1;
-    assert(length == IEEE802154_ACK_LENGTH && length == packetInfo.firstPortionData[0]);
-
-    // skip length byte
-    assert(packetInfo.firstPortionBytes > 0);
-    packetInfo.firstPortionData++;
-    packetInfo.firstPortionBytes--;
-    packetInfo.packetBytes--;
-
-    // read packet
-    memcpy(frame, packetInfo.firstPortionData, packetInfo.firstPortionBytes);
-    memcpy(frame + packetInfo.firstPortionBytes, packetInfo.lastPortionData,
-           packetInfo.packetBytes - packetInfo.firstPortionBytes);
-
-    assert((frame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK);
-
-    if (frame[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
-    {
-        sTransmitError = OT_ERROR_NONE;
-    }
-    else
-    {
-        sTransmitError = OT_ERROR_NO_ACK;
-    }
-
-    status = RAIL_ReleaseRxPacket(aRailHandle, packetHandle);
-    assert(status == RAIL_STATUS_NO_ERROR);
-
-exit:
-    return;
-}
-
 static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle)
 {
     RAIL_RxPacketHandle_t  packetHandle = RAIL_RX_PACKET_HANDLE_INVALID;
@@ -656,9 +604,6 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
     otEXPECT(status != RAIL_STATUS_INVALID_STATE);
     assert(status == RAIL_STATUS_NO_ERROR);
     length = packetInfo.packetBytes + 1;
-
-    assert(!packetDetails.isAck);
-    assert(length != IEEE802154_ACK_LENGTH);
 
     // check the length in recv packet info structure
     assert(length == packetInfo.firstPortionData[0]);
@@ -687,23 +632,44 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
     // sReceiveFrame.mMsec = packetDetails.packetTime;
     // sReceiveFrame.mUsec = packetDetails.packetTime;
 
-    sReceiveError = OT_ERROR_NONE;
+    if (packetDetails.isAck)
+    {
+        assert((length == IEEE802154_ACK_LENGTH) &&
+               (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK);
+
+        sTransmitBusy = false;
+
+        if (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
+        {
+            sTransmitError = OT_ERROR_NONE;
+        }
+        else
+        {
+            sTransmitError = OT_ERROR_NO_ACK;
+        }
+    }
+    else
+    {
+        assert(length != IEEE802154_ACK_LENGTH);
+
+        sReceiveError = OT_ERROR_NONE;
 
 #if OPENTHREAD_ENABLE_DIAG
 
-    if (otPlatDiagModeGet())
-    {
-        otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
-    }
-    else
-#endif
-    {
-        // signal MAC layer for each received frame if promiscous is enabled
-        // otherwise only signal MAC layer for non-ACK frame
-        if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
+        if (otPlatDiagModeGet())
         {
-            otLogInfoPlat(aInstance, "Received %d bytes", sReceiveFrame.mLength);
-            otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+            otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+        }
+        else
+#endif
+        {
+            // signal MAC layer for each received frame if promiscous is enabled
+            // otherwise only signal MAC layer for non-ACK frame
+            if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
+            {
+                otLogInfoPlat(aInstance, "Received %d bytes", sReceiveFrame.mLength);
+                otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+            }
         }
     }
 
@@ -759,7 +725,6 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
     if (aEvents & RAIL_EVENT_RX_PACKET_RECEIVED)
     {
         RAIL_HoldRxPacket(aRailHandle);
-        checkForAck(aRailHandle);
     }
 
     if (aEvents & RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND)
@@ -818,8 +783,13 @@ void efr32RadioProcess(otInstance *aInstance)
         }
         else
 #endif
+            if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || (sTransmitError != OT_ERROR_NONE))
         {
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
+        }
+        else
+        {
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
         }
     }
 
