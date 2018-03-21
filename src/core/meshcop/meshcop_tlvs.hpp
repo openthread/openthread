@@ -1271,6 +1271,7 @@ public:
 
         /**
          * Default Delay Timer value for a Pending Operational Dataset (ms)
+         *
          */
         kDelayTimerDefault = OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY,
     };

@@ -532,7 +532,8 @@
  *
  * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
  *
- * Thread specification defines this value as 30,000. Changing from the specified value should be done for testing only.
+ * Thread specification defines this value as 30,000 ms. Changing from the specified value should be done for testing
+ * only.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
@@ -544,7 +545,7 @@
  *
  * Default Delay Timer value for a Pending Operational Dataset (in ms).
  *
- * Thread specification defines this value as 300,000. Changing from the specified value should be done for testing
+ * Thread specification defines this value as 300,000 ms. Changing from the specified value should be done for testing
  * only.
  *
  */
