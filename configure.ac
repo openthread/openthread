@@ -735,7 +735,7 @@ AC_ARG_ENABLE(joiner,
             ;;
         esac
     ],
-    [enable_joiner=no])
+    [enable_joiner=yes])
 
 if test "$enable_joiner" = "yes"; then
     OPENTHREAD_ENABLE_JOINER=1
