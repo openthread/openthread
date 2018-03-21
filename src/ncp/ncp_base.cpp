@@ -245,6 +245,10 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_NEW_CHANNEL),
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_DELAY),
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_SUPPORTED_CHANNELS),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_FAVORED_CHANNELS),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_CHANNEL_SELECT),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_ENABLED),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL),
 #endif
 #endif // OPENTHREAD_FTD
 
@@ -347,6 +351,10 @@ const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_NEW_CHANNEL),
     NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_DELAY),
     NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_SUPPORTED_CHANNELS),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_FAVORED_CHANNELS),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_CHANNEL_SELECT),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_ENABLED),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL),
 #endif
 #endif // #if OPENTHREAD_FTD
 };
@@ -1253,7 +1261,11 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
         ExitNow(error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
     }
 
+    mDisableStreamWrite = false;
+
     error = (this->*handler)();
+
+    mDisableStreamWrite = true;
 
     if (error == OT_ERROR_NONE)
     {
@@ -1304,7 +1316,11 @@ otError NcpBase::HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_
     mDecoder.ReadData(valuePtr, valueLen);
     mDecoder.ResetToSaved();
 
+    mDisableStreamWrite = false;
+
     error = (this->*handler)();
+
+    mDisableStreamWrite = true;
 
     VerifyOrExit(error == OT_ERROR_NONE, error = PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(error)));
 
