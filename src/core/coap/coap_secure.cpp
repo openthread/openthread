@@ -311,6 +311,26 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
     aTimer.GetOwner<CoapSecure>().CoapBase::HandleResponsesQueueTimer();
 }
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
+    //: CoapSecure(aInstance, &ApplicationCoapSecure::HandleRetransmissionTimer, &ApplicationCoapSecure::HandleResponsesQueueTimer)
+: CoapSecure(aInstance)
+{
+}
+//TODO: Maybe not used, bcs timerHandler implemented in coap_secure.pp
+//void ApplicationCoapSecure::HandleRetransmissionTimer(Timer &aTimer)
+//{
+//    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleRetransmissionTimer();
+//}
+//
+//void ApplicationCoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
+//{
+//    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleResponsesQueueTimer();
+//}
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 } // namespace Coap
 } // namespace ot
 

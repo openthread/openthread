@@ -39,6 +39,8 @@
 #include "coap/coap_header.hpp"
 
 #include "coap/coap_secure.hpp"		// include cores coap secure
+#include "common/instance.hpp"
+
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -50,5 +52,15 @@ otError otCoapSecureTestIntegration(uint8_t * aCount)
     Coap::CoapSecure *coaps = static_cast<Coap::CoapSecure *>(aHeader);
     return coaps->TestIntegration(aCount);
 }
+
+otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().Start(aPort);
+}
+
+
+
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

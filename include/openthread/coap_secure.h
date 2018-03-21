@@ -61,6 +61,7 @@ extern "C" {
 
 #define OT_DEFAULT_COAP_SECURE_PORT  5684  ///< Default CoAP Secure port, as specified in RFC 7252
 
+//TODO: remove, only for testing!!!
 /**
  * This function is only for test the integration of coaps api.
  * It has no further function for coaps.
@@ -70,6 +71,8 @@ extern "C" {
  * @retval 		OT_ERROR_NONE     	Successfully call this function.
  */
 otError otCoapSecureTestIntegration(uint8_t * aCount);
+
+otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
 
 /**
  * @}

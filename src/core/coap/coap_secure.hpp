@@ -242,6 +242,31 @@ private:
     Tasklet           mTransmitTask;
 };
 
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+/**
+ * This class implements the application CoAP client and server.
+ *
+ */
+class ApplicationCoapSecure : public CoapSecure
+{
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     *
+     */
+    explicit ApplicationCoapSecure(Instance &aInstance);
+
+private:
+    static void HandleRetransmissionTimer(Timer &aTimer);
+    static void HandleResponsesQueueTimer(Timer &aTimer);
+};
+
+#endif
+
 } // namespace Coap
 } // namespace ot
 

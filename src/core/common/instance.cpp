@@ -68,6 +68,9 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoap(*this)
 #endif
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    , mApplicationCoapSecure(*this)
+#endif
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
 #endif

@@ -306,6 +306,16 @@ public:
     Coap::ApplicationCoap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    /**
+     * This method returns a reference to application COAP object.
+     *
+     * @returns A reference to the application COAP object.
+     *
+     */
+    Coap::ApplicationCoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
+#endif
+
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     /**
      * This method returns a reference to ChannelMonitor object.
@@ -383,6 +393,10 @@ private:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Coap::ApplicationCoap mApplicationCoap;
+#endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    Coap::ApplicationCoapSecure mApplicationCoapSecure;
 #endif
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL

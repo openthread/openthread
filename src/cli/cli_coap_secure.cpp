@@ -88,11 +88,22 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         mInterpreter.mServer->OutputFormat("Count before: %d | Count after: ", count);
         SuccessOrExit( error = otCoapSecureTestIntegration(&count) );					// function out of the coaps api
         mInterpreter.mServer->OutputFormat("%d (should be two greater than input)\r\n", count);
+    }else if (strcmp(argv[0], "start") == 0)
+    {
+        SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT));
+        mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        otCoapRemoveResource(mInterpreter.mInstance, &mResource);
+        SuccessOrExit(error = otCoapStop(mInterpreter.mInstance));
+        mInterpreter.mServer->OutputFormat("Coap service stopped: ");
     }
     else if (strcmp(argv[0], "help") == 0)
     {
     	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n");
     	mInterpreter.mServer->OutputFormat(">'coaps test': test access to coaps implementation.\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start': start coaps\r\n");
     	mInterpreter.mServer->OutputFormat("\r\nno more functions at moment.\r\n");
 
     }
