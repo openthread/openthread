@@ -59,6 +59,14 @@ libmbedcrypto_a_SOURCES                      += \
     $(NULL)
 endif  # OPENTHREAD_EXAMPLES_EFR32
 
+if OPENTHREAD_EXAMPLES_NRF52840
+nodist_libmbedcrypto_a_SOURCES                                                          = \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/aes_alt_cc310.c    \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/sha256_alt_cc310.c \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/cc310_mbedtls.c    \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_NRF52840
+
 if OPENTHREAD_ENABLE_DTLS
 libmbedcrypto_a_SOURCES                      += \
     repo.patched/library/bignum.c               \
@@ -90,6 +98,13 @@ libmbedcrypto_a_SOURCES                      += \
     repo.patched/library/ecp.c                  \
     $(NULL)
 endif  # OPENTHREAD_EXAMPLES_EFR32
+
+if OPENTHREAD_EXAMPLES_NRF52840
+nodist_libmbedcrypto_a_SOURCES                                                       += \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/ecp_alt_cc310.c  \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/ecp_curves_alt.c \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_NRF52840
 
 endif  # OPENTHREAD_ENABLE_DTLS
 
