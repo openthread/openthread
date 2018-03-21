@@ -88,6 +88,7 @@ PLATFORM_COMMON_SOURCES                                                         
     radio.c                                                                                                  \
     random.c                                                                                                 \
     temp.c                                                                                                   \
+    spi-slave.c                                                                                              \
     uart.c                                                                                                   \
     usb-cdc-uart.c                                                                                           \
     $(NULL)
@@ -312,6 +313,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_ppi.h                                           \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_power.h                                         \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_rng.h                                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_spis.h                                          \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_uart.h                                          \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_usbd.h                                          \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/compiler_abstraction.h                              \
