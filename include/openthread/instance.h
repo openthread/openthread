@@ -247,6 +247,7 @@ enum
     OT_CHANGED_MASTER_KEY                  = 1 << 20, ///< Master key changed
     OT_CHANGED_PSKC                        = 1 << 21, ///< PSKc changed
     OT_CHANGED_SECURITY_POLICY             = 1 << 22, ///< Security Policy changed
+    OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL = 1 << 23, ///< Channel Manager new pending Thread channel changed
 };
 
 /**

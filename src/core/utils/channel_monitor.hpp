@@ -41,6 +41,7 @@
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"
+#include "mac/mac.hpp"
 
 namespace ot {
 namespace Utils {
@@ -167,6 +168,21 @@ public:
      *
      */
     uint16_t GetChannelOccupancy(uint8_t aChannel) const;
+
+    /**
+     * This method finds the best channel(s) (with least occupancy rate) in a given channel mask.
+     *
+     * The channels are compared based on their occupancy rate from `GetChannelOccupancy()` and lower occupancy rate
+     * is considered better.
+     *
+     * @param[in]  aMask         A channel mask (the search is limited to channels in @p aMask).
+     * @param[out] aOccupancy    A reference to `uint16` to return the occupancy rate associated with best channel(s).
+     *
+     * @returns    A channel mask containing the best channels. A mask is returned in case there are more than one
+     *             channel with the same occupancy rate value.
+     *
+     */
+    Mac::ChannelMask FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy);
 
 private:
     enum

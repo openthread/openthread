@@ -41,11 +41,11 @@ using namespace ot;
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
 
-otError otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
+void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().RequestChannelChange(aChannel);
+    instance.GetChannelManager().RequestChannelChange(aChannel);
 }
 
 uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance)
@@ -69,6 +69,41 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aMinDelay)
     return instance.GetChannelManager().SetDelay(aMinDelay);
 }
 
+otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelManager().RequestChannelSelect(aSkipQualityCheck);
+}
+
+void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetChannelManager().SetAutoChannelSelectionEnabled(aEnabled);
+}
+
+bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelManager().GetAutoChannelSelectionEnabled();
+}
+
+otError otChannelManagerSetAutoChannelSelectionInterval(otInstance *aInstance, uint32_t aInterval)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelManager().SetAutoChannelSelectionInterval(aInterval);
+}
+
+uint32_t otChannelManagerGetAutoChannelSelectionInterval(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelManager().GetAutoChannelSelectionInterval();
+}
+
 uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -81,6 +116,20 @@ void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChann
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetChannelManager().SetSupportedChannels(aChannelMask);
+}
+
+uint32_t otChannelManagerGetFavoredChannels(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelManager().GetFavoredChannels();
+}
+
+void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannelMask)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetChannelManager().SetFavoredChannels(aChannelMask);
 }
 
 #endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD

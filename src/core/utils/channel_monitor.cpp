@@ -213,6 +213,37 @@ void ChannelMonitor::LogResults(void)
         mChannelOccupancy[15] >> 8);
 }
 
+Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy)
+{
+    uint8_t          channel;
+    Mac::ChannelMask bestMask;
+    uint16_t         minOccupancy = 0xffff;
+
+    bestMask.Clear();
+
+    channel = Mac::ChannelMask::kChannelIteratorFirst;
+
+    while (aMask.GetNextChannel(channel) == OT_ERROR_NONE)
+    {
+        uint16_t occupancy = GetChannelOccupancy(channel);
+
+        if (bestMask.IsEmpty() || (occupancy <= minOccupancy))
+        {
+            if (occupancy < minOccupancy)
+            {
+                bestMask.Clear();
+            }
+
+            bestMask.AddChannel(channel);
+            minOccupancy = occupancy;
+        }
+    }
+
+    aOccupancy = minOccupancy;
+
+    return bestMask;
+}
+
 } // namespace Utils
 } // namespace ot
 

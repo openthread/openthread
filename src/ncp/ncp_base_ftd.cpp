@@ -872,7 +872,7 @@ otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
 
     SuccessOrExit(error = mDecoder.ReadUint8(channel));
 
-    error = otChannelManagerRequestChannelChange(mInstance, channel);
+    otChannelManagerRequestChannelChange(mInstance, channel);
 
 exit:
     return error;
