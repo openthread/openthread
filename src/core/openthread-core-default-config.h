@@ -1249,6 +1249,27 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+ *
+ * Define to 1 to enable support controlling of desired power state of NCP's micro-controller.
+ *
+ * The power state specifies the desired power state of NCP's micro-controller (MCU) when the underlying platform's
+ * operating system enters idle mode (i.e., all active tasks/events are processed and the MCU can potentially enter a
+ * energy-saving power state).
+ *
+ * The power state primarily determines how the host should interact with the NCP and whether the host needs an
+ * external trigger (a "poke") before it can communicate with the NCP or not.
+ *
+ * When enabled, the platform is expected to provide `otPlatSetMcuPowerState()` and `otPlatGetMcuPowerState()`
+ * functions (please see `openthread/platform/misc.h`). Host can then control the power state using
+ * `SPINEL_PROP_MCU_POWER_STATE`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+#define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
  *
  * Define as 1 to stay awake between fragments while transmitting a large packet,

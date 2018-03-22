@@ -89,3 +89,15 @@ void otPlatWakeHost(void)
 {
     // TODO: implement an operation to wake the host from sleep state.
 }
+
+otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
+{
+    (void)aInstance;
+    return (aState == OT_PLAT_MCU_POWER_STATE_ON) ? OT_ERROR_NONE : OT_ERROR_FAILED;
+}
+
+otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
+{
+    (void)aInstance;
+    return OT_PLAT_MCU_POWER_STATE_ON;
+}

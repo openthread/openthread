@@ -218,6 +218,16 @@ typedef enum
 
 typedef enum
 {
+    SPINEL_MCU_POWER_STATE_ON           = 0,
+    SPINEL_MCU_POWER_STATE_LOW_POWER    = 1,
+    SPINEL_MCU_POWER_STATE_OFF          = 2,
+} spinel_mcu_power_state_t;
+
+// The `spinel_power_state_t` enumeration and `POWER_STATE`
+// property are deprecated. Please use `MCU_POWER_STATE`
+// instead.
+typedef enum
+{
     SPINEL_POWER_STATE_OFFLINE          = 0,
     SPINEL_POWER_STATE_DEEP_SLEEP       = 1,
     SPINEL_POWER_STATE_STANDBY          = 2,
@@ -397,6 +407,7 @@ enum
     SPINEL_CAP_TRNG                     = 10,
     SPINEL_CAP_CMD_MULTI                = 11,
     SPINEL_CAP_UNSOL_UPDATE_FILTER      = 12,
+    SPINEL_CAP_MCU_POWER_STATE          = 13,
 
     SPINEL_CAP_802_15_4__BEGIN          = 16,
     SPINEL_CAP_802_15_4_2003            = (SPINEL_CAP_802_15_4__BEGIN + 0),
@@ -457,12 +468,13 @@ typedef enum
     SPINEL_PROP_VENDOR_ID               = 4,        ///< [i]
     SPINEL_PROP_CAPS                    = 5,        ///< capability list [A(i)]
     SPINEL_PROP_INTERFACE_COUNT         = 6,        ///< Interface count [C]
-    SPINEL_PROP_POWER_STATE             = 7,        ///< PowerState [C]
+    SPINEL_PROP_POWER_STATE             = 7,        ///< PowerState [C] (deprecated, use `MCU_POWER_STATE` instead).
     SPINEL_PROP_HWADDR                  = 8,        ///< PermEUI64 [E]
     SPINEL_PROP_LOCK                    = 9,        ///< PropLock [b]
     SPINEL_PROP_HBO_MEM_MAX             = 10,       ///< Max offload mem [S]
     SPINEL_PROP_HBO_BLOCK_MAX           = 11,       ///< Max offload block [S]
     SPINEL_PROP_HOST_POWER_STATE        = 12,       ///< Host MCU power state [C]
+    SPINEL_PROP_MCU_POWER_STATE         = 13,       ///< NCP's MCU power state [c]
 
     SPINEL_PROP_BASE_EXT__BEGIN         = 0x1000,
 
