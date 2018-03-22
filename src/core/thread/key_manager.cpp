@@ -47,8 +47,28 @@ static const uint8_t kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
+static const otMasterKey kDefaultMasterKey = {{
+    0x00,
+    0x11,
+    0x22,
+    0x33,
+    0x44,
+    0x55,
+    0x66,
+    0x77,
+    0x88,
+    0x99,
+    0xaa,
+    0xbb,
+    0xcc,
+    0xdd,
+    0xee,
+    0xff,
+}};
+
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mMasterKey(kDefaultMasterKey)
     , mKeySequence(0)
     , mMacFrameCounter(0)
     , mMleFrameCounter(0)
@@ -62,6 +82,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(0xff)
 {
+    ComputeKey(mKeySequence, mKey);
 }
 
 void KeyManager::Start(void)
