@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, Nordic Semiconductor, Inc.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ static uint16_t                                  sOutputBufLen           = 0;
 static uint8_t *                                 sInputBuf               = NULL;
 static uint16_t                                  sInputBufLen            = 0;
 static bool                                      sRequestTransactionFlag = false;
-static bool                                      sTransactionDone        = false;
+static bool                                      sFurtherProcessingFlag  = false;
 static otPlatSpiSlaveTransactionProcessCallback  sProcessCallback        = NULL;
 static otPlatSpiSlaveTransactionCompleteCallback sCompleteCallback       = NULL;
 
@@ -71,21 +71,13 @@ void nrf5SpiSlaveDeinit(void)
 
 void nrf5SpiSlaveProcess(void)
 {
-    otEXPECT(sTransactionDone == true);
+    otEXPECT(sFurtherProcessingFlag == true);
 
-    /* Clear transaction flag. */
-    sTransactionDone = false;
+    /* Clear further processing flag. */
+    sFurtherProcessingFlag = false;
 
-    /* Execute application callback. */
-    if (sCompleteCallback(sContext, sOutputBuf, sOutputBufLen, sInputBuf, sInputBufLen,
-                          nrf_spis_rx_amount_get(SPIS_INSTANCE)))
-    {
-        /* Further processing is required. */
-        sProcessCallback(sContext);
-    }
-
-    /* Trigger acquired event. */
-    nrf_spis_task_trigger(SPIS_INSTANCE, NRF_SPIS_TASK_ACQUIRE);
+    /* Perform any further processing if necessary. */
+    sProcessCallback(sContext);
 
 exit:
     return;
@@ -164,11 +156,11 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
                                          uint16_t aInputBufLen,
                                          bool     aRequestTransactionFlag)
 {
-    otError error = OT_ERROR_NONE;
+    otError            error            = OT_ERROR_NONE;
+    nrf_spis_semstat_t semaphore_status = nrf_spis_semaphore_status_get(SPIS_INSTANCE);
 
     otEXPECT_ACTION(sCompleteCallback != NULL, error = OT_ERROR_INVALID_STATE);
 
-    nrf_spis_semstat_t semaphore_status = nrf_spis_semaphore_status_get(SPIS_INSTANCE);
     otEXPECT_ACTION(((semaphore_status != NRF_SPIS_SEMSTAT_SPIS) && (semaphore_status != NRF_SPIS_SEMSTAT_CPUPENDING)),
                     error = OT_ERROR_BUSY);
 
@@ -227,7 +219,16 @@ void SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQHandler(void)
             nrf_gpio_pin_set(SPIS_PIN_HOST_IRQ);
         }
 
-        /* Set transaction done flag. */
-        sTransactionDone = true;
+        /* Discard all transactions until buffers are updated. */
+        nrf_spis_tx_buffer_set(SPIS_INSTANCE, sOutputBuf, 0);
+        nrf_spis_rx_buffer_set(SPIS_INSTANCE, sInputBuf, 0);
+
+        /* Execute application callback. */
+        if (sCompleteCallback(sContext, sOutputBuf, sOutputBufLen, sInputBuf, sInputBufLen,
+                              nrf_spis_rx_amount_get(SPIS_INSTANCE)))
+        {
+            /* Further processing is required. */
+            sFurtherProcessingFlag = true;
+        }
     }
 }

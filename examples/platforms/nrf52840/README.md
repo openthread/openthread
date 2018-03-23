@@ -69,6 +69,9 @@ In the above example it is assumed that `spi-hdlc-adapter` is installed in `/usr
 
 The default SPI Slave pin configuration for nRF52840 is defined in `examples/platforms/nrf52840/platform-config.h`.
 
+Note that the native SPI Slave support is not intended to be used with Engineering sample A of the nRF52840 chip due to
+single transfer size limitation.
+
 [spi-hdlc-adapter]: https://github.com/openthread/openthread/tree/master/tools/spi-hdlc-adapter
 
 ## Flashing the binaries
