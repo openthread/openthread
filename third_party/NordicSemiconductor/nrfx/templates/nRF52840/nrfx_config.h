@@ -1709,7 +1709,7 @@
 
 
 #ifndef NRFX_SPIM3_ENABLED
-#define NRFX_SPIM3_ENABLED 0
+#define NRFX_SPIM3_ENABLED 1
 #endif
 
 // <q> NRFX_SPIM_EXTENDED_ENABLED  - Enable extended SPIM features
@@ -1795,6 +1795,16 @@
 
 // </e>
 
+// <q> NRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED  - Enables nRF52840 anomaly 198 workaround for SPIM3.
+ 
+
+// <i> See more in the Errata document located at 
+// <i> https://infocenter.nordicsemi.com/
+
+#ifndef NRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED
+#define NRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED 0
+#endif
+
 // </e>
 
 // <e> NRFX_SPIS_ENABLED - nrfx_spis - SPIS peripheral driver
@@ -1836,26 +1846,6 @@
 
 #ifndef NRFX_SPIS_DEFAULT_CONFIG_IRQ_PRIORITY
 #define NRFX_SPIS_DEFAULT_CONFIG_IRQ_PRIORITY 7
-#endif
-
-// <o> NRFX_SPIS_DEFAULT_MODE  - Mode
-
-// <0=> MODE_0
-// <1=> MODE_1
-// <2=> MODE_2
-// <3=> MODE_3
-
-#ifndef NRFX_SPIS_DEFAULT_MODE
-#define NRFX_SPIS_DEFAULT_MODE 0
-#endif
-
-// <o> NRFX_SPIS_DEFAULT_BIT_ORDER  - SPIS default bit order
-
-// <0=> MSB first
-// <1=> LSB first
-
-#ifndef NRFX_SPIS_DEFAULT_BIT_ORDER
-#define NRFX_SPIS_DEFAULT_BIT_ORDER 0
 #endif
 
 // <o> NRFX_SPIS_DEFAULT_DEF - SPIS default DEF character  <0-255>

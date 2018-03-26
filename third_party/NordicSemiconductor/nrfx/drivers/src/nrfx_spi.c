@@ -1,41 +1,32 @@
 /**
  * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
- * 
  * All rights reserved.
  * 
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  * 
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  * 
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  * 
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- * 
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- * 
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <nrfx.h>
@@ -66,6 +57,7 @@ typedef struct
     // [no need for 'volatile' attribute for the following members, as they
     //  are not concurrently used in IRQ handlers and main line code]
     uint8_t     ss_pin;
+    uint8_t     miso_pin;
     uint8_t     orc;
     size_t      bytes_transferred;
 
@@ -125,7 +117,7 @@ nrfx_err_t nrfx_spi_init(nrfx_spi_t const * const  p_instance,
     //   0 - for modes 0 and 1 (CPOL = 0), 1 - for modes 2 and 3 (CPOL = 1);
     //   according to the reference manual guidelines this pin and its input
     //   buffer must always be connected for the SPI to work.
-    if (p_config->mode <= NRFX_SPI_MODE_1)
+    if (p_config->mode <= NRF_SPI_MODE_1)
     {
         nrf_gpio_pin_clear(p_config->sck_pin);
     }
@@ -160,6 +152,7 @@ nrfx_err_t nrfx_spi_init(nrfx_spi_t const * const  p_instance,
     {
         miso_pin = NRF_SPI_PIN_NOT_CONNECTED;
     }
+    m_cb[p_instance->drv_inst_idx].miso_pin = p_config->miso_pin;
     // - Slave Select (optional) - output with initial value 1 (inactive).
     if (p_config->ss_pin != NRFX_SPI_PIN_NOT_USED)
     {
@@ -170,11 +163,8 @@ nrfx_err_t nrfx_spi_init(nrfx_spi_t const * const  p_instance,
 
     NRF_SPI_Type * p_spi = p_instance->p_reg;
     nrf_spi_pins_set(p_spi, p_config->sck_pin, mosi_pin, miso_pin);
-    nrf_spi_frequency_set(p_spi,
-        (nrf_spi_frequency_t)p_config->frequency);
-    nrf_spi_configure(p_spi,
-        (nrf_spi_mode_t)p_config->mode,
-        (nrf_spi_bit_order_t)p_config->bit_order);
+    nrf_spi_frequency_set(p_spi, p_config->frequency);
+    nrf_spi_configure(p_spi, p_config->mode, p_config->bit_order);
 
     m_cb[p_instance->drv_inst_idx].orc = p_config->orc;
 
@@ -214,6 +204,11 @@ void nrfx_spi_uninit(nrfx_spi_t const * const p_instance)
     if (p_cb->handler)
     {
         nrf_spi_int_disable(p_spi, NRF_SPI_ALL_INTS_MASK);
+    }
+
+    if (p_cb->miso_pin != NRFX_SPI_PIN_NOT_USED)
+    {
+        nrf_gpio_cfg_default(p_cb->miso_pin);
     }
     nrf_spi_disable(p_spi);
 

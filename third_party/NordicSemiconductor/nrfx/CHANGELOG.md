@@ -1,26 +1,29 @@
 # Changelog
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [1.0.0] - 2018-03-21
 ### Added
-- Added wait-for function to improve time-out functionality in QSPI and SAADC drivers.
-- Added glue layer for interrupt pending set/clear and is set functions.
-- Added new interrupts and events to UARTE HAL.
+- Added the NRFX_WAIT_FOR macro to improve the time-out functionality in QSPI and SAADC drivers.
+- Added glue layer macros for checking and modifying the pending status of interrupts.
+- Added new enumeration values for interrupts and events in the UARTE HAL.
+- Implemented workarounds for nRF52 anomalies 192 and 201 in the CLOCK driver.
+- Implemented workaround for nRF52840 anomaly 122 in the QSPI driver.
+- Implemented workaround for nRF52840 anomaly 198 in the SPIM driver.
 
 ### Changed
-- Extended input pin configuration in GPIOTE driver.
-- Unified the way of checking if required event handler was provided. Now, all drivers do it with assertion.
-- Improved condition checking in uninit and init functions in SAADC driver.
-- Enabled RNG bias correction by default.
-- Updated MDK to 8.15.4.
-- Refactored ADC driver and HAL.
-- Corrected TIMER asserts to make it usable with PPI in debug.
-- Improved buffer handling in I2S driver. The API of the driver has been sligthly modified.
+- Updated MDK to 8.16.0.
+- Extended input pin configuration in the GPIOTE driver.
+- Unified the way of checking if a required event handler was provided. Now, all drivers do it with assertions.
+- Changed the RNG bias correction configuration option to be enabled by default.
+- Refactored the ADC driver and HAL.
+- Corrected assertions in the TIMER driver to make it usable in debug version with PPI.
+- Improved buffer handling in the I2S driver. The API of the driver has been sligthly modified.
+- Enhanced SPIS driver API: added the "p_context" parameter, allowed NULL pointers for zero-length buffers.
 
 ### Fixed
-- Fixed result value casting in TEMP HAL.
-- Fixed types of conversion result and buffer size in ADC HAL and driver.
-- Fixed timeout in SAADC driver in abort function.
+- Fixed result value casting in the TEMP HAL.
+- Fixed types of conversion result and buffer size in the ADC HAL and driver.
+- Fixed time-out in the SAADC driver in abort function.
 
 ## [0.8.0] - 2017-12-20
 ### Added
