@@ -48,6 +48,8 @@ extern "C" {
 #define EVENT_TRACE_EXIT                       0x0002UL
 #define EVENT_SET_STATE                        0x0005UL
 #define EVENT_RADIO_RESET                      0x0006UL
+#define EVENT_TIMESLOT_REQUEST                 0x0007UL
+#define EVENT_TIMESLOT_REQUEST_RESULT          0x0008UL
 
 #define FUNCTION_SLEEP                         0x0001UL
 #define FUNCTION_RECEIVE                       0x0002UL
@@ -88,8 +90,11 @@ extern "C" {
 #define FUNCTION_RAAL_SIG_EVENT_EXTEND         0x0403UL
 #define FUNCTION_RAAL_SIG_EVENT_ENDED          0x0404UL
 #define FUNCTION_RAAL_SIG_EVENT_RADIO          0x0405UL
-#define FUNCTION_RAAL_SIG_EVENT_EXCEED_SUCCESS 0x0406UL
-#define FUNCTION_RAAL_SIG_EVENT_EXCEED_FAIL    0x0407UL
+#define FUNCTION_RAAL_SIG_EVENT_EXTEND_SUCCESS 0x0406UL
+#define FUNCTION_RAAL_SIG_EVENT_EXTEND_FAIL    0x0407UL
+#define FUNCTION_RAAL_EVT_BLOCKED              0x0408UL
+#define FUNCTION_RAAL_EVT_SESSION_IDLE         0x0409UL
+#define FUNCTION_RAAL_EVT_HFCLK_READY          0x040AUL
 
 #define PIN_DBG_RADIO_EVT_END                  11
 #define PIN_DBG_RADIO_EVT_DISABLED             12
@@ -123,7 +128,7 @@ extern volatile uint32_t nrf_802154_debug_log_ptr;
 
 #else // ENABLE_DEBUG_LOG
 
-#define nrf_802154_log(EVENT_CODE, EVENT_ARG)
+#define nrf_802154_log(EVENT_CODE, EVENT_ARG) (void)(EVENT_ARG)
 
 #endif // ENABLE_DEBUG_LOG
 

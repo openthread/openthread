@@ -49,6 +49,10 @@
 #include <nrf.h>
 #include "platform/timer/nrf_802154_timer.h"
 
+#if defined(__ICCARM__)
+    _Pragma("diag_suppress=Pe167")
+#endif
+
 static volatile uint8_t              m_mutex;              ///< Mutex for starting the timer.
 static volatile uint8_t              m_queue_changed_cntr; ///< Information that scheduler queue was modified.
 static volatile nrf_802154_timer_t * mp_head;              ///< Head of the running timers list.
