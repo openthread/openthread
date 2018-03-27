@@ -110,6 +110,7 @@ void PlatformProcessDrivers(otInstance *aInstance)
     nrf5AlarmProcess(aInstance);
     nrf5RadioProcess(aInstance);
     nrf5UartProcess();
+    nrf5TempProcess();
 }
 
 __WEAK void PlatformEventSignalPending(void)
