@@ -205,13 +205,6 @@ static void processConnection(void)
     // Provide some delay so the OS can re-enumerate the device in case of reset.
     if (sUsbState.mReadyToStart)
     {
-        if (((otPlatGetResetReason(NULL) == OT_PLAT_RESET_REASON_EXTERNAL) ||
-             (otPlatGetResetReason(NULL) == OT_PLAT_RESET_REASON_SOFTWARE)) &&
-            (otPlatAlarmMilliGetNow() < USB_INITIAL_DELAY_MS))
-        {
-            return;
-        }
-
         sUsbState.mReadyToStart = false;
 
         if (nrf_drv_usbd_is_enabled())

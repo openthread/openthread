@@ -318,16 +318,6 @@
 #endif
 
 /**
- * @def USB_INITIAL_DELAY_MS
- *
- * Init delay for USB driver, used when software reset was detected to help OS to re-enumerate the device.
- *
- */
-#ifndef USB_INITIAL_DELAY_MS
-#define USB_INITIAL_DELAY_MS 600
-#endif
-
-/**
  * @def USB_HOST_UART_CONFIG_DELAY_MS
  *
  * Delay after DTR gets asserted that we start send any queued data. This allows slow
