@@ -72,7 +72,25 @@ extern "C" {
  */
 otError otCoapSecureTestIntegration(uint8_t * aCount);
 
+/**
+ * This function starts the CoAP Secure server.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aPort      The local UDP port to bind to.
+ *
+ * @retval OT_ERROR_NONE  Successfully started the CoAP Secure server.
+ *
+ */
 otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
+
+/**
+ * This function stops the CoAP Secure server.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE  Successfully stopped the CoAP Secure server.
+ */
+otError otCoapSecureStop(otInstance *aInstance);
 
 /**
  * @}

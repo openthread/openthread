@@ -96,14 +96,15 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     else if (strcmp(argv[0], "stop") == 0)
     {
         otCoapRemoveResource(mInterpreter.mInstance, &mResource);
-        SuccessOrExit(error = otCoapStop(mInterpreter.mInstance));
-        mInterpreter.mServer->OutputFormat("Coap service stopped: ");
+        SuccessOrExit(error = otCoapSecureStop(mInterpreter.mInstance));
+        mInterpreter.mServer->OutputFormat("Coap Secure service stopped: ");
     }
     else if (strcmp(argv[0], "help") == 0)
     {
     	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n");
     	mInterpreter.mServer->OutputFormat(">'coaps test': test access to coaps implementation.\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start': start coaps\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start': start coaps (server)\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start': stops coaps (server)\r\n");
     	mInterpreter.mServer->OutputFormat("\r\nno more functions at moment.\r\n");
 
     }
@@ -133,7 +134,7 @@ void CoapSecureCli::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMess
     char         responseContent = '0';
 
     mInterpreter.mServer->OutputFormat(
-        "Received coap request from [%x:%x:%x:%x:%x:%x:%x:%x]: ", HostSwap16(aMessageInfo->mSockAddr.mFields.m16[0]),
+        "Received coap secure request from [%x:%x:%x:%x:%x:%x:%x:%x]: ", HostSwap16(aMessageInfo->mSockAddr.mFields.m16[0]),
         HostSwap16(aMessageInfo->mSockAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mSockAddr.mFields.m16[2]),
         HostSwap16(aMessageInfo->mSockAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mSockAddr.mFields.m16[4]),
         HostSwap16(aMessageInfo->mSockAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mSockAddr.mFields.m16[6]),
@@ -199,13 +200,13 @@ exit:
 
     if (error != OT_ERROR_NONE && responseMessage != NULL)
     {
-        mInterpreter.mServer->OutputFormat("Cannot send coap response message: Error %d: %s\r\n", error,
+        mInterpreter.mServer->OutputFormat("Cannot send coap secure response message: Error %d: %s\r\n", error,
                                            otThreadErrorToString(error));
         otMessageFree(responseMessage);
     }
     else if (responseCode >= OT_COAP_CODE_RESPONSE_MIN)
     {
-        mInterpreter.mServer->OutputFormat("coap response sent successfully!\r\n");
+        mInterpreter.mServer->OutputFormat("coap secure response sent successfully!\r\n");
     }
 }
 
@@ -313,7 +314,7 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
         error = otCoapSendRequest(mInterpreter.mInstance, message, &messageInfo, NULL, NULL);
     }
 
-    mInterpreter.mServer->OutputFormat("Sending coap request: ");
+    mInterpreter.mServer->OutputFormat("Sending coap secure request: ");
 
 exit:
 
@@ -341,12 +342,12 @@ void CoapSecureCli::HandleClientResponse(otCoapHeader *       aHeader,
 {
     if (aError != OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("Error receiving coap response message: Error %d: %s\r\n", aError,
+        mInterpreter.mServer->OutputFormat("Error receiving coap secure response message: Error %d: %s\r\n", aError,
                                            otThreadErrorToString(aError));
     }
     else
     {
-        mInterpreter.mServer->OutputFormat("Received coap response");
+        mInterpreter.mServer->OutputFormat("Received coap secure response");
         PrintPayload(aMessage);
     }
 

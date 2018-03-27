@@ -60,7 +60,12 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
     return instance.GetApplicationCoapSecure().Start(aPort);
 }
 
+otError otCoapSecureStop( otInstance *aInstance )
+{
+	Instance &instance = *static_cast<Instance *>(aInstance);
 
+	return instance.GetApplicationCoapSecure().Stop();
+}
 
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
