@@ -1,41 +1,32 @@
 /**
  * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
- * 
  * All rights reserved.
  * 
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  * 
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  * 
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  * 
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- * 
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- * 
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <nrfx.h>
@@ -71,6 +62,17 @@ extern bool nrfx_power_irq_enabled;
 #define CALIBRATION_SUPPORT 0
 #endif
 
+#if defined(NRF52810_XXAA) || \
+    defined(NRF52832_XXAA) || defined(NRF52832_XXAB) || \
+    defined(NRF52840_XXAA)
+// Enable workaround for nRF52 anomaly 192 (LFRC oscillator frequency is wrong
+// after calibration, exceeding 500 ppm).
+#define USE_WORKAROUND_FOR_ANOMALY_192
+
+// Enable workaround for nRF52 anomaly 201 (EVENTS_HFCLKSTARTED might be generated twice).
+#define USE_WORKAROUND_FOR_ANOMALY_201
+#endif
+
 typedef enum
 {
     CAL_STATE_IDLE,
@@ -82,6 +84,10 @@ typedef struct
 {
     nrfx_clock_event_handler_t      event_handler;
     bool                            module_initialized; /*< Indicate the state of module */
+#if defined(USE_WORKAROUND_FOR_ANOMALY_201)
+    bool                            hfclk_started;      /*< Anomaly 201 workaround. */
+#endif
+
 #if CALIBRATION_SUPPORT
     volatile nrfx_clock_cal_state_t cal_state;
 #endif // CALIBRATION_SUPPORT
@@ -97,7 +103,7 @@ static nrfx_clock_cb_t m_clock_cb;
 bool nrfx_clock_irq_enabled;
 #endif
 
-#ifdef NRF52832_XXAA
+#if defined(NRF52832_XXAA) || defined(NRF52832_XXAB)
 
 // ANOMALY 132 - LFCLK needs to avoid frame from 66us to 138us after LFCLK stop. This solution
 //               applies delay of 138us before starting LFCLK.
@@ -140,7 +146,7 @@ static void nrfx_clock_anomaly_132(void)
     CoreDebug->DEMCR = core_debug;
 }
 
-#endif // NRF52832_XXAA
+#endif // defined(NRF52832_XXAA) || defined(NRF52832_XXAB)
 
 nrfx_err_t nrfx_clock_init(nrfx_clock_event_handler_t event_handler)
 {
@@ -158,6 +164,9 @@ nrfx_err_t nrfx_clock_init(nrfx_clock_event_handler_t event_handler)
 #endif
         m_clock_cb.event_handler = event_handler;
         m_clock_cb.module_initialized = true;
+#if defined(USE_WORKAROUND_FOR_ANOMALY_201)
+        m_clock_cb.hfclk_started = false;
+#endif
     }
 
     NRFX_LOG_INFO("Function: %s, error code: %s.", __func__, NRFX_LOG_ERROR_STRING_GET(err_code));
@@ -212,7 +221,7 @@ void nrfx_clock_lfclk_start(void)
     nrf_clock_event_clear(NRF_CLOCK_EVENT_LFCLKSTARTED);
     nrf_clock_int_enable(NRF_CLOCK_INT_LF_STARTED_MASK);
 
-#ifdef NRF52832_XXAA
+#if defined(NRF52832_XXAA) || defined(NRF52832_XXAB)
     nrfx_clock_anomaly_132();
 #endif
 
@@ -241,6 +250,9 @@ void nrfx_clock_hfclk_stop(void)
     nrf_clock_task_trigger(NRF_CLOCK_TASK_HFCLKSTOP);
     while (nrf_clock_hf_is_running(NRF_CLOCK_HFCLK_HIGH_ACCURACY))
     {}
+#if defined(USE_WORKAROUND_FOR_ANOMALY_201)
+    m_clock_cb.hfclk_started = false;
+#endif
 }
 
 nrfx_err_t nrfx_clock_calibration_start(void)
@@ -262,6 +274,9 @@ nrfx_err_t nrfx_clock_calibration_start(void)
         nrf_clock_event_clear(NRF_CLOCK_EVENT_DONE);
         nrf_clock_int_enable(NRF_CLOCK_INT_DONE_MASK);
         m_clock_cb.cal_state = CAL_STATE_CAL;
+#if defined(USE_WORKAROUND_FOR_ANOMALY_192)
+        *(volatile uint32_t *)0x40000C34 = 0x00000002;
+#endif
         nrf_clock_task_trigger(NRF_CLOCK_TASK_CAL);
     }
     else
@@ -308,7 +323,15 @@ void nrfx_clock_irq_handler(void)
         NRFX_LOG_DEBUG("Event: %s.", EVT_TO_STR(NRF_CLOCK_EVENT_HFCLKSTARTED));
         nrf_clock_int_disable(NRF_CLOCK_INT_HF_STARTED_MASK);
 
+#if defined(USE_WORKAROUND_FOR_ANOMALY_201)
+        if (!m_clock_cb.hfclk_started)
+        {
+            m_clock_cb.hfclk_started = true;
+            m_clock_cb.event_handler(NRFX_CLOCK_EVT_HFCLK_STARTED);
+        }
+#else
         m_clock_cb.event_handler(NRFX_CLOCK_EVT_HFCLK_STARTED);
+#endif
     }
     if (nrf_clock_event_check(NRF_CLOCK_EVENT_LFCLKSTARTED))
     {
@@ -330,6 +353,9 @@ void nrfx_clock_irq_handler(void)
 
     if (nrf_clock_event_check(NRF_CLOCK_EVENT_DONE))
     {
+#if defined(USE_WORKAROUND_FOR_ANOMALY_192)
+        *(volatile uint32_t *)0x40000C34 = 0x00000000;
+#endif
         nrf_clock_event_clear(NRF_CLOCK_EVENT_DONE);
         NRFX_LOG_DEBUG("Event: %s.", EVT_TO_STR(NRF_CLOCK_EVENT_DONE));
         nrf_clock_int_disable(NRF_CLOCK_INT_DONE_MASK);

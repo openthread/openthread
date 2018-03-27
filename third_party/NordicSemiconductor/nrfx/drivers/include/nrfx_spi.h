@@ -1,41 +1,32 @@
 /**
  * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
- * 
  * All rights reserved.
  * 
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  * 
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  * 
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  * 
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- * 
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- * 
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRFX_SPI_H__
@@ -94,40 +85,6 @@ enum {
 #define NRFX_SPI_PIN_NOT_USED  0xFF
 
 /**
- * @brief SPI data rates.
- */
-typedef enum
-{
-    NRFX_SPI_FREQ_125K = NRF_SPI_FREQ_125K, ///< 125 kbps.
-    NRFX_SPI_FREQ_250K = NRF_SPI_FREQ_250K, ///< 250 kbps.
-    NRFX_SPI_FREQ_500K = NRF_SPI_FREQ_500K, ///< 500 kbps.
-    NRFX_SPI_FREQ_1M   = NRF_SPI_FREQ_1M,   ///< 1 Mbps.
-    NRFX_SPI_FREQ_2M   = NRF_SPI_FREQ_2M,   ///< 2 Mbps.
-    NRFX_SPI_FREQ_4M   = NRF_SPI_FREQ_4M,   ///< 4 Mbps.
-    NRFX_SPI_FREQ_8M   = NRF_SPI_FREQ_8M    ///< 8 Mbps.
-} nrfx_spi_frequency_t;
-
-/**
- * @brief SPI modes.
- */
-typedef enum
-{
-    NRFX_SPI_MODE_0 = NRF_SPI_MODE_0, ///< SCK active high, sample on leading edge of clock.
-    NRFX_SPI_MODE_1 = NRF_SPI_MODE_1, ///< SCK active high, sample on trailing edge of clock.
-    NRFX_SPI_MODE_2 = NRF_SPI_MODE_2, ///< SCK active low, sample on leading edge of clock.
-    NRFX_SPI_MODE_3 = NRF_SPI_MODE_3  ///< SCK active low, sample on trailing edge of clock.
-} nrfx_spi_mode_t;
-
-/**
- * @brief SPI bit orders.
- */
-typedef enum
-{
-    NRFX_SPI_BIT_ORDER_MSB_FIRST = NRF_SPI_BIT_ORDER_MSB_FIRST, ///< Most significant bit shifted out first.
-    NRFX_SPI_BIT_ORDER_LSB_FIRST = NRF_SPI_BIT_ORDER_LSB_FIRST  ///< Least significant bit shifted out first.
-} nrfx_spi_bit_order_t;
-
-/**
  * @brief SPI master driver instance configuration structure.
  */
 typedef struct
@@ -149,9 +106,9 @@ typedef struct
     uint8_t orc;                    ///< Over-run character.
                                     /**< This character is used when all bytes from the TX buffer are sent,
                                          but the transfer continues due to RX. */
-    nrfx_spi_frequency_t frequency; ///< SPI frequency.
-    nrfx_spi_mode_t      mode;      ///< SPI mode.
-    nrfx_spi_bit_order_t bit_order; ///< SPI bit order.
+    nrf_spi_frequency_t frequency;  ///< SPI frequency.
+    nrf_spi_mode_t      mode;       ///< SPI mode.
+    nrf_spi_bit_order_t bit_order;  ///< SPI bit order.
 } nrfx_spi_config_t;
 
 /**
@@ -165,9 +122,9 @@ typedef struct
     .ss_pin       = NRFX_SPI_PIN_NOT_USED,                \
     .irq_priority = NRFX_SPI_DEFAULT_CONFIG_IRQ_PRIORITY, \
     .orc          = 0xFF,                                 \
-    .frequency    = NRFX_SPI_FREQ_4M,                     \
-    .mode         = NRFX_SPI_MODE_0,                      \
-    .bit_order    = NRFX_SPI_BIT_ORDER_MSB_FIRST,         \
+    .frequency    = NRF_SPI_FREQ_4M,                      \
+    .mode         = NRF_SPI_MODE_0,                       \
+    .bit_order    = NRF_SPI_BIT_ORDER_MSB_FIRST,          \
 }
 
 /**
@@ -179,7 +136,7 @@ typedef struct
     size_t          tx_length;   ///< TX buffer length.
     uint8_t       * p_rx_buffer; ///< Pointer to RX buffer.
     size_t          rx_length;   ///< RX buffer length.
-}nrfx_spi_xfer_desc_t;
+} nrfx_spi_xfer_desc_t;
 
 /**
  * @brief Macro for setting up single transfer descriptor.
