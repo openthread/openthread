@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef DISABLE_CC310
+#define MBEDTLS_AES_ALT
+#define MBEDTLS_ECP_ALT
 #define MBEDTLS_SHA256_ALT
+#endif // DISABLE_CC310
 
 #if defined(__ICCARM__)
     _Pragma("diag_suppress=Pe549")
