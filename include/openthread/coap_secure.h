@@ -92,6 +92,10 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
  */
 otError otCoapSecureStop(otInstance *aInstance);
 
+typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
+otError otCoapSecureConnect(otInstance *aInstance,const otMessageInfo * aMessageInfo,  otHandleSecureCoapClientConnect aHandler);
+
+
 /**
  * @}
  *

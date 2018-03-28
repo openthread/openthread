@@ -109,6 +109,8 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallb
                                       &CoapSecure::HandleDtlsSend, this);
 }
 
+
+
 bool CoapSecure::IsConnectionActive(void)
 {
     return GetNetif().GetDtls().IsStarted();

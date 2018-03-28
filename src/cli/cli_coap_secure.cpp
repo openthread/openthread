@@ -50,6 +50,22 @@ CoapSecureCli::CoapSecureCli(Interpreter &aInterpreter)
     memset(&mResource, 0, sizeof(mResource));
 }
 
+
+void OTCALL CoapSecureCli::HandleSecureCoapClientConnect(bool aConnected, void *aContext)
+{
+    static_cast<CoapSecureCli *>(aContext)->HandleSecureCoapClientConnect(aConnected);
+}
+
+
+void CoapSecureCli::HandleSecureCoapClientConnect(bool aConnected)
+{
+	if(aConnected){
+		mInterpreter.mServer->OutputFormat("CoAP Secure connected!");
+	}else{
+		mInterpreter.mServer->OutputFormat("CoAP Secure NOT connected!");
+	}
+}
+
 void CoapSecureCli::PrintPayload(otMessage *aMessage) const
 {
     uint8_t  buf[kMaxBufferSize];
@@ -79,6 +95,7 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
 otError CoapSecureCli::Process(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
+    otIp6Address coapDestinationIp;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     if (strcmp(argv[0], "test") == 0)
@@ -88,10 +105,33 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         mInterpreter.mServer->OutputFormat("Count before: %d | Count after: ", count);
         SuccessOrExit( error = otCoapSecureTestIntegration(&count) );					// function out of the coaps api
         mInterpreter.mServer->OutputFormat("%d (should be two greater than input)\r\n", count);
-    }else if (strcmp(argv[0], "start") == 0)
+    }
+    else if (strcmp(argv[0], "start") == 0)
     {
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT));
         mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
+    }
+    else if (strcmp(argv[0], "connect") == 0)
+    {
+        // Destination IPv6 address
+		if (argc > 1)
+		{
+            //parse ipAddr
+			SuccessOrExit(error = otIp6AddressFromString(argv[1], &coapDestinationIp));
+			otMessageInfo messageInfo;
+			memset(&messageInfo, 0, sizeof(messageInfo));
+			messageInfo.mPeerAddr    = coapDestinationIp;
+			messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
+			messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+			SuccessOrExit(error =
+					otCoapSecureConnect(mInterpreter.mInstance, &messageInfo, &CoapSecureCli::HandleSecureCoapClientConnect));
+//			mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
+		}
+		else
+		{
+			ExitNow(error = OT_ERROR_INVALID_ARGS);
+		}
+
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -102,9 +142,9 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     else if (strcmp(argv[0], "help") == 0)
     {
     	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n");
-    	mInterpreter.mServer->OutputFormat(">'coaps test': test access to coaps implementation.\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps test':  test access to coaps implementation.\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps start': start coaps (server)\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start': stops coaps (server)\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps stop':  stops coaps (server)\r\n");
     	mInterpreter.mServer->OutputFormat("\r\nno more functions at moment.\r\n");
 
     }

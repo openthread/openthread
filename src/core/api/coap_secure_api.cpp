@@ -60,6 +60,14 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
     return instance.GetApplicationCoapSecure().Start(aPort);
 }
 
+
+
+otError otCoapSecureConnect(otInstance *aInstance, const otMessageInfo * aMessageInfo, otHandleSecureCoapClientConnect aHandler ){
+	Instance &instance = *static_cast<Instance *>(aInstance);
+
+	return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler,aInstance);
+}
+
 otError otCoapSecureStop( otInstance *aInstance )
 {
 	Instance &instance = *static_cast<Instance *>(aInstance);

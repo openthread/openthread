@@ -72,6 +72,7 @@ public:
      */
     otError Process(int argc, char *argv[]);
 
+
 private:
     enum
     {
@@ -98,6 +99,9 @@ private:
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
+
+    static void OTCALL HandleSecureCoapClientConnect(bool aConnected, void *aContext);
+    void HandleSecureCoapClientConnect(bool aConnected);
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
