@@ -79,6 +79,9 @@ void PlatformInit(int argc, char *argv[])
     nrf5AlarmInit();
     nrf5RandomInit();
     nrf5UartInit();
+#ifndef SPIS_TRANSPORT_DISABLE
+    nrf5SpiSlaveInit();
+#endif
     nrf5MiscInit();
     nrf5CryptoInit();
     nrf5RadioInit();
@@ -91,6 +94,9 @@ void PlatformDeinit(void)
     nrf5RadioDeinit();
     nrf5CryptoDeinit();
     nrf5MiscDeinit();
+#ifndef SPIS_TRANSPORT_DISABLE
+    nrf5SpiSlaveDeinit();
+#endif
     nrf5UartDeinit();
     nrf5RandomDeinit();
     nrf5AlarmDeinit();
@@ -111,6 +117,9 @@ void PlatformProcessDrivers(otInstance *aInstance)
     nrf5RadioProcess(aInstance);
     nrf5UartProcess();
     nrf5TempProcess();
+#ifndef SPIS_TRANSPORT_DISABLE
+    nrf5SpiSlaveProcess();
+#endif
 }
 
 __WEAK void PlatformEventSignalPending(void)

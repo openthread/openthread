@@ -48,6 +48,32 @@ $ make -f examples/Makefile-nrf52840 USB=1
 Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to be loaded.
 It can be found in third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf
 
+## Native SPI Slave support
+
+You can build the libraries with support for native SPI Slave.
+To do so, build the libraries with the following parameter:
+```
+$ make -f examples/Makefile-nrf52840 NCP_SPI=1
+```
+
+With this option enabled, SPI communication between the NCP example and wpantund is possible
+(provided that the wpantund host supports SPI Master). To achieve that, an appropriate SPI device
+should be chosen in wpantund configuration file, `/etc/wpantund.conf`. You can find an example below.
+```
+Config:NCP:SocketPath "system:/usr/bin/spi-hdlc-adapter --gpio-int /sys/class/gpio/gpio25 /dev/spidev0.0"
+```
+
+[spi-hdlc-adapter][spi-hdlc-adapter]
+is a tool that can be used to perform communication between NCP and wpantund over SPI.
+In the above example it is assumed that `spi-hdlc-adapter` is installed in `/usr/bin`.
+
+The default SPI Slave pin configuration for nRF52840 is defined in `examples/platforms/nrf52840/platform-config.h`.
+
+Note that the native SPI Slave support is not intended to be used with Engineering sample A of the nRF52840 chip due to
+single transfer size limitation.
+
+[spi-hdlc-adapter]: https://github.com/openthread/openthread/tree/master/tools/spi-hdlc-adapter
+
 ## Flashing the binaries
 
 Flash the compiled binaries onto nRF52840 using `nrfjprog` which is

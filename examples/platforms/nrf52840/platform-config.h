@@ -317,6 +317,94 @@
 #define LOG_TIMESTAMP_ENABLE 1
 #endif
 
+/*******************************************************************************
+ * @section SPI Slave configuration.
+ ******************************************************************************/
+
+/**
+ * @def SPIS Instance.
+ */
+#ifndef SPIS_INSTANCE
+#define SPIS_INSTANCE NRF_SPIS0
+#endif
+
+/**
+ * @def SPIS mode.
+ *
+ * @brief Possible values:
+ *         \ref NRF_SPIS_MODE_0 - SCK active high, sample on leading edge of clock.
+ *         \ref NRF_SPIS_MODE_1 - SCK active high, sample on trailing edge of clock.
+ *         \ref NRF_SPIS_MODE_2 - SCK active low, sample on leading edge of clock.
+ *         \ref NRF_SPIS_MODE_3 - SCK active low, sample on trailing edge of clock.
+ */
+#ifndef SPIS_MODE
+#define SPIS_MODE NRF_SPIS_MODE_0
+#endif
+
+/**
+ * @def SPIS bit orders.
+ *
+ * @brief Possible values:
+ *         \ref NRF_SPIS_BIT_ORDER_MSB_FIRST - Most significant bit shifted out first.
+ *         \ref NRF_SPIS_BIT_ORDER_LSB_FIRST - Least significant bit shifted out first.
+ */
+#ifndef SPIS_BIT_ORDER
+#define SPIS_BIT_ORDER NRF_SPIS_BIT_ORDER_MSB_FIRST
+#endif
+
+/**
+ * @def SPIS Interrupt number.
+ */
+#ifndef SPIS_IRQN
+#define SPIS_IRQN SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQn
+#endif
+
+/**
+ * @def SPIS Interrupt priority.
+ */
+#ifndef SPIS_IRQ_PRIORITY
+#define SPIS_IRQ_PRIORITY 6
+#endif
+
+/**
+ * @def SPIS MOSI Pin.
+ */
+#ifndef SPIS_PIN_MOSI
+#define SPIS_PIN_MOSI 4
+#endif
+
+/**
+ * @def SPIS MISO Pin.
+ */
+#ifndef SPIS_PIN_MISO
+#define SPIS_PIN_MISO 28
+#endif
+
+/**
+ * @def SPIS SCK Pin.
+ */
+#ifndef SPIS_PIN_SCK
+#define SPIS_PIN_SCK 3
+#endif
+
+/**
+ * @def SPIS CSN Pin.
+ */
+#ifndef SPIS_PIN_CSN
+#define SPIS_PIN_CSN 29
+#endif
+
+/**
+ * @def SPIS Host IRQ Pin.
+ */
+#ifndef SPIS_PIN_HOST_IRQ
+#define SPIS_PIN_HOST_IRQ 30
+#endif
+
+/*******************************************************************************
+ * @section USB driver configuration.
+ ******************************************************************************/
+
 /**
  * @def USB_HOST_UART_CONFIG_DELAY_MS
  *
