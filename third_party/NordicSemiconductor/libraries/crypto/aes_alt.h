@@ -61,17 +61,34 @@
 extern "C" {
 #endif
 
+#if defined(__CC_ARM)
+#pragma anon_unions
+#endif
+
 /**
  * @brief AES context structure
  */
-typedef struct
+typedef union
 {
-    SaSiAesUserContext_t user_context;   ///< User context for CC310 AES.
-    uint8_t              key_buffer[32]; ///< Buffer for an encryption key.
-    SaSiAesUserKeyData_t key;            ///< CC310 AES key structure.
-    SaSiAesEncryptMode_t mode;           ///< Current context operation mode (encrypt/decrypt).
+    struct
+    {
+        SaSiAesUserContext_t user_context;      ///< User context for CC310 AES.
+        uint8_t              key_buffer[32];    ///< Buffer for an encryption key.
+        SaSiAesUserKeyData_t key;               ///< CC310 AES key structure.
+        SaSiAesEncryptMode_t mode;              ///< Current context operation mode (encrypt/decrypt).
+    };
+    struct
+    {
+        int       nr;                           ///<  number of rounds  */
+        uint32_t *rk;                           ///<  AES round keys    */
+        uint32_t  buf[68];                      ///<  unaligned data    */
+    };
 }
 mbedtls_aes_context;
+
+#if defined(__CC_ARM)
+#pragma no_anon_unions
+#endif
 
 /**
  * @brief Initialize AES context

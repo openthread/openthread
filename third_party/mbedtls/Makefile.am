@@ -60,10 +60,10 @@ libmbedcrypto_a_SOURCES                      += \
 endif  # OPENTHREAD_EXAMPLES_EFR32
 
 if OPENTHREAD_EXAMPLES_NRF52840
-nodist_libmbedcrypto_a_SOURCES                                                          = \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/aes_alt_cc310.c    \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/sha256_alt_cc310.c \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/cc310_mbedtls.c    \
+nodist_libmbedcrypto_a_SOURCES                                                       = \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_cc310.c    \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/sha256_alt_cc310.c \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/cc310_mbedtls.c    \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_NRF52840
 
@@ -100,9 +100,9 @@ libmbedcrypto_a_SOURCES                      += \
 endif  # OPENTHREAD_EXAMPLES_EFR32
 
 if OPENTHREAD_EXAMPLES_NRF52840
-nodist_libmbedcrypto_a_SOURCES                                                       += \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/ecp_alt_cc310.c  \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/hw/ecp_curves_alt.c \
+nodist_libmbedcrypto_a_SOURCES                                                    += \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_alt_cc310.c  \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_curves_alt.c \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_NRF52840
 
