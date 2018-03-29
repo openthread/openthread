@@ -44,7 +44,18 @@
 #ifndef MBEDTLS_SHA256_ALT_H
 #define MBEDTLS_SHA256_ALT_H
 
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
+#include <stddef.h>
+#include <stdint.h>
+
 #ifdef MBEDTLS_SHA256_ALT
+
+#include "crys_hash.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,20 +64,24 @@ extern "C" {
 #if defined(__CC_ARM)
 #pragma anon_unions
 #endif
-	
+
 /**
- * \brief          SHA-256 context structure
+ * @brief SHA-256 context structure
  */
 typedef union
 {
     struct
     {
-        uint32_t total[2];          /*!< number of bytes processed  */
-        uint32_t state[8];          /*!< intermediate digest state  */
-        unsigned char buffer[64];   /*!< data block being processed */
-        int is224;                  /*!< 0 => SHA-256, else SHA-224 */
+        CRYS_HASHUserContext_t    user_context; ///< User context for CC310 SHA256
+        CRYS_HASH_OperationMode_t mode;         ///< CC310 hash operation mode
     };
-    uint8_t reserved[256];
+    struct
+    {
+        uint32_t      total[2];                 ///< number of bytes processed
+        uint32_t      state[8];                 ///< intermediate digest state
+        unsigned char buffer[64];               ///< data block being processed
+        int           is224;                    ///< 0 => SHA-256, else SHA-224
+    };
 }
 mbedtls_sha256_context;
 
@@ -130,8 +145,5 @@ void mbedtls_sha256_process(mbedtls_sha256_context *ctx, const unsigned char dat
 #endif
 
 #endif /* MBEDTLS_SHA256_ALT */
-
-/* MBEDTLS_SHA256_ALT was used to redifine context structure. Undefine it now to enable default mbedTLS implementation. */
-#undef MBEDTLS_SHA256_ALT
 
 #endif /* MBEDTLS_SHA256_ALT_H */

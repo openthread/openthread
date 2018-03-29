@@ -30,7 +30,6 @@
 
 #include <string.h>
 
-
 #ifdef MBEDTLS_SHA256_ALT
 
 #include "cc310_mbedtls.h"
