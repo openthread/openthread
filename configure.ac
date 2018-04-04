@@ -357,7 +357,7 @@ fi
 # Code style
 #
 
-AC_SUBST(PRETTY, ["clang-format"])
+AC_SUBST(PRETTY, ["\${abs_top_srcdir}/script/clang-format.sh"])
 AC_SUBST(PRETTY_ARGS, ["-style=file -i"])
 AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/script/clang-format-check.sh"])
 AC_SUBST(PRETTY_CHECK_ARGS, [""])
