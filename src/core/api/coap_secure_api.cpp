@@ -61,6 +61,11 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
 }
 
 
+otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *mPsk, uint8_t length){
+	Instance &instance = *static_cast<Instance *>(aInstance);
+	return instance.GetApplicationCoapSecure().SetPsk(mPsk,length);
+}
+
 
 otError otCoapSecureConnect(otInstance *aInstance, const otMessageInfo * aMessageInfo, otHandleSecureCoapClientConnect aHandler ){
 	Instance &instance = *static_cast<Instance *>(aInstance);

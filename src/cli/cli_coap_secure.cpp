@@ -111,6 +111,22 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT));
         mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
     }
+    else if (strcmp(argv[0], "setpsk") == 0)
+	{
+    	if (argc > 1)
+		{
+    		uint8_t mPsk[32];
+    		uint8_t length = strlen(argv[1]);
+    		memcpy(mPsk,argv[1],length);
+    		SuccessOrExit(error = otCoapSecureSetPSK(mInterpreter.mInstance, mPsk, length));
+    		mInterpreter.mServer->OutputFormat("Coap Secure set PSK: ");
+		}else
+		{
+			ExitNow(error = OT_ERROR_INVALID_ARGS);
+		}
+
+
+	}
     else if (strcmp(argv[0], "connect") == 0)
     {
         // Destination IPv6 address
@@ -143,8 +159,10 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     {
     	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps test':  test access to coaps implementation.\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start': start coaps (server)\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps stop':  stops coaps (server)\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start': start coaps\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps setpsk': set PSK\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps connect': connect to server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps stop':  stops coaps\r\n");
     	mInterpreter.mServer->OutputFormat("\r\nno more functions at moment.\r\n");
 
     }

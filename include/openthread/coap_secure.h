@@ -91,6 +91,7 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
  * @retval OT_ERROR_NONE  Successfully stopped the CoAP Secure server.
  */
 otError otCoapSecureStop(otInstance *aInstance);
+otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *mPsk, uint8_t length);
 
 typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
 otError otCoapSecureConnect(otInstance *aInstance,const otMessageInfo * aMessageInfo,  otHandleSecureCoapClientConnect aHandler);
