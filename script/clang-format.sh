@@ -27,15 +27,25 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# clang-format does not return a non-zero exit code.  This wrapper
-# exits with a non-zero exit code if clang-format outputs any
-# replacements.
-#
+CLANG_FORMAT_VERSION="clang-format version 5.0"
 
-set -x
+die() {
+    echo " *** ERROR: " $*
+    exit 1
+}
 
-# from `man diff`:
-# Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
+if which clang-format > /dev/null; then
+    case "$(clang-format --version)" in
+        "$CLANG_FORMAT_VERSION"*)
+            ;;
+        *)
+            die "clang-format 5.0 required"
+            ;;
+    esac
+elif which clang-format-5.0 > /dev/null; then
+    alias clang-format=clang-format-5.0
+else
+    die "clang-format 5.0 required"
+fi
 
-$(dirname "$0")/clang-format.sh -style=file $@  | diff -u $@ -
+clang-format $@
