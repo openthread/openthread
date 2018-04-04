@@ -56,6 +56,15 @@ void nrf_802154_priority_drop_init(void);
 void nrf_802154_priority_drop_timeslot_exit(void);
 
 /**
+ * @brief Terminate requesting of timeslot discarding.
+ *
+ * Function used to to terminate timeslot exit procedure requested by previous call to
+ * @rev nrf_802154_priority_drop_timeslot_exit. Timeslot discarding is terminated only if it has
+ * not been started.
+ */
+void nrf_802154_priority_drop_timeslot_exit_terminate(void);
+
+/**
  *@}
  **/
 

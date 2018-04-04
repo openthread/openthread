@@ -150,6 +150,11 @@ int8_t nrf_802154_dbm_from_energy_level_calculate(uint8_t energy_level)
     return ED_MIN_DBM + (energy_level / ED_RESULT_FACTOR);
 }
 
+uint8_t nrf_802154_ccaedthres_from_dbm_calculate(int8_t dbm)
+{
+    return dbm - ED_MIN_DBM;
+}
+
 uint32_t nrf_802154_first_symbol_timestamp_get(uint32_t end_timestamp, uint8_t psdu_length)
 {
     uint32_t frame_symbols = PHY_SHR_DURATION;
@@ -334,13 +339,31 @@ void nrf_802154_buffer_free_raw(uint8_t * p_data)
     rx_buffer_t * p_buffer = (rx_buffer_t *)p_data;
 
     assert(p_buffer->free == false);
+    (void)p_buffer;
 
     nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
 
     result = nrf_802154_request_buffer_free(p_data);
     assert(result);
+    (void)result;
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+}
+
+bool nrf_802154_buffer_free_immediately_raw(uint8_t * p_data)
+{
+    bool          result;
+    rx_buffer_t * p_buffer = (rx_buffer_t *)p_data;
+
+    assert(p_buffer->free == false);
+    (void)p_buffer;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
+
+    result = nrf_802154_request_buffer_free(p_data);
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+    return result;
 }
 
 #else // NRF_802154_USE_RAW_API
@@ -351,13 +374,31 @@ void nrf_802154_buffer_free(uint8_t * p_data)
     rx_buffer_t * p_buffer = (rx_buffer_t *)(p_data - RAW_PAYLOAD_OFFSET);
 
     assert(p_buffer->free == false);
+    (void)p_buffer;
 
     nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
 
     result = nrf_802154_request_buffer_free(p_data - RAW_PAYLOAD_OFFSET);
     assert(result);
+    (void)result;
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+}
+
+bool nrf_802154_buffer_free_immediately(uint8_t * p_data)
+{
+    bool          result;
+    rx_buffer_t * p_buffer = (rx_buffer_t *)(p_data - RAW_PAYLOAD_OFFSET);
+
+    assert(p_buffer->free == false);
+    (void)p_buffer;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
+
+    result = nrf_802154_request_buffer_free(p_data - RAW_PAYLOAD_OFFSET);
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+    return result;
 }
 
 #endif // NRF_802154_USE_RAW_API

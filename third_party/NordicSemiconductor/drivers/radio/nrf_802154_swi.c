@@ -368,6 +368,7 @@ static nrf_802154_req_data_t * req_enter(void)
     __ISB();
 
     assert(!req_queue_is_full());
+    (void)req_queue_is_full();
 
     return &m_req_queue[m_req_w_ptr];
 }
@@ -511,6 +512,7 @@ void nrf_802154_swi_notify_cca(bool channel_free)
 void nrf_802154_swi_notify_cca_failed(nrf_802154_cca_error_t error)
 {
     assert(!ntf_queue_is_full());
+    (void)ntf_queue_is_full();
 
     nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
 
@@ -527,6 +529,11 @@ void nrf_802154_swi_timeslot_exit(void)
     assert(!nrf_egu_event_check(SWI_EGU, TIMESLOT_EXIT_EVENT));
 
     nrf_egu_task_trigger(SWI_EGU, TIMESLOT_EXIT_TASK);
+}
+
+void nrf_802154_swi_timeslot_exit_terminate(void)
+{
+    nrf_egu_event_clear(SWI_EGU, TIMESLOT_EXIT_EVENT);
 }
 
 void nrf_802154_swi_sleep(nrf_802154_term_t term_lvl, bool * p_result)
@@ -754,6 +761,12 @@ void SWI_IRQHandler(void)
                                                     p_slot->data.receive.req_orig,
                                                     p_slot->data.receive.notif_func) :
                             false;
+
+                    if (!in_crit_sect)
+                    {
+                        p_slot->data.receive.notif_func(false);
+                    }
+
                     break;
 
                 case REQ_TYPE_TRANSMIT:
@@ -764,6 +777,12 @@ void SWI_IRQHandler(void)
                                                      p_slot->data.transmit.cca,
                                                      p_slot->data.transmit.notif_func) :
                             false;
+
+                    if (!in_crit_sect)
+                    {
+                        p_slot->data.transmit.notif_func(false);
+                    }
+
                     break;
 
                 case REQ_TYPE_ENERGY_DETECTION:

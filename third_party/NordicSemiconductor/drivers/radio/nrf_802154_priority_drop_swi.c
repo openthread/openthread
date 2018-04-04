@@ -49,3 +49,8 @@ void nrf_802154_priority_drop_timeslot_exit(void)
     nrf_802154_swi_timeslot_exit();
 }
 
+void nrf_802154_priority_drop_timeslot_exit_terminate(void)
+{
+    nrf_802154_swi_timeslot_exit_terminate();
+}
+
