@@ -689,6 +689,7 @@ void nrf_raal_init(void)
 
     uint32_t err_code = sd_radio_session_open(signal_handler);
     assert(err_code == NRF_SUCCESS);
+    (void)err_code;
 
     m_initialized = true;
 }
@@ -699,6 +700,7 @@ void nrf_raal_uninit(void)
 
     uint32_t err_code = sd_radio_session_close();
     assert(err_code == NRF_SUCCESS);
+    (void)err_code;
 
     m_continuous     = false;
     m_timeslot_state = TIMESLOT_STATE_IDLE;

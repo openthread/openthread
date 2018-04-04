@@ -370,7 +370,7 @@ static bool dst_extended_addr_check(const uint8_t *p_psdu)
 
 nrf_802154_rx_error_t nrf_802154_filter_frame_part(const uint8_t * p_psdu, uint8_t * p_num_bytes)
 {
-    nrf_802154_rx_error_t result;
+    nrf_802154_rx_error_t result = NRF_802154_RX_ERROR_INVALID_FRAME;
 
     switch (*p_num_bytes)
     {
