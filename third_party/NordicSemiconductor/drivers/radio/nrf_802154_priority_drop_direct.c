@@ -49,3 +49,9 @@ void nrf_802154_priority_drop_timeslot_exit(void)
     nrf_raal_continuous_mode_exit();
 }
 
+void nrf_802154_priority_drop_timeslot_exit_terminate(void)
+{
+    // Intentionally empty:
+    // nrf_802154_priority_drop_timeslot_exit is synchronous and cannot be terminated.
+}
+

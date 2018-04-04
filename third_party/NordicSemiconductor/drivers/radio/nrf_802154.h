@@ -74,8 +74,8 @@ void nrf_802154_deinit(void);
  * @note If NRF_802154_INTERNAL_RADIO_IRQ_HANDLING is enabled, the driver internally handles the
  *       RADIO IRQ, and this function shall not be called.
  *
- * This function should be used in an operating system environment where the OS handles IRQ
- * and indirectly passes it to the driver, or with a RAAL implementation that indirectly passes radio
+ * This function should be used in an operating system environment where the OS handles IRQ and
+ * indirectly passes it to the driver, or with a RAAL implementation that indirectly passes radio
  * IRQ to the driver (i.e. SoftDevice).
  */
 void nrf_802154_radio_irq_handler(void);
@@ -212,6 +212,16 @@ void nrf_802154_short_address_set(const uint8_t *p_short_address);
 int8_t nrf_802154_dbm_from_energy_level_calculate(uint8_t energy_level);
 
 /**
+ * @brief  Calculate the CCA energy detection threshold value from a given dBm level.
+ *
+ * @param[in]  dbm  Energy level in dBm used to calculate the CCAEDTHRES value.
+ *
+ * @return  Energy level value corresponding to the given dBm level that should be written to
+ *          the CCACTRL register.
+ */
+uint8_t nrf_802154_ccaedthres_from_dbm_calculate(int8_t dbm);
+
+/**
  * @brief  Calculate the timestamp of the first symbol of the preamble in a received frame.
  *
  * @param[in]  end_timestamp  Timestamp of the end of the last symbol in the frame (in us).
@@ -236,11 +246,12 @@ nrf_802154_state_t nrf_802154_state_get(void);
 /**
  * @brief Change radio state to sleep.
  *
- * Sleep state is the lowest power state. In this state, the radio cannot transmit or receive frames.
- * It is the only state in which the driver releases the high-frequency clock and does not request
- * timeslots from a radio arbiter.
+ * Sleep state is the lowest power state. In this state, the radio cannot transmit or receive
+ * frames. It is the only state in which the driver releases the high-frequency clock and does not
+ * request timeslots from a radio arbiter.
  *
- * @note If another module requests it, the high-frequency clock may be enabled even in radio sleep state.
+ * @note If another module requests it, the high-frequency clock may be enabled even in radio sleep
+ *       state.
  *
  * @retval  true   If the radio changes its state to low power mode.
  * @retval  false  If the driver could not schedule changing state.
@@ -250,8 +261,9 @@ bool nrf_802154_sleep(void);
 /**
  * @brief Change radio state to receive.
  *
- * In receive state, the radio receives frames and may automatically send ACK frames when appropriate.
- * The received frame is reported to higher layer by a call to @ref nrf_802154_received.
+ * In receive state, the radio receives frames and may automatically send ACK frames when
+ * appropriate. The received frame is reported to higher layer by a call to
+ * @ref nrf_802154_received.
  *
  * @retval  true   If the radio enters receive state.
  * @retval  false  If the driver could not enter receive state.
@@ -263,18 +275,18 @@ bool nrf_802154_receive(void);
  * @brief Change radio state to transmit.
  *
  * @note If the CPU is halted or interrupted while this function is executed, 
- *       @ref nrf_802154_transmitted or @ref nrf_802154_transmit_failed may be
- *       called before this function returns a result.
+ *       @ref nrf_802154_transmitted or @ref nrf_802154_transmit_failed may be called before this
+ *       function returns a result.
  * @note This function is implemented in zero-copy fashion. It passes the given buffer pointer to
  *       the RADIO peripheral.
  *
  * In transmit state, the radio transmits a given frame. If requested, it waits for an ACK frame.
  * Depending on @ref NRF_802154_ACK_TIMEOUT_ENABLED, the radio driver automatically
- * stops waiting for an ACK frame or waits indefinitely for an ACK frame. If it is configured to wait,
- * the MAC layer is responsible for calling @ref nrf_802154_receive or
+ * stops waiting for an ACK frame or waits indefinitely for an ACK frame. If it is configured to
+ * wait, the MAC layer is responsible for calling @ref nrf_802154_receive or
  * @ref nrf_802154_sleep after the ACK time-out.
- * The transmission result is reported to the higher layer by calls to @ref nrf_802154_transmitted or
- * @ref nrf_802154_transmit_failed.
+ * The transmission result is reported to the higher layer by calls to @ref nrf_802154_transmitted
+ * or @ref nrf_802154_transmit_failed.
  *
  * @verbatim
  * p_data
@@ -286,11 +298,11 @@ bool nrf_802154_receive(void);
  *       | <---------------------------- PHR -----------------------------------> |
  * @endverbatim
  *
- * @param[in]  p_data    Pointer to array containing data to transmit. First byte should contain
- *                       frame length (including PHR and FCS). Following bytes should contain data.
- *                       CRC is computed automatically by radio hardware. Therefore, the FCS
- *                       field can contain any bytes.
- * @param[in]  cca       If the driver should perform a CCA procedure before transmission.
+ * @param[in]  p_data  Pointer to array containing data to transmit. First byte should contain frame
+ *                     length (including PHR and FCS). Following bytes should contain data. CRC is
+ *                     computed automatically by radio hardware. Therefore, the FCS field can
+ *                     contain any bytes.
+ * @param[in]  cca     If the driver should perform a CCA procedure before transmission.
  *
  * @retval  true   If the transmission procedure was scheduled.
  * @retval  false  If the driver could not schedule the transmission procedure.
@@ -303,19 +315,19 @@ bool nrf_802154_transmit_raw(const uint8_t * p_data, bool cca);
  * @brief Change radio state to transmit.
  *
  * @note If the CPU is halted or interrupted while this function is executed, 
- *       @ref nrf_802154_transmitted or @ref nrf_802154_transmit_failed must be
- *       called before this function returns a result.
- * @note This function copies the given buffer. It maintains an internal buffer, which
- *       is used to make a frame copy. To prevent unnecessary memory consumption and
- *       to perform zero-copy transmission, use @ref nrf_802154_transmit_raw instead.
+ *       @ref nrf_802154_transmitted or @ref nrf_802154_transmit_failed must be called before this
+ *       function returns a result.
+ * @note This function copies the given buffer. It maintains an internal buffer, which is used to
+ *       make a frame copy. To prevent unnecessary memory consumption and to perform zero-copy
+ *       transmission, use @ref nrf_802154_transmit_raw instead.
  *
  * In transmit state, the radio transmits a given frame. If requested, it waits for an ACK frame.
  * Depending on @ref NRF_802154_ACK_TIMEOUT_ENABLED, the radio driver automatically
- * stops waiting for an ACK frame or waits indefinitely for an ACK frame. If it is configured to wait,
- * the MAC layer is responsible for calling @ref nrf_802154_receive or
+ * stops waiting for an ACK frame or waits indefinitely for an ACK frame. If it is configured to
+ * wait, the MAC layer is responsible for calling @ref nrf_802154_receive or
  * @ref nrf_802154_sleep after the ACK time-out.
- * The transmission result is reported to the higher layer by calls to @ref nrf_802154_transmitted or
- * @ref nrf_802154_transmit_failed.
+ * The transmission result is reported to the higher layer by calls to @ref nrf_802154_transmitted
+ * or @ref nrf_802154_transmit_failed.
  *
  * @verbatim
  *       p_data
@@ -327,11 +339,11 @@ bool nrf_802154_transmit_raw(const uint8_t * p_data, bool cca);
  *       | <------------------ length -----------------------------> |
  * @endverbatim
  *
- * @param[in]  p_data    Pointer to array containing payload of data to transmit. The array
- *                       should exclude PHR or FCS fields of the 802.15.4 frame.
- * @param[in]  length    Length of the given frame. This value shall exclude PHR and FCS fields from
- *                       the given frame (exact size of buffer pointed to by @p p_data).
- * @param[in]  cca       If the driver should perform a CCA procedure before transmission.
+ * @param[in]  p_data  Pointer to array containing payload of data to transmit. The array should
+ *                     exclude PHR or FCS fields of the 802.15.4 frame.
+ * @param[in]  length  Length of the given frame. This value shall exclude PHR and FCS fields from
+ *                     the given frame (exact size of buffer pointed to by @p p_data).
+ * @param[in]  cca     If the driver should perform a CCA procedure before transmission.
  *
  * @retval  true   If the transmission procedure was scheduled.
  * @retval  false  If the driver could not schedule the transmission procedure.
@@ -343,15 +355,15 @@ bool nrf_802154_transmit(const uint8_t * p_data, uint8_t length, bool cca);
 /**
  * @brief Change radio state to energy detection.
  *
- * In energy detection state, the radio detects the maximum energy for a given time. The result of the detection
- * is reported to the higher layer by @ref nrf_802154_energy_detected.
+ * In energy detection state, the radio detects the maximum energy for a given time. The result of
+ * the detection is reported to the higher layer by @ref nrf_802154_energy_detected.
  *
  * @note @ref nrf_802154_energy_detected may be called before this function returns a result.
- * @note Performing the energy detection procedure make take longer time than requested in @p time_us.
- *       The procedure is performed only during timeslots granted by a radio arbiter. It may be
- *       interrupted by other protocols using the radio hardware. If the procedure is interrupted, it is
- *       automatically continued and the sum of time periods during which the procedure is carried
- *       out is not less than the requested @p time_us.
+ * @note Performing the energy detection procedure make take longer time than requested in
+ *       @p time_us. The procedure is performed only during timeslots granted by a radio arbiter.
+ *       It may be interrupted by other protocols using the radio hardware. If the procedure is
+ *       interrupted, it is automatically continued and the sum of time periods during which the
+ *       procedure is carried out is not less than the requested @p time_us.
  *
  * @param[in]  time_us   Duration of energy detection procedure. The given value is rounded up to
  *                       multiplication of 8s (128 us).
@@ -366,8 +378,8 @@ bool nrf_802154_energy_detection(uint32_t time_us);
  *
  * @note @ref nrf_802154_cca_done may be called before this function returns a result.
  *
- * In CCA state, the radio verifies if the channel is clear. The result of the verification is reported to the higher
- * layer by @ref nrf_802154_cca_done.
+ * In CCA state, the radio verifies if the channel is clear. The result of the verification is
+ * reported to the higher layer by @ref nrf_802154_cca_done.
  *
  * @retval  true   If the CCA procedure was scheduled.
  * @retval  false  If the driver could not schedule the CCA procedure.
@@ -377,9 +389,9 @@ bool nrf_802154_cca(void);
 /**
  * @brief Change radio state to continuous carrier.
  *
- * @note When the radio is emitting continuous carrier signals, it blocks all transmissions on the selected channel.
- *       This function should be called only during radio tests. It should not be used during
- *       normal device operation.
+ * @note When the radio is emitting continuous carrier signals, it blocks all transmissions on the
+ *       selected channel. This function should be called only during radio tests. It should not be
+ *       used during normal device operation.
  * @note This function works correctly only with a single-PHY arbiter. It should not be used with
  *       any other arbiter.
  *
@@ -407,8 +419,8 @@ extern void nrf_802154_tx_ack_started(void);
 /**
  * @brief Notify that a frame was received.
  *
- * @note The buffer pointed to by @p p_data is not modified by the radio driver (and cannot
- *       be used to receive a frame) until @ref nrf_802154_buffer_free_raw is called.
+ * @note The buffer pointed to by @p p_data is not modified by the radio driver (and cannot be used
+ *       to receive a frame) until @ref nrf_802154_buffer_free_raw is called.
  * @note The buffer pointed to by @p p_data may be modified by the function handler (and other
  *       modules) until @ref nrf_802154_buffer_free_raw is called.
  *
@@ -423,9 +435,9 @@ extern void nrf_802154_tx_ack_started(void);
  * @endverbatim
  *
  * @param[in]  p_data  Pointer to the buffer containing received data (PHR + PSDU). First byte in
- *                     the buffer is length of the frame (PHR). The following bytes contain the frame
- *                     itself (PSDU). The length byte (PHR) includes FCS. FCS is already verified by
- *                     the hardware and may be modified by the hardware.
+ *                     the buffer is length of the frame (PHR). The following bytes contain the
+ *                     frame itself (PSDU). The length byte (PHR) includes FCS. FCS is already
+ *                     verified by the hardware and may be modified by the hardware.
  * @param[in]  power   RSSI of received frame.
  * @param[in]  lqi     LQI of received frame.
  */
@@ -451,7 +463,8 @@ extern void nrf_802154_received_raw(uint8_t * p_data, int8_t power, uint8_t lqi)
  *       | <------------------ length -----------------------------> |
  * @endverbatim
  *
- * @param[in]  p_data  Pointer to the buffer containing the payload of the received frame (PSDU without FCS).
+ * @param[in]  p_data  Pointer to the buffer containing the payload of the received frame (PSDU
+ *                     without FCS).
  * @param[in]  length  Length of received payload.
  * @param[in]  power   RSSI of received frame.
  * @param[in]  lqi     LQI of received frame.
@@ -469,15 +482,15 @@ extern void nrf_802154_received(uint8_t * p_data, uint8_t length, int8_t power, 
  * list.
  *
  * @note @p timestamp may be inaccurate due to software latency (IRQ handling).
- * @note @p timestamp granularity depends on the granularity of the timer driver in the platform/timer
- *       directory.
- * @note Including the timestamp for received frames uses resources like CPU time and memory. If the timestamp
- *       is not required, use @ref nrf_802154_received_raw instead.
+ * @note @p timestamp granularity depends on the granularity of the timer driver in the
+ *       platform/timer directory.
+ * @note Including the timestamp for received frames uses resources like CPU time and memory. If the
+ *       timestamp is not required, use @ref nrf_802154_received_raw instead.
  *
  * @param[in]  p_data  Pointer to the buffer containing received data (PHR + PSDU). First byte in
- *                     the buffer is length of the frame (PHR). The following bytes contain the frame
- *                     itself (PSDU). The length byte (PHR) includes FCS. FCS is already verified by
- *                     the hardware and may be modified by the hardware.
+ *                     the buffer is length of the frame (PHR). The following bytes contain the
+ *                     frame itself (PSDU). The length byte (PHR) includes FCS. FCS is already
+ *                     verified by the hardware and may be modified by the hardware.
  * @param[in]  power   RSSI of received frame.
  * @param[in]  lqi     LQI of received frame.
  * @param[in]  time    Timestamp taken when the last symbol of the frame was received (in us).
@@ -495,12 +508,13 @@ extern void nrf_802154_received_timestamp_raw(uint8_t * p_data,
  * This functions works like @ref nrf_802154_received and adds a timestamp to the parameter list.
  *
  * @note @p timestamp may be inaccurate due to software latency (IRQ handling).
- * @note @p timestamp granularity depends on the granularity of the timer driver in the platform/timer
- *       directory.
- * @note Including the timestamp for received frames uses resources like CPU time and memory. If the timestamp
- *       is not required, use @ref nrf_802154_received instead.
+ * @note @p timestamp granularity depends on the granularity of the timer driver in the
+ *       platform/timer directory.
+ * @note Including the timestamp for received frames uses resources like CPU time and memory. If the
+ *       timestamp is not required, use @ref nrf_802154_received instead.
  *
- * @param[in]  p_data  Pointer to the buffer containing the payload of the received frame (PSDU without FCS).
+ * @param[in]  p_data  Pointer to the buffer containing the payload of the received frame (PSDU
+ *                     without FCS).
  * @param[in]  length  Length of received payload.
  * @param[in]  power   RSSI of received frame.
  * @param[in]  lqi     LQI of received frame.
@@ -539,19 +553,19 @@ extern void nrf_802154_tx_started(const uint8_t * p_frame);
 /**
  * @brief Notify that a frame was transmitted.
  *
- * @note If ACK was requested for the transmitted frame, this function is called after a proper ACK is
- *       received. If ACK was not requested, this function is called just after transmission has
+ * @note If ACK was requested for the transmitted frame, this function is called after a proper ACK
+ *       is received. If ACK was not requested, this function is called just after transmission has
  *       ended.
- * @note The buffer pointed to by @p p_ack is not modified by the radio driver (and cannot
- *       be used to receive a frame) until @ref nrf_802154_buffer_free_raw is called.
+ * @note The buffer pointed to by @p p_ack is not modified by the radio driver (and cannot be used
+ *       to receive a frame) until @ref nrf_802154_buffer_free_raw is called.
  * @note The buffer pointed to by @p p_ack may be modified by the function handler (and other
  *       modules) until @ref nrf_802154_buffer_free_raw is called.
  *
  * @param[in]  p_frame  Pointer to the buffer containing PHR and PSDU of the transmitted frame.
- * @param[in]  p_ack    Pointer to the received ACK buffer. First byte in the buffer is the length of the
- *                      frame (PHR). The following bytes contain the ACK frame itself (PSDU). The length byte
- *                      (PHR) includes FCS. FCS is already verified by the hardware and may be
- *                      modified by the hardware.
+ * @param[in]  p_ack    Pointer to the received ACK buffer. First byte in the buffer is the length
+ *                      of the frame (PHR). The following bytes contain the ACK frame itself (PSDU).
+ *                      The length byte (PHR) includes FCS. FCS is already verified by the hardware
+ *                      and may be modified by the hardware.
  *                      If ACK was not requested, @p p_ack is set to NULL.
  * @param[in]  power    RSSI of received frame or 0 if ACK was not requested.
  * @param[in]  lqi      LQI of received frame or 0 if ACK was not requested.
@@ -566,8 +580,8 @@ extern void nrf_802154_transmitted_raw(const uint8_t * p_frame,
 /**
  * @brief Notify that a frame was transmitted.
  *
- * @note If ACK was requested for the transmitted frame, this function is called after a proper ACK is
- *       received. If ACK was not requested, this function is called just after transmission has
+ * @note If ACK was requested for the transmitted frame, this function is called after a proper ACK
+ *       is received. If ACK was not requested, this function is called just after transmission has
  *       ended.
  * @note The buffer pointed to by @p p_ack is not modified by the radio driver (and cannot
  *       be used to receive a frame) until @ref nrf_802154_buffer_free is
@@ -578,8 +592,9 @@ extern void nrf_802154_transmitted_raw(const uint8_t * p_frame,
  *       @ref nrf_802154_transmitted_raw. It should not handle both functions.
  *
  * @param[in]  p_frame  Pointer to the buffer containing PSDU of the transmitted frame.
- * @param[in]  p_ack    Pointer to the buffer containing the received ACK payload (PHR excluding FCS).
-  *                     If ACK was not requested, @p p_ack is set to NULL.
+ * @param[in]  p_ack    Pointer to the buffer containing the received ACK payload (PHR excluding
+ *                      FCS).
+ *                      If ACK was not requested, @p p_ack is set to NULL.
  * @param[in]  length   Length of the received ACK payload or 0 if ACK was not requested.
  * @param[in]  power    RSSI of received frame or 0 if ACK was not requested.
  * @param[in]  lqi      LQI of received frame or 0 if ACK was not requested.
@@ -602,16 +617,16 @@ extern void nrf_802154_transmitted(const uint8_t * p_frame,
  * list.
  *
  * @note @p timestamp may be inaccurate due to software latency (IRQ handling).
- * @note @p timestamp granularity depends on the granularity of the timer driver in the platform/timer
- *       directory.
- * @note Including a timestamp for received frames uses resources like CPU time and memory. If the timestamp
- *       is not required, use @ref nrf_802154_received instead.
+ * @note @p timestamp granularity depends on the granularity of the timer driver in the
+ *       platform/timer directory.
+ * @note Including a timestamp for received frames uses resources like CPU time and memory. If the
+ *       timestamp is not required, use @ref nrf_802154_received instead.
  *
  * @param[in]  p_frame  Pointer to the buffer containing PSDU of the transmitted frame.
- * @param[in]  p_ack    Pointer to the received ACK buffer. First byte in the buffer is the length of the
- *                      frame (PHR). The following bytes contain the ACK frame itself (PSDU). The length byte
- *                      (PHR) includes FCS. FCS is already verified by the hardware and may be
- *                      modified by the hardware.
+ * @param[in]  p_ack    Pointer to the received ACK buffer. First byte in the buffer is the length
+ *                      of the frame (PHR). The following bytes contain the ACK frame itself (PSDU).
+ *                      The length byte (PHR) includes FCS. FCS is already verified by the hardware
+ *                      and may be modified by the hardware.
  *                      If ACK was not requested, @p p_ack is set to NULL.
  * @param[in]  power    RSSI of received frame or 0 if ACK was not requested.
  * @param[in]  lqi      LQI of received frame or 0 if ACK was not requested.
@@ -635,8 +650,8 @@ extern void nrf_802154_transmitted_timestamp_raw(const uint8_t * p_frame,
  * @note @p timestamp may be inaccurate due to software latency (IRQ handling).
  * @note @p timestamp granularity depends on the granularity of the timer driver in the platform/timer
  *       directory.
- * @note Including a timestamp for received frames uses resources like CPU time and memory. If the timestamp
- *       is not required, use @ref nrf_802154_received instead.
+ * @note Including a timestamp for received frames uses resources like CPU time and memory. If the
+ *       timestamp is not required, use @ref nrf_802154_received instead.
  *
  * @param[in]  p_frame  Pointer to the buffer containing PSDU of the transmitted frame.
  * @param[in]  p_ack    Pointer to the buffer containing the received ACK payload (PHR excluding FCS).
@@ -713,11 +728,29 @@ extern void nrf_802154_cca_failed(nrf_802154_cca_error_t error);
  * @brief Notify the driver that the buffer containing the received frame is not used anymore.
  *
  * @note The buffer pointed to by @p p_data may be modified by this function.
+ * @note This function can be safely called only from the main context. To free the buffer from
+ *       a callback or IRQ context, use @ref nrf_802154_buffer_free_immediately_raw.
  *
- * @param[in]  p_data  A pointer to the buffer containing the received data that is no longer needed by
- *                     the higher layer.
+ * @param[in]  p_data  A pointer to the buffer containing the received data that is no longer needed
+ *                     by the higher layer.
  */
 void nrf_802154_buffer_free_raw(uint8_t * p_data);
+
+/**
+ * @brief Notify the driver that the buffer containing the received frame is not used anymore.
+ *
+ * @note The buffer pointed to by @p p_data may be modified by this function.
+ * @note This function can be safely called from any context. If the driver is busy processing
+ *       a request called from a context with lower priority, this function returns false and
+ *       the caller should free the buffer later.
+ *
+ * @param[in]  p_data  A pointer to the buffer containing the received data that is no longer needed
+ *                     by the higher layer.
+ *
+ * @retval true   Buffer was freed successfully.
+ * @retval false  Buffer cannot be freed right now due to ongoing operation.
+ */
+bool nrf_802154_buffer_free_immediately_raw(uint8_t * p_data);
 
 #else // NRF_802154_USE_RAW_API
 
@@ -725,11 +758,29 @@ void nrf_802154_buffer_free_raw(uint8_t * p_data);
  * @brief Notify the driver that the buffer containing the received frame is not used anymore.
  *
  * @note The buffer pointed to by @p p_data may be modified by this function.
+ * @note This function can be safely called only from the main context. To free the buffer from
+ *       a callback or IRQ context, use @ref nrf_802154_buffer_free_immediately.
  *
- * @param[in]  p_data  A pointer to the buffer containing the received data that is no longer needed by
- *                     the higher layer.
+ * @param[in]  p_data  A pointer to the buffer containing the received data that is no longer needed
+ *                     by the higher layer.
  */
 void nrf_802154_buffer_free(uint8_t * p_data);
+
+/**
+ * @brief Notify the driver that the buffer containing the received frame is not used anymore.
+ *
+ * @note The buffer pointed to by @p p_data may be modified by this function.
+ * @note This function can be safely called from any context. If the driver is busy processing
+ *       a request called from a context with lower priority, this function returns false and
+ *       the caller should free the buffer later.
+ *
+ * @param[in]  p_data  A pointer to the buffer containing the received data that is no longer needed
+ *                     by the higher layer.
+ *
+ * @retval true   Buffer was freed successfully.
+ * @retval false  Buffer cannot be freed right now due to ongoing operation.
+ */
+bool nrf_802154_buffer_free_immediately(uint8_t * p_data);
 
 #endif // NRF_802154_USE_RAW_API
 
@@ -771,8 +822,9 @@ int8_t nrf_802154_rssi_last_get(void);
  *
  * In promiscuous mode, the driver notifies the higher layer that it received any frame (regardless
  * frame type or destination address).
- * In normal mode (not promiscuous), the higher layer is not notified about ACK frames and frames with
- * unknown type. Also frames with a destination address not matching the device address are ignored.
+ * In normal mode (not promiscuous), the higher layer is not notified about ACK frames and frames
+ * with unknown type. Also frames with a destination address not matching the device address are
+ * ignored.
  *
  * @param[in]  enabled  If promiscuous mode should be enabled.
  */
@@ -799,13 +851,13 @@ bool nrf_802154_promiscuous_get(void);
  * @note Auto ACK is enabled by default.
  *
  * If auto ACK is enabled, the driver prepares and sends ACK frames automatically
- * aTurnaroundTime (192 us) after the proper frame is received. The driver sets the sequence number in
- * the ACK frame and a pending bit according to the auto pending bit feature settings. When auto ACK
- * is enabled, the driver notifies the next higher layer about the received frame after the ACK
+ * aTurnaroundTime (192 us) after the proper frame is received. The driver sets the sequence number
+ * in the ACK frame and a pending bit according to the auto pending bit feature settings. When auto
+ * ACK is enabled, the driver notifies the next higher layer about the received frame after the ACK
  * frame is transmitted.
- * If auto ACK is disabled, the driver does not transmit ACK frames. It notifies the next
- * higher layer about received frames when a frame is received. In this mode, the next higher layer
- * is responsible for sending the ACK frame. ACK frames should be sent using @ref nrf_802154_transmit.
+ * If auto ACK is disabled, the driver does not transmit ACK frames. It notifies the next higher
+ * layer about received frames when a frame is received. In this mode, the next higher layer is
+ * responsible for sending the ACK frame. ACK frames should be sent using @ref nrf_802154_transmit.
  *
  * @param[in]  enabled  If auto ACK should be enabled.
  */
@@ -824,13 +876,14 @@ bool nrf_802154_auto_ack_get(void);
  *
  * @note Setting a pending bit in automatically transmitted ACK frames is enabled by default.
  *
- * The radio driver automatically sends ACK frames in response frames destined to this node with the ACK
- * Request bit set. The pending bit in the ACK frame can be set or cleared regarding data in the indirect queue
- * destined to ACK destination.
+ * The radio driver automatically sends ACK frames in response frames destined to this node with the
+ * ACK Request bit set. The pending bit in the ACK frame can be set or cleared regarding data in the
+ * indirect queue destined to ACK destination.
  *
  * If setting a pending bit in ACK frames is disabled, the pending bit in every ACK frame is set.
  * If setting a pending bit in ACK frames is enabled, the radio driver checks if there is data
- * in the indirect queue destined to ACK destination. If there is no such data, the pending bit is cleared.
+ * in the indirect queue destined to ACK destination. If there is no such data, the pending bit is
+ * cleared.
  *
  * @note Due to ISR latency, the radio driver might not be able to verify if there is data in
  *       the indirect queue before ACK is sent. In this case, the pending bit is set.
@@ -866,7 +919,8 @@ bool nrf_802154_pending_bit_for_addr_clear(const uint8_t *p_addr, bool extended)
 /**
  * @brief Remove all addresses of a given type from the pending bit list.
  *
- * @param[in]  extended  If the function should remove all extended MAC addresses or all short addresses.
+ * @param[in]  extended  If the function should remove all extended MAC addresses or all short
+ *                       addresses.
  */
 void nrf_802154_pending_bit_for_addr_reset(bool extended);
 
@@ -905,14 +959,15 @@ void nrf_802154_cca_cfg_get(nrf_802154_cca_cfg_t * p_cca_cfg);
  * The end of the CSMA-CA procedure is notified by @ref nrf_802154_transmitted_raw or
  * @ref nrf_802154_transmit_failed.
  *
- * @note The driver may be configured to automatically time out waiting for an ACK frame depending on
- *       @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK time-out is
- *       disabled, the CSMA-CA procedure does not time out waiting for an ACK frame if a frame with the ACK
- *       request bit set was transmitted. The MAC layer should manage the timer to time out waiting for the ACK
- *       frame. This timer can be started by @ref nrf_802154_tx_started. When the timer
- *       expires, the MAC layer should call @ref nrf_802154_receive or @ref nrf_802154_sleep to stop
- *       waiting for the ACK frame.
- * @note Before the CSMA-CA procedure is used, the application should initialize a random seed with srand.
+ * @note The driver may be configured to automatically time out waiting for an ACK frame depending
+ *       on @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK time-out is disabled, the CSMA-CA
+ *       procedure does not time out waiting for an ACK frame if a frame with the ACK request bit
+ *       set was transmitted. The MAC layer should manage the timer to time out waiting for the ACK
+ *       frame. This timer can be started by @ref nrf_802154_tx_started. When the timer expires,
+ *       the MAC layer should call @ref nrf_802154_receive or @ref nrf_802154_sleep to stop waiting
+ *       for the ACK frame.
+ * @note Before the CSMA-CA procedure is used, the application should initialize a random seed with
+ *       srand.
  *
  * @param[in]  p_data  Pointer to the frame to transmit. See also @ref nrf_802154_transmit_raw.
  */
@@ -926,14 +981,15 @@ void nrf_802154_transmit_csma_ca_raw(const uint8_t * p_data);
  * The end of the CSMA-CA procedure is notified by @ref nrf_802154_transmitted or
  * @ref nrf_802154_transmit_failed.
  *
- * @note The driver may be configured to automatically time out waiting for an ACK frame depending on
- *       @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK time-out is
- *       disabled, the CSMA-CA procedure does not time out waiting for an ACK frame if a frame with the ACK
- *       request bit set was transmitted. The MAC layer should manage the timer to time out waiting for the ACK
- *       frame. This timer can be started by @ref nrf_802154_tx_started. When the timer
- *       expires, the MAC layer should call @ref nrf_802154_receive or @ref nrf_802154_sleep to stop
- *       waiting for the ACK frame.
- * @note Before the CSMA-CA procedure is used, the application should initialize a random seed with srand.
+ * @note The driver may be configured to automatically time out waiting for an ACK frame depending
+ *       on @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK time-out is disabled, the CSMA-CA
+ *       procedure does not time out waiting for an ACK frame if a frame with the ACK request bit
+ *       set was transmitted. The MAC layer should manage the timer to time out waiting for the ACK
+ *       frame. This timer can be started by @ref nrf_802154_tx_started. When the timer expires,
+ *       the MAC layer should call @ref nrf_802154_receive or @ref nrf_802154_sleep to stop waiting
+ *       for the ACK frame.
+ * @note Before the CSMA-CA procedure is used, the application should initialize a random seed with
+ *       srand.
  *
  * @param[in]  p_data    Pointer to the frame to transmit. See also @ref nrf_802154_transmit.
  * @param[in]  length    Length of the given frame. See also @ref nrf_802154_transmit.

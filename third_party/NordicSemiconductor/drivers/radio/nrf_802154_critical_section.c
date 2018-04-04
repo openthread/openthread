@@ -149,6 +149,7 @@ void nrf_802154_critical_section_forcefully_enter(void)
 {
     bool critical_section_entered = critical_section_enter(true);
     assert(critical_section_entered);
+    (void)critical_section_entered;
 }
 
 void nrf_802154_critical_section_exit(void)
@@ -167,6 +168,7 @@ void nrf_802154_critical_section_exit(void)
         if (cnt == 1)
         {
             assert(!exiting_crit_sect);
+            (void)exiting_crit_sect;
             exiting_crit_sect = true;
 
             // RAAL critical section shall be exited before RADIO IRQ handler is enabled. In other
