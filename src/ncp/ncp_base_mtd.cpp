@@ -284,28 +284,12 @@ otError NcpBase::SetPropertyHandler_NET_STACK_UP(void)
         if (enabled != false)
         {
             error = otThreadSetEnabled(mInstance, true);
-
-#if OPENTHREAD_ENABLE_LEGACY
-            mLegacyNodeDidJoin = false;
-
-            if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStartLegacy != NULL))
-            {
-                mLegacyHandlers->mStartLegacy();
-            }
-#endif // OPENTHREAD_ENABLE_LEGACY
+            StartLegacy();
         }
         else
         {
             error = otThreadSetEnabled(mInstance, false);
-
-#if OPENTHREAD_ENABLE_LEGACY
-            mLegacyNodeDidJoin = false;
-
-            if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStopLegacy != NULL))
-            {
-                mLegacyHandlers->mStopLegacy();
-            }
-#endif // OPENTHREAD_ENABLE_LEGACY
+            StopLegacy();
         }
     }
 
@@ -2520,9 +2504,6 @@ void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
     mUpdateChangedPropsTask.Post();
 }
 
-#endif // OPENTHREAD_ENABLE_LEGACY
-
-#if OPENTHREAD_ENABLE_LEGACY
 otError NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(void)
 {
     return mEncoder.WriteData(mLegacyUlaPrefix, sizeof(mLegacyUlaPrefix));
@@ -2560,6 +2541,27 @@ otError NcpBase::GetPropertyHandler_NEST_LEGACY_LAST_NODE_JOINED(void)
 
     return mEncoder.WriteEui64(mLegacyLastJoinedNode);
 }
+
+void NcpBase::StartLegacy(void)
+{
+    mLegacyNodeDidJoin = false;
+
+    if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStartLegacy != NULL))
+    {
+        mLegacyHandlers->mStartLegacy();
+    }
+}
+
+void NcpBase::StopLegacy(void)
+{
+    mLegacyNodeDidJoin = false;
+
+    if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStopLegacy != NULL))
+    {
+        mLegacyHandlers->mStopLegacy();
+    }
+}
+
 #endif // OPENTHREAD_ENABLE_LEGACY
 
 otError NcpBase::EncodeChannelMask(uint32_t aChannelMask)
