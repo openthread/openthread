@@ -76,6 +76,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(PHY_RX_SENSITIVITY),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_TX_POWER),
     NCP_GET_PROP_HANDLER_ENTRY(POWER_STATE),
+    NCP_GET_PROP_HANDLER_ENTRY(MCU_POWER_STATE),
     NCP_GET_PROP_HANDLER_ENTRY(PROTOCOL_VERSION),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_PANID),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_LADDR),
@@ -261,6 +262,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 {
     NCP_SET_PROP_HANDLER_ENTRY(POWER_STATE),
+    NCP_SET_PROP_HANDLER_ENTRY(MCU_POWER_STATE),
     NCP_SET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
     NCP_SET_PROP_HANDLER_ENTRY(PHY_TX_POWER),
     NCP_SET_PROP_HANDLER_ENTRY(PHY_CHAN),
@@ -1791,6 +1793,10 @@ otError NcpBase::GetPropertyHandler_CAPS(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_COUNTERS));
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_UNSOL_UPDATE_FILTER));
 
+#if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MCU_POWER_STATE));
+#endif
+
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RAW));
 #endif
@@ -1859,9 +1865,100 @@ otError NcpBase::GetPropertyHandler_INTERFACE_COUNT(void)
     return mEncoder.WriteUint8(1); // Only one interface for now
 }
 
+#if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+
+otError NcpBase::GetPropertyHandler_MCU_POWER_STATE(void)
+{
+    spinel_mcu_power_state_t state = SPINEL_MCU_POWER_STATE_ON;
+
+    switch (otPlatGetMcuPowerState(mInstance))
+    {
+    case OT_PLAT_MCU_POWER_STATE_ON:
+        state = SPINEL_MCU_POWER_STATE_ON;
+        break;
+
+    case OT_PLAT_MCU_POWER_STATE_LOW_POWER:
+        state = SPINEL_MCU_POWER_STATE_LOW_POWER;
+        break;
+
+    case OT_PLAT_MCU_POWER_STATE_OFF:
+        state = SPINEL_MCU_POWER_STATE_OFF;
+        break;
+    }
+
+    return mEncoder.WriteUint8(state);
+}
+
+otError NcpBase::SetPropertyHandler_MCU_POWER_STATE(void)
+{
+    otError error = OT_ERROR_NONE;
+    otPlatMcuPowerState powerState;
+    uint8_t state;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(state));
+
+    switch (state)
+    {
+    case SPINEL_MCU_POWER_STATE_ON:
+        powerState = OT_PLAT_MCU_POWER_STATE_ON;
+        break;
+
+    case SPINEL_MCU_POWER_STATE_LOW_POWER:
+        powerState = OT_PLAT_MCU_POWER_STATE_LOW_POWER;
+        break;
+
+    case SPINEL_MCU_POWER_STATE_OFF:
+        powerState = OT_PLAT_MCU_POWER_STATE_OFF;
+        break;
+
+    default:
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+    SuccessOrExit(error = otPlatSetMcuPowerState(mInstance, powerState));
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+    // If the call `otPlatSetMcuPowerState()` was successful and the desire
+    // state is `OFF`, ensure to disable Thread (MLE) operation (and stop
+    // legacy) and also bring the IPv6 interface down.
+
+    if (powerState == OT_PLAT_MCU_POWER_STATE_OFF)
+    {
+        if (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED)
+        {
+            otThreadSetEnabled(mInstance, false);
+            StopLegacy();
+        }
+
+        if (otIp6IsEnabled(mInstance))
+        {
+            otIp6SetEnabled(mInstance, false);
+        }
+    }
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+exit:
+    return error;
+}
+
+#else // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+
+otError NcpBase::GetPropertyHandler_MCU_POWER_STATE(void)
+{
+    return mEncoder.WriteUint8(SPINEL_MCU_POWER_STATE_ON);
+}
+
+otError NcpBase::SetPropertyHandler_MCU_POWER_STATE(void)
+{
+    return OT_ERROR_DISABLED_FEATURE;
+}
+
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+
 otError NcpBase::GetPropertyHandler_POWER_STATE(void)
 {
-    return mEncoder.WriteUint8(SPINEL_POWER_STATE_ONLINE);   // Always online at the moment
+    return mEncoder.WriteUint8(SPINEL_POWER_STATE_ONLINE);
 }
 
 otError NcpBase::SetPropertyHandler_POWER_STATE(void)
@@ -2161,7 +2258,6 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 
     return error;
 }
-
 
 extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {

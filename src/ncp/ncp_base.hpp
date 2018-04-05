@@ -363,6 +363,8 @@ protected:
     NCP_GET_PROP_HANDLER(INTERFACE_COUNT);
     NCP_GET_PROP_HANDLER(POWER_STATE);
     NCP_SET_PROP_HANDLER(POWER_STATE);
+    NCP_GET_PROP_HANDLER(MCU_POWER_STATE);
+    NCP_SET_PROP_HANDLER(MCU_POWER_STATE);
     NCP_GET_PROP_HANDLER(HWADDR);
     NCP_GET_PROP_HANDLER(LOCK);
     NCP_GET_PROP_HANDLER(HOST_POWER_STATE);
@@ -690,6 +692,15 @@ protected:
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     otError SetPropertyHandler_STREAM_RAW(uint8_t aHeader);
 #endif
+
+#if OPENTHREAD_ENABLE_LEGACY
+    void StartLegacy(void);
+    void StopLegacy(void);
+#else
+    void StartLegacy(void) { }
+    void StopLegacy(void) { }
+#endif
+
 
 protected:
     static NcpBase *sNcpInstance;
