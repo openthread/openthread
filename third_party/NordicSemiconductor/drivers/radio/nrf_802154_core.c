@@ -179,8 +179,8 @@ static const uint8_t * mp_tx_data;                 ///< Pointer to data to trans
 static uint32_t        m_ed_time_left;             ///< Remaining time of current energy detection procedure [us].
 static uint8_t         m_ed_result;                ///< Result of current energy detection procedure.
 
-static volatile radio_state_t m_state = RADIO_STATE_SLEEP;  ///< State of the radio driver
-static volatile bool          m_timeslot_is_granted;        ///< Indicates if RAAL reported that timeslot is granted.
+static volatile radio_state_t m_state;                ///< State of the radio driver
+static volatile bool          m_timeslot_is_granted;  ///< Indicates if RAAL reported that timeslot is granted.
 
 typedef struct
 {
@@ -2579,13 +2579,13 @@ void nrf_802154_core_init(void)
     const uint8_t ack_psdu[] = {0x05, ACK_HEADER_WITH_PENDING, 0x00, 0x00, 0x00, 0x00};
     memcpy(m_ack_psdu, ack_psdu, sizeof(ack_psdu));
 
+    m_state = RADIO_STATE_SLEEP;
+
     nrf_timer_init();
 }
 
 void nrf_802154_core_deinit(void)
 {
-    current_operation_terminate(NRF_802154_TERM_802154, REQ_ORIG_HIGHER_LAYER, true);
-
     if (timeslot_is_granted())
     {
         nrf_radio_reset();
