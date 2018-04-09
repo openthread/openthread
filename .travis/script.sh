@@ -368,7 +368,7 @@ set -x
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    COVERAGE=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
+    NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
