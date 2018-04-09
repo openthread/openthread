@@ -32,20 +32,38 @@ die() {
     exit 1
 }
 
+cleanup() {
+    # Clear logs and flash files
+    sudo rm tmp/*.flash > /dev/null 2>&1
+    sudo rm *.log > /dev/null 2>&1
+
+    # Clear any wpantund instances
+    sudo killall wpantund > /dev/null 2>&1
+
+    wpan_interfaces=$(ifconfig 2>/dev/null | grep -o wpan[0-9]*)
+
+    for interface in $wpan_interfaces; do
+        sudo ip link delete $interface > /dev/null 2>&1
+    done
+
+    sleep 0.3
+}
+
 run() {
     counter=0
     while true; do
-        # Clear logs and flash files
-        sudo rm tmp/*.flash > /dev/null 2>&1
-        sudo rm *.log > /dev/null 2>&1
 
-        sudo python $1 && return
+        if sudo python $1; then
+            cleanup
+            return
+        fi
 
         # On Travis, we allow a failed test to be retried up to 3 attempts.
         if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
             if [ "$counter" -lt 2 ]; then
                 counter=$((counter+1))
                 echo Attempt $counter running "$1" failed. Trying again.
+                cleanup
                 sleep 10
                 continue
             fi
@@ -85,6 +103,8 @@ make -j 8 || die
 
 cd tests/toranj
 
+cleanup
+
 run test-001-get-set.py
 run test-002-form.py
 run test-003-join.py
@@ -93,3 +113,5 @@ run test-005-discover-scan.py
 run test-006-traffic-router-end-device.py
 run test-007-traffic-router-sleepy.py
 run test-008-permit-join.py
+
+exit 0
