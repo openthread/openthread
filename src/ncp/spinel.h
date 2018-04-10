@@ -2052,6 +2052,8 @@ SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key
 
 SPINEL_API_EXTERN const char *spinel_net_role_to_cstr(uint8_t net_role);
 
+SPINEL_API_EXTERN const char *spinel_mcu_power_state_to_cstr(spinel_mcu_power_state_t mcu_power_state);
+
 SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 
 SPINEL_API_EXTERN const char *spinel_capability_to_cstr(unsigned int capability);
