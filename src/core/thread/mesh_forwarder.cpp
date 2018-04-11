@@ -1106,8 +1106,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     netif.GetSupervisionListener().UpdateOnReceive(macSource, linkInfo.mLinkSecurity);
 
-    mDataPollManager.CheckFramePending(aFrame);
-
     switch (aFrame.GetType())
     {
     case Mac::Frame::kFcfFrameData:

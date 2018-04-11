@@ -1668,12 +1668,13 @@ exit:
 
 void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 {
-    Address   srcaddr;
-    Address   dstaddr;
-    PanId     panid;
-    Neighbor *neighbor;
-    bool      receive = false;
-    otError   error   = aError;
+    ThreadNetif &netif = GetNetif();
+    Address      srcaddr;
+    Address      dstaddr;
+    PanId        panid;
+    Neighbor *   neighbor;
+    bool         receive = false;
+    otError      error   = aError;
 #if OPENTHREAD_ENABLE_MAC_FILTER
     int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
@@ -1697,7 +1698,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     aFrame->GetSrcAddr(srcaddr);
     aFrame->GetDstAddr(dstaddr);
-    neighbor = GetNetif().GetMle().GetNeighbor(srcaddr);
+    neighbor = netif.GetMle().GetNeighbor(srcaddr);
 
     // Destination Address Filtering
     switch (dstaddr.GetType())
@@ -1712,9 +1713,9 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
         // Allow  multicasts from neighbor routers if FFD
-        if (neighbor == NULL && dstaddr.IsBroadcast() && (GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD))
+        if (neighbor == NULL && dstaddr.IsBroadcast() && (netif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD))
         {
-            neighbor = GetNetif().GetMle().GetRxOnlyNeighborRouter(srcaddr);
+            neighbor = netif.GetMle().GetRxOnlyNeighborRouter(srcaddr);
         }
 
         break;
@@ -1810,6 +1811,8 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     default:
         ExitNow();
     }
+
+    netif.GetMeshForwarder().GetDataPollManager().CheckFramePending(*aFrame);
 
     if (neighbor != NULL)
     {
