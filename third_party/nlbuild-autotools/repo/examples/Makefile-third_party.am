@@ -1,5 +1,5 @@
 #
-#    Copyright 2016 Nest Labs Inc. All Rights Reserved.
+#    Copyright 2018 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -17,10 +17,17 @@
 #
 #    Description:
 #      This file is the GNU automake template for the @PACKAGE_DESCRIPTION@
-#      first-party (e.g. Nest Labs) software directory.
+#      third-party software directory.
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+
+# Always package (e.g. for 'make dist') these subdirectories.
+
+DIST_SUBDIRS             = \
+    $(NULL)
+
+# Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                  = \
     $(NULL)
