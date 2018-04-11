@@ -10,6 +10,14 @@ not only building on and targeting against standalone build host
 systems but also embedded target systems using GCC-based or
 -compatible toolchains.
 
+In addition, nlbuild-autotools endeavors to make it easy to support:
+
+  * Unit and Functional Tests (via 'make check')
+  * Code Coverage (via 'make coverage')
+  * Code Formatting (via 'make pretty' or 'make pretty-check')
+  * Documentation
+  * Distribution Generation (via 'make dist' or 'make docdist')
+
 # Users and System Integrators
 
 ## Getting Started
@@ -95,8 +103,12 @@ The nlbuild-autotools package is laid out as follows:
 | automake/post.am                     | GNU automake Makefile.am footer included by every makefile.                              |
 | automake/pre/                        | GNU automake Makefile.am headers.                                                        |
 | automake/pre.am                      | GNU automake Makefile.am header included by every makefile.                              |
+| etc/                                 | Configurations files used by nlbuild-autotools.                                          |
 | examples/                            | Example template files for starting your own nlbuild-autotools-based project.            |
 | scripts/                             | Automation scripts for regenerating the build system and for managing package versions.  |
+| third_party/                         | Third-party code and infrastructure used by nlbuild-autotools.                           |
+| third_party/autoconf/                | GNU autoconf infrastructure provided by third-parties, including GNU.                    |
+| third_party/autoconf/m4/             | GNU m4 macros for configure.ac provided by third-parties, including GNU.                 |
 | tools/                               | Qualified packages of and pre-built instances of GNU autotools.                          |
 | tools/host/                          | Pre-built instances of GNU autotools (if installed).                                     |
 | tools/host/i686-pc-cygwin/           | Pre-built instances of GNU autotools for 32-bit Cygwin (if installed).                   |
@@ -105,7 +117,16 @@ The nlbuild-autotools package is laid out as follows:
 | tools/host/x86_64-unknown-linux-gnu/ | Pre-built instances of GNU autotools for 64-bit Linux (if installed).                    |
 | tools/packages/                      | Qualified packages for GNU autotools.                                                    |
 
-# FAQ {#FAQ}
+# Interact
+
+There are numerous avenues for nlbuild-autotools support:
+
+  * Bugs and feature requests — [submit to the Issue Tracker](https://github.com/nestlabs/nlbuild-autotools/issues)
+  * Google Groups — discussion and announcements
+    * [nlbuild-autotools-announce](https://groups.google.com/forum/#!forum/nlbuild-autotools-announce) — release notes and new updates on nlbuild-autotools
+    * [nlbuild-autotools-users](https://groups.google.com/forum/#!forum/nlbuild-autotools-users) — discuss use of and enhancements to nlbuild-autotools
+
+# FAQ
 
 Q: Why does nlbuild-autotools have an option for its own built versions
    of GNU autotools rather than leveraging whatever versions exist on

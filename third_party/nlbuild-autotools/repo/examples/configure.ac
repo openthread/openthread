@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 #
-#    Copyright 2016 Nest Labs Inc. All Rights Reserved.
+#    Copyright 2016-2017 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -68,12 +68,12 @@ AC_CONFIG_SRCDIR([include/@PACKAGE_SHORT_LOWER@.h])
 # Tell autoconf where to find auxilliary build tools (e.g. config.guess,
 # install-sh, missing, etc.)
 #
-AC_CONFIG_AUX_DIR([@NLBUILD_AUTOTOOLS_STEM@/autoconf])
+AC_CONFIG_AUX_DIR([@NLBUILD_AUTOTOOLS_STEM@/third_party/autoconf])
 
 #
 # Tell autoconf where to find auxilliary M4 macros
 #
-AC_CONFIG_MACRO_DIR([@NLBUILD_AUTOTOOLS_STEM@/autoconf/m4])
+AC_CONFIG_MACRO_DIRS([@NLBUILD_AUTOTOOLS_STEM@/third_party/autoconf/m4 @NLBUILD_AUTOTOOLS_STEM@/autoconf/m4])
 
 #
 # Tell autoconf what file the package is using to aggregate C preprocessor
@@ -303,10 +303,10 @@ if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
 
-# Add any code coverage CPPFLAGS and LDFLAGS
+# Add any code coverage CPPFLAGS and LIBS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
-LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
+LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
 
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of an -Werror issues by
