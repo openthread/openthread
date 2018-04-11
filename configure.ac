@@ -1505,7 +1505,7 @@ CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
-LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
+LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
 
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of an -Werror issues by
