@@ -72,9 +72,9 @@ VERSION_FILE                      := $(if $(wildcard $(builddir)/.local-version)
 
 #
 # Override autotool's default notion of the package version variables.
-# This ensures that when we create a source distribution that the
-# version is always the current version, not the version when the
-# package was bootstrapped.
+# This ensures that when we create a source distribution the
+# version is always the current version, not the package bootstrap
+# version.
 #
 
 @PACKAGE_SHORT_UPPER@_VERSION     ?= $(shell cat $(VERSION_FILE) 2> /dev/null)
