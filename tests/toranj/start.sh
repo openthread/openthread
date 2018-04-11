@@ -83,6 +83,7 @@ cd ../..
 ./bootstrap || die
 ./configure                             \
     CPPFLAGS='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"' \
+    --enable-coverage                   \
     --enable-ncp-app=all                \
     --with-ncp-bus=uart                 \
     --with-examples=posix               \
