@@ -57,6 +57,21 @@ CoapSecure::CoapSecure(Instance &aInstance)
 {
 }
 
+// constructor für coaps application with different handlers
+CoapSecure::CoapSecure(Instance &aInstance,
+		               Tasklet::Handler aUdpTransmitHandle,
+					   Timer::Handler aRetransmissionTimer,
+					   Timer::Handler aResponsesQueueTimer)
+    : CoapBase(aInstance, aRetransmissionTimer, aResponsesQueueTimer)
+    , mConnectedCallback(NULL)
+    , mConnectedContext(NULL)
+    , mTransportCallback(NULL)
+    , mTransportContext(NULL)
+    , mTransmitMessage(NULL)
+    , mTransmitTask(aInstance, aUdpTransmitHandle, this)
+{
+}
+
 // ToDo: Remove test function before a bull request (only for evaluations)
 otError CoapSecure::TestIntegration(uint8_t* count)
 {
@@ -316,20 +331,28 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
-    //: CoapSecure(aInstance, &ApplicationCoapSecure::HandleRetransmissionTimer, &ApplicationCoapSecure::HandleResponsesQueueTimer)
-: CoapSecure(aInstance)
+//: CoapSecure(aInstance, &ApplicationCoapSecure::HandleRetransmissionTimer, &ApplicationCoapSecure::HandleResponsesQueueTimer)
+: CoapSecure(aInstance,
+		     &ApplicationCoapSecure::HandleUdpTransmit,
+			 &ApplicationCoapSecure::HandleRetransmissionTimer,
+			 &ApplicationCoapSecure::HandleResponsesQueueTimer)
 {
 }
-//TODO: Maybe not used, bcs timerHandler implemented in coap_secure.pp
-//void ApplicationCoapSecure::HandleRetransmissionTimer(Timer &aTimer)
-//{
-//    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleRetransmissionTimer();
-//}
-//
-//void ApplicationCoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
-//{
-//    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleResponsesQueueTimer();
-//}
+
+void ApplicationCoapSecure::HandleUdpTransmit(Tasklet &aTasklet)
+{
+    aTasklet.GetOwner<ApplicationCoapSecure>().CoapSecure::HandleUdpTransmit();
+}
+
+void ApplicationCoapSecure::HandleRetransmissionTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleRetransmissionTimer();
+}
+
+void ApplicationCoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleResponsesQueueTimer();
+}
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 

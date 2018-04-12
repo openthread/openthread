@@ -74,6 +74,10 @@ public:
      *
      */
     explicit CoapSecure(Instance &aInstance);
+    explicit CoapSecure(Instance &aInstance,
+    		            Tasklet::Handler aUdpTransmitHandle,
+						Timer::Handler aRetransmissionTimer,
+						Timer::Handler aResponsesQueueTimer);
 
     // ToDo: Remove testfunction before a bull request (only for evaluations)
     /**
@@ -215,6 +219,9 @@ public:
      */
     virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+protected:
+    void        HandleUdpTransmit(void);
+    static void HandleUdpTransmit(Tasklet &aTasklet);
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -227,8 +234,8 @@ private:
     static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
     otError        HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
-    static void HandleUdpTransmit(Tasklet &aTasklet);
-    void        HandleUdpTransmit(void);
+//    static void HandleUdpTransmit(Tasklet &aTasklet);
+//    void        HandleUdpTransmit(void);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
@@ -263,6 +270,7 @@ public:
 private:
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
+    static void HandleUdpTransmit(Tasklet &aTasklet);
 };
 
 #endif

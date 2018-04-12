@@ -100,8 +100,8 @@ private:
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
 
-    static void OTCALL HandleSecureCoapClientConnect(bool aConnected, void *aContext);
-    void HandleSecureCoapClientConnect(bool aConnected);
+    static void OTCALL HandleSecureCoapClientConnect(const bool aConnected, void *aContext);
+    void HandleSecureCoapClientConnect(const bool aConnected);
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];

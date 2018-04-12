@@ -50,22 +50,6 @@ CoapSecureCli::CoapSecureCli(Interpreter &aInterpreter)
     memset(&mResource, 0, sizeof(mResource));
 }
 
-
-void OTCALL CoapSecureCli::HandleSecureCoapClientConnect(bool aConnected, void *aContext)
-{
-    static_cast<CoapSecureCli *>(aContext)->HandleSecureCoapClientConnect(aConnected);
-}
-
-
-void CoapSecureCli::HandleSecureCoapClientConnect(bool aConnected)
-{
-	if(aConnected){
-		mInterpreter.mServer->OutputFormat("CoAP Secure connected!");
-	}else{
-		mInterpreter.mServer->OutputFormat("CoAP Secure NOT connected!");
-	}
-}
-
 void CoapSecureCli::PrintPayload(otMessage *aMessage) const
 {
     uint8_t  buf[kMaxBufferSize];
@@ -108,7 +92,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "start") == 0)
     {
-        SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT));
+        SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
         mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
     }
     else if (strcmp(argv[0], "setpsk") == 0)
@@ -140,7 +124,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 			messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
 			messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 			SuccessOrExit(error =
-					otCoapSecureConnect(mInterpreter.mInstance, &messageInfo, &CoapSecureCli::HandleSecureCoapClientConnect));
+					otCoapSecureConnect(mInterpreter.mInstance, &messageInfo, &CoapSecureCli::HandleSecureCoapClientConnect, this));
 //			mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
 		}
 		else
@@ -173,6 +157,25 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 
 exit:
     return error;
+}
+
+void OTCALL CoapSecureCli::HandleSecureCoapClientConnect(bool aConnected, void *aContext)
+{
+    static_cast<CoapSecureCli *>(aContext)->HandleSecureCoapClientConnect(aConnected);
+}
+
+
+void CoapSecureCli::HandleSecureCoapClientConnect(const bool aConnected)
+{
+
+	if(aConnected){
+		mInterpreter.mServer->OutputFormat("CoAP Secure connected!");
+
+	}else{
+		mInterpreter.mServer->OutputFormat("CoAP Secure NOT connected!");
+	}
+
+	OT_UNUSED_VARIABLE(aConnected);
 }
 
 void OTCALL CoapSecureCli::HandleServerResponse(void *               aContext,

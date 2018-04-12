@@ -337,6 +337,13 @@ template <> Coap::ApplicationCoap &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+template <> Coap::ApplicationCoapSecure &Instance::Get(void)
+{
+    return GetApplicationCoapSecure();
+}
+#endif
+
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 template <> MeshCoP::Commissioner &Instance::Get(void)
 {
