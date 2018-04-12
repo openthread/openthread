@@ -66,27 +66,27 @@ enum
     OT_BLE_TIMESLOT_UNIT = 625,
 
     /**
-     * Minimum allowed connection interval in OT_BLE_TIMESLOT_UNIT units (7.5ms).
-     */
-    OT_BLE_CONN_INTERVAL_MIN = 0x0006,
-
-    /**
-     * Maximum allowed connection interval in OT_BLE_TIMESLOT_UNIT units (4s).
-     */
-    OT_BLE_CONN_INTERVAL_MAX = 0x0C80,
-
-    /**
      * Unit used to calculate connection interval (1.25ms)
      */
     OT_BLE_CONN_INTERVAL_UNIT = 2 * OT_BLE_TIMESLOT_UNIT,
 
     /**
-     * Maximum allowed slave latency field value.
+     * Minimum allowed connection interval in OT_BLE_CONN_INTERVAL_UNIT units (7.5ms).
+     */
+    OT_BLE_CONN_INTERVAL_MIN = 0x0006,
+
+    /**
+     * Maximum allowed connection interval in OT_BLE_CONN_INTERVAL_UNIT units (4s).
+     */
+    OT_BLE_CONN_INTERVAL_MAX = 0x0C80,
+
+    /**
+     * Maximum allowed slave latency in units of connection events.
      */
     OT_BLE_CONN_SLAVE_LATENCY_MAX = 0x01F3,
 
     /**
-     * Minimum allowed connection timeout (100ms).
+     * Minimum allowed connection timeout in units of 10ms (100ms).
      */
     OT_BLE_CONN_SUPERVISOR_TIMEOUT_MIN = 0x000A,
 
@@ -146,12 +146,12 @@ enum
     OT_BLE_SCAN_INTERVAL_UNIT = OT_BLE_TIMESLOT_UNIT,
 
     /**
-     * Minimum allowed scan window (2.5ms).
+     * Minimum allowed scan window in OT_BLE_TIMESLOT_UNIT units (2.5ms).
      */
     OT_BLE_SCAN_WINDOW_MIN = 0x0004,
 
     /**
-     * Maximum allowed scan window (10.24s).
+     * Maximum allowed scan window in OT_BLE_TIMESLOT_UNIT units (10.24s).
      */
     OT_BLE_SCAN_WINDOW_MAX = 0x4000,
 
@@ -300,9 +300,9 @@ typedef struct otPlatBleGapConnParams
  *
  */
 typedef enum otPlatBleUuidType {
-    OT_BLE_UUID_TYPE_16  = 0, ///< UUID reprsents 16-bit value.
-    OT_BLE_UUID_TYPE_32  = 1, ///< UUID reprsents 32-bit value.
-    OT_BLE_UUID_TYPE_128 = 2, ///< UUID reprsents 128-bit value.
+    OT_BLE_UUID_TYPE_16  = 0, ///< UUID represented by 16-bit value.
+    OT_BLE_UUID_TYPE_32  = 1, ///< UUID represented by 32-bit value.
+    OT_BLE_UUID_TYPE_128 = 2, ///< UUID represented by 128-bit value.
 } otPlatBleUuidType;
 
 /**
