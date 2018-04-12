@@ -42,9 +42,11 @@
 #include <openthread/types.h>
 #include <openthread/platform/logging.h>
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #include "api/link_raw.hpp"
+#include "common/message.hpp"
 #endif
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
@@ -62,6 +64,7 @@
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 #include "utils/channel_monitor.hpp"
 #endif
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
  * @addtogroup core-instance
@@ -138,14 +141,6 @@ public:
     bool IsInitialized(void) const { return mIsInitialized; }
 
     /**
-     * This method finalizes the OpenThread instance.
-     *
-     * This method should be called when OpenThread instance is no longer in use.
-     *
-     */
-    void Finalize(void);
-
-    /**
      * This method triggers a platform reset.
      *
      * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that
@@ -155,21 +150,30 @@ public:
     void Reset(void);
 
     /**
-     * This method deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
+     * This method returns a reference to the timer milli scheduler object.
+     *
+     * @returns A reference to the timer milli scheduler object.
      *
      */
-    void FactoryReset(void);
+    TimerMilliScheduler &GetTimerMilliScheduler(void) { return mTimerMilliScheduler; }
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    /**
+     * This method returns a reference to the timer micro scheduler object.
+     *
+     * @returns A reference to the timer micro scheduler object.
+     *
+     */
+    TimerMicroScheduler &GetTimerMicroScheduler(void) { return mTimerMicroScheduler; }
+#endif
 
     /**
-     * This method erases all the OpenThread persistent info (network settings) stored in non-volatile memory.
+     * This method returns a reference to the tasklet scheduler object.
      *
-     * Erase is successful/allowed only if the device is in `disabled` state/role.
-     *
-     * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
-     * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
+     * @returns A reference to the tasklet scheduler object.
      *
      */
-    otError ErasePersistentInfo(void);
+    TaskletScheduler &GetTaskletScheduler(void) { return mTaskletScheduler; }
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     /**
@@ -188,6 +192,32 @@ public:
      */
     void SetDynamicLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
 #endif
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    /**
+     * This method finalizes the OpenThread instance.
+     *
+     * This method should be called when OpenThread instance is no longer in use.
+     *
+     */
+    void Finalize(void);
+
+    /**
+     * This method deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
+     *
+     */
+    void FactoryReset(void);
+
+    /**
+     * This method erases all the OpenThread persistent info (network settings) stored in non-volatile memory.
+     *
+     * Erase is successful/allowed only if the device is in `disabled` state/role.
+     *
+     * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
+     * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
+     *
+     */
+    otError ErasePersistentInfo(void);
 
     /**
      * This method registers the active scan callback.
@@ -243,32 +273,6 @@ public:
      */
     Settings &GetSettings(void) { return mSettings; }
 
-    /**
-     * This method returns a reference to the tasklet scheduler object.
-     *
-     * @returns A reference to the tasklet scheduler object.
-     *
-     */
-    TaskletScheduler &GetTaskletScheduler(void) { return mTaskletScheduler; }
-
-    /**
-     * This method returns a reference to the timer milli scheduler object.
-     *
-     * @returns A reference to the timer milli scheduler object.
-     *
-     */
-    TimerMilliScheduler &GetTimerMilliScheduler(void) { return mTimerMilliScheduler; }
-
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    /**
-     * This method returns a reference to the timer micro scheduler object.
-     *
-     * @returns A reference to the timer micro scheduler object.
-     *
-     */
-    TimerMicroScheduler &GetTimerMicroScheduler(void) { return mTimerMicroScheduler; }
-#endif
-
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     /**
      * This method returns a reference to the MbedTlsHeap object.
@@ -294,16 +298,6 @@ public:
      *
      */
     ThreadNetif &GetThreadNetif(void) { return mThreadNetif; }
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    /**
-     * This method returns a reference to LinkRaw object.
-     *
-     * @returns A reference to the LinkRaw object.
-     *
-     */
-    LinkRaw &GetLinkRaw(void) { return mLinkRaw; }
-#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     /**
@@ -342,6 +336,7 @@ public:
      *
      */
     MessagePool &GetMessagePool(void) { return mMessagePool; }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
      * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
@@ -360,10 +355,27 @@ public:
      */
     template <typename Type> Type &Get(void);
 
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    /**
+     * This method returns a reference to LinkRaw object.
+     *
+     * @returns A reference to the LinkRaw object.
+     *
+     */
+    LinkRaw &GetLinkRaw(void) { return mLinkRaw; }
+#endif
+
 private:
     Instance(void);
     void AfterInit(void);
 
+    TimerMilliScheduler mTimerMilliScheduler;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    TimerMicroScheduler mTimerMicroScheduler;
+#endif
+    TaskletScheduler mTaskletScheduler;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     otHandleActiveScanResult mActiveScanCallback;
     void *                   mActiveScanCallbackContext;
     otHandleEnergyScanResult mEnergyScanCallback;
@@ -371,13 +383,6 @@ private:
 
     Notifier mNotifier;
     Settings mSettings;
-
-    TaskletScheduler    mTaskletScheduler;
-    TimerMilliScheduler mTimerMilliScheduler;
-
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    TimerMicroScheduler mTimerMicroScheduler;
-#endif
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Crypto::MbedTls mMbedTls;
@@ -387,16 +392,8 @@ private:
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw mLinkRaw;
-#endif
-
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Coap::ApplicationCoap mApplicationCoap;
-#endif
-
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    otLogLevel mLogLevel;
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -408,7 +405,14 @@ private:
 #endif
 
     MessagePool mMessagePool;
-    bool        mIsInitialized;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    LinkRaw mLinkRaw;
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    otLogLevel mLogLevel;
+#endif
+    bool mIsInitialized;
 };
 
 /**

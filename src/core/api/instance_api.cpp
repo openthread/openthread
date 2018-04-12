@@ -36,8 +36,8 @@
 #include "openthread-core-config.h"
 
 #include <openthread/instance.h>
+#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
-#include <openthread/platform/settings.h>
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -64,18 +64,34 @@ otInstance *otInstanceInitSingle(void)
 
 bool otInstanceIsInitialized(otInstance *aInstance)
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.IsInitialized();
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    return true;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
 void otInstanceFinalize(otInstance *aInstance)
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     Instance &instance = *static_cast<Instance *>(aInstance);
-
     instance.Finalize();
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
+void otInstanceReset(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Reset();
+}
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -88,13 +104,6 @@ void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback a
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     instance.GetNotifier().RemoveCallback(aCallback, aContext);
-}
-
-void otInstanceReset(otInstance *aInstance)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Reset();
 }
 
 void otInstanceFactoryReset(otInstance *aInstance)
@@ -110,6 +119,7 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance)
 
     return instance.ErasePersistentInfo();
 }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 otLogLevel otGetDynamicLogLevel(otInstance *aInstance)
 {
@@ -142,4 +152,39 @@ otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
 #endif
 
     return error;
+}
+
+const char *otGetVersionString(void)
+{
+/**
+ * PLATFORM_VERSION_ATTR_PREFIX and PLATFORM_VERSION_ATTR_SUFFIX are
+ * intended to be used to specify compiler directives to indicate
+ * what linker section the platform version string should be stored.
+ *
+ * This is useful for specifying an exact locaiton of where the version
+ * string will be located so that it can be easily retrieved from the
+ * raw firmware image.
+ *
+ * If PLATFORM_VERSION_ATTR_PREFIX is unspecified, the keyword `static`
+ * is used instead.
+ *
+ * If both are unspecified, the location of the string in the firmware
+ * image will be undefined and may change.
+ */
+
+#ifdef PLATFORM_VERSION_ATTR_PREFIX
+    PLATFORM_VERSION_ATTR_PREFIX
+#else
+    static
+#endif
+    const char sVersion[] = PACKAGE_NAME "/" PACKAGE_VERSION "; " OPENTHREAD_CONFIG_PLATFORM_INFO
+#if defined(__DATE__)
+                                         "; " __DATE__ " " __TIME__
+#endif
+#ifdef PLATFORM_VERSION_ATTR_SUFFIX
+                                             PLATFORM_VERSION_ATTR_SUFFIX
+#endif
+        ; // Trailing semicolon to end statement.
+
+    return sVersion;
 }

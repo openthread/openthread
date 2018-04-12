@@ -145,6 +145,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
 
 otError MessagePool::ReclaimBuffers(int aNumBuffers)
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     while (aNumBuffers > GetFreeBufferCount())
     {
         MeshForwarder &meshForwarder = GetInstance().GetThreadNetif().GetMeshForwarder();
@@ -152,6 +153,7 @@ otError MessagePool::ReclaimBuffers(int aNumBuffers)
     }
 
 exit:
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     // First comparison is to get around issues with comparing
     // signed and unsigned numbers, if aNumBuffers is negative then

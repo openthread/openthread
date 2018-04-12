@@ -32,23 +32,19 @@
 
 #include "ncp_base.hpp"
 
-#include <stdlib.h>
-
-#include <openthread/diag.h>
-#include <openthread/icmp6.h>
-
+#include <openthread/link.h>
+#include <openthread/link_raw.h>
 #include <openthread/ncp.h>
 #include <openthread/openthread.h>
-
-#include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "net/ip6.hpp"
+#include "mac/mac_frame.hpp"
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
 namespace ot {
 namespace Ncp {
 
@@ -162,7 +158,7 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
     // Make sure we are back listening on the original receive channel,
     // since the energy scan could have been on a different channel.
-    otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+    otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
 
     SuccessOrExit(
         mEncoder.BeginFrame(
@@ -327,7 +323,7 @@ otError NcpBase::SetPropertyHandler_PHY_ENABLED(void)
         // If we have raw stream enabled already, start receiving
         if (error == OT_ERROR_NONE && mIsRawStreamEnabled)
         {
-            error = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+            error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
         }
     }
 
@@ -342,7 +338,7 @@ otError NcpBase::SetPropertyHandler_MAC_15_4_SADDR(void)
 
     SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
 
-    error = otLinkRawSetShortAddress(mInstance, shortAddress);
+    error = otLinkSetShortAddress(mInstance, shortAddress);
 
 exit:
     return error;
@@ -395,4 +391,4 @@ exit:
 }  // namespace Ncp
 }  // namespace ot
 
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
