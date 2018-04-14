@@ -312,6 +312,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     Message *        message = NULL;
     Coap::Header     header;
     Ip6::MessageInfo messageInfo;
+    Dataset          dataset(MeshCoP::Tlv::kActiveTimestamp);
 
     NetworkMasterKeyTlv   masterKey;
     MeshLocalPrefixTlv    meshLocalPrefix;
@@ -345,7 +346,8 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     networkName.SetNetworkName(netif.GetMac().GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(Tlv) + networkName.GetLength()));
 
-    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kActiveTimestamp)) != NULL)
+    netif.GetActiveDataset().Get(dataset);
+    if ((tlv = dataset.Get(Tlv::kActiveTimestamp)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }
@@ -356,7 +358,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
         SuccessOrExit(error = message->Append(&activeTimestamp, sizeof(activeTimestamp)));
     }
 
-    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kChannelMask)) != NULL)
+    if ((tlv = dataset.Get(Tlv::kChannelMask)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }
@@ -367,7 +369,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }
 
-    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kPSKc)) != NULL)
+    if ((tlv = dataset.Get(Tlv::kPSKc)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }
@@ -378,7 +380,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
         SuccessOrExit(error = message->Append(&pskc, sizeof(pskc)));
     }
 
-    if ((tlv = netif.GetActiveDataset().GetTlv(Tlv::kSecurityPolicy)) != NULL)
+    if ((tlv = dataset.Get(Tlv::kSecurityPolicy)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
     }

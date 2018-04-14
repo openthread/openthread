@@ -92,14 +92,6 @@ public:
     otError AppendMleDatasetTlv(Message &aMessage) const;
 
     /**
-     * This method returns a pointer to the TLV.
-     *
-     * @returns A pointer to the TLV or NULL if none is found.
-     *
-     */
-    const Tlv *GetTlv(Tlv::Type aType) const;
-
-    /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.

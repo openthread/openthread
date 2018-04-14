@@ -2038,9 +2038,10 @@ void Mle::SendOrphanAnnounce(void)
 {
     const MeshCoP::ChannelMask0Tlv *channelMask;
     uint8_t                         channel;
+    MeshCoP::Dataset                dataset(MeshCoP::Tlv::kActiveTimestamp);
 
-    channelMask =
-        static_cast<const MeshCoP::ChannelMask0Tlv *>(GetNetif().GetActiveDataset().GetTlv(MeshCoP::Tlv::kChannelMask));
+    GetNetif().GetActiveDataset().Get(dataset);
+    channelMask = static_cast<const MeshCoP::ChannelMask0Tlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
 
     VerifyOrExit(channelMask != NULL);
 
