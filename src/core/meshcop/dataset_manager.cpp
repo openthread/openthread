@@ -94,15 +94,6 @@ otError DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
     return dataset.AppendMleDatasetTlv(aMessage);
 }
 
-const Tlv *DatasetManager::GetTlv(Tlv::Type aType) const
-{
-    Dataset dataset(mLocal.GetType());
-
-    mLocal.Get(dataset);
-
-    return dataset.Get(aType);
-}
-
 otError DatasetManager::Restore(void)
 {
     otError          error;
@@ -203,9 +194,11 @@ void DatasetManager::HandleTimer(void)
 
     if (mLocal.GetType() == Tlv::kActiveTimestamp)
     {
-        const ActiveTimestampTlv *tlv =
-            static_cast<const ActiveTimestampTlv *>(netif.GetPendingDataset().GetTlv(Tlv::kActiveTimestamp));
-        const Timestamp *pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
+        Dataset dataset(Tlv::kPendingTimestamp);
+        netif.GetPendingDataset().Get(dataset);
+
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.Get(Tlv::kActiveTimestamp));
+        const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
         if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) >= 0)
         {
