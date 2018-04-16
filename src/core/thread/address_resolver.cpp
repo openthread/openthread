@@ -542,8 +542,6 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     otError               error = OT_ERROR_NONE;
     ThreadTargetTlv       targetTlv;
     ThreadMeshLocalEidTlv mlIidTlv;
-    Child *               children;
-    uint8_t               numChildren;
     Mac::ExtAddress       macAddr;
     Ip6::Address          destination;
 
@@ -577,16 +575,14 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
         }
     }
 
-    children = netif.GetMle().GetChildren(&numChildren);
-
     memcpy(&macAddr, mlIidTlv.GetIid(), sizeof(macAddr));
     macAddr.m8[0] ^= 0x2;
 
-    for (int i = 0; i < numChildren; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
     {
-        Child &child = children[i];
+        Child &child = *iter.GetChild();
 
-        if (child.GetState() != Neighbor::kStateValid || child.IsFullThreadDevice())
+        if (child.IsFullThreadDevice())
         {
             continue;
         }
@@ -635,8 +631,6 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     ThreadTargetTlv              targetTlv;
     ThreadMeshLocalEidTlv        mlIidTlv;
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
-    Child *                      children;
-    uint8_t                      numChildren;
     char                         stringBuffer[Ip6::Address::kIp6AddressStringSize];
 
     VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST);
@@ -659,14 +653,11 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
         ExitNow();
     }
 
-    children = netif.GetMle().GetChildren(&numChildren);
-
-    for (int i = 0; i < numChildren; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
     {
-        Child &child = children[i];
+        Child &child = *iter.GetChild();
 
-        if (child.GetState() != Neighbor::kStateValid || child.IsFullThreadDevice() ||
-            child.GetLinkFailures() >= Mle::kFailedChildTransmissions)
+        if (child.IsFullThreadDevice() || child.GetLinkFailures() >= Mle::kFailedChildTransmissions)
         {
             continue;
         }

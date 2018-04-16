@@ -48,6 +48,7 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/icmp6.hpp"
 #include "net/udp6.hpp"
+#include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -378,66 +379,12 @@ public:
     otError RemoveNeighbor(Neighbor &aNeighbor);
 
     /**
-     * This method returns a pointer to a Child object.
+     * This method gets the `ChildTable` object.
      *
-     * @param[in]  aAddress  The address of the Child.
-     *
-     * @returns A pointer to the Child object.
+     * @returns  A reference to the `ChildTable`.
      *
      */
-    Child *GetChild(uint16_t aAddress);
-
-    /**
-     * This method returns a pointer to a Child object.
-     *
-     * @param[in]  aAddress  A reference to the address of the Child.
-     *
-     * @returns A pointer to the Child object.
-     *
-     */
-    Child *GetChild(const Mac::ExtAddress &aAddress);
-
-    /**
-     * This method returns a pointer to a Child object.
-     *
-     * @param[in]  aAddress  A reference to the address of the Child.
-     *
-     * @returns A pointer to the Child corresponding to @p aAddress, NULL otherwise.
-     *
-     */
-    Child *GetChild(const Mac::Address &aAddress);
-
-    /**
-     * This method returns a child index for the Child object.
-     *
-     * @param[in]  aChild  A reference to the Child object.
-     *
-     * @returns The index for the Child corresponding to @p aChild.
-     *
-     */
-    uint8_t GetChildIndex(const Child &aChild);
-
-    /**
-     * This method returns a pointer to a Child array.
-     *
-     * @param[out]  aNumChildren  A pointer to output the number of children.
-     *
-     * @returns A pointer to the Child array.
-     *
-     */
-    Child *GetChildren(uint8_t *aNumChildren);
-
-    /**
-     * This method sets the max children allowed value for this Thread interface.
-     *
-     * @param[in]  aMaxChildren  The max children allowed value.
-     *
-     * @retval  OT_ERROR_NONE           Successfully set the max.
-     * @retval  OT_ERROR_INVALID_ARGS   If @p aMaxChildren is not in the range [1, kMaxChildren].
-     * @retval  OT_ERROR_INVALID_STATE  If MLE has already been started.
-     *
-     */
-    otError SetMaxAllowedChildren(uint8_t aMaxChildren);
+    ChildTable &GetChildTable(void) { return mChildTable; }
 
     /**
      * This method restores children information from non-volatile memory.
@@ -882,10 +829,6 @@ private:
 
     void HandlePartitionChange(void);
 
-    Child *NewChild(void);
-    Child *FindChild(uint16_t aChildId);
-    Child *FindChild(const Mac::ExtAddress &aMacAddr);
-
     void    SetChildStateToValid(Child &aChild);
     bool    HasChildren(void);
     void    RemoveChildren(void);
@@ -914,8 +857,8 @@ private:
     uint8_t  mRouterIdSequence;
     uint32_t mRouterIdSequenceLastUpdated;
     Router   mRouters[kMaxRouterId + 1];
-    uint8_t  mMaxChildrenAllowed;
-    Child    mChildren[kMaxChildren];
+
+    ChildTable mChildTable;
 
     otThreadChildTableCallback mChildTableChangedCallback;
 
