@@ -61,7 +61,7 @@ CoapSecure::CoapSecure(Instance &aInstance)
 	mApplicationCoapSecure = false;
 }
 
-// constructor für coaps application with different handlers
+// constructor for coaps application with different handlers
 CoapSecure::CoapSecure(Instance &aInstance,
 		               Tasklet::Handler aUdpTransmitHandle,
 					   Timer::Handler aRetransmissionTimer,
@@ -113,7 +113,8 @@ otError CoapSecure::Stop(void)
     return CoapBase::Stop();
 }
 
-otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext)
+otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
+                            ConnectedCallback aCallback, void *aContext)
 {
     mPeerAddress       = aMessageInfo;
     mConnectedCallback = aCallback;
@@ -121,12 +122,14 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallb
 
     if(!mApplicationCoapSecure)
     {
-        return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+        return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected,
+                                          &CoapSecure::HandleDtlsReceive,
                                           &CoapSecure::HandleDtlsSend, this);
     }
     else
     {
-        return GetNetif().GetDtls().StartApplicationCoapSecure(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+        return GetNetif().GetDtls().StartApplicationCoapSecure(true, &CoapSecure::HandleDtlsConnected,
+                                                               &CoapSecure::HandleDtlsReceive,
                                                                &CoapSecure::HandleDtlsSend,
                                                                this,
                                                                (const unsigned char *)"",
@@ -337,6 +340,7 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
 {
     aTimer.GetOwner<CoapSecure>().CoapBase::HandleResponsesQueueTimer();
 }
+
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 

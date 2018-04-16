@@ -54,17 +54,44 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
     return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
 }
 
-
-otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *mPsk, uint8_t length){
+otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint8_t aPskLength)
+{
 	Instance &instance = *static_cast<Instance *>(aInstance);
-	return instance.GetApplicationCoapSecure().SetPsk(mPsk,length);
+
+	return instance.GetApplicationCoapSecure().SetPsk(aPsk, aPskLength);
 }
 
-
-otError otCoapSecureConnect(otInstance *aInstance, const otMessageInfo * aMessageInfo, otHandleSecureCoapClientConnect aHandler, void *aContext ){
+otError otCoapSecureConnect(otInstance *aInstance,
+                            const otMessageInfo * aMessageInfo,
+                            otHandleSecureCoapClientConnect aHandler,
+                            void *aContext )
+{
 	Instance &instance = *static_cast<Instance *>(aInstance);
 
-	return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler, aContext);
+	return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+	                                                   aHandler,
+	                                                   aContext);
+}
+
+otError otCoapSecureDisconnect(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().Disconnect();
+}
+
+bool otCoapSecureIsConnected(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().IsConnected();
+}
+
+bool otIsConncetionActive(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().IsConnectionActive();
 }
 
 otError otCoapSecureStop( otInstance *aInstance )

@@ -209,7 +209,7 @@ public:
 
 protected:
     void        HandleUdpTransmit(void);
-//    static void HandleUdpTransmit(Tasklet &aTasklet);
+
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -223,7 +223,6 @@ private:
     otError        HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     static void HandleUdpTransmit(Tasklet &aTasklet);
-//    void        HandleUdpTransmit(void);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
@@ -244,7 +243,7 @@ private:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
- * This class implements the application CoAP client and server.
+ * This class implements the application CoAP Secure client and server.
  *
  */
 class ApplicationCoapSecure : public CoapSecure

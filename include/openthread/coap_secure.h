@@ -61,22 +61,23 @@ extern "C" {
 
 #define OT_DEFAULT_COAP_SECURE_PORT  5684  ///< Default CoAP Secure port, as specified in RFC 7252
 
-//TODO: remove, only for testing!!!
-/**
- * This function is only for test the integration of coaps api.
- * It has no further function for coaps.
- *
- * @param[inout]  aCount           	A pointer to a value. Will increment at one.
- *
- * @retval 		OT_ERROR_NONE     	Successfully call this function.
- */
-otError otCoapSecureTestIntegration(uint8_t * aCount);
 
 /**
- * This function starts the CoAP Secure server.
+ * This function pointer is called once DTLS connection is established.
+ *
+ * @param[in]  aConnected TRUE if a connection was established, FALSE otherwise.
+ * @param[in]  aContext    A pointer to arbitrary context information.
+ *
+ */
+typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
+
+
+/**
+ * This function starts the CoAP Secure service.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aPort      The local UDP port to bind to.
+ * @param[in]  aContext   A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE  Successfully started the CoAP Secure server.
  *
@@ -91,10 +92,64 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
  * @retval OT_ERROR_NONE  Successfully stopped the CoAP Secure server.
  */
 otError otCoapSecureStop(otInstance *aInstance);
-otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *mPsk, uint8_t length);
 
-typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
+/**
+ * This method sets the PSK.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aPSK        A pointer to the PSK.
+ * @param[in]  aPskLength  The PSK length.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the PSK.
+ * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
+ *
+ */
+otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint8_t aPskLength);
+
+/**
+ * This method initializes DTLS session with a peer.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMessageInfo  A reference to an address of the peer.
+ * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
+ * @param[in]  aContext      A pointer to arbitrary context information.
+ *
+ * @retval OT_ERROR_NONE  Successfully started DTLS connection.
+ *
+ */
 otError otCoapSecureConnect(otInstance *aInstance,const otMessageInfo * aMessageInfo,  otHandleSecureCoapClientConnect aHandler, void *aContext);
+
+/**
+ * This method stops the DTLS connection.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE  Successfully stopped the DTLS connection.
+ *
+ */
+otError otCoapSecureDisconnect(otInstance *aInstance);
+
+/**
+ * This method indicates whether or not the DTLS session is connected.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   The DTLS session is connected.
+ * @retval FALSE  The DTLS session is not connected.
+ *
+ */
+bool otCoapSecureIsConnected(otInstance *aInstance);
+
+/**
+ * This method indicates whether or not the DTLS session is active.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE  If DTLS session is active.
+ * @retval FALSE If DTLS session is not active.
+ *
+ */
+bool otIsConncetionActive(otInstance *aInstance);
 
 
 /**

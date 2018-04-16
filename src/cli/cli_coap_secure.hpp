@@ -49,7 +49,7 @@ namespace Cli {
 class Interpreter;
 
 /**
- * This class implements the CLI CoAP server and client.
+ * This class implements the CLI CoAP Secure server and client.
  *
  */
 class CoapSecureCli

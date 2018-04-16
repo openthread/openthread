@@ -97,12 +97,11 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     		memcpy(mPsk,argv[1],length);
     		SuccessOrExit(error = otCoapSecureSetPSK(mInterpreter.mInstance, mPsk, length));
     		mInterpreter.mServer->OutputFormat("Coap Secure set PSK: ");
-		}else
+		}
+    	else
 		{
 			ExitNow(error = OT_ERROR_INVALID_ARGS);
 		}
-
-
 	}
     else if (strcmp(argv[0], "connect") == 0)
     {
@@ -118,7 +117,6 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 			messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 			SuccessOrExit(error =
 					otCoapSecureConnect(mInterpreter.mInstance, &messageInfo, &CoapSecureCli::HandleSecureCoapClientConnect, this));
-//			mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
 		}
 		else
 		{
@@ -126,20 +124,31 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 		}
 
     }
+    else if (strcmp(argv[0], "disconnect") == 0)
+    {
+        SuccessOrExit(error = otCoapSecureDisconnect(mInterpreter.mInstance));
+    }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        otCoapRemoveResource(mInterpreter.mInstance, &mResource);
+        // check, if the dtls session is not active, else disconnect it.
+        if (otCoapSecureIsConnected(mInterpreter.mInstance) ||
+                otIsConncetionActive(mInterpreter.mInstance))
+        {
+            error = otCoapSecureDisconnect(mInterpreter.mInstance);
+        }
+                                                                                                    otCoapRemoveResource(mInterpreter.mInstance, &mResource);
         SuccessOrExit(error = otCoapSecureStop(mInterpreter.mInstance));
         mInterpreter.mServer->OutputFormat("Coap Secure service stopped: ");
     }
     else if (strcmp(argv[0], "help") == 0)
     {
-    	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start': start coaps\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps setpsk': set PSK\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps connect': connect to server\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps stop':  stops coaps\r\n");
-    	mInterpreter.mServer->OutputFormat("\r\nno more functions at moment.\r\n");
+    	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start'                  : start coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps setpsk'                 : set PSK\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps connect ipV6_addr_srv   : start dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps disconnect'             : stop dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps stop'                   : stop coap secure service\r\n");
+    	mInterpreter.mServer->OutputFormat("\r\n");
 
     }
     else
@@ -160,25 +169,30 @@ void OTCALL CoapSecureCli::HandleSecureCoapClientConnect(bool aConnected, void *
 void CoapSecureCli::HandleSecureCoapClientConnect(const bool aConnected)
 {
 
-	if(aConnected){
-		mInterpreter.mServer->OutputFormat("CoAP Secure connected!");
-
-	}else{
-		mInterpreter.mServer->OutputFormat("CoAP Secure NOT connected!");
+	if(aConnected)
+	{
+	    mInterpreter.mServer->OutputFormat("CoAP Secure connected!\r\n>");
+	}
+	else
+	{
+	    mInterpreter.mServer->OutputFormat("CoAP Secure not connected or disconnected.\r\n>");
 	}
 
 	OT_UNUSED_VARIABLE(aConnected);
 }
 
-void OTCALL CoapSecureCli::HandleServerResponse(void *               aContext,
+void OTCALL CoapSecureCli::HandleServerResponse(void *      aContext,
                                        otCoapHeader *       aHeader,
                                        otMessage *          aMessage,
                                        const otMessageInfo *aMessageInfo)
 {
-    static_cast<CoapSecureCli *>(aContext)->HandleServerResponse(aHeader, aMessage, aMessageInfo);
+    static_cast<CoapSecureCli *>(aContext)->HandleServerResponse(aHeader,
+                                                                 aMessage,
+                                                                 aMessageInfo);
 }
 
-void CoapSecureCli::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void CoapSecureCli::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage,
+                                         const otMessageInfo *aMessageInfo)
 {
     otError      error = OT_ERROR_NONE;
     otCoapHeader responseHeader;
@@ -379,19 +393,22 @@ exit:
     return error;
 }
 
-void OTCALL CoapSecureCli::HandleClientResponse(void *               aContext,
+void OTCALL CoapSecureCli::HandleClientResponse(void *      aContext,
                                        otCoapHeader *       aHeader,
                                        otMessage *          aMessage,
                                        const otMessageInfo *aMessageInfo,
                                        otError              aError)
 {
-    static_cast<CoapSecureCli *>(aContext)->HandleClientResponse(aHeader, aMessage, aMessageInfo, aError);
+    static_cast<CoapSecureCli *>(aContext)->HandleClientResponse(aHeader,
+                                                                 aMessage,
+                                                                 aMessageInfo,
+                                                                 aError);
 }
 
-void CoapSecureCli::HandleClientResponse(otCoapHeader *       aHeader,
-                                otMessage *          aMessage,
-                                const otMessageInfo *aMessageInfo,
-                                otError              aError)
+void CoapSecureCli::HandleClientResponse(otCoapHeader * aHeader,
+                                otMessage *             aMessage,
+                                const otMessageInfo *   aMessageInfo,
+                                otError                 aError)
 {
     if (aError != OT_ERROR_NONE)
     {
