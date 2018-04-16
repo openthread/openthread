@@ -245,6 +245,11 @@ template <> Mle::MleRouter &Instance::Get(void)
     return GetThreadNetif().GetMle();
 }
 
+template <> ChildTable &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle().GetChildTable();
+}
+
 template <> Ip6::Netif &Instance::Get(void)
 {
     return GetThreadNetif();

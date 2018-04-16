@@ -38,6 +38,7 @@
 
 #include "utils/wrap_string.h"
 
+#include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -52,6 +53,7 @@ class MleRouter : public Mle
 public:
     explicit MleRouter(Instance &aInstance)
         : Mle(aInstance)
+        , mChildTable(aInstance)
     {
     }
 
@@ -83,21 +85,7 @@ public:
     otError RemoveNeighbor(const Mac::Address &) { return BecomeDetached(); }
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
 
-    Child *GetChild(uint16_t) { return NULL; }
-    Child *GetChild(const Mac::ExtAddress &) { return NULL; }
-    Child *GetChild(const Mac::Address &) { return NULL; }
-
-    uint8_t GetChildIndex(const Child &) { return 0; }
-
-    Child *GetChildren(uint8_t *aNumChildren)
-    {
-        if (aNumChildren != NULL)
-        {
-            *aNumChildren = 0;
-        }
-
-        return NULL;
-    }
+    ChildTable &GetChildTable(void) { return mChildTable; }
 
     bool IsMinimalChild(uint16_t) { return false; }
 
@@ -176,6 +164,8 @@ private:
         OT_UNUSED_VARIABLE(aRoute);
         return OT_ERROR_NONE;
     }
+
+    ChildTable mChildTable;
 };
 
 } // namespace Mle

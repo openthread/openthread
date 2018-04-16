@@ -68,14 +68,11 @@ Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
     Child * child = NULL;
     uint8_t childIndex;
-    uint8_t numChildren;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
 
     aMessage.Read(0, sizeof(childIndex), &childIndex);
-    child = GetNetif().GetMle().GetChildren(&numChildren);
-    VerifyOrExit(childIndex < numChildren, child = NULL);
-    child += childIndex;
+    child = GetNetif().GetMle().GetChildTable().GetChildAtIndex(childIndex);
 
 exit:
     return child;
@@ -97,7 +94,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // the destination of the message to be later retrieved using
     // `ChildSupervisor::GetDestination(message)`.
 
-    childIndex = netif.GetMle().GetChildIndex(aChild);
+    childIndex = netif.GetMle().GetChildTable().GetChildIndex(aChild);
     SuccessOrExit(message->Append(&childIndex, sizeof(childIndex)));
 
     SuccessOrExit(netif.SendMessage(*message));
@@ -125,25 +122,17 @@ void ChildSupervisor::HandleTimer(Timer &aTimer)
 
 void ChildSupervisor::HandleTimer(void)
 {
-    Child * child;
-    uint8_t numChildren;
-
     VerifyOrExit(mSupervisionInterval != 0);
 
-    child = GetNetif().GetMle().GetChildren(&numChildren);
-
-    for (uint8_t i = 0; i < numChildren; i++, child++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
     {
-        if (child->GetState() != Child::kStateValid)
-        {
-            continue;
-        }
+        Child &child = *iter.GetChild();
 
-        child->IncrementSecondsSinceLastSupervision();
+        child.IncrementSecondsSinceLastSupervision();
 
-        if ((child->GetSecondsSinceLastSupervision() >= mSupervisionInterval) && (child->IsRxOnWhenIdle() == false))
+        if ((child.GetSecondsSinceLastSupervision() >= mSupervisionInterval) && (child.IsRxOnWhenIdle() == false))
         {
-            SendMessage(*child);
+            SendMessage(child);
         }
     }
 
@@ -155,23 +144,15 @@ exit:
 
 void ChildSupervisor::CheckState(void)
 {
-    bool            shouldRun   = false;
-    uint8_t         numChildren = 0;
-    Mle::MleRouter &mle         = GetInstance().Get<Mle::MleRouter>();
+    bool            shouldRun = false;
+    Mle::MleRouter &mle       = GetInstance().Get<Mle::MleRouter>();
 
     // Child Supervision should run if `mSupervisionInterval` is not
     // zero, Thread MLE operation is enabled, and there is at least one
     // "valid" child in the child table.
 
-    VerifyOrExit(mSupervisionInterval != 0);
-    VerifyOrExit(mle.GetRole() != OT_DEVICE_ROLE_DISABLED);
-
-    for (Child *child = mle.GetChildren(&numChildren); numChildren > 0; child++, numChildren--)
-    {
-        VerifyOrExit(child->GetState() != Child::kStateValid, shouldRun = true);
-    }
-
-exit:
+    shouldRun = ((mSupervisionInterval != 0) && (mle.GetRole() != OT_DEVICE_ROLE_DISABLED) &&
+                 mle.GetChildTable().HasChildren(ChildTable::kInStateValid));
 
     if (shouldRun && !mTimer.IsRunning())
     {

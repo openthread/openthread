@@ -82,7 +82,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mSendMessageFrameCounter(0)
     , mSendMessageKeyId(0)
     , mSendMessageDataSequenceNumber(0)
-    , mStartChildIndex(0)
+    , mIndirectStartingChild(NULL)
 #endif
     , mDataPollManager(aInstance)
 {
@@ -148,14 +148,9 @@ exit:
 
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
-    Child * children;
-    uint8_t numChildren;
-
-    children = GetNetif().GetMle().GetChildren(&numChildren);
-
-    for (uint8_t i = 0; i < numChildren; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
     {
-        IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, children[i]));
+        IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
     }
 
     if (mSendMessage == &aMessage)
@@ -569,8 +564,9 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
         // The case where the current message requires fragmentation is
         // already checked and handled in `SendFragment()` method.
 
-        if (((child = netif.GetMle().GetChild(macDest)) != NULL) && !child->IsRxOnWhenIdle() &&
-            (child->GetIndirectMessageCount() > 1))
+        child = netif.GetMle().GetChildTable().FindChild(macDest, ChildTable::kInStateValidOrRestoring);
+
+        if ((child != NULL) && !child->IsRxOnWhenIdle() && (child->GetIndirectMessageCount() > 1))
         {
             aFrame.SetFramePending(true);
         }

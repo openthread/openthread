@@ -121,7 +121,6 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
     otError error = OT_ERROR_NONE;
     Router *routers;
-    Child * children;
     uint8_t num;
 
     VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0);
@@ -147,13 +146,11 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     }
 
     // reset child frame counters
-    children = GetNetif().GetMle().GetChildren(&num);
-
-    for (uint8_t i = 0; i < num; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
     {
-        children[i].SetKeySequence(0);
-        children[i].SetLinkFrameCounter(0);
-        children[i].SetMleFrameCounter(0);
+        iter.GetChild()->SetKeySequence(0);
+        iter.GetChild()->SetLinkFrameCounter(0);
+        iter.GetChild()->SetMleFrameCounter(0);
     }
 
     GetNotifier().SetFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);

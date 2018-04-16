@@ -87,7 +87,7 @@ public:
     void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
 
     /**
-     * Check if the neighbor/child is being restored.
+     * This method indicates whether the neighbor/child is being restored.
      *
      * @returns TRUE if the neighbor is being restored, FALSE otherwise.
      *
@@ -95,7 +95,8 @@ public:
     bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
 
     /**
-     * Check if the neighbor/child is in valid state or if it is being restored.
+     * This method indicates whether the neighbor/child is in valid state or if it is being restored.
+     *
      * When in these states messages can be sent to and/or received from the neighbor/child.
      *
      * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
@@ -413,6 +414,17 @@ public:
 
         otChildIp6AddressIterator mIndex;
     };
+
+    /**
+     * This method indicates if the child state is valid or being attached or being restored.
+     *
+     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, (and
+     * `kStateLinkRequest) are considered as attached or being restored.
+     *
+     * @returns TRUE if the child is attached or being restored.
+     *
+     */
+    bool IsStateValidOrAttaching(void) const;
 
     /**
      * This method clears the IPv6 address list for the child.
