@@ -38,6 +38,8 @@
 
 #if OPENTHREAD_ENABLE_DTLS
 
+
+
 /**
  * @file
  *   This file implements the secure CoAP agent.
@@ -55,6 +57,8 @@ CoapSecure::CoapSecure(Instance &aInstance)
     , mTransmitMessage(NULL)
     , mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
 {
+	mLayerTwoSecurity = false;
+	mApplicationCoapSecure = false;
 }
 
 // constructor für coaps application with different handlers
@@ -70,13 +74,8 @@ CoapSecure::CoapSecure(Instance &aInstance,
     , mTransmitMessage(NULL)
     , mTransmitTask(aInstance, aUdpTransmitHandle, this)
 {
-}
-
-// ToDo: Remove test function before a bull request (only for evaluations)
-otError CoapSecure::TestIntegration(uint8_t* count)
-{
-	count[0] += 2;
-	return OT_ERROR_NONE;
+	mLayerTwoSecurity = true;
+	mApplicationCoapSecure = true;
 }
 
 otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aContext)
@@ -120,8 +119,19 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallb
     mConnectedCallback = aCallback;
     mConnectedContext  = aContext;
 
-    return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                                      &CoapSecure::HandleDtlsSend, this);
+    if(!mApplicationCoapSecure)
+    {
+        return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+                                          &CoapSecure::HandleDtlsSend, this);
+    }
+    else
+    {
+        return GetNetif().GetDtls().StartApplicationCoapSecure(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+                                                               &CoapSecure::HandleDtlsSend,
+                                                               this,
+                                                               (const unsigned char *)"",
+                                                               (const unsigned char *)"");
+    }
 }
 
 
@@ -264,7 +274,7 @@ otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_
     {
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
         mTransmitMessage->SetSubType(aMessageSubType);
-        mTransmitMessage->SetLinkSecurityEnabled(false);
+        mTransmitMessage->SetLinkSecurityEnabled(mLayerTwoSecurity);															// Attentntion, not d
     }
 
     SuccessOrExit(error = mTransmitMessage->Append(aBuf, aLength));

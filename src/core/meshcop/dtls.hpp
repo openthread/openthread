@@ -46,6 +46,21 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
+//#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#include <mbedtls/ssl.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/oid.h>
+#include <mbedtls/error.h>
+#include <mbedtls/certs.h>
+#include <mbedtls/ssl_cookie.h>
+#include <mbedtls/x509.h>
+#include <mbedtls/x509_crt.h>
+#include <mbedtls/x509_crl.h>
+#include <mbedtls/x509_csr.h>
+#include <mbedtls/base64.h>
+//#endif  // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
@@ -120,6 +135,29 @@ public:
                   ReceiveHandler   aReceiveHandler,
                   SendHandler      aSendHandler,
                   void *           aContext);
+
+    /**
+     * This method starts the DTLS service for Application Coap Secure.
+     *
+     * @param[in]  aClient            TRUE if operating as a client, FALSE if operating as a server.
+     * @param[in]  aConnectedHandler  A pointer to the connected handler.
+     * @param[in]  aReceiveHandler    A pointer to the receive handler.
+     * @param[in]  aSendHandler       A pointer to the send handler.
+     * @param[in]  aContext           A pointer to application-specific context.
+     * @param[in]  aX509Cert          A pointer to x509 Certificate
+     * @param[in]  aPrivateKey        A pointer to the private key
+     *
+     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
+     *
+     */
+    otError StartApplicationCoapSecure(bool                     aClient,
+                                       ConnectedHandler         aConnectedHandler,
+                                       ReceiveHandler           aReceiveHandler,
+                                       SendHandler              aSendHandler,
+                                       void *                   aContext,
+                                       const unsigned char *    aX509Cert,
+                                       const unsigned char *    aPrivateKey
+                                       );
 
     /**
      * This method stops the DTLS service.
@@ -246,6 +284,9 @@ private:
 
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
+
+    mbedtls_x509_crt         mCaCert;
+    mbedtls_pk_context       mPrivateKey;
 
     mbedtls_entropy_context  mEntropy;
     mbedtls_ctr_drbg_context mCtrDrbg;

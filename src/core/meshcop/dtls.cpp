@@ -71,12 +71,15 @@ Dtls::Dtls(Instance &aInstance)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
+    memset(&mCaCert, 0, sizeof(mCaCert));
+
     memset(mPsk, 0, sizeof(mPsk));
     memset(&mEntropy, 0, sizeof(mEntropy));
     memset(&mCtrDrbg, 0, sizeof(mCtrDrbg));
     memset(&mSsl, 0, sizeof(mSsl));
     memset(&mConf, 0, sizeof(mConf));
     memset(&mCookieCtx, 0, sizeof(mCookieCtx));
+
     mProvisioningUrl.Init();
 }
 
@@ -167,6 +170,118 @@ otError Dtls::Start(bool             aClient,
 
     rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     VerifyOrExit(rval == 0);
+
+    mStarted = true;
+    Process();
+
+    otLogInfoMeshCoP(GetInstance(), "DTLS started");
+
+exit:
+    return MapError(rval);
+}
+
+// new start dtls for coap application ====================================================
+otError Dtls::StartApplicationCoapSecure(bool                   aClient,
+                                         ConnectedHandler       aConnectedHandler,
+                                         ReceiveHandler         aReceiveHandler,
+                                         SendHandler            aSendHandler,
+                                         void *                 aContext,
+                                         const unsigned char *  aX509Cert,
+                                         const unsigned char *  aPrivateKey
+										 )
+{
+//	static const int ciphersuites[1] = {
+//				MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 }; // cipher suite for real use (x509 cert)
+    static const int ciphersuites[1] = {
+                MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8}; // cipher suite for local testserver
+    otExtAddress     eui64;
+    int              rval;
+
+    mConnectedHandler = aConnectedHandler;
+    mReceiveHandler   = aReceiveHandler;
+    mSendHandler      = aSendHandler;
+    mContext          = aContext;
+    mClient           = aClient;
+    mReceiveMessage   = NULL;
+    mMessageSubType   = Message::kSubTypeNone;
+
+    mbedtls_ssl_init(&mSsl);
+    mbedtls_ssl_config_init(&mConf);
+
+    mbedtls_x509_crt_init(&mCaCert);
+
+    mbedtls_ctr_drbg_init(&mCtrDrbg);
+    mbedtls_entropy_init(&mEntropy);
+
+    rval = mbedtls_entropy_add_source(&mEntropy, &Dtls::HandleMbedtlsEntropyPoll, NULL, MBEDTLS_ENTROPY_MIN_PLATFORM,
+                                      MBEDTLS_ENTROPY_SOURCE_STRONG);
+    VerifyOrExit(rval == 0);
+
+    // mbedTLS's debug level is almost the same as OpenThread's
+    mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
+    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+    rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
+//    VerifyOrExit(rval == 0);
+
+
+    rval = mbedtls_x509_crt_parse(&mCaCert, (const uint8_t *) aX509Cert, sizeof (aX509Cert));
+//    VerifyOrExit(rval == 0);
+
+    rval = mbedtls_pk_parse_key(&mPrivateKey,
+                                aPrivateKey,
+                                sizeof(aPrivateKey), NULL, 0);
+//    VerifyOrExit(rval == 0);
+
+
+    rval = mbedtls_ssl_config_defaults(&mConf, MBEDTLS_SSL_IS_CLIENT,
+                                       MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
+//    VerifyOrExit(rval == 0);
+
+    mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);     // Bad but easy, change later
+    mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
+
+    mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
+    mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
+
+    mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
+    mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
+
+    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
+
+    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, &mSsl);
+
+/*    if (!mClient)
+    {
+        mbedtls_ssl_cookie_init(&mCookieCtx);
+
+        rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, &mCtrDrbg);
+        VerifyOrExit(rval == 0);
+
+        mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
+    }
+*/
+
+
+    // ToDo: remove later. only for use with local testserver without x509 cert. It use PSK with AES 128
+    mbedtls_ssl_conf_psk(&mConf, (const unsigned char*)"secretPSK", 9, (const unsigned char*)"Client_identity", 15);
+
+
+
+    rval = mbedtls_ssl_conf_own_cert(&mConf, &mCaCert, &mPrivateKey);
+    VerifyOrExit(rval == 0);
+
+    rval = mbedtls_ssl_setup(&mSsl, &mConf);
+    VerifyOrExit(rval == 0);
+
+//    mbedtls_ssl_set_hostname(&mSsl, "server");
+
+    mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
+    mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
+
+//    rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
+//    VerifyOrExit(rval == 0);
 
     mStarted = true;
     Process();

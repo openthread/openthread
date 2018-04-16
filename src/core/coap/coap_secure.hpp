@@ -79,18 +79,6 @@ public:
 						Timer::Handler aRetransmissionTimer,
 						Timer::Handler aResponsesQueueTimer);
 
-    // ToDo: Remove testfunction before a bull request (only for evaluations)
-    /**
-     * This method increase the count value at two.
-     * Is only for test the access to the coap secure and can
-     * remove later.
-     *
-     * @param[inout]	count	A value who increase at two.
-     *
-     * @retval	OT_ERROR_NONE	Successfully call this function.
-     */
-    otError TestIntegration(uint8_t* count);
-
     /**
      * This method starts the secure CoAP agent.
      *
@@ -221,7 +209,7 @@ public:
 
 protected:
     void        HandleUdpTransmit(void);
-    static void HandleUdpTransmit(Tasklet &aTasklet);
+//    static void HandleUdpTransmit(Tasklet &aTasklet);
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -234,7 +222,7 @@ private:
     static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
     otError        HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
-//    static void HandleUdpTransmit(Tasklet &aTasklet);
+    static void HandleUdpTransmit(Tasklet &aTasklet);
 //    void        HandleUdpTransmit(void);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
@@ -247,6 +235,9 @@ private:
     void *            mTransportContext;
     Message *         mTransmitMessage;
     Tasklet           mTransmitTask;
+
+    bool			  mLayerTwoSecurity;
+    bool              mApplicationCoapSecure;
 };
 
 

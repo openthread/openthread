@@ -80,6 +80,30 @@ libmbedcrypto_a_SOURCES                      += \
     repo.patched/library/ssl_tls.c              \
     $(NULL)
 
+if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+libmbedcrypto_a_SOURCES                      += \
+	repo.patched/library/x509.c                 \
+    repo.patched/library/x509_crl.c             \
+    repo.patched/library/x509_crt.c             \
+    repo.patched/library/oid.c                  \
+    repo.patched/library/pkparse.c              \
+    repo.patched/library/pk.c                   \
+    repo.patched/library/asn1parse.c            \
+    repo.patched/library/pk_wrap.c              \
+    repo.patched/library/pem.c                  \
+    repo.patched/library/base64.c               \
+    repo.patched/library/ecdh.c                 \
+    repo.patched/library/ecdsa.c                \
+    repo.patched/library/rsa.c                  \
+    repo.patched/library/asn1write.c            \
+    repo.patched/library/x509_csr.c             \
+    repo.patched/library/x509write_csr.c        \
+    repo.patched/library/x509_create.c          \
+    repo.patched/library/pkwrite.c              \
+    repo.patched/library/hmac_drbg.c            \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 if OPENTHREAD_EXAMPLES_EFR32
 nodist_libmbedcrypto_a_SOURCES               += \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/library/ecp.c \

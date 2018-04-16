@@ -46,12 +46,6 @@
 
 using namespace ot;
 
-otError otCoapSecureTestIntegration(uint8_t * aCount)
-{
-	void * aHeader = NULL;
-    Coap::CoapSecure *coaps = static_cast<Coap::CoapSecure *>(aHeader);
-    return coaps->TestIntegration(aCount);
-}
 
 otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
 {
