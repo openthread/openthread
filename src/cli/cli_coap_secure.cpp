@@ -44,6 +44,8 @@
 namespace ot {
 namespace Cli {
 
+bool shutdownFlag = false;
+
 CoapSecureCli::CoapSecureCli(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
 {
@@ -132,22 +134,27 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     {
         // check, if the dtls session is not active, else disconnect it.
         if (otCoapSecureIsConnected(mInterpreter.mInstance) ||
-                otIsConncetionActive(mInterpreter.mInstance))
+                otCoapSecureIsConncetionActive(mInterpreter.mInstance))
         {
             error = otCoapSecureDisconnect(mInterpreter.mInstance);
+            shutdownFlag = true;
         }
-                                                                                                    otCoapRemoveResource(mInterpreter.mInstance, &mResource);
-        SuccessOrExit(error = otCoapSecureStop(mInterpreter.mInstance));
-        mInterpreter.mServer->OutputFormat("Coap Secure service stopped: ");
+        else
+        {
+                                                                                                        otCoapRemoveResource(mInterpreter.mInstance, &mResource);   // ToDo
+            SuccessOrExit(error = otCoapSecureStop(mInterpreter.mInstance));
+            mInterpreter.mServer->OutputFormat("Coap Secure service stopped: ");
+        }
     }
     else if (strcmp(argv[0], "help") == 0)
     {
     	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start'                  : start coap secure service\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps setpsk'                 : set PSK\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps connect ipV6_addr_srv   : start dtls session with a server\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps disconnect'             : stop dtls session with a server\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps stop'                   : stop coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start'                      : start coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps setpsk'                     : set PSK\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps connect ipV6_addr_srv       : start dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps get (ipV6_addr_srv) coap_src: get a coap source from server, ipv6 is not need as client\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps disconnect'                 : stop dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps stop'                       : stop coap secure service\r\n");
     	mInterpreter.mServer->OutputFormat("\r\n");
 
     }
@@ -175,7 +182,18 @@ void CoapSecureCli::HandleSecureCoapClientConnect(const bool aConnected)
 	}
 	else
 	{
-	    mInterpreter.mServer->OutputFormat("CoAP Secure not connected or disconnected.\r\n>");
+	    if (!shutdownFlag)
+	    {
+	        mInterpreter.mServer->OutputFormat("CoAP Secure not connected or disconnected.\r\n>");
+	    }
+	    else
+	    {
+	        mInterpreter.mServer->OutputFormat("CoAP Secure disconnected before stop.\r\n>");
+	        otCoapRemoveResource(mInterpreter.mInstance, &mResource);   // ToDo: rm the right values, not the coap vals
+	        otCoapSecureStop(mInterpreter.mInstance);
+	        mInterpreter.mServer->OutputFormat("Coap Secure service stopped: ");
+	        shutdownFlag = false;
+	    }
 	}
 
 	OT_UNUSED_VARIABLE(aConnected);
@@ -284,6 +302,7 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
     otMessageInfo messageInfo;
     otCoapHeader  header;
     uint16_t      payloadLength = 0;
+    uint8_t       index_shifter = 0;
 
     // Default parameters
     char         coapUri[kMaxUriLength] = "test";
@@ -318,17 +337,28 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
     // Destination IPv6 address
     if (argc > 1)
     {
-        SuccessOrExit(error = otIp6AddressFromString(argv[1], &coapDestinationIp));
+        error = otIp6AddressFromString(argv[1], &coapDestinationIp);
     }
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    // CoAP-URI
-    if (argc > 2)
+    // Destination IPv6 address not need as client
+    // if no IPv6 is entered, so ignore it and go away
+    if (error == 0)
     {
-        strlcpy(coapUri, argv[2], kMaxUriLength);
+        index_shifter = 0;
+    }
+    else
+    {
+        index_shifter = 1;
+    }
+
+    // CoAP-URI
+    if (argc > (2-index_shifter))
+    {
+        strlcpy(coapUri, argv[2-index_shifter], kMaxUriLength);
     }
     else
     {
@@ -336,9 +366,9 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
     }
 
     // CoAP-Type
-    if (argc > 3)
+    if (argc > (3-index_shifter))
     {
-        if (strcmp(argv[3], "con") == 0)
+        if (strcmp(argv[3-index_shifter], "con") == 0)
         {
             coapType = OT_COAP_TYPE_CONFIRMABLE;
         }
@@ -348,9 +378,9 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
     otCoapHeaderGenerateToken(&header, ot::Coap::Header::kDefaultTokenLength);
     SuccessOrExit(error = otCoapHeaderAppendUriPathOptions(&header, coapUri));
 
-    if (argc > 4)
+    if (argc > (4-index_shifter))
     {
-        payloadLength = static_cast<uint16_t>(strlen(argv[4]));
+        payloadLength = static_cast<uint16_t>(strlen(argv[4-index_shifter]));
 
         if (payloadLength > 0)
         {
@@ -364,7 +394,7 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
     // Embed content into message if given
     if (payloadLength > 0)
     {
-        SuccessOrExit(error = otMessageAppend(message, argv[4], payloadLength));
+        SuccessOrExit(error = otMessageAppend(message, argv[4-index_shifter], payloadLength));
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
@@ -374,11 +404,11 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
-        error = otCoapSendRequest(mInterpreter.mInstance, message, &messageInfo, &CoapSecureCli::HandleClientResponse, this);
+        error = otCoapSecureSendMessage(mInterpreter.mInstance, message, &CoapSecureCli::HandleClientResponse, this);
     }
     else
     {
-        error = otCoapSendRequest(mInterpreter.mInstance, message, &messageInfo, NULL, NULL);
+        error = otCoapSecureSendMessage(mInterpreter.mInstance, message, NULL, NULL);
     }
 
     mInterpreter.mServer->OutputFormat("Sending coap secure request: ");

@@ -149,7 +149,29 @@ bool otCoapSecureIsConnected(otInstance *aInstance);
  * @retval FALSE If DTLS session is not active.
  *
  */
-bool otIsConncetionActive(otInstance *aInstance);
+bool otCoapSecureIsConncetionActive(otInstance *aInstance);
+
+/**
+ * This method sends a CoAP message over secure DTLS connection.
+ *
+ * If a response for a request is expected, respective function and context information should be provided.
+ * If no response is expected, these arguments should be NULL pointers.
+ * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMessage      A reference to the message to send.
+ * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+ * @param[in]  aContext      A pointer to arbitrary context information.
+ *
+ * @retval OT_ERROR_NONE           Successfully sent CoAP message.
+ * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+ * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+ *
+ */
+otError otCoapSecureSendMessage(otInstance *aInstance,
+                                otMessage *aMessage,
+                                otCoapResponseHandler aHandler,
+                                void *aContext);
 
 
 /**

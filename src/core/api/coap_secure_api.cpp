@@ -87,18 +87,30 @@ bool otCoapSecureIsConnected(otInstance *aInstance)
     return instance.GetApplicationCoapSecure().IsConnected();
 }
 
-bool otIsConncetionActive(otInstance *aInstance)
+bool otCoapSecureIsConncetionActive(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().IsConnectionActive();
 }
 
-otError otCoapSecureStop( otInstance *aInstance )
+otError otCoapSecureStop(otInstance *aInstance)
 {
 	Instance &instance = *static_cast<Instance *>(aInstance);
 
 	return instance.GetApplicationCoapSecure().Stop();
+}
+
+otError otCoapSecureSendMessage(otInstance *aInstance,
+                                otMessage *aMessage,
+                                otCoapResponseHandler aHandler = NULL,
+                                void *aContext = NULL)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage),
+                                                            aHandler,
+                                                            aContext);
 }
 
 
