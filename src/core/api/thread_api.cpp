@@ -405,41 +405,6 @@ exit:
     return error;
 }
 
-const char *otGetVersionString(void)
-{
-/**
- * PLATFORM_VERSION_ATTR_PREFIX and PLATFORM_VERSION_ATTR_SUFFIX are
- * intended to be used to specify compiler directives to indicate
- * what linker section the platform version string should be stored.
- *
- * This is useful for specifying an exact locaiton of where the version
- * string will be located so that it can be easily retrieved from the
- * raw firmware image.
- *
- * If PLATFORM_VERSION_ATTR_PREFIX is unspecified, the keyword `static`
- * is used instead.
- *
- * If both are unspecified, the location of the string in the firmware
- * image will be undefined and may change.
- */
-
-#ifdef PLATFORM_VERSION_ATTR_PREFIX
-    PLATFORM_VERSION_ATTR_PREFIX
-#else
-    static
-#endif
-    const char sVersion[] = PACKAGE_NAME "/" PACKAGE_VERSION "; " OPENTHREAD_CONFIG_PLATFORM_INFO
-#if defined(__DATE__)
-                                         "; " __DATE__ " " __TIME__
-#endif
-#ifdef PLATFORM_VERSION_ATTR_SUFFIX
-                                             PLATFORM_VERSION_ATTR_SUFFIX
-#endif
-        ; // Trailing semicolon to end statement.
-
-    return sVersion;
-}
-
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
                                              otReceiveDiagnosticGetCallback aCallback,
