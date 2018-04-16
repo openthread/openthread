@@ -49,7 +49,7 @@ Total number of RSSI samples (per channel) taken by the channel
 monitoring module since its start (since Thread network interface
 was enabled).
 
-### PROP 4618: SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY (#prop-channel-monitor-channel-quality)
+### PROP 4618: SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY (#prop-channel-monitor-channel-occupancy)
 
  * Type: Read-Only
  * Packing-Encoding: `A(t(cU))`
@@ -57,9 +57,9 @@ was enabled).
 Data per item is:
 
  *  `C`: Channel
- *  `U`: Channel quality indicator
+ *  `U`: Channel occupancy indicator
 
-The channel quality value represents the average rate/percentage of
+The channel occupancy value represents the average rate/percentage of
 RSSI samples that were above RSSI threshold ("bad" RSSI samples) within
 (approximately) latest sample window RSSI samples.
 

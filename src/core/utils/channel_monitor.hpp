@@ -66,7 +66,7 @@ namespace Utils {
  * channel collecting a single RSSI  sample per channel. The RSSI samples are compared with a pre-specified RSSI
  * threshold `kRssiThreshold`. As an indicator of channel quality, the `ChannelMonitor` maintains and provides the
  * average rate/percentage of RSSI samples that are above the threshold within (approximately) a specified sample
- * window.
+ * window (referred to as "channel occupancy").
  *
  */
 class ChannelMonitor : public InstanceLocator
@@ -148,34 +148,34 @@ public:
     uint32_t GetSampleCount(void) const { return mSampleCount; }
 
     /**
-     * This method returns the current channel quality value for a given channel.
+     * This method returns the current channel occupancy for a given channel.
      *
-     * The channel quality value represents the average rate/percentage of RSSI samples that were above RSSI threshold
+     * The channel occupancy represents the average rate/percentage of RSSI samples that were above RSSI threshold
      * `kRssiThreshold` ("bad" RSSI samples).
      *
      * For the first `kSampleWindow` samples, the average is maintained as the actual percentage (i.e., ratio of number
      * of "bad" samples by total number of samples). After `kSampleWindow` samples, the averager uses an exponentially
      * weighted moving average logic with weight coefficient `1/kSampleWindow` for new values. Practically, this means
-     * the quality is representative of up to `3 * kSampleWindow` last samples with highest weight given to latest
-     * `kSampleWindow` samples.
+     * the occupancy is representative of up to `3 * kSampleWindow` last samples with highest weight given to the
+     * latest `kSampleWindow` samples.
      *
      * Max value of `0xffff` indicates all RSSI samples were above RSSI threshold (i.e. 100% of samples were "bad").
      *
-     * @param[in]  aChannel     The channel for which to get the link quality.
+     * @param[in]  aChannel     The channel for which to get the link occupancy.
      *
-     * @returns the current channel quality value for the given channel.
+     * @returns the current channel occupancy for the given channel.
      *
      */
-    uint16_t GetChannelQuality(uint8_t aChannel) const;
+    uint16_t GetChannelOccupancy(uint8_t aChannel) const;
 
 private:
     enum
     {
-        kNumChannels         = (OT_RADIO_CHANNEL_MAX - OT_RADIO_CHANNEL_MIN + 1),
-        kNumChannelMasks     = 4,
-        kTimerInterval       = (kSampleInterval / kNumChannelMasks),
-        kMaxJitterInterval   = 4096,
-        kMaxQualityIndicator = 0xffff,
+        kNumChannels       = (OT_RADIO_CHANNEL_MAX - OT_RADIO_CHANNEL_MIN + 1),
+        kNumChannelMasks   = 4,
+        kTimerInterval     = (kSampleInterval / kNumChannelMasks),
+        kMaxJitterInterval = 4096,
+        kMaxOccupancy      = 0xffff,
     };
 
     void        RestartTimer(void);
@@ -189,7 +189,7 @@ private:
 
     uint8_t    mChannelMaskIndex : 2;
     uint32_t   mSampleCount : 30;
-    uint16_t   mChannelQuality[kNumChannels];
+    uint16_t   mChannelOccupancy[kNumChannels];
     TimerMilli mTimer;
 };
 

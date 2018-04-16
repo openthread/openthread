@@ -768,7 +768,7 @@ typedef enum
     SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_COUNT
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 9,
 
-    /// Channel monitoring channel quality
+    /// Channel monitoring channel occupancy
     /** Format: `A(t(CU))` (read-only)
      *
      * Required capability: SPINEL_CAP_CHANNEL_MONITOR
@@ -776,9 +776,9 @@ typedef enum
      * Data per item is:
      *
      *  `C`: Channel
-     *  `U`: Channel quality indicator
+     *  `U`: Channel occupancy indicator
      *
-     * The channel quality value represents the average rate/percentage of
+     * The channel occupancy value represents the average rate/percentage of
      * RSSI samples that were above RSSI threshold ("bad" RSSI samples) within
      * (approximately) sample window latest RSSI samples.
      *
@@ -786,7 +786,7 @@ typedef enum
      * threshold (i.e. 100% of samples were "bad").
      *
      */
-    SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY
+    SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 10,
 
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
