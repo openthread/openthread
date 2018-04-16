@@ -1565,7 +1565,7 @@ otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_COUNT(void)
     return mEncoder.WriteUint32(otChannelMonitorGetSampleCount(mInstance));
 }
 
-otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_OCCUPANCY(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1574,7 +1574,7 @@ otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
         SuccessOrExit(error = mEncoder.OpenStruct());
 
         SuccessOrExit(error = mEncoder.WriteUint8(channel));
-        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelQuality(mInstance, channel)));
+        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelOccupancy(mInstance, channel)));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
     }

@@ -1209,8 +1209,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_CHANNEL_MONITOR_SAMPLE_COUNT";
         break;
 
-    case SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY:
-        ret = "PROP_CHANNEL_MONITOR_CHANNEL_QUALITY";
+    case SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY:
+        ret = "PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY";
         break;
 
     case SPINEL_PROP_MAC_SCAN_STATE:
