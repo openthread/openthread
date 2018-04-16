@@ -62,9 +62,10 @@ int    gArgumentsCount = 0;
 char **gArguments      = NULL;
 #endif
 
-void PlatformInit(int argc, char *argv[])
+void PlatformInit(int aArgCount, char *aArgVector[])
 {
-    char *endptr;
+    char *   endptr;
+    uint32_t speedUpFactor = 1;
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -72,28 +73,40 @@ void PlatformInit(int argc, char *argv[])
         return;
     }
 
-    if (argc != 2)
+    if (aArgCount < 2)
     {
+        fprintf(stderr, "Syntax:\n    %s NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
         exit(EXIT_FAILURE);
     }
 
 #ifndef _WIN32
-    openlog(basename(argv[0]), LOG_PID, LOG_USER);
+    openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
-    gArgumentsCount = argc;
-    gArguments      = argv;
+    gArgumentsCount = aArgCount;
+    gArguments      = aArgVector;
 #endif
 
-    NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
+    NODE_ID = (uint32_t)strtol(aArgVector[1], &endptr, 0);
 
     if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
     {
-        fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
+        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[1]);
         exit(EXIT_FAILURE);
     }
 
-    platformAlarmInit();
+    if (aArgCount > 2)
+    {
+        speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
+
+        if (*endptr != '\0' || speedUpFactor == 0)
+        {
+            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    platformAlarmInit(speedUpFactor);
     platformRadioInit();
     platformRandomInit();
 }

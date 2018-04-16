@@ -173,7 +173,8 @@ def _log(text, new_line=True, flush=True):
 class Node(object):
     """ A wpantund OT NCP instance """
 
-    _VERBOSE = False     # defines the default verbosity setting (can be changed per `Node`)
+    _VERBOSE = False        # defines the default verbosity setting (can be changed per `Node`)
+    _SPEED_UP_FACTOR = 1    # defines the default time speed up factor
 
     # path to `wpantund`, `wpanctl` and `ot-ncp-ftd` code
     _WPANTUND = '/usr/local/sbin/wpantund'
@@ -200,8 +201,10 @@ class Node(object):
         self._interface_name = self._INTFC_NAME_PREFIX + str(index)
         self._verbose = verbose
 
+        ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index, self._SPEED_UP_FACTOR)
+
         cmd = self._WPANTUND + \
-               ' -o Config:NCP:SocketPath \"system:{} {}\"'.format(self._OT_NCP_FTD, index) + \
+               ' -o Config:NCP:SocketPath \"{}\"'.format(ncp_socket_path) + \
                ' -o Config:TUN:InterfaceName {}'.format(self._interface_name) + \
                ' -o Config:NCP:DriverName spinel' + \
                ' -o Daemon:SyslogMask \"all -debug\"'
@@ -423,6 +426,13 @@ class Node(object):
                 else:
                     break
                 time.sleep(0.4)
+
+    @classmethod
+    def set_time_speedup_factor(cls, factor):
+        """Sets up the time speed up factor - should be set before creating any `Node` objects"""
+        if len(Node._all_nodes) != 0:
+            raise Node._NodeError('set_time_speedup_factor() cannot be called after creating a `Node`')
+        Node._SPEED_UP_FACTOR = factor
 
     #------------------------------------------------------------------------------------------------------------------
     # IPv6 message Sender and Receiver class
