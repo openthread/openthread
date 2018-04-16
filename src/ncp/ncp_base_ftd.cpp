@@ -30,6 +30,7 @@
  *   This file implements full thread device specified Spinel interface to the OpenThread stack.
  */
 
+#include <openthread/config.h>
 #include "ncp_base.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
@@ -41,7 +42,6 @@
 #include <openthread/ncp.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
-#include <openthread/platform/radio.h>
 #include <openthread/thread_ftd.h>
 
 #if OPENTHREAD_ENABLE_TMF_PROXY
@@ -54,7 +54,6 @@
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include "meshcop/commissioner.hpp"
 #endif
-#include "net/ip6.hpp"
 
 #if OPENTHREAD_FTD
 namespace ot {
