@@ -158,6 +158,36 @@ public:
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
     /**
+     * This method sets the Pre Shared Key (PSK) for DTLS sessions
+     * identified by a PSK.
+     *
+     * @param[in]  aPsk          A pointer to the PSK.
+     * @param[in]  aPskLength    The PSK char length.
+     * @param[in]  aPskIdentity  The Identity Name for the PSK.
+     * @param[in]  aPskIdLength  The PSK Identity Length.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     *
+     */
+    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
+                            uint8_t *aPskIdentity, uint16_t aPskIdLength);
+
+    /**
+     * This method sets a X509 certificate with his private key for
+     * DTLS session.
+     *
+     * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
+     * @param[in]  aX509CertLenth    The length of certificate.
+     * @param[in]  aPrivateKey       A pointer to the private key.
+     * @param[in]  aPrivateKeyLenth  The length of the private key.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     *
+     */
+    otError SetX509Certificate(uint8_t *aX509Cert, uint32_t aX509Length,
+                                           uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
+
+    /**
      * This method sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.

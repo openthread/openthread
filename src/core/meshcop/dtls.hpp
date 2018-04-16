@@ -154,9 +154,7 @@ public:
                                        ConnectedHandler         aConnectedHandler,
                                        ReceiveHandler           aReceiveHandler,
                                        SendHandler              aSendHandler,
-                                       void *                   aContext,
-                                       const unsigned char *    aX509Cert,
-                                       const unsigned char *    aPrivateKey
+                                       void *                   aContext
                                        );
 
     /**
@@ -185,6 +183,35 @@ public:
      *
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+
+    /**
+     * This method sets the Pre Shared Key (PSK) for DTLS sessions
+     * identified by a PSK.
+     *
+     * @param[in]  aPsk          A pointer to the PSK.
+     * @param[in]  aPskLength    The PSK char length.
+     * @param[in]  aPskIdentity  The Identity Name for the PSK.
+     * @param[in]  aPskIdLength  The PSK Identity Length.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     *
+     */
+    otError SetPreSharedKey(uint8_t * aPsk, uint16_t aPskLength,
+                            uint8_t * aPskIdentity, uint16_t aPskIdLength);
+
+    /**
+     * This method sets the x509 certificate with his private key.
+     *
+     * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
+     * @param[in]  aX509CertLenth    The length of certificate.
+     * @param[in]  aPrivateKey       A pointer to the private key.
+     * @param[in]  aPrivateKeyLenth  The length of the private key.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     *
+     */
+    otError SetX509Certificate(uint8_t * aX509Certificate, uint32_t aX509CertLenth,
+                                     uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth);
 
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
@@ -287,6 +314,13 @@ private:
 
     mbedtls_x509_crt         mCaCert;
     mbedtls_pk_context       mPrivateKey;
+
+    uint8_t                  mPreSharedKey[32];
+    uint8_t                  mPreSharedKeyIdentity[32];
+    uint16_t                 mPreSharedKeyLength;
+    uint16_t                 mPreSharedKeyIdLength;
+
+    int                      mApplicationCoapCiphreSuite[1];
 
     mbedtls_entropy_context  mEntropy;
     mbedtls_ctr_drbg_context mCtrDrbg;

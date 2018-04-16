@@ -72,6 +72,11 @@ Dtls::Dtls(Instance &aInstance)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
     memset(&mCaCert, 0, sizeof(mCaCert));
+    memset(&mPreSharedKey, 0, sizeof(mPreSharedKey));
+    memset(&mPreSharedKeyIdentity, 0, sizeof(mPreSharedKeyIdentity));
+    mPreSharedKeyIdLength = 0;
+    mPreSharedKeyLength = 0;
+    memset(&mApplicationCoapCiphreSuite, 0, sizeof(mApplicationCoapCiphreSuite));
 
     memset(mPsk, 0, sizeof(mPsk));
     memset(&mEntropy, 0, sizeof(mEntropy));
@@ -185,15 +190,13 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
                                          ConnectedHandler       aConnectedHandler,
                                          ReceiveHandler         aReceiveHandler,
                                          SendHandler            aSendHandler,
-                                         void *                 aContext,
-                                         const unsigned char *  aX509Cert,
-                                         const unsigned char *  aPrivateKey
+                                         void *                 aContext
 										 )
 {
 //	static const int ciphersuites[1] = {
 //				MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 }; // cipher suite for real use (x509 cert)
-    static const int ciphersuites[1] = {
-                MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8}; // cipher suite for local testserver
+//    static const int ciphersuites[1] = {
+//                MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8}; // cipher suite for local testserver
     otExtAddress     eui64;
     int              rval;
 
@@ -224,12 +227,12 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
 //    VerifyOrExit(rval == 0);
 
 
-    rval = mbedtls_x509_crt_parse(&mCaCert, (const uint8_t *) aX509Cert, sizeof (aX509Cert));
+//    rval = mbedtls_x509_crt_parse(&mCaCert, (const uint8_t *) aX509Cert, sizeof (aX509Cert));
 //    VerifyOrExit(rval == 0);
 
-    rval = mbedtls_pk_parse_key(&mPrivateKey,
-                                aPrivateKey,
-                                sizeof(aPrivateKey), NULL, 0);
+//    rval = mbedtls_pk_parse_key(&mPrivateKey,
+//                                aPrivateKey,
+//                                sizeof(aPrivateKey), NULL, 0);
 //    VerifyOrExit(rval == 0);
 
 
@@ -243,7 +246,7 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
-    mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
+    mbedtls_ssl_conf_ciphersuites(&mConf, mApplicationCoapCiphreSuite);
 
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
@@ -264,8 +267,9 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
 */
 
 
-    // ToDo: remove later. only for use with local testserver without x509 cert. It use PSK with AES 128
-    mbedtls_ssl_conf_psk(&mConf, (const unsigned char*)"secretPSK", 9, (const unsigned char*)"Client_identity", 15);
+//    // ToDo: remove later. only for use with local testserver without x509 cert. It use PSK with AES 128
+    mbedtls_ssl_conf_psk(&mConf, (const unsigned char*)mPreSharedKey, mPreSharedKeyLength,
+                         (const unsigned char*)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
 
 
 
@@ -332,6 +336,47 @@ otError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 
     memcpy(mPsk, aPsk, aPskLength);
     mPskLength = aPskLength;
+
+exit:
+    return error;
+}
+
+otError Dtls::SetX509Certificate(uint8_t * aX509Certificate, uint32_t aX509CertLenth,
+                                 uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth)
+{
+    otError error = OT_ERROR_NONE;
+    int rval = 0;
+
+    VerifyOrExit(aX509CertLenth <= sizeof(mCaCert), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPrivateKeyLenth <= sizeof(mPrivateKey), error = OT_ERROR_INVALID_ARGS);
+
+    rval = mbedtls_x509_crt_parse(&mCaCert, (const uint8_t *) aX509Certificate, aX509CertLenth);
+    VerifyOrExit(rval == 0, error = OT_ERROR_SECURITY);
+
+    rval = mbedtls_pk_parse_key(&mPrivateKey, aPrivateKey, aPrivateKeyLenth, NULL, 0);
+    VerifyOrExit(rval == 0, error = OT_ERROR_SECURITY);
+
+    mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
+
+exit:
+
+    return error;
+}
+
+otError Dtls::SetPreSharedKey(uint8_t * aPsk, uint16_t aPskLength,
+                              uint8_t * aPskIdentity, uint16_t aPskIdLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aPskLength <= sizeof(mPreSharedKey), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPskIdLength <= sizeof(mPreSharedKeyIdentity), error = OT_ERROR_INVALID_ARGS);
+
+    memcpy(mPreSharedKey, aPsk, aPskLength);
+    mPreSharedKeyLength = aPskLength;
+    memcpy(mPreSharedKeyIdentity, aPskIdentity, aPskIdLength);
+    mPreSharedKeyIdLength = aPskIdLength;
+
+    mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
 
 exit:
     return error;

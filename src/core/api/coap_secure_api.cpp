@@ -54,11 +54,22 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
     return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
 }
 
-otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint8_t aPskLength)
+otError otCoapSecureSetX509Certificate(otInstance *aInstance, uint8_t *aX509Cert, uint32_t aX509Length,
+                                       uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert, aX509Length,
+                                                                  aPrivateKey, aPrivateKeyLength);
+}
+
+otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint16_t aPskLength,
+                           uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
 	Instance &instance = *static_cast<Instance *>(aInstance);
 
-	return instance.GetApplicationCoapSecure().SetPsk(aPsk, aPskLength);
+	return instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength,
+	                                                           aPskIdentity, aPskIdLength);
 }
 
 otError otCoapSecureConnect(otInstance *aInstance,

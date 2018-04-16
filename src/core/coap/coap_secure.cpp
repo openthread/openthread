@@ -131,9 +131,7 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
         return GetNetif().GetDtls().StartApplicationCoapSecure(true, &CoapSecure::HandleDtlsConnected,
                                                                &CoapSecure::HandleDtlsReceive,
                                                                &CoapSecure::HandleDtlsSend,
-                                                               this,
-                                                               (const unsigned char *)"",
-                                                               (const unsigned char *)"");
+                                                               this);
     }
 }
 
@@ -162,6 +160,19 @@ MeshCoP::Dtls &CoapSecure::GetDtls(void)
 otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 {
     return GetNetif().GetDtls().SetPsk(aPsk, aPskLength);
+}
+
+otError CoapSecure::SetX509Certificate(uint8_t *aX509Cert, uint32_t aX509Length,
+                                       uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
+{
+    return GetNetif().GetDtls().SetX509Certificate(aX509Cert, aX509Length,
+                                                   aPrivateKey, aPrivateKeyLength);
+}
+
+otError CoapSecure::SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
+                                    uint8_t *aPskIdentity, uint16_t aPskIdLength)
+{
+    return GetNetif().GetDtls().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 }
 
 otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandler, void *aContext)

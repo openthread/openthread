@@ -92,12 +92,18 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "setpsk") == 0)
 	{
-    	if (argc > 1)
+    	if (argc > 2)
 		{
     		uint8_t mPsk[32];
-    		uint8_t length = strlen(argv[1]);
-    		memcpy(mPsk,argv[1],length);
-    		SuccessOrExit(error = otCoapSecureSetPSK(mInterpreter.mInstance, mPsk, length));
+    		uint8_t mPskLength = strlen(argv[1]);
+    		uint8_t mPskId[32];
+    		uint8_t mPskIdLength = strlen(argv[2]);
+
+    		memcpy(mPsk, argv[1], mPskLength);
+    		memcpy(mPskId, argv[2], mPskIdLength);
+
+    		SuccessOrExit(error = otCoapSecureSetPSK(mInterpreter.mInstance, mPsk, mPskLength,
+    		                                         mPskId, mPskIdLength));
     		mInterpreter.mServer->OutputFormat("Coap Secure set PSK: ");
 		}
     	else
@@ -105,6 +111,30 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 			ExitNow(error = OT_ERROR_INVALID_ARGS);
 		}
 	}
+    else if (strcmp(argv[0], "setx509") == 0)
+    {
+        if (argc > 2)
+        {
+            uint8_t mX509Cert[255];
+            uint32_t mX509Length = strlen(argv[1]);
+            uint8_t mPk[255];
+            uint32_t mPkLength = strlen(argv[2]);
+
+            memcpy(mX509Cert, argv[1], mX509Length);
+            memcpy(mPk, argv[2], mPkLength);
+
+            SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
+                                                                 mX509Cert, mX509Length,
+                                                                 mPk, mPkLength));
+            mInterpreter.mServer->OutputFormat("Coap Secure set X509 Cert: ");
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
+
+    }
     else if (strcmp(argv[0], "connect") == 0)
     {
         // Destination IPv6 address
@@ -149,12 +179,13 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     else if (strcmp(argv[0], "help") == 0)
     {
     	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start'                      : start coap secure service\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps setpsk'                     : set PSK\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps connect ipV6_addr_srv       : start dtls session with a server\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps get (ipV6_addr_srv) coap_src: get a coap source from server, ipv6 is not need as client\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps disconnect'                 : stop dtls session with a server\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps stop'                       : stop coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start'                                       : start coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps setpsk'      args: psk, identity             : set Preshared Key and Client Identity (Ciphresuit PSK_AES128)\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps setx509'     args: cert, pk                  : set X509 Cert und Private Key (Ciphresuit ECDHE_ECDSA_AES128)\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps connect'     args: ipV6_addr_srv             : start dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps get'         args:(ipV6_addr_srv), coap_src  : get a coap source from server, ipv6 is not need as client\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps disconnect'                                  : stop dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps stop'                                        : stop coap secure service\r\n");
     	mInterpreter.mServer->OutputFormat("\r\n");
 
     }
