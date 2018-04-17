@@ -190,13 +190,8 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
                                          ConnectedHandler       aConnectedHandler,
                                          ReceiveHandler         aReceiveHandler,
                                          SendHandler            aSendHandler,
-                                         void *                 aContext
-										 )
+                                         void *                 aContext)
 {
-//	static const int ciphersuites[1] = {
-//				MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 }; // cipher suite for real use (x509 cert)
-//    static const int ciphersuites[1] = {
-//                MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8}; // cipher suite for local testserver
     otExtAddress     eui64;
     int              rval;
 
@@ -211,8 +206,6 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
 
-    mbedtls_x509_crt_init(&mCaCert);
-
     mbedtls_ctr_drbg_init(&mCtrDrbg);
     mbedtls_entropy_init(&mEntropy);
 
@@ -226,22 +219,11 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
 //    VerifyOrExit(rval == 0);
 
-
-//    rval = mbedtls_x509_crt_parse(&mCaCert, (const uint8_t *) aX509Cert, sizeof (aX509Cert));
-//    VerifyOrExit(rval == 0);
-
-//    rval = mbedtls_pk_parse_key(&mPrivateKey,
-//                                aPrivateKey,
-//                                sizeof(aPrivateKey), NULL, 0);
-//    VerifyOrExit(rval == 0);
-
-
     rval = mbedtls_ssl_config_defaults(&mConf, MBEDTLS_SSL_IS_CLIENT,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
 //    VerifyOrExit(rval == 0);
 
     mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);     // Bad but easy, change later
-    mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
 
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
@@ -266,15 +248,27 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     }
 */
 
+    switch(mApplicationCoapCiphreSuite[0])
+    {
+        case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:    // with x509 cert
 
-//    // ToDo: remove later. only for use with local testserver without x509 cert. It use PSK with AES 128
-    mbedtls_ssl_conf_psk(&mConf, (const unsigned char*)mPreSharedKey, mPreSharedKeyLength,
-                         (const unsigned char*)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+            mbedtls_x509_crt_init(&mCaCert);
+            mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
+            rval = mbedtls_ssl_conf_own_cert(&mConf, &mCaCert, &mPrivateKey);
+            VerifyOrExit(rval == 0);
+            break;
+
+        case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:            // with preshared key
+
+            mbedtls_ssl_conf_psk(&mConf, (const unsigned char*)mPreSharedKey, mPreSharedKeyLength,
+                                 (const unsigned char*)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+            break;
+
+        default:
+            break;
+    }
 
 
-
-    rval = mbedtls_ssl_conf_own_cert(&mConf, &mCaCert, &mPrivateKey);
-    VerifyOrExit(rval == 0);
 
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
     VerifyOrExit(rval == 0);
@@ -284,13 +278,10 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
 
-//    rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
-//    VerifyOrExit(rval == 0);
-
     mStarted = true;
     Process();
 
-    otLogInfoMeshCoP(GetInstance(), "DTLS started");
+    otLogInfoApi(this,"Coap Secure DTLS started");
 
 exit:
     return MapError(rval);
