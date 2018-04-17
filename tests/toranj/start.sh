@@ -114,5 +114,6 @@ run test-005-discover-scan.py
 run test-006-traffic-router-end-device.py
 run test-007-traffic-router-sleepy.py
 run test-008-permit-join.py
+run test-100-mcu-power-state.py
 
 exit 0

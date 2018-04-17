@@ -52,6 +52,7 @@ WPAN_NODE_TYPE                                 = 'Network:NodeType'
 WPAN_ROLE                                      = 'Network:Role'
 WPAN_PARTITION_ID                              = 'Network:PartitionId'
 WPAN_NCP_VERSION                               = 'NCP:Version'
+WPAN_NCP_MCU_POWER_STATE                       = "NCP:MCUPowerState"
 WPAN_NETWORK_ALLOW_JOIN                        = 'com.nestlabs.internal:Network:AllowingJoin'
 WPAN_NETWORK_PASSTHRU_PORT                     = 'com.nestlabs.internal:Network:PassthruPort'
 
@@ -139,6 +140,13 @@ STATE_ASSOCIATED                               =  '"associated"'
 STATE_ISOLATED                                 =  '"associated:no-parent"'
 STATE_NETWAKE_ASLEEP                           =  '"associated:netwake-asleep"'
 STATE_NETWAKE_WAKING                           =  '"associated:netwake-waking"'
+
+#-----------------------------------------------------------------------------------------------------------------------
+# MCU Power state from `WPAN_NCP_MCU_POWER_STATE`
+
+MCU_POWER_STATE_ON                             = '"on"'
+MCU_POWER_STATE_LOW_POWER                      = '"low-power"'
+MCU_POWER_STATE_OFF                            = '"off"'
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Node types (from `WPAN_NODE_TYPE` property)

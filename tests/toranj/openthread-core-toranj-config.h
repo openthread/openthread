@@ -184,5 +184,25 @@
 #define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT  1
 
 
+/**
+ * @def OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+ *
+ * Define to 1 to enable support controlling of desired power state of NCP's micro-controller.
+ *
+ * The power state specifies the desired power state of NCP's micro-controller (MCU) when the underlying platform's
+ * operating system enters idle mode (i.e., all active tasks/events are processed and the MCU can potentially enter a
+ * energy-saving power state).
+ *
+ * The power state primarily determines how the host should interact with the NCP and whether the host needs an
+ * external trigger (a "poke") before it can communicate with the NCP or not.
+ *
+ * When enabled, the platform is expected to provide `otPlatSetMcuPowerState()` and `otPlatGetMcuPowerState()`
+ * functions (please see `openthread/platform/misc.h`). Host can then control the power state using
+ * `SPINEL_PROP_MCU_POWER_STATE`.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 1
+
+
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_H_ */
 
