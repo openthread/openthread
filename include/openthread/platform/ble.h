@@ -31,8 +31,8 @@
  *   This file defines a generic OpenThread BLE driver HOST interface.
  */
 
-#ifndef _PLATFORM_BLE_H_
-#define _PLATFORM_BLE_H_
+#ifndef BLE_H_
+#define BLE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,6 +48,7 @@ extern "C" {
  *
  * @brief
  *   This module includes the platform abstraction for BLE Host communication.
+ *   The platform needs to implement Bluetooth LE 4.2 or higher.
  *
  * @{
  *
@@ -173,12 +174,12 @@ enum
     /**
      * Maximum size of BLE Characteristic.
      */
-    OT_BLE_CHARACTERISTIC_MAX_LENGTH = 128,
+    OT_BLE_CHARACTERISTIC_MAX_LENGTH = 512,
 
     /**
      * Maximum value of ATT_MTU.
      */
-    OT_BLE_ATT_MTU_MAX = 131,
+    OT_BLE_ATT_MTU_MAX = 511,
 
     /**
      * Length of full BLE UUID in bytes.
@@ -367,12 +368,12 @@ typedef struct otBleRadioPacket
  * Enable the Bluetooth Low Energy radio.
  *
  * @note BLE Device should use the highest ATT_MTU supported that does not
- * exceed 131 octets.
+ * exceed OT_BLE_ATT_MTU_MAX octets.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
  * @retval ::OT_ERROR_NONE         Successfully enabled.
- * @retval ::kThreadError_Failure  The BLE radio could not be enabled.
+ * @retval ::OT_ERROR_FAILED       The BLE radio could not be enabled.
  */
 otError otPlatBleEnable(otInstance *aInstance);
 
@@ -382,7 +383,7 @@ otError otPlatBleEnable(otInstance *aInstance);
  * @param[in] aInstance  The OpenThread instance structure.
  *
  * @retval ::OT_ERROR_NONE        Successfully transitioned to disabled.
- * @retval ::kThreadError_Failure The BLE radio could not be disabled.
+ * @retval ::OT_ERROR_FAILED      The BLE radio could not be disabled.
  */
 otError otPlatBleDisable(otInstance *aInstance);
 
@@ -706,7 +707,7 @@ otError otPlatBleGattClientWrite(otInstance *aInstance, uint16_t aHandle, otBleR
  */
 extern void otPlatBleGattClientOnWriteResponse(otInstance *aInstance, uint16_t aHandle);
 /**
- * Subscribes to characteristic.
+ * Subscribes for characteristic indications.
  *
  * @note This function shall be used only for GATT Client.
  *
@@ -789,7 +790,7 @@ otError otPlatBleGattClientServiceDiscover(otInstance *aInstance, const otPlatBl
  * @param[in] aServiceUuid  The Uuid16 for the service entry.
  * @param[in] aError        The value of OT_ERROR_NONE indicates that service has been found
  *                          and structure @p aStartHandle and @p aEndHandle contain valid handles.
- *                          kThreadError_NotFound error should be set if service has not been found.
+ *                          OT_ERROR_NOT_FOUND error should be set if service has not been found.
  *                          Otherwise error indicates the reason of failure is used.
  *
  */
@@ -828,7 +829,7 @@ otError otPlatBleGattClientCharacteristicsDiscover(otInstance *aInstance, uint16
  * @param[in] aCount     Number of characteristics in @p aChar list.
  * @param[in] aError     The value of OT_ERROR_NONE indicates that at least one characteristic
  *                       has been found and the total number of them is stored in @p aCount.
- *                       kThreadError_NotFound error should be set if no charactertistics are found.
+ *                       OT_ERROR_NOT_FOUND error should be set if no charactertistics are found.
  *                       Otherwise error indicates the reason of failure is used.
  *
  */
@@ -864,7 +865,7 @@ otError otPlatBleGattClientDescriptorsDiscover(otInstance *aInstance, uint16_t a
  * @param[in] aCount     Number of descriptors in @p aDescs list.
  * @param[in] aError     The value of OT_ERROR_NONE indicates that at least one descriptor
  *                       has been found and the total number of them is stored in @p aCount.
- *                       kThreadError_NotFound error should be set if no descriptors are found.
+ *                       OT_ERROR_NOT_FOUND error should be set if no descriptors are found.
  *                       Otherwise error indicates the reason of failure is used.
  *
  */
