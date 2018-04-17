@@ -1565,7 +1565,7 @@ otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_COUNT(void)
     return mEncoder.WriteUint32(otChannelMonitorGetSampleCount(mInstance));
 }
 
-otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_OCCUPANCY(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1574,7 +1574,7 @@ otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
         SuccessOrExit(error = mEncoder.OpenStruct());
 
         SuccessOrExit(error = mEncoder.WriteUint8(channel));
-        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelQuality(mInstance, channel)));
+        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelOccupancy(mInstance, channel)));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
@@ -2969,6 +2969,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         { OT_CHANGED_THREAD_EXT_PANID,            SPINEL_PROP_NET_XPANID                     },
         { OT_CHANGED_MASTER_KEY,                  SPINEL_PROP_NET_MASTER_KEY                 },
         { OT_CHANGED_PSKC,                        SPINEL_PROP_NET_PSKC                       },
+        { OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL    },
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

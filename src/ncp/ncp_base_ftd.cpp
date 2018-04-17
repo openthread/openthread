@@ -872,7 +872,7 @@ otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_NEW_CHANNEL(void)
 
     SuccessOrExit(error = mDecoder.ReadUint8(channel));
 
-    error = otChannelManagerRequestChannelChange(mInstance, channel);
+    otChannelManagerRequestChannelChange(mInstance, channel);
 
 exit:
     return error;
@@ -908,6 +908,74 @@ otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_SUPPORTED_CHANNELS(void)
 
     SuccessOrExit(error = DecodeChannelMask(channelMask));
     otChannelManagerSetSupportedChannels(mInstance, channelMask);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_FAVORED_CHANNELS(void)
+{
+    return EncodeChannelMask(otChannelManagerGetFavoredChannels(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_FAVORED_CHANNELS(void)
+{
+    uint32_t channelMask = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = DecodeChannelMask(channelMask));
+    otChannelManagerSetFavoredChannels(mInstance, channelMask);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_CHANNEL_SELECT(void)
+{
+    return mEncoder.WriteBool(false);
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_CHANNEL_SELECT(void)
+{
+    bool skipQualityCheck = false;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(skipQualityCheck));
+    error = otChannelManagerRequestChannelSelect(mInstance, skipQualityCheck);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_AUTO_SELECT_ENABLED(void)
+{
+    return mEncoder.WriteBool(otChannelManagerGetAutoChannelSelectionEnabled(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_AUTO_SELECT_ENABLED(void)
+{
+    bool enabled = false;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    otChannelManagerSetAutoChannelSelectionEnabled(mInstance, enabled);
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL(void)
+{
+    return mEncoder.WriteUint32(otChannelManagerGetAutoChannelSelectionInterval(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL(void)
+{
+    uint32_t interval;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(interval));
+    error = otChannelManagerSetAutoChannelSelectionInterval(mInstance, interval);
 
 exit:
     return error;
