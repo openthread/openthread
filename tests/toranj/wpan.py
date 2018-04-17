@@ -34,6 +34,7 @@ import weakref
 import subprocess
 import socket
 import asyncore
+import inspect
 
 #----------------------------------------------------------------------------------------------------------------------
 # wpantund properties
@@ -724,8 +725,10 @@ class AsyncReceiver(asyncore.dispatcher):
 #-----------------------------------------------------------------------------------------------------------------------
 
 def verify(condition):
+    """Verifies that a `condition` is true, otherwise exits"""
     if not condition:
-        print 'verify() failed'
+        calling_frame = inspect.currentframe().f_back
+        print 'verify() failed at line {} in "{}"'.format(calling_frame.f_lineno, calling_frame.f_code.co_filename)
         exit(1)
 
 
