@@ -56,7 +56,8 @@ extern "C" {
  *   When channel monitoring is active, a zero-duration Energy Scan is performed, collecting a single RSSI sample on
  *   every channel per sample interval. The RSSI samples are compared with a pre-specified RSSI threshold. As an
  *   indicator of channel quality, the channel monitoring module maintains and provides the average rate/percentage of
- *   RSSI samples that are above the threshold within (approximately) a specified sample window.
+ *   RSSI samples that are above the threshold within (approximately) a specified sample window (referred to as channel
+ *   occupancy).
  *
  * @{
  *
@@ -134,25 +135,25 @@ uint32_t otChannelMonitorGetSampleWindow(otInstance *aInstance);
 uint32_t otChannelMonitorGetSampleCount(otInstance *aInstance);
 
 /**
- * Gets the current channel quality value for a given channel.
+ * Gets the current channel occupancy for a given channel.
  *
- * The channel quality value represents the average rate/percentage of RSSI samples that were above RSSI threshold
+ * The channel occupancy value represents the average rate/percentage of RSSI samples that were above RSSI threshold
  * ("bad" RSSI samples).
  *
  * For the first "sample window" samples, the average is maintained as the actual percentage (i.e., ratio of number
  * of "bad" samples by total number of samples). After "window" samples, the averager uses an exponentially
- * weighted moving average. Practically, this means the quality is representative of up to `3 * window` last samples
- * with highest weight given to latest `kSampleWindow` samples.
+ * weighted moving average. Practically, this means the average is representative of up to `3 * window` last samples
+ * with highest weight given to the latest `kSampleWindow` samples.
  *
  * Max value of `0xffff` indicates all RSSI samples were above RSSI threshold (i.e. 100% of samples were "bad").
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aChannel        The channel for which to get the link quality.
+ * @param[in]  aChannel        The channel for which to get the link occupancy.
  *
- * @returns The current channel quality value for the given channel.
+ * @returns The current channel occupancy for the given channel.
  *
  */
-uint16_t otChannelMonitorGetChannelQuality(otInstance *aInstance, uint8_t aChannel);
+uint16_t otChannelMonitorGetChannelOccupancy(otInstance *aInstance, uint8_t aChannel);
 
 /**
  * @}

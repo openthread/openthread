@@ -56,7 +56,7 @@ ChannelMonitor::ChannelMonitor(Instance &aInstance)
     , mSampleCount(0)
     , mTimer(aInstance, &ChannelMonitor::HandleTimer, this)
 {
-    memset(mChannelQuality, 0, sizeof(mChannelQuality));
+    memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
 }
 
 otError ChannelMonitor::Start(void)
@@ -88,20 +88,20 @@ void ChannelMonitor::Clear(void)
 {
     mChannelMaskIndex = 0;
     mSampleCount      = 0;
-    memset(mChannelQuality, 0, sizeof(mChannelQuality));
+    memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
 
     otLogDebgUtil(GetInstance(), "ChannelMonitor: Clearing data");
 }
 
-uint16_t ChannelMonitor::GetChannelQuality(uint8_t aChannel) const
+uint16_t ChannelMonitor::GetChannelOccupancy(uint8_t aChannel) const
 {
-    uint16_t quality = 0;
+    uint16_t occupancy = 0;
 
     VerifyOrExit((OT_RADIO_CHANNEL_MIN <= aChannel) && (aChannel <= OT_RADIO_CHANNEL_MAX));
-    quality = mChannelQuality[aChannel - OT_RADIO_CHANNEL_MIN];
+    occupancy = mChannelOccupancy[aChannel - OT_RADIO_CHANNEL_MIN];
 
 exit:
-    return quality;
+    return occupancy;
 }
 
 void ChannelMonitor::RestartTimer(void)
@@ -162,7 +162,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
     else
     {
         uint8_t  channelIndex = (aResult->mChannel - OT_RADIO_CHANNEL_MIN);
-        uint32_t newAverage   = mChannelQuality[channelIndex];
+        uint32_t newAverage   = mChannelOccupancy[channelIndex];
         uint32_t newValue     = 0;
         uint32_t weight;
 
@@ -172,19 +172,19 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
         if (aResult->mMaxRssi != OT_RADIO_RSSI_INVALID)
         {
-            newValue = (aResult->mMaxRssi >= kRssiThreshold) ? kMaxQualityIndicator : 0;
+            newValue = (aResult->mMaxRssi >= kRssiThreshold) ? kMaxOccupancy : 0;
         }
 
-        // `mChannelQuality` stores the average rate/percentage of RSS samples
-        // that are higher than a given RSS threshold ("bad" RSS samples). For
-        // the first `kSampleWindow` samples, the average is maintained as the
-        // actual percentage (i.e., ratio of number of "bad" samples by total
-        // number of samples). After `kSampleWindow` samples, the averager
-        // uses an exponentially weighted moving average logic with weight
-        // coefficient `1/kSampleWindow` for new values. Practically, this
-        // means the quality is representative of up to `3 * kSampleWindow`
-        // last samples with highest weight given to latest `kSampleWindow`
-        // samples.
+        // `mChannelOccupancy` stores the average rate/percentage of RSS
+        // samples that are higher than a given RSS threshold ("bad" RSS
+        // samples). For the first `kSampleWindow` samples, the average is
+        // maintained as the actual percentage (i.e., ratio of number of
+        // "bad" samples by total number of samples). After `kSampleWindow`
+        // samples, the averager uses an exponentially weighted moving
+        // average logic with weight coefficient `1/kSampleWindow` for new
+        // values. Practically, this means the average is representative
+        // of up to `3 * kSampleWindow` samples with highest weight given
+        // to the latest `kSampleWindow` samples.
 
         if (mSampleCount >= kSampleWindow)
         {
@@ -197,7 +197,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
         newAverage = (newAverage * weight + newValue) / (weight + 1);
 
-        mChannelQuality[channelIndex] = static_cast<uint16_t>(newAverage);
+        mChannelOccupancy[channelIndex] = static_cast<uint16_t>(newAverage);
     }
 }
 
@@ -206,11 +206,42 @@ void ChannelMonitor::LogResults(void)
     otLogInfoUtil(
         GetInstance(),
         "ChannelMonitor: %u [%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x]",
-        mSampleCount, mChannelQuality[0] >> 8, mChannelQuality[1] >> 8, mChannelQuality[2] >> 8,
-        mChannelQuality[3] >> 8, mChannelQuality[4] >> 8, mChannelQuality[5] >> 8, mChannelQuality[6] >> 8,
-        mChannelQuality[7] >> 8, mChannelQuality[8] >> 8, mChannelQuality[9] >> 8, mChannelQuality[10] >> 8,
-        mChannelQuality[11] >> 8, mChannelQuality[12] >> 8, mChannelQuality[13] >> 8, mChannelQuality[14] >> 8,
-        mChannelQuality[15] >> 8);
+        mSampleCount, mChannelOccupancy[0] >> 8, mChannelOccupancy[1] >> 8, mChannelOccupancy[2] >> 8,
+        mChannelOccupancy[3] >> 8, mChannelOccupancy[4] >> 8, mChannelOccupancy[5] >> 8, mChannelOccupancy[6] >> 8,
+        mChannelOccupancy[7] >> 8, mChannelOccupancy[8] >> 8, mChannelOccupancy[9] >> 8, mChannelOccupancy[10] >> 8,
+        mChannelOccupancy[11] >> 8, mChannelOccupancy[12] >> 8, mChannelOccupancy[13] >> 8, mChannelOccupancy[14] >> 8,
+        mChannelOccupancy[15] >> 8);
+}
+
+Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy)
+{
+    uint8_t          channel;
+    Mac::ChannelMask bestMask;
+    uint16_t         minOccupancy = 0xffff;
+
+    bestMask.Clear();
+
+    channel = Mac::ChannelMask::kChannelIteratorFirst;
+
+    while (aMask.GetNextChannel(channel) == OT_ERROR_NONE)
+    {
+        uint16_t occupancy = GetChannelOccupancy(channel);
+
+        if (bestMask.IsEmpty() || (occupancy <= minOccupancy))
+        {
+            if (occupancy < minOccupancy)
+            {
+                bestMask.Clear();
+            }
+
+            bestMask.AddChannel(channel);
+            minOccupancy = occupancy;
+        }
+    }
+
+    aOccupancy = minOccupancy;
+
+    return bestMask;
 }
 
 } // namespace Utils

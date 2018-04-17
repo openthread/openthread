@@ -768,7 +768,7 @@ typedef enum
     SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_COUNT
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 9,
 
-    /// Channel monitoring channel quality
+    /// Channel monitoring channel occupancy
     /** Format: `A(t(CU))` (read-only)
      *
      * Required capability: SPINEL_CAP_CHANNEL_MONITOR
@@ -776,9 +776,9 @@ typedef enum
      * Data per item is:
      *
      *  `C`: Channel
-     *  `U`: Channel quality indicator
+     *  `U`: Channel occupancy indicator
      *
-     * The channel quality value represents the average rate/percentage of
+     * The channel occupancy value represents the average rate/percentage of
      * RSSI samples that were above RSSI threshold ("bad" RSSI samples) within
      * (approximately) sample window latest RSSI samples.
      *
@@ -786,7 +786,7 @@ typedef enum
      * threshold (i.e. 100% of samples were "bad").
      *
      */
-    SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY
+    SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY
                                         = SPINEL_PROP_PHY_EXT__BEGIN + 10,
 
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
@@ -1499,6 +1499,70 @@ typedef enum
      */
     SPINEL_PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS
                                         = SPINEL_PROP_OPENTHREAD__BEGIN + 2,
+
+    /// Channel Manager Favored Channels
+    /** Format 'A(C)'
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * This property specifies the list of favored channels (when `ChannelManager` is asked to select channel)
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 3,
+
+    /// Channel Manager Channel Select Trigger
+    /** Format 'b'
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * Writing to this property triggers a request on `ChannelManager` to select a new channel.
+     *
+     * Once a Channel Select is triggered, the Channel Manager will perform the following 3 steps:
+     *
+     * 1) `ChannelManager` decides if the channel change would be helpful. This check can be skipped if in the input
+     *    boolean to this property is set to `true` (skipping the quality check).
+     *    This step uses the collected link quality metrics on the device such as CCA failure rate, frame and message
+     *    error rates per neighbor, etc. to determine if the current channel quality is at the level that justifies
+     *    a channel change.
+     *
+     * 2) If first step passes, then `ChannelManager` selects a potentially better channel. It uses the collected
+     *    channel quality data by `ChannelMonitor` module. The supported and favored channels are used at this step.
+     *
+     * 3) If the newly selected channel is different from the current channel, `ChannelManager` requests/starts the
+     *    channel change process.
+     *
+     * Reading this property always yields `false`.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 4,
+
+    /// Channel Manager Auto Channel Selection Enabled
+    /** Format 'b'
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * This property indicates if auto-channel-selection functionality is enabled/disabled on `ChannelManager`.
+     *
+     * When enabled, `ChannelManager` will periodically checks and attempts to select a new channel. The period interval
+     * is specified by `SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL`.
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 5,
+
+    /// Channel Manager Auto Channel Selection Interval
+    /** Format 'L'
+     *  units: seconds
+     *
+     * Required capability: SPINEL_CAP_CHANNEL_MANAGER
+     *
+     * This property specifies the auto-channel-selection check interval (in seconds).
+     *
+     */
+    SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL
+                                        = SPINEL_PROP_OPENTHREAD__BEGIN + 6,
 
     SPINEL_PROP_OPENTHREAD__END         = 0x2000,
 

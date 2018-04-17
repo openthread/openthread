@@ -1261,9 +1261,19 @@ public:
 
     enum
     {
-        kMaxDelayTimer     = 259200, ///< maximum delay timer value for a Pending Dataset in seconds
-        kDelayTimerMinimal = 30000,  ///< Minimum Delay Timer value for a Pending Operational Dataset (ms)
-        kDelayTimerDefault = 300000, ///< Default Delay Timer value for a Pending Operational Dataset (ms)
+        kMaxDelayTimer = 259200, ///< maximum delay timer value for a Pending Dataset in seconds
+
+        /**
+         * Minimum Delay Timer value for a Pending Operational Dataset (ms)
+         *
+         */
+        kDelayTimerMinimal = OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY,
+
+        /**
+         * Default Delay Timer value for a Pending Operational Dataset (ms)
+         *
+         */
+        kDelayTimerDefault = OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY,
     };
 
 private:
