@@ -42,8 +42,9 @@ extern int    gArgumentsCount;
 extern char **gArguments;
 #endif
 
-static otPlatResetReason sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
-bool                     gPlatformPseudoResetWasRequested;
+static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
+bool                       gPlatformPseudoResetWasRequested;
+static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
@@ -92,12 +93,27 @@ void otPlatWakeHost(void)
 
 otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
 {
+    otError error = OT_ERROR_NONE;
+
     (void)aInstance;
-    return (aState == OT_PLAT_MCU_POWER_STATE_ON) ? OT_ERROR_NONE : OT_ERROR_FAILED;
+
+    switch (aState)
+    {
+    case OT_PLAT_MCU_POWER_STATE_ON:
+    case OT_PLAT_MCU_POWER_STATE_LOW_POWER:
+        gPlatMcuPowerState = aState;
+        break;
+
+    default:
+        error = OT_ERROR_FAILED;
+        break;
+    }
+
+    return error;
 }
 
 otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
 {
     (void)aInstance;
-    return OT_PLAT_MCU_POWER_STATE_ON;
+    return gPlatMcuPowerState;
 }
