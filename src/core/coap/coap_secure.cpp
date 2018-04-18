@@ -162,11 +162,14 @@ otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
     return GetNetif().GetDtls().SetPsk(aPsk, aPskLength);
 }
 
-otError CoapSecure::SetX509Certificate(uint8_t *aX509Cert, uint32_t aX509Length,
-                                       uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
+otError CoapSecure::SetX509Certificate(const uint8_t *aX509Cert, uint32_t aX509Length)
 {
-    return GetNetif().GetDtls().SetX509Certificate(aX509Cert, aX509Length,
-                                                   aPrivateKey, aPrivateKeyLength);
+    return GetNetif().GetDtls().SetX509Certificate(aX509Cert, aX509Length);
+}
+
+otError CoapSecure::SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
+{
+    return GetNetif().GetDtls().SetX509PrivateKey(aPrivateKey, aPrivateKeyLength);
 }
 
 otError CoapSecure::SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,

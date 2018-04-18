@@ -173,19 +173,26 @@ public:
                             uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
     /**
-     * This method sets a X509 certificate with his private key for
-     * DTLS session.
+     * This method sets a X509 certificate for DTLS session.
      *
      * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
      * @param[in]  aX509CertLenth    The length of certificate.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     *
+     */
+    otError SetX509Certificate(const uint8_t *aX509Cert, uint32_t aX509Length);
+
+    /**
+     * This method sets a X509 private key for DTLS session.
+     *
      * @param[in]  aPrivateKey       A pointer to the private key.
      * @param[in]  aPrivateKeyLenth  The length of the private key.
      *
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetX509Certificate(uint8_t *aX509Cert, uint32_t aX509Length,
-                                           uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
+    otError SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.

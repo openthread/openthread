@@ -204,14 +204,22 @@ public:
      *
      * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
      * @param[in]  aX509CertLenth    The length of certificate.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     *
+     */
+    otError SetX509Certificate(const uint8_t * aX509Certificate, uint32_t aX509CertLenth);
+
+    /**
+     * This method sets the x509 private key.
+     *
      * @param[in]  aPrivateKey       A pointer to the private key.
      * @param[in]  aPrivateKeyLenth  The length of the private key.
      *
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetX509Certificate(uint8_t * aX509Certificate, uint32_t aX509CertLenth,
-                                     uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth);
+    otError SetX509PrivateKey(const uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth);
 
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
@@ -319,6 +327,11 @@ private:
     uint8_t                  mPreSharedKeyIdentity[32];
     uint16_t                 mPreSharedKeyLength;
     uint16_t                 mPreSharedKeyIdLength;
+
+    const uint8_t *          mX509Cert;
+    uint32_t                 mX509CertLenth;
+    const uint8_t *          mX509Pk;
+    uint32_t                 mX509PkLength;
 
     int                      mApplicationCoapCiphreSuite[1];
 

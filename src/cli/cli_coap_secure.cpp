@@ -41,6 +41,8 @@
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"		// include the core coap secure implementation ToDo: remove this comment later
 
+#include "x509_cert_key.hpp"
+
 namespace ot {
 namespace Cli {
 
@@ -61,7 +63,7 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
 
     if (length > 0)
     {
-        mInterpreter.mServer->OutputFormat(" with payload: ");
+        mInterpreter.mServer->OutputFormat("\r\n   with payload HEX  : ");
 
         while (length > 0)
         {
@@ -76,6 +78,30 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
     }
 
     mInterpreter.mServer->OutputFormat("\r\n");
+    bytesPrinted = 0;
+    length       = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+
+        if (length > 0)
+        {
+            mInterpreter.mServer->OutputFormat("   with payload ASCII: ",aMessage);
+
+            while (length > 0)
+            {
+                bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
+                otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, buf, bytesToPrint);
+
+                for (int i = 0; i < bytesToPrint; i++)
+                    {
+                    mInterpreter.mServer->OutputFormat("%c", buf[i]);
+                    }
+
+
+                length -= bytesToPrint;
+                bytesPrinted += bytesToPrint;
+            }
+        }
+
+        mInterpreter.mServer->OutputFormat("\r\n");
 }
 
 otError CoapSecureCli::Process(int argc, char *argv[])
@@ -113,25 +139,30 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 	}
     else if (strcmp(argv[0], "setx509") == 0)
     {
-        if (argc > 2)
-        {
-            uint8_t mX509Cert[255];
-            uint32_t mX509Length = strlen(argv[1]);
-            uint8_t mPk[255];
-            uint32_t mPkLength = strlen(argv[2]);
+//        if (argc > 2)
+//        {
+//            uint8_t mX509Cert[255];
+//            uint32_t mX509Length = strlen(X509_CERTIFICATE);
+//            uint8_t mPk[255];
+//            uint32_t mPkLength = strlen(PRIVATE_KEY);
 
-            memcpy(mX509Cert, argv[1], mX509Length);
-            memcpy(mPk, argv[2], mPkLength);
+//            memcpy(mX509Cert,X509_CERTIFICATE, mX509Length);
+//            memcpy(mPk, PRIVATE_KEY, mPkLength);
 
-            SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
-                                                                 mX509Cert, mX509Length,
-                                                                 mPk, mPkLength));
-            mInterpreter.mServer->OutputFormat("Coap Secure set X509 Cert: ");
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
+             SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
+                                                                  (const uint8_t *)X509_CERTIFICATE, sizeof(X509_CERTIFICATE)));
+
+//            SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
+//                                                                 (const unsigned char*)dtls_test_cas_pem, dtls_test_cas_pem_len));
+
+            SuccessOrExit(error = otCoapSecureSetX509PrivateKey(mInterpreter.mInstance,
+                                                                (const uint8_t *)PRIVATE_KEY, sizeof(PRIVATE_KEY)));
+ //           mInterpreter.mServer->OutputFormat("Coap Secure set X509 Cert: ");
+//        }
+//        else
+//        {
+//            ExitNow(error = OT_ERROR_INVALID_ARGS);
+//        }
 
 
     }

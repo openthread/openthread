@@ -71,12 +71,21 @@ Dtls::Dtls(Instance &aInstance)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
-    memset(&mCaCert, 0, sizeof(mCaCert));
+    memset(&mApplicationCoapCiphreSuite, 0, sizeof(mApplicationCoapCiphreSuite));
+
     memset(&mPreSharedKey, 0, sizeof(mPreSharedKey));
     memset(&mPreSharedKeyIdentity, 0, sizeof(mPreSharedKeyIdentity));
     mPreSharedKeyIdLength = 0;
     mPreSharedKeyLength = 0;
-    memset(&mApplicationCoapCiphreSuite, 0, sizeof(mApplicationCoapCiphreSuite));
+
+//    memset(&mCaCert, 0, sizeof(mCaCert));
+//    memset(&mPrivateKey, 0, sizeof(mPrivateKey));
+//    memset(&mX509Cert, 0, sizeof(mX509Cert));
+//    memset(&mX509Pk, 0, sizeof(mX509Pk));
+    mX509Cert = NULL;
+    mX509Pk = NULL;
+    mX509CertLenth = 0;
+    mX509PkLength = 0;
 
     memset(mPsk, 0, sizeof(mPsk));
     memset(&mEntropy, 0, sizeof(mEntropy));
@@ -84,6 +93,8 @@ Dtls::Dtls(Instance &aInstance)
     memset(&mSsl, 0, sizeof(mSsl));
     memset(&mConf, 0, sizeof(mConf));
     memset(&mCookieCtx, 0, sizeof(mCookieCtx));
+
+    mbedtls_x509_crt_init(&mCaCert);
 
     mProvisioningUrl.Init();
 }
@@ -217,11 +228,11 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
     otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
     rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
-//    VerifyOrExit(rval == 0);
+    VerifyOrExit(rval == 0);
 
     rval = mbedtls_ssl_config_defaults(&mConf, MBEDTLS_SSL_IS_CLIENT,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
-//    VerifyOrExit(rval == 0);
+    VerifyOrExit(rval == 0);
 
     mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);     // Bad but easy, change later
 
@@ -233,9 +244,9 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
 
-    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
+    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);                 // ToDo: Test
 
-    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, &mSsl);
+    //mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, &mSsl);              // ToDo: Test
 
 /*    if (!mClient)
     {
@@ -252,7 +263,17 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     {
         case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:    // with x509 cert
 
-            mbedtls_x509_crt_init(&mCaCert);
+            //mbedtls_x509_crt_init(&mCaCert);
+            mbedtls_x509_crt_free(&mCaCert);
+            // load certificate
+            rval = mbedtls_x509_crt_parse(&mCaCert, mX509Cert,
+                                           mX509CertLenth);
+            VerifyOrExit( rval == 0);
+            // load private key
+            rval =  mbedtls_pk_parse_key(&mPrivateKey, mX509Pk,
+                                          mX509PkLength, NULL, 0);
+            VerifyOrExit( rval == 0);
+            // load ca chain
             mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
             rval = mbedtls_ssl_conf_own_cert(&mConf, &mCaCert, &mPrivateKey);
             VerifyOrExit(rval == 0);
@@ -260,8 +281,12 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
 
         case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:            // with preshared key
 
-            mbedtls_ssl_conf_psk(&mConf, (const unsigned char*)mPreSharedKey, mPreSharedKeyLength,
-                                 (const unsigned char*)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+            rval = mbedtls_ssl_conf_psk(&mConf,
+                                        (const unsigned char*)mPreSharedKey,
+                                         mPreSharedKeyLength,
+                                        (const unsigned char*)mPreSharedKeyIdentity,
+                                         mPreSharedKeyIdLength);
+            VerifyOrExit(rval == 0);
             break;
 
         default:
@@ -273,7 +298,7 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
     VerifyOrExit(rval == 0);
 
-//    mbedtls_ssl_set_hostname(&mSsl, "server");
+    mbedtls_ssl_set_hostname(&mSsl, "server");
 
     mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
@@ -304,6 +329,7 @@ void Dtls::Close(void)
     mbedtls_ctr_drbg_free(&mCtrDrbg);
     mbedtls_entropy_free(&mEntropy);
     mbedtls_ssl_cookie_free(&mCookieCtx);
+    mbedtls_x509_crt_free(&mCaCert);
 
     if (mConnectedHandler != NULL)
     {
@@ -332,24 +358,24 @@ exit:
     return error;
 }
 
-otError Dtls::SetX509Certificate(uint8_t * aX509Certificate, uint32_t aX509CertLenth,
-                                 uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth)
+otError Dtls::SetX509Certificate(const uint8_t * aX509Certificate, uint32_t aX509CertLenth)
 {
     otError error = OT_ERROR_NONE;
-    int rval = 0;
 
-    VerifyOrExit(aX509CertLenth <= sizeof(mCaCert), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aPrivateKeyLenth <= sizeof(mPrivateKey), error = OT_ERROR_INVALID_ARGS);
-
-    rval = mbedtls_x509_crt_parse(&mCaCert, (const uint8_t *) aX509Certificate, aX509CertLenth);
-    VerifyOrExit(rval == 0, error = OT_ERROR_SECURITY);
-
-    rval = mbedtls_pk_parse_key(&mPrivateKey, aPrivateKey, aPrivateKeyLenth, NULL, 0);
-    VerifyOrExit(rval == 0, error = OT_ERROR_SECURITY);
+    mX509Cert = aX509Certificate;
+    mX509CertLenth = aX509CertLenth;
 
     mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
 
-exit:
+    return error;
+}
+
+otError Dtls::SetX509PrivateKey(const uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth)
+{
+    otError error = OT_ERROR_NONE;
+
+    mX509Pk = aPrivateKey;
+    mX509PkLength = aPrivateKeyLenth;
 
     return error;
 }
@@ -667,6 +693,15 @@ otError Dtls::MapError(int rval)
         break;
 
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
+        error = OT_ERROR_NO_BUFS;
+        break;
+
+    case MBEDTLS_ERR_X509_INVALID_FORMAT:
+    case MBEDTLS_ERR_PK_BAD_INPUT_DATA:
+        error = OT_ERROR_SECURITY;
+        break;
+
+    case MBEDTLS_ERR_X509_ALLOC_FAILED:
         error = OT_ERROR_NO_BUFS;
         break;
 

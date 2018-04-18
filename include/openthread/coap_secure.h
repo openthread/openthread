@@ -116,14 +116,22 @@ otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint16_t aPskLe
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
  * @param[in]  aX509CertLenth    The length of certificate.
+ *
+ * @retval OT_ERROR_NONE  Successfully set the PSK.
+ *
+ */
+otError otCoapSecureSetX509Certificate(otInstance *aInstance, const uint8_t *aX509Cert, uint32_t aX509Length);
+/**
+ * This method sets a X509 private key for DTLS session.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aPrivateKey       A pointer to the private key.
  * @param[in]  aPrivateKeyLenth  The length of the private key.
  *
  * @retval OT_ERROR_NONE  Successfully set the PSK.
  *
  */
-otError otCoapSecureSetX509Certificate(otInstance *aInstance, uint8_t *aX509Cert, uint32_t aX509Length,
-                                       uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
+otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
 
 /**
  * This method initializes DTLS session with a peer.
