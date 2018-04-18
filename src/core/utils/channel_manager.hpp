@@ -276,9 +276,12 @@ private:
     static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aChangedFlags);
     void        HandleStateChanged(uint32_t aChangedFlags);
     void        PreparePendingDataset(void);
-    otError     FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy);
-    bool        ShouldAttamptChannelChange(void);
     void        StartAutoSelectTimer(void);
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    otError FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy);
+    bool    ShouldAttamptChannelChange(void);
+#endif
 
     Mac::ChannelMask   mSupportedChannelMask;
     Mac::ChannelMask   mFavoredChannelMask;
