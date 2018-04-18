@@ -50,8 +50,8 @@
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-#include "crypto/heap.hpp"
 #include "crypto/mbedtls.hpp"
+#include "utils/heap.hpp"
 #endif
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
@@ -275,12 +275,12 @@ public:
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     /**
-     * This method returns a reference to the MbedTlsHeap object.
+     * This method returns a reference to the Heap object.
      *
-     * @returns A reference to the MbedTlsHeap object.
+     * @returns A reference to the Heap object.
      *
      */
-    Crypto::Heap &GetMbedTlsHeap(void) { return mMbedTlsHeap; }
+    Utils::Heap &GetHeap(void) { return mHeap; }
 #endif
 
     /**
@@ -386,7 +386,7 @@ private:
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Crypto::MbedTls mMbedTls;
-    Crypto::Heap    mMbedTlsHeap;
+    Utils::Heap     mHeap;
 #endif
 
     Ip6::Ip6    mIp6;

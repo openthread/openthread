@@ -135,7 +135,6 @@ SOURCES_COMMON                      = \
     common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
-    crypto/heap.cpp                   \
     crypto/hmac_sha256.cpp            \
     crypto/mbedtls.cpp                \
     crypto/pbkdf2_cmac.cpp            \
@@ -196,6 +195,7 @@ SOURCES_COMMON                      = \
     utils/channel_manager.cpp         \
     utils/channel_monitor.cpp         \
     utils/child_supervision.cpp       \
+    utils/heap.cpp                    \
     utils/jam_detector.cpp            \
     utils/missing_strlcpy.c           \
     utils/missing_strlcat.c           \
@@ -252,7 +252,6 @@ HEADERS_COMMON                      = \
     common/trickle_timer.hpp          \
     crypto/aes_ccm.hpp                \
     crypto/aes_ecb.hpp                \
-    crypto/heap.hpp                   \
     crypto/hmac_sha256.hpp            \
     crypto/mbedtls.hpp                \
     crypto/pbkdf2_cmac.h              \
@@ -324,6 +323,7 @@ HEADERS_COMMON                      = \
     utils/channel_monitor.hpp         \
     utils/child_supervision.hpp       \
     utils/slaac_address.hpp           \
+    utils/heap.hpp                    \
     utils/jam_detector.hpp            \
     utils/wrap_stdbool.h              \
     utils/wrap_stdint.h               \

@@ -28,7 +28,7 @@
 
 #include <openthread/config.h>
 
-#include "core/crypto/heap.hpp"
+#include "core/utils/heap.hpp"
 
 #include <stdlib.h>
 
@@ -45,15 +45,17 @@
  */
 void TestAllocateSingle(void)
 {
-    ot::Crypto::Heap heap;
+    ot::Utils::Heap heap;
+
+    const size_t totalSize = heap.GetFreeSize();
 
     {
         void *p = heap.CAlloc(1, 0);
-        VerifyOrQuit(p == NULL, "TestAllocateSingle allocate 1 x 0 byte failed!\n");
+        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 1 x 0 byte failed!\n");
         heap.Free(p);
 
         p = heap.CAlloc(0, 1);
-        VerifyOrQuit(p == NULL, "TestAllocateSingle allocate 0 x 1 byte failed!\n");
+        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 0 x 1 byte failed!\n");
         heap.Free(p);
     }
 
@@ -61,10 +63,10 @@ void TestAllocateSingle(void)
     {
         Log("%s allocating %zu bytes...", __func__, size);
         void *p = heap.CAlloc(1, size);
-        VerifyOrQuit(p != NULL && !heap.IsClean(), "allocating failed!\n");
+        VerifyOrQuit(p != NULL && !heap.IsClean() && heap.GetFreeSize() + size <= totalSize, "allocating failed!\n");
         memset(p, 0xff, size);
         heap.Free(p);
-        VerifyOrQuit(heap.IsClean(), "freeing failed!\n");
+        VerifyOrQuit(heap.IsClean() && heap.GetFreeSize() == totalSize, "freeing failed!\n");
     }
 }
 
@@ -83,13 +85,14 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
         size_t mSize;
     };
 
-    ot::Crypto::Heap heap;
-    Node             head;
-    size_t           nnodes = 0;
+    ot::Utils::Heap heap;
+    Node            head;
+    size_t          nnodes = 0;
 
     srand(aSeed);
 
-    Node *last = &head;
+    const size_t totalSize = heap.GetFreeSize();
+    Node *       last      = &head;
 
     do
     {
@@ -146,7 +149,8 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
         last = next;
     }
 
-    VerifyOrQuit(heap.IsClean(), "TestAllocateRandomly heap not clean after freeing all!\n");
+    VerifyOrQuit(heap.IsClean() && heap.GetFreeSize() == totalSize,
+                 "TestAllocateRandomly heap not clean after freeing all!\n");
 }
 
 /**

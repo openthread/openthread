@@ -42,7 +42,7 @@
 #include "utils/wrap_stdint.h"
 
 namespace ot {
-namespace Crypto {
+namespace Utils {
 
 /**
  * This class represents a memory block.
@@ -206,11 +206,12 @@ public:
      * This method returns whether the heap is clean.
      *
      */
-    bool IsClean(void)
+    bool IsClean(void) const
     {
-        const Block &super = BlockSuper();
-        const Block &first = BlockRight(super);
-        return super.GetNext() == BlockOffset(first) && first.GetSize() == kFirstBlockSize;
+        Heap &       self  = *const_cast<Heap *>(this);
+        const Block &super = self.BlockSuper();
+        const Block &first = self.BlockRight(super);
+        return super.GetNext() == self.BlockOffset(first) && first.GetSize() == kFirstBlockSize;
     }
 
     /**
@@ -219,13 +220,18 @@ public:
      */
     size_t GetCapacity(void) const { return kFirstBlockSize; }
 
+    /**
+     * This method returns free space of this heap.
+     */
+    size_t GetFreeSize(void) const { return mMemory.mFreeSize; }
+
 private:
     enum
     {
 #if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE, ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_HEAP_SIZE, ///< Size of memory buffer (bytes).
 #else
-        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).
 #endif
         kAlignSize          = sizeof(long),                                       ///< The alignment size.
         kBlockRemainderSize = kAlignSize - sizeof(uint16_t) * 2,                  ///< Block unit remainder size.
@@ -331,6 +337,7 @@ private:
 
     union
     {
+        uint16_t mFreeSize;
         // Make sure memory is long aligned.
         long     mLong[kMemorySize / sizeof(long)];
         uint8_t  m8[kMemorySize];
@@ -338,7 +345,7 @@ private:
     } mMemory;
 };
 
-} // namespace Crypto
+} // namespace Utils
 } // namespace ot
 
 #endif // OT_HEAP_HPP_
