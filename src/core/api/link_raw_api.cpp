@@ -157,18 +157,24 @@ otRadioCaps LinkRaw::GetCaps(void) const
     // time included into the raw link-layer code.
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-    assert((RadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) == 0);
-    RadioCaps = static_cast<otRadioCaps>(RadioCaps | OT_RADIO_CAPS_ACK_TIMEOUT);
+    if ((RadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) == 0)
+    {
+        RadioCaps = static_cast<otRadioCaps>(RadioCaps | OT_RADIO_CAPS_ACK_TIMEOUT);
+    }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-    assert((RadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0);
-    RadioCaps = static_cast<otRadioCaps>(RadioCaps | OT_RADIO_CAPS_TRANSMIT_RETRIES);
+    if ((RadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0)
+    {
+        RadioCaps = static_cast<otRadioCaps>(RadioCaps | OT_RADIO_CAPS_TRANSMIT_RETRIES);
+    }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    assert((RadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) == 0);
-    RadioCaps = static_cast<otRadioCaps>(RadioCaps | OT_RADIO_CAPS_ENERGY_SCAN);
+    if ((RadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) == 0)
+    {
+        RadioCaps = static_cast<otRadioCaps>(RadioCaps | OT_RADIO_CAPS_ENERGY_SCAN);
+    }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
     return RadioCaps;
