@@ -705,6 +705,7 @@ otError otPlatBleGattClientWrite(otInstance *aInstance, uint16_t aHandle, otBleR
  * @param[in] aHandle    The handle on which ATT Write Response has been sent.
  *
  */
+
 extern void otPlatBleGattClientOnWriteResponse(otInstance *aInstance, uint16_t aHandle);
 /**
  * Subscribes for characteristic indications.
