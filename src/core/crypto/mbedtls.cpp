@@ -35,7 +35,6 @@
 
 #include <mbedtls/platform.h>
 
-#include "heap.hpp"
 #include "common/instance.hpp"
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
@@ -45,12 +44,12 @@ namespace Crypto {
 
 static void *CAlloc(size_t aCount, size_t aSize)
 {
-    return Instance::Get().GetMbedTlsHeap().CAlloc(aCount, aSize);
+    return Instance::Get().GetHeap().CAlloc(aCount, aSize);
 }
 
 static void Free(void *aPointer)
 {
-    Instance::Get().GetMbedTlsHeap().Free(aPointer);
+    Instance::Get().GetHeap().Free(aPointer);
 }
 
 MbedTls::MbedTls(void)

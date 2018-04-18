@@ -989,23 +989,23 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
+ * @def OPENTHREAD_CONFIG_HEAP_SIZE
  *
- * The size of mbedTLS heap buffer when DTLS is enabled.
+ * The size of heap buffer when DTLS is enabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
-#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE (1536 * sizeof(void *))
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE
+#define OPENTHREAD_CONFIG_HEAP_SIZE (1536 * sizeof(void *))
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+ * @def OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
  *
- * The size of mbedTLS heap buffer when DTLS is disabled.
+ * The size of heap buffer when DTLS is disabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
-#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS 384
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS 384
 #endif
 
 /**
