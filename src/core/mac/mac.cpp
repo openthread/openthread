@@ -1455,6 +1455,7 @@ void Mac::HandleMacTimer(void)
 
     case kOperationTransmitData:
         otLogDebgMac(GetInstance(), "Ack timer fired");
+        RadioReceive(mTxFrame->mChannel);
         HandleTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
         break;
 
