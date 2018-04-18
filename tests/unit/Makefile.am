@@ -163,8 +163,8 @@ test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
 test_lowpan_LDADD            = $(COMMON_LDADD)
 test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp
 
-test_network_data_LDADD       = $(COMMON_LDADD)
-test_network_data_SOURCES     = test_platform.cpp test_network_data.cpp
+test_network_data_LDADD      = $(COMMON_LDADD)
+test_network_data_SOURCES    = test_platform.cpp test_network_data.cpp
 
 test_mac_frame_LDADD         = $(COMMON_LDADD)
 test_mac_frame_SOURCES       = test_platform.cpp test_mac_frame.cpp
