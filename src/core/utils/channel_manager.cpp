@@ -369,16 +369,6 @@ exit:
     return error;
 }
 
-#else // OPENTHREAD_ENABLE_CHANNEL_MONITOR
-
-otError ChannelManager::FindBetterChannel(uint8_t &, uint16_t &)
-{
-    otLogInfoUtil(GetInstance(), "ChannelManager: ChannelMonitor feature is disabled - cannot select channel");
-    return OT_ERROR_DISABLED_FEATURE;
-}
-
-#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
-
 bool ChannelManager::ShouldAttamptChannelChange(void)
 {
     uint16_t ccaFailureRate = GetInstance().Get<Mac::Mac>().GetCcaFailureRate();
@@ -439,6 +429,16 @@ exit:
 
     return error;
 }
+
+#else // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+
+otError ChannelManager::RequestChannelSelect(bool)
+{
+    otLogInfoUtil(GetInstance(), "ChannelManager: ChannelMonitor feature is disabled - cannot select channel");
+    return OT_ERROR_DISABLED_FEATURE;
+}
+
+#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
 void ChannelManager::StartAutoSelectTimer(void)
 {
