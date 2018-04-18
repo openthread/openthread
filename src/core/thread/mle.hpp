@@ -1483,6 +1483,7 @@ private:
     otError SendParentRequest(void);
     otError SendChildIdRequest(void);
     void    SendOrphanAnnounce(void);
+    otError SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
