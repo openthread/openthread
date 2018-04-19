@@ -238,8 +238,6 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
-    mRole = OT_DEVICE_ROLE_DETACHED;
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
     SetStateDetached();
 
     netif.GetKeyManager().Start();
@@ -275,19 +273,35 @@ otError Mle::Stop(bool aClearNetworkDatasets)
 {
     ThreadNetif &netif = GetNetif();
 
-    netif.GetKeyManager().Stop();
-    SetStateDetached();
-    netif.RemoveUnicastAddress(mMeshLocal16);
-
     if (aClearNetworkDatasets)
     {
         netif.GetActiveDataset().HandleDetach();
         netif.GetPendingDataset().HandleDetach();
     }
 
-    mRole = OT_DEVICE_ROLE_DISABLED;
+    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
 
+    netif.GetKeyManager().Stop();
+    SetStateDetached();
+    netif.RemoveUnicastAddress(mMeshLocal16);
+
+    SetRole(OT_DEVICE_ROLE_DISABLED);
+
+exit:
     return OT_ERROR_NONE;
+}
+
+void Mle::SetRole(otDeviceRole aRole)
+{
+    VerifyOrExit(aRole != mRole);
+
+    otLogInfoMle(GetInstance(), "Role %s -> %s", RoleToString(mRole), RoleToString(aRole));
+
+    mRole = aRole;
+    GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
+
+exit:
+    return;
 }
 
 otError Mle::Restore(void)
@@ -565,17 +579,12 @@ otError Mle::SetStateDetached(void)
 {
     ThreadNetif &netif = GetNetif();
 
-    if (mRole != OT_DEVICE_ROLE_DETACHED)
-    {
-        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
-    }
-
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
         netif.RemoveUnicastAddress(mLeaderAloc);
     }
 
-    mRole               = OT_DEVICE_ROLE_DETACHED;
+    SetRole(OT_DEVICE_ROLE_DETACHED);
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
     mChildUpdateRequestTimer.Stop();
@@ -585,7 +594,6 @@ otError Mle::SetStateDetached(void)
     netif.GetIp6().SetForwardingEnabled(false);
     netif.GetIp6().GetMpl().SetTimerExpirations(0);
 
-    otLogInfoMle(GetInstance(), "Role -> Detached");
     return OT_ERROR_NONE;
 }
 
@@ -593,18 +601,13 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
-    if (mRole != OT_DEVICE_ROLE_CHILD)
-    {
-        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
-    }
-
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
         netif.RemoveUnicastAddress(mLeaderAloc);
     }
 
     SetRloc16(aRloc16);
-    mRole                = OT_DEVICE_ROLE_CHILD;
+    SetRole(OT_DEVICE_ROLE_CHILD);
     mParentRequestState  = kParentIdle;
     mReattachState       = kReattachStop;
     mChildUpdateAttempts = 0;
@@ -639,7 +642,6 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     mPreviousParentRloc = mParent.GetRloc16();
 #endif
 
-    otLogInfoMle(GetInstance(), "Role -> Child");
     return OT_ERROR_NONE;
 }
 

@@ -972,6 +972,14 @@ protected:
     Message *NewMleMessage(void);
 
     /**
+     * This method sets the device role.
+     *
+     * @param[in] aRole A device role.
+     *
+     */
+    void SetRole(otDeviceRole aRole);
+
+    /**
      * This method appends an MLE header to a message.
      *
      * @param[in]  aMessage  A reference to the message.

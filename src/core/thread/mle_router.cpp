@@ -416,13 +416,8 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
-    if (mRole != OT_DEVICE_ROLE_ROUTER)
-    {
-        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
-    }
-
     SetRloc16(aRloc16);
-    mRole               = OT_DEVICE_ROLE_ROUTER;
+    SetRole(OT_DEVICE_ROLE_ROUTER);
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
     mChildUpdateRequestTimer.Stop();
@@ -455,7 +450,6 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
         }
     }
 
-    otLogInfoMle(GetInstance(), "Role -> Router");
     return OT_ERROR_NONE;
 }
 
@@ -463,13 +457,8 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
-    if (mRole != OT_DEVICE_ROLE_LEADER)
-    {
-        GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
-    }
-
     SetRloc16(aRloc16);
-    mRole               = OT_DEVICE_ROLE_LEADER;
+    SetRole(OT_DEVICE_ROLE_LEADER);
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
     mChildUpdateRequestTimer.Stop();
@@ -502,7 +491,8 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
         }
     }
 
-    otLogInfoMle(GetInstance(), "Role -> Leader %d", mLeaderData.GetPartitionId());
+    otLogInfoMle(GetInstance(), "Leader partition id 0x%x", mLeaderData.GetPartitionId());
+
     return OT_ERROR_NONE;
 }
 
