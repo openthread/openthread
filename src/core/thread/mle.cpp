@@ -1980,12 +1980,22 @@ exit:
 
 otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
 {
+    Ip6::Address destination;
+
+    memset(&destination, 0, sizeof(destination));
+    destination.mFields.m16[0] = HostSwap16(0xff02);
+    destination.mFields.m16[7] = HostSwap16(0x0001);
+
+    return SendAnnounce(aChannel, aOrphanAnnounce, destination);
+}
+
+otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination)
+{
     ThreadNetif &      netif = GetNetif();
     otError            error = OT_ERROR_NONE;
     ChannelTlv         channel;
     PanIdTlv           panid;
     ActiveTimestampTlv activeTimestamp;
-    Ip6::Address       destination;
     Message *          message;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -2016,11 +2026,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
     panid.Init();
     panid.SetPanId(netif.GetMac().GetPanId());
     SuccessOrExit(error = message->Append(&panid, sizeof(panid)));
-
-    memset(&destination, 0, sizeof(destination));
-    destination.mFields.m16[0] = HostSwap16(0xff02);
-    destination.mFields.m16[7] = HostSwap16(0x0001);
-    SuccessOrExit(error = SendMessage(*message, destination));
+    SuccessOrExit(error = SendMessage(*message, aDestination));
 
     otLogInfoMle(GetInstance(), "Send Announce on channel %d", aChannel);
 
@@ -3188,36 +3194,53 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
 {
     ThreadNetif &             netif = GetNetif();
     otError                   error = OT_ERROR_NONE;
-    ChannelTlv                channel;
+    ChannelTlv                channelTlv;
     ActiveTimestampTlv        timestamp;
     const MeshCoP::Timestamp *localTimestamp;
-    PanIdTlv                  panid;
+    PanIdTlv                  panIdTlv;
+    uint8_t                   channel;
+    uint16_t                  panId;
 
     LogMleMessage("Receive Announce", aMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel));
-    VerifyOrExit(channel.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channelTlv), channelTlv));
+    VerifyOrExit(channelTlv.IsValid(), error = OT_ERROR_PARSE);
+    channel = static_cast<uint8_t>(channelTlv.GetChannel());
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(timestamp), timestamp));
     VerifyOrExit(timestamp.IsValid(), error = OT_ERROR_PARSE);
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panid), panid));
-    VerifyOrExit(panid.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panIdTlv), panIdTlv));
+    VerifyOrExit(panIdTlv.IsValid(), error = OT_ERROR_PARSE);
+    panId = panIdTlv.GetPanId();
 
     localTimestamp = netif.GetActiveDataset().GetTimestamp();
 
     if (localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0)
     {
+        uint8_t  curChannel = netif.GetMac().GetChannel();
+        uint16_t curPanId   = netif.GetMac().GetPanId();
+
+        // No action is required if device is detached, and current
+        // channel and pan-id match the values from the received MLE
+        // Announce message.
+
+        VerifyOrExit((mRole != OT_DEVICE_ROLE_DETACHED) || (curChannel != channel) || (curPanId != panId));
+
         Stop(false);
-        mPreviousChannel = netif.GetMac().GetChannel();
-        mPreviousPanId   = netif.GetMac().GetPanId();
-        netif.GetMac().SetChannel(static_cast<uint8_t>(channel.GetChannel()));
-        netif.GetMac().SetPanId(panid.GetPanId());
+        mPreviousChannel = curChannel;
+        mPreviousPanId   = curPanId;
+        netif.GetMac().SetChannel(channel);
+        netif.GetMac().SetPanId(panId);
         Start(false, true);
     }
     else if (localTimestamp->Compare(timestamp) < 0)
     {
-        SendAnnounce(static_cast<uint8_t>(channel.GetChannel()), false);
+        SendAnnounce(channel, false);
+
+#if OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+        SendAnnounce(channel, false, aMessageInfo.GetPeerAddr());
+#endif
     }
     else
     {
