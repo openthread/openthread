@@ -45,6 +45,9 @@
 #include <openthread/icmp6.h>
 #include <openthread/joiner.h>
 #include <openthread/link.h>
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#include <openthread/network_time.h>
+#endif
 #include <openthread/openthread.h>
 
 #if OPENTHREAD_FTD
@@ -177,6 +180,9 @@ const struct Command Interpreter::sCommands[] = {
     {"networkidtimeout", &Interpreter::ProcessNetworkIdTimeout},
 #endif
     {"networkname", &Interpreter::ProcessNetworkName},
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    {"networktime", &Interpreter::ProcessNetworkTime},
+#endif
     {"panid", &Interpreter::ProcessPanId},
     {"parent", &Interpreter::ProcessParent},
 #if OPENTHREAD_FTD
@@ -1578,6 +1584,60 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+void Interpreter::ProcessNetworkTime(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+    long    value;
+
+    if (argc == 0)
+    {
+        uint64_t            time;
+        otNetworkTimeStatus networkTimeStatus;
+
+        networkTimeStatus = otNetworkTimeGet(mInstance, time);
+
+        mServer->OutputFormat("Network Time:     %dus", time);
+
+        switch (networkTimeStatus)
+        {
+        case OT_NETWORK_TIME_UNSYNCHRONIZED:
+            mServer->OutputFormat(" (unsynchronized)\r\n");
+            break;
+
+        case OT_NETWORK_TIME_RESYNC_NEEDED:
+            mServer->OutputFormat(" (resync needed)\r\n");
+            break;
+
+        case OT_NETWORK_TIME_SYNCHRONIZED:
+            mServer->OutputFormat(" (synchronized)\r\n");
+            break;
+
+        default:
+            break;
+        }
+
+        mServer->OutputFormat("Time Sync Period: %ds\r\n", otNetworkTimeGetSyncPeriod(mInstance));
+        mServer->OutputFormat("XTAL Threshold:   %dppm\r\n", otNetworkTimeGetXtalThreshold(mInstance));
+    }
+    else if (argc == 2)
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        SuccessOrExit(error = otNetworkTimeSetSyncPeriod(mInstance, static_cast<uint16_t>(value)));
+
+        SuccessOrExit(error = ParseLong(argv[1], value));
+        SuccessOrExit(error = otNetworkTimeSetXtalThreshold(mInstance, static_cast<uint16_t>(value)));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 void Interpreter::ProcessPanId(int argc, char *argv[])
 {

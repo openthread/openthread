@@ -668,6 +668,9 @@ Message *Message::Clone(uint16_t aLength) const
     messageCopy->SetSubType(GetSubType());
     messageCopy->SetPriority(GetPriority());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    messageCopy->SetTimeSync(IsTimeSync());
+#endif
 
 exit:
 

@@ -111,27 +111,23 @@ otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
         assert(false);
     }
 
-    // Source PAN + Address
+    // Source PAN
+    if (IsSrcPanIdPresent(aFcf))
+    {
+        length += sizeof(PanId);
+    }
+
+    // Source Address
     switch (aFcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrNone:
         break;
 
     case kFcfSrcAddrShort:
-        if ((aFcf & kFcfPanidCompression) == 0)
-        {
-            length += sizeof(PanId);
-        }
-
         length += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        if ((aFcf & kFcfPanidCompression) == 0)
-        {
-            length += sizeof(PanId);
-        }
-
         length += sizeof(ExtAddress);
         break;
 
@@ -363,6 +359,30 @@ exit:
     return index;
 }
 
+bool Frame::IsSrcPanIdPresent(uint16_t aFcf) const
+{
+    bool srcPanIdPresent = false;
+
+    if ((aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone && (aFcf & kFcfPanidCompression) == 0)
+    {
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+        // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
+        //  Dest Address:       Extended
+        //  Source Address:     Extended
+        //  Dest Pan ID:        Present
+        //  Src Pan ID:         Not Present
+        //  Pan ID Compression: 0
+        if ((aFcf & kFcfFrameVersionMask) != kFcfFrameVersion2015 || (aFcf & kFcfDstAddrMask) != kFcfDstAddrExt ||
+            (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrExt)
+#endif
+        {
+            srcPanIdPresent = true;
+        }
+    }
+
+    return srcPanIdPresent;
+}
+
 otError Frame::GetSrcPanId(PanId &aPanId) const
 {
     otError error = OT_ERROR_NONE;
@@ -408,7 +428,7 @@ uint8_t Frame::FindSrcAddrIndex(void) const
     }
 
     // Source PAN
-    if ((fcf & kFcfPanidCompression) == 0)
+    if (IsSrcPanIdPresent(fcf))
     {
         index += sizeof(PanId);
     }
@@ -515,24 +535,20 @@ uint8_t Frame::FindSecurityHeaderIndex(void) const
         break;
     }
 
-    // Source PAN + Address
+    // Source PAN
+    if (IsSrcPanIdPresent(fcf))
+    {
+        index += sizeof(PanId);
+    }
+
+    // Source Address
     switch (fcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrShort:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ExtAddress);
         break;
     }
@@ -784,7 +800,7 @@ otError Frame::SetPayloadLength(uint8_t aLength)
     return OT_ERROR_NONE;
 }
 
-uint8_t Frame::FindPayloadIndex(void) const
+uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
     uint8_t  index = 0;
     uint16_t fcf;
@@ -816,27 +832,23 @@ uint8_t Frame::FindPayloadIndex(void) const
         ExitNow(index = kInvalidIndex);
     }
 
-    // Source PAN + Address
+    // Source PAN
+    if (IsSrcPanIdPresent(fcf))
+    {
+        index += sizeof(PanId);
+    }
+
+    // Source Address
     switch (fcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrNone:
         break;
 
     case kFcfSrcAddrShort:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ExtAddress);
         break;
 
@@ -873,6 +885,49 @@ uint8_t Frame::FindPayloadIndex(void) const
         }
     }
 
+exit:
+    return index;
+}
+
+uint8_t Frame::FindPayloadIndex(void) const
+{
+    uint16_t fcf   = GetFrameControlField();
+    uint8_t  index = SkipSecurityHeaderIndex();
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    uint8_t *cur    = NULL;
+    uint8_t *footer = GetFooter();
+#endif
+
+    VerifyOrExit(index != kInvalidIndex);
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    cur = GetPsdu() + index;
+
+    if (IsIePresent())
+    {
+        while (cur + sizeof(HeaderIe) <= footer)
+        {
+            HeaderIe *ie  = reinterpret_cast<HeaderIe *>(cur);
+            uint8_t   len = static_cast<uint8_t>(ie->GetLength());
+
+            cur += sizeof(HeaderIe);
+            index += sizeof(HeaderIe);
+
+            VerifyOrExit(cur + len <= footer, index = kInvalidIndex);
+
+            cur += len;
+            index += len;
+
+            if (ie->GetId() == kHeaderIeTermination2)
+            {
+                break;
+            }
+        }
+
+        // Assume no Payload IE in current implementation
+    }
+#endif
+
     // Command ID
     if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
@@ -894,10 +949,10 @@ exit:
     return payload;
 }
 
-const uint8_t *Frame::GetPayload(void) const
+uint8_t *Frame::GetPayload(void) const
 {
-    uint8_t        index   = FindPayloadIndex();
-    const uint8_t *payload = GetPsdu() + index;
+    uint8_t  index   = FindPayloadIndex();
+    uint8_t *payload = GetPsdu() + index;
 
     VerifyOrExit(index != kInvalidIndex, payload = NULL);
 
@@ -910,10 +965,103 @@ uint8_t *Frame::GetFooter(void)
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
 
-const uint8_t *Frame::GetFooter(void) const
+uint8_t *Frame::GetFooter(void) const
 {
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+uint8_t Frame::FindHeaderIeIndex(void) const
+{
+    uint8_t index;
+
+    VerifyOrExit(IsIePresent(), index = kInvalidIndex);
+
+    index = SkipSecurityHeaderIndex();
+
+exit:
+    return index;
+}
+
+otError Frame::AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount)
+{
+    otError  error = OT_ERROR_NONE;
+    uint8_t  index = FindHeaderIeIndex();
+    uint8_t *cur;
+    uint8_t *base;
+
+    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_FAILED);
+    cur  = GetPsdu() + index;
+    base = cur;
+
+    for (uint8_t i = 0; i < aIeCount; i++)
+    {
+        memcpy(cur, &aIeList[i], sizeof(HeaderIe));
+        cur += sizeof(HeaderIe);
+        cur += aIeList[i].GetLength();
+    }
+
+    SetPsduLength(GetPsduLength() + cur - base);
+
+exit:
+    return error;
+}
+
+uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
+{
+    uint8_t  index   = FindHeaderIeIndex();
+    uint8_t *cur     = NULL;
+    uint8_t *payload = GetPayload();
+
+    VerifyOrExit(index != kInvalidIndex);
+
+    cur = GetPsdu() + index;
+
+    while (cur + sizeof(HeaderIe) <= payload)
+    {
+        HeaderIe *ie  = reinterpret_cast<HeaderIe *>(cur);
+        uint8_t   len = static_cast<uint8_t>(ie->GetLength());
+
+        if (ie->GetId() == aIeId)
+        {
+            break;
+        }
+
+        cur += sizeof(HeaderIe);
+
+        VerifyOrExit(cur + len <= payload, cur = NULL);
+
+        cur += len;
+    }
+
+    if (cur == payload)
+    {
+        cur = NULL;
+    }
+
+exit:
+    return cur;
+}
+
+uint8_t *Frame::GetTimeIe(void) const
+{
+    TimeIe * timeIe              = NULL;
+    uint8_t *cur                 = NULL;
+    uint8_t  oui[kVendorOuiSize] = {kVendorOuiNest & 0xff, (kVendorOuiNest >> 8) & 0xff, (kVendorOuiNest >> 16) & 0xff};
+
+    cur = GetHeaderIe(kHeaderIeVendor);
+    VerifyOrExit(cur != NULL);
+
+    cur += sizeof(HeaderIe);
+
+    timeIe = reinterpret_cast<TimeIe *>(cur);
+    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), kVendorOuiSize) == 0, cur = NULL);
+    VerifyOrExit(timeIe->GetSubType() == kVendorIeTime, cur = NULL);
+
+exit:
+    return cur;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 Frame::InfoString Frame::ToInfoString(void) const
 {

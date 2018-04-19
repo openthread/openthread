@@ -43,9 +43,11 @@
 
 #include <common/code_utils.hpp>
 #include <platform-config.h>
+#include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/time.h>
 
 #include "platform-nrf5.h"
 #include "platform.h"
@@ -78,6 +80,12 @@ static otRadioFrame sReceivedFrames[NRF_802154_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+static otRadioIeInfo sTransmitIeInfo;
+static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
+static otInstance *  sInstance = NULL;
+#endif
+
 static otRadioFrame sAckFrame;
 
 static int8_t sDefaultTxPower;
@@ -103,6 +111,9 @@ static void dataInit(void)
     sDisabled = true;
 
     sTransmitFrame.mPsdu = sTransmitPsdu + 1;
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    sTransmitFrame.mIeInfo = &sTransmitIeInfo;
+#endif
 
     sReceiveError = OT_ERROR_NONE;
 
@@ -322,7 +333,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    (void)aInstance;
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    sInstance = aInstance;
+#endif
 
     otError result = OT_ERROR_NONE;
 
@@ -661,7 +674,11 @@ void nrf5RadioProcess(otInstance *aInstance)
     }
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+void nrf_802154_received_timestamp_raw(uint8_t *p_data, int8_t power, uint8_t lqi, uint32_t time)
+#else
 void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
+#endif
 {
     otRadioFrame *receivedFrame = NULL;
 
@@ -670,13 +687,16 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
         if (sReceivedFrames[i].mPsdu == NULL)
         {
             receivedFrame = &sReceivedFrames[i];
+
+            memset(receivedFrame, 0, sizeof(*receivedFrame));
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+            receivedFrame->mIeInfo = &sReceivedIeInfos[i];
+#endif
             break;
         }
     }
 
     assert(receivedFrame != NULL);
-
-    memset(receivedFrame, 0, sizeof(*receivedFrame));
 
     receivedFrame->mPsdu               = &p_data[1];
     receivedFrame->mLength             = p_data[0];
@@ -687,6 +707,12 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
     receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
     receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mInfo.mRxInfo.mMsec * US_PER_MS;
+#endif
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    // Get the timestamp when the SFD was received.
+    uint32_t offset =
+        (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(time, p_data[0]);
+    receivedFrame->mIeInfo->mTimestamp = otPlatTimeGet() - offset;
 #endif
 
     PlatformEventSignalPending();
@@ -775,3 +801,27 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     (void)aInstance;
     return NRF52840_RECEIVE_SENSITIVITY;
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+void nrf_802154_tx_started(const uint8_t *aFrame)
+{
+    assert(aFrame == sTransmitPsdu);
+
+    if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
+    {
+        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mIeInfo->mTimeIeOffset;
+        uint64_t time   = otPlatTimeGet() + sTransmitFrame.mIeInfo->mNetworkTimeOffset;
+
+        *timeIe = sTransmitFrame.mIeInfo->mTimeSyncSeq;
+
+        *(++timeIe) = (uint8_t)(time & 0xff);
+        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
+        {
+            time        = time >> 8;
+            *(++timeIe) = (uint8_t)(time & 0xff);
+        }
+
+        otPlatRadioFrameUpdated(sInstance, &sTransmitFrame);
+    }
+}
+#endif

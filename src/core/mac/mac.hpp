@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/platform/radio.h>
+#include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
@@ -985,6 +986,11 @@ private:
     void LogFrameRxFailure(const Frame *aFrame, otError aError) const;
     void LogFrameTxFailure(const Frame &aFrame, otError aError) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    void    ProcessTimeIe(Frame &aFrame);
+    uint8_t GetTimeIeOffset(Frame &aFrame);
+#endif
 
     static const char *OperationToString(Operation aOperation);
 

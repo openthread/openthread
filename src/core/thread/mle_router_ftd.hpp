@@ -669,6 +669,17 @@ public:
      */
     static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    /**
+     * This method generates an MLE Time Synchronization message.
+     *
+     * @retval OT_ERROR_NONE     Successfully sent an MLE Time Synchronization message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Time Synchronization message.
+     *
+     */
+    otError SendTimeSync(void);
+#endif
+
 private:
     enum
     {
@@ -707,6 +718,9 @@ private:
     otError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleNetworkDataUpdateRouter(void);
     otError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    otError HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#endif
 
     otError ProcessRouteTlv(const RouteTlv &aRoute);
     void    StopAdvertiseTimer(void);

@@ -266,6 +266,9 @@ private:
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
 #endif
     void ProcessNetworkName(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    void ProcessNetworkTime(int argc, char *argv[]);
+#endif
     void ProcessPanId(int argc, char *argv[]);
     void ProcessParent(int argc, char *argv[]);
 #if OPENTHREAD_FTD

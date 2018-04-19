@@ -1105,6 +1105,9 @@ void Mac::BeginTransmit(void)
     otError error                 = OT_ERROR_NONE;
     bool    applyTransmitSecurity = true;
     Frame & sendFrame(*GetOperationFrame());
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    uint8_t timeIeOffset = 0;
+#endif
 
     VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
 
@@ -1160,6 +1163,20 @@ void Mac::BeginTransmit(void)
             assert(false);
             break;
         }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+        timeIeOffset = GetTimeIeOffset(sendFrame);
+        sendFrame.SetTimeIeOffset(timeIeOffset);
+
+        if (timeIeOffset != 0)
+        {
+            // Transmit security will be processed after time IE content is updated.
+            applyTransmitSecurity = false;
+            sendFrame.SetTimeSyncSeq(GetNetif().GetTimeSync().GetTimeSyncSeq());
+            sendFrame.SetNetworkTimeOffset(GetNetif().GetTimeSync().GetNetworkTimeOffset());
+        }
+
+#endif
 
         if (applyTransmitSecurity)
         {
@@ -1923,6 +1940,15 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     netif.GetMeshForwarder().GetDataPollManager().CheckFramePending(*aFrame);
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
+    if (aFrame->GetVersion() == Frame::kFcfFrameVersion2015)
+    {
+        ProcessTimeIe(*aFrame);
+    }
+
+#endif
+
     if (neighbor != NULL)
     {
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -2286,6 +2312,50 @@ void Mac::LogFrameTxFailure(const Frame &, otError) const
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+void Mac::ProcessTimeIe(Frame &aFrame)
+{
+    TimeIe *timeIe = reinterpret_cast<TimeIe *>(aFrame.GetTimeIe());
+
+    VerifyOrExit(timeIe != NULL);
+
+    aFrame.SetNetworkTimeOffset(static_cast<int64_t>(timeIe->GetTime()) - static_cast<int64_t>(aFrame.GetTimestamp()));
+    aFrame.SetTimeSyncSeq(timeIe->GetSequence());
+
+exit:
+    return;
+}
+
+uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
+{
+    uint8_t  offset = 0;
+    uint8_t *base   = aFrame.GetPsdu();
+    uint8_t *cur    = NULL;
+
+    cur = aFrame.GetTimeIe();
+    VerifyOrExit(cur != NULL);
+
+    cur += sizeof(VendorIeHeader);
+    offset = cur - base;
+
+exit:
+    return offset;
+}
+
+extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
+{
+    Instance *instance = static_cast<Instance *>(aInstance);
+    Frame     frame    = *static_cast<Frame *>(aFrame);
+
+    VerifyOrExit(instance->IsInitialized());
+
+    instance->GetThreadNetif().GetMac().ProcessTransmitSecurity(frame);
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 } // namespace Mac
 } // namespace ot

@@ -46,6 +46,9 @@
 #include <openthread/jam_detection.h>
 #endif
 #include <openthread/ncp.h>
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#include <openthread/network_time.h>
+#endif
 #include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
@@ -2520,6 +2523,23 @@ void NcpBase::StopLegacy(void)
 }
 
 #endif // OPENTHREAD_ENABLE_LEGACY
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+otError NcpBase::GetPropertyHandler_THREAD_NETWORK_TIME(void)
+{
+    otError             error = OT_ERROR_NONE;
+    otNetworkTimeStatus networkTimeStatus;
+    uint64_t            time;
+
+    networkTimeStatus = otNetworkTimeGet(mInstance, time);
+
+    SuccessOrExit(error = mEncoder.WriteUint64(time));
+    SuccessOrExit(error = mEncoder.WriteInt8((int8_t)networkTimeStatus));
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 otError NcpBase::EncodeChannelMask(uint32_t aChannelMask)
 {
