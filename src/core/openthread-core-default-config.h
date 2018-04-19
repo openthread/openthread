@@ -1328,6 +1328,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+ *
+ * Define as 1 to enable sending of a unicast MLE Announce message in response to a received Announce message from
+ * a device.
+ *
+ * @note The unicast MLE announce message is sent in addition to (and after) the multicast MLE Announce.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+#define OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
  *
  * Define as 1 to enable peek/poke functionality on NCP.
