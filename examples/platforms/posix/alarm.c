@@ -67,7 +67,8 @@ uint32_t otPlatAlarmMilliGetNow(void)
     gettimeofday(&tv, NULL);
     timersub(&tv, &sStart, &tv);
 
-    return (uint32_t)((tv.tv_sec * sSpeedUpFactor * MS_PER_S) + (tv.tv_usec * sSpeedUpFactor / US_PER_MS));
+    return (uint32_t)(((uint64_t)tv.tv_sec * sSpeedUpFactor * MS_PER_S) +
+                      ((uint64_t)tv.tv_usec * sSpeedUpFactor / US_PER_MS));
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
