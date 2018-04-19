@@ -1449,6 +1449,12 @@ private:
         kMleHopLimit        = 255,
     };
 
+    enum ParentRequestType
+    {
+        kParentRequestTypeRouters,         ///< Parent Request to all routers.
+        kParentRequestTypeRoutersAndReeds, ///< Parent Request to all routers and REEDs.
+    };
+
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
     enum
     {
@@ -1488,7 +1494,7 @@ private:
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError SendParentRequest(void);
+    otError SendParentRequest(ParentRequestType aType);
     otError SendChildIdRequest(void);
     void    SendOrphanAnnounce(void);
     otError SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);

@@ -1452,7 +1452,18 @@ void Mle::HandleAttachTimer(void)
         mAttachState = kAttachStateParentRequestRouter;
         mParentCandidate.SetState(Neighbor::kStateInvalid);
         mReceivedResponseFromParent = false;
-        SendParentRequest();
+
+        if (mParentRequestMode == kAttachSame1 || mParentRequestMode == kAttachSame2)
+        {
+            SendParentRequest(kParentRequestTypeRoutersAndReeds);
+            mAttachTimer.Start(kParentRequestReedTimeout);
+        }
+        else
+        {
+            SendParentRequest(kParentRequestTypeRouters);
+            mAttachTimer.Start(kParentRequestRouterTimeout);
+        }
+
         break;
 
     case kAttachStateParentRequestRouter:
@@ -1460,7 +1471,8 @@ void Mle::HandleAttachTimer(void)
 
         if (mParentCandidate.GetState() != Neighbor::kStateParentResponse)
         {
-            SendParentRequest();
+            SendParentRequest(kParentRequestTypeRoutersAndReeds);
+            mAttachTimer.Start(kParentRequestReedTimeout);
             break;
         }
 
@@ -1635,7 +1647,7 @@ void Mle::RemoveDelayedDataResponseMessage(void)
     }
 }
 
-otError Mle::SendParentRequest(void)
+otError Mle::SendParentRequest(ParentRequestType aType)
 {
     otError      error = OT_ERROR_NONE;
     Message *    message;
@@ -1644,24 +1656,14 @@ otError Mle::SendParentRequest(void)
 
     Random::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
 
-    switch (mAttachState)
+    switch (aType)
     {
-    case kAttachStateParentRequestRouter:
+    case kParentRequestTypeRouters:
         scanMask = ScanMaskTlv::kRouterFlag;
-
-        if (mParentRequestMode == kAttachSame1 || mParentRequestMode == kAttachSame2)
-        {
-            scanMask |= ScanMaskTlv::kEndDeviceFlag;
-        }
-
         break;
 
-    case kAttachStateParentRequestReed:
+    case kParentRequestTypeRoutersAndReeds:
         scanMask = ScanMaskTlv::kRouterFlag | ScanMaskTlv::kEndDeviceFlag;
-        break;
-
-    default:
-        assert(false);
         break;
     }
 
@@ -1677,32 +1679,25 @@ otError Mle::SendParentRequest(void)
     destination.mFields.m16[7] = HostSwap16(0x0002);
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
+    switch (aType)
     {
+    case kParentRequestTypeRouters:
         LogMleMessage("Send Parent Request to routers", destination);
-    }
-    else
-    {
+        break;
+
+    case kParentRequestTypeRoutersAndReeds:
         LogMleMessage("Send Parent Request to routers and REEDs", destination);
+        break;
     }
 
 exit:
-
-    if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
-    {
-        mAttachTimer.Start(kParentRequestRouterTimeout);
-    }
-    else
-    {
-        mAttachTimer.Start(kParentRequestReedTimeout);
-    }
 
     if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
 
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError Mle::SendChildIdRequest(void)
