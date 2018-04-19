@@ -66,9 +66,9 @@ Mle::Mle(Instance &aInstance)
     , mRetrieveNewNetworkData(false)
     , mRole(OT_DEVICE_ROLE_DISABLED)
     , mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest)
-    , mParentRequestState(kParentIdle)
+    , mAttachState(kAttachStateIdle)
     , mReattachState(kReattachStop)
-    , mParentRequestTimer(aInstance, &Mle::HandleParentRequestTimer, this)
+    , mAttachTimer(aInstance, &Mle::HandleAttachTimer, this)
     , mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this)
     , mChildUpdateRequestTimer(aInstance, &Mle::HandleChildUpdateRequestTimer, this)
     , mLastPartitionId(0)
@@ -260,7 +260,7 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     }
     else
     {
-        mParentRequestState  = kParentSynchronize;
+        mAttachState         = kAttachStateSynchronize;
         mChildUpdateAttempts = 0;
         SendChildUpdateRequest();
     }
@@ -534,7 +534,7 @@ otError Mle::BecomeChild(AttachMode aMode)
     otError      error = OT_ERROR_NONE;
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mParentRequestState == kParentIdle, error = OT_ERROR_BUSY);
+    VerifyOrExit(mAttachState == kAttachStateIdle, error = OT_ERROR_BUSY);
 
     otLogInfoMle(GetInstance(), "Attempt to attach");
 
@@ -551,8 +551,8 @@ otError Mle::BecomeChild(AttachMode aMode)
     }
 
     ResetParentCandidate();
-    mParentRequestState = kParentRequestStart;
-    mParentRequestMode  = aMode;
+    mAttachState       = kAttachStateStart;
+    mParentRequestMode = aMode;
 
     if (aMode != kAttachBetter)
     {
@@ -564,7 +564,7 @@ otError Mle::BecomeChild(AttachMode aMode)
 
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
 
-    mParentRequestTimer.Start(1 + Random::GetUint32InRange(0, kParentRequestRouterTimeout));
+    mAttachTimer.Start(1 + Random::GetUint32InRange(0, kParentRequestRouterTimeout));
 
 exit:
     return error;
@@ -585,8 +585,8 @@ otError Mle::SetStateDetached(void)
     }
 
     SetRole(OT_DEVICE_ROLE_DETACHED);
-    mParentRequestState = kParentIdle;
-    mParentRequestTimer.Stop();
+    mAttachState = kAttachStateIdle;
+    mAttachTimer.Stop();
     mChildUpdateRequestTimer.Stop();
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
     netif.GetMac().SetBeaconEnabled(false);
@@ -608,7 +608,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
     SetRloc16(aRloc16);
     SetRole(OT_DEVICE_ROLE_CHILD);
-    mParentRequestState  = kParentIdle;
+    mAttachState         = kAttachStateIdle;
     mReattachState       = kReattachStop;
     mChildUpdateAttempts = 0;
     netif.GetMac().SetBeaconEnabled(false);
@@ -1431,34 +1431,34 @@ exit:
 }
 #endif
 
-void Mle::HandleParentRequestTimer(Timer &aTimer)
+void Mle::HandleAttachTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleParentRequestTimer();
+    aTimer.GetOwner<Mle>().HandleAttachTimer();
 }
 
-void Mle::HandleParentRequestTimer(void)
+void Mle::HandleAttachTimer(void)
 {
     ThreadNetif &netif = GetNetif();
 
-    switch (mParentRequestState)
+    switch (mAttachState)
     {
-    case kParentIdle:
+    case kAttachStateIdle:
         assert(false);
         break;
 
-    case kParentSynchronize:
+    case kAttachStateSynchronize:
         SendChildUpdateRequest();
         break;
 
-    case kParentRequestStart:
-        mParentRequestState = kParentRequestRouter;
+    case kAttachStateStart:
+        mAttachState = kAttachStateParentRequestRouter;
         mParentCandidate.SetState(Neighbor::kStateInvalid);
         mReceivedResponseFromParent = false;
         SendParentRequest();
         break;
 
-    case kParentRequestRouter:
-        mParentRequestState = kParentRequestChild;
+    case kAttachStateParentRequestRouter:
+        mAttachState = kAttachStateParentRequestReed;
 
         if (mParentCandidate.GetState() != Neighbor::kStateParentResponse)
         {
@@ -1468,20 +1468,20 @@ void Mle::HandleParentRequestTimer(void)
 
         // fall through
 
-    case kParentRequestChild:
+    case kAttachStateParentRequestReed:
         if (mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
             (mRole != OT_DEVICE_ROLE_CHILD || mReceivedResponseFromParent || mParentRequestMode == kAttachBetter) &&
             SendChildIdRequest() == OT_ERROR_NONE)
         {
-            mParentRequestState = kChildIdRequest;
-            mParentRequestTimer.Start(kParentRequestChildTimeout);
+            mAttachState = kAttachStateChildIdRequest;
+            mAttachTimer.Start(kParentRequestReedTimeout);
             break;
         }
 
         // fall through
 
-    case kChildIdRequest:
-        mParentRequestState = kParentIdle;
+    case kAttachStateChildIdRequest:
+        mAttachState = kAttachStateIdle;
         ResetParentCandidate();
 
         if (mReattachState == kReattachActive)
@@ -1489,9 +1489,9 @@ void Mle::HandleParentRequestTimer(void)
             if (netif.GetPendingDataset().Restore() == OT_ERROR_NONE)
             {
                 netif.GetPendingDataset().ApplyConfiguration();
-                mReattachState      = kReattachPending;
-                mParentRequestState = kParentRequestStart;
-                mParentRequestTimer.Start(kParentRequestRouterTimeout);
+                mReattachState = kReattachPending;
+                mAttachState   = kAttachStateStart;
+                mAttachTimer.Start(kParentRequestRouterTimeout);
             }
             else
             {
@@ -1639,9 +1639,9 @@ otError Mle::SendParentRequest(void)
 
     Random::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
 
-    switch (mParentRequestState)
+    switch (mAttachState)
     {
-    case kParentRequestRouter:
+    case kAttachStateParentRequestRouter:
         scanMask = ScanMaskTlv::kRouterFlag;
 
         if (mParentRequestMode == kAttachSame1 || mParentRequestMode == kAttachSame2)
@@ -1651,7 +1651,7 @@ otError Mle::SendParentRequest(void)
 
         break;
 
-    case kParentRequestChild:
+    case kAttachStateParentRequestReed:
         scanMask = ScanMaskTlv::kRouterFlag | ScanMaskTlv::kEndDeviceFlag;
         break;
 
@@ -1685,11 +1685,11 @@ exit:
 
     if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
     {
-        mParentRequestTimer.Start(kParentRequestRouterTimeout);
+        mAttachTimer.Start(kParentRequestRouterTimeout);
     }
     else
     {
-        mParentRequestTimer.Start(kParentRequestChildTimeout);
+        mAttachTimer.Start(kParentRequestReedTimeout);
     }
 
     if (error != OT_ERROR_NONE && message != NULL)
@@ -2800,7 +2800,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
 
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
 
-    VerifyOrExit(mParentRequestState != kParentRequestRouter || linkQuality == 3);
+    VerifyOrExit(mAttachState != kAttachStateParentRequestRouter || linkQuality == 3);
 
     // Connectivity
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
@@ -2921,7 +2921,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
 
     LogMleMessage("Receive Child ID Response", aMessageInfo.GetPeerAddr(), sourceAddress.GetRloc16());
 
-    VerifyOrExit(mParentRequestState == kChildIdRequest);
+    VerifyOrExit(mAttachState == kAttachStateChildIdRequest);
 
     // Leader Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
@@ -2972,7 +2972,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     }
 
     // Parent Attach Success
-    mParentRequestTimer.Stop();
+    mAttachTimer.Stop();
     SetStateDetached();
 
     SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
