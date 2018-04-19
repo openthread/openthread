@@ -46,20 +46,13 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
-//#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#include <mbedtls/ssl.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #include <mbedtls/oid.h>
-#include <mbedtls/error.h>
-#include <mbedtls/certs.h>
-#include <mbedtls/ssl_cookie.h>
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_crl.h>
 #include <mbedtls/x509_csr.h>
-#include <mbedtls/base64.h>
-//#endif  // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif  // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -78,6 +71,10 @@ public:
     {
         kPskMaxLength             = 32,
         kApplicationDataMaxLength = 128,
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+        kPreSharedKeyMaxLength      = 32,
+        kClientIdentityMaxLength  = 32,
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     };
 
     /**
@@ -136,16 +133,18 @@ public:
                   SendHandler      aSendHandler,
                   void *           aContext);
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
      * This method starts the DTLS service for Application Coap Secure.
+     *
+     * For use DTLS mode ECDHE ECDSA with AES 128 CCM 8 first set X509 Pk and Cert.
+     * For use DTLS mode PSK with AES 128 CCM 8 first set PreShared Key.
      *
      * @param[in]  aClient            TRUE if operating as a client, FALSE if operating as a server.
      * @param[in]  aConnectedHandler  A pointer to the connected handler.
      * @param[in]  aReceiveHandler    A pointer to the receive handler.
      * @param[in]  aSendHandler       A pointer to the send handler.
      * @param[in]  aContext           A pointer to application-specific context.
-     * @param[in]  aX509Cert          A pointer to x509 Certificate
-     * @param[in]  aPrivateKey        A pointer to the private key
      *
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
@@ -156,6 +155,7 @@ public:
                                        SendHandler              aSendHandler,
                                        void *                   aContext
                                        );
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
      * This method stops the DTLS service.
@@ -184,9 +184,12 @@ public:
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
      * This method sets the Pre Shared Key (PSK) for DTLS sessions
      * identified by a PSK.
+     *
+     * DTLS mode "PSK with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aPsk          A pointer to the PSK.
      * @param[in]  aPskLength    The PSK char length.
@@ -200,7 +203,9 @@ public:
                             uint8_t * aPskIdentity, uint16_t aPskIdLength);
 
     /**
-     * This method sets the x509 certificate with his private key.
+     * This method sets a reference to the x509 certificate.
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
      * @param[in]  aX509CertLenth    The length of certificate.
@@ -211,7 +216,9 @@ public:
     otError SetX509Certificate(const uint8_t * aX509Certificate, uint32_t aX509CertLenth);
 
     /**
-     * This method sets the x509 private key.
+     * This method sets a reference to the x509 private key.
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aPrivateKey       A pointer to the private key.
      * @param[in]  aPrivateKeyLenth  The length of the private key.
@@ -220,6 +227,8 @@ public:
      *
      */
     otError SetX509PrivateKey(const uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth);
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
@@ -320,20 +329,23 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
     mbedtls_x509_crt         mCaCert;
     mbedtls_pk_context       mPrivateKey;
+    const uint8_t*           mPk;
+    uint32_t                 mPkLength;
+    const uint8_t*           mX509Cert;
+    uint32_t                 mX509CertLength;
 
-    uint8_t                  mPreSharedKey[32];
-    uint8_t                  mPreSharedKeyIdentity[32];
+    uint8_t                  mPreSharedKey[kPreSharedKeyMaxLength];
+    uint8_t                  mPreSharedKeyIdentity[kClientIdentityMaxLength];
     uint16_t                 mPreSharedKeyLength;
     uint16_t                 mPreSharedKeyIdLength;
 
-    const uint8_t *          mX509Cert;
-    uint32_t                 mX509CertLenth;
-    const uint8_t *          mX509Pk;
-    uint32_t                 mX509PkLength;
-
     int                      mApplicationCoapCiphreSuite[1];
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     mbedtls_entropy_context  mEntropy;
     mbedtls_ctr_drbg_context mCtrDrbg;

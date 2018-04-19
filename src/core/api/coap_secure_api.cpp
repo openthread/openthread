@@ -35,10 +35,9 @@
 
 #include <openthread/coap_secure.h>
 
-//#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 
-#include "coap/coap_secure.hpp"		// include cores coap secure
+#include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
 
 
@@ -54,14 +53,16 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
     return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
 }
 
-otError otCoapSecureSetX509Certificate(otInstance *aInstance, const uint8_t *aX509Cert, uint32_t aX509Length)
+otError otCoapSecureSetX509Certificate(otInstance *aInstance, const uint8_t *aX509Cert,
+                                       uint32_t aX509Length)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert, aX509Length);
 }
 
-otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
+otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPrivateKey,
+                                      uint32_t aPrivateKeyLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
@@ -128,6 +129,5 @@ otError otCoapSecureSendMessage(otInstance *aInstance,
                                                             aHandler,
                                                             aContext);
 }
-
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

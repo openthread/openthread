@@ -74,10 +74,22 @@ public:
      *
      */
     explicit CoapSecure(Instance &aInstance);
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    /**
+     * This constructor initializes the object.
+     * (For Application CoAPS)
+     *
+     * @param[in]  aInstance             A reference to the OpenThread instance.
+     * @param[in]  aUdpTransmitHandle    Handler for udp transmit.
+     * @param[in]  aRetransmissionTimer  Handler for retransmission.
+     * @param[in]  aResponsesQueueTimer  Handler for Queue Responses.
+     *
+     */
     explicit CoapSecure(Instance &aInstance,
     		            Tasklet::Handler aUdpTransmitHandle,
 						Timer::Handler aRetransmissionTimer,
 						Timer::Handler aResponsesQueueTimer);
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
      * This method starts the secure CoAP agent.
@@ -157,9 +169,12 @@ public:
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
     /**
      * This method sets the Pre Shared Key (PSK) for DTLS sessions
      * identified by a PSK.
+     * DTLS mode "TLS with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aPsk          A pointer to the PSK.
      * @param[in]  aPskLength    The PSK char length.
@@ -174,8 +189,9 @@ public:
 
     /**
      * This method sets a X509 certificate for DTLS session.
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
-     * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
+     * @param[in]  aX509Certificate  A pointer to the X509 PEM certificate.
      * @param[in]  aX509CertLenth    The length of certificate.
      *
      * @retval OT_ERROR_NONE  Successfully set the PSK.
@@ -185,6 +201,7 @@ public:
 
     /**
      * This method sets a X509 private key for DTLS session.
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aPrivateKey       A pointer to the private key.
      * @param[in]  aPrivateKeyLenth  The length of the private key.
@@ -193,6 +210,8 @@ public:
      *
      */
     otError SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -300,7 +319,7 @@ private:
     static void HandleUdpTransmit(Tasklet &aTasklet);
 };
 
-#endif
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 } // namespace Coap
 } // namespace ot

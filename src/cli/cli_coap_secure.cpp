@@ -39,9 +39,9 @@
 
 #include "cli/cli.hpp"
 #include "coap/coap_header.hpp"
-#include "coap/coap_secure.hpp"		// include the core coap secure implementation ToDo: remove this comment later
+#include "coap/coap_secure.hpp"
 
-#include "x509_cert_key.hpp"
+#include "x509_cert_key.hpp"   // key and cert file
 
 namespace ot {
 namespace Cli {
@@ -139,32 +139,14 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 	}
     else if (strcmp(argv[0], "setx509") == 0)
     {
-//        if (argc > 2)
-//        {
-//            uint8_t mX509Cert[255];
-//            uint32_t mX509Length = strlen(X509_CERTIFICATE);
-//            uint8_t mPk[255];
-//            uint32_t mPkLength = strlen(PRIVATE_KEY);
 
-//            memcpy(mX509Cert,X509_CERTIFICATE, mX509Length);
-//            memcpy(mPk, PRIVATE_KEY, mPkLength);
+         SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
+                                                              (const uint8_t *)X509_CERTIFICATE,
+                                                              sizeof(X509_CERTIFICATE)));
 
-             SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
-                                                                  (const uint8_t *)X509_CERTIFICATE, sizeof(X509_CERTIFICATE)));
-
-//            SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
-//                                                                 (const unsigned char*)dtls_test_cas_pem, dtls_test_cas_pem_len));
-
-            SuccessOrExit(error = otCoapSecureSetX509PrivateKey(mInterpreter.mInstance,
-                                                                (const uint8_t *)PRIVATE_KEY, sizeof(PRIVATE_KEY)));
- //           mInterpreter.mServer->OutputFormat("Coap Secure set X509 Cert: ");
-//        }
-//        else
-//        {
-//            ExitNow(error = OT_ERROR_INVALID_ARGS);
-//        }
-
-
+         SuccessOrExit(error = otCoapSecureSetX509PrivateKey(mInterpreter.mInstance,
+                                                             (const uint8_t *)PRIVATE_KEY,
+                                                             sizeof(PRIVATE_KEY)));
     }
     else if (strcmp(argv[0], "connect") == 0)
     {
@@ -179,7 +161,8 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 			messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
 			messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 			SuccessOrExit(error =
-					otCoapSecureConnect(mInterpreter.mInstance, &messageInfo, &CoapSecureCli::HandleSecureCoapClientConnect, this));
+					otCoapSecureConnect(mInterpreter.mInstance, &messageInfo,
+					                    &CoapSecureCli::HandleSecureCoapClientConnect, this));
 		}
 		else
 		{
@@ -202,7 +185,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         }
         else
         {
-                                                                                                        otCoapRemoveResource(mInterpreter.mInstance, &mResource);   // ToDo
+            otCoapRemoveResource(mInterpreter.mInstance, &mResource);
             SuccessOrExit(error = otCoapSecureStop(mInterpreter.mInstance));
             mInterpreter.mServer->OutputFormat("Coap Secure service stopped: ");
         }
@@ -210,14 +193,21 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     else if (strcmp(argv[0], "help") == 0)
     {
     	mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start'                                       : start coap secure service\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps setpsk'      args: psk, identity             : set Preshared Key and Client Identity (Ciphresuit PSK_AES128)\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps setx509'                                     : set X509 Cert und Private Key (Ciphresuit ECDHE_ECDSA_AES128)\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps connect'     args: ipV6_addr_srv             : start dtls session with a server\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' : interact with coap source from server, ipv6 is not need as client\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start'                                       "\
+                ": start coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps setpsk'      args: psk, identity             "\
+                ": set Preshared Key and Client Identity (Ciphresuit PSK_AES128)\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps setx509'                                     "\
+                ": set X509 Cert und Private Key (Ciphresuit ECDHE_ECDSA_AES128)\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps connect'     args: ipV6_addr_srv             "\
+                ": start dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' "\
+                ": interact with coap source from server, ipv6 is not need as client\r\n");
         mInterpreter.mServer->OutputFormat("    >> args:(ipV6_addr_srv), coap_src, con, payload\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps disconnect'                                  : stop dtls session with a server\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps stop'                                        : stop coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps disconnect'                                  "\
+                ": stop dtls session with a server\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps stop'                                        "\
+                ": stop coap secure service\r\n");
     	mInterpreter.mServer->OutputFormat("\r\n");
 
     }
@@ -389,7 +379,7 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
         coapCode = OT_COAP_CODE_PUT;
     }
     else if (strcmp(argv[0], "delete") == 0)
-    {
+    {   // ToDo
         coapCode = OT_COAP_CODE_DELETE;
     }
     else

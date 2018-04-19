@@ -41,7 +41,7 @@
 #include <openthread/types.h>
 
 #include "coap/coap_header.hpp"
-#include "coap/coap_secure.hpp"		// include the core coap secure implementation ToDo: remove this comment later
+#include "coap/coap_secure.hpp"
 
 namespace ot {
 namespace Cli {
@@ -84,11 +84,14 @@ private:
 
     otError ProcessRequest(int argc, char *argv[]);
 
+
     static void OTCALL HandleServerResponse(void *               aContext,
                                             otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo);
-    void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void               HandleServerResponse(otCoapHeader        *aHeader,
+                                            otMessage           *aMessage,
+                                            const otMessageInfo *aMessageInfo);
 
     static void OTCALL HandleClientResponse(void *               aContext,
                                             otCoapHeader *       aHeader,
@@ -100,8 +103,9 @@ private:
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
 
-    static void OTCALL HandleSecureCoapClientConnect(const bool aConnected, void *aContext);
-    void HandleSecureCoapClientConnect(const bool aConnected);
+    static void OTCALL HandleSecureCoapClientConnect(const bool  aConnected,
+                                                     void       *aContext);
+    void               HandleSecureCoapClientConnect(const bool aConnected);
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];

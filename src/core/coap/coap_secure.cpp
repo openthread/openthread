@@ -61,7 +61,7 @@ CoapSecure::CoapSecure(Instance &aInstance)
 	mApplicationCoapSecure = false;
 }
 
-// constructor for coaps application with different handlers
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 CoapSecure::CoapSecure(Instance &aInstance,
 		               Tasklet::Handler aUdpTransmitHandle,
 					   Timer::Handler aRetransmissionTimer,
@@ -77,6 +77,7 @@ CoapSecure::CoapSecure(Instance &aInstance,
 	mLayerTwoSecurity = true;
 	mApplicationCoapSecure = true;
 }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aContext)
 {
@@ -128,10 +129,12 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
     }
     else
     {
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         return GetNetif().GetDtls().StartApplicationCoapSecure(true, &CoapSecure::HandleDtlsConnected,
                                                                &CoapSecure::HandleDtlsReceive,
                                                                &CoapSecure::HandleDtlsSend,
                                                                this);
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     }
 }
 
@@ -162,6 +165,8 @@ otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
     return GetNetif().GetDtls().SetPsk(aPsk, aPskLength);
 }
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 otError CoapSecure::SetX509Certificate(const uint8_t *aX509Cert, uint32_t aX509Length)
 {
     return GetNetif().GetDtls().SetX509Certificate(aX509Cert, aX509Length);
@@ -177,6 +182,8 @@ otError CoapSecure::SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
 {
     return GetNetif().GetDtls().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 }
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandler, void *aContext)
 {
@@ -291,7 +298,7 @@ otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_
     {
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
         mTransmitMessage->SetSubType(aMessageSubType);
-        mTransmitMessage->SetLinkSecurityEnabled(mLayerTwoSecurity);															// Attentntion, not d
+        mTransmitMessage->SetLinkSecurityEnabled(mLayerTwoSecurity);
     }
 
     SuccessOrExit(error = mTransmitMessage->Append(aBuf, aLength));
@@ -359,7 +366,6 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
-//: CoapSecure(aInstance, &ApplicationCoapSecure::HandleRetransmissionTimer, &ApplicationCoapSecure::HandleResponsesQueueTimer)
 : CoapSecure(aInstance,
 		     &ApplicationCoapSecure::HandleUdpTransmit,
 			 &ApplicationCoapSecure::HandleRetransmissionTimer,
