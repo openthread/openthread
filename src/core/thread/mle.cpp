@@ -1438,6 +1438,8 @@ void Mle::HandleAttachTimer(Timer &aTimer)
 
 void Mle::HandleAttachTimer(void)
 {
+    uint32_t delay = 0;
+
     switch (mAttachState)
     {
     case kAttachStateIdle:
@@ -1456,12 +1458,12 @@ void Mle::HandleAttachTimer(void)
         if (mParentRequestMode == kAttachSame1 || mParentRequestMode == kAttachSame2)
         {
             SendParentRequest(kParentRequestTypeRoutersAndReeds);
-            mAttachTimer.Start(kParentRequestReedTimeout);
+            delay = kParentRequestReedTimeout;
         }
         else
         {
             SendParentRequest(kParentRequestTypeRouters);
-            mAttachTimer.Start(kParentRequestRouterTimeout);
+            delay = kParentRequestRouterTimeout;
         }
 
         break;
@@ -1472,7 +1474,7 @@ void Mle::HandleAttachTimer(void)
         if (mParentCandidate.GetState() != Neighbor::kStateParentResponse)
         {
             SendParentRequest(kParentRequestTypeRoutersAndReeds);
-            mAttachTimer.Start(kParentRequestReedTimeout);
+            delay = kParentRequestReedTimeout;
             break;
         }
 
@@ -1484,7 +1486,7 @@ void Mle::HandleAttachTimer(void)
             SendChildIdRequest() == OT_ERROR_NONE)
         {
             mAttachState = kAttachStateChildIdRequest;
-            mAttachTimer.Start(kParentRequestReedTimeout);
+            delay        = kParentRequestReedTimeout;
             break;
         }
 
@@ -1493,14 +1495,20 @@ void Mle::HandleAttachTimer(void)
     case kAttachStateChildIdRequest:
         mAttachState = kAttachStateIdle;
         ResetParentCandidate();
-        Reattach();
+        delay = Reattach();
         break;
+    }
+
+    if (delay != 0)
+    {
+        mAttachTimer.Start(delay);
     }
 }
 
-void Mle::Reattach(void)
+uint32_t Mle::Reattach(void)
 {
     ThreadNetif &netif = GetNetif();
+    uint32_t     delay = 0;
 
     if (mReattachState == kReattachActive)
     {
@@ -1509,7 +1517,7 @@ void Mle::Reattach(void)
             netif.GetPendingDataset().ApplyConfiguration();
             mReattachState = kReattachPending;
             mAttachState   = kAttachStateStart;
-            mAttachTimer.Start(kParentRequestRouterTimeout);
+            delay          = kParentRequestRouterTimeout;
         }
         else
         {
@@ -1568,7 +1576,7 @@ void Mle::Reattach(void)
     }
 
 exit:
-    return;
+    return delay;
 }
 
 void Mle::HandleDelayedResponseTimer(Timer &aTimer)

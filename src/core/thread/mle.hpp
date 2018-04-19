@@ -1494,11 +1494,11 @@ private:
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError SendParentRequest(ParentRequestType aType);
-    otError SendChildIdRequest(void);
-    void    SendOrphanAnnounce(void);
-    otError SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
-    void    Reattach(void);
+    otError  SendParentRequest(ParentRequestType aType);
+    otError  SendChildIdRequest(void);
+    void     SendOrphanAnnounce(void);
+    otError  SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
+    uint32_t Reattach(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
