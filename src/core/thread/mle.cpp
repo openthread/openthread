@@ -1438,8 +1438,6 @@ void Mle::HandleAttachTimer(Timer &aTimer)
 
 void Mle::HandleAttachTimer(void)
 {
-    ThreadNetif &netif = GetNetif();
-
     switch (mAttachState)
     {
     case kAttachStateIdle:
@@ -1483,75 +1481,82 @@ void Mle::HandleAttachTimer(void)
     case kAttachStateChildIdRequest:
         mAttachState = kAttachStateIdle;
         ResetParentCandidate();
+        Reattach();
+        break;
+    }
+}
 
-        if (mReattachState == kReattachActive)
+void Mle::Reattach(void)
+{
+    ThreadNetif &netif = GetNetif();
+
+    if (mReattachState == kReattachActive)
+    {
+        if (netif.GetPendingDataset().Restore() == OT_ERROR_NONE)
         {
-            if (netif.GetPendingDataset().Restore() == OT_ERROR_NONE)
-            {
-                netif.GetPendingDataset().ApplyConfiguration();
-                mReattachState = kReattachPending;
-                mAttachState   = kAttachStateStart;
-                mAttachTimer.Start(kParentRequestRouterTimeout);
-            }
-            else
-            {
-                mReattachState = kReattachStop;
-            }
+            netif.GetPendingDataset().ApplyConfiguration();
+            mReattachState = kReattachPending;
+            mAttachState   = kAttachStateStart;
+            mAttachTimer.Start(kParentRequestRouterTimeout);
         }
-        else if (mReattachState == kReattachPending)
+        else
         {
             mReattachState = kReattachStop;
-            netif.GetActiveDataset().Restore();
         }
+    }
+    else if (mReattachState == kReattachPending)
+    {
+        mReattachState = kReattachStop;
+        netif.GetActiveDataset().Restore();
+    }
 
-        if (mReattachState == kReattachStop)
+    VerifyOrExit(mReattachState == kReattachStop);
+
+    switch (mParentRequestMode)
+    {
+    case kAttachAny:
+        if (mRole != OT_DEVICE_ROLE_CHILD)
         {
-            switch (mParentRequestMode)
+            if (mPreviousPanId != Mac::kPanIdBroadcast)
             {
-            case kAttachAny:
-                if (mRole != OT_DEVICE_ROLE_CHILD)
-                {
-                    if (mPreviousPanId != Mac::kPanIdBroadcast)
-                    {
-                        netif.GetMac().SetChannel(mPreviousChannel);
-                        netif.GetMac().SetPanId(mPreviousPanId);
-                        mPreviousPanId = Mac::kPanIdBroadcast;
-                        BecomeDetached();
-                    }
-                    else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
-                    {
-                        SendOrphanAnnounce();
-                        BecomeDetached();
-                    }
-                    else if (netif.GetMle().BecomeLeader() != OT_ERROR_NONE)
-                    {
-                        BecomeDetached();
-                    }
-                }
-                else if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
-                {
-                    // return to sleepy operation
-                    netif.GetMeshForwarder().GetDataPollManager().SetAttachMode(false);
-                    netif.GetMeshForwarder().SetRxOnWhenIdle(false);
-                }
-
-                break;
-
-            case kAttachSame1:
-                BecomeChild(kAttachSame2);
-                break;
-
-            case kAttachSame2:
-                BecomeChild(kAttachAny);
-                break;
-
-            case kAttachBetter:
-                break;
+                netif.GetMac().SetChannel(mPreviousChannel);
+                netif.GetMac().SetPanId(mPreviousPanId);
+                mPreviousPanId = Mac::kPanIdBroadcast;
+                BecomeDetached();
             }
+            else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
+            {
+                SendOrphanAnnounce();
+                BecomeDetached();
+            }
+            else if (netif.GetMle().BecomeLeader() != OT_ERROR_NONE)
+            {
+                BecomeDetached();
+            }
+        }
+        else if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+        {
+            // return to sleepy operation
+            netif.GetMeshForwarder().GetDataPollManager().SetAttachMode(false);
+            netif.GetMeshForwarder().SetRxOnWhenIdle(false);
         }
 
         break;
+
+    case kAttachSame1:
+        BecomeChild(kAttachSame2);
+        break;
+
+    case kAttachSame2:
+        BecomeChild(kAttachAny);
+        break;
+
+    case kAttachBetter:
+        break;
     }
+
+exit:
+    return;
 }
 
 void Mle::HandleDelayedResponseTimer(Timer &aTimer)
