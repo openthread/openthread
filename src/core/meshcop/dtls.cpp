@@ -215,6 +215,14 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     mReceiveMessage   = NULL;
     mMessageSubType   = Message::kSubTypeNone;
 
+    if (!mClient)
+    {
+        while(1)
+        {
+            //ToDo: no server functionality implemented.
+        }
+    }
+
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
 

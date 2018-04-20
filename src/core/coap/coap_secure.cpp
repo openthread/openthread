@@ -127,15 +127,17 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
                                           &CoapSecure::HandleDtlsReceive,
                                           &CoapSecure::HandleDtlsSend, this);
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
         return GetNetif().GetDtls().StartApplicationCoapSecure(true, &CoapSecure::HandleDtlsConnected,
                                                                &CoapSecure::HandleDtlsReceive,
                                                                &CoapSecure::HandleDtlsSend,
                                                                this);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    return OT_ERROR_ABORT;
 }
 
 

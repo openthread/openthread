@@ -41,7 +41,7 @@
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"
 
-#include "x509_cert_key.hpp"   // key and cert file
+#include "x509_cert_key_ines.hpp"   // key and cert file
 
 namespace ot {
 namespace Cli {
@@ -242,7 +242,7 @@ void CoapSecureCli::HandleSecureCoapClientConnect(const bool aConnected)
 	    else
 	    {
 	        mInterpreter.mServer->OutputFormat("CoAP Secure disconnected before stop.\r\n>");
-	        otCoapRemoveResource(mInterpreter.mInstance, &mResource);   // ToDo: rm the right values, not the coap vals
+	        otCoapRemoveResource(mInterpreter.mInstance, &mResource);
 	        otCoapSecureStop(mInterpreter.mInstance);
 	        mInterpreter.mServer->OutputFormat("Coap Secure service stopped: ");
 	        shutdownFlag = false;
@@ -379,7 +379,7 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
         coapCode = OT_COAP_CODE_PUT;
     }
     else if (strcmp(argv[0], "delete") == 0)
-    {   // ToDo
+    {
         coapCode = OT_COAP_CODE_DELETE;
     }
     else
