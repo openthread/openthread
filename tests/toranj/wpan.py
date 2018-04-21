@@ -377,7 +377,7 @@ class Node(object):
     def is_associated(self):
         return self.get(WPAN_STATE) == STATE_ASSOCIATED
 
-    def join_node(self, node, node_type=JOIN_TYPE_ROUTER):
+    def join_node(self, node, node_type=JOIN_TYPE_ROUTER, should_set_key=True):
         """Join a network specified by another node, `node` should be a Node"""
 
         if not node.is_associated():
@@ -386,10 +386,12 @@ class Node(object):
         name = node.get(WPAN_NAME)
         panid = node.get(WPAN_PANID)
         xpanid = node.get(WPAN_XPANID)
-        netkey = node.get(WPAN_KEY)
         channel = node.get(WPAN_CHANNEL)
 
-        self.set(WPAN_KEY, netkey[1:-1], binary_data=True)
+        if should_set_key:
+            netkey = node.get(WPAN_KEY)
+            self.set(WPAN_KEY, netkey[1:-1], binary_data=True)
+
         return self.join(name[1:-1], channel=channel, node_type=node_type, panid=panid, xpanid=xpanid)
 
     def whitelist_node(self, node):
