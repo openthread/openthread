@@ -266,6 +266,8 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
             } OT_TOOL_PACKED_END data;
 
             aMessage.Read(offset, sizeof(Tlv), &data.tlv);
+            VerifyOrExit(data.tlv.GetLength() <= sizeof(data.value), state = StateTlv::kReject);
+
             aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
 
             switch (data.tlv.GetType())
@@ -291,7 +293,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
                 // fall through
 
             default:
-                dataset.Set(data.tlv);
+                VerifyOrExit(dataset.Set(data.tlv) == OT_ERROR_NONE, state = StateTlv::kReject);
                 break;
             }
 
