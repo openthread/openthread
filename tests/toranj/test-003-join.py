@@ -84,6 +84,18 @@ verify(node2.get(wpan.WPAN_PANID) == node1.get(wpan.WPAN_PANID))
 verify(node2.get(wpan.WPAN_XPANID) == node1.get(wpan.WPAN_XPANID))
 verify(node2.get(wpan.WPAN_KEY) == node1.get(wpan.WPAN_KEY))
 
+node2.leave()
+
+# Join from node2 without setting network key
+node2.join_node(node1, should_set_key=False)
+verify(node2.get(wpan.WPAN_STATE) == wpan.STATE_CREDENTIALS_NEEDED)
+verify(node2.get(wpan.WPAN_NAME) == node1.get(wpan.WPAN_NAME))
+verify(node2.get(wpan.WPAN_PANID) == node1.get(wpan.WPAN_PANID))
+verify(node2.get(wpan.WPAN_XPANID) == node1.get(wpan.WPAN_XPANID))
+node2.set(wpan.WPAN_KEY, node1.get(wpan.WPAN_KEY)[1:-1], binary_data=True)
+verify(node2.get(wpan.WPAN_KEY) == node1.get(wpan.WPAN_KEY))
+verify(node2.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
+
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
