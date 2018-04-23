@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-#    Copyright 2015-2016 Nest Labs Inc. All Rights Reserved.
+#    Copyright 2015-2018 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -222,7 +222,9 @@ done
 
 populate "${DIR}" 664 configure.ac        .
 populate "${DIR}" 775 bootstrap           .
+populate "${DIR}" 664 repos.conf          .
 populate "${DIR}" 664 Makefile.am         .
+populate "${DIR}" 664 Makefile-bootstrap  .
 populate "${DIR}" 664 Makefile.am         doc
 populate "${DIR}" 664 Doxyfile.in         doc
 populate "${DIR}" 664 Makefile.am         third_party 
