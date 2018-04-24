@@ -187,20 +187,20 @@ fetch_url_with_command() {
     shift 2
     
     if [ -x "${executable}" ]; then
-                cd "${fetchdir}"
-                
-                        verbose "  `echo ${1} | tr '[[:lower:]]' '[[:upper:]]'`     ${url}"
+        cd "${fetchdir}"
+        
+            verbose "  `echo ${1} | tr '[[:lower:]]' '[[:upper:]]'`     ${url}"
 
-                        ${*} "${url}"
+            ${*} "${url}"
 
-                        status=${?}
+            status=${?}
 
-                        if [ ${?} -ne 0 ]; then
-                                error "Failed to fetch ${url} with ${1}."
-                        fi
+            if [ ${?} -ne 0 ]; then
+                    error "Failed to fetch ${url} with ${1}."
+            fi
 
-                cd "${curdir}"
-        fi
+        cd "${curdir}"
+    fi
     
     return ${status}
 }
@@ -433,8 +433,8 @@ while [ ${#} -gt 0 ]; do
             ;;
 
         *)
-          usage 1
-          ;;
+            usage 1
+            ;;
     esac
 done
 
