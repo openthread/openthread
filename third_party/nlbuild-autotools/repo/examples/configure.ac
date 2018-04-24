@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 #
-#    Copyright 2016-2017 Nest Labs Inc. All Rights Reserved.
+#    Copyright 2016-2018 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ AC_PREREQ([2.68])
 #
 # Initialize autoconf for the package
 #
-AC_INIT([@PACKAGE_SHORT_UPPER@],
+AC_INIT([@PACKAGE_SHORT_LOWER@],
         m4_esyscmd([@NLBUILD_AUTOTOOLS_STEM@/scripts/mkversion -b `cat .default-version` .]),
         [@PACKAGE_EMAIL@],
         [@PACKAGE_SHORT_LOWER@],
@@ -268,11 +268,68 @@ AM_CONDITIONAL(@PACKAGE_SHORT_UPPER@_BUILD_DOCS, [test "${nl_cv_build_docs}" = "
 #
 AC_MSG_NOTICE([checking required package dependencies])
 
-# NL_WITH_PACKAGE(...)
-
 # Check if the build host has pkg-config
 
 AC_PATH_PROG([PKG_CONFIG],[pkg-config])
+
+# Here is a package example with nlunit-test. Uncomment and adapt or delete
+# this, as needed. If you choose to use this, please also take a look at
+# Makefile.am and third_party/Makefile.am and uncomment the appropriate
+# sections there.
+
+# #
+# # Nlunit-test
+# #
+#
+# if test "${nl_cv_build_tests}" = "yes"; then
+#     NL_WITH_PACKAGE(
+#         [Nlunit-test],
+#         [NLUNIT_TEST],
+#         [nlunit_test],
+#         [-lnlunit-test],
+#         [
+# 	    # At this point, the internal Nlunit-test package will be neither
+# 	    # configured nor built, so the normal checks we undertake for an
+# 	    # external package cannot be run here. Simply set the appropriate
+# 	    # variables and trust all will be well.
+# 
+#             NLUNIT_TEST_CPPFLAGS="-I\${abs_top_srcdir}/third_party/nlunit-test/repo/src"
+#             NLUNIT_TEST_LDFLAGS="-L${ac_pwd}/third_party/nlunit-test/repo/src"
+#             NLUNIT_TEST_LIBS="-lnlunit-test"
+#         ],
+#         [
+#             # Check for required nlunit-test headers.
+# 
+#             AC_CHECK_HEADERS([nlunit-test.h],
+#             [],
+#             [
+#                 AC_MSG_ERROR(The nlunit-test header "$ac_header" is required but cannot be found.)
+#             ])
+#         ])
+# fi
+#
+# # Depending on whether nlunit-test has been configured for an internal
+# # location, its directory stem within this package needs to be set
+# # accordingly. In addition, if the location is internal, then we need
+# # to attempt to pull it down using the bootstrap makefile.
+# 
+# if test "${nl_with_nlunit_test}" = "internal"; then
+#     maybe_nlunit_test_dirstem="nlunit-test/repo"
+#     nlunit_test_dirstem="third_party/${maybe_nlunit_test_dirstem}"
+#
+#     AC_MSG_NOTICE([attempting to create internal ${nlunit_test_dirstem}])
+#
+#     ${MAKE-make} --no-print-directory -C ${srcdir} -f Makefile-bootstrap ${nlunit_test_dirstem}
+#
+#     if test $? -ne 0; then
+#         AC_MSG_ERROR([failed to create ${nlunit_test_dirstem}. Please check your network connection or the correctness of 'repos.conf'])
+#     fi
+# else
+#     maybe_nlunit_test_dirstem=""
+# fi
+#
+# AC_SUBST(NLUNIT_TEST_SUBDIRS, [${maybe_nlunit_test_dirstem}])
+# AM_CONDITIONAL([@PACKAGE_SHORT_UPPER@_WITH_NLUNIT_TEST_INTERNAL], [test "${nl_with_nlunit_test}" = "internal"])
 
 #
 # Check for headers
@@ -303,16 +360,34 @@ if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
 
+# Here is an example with nlunit-test. Uncomment and adapt or delete
+# this, as needed.
+
+# # Add any nlunit-test CPPFLAGS, LDFLAGS, and LIBS
+# 
+# CPPFLAGS="${CPPFLAGS} ${NLUNIT_TEST_CPPFLAGS}"
+# LDFLAGS="${LDFLAGS} ${NLUNIT_TEST_LDFLAGS}"
+# LIBS="${LIBS} ${NLUNIT_TEST_LIBS}"
+
 # Add any code coverage CPPFLAGS and LIBS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
 LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
 
 # At this point, we can restore the compiler flags to whatever the
-# user passed in, now that we're clear of an -Werror issues by
+# user passed in, now that we're clear of any -Werror issues by
 # transforming -Wno-error back to -Werror.
 
 NL_RESTORE_WERROR
+
+# Here is an example with nlunit-test. Uncomment and adapt or delete
+# this, as needed.
+
+# # Configure any autotools-based subdirectories
+#
+# if test "${nl_with_nlunit_test}" = "internal"; then
+#     AC_CONFIG_SUBDIRS([third_party/nlunit-test/repo])
+# fi
 
 #
 # Identify the various makefiles and auto-generated files for the package
@@ -362,6 +437,10 @@ AC_MSG_NOTICE([
   Doxygen                                   : ${DOXYGEN:--}
   GraphViz dot                              : ${DOT:--}
   PERL                                      : ${PERL:--}
+  Nlunit-test source                        : ${nl_with_nlunit_test:--}
+  Nlunit-test compile flags                 : ${NLUNIT_TEST_CPPFLAGS:--}
+  Nlunit-test link flags                    : ${NLUNIT_TEST_LDFLAGS:--}
+  Nlunit-test link libraries                : ${NLUNIT_TEST_LIBS:--}
   C Preprocessor                            : ${CPP}
   C Compiler                                : ${CC}
   C++ Preprocessor                          : ${CXXCPP}
@@ -377,6 +456,3 @@ AC_MSG_NOTICE([
   Link libraries                            : ${LIBS}
 
 ])
-
-
-
