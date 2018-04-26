@@ -296,7 +296,8 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     SetRloc16(aRloc16);
 
     SetRole(OT_DEVICE_ROLE_ROUTER);
-    mAttachState = kAttachStateIdle;
+    SetAttachState(kAttachStateIdle);
+    mAttachCounter = 0;
     mAttachTimer.Stop();
     mChildUpdateRequestTimer.Stop();
     mAdvertiseTimer.Stop();
@@ -330,7 +331,8 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     SetRloc16(aRloc16);
 
     SetRole(OT_DEVICE_ROLE_LEADER);
-    mAttachState = kAttachStateIdle;
+    SetAttachState(kAttachStateIdle);
+    mAttachCounter = 0;
     mAttachTimer.Stop();
     mChildUpdateRequestTimer.Stop();
     mAdvertiseTimer.Stop();

@@ -127,5 +127,6 @@ run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py
 run test-602-channel-manager-channel-select.py
+run test-603-channel-manager-announce-recovery.py
 
 exit 0
