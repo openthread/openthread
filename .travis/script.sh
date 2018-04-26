@@ -282,6 +282,74 @@ set -x
     arc-elf32-size  output/emsk/bin/ot-ncp-mtd || die
 }
 
+[ $BUILD_TARGET != arm-gcc7 ] || {
+    export PATH=/tmp/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2538 || die
+    arm-none-eabi-size  output/cc2538/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc2538/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2538/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc2538/bin/ot-ncp-mtd || die
+
+    # git checkout -- . || die
+    # git clean -xfd || die
+    # ./bootstrap || die
+    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
+    # arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
+    # arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
+    # arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
+    # arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-kw41z || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-nrf52840 || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-cc2650 || die
+    arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2652 || die
+    arm-none-eabi-size  output/cc2652/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
+    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
+    mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
+}
+
 [ $BUILD_TARGET != posix ] || {
     sh -c '$CC --version' || die
     sh -c '$CXX --version' || die

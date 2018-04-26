@@ -85,6 +85,14 @@ cd /tmp || die
         arc-elf32-gcc --version || die
     }
 
+    [ $BUILD_TARGET != arm-gcc7 ] || {
+        sudo apt-get install lib32z1 || die
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2017q4/gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
+    }
+
     [ $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-mtd ] || {
         sudo apt-get install g++-multilib || die
     }

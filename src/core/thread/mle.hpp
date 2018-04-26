@@ -1406,19 +1406,19 @@ protected:
     uint8_t      mDeviceMode; ///< Device mode setting.
 
     /**
-     * States when searching for a parent.
+     * States during attach (when searching for a parent).
      *
      */
-    enum ParentRequestState
+    enum AttachState
     {
-        kParentIdle,          ///< Not currently searching for a parent.
-        kParentSynchronize,   ///< Looking to synchronize with a parent (after reset).
-        kParentRequestStart,  ///< Starting to look for a parent.
-        kParentRequestRouter, ///< Searching for a Router to attach to.
-        kParentRequestChild,  ///< Searching for Routers or REEDs to attach to.
-        kChildIdRequest,      ///< Sending a Child ID Request message.
+        kAttachStateIdle,                ///< Not currently searching for a parent.
+        kAttachStateSynchronize,         ///< Looking to synchronize with a parent (after reset).
+        kAttachStateStart,               ///< Starting to look for a parent.
+        kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
+        kAttachStateParentRequestReed,   ///< Searching for Routers or REEDs to attach to.
+        kAttachStateChildIdRequest,      ///< Sending a Child ID Request message.
     };
-    ParentRequestState mParentRequestState; ///< The parent request state.
+    AttachState mAttachState; ///< The parent request state.
 
     /**
      * States when reattaching network using stored dataset
@@ -1433,7 +1433,7 @@ protected:
     };
     ReattachState mReattachState;
 
-    TimerMilli mParentRequestTimer;            ///< The timer for driving the Parent Request process.
+    TimerMilli mAttachTimer;                   ///< The timer for driving the attach process.
     TimerMilli mDelayedResponseTimer;          ///< The timer to delay MLE responses.
     TimerMilli mChildUpdateRequestTimer;       ///< The timer for sending MLE Child Update Request messages.
     uint32_t   mLastPartitionId;               ///< The partition ID of the previous Thread partition
@@ -1447,6 +1447,12 @@ private:
     {
         kMleMessagePriority = Message::kPriorityHigh,
         kMleHopLimit        = 255,
+    };
+
+    enum ParentRequestType
+    {
+        kParentRequestTypeRouters,         ///< Parent Request to all routers.
+        kParentRequestTypeRoutersAndReeds, ///< Parent Request to all routers and REEDs.
     };
 
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
@@ -1467,8 +1473,8 @@ private:
 
     static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
     void        HandleStateChanged(uint32_t aFlags);
-    static void HandleParentRequestTimer(Timer &aTimer);
-    void        HandleParentRequestTimer(void);
+    static void HandleAttachTimer(Timer &aTimer);
+    void        HandleAttachTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
     void        HandleDelayedResponseTimer(void);
     static void HandleChildUpdateRequestTimer(Timer &aTimer);
@@ -1488,10 +1494,11 @@ private:
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError SendParentRequest(void);
-    otError SendChildIdRequest(void);
-    void    SendOrphanAnnounce(void);
-    otError SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
+    otError  SendParentRequest(ParentRequestType aType);
+    otError  SendChildIdRequest(void);
+    void     SendOrphanAnnounce(void);
+    otError  SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
+    uint32_t Reattach(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);

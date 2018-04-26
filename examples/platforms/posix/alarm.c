@@ -67,7 +67,8 @@ uint32_t otPlatAlarmMilliGetNow(void)
     gettimeofday(&tv, NULL);
     timersub(&tv, &sStart, &tv);
 
-    return (uint32_t)((tv.tv_sec * sSpeedUpFactor * MS_PER_S) + (tv.tv_usec * sSpeedUpFactor / US_PER_MS));
+    return (uint32_t)(((uint64_t)tv.tv_sec * sSpeedUpFactor * MS_PER_S) +
+                      ((uint64_t)tv.tv_usec * sSpeedUpFactor / US_PER_MS));
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -147,7 +148,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = 1;
         }
 
-        aTimeout->tv_sec  = remaining / US_PER_S;
+        aTimeout->tv_sec  = (time_t)remaining / US_PER_S;
         aTimeout->tv_usec = remaining % US_PER_S;
     }
 }
