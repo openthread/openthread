@@ -521,7 +521,7 @@ exit:
 
 otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 {
-    otLogInfoPlat(aInstance, "LinkRaw Recv (Channel %d)", aChannel);
+    otLogInfoPlat(aInstance, "LinkRaw Recv");
     return static_cast<Instance *>(aInstance)->GetLinkRaw().Receive(aCallback);
 }
 
