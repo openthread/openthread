@@ -265,6 +265,23 @@ typedef struct otPlatBleDeviceAddr
 } otPlatBleDeviceAddr;
 
 /**
+ * This structure represents BLE advertisement type.
+ *
+ */
+enum
+{
+    /**
+     * If set, advertising device will allow connections to be initiated.
+     */
+    OT_BLE_ADV_TYPE_CONNECTABLE = 0x01,
+
+    /**
+     * If set, advertising device will respond to scan requests.
+     */
+    OT_BLE_ADV_TYPE_SCANNABLE = 0x02,
+};
+
+/**
  * This structure represents BLE connection parameters.
  *
  */
@@ -380,6 +397,11 @@ otError otPlatBleEnable(otInstance *aInstance);
 /**
  * Disable the Bluetooth Low Energy radio.
  *
+ * When disabled, the BLE stack will flush event queues and not generate new
+ * events. The BLE peripheral is turned off or put into a low power sleep
+ * state. Any dynamic memory used by the stack should be released,
+ * but static memory may remain reserved.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  *
  * @retval ::OT_ERROR_NONE        Successfully transitioned to disabled.
@@ -486,8 +508,8 @@ otError otPlatBleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanR
 /**
  * Starts BLE Advertising procedure.
  *
- * The BLE device shall use connectable undirected advertising with no filter
- * applied. A single BLE Advertising packet must be sent on all advertising
+ * The BLE device shall use undirected advertising with no filter applied.
+ * A single BLE Advertising packet must be sent on all advertising
  * channels (37, 38 and 39).
  *
  * @note This function shall be used only for BLE Peripheral role.
@@ -495,14 +517,16 @@ otError otPlatBleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanR
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aInterval  The interval between subsequent advertising packets
  *                       in OT_BLE_ADV_INTERVAL_UNIT units.
- *                       Shall be in OT_BLE_ADV_INTERVAL_MIN and OT_BLE_ADV_INTERVAL_MAX
- *                       range.
+ *                       Shall be within OT_BLE_ADV_INTERVAL_MIN and
+ *                       OT_BLE_ADV_INTERVAL_MAX range.
+ * @param[in] aType      The advertisement properties as a bitmask:
+ *                       whether it is connectable | scannable.
  *
  * @retval ::OT_ERROR_NONE           Advertising procedure has been started.
  * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
  * @retval ::OT_ERROR_INVALID_ARGS   Invalid interval value has been supplied.
  */
-otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval);
+otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType);
 
 /**
  * Stops BLE Advertising procedure.
@@ -552,7 +576,7 @@ extern void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnecti
  * @retval ::OT_ERROR_INVALID_ARGS   Invalid interval or window value has been
  *                                   supplied.
  */
-otError otPlatBleGapAdvScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWindow);
+otError otPlatBleGapScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWindow);
 
 /**
  * Stops BLE Scanning procedure.
@@ -564,7 +588,7 @@ otError otPlatBleGapAdvScanStart(otInstance *aInstance, uint16_t aInterval, uint
  * @retval ::OT_ERROR_NONE           Scanning procedure has been stopped.
  * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
  */
-otError otPlatBleGapAdvScanStop(otInstance *aInstance);
+otError otPlatBleGapScanStop(otInstance *aInstance);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an advertisement
