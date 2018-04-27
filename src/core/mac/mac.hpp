@@ -786,6 +786,17 @@ public:
      */
     uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
 
+    /**
+     * This method Starts/Stops the MAC layer. It is used when the Interface State changes Up/Down.
+     *
+     * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
+     *
+     * @retval true   The operation succeeded or the new State equals the current State.
+     * @retval false  The operation failed.
+     *
+     */
+    bool SetEnabled(bool aEnable);
+
 private:
     enum
     {
@@ -924,6 +935,7 @@ private:
 
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
+    bool               mEnabled;
 };
 
 /**

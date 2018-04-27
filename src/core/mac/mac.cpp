@@ -194,6 +194,7 @@ Mac::Mac(Instance &aInstance)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSuccessRateTracker()
     , mCcaSampleCount(0)
+    , mEnabled(false)
 {
     GenerateExtAddress(&mExtAddress);
 
@@ -309,7 +310,14 @@ exit:
 
 otError Mac::UpdateScanChannel(void)
 {
-    return mScanChannelMask.GetNextChannel(mScanChannel);
+    otError error;
+
+    VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
+
+    error = mScanChannelMask.GetNextChannel(mScanChannel);
+
+exit:
+    return error;
 }
 
 void Mac::PerformActiveScan(void)
@@ -653,45 +661,58 @@ void Mac::PerformOperation(void)
     // operations since radio should remain in receive mode after
     // a data poll ack indicating a pending frame from parent.
 
-    if (mPendingWaitingForData)
+    if (mEnabled)
     {
-        mPendingWaitingForData = false;
-        mOperation             = kOperationWaitingForData;
-        RadioReceive(mChannel);
-    }
-    else if (mPendingTransmitOobFrame)
-    {
-        mPendingTransmitOobFrame = false;
-        mOperation               = kOperationTransmitOutOfBandFrame;
-        StartCsmaBackoff();
-    }
-    else if (mPendingActiveScan)
-    {
-        mPendingActiveScan = false;
-        mOperation         = kOperationActiveScan;
-        PerformActiveScan();
-    }
-    else if (mPendingEnergyScan)
-    {
-        mPendingEnergyScan = false;
-        mOperation         = kOperationEnergyScan;
-        PerformEnergyScan();
-    }
-    else if (mPendingTransmitBeacon)
-    {
-        mPendingTransmitBeacon = false;
-        mOperation             = kOperationTransmitBeacon;
-        StartCsmaBackoff();
-    }
-    else if (mPendingTransmitData)
-    {
-        mPendingTransmitData = false;
-        mOperation           = kOperationTransmitData;
-        StartCsmaBackoff();
+        if (mPendingWaitingForData)
+        {
+            mPendingWaitingForData = false;
+            mOperation             = kOperationWaitingForData;
+            RadioReceive(mChannel);
+        }
+        else if (mPendingTransmitOobFrame)
+        {
+            mPendingTransmitOobFrame = false;
+            mOperation               = kOperationTransmitOutOfBandFrame;
+            StartCsmaBackoff();
+        }
+        else if (mPendingActiveScan)
+        {
+            mPendingActiveScan = false;
+            mOperation         = kOperationActiveScan;
+            PerformActiveScan();
+        }
+        else if (mPendingEnergyScan)
+        {
+            mPendingEnergyScan = false;
+            mOperation         = kOperationEnergyScan;
+            PerformEnergyScan();
+        }
+        else if (mPendingTransmitBeacon)
+        {
+            mPendingTransmitBeacon = false;
+            mOperation             = kOperationTransmitBeacon;
+            StartCsmaBackoff();
+        }
+        else if (mPendingTransmitData)
+        {
+            mPendingTransmitData = false;
+            mOperation           = kOperationTransmitData;
+            StartCsmaBackoff();
+        }
+        else
+        {
+            UpdateIdleMode();
+        }
     }
     else
     {
-        UpdateIdleMode();
+        mPendingWaitingForData = false;
+        mPendingTransmitOobFrame = false;
+        mPendingActiveScan = false;
+        mPendingEnergyScan = false;
+        mPendingTransmitBeacon = false;
+        mPendingTransmitData = false;
+        mOobFrame = NULL;  
     }
 
     if (mOperation != kOperationIdle)
@@ -998,6 +1019,8 @@ void Mac::BeginTransmit(void)
     otError error                 = OT_ERROR_NONE;
     bool    applyTransmitSecurity = true;
     Frame & sendFrame(*GetOperationFrame());
+
+    VerifyOrExit(mEnabled, error = OT_ERROR_ABORT); 
 
 #if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
 
@@ -2043,6 +2066,11 @@ bool Mac::RadioSupportsCsmaBackoff(void)
 bool Mac::RadioSupportsRetries(void)
 {
     return (otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0;
+}
+
+bool Mac::SetEnabled(bool aEnable)
+{
+    mEnabled = aEnable;
 }
 
 void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const

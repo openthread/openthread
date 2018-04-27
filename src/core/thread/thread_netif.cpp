@@ -111,6 +111,7 @@ otError ThreadNetif::Up(void)
 {
     if (!mIsUp)
     {
+        mMac.SetEnabled(true);
         GetIp6().AddNetif(*this);
         mMeshForwarder.Start();
         mCoap.Start(kCoapUdpPort);
@@ -129,6 +130,7 @@ otError ThreadNetif::Up(void)
 
 otError ThreadNetif::Down(void)
 {
+    mMac.SetEnabled(false);
     mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
