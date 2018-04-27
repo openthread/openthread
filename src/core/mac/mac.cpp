@@ -706,13 +706,13 @@ void Mac::PerformOperation(void)
     }
     else
     {
-        mPendingWaitingForData = false;
+        mPendingWaitingForData   = false;
         mPendingTransmitOobFrame = false;
-        mPendingActiveScan = false;
-        mPendingEnergyScan = false;
-        mPendingTransmitBeacon = false;
-        mPendingTransmitData = false;
-        mOobFrame = NULL;  
+        mPendingActiveScan       = false;
+        mPendingEnergyScan       = false;
+        mPendingTransmitBeacon   = false;
+        mPendingTransmitData     = false;
+        mOobFrame                = NULL;
     }
 
     if (mOperation != kOperationIdle)
@@ -1020,7 +1020,7 @@ void Mac::BeginTransmit(void)
     bool    applyTransmitSecurity = true;
     Frame & sendFrame(*GetOperationFrame());
 
-    VerifyOrExit(mEnabled, error = OT_ERROR_ABORT); 
+    VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
 
 #if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
 
