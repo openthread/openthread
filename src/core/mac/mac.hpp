@@ -797,6 +797,15 @@ public:
      */
     bool SetEnabled(bool aEnable);
 
+    /**
+     * This method indicates whether or not the link layer is enabled.
+     *
+     * @retval true   Link layer is enabled.
+     * @retval false  Link layer is not enabled.
+     *
+     */
+    bool IsEnabled(void) { return mEnabled; }
+
 private:
     enum
     {

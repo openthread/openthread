@@ -111,6 +111,7 @@ otError ThreadNetif::Up(void)
 {
     if (!mIsUp)
     {
+        // Enable the MAC just in case it was disabled while the Interface was down.
         mMac.SetEnabled(true);
         GetIp6().AddNetif(*this);
         mMeshForwarder.Start();
@@ -130,7 +131,6 @@ otError ThreadNetif::Up(void)
 
 otError ThreadNetif::Down(void)
 {
-    mMac.SetEnabled(false);
     mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();

@@ -194,7 +194,7 @@ Mac::Mac(Instance &aInstance)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSuccessRateTracker()
     , mCcaSampleCount(0)
-    , mEnabled(false)
+    , mEnabled(true)
 {
     GenerateExtAddress(&mExtAddress);
 
@@ -2071,6 +2071,8 @@ bool Mac::RadioSupportsRetries(void)
 bool Mac::SetEnabled(bool aEnable)
 {
     mEnabled = aEnable;
+
+    return true;
 }
 
 void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
