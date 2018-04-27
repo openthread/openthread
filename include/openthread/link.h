@@ -652,7 +652,7 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
  * @retval false  Link layer is not enabled.
  *
  */
-bool otLinkIsEnabled(otInstance *aInstance)
+bool otLinkIsEnabled(otInstance *aInstance);
 
 /**
  * @}
