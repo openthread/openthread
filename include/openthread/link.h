@@ -632,10 +632,10 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance);
  * This function enables or disables the link layer.
  *
  * @note The link layer may only be enabled / disabled when the Thread Interface is disabled.
- * 
+ *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aEnable       true to enable the link layer, or false otherwise.
- * 
+ *
  * @retval OT_ERROR_NONE          Successfully enabled / disabled the link layer.
  * @retval OT_ERROR_INVALID_STATE Could not disable the link layer because
  *                                the Thread interface is enabled.
