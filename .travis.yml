@@ -58,6 +58,9 @@ matrix:
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
+    - env: BUILD_TARGET="posix-radio-ncp" VERBOSE=1
+      os: linux
+      compiler: gcc
     - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
@@ -131,6 +134,9 @@ matrix:
             - gcc-7
             - g++-7
     - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-ncp-radio-ncp" VERBOSE=1
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1

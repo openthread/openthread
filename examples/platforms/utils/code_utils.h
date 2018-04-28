@@ -71,4 +71,22 @@
         }                                    \
     } while (0)
 
+/**
+ *  This unconditionally executes @aAction and branches to the local
+ *  label 'exit'.
+ *
+ *  @note The use of this interface implies neither success nor
+ *        failure for the overall exit status of the enclosing
+ *        function body.
+ *
+ *  @param[in]  aAction     An expression or block to execute.
+ *
+ */
+#define otEXIT_NOW(aAction) \
+    do                      \
+    {                       \
+        aAction;            \
+        goto exit;          \
+    } while (0)
+
 #endif // CODE_UTILS_H

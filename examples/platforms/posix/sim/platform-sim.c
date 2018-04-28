@@ -34,7 +34,7 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_ENABLE_POSIX_RADIO_NCP == 0 && OPENTHREAD_POSIX_VIRTUAL_TIME
 
 #include <assert.h>
 #include <errno.h>
@@ -49,8 +49,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint32_t NODE_ID           = 1;
-uint32_t WELLKNOWN_NODE_ID = 34;
+uint64_t NODE_ID = 0;
 
 extern bool gPlatformPseudoResetWasRequested;
 
@@ -189,7 +188,7 @@ void PlatformInit(int argc, char *argv[])
     gArgumentsCount = argc;
     gArguments      = argv;
 
-    NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
+    NODE_ID = (uint64_t)strtol(argv[1], &endptr, 0);
 
     if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
     {
@@ -216,11 +215,12 @@ void PlatformDeinit(void)
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
-    fd_set read_fds;
-    fd_set write_fds;
-    fd_set error_fds;
-    int    max_fd = -1;
-    int    rval;
+    fd_set         read_fds;
+    fd_set         write_fds;
+    fd_set         error_fds;
+    struct timeval timeout;
+    int            max_fd = -1;
+    int            rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
@@ -245,10 +245,23 @@ void PlatformProcessDrivers(otInstance *aInstance)
 
         processEvent(aInstance);
     }
+    else
+    {
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
+
+        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+
+        if ((rval < 0) && (errno != EINTR))
+        {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     platformAlarmProcess(aInstance);
-    platformRadioProcess(aInstance);
-    platformUartProcess();
+    platformRadioProcess(aInstance, &read_fds, &write_fds);
+    platformUartProcess(&read_fds, &write_fds, &error_fds);
 }
 
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // OPENTHREAD_ENABLE_POSIX_RADIO_NCP == 0 && OPENTHREAD_POSIX_VIRTUAL_TIME

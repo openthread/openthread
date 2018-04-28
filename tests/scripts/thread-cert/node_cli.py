@@ -66,6 +66,10 @@ class otCli:
             cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         else:
             cmd = './ot-cli-%s' % mode
+
+        if 'NCP_FILE' in os.environ:
+            cmd += ' %s' % os.environ['NCP_FILE']
+
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
@@ -77,11 +81,16 @@ class otCli:
 
     def __init_ncp_sim(self, nodeid, mode):
         """ Initialize an NCP simulation node. """
+        if 'NCP_FILE' in os.environ:
+            args = ' %s' % os.environ['NCP_FILE']
+        else:
+            args = ''
+
         if "top_builddir" in os.environ.keys():
             builddir = os.environ['top_builddir']
-            cmd = 'spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-%s -n' % (builddir, mode)
+            cmd = 'spinel-cli.py -p "%s/examples/apps/ncp/ot-ncp-%s%s" -n' % (builddir, mode, args)
         else:
-            cmd = './ot-ncp-%s' % mode
+            cmd = 'spinel-cli.py -p "./ot-ncp-%s%s" -n' % (mode, args)
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
@@ -106,6 +115,7 @@ class otCli:
     def send_command(self, cmd):
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
+        sys.stdout.flush()
 
         if isinstance(self.simulator, simulator.VirtualTime):
             self.simulator.receive_events()

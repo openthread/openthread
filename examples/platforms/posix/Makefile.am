@@ -34,6 +34,7 @@ libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/src                     \
     -D_GNU_SOURCE                           \
     $(NULL)
 
@@ -48,6 +49,9 @@ PLATFORM_SOURCES                          = \
     uart-posix.c                            \
     flash.c                                 \
     spi-stubs.c                             \
+    ncp/frame_cache.cpp                     \
+    ncp/ncp_spinel.cpp                      \
+    ncp/radio-ncp.c                         \
     sim/alarm-sim.c                         \
     sim/platform-sim.c                      \
     sim/radio-sim.c                         \
@@ -57,8 +61,18 @@ libopenthread_posix_a_SOURCES             = \
      $(PLATFORM_SOURCES)                    \
     $(NULL)
 
+if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+libopenthread_posix_a_SOURCES            += \
+    ncp/hdlc.cpp                            \
+    ncp/spinel.c                            \
+    $(NULL)
+endif
+
 noinst_HEADERS                            = \
     platform-posix.h                        \
+    ncp/frame_cache.hpp                     \
+    ncp/ncp.h                               \
+    ncp/ncp_spinel.hpp                      \
     $(NULL)
 
 PRETTY_FILES                              = \
@@ -70,8 +84,24 @@ Dash                                      = -
 libopenthread_posix_a_LIBADD              = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
+if OPENTHREAD_BUILD_TESTS
+
+if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+noinst_PROGRAMS                           = frame-cache-test
+TESTS                                     = frame-cache-test
+endif
+
+frame_cache_test_SOURCES                  = ncp/frame_cache.cpp
+frame_cache_test_CPPFLAGS                 = \
+    -DSELF_TEST=1                           \
+    -I$(top_srcdir)/examples/platforms      \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src/core                \
+    $(NULL)
+
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
+endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

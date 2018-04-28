@@ -38,6 +38,7 @@ MAKE                           := make
 MKDIR_P                        := mkdir -p
 LN_S                           := ln -s
 RM_F                           := rm -f
+RADIO                          ?= sim
 
 BuildJobs                      ?= 10
 
@@ -66,6 +67,7 @@ configure_OPTIONS                   = \
     --enable-tmf-proxy                \
     --with-examples=posix             \
     --with-ncp-bus=uart               \
+    --with-posix-radio=$(RADIO)       \
     $(NULL)
 
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..

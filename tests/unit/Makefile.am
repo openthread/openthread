@@ -80,6 +80,12 @@ COMMON_LDADD                                                       += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
+if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+COMMON_LDADD                                                       += \
+    -lutil
+    $(NULL)
+endif
+
 # Test applications that should be run when the 'check' target is run.
 
 check_PROGRAMS                                                      = \
@@ -214,6 +220,9 @@ test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a    
                                $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
                                $(NULL)
 test_diag_SOURCES            = test_diag.cpp
+if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+test_diag_LDADD             += -lutil
+endif
 endif
 
 PRETTY_FILES                                                        = \

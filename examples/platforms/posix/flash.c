@@ -29,6 +29,7 @@
 #include "platform-posix.h"
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,7 +54,7 @@ enum
 otError utilsFlashInit(void)
 {
     otError     error = OT_ERROR_NONE;
-    char        fileName[20];
+    char        fileName[32];
     struct stat st;
     bool        create = false;
     const char *offset = getenv("PORT_OFFSET");
@@ -70,7 +71,7 @@ otError utilsFlashInit(void)
         offset = "0";
     }
 
-    snprintf(fileName, sizeof(fileName), "tmp/%s_%d.flash", offset, NODE_ID);
+    snprintf(fileName, sizeof(fileName), "tmp/%s_%" PRIx64 ".flash", offset, NODE_ID);
 
     if (access(fileName, 0))
     {

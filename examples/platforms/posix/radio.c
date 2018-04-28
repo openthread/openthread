@@ -28,7 +28,7 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0 && OPENTHREAD_ENABLE_POSIX_RADIO_NCP == 0
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -401,7 +401,7 @@ void platformRadioInit(void)
     }
     else
     {
-        sockaddr.sin_port = htons(9000 + sPortOffset + NODE_ID);
+        sockaddr.sin_port = htons(9000 + sPortOffset + (uint16_t)NODE_ID);
     }
 
     sockaddr.sin_addr.s_addr = INADDR_ANY;
@@ -604,7 +604,7 @@ void radioSendMessage(otInstance *aInstance)
     }
 }
 
-void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
+void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
 {
     if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sAckWait))
     {
@@ -625,14 +625,15 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
             *aMaxFd = sSockFd;
         }
     }
+
+    (void)aTimeout;
 }
 
-void platformRadioProcess(otInstance *aInstance)
+void platformRadioProcess(otInstance *aInstance, fd_set *aReadFdSet, fd_set *aWriteFdSet)
 {
-    const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd = {sSockFd, flags, 0};
+    (void)aWriteFdSet;
 
-    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    if (FD_ISSET(sSockFd, aReadFdSet))
     {
         radioReceive(aInstance);
     }
@@ -823,6 +824,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     }
 
 exit:
+    assert(error == OT_ERROR_NONE);
     (void)aInstance;
     return error;
 }
@@ -888,4 +890,4 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return POSIX_RECEIVE_SENSITIVITY;
 }
 
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0 && OPENTHREAD_ENABLE_POSIX_RADIO_NCP == 0

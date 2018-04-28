@@ -432,6 +432,15 @@ set -x
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
 }
 
+[ $BUILD_TARGET != posix-radio-ncp ] || {
+    NCP_OUTPUT_DIR=output-ncp-radio
+    ./bootstrap || die
+    make -f examples/Makefile-posix || die
+    mv output $NCP_OUTPUT_DIR
+    rm -rf build/*
+    NCP_FILE="$(pwd)/$(ls $NCP_OUTPUT_DIR/*/bin/ot-ncp-radio)" COVERAGE=1 RADIO=ncp make -f examples/Makefile-posix check || die
+}
+
 [ $BUILD_TARGET != posix-mtd ] || {
     ./bootstrap || die
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
@@ -440,6 +449,15 @@ set -x
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
     make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix" || die
+}
+
+[ $BUILD_TARGET != posix-ncp-radio-ncp ] || {
+    NCP_OUTPUT_DIR=output-ncp-radio
+    ./bootstrap || die
+    make -f examples/Makefile-posix || die
+    mv output $NCP_OUTPUT_DIR
+    rm -rf build/*
+    NCP_FILE="$(pwd)/$(ls $NCP_OUTPUT_DIR/*/bin/ot-ncp-radio)" COVERAGE=1 NODE_TYPE=ncp-sim RADIO=ncp make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
