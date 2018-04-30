@@ -297,7 +297,7 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable)
     // cannot disable the link layer if the Thread interface is enabled
     VerifyOrExit(instance.GetThreadNetif().IsUp() == false, error = OT_ERROR_INVALID_STATE);
 
-    instance.GetThreadNetif().GetMac().SetEnabled(aEnable);
+    error = instance.GetThreadNetif().GetMac().SetEnabled(aEnable);
 
 exit:
     return error;

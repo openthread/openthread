@@ -213,6 +213,7 @@ otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveSc
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
     mActiveScanHandler = aHandler;
@@ -232,6 +233,7 @@ otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergySc
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
     mEnergyScanHandler = aHandler;
@@ -548,6 +550,7 @@ otError Mac::SendFrameRequest(Sender &aSender)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mSendTail != &aSender && aSender.mNext == NULL, error = OT_ERROR_ALREADY);
 
     if (mSendHead == NULL)
@@ -571,6 +574,7 @@ otError Mac::SendOutOfBandFrameRequest(otRadioFrame *aOobFrame)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mOobFrame == NULL, error = OT_ERROR_ALREADY);
 
     mOobFrame = static_cast<Frame *>(aOobFrame);
@@ -657,54 +661,7 @@ void Mac::PerformOperation(void)
 {
     VerifyOrExit(mOperation == kOperationIdle);
 
-    // `WaitingForData` should be checked before any other pending
-    // operations since radio should remain in receive mode after
-    // a data poll ack indicating a pending frame from parent.
-
-    if (mEnabled)
-    {
-        if (mPendingWaitingForData)
-        {
-            mPendingWaitingForData = false;
-            mOperation             = kOperationWaitingForData;
-            RadioReceive(mChannel);
-        }
-        else if (mPendingTransmitOobFrame)
-        {
-            mPendingTransmitOobFrame = false;
-            mOperation               = kOperationTransmitOutOfBandFrame;
-            StartCsmaBackoff();
-        }
-        else if (mPendingActiveScan)
-        {
-            mPendingActiveScan = false;
-            mOperation         = kOperationActiveScan;
-            PerformActiveScan();
-        }
-        else if (mPendingEnergyScan)
-        {
-            mPendingEnergyScan = false;
-            mOperation         = kOperationEnergyScan;
-            PerformEnergyScan();
-        }
-        else if (mPendingTransmitBeacon)
-        {
-            mPendingTransmitBeacon = false;
-            mOperation             = kOperationTransmitBeacon;
-            StartCsmaBackoff();
-        }
-        else if (mPendingTransmitData)
-        {
-            mPendingTransmitData = false;
-            mOperation           = kOperationTransmitData;
-            StartCsmaBackoff();
-        }
-        else
-        {
-            UpdateIdleMode();
-        }
-    }
-    else
+    if (!mEnabled)
     {
         mPendingWaitingForData   = false;
         mPendingTransmitOobFrame = false;
@@ -713,6 +670,51 @@ void Mac::PerformOperation(void)
         mPendingTransmitBeacon   = false;
         mPendingTransmitData     = false;
         mOobFrame                = NULL;
+        ExitNow();
+    }
+
+    // `WaitingForData` should be checked before any other pending
+    // operations since radio should remain in receive mode after
+    // a data poll ack indicating a pending frame from parent.
+    if (mPendingWaitingForData)
+    {
+        mPendingWaitingForData = false;
+        mOperation             = kOperationWaitingForData;
+        RadioReceive(mChannel);
+    }
+    else if (mPendingTransmitOobFrame)
+    {
+        mPendingTransmitOobFrame = false;
+        mOperation               = kOperationTransmitOutOfBandFrame;
+        StartCsmaBackoff();
+    }
+    else if (mPendingActiveScan)
+    {
+        mPendingActiveScan = false;
+        mOperation         = kOperationActiveScan;
+        PerformActiveScan();
+    }
+    else if (mPendingEnergyScan)
+    {
+        mPendingEnergyScan = false;
+        mOperation         = kOperationEnergyScan;
+        PerformEnergyScan();
+    }
+    else if (mPendingTransmitBeacon)
+    {
+        mPendingTransmitBeacon = false;
+        mOperation             = kOperationTransmitBeacon;
+        StartCsmaBackoff();
+    }
+    else if (mPendingTransmitData)
+    {
+        mPendingTransmitData = false;
+        mOperation           = kOperationTransmitData;
+        StartCsmaBackoff();
+    }
+    else
+    {
+        UpdateIdleMode();
     }
 
     if (mOperation != kOperationIdle)
@@ -1248,7 +1250,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
         otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
-        if (!RadioSupportsRetries() && mTransmitAttempts < sendFrame.GetMaxTxAttempts())
+        if (mEnabled && !RadioSupportsRetries() && mTransmitAttempts < sendFrame.GetMaxTxAttempts())
         {
             mCounters.mTxRetry++;
             StartCsmaBackoff();
@@ -1324,7 +1326,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
         if (sendFrame.IsDataRequestCommand())
         {
-            if (framePending)
+            if (mEnabled && framePending)
             {
                 mReceiveTimer.Start(kDataPollTimeout);
                 StartOperation(kOperationWaitingForData);
@@ -1707,6 +1709,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     VerifyOrExit(error == OT_ERROR_NONE);
     VerifyOrExit(aFrame != NULL, error = OT_ERROR_NO_FRAME_RECEIVED);
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
 
     aFrame->SetSecurityValid(false);
 
@@ -2010,11 +2013,11 @@ otError Mac::HandleMacCommand(Frame &aFrame)
         mCounters.mRxBeaconRequest++;
         otLogInfoMac(GetInstance(), "Received Beacon Request");
 
-        if (mBeaconsEnabled
+        if (mEnabled && (mBeaconsEnabled
 #if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-            || IsBeaconJoinable()
+                         || IsBeaconJoinable()
 #endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-        )
+                             ))
         {
             StartOperation(kOperationTransmitBeacon);
         }
@@ -2068,11 +2071,11 @@ bool Mac::RadioSupportsRetries(void)
     return (otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0;
 }
 
-bool Mac::SetEnabled(bool aEnable)
+otError Mac::SetEnabled(bool aEnable)
 {
     mEnabled = aEnable;
 
-    return true;
+    return OT_ERROR_NONE;
 }
 
 void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
