@@ -1,3 +1,8 @@
+1.5.2 (2018-04-26)
+
+        * Since the '--name-only' option only appears in git-2.6 and later
+          and there are production systems using git version as old as
+          git-1.9, do not use '--name-only' when processing 'repos.conf'.
 
 1.5.1 (2018-04-20)
 
