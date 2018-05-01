@@ -629,6 +629,32 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 uint16_t otLinkGetCcaFailureRate(otInstance *aInstance);
 
 /**
+ * This function enables or disables the link layer.
+ *
+ * @note The link layer may only be enabled / disabled when the Thread Interface is disabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aEnable       true to enable the link layer, or false otherwise.
+ *
+ * @retval OT_ERROR_NONE          Successfully enabled / disabled the link layer.
+ * @retval OT_ERROR_INVALID_STATE Could not disable the link layer because
+ *                                the Thread interface is enabled.
+ *
+ */
+otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * This function indicates whether or not the link layer is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval true   Link layer is enabled.
+ * @retval false  Link layer is not enabled.
+ *
+ */
+bool otLinkIsEnabled(otInstance *aInstance);
+
+/**
  * @}
  *
  */
