@@ -173,6 +173,7 @@ void Instance::Finalize(void)
 
     IgnoreReturnValue(otThreadSetEnabled(this, false));
     IgnoreReturnValue(otIp6SetEnabled(this, false));
+    IgnoreReturnValue(otLinkSetEnabled(this, false));
 
 exit:
     return;

@@ -111,6 +111,8 @@ otError ThreadNetif::Up(void)
 {
     if (!mIsUp)
     {
+        // Enable the MAC just in case it was disabled while the Interface was down.
+        mMac.SetEnabled(true);
         GetIp6().AddNetif(*this);
         mMeshForwarder.Start();
         mCoap.Start(kCoapUdpPort);
