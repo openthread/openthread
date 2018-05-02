@@ -56,6 +56,7 @@
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
 #include "net/ip6.hpp"
+#include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
@@ -329,6 +330,16 @@ public:
     Utils::ChannelManager &GetChannelManager(void) { return mChannelManager; }
 #endif
 
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+    /**
+     * This method returns a reference to AnnounceSender object.
+     *
+     * @returns A reference to the AnnounceSender object.
+     *
+     */
+    AnnounceSender &GetAnnounceSender(void) { return mAnnounceSender; }
+#endif
+
     /**
      * This method returns a reference to message pool object.
      *
@@ -402,6 +413,10 @@ private:
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
     Utils::ChannelManager mChannelManager;
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+    AnnounceSender mAnnounceSender;
 #endif
 
     MessagePool mMessagePool;

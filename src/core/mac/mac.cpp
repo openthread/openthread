@@ -73,6 +73,19 @@ const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYM
 static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
 #endif
 
+uint8_t ChannelMask::GetNumberOfChannels(void) const
+{
+    uint8_t num     = 0;
+    uint8_t channel = kChannelIteratorFirst;
+
+    while (GetNextChannel(channel) == OT_ERROR_NONE)
+    {
+        num++;
+    }
+
+    return num;
+}
+
 otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 {
     otError error = OT_ERROR_NOT_FOUND;
