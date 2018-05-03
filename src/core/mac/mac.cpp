@@ -538,6 +538,7 @@ otError Mac::SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel)
     mRadioChannel = aChannel;
 
     UpdateIdleMode();
+
 exit:
     return error;
 }
@@ -549,7 +550,7 @@ otError Mac::AcquireRadioChannel(uint16_t *aAcquisitionId)
     VerifyOrExit(aAcquisitionId != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(!mRadioChannelAcquisitionId, error = OT_ERROR_INVALID_STATE);
 
-    mRadioChannelAcquisitionId = Random::GetUint32InRange(1, (1U << (sizeof(mRadioChannelAcquisitionId) * 8)) - 1);
+    mRadioChannelAcquisitionId = static_cast<uint16_t>(Random::GetUint32InRange(1, (1U << (sizeof(mRadioChannelAcquisitionId) * 8)) - 1));
 
     *aAcquisitionId = mRadioChannelAcquisitionId;
 
