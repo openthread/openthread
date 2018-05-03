@@ -67,7 +67,7 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
 {
     otLogInfoUtil(GetInstance(), "ChannelManager: Request to change to channel %d with delay %d sec", aChannel, mDelay);
 
-    if (aChannel == GetInstance().Get<Mac::Mac>().GetChannel())
+    if (aChannel == GetInstance().Get<Mac::Mac>().GetPanChannel())
     {
         otLogInfoUtil(GetInstance(), "ChannelManager: Already operating on the requested channel %d", aChannel);
         ExitNow();
@@ -107,7 +107,7 @@ void ChannelManager::PreparePendingDataset(void)
 
     VerifyOrExit(mState == kStateChangeRequested);
 
-    VerifyOrExit(mChannel != GetInstance().Get<Mac::Mac>().GetChannel());
+    VerifyOrExit(mChannel != GetInstance().Get<Mac::Mac>().GetPanChannel());
 
     if (netif.GetPendingDataset().Get(dataset) == OT_ERROR_NONE)
     {
@@ -264,7 +264,7 @@ void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, uint32_t 
 void ChannelManager::HandleStateChanged(uint32_t aFlags)
 {
     VerifyOrExit((aFlags & OT_CHANGED_THREAD_CHANNEL) != 0);
-    VerifyOrExit(mChannel == GetInstance().Get<Mac::Mac>().GetChannel());
+    VerifyOrExit(mChannel == GetInstance().Get<Mac::Mac>().GetPanChannel());
 
     mState = kStateIdle;
     StartAutoSelectTimer();
@@ -395,7 +395,7 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
 
     SuccessOrExit(error = FindBetterChannel(newChannel, newOccupancy));
 
-    curChannel   = GetInstance().Get<Mac::Mac>().GetChannel();
+    curChannel   = GetInstance().Get<Mac::Mac>().GetPanChannel();
     curOccupancy = GetInstance().GetChannelMonitor().GetChannelOccupancy(curChannel);
 
     if (newChannel == curChannel)

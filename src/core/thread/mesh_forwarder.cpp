@@ -74,7 +74,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mScanChannels(0)
     , mScanChannel(0)
-    , mRestoreChannel(0)
+    , mMacRadioAcquisitionId(0)
     , mRestorePanId(Mac::kPanIdBroadcast)
     , mScanning(false)
 #if OPENTHREAD_FTD
@@ -121,7 +121,12 @@ otError MeshForwarder::Stop(void)
 
     if (mScanning)
     {
-        netif.GetMac().SetChannel(mRestoreChannel);
+        if (mMacRadioAcquisitionId)
+        {
+            netif.GetMac().ReleaseRadioChannel();
+            mMacRadioAcquisitionId = 0;
+        }
+
         mScanning = false;
         netif.GetMle().HandleDiscoverComplete();
     }
@@ -204,8 +209,9 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
     mScanChannel = OT_RADIO_CHANNEL_MIN;
     mScanChannels >>= OT_RADIO_CHANNEL_MIN;
-    mRestoreChannel = netif.GetMac().GetChannel();
-    mRestorePanId   = netif.GetMac().GetPanId();
+    mRestorePanId = netif.GetMac().GetPanId();
+
+    SuccessOrExit(error = netif.GetMac().AcquireRadioChannel(&mMacRadioAcquisitionId));
 
     while ((mScanChannels & 1) == 0)
     {
@@ -214,6 +220,12 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
         if (mScanChannel > OT_RADIO_CHANNEL_MAX)
         {
+            if (mMacRadioAcquisitionId)
+            {
+                netif.GetMac().ReleaseRadioChannel();
+                mMacRadioAcquisitionId = 0;
+            }
+
             netif.GetMle().HandleDiscoverComplete();
             ExitNow(error = OT_ERROR_DROP);
         }
@@ -479,7 +491,8 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     case Message::kTypeIp6:
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
-            netif.GetMac().SetChannel(mScanChannel);
+            SuccessOrExit(error = netif.GetMac().SetRadioChannel(mMacRadioAcquisitionId, mScanChannel));
+
             aFrame.SetChannel(mScanChannel);
 
             // In case a specific PAN ID of a Thread Network to be discovered is not known, Discovery
@@ -1053,7 +1066,13 @@ void MeshForwarder::HandleDiscoverTimer(void)
             mSendQueue.Dequeue(*mSendMessage);
             mSendMessage->Free();
             mSendMessage = NULL;
-            netif.GetMac().SetChannel(mRestoreChannel);
+
+            if (mMacRadioAcquisitionId)
+            {
+                netif.GetMac().ReleaseRadioChannel();
+                mMacRadioAcquisitionId = 0;
+            }
+
             netif.GetMac().SetPanId(mRestorePanId);
             mScanning = false;
             netif.GetMle().HandleDiscoverComplete();

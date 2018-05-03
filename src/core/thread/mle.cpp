@@ -1539,7 +1539,7 @@ uint32_t Mle::Reattach(void)
         {
             if (mPreviousPanId != Mac::kPanIdBroadcast)
             {
-                netif.GetMac().SetChannel(mPreviousChannel);
+                netif.GetMac().SetPanChannel(mPreviousChannel);
                 netif.GetMac().SetPanId(mPreviousPanId);
                 mPreviousPanId = Mac::kPanIdBroadcast;
                 BecomeDetached();
@@ -2016,7 +2016,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
 
     channel.Init();
     channel.SetChannelPage(0);
-    channel.SetChannel(netif.GetMac().GetChannel());
+    channel.SetChannel(netif.GetMac().GetPanChannel());
     SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
 
     if (aOrphanAnnounce)
@@ -3228,7 +3228,7 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
 
     if (localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0)
     {
-        uint8_t  curChannel = netif.GetMac().GetChannel();
+        uint8_t  curChannel = netif.GetMac().GetPanChannel();
         uint16_t curPanId   = netif.GetMac().GetPanId();
 
         // No action is required if device is detached, and current
@@ -3240,7 +3240,7 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
         Stop(false);
         mPreviousChannel = curChannel;
         mPreviousPanId   = curPanId;
-        netif.GetMac().SetChannel(channel);
+        netif.GetMac().SetPanChannel(channel);
         netif.GetMac().SetPanId(panId);
         Start(false, true);
     }
