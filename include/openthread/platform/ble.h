@@ -202,8 +202,7 @@ enum
  * This enum represents BLE Device Address types.
  *
  */
-typedef enum otPlatBleAddressType
-{
+typedef enum otPlatBleAddressType {
     OT_BLE_ADDRESS_TYPE_PUBLIC                        = 0, ///< Bluetooth public device address.
     OT_BLE_ADDRESS_TYPE_RANDOM_STATIC                 = 1, ///< Bluetooth random static address.
     OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_RESOLVABLE     = 2, ///< Bluetooth random private resolvable address.
