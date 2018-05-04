@@ -31,8 +31,8 @@
  *   This file defines a generic OpenThread BLE driver HOST interface.
  */
 
-#ifndef BLE_H_
-#define BLE_H_
+#ifndef OT_PLATFORM_BLE_H_
+#define OT_PLATFORM_BLE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -1043,4 +1043,4 @@ extern void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_
 } // end of extern "C"
 #endif
 
-#endif // _PLATFORM_BLE_H_
+#endif // OT_PLATFORM_BLE_H_
