@@ -71,9 +71,6 @@ Mle::Mle(Instance &aInstance)
     , mAttachTimer(aInstance, &Mle::HandleAttachTimer, this)
     , mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this)
     , mChildUpdateRequestTimer(aInstance, &Mle::HandleChildUpdateRequestTimer, this)
-    , mLastPartitionId(0)
-    , mLastPartitionRouterIdSequence(0)
-    , mLastPartitionIdTimeout(0)
     , mParentLeaderCost(0)
     , mParentRequestMode(kAttachAny)
     , mParentPriority(0)
@@ -849,9 +846,6 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     if (mLeaderData.GetPartitionId() != aPartitionId)
     {
         GetNetif().GetMle().HandlePartitionChange();
-        mLastPartitionId               = mLeaderData.GetPartitionId();
-        mLastPartitionRouterIdSequence = GetNetif().GetMle().GetRouterIdSequence();
-        mLastPartitionIdTimeout        = GetNetif().GetMle().GetNetworkIdTimeout();
         GetNotifier().SetFlags(OT_CHANGED_THREAD_PARTITION_ID);
     }
 
