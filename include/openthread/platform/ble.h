@@ -57,7 +57,7 @@ extern "C" {
 enum
 {
     /**
-     * The size of the Bluetooth Device Address.
+     * The size of the Bluetooth Device Address [bytes].
      */
     OT_BLE_ADDRESS_LENGTH = 6,
 
@@ -73,26 +73,31 @@ enum
 
     /**
      * Minimum allowed connection interval in OT_BLE_CONN_INTERVAL_UNIT units (7.5ms).
+     * See v4.2 [Vol 2, Part E] page 946
      */
     OT_BLE_CONN_INTERVAL_MIN = 0x0006,
 
     /**
      * Maximum allowed connection interval in OT_BLE_CONN_INTERVAL_UNIT units (4s).
+     * See v4.2 [Vol 2, Part E] page 946
      */
     OT_BLE_CONN_INTERVAL_MAX = 0x0C80,
 
     /**
      * Maximum allowed slave latency in units of connection events.
+     * See v4.2 [Vol 2, Part E] page 946
      */
     OT_BLE_CONN_SLAVE_LATENCY_MAX = 0x01F3,
 
     /**
      * Minimum allowed connection timeout in units of 10ms (100ms).
+     * See v4.2 [Vol 2, Part E] page 946
      */
     OT_BLE_CONN_SUPERVISOR_TIMEOUT_MIN = 0x000A,
 
     /**
      * Maximum allowed connection timeout (32s).
+     * See v4.2 [Vol 2, Part E] page 946
      */
     OT_BLE_CONN_SUPERVISOR_TIMEOUT_MAX = 0x0C80,
 
@@ -102,17 +107,17 @@ enum
     OT_BLE_CONN_SUPERVISOR_UNIT = 16 * OT_BLE_TIMESLOT_UNIT,
 
     /**
-     * Maximum length of the device name characteristic.
+     * Maximum length of the device name characteristic [bytes].
      */
     OT_BLE_DEV_NAME_MAX_LENGTH = 248,
 
     /**
-     * Maximum length of advertising data.
+     * Maximum length of advertising data [bytes].
      */
     OT_BLE_ADV_DATA_MAX_LENGTH = 31,
 
     /**
-     * Maximum length of scan response data.
+     * Maximum length of scan response data [bytes].
      */
     OT_BLE_SCAN_RESPONSE_MAX_LENGTH = 31,
 
@@ -172,12 +177,12 @@ enum
     OT_BLE_INVALID_HANDLE = 0x0000,
 
     /**
-     * Maximum size of BLE Characteristic.
+     * Maximum size of BLE Characteristic [bytes].
      */
     OT_BLE_CHARACTERISTIC_MAX_LENGTH = 512,
 
     /**
-     * Maximum value of ATT_MTU.
+     * Maximum value of ATT_MTU [bytes].
      */
     OT_BLE_ATT_MTU_MAX = 511,
 
@@ -197,16 +202,17 @@ enum
  * This enum represents BLE Device Address types.
  *
  */
-enum
+typedef enum otPlatBleAddressType
 {
     OT_BLE_ADDRESS_TYPE_PUBLIC                        = 0, ///< Bluetooth public device address.
     OT_BLE_ADDRESS_TYPE_RANDOM_STATIC                 = 1, ///< Bluetooth random static address.
     OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_RESOLVABLE     = 2, ///< Bluetooth random private resolvable address.
     OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE = 3, ///< Bluetooth random private non-resolvable address.
-};
+} otPlatBleAddressType;
 
 /**
- * This enum represents characterstic properties.
+ * This enumeration defines the characterstic properties flags for a
+ * Client Characteristic Configuration Descriptor (CCCD).
  *
  * See v4.2 [Vol 3, Part G] 3.3.1.1 Characteristic Properties - Table 3.5
  */
@@ -215,42 +221,42 @@ enum
     /**
      * If set, permits broadcasts of the Characteristic Value using Characteristic Configuration Descriptor.
      */
-    OT_BLE_CHAR_PROP_BROADCAST = 0x01,
+    OT_BLE_CHAR_PROP_BROADCAST = (1 << 0),
 
     /**
      * If set, permits reads of the Characteristic Value.
      */
-    OT_BLE_CHAR_PROP_READ = 0x02,
+    OT_BLE_CHAR_PROP_READ = (1 << 1),
 
     /**
      * If set, permit writes of the Characteristic Value without response.
      */
-    OT_BLE_CHAR_PROP_WRITE_NO_RESPONSE = 0x04,
+    OT_BLE_CHAR_PROP_WRITE_NO_RESPONSE = (1 << 2),
 
     /**
      * If set, permits writes of the Characteristic Value with response.
      */
-    OT_BLE_CHAR_PROP_WRITE = 0x08,
+    OT_BLE_CHAR_PROP_WRITE = (1 << 3),
 
     /**
      * If set, permits notifications of a Characteristic Value without acknowledgement.
      */
-    OT_BLE_CHAR_PROP_NOTIFY = 0x10,
+    OT_BLE_CHAR_PROP_NOTIFY = (1 << 4),
 
     /**
      * If set, permits indications of a Characteristic Value with acknowledgement.
      */
-    OT_BLE_CHAR_PROP_INDICATE = 0x20,
+    OT_BLE_CHAR_PROP_INDICATE = (1 << 5),
 
     /**
      * If set, permits signed writes to the Characteristic Value.
      */
-    OT_BLE_CHAR_PROP_AUTH_SIGNED_WRITE = 0x40,
+    OT_BLE_CHAR_PROP_AUTH_SIGNED_WRITE = (1 << 6),
 
     /**
      * If set, additional characteristic properties are defined in the Characteristic Extended Properties Descriptor.
      */
-    OT_BLE_CHAR_PROP_EXTENDED = 0x80,
+    OT_BLE_CHAR_PROP_EXTENDED = (1 << 7),
 
 };
 
@@ -265,7 +271,7 @@ typedef struct otPlatBleDeviceAddr
 } otPlatBleDeviceAddr;
 
 /**
- * This structure represents BLE advertisement type.
+ * This structure represents flags for BLE advertisement mode.
  *
  */
 enum
@@ -273,12 +279,12 @@ enum
     /**
      * If set, advertising device will allow connections to be initiated.
      */
-    OT_BLE_ADV_TYPE_CONNECTABLE = 0x01,
+    OT_BLE_ADV_MODE_CONNECTABLE = (1 << 0),
 
     /**
      * If set, advertising device will respond to scan requests.
      */
-    OT_BLE_ADV_TYPE_SCANNABLE = 0x02,
+    OT_BLE_ADV_MODE_SCANNABLE = (1 << 1),
 };
 
 /**
@@ -438,7 +444,7 @@ otError otPlatBleGapAddressGet(otInstance *aInstance, otPlatBleDeviceAddr *aAddr
  * Sets Bluetooth Device Address.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- * @param[int] aAddress   The pointer to Bluetooth Device Address.
+ * @param[in] aAddress    The pointer to Bluetooth Device Address.
  *
  * @retval ::OT_ERROR_NONE          Request has been successfully done.
  * @retval ::OT_ERROR_INVALID_ARGS  Invalid parameters has been supplied.
@@ -544,7 +550,8 @@ otError otPlatBleGapAdvStop(otInstance *aInstance);
  * The BLE driver calls this method to notify OpenThread that BLE Device has
  * been connected.
  *
- * @param[in]  aInstance The OpenThread instance structure.
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aConnectionId The identifier of the open connection.
  *
  */
 extern void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId);
@@ -553,7 +560,8 @@ extern void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionI
  * The BLE driver calls this method to notify OpenThread that the BLE Device
  * has been disconnected.
  *
- * @param[in]  aInstance The OpenThread instance structure.
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aConnectionId The identifier of the closed connection.
  *
  */
 extern void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId);
@@ -651,7 +659,7 @@ otError otPlatBleGapDisconnect(otInstance *aInstance);
  * Registers vendor specific UUID Base.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aUUID      A pointer to vendor specific 128-bit UUID Base.
+ * @param[in]  aUuid      A pointer to vendor specific 128-bit UUID Base.
  *
  */
 otError otPlatBleGattVendorUuidRegister(otInstance *aInstance, const otPlatBleUuid *aUuid);
