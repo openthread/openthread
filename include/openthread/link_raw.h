@@ -32,8 +32,8 @@
  *   This file defines the raw OpenThread IEEE 802.15.4 Link Layer API.
  */
 
-#ifndef LINK_RAW_H_
-#define LINK_RAW_H_
+#ifndef OPENTHREAD_LINK_RAW_H_
+#define OPENTHREAD_LINK_RAW_H_
 
 #include <openthread/types.h>
 #include <openthread/platform/radio.h>
@@ -329,4 +329,4 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // LINK_RAW_H_
+#endif // OPENTHREAD_LINK_RAW_H_
