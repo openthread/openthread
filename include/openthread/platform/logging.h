@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the debug log service.
  */
 
-#ifndef LOGGING_H_
-#define LOGGING_H_
+#ifndef OT_PLATFORM_LOGGING_H_
+#define OT_PLATFORM_LOGGING_H_
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -100,4 +100,4 @@ void otPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aForma
 } // extern "C"
 #endif
 
-#endif // DEBUG_H_
+#endif // OT_PLATFORM_LOGGING_H_

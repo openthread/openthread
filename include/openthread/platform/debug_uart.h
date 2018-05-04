@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_DEBUG_UART_H
-#define OPENTHREAD_PLATFORM_DEBUG_UART_H
+#ifndef OT_PLATFORM_DEBUG_UART_H_
+#define OT_PLATFORM_DEBUG_UART_H_
 
 #include <openthread/platform/logging.h>
 
@@ -191,4 +191,4 @@ otError otPlatDebugUart_logfile(const char *filename);
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_PLATFORM_DEBUG_UART_H
+#endif // OT_PLATFORM_DEBUG_UART_H_

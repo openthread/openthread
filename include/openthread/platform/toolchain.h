@@ -54,8 +54,8 @@
  *
  */
 
-#ifndef TOOLCHAIN_H_
-#define TOOLCHAIN_H_
+#ifndef OT_PLATFORM_TOOLCHAIN_H_
+#define OT_PLATFORM_TOOLCHAIN_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -279,4 +279,4 @@ extern "C" {
 } // extern "C"
 #endif
 
-#endif // TOOLCHAIN_H_
+#endif // OT_PLATFORM_TOOLCHAIN_H_

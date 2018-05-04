@@ -32,8 +32,8 @@
  *   This file includes platform abstractions for miscellaneous behaviors.
  */
 
-#ifndef OT_PLATFORM_MISC_H
-#define OT_PLATFORM_MISC_H 1
+#ifndef OT_PLATFORM_MISC_H_
+#define OT_PLATFORM_MISC_H_
 
 #include <stdint.h>
 
@@ -200,4 +200,4 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // OT_PLATFORM_MISC_H
+#endif // OT_PLATFORM_MISC_H_

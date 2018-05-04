@@ -33,8 +33,8 @@
  *
  */
 
-#ifndef DIAG_H_
-#define DIAG_H_
+#ifndef OT_PLATFORM_DIAG_H_
+#define OT_PLATFORM_DIAG_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -127,4 +127,4 @@ void otPlatDiagAlarmCallback(otInstance *aInstance);
 } // end of extern "C"
 #endif
 
-#endif
+#endif // OT_PLATFORM_DIAG_H_
