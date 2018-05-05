@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for dynamic memory allocation.
  */
 
-#ifndef OT_PLATFORM_MEMORY_H_
-#define OT_PLATFORM_MEMORY_H_
+#ifndef OPENTHREAD_PLATFORM_MEMORY_H_
+#define OPENTHREAD_PLATFORM_MEMORY_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,4 +89,4 @@ void otPlatFree(void *aPtr);
 } // extern "C"
 #endif
 
-#endif // OT_PLATFORM_MEMORY_H_
+#endif // OPENTHREAD_PLATFORM_MEMORY_H_

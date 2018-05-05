@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for SPI slave communication.
  */
 
-#ifndef OT_PLATFORM_SPI_SLAVE_H_
-#define OT_PLATFORM_SPI_SLAVE_H_
+#ifndef OPENTHREAD_PLATFORM_SPI_SLAVE_H_
+#define OPENTHREAD_PLATFORM_SPI_SLAVE_H_
 
 #include <stdint.h>
 
@@ -177,4 +177,4 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
 } // extern "C"
 #endif
 
-#endif // OT_PLATFORM_SPI_SLAVE_H_
+#endif // OPENTHREAD_PLATFORM_SPI_SLAVE_H_
