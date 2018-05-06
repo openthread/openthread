@@ -32,8 +32,8 @@
  *  This file defines the top-level functions for the OpenThread NCP module.
  */
 
-#ifndef NCP_H_
-#define NCP_H_
+#ifndef OPENTHREAD_NCP_H_
+#define OPENTHREAD_NCP_H_
 
 #include <stdarg.h>
 #include <openthread/types.h>
@@ -221,4 +221,4 @@ void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
 } // extern "C"
 #endif
 
-#endif
+#endif // OPENTHREAD_NCP_H_
