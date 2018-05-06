@@ -873,9 +873,13 @@ private:
     bool     mRouterRoleEnabled : 1;
     bool     mAddressSolicitPending : 1;
 
-    uint8_t  mRouterId;
-    uint8_t  mPreviousRouterId;
-    uint32_t mPreviousPartitionId;
+    uint8_t mRouterId;
+    uint8_t mPreviousRouterId;
+
+    uint32_t mPreviousPartitionIdRouter;         ///< The partition ID when last operating as a router
+    uint32_t mPreviousPartitionId;               ///< The partition ID when last attached
+    uint8_t  mPreviousPartitionRouterIdSequence; ///< The router ID sequence when last attached
+    uint8_t  mPreviousPartitionIdTimeout;        ///< The partition ID timeout when last attached
 
     uint8_t mRouterSelectionJitter;        ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.
