@@ -166,6 +166,16 @@ public:
         return ot::Tlv::GetValueOffset(aMessage, static_cast<uint8_t>(aType), aOffset, aLength);
     }
 
+    /**
+     * This static method indicates whether a TLV appears to be well-formed.
+     *
+     * @param[in]  aTlv  A reference to the TLV.
+     *
+     * @returns TRUE if the TLV appears to be well-formed, FALSE otherwise.
+     *
+     */
+    static bool IsValid(const Tlv &aTlv);
+
 } OT_TOOL_PACKED_END;
 
 /**
