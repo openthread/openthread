@@ -102,6 +102,17 @@ public:
      */
     otError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
+    /**
+     * This method send an OpenThread log message to host via `SPINEL_PROP_STREAM_LOG` property.
+     *
+     * @param[in] aLogLevel   The log level
+     * @param[in] aLogRegion  The log region
+     * @param[in] aLogString  The log string
+     *
+     */
+    void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString);
+
+
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     /**
      * This method registers peek/poke delegate functions with NCP module.
@@ -709,6 +720,8 @@ protected:
     void StopLegacy(void) { }
 #endif
 
+    static uint8_t ConvertLogLevel(otLogLevel aLogLevel);
+    static unsigned int ConvertLogRegion(otLogRegion aLogRegion);
 
 protected:
     static NcpBase *sNcpInstance;

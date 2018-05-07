@@ -824,6 +824,140 @@ exit:
     return error;
 }
 
+uint8_t NcpBase::ConvertLogLevel(otLogLevel aLogLevel)
+{
+    uint8_t spinelLogLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
+
+    switch (aLogLevel)
+    {
+    case OT_LOG_LEVEL_NONE:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
+        break;
+
+    case OT_LOG_LEVEL_CRIT:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_CRIT;
+        break;
+
+    case OT_LOG_LEVEL_WARN:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_WARN;
+        break;
+
+    case OT_LOG_LEVEL_INFO:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_INFO;
+        break;
+
+    case OT_LOG_LEVEL_DEBG:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_DEBUG;
+        break;
+    }
+
+    return spinelLogLevel;
+}
+
+unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
+{
+    unsigned int spinelLogRegion = SPINEL_NCP_LOG_REGION_NONE;
+
+    switch (aLogRegion)
+    {
+
+    case OT_LOG_REGION_API:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_API;
+        break;
+
+    case OT_LOG_REGION_MLE:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MLE;
+        break;
+
+    case OT_LOG_REGION_ARP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_ARP;
+        break;
+
+    case OT_LOG_REGION_NET_DATA:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_NET_DATA;
+        break;
+
+    case OT_LOG_REGION_ICMP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_ICMP;
+        break;
+
+    case OT_LOG_REGION_IP6:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_IP6;
+        break;
+
+    case OT_LOG_REGION_MAC:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MAC;
+        break;
+
+    case OT_LOG_REGION_MEM:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MEM;
+        break;
+
+    case OT_LOG_REGION_NCP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_NCP;
+        break;
+
+    case OT_LOG_REGION_MESH_COP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MESH_COP;
+        break;
+
+    case OT_LOG_REGION_NET_DIAG:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_NET_DIAG;
+        break;
+
+    case OT_LOG_REGION_PLATFORM:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_PLATFORM;
+        break;
+
+    case OT_LOG_REGION_COAP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_COAP;
+        break;
+
+    case OT_LOG_REGION_CLI:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_CLI;
+        break;
+
+    case OT_LOG_REGION_CORE:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_CORE;
+        break;
+
+    case OT_LOG_REGION_UTIL:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_UTIL;
+        break;
+    }
+
+    return spinelLogRegion;
+}
+
+void NcpBase::Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    VerifyOrExit(!mDisableStreamWrite);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_STREAM_LOG));
+
+    // If there is a pending queued response we do not allow any new log
+    // stream writes. This is to ensure that log messages can not continue
+    // to use the NCP buffer space and block other spinel frames.
+
+    VerifyOrExit(IsResponseQueueEmpty(), error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_LOG));
+    SuccessOrExit(error = mEncoder.WriteUtf8(aLogString));
+    SuccessOrExit(error = mEncoder.WriteUint8(ConvertLogLevel(aLogLevel)));
+    SuccessOrExit(error = mEncoder.WriteUintPacked(ConvertLogRegion(aLogRegion)));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+
+    if (error == OT_ERROR_NO_BUFS)
+    {
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+        mUpdateChangedPropsTask.Post();
+    }
+}
+
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 
 void NcpBase::RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
@@ -1830,6 +1964,10 @@ otError NcpBase::GetPropertyHandler_CAPS(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RAW));
 #endif
 
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_OPENTHREAD_LOG_METADATA));
+#endif
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_NET_THREAD_1_0));
@@ -2169,32 +2307,7 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_WATCHDOG(void)
 
 otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
 {
-    uint8_t logLevel = 0;
-
-    switch (otGetDynamicLogLevel(mInstance))
-    {
-    case OT_LOG_LEVEL_NONE:
-        logLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
-        break;
-
-    case OT_LOG_LEVEL_CRIT:
-        logLevel = SPINEL_NCP_LOG_LEVEL_CRIT;
-        break;
-
-    case OT_LOG_LEVEL_WARN:
-        logLevel = SPINEL_NCP_LOG_LEVEL_WARN;
-        break;
-
-    case OT_LOG_LEVEL_INFO:
-        logLevel = SPINEL_NCP_LOG_LEVEL_INFO;
-        break;
-
-    case OT_LOG_LEVEL_DEBG:
-        logLevel = SPINEL_NCP_LOG_LEVEL_DEBUG;
-        break;
-    }
-
-    return mEncoder.WriteUint8(logLevel);
+    return mEncoder.WriteUint8(ConvertLogLevel(otGetDynamicLogLevel(mInstance)));
 }
 
 otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
@@ -2306,3 +2419,26 @@ extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 }
+
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+
+extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list args;
+    char logString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE];
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    va_start(args, aFormat);
+
+    if (vsnprintf(logString, sizeof(logString), aFormat, args) > 0)
+    {
+        if (ncp != NULL)
+        {
+            ncp->Log(aLogLevel, aLogRegion, logString);
+        }
+    }
+
+    va_end(args);
+}
+
+#endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)

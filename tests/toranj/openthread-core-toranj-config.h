@@ -122,7 +122,7 @@
  * Selects if, and where the LOG output goes to.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT                            OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+#define OPENTHREAD_CONFIG_LOG_OUTPUT                            OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
@@ -141,12 +141,28 @@
 #define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL              1
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
+ *
+ * Define to prepend the log level to all log messages
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL                     0
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+ *
+ * Define to prepend the log region to all log messages
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION                    0
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_SUFFIX
  *
  * Define suffix to append at the end of logs.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_SUFFIX                            "\n"
+#define OPENTHREAD_CONFIG_LOG_SUFFIX                            ""
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
