@@ -32,8 +32,8 @@
  *  This file defines the WPP Tracing Definitions.
  */
 
-#ifndef _LOGGING_WINDOWS_H
-#define _LOGGING_WINDOWS_H
+#ifndef OPENTHREAD_PLATFORM_LOGGING_WINDOWS_H_
+#define OPENTHREAD_PLATFORM_LOGGING_WINDOWS_H_
 
 #define OPENTHREAD_ENABLE_CERT_LOG 1
 
@@ -583,4 +583,4 @@
 // USESUFFIX(otLogFuncExitErr, " %!otError!", EXP);
 // end_wpp
 
-#endif // _LOGGING_WINDOWS_H
+#endif // OPENTHREAD_PLATFORM_LOGGING_WINDOWS_H_

@@ -75,7 +75,10 @@ MleRouter::MleRouter(Instance &aInstance)
     , mFixedLeaderPartitionId(0)
     , mRouterRoleEnabled(true)
     , mAddressSolicitPending(false)
+    , mPreviousPartitionIdRouter(0)
     , mPreviousPartitionId(0)
+    , mPreviousPartitionRouterIdSequence(0)
+    , mPreviousPartitionIdTimeout(0)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
     , mParentPriority(kParentPriorityUnspecified)
@@ -90,6 +93,10 @@ MleRouter::MleRouter(Instance &aInstance)
 void MleRouter::HandlePartitionChange(void)
 {
     ThreadNetif &netif = GetNetif();
+
+    mPreviousPartitionId               = mLeaderData.GetPartitionId();
+    mPreviousPartitionRouterIdSequence = netif.GetMle().GetRouterIdSequence();
+    mPreviousPartitionIdTimeout        = netif.GetMle().GetNetworkIdTimeout();
 
     netif.GetAddressResolver().Clear();
     netif.GetCoap().AbortTransaction(&MleRouter::HandleAddressSolicitResponse, this);
@@ -394,7 +401,7 @@ otError MleRouter::HandleChildStart(AttachMode aMode)
 
     case kAttachAny:
     case kAttachBetter:
-        if (HasChildren() && mPreviousPartitionId != mLeaderData.GetPartitionId())
+        if (HasChildren() && mPreviousPartitionIdRouter != mLeaderData.GetPartitionId())
         {
             BecomeRouter(ThreadStatusTlv::kParentPartitionChange);
         }
@@ -427,7 +434,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
 
     netif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].SetNextHop(mRouterId);
-    mPreviousPartitionId = mLeaderData.GetPartitionId();
+    mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     netif.GetNetworkDataLeader().Stop();
     netif.GetIp6().SetForwardingEnabled(true);
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
@@ -470,7 +477,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
 
     netif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].SetNextHop(mRouterId);
-    mPreviousPartitionId = mLeaderData.GetPartitionId();
+    mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mRouters[mRouterId].SetLastHeard(TimerMilli::GetNow());
 
@@ -1329,10 +1336,10 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = OT_ERROR_LINK_MARGIN_LOW);
 
-        if (route.IsValid() && (mDeviceMode & ModeTlv::kModeFFD) && (mLastPartitionIdTimeout > 0) &&
-            (partitionId == mLastPartitionId))
+        if (route.IsValid() && (mDeviceMode & ModeTlv::kModeFFD) && (mPreviousPartitionIdTimeout > 0) &&
+            (partitionId == mPreviousPartitionId))
         {
-            VerifyOrExit((static_cast<int8_t>(route.GetRouterIdSequence() - mLastPartitionRouterIdSequence) > 0),
+            VerifyOrExit((static_cast<int8_t>(route.GetRouterIdSequence() - mPreviousPartitionRouterIdSequence) > 0),
                          error = OT_ERROR_DROP);
         }
 
@@ -1753,9 +1760,9 @@ void MleRouter::HandleStateUpdateTimer(void)
         mChallengeTimeout--;
     }
 
-    if (mLastPartitionIdTimeout > 0)
+    if (mPreviousPartitionIdTimeout > 0)
     {
-        mLastPartitionIdTimeout--;
+        mPreviousPartitionIdTimeout--;
     }
 
     if (mRouterSelectionJitterTimeout > 0)
