@@ -853,6 +853,7 @@ private:
     {
         kInvalidRssiValue  = 127,
         kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
+        kMaxAcquisitionId  = 0xffff,
 
     /**
      * Interval between RSSI samples when performing Energy Scan.

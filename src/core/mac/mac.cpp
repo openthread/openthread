@@ -550,8 +550,7 @@ otError Mac::AcquireRadioChannel(uint16_t *aAcquisitionId)
     VerifyOrExit(aAcquisitionId != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(!mRadioChannelAcquisitionId, error = OT_ERROR_INVALID_STATE);
 
-    mRadioChannelAcquisitionId =
-        static_cast<uint16_t>(Random::GetUint32InRange(1, (1U << (sizeof(mRadioChannelAcquisitionId) * 8)) - 1));
+    mRadioChannelAcquisitionId = Random::GetUint16InRange(1, kMaxAcquisitionId);
 
     *aAcquisitionId = mRadioChannelAcquisitionId;
 
