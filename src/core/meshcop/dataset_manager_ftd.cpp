@@ -300,7 +300,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
             offset += sizeof(Tlv) + data.tlv.GetLength();
         }
 
-        Set(dataset);
+        VerifyOrExit(Set(dataset) == OT_ERROR_NONE, state = StateTlv::kReject);
         netif.GetNetworkDataLeader().IncrementVersion();
         netif.GetNetworkDataLeader().IncrementStableVersion();
     }

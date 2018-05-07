@@ -70,6 +70,14 @@ public:
     void Clear(void);
 
     /**
+     * This method indicates whether or not the dataset appears to be well-formed.
+     *
+     * @returns TRUE if the dataset appears to be well-formed, FALSE otherwise.
+     *
+     */
+    bool IsValid(void) const;
+
+    /**
      * This method returns a pointer to the TLV.
      *
      * @returns A pointer to the TLV or NULL if none is found.
@@ -216,7 +224,8 @@ public:
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
-     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
     otError ApplyConfiguration(Instance &aInstance) const;

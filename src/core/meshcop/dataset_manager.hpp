@@ -116,7 +116,8 @@ public:
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
      *
-     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
     otError ApplyConfiguration(void) const;
@@ -157,8 +158,11 @@ protected:
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
+     *
      */
-    void Set(const Dataset &aDataset);
+    otError Set(const Dataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
