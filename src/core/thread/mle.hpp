@@ -966,6 +966,7 @@ protected:
     {
         kAttachStateIdle,                ///< Not currently searching for a parent.
         kAttachStateSynchronize,         ///< Looking to synchronize with a parent (after reset).
+        kAttachStateProcessAnnounce,     ///< Waiting to process a received Announce (to switch channel/pan-id).
         kAttachStateStart,               ///< Starting to look for a parent.
         kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
         kAttachStateParentRequestReed,   ///< Searching for Routers or REEDs to attach to.
@@ -1533,6 +1534,7 @@ private:
     otError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void    ProcessAnnounce(void);
 
     otError  SendParentRequest(ParentRequestType aType);
     otError  SendChildIdRequest(void);
@@ -1612,8 +1614,9 @@ private:
 #endif
 
     uint8_t  mAnnounceChannel;
-    uint8_t  mPreviousChannel;
-    uint16_t mPreviousPanId;
+    uint8_t  mAlternateChannel;
+    uint16_t mAlternatePanId;
+    uint64_t mAlternateTimestamp;
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
