@@ -528,6 +528,32 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
+ *
+ * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
+ *
+ * Thread specification defines this value as 30,000 ms. Changing from the specified value should be done for testing
+ * only.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
+#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY 30000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY
+ *
+ * Default Delay Timer value for a Pending Operational Dataset (in ms).
+ *
+ * Thread specification defines this value as 300,000 ms. Changing from the specified value should be done for testing
+ * only.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY
+#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY 300000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
  * Selects if, and where the LOG output goes to.
@@ -831,8 +857,12 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
+#if OPENTHREAD_RADIO
+#define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE 512
+#else
 #define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE 1300
 #endif
+#endif // OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
@@ -841,8 +871,12 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
+#if OPENTHREAD_RADIO
+#define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE 512
+#else
 #define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE 1300
 #endif
+#endif // OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
@@ -955,23 +989,23 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
+ * @def OPENTHREAD_CONFIG_HEAP_SIZE
  *
- * The size of mbedTLS heap buffer when DTLS is enabled.
+ * The size of heap buffer when DTLS is enabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
-#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE (1536 * sizeof(void *))
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE
+#define OPENTHREAD_CONFIG_HEAP_SIZE (1536 * sizeof(void *))
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+ * @def OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
  *
- * The size of mbedTLS heap buffer when DTLS is disabled.
+ * The size of heap buffer when DTLS is disabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
-#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS 384
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS 384
 #endif
 
 /**
@@ -1090,7 +1124,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
  *
- * The minimum delay in seconds used by Channel Manager module for performing a channel change.
+ * The minimum delay (in seconds) used by Channel Manager module for performing a channel change.
  *
  * The minimum delay should preferably be longer than maximum data poll interval used by all sleepy-end-devices within
  * the Thread network.
@@ -1100,6 +1134,81 @@
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY 120
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT
+ *
+ * The minimum number of RSSI samples per channel by Channel Monitoring feature before the collected data can be used
+ * by the Channel Manager module to (auto) select a better channel.
+ *
+ * Applicable only if Channel Manager and Channel Monitoring features are both enabled (i.e.,
+ * `OPENTHREAD_ENABLE_CHANNEL_MANAGER` and `OPENTHREAD_ENABLE_CHANNEL_MONITOR` are set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT 500
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED
+ *
+ * This threshold specifies the minimum occupancy rate difference between two channels for the Channel Manager to
+ * prefer an unfavored channel over the best favored one. This is used when (auto) selecting a channel based on the
+ * collected channel quality data by "channel monitor" feature.
+ *
+ * The difference is based on the `ChannelMonitor::GetChannelOccupancy()` definition which provides the average
+ * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
+ * a threshold). Value 0 maps to 0% and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED (0xffff * 7 / 100)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL
+ *
+ * This threshold specifies the minimum occupancy rate difference required between the current channel and a newly
+ * selected channel for Channel Manager to allow channel change to the new channel.
+ *
+ * The difference is based on the `ChannelMonitor::GetChannelOccupancy()` definition which provides the average
+ * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
+ * a threshold). Value 0 maps to 0% rate and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL
+ *
+ * The default time interval (in seconds) used by Channel Manager for auto-channel-selection functionality.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL (3 * 60 * 60)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD
+ *
+ * Minimum CCA failure rate threshold on current channel before Channel Manager starts channel selection attempt.
+ *
+ * Value 0 maps to 0% and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD (0xffff * 14 / 100)
 #endif
 
 /**
@@ -1216,6 +1325,19 @@
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD -65
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+ *
+ * Define as 1 to enable sending of a unicast MLE Announce message in response to a received Announce message from
+ * a device.
+ *
+ * @note The unicast MLE announce message is sent in addition to (and after) the multicast MLE Announce.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+#define OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE 1
 #endif
 
 /**

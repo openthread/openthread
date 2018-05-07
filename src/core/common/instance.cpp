@@ -50,26 +50,21 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(Instance), uint64_t);
 #endif
 
 Instance::Instance(void)
-    : mActiveScanCallback(NULL)
+    : mTimerMilliScheduler(*this)
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    , mTimerMicroScheduler(*this)
+#endif
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    , mActiveScanCallback(NULL)
     , mActiveScanCallbackContext(NULL)
     , mEnergyScanCallback(NULL)
     , mEnergyScanCallbackContext(NULL)
     , mNotifier(*this)
     , mSettings(*this)
-    , mTimerMilliScheduler(*this)
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    , mTimerMicroScheduler(*this)
-#endif
     , mIp6(*this)
     , mThreadNetif(*this)
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    , mLinkRaw(*this)
-#endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoap(*this)
-#endif
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     , mChannelMonitor(*this)
@@ -78,6 +73,13 @@ Instance::Instance(void)
     , mChannelManager(*this)
 #endif
     , mMessagePool(*this)
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    , mLinkRaw(*this)
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
+#endif
     , mIsInitialized(false)
 {
 }
@@ -128,9 +130,15 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
+void Instance::Reset(void)
+{
+    otPlatReset(this);
+}
+
 void Instance::AfterInit(void)
 {
     mIsInitialized = true;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 
     // Restore datasets and network information
 
@@ -153,8 +161,10 @@ void Instance::AfterInit(void)
     }
 
 #endif
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Instance::Finalize(void)
 {
     VerifyOrExit(mIsInitialized == true);
@@ -163,14 +173,10 @@ void Instance::Finalize(void)
 
     IgnoreReturnValue(otThreadSetEnabled(this, false));
     IgnoreReturnValue(otIp6SetEnabled(this, false));
+    IgnoreReturnValue(otLinkSetEnabled(this, false));
 
 exit:
     return;
-}
-
-void Instance::Reset(void)
-{
-    otPlatReset(this);
 }
 
 void Instance::FactoryReset(void)
@@ -225,11 +231,6 @@ template <> Notifier &Instance::Get(void)
     return GetNotifier();
 }
 
-template <> TaskletScheduler &Instance::Get(void)
-{
-    return GetTaskletScheduler();
-}
-
 template <> MeshForwarder &Instance::Get(void)
 {
     return GetThreadNetif().GetMeshForwarder();
@@ -243,6 +244,11 @@ template <> Mle::Mle &Instance::Get(void)
 template <> Mle::MleRouter &Instance::Get(void)
 {
     return GetThreadNetif().GetMle();
+}
+
+template <> ChildTable &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle().GetChildTable();
 }
 
 template <> Ip6::Netif &Instance::Get(void)
@@ -367,13 +373,6 @@ template <> Coap::CoapSecure &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-template <> LinkRaw &Instance::Get(void)
-{
-    return GetLinkRaw();
-}
-#endif
-
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
 template <> Dhcp6::Dhcp6Client &Instance::Get(void)
 {
@@ -411,5 +410,19 @@ template <> Utils::ChannelManager &Instance::Get(void)
     return GetChannelManager();
 }
 #endif
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+template <> LinkRaw &Instance::Get(void)
+{
+    return GetLinkRaw();
+}
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
+template <> TaskletScheduler &Instance::Get(void)
+{
+    return GetTaskletScheduler();
+}
 
 } // namespace ot

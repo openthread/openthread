@@ -44,12 +44,10 @@ namespace ot {
 
 otError MeshForwarder::SendMessage(Message &aMessage)
 {
-    ThreadNetif &netif = GetNetif();
-    otError      error = OT_ERROR_NONE;
+    ThreadNetif &netif      = GetNetif();
+    ChildTable & childTable = netif.GetMle().GetChildTable();
+    otError      error      = OT_ERROR_NONE;
     Neighbor *   neighbor;
-
-    uint8_t numChildren;
-    Child * child;
 
     switch (aMessage.GetType())
     {
@@ -73,30 +71,34 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
             if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
             {
-                child = netif.GetMle().GetChildren(&numChildren);
-
                 if (ip6Header.GetDestination() == netif.GetMle().GetLinkLocalAllThreadNodesAddress() ||
                     ip6Header.GetDestination() == netif.GetMle().GetRealmLocalAllThreadNodesAddress())
                 {
                     // destined for all sleepy children
-                    for (uint8_t i = 0; i < numChildren; i++, child++)
+                    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone();
+                         iter.Advance())
                     {
-                        if (child->IsStateValidOrRestoring() && !child->IsRxOnWhenIdle())
+                        Child &child = *iter.GetChild();
+
+                        if (!child.IsRxOnWhenIdle())
                         {
-                            aMessage.SetChildMask(i);
-                            mSourceMatchController.IncrementMessageCount(*child);
+                            aMessage.SetChildMask(childTable.GetChildIndex(child));
+                            mSourceMatchController.IncrementMessageCount(child);
                         }
                     }
                 }
                 else
                 {
                     // destined for some sleepy children which subscribed the multicast address.
-                    for (uint8_t i = 0; i < numChildren; i++, child++)
+                    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone();
+                         iter.Advance())
                     {
-                        if (netif.GetMle().IsSleepyChildSubscribed(ip6Header.GetDestination(), *child))
+                        Child &child = *iter.GetChild();
+
+                        if (netif.GetMle().IsSleepyChildSubscribed(ip6Header.GetDestination(), child))
                         {
-                            aMessage.SetChildMask(i);
-                            mSourceMatchController.IncrementMessageCount(*child);
+                            aMessage.SetChildMask(childTable.GetChildIndex(child));
+                            mSourceMatchController.IncrementMessageCount(child);
                         }
                     }
                 }
@@ -106,9 +108,9 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                  !neighbor->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
         {
             // destined for a sleepy child
-            child = static_cast<Child *>(neighbor);
-            aMessage.SetChildMask(netif.GetMle().GetChildIndex(*child));
-            mSourceMatchController.IncrementMessageCount(*child);
+            Child &child = *static_cast<Child *>(neighbor);
+            aMessage.SetChildMask(childTable.GetChildIndex(child));
+            mSourceMatchController.IncrementMessageCount(child);
         }
         else
         {
@@ -120,13 +122,15 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     }
 
     case Message::kTypeSupervision:
-        child = netif.GetChildSupervisor().GetDestination(aMessage);
+    {
+        Child *child = netif.GetChildSupervisor().GetDestination(aMessage);
         VerifyOrExit(child != NULL, error = OT_ERROR_DROP);
         VerifyOrExit(!child->IsRxOnWhenIdle(), error = OT_ERROR_DROP);
 
-        aMessage.SetChildMask(netif.GetMle().GetChildIndex(*child));
+        aMessage.SetChildMask(childTable.GetChildIndex(*child));
         mSourceMatchController.IncrementMessageCount(*child);
         break;
+    }
 
     default:
         aMessage.SetDirectTransmission();
@@ -192,7 +196,7 @@ void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
     {
         nextMessage = message->GetNext();
 
-        message->ClearChildMask(GetNetif().GetMle().GetChildIndex(aChild));
+        message->ClearChildMask(GetNetif().GetMle().GetChildTable().GetChildIndex(aChild));
 
         if (!message->IsChildPending() && !message->GetDirectTransmission())
         {
@@ -215,21 +219,15 @@ exit:
 
 void MeshForwarder::UpdateIndirectMessages(void)
 {
-    Child * children;
-    uint8_t numChildren;
-
-    children = GetNetif().GetMle().GetChildren(&numChildren);
-
-    for (uint8_t i = 0; i < numChildren; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptValidOrRestoing); !iter.IsDone();
+         iter.Advance())
     {
-        Child *child = &children[i];
-
-        if (child->IsStateValidOrRestoring() || (child->GetIndirectMessageCount() == 0))
+        if (iter.GetChild()->GetIndirectMessageCount() == 0)
         {
             continue;
         }
 
-        ClearChildIndirectMessages(*child);
+        ClearChildIndirectMessages(*iter.GetChild());
     }
 }
 
@@ -255,7 +253,7 @@ exit:
 otError MeshForwarder::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
 {
     otError error      = OT_ERROR_NONE;
-    uint8_t childIndex = GetNetif().GetMle().GetChildIndex(aChild);
+    uint8_t childIndex = GetNetif().GetMle().GetChildTable().GetChildIndex(aChild);
 
     VerifyOrExit(aMessage.GetChildMask(childIndex) == true, error = OT_ERROR_NOT_FOUND);
 
@@ -350,14 +348,10 @@ void MeshForwarder::RemoveDataResponseMessages(void)
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {
-            Child * children;
-            uint8_t numChildren;
-
-            children = GetNetif().GetMle().GetChildren(&numChildren);
-
-            for (uint8_t i = 0; i < numChildren; i++)
+            for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone();
+                 iter.Advance())
             {
-                IgnoreReturnValue(RemoveMessageFromSleepyChild(*message, children[i]));
+                IgnoreReturnValue(RemoveMessageFromSleepyChild(*message, *iter.GetChild()));
             }
         }
 
@@ -376,32 +370,15 @@ otError MeshForwarder::GetIndirectTransmission(void)
 {
     otError      error = OT_ERROR_NOT_FOUND;
     ThreadNetif &netif = GetNetif();
-    uint8_t      numChildren;
-    uint8_t      childIndex;
-    uint8_t      nextIndex;
-    Child *      children;
 
     UpdateIndirectMessages();
 
-    children = netif.GetMle().GetChildren(&numChildren);
-
-    if (mStartChildIndex >= numChildren)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring, mIndirectStartingChild);
+         !iter.IsDone(); iter.Advance())
     {
-        mStartChildIndex = 0;
-    }
+        Child &child = *iter.GetChild();
 
-    childIndex = mStartChildIndex;
-
-    for (uint8_t iterations = numChildren; iterations > 0; iterations--, childIndex = nextIndex)
-    {
-        Child &child = children[childIndex];
-
-        if ((nextIndex = childIndex + 1) == numChildren)
-        {
-            nextIndex = 0;
-        }
-
-        if (!child.IsStateValidOrRestoring() || !child.IsDataRequestPending())
+        if (!child.IsDataRequestPending())
         {
             continue;
         }
@@ -434,9 +411,9 @@ otError MeshForwarder::GetIndirectTransmission(void)
             child.GetMacAddress(mMacDest);
         }
 
-        // Record current child index, and move it to next index after this indirect transmission has completed.
+        // Remember the current child and move it to next one in the list after the indirect transmission has completed.
 
-        mStartChildIndex = childIndex;
+        mIndirectStartingChild = &child;
 
         netif.GetMac().SendFrameRequest(mMacSender);
         ExitNow(error = OT_ERROR_NONE);
@@ -450,7 +427,7 @@ Message *MeshForwarder::GetIndirectTransmission(Child &aChild)
 {
     Message *message = NULL;
     Message *next;
-    uint8_t  childIndex = GetNetif().GetMle().GetChildIndex(aChild);
+    uint8_t  childIndex = GetNetif().GetMle().GetChildTable().GetChildIndex(aChild);
 
     for (message = mSendQueue.GetHead(); message; message = next)
     {
@@ -569,7 +546,9 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const otTh
 
     VerifyOrExit(netif.GetMle().GetRole() != OT_DEVICE_ROLE_DETACHED);
 
-    VerifyOrExit((child = netif.GetMle().GetChild(aMacSource)) != NULL);
+    child = netif.GetMle().GetChildTable().FindChild(aMacSource, ChildTable::kInStateValidOrRestoring);
+    VerifyOrExit(child != NULL);
+
     child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
@@ -593,7 +572,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
     ThreadNetif &netif = GetNetif();
     Child *      child;
 
-    child = netif.GetMle().GetChild(aMacDest);
+    child = netif.GetMle().GetChildTable().FindChild(aMacDest, ChildTable::kInStateValidOrRestoring);
     VerifyOrExit(child != NULL);
 
     child->SetDataRequestPending(false);
@@ -604,12 +583,14 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
     {
         // To ensure fairness in handling of data requests from sleepy
         // children, once a message is completed for indirect transmission to a
-        // child (no matter succeed or failed), the `mStartChildIndex` is updated to
-        // the next index after the current child. Subsequent call to
-        // `ScheduleTransmissionTask()` will begin the iteration through
-        // the children list from this index.
+        // child (on both success or failure), the `mIndirectStartingChild` is
+        // updated to the next `Child` entry after the current one. Subsequent
+        // call to `ScheduleTransmissionTask()` will begin the iteration
+        // through the children list from this child.
 
-        mStartChildIndex++;
+        ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring, mIndirectStartingChild);
+        iter.Advance();
+        mIndirectStartingChild = iter.GetChild();
 
         if (aError == OT_ERROR_NONE)
         {
@@ -685,7 +666,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
             mSourceMatchController.SetSrcMatchAsShort(*child, true);
         }
 
-        childIndex = netif.GetMle().GetChildIndex(*child);
+        childIndex = netif.GetMle().GetChildTable().GetChildIndex(*child);
 
         if (mSendMessage->GetChildMask(childIndex))
         {

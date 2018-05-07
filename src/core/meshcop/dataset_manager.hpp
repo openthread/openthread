@@ -92,14 +92,6 @@ public:
     otError AppendMleDatasetTlv(Message &aMessage) const;
 
     /**
-     * This method returns a pointer to the TLV.
-     *
-     * @returns A pointer to the TLV or NULL if none is found.
-     *
-     */
-    const Tlv *GetTlv(Tlv::Type aType) const;
-
-    /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
@@ -124,7 +116,8 @@ public:
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
      *
-     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
     otError ApplyConfiguration(void) const;
@@ -165,8 +158,11 @@ protected:
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
+     *
      */
-    void Set(const Dataset &aDataset);
+    otError Set(const Dataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.

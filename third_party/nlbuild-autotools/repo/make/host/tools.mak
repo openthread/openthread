@@ -1,5 +1,5 @@
 #
-#    Copyright 2016 Nest Labs Inc. All Rights Reserved.
+#    Copyright 2018 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -16,13 +16,9 @@
 
 #
 #    Description:
-#      This file is the GNU automake template for the @PACKAGE_DESCRIPTION@
-#      first-party (e.g. Nest Labs) software directory.
+#      This file is the generic "header" or pre make header for all
+#      common host-specific (i.e., non-target and -toolchain-specific)
+#      tools included in any makefile used in the build tree.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
-
-SUBDIRS                  = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+include $(abs_top_nlbuild_autotools_dir)/make/host/tools/tools.mak

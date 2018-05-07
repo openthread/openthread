@@ -55,35 +55,56 @@ public:
     /**
      * This constructor initializes the object.
      *
+     * @param[in]   aInstance   A reference to the OpenThread instance.
+     *
      */
     explicit LinkRaw(Instance &aInstance);
 
     /**
      * This method returns true if the raw link-layer is enabled.
      *
+     * @returns true if enabled, false otherwise.
+     *
      */
-    bool IsEnabled() { return mEnabled; }
+    bool IsEnabled(void) const { return mEnabled; }
 
     /**
      * This method enables/disables the raw link-layer.
      *
+     * @param[in]   aEnabled    Whether enable raw link-layer.
+     *
+     * @retval OT_ERROR_INVALID_STATE   Thread stack is enabled.
+     * @retval OT_ERROR_NONE            Successfully enabled raw link.
+     *
      */
-    void SetEnabled(bool aEnabled) { mEnabled = aEnabled; }
+    otError SetEnabled(bool aEnabled);
 
     /**
      * This method returns the capabilities of the raw link-layer.
      *
+     * @returns The radio capability bit vector. The stack enables or disables some functions based on this value.
+     *
      */
-    otRadioCaps GetCaps();
+    otRadioCaps GetCaps(void) const;
 
     /**
      * This method starts a (recurring) Receive on the link-layer.
      *
+     * @param[in]  aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame.
+     *
+     * @retval OT_ERROR_NONE             Successfully transitioned to Receive.
+     * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
+     *
      */
-    otError Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback);
+    otError Receive(otLinkRawReceiveDone aCallback);
 
     /**
      * This method invokes the mReceiveDoneCallback, if set.
+     *
+     * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+     * @param[in]  aError    OT_ERROR_NONE when successfully received a frame, OT_ERROR_ABORT when reception
+     *                       was aborted and a frame was not received, OT_ERROR_NO_BUFS when a frame could not be
+     *                       received due to lack of rx buffer space.
      *
      */
     void InvokeReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -91,11 +112,24 @@ public:
     /**
      * This method starts a (single) Transmit on the link-layer.
      *
+     * @param[in]  aFrame               A pointer to the frame that was transmitted.
+     * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
+     *
+     * @retval OT_ERROR_NONE            Successfully transitioned to Transmit.
+     * @retval OT_ERROR_INVALID_STATE   The radio was not in the Receive state.
+     *
      */
     otError Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
 
     /**
      * This method invokes the mTransmitDoneCallback, if set.
+     *
+     * @param[in]  aFrame     A pointer to the frame that was transmitted.
+     * @param[in]  aAckFrame  A pointer to the ACK frame, NULL if no ACK was received.
+     * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
+     *                        transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
+     *                        could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
+     *                        aborted for other reasons.
      *
      */
     void InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
@@ -103,24 +137,108 @@ public:
     /**
      * This method starts a (single) Enery Scan on the link-layer.
      *
+     * @param[in]  aScanChannel     The channel to perform the energy scan on.
+     * @param[in]  aScanDuration    The duration, in milliseconds, for the channel to be scanned.
+     * @param[in]  aCallback        A pointer to a function called on completion of a scanned channel.
+     *
+     * @retval OT_ERROR_NONE             Successfully started scanning the channel.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The radio doesn't support energy scanning.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
      */
     otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback);
 
     /**
      * This method invokes the mEnergyScanDoneCallback, if set.
      *
+     * @param[in]   aEnergyScanMaxRssi  The max RSSI for energy scan.
+     *
      */
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-private:
-    otError DoTransmit(otRadioFrame *aFrame);
+    /**
+     * This method is called when the transmission has started.
+     *
+     * @param[in]  aFrame     A pointer to the frame that is being transmitted.
+     *
+     */
+    void TransmitStarted(otRadioFrame *aFrame);
 
-    otInstance &            mInstance;
-    bool                    mEnabled;
-    uint8_t                 mReceiveChannel;
-    otLinkRawReceiveDone    mReceiveDoneCallback;
-    otLinkRawTransmitDone   mTransmitDoneCallback;
-    otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+    /**
+     * This function returns the short address.
+     *
+     * @returns short address.
+     *
+     */
+    uint16_t GetShortAddress(void) const { return mShortAddress; }
+
+    /**
+     * This method updates short address.
+     *
+     * @param[in]   aShortAddress   The short address.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetShortAddress(uint16_t aShortAddress);
+
+    /**
+     * This function returns PANID.
+     *
+     * @returns PANID.
+     *
+     */
+    uint16_t GetPanId(void) const { return mPanId; }
+
+    /**
+     * This method updates PANID.
+     *
+     * @param[in]   aPanId          The PANID.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetPanId(uint16_t aPanId);
+
+    /**
+     * This method gets the current receiving channel.
+     *
+     * @returns Current receiving channel.
+     *
+     */
+    uint8_t GetChannel(void) const { return mReceiveChannel; }
+
+    /**
+     * This method sets the receiving channel.
+     *
+     * @param[in]  aChannel     The channel to use for receiving.
+     *
+     */
+    otError SetChannel(uint8_t aChannel);
+
+    /**
+     * This function returns the extended address.
+     *
+     * @returns A reference to the extended address.
+     *
+     */
+    const otExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+    /**
+     * This method updates extended address.
+     *
+     * @param[in]   aExtAddress     The extended address.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetExtAddress(const otExtAddress &aExtAddress);
+
+private:
+    otInstance &mInstance;
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
@@ -166,6 +284,15 @@ private:
     void        HandleEnergyScanTask(void);
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+
+    otExtAddress            mExtAddress;
+    uint16_t                mPanId;
+    uint16_t                mShortAddress;
+    bool                    mEnabled;
+    uint8_t                 mReceiveChannel;
+    otLinkRawReceiveDone    mReceiveDoneCallback;
+    otLinkRawTransmitDone   mTransmitDoneCallback;
+    otLinkRawEnergyScanDone mEnergyScanDoneCallback;
 };
 
 } // namespace ot

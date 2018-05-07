@@ -48,8 +48,9 @@ static uint32_t sMsAlarm     = 0;
 static bool     sIsUsRunning = false;
 static uint32_t sUsAlarm     = 0;
 
-void platformAlarmInit(void)
+void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
+    (void)aSpeedUpFactor;
     sNow = 0;
 }
 

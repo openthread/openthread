@@ -145,6 +145,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     (void)aLogRegion;
 
     uint16_t length = 0;
+    int      charsWritten;
     char     logString[LOG_PARSE_BUFFER_SIZE + 1];
 
     otEXPECT(sLogInitialized == true);
@@ -159,7 +160,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     // Parse user string.
     va_list paramList;
     va_start(paramList, aFormat);
-    length += vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aFormat, paramList);
+    charsWritten = vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aFormat, paramList);
+    otEXPECT(charsWritten >= 0);
+    length += charsWritten;
 
     if (length > LOG_PARSE_BUFFER_SIZE)
     {

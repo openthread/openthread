@@ -166,6 +166,16 @@ public:
         return ot::Tlv::GetValueOffset(aMessage, static_cast<uint8_t>(aType), aOffset, aLength);
     }
 
+    /**
+     * This static method indicates whether a TLV appears to be well-formed.
+     *
+     * @param[in]  aTlv  A reference to the TLV.
+     *
+     * @returns TRUE if the TLV appears to be well-formed, FALSE otherwise.
+     *
+     */
+    static bool IsValid(const Tlv &aTlv);
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1261,9 +1271,19 @@ public:
 
     enum
     {
-        kMaxDelayTimer     = 259200, ///< maximum delay timer value for a Pending Dataset in seconds
-        kDelayTimerMinimal = 30000,  ///< Minimum Delay Timer value for a Pending Operational Dataset (ms)
-        kDelayTimerDefault = 300000, ///< Default Delay Timer value for a Pending Operational Dataset (ms)
+        kMaxDelayTimer = 259200, ///< maximum delay timer value for a Pending Dataset in seconds
+
+        /**
+         * Minimum Delay Timer value for a Pending Operational Dataset (ms)
+         *
+         */
+        kDelayTimerMinimal = OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY,
+
+        /**
+         * Default Delay Timer value for a Pending Operational Dataset (ms)
+         *
+         */
+        kDelayTimerDefault = OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY,
     };
 
 private:

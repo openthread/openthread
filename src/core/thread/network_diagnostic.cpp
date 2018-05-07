@@ -235,43 +235,33 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
     otError         error   = OT_ERROR_NONE;
     uint8_t         count   = 0;
     uint8_t         timeout = 0;
-    uint8_t         numChildren;
-    const Child *   children = netif.GetMle().GetChildren(&numChildren);
     ChildTableTlv   tlv;
     ChildTableEntry entry;
 
     tlv.Init();
 
-    for (int i = 0; i < numChildren; i++)
-    {
-        if (children[i].GetState() == Neighbor::kStateValid)
-        {
-            count++;
-        }
-    }
-
+    count = netif.GetMle().GetChildTable().GetNumChildren(ChildTable::kInStateValid);
     tlv.SetLength(count * sizeof(ChildTableEntry));
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(ChildTableTlv)));
 
-    for (int i = 0; i < numChildren; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
     {
-        if (children[i].GetState() == Neighbor::kStateValid)
+        Child &child = *iter.GetChild();
+
+        timeout = 0;
+
+        while (static_cast<uint32_t>(1 << timeout) < child.GetTimeout())
         {
-            timeout = 0;
-
-            while (static_cast<uint32_t>(1 << timeout) < children[i].GetTimeout())
-            {
-                timeout++;
-            }
-
-            entry.SetReserved(0);
-            entry.SetTimeout(timeout + 4);
-            entry.SetChildId(netif.GetMle().GetChildId(children[i].GetRloc16()));
-            entry.SetMode(children[i].GetDeviceMode());
-
-            SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
+            timeout++;
         }
+
+        entry.SetReserved(0);
+        entry.SetTimeout(timeout + 4);
+        entry.SetChildId(netif.GetMle().GetChildId(child.GetRloc16()));
+        entry.SetMode(child.GetDeviceMode());
+
+        SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
     }
 
 exit:

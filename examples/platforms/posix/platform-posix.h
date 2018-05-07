@@ -114,7 +114,7 @@ extern uint32_t WELLKNOWN_NODE_ID;
  * This function initializes the alarm service used by OpenThread.
  *
  */
-void platformAlarmInit(void);
+void platformAlarmInit(uint32_t aSpeedUpFactor);
 
 /**
  * This function retrieves the time remaining until the alarm fires.

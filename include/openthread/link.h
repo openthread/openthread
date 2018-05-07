@@ -293,6 +293,18 @@ OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPerio
 OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
 
 /**
+ * Set the Short Address for address filtering.
+ *
+ * @param[in] aInstance      A pointer to an OpenThread instance.
+ * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+OTAPI otError OTCALL otLinkSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+
+/**
  * This function gets the address mode of MAC filter.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -615,6 +627,32 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
  *
  */
 uint16_t otLinkGetCcaFailureRate(otInstance *aInstance);
+
+/**
+ * This function enables or disables the link layer.
+ *
+ * @note The link layer may only be enabled / disabled when the Thread Interface is disabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aEnable       true to enable the link layer, or false otherwise.
+ *
+ * @retval OT_ERROR_NONE          Successfully enabled / disabled the link layer.
+ * @retval OT_ERROR_INVALID_STATE Could not disable the link layer because
+ *                                the Thread interface is enabled.
+ *
+ */
+otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * This function indicates whether or not the link layer is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval true   Link layer is enabled.
+ * @retval false  Link layer is not enabled.
+ *
+ */
+bool otLinkIsEnabled(otInstance *aInstance);
 
 /**
  * @}

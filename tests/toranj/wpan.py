@@ -34,6 +34,7 @@ import weakref
 import subprocess
 import socket
 import asyncore
+import inspect
 
 #----------------------------------------------------------------------------------------------------------------------
 # wpantund properties
@@ -51,6 +52,7 @@ WPAN_NODE_TYPE                                 = 'Network:NodeType'
 WPAN_ROLE                                      = 'Network:Role'
 WPAN_PARTITION_ID                              = 'Network:PartitionId'
 WPAN_NCP_VERSION                               = 'NCP:Version'
+WPAN_NCP_MCU_POWER_STATE                       = "NCP:MCUPowerState"
 WPAN_NETWORK_ALLOW_JOIN                        = 'com.nestlabs.internal:Network:AllowingJoin'
 WPAN_NETWORK_PASSTHRU_PORT                     = 'com.nestlabs.internal:Network:PassthruPort'
 
@@ -123,6 +125,14 @@ WPAN_CHANNEL_MONITOR_SAMPLE_COUNT              = "ChannelMonitor:SampleCount"
 WPAN_CHANNEL_MONITOR_CHANNEL_QUALITY           = "ChannelMonitor:ChannelQuality"
 WPAN_CHANNEL_MONITOR_CHANNEL_QUALITY_ASVALMAP  = "ChannelMonitor:ChannelQuality:AsValMap"
 
+WPAN_CHANNEL_MANAGER_NEW_CHANNEL               = "ChannelManager:NewChannel"
+WPAN_CHANNEL_MANAGER_DELAY                     = "ChannelManager:Delay"
+WPAN_CHANNEL_MANAGER_CHANNEL_SELECT            = "ChannelManager:ChannelSelect"
+WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED       = "ChannelManager:AutoSelect:Enabled"
+WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL      = "ChannelManager:AutoSelect:Interval"
+WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK    = "ChannelManager:SupportedChannelMask"
+WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK      = "ChannelManager:FavoredChannelMask"
+
 #----------------------------------------------------------------------------------------------------------------------
 # Valid state values
 
@@ -138,6 +148,13 @@ STATE_ASSOCIATED                               =  '"associated"'
 STATE_ISOLATED                                 =  '"associated:no-parent"'
 STATE_NETWAKE_ASLEEP                           =  '"associated:netwake-asleep"'
 STATE_NETWAKE_WAKING                           =  '"associated:netwake-waking"'
+
+#-----------------------------------------------------------------------------------------------------------------------
+# MCU Power state from `WPAN_NCP_MCU_POWER_STATE`
+
+MCU_POWER_STATE_ON                             = '"on"'
+MCU_POWER_STATE_LOW_POWER                      = '"low-power"'
+MCU_POWER_STATE_OFF                            = '"off"'
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Node types (from `WPAN_NODE_TYPE` property)
@@ -173,7 +190,8 @@ def _log(text, new_line=True, flush=True):
 class Node(object):
     """ A wpantund OT NCP instance """
 
-    _VERBOSE = False     # defines the default verbosity setting (can be changed per `Node`)
+    _VERBOSE = False        # defines the default verbosity setting (can be changed per `Node`)
+    _SPEED_UP_FACTOR = 1    # defines the default time speed up factor
 
     # path to `wpantund`, `wpanctl` and `ot-ncp-ftd` code
     _WPANTUND = '/usr/local/sbin/wpantund'
@@ -200,8 +218,10 @@ class Node(object):
         self._interface_name = self._INTFC_NAME_PREFIX + str(index)
         self._verbose = verbose
 
+        ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index, self._SPEED_UP_FACTOR)
+
         cmd = self._WPANTUND + \
-               ' -o Config:NCP:SocketPath \"system:{} {}\"'.format(self._OT_NCP_FTD, index) + \
+               ' -o Config:NCP:SocketPath \"{}\"'.format(ncp_socket_path) + \
                ' -o Config:TUN:InterfaceName {}'.format(self._interface_name) + \
                ' -o Config:NCP:DriverName spinel' + \
                ' -o Daemon:SyslogMask \"all -debug\"'
@@ -357,7 +377,7 @@ class Node(object):
     def is_associated(self):
         return self.get(WPAN_STATE) == STATE_ASSOCIATED
 
-    def join_node(self, node, node_type=JOIN_TYPE_ROUTER):
+    def join_node(self, node, node_type=JOIN_TYPE_ROUTER, should_set_key=True):
         """Join a network specified by another node, `node` should be a Node"""
 
         if not node.is_associated():
@@ -366,10 +386,12 @@ class Node(object):
         name = node.get(WPAN_NAME)
         panid = node.get(WPAN_PANID)
         xpanid = node.get(WPAN_XPANID)
-        netkey = node.get(WPAN_KEY)
         channel = node.get(WPAN_CHANNEL)
 
-        self.set(WPAN_KEY, netkey[1:-1], binary_data=True)
+        if should_set_key:
+            netkey = node.get(WPAN_KEY)
+            self.set(WPAN_KEY, netkey[1:-1], binary_data=True)
+
         return self.join(name[1:-1], channel=channel, node_type=node_type, panid=panid, xpanid=xpanid)
 
     def whitelist_node(self, node):
@@ -423,6 +445,13 @@ class Node(object):
                 else:
                     break
                 time.sleep(0.4)
+
+    @classmethod
+    def set_time_speedup_factor(cls, factor):
+        """Sets up the time speed up factor - should be set before creating any `Node` objects"""
+        if len(Node._all_nodes) != 0:
+            raise Node._NodeError('set_time_speedup_factor() cannot be called after creating a `Node`')
+        Node._SPEED_UP_FACTOR = factor
 
     #------------------------------------------------------------------------------------------------------------------
     # IPv6 message Sender and Receiver class
@@ -714,8 +743,10 @@ class AsyncReceiver(asyncore.dispatcher):
 #-----------------------------------------------------------------------------------------------------------------------
 
 def verify(condition):
+    """Verifies that a `condition` is true, otherwise exits"""
     if not condition:
-        print 'verify() failed'
+        calling_frame = inspect.currentframe().f_back
+        print 'verify() failed at line {} in "{}"'.format(calling_frame.f_lineno, calling_frame.f_code.co_filename)
         exit(1)
 
 

@@ -37,6 +37,7 @@ EXTRA_DIST                                        = \
 lib_LIBRARIES                                     = \
     libopenthread-ncp-mtd.a                         \
     libopenthread-ncp-ftd.a                         \
+    libopenthread-ncp-radio.a                       \
     $(NULL)
 
 
@@ -57,6 +58,11 @@ libopenthread_ncp_mtd_a_CPPFLAGS                  = \
 
 libopenthread_ncp_ftd_a_CPPFLAGS                  = \
     -DOPENTHREAD_FTD=1                              \
+    $(COMMON_CPPFLAGS)                              \
+    $(NULL)
+
+libopenthread_ncp_radio_a_CPPFLAGS                = \
+    -DOPENTHREAD_RADIO=1                            \
     $(COMMON_CPPFLAGS)                              \
     $(NULL)
 
@@ -108,6 +114,10 @@ libopenthread_ncp_mtd_a_SOURCES                   = \
    $(NULL)
 
 libopenthread_ncp_ftd_a_SOURCES                   = \
+   $(COMMON_SOURCES)                                \
+   $(NULL)
+
+libopenthread_ncp_radio_a_SOURCES                 = \
    $(COMMON_SOURCES)                                \
    $(NULL)
 

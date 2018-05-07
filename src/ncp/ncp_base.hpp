@@ -236,7 +236,7 @@ protected:
     static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
     void HandleRawFrame(const otRadioFrame *aFrame);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -247,7 +247,7 @@ protected:
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     static void HandleStateChanged(uint32_t aFlags, void *aContext);
@@ -396,7 +396,7 @@ protected:
     // --------------------------------------------------------------------------
     // Raw Link API Properties
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     NCP_SET_PROP_HANDLER(PHY_ENABLED);
 
@@ -410,7 +410,7 @@ protected:
     NCP_INSERT_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
     NCP_REMOVE_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
 
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     // --------------------------------------------------------------------------
     // MTD (or FTD) Properties
@@ -605,7 +605,7 @@ protected:
     NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_RSSI_THRESHOLD);
     NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_SAMPLE_WINDOW);
     NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_SAMPLE_COUNT);
-    NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_CHANNEL_QUALITY);
+    NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_CHANNEL_OCCUPANCY);
 #endif
 
 #if OPENTHREAD_ENABLE_LEGACY
@@ -671,6 +671,14 @@ protected:
     NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_DELAY);
     NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_SUPPORTED_CHANNELS);
     NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_SUPPORTED_CHANNELS);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_FAVORED_CHANNELS);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_FAVORED_CHANNELS);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_CHANNEL_SELECT);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_CHANNEL_SELECT);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_ENABLED);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_ENABLED);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL);
 #endif
 
 #endif // OPENTHREAD_FTD
@@ -689,7 +697,7 @@ protected:
     otError SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     otError SetPropertyHandler_STREAM_RAW(uint8_t aHeader);
 #endif
 
@@ -767,9 +775,8 @@ protected:
     uint8_t mPreferredRouteId;
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     uint8_t mCurTransmitTID;
-    uint8_t mCurReceiveChannel;
     int8_t  mCurScanChannel;
     bool    mSrcMatchEnabled;
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API

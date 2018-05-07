@@ -33,6 +33,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/random.h>
 
 #include "utils/code_utils.h"
 
@@ -82,6 +83,10 @@ enum
 {
     POSIX_RECEIVE_SENSITIVITY   = -100, // dBm
     POSIX_MAX_SRC_MATCH_ENTRIES = OPENTHREAD_CONFIG_MAX_CHILDREN,
+
+    POSIX_HIGH_RSSI_SAMPLE               = -30, // dBm
+    POSIX_LOW_RSSI_SAMPLE                = -98, // dBm
+    POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -504,8 +509,27 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
+    int8_t   rssi    = POSIX_LOW_RSSI_SAMPLE;
+    uint8_t  channel = sReceiveFrame.mChannel;
+    uint32_t probabilityThreshold;
+
     (void)aInstance;
-    return 0;
+
+    otEXPECT((OT_RADIO_CHANNEL_MIN <= channel) && channel <= (OT_RADIO_CHANNEL_MAX));
+
+    // To emulate a simple interference model, we return either a high or
+    // a low  RSSI value with a fixed probability per each channel. The
+    // probability is increased per channel by a constant.
+
+    probabilityThreshold = (channel - OT_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+
+    if ((otPlatRandomGet() & 0xffff) < (probabilityThreshold * 0xffff / 100))
+    {
+        rssi = POSIX_HIGH_RSSI_SAMPLE;
+    }
+
+exit:
+    return rssi;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)

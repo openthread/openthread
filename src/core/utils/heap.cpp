@@ -40,7 +40,7 @@
 #include "common/code_utils.hpp"
 
 namespace ot {
-namespace Crypto {
+namespace Utils {
 
 Heap::Heap(void)
 {
@@ -55,6 +55,8 @@ Heap::Heap(void)
 
     super.SetNext(BlockOffset(first));
     first.SetNext(BlockOffset(guard));
+
+    mMemory.mFreeSize = kFirstBlockSize;
 }
 
 void *Heap::CAlloc(size_t aCount, size_t aSize)
@@ -100,7 +102,11 @@ void *Heap::CAlloc(size_t aCount, size_t aSize)
         {
             BlockInsert(BlockSuper(), newBlock);
         }
+
+        mMemory.mFreeSize -= sizeof(Block);
     }
+
+    mMemory.mFreeSize -= curr->GetSize();
 
     curr->SetNext(0);
 
@@ -146,10 +152,14 @@ void Heap::Free(void *aPointer)
     Block &block = BlockOf(aPointer);
     Block &right = BlockRight(block);
 
+    mMemory.mFreeSize += block.GetSize();
+
     if (IsLeftFree(block))
     {
         Block *prev = &BlockSuper();
         Block *left = &BlockNext(*prev);
+
+        mMemory.mFreeSize += sizeof(Block);
 
         for (const uint16_t offset = block.GetLeftNext(); left->GetNext() != offset; left = &BlockNext(*left))
         {
@@ -162,6 +172,8 @@ void Heap::Free(void *aPointer)
 
         if (right.IsFree())
         {
+            mMemory.mFreeSize += sizeof(Block);
+
             if (right.GetSize() > left->GetSize())
             {
                 for (const uint16_t offset = BlockOffset(right); prev->GetNext() != offset; prev = &BlockNext(*prev))
@@ -193,6 +205,8 @@ void Heap::Free(void *aPointer)
             prev.SetNext(right.GetNext());
             block.SetSize(block.GetSize() + right.GetSize() + sizeof(Block));
             BlockInsert(prev, block);
+
+            mMemory.mFreeSize += sizeof(Block);
         }
         else
         {
@@ -201,5 +215,5 @@ void Heap::Free(void *aPointer)
     }
 }
 
-} // namespace Crypto
+} // namespace Utils
 } // namespace ot

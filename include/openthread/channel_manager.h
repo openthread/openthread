@@ -64,12 +64,9 @@ extern "C" {
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aChannel           The new channel for the Thread network.
-
- * @retval OT_ERROR_NONE          Channel change request successfully processed.
- * @retval OT_ERROR_INVALID_ARGS  The channel is not a supported channel (@sa otChannelManagerGetSupportedChannels).
  *
  */
-otError otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel);
+void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel);
 
 /**
  * This function gets the channel from the last successful call to `otChannelManagerRequestChannelChange()`
@@ -105,11 +102,87 @@ uint16_t otChannelManagerGetDelay(otInstance *aInstance);
 otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
 
 /**
+ * This function requests that `ChannelManager` checks and selects a new channel and starts a channel change.
+ *
+ * Unlike the `otChannelManagerRequestChannelChange()` where the channel must be given as a parameter, this function
+ * asks the `ChannelManager` to select a channel by itself (based of collected channel quality info).
+ *
+ * Once called, the Channel Manager will perform the following 3 steps:
+ *
+ * 1) `ChannelManager` decides if the channel change would be helpful. This check can be skipped if
+ *    `aSkipQualityCheck` is set to true (forcing a channel selection to happen and skipping the quality check).
+ *    This step uses the collected link quality metrics on the device (such as CCA failure rate, frame and message
+ *    error rates per neighbor, etc.) to determine if the current channel quality is at the level that justifies
+ *    a channel change.
+ *
+ * 2) If the first step passes, then `ChannelManager` selects a potentially better channel. It uses the collected
+ *    channel quality data by `ChannelMonitor` module. The supported and favored channels are used at this step.
+ *    (@sa otChannelManagerSetSupportedChannels, @sa otChannelManagerSetFavoredChannels).
+ *
+ * 3) If the newly selected channel is different from the current channel, `ChannelManager` requests/starts the
+ *    channel change process (internally invoking a `RequestChannelChange()`).
+ *
+ * @param[in] aInstance                A pointer to an OpenThread instance.
+ * @param[in] aSkipQualityCheck        Indicates whether the quality check (step 1) should be skipped.
+ *
+ * @retval OT_ERROR_NONE               Channel selection finished successfully.
+ * @retval OT_ERROR_NOT_FOUND          Supported channel mask is empty, therefore could not select a channel.
+ * @retval OT_ERROR_INVALID_STATE      Thread is not enabled or not enough data to select a new channel.
+ * @retval OT_ERROR_DISABLED_FEATURE   `ChannelMonintor` feature is disabled by build-time configuration options.
+ *
+ */
+otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck);
+
+/**
+ * This function enables/disables the auto-channel-selection functionality.
+ *
+ * When enabled, `ChannelManager` will periodically invoke a `RequestChannelSelect(false)`. The period interval
+ * can be set by `SetAutoChannelSelectionInterval()`.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aEnabled     Indicates whether to enable or disable this functionality.
+ *
+ */
+void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function indicates whether the auto-channel-selection functionality is enabled or not.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if enabled, FALSE if disabled.
+ *
+ */
+bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance);
+
+/**
+ * This function sets the period interval (in seconds) used by auto-channel-selection functionality.
+ *
+ * @param[in] aInstance   A pointer to an OpenThread instance.
+ * @param[in] aInterval   The interval in seconds.
+ *
+ * @retval OT_ERROR_NONE           The interval was set successfully.
+ * @retval OT_ERROR_INVALID_ARGS   The @p aInterval is not valid (zero).
+ *
+ */
+otError otChannelManagerSetAutoChannelSelectionInterval(otInstance *aInstance, uint32_t aInterval);
+
+/**
+ * This function gets the period interval (in seconds) used by auto-channel-selection functionality.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The interval in seconds.
+ *
+ */
+uint32_t otChannelManagerGetAutoChannelSelectionInterval(otInstance *aInstance);
+
+/**
  * This function gets the supported channel mask.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
- * @returns  The supported channels as bit-mask.
+ * @returns  The supported channels as a bit-mask.
  *
  */
 uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance);
@@ -122,6 +195,25 @@ uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance);
  *
  */
 void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask);
+
+/**
+ * This function gets the favored channel mask.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ *
+ * @returns  The favored channels as a bit-mask.
+ *
+ */
+uint32_t otChannelManagerGetFavoredChannels(otInstance *aInstance);
+
+/**
+ * This function sets the favored channel mask.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aChannelMask  A channel mask.
+ *
+ */
+void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
  * @}

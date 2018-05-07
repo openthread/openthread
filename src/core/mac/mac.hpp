@@ -786,6 +786,25 @@ public:
      */
     uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
 
+    /**
+     * This method Starts/Stops the Link layer. It may only be used when the Netif Interface is down
+     *
+     * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
+     *
+     * @retval OT_ERROR_NONE   The operation succeeded or the new State equals the current State.
+     *
+     */
+    otError SetEnabled(bool aEnable);
+
+    /**
+     * This method indicates whether or not the link layer is enabled.
+     *
+     * @retval true   Link layer is enabled.
+     * @retval false  Link layer is not enabled.
+     *
+     */
+    bool IsEnabled(void) { return mEnabled; }
+
 private:
     enum
     {
@@ -924,6 +943,7 @@ private:
 
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
+    bool               mEnabled;
 };
 
 /**

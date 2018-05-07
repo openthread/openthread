@@ -79,6 +79,10 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] =
     { SPINEL_PROP_NET_XPANID,                            SPINEL_STATUS_OK,                  true  },         // 25
     { SPINEL_PROP_NET_MASTER_KEY,                        SPINEL_STATUS_OK,                  true  },         // 26
     { SPINEL_PROP_NET_PSKC,                              SPINEL_STATUS_OK,                  true  },         // 27
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    { SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL,           SPINEL_STATUS_OK,                  true  },         // 28
+#endif
+
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const

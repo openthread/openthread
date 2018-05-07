@@ -83,6 +83,7 @@ cd ../..
 ./bootstrap || die
 ./configure                             \
     CPPFLAGS='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"' \
+    --enable-coverage                   \
     --enable-ncp-app=all                \
     --with-ncp-bus=uart                 \
     --with-examples=posix               \
@@ -94,6 +95,7 @@ cd ../..
     --enable-mac-filter                 \
     --enable-service                    \
     --enable-channel-monitor            \
+    --enable-channel-manager            \
     --disable-docs                      \
     --disable-test || die
 
@@ -113,5 +115,10 @@ run test-005-discover-scan.py
 run test-006-traffic-router-end-device.py
 run test-007-traffic-router-sleepy.py
 run test-008-permit-join.py
+run test-100-mcu-power-state.py
+
+run test-600-channel-manager-properties.py
+run test-601-channel-manager-channel-change.py
+run test-602-channel-manager-channel-select.py
 
 exit 0

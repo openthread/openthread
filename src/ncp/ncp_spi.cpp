@@ -330,7 +330,8 @@ void NcpSpi::PrepareTxFrame(void)
     case kTxStateHandlingSendDone:
         mTxState = kTxStateIdle;
 
-        // Fall-through to next case to prepare the next frame (if any).
+        // Fall through
+        // to next case to prepare the next frame (if any).
 
     case kTxStateIdle:
         PrepareNextSpiSendFrame();

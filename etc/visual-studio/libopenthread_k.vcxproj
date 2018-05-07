@@ -132,6 +132,7 @@
     <ClCompile Include="..\..\src\core\net\udp6.cpp" />
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp" />
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp" />
+    <ClCompile Include="..\..\src\core\thread\child_table.cpp" />
     <ClCompile Include="..\..\src\core\thread\data_poll_manager.cpp" />
     <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\key_manager.cpp" />
@@ -241,6 +242,7 @@
     <ClInclude Include="..\..\src\core\openthread-core-default-config.h" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\child_table.hpp" />
     <ClInclude Include="..\..\src\core\thread\data_poll_manager.hpp" />
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\key_manager.hpp" />

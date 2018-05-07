@@ -320,6 +320,10 @@ const char *Notifier::FlagToString(uint32_t aFlag) const
         retval = "SecPolicy";
         break;
 
+    case OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL:
+        retval = "CMNewChan";
+        break;
+
     default:
         break;
     }
