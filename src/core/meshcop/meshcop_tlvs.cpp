@@ -36,6 +36,51 @@
 namespace ot {
 namespace MeshCoP {
 
+bool Tlv::IsValid(const Tlv &aTlv)
+{
+    bool rval = true;
+
+    switch (aTlv.GetType())
+    {
+    case Tlv::kChannel:
+        rval = static_cast<const ChannelTlv &>(aTlv).IsValid();
+        break;
+
+    case Tlv::kPanId:
+        rval = static_cast<const PanIdTlv &>(aTlv).IsValid();
+        break;
+
+    case Tlv::kExtendedPanId:
+        rval = static_cast<const ExtendedPanIdTlv &>(aTlv).IsValid();
+        break;
+
+    case Tlv::kNetworkName:
+        rval = static_cast<const NetworkNameTlv &>(aTlv).IsValid();
+        break;
+
+    case Tlv::kNetworkMasterKey:
+        rval = static_cast<const NetworkMasterKeyTlv &>(aTlv).IsValid();
+        break;
+
+    case Tlv::kPSKc:
+        rval = static_cast<const PSKcTlv &>(aTlv).IsValid();
+        break;
+
+    case Tlv::kMeshLocalPrefix:
+        rval = static_cast<const MeshLocalPrefixTlv &>(aTlv).IsValid();
+        break;
+
+    case Tlv::kSecurityPolicy:
+        rval = static_cast<const SecurityPolicyTlv &>(aTlv).IsValid();
+        break;
+
+    default:
+        break;
+    }
+
+    return rval;
+}
+
 bool SteeringDataTlv::IsCleared(void) const
 {
     bool rval = true;

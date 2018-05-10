@@ -33,8 +33,8 @@
  *
  */
 
-#ifndef RADIO_H_
-#define RADIO_H_
+#ifndef OPENTHREAD_PLATFORM_RADIO_H_
+#define OPENTHREAD_PLATFORM_RADIO_H_
 
 #include <stdint.h>
 
@@ -558,4 +558,4 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance);
 } // end of extern "C"
 #endif
 
-#endif // RADIO_H_
+#endif // OPENTHREAD_PLATFORM_RADIO_H_

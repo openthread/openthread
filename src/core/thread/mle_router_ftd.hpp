@@ -51,6 +51,7 @@
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
+#include "thread/router_table.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/topology.hpp"
 
@@ -133,30 +134,6 @@ public:
      *
      */
     otError BecomeLeader(void);
-
-    /**
-     * This method returns the number of active routers.
-     *
-     * @returns The number of active routers.
-     *
-     */
-    uint8_t GetActiveRouterCount(void) const;
-
-    /**
-     * This method returns the number of active neighbor routers.
-     *
-     * @returns The number of active neighbor routers.
-     *
-     */
-    uint8_t GetActiveNeighborRouterCount(void) const;
-
-    /**
-     * This method returns the time in seconds since the last Router ID Sequence update.
-     *
-     * @returns The time in seconds since the last Router ID Sequence update.
-     *
-     */
-    uint32_t GetLeaderAge(void) const;
 
     /**
      * This method returns the Leader Weighting value for this Thread interface.
@@ -307,14 +284,6 @@ public:
     uint8_t GetRouterSelectionJitterTimeout(void) { return mRouterSelectionJitterTimeout; }
 
     /**
-     * This method returns the current Router ID Sequence value.
-     *
-     * @returns The current Router ID Sequence value.
-     *
-     */
-    uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
-
-    /**
      * This method returns the ROUTER_UPGRADE_THRESHOLD value.
      *
      * @returns The ROUTER_UPGRADE_THRESHOLD value.
@@ -345,17 +314,6 @@ public:
      *
      */
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
-
-    /**
-     * This method release a given Router ID.
-     *
-     * @param[in]  aRouterId  The Router ID to release.
-     *
-     * @retval OT_ERROR_NONE           Successfully released the Router ID.
-     * @retval OT_ERROR_INVALID_STATE  The Router ID was not allocated.
-     *
-     */
-    otError ReleaseRouterId(uint8_t aRouterId);
 
     /**
      * This method removes a link to a neighbor.
@@ -524,48 +482,6 @@ public:
     otError GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeighborInfo &aNeighInfo);
 
     /**
-     * This method returns a pointer to a Router array.
-     *
-     * @param[out]  aNumRouters  A pointer to output the number of routers.
-     *
-     * @returns A pointer to the Router array.
-     *
-     */
-    Router *GetRouters(uint8_t *aNumRouters);
-
-    /**
-     * This method returns a pointer to a Router entry.
-     *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     * @returns A pointer to a Router entry or NULL if @p aRouterId is out-of-range.
-     *
-     */
-    Router *GetRouter(uint8_t aRouterId);
-
-    /**
-     * This method returns a pointer to a Router entry.
-     *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     * @returns A pointer to a Router entry or NULL if @p aRouterId is out-of-range.
-     *
-     */
-    const Router *GetRouter(uint8_t aRouterId) const;
-
-    /**
-     * This method retains diagnostic information for a given router.
-     *
-     * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
-     * @param[out]  aRouterInfo  The router information.
-     *
-     * @retval OT_ERROR_NONE          Successfully retrieved the router info for given id.
-     * @retval OT_ERROR_NOT_FOUND     No router entry with the given id.
-     *
-     */
-    otError GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo);
-
-    /**
      * This method indicates whether or not the given Thread partition attributes are preferred.
      *
      * @param[in]  aSingletonA   Whether or not the Thread Partition A has a single router.
@@ -640,6 +556,8 @@ public:
      *
      */
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+
+    otError SendLinkRequest(Neighbor *aNeighbor);
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     /**
@@ -729,6 +647,28 @@ public:
      */
     bool IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild);
 
+    /**
+     * This method resets the MLE Advertisement Trickle timer interval.
+     *
+     */
+    void ResetAdvertiseInterval(void);
+
+    /**
+     * This method returns a reference to the router table object.
+     *
+     */
+    RouterTable &GetRouterTable(void) { return mRouterTable; }
+
+    /**
+     * This static method converts link quality to route cost.
+     *
+     * @param[in]  aLinkQuality  The link quality.
+     *
+     * @returns The link cost corresponding to @p aLinkQuality.
+     *
+     */
+    static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
+
 private:
     enum
     {
@@ -770,14 +710,12 @@ private:
 
     otError ProcessRouteTlv(const RouteTlv &aRoute);
     void    StopAdvertiseTimer(void);
-    void    ResetAdvertiseInterval(void);
     otError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     otError SendAddressRelease(void);
     void    SendAddressSolicitResponse(const Coap::Header &    aRequest,
-                                       uint8_t                 aRouterId,
+                                       const Router *          aRouter,
                                        const Ip6::MessageInfo &aMessageInfo);
     otError SendAdvertisement(void);
-    otError SendLinkRequest(Neighbor *aNeighbor);
     otError SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
                            Neighbor *              aNeighbor,
                            const TlvRequestTlv &   aTlvRequest,
@@ -823,23 +761,16 @@ private:
                                      const otMessageInfo *aMessageInfo);
     void        HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
-
     static bool IsSingleton(const RouteTlv &aRouteTlv);
 
     void HandlePartitionChange(void);
 
-    void    SetChildStateToValid(Child &aChild);
-    bool    HasChildren(void);
-    void    RemoveChildren(void);
-    bool    HasMinDowngradeNeighborRouters(void);
-    bool    HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
-    bool    HasSmallNumberOfChildren(void);
-    uint8_t GetMinDowngradeNeighborRouters(void);
-
-    uint8_t AllocateRouterId(void);
-    uint8_t AllocateRouterId(uint8_t aRouterId);
-    bool    InRouterIdMask(uint8_t aRouterId);
+    void SetChildStateToValid(Child &aChild);
+    bool HasChildren(void);
+    void RemoveChildren(void);
+    bool HasMinDowngradeNeighborRouters(void);
+    bool HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
+    bool HasSmallNumberOfChildren(void);
 
     static bool HandleAdvertiseTimer(TrickleTimer &aTimer);
     bool        HandleAdvertiseTimer(void);
@@ -854,11 +785,8 @@ private:
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;
 
-    uint8_t  mRouterIdSequence;
-    uint32_t mRouterIdSequenceLastUpdated;
-    Router   mRouters[kMaxRouterId + 1];
-
-    ChildTable mChildTable;
+    ChildTable  mChildTable;
+    RouterTable mRouterTable;
 
     otThreadChildTableCallback mChildTableChangedCallback;
 
@@ -873,9 +801,13 @@ private:
     bool     mRouterRoleEnabled : 1;
     bool     mAddressSolicitPending : 1;
 
-    uint8_t  mRouterId;
-    uint8_t  mPreviousRouterId;
-    uint32_t mPreviousPartitionId;
+    uint8_t mRouterId;
+    uint8_t mPreviousRouterId;
+
+    uint32_t mPreviousPartitionIdRouter;         ///< The partition ID when last operating as a router
+    uint32_t mPreviousPartitionId;               ///< The partition ID when last attached
+    uint8_t  mPreviousPartitionRouterIdSequence; ///< The router ID sequence when last attached
+    uint8_t  mPreviousPartitionIdTimeout;        ///< The partition ID timeout when last attached
 
     uint8_t mRouterSelectionJitter;        ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.

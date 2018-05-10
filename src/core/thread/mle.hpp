@@ -1433,12 +1433,9 @@ protected:
     };
     ReattachState mReattachState;
 
-    TimerMilli mAttachTimer;                   ///< The timer for driving the attach process.
-    TimerMilli mDelayedResponseTimer;          ///< The timer to delay MLE responses.
-    TimerMilli mChildUpdateRequestTimer;       ///< The timer for sending MLE Child Update Request messages.
-    uint32_t   mLastPartitionId;               ///< The partition ID of the previous Thread partition
-    uint8_t    mLastPartitionRouterIdSequence; ///< The router ID sequence from the previous Thread partition
-    uint8_t    mLastPartitionIdTimeout;        ///< The time remaining to avoid the previous Thread partition
+    TimerMilli mAttachTimer;             ///< The timer for driving the attach process.
+    TimerMilli mDelayedResponseTimer;    ///< The timer to delay MLE responses.
+    TimerMilli mChildUpdateRequestTimer; ///< The timer for sending MLE Child Update Request messages.
 
     uint8_t mParentLeaderCost;
 

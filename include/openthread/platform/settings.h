@@ -32,8 +32,8 @@
  *   This file includes platform abstraction for non-volatile storage of settings.
  */
 
-#ifndef OT_PLATFORM_SETTINGS_H
-#define OT_PLATFORM_SETTINGS_H 1
+#ifndef OPENTHREAD_PLATFORM_SETTINGS_H_
+#define OPENTHREAD_PLATFORM_SETTINGS_H_
 
 #include <openthread/types.h>
 
@@ -278,4 +278,4 @@ void otPlatSettingsWipe(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // OT_PLATFORM_SETTINGS_H
+#endif // OPENTHREAD_PLATFORM_SETTINGS_H_

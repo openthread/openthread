@@ -146,8 +146,9 @@ void DatasetManager::HandleDetach(void)
     Restore();
 }
 
-void DatasetManager::Set(const Dataset &aDataset)
+otError DatasetManager::Set(const Dataset &aDataset)
 {
+    otError          error = OT_ERROR_NONE;
     const Timestamp *timestamp;
     int              compare;
 
@@ -160,7 +161,7 @@ void DatasetManager::Set(const Dataset &aDataset)
 
         if (mLocal.GetType() == Tlv::kActiveTimestamp)
         {
-            aDataset.ApplyConfiguration(GetInstance());
+            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance()));
         }
     }
 
@@ -182,6 +183,9 @@ void DatasetManager::Set(const Dataset &aDataset)
     {
         mTimer.Start(1000);
     }
+
+exit:
+    return error;
 }
 
 void DatasetManager::HandleTimer(void)

@@ -188,6 +188,7 @@ SOURCES_COMMON                      = \
     thread/network_data_local.cpp     \
     thread/network_diagnostic.cpp     \
     thread/panid_query_server.cpp     \
+    thread/router_table.cpp           \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
     thread/tmf_proxy.cpp              \
@@ -313,6 +314,7 @@ HEADERS_COMMON                      = \
     thread/panid_query_server.hpp     \
     thread/network_diagnostic.hpp     \
     thread/network_diagnostic_tlvs.hpp \
+    thread/router_table.hpp           \
     thread/src_match_controller.hpp   \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \

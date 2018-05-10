@@ -60,6 +60,21 @@ void Dataset::Clear(void)
     mLength = 0;
 }
 
+bool Dataset::IsValid(void) const
+{
+    bool       rval = true;
+    const Tlv *cur  = reinterpret_cast<const Tlv *>(mTlvs);
+    const Tlv *end  = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext())
+    {
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end && Tlv::IsValid(*cur), rval = false);
+    }
+
+exit:
+    return rval;
+}
+
 Tlv *Dataset::Get(Tlv::Type aType)
 {
     Tlv *cur  = reinterpret_cast<Tlv *>(mTlvs);
@@ -523,6 +538,8 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
     const Tlv *  cur      = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *  end      = reinterpret_cast<const Tlv *>(mTlvs + mLength);
 
+    VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
+
     while (cur < end)
     {
         switch (cur->GetType())
@@ -578,6 +595,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
         {
             const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
             otNetworkName         networkName;
+
             memcpy(networkName.m8, name->GetNetworkName(), name->GetLength());
             networkName.m8[name->GetLength()] = '\0';
 

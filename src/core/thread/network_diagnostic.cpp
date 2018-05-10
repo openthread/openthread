@@ -338,6 +338,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
+#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kRoute:
         {
             RouteTlv tlv;
@@ -346,6 +347,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }
+#endif
 
         case NetworkDiagnosticTlv::kLeaderData:
         {
