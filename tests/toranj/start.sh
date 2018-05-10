@@ -115,6 +115,7 @@ run test-005-discover-scan.py
 run test-006-traffic-router-end-device.py
 run test-007-traffic-router-sleepy.py
 run test-008-permit-join.py
+run test-009-insecure-traffic-join.py
 run test-100-mcu-power-state.py
 
 run test-600-channel-manager-properties.py
