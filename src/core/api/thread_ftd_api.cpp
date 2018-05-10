@@ -168,7 +168,7 @@ otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().ReleaseRouterId(aRouterId);
+    return instance.GetThreadNetif().GetMle().GetRouterTable().Release(aRouterId);
 }
 
 otError otThreadBecomeRouter(otInstance *aInstance)
@@ -283,7 +283,7 @@ uint8_t otThreadGetRouterIdSequence(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().GetRouterIdSequence();
+    return instance.GetThreadNetif().GetMle().GetRouterTable().GetRouterIdSequence();
 }
 
 uint8_t otThreadGetMaxRouterId(otInstance *aInstance)
@@ -299,7 +299,7 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
 
     VerifyOrExit(aRouterInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetMle().GetRouterInfo(aRouterId, *aRouterInfo);
+    error = instance.GetThreadNetif().GetMle().GetRouterTable().GetRouterInfo(aRouterId, *aRouterInfo);
 
 exit:
     return error;

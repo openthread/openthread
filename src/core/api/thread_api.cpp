@@ -364,7 +364,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();
     aParentInfo->mLinkQualityOut = parent->GetLinkQualityOut();
     aParentInfo->mAge = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
-    aParentInfo->mAllocated       = parent->IsAllocated();
+    aParentInfo->mAllocated       = true;
     aParentInfo->mLinkEstablished = parent->GetState() == Neighbor::kStateValid;
 
 exit:

@@ -119,9 +119,9 @@ const otMasterKey &KeyManager::GetMasterKey(void) const
 
 otError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
-    otError error = OT_ERROR_NONE;
-    Router *routers;
-    uint8_t num;
+    Mle::MleRouter &mle   = GetNetif().GetMle();
+    otError         error = OT_ERROR_NONE;
+    Router *        routers;
 
     VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0);
 
@@ -130,19 +130,17 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    routers = GetNetif().GetMle().GetParent();
+    routers = mle.GetParent();
     routers->SetKeySequence(0);
     routers->SetLinkFrameCounter(0);
     routers->SetMleFrameCounter(0);
 
     // reset router frame counters
-    routers = GetNetif().GetMle().GetRouters(&num);
-
-    for (uint8_t i = 0; i < num; i++)
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
     {
-        routers[i].SetKeySequence(0);
-        routers[i].SetLinkFrameCounter(0);
-        routers[i].SetMleFrameCounter(0);
+        iter.GetRouter()->SetKeySequence(0);
+        iter.GetRouter()->SetLinkFrameCounter(0);
+        iter.GetRouter()->SetMleFrameCounter(0);
     }
 
     // reset child frame counters

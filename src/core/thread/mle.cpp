@@ -2764,7 +2764,6 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     MleFrameCounterTlv      mleFrameCounter;
     ChallengeTlv            challenge;
     Mac::ExtAddress         extAddress;
-    int8_t                  diff;
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
@@ -2808,9 +2807,11 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
     VerifyOrExit(connectivity.IsValid(), error = OT_ERROR_PARSE);
 
+#if OPENTHREAD_FTD
     if ((mDeviceMode & ModeTlv::kModeFFD) && (mRole != OT_DEVICE_ROLE_DETACHED))
     {
-        diff = static_cast<int8_t>(connectivity.GetIdSequence() - netif.GetMle().GetRouterIdSequence());
+        int8_t diff =
+            static_cast<int8_t>(connectivity.GetIdSequence() - netif.GetMle().GetRouterTable().GetRouterIdSequence());
 
         switch (mParentRequestMode)
         {
@@ -2821,8 +2822,8 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
         case kAttachSame1:
         case kAttachSame2:
             VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
-            VerifyOrExit(diff > 0 ||
-                         (diff == 0 && netif.GetMle().GetLeaderAge() < netif.GetMle().GetNetworkIdTimeout()));
+            VerifyOrExit(diff > 0 || (diff == 0 && netif.GetMle().GetRouterTable().GetLeaderAge() <
+                                                       netif.GetMle().GetNetworkIdTimeout()));
             break;
 
         case kAttachBetter:
@@ -2832,6 +2833,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
             break;
         }
     }
+#endif
 
     // if already have a candidate parent, only seek a better parent
     if (mParentCandidate.GetState() == Neighbor::kStateParentResponse)

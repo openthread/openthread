@@ -119,7 +119,7 @@ public:
          *
          * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
          * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
-         * `GetChild()` returns `NULL` and `IsDone()` returns `true`.
+         * `GetChild()` returns `NULL` and `IsDone()` returns `true`).
          *
          */
         void Advance(void);

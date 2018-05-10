@@ -39,6 +39,7 @@
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "thread/router_table.hpp"
 
 namespace ot {
 
@@ -249,6 +250,11 @@ template <> Mle::MleRouter &Instance::Get(void)
 template <> ChildTable &Instance::Get(void)
 {
     return GetThreadNetif().GetMle().GetChildTable();
+}
+
+template <> RouterTable &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle().GetRouterTable();
 }
 
 template <> Ip6::Netif &Instance::Get(void)
