@@ -80,10 +80,16 @@ cd ../..
 
 # Build OpenThread posix mode with required configuration
 
+if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
+    coverage=yes
+else
+    coverage=no
+fi
+
 ./bootstrap || die
 ./configure                             \
     CPPFLAGS='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"' \
-    --enable-coverage                   \
+    --enable-coverage=${coverage}       \
     --enable-ncp-app=all                \
     --with-ncp-bus=uart                 \
     --with-examples=posix               \
