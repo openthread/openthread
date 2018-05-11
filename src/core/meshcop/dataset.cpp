@@ -548,9 +548,9 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
         {
             uint8_t channel = static_cast<uint8_t>(static_cast<const ChannelTlv *>(cur)->GetChannel());
 
-            if (mac.GetChannel() != channel)
+            if (mac.GetPanChannel() != channel)
             {
-                error = mac.SetChannel(channel);
+                error = mac.SetPanChannel(channel);
 
                 if (error != OT_ERROR_NONE)
                 {
