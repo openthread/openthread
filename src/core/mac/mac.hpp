@@ -554,22 +554,65 @@ public:
     otError SetShortAddress(ShortAddress aShortAddress);
 
     /**
-     * This method returns the IEEE 802.15.4 Channel.
+     * This method returns the IEEE 802.15.4 PAN Channel.
      *
-     * @returns The IEEE 802.15.4 Channel.
+     * @returns The IEEE 802.15.4 PAN Channel.
      *
      */
-    uint8_t GetChannel(void) const { return mChannel; }
+    uint8_t GetPanChannel(void) const { return mPanChannel; }
 
     /**
-     * This method sets the IEEE 802.15.4 Channel.
+     * This method sets the IEEE 802.15.4 PAN Channel.
      *
-     * @param[in]  aChannel  The IEEE 802.15.4 Channel.
+     * @param[in]  aChannel  The IEEE 802.15.4 PAN Channel.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Channel.
+     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 PAN Channel.
      *
      */
-    otError SetChannel(uint8_t aChannel);
+    otError SetPanChannel(uint8_t aChannel);
+
+    /**
+     * This method returns the IEEE 802.15.4 Radio Channel.
+     *
+     * @returns The IEEE 802.15.4 Radio Channel.
+     *
+     */
+    uint8_t GetRadioChannel(void) const { return mRadioChannel; }
+
+    /**
+     * This method sets the IEEE 802.15.4 Radio Channel. It can only be called
+     * after successfully calling AcquireRadioChannel().
+     *
+     * @param[in]  aChannel  The IEEE 802.15.4 Radio Channel.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Radio Channel.
+     *
+     */
+    otError SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel);
+
+    /**
+     * This method acquires external ownership of the Radio channel so that future calls to
+     * SetRadioChannel will succeed.
+     *
+     * @param[out]  aAcquisitionId  The AcquisitionId that the caller should use when
+     *                              calling SetRadioChannel().
+     *
+     * @retval OT_ERROR_NONE  Successfully acquired permission to Set the Radio Channel.
+     * @retval OT_ERROR_INVALID_STATE  Failed to acquire permission as the radio Channel
+     *                                 has already been acquired.
+     *
+     */
+    otError AcquireRadioChannel(uint16_t *aAcquisitionId);
+
+    /**
+     * This method releases external ownership of the radio Channel
+     * that was acquired with AcquireRadioChannel().  The channel
+     * will re-adopt the PAN Channel when this API is called.
+     *
+     * @retval OT_ERROR_NONE  Successfully released the IEEE 802.15.4 Radio Channel.
+     *
+     */
+    otError ReleaseRadioChannel(void);
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -810,6 +853,7 @@ private:
     {
         kInvalidRssiValue  = 127,
         kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
+        kMaxAcquisitionId  = 0xffff,
 
     /**
      * Interval between RSSI samples when performing Energy Scan.
@@ -904,7 +948,9 @@ private:
     ExtAddress   mExtAddress;
     ShortAddress mShortAddress;
     PanId        mPanId;
-    uint8_t      mChannel;
+    uint8_t      mPanChannel;
+    uint8_t      mRadioChannel;
+    uint16_t     mRadioChannelAcquisitionId;
 
     otNetworkName   mNetworkName;
     otExtendedPanId mExtendedPanId;

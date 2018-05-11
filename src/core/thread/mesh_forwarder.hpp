@@ -366,7 +366,7 @@ private:
 
     uint32_t mScanChannels;
     uint8_t  mScanChannel;
-    uint8_t  mRestoreChannel;
+    uint16_t mMacRadioAcquisitionId;
     uint16_t mRestorePanId;
     bool     mScanning;
 
