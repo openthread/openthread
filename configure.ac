@@ -672,7 +672,7 @@ AC_ARG_ENABLE(application_coap_secure,
             ;;
         esac
     ],
-    [enable_application_coap_secure=yes])
+    [enable_application_coap_secure=no])
 
 if test "$enable_application_coap_secure" = "yes"; then
     OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=1
@@ -738,7 +738,7 @@ AC_ARG_ENABLE(joiner,
             ;;
         esac
     ],
-    [enable_joiner=yes])
+    [enable_joiner=no])
 
 if test "$enable_joiner" = "yes"; then
     OPENTHREAD_ENABLE_JOINER=1

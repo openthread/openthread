@@ -47,7 +47,6 @@
 #include <mbedtls/ssl_cookie.h>
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-//#include <mbedtls/oid.h>
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_crl.h>

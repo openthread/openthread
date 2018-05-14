@@ -40,6 +40,8 @@
 extern "C" {
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 /**
  * place your X.509 certificate for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
@@ -57,6 +59,8 @@ extern "C" {
 "-----BEGIN PRIVATE KEY-----\r\n"                                       \
 "Our Private Key\r\n"                                                   \
 "-----END PRIVATE KEY-----\r\n"
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * @}

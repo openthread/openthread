@@ -2667,7 +2667,11 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
 
 /* SSL options */
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #define MBEDTLS_SSL_MAX_CONTENT_LEN             2*768 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
+#else
+#define MBEDTLS_SSL_MAX_CONTENT_LEN             768 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
+#endif
 //#define MBEDTLS_SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 //#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
 //#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */
