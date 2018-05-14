@@ -270,7 +270,7 @@ typedef struct otPlatBleDeviceAddr
 } otPlatBleDeviceAddr;
 
 /**
- * This structure represents flags for BLE advertisement mode.
+ * This enumeration defines flags for BLE advertisement mode.
  *
  */
 enum
@@ -319,7 +319,7 @@ typedef struct otPlatBleGapConnParams
 } otPlatBleGapConnParams;
 
 /**
- * This structure represents BLE UUID value.
+ * This enumeration represents BLE UUID value.
  *
  */
 typedef enum otPlatBleUuidType {
