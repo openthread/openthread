@@ -166,19 +166,18 @@ void RouterTable::UpdateAllocation(void)
     // fix replaced entries
     for (uint8_t i = 0; i <= Mle::kMaxRouterId; i++)
     {
-        uint8_t index  = indexMap[i];
-        Router &router = mRouters[index];
+        uint8_t index = indexMap[i];
 
-        if (index == Mle::kInvalidRouterId)
+        if (index != Mle::kInvalidRouterId)
         {
-            continue;
-        }
+            Router &router = mRouters[index];
 
-        if (router.GetRouterId() != i)
-        {
-            memset(&router, 0, sizeof(router));
-            router.SetRloc16(Mle::Mle::GetRloc16(i));
-            router.SetNextHop(Mle::kInvalidRouterId);
+            if (router.GetRouterId() != i)
+            {
+                memset(&router, 0, sizeof(router));
+                router.SetRloc16(Mle::Mle::GetRloc16(i));
+                router.SetNextHop(Mle::kInvalidRouterId);
+            }
         }
     }
 
