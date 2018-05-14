@@ -194,7 +194,6 @@ private:
         kMaxOccupancy      = 0xffff,
     };
 
-    void        RestartTimer(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
     static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
