@@ -144,22 +144,13 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kChannelMask:
         {
-            uint8_t        length   = cur->GetLength();
-            const uint8_t *entry    = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
-            const uint8_t *entryEnd = entry + length;
+            const ChannelMaskTlv *   tlv   = static_cast<const ChannelMaskTlv *>(cur);
+            const ChannelMask0Entry *entry = tlv->GetMask0Entry();
 
-            while (entry < entryEnd)
+            if (entry != NULL)
             {
-                if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
-                {
-                    const ChannelMask0Tlv *tlv      = static_cast<const ChannelMask0Tlv *>(cur);
-                    aDataset.mChannelMaskPage0      = tlv->GetMask();
-                    aDataset.mIsChannelMaskPage0Set = true;
-                    break;
-                }
-
-                entry +=
-                    (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry));
+                aDataset.mChannelMaskPage0      = entry->GetMask();
+                aDataset.mIsChannelMaskPage0Set = true;
             }
 
             break;
