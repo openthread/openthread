@@ -677,7 +677,7 @@ AC_ARG_ENABLE(application_coap_secure,
 if test "$enable_application_coap_secure" = "yes"; then
     OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=1
     enable_application_coap="yes"
-    
+
     enable_dtls="yes"
 #    enable_builtin_mbedtls="yes"
 else
