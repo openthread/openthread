@@ -958,6 +958,33 @@ public:
     static const char *RoleToString(otDeviceRole aRole);
 
 protected:
+    /**
+     * States during attach (when searching for a parent).
+     *
+     */
+    enum AttachState
+    {
+        kAttachStateIdle,                ///< Not currently searching for a parent.
+        kAttachStateSynchronize,         ///< Looking to synchronize with a parent (after reset).
+        kAttachStateStart,               ///< Starting to look for a parent.
+        kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
+        kAttachStateParentRequestReed,   ///< Searching for Routers or REEDs to attach to.
+        kAttachStateAnnounce,            ///< Send Announce messages
+        kAttachStateChildIdRequest,      ///< Sending a Child ID Request message.
+    };
+
+    /**
+     * States when reattaching network using stored dataset
+     *
+     */
+    enum ReattachState
+    {
+        kReattachStop    = 0, ///< Reattach process is disabled or finished
+        kReattachStart   = 1, ///< Start reattach process
+        kReattachActive  = 2, ///< Reattach using stored Active Dataset
+        kReattachPending = 3, ///< Reattach using stored Pending Dataset
+    };
+
     enum
     {
         kMleMaxResponseDelay = 1000u, ///< Maximum delay before responding to a multicast request.
@@ -978,6 +1005,14 @@ protected:
      *
      */
     void SetRole(otDeviceRole aRole);
+
+    /**
+     * This method sets the attach state
+     *
+     * @param[in] aState An attach state
+     *
+     */
+    void SetAttachState(AttachState aState);
 
     /**
      * This method appends an MLE header to a message.
@@ -1398,46 +1433,54 @@ protected:
      */
     void InformPreviousChannel(void);
 
-    LeaderDataTlv mLeaderData;             ///< Last received Leader Data TLV.
-    bool          mRetrieveNewNetworkData; ///< Indicating new Network Data is needed if set.
-
-    otDeviceRole mRole;       ///< Current Thread role.
-    Router       mParent;     ///< Parent information.
-    uint8_t      mDeviceMode; ///< Device mode setting.
-
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
     /**
-     * States during attach (when searching for a parent).
+     * This method converts an `AttachMode` enumeration value into a human-readable string.
+     *
+     * @param[in] aMode An attach mode
+     *
+     * @returns A human-readable string corresponding to the attach mode.
      *
      */
-    enum AttachState
-    {
-        kAttachStateIdle,                ///< Not currently searching for a parent.
-        kAttachStateSynchronize,         ///< Looking to synchronize with a parent (after reset).
-        kAttachStateStart,               ///< Starting to look for a parent.
-        kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
-        kAttachStateParentRequestReed,   ///< Searching for Routers or REEDs to attach to.
-        kAttachStateChildIdRequest,      ///< Sending a Child ID Request message.
-    };
-    AttachState mAttachState; ///< The parent request state.
+    static const char *AttachModeToString(AttachMode aMode);
 
     /**
-     * States when reattaching network using stored dataset
+     * This method converts an `AttachState` enumeration value into a human-readable string.
+     *
+     * @param[in] aState An attach state
+     *
+     * @returns A human-readable string corresponding to the attach state.
      *
      */
-    enum ReattachState
-    {
-        kReattachStop    = 0, ///< Reattach process is disabled or finished
-        kReattachStart   = 1, ///< Start reattach process
-        kReattachActive  = 2, ///< Reattach using stored Active Dataset
-        kReattachPending = 3, ///< Reattach using stored Pending Dataset
-    };
-    ReattachState mReattachState;
+    static const char *AttachStateToString(AttachState aState);
 
-    TimerMilli mAttachTimer;             ///< The timer for driving the attach process.
-    TimerMilli mDelayedResponseTimer;    ///< The timer to delay MLE responses.
-    TimerMilli mChildUpdateRequestTimer; ///< The timer for sending MLE Child Update Request messages.
+    /**
+     * This method converts a `ReattachState` enumeration value into a human-readable string.
+     *
+     * @param[in] aState A reattach state
+     *
+     * @returns A human-readable string corresponding to the reattach state.
+     *
+     */
+    static const char *ReattachStateToString(ReattachState aState);
+#endif
 
-    uint8_t mParentLeaderCost;
+    LeaderDataTlv mLeaderData;                    ///< Last received Leader Data TLV.
+    bool          mRetrieveNewNetworkData;        ///< Indicating new Network Data is needed if set.
+    otDeviceRole  mRole;                          ///< Current Thread role.
+    Router        mParent;                        ///< Parent information.
+    uint8_t       mDeviceMode;                    ///< Device mode setting.
+    AttachState   mAttachState;                   ///< The parent request state.
+    ReattachState mReattachState;                 ///< Reattach state
+    uint16_t      mAttachCounter;                 ///< Attach attempt counter.
+    uint16_t      mAnnounceDelay;                 ///< Delay in between sending Announce messages during attach.
+    TimerMilli    mAttachTimer;                   ///< The timer for driving the attach process.
+    TimerMilli    mDelayedResponseTimer;          ///< The timer to delay MLE responses.
+    TimerMilli    mChildUpdateRequestTimer;       ///< The timer for sending MLE Child Update Request messages.
+    uint32_t      mLastPartitionId;               ///< The partition ID of the previous Thread partition
+    uint8_t       mLastPartitionRouterIdSequence; ///< The router ID sequence from the previous Thread partition
+    uint8_t       mLastPartitionIdTimeout;        ///< The time remaining to avoid the previous Thread partition
+    uint8_t       mParentLeaderCost;
 
 private:
     enum
@@ -1493,7 +1536,8 @@ private:
 
     otError  SendParentRequest(ParentRequestType aType);
     otError  SendChildIdRequest(void);
-    void     SendOrphanAnnounce(void);
+    otError  SendOrphanAnnounce(void);
+    bool     PrepareAnnounceState(void);
     otError  SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
     uint32_t Reattach(void);
 
