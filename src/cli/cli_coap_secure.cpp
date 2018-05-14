@@ -152,7 +152,7 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
         mInterpreter.mServer->OutputFormat("    No payload.");
     }
 
-    mInterpreter.mServer->OutputFormat("\r\n");
+    mInterpreter.mServer->OutputFormat("\r\n> ");
 }
 
 otError CoapSecureCli::Process(int argc, char *argv[])
@@ -301,18 +301,25 @@ void CoapSecureCli::HandleClientConnect(const bool aConnected)
 
     if(aConnected)
     {
-        mInterpreter.mServer->OutputFormat("CoAP Secure connected!\r\n>");
+        mInterpreter.mServer->OutputFormat("CoAP Secure connected!\r\n> ");
     }
     else
     {
         if (!mShutdownFlag)
         {
-            mInterpreter.mServer->OutputFormat("CoAP Secure not connected or disconnected.\r\n>");
+            mInterpreter.mServer->OutputFormat("CoAP Secure not connected or disconnected.\r\n> ");
         }
         else
         {
-            mInterpreter.mServer->OutputFormat("CoAP Secure disconnected before stop.\r\n>");
-            Stop();
+            mInterpreter.mServer->OutputFormat("CoAP Secure disconnected before stop.\r\n> ");
+            if (Stop() == OT_ERROR_NONE)
+            {
+                mInterpreter.mServer->OutputFormat(" Done\r\n> ");
+            }
+            else
+            {
+                mInterpreter.mServer->OutputFormat(" With error\r\n> ");
+            }
             mShutdownFlag = false;
         }
     }
@@ -521,8 +528,6 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
     messageInfo.mPeerPort    = OT_DEFAULT_COAP_PORT;
     messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
-    mInterpreter.mServer->OutputFormat("Sending coaps payload:\r\n");
-    PrintPayload(message);
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
         error = otCoapSecureSendMessage(mInterpreter.mInstance, message,
