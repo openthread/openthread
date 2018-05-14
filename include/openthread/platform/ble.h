@@ -215,8 +215,7 @@ typedef enum otPlatBleAddressType {
  *
  * See v4.2 [Vol 3, Part G] 3.3.1.1 Characteristic Properties - Table 3.5
  */
-enum
-{
+typedef enum otPlatBleCccdFlags {
     /**
      * If set, permits broadcasts of the Characteristic Value using Characteristic Configuration Descriptor.
      */
@@ -257,7 +256,7 @@ enum
      */
     OT_BLE_CHAR_PROP_EXTENDED = (1 << 7),
 
-};
+} otPlatBleCccdFlags;
 
 /**
  * This structure represents BLE Device Address.
@@ -273,8 +272,7 @@ typedef struct otPlatBleDeviceAddr
  * This enumeration defines flags for BLE advertisement mode.
  *
  */
-enum
-{
+typedef enum otPlatBleAdvMode {
     /**
      * If set, advertising device will allow connections to be initiated.
      */
@@ -284,7 +282,7 @@ enum
      * If set, advertising device will respond to scan requests.
      */
     OT_BLE_ADV_MODE_SCANNABLE = (1 << 1),
-};
+} otPlatBleAdvMode;
 
 /**
  * This structure represents BLE connection parameters.
