@@ -87,6 +87,8 @@ private:
 
     otError ProcessRequest(int argc, char *argv[]);
 
+    otError Stop(void);
+
 
     static void OTCALL HandleServerResponse(void *               aContext,
                                             otCoapHeader *       aHeader,
@@ -113,6 +115,7 @@ private:
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
+    bool           mShutdownFlag;
 
     Interpreter &mInterpreter;
 };
