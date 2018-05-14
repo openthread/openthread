@@ -57,15 +57,15 @@ CoapSecure::CoapSecure(Instance &aInstance)
     , mTransmitMessage(NULL)
     , mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
 {
-	mLayerTwoSecurity = false;
-	mApplicationCoapSecure = false;
+    mLayerTwoSecurity = false;
+    mApplicationCoapSecure = false;
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 CoapSecure::CoapSecure(Instance &aInstance,
-		               Tasklet::Handler aUdpTransmitHandle,
-					   Timer::Handler aRetransmissionTimer,
-					   Timer::Handler aResponsesQueueTimer)
+                       Tasklet::Handler aUdpTransmitHandle,
+                       Timer::Handler aRetransmissionTimer,
+                       Timer::Handler aResponsesQueueTimer)
     : CoapBase(aInstance, aRetransmissionTimer, aResponsesQueueTimer)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
@@ -74,8 +74,8 @@ CoapSecure::CoapSecure(Instance &aInstance,
     , mTransmitMessage(NULL)
     , mTransmitTask(aInstance, aUdpTransmitHandle, this)
 {
-	mLayerTwoSecurity = true;
-	mApplicationCoapSecure = true;
+    mLayerTwoSecurity = true;
+    mApplicationCoapSecure = true;
 }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -115,7 +115,8 @@ otError CoapSecure::Stop(void)
 }
 
 otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
-                            ConnectedCallback aCallback, void *aContext)
+                            ConnectedCallback aCallback, void *aContext,
+                            bool aVerifyPeerCertificate)
 {
     mPeerAddress       = aMessageInfo;
     mConnectedCallback = aCallback;
@@ -134,6 +135,7 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
         return GetNetif().GetDtls().StartApplicationCoapSecure(true, &CoapSecure::HandleDtlsConnected,
                                                                &CoapSecure::HandleDtlsReceive,
                                                                &CoapSecure::HandleDtlsSend,
+                                                               aVerifyPeerCertificate,
                                                                this);
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
@@ -183,6 +185,13 @@ otError CoapSecure::SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
                                     uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
     return GetNetif().GetDtls().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
+}
+
+otError CoapSecure::GetPeerCertificateBase64(unsigned char *aPeerCert,
+                                             size_t        *aCertLength,
+                                             size_t         aCertBufferSize)
+{
+    return GetNetif().GetDtls().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
@@ -369,9 +378,9 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
 
 ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
 : CoapSecure(aInstance,
-		     &ApplicationCoapSecure::HandleUdpTransmit,
-			 &ApplicationCoapSecure::HandleRetransmissionTimer,
-			 &ApplicationCoapSecure::HandleResponsesQueueTimer)
+             &ApplicationCoapSecure::HandleUdpTransmit,
+             &ApplicationCoapSecure::HandleRetransmissionTimer,
+             &ApplicationCoapSecure::HandleResponsesQueueTimer)
 {
 }
 

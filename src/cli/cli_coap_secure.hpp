@@ -28,7 +28,8 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI CoAP Secure server and client.
+ *   This file contains definitions for a simple CLI CoAP Secure (server and) client.
+ *   Note: Server functionality now not implemented.
  */
 
 #ifndef CLI_COAP_SECURE_HPP_
@@ -80,6 +81,8 @@ private:
         kMaxBufferSize = 16
     };
 
+    void PrintHeaderInfos(otCoapHeader *aHeader) const;
+
     void PrintPayload(otMessage *aMessage) const;
 
     otError ProcessRequest(int argc, char *argv[]);
@@ -103,9 +106,10 @@ private:
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
 
-    static void OTCALL HandleSecureCoapClientConnect(const bool  aConnected,
-                                                     void       *aContext);
-    void               HandleSecureCoapClientConnect(const bool aConnected);
+    static void OTCALL HandleClientConnect(const bool  aConnected,
+                                           void       *aContext);
+    void               HandleClientConnect(const bool  aConnected);
+
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];

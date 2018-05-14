@@ -68,6 +68,7 @@ Dtls::Dtls(Instance &aInstance)
     , mSendHandler(NULL)
     , mContext(NULL)
     , mClient(false)
+    , mApplicationCoapSecure(false)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
@@ -198,22 +199,24 @@ exit:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-otError Dtls::StartApplicationCoapSecure(bool                   aClient,
-                                         ConnectedHandler       aConnectedHandler,
-                                         ReceiveHandler         aReceiveHandler,
-                                         SendHandler            aSendHandler,
-                                         void *                 aContext)
+otError Dtls::StartApplicationCoapSecure(bool             aClient,
+                                         ConnectedHandler aConnectedHandler,
+                                         ReceiveHandler   aReceiveHandler,
+                                         SendHandler      aSendHandler,
+                                         bool             aVerifyPeerCertificate,
+                                         void *           aContext)
 {
-    otExtAddress     eui64;
-    int              rval;
+    otExtAddress eui64;
+    int          rval;
 
-    mConnectedHandler = aConnectedHandler;
-    mReceiveHandler   = aReceiveHandler;
-    mSendHandler      = aSendHandler;
-    mContext          = aContext;
-    mClient           = aClient;
-    mReceiveMessage   = NULL;
-    mMessageSubType   = Message::kSubTypeNone;
+    mConnectedHandler      = aConnectedHandler;
+    mReceiveHandler        = aReceiveHandler;
+    mSendHandler           = aSendHandler;
+    mContext               = aContext;
+    mClient                = aClient;
+    mReceiveMessage        = NULL;
+    mMessageSubType        = Message::kSubTypeNone;
+    mApplicationCoapSecure = true;
 
     if (!mClient)
     {
@@ -225,29 +228,42 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
-
     mbedtls_ctr_drbg_init(&mCtrDrbg);
     mbedtls_entropy_init(&mEntropy);
 
-    rval = mbedtls_entropy_add_source(&mEntropy, &Dtls::HandleMbedtlsEntropyPoll, NULL, MBEDTLS_ENTROPY_MIN_PLATFORM,
+    rval = mbedtls_entropy_add_source(&mEntropy,
+                                      &Dtls::HandleMbedtlsEntropyPoll,
+                                      NULL,
+                                      MBEDTLS_ENTROPY_MIN_PLATFORM,
                                       MBEDTLS_ENTROPY_SOURCE_STRONG);
     VerifyOrExit(rval == 0);
 
     // mbedTLS's debug level is almost the same as OpenThread's
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
     otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
-    rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
+    rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func,
+                                 &mEntropy, eui64.m8, sizeof(eui64));
     VerifyOrExit(rval == 0);
 
     rval = mbedtls_ssl_config_defaults(&mConf, MBEDTLS_SSL_IS_CLIENT,
-                                       MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
+                                       MBEDTLS_SSL_TRANSPORT_DATAGRAM,
+                                       MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
-    mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);     // Bad but easy, change later
+    if(aVerifyPeerCertificate)
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    }
+    else
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
+    }
 
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
-    mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
-    mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3,
+                                 MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3,
+                                 MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_ciphersuites(&mConf, mApplicationCoapCiphreSuite);
 
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
@@ -257,14 +273,14 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
 
     switch(mApplicationCoapCiphreSuite[0])
     {
-    case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:    // with x509 cert
+    case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
 
         rval =  mbedtls_pk_parse_key(&mPrivateKey, mPk,
-                                      mPkLength, NULL, 0);
+                                     mPkLength, NULL, 0);
         VerifyOrExit(rval == 0);
 
-        rval = mbedtls_x509_crt_parse(&mCaCert, (const unsigned char *)mX509Cert,
-                                       mX509CertLength);
+        rval = mbedtls_x509_crt_parse(&mCaCert, (const unsigned char*)mX509Cert,
+                                      mX509CertLength);
         VerifyOrExit(rval == 0);
 
         mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
@@ -274,13 +290,13 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
 
         break;
 
-    case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:            // with preshared key
+    case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
 
         rval = mbedtls_ssl_conf_psk(&mConf,
                                     (const unsigned char*)mPreSharedKey,
-                                     mPreSharedKeyLength,
+                                    mPreSharedKeyLength,
                                     (const unsigned char*)mPreSharedKeyIdentity,
-                                     mPreSharedKeyIdLength);
+                                    mPreSharedKeyIdLength);
         VerifyOrExit(rval == 0);
 
         break;
@@ -292,15 +308,13 @@ otError Dtls::StartApplicationCoapSecure(bool                   aClient,
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
     VerifyOrExit(rval == 0);
 
-    mbedtls_ssl_set_hostname(&mSsl, "server");
-
     mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
 
     mStarted = true;
     Process();
 
-    otLogInfoApi(this,"Coap Secure DTLS started");
+    otLogInfoCoap(this,"Application Coap Secure DTLS started");
 
 exit:
     return MapError(rval);
@@ -359,14 +373,14 @@ exit:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-otError Dtls::SetX509Certificate(const uint8_t * aX509Certificate, uint32_t aX509CertLenth)
+otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aX509CertLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aX509Certificate != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    mX509Cert= aX509Certificate;
+    mX509Cert = aX509Certificate;
     mX509CertLength = aX509CertLenth;
 
     mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
@@ -375,7 +389,7 @@ exit:
     return error;
 }
 
-otError Dtls::SetX509PrivateKey(const uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth)
+otError Dtls::SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth)
 {
     otError error = OT_ERROR_NONE;
 
@@ -389,8 +403,8 @@ exit:
     return error;
 }
 
-otError Dtls::SetPreSharedKey(uint8_t * aPsk, uint16_t aPskLength,
-                              uint8_t * aPskIdentity, uint16_t aPskIdLength)
+otError Dtls::SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
+                              uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -403,6 +417,24 @@ otError Dtls::SetPreSharedKey(uint8_t * aPsk, uint16_t aPskLength,
     mPreSharedKeyIdLength = aPskIdLength;
 
     mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
+
+exit:
+    return error;
+}
+
+otError Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength,
+                                       size_t aCertBufferSize)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsConnected() == true, error = OT_ERROR_INVALID_STATE);
+
+    VerifyOrExit(
+            mbedtls_base64_encode(aPeerCert, aCertBufferSize,
+                                  aCertLength, mSsl.session->peer_cert->raw.p,
+                                  mSsl.session->peer_cert->raw.len) == 0,
+            error = OT_ERROR_NO_BUFS
+            );
 
 exit:
     return error;
@@ -465,7 +497,10 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
     otError error;
     int     rval = 0;
 
-    otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
+    if(!mApplicationCoapSecure)
+        otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
+    else
+        otLogInfoCoap(GetInstance(), "Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
 
     error = mSendHandler(mContext, aBuf, static_cast<uint16_t>(aLength), mMessageSubType);
 
@@ -499,7 +534,10 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 {
     int rval;
 
-    otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsReceive");
+    if(!mApplicationCoapSecure)
+        otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsReceive");
+    else
+        otLogInfoCoap(GetInstance(), "Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
 
     VerifyOrExit(mReceiveMessage != NULL && mReceiveLength != 0, rval = MBEDTLS_ERR_SSL_WANT_READ);
 
@@ -525,7 +563,10 @@ int Dtls::HandleMbedtlsGetTimer(void)
 {
     int rval;
 
-    otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsGetTimer");
+    if(!mApplicationCoapSecure)
+        otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsGetTimer");
+    else
+        otLogInfoCoap(GetInstance(), "Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
 
     if (!mTimerSet)
     {
@@ -554,7 +595,10 @@ void Dtls::HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_
 
 void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
-    otLogInfoMeshCoP(GetInstance(), "Dtls::SetTimer");
+    if(!mApplicationCoapSecure)
+        otLogInfoMeshCoP(GetInstance(), "Dtls::SetTimer");
+    else
+        otLogInfoCoap(GetInstance(), "Dtls::ApplicationCoapSecure SetTimer");
 
     if (aFinish == 0)
     {
@@ -595,7 +639,10 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
 
     GetNetif().GetKeyManager().SetKek(kek);
 
-    otLogInfoMeshCoP(GetInstance(), "Generated KEK");
+    if(!mApplicationCoapSecure)
+        otLogInfoMeshCoP(GetInstance(), "Generated KEK");
+    else
+        otLogInfoCoap(GetInstance(), "ApplicationCoapSecure Generated KEK");
 
     OT_UNUSED_VARIABLE(aMasterSecret);
     return 0;
@@ -727,6 +774,7 @@ otError Dtls::MapError(int rval)
     case MBEDTLS_ERR_X509_INVALID_EXTENSIONS:
     case MBEDTLS_ERR_X509_UNKNOWN_VERSION:
     case -9186:
+    case -4396:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     case MBEDTLS_ERR_SSL_BAD_INPUT_DATA:
         error = OT_ERROR_INVALID_ARGS;
@@ -746,6 +794,7 @@ otError Dtls::MapError(int rval)
     case MBEDTLS_ERR_PK_SIG_LEN_MISMATCH:
     case MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE:
     case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
+    case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
         error = OT_ERROR_SECURITY;
         break;
 
@@ -768,25 +817,49 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
     OT_UNUSED_VARIABLE(pThis);
     OT_UNUSED_VARIABLE(str);
 
-    switch (level)
+    if(!pThis->mApplicationCoapSecure)
     {
-    case 1:
-        otLogCritMbedTls(pThis->GetInstance(), "%s", str);
-        break;
+        switch (level)
+        {
+        case 1:
+            otLogCritMbedTls(pThis->GetInstance(), "%s", str);
+            break;
 
-    case 2:
-        otLogWarnMbedTls(pThis->GetInstance(), "%s", str);
-        break;
+        case 2:
+            otLogWarnMbedTls(pThis->GetInstance(), "%s", str);
+            break;
 
-    case 3:
-        otLogInfoMbedTls(pThis->GetInstance(), "%s", str);
-        break;
+        case 3:
+            otLogInfoMbedTls(pThis->GetInstance(), "%s", str);
+            break;
 
-    case 4:
-    default:
-        otLogDebgMbedTls(pThis->GetInstance(), "%s", str);
-        break;
+        case 4:
+        default:
+            otLogDebgMbedTls(pThis->GetInstance(), "%s", str);
+            break;
+        }
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    else
+    {
+        switch (level)
+        {
+        case 1:
+            otLogCritCoap(pThis->GetInstance(), "ApplicationCoapSecure Mbedtls: %s", str);
+            break;
+        case 2:
+            otLogWarnCoap(pThis->GetInstance(), "ApplicationCoapSecure Mbedtls: %s", str);
+            break;
+        case 3:
+            otLogInfoCoap(pThis->GetInstance(), "ApplicationCoapSecure Mbedtls: %s", str);
+            break;
+        case 4:
+        default:
+            otLogDebgCoap(pThis->GetInstance(), "ApplicationCoapSecure Mbedtls: %s", str);
+            break;
+        }
+    }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 }
 
 } // namespace MeshCoP

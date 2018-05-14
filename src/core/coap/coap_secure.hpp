@@ -74,10 +74,11 @@ public:
      *
      */
     explicit CoapSecure(Instance &aInstance);
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
      * This constructor initializes the object.
-     * (For Application CoAPS)
+     * (Used for Application CoAPS)
      *
      * @param[in]  aInstance             A reference to the OpenThread instance.
      * @param[in]  aUdpTransmitHandle    Handler for udp transmit.
@@ -86,9 +87,9 @@ public:
      *
      */
     explicit CoapSecure(Instance &aInstance,
-    		            Tasklet::Handler aUdpTransmitHandle,
-						Timer::Handler aRetransmissionTimer,
-						Timer::Handler aResponsesQueueTimer);
+                        Tasklet::Handler aUdpTransmitHandle,
+                        Timer::Handler aRetransmissionTimer,
+                        Timer::Handler aResponsesQueueTimer);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -115,13 +116,15 @@ public:
     /**
      * This method initializes DTLS session with a peer.
      *
-     * @param[in]  aMessageInfo  A reference to an address of the peer.
-     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
+     * @param[in]  aMessageInfo            A reference to an address of the peer.
+     * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is established.
+     * @param[in]  aVerifyPeerCertificate  true if the peer cert verified, else false.
      *
      * @retval OT_ERROR_NONE  Successfully started DTLS connection.
      *
      */
-    otError Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext);
+    otError Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback,
+                    void *aContext, bool aVerifyPeerCertificate = true);
 
     /**
      * This method indicates whether or not the DTLS session is active.
@@ -211,6 +214,21 @@ public:
      */
     otError SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
 
+    /**
+     * This method returns the peer x509 certificate base64 encoded.
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
+     * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
+     * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+     *
+     * @retval OT_ERROR_NONE  Successfully get the peer certificate.
+     *
+     */
+    otError GetPeerCertificateBase64(unsigned char *aPeerCert,
+                                     size_t        *aCertLength,
+                                     size_t         aCertBufferSize);
+
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -291,8 +309,8 @@ private:
     Message *         mTransmitMessage;
     Tasklet           mTransmitTask;
 
-    bool			  mLayerTwoSecurity;
-    bool              mApplicationCoapSecure;
+    bool mLayerTwoSecurity;
+    bool  mApplicationCoapSecure;
 };
 
 

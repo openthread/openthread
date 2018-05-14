@@ -157,6 +157,7 @@ typedef enum otCoapOptionContentFormat {
     OT_COAP_OPTION_CONTENT_FORMAT_OCTET_STREAM = 42, ///< application/octet-stream
     OT_COAP_OPTION_CONTENT_FORMAT_EXI          = 47, ///< application/exi
     OT_COAP_OPTION_CONTENT_FORMAT_JSON         = 50, ///< application/json
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS10       = 70, ///< application/pkcs10
 } otCoapOptionContentFormat;
 
 #define OT_COAP_HEADER_MAX_LENGTH 128 ///< Max CoAP header length (bytes)

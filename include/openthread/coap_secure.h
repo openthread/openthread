@@ -40,7 +40,7 @@
 #include <openthread/message.h>
 #include <openthread/types.h>
 
-#include <openthread/coap.h>		// include for coap & coap header typdefs
+#include <openthread/coap.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,8 +52,8 @@ extern "C" {
  * @brief
  *   This module includes functions that control CoAP Secure (CoAP over TLS) communication.
  *
- *   The functions in this module are available when application-coap-secure feature (`OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE`) is
- *   enabled.
+ *   The functions in this module are available when application-coap-secure feature
+ *   (`OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE`) is enabled.
  *
  * @{
  *
@@ -65,7 +65,7 @@ extern "C" {
 /**
  * This function pointer is called once DTLS connection is established.
  *
- * @param[in]  aConnected TRUE if a connection was established, FALSE otherwise.
+ * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
@@ -94,11 +94,12 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
 otError otCoapSecureStop(otInstance *aInstance);
 
 /**
- * This method sets the PSK.
+ * This method sets the Pre-Shared Key (PSK) and set cipher suit
+ * DTLS_PSK_WITH_AES_128_CCM_8.
  *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aPSK        A pointer to the PSK.
- * @param[in]  aPskLength  The PSK length.
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aPSK          A pointer to the PSK.
+ * @param[in]  aPskLength    The PSK length.
  * @param[in]  aPskIdentity  The Identity Name for the PSK.
  * @param[in]  aPskIdLength  The PSK Identity Length.
  *
@@ -110,10 +111,24 @@ otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint16_t aPskLe
                            uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
 /**
- * This method sets a X509 certificate with his private key for
- * DTLS session.
+ * This method returns the peer x509 certificate base64 encoded.
  *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]   aInstance        A pointer to an OpenThread instance.
+ * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
+ * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
+ * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+ *
+ * @retval OT_ERROR_NONE  Successfully get the peer certificate.
+ *
+ */
+otError otCoapSecureGetPeerCertificateBase64(otInstance *aInstance, unsigned char * aPeerCert,
+                                             uint64_t * aCertLength, uint64_t aCertBufferSize);
+
+/**
+ * This method sets the own X509 certificate with his private key for
+ * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
  * @param[in]  aX509CertLenth    The length of certificate.
  *
@@ -122,9 +137,10 @@ otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint16_t aPskLe
  */
 otError otCoapSecureSetX509Certificate(otInstance *aInstance, const uint8_t *aX509Cert, uint32_t aX509Length);
 /**
- * This method sets a X509 private key for DTLS session.
+ * This method sets the own X509 private key for DTLS session with
+ * DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPrivateKey       A pointer to the private key.
  * @param[in]  aPrivateKeyLenth  The length of the private key.
  *
@@ -136,15 +152,20 @@ otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPri
 /**
  * This method initializes DTLS session with a peer.
  *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aMessageInfo  A reference to an address of the peer.
- * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
- * @param[in]  aContext      A pointer to arbitrary context information.
+ * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[in]  aMessageInfo            A reference to an address of the peer.
+ * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is established.
+ * @param[in]  aVerifyPeerCertificate  true if the peer cert should be verify, else false.
+ * @param[in]  aContext                A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE  Successfully started DTLS connection.
  *
  */
-otError otCoapSecureConnect(otInstance *aInstance,const otMessageInfo * aMessageInfo,  otHandleSecureCoapClientConnect aHandler, void *aContext);
+otError otCoapSecureConnect(otInstance *aInstance,
+                            const otMessageInfo *           aMessageInfo,
+                            otHandleSecureCoapClientConnect aHandler,
+                            bool                            aVerifyPeerCertificate,
+                            void                           *aContext);
 
 /**
  * This method stops the DTLS connection.
@@ -195,10 +216,10 @@ bool otCoapSecureIsConncetionActive(otInstance *aInstance);
  * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
  *
  */
-otError otCoapSecureSendMessage(otInstance *aInstance,
-                                otMessage *aMessage,
+otError otCoapSecureSendMessage(otInstance           *aInstance,
+                                otMessage            *aMessage,
                                 otCoapResponseHandler aHandler,
-                                void *aContext);
+                                void                 *aContext);
 
 
 /**

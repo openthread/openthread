@@ -47,11 +47,12 @@
 #include <mbedtls/ssl_cookie.h>
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#include <mbedtls/oid.h>
+//#include <mbedtls/oid.h>
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_crl.h>
 #include <mbedtls/x509_csr.h>
+#include <mbedtls/base64.h>
 #endif  // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include "common/locator.hpp"
@@ -70,9 +71,13 @@ public:
     enum
     {
         kPskMaxLength             = 32,
+#if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         kApplicationDataMaxLength = 128,
+#else
+        kApplicationDataMaxLength = 1400,
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-        kPreSharedKeyMaxLength      = 32,
+        kPreSharedKeyMaxLength    = 32,
         kClientIdentityMaxLength  = 32,
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     };
@@ -140,20 +145,23 @@ public:
      * For use DTLS mode ECDHE ECDSA with AES 128 CCM 8 first set X509 Pk and Cert.
      * For use DTLS mode PSK with AES 128 CCM 8 first set PreShared Key.
      *
-     * @param[in]  aClient            TRUE if operating as a client, FALSE if operating as a server.
-     * @param[in]  aConnectedHandler  A pointer to the connected handler.
-     * @param[in]  aReceiveHandler    A pointer to the receive handler.
-     * @param[in]  aSendHandler       A pointer to the send handler.
-     * @param[in]  aContext           A pointer to application-specific context.
+     * @param[in]  aClient                 true if operating as a client,
+     *                                     false if operating as a server.
+     * @param[in]  aConnectedHandler       A pointer to the connected handler.
+     * @param[in]  aReceiveHandler         A pointer to the receive handler.
+     * @param[in]  aSendHandler            A pointer to the send handler.
+     * @param[in]  aVerifyPeerCertificate  true if the peer cert verified, else false.
+     * @param[in]  aContext                A pointer to application-specific context.
      *
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
      */
-    otError StartApplicationCoapSecure(bool                     aClient,
-                                       ConnectedHandler         aConnectedHandler,
-                                       ReceiveHandler           aReceiveHandler,
-                                       SendHandler              aSendHandler,
-                                       void *                   aContext
+    otError StartApplicationCoapSecure(bool             aClient,
+                                       ConnectedHandler aConnectedHandler,
+                                       ReceiveHandler   aReceiveHandler,
+                                       SendHandler      aSendHandler,
+                                       bool             aVerifyPeerCertificate,
+                                       void *           aContext
                                        );
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -186,7 +194,7 @@ public:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
-     * This method sets the Pre Shared Key (PSK) for DTLS sessions
+     * This method sets the Pre-Shared Key (PSK) for DTLS sessions-
      * identified by a PSK.
      *
      * DTLS mode "PSK with AES 128 CCM 8" for Application CoAPS.
@@ -199,8 +207,8 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(uint8_t * aPsk, uint16_t aPskLength,
-                            uint8_t * aPskIdentity, uint16_t aPskIdLength);
+    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
+                            uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
     /**
      * This method sets a reference to the x509 certificate.
@@ -213,7 +221,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetX509Certificate(const uint8_t * aX509Certificate, uint32_t aX509CertLenth);
+    otError SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth);
 
     /**
      * This method sets a reference to the x509 private key.
@@ -226,7 +234,22 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetX509PrivateKey(const uint8_t * aPrivateKey, uint32_t aPrivateKeyLenth);
+    otError SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth);
+
+    /**
+     * This method returns the peer x509 certificate base64 encoded.
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
+     * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
+     * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+     *
+     * @retval OT_ERROR_NONE  Successfully get the peer certificate.
+     *
+     */
+    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength,
+                                     size_t aCertBufferSize);
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -331,17 +354,17 @@ private:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-    mbedtls_x509_crt         mCaCert;
-    mbedtls_pk_context       mPrivateKey;
-    const uint8_t*           mPk;
-    uint32_t                 mPkLength;
-    const uint8_t*           mX509Cert;
-    uint32_t                 mX509CertLength;
+    mbedtls_x509_crt   mCaCert;
+    mbedtls_pk_context mPrivateKey;
+    const uint8_t     *mPk;
+    uint32_t           mPkLength;
+    const uint8_t     *mX509Cert;
+    uint32_t           mX509CertLength;
 
-    uint8_t                  mPreSharedKey[kPreSharedKeyMaxLength];
-    uint8_t                  mPreSharedKeyIdentity[kClientIdentityMaxLength];
-    uint16_t                 mPreSharedKeyLength;
-    uint16_t                 mPreSharedKeyIdLength;
+    uint8_t  mPreSharedKey[kPreSharedKeyMaxLength];
+    uint8_t  mPreSharedKeyIdentity[kClientIdentityMaxLength];
+    uint16_t mPreSharedKeyLength;
+    uint16_t mPreSharedKeyIdLength;
 
     int                      mApplicationCoapCiphreSuite[1];
 
@@ -367,6 +390,7 @@ private:
     SendHandler      mSendHandler;
     void *           mContext;
     bool             mClient;
+    bool             mApplicationCoapSecure;
 
     uint8_t mMessageSubType;
     uint8_t mMessageDefaultSubType;
