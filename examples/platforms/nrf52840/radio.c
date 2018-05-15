@@ -157,10 +157,6 @@ static inline void clearPendingEvents(void)
     volatile uint32_t pendingEvents;
     uint32_t          bitsToRemain = ~(0UL);
 
-    bitsToRemain &= ~(1UL << kPendingEventFrameTransmitted);
-    bitsToRemain &= ~(1UL << kPendingEventChannelAccessFailure);
-    bitsToRemain &= ~(1UL << kPendingEventInvalidOrNoAck);
-
     bitsToRemain &= ~(1UL << kPendingEventSleep);
 
     do
@@ -548,6 +544,8 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventFrameTransmitted))
     {
+        resetPendingEvent(kPendingEventFrameTransmitted);
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
@@ -566,12 +564,12 @@ void nrf5RadioProcess(otInstance *aInstance)
             nrf_802154_buffer_free_raw(sAckFrame.mPsdu - 1);
             sAckFrame.mPsdu = NULL;
         }
-
-        resetPendingEvent(kPendingEventFrameTransmitted);
     }
 
     if (isPendingEventSet(kPendingEventChannelAccessFailure))
     {
+        resetPendingEvent(kPendingEventChannelAccessFailure);
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
@@ -583,12 +581,12 @@ void nrf5RadioProcess(otInstance *aInstance)
         {
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_CHANNEL_ACCESS_FAILURE);
         }
-
-        resetPendingEvent(kPendingEventChannelAccessFailure);
     }
 
     if (isPendingEventSet(kPendingEventInvalidOrNoAck))
     {
+        resetPendingEvent(kPendingEventInvalidOrNoAck);
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
@@ -600,12 +598,12 @@ void nrf5RadioProcess(otInstance *aInstance)
         {
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NO_ACK);
         }
-
-        resetPendingEvent(kPendingEventInvalidOrNoAck);
     }
 
     if (isPendingEventSet(kPendingEventReceiveFailed))
     {
+        resetPendingEvent(kPendingEventReceiveFailed);
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
@@ -617,15 +615,13 @@ void nrf5RadioProcess(otInstance *aInstance)
         {
             otPlatRadioReceiveDone(aInstance, NULL, sReceiveError);
         }
-
-        resetPendingEvent(kPendingEventReceiveFailed);
     }
 
     if (isPendingEventSet(kPendingEventEnergyDetected))
     {
-        otPlatRadioEnergyScanDone(aInstance, sEnergyDetected);
-
         resetPendingEvent(kPendingEventEnergyDetected);
+
+        otPlatRadioEnergyScanDone(aInstance, sEnergyDetected);
     }
 
     if (isPendingEventSet(kPendingEventSleep))
