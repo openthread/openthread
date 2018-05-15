@@ -40,11 +40,9 @@
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
 
-
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 using namespace ot;
-
 
 otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
 {
@@ -53,53 +51,52 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
     return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
 }
 
-otError otCoapSecureSetX509Certificate(otInstance *aInstance, const uint8_t *aX509Cert,
-                                       uint32_t aX509Length)
+otError otCoapSecureSetX509Certificate(otInstance *aInstance, const uint8_t *aX509Cert, uint32_t aX509Length)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert, aX509Length);
 }
 
-otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPrivateKey,
-                                      uint32_t aPrivateKeyLength)
+otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().SetX509PrivateKey(aPrivateKey, aPrivateKeyLength);
 }
 
-otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint16_t aPskLength,
-                           uint8_t *aPskIdentity, uint16_t aPskIdLength)
+otError otCoapSecureSetPSK(otInstance *aInstance,
+                           uint8_t *   aPsk,
+                           uint16_t    aPskLength,
+                           uint8_t *   aPskIdentity,
+                           uint16_t    aPskIdLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength,
-                                                               aPskIdentity, aPskIdLength);
+    return instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 }
 
-otError otCoapSecureGetPeerCertificateBase64(otInstance *aInstance, unsigned char *aPeerCert,
-                                             uint64_t *aCertLength, uint64_t aCertBufferSize)
+otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
+                                             unsigned char *aPeerCert,
+                                             uint64_t *     aCertLength,
+                                             uint64_t       aCertBufferSize)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert,
-                                                                        (size_t*) aCertLength,
-                                                                        (size_t)  aCertBufferSize);
+    return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, (size_t *)aCertLength,
+                                                                        (size_t)aCertBufferSize);
 }
 
-otError otCoapSecureConnect(otInstance                     *aInstance,
-                            const otMessageInfo            *aMessageInfo,
+otError otCoapSecureConnect(otInstance *                    aInstance,
+                            const otMessageInfo *           aMessageInfo,
                             otHandleSecureCoapClientConnect aHandler,
                             bool                            aVerifyPeerCertificate,
-                            void                           *aContext )
+                            void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                       aHandler,
-                                                       aContext,
-                                                       aVerifyPeerCertificate);
+    return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler,
+                                                       aContext, aVerifyPeerCertificate);
 }
 
 otError otCoapSecureDisconnect(otInstance *aInstance)
@@ -130,16 +127,14 @@ otError otCoapSecureStop(otInstance *aInstance)
     return instance.GetApplicationCoapSecure().Stop();
 }
 
-otError otCoapSecureSendMessage(otInstance           *aInstance,
-                                otMessage            *aMessage,
+otError otCoapSecureSendMessage(otInstance *          aInstance,
+                                otMessage *           aMessage,
                                 otCoapResponseHandler aHandler = NULL,
                                 void *                aContext = NULL)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage),
-                                                            aHandler,
-                                                            aContext);
+    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage), aHandler, aContext);
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

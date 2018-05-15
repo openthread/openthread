@@ -86,7 +86,6 @@ int main(int argc, char *argv[])
     otDiagInit(sInstance);
 #endif
 
-
     while (1)
     {
         otTaskletsProcess(sInstance);

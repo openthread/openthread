@@ -108,7 +108,7 @@ const struct Command Interpreter::sCommands[] = {
     {"coap", &Interpreter::ProcessCoap},
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-	{"coaps", &Interpreter::ProcessCoapSecure},
+    {"coaps", &Interpreter::ProcessCoapSecure},
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     {"commissioner", &Interpreter::ProcessCommissioner},

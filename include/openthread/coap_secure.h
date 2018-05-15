@@ -59,8 +59,7 @@ extern "C" {
  *
  */
 
-#define OT_DEFAULT_COAP_SECURE_PORT  5684  ///< Default CoAP Secure port, as specified in RFC 7252
-
+#define OT_DEFAULT_COAP_SECURE_PORT 5684 ///< Default CoAP Secure port, as specified in RFC 7252
 
 /**
  * This function pointer is called once DTLS connection is established.
@@ -70,7 +69,6 @@ extern "C" {
  *
  */
 typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
-
 
 /**
  * This function starts the CoAP Secure service.
@@ -107,8 +105,11 @@ otError otCoapSecureStop(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
  *
  */
-otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint16_t aPskLength,
-                           uint8_t *aPskIdentity, uint16_t aPskIdLength);
+otError otCoapSecureSetPSK(otInstance *aInstance,
+                           uint8_t *   aPsk,
+                           uint16_t    aPskLength,
+                           uint8_t *   aPskIdentity,
+                           uint16_t    aPskIdLength);
 
 /**
  * This method returns the peer x509 certificate base64 encoded.
@@ -121,8 +122,10 @@ otError otCoapSecureSetPSK(otInstance *aInstance, uint8_t *aPsk, uint16_t aPskLe
  * @retval OT_ERROR_NONE  Successfully get the peer certificate.
  *
  */
-otError otCoapSecureGetPeerCertificateBase64(otInstance *aInstance, unsigned char * aPeerCert,
-                                             uint64_t * aCertLength, uint64_t aCertBufferSize);
+otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
+                                             unsigned char *aPeerCert,
+                                             uint64_t *     aCertLength,
+                                             uint64_t       aCertBufferSize);
 
 /**
  * This method sets the own X509 certificate with his private key for
@@ -161,11 +164,11 @@ otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPri
  * @retval OT_ERROR_NONE  Successfully started DTLS connection.
  *
  */
-otError otCoapSecureConnect(otInstance *aInstance,
+otError otCoapSecureConnect(otInstance *                    aInstance,
                             const otMessageInfo *           aMessageInfo,
                             otHandleSecureCoapClientConnect aHandler,
                             bool                            aVerifyPeerCertificate,
-                            void                           *aContext);
+                            void *                          aContext);
 
 /**
  * This method stops the DTLS connection.
@@ -216,11 +219,10 @@ bool otCoapSecureIsConncetionActive(otInstance *aInstance);
  * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
  *
  */
-otError otCoapSecureSendMessage(otInstance           *aInstance,
-                                otMessage            *aMessage,
+otError otCoapSecureSendMessage(otInstance *          aInstance,
+                                otMessage *           aMessage,
                                 otCoapResponseHandler aHandler,
-                                void                 *aContext);
-
+                                void *                aContext);
 
 /**
  * @}
@@ -228,7 +230,7 @@ otError otCoapSecureSendMessage(otInstance           *aInstance,
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif /* OPENTHREAD_COAP_SECURE_H_ */

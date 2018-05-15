@@ -73,7 +73,6 @@ public:
      */
     otError Process(int argc, char *argv[]);
 
-
 private:
     enum
     {
@@ -89,14 +88,11 @@ private:
 
     otError Stop(void);
 
-
     static void OTCALL HandleServerResponse(void *               aContext,
                                             otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo);
-    void               HandleServerResponse(otCoapHeader        *aHeader,
-                                            otMessage           *aMessage,
-                                            const otMessageInfo *aMessageInfo);
+    void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     static void OTCALL HandleClientResponse(void *               aContext,
                                             otCoapHeader *       aHeader,
@@ -108,10 +104,8 @@ private:
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
 
-    static void OTCALL HandleClientConnect(const bool  aConnected,
-                                           void       *aContext);
-    void               HandleClientConnect(const bool  aConnected);
-
+    static void OTCALL HandleClientConnect(const bool aConnected, void *aContext);
+    void               HandleClientConnect(const bool aConnected);
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];

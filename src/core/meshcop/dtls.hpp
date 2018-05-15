@@ -47,12 +47,12 @@
 #include <mbedtls/ssl_cookie.h>
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#include <mbedtls/x509.h>
-#include <mbedtls/x509_crt.h>
-#include <mbedtls/x509_crl.h>
-#include <mbedtls/x509_csr.h>
 #include <mbedtls/base64.h>
-#endif  // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#include <mbedtls/x509.h>
+#include <mbedtls/x509_crl.h>
+#include <mbedtls/x509_crt.h>
+#include <mbedtls/x509_csr.h>
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -69,15 +69,15 @@ class Dtls : public InstanceLocator
 public:
     enum
     {
-        kPskMaxLength             = 32,
+        kPskMaxLength = 32,
 #if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         kApplicationDataMaxLength = 128,
 #else
         kApplicationDataMaxLength = 1400,
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-        kPreSharedKeyMaxLength    = 32,
-        kClientIdentityMaxLength  = 32,
+        kPreSharedKeyMaxLength   = 32,
+        kClientIdentityMaxLength = 32,
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     };
 
@@ -160,8 +160,7 @@ public:
                                        ReceiveHandler   aReceiveHandler,
                                        SendHandler      aSendHandler,
                                        bool             aVerifyPeerCertificate,
-                                       void *           aContext
-                                       );
+                                       void *           aContext);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -206,8 +205,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
-                            uint8_t *aPskIdentity, uint16_t aPskIdLength);
+    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength, uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
     /**
      * This method sets a reference to the x509 certificate.
@@ -247,8 +245,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully get the peer certificate.
      *
      */
-    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength,
-                                     size_t aCertBufferSize);
+    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -355,9 +352,9 @@ private:
 
     mbedtls_x509_crt   mCaCert;
     mbedtls_pk_context mPrivateKey;
-    const uint8_t     *mPk;
+    const uint8_t *    mPk;
     uint32_t           mPkLength;
-    const uint8_t     *mX509Cert;
+    const uint8_t *    mX509Cert;
     uint32_t           mX509CertLength;
 
     uint8_t  mPreSharedKey[kPreSharedKeyMaxLength];
@@ -365,7 +362,7 @@ private:
     uint16_t mPreSharedKeyLength;
     uint16_t mPreSharedKeyIdLength;
 
-    int                      mApplicationCoapCiphreSuite[1];
+    int mApplicationCoapCiphreSuite[1];
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 

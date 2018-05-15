@@ -86,10 +86,10 @@ public:
      * @param[in]  aResponsesQueueTimer  Handler for Queue Responses.
      *
      */
-    explicit CoapSecure(Instance &aInstance,
+    explicit CoapSecure(Instance &       aInstance,
                         Tasklet::Handler aUdpTransmitHandle,
-                        Timer::Handler aRetransmissionTimer,
-                        Timer::Handler aResponsesQueueTimer);
+                        Timer::Handler   aRetransmissionTimer,
+                        Timer::Handler   aResponsesQueueTimer);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -117,14 +117,17 @@ public:
      * This method initializes DTLS session with a peer.
      *
      * @param[in]  aMessageInfo            A reference to an address of the peer.
-     * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is established.
+     * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is
+     * established.
      * @param[in]  aVerifyPeerCertificate  true if the peer cert verified, else false.
      *
      * @retval OT_ERROR_NONE  Successfully started DTLS connection.
      *
      */
-    otError Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback,
-                    void *aContext, bool aVerifyPeerCertificate = true);
+    otError Connect(const Ip6::MessageInfo &aMessageInfo,
+                    ConnectedCallback       aCallback,
+                    void *                  aContext,
+                    bool                    aVerifyPeerCertificate = true);
 
     /**
      * This method indicates whether or not the DTLS session is active.
@@ -187,8 +190,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength,
-                            uint8_t *aPskIdentity, uint16_t aPskIdLength);
+    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength, uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
     /**
      * This method sets a X509 certificate for DTLS session.
@@ -225,9 +227,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully get the peer certificate.
      *
      */
-    otError GetPeerCertificateBase64(unsigned char *aPeerCert,
-                                     size_t        *aCertLength,
-                                     size_t         aCertBufferSize);
+    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -282,7 +282,7 @@ public:
     virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 protected:
-    void        HandleUdpTransmit(void);
+    void HandleUdpTransmit(void);
 
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -310,9 +310,8 @@ private:
     Tasklet           mTransmitTask;
 
     bool mLayerTwoSecurity;
-    bool  mApplicationCoapSecure;
+    bool mApplicationCoapSecure;
 };
-
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
