@@ -104,29 +104,6 @@ exit:
     return occupancy;
 }
 
-void ChannelMonitor::RestartTimer(void)
-{
-    uint16_t interval = kTimerInterval;
-    int16_t  jitter;
-
-    jitter = static_cast<int16_t>(Random::GetUint16InRange(0, 2 * kMaxJitterInterval)) - kMaxJitterInterval;
-
-    if (jitter >= kTimerInterval)
-    {
-        jitter = kTimerInterval - 1;
-    }
-
-    if (jitter <= -kTimerInterval)
-    {
-        jitter = -kTimerInterval + 1;
-    }
-
-    interval += jitter;
-    mTimer.StartAt(mTimer.GetFireTime(), interval);
-
-    otLogDebgUtil(GetInstance(), "ChannelMonitor: Timer interval %u, jitter %d", interval, jitter);
-}
-
 void ChannelMonitor::HandleTimer(Timer &aTimer)
 {
     aTimer.GetOwner<ChannelMonitor>().HandleTimer();
@@ -136,7 +113,8 @@ void ChannelMonitor::HandleTimer(void)
 {
     GetInstance().Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0,
                                              &ChannelMonitor::HandleEnergyScanResult, this);
-    RestartTimer();
+
+    mTimer.StartAt(mTimer.GetFireTime(), Random::AddJitter(kTimerInterval, kMaxJitterInterval));
 }
 
 void ChannelMonitor::HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult)
