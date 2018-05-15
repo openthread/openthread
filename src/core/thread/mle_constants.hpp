@@ -61,7 +61,7 @@ enum
     kUdpPort                       = 19788, ///< MLE UDP Port
     kParentRequestRouterTimeout    = 750,   ///< Router Parent Request timeout
     kParentRequestReedTimeout      = 1250,  ///< Router and REEDs Parent Request timeout
-    kParentRequestJitter           = 50,    ///< Maximum jitter time added to Parent Request timeout
+    kAttachStartJitter             = 50,    ///< Maximum jitter time added to start of attach.
     kAnnounceProcessTimeout        = 250,   ///< Timeout after receiving Announcement before channel/pan-id change
     kAnnounceTimeout               = 1400,  ///< Total timeout used for sending Announcement messages
     kMinAnnounceDelay              = 80,    ///< Minimum delay between Announcement messages

@@ -520,6 +520,12 @@ otError Mle::BecomeDetached(void)
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
+    // In case role is already detached and attach state is `kAttachStateStart`
+    // (i.e., waiting to start an attach attempt), there is no need to make any
+    // changes.
+
+    VerifyOrExit(mRole != OT_DEVICE_ROLE_DETACHED || mAttachState != kAttachStateStart);
+
     // not in reattach stage after reset
     if (mReattachState == kReattachStop)
     {
@@ -563,10 +569,6 @@ otError Mle::BecomeChild(AttachMode aMode)
     SetAttachState(kAttachStateStart);
     mParentRequestMode = aMode;
 
-    mAttachCounter++;
-    otLogInfoMle(GetInstance(), "Attempt to attach - attempt %d, %s %s", mAttachCounter, AttachModeToString(aMode),
-                 ReattachStateToString(mReattachState));
-
     if (aMode != kAttachBetter)
     {
         if (IsFullThreadDevice())
@@ -575,10 +577,69 @@ otError Mle::BecomeChild(AttachMode aMode)
         }
     }
 
-    mAttachTimer.Start(1 + ((mAttachCounter == 1) ? Random::GetUint32InRange(0, kParentRequestRouterTimeout) : 0));
+    mAttachTimer.Start(GetAttachStartDelay());
+
+    if (mRole == OT_DEVICE_ROLE_DETACHED)
+    {
+        mAttachCounter++;
+
+        if (mAttachCounter == 0)
+        {
+            mAttachCounter--;
+        }
+
+        if (!IsRxOnWhenIdle())
+        {
+            netif.GetMac().SetRxOnWhenIdle(false);
+        }
+    }
 
 exit:
     return error;
+}
+
+uint32_t Mle::GetAttachStartDelay(void) const
+{
+    uint32_t delay = 1;
+    uint32_t jitter;
+
+    VerifyOrExit(mRole == OT_DEVICE_ROLE_DETACHED);
+
+    if (mAttachCounter == 0)
+    {
+        delay = 1 + Random::GetUint32InRange(0, kParentRequestRouterTimeout);
+        ExitNow();
+    }
+#if OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+    else
+    {
+        uint16_t       counter = mAttachCounter - 1;
+        const uint32_t ratio   = kAttachBackoffMaxInterval / kAttachBackoffMinInterval;
+
+        if ((counter <= sizeof(ratio) * CHAR_BIT) && ((1U << counter) <= ratio))
+        {
+            delay = kAttachBackoffMinInterval;
+            delay <<= counter;
+        }
+        else
+        {
+            delay = Random::AddJitter(kAttachBackoffMaxInterval, kAttachBackoffJitter);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+
+    jitter = Random::GetUint32InRange(0, kAttachStartJitter);
+
+    if (jitter + delay > delay) // check for overflow
+    {
+        delay += jitter;
+    }
+
+    otLogInfoMle(GetInstance(), "Attach attempt %d unsuccessful, will try again in %u.%03u seconds", mAttachCounter,
+                 delay / 1000, delay % 1000);
+
+exit:
+    return delay;
 }
 
 bool Mle::IsAttached(void) const
@@ -1484,6 +1545,17 @@ void Mle::HandleAttachTimer(void)
         break;
 
     case kAttachStateStart:
+        if (mAttachCounter > 0)
+        {
+            otLogInfoMle(GetInstance(), "Attempt to attach - attempt %d, %s %s", mAttachCounter,
+                         AttachModeToString(mParentRequestMode), ReattachStateToString(mReattachState));
+        }
+        else
+        {
+            otLogInfoMle(GetInstance(), "Attempt to attach - %s %s", AttachModeToString(mParentRequestMode),
+                         ReattachStateToString(mReattachState));
+        }
+
         SetAttachState(kAttachStateParentRequestRouter);
         mParentCandidate.SetState(Neighbor::kStateInvalid);
         mReceivedResponseFromParent = false;
@@ -1600,7 +1672,7 @@ uint32_t Mle::Reattach(void)
             netif.GetPendingDataset().ApplyConfiguration();
             mReattachState = kReattachPending;
             SetAttachState(kAttachStateStart);
-            delay = 1 + Random::GetUint32InRange(0, kParentRequestJitter);
+            delay = 1 + Random::GetUint32InRange(0, kAttachStartJitter);
         }
         else
         {

@@ -1520,6 +1520,18 @@ private:
     {
         kMleMessagePriority = Message::kPriorityHigh,
         kMleHopLimit        = 255,
+
+        // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
+        // All timer intervals are converted to milliseconds.
+        kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u),
+        kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u),
+        kParentSearchJitterInterval  = (15 * 1000u),
+        kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
+
+        // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
+        kAttachBackoffMinInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL,
+        kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
+        kAttachBackoffJitter      = OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL,
     };
 
     enum ParentRequestType
@@ -1527,17 +1539,6 @@ private:
         kParentRequestTypeRouters,         ///< Parent Request to all routers.
         kParentRequestTypeRoutersAndReeds, ///< Parent Request to all routers and REEDs.
     };
-
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
-    enum
-    {
-        // All timer intervals are converted to milliseconds
-        kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u),
-        kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u),
-        kParentSearchJitterInterval  = (15 * 1000u),
-        kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
-    };
-#endif
 
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,
                        uint32_t               aFrameCounter,
@@ -1568,6 +1569,7 @@ private:
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    ProcessAnnounce(void);
 
+    uint32_t GetAttachStartDelay(void) const;
     otError  SendParentRequest(ParentRequestType aType);
     otError  SendChildIdRequest(void);
     otError  SendOrphanAnnounce(void);
