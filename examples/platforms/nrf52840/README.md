@@ -4,9 +4,9 @@ This directory contains example platform drivers for [Nordic Semiconductor nRF52
 
 [nRF52840]: https://www.nordicsemi.com/eng/Products/nRF52840
 
-To facilitate Thread products development with the nRF52840 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread</i>. See [Nordic Semiconductor's nRF5 SDK for Thread][nRF5-SDK-section] section for more details.
+To facilitate Thread products development with the nRF52840 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread and Zigbee</i>. See [Nordic Semiconductor's nRF5 SDK for Thread and Zigbee][nRF5-SDK-section] section for more details.
 
-[nRF5-SDK-section]: #nordic-semiconductors-nrf5-sdk-for-thread
+[nRF5-SDK-section]: #nordic-semiconductors-nrf5-sdk-for-thread-and-zigbee
 
 ## Toolchain
 
@@ -199,17 +199,18 @@ The following toolchains have been used for testing and verification:
   - gcc version 6.2.0
 
  The following OpenThread commits have been verified with nRF52840 examples by Nordic Semiconductor:
-  - `a89eb88` - 16.11.2017 (the newest checked)
+  - `ec59d7e` - 06.04.2018 (the newest checked)
+  - `a89eb88` - 16.11.2017
   - `6a15261` - 29.06.2017
   - `030efba` - 22.04.2017
   - `de48acf` - 02.03.2017
   - `50db58d` - 23.01.2017
 
-# Nordic Semiconductor's nRF5 SDK for Thread
+# Nordic Semiconductor's nRF5 SDK for Thread and Zigbee
 
-The [nRF5 Software Development Kit (SDK) for Thread][nRF5-SDK-Thread] helps you when developing Thread products with Nordic Semiconductor's advanced nRF52840 System on Chip (SoC).
+The [nRF5 Software Development Kit (SDK) for Thread and Zigbee][nRF5-SDK-Thread-Zigbee] helps you when developing Thread products with Nordic Semiconductor's advanced nRF52840 System on Chip (SoC).
 
-The <i>nRF5 SDK for Thread</i> includes:
+The <i>nRF5 SDK for Thread and Zigbee</i> includes:
  - a pre-built OpenThread stack for the Nordic nRF52840 SoC with ARM® CryptoCell-310 support,
  - unique Thread/Bluetooth Low Energy dynamic multiprotocol solution which allows for concurrent operation of Thread and Bluetooth Low Energy utilizing OpenThread and SoftDevice (Nordic’s Bluetooth Low Energy stack) with accompanying example applications,
  - Thread/Bluetooth Low Energy switched multiprotocol solution with accompanying example applications,
@@ -230,4 +231,4 @@ By default, mbedTLS library is built with support for CryptoCell 310 hardware ac
 $ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
 ```
 
-[nRF5-SDK-Thread]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread
+[nRF5-SDK-Thread-Zigbee]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread
