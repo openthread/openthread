@@ -41,9 +41,3 @@ libtool
 Makefile
 Makefile.in
 output
-..gitignore.swp
-.autotools
-.cproject
-.project
-.settings/
-src/cli/x509_cert_key_ines.hpp
