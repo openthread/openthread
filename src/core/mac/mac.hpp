@@ -205,6 +205,14 @@ public:
     void Intersect(const ChannelMask &aOtherMask) { mMask &= aOtherMask.mMask; }
 
     /**
+     * This method returns the number of channels in the mask.
+     *
+     * @returns Number of channels in the mask.
+     *
+     */
+    uint8_t GetNumberOfChannels(void) const;
+
+    /**
      * This method gets the next channel in the channel mask.
      *
      * This method can be used to iterate over all channels in the channel mask. To get the first channel (channel with
@@ -219,6 +227,26 @@ public:
      *
      */
     otError GetNextChannel(uint8_t &aChannel) const;
+
+    /**
+     * This method overloads `==` operator to indicate whether two masks are equal.
+     *
+     * @param[in] aAnother   A reference to another mask to compare with the current one.
+     *
+     * @returns TRUE if the two masks are equal, FALSE otherwise.
+     *
+     */
+    bool operator==(const ChannelMask &aAnother) const { return (mMask == aAnother.mMask); }
+
+    /**
+     * This method overloads `!=` operator to indicate whether two masks are different.
+     *
+     * @param[in] aAnother     A reference to another mask to compare with the current one.
+     *
+     * @returns TRUE if the two masks are different, FALSE otherwise.
+     *
+     */
+    bool operator!=(const ChannelMask &aAnother) const { return (mMask != aAnother.mMask); }
 
     /**
      * This method converts the channel mask into a human-readable NULL-terminated string.
