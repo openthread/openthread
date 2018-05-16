@@ -1547,22 +1547,26 @@ exit:
 
 bool Mle::PrepareAnnounceState(void)
 {
-    bool                            shouldAnnounce = false;
-    uint16_t                        numChannels    = 0;
-    const MeshCoP::ChannelMask0Tlv *channelMask;
-    MeshCoP::Dataset                dataset(MeshCoP::Tlv::kActiveTimestamp);
+    bool                              shouldAnnounce = false;
+    uint16_t                          numChannels    = 0;
+    const MeshCoP::ChannelMaskTlv *   channelMaskTlv;
+    const MeshCoP::ChannelMask0Entry *channelMaskEntry;
+    MeshCoP::Dataset                  dataset(MeshCoP::Tlv::kActiveTimestamp);
 
     VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && ((mDeviceMode & ModeTlv::kModeFFD) == 0) &&
                  (mReattachState == kReattachStop));
 
     SuccessOrExit(GetNetif().GetActiveDataset().Get(dataset));
-    channelMask = static_cast<const MeshCoP::ChannelMask0Tlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
 
-    VerifyOrExit(channelMask != NULL);
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    VerifyOrExit(channelMaskTlv != NULL);
+
+    channelMaskEntry = channelMaskTlv->GetMask0Entry();
+    VerifyOrExit(channelMaskEntry != NULL);
 
     for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
     {
-        if (channelMask->IsChannelSet(channel))
+        if (channelMaskEntry->IsChannelSet(channel))
         {
             numChannels++;
         }
@@ -2127,18 +2131,22 @@ exit:
 
 otError Mle::SendOrphanAnnounce(void)
 {
-    otError                         error = OT_ERROR_NONE;
-    const MeshCoP::ChannelMask0Tlv *channelMask;
-    MeshCoP::Dataset                dataset(MeshCoP::Tlv::kActiveTimestamp);
+    otError                           error = OT_ERROR_NONE;
+    const MeshCoP::ChannelMaskTlv *   channelMaskTlv;
+    const MeshCoP::ChannelMask0Entry *channelMaskEntry;
+    MeshCoP::Dataset                  dataset(MeshCoP::Tlv::kActiveTimestamp);
 
     SuccessOrExit(error = GetNetif().GetActiveDataset().Get(dataset));
 
-    channelMask = static_cast<const MeshCoP::ChannelMask0Tlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
-    VerifyOrExit(channelMask != NULL, error = OT_ERROR_NOT_FOUND);
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
+
+    channelMaskEntry = channelMaskTlv->GetMask0Entry();
+    VerifyOrExit(channelMaskEntry != NULL, error = OT_ERROR_NOT_FOUND);
 
     VerifyOrExit(mAnnounceChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_NOT_FOUND);
 
-    while (!channelMask->IsChannelSet(mAnnounceChannel))
+    while (!channelMaskEntry->IsChannelSet(mAnnounceChannel))
     {
         mAnnounceChannel++;
         VerifyOrExit(mAnnounceChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_NOT_FOUND);

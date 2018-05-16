@@ -1331,6 +1331,14 @@ public:
     void SetMaskLength(uint8_t aMaskLength) { mMaskLength = aMaskLength; }
 
     /**
+     * This method returns the total size of this Channel Mask Entry including the mask.
+     *
+     * @returns The total size of this entry (number of bytes).
+     *
+     */
+    uint8_t GetSize(void) const { return sizeof(ChannelMaskEntry) + mMaskLength; }
+
+    /**
      * This method clears the bit corresponding to @p aChannel in ChannelMask.
      *
      * @param[in]  aChannel  The channel in ChannelMask to clear.
@@ -1366,9 +1374,66 @@ public:
         return (aChannel < (mMaskLength * 8)) ? ((mask[aChannel / 8] & (0x80 >> (aChannel % 8))) != 0) : false;
     }
 
+    /**
+     * This method gets the next Channel Mask Entry in a Channel Mask TLV.
+     *
+     * @param[in] aChannelMaskTlv  A pointer to the Channel Mask TLV to which this entry belongs.
+     *
+     * @returns A pointer to next Channel Mask Entry or NULL if none found.
+     *
+     */
+    const ChannelMaskEntry *GetNext(const Tlv *aChannelMaskTlv) const;
+
 private:
     uint8_t mChannelPage;
     uint8_t mMaskLength;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Channel Mask Entry Page 0 generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChannelMask0Entry : public ChannelMaskEntry
+{
+public:
+    /**
+     * This method initializes the entry.
+     *
+     */
+    void Init(void)
+    {
+        SetChannelPage(0);
+        SetMaskLength(sizeof(mMask));
+    }
+
+    /**
+     * This method indicates whether or not the entry appears to be well-formed.
+     *
+     * @retval TRUE   If the entry appears to be well-formed.
+     * @retval FALSE  If the entry does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetChannelPage() == 0 && GetMaskLength() == sizeof(mMask); }
+
+    /**
+     * This method returns the Channel Mask value as a `uint32_t` bit mask.
+     *
+     * @returns The Channel Mask value.
+     *
+     */
+    uint32_t GetMask(void) const { return Reverse32(HostSwap32(mMask)); }
+
+    /**
+     * This method sets the Channel Mask value.
+     *
+     * @param[in]  aMask  The Channel Mask value.
+     *
+     */
+    void SetMask(uint32_t aMask) { mMask = HostSwap32(Reverse32(aMask)); }
+
+private:
+    uint32_t mMask;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1397,6 +1462,23 @@ public:
      *
      */
     bool IsValid(void) const { return true; }
+
+    /**
+     * This method gets the first Channel Mask Entry in the Channel Mask TLV.
+     *
+     * @returns A pointer to first Channel Mask Entry or NULL if not found.
+     *
+     */
+    const ChannelMaskEntry *GetFirstEntry(void) const;
+
+    /**
+     * This method gets the Page 0 Channel Mask Entry in the Channel Mask TLV.
+     *
+     * @returns A pointer to Page 0 Channel Mask Entry or NULL if not found.
+     *
+     */
+    const ChannelMask0Entry *GetMask0Entry(void) const;
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1404,7 +1486,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelMask0Tlv : public ChannelMaskTlv, public ChannelMaskEntry
+class ChannelMask0Tlv : public ChannelMaskTlv, public ChannelMask0Entry
 {
 public:
     /**
@@ -1415,8 +1497,7 @@ public:
     {
         SetType(kChannelMask);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        SetChannelPage(0);
-        SetMaskLength(sizeof(mMask));
+        ChannelMask0Entry::Init();
     }
 
     /**
@@ -1426,29 +1507,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const
-    {
-        return GetLength() == sizeof(*this) - sizeof(Tlv) && GetChannelPage() == 0 && GetMaskLength() == sizeof(mMask);
-    }
-
-    /**
-     * This method returns the Channel Mask value.
-     *
-     * @returns The Channel Mask value.
-     *
-     */
-    uint32_t GetMask(void) const { return Reverse32(HostSwap32(mMask)); }
-
-    /**
-     * This method sets the Channel Mask value.
-     *
-     * @param[in]  aMask  The Channel Mask value.
-     *
-     */
-    void SetMask(uint32_t aMask) { mMask = HostSwap32(Reverse32(aMask)); }
-
-private:
-    uint32_t mMask;
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv) && ChannelMask0Entry::IsValid(); }
 } OT_TOOL_PACKED_END;
 
 /**
