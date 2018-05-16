@@ -32,15 +32,47 @@ die() {
     exit 1
 }
 
-failed() {
-    echo " *** TEST FAILED: ERROR: " $*
-    tail -n 30 wpantund-logs*.log
-    exit 1
-}
-
-clean() {
+cleanup() {
+    # Clear logs and flash files
     sudo rm tmp/*.flash > /dev/null 2>&1
     sudo rm *.log > /dev/null 2>&1
+
+    # Clear any wpantund instances
+    sudo killall wpantund > /dev/null 2>&1
+
+    wpan_interfaces=$(ifconfig 2>/dev/null | grep -o wpan[0-9]*)
+
+    for interface in $wpan_interfaces; do
+        sudo ip link delete $interface > /dev/null 2>&1
+    done
+
+    sleep 0.3
+}
+
+run() {
+    counter=0
+    while true; do
+
+        if sudo python $1; then
+            cleanup
+            return
+        fi
+
+        # On Travis, we allow a failed test to be retried up to 3 attempts.
+        if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
+            if [ "$counter" -lt 2 ]; then
+                counter=$((counter+1))
+                echo Attempt $counter running "$1" failed. Trying again.
+                cleanup
+                sleep 10
+                continue
+            fi
+        fi
+
+        echo " *** TEST FAILED"
+        tail -n 40 wpantund-logs*.log
+        exit 1
+    done
 }
 
 cd $(dirname $0)
@@ -48,9 +80,16 @@ cd ../..
 
 # Build OpenThread posix mode with required configuration
 
+if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
+    coverage=yes
+else
+    coverage=no
+fi
+
 ./bootstrap || die
 ./configure                             \
     CPPFLAGS='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"' \
+    --enable-coverage=${coverage}       \
     --enable-ncp-app=all                \
     --with-ncp-bus=uart                 \
     --with-examples=posix               \
@@ -62,6 +101,7 @@ cd ../..
     --enable-mac-filter                 \
     --enable-service                    \
     --enable-channel-monitor            \
+    --enable-channel-manager            \
     --disable-docs                      \
     --disable-test || die
 
@@ -71,11 +111,22 @@ make -j 8 || die
 
 cd tests/toranj
 
-clean; sudo python test-001-get-set.py                                   || failed
-clean; sudo python test-002-form.py                                      || failed
-clean; sudo python test-003-join.py                                      || failed
-clean; sudo python test-004-scan.py                                      || failed
-clean; sudo python test-005-discover-scan.py                             || failed
-clean; sudo python test-006-traffic-router-end-device.py                 || failed
-clean; sudo python test-007-traffic-router-sleepy.py                     || failed
-clean; sudo python test-008-permit-join.py                               || failed
+cleanup
+
+run test-001-get-set.py
+run test-002-form.py
+run test-003-join.py
+run test-004-scan.py
+run test-005-discover-scan.py
+run test-006-traffic-router-end-device.py
+run test-007-traffic-router-sleepy.py
+run test-008-permit-join.py
+run test-009-insecure-traffic-join.py
+run test-100-mcu-power-state.py
+
+run test-600-channel-manager-properties.py
+run test-601-channel-manager-channel-change.py
+run test-602-channel-manager-channel-select.py
+run test-603-channel-manager-announce-recovery.py
+
+exit 0

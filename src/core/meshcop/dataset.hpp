@@ -70,6 +70,14 @@ public:
     void Clear(void);
 
     /**
+     * This method indicates whether or not the dataset appears to be well-formed.
+     *
+     * @returns TRUE if the dataset appears to be well-formed, FALSE otherwise.
+     *
+     */
+    bool IsValid(void) const;
+
+    /**
      * This method returns a pointer to the TLV.
      *
      * @returns A pointer to the TLV or NULL if none is found.
@@ -84,6 +92,14 @@ public:
      *
      */
     const Tlv *Get(Tlv::Type aType) const;
+
+    /**
+     * This method returns a pointer to the byte representation of the Dataset.
+     *
+     * @returns A pointer to the byte representation of the Dataset.
+     *
+     */
+    uint8_t *GetBytes(void) { return mTlvs; }
 
     /**
      * This method returns a pointer to the byte representation of the Dataset.
@@ -106,6 +122,14 @@ public:
      *
      */
     uint16_t GetSize(void) const { return mLength; }
+
+    /**
+     * This method sets the Dataset size in bytes.
+     *
+     * @param[in] aSize  The Dataset size in bytes.
+     *
+     */
+    void SetSize(uint16_t aSize) { mLength = aSize; }
 
     /**
      * This method returns the local time the dataset was last updated.
@@ -200,7 +224,8 @@ public:
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
-     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
     otError ApplyConfiguration(Instance &aInstance) const;
@@ -216,8 +241,6 @@ public:
     otError ConvertToActive(void);
 
 private:
-    uint16_t GetSettingsKey(void);
-
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer

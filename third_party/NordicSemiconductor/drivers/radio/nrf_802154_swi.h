@@ -128,6 +128,13 @@ void nrf_802154_swi_notify_cca_failed(nrf_802154_cca_error_t error);
 void nrf_802154_swi_timeslot_exit(void);
 
 /**
+ * @brief Terminate discarding of the timeslot.
+ *
+ * @note This function terminates discrading of timeslot only if it has not been performed.
+ */
+void nrf_802154_swi_timeslot_exit_terminate(void);
+
+/**
  * @brief Request entering sleep state from SWI priority.
  *
  * @param[in]   term_lvl  Termination level of this request. Selects procedures to abort.

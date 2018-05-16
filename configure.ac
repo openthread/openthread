@@ -74,12 +74,12 @@ AC_CONFIG_SRCDIR([include/openthread/openthread.h])
 # Tell autoconf where to find auxilliary build tools (e.g. config.guess,
 # install-sh, missing, etc.)
 #
-AC_CONFIG_AUX_DIR([third_party/nlbuild-autotools/repo/autoconf])
+AC_CONFIG_AUX_DIR([third_party/nlbuild-autotools/repo/third_party/autoconf])
 
 #
 # Tell autoconf where to find auxilliary M4 macros
 #
-AC_CONFIG_MACRO_DIR([third_party/nlbuild-autotools/repo/autoconf/m4])
+AC_CONFIG_MACRO_DIRS([third_party/nlbuild-autotools/repo/third_party/autoconf/m4 third_party/nlbuild-autotools/repo/autoconf/m4])
 
 #
 # Tell autoconf what file the package is using to aggregate C preprocessor
@@ -357,7 +357,7 @@ fi
 # Code style
 #
 
-AC_SUBST(PRETTY, ["clang-format"])
+AC_SUBST(PRETTY, ["\${abs_top_srcdir}/script/clang-format.sh"])
 AC_SUBST(PRETTY_ARGS, ["-style=file -i"])
 AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/script/clang-format-check.sh"])
 AC_SUBST(PRETTY_CHECK_ARGS, [""])
@@ -425,11 +425,11 @@ AC_SUBST(OPENTHREAD_ENABLE_CLI_MTD)
 # NCP app
 #
 AC_ARG_ENABLE(ncp-app,
-    [AS_HELP_STRING([--enable-ncp-app],[Enable NCP support (no|mtd|ftd|all) @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-ncp-app],[Enable NCP support (no|mtd|ftd|radio|all) @<:@default=no@:>@.])],
     [
         # Map all & both to yes
         case "${enableval}" in
-        all|both)
+        all)
             enableval=yes
             ;;
 
@@ -444,18 +444,28 @@ AC_ARG_ENABLE(ncp-app,
             enable_ncp_app=${enableval}
             enable_ncp_app_mtd=${enableval}
             enable_ncp_app_ftd=${enableval}
+            enable_ncp_app_radio=${enableval}
             ;;
 
         mtd)
             enable_ncp_app=yes
             enable_ncp_app_mtd=yes
             enable_ncp_app_ftd=no
+            enable_ncp_app_radio=no
             ;;
 
         ftd)
             enable_ncp_app=yes
             enable_ncp_app_mtd=no
             enable_ncp_app_ftd=yes
+            enable_ncp_app_radio=no
+            ;;
+
+        radio)
+            enable_ncp_app=yes
+            enable_ncp_app_mtd=no
+            enable_ncp_app_ftd=no
+            enable_ncp_app_radio=yes
             ;;
 
         *)
@@ -467,6 +477,7 @@ AC_ARG_ENABLE(ncp-app,
      enable_ncp_app=no
      enable_ncp_app_ftd=no
      enable_ncp_app_mtd=no
+     enable_ncp_app_radio=no
     ]
     )
 
@@ -477,14 +488,18 @@ AC_MSG_CHECKING([should NCP support ftd])
 AC_MSG_RESULT(${enable_ncp_app_ftd})
 AC_MSG_CHECKING([should NCP support mtd])
 AC_MSG_RESULT(${enable_ncp_app_mtd})
+AC_MSG_CHECKING([should NCP support radio-only])
+AC_MSG_RESULT(${enable_ncp_app_radio})
 
 AC_SUBST(OPENTHREAD_ENABLE_NCP)
 AC_SUBST(OPENTHREAD_ENABLE_NCP_MTD)
 AC_SUBST(OPENTHREAD_ENABLE_NCP_FTD)
+AC_SUBST(OPENTHREAD_ENABLE_NCP_RADIO)
 
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp_app}" == "yes"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_MTD],  [test "${enable_ncp_app_mtd}" == "yes"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],  [test "${enable_ncp_app_ftd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],         [test "${enable_ncp_app}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_MTD],     [test "${enable_ncp_app_mtd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],     [test "${enable_ncp_app_ftd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_RADIO],   [test "${enable_ncp_app_radio}" == "yes"])
 
 #
 # NCP BUS - how does the NCP talk to the host?
@@ -1539,7 +1554,7 @@ CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
-LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
+LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
 
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of an -Werror issues by

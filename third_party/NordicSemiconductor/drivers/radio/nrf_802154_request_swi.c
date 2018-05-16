@@ -50,14 +50,40 @@
 
 #include <nrf.h>
 
-#define REQUEST_FUNCTION(func_core, params_core, func_swi, params_swi)                             \
+#define REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, func_swi, fail_instr, ...)                     \
     bool result = false;                                                                           \
                                                                                                    \
     if (active_vector_priority_is_high())                                                          \
     {                                                                                              \
         if (nrf_802154_critical_section_enter())                                                   \
         {                                                                                          \
-            result = func_core params_core;                                                        \
+            result = func_core(__VA_ARGS__);                                                       \
+            nrf_802154_critical_section_exit();                                                    \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            fail_instr                                                                             \
+            result = false;                                                                        \
+        }                                                                                          \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        func_swi(__VA_ARGS__, &result);                                                            \
+    }                                                                                              \
+                                                                                                   \
+    return result;
+
+#define REQUEST_FUNCTION(func_core, func_swi, ...)                                                 \
+        REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, func_swi, , __VA_ARGS__)
+
+#define REQUEST_FUNCTION_NO_ARGS(func_core, func_swi)                                              \
+    bool result = false;                                                                           \
+                                                                                                   \
+    if (active_vector_priority_is_high())                                                          \
+    {                                                                                              \
+        if (nrf_802154_critical_section_enter())                                                   \
+        {                                                                                          \
+            result = func_core();                                                                  \
             nrf_802154_critical_section_exit();                                                    \
         }                                                                                          \
         else                                                                                       \
@@ -67,34 +93,10 @@
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
-        func_swi params_swi;                                                                       \
+        func_swi(&result);                                                                         \
     }                                                                                              \
                                                                                                    \
     return result;
-
-#define REQUEST_FUNCTION_NO_ARGS(func_core, func_swi)                                              \
-        REQUEST_FUNCTION(func_core, (), func_swi, (&result))
-
-#define REQUEST_FUNCTION_1_ARG(func_core, func_swi, arg)                                           \
-        REQUEST_FUNCTION(func_core, (arg), func_swi, (arg, &result))
-
-#define REQUEST_FUNCTION_2_ARGS(func_core, func_swi, arg1, arg2)                                   \
-        REQUEST_FUNCTION(func_core, (arg1, arg2), func_swi, (arg1, arg2, &result))
-
-#define REQUEST_FUNCTION_3_ARGS(func_core, func_swi, arg1, arg2, arg3)                             \
-        REQUEST_FUNCTION(func_core, (arg1, arg2, arg3), func_swi, (arg1, arg2, arg3, &result))
-
-#define REQUEST_FUNCTION_4_ARGS(func_core, func_swi, arg1, arg2, arg3, arg4)                       \
-        REQUEST_FUNCTION(func_core,                                                                \
-                         (arg1, arg2, arg3, arg4),                                                 \
-                         func_swi,                                                                 \
-                         (arg1, arg2, arg3, arg4, &result))
-
-#define REQUEST_FUNCTION_5_ARGS(func_core, func_swi, arg1, arg2, arg3, arg4, arg5)                 \
-        REQUEST_FUNCTION(func_core,                                                                \
-                         (arg1, arg2, arg3, arg4, arg5),                                           \
-                         func_swi,                                                                 \
-                         (arg1, arg2, arg3, arg4, arg5, &result))
 
 /** Check if active vector priority is high enough to call requests directly.
  *
@@ -114,20 +116,19 @@ void nrf_802154_request_init(void)
 
 bool nrf_802154_request_sleep(nrf_802154_term_t term_lvl)
 {
-    REQUEST_FUNCTION_1_ARG(nrf_802154_core_sleep,
-                           nrf_802154_swi_sleep,
-                           term_lvl)
+    REQUEST_FUNCTION(nrf_802154_core_sleep, nrf_802154_swi_sleep, term_lvl)
 }
 
 bool nrf_802154_request_receive(nrf_802154_term_t              term_lvl,
                                 req_originator_t               req_orig,
                                 nrf_802154_notification_func_t notify_function)
 {
-    REQUEST_FUNCTION_3_ARGS(nrf_802154_core_receive,
-                            nrf_802154_swi_receive,
-                            term_lvl,
-                            req_orig,
-                            notify_function)
+    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_receive,
+                                     nrf_802154_swi_receive,
+                                     notify_function(false); ,
+                                     term_lvl,
+                                     req_orig,
+                                     notify_function)
 }
 
 bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
@@ -136,54 +137,47 @@ bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
                                  bool                           cca,
                                  nrf_802154_notification_func_t notify_function)
 {
-    REQUEST_FUNCTION_5_ARGS(nrf_802154_core_transmit,
-                            nrf_802154_swi_transmit,
-                            term_lvl,
-                            req_orig,
-                            p_data,
-                            cca,
-                            notify_function)
+    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_transmit,
+                                     nrf_802154_swi_transmit,
+                                     notify_function(false); ,
+                                     term_lvl,
+                                     req_orig,
+                                     p_data,
+                                     cca,
+                                     notify_function)
 }
 
 bool nrf_802154_request_energy_detection(nrf_802154_term_t term_lvl,
                                          uint32_t          time_us)
 {
-    REQUEST_FUNCTION_2_ARGS(nrf_802154_core_energy_detection,
-                            nrf_802154_swi_energy_detection,
-                            term_lvl,
-                            time_us)
+    REQUEST_FUNCTION(nrf_802154_core_energy_detection,
+                     nrf_802154_swi_energy_detection,
+                     term_lvl,
+                     time_us)
 }
 
 bool nrf_802154_request_cca(nrf_802154_term_t term_lvl)
 {
-    REQUEST_FUNCTION_1_ARG(nrf_802154_core_cca,
-                           nrf_802154_swi_cca,
-                           term_lvl)
+    REQUEST_FUNCTION(nrf_802154_core_cca, nrf_802154_swi_cca, term_lvl)
 }
 
 bool nrf_802154_request_continuous_carrier(nrf_802154_term_t term_lvl)
 {
-    REQUEST_FUNCTION_1_ARG(nrf_802154_core_continuous_carrier,
-                           nrf_802154_swi_continuous_carrier,
-                           term_lvl)
+    REQUEST_FUNCTION(nrf_802154_core_continuous_carrier, nrf_802154_swi_continuous_carrier, term_lvl)
 }
 
 bool nrf_802154_request_buffer_free(uint8_t * p_data)
 {
-    REQUEST_FUNCTION_1_ARG(nrf_802154_core_notify_buffer_free,
-                           nrf_802154_swi_buffer_free,
-                           p_data)
+    REQUEST_FUNCTION(nrf_802154_core_notify_buffer_free, nrf_802154_swi_buffer_free, p_data)
 }
 
 bool nrf_802154_request_channel_update(void)
 {
-    REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_channel_update,
-                             nrf_802154_swi_channel_update)
+    REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_channel_update, nrf_802154_swi_channel_update)
 }
 
 bool nrf_802154_request_cca_cfg_update(void)
 {
-    REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_cca_cfg_update,
-                             nrf_802154_swi_cca_cfg_update)
+    REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_cca_cfg_update, nrf_802154_swi_cca_cfg_update)
 }
 

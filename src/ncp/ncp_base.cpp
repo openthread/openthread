@@ -37,18 +37,14 @@
 
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
-
+#include <openthread/link.h>
 #include <openthread/ncp.h>
 #include <openthread/openthread.h>
-
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "mac/mac_frame.hpp"
-#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ncp {
@@ -76,6 +72,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(PHY_RX_SENSITIVITY),
     NCP_GET_PROP_HANDLER_ENTRY(PHY_TX_POWER),
     NCP_GET_PROP_HANDLER_ENTRY(POWER_STATE),
+    NCP_GET_PROP_HANDLER_ENTRY(MCU_POWER_STATE),
     NCP_GET_PROP_HANDLER_ENTRY(PROTOCOL_VERSION),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_PANID),
     NCP_GET_PROP_HANDLER_ENTRY(MAC_15_4_LADDR),
@@ -164,7 +161,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MONITOR_RSSI_THRESHOLD),
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MONITOR_SAMPLE_WINDOW),
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MONITOR_SAMPLE_COUNT),
-    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MONITOR_CHANNEL_QUALITY),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MONITOR_CHANNEL_OCCUPANCY),
 #endif
 #if OPENTHREAD_ENABLE_LEGACY
     NCP_GET_PROP_HANDLER_ENTRY(NEST_LEGACY_ULA_PREFIX),
@@ -248,6 +245,10 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_NEW_CHANNEL),
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_DELAY),
     NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_SUPPORTED_CHANNELS),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_FAVORED_CHANNELS),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_CHANNEL_SELECT),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_ENABLED),
+    NCP_GET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL),
 #endif
 #endif // OPENTHREAD_FTD
 
@@ -260,7 +261,15 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 
 const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 {
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
+    NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_ENABLED),
+    NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
+    NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
+    NCP_SET_PROP_HANDLER_ENTRY(PHY_ENABLED),
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_SET_PROP_HANDLER_ENTRY(POWER_STATE),
+    NCP_SET_PROP_HANDLER_ENTRY(MCU_POWER_STATE),
     NCP_SET_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
     NCP_SET_PROP_HANDLER_ENTRY(PHY_TX_POWER),
     NCP_SET_PROP_HANDLER_ENTRY(PHY_CHAN),
@@ -268,13 +277,6 @@ const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_PANID),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_LADDR),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_RAW_STREAM_ENABLED),
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
-    NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_ENABLED),
-    NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
-    NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
-    NCP_SET_PROP_HANDLER_ENTRY(PHY_ENABLED),
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     NCP_SET_PROP_HANDLER_ENTRY(MAC_DATA_POLL_PERIOD),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_SCAN_MASK),
@@ -349,6 +351,10 @@ const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_NEW_CHANNEL),
     NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_DELAY),
     NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_SUPPORTED_CHANNELS),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_FAVORED_CHANNELS),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_CHANNEL_SELECT),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_ENABLED),
+    NCP_SET_PROP_HANDLER_ENTRY(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL),
 #endif
 #endif // #if OPENTHREAD_FTD
 };
@@ -358,7 +364,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 const NcpBase::PropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
 {
     NCP_INSERT_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
 #endif
@@ -388,7 +394,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
 const NcpBase::PropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] =
 {
     NCP_REMOVE_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_EXTENDED_ADDRESSES),
 #endif
@@ -572,9 +578,8 @@ NcpBase::NcpBase(Instance *aInstance):
 #if OPENTHREAD_FTD
     mPreferredRouteId(0),
 #endif
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     mCurTransmitTID(0),
-    mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
     mCurScanChannel(kInvalidScanChannel),
     mSrcMatchEnabled(false),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1225,7 +1230,7 @@ bool NcpBase::HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop
         ExitNow(aError = SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(aHeader));
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     case SPINEL_PROP_STREAM_RAW:
         ExitNow(aError = SetPropertyHandler_STREAM_RAW(aHeader));
 #endif
@@ -1256,7 +1261,11 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
         ExitNow(error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
     }
 
+    mDisableStreamWrite = false;
+
     error = (this->*handler)();
+
+    mDisableStreamWrite = true;
 
     if (error == OT_ERROR_NONE)
     {
@@ -1307,7 +1316,11 @@ otError NcpBase::HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_
     mDecoder.ReadData(valuePtr, valueLen);
     mDecoder.ResetToSaved();
 
+    mDisableStreamWrite = false;
+
     error = (this->*handler)();
+
+    mDisableStreamWrite = true;
 
     VerifyOrExit(error == OT_ERROR_NONE, error = PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(error)));
 
@@ -1526,6 +1539,31 @@ exit:
 // MARK: Individual Property Getters and Setters
 // ----------------------------------------------------------------------------
 
+#if OPENTHREAD_ENABLE_DIAG
+
+otError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader)
+{
+    const char *string = NULL;
+    const char *output = NULL;
+    otError error = OT_ERROR_NONE;
+
+    error = mDecoder.ReadUtf8(string);
+
+    VerifyOrExit(error == OT_ERROR_NONE, error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
+
+    output = otDiagProcessCmdLine(string);
+
+    // Prepare the response
+    SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_NEST_STREAM_MFG));
+    SuccessOrExit(error = mEncoder.WriteUtf8(output));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_DIAG
+
 otError NcpBase::GetPropertyHandler_PHY_ENABLED(void)
 {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1547,27 +1585,20 @@ otError NcpBase::SetPropertyHandler_PHY_CHAN(void)
 
     SuccessOrExit(error = mDecoder.ReadUintPacked(channel));
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
     error = otLinkSetChannel(mInstance, static_cast<uint8_t>(channel));
-#endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     SuccessOrExit(error);
-
-    // Cache the channel. If the raw link layer isn't enabled yet, the otSetChannel call
-    // doesn't call into the radio layer to set the channel. We will have to do it
-    // manually whenever the radios are enabled and/or raw stream is enabled.
-    mCurReceiveChannel = static_cast<uint8_t>(channel);
 
     // Make sure we are update the receiving channel if raw link is enabled and we have raw
     // stream enabled already
     if (otLinkRawIsEnabled(mInstance) && mIsRawStreamEnabled)
     {
-        error = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+        error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
     }
 
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 exit:
     return error;
@@ -1661,13 +1692,13 @@ otError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(void)
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     if (otLinkRawIsEnabled(mInstance))
     {
         if (enabled)
         {
-            error = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+            error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
         }
         else
         {
@@ -1675,7 +1706,7 @@ otError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(void)
         }
     }
 
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     mIsRawStreamEnabled = enabled;
 
@@ -1791,7 +1822,11 @@ otError NcpBase::GetPropertyHandler_CAPS(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_COUNTERS));
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_UNSOL_UPDATE_FILTER));
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MCU_POWER_STATE));
+#endif
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RAW));
 #endif
 
@@ -1859,9 +1894,100 @@ otError NcpBase::GetPropertyHandler_INTERFACE_COUNT(void)
     return mEncoder.WriteUint8(1); // Only one interface for now
 }
 
+#if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+
+otError NcpBase::GetPropertyHandler_MCU_POWER_STATE(void)
+{
+    spinel_mcu_power_state_t state = SPINEL_MCU_POWER_STATE_ON;
+
+    switch (otPlatGetMcuPowerState(mInstance))
+    {
+    case OT_PLAT_MCU_POWER_STATE_ON:
+        state = SPINEL_MCU_POWER_STATE_ON;
+        break;
+
+    case OT_PLAT_MCU_POWER_STATE_LOW_POWER:
+        state = SPINEL_MCU_POWER_STATE_LOW_POWER;
+        break;
+
+    case OT_PLAT_MCU_POWER_STATE_OFF:
+        state = SPINEL_MCU_POWER_STATE_OFF;
+        break;
+    }
+
+    return mEncoder.WriteUint8(state);
+}
+
+otError NcpBase::SetPropertyHandler_MCU_POWER_STATE(void)
+{
+    otError error = OT_ERROR_NONE;
+    otPlatMcuPowerState powerState;
+    uint8_t state;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(state));
+
+    switch (state)
+    {
+    case SPINEL_MCU_POWER_STATE_ON:
+        powerState = OT_PLAT_MCU_POWER_STATE_ON;
+        break;
+
+    case SPINEL_MCU_POWER_STATE_LOW_POWER:
+        powerState = OT_PLAT_MCU_POWER_STATE_LOW_POWER;
+        break;
+
+    case SPINEL_MCU_POWER_STATE_OFF:
+        powerState = OT_PLAT_MCU_POWER_STATE_OFF;
+        break;
+
+    default:
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+    SuccessOrExit(error = otPlatSetMcuPowerState(mInstance, powerState));
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+    // If the call `otPlatSetMcuPowerState()` was successful and the desire
+    // state is `OFF`, ensure to disable Thread (MLE) operation (and stop
+    // legacy) and also bring the IPv6 interface down.
+
+    if (powerState == OT_PLAT_MCU_POWER_STATE_OFF)
+    {
+        if (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED)
+        {
+            otThreadSetEnabled(mInstance, false);
+            StopLegacy();
+        }
+
+        if (otIp6IsEnabled(mInstance))
+        {
+            otIp6SetEnabled(mInstance, false);
+        }
+    }
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+exit:
+    return error;
+}
+
+#else // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+
+otError NcpBase::GetPropertyHandler_MCU_POWER_STATE(void)
+{
+    return mEncoder.WriteUint8(SPINEL_MCU_POWER_STATE_ON);
+}
+
+otError NcpBase::SetPropertyHandler_MCU_POWER_STATE(void)
+{
+    return OT_ERROR_DISABLED_FEATURE;
+}
+
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+
 otError NcpBase::GetPropertyHandler_POWER_STATE(void)
 {
-    return mEncoder.WriteUint8(SPINEL_POWER_STATE_ONLINE);   // Always online at the moment
+    return mEncoder.WriteUint8(SPINEL_POWER_STATE_ONLINE);
 }
 
 otError NcpBase::SetPropertyHandler_POWER_STATE(void)
@@ -1872,7 +1998,7 @@ otError NcpBase::SetPropertyHandler_POWER_STATE(void)
 otError NcpBase::GetPropertyHandler_HWADDR(void)
 {
     otExtAddress hwAddr;
-    otLinkGetFactoryAssignedIeeeEui64(mInstance, &hwAddr);
+    otPlatRadioGetIeeeEui64(mInstance, hwAddr.m8);
 
     return mEncoder.WriteEui64(hwAddr);
 }
@@ -2161,7 +2287,6 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 
     return error;
 }
-
 
 extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {

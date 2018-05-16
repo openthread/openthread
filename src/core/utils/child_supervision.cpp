@@ -53,42 +53,26 @@ ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupervisionInterval(kDefaultSupervisionInterval)
     , mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
+    , mNotifierCallback(&ChildSupervisor::HandleStateChanged, this)
 {
-}
-
-void ChildSupervisor::Start(void)
-{
-    VerifyOrExit(mSupervisionInterval != 0);
-    VerifyOrExit(!mTimer.IsRunning());
-    mTimer.Start(kOneSecond);
-
-exit:
-    return;
-}
-
-void ChildSupervisor::Stop(void)
-{
-    mTimer.Stop();
+    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 {
     mSupervisionInterval = aInterval;
-    Start();
+    CheckState();
 }
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
     Child * child = NULL;
     uint8_t childIndex;
-    uint8_t numChildren;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
 
     aMessage.Read(0, sizeof(childIndex), &childIndex);
-    child = GetNetif().GetMle().GetChildren(&numChildren);
-    VerifyOrExit(childIndex < numChildren, child = NULL);
-    child += childIndex;
+    child = GetNetif().GetMle().GetChildTable().GetChildAtIndex(childIndex);
 
 exit:
     return child;
@@ -110,7 +94,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // the destination of the message to be later retrieved using
     // `ChildSupervisor::GetDestination(message)`.
 
-    childIndex = netif.GetMle().GetChildIndex(aChild);
+    childIndex = netif.GetMle().GetChildTable().GetChildIndex(aChild);
     SuccessOrExit(message->Append(&childIndex, sizeof(childIndex)));
 
     SuccessOrExit(netif.SendMessage(*message));
@@ -138,25 +122,17 @@ void ChildSupervisor::HandleTimer(Timer &aTimer)
 
 void ChildSupervisor::HandleTimer(void)
 {
-    Child * child;
-    uint8_t numChildren;
-
     VerifyOrExit(mSupervisionInterval != 0);
 
-    child = GetNetif().GetMle().GetChildren(&numChildren);
-
-    for (uint8_t i = 0; i < numChildren; i++, child++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
     {
-        if (!child->IsStateValidOrRestoring())
-        {
-            continue;
-        }
+        Child &child = *iter.GetChild();
 
-        child->IncrementSecondsSinceLastSupervision();
+        child.IncrementSecondsSinceLastSupervision();
 
-        if ((child->GetSecondsSinceLastSupervision() >= mSupervisionInterval) && (child->IsRxOnWhenIdle() == false))
+        if ((child.GetSecondsSinceLastSupervision() >= mSupervisionInterval) && (child.IsRxOnWhenIdle() == false))
         {
-            SendMessage(*child);
+            SendMessage(child);
         }
     }
 
@@ -164,6 +140,44 @@ void ChildSupervisor::HandleTimer(void)
 
 exit:
     return;
+}
+
+void ChildSupervisor::CheckState(void)
+{
+    bool            shouldRun = false;
+    Mle::MleRouter &mle       = GetInstance().Get<Mle::MleRouter>();
+
+    // Child Supervision should run if `mSupervisionInterval` is not
+    // zero, Thread MLE operation is enabled, and there is at least one
+    // "valid" child in the child table.
+
+    shouldRun = ((mSupervisionInterval != 0) && (mle.GetRole() != OT_DEVICE_ROLE_DISABLED) &&
+                 mle.GetChildTable().HasChildren(ChildTable::kInStateValid));
+
+    if (shouldRun && !mTimer.IsRunning())
+    {
+        mTimer.Start(kOneSecond);
+        otLogInfoUtil(GetInstance(), "Starting Child Supervision");
+    }
+
+    if (!shouldRun && mTimer.IsRunning())
+    {
+        mTimer.Stop();
+        otLogInfoUtil(GetInstance(), "Stopping Child Supervision");
+    }
+}
+
+void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+{
+    aCallback.GetOwner<ChildSupervisor>().HandleStateChanged(aFlags);
+}
+
+void ChildSupervisor::HandleStateChanged(uint32_t aFlags)
+{
+    if ((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
+    {
+        CheckState();
+    }
 }
 
 #endif // #if OPENTHREAD_FTD

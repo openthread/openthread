@@ -42,6 +42,7 @@
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/announce_sender.hpp"
 
 namespace ot {
 
@@ -49,7 +50,7 @@ namespace ot {
  * This class implements handling Announce Begin Requests.
  *
  */
-class AnnounceBeginServer : public InstanceLocator
+class AnnounceBeginServer : public AnnounceSenderBase
 {
 public:
     /**
@@ -85,6 +86,7 @@ private:
     {
         kDefaultCount  = 3,
         kDefaultPeriod = 1000,
+        kDefaultJitter = 0,
     };
 
     static void HandleRequest(void *               aContext,
@@ -94,14 +96,6 @@ private:
     void        HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-
-    uint32_t mChannelMask;
-    uint16_t mPeriod;
-    uint8_t  mCount;
-    uint8_t  mChannel;
-
-    TimerMilli mTimer;
 
     Coap::Resource mAnnounceBegin;
 };

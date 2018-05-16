@@ -205,6 +205,14 @@ public:
     void Intersect(const ChannelMask &aOtherMask) { mMask &= aOtherMask.mMask; }
 
     /**
+     * This method returns the number of channels in the mask.
+     *
+     * @returns Number of channels in the mask.
+     *
+     */
+    uint8_t GetNumberOfChannels(void) const;
+
+    /**
      * This method gets the next channel in the channel mask.
      *
      * This method can be used to iterate over all channels in the channel mask. To get the first channel (channel with
@@ -219,6 +227,26 @@ public:
      *
      */
     otError GetNextChannel(uint8_t &aChannel) const;
+
+    /**
+     * This method overloads `==` operator to indicate whether two masks are equal.
+     *
+     * @param[in] aAnother   A reference to another mask to compare with the current one.
+     *
+     * @returns TRUE if the two masks are equal, FALSE otherwise.
+     *
+     */
+    bool operator==(const ChannelMask &aAnother) const { return (mMask == aAnother.mMask); }
+
+    /**
+     * This method overloads `!=` operator to indicate whether two masks are different.
+     *
+     * @param[in] aAnother     A reference to another mask to compare with the current one.
+     *
+     * @returns TRUE if the two masks are different, FALSE otherwise.
+     *
+     */
+    bool operator!=(const ChannelMask &aAnother) const { return (mMask != aAnother.mMask); }
 
     /**
      * This method converts the channel mask into a human-readable NULL-terminated string.
@@ -554,22 +582,65 @@ public:
     otError SetShortAddress(ShortAddress aShortAddress);
 
     /**
-     * This method returns the IEEE 802.15.4 Channel.
+     * This method returns the IEEE 802.15.4 PAN Channel.
      *
-     * @returns The IEEE 802.15.4 Channel.
+     * @returns The IEEE 802.15.4 PAN Channel.
      *
      */
-    uint8_t GetChannel(void) const { return mChannel; }
+    uint8_t GetPanChannel(void) const { return mPanChannel; }
 
     /**
-     * This method sets the IEEE 802.15.4 Channel.
+     * This method sets the IEEE 802.15.4 PAN Channel.
      *
-     * @param[in]  aChannel  The IEEE 802.15.4 Channel.
+     * @param[in]  aChannel  The IEEE 802.15.4 PAN Channel.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Channel.
+     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 PAN Channel.
      *
      */
-    otError SetChannel(uint8_t aChannel);
+    otError SetPanChannel(uint8_t aChannel);
+
+    /**
+     * This method returns the IEEE 802.15.4 Radio Channel.
+     *
+     * @returns The IEEE 802.15.4 Radio Channel.
+     *
+     */
+    uint8_t GetRadioChannel(void) const { return mRadioChannel; }
+
+    /**
+     * This method sets the IEEE 802.15.4 Radio Channel. It can only be called
+     * after successfully calling AcquireRadioChannel().
+     *
+     * @param[in]  aChannel  The IEEE 802.15.4 Radio Channel.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Radio Channel.
+     *
+     */
+    otError SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel);
+
+    /**
+     * This method acquires external ownership of the Radio channel so that future calls to
+     * SetRadioChannel will succeed.
+     *
+     * @param[out]  aAcquisitionId  The AcquisitionId that the caller should use when
+     *                              calling SetRadioChannel().
+     *
+     * @retval OT_ERROR_NONE  Successfully acquired permission to Set the Radio Channel.
+     * @retval OT_ERROR_INVALID_STATE  Failed to acquire permission as the radio Channel
+     *                                 has already been acquired.
+     *
+     */
+    otError AcquireRadioChannel(uint16_t *aAcquisitionId);
+
+    /**
+     * This method releases external ownership of the radio Channel
+     * that was acquired with AcquireRadioChannel().  The channel
+     * will re-adopt the PAN Channel when this API is called.
+     *
+     * @retval OT_ERROR_NONE  Successfully released the IEEE 802.15.4 Radio Channel.
+     *
+     */
+    otError ReleaseRadioChannel(void);
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -786,11 +857,31 @@ public:
      */
     uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
 
+    /**
+     * This method Starts/Stops the Link layer. It may only be used when the Netif Interface is down
+     *
+     * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
+     *
+     * @retval OT_ERROR_NONE   The operation succeeded or the new State equals the current State.
+     *
+     */
+    otError SetEnabled(bool aEnable);
+
+    /**
+     * This method indicates whether or not the link layer is enabled.
+     *
+     * @retval true   Link layer is enabled.
+     * @retval false  Link layer is not enabled.
+     *
+     */
+    bool IsEnabled(void) { return mEnabled; }
+
 private:
     enum
     {
         kInvalidRssiValue  = 127,
         kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
+        kMaxAcquisitionId  = 0xffff,
 
     /**
      * Interval between RSSI samples when performing Energy Scan.
@@ -852,6 +943,10 @@ private:
     otError RadioReceive(uint8_t aChannel);
     otError RadioSleep(void);
 
+    void LogFrameRxFailure(const Frame *aFrame, otError aError) const;
+    void LogFrameTxFailure(const Frame &aFrame, otError aError) const;
+    void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+
     static const char *OperationToString(Operation aOperation);
 
     Operation mOperation;
@@ -881,7 +976,9 @@ private:
     ExtAddress   mExtAddress;
     ShortAddress mShortAddress;
     PanId        mPanId;
-    uint8_t      mChannel;
+    uint8_t      mPanChannel;
+    uint8_t      mRadioChannel;
+    uint16_t     mRadioChannelAcquisitionId;
 
     otNetworkName   mNetworkName;
     otExtendedPanId mExtendedPanId;
@@ -920,6 +1017,7 @@ private:
 
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
+    bool               mEnabled;
 };
 
 /**

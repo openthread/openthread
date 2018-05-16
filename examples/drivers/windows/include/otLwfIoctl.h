@@ -717,8 +717,16 @@ typedef struct otCommissionConfig
     OTLWF_CTL_CODE(200, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
 
+#define IOCTL_OTLWF_OT_NEXT_ROUTE \
+    OTLWF_CTL_CODE(201, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // BOOLEAN - aLocal (input)
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otExternalRouteConfig - aConfig (output)
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 200
+#define MAX_OTLWF_IOCTL_FUNC_CODE 201
 
 #endif //__OTLWFIOCTL_H__

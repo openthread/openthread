@@ -218,17 +218,13 @@ exit:
 otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
-    uint8_t numChildren;
-    Child * child;
 
-    child = GetNetif().GetMle().GetChildren(&numChildren);
-
-    for (uint8_t i = 0; i < numChildren; i++, child++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter.Advance())
     {
-        if (child->IsStateValidOrRestoring() && child->IsIndirectSourceMatchPending())
+        if (iter.GetChild()->IsIndirectSourceMatchPending())
         {
-            SuccessOrExit(error = AddAddress(*child));
-            child->SetIndirectSourceMatchPending(false);
+            SuccessOrExit(error = AddAddress(*iter.GetChild()));
+            iter.GetChild()->SetIndirectSourceMatchPending(false);
         }
     }
 

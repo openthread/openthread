@@ -72,7 +72,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt                                               \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/headers                                       \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     $(NULL)
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
@@ -88,6 +88,7 @@ PLATFORM_COMMON_SOURCES                                                         
     radio.c                                                                                                  \
     random.c                                                                                                 \
     temp.c                                                                                                   \
+    spi-slave.c                                                                                              \
     uart.c                                                                                                   \
     usb-cdc-uart.c                                                                                           \
     $(NULL)
@@ -146,9 +147,12 @@ RADIO_DRIVER_SOURCES                                                            
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_debug.c                          \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_pib.c                            \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_revision.c                       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rssi.c                           \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.c                      \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control.c                       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.c            \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_ack_timeout.c       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_csma_ca.c           \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock_sdk.c       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.c    \
     $(NULL)
@@ -210,135 +214,138 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
     $(SOFTDEVICE_SOURCES)                                                                                    \
     $(NULL)
 
-noinst_HEADERS                                                                                             = \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/arm_math.h                                           \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc_V6.h                                     \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_gcc.h                                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cm4.h                                           \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmFunc.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmInstr.h                                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmSimd.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util_platform.h                           \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util.h                                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/apply_old_config.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nordic_common.h                               \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_assert.h                                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_error.h                                   \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_instance.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_internal.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_types.h                               \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log.h                                     \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_section.h                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_config.h                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_glue.h                                   \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_log.h                                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_common.h                                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_config.h                                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_errors.h                                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_macros.h                                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_os.h                                      \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_resources.h                               \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/common/nrf_drv_common.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/power/nrf_drv_power.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/systick/nrf_drv_systick.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/usbd/nrf_drv_usbd_errata.h                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/usbd/nrf_drv_usbd.h                                \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154.h                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_ack_pending_bit.h                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core_hooks.h                      \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_config.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_const.h                           \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_critical_section.h                \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_debug.h                           \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification.h                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_pib.h                             \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop.h                   \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_procedures_duration.h             \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request.h                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_revision.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.h                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_swi.h                             \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_api.h                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_config.h                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal/nrf_radio.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_ack_timeout.h        \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_csma_ca.h            \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.h             \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock.h            \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_802154_timer.h            \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_api.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_config.h                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/softdevice/nrf_raal_softdevice.h        \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.h     \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error/app_error_weak.h                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error/app_error.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo_internal.h                     \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic_internal.h                     \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_class_base.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_descriptor.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_langid.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_request.h                           \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_serial_num.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.h                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_types.h                             \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd.h                                   \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/app_usbd_cdc_desc.h                \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/app_usbd_cdc_types.h               \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm_internal.h    \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.h             \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/config/app_usbd_string_config.h              \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_common.h                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_errors.h                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_clock.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power_clock.h                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_systick.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_clock.h                                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_gpio.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_gpiote.h                                      \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_egu.h                                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_nvmc.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_ppi.h                                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_power.h                                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_rng.h                                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_uart.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_usbd.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/compiler_abstraction.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf.h                                             \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf_peripherals.h                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf51_to_nrf52.h                                  \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf51_to_nrf52840.h                               \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52_to_nrf52840.h                               \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840.h                                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_bitfields.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_peripherals.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/system_nrf52840.h                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.h                                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h                               \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble.h                              \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_err.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gap.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gatt.h                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gattc.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gatts.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_hci.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_l2cap.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_ranges.h                       \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_types.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_error.h                        \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_error_sdm.h                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_error_soc.h                    \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_nvic.h                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_sdm.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_soc.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_svc.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52/nrf_mbr.h                    \
+noinst_HEADERS                                                                                               = \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/arm_math.h                                             \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc_V6.h                                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_gcc.h                                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cm4.h                                             \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmFunc.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmInstr.h                                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmSimd.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util_platform.h                             \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util.h                                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/apply_old_config.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nordic_common.h                                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_assert.h                                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_error.h                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_instance.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_internal.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_types.h                                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log.h                                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_section.h                                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_config.h                                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_glue.h                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_log.h                                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_common.h                                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_config.h                                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_errors.h                                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_macros.h                                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_os.h                                        \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_resources.h                                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/common/nrf_drv_common.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/power/nrf_drv_power.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/systick/nrf_drv_systick.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/usbd/nrf_drv_usbd_errata.h                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/usbd/nrf_drv_usbd.h                                  \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154.h                                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_ack_pending_bit.h                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_core_hooks.h                        \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_config.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_const.h                             \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_critical_section.h                  \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_debug.h                             \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification.h                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_pib.h                               \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop.h                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_procedures_duration.h               \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request.h                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_revision.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rssi.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.h                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_swi.h                               \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_api.h                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control_config.h                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal/nrf_radio.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_ack_timeout.h          \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_csma_ca.h              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.h               \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock.h              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/temperature/nrf_802154_temperature.h  \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/timer/nrf_802154_timer.h              \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_api.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_config.h                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/softdevice/nrf_raal_softdevice.h          \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.h       \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error/app_error_weak.h                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error/app_error.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo_internal.h                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic_internal.h                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_class_base.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_descriptor.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_langid.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_request.h                             \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_serial_num.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.h                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_types.h                               \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd.h                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/app_usbd_cdc_desc.h                  \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/app_usbd_cdc_types.h                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm_internal.h      \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.h               \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/config/app_usbd_string_config.h                \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_common.h                                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_errors.h                                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_clock.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power_clock.h                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_systick.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_clock.h                                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_gpio.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_gpiote.h                                        \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_egu.h                                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_nvmc.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_ppi.h                                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_power.h                                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_rng.h                                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_spis.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_uart.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_usbd.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/compiler_abstraction.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf.h                                               \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf_peripherals.h                                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf51_to_nrf52.h                                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf51_to_nrf52840.h                                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52_to_nrf52840.h                                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840.h                                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_bitfields.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_peripherals.h                              \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/system_nrf52840.h                                   \
+    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.h                                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h                                 \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_err.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gap.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gatt.h                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gattc.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gatts.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_hci.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_l2cap.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_ranges.h                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_types.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_error.h                          \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_error_sdm.h                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_error_soc.h                      \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_nvic.h                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_sdm.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_soc.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf_svc.h                            \
+    $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52/nrf_mbr.h                      \
     $(NULL)
 
 PRETTY_FILES                                                                                               = \

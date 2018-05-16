@@ -44,7 +44,9 @@
 
 #include "platform/clock/nrf_802154_clock.h"
 
-static bool m_continuous;
+static bool          m_continuous;
+static volatile bool m_critical_section;
+static volatile bool m_started_pending;
 
 void nrf_raal_init(void)
 {
@@ -93,15 +95,28 @@ uint32_t nrf_raal_timeslot_us_left_get(void)
 
 void nrf_raal_critical_section_enter(void)
 {
-    // Intentionally empty.
+    m_critical_section = true;
 }
 
 void nrf_raal_critical_section_exit(void)
 {
-    // Intentionally empty.
+    m_critical_section = false;
+
+    if (m_started_pending)
+    {
+        nrf_raal_timeslot_started();
+        m_started_pending = false;
+    }
 }
 
 void nrf_802154_clock_hfclk_ready(void)
 {
-    nrf_raal_timeslot_started();
+    if (m_critical_section)
+    {
+        m_started_pending = true;
+    }
+    else
+    {
+        nrf_raal_timeslot_started();
+    }
 }

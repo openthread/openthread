@@ -46,7 +46,7 @@ uint8_t otLinkGetChannel(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMac().GetChannel();
+    return instance.GetThreadNetif().GetMac().GetPanChannel();
 }
 
 otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
@@ -57,7 +57,7 @@ otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = instance.GetThreadNetif().GetMac().SetChannel(aChannel));
+    SuccessOrExit(error = instance.GetThreadNetif().GetMac().SetPanChannel(aChannel));
     instance.GetThreadNetif().GetActiveDataset().Clear();
     instance.GetThreadNetif().GetPendingDataset().Clear();
 
@@ -287,6 +287,27 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous)
 
 exit:
     return error;
+}
+
+otError otLinkSetEnabled(otInstance *aInstance, bool aEnable)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    // cannot disable the link layer if the Thread interface is enabled
+    VerifyOrExit(instance.GetThreadNetif().IsUp() == false, error = OT_ERROR_INVALID_STATE);
+
+    error = instance.GetThreadNetif().GetMac().SetEnabled(aEnable);
+
+exit:
+    return error;
+}
+
+bool otLinkIsEnabled(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetMac().IsEnabled();
 }
 
 const otMacCounters *otLinkGetCounters(otInstance *aInstance)

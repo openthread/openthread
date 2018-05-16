@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,19 @@
  */
 
 /**
- * @file
- *   This file implements the OpenThread platform abstraction for logging.
+ * @file logging.c
+ * Platform abstraction for the logging
  *
  */
-
-#include <openthread/cli.h>
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 #include <openthread/platform/logging.h>
 
-#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
-
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     (void)aLogLevel;
     (void)aLogRegion;
     (void)aFormat;
 }
-
-#endif // (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
+#endif

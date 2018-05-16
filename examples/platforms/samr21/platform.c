@@ -175,6 +175,11 @@ void PlatformInit(int argc, char *argv[])
     samr21RadioInit();
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 void PlatformDeinit(void)
 {
 }

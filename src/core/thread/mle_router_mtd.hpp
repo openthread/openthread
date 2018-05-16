@@ -38,8 +38,10 @@
 
 #include "utils/wrap_string.h"
 
+#include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
+#include "thread/router_table.hpp"
 #include "thread/thread_tlvs.hpp"
 
 namespace ot {
@@ -52,19 +54,19 @@ class MleRouter : public Mle
 public:
     explicit MleRouter(Instance &aInstance)
         : Mle(aInstance)
+        , mChildTable(aInstance)
+        , mRouterTable(aInstance)
     {
     }
+
+    bool IsRouterRoleEnabled(void) const { return false; }
 
     bool IsSingleton(void) { return false; }
 
     otError BecomeRouter(ThreadStatusTlv::Status) { return OT_ERROR_NOT_CAPABLE; }
     otError BecomeLeader(void) { return OT_ERROR_NOT_CAPABLE; }
 
-    uint8_t GetActiveRouterCount(void) const { return 0; }
-    uint8_t GetActiveNeighborRouterCount(void) const { return 0; }
     uint8_t GetRouterSelectionJitterTimeout(void) { return 0; }
-
-    uint32_t GetLeaderAge(void) const { return 0; }
 
     uint32_t GetPreviousPartitionId(void) const { return 0; }
     void     SetPreviousPartitionId(uint32_t) {}
@@ -78,26 +80,11 @@ public:
     uint8_t GetLinkCost(uint16_t) { return 0; }
     uint8_t GetCost(uint16_t) { return 0; }
 
-    uint8_t GetRouterIdSequence(void) const { return 0; }
-
     otError RemoveNeighbor(const Mac::Address &) { return BecomeDetached(); }
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
 
-    Child *GetChild(uint16_t) { return NULL; }
-    Child *GetChild(const Mac::ExtAddress &) { return NULL; }
-    Child *GetChild(const Mac::Address &) { return NULL; }
-
-    uint8_t GetChildIndex(const Child &) { return 0; }
-
-    Child *GetChildren(uint8_t *aNumChildren)
-    {
-        if (aNumChildren != NULL)
-        {
-            *aNumChildren = 0;
-        }
-
-        return NULL;
-    }
+    ChildTable & GetChildTable(void) { return mChildTable; }
+    RouterTable &GetRouterTable(void) { return mRouterTable; }
 
     bool IsMinimalChild(uint16_t) { return false; }
 
@@ -117,16 +104,6 @@ public:
 
     otError GetNextNeighborInfo(otNeighborInfoIterator &, otNeighborInfo &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
-    Router *GetRouters(uint8_t *aNumRouters)
-    {
-        if (aNumRouters != NULL)
-        {
-            *aNumRouters = 0;
-        }
-
-        return NULL;
-    }
-
     static int ComparePartitions(bool, const LeaderDataTlv &, bool, const LeaderDataTlv &) { return 0; }
 
     void ResolveRoutingLoops(uint16_t, uint16_t) {}
@@ -139,7 +116,6 @@ public:
     static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
 
     void FillConnectivityTlv(ConnectivityTlv &) {}
-    void FillRouteTlv(RouteTlv &) {}
 
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
@@ -169,13 +145,11 @@ private:
     otError HandleNetworkDataUpdateRouter(void) { return OT_ERROR_NONE; }
     otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     void    HandlePartitionChange(void) {}
-
     void    StopAdvertiseTimer(void) {}
-    otError ProcessRouteTlv(const RouteTlv &aRoute)
-    {
-        OT_UNUSED_VARIABLE(aRoute);
-        return OT_ERROR_NONE;
-    }
+    otError ProcessRouteTlv(const RouteTlv &) { return OT_ERROR_NONE; }
+
+    ChildTable  mChildTable;
+    RouterTable mRouterTable;
 };
 
 } // namespace Mle

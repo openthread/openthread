@@ -74,7 +74,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mScanChannels(0)
     , mScanChannel(0)
-    , mRestoreChannel(0)
+    , mMacRadioAcquisitionId(0)
     , mRestorePanId(Mac::kPanIdBroadcast)
     , mScanning(false)
 #if OPENTHREAD_FTD
@@ -82,7 +82,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mSendMessageFrameCounter(0)
     , mSendMessageKeyId(0)
     , mSendMessageDataSequenceNumber(0)
-    , mStartChildIndex(0)
+    , mIndirectStartingChild(NULL)
 #endif
     , mDataPollManager(aInstance)
 {
@@ -121,7 +121,12 @@ otError MeshForwarder::Stop(void)
 
     if (mScanning)
     {
-        netif.GetMac().SetChannel(mRestoreChannel);
+        if (mMacRadioAcquisitionId)
+        {
+            netif.GetMac().ReleaseRadioChannel();
+            mMacRadioAcquisitionId = 0;
+        }
+
         mScanning = false;
         netif.GetMle().HandleDiscoverComplete();
     }
@@ -148,14 +153,9 @@ exit:
 
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
-    Child * children;
-    uint8_t numChildren;
-
-    children = GetNetif().GetMle().GetChildren(&numChildren);
-
-    for (uint8_t i = 0; i < numChildren; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
     {
-        IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, children[i]));
+        IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
     }
 
     if (mSendMessage == &aMessage)
@@ -209,8 +209,9 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
     mScanChannel = OT_RADIO_CHANNEL_MIN;
     mScanChannels >>= OT_RADIO_CHANNEL_MIN;
-    mRestoreChannel = netif.GetMac().GetChannel();
-    mRestorePanId   = netif.GetMac().GetPanId();
+    mRestorePanId = netif.GetMac().GetPanId();
+
+    SuccessOrExit(error = netif.GetMac().AcquireRadioChannel(&mMacRadioAcquisitionId));
 
     while ((mScanChannels & 1) == 0)
     {
@@ -219,6 +220,12 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
         if (mScanChannel > OT_RADIO_CHANNEL_MAX)
         {
+            if (mMacRadioAcquisitionId)
+            {
+                netif.GetMac().ReleaseRadioChannel();
+                mMacRadioAcquisitionId = 0;
+            }
+
             netif.GetMle().HandleDiscoverComplete();
             ExitNow(error = OT_ERROR_DROP);
         }
@@ -484,7 +491,8 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     case Message::kTypeIp6:
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
-            netif.GetMac().SetChannel(mScanChannel);
+            SuccessOrExit(error = netif.GetMac().SetRadioChannel(mMacRadioAcquisitionId, mScanChannel));
+
             aFrame.SetChannel(mScanChannel);
 
             // In case a specific PAN ID of a Thread Network to be discovered is not known, Discovery
@@ -569,8 +577,9 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
         // The case where the current message requires fragmentation is
         // already checked and handled in `SendFragment()` method.
 
-        if (((child = netif.GetMle().GetChild(macDest)) != NULL) && !child->IsRxOnWhenIdle() &&
-            (child->GetIndirectMessageCount() > 1))
+        child = netif.GetMle().GetChildTable().FindChild(macDest, ChildTable::kInStateValidOrRestoring);
+
+        if ((child != NULL) && !child->IsRxOnWhenIdle() && (child->GetIndirectMessageCount() > 1))
         {
             aFrame.SetFramePending(true);
         }
@@ -1057,7 +1066,13 @@ void MeshForwarder::HandleDiscoverTimer(void)
             mSendQueue.Dequeue(*mSendMessage);
             mSendMessage->Free();
             mSendMessage = NULL;
-            netif.GetMac().SetChannel(mRestoreChannel);
+
+            if (mMacRadioAcquisitionId)
+            {
+                netif.GetMac().ReleaseRadioChannel();
+                mMacRadioAcquisitionId = 0;
+            }
+
             netif.GetMac().SetPanId(mRestorePanId);
             mScanning = false;
             netif.GetMle().HandleDiscoverComplete();
@@ -1086,7 +1101,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     uint8_t *        payload;
     uint8_t          payloadLength;
     otError          error = OT_ERROR_NONE;
-    char             stringBuffer[Mac::Frame::kInfoStringSize];
 
     if (!mEnabled)
     {
@@ -1106,8 +1120,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     payloadLength = aFrame.GetPayloadLength();
 
     netif.GetSupervisionListener().UpdateOnReceive(macSource, linkInfo.mLinkSecurity);
-
-    mDataPollManager.CheckFramePending(aFrame);
 
     switch (aFrame.GetType())
     {
@@ -1130,8 +1142,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         {
             VerifyOrExit(payloadLength == 0, error = OT_ERROR_NOT_LOWPAN_DATA_FRAME);
 
-            otLogInfoMac(GetInstance(), "Received empty payload frame, %s",
-                         aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
+            LogFrame("Received empty payload frame", aFrame, OT_ERROR_NONE);
         }
 
         break;
@@ -1167,11 +1178,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoMac(GetInstance(), "Dropping rx frame, error:%s, %s", otThreadErrorToString(error),
-                     aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
+        LogFrame("Dropping rx frame", aFrame, error);
     }
-
-    OT_UNUSED_VARIABLE(stringBuffer);
 }
 
 void MeshForwarder::HandleFragment(uint8_t *               aFrame,
@@ -1284,19 +1292,7 @@ exit:
     }
     else
     {
-        char srcStringBuffer[Mac::Address::kAddressStringSize];
-        char dstStringBuffer[Mac::Address::kAddressStringSize];
-
-        OT_UNUSED_VARIABLE(srcStringBuffer);
-        OT_UNUSED_VARIABLE(dstStringBuffer);
-
-        otLogInfoMac(GetInstance(),
-                     "Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
-                     otThreadErrorToString(error), aFrameLength,
-                     aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
-                     aMacDest.ToString(dstStringBuffer, sizeof(dstStringBuffer)), fragmentHeader.GetDatagramTag(),
-                     fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize(),
-                     aLinkInfo.mLinkSecurity ? "yes" : "no");
+        LogFragmentFrameDrop(error, aFrameLength, aMacSource, aMacDest, fragmentHeader, aLinkInfo.mLinkSecurity);
 
         if (message != NULL)
         {
@@ -1399,16 +1395,7 @@ exit:
     }
     else
     {
-        char srcStringBuffer[Mac::Address::kAddressStringSize];
-        char dstStringBuffer[Mac::Address::kAddressStringSize];
-
-        OT_UNUSED_VARIABLE(srcStringBuffer);
-        OT_UNUSED_VARIABLE(dstStringBuffer);
-
-        otLogInfoMac(
-            GetInstance(), "Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s",
-            otThreadErrorToString(error), aFrameLength, aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
-            aMacDest.ToString(dstStringBuffer, sizeof(dstStringBuffer)), aLinkInfo.mLinkSecurity ? "yes" : "no");
+        LogLowpanHcFrameDrop(error, aFrameLength, aMacSource, aMacDest, aLinkInfo.mLinkSecurity);
 
         if (message != NULL)
         {
@@ -1572,12 +1559,76 @@ exit:
     return;
 }
 
+void MeshForwarder::LogFrame(const char *aActionText, const Mac::Frame &aFrame, otError aError)
+{
+    char stringBuffer[Mac::Frame::kInfoStringSize];
+
+    if (aError != OT_ERROR_NONE)
+    {
+        otLogInfoMac(GetInstance(), "%s, aError:%s, %s", aActionText, otThreadErrorToString(aError),
+                     aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
+    }
+    else
+    {
+        otLogInfoMac(GetInstance(), "%s, %s", aActionText, aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
+    }
+}
+
+void MeshForwarder::LogFragmentFrameDrop(otError                       aError,
+                                         uint8_t                       aFrameLength,
+                                         const Mac::Address &          aMacSource,
+                                         const Mac::Address &          aMacDest,
+                                         const Lowpan::FragmentHeader &aFragmentHeader,
+                                         bool                          aIsSecure)
+{
+    char srcStringBuffer[Mac::Address::kAddressStringSize];
+    char dstStringBuffer[Mac::Address::kAddressStringSize];
+
+    otLogInfoMac(
+        GetInstance(), "Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
+        otThreadErrorToString(aError), aFrameLength, aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+        aMacDest.ToString(dstStringBuffer, sizeof(dstStringBuffer)), aFragmentHeader.GetDatagramTag(),
+        aFragmentHeader.GetDatagramOffset(), aFragmentHeader.GetDatagramSize(), aIsSecure ? "yes" : "no");
+}
+
+void MeshForwarder::LogLowpanHcFrameDrop(otError             aError,
+                                         uint8_t             aFrameLength,
+                                         const Mac::Address &aMacSource,
+                                         const Mac::Address &aMacDest,
+                                         bool                aIsSecure)
+{
+    char srcStringBuffer[Mac::Address::kAddressStringSize];
+    char dstStringBuffer[Mac::Address::kAddressStringSize];
+
+    otLogInfoMac(GetInstance(), "Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s",
+                 otThreadErrorToString(aError), aFrameLength,
+                 aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+                 aMacDest.ToString(dstStringBuffer, sizeof(dstStringBuffer)), aIsSecure ? "yes" : "no");
+}
+
 #else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 void MeshForwarder::LogIp6Message(MessageAction, const Message &, const Mac::Address *, otError)
 {
 }
 
-#endif //#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+void MeshForwarder::LogFrame(const char *, const Mac::Frame &, otError)
+{
+}
+
+void MeshForwarder::LogFragmentFrameDrop(otError,
+                                         uint8_t,
+                                         const Mac::Address &,
+                                         const Mac::Address &,
+                                         const Lowpan::FragmentHeader &,
+                                         bool)
+{
+}
+
+void MeshForwarder::LogLowpanHcFrameDrop(otError, uint8_t, const Mac::Address &, const Mac::Address &, bool)
+{
+}
+
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 } // namespace ot

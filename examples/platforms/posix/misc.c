@@ -42,9 +42,21 @@ extern int    gArgumentsCount;
 extern char **gArguments;
 #endif
 
+static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
+bool                       gPlatformPseudoResetWasRequested;
+static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
+
 void otPlatReset(otInstance *aInstance)
 {
-#ifndef _WIN32
+#if _WIN32
+// This function does nothing on the Windows platform.
+
+#elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET // if _WIN32
+    gPlatformPseudoResetWasRequested = true;
+    sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
+
+#else // elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    // Restart the process using execvp.
     char *argv[gArgumentsCount + 1];
 
     for (int i = 0; i < gArgumentsCount; ++i)
@@ -62,19 +74,46 @@ void otPlatReset(otInstance *aInstance)
     execvp(argv[0], argv);
     perror("reset failed");
     exit(EXIT_FAILURE);
-#else
-// This function does nothing on the Windows platform.
-#endif // _WIN32
+
+#endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+
     (void)aInstance;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;
-    return OT_PLAT_RESET_REASON_POWER_ON;
+    return sPlatResetReason;
 }
 
 void otPlatWakeHost(void)
 {
     // TODO: implement an operation to wake the host from sleep state.
+}
+
+otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
+{
+    otError error = OT_ERROR_NONE;
+
+    (void)aInstance;
+
+    switch (aState)
+    {
+    case OT_PLAT_MCU_POWER_STATE_ON:
+    case OT_PLAT_MCU_POWER_STATE_LOW_POWER:
+        gPlatMcuPowerState = aState;
+        break;
+
+    default:
+        error = OT_ERROR_FAILED;
+        break;
+    }
+
+    return error;
+}
+
+otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
+{
+    (void)aInstance;
+    return gPlatMcuPowerState;
 }

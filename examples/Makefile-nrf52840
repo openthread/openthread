@@ -45,7 +45,6 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 configure_OPTIONS                                 = \
     --enable-cli-app=all                            \
     --enable-ncp-app=all                            \
-    --with-ncp-bus=uart                             \
     --enable-diag                                   \
     --with-examples=nrf52840                        \
     --enable-linker-map                             \
@@ -56,15 +55,25 @@ ifdef SRC_PATH
 configure_OPTIONS              += --srcdir="$(SRC_PATH)"
 endif
 
+ifeq ($(NCP_SPI),1)
+configure_OPTIONS              += --with-ncp-bus=spi
+else
+configure_OPTIONS              += --with-ncp-bus=uart
+endif
+
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 NRF52840_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"nrf52840-mbedtls-config.h\"'
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52840/crypto
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include/mbedtls
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/crypto
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_cc310/include
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/nrfx/mdk
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/cmsis
+NRF52840_MBEDTLS_CPPFLAGS += -DNRF52840_XXAA
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52840/
@@ -86,6 +95,14 @@ endif
 
 ifeq ($(USB),1)
 COMMONCFLAGS += -DUSB_CDC_AS_SERIAL_TRANSPORT=1
+endif
+
+ifeq ($(DISABLE_CC310), 1)
+NRF52840_MBEDTLS_CPPFLAGS += -DDISABLE_CC310=1
+endif
+
+ifeq ($(DISABLE_SPI),1)
+COMMONCFLAGS += -DSPIS_TRANSPORT_DISABLE=1
 endif
 
 ifeq ($(shell expr $(GCCVersion) \>= 7), 1)

@@ -138,6 +138,12 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
 static sys_clk_t ClkGet(void)
 {
     sys_clk_t clk    = sysclk_RC16;
@@ -272,13 +278,16 @@ static void StateChangedCallback(uint32_t aFlags, void *aContext)
         }
     }
 }
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
     if (sInstance == NULL)
     {
         sInstance = aInstance;
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
         otSetStateChangedCallback(aInstance, StateChangedCallback, 0);
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
     }
 
     da15000UartProcess();

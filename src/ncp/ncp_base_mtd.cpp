@@ -30,6 +30,8 @@
  *   This file implements minimal thread device required Spinel interface to the OpenThread stack.
  */
 
+#include <openthread/config.h>
+
 #include "ncp_base.hpp"
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -284,28 +286,12 @@ otError NcpBase::SetPropertyHandler_NET_STACK_UP(void)
         if (enabled != false)
         {
             error = otThreadSetEnabled(mInstance, true);
-
-#if OPENTHREAD_ENABLE_LEGACY
-            mLegacyNodeDidJoin = false;
-
-            if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStartLegacy != NULL))
-            {
-                mLegacyHandlers->mStartLegacy();
-            }
-#endif // OPENTHREAD_ENABLE_LEGACY
+            StartLegacy();
         }
         else
         {
             error = otThreadSetEnabled(mInstance, false);
-
-#if OPENTHREAD_ENABLE_LEGACY
-            mLegacyNodeDidJoin = false;
-
-            if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStopLegacy != NULL))
-            {
-                mLegacyHandlers->mStopLegacy();
-            }
-#endif // OPENTHREAD_ENABLE_LEGACY
+            StopLegacy();
         }
     }
 
@@ -1032,11 +1018,11 @@ otError NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(void)
 {
     otError error = OT_ERROR_NONE;
     const uint8_t *meshLocalPrefix;
-    uint16_t prefixLength;
+    uint8_t prefixLength;
 
-    SuccessOrExit(error = mDecoder.ReadData(meshLocalPrefix, prefixLength));
-
-    VerifyOrExit(prefixLength >= 8, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadIp6Address(meshLocalPrefix));
+    SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
+    VerifyOrExit(prefixLength == 64, error = OT_ERROR_INVALID_ARGS);
 
     error = otThreadSetMeshLocalPrefix(mInstance, meshLocalPrefix);
 
@@ -1579,7 +1565,7 @@ otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_SAMPLE_COUNT(void)
     return mEncoder.WriteUint32(otChannelMonitorGetSampleCount(mInstance));
 }
 
-otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
+otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_OCCUPANCY(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1588,7 +1574,7 @@ otError NcpBase::GetPropertyHandler_CHANNEL_MONITOR_CHANNEL_QUALITY(void)
         SuccessOrExit(error = mEncoder.OpenStruct());
 
         SuccessOrExit(error = mEncoder.WriteUint8(channel));
-        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelQuality(mInstance, channel)));
+        SuccessOrExit(error = mEncoder.WriteUint16(otChannelMonitorGetChannelOccupancy(mInstance, channel)));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
@@ -2281,31 +2267,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_DIAG
-
-otError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader)
-{
-    const char *string = NULL;
-    const char *output = NULL;
-    otError error = OT_ERROR_NONE;
-
-    error = mDecoder.ReadUtf8(string);
-
-    VerifyOrExit(error == OT_ERROR_NONE, error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
-
-    output = otDiagProcessCmdLine(string);
-
-    // Prepare the response
-    SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_NEST_STREAM_MFG));
-    SuccessOrExit(error = mEncoder.WriteUtf8(output));
-    SuccessOrExit(error = mEncoder.EndFrame());
-
-exit:
-    return error;
-}
-
-#endif // OPENTHREAD_ENABLE_DIAG
-
 otError NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS(void)
 {
     otError error = OT_ERROR_NONE;
@@ -2520,9 +2481,6 @@ void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
     mUpdateChangedPropsTask.Post();
 }
 
-#endif // OPENTHREAD_ENABLE_LEGACY
-
-#if OPENTHREAD_ENABLE_LEGACY
 otError NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(void)
 {
     return mEncoder.WriteData(mLegacyUlaPrefix, sizeof(mLegacyUlaPrefix));
@@ -2560,6 +2518,27 @@ otError NcpBase::GetPropertyHandler_NEST_LEGACY_LAST_NODE_JOINED(void)
 
     return mEncoder.WriteEui64(mLegacyLastJoinedNode);
 }
+
+void NcpBase::StartLegacy(void)
+{
+    mLegacyNodeDidJoin = false;
+
+    if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStartLegacy != NULL))
+    {
+        mLegacyHandlers->mStartLegacy();
+    }
+}
+
+void NcpBase::StopLegacy(void)
+{
+    mLegacyNodeDidJoin = false;
+
+    if ((mLegacyHandlers != NULL) && (mLegacyHandlers->mStopLegacy != NULL))
+    {
+        mLegacyHandlers->mStopLegacy();
+    }
+}
+
 #endif // OPENTHREAD_ENABLE_LEGACY
 
 otError NcpBase::EncodeChannelMask(uint32_t aChannelMask)
@@ -2676,13 +2655,13 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(void)
         break;
 
     case SPINEL_SCAN_STATE_BEACON:
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         if (otLinkRawIsEnabled(mInstance))
         {
             error = OT_ERROR_NOT_IMPLEMENTED;
         }
         else
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         {
             error = otLinkActiveScan(
                         mInstance,
@@ -2697,7 +2676,7 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(void)
         break;
 
     case SPINEL_SCAN_STATE_ENERGY:
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         if (otLinkRawIsEnabled(mInstance))
         {
             uint8_t scanChannel;
@@ -2718,7 +2697,7 @@ otError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(void)
                     );
         }
         else
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         {
             error = otLinkEnergyScan(
                         mInstance,
@@ -2990,6 +2969,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         { OT_CHANGED_THREAD_EXT_PANID,            SPINEL_PROP_NET_XPANID                     },
         { OT_CHANGED_MASTER_KEY,                  SPINEL_PROP_NET_MASTER_KEY                 },
         { OT_CHANGED_PSKC,                        SPINEL_PROP_NET_PSKC                       },
+        { OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL    },
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

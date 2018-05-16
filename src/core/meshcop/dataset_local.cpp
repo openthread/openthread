@@ -38,8 +38,6 @@
 
 #include <stdio.h>
 
-#include <openthread/platform/settings.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -64,7 +62,7 @@ void DatasetLocal::Clear(void)
 {
     mTimestamp.Init();
     mTimestampPresent = false;
-    otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), -1);
+    GetInstance().GetSettings().DeleteOperationalDataset(IsActive());
 }
 
 otError DatasetLocal::Restore(Dataset &aDataset)
@@ -97,8 +95,7 @@ otError DatasetLocal::Get(Dataset &aDataset) const
     uint32_t       elapsed;
     otError        error;
 
-    aDataset.mLength = sizeof(aDataset.mTlvs);
-    error            = otPlatSettingsGet(&GetInstance(), GetSettingsKey(), 0, aDataset.mTlvs, &aDataset.mLength);
+    error = GetInstance().GetSettings().ReadOperationalDataset(IsActive(), aDataset);
     VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
     if (mType == Tlv::kActiveTimestamp)
@@ -171,12 +168,12 @@ otError DatasetLocal::Set(const Dataset &aDataset)
 
     if (aDataset.GetSize() == 0)
     {
-        error = otPlatSettingsDelete(&GetInstance(), GetSettingsKey(), 0);
+        error = GetInstance().GetSettings().DeleteOperationalDataset(IsActive());
         otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
-        error = otPlatSettingsSet(&GetInstance(), GetSettingsKey(), aDataset.GetBytes(), aDataset.GetSize());
+        error = GetInstance().GetSettings().SaveOperationalDataset(IsActive(), aDataset);
         otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 
@@ -198,22 +195,6 @@ otError DatasetLocal::Set(const Dataset &aDataset)
 
 exit:
     return error;
-}
-
-uint16_t DatasetLocal::GetSettingsKey(void) const
-{
-    uint16_t rval;
-
-    if (mType == Tlv::kActiveTimestamp)
-    {
-        rval = static_cast<uint16_t>(Settings::kKeyActiveDataset);
-    }
-    else
-    {
-        rval = static_cast<uint16_t>(Settings::kKeyPendingDataset);
-    }
-
-    return rval;
 }
 
 int DatasetLocal::Compare(const Timestamp *aCompareTimestamp)

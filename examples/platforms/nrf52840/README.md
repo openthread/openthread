@@ -4,9 +4,9 @@ This directory contains example platform drivers for [Nordic Semiconductor nRF52
 
 [nRF52840]: https://www.nordicsemi.com/eng/Products/nRF52840
 
-To facilitate Thread products development with the nRF52840 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread</i>. See [Nordic Semiconductor's nRF5 SDK for Thread][nRF5-SDK-section] section for more details.
+To facilitate Thread products development with the nRF52840 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread and Zigbee</i>. See [Nordic Semiconductor's nRF5 SDK for Thread and Zigbee][nRF5-SDK-section] section for more details.
 
-[nRF5-SDK-section]: #nordic-semiconductors-nrf5-sdk-for-thread
+[nRF5-SDK-section]: #nordic-semiconductors-nrf5-sdk-for-thread-and-zigbee
 
 ## Toolchain
 
@@ -39,14 +39,40 @@ $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
 
 ## Native USB support
 
-You can build the libraries with support for native USB CDC ACM as a serial transport. 
+You can build the libraries with support for native USB CDC ACM as a serial transport.
 To do so, build the libraries with the following parameter:
 ```
 $ make -f examples/Makefile-nrf52840 USB=1
 ```
 
-Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to be loaded. 
+Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to be loaded.
 It can be found in third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf
+
+## Native SPI Slave support
+
+You can build the libraries with support for native SPI Slave.
+To do so, build the libraries with the following parameter:
+```
+$ make -f examples/Makefile-nrf52840 NCP_SPI=1
+```
+
+With this option enabled, SPI communication between the NCP example and wpantund is possible
+(provided that the wpantund host supports SPI Master). To achieve that, an appropriate SPI device
+should be chosen in wpantund configuration file, `/etc/wpantund.conf`. You can find an example below.
+```
+Config:NCP:SocketPath "system:/usr/bin/spi-hdlc-adapter --gpio-int /sys/class/gpio/gpio25 /dev/spidev0.0"
+```
+
+[spi-hdlc-adapter][spi-hdlc-adapter]
+is a tool that can be used to perform communication between NCP and wpantund over SPI.
+In the above example it is assumed that `spi-hdlc-adapter` is installed in `/usr/bin`.
+
+The default SPI Slave pin configuration for nRF52840 is defined in `examples/platforms/nrf52840/platform-config.h`.
+
+Note that the native SPI Slave support is not intended to be used with Engineering sample A of the nRF52840 chip due to
+single transfer size limitation.
+
+[spi-hdlc-adapter]: https://github.com/openthread/openthread/tree/master/tools/spi-hdlc-adapter
 
 ## Flashing the binaries
 
@@ -173,17 +199,18 @@ The following toolchains have been used for testing and verification:
   - gcc version 6.2.0
 
  The following OpenThread commits have been verified with nRF52840 examples by Nordic Semiconductor:
-  - `a89eb88` - 16.11.2017 (the newest checked)
+  - `ec59d7e` - 06.04.2018 (the newest checked)
+  - `a89eb88` - 16.11.2017
   - `6a15261` - 29.06.2017
   - `030efba` - 22.04.2017
   - `de48acf` - 02.03.2017
   - `50db58d` - 23.01.2017
 
-# Nordic Semiconductor's nRF5 SDK for Thread
+# Nordic Semiconductor's nRF5 SDK for Thread and Zigbee
 
-The [nRF5 Software Development Kit (SDK) for Thread][nRF5-SDK-Thread] helps you when developing Thread products with Nordic Semiconductor's advanced nRF52840 System on Chip (SoC).
+The [nRF5 Software Development Kit (SDK) for Thread and Zigbee][nRF5-SDK-Thread-Zigbee] helps you when developing Thread products with Nordic Semiconductor's advanced nRF52840 System on Chip (SoC).
 
-The <i>nRF5 SDK for Thread</i> includes:
+The <i>nRF5 SDK for Thread and Zigbee</i> includes:
  - a pre-built OpenThread stack for the Nordic nRF52840 SoC with ARM® CryptoCell-310 support,
  - unique Thread/Bluetooth Low Energy dynamic multiprotocol solution which allows for concurrent operation of Thread and Bluetooth Low Energy utilizing OpenThread and SoftDevice (Nordic’s Bluetooth Low Energy stack) with accompanying example applications,
  - Thread/Bluetooth Low Energy switched multiprotocol solution with accompanying example applications,
@@ -197,8 +224,11 @@ The <i>nRF5 SDK for Thread</i> includes:
  - range of PC tools including a Thread Topology Monitor,
  - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
 
-#### Important notice
+#### CryptoCell 310 support
 
-Due to legal restrictions support for hardware-accelerated cryptography utilizing ARM CryptoCell-310 is only available in mbedTLS library (libmbedcrypto.a) provided with the <i>nRF5 SDK for Thread</i>. The library available in OpenThread repository does not support hardware acceleration. You can still use it, but the commissioning procedure takes much more time in such case. For the best performance and user experience, use the library provided with the SDK.
+By default, mbedTLS library is built with support for CryptoCell 310 hardware acceleration of cryptographic operations used in OpenThread. You can disable CryptoCell 310 and use software cryptography instead by building OpenThread with the following parameter:
+```
+$ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
+```
 
-[nRF5-SDK-Thread]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread
+[nRF5-SDK-Thread-Zigbee]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread

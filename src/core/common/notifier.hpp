@@ -80,7 +80,7 @@ public:
          *
          * @param[in] aCallback    A reference to callback instance.
          * @param[in] aFlags       A bit-field indicating specific state that has changed. See `OT_CHANGED_<STATE>`
-         *                         definitions in `types.h`.
+         *                         definitions in `instance.h`.
          *
          */
         typedef void (*Handler)(Callback &aCallback, uint32_t aFlags);

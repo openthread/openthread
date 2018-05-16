@@ -53,9 +53,11 @@
 #include "nrf_802154_priority_drop.h"
 #include "nrf_802154_request.h"
 #include "nrf_802154_revision.h"
+#include "nrf_802154_rssi.h"
 #include "nrf_802154_rx_buffer.h"
 #include "hal/nrf_radio.h"
 #include "platform/clock/nrf_802154_clock.h"
+#include "platform/temperature/nrf_802154_temperature.h"
 #include "platform/timer/nrf_802154_timer.h"
 #include "raal/nrf_raal_api.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
@@ -123,6 +125,11 @@ int8_t nrf_802154_tx_power_get(void)
     return nrf_802154_pib_tx_power_get();
 }
 
+void nrf_802154_temperature_changed(void)
+{
+    nrf_802154_request_cca_cfg_update();
+}
+
 void nrf_802154_pan_id_set(const uint8_t * p_pan_id)
 {
     nrf_802154_pib_pan_id_set(p_pan_id);
@@ -141,6 +148,11 @@ void nrf_802154_short_address_set(const uint8_t * p_short_address)
 int8_t nrf_802154_dbm_from_energy_level_calculate(uint8_t energy_level)
 {
     return ED_MIN_DBM + (energy_level / ED_RESULT_FACTOR);
+}
+
+uint8_t nrf_802154_ccaedthres_from_dbm_calculate(int8_t dbm)
+{
+    return dbm - ED_MIN_DBM;
 }
 
 uint32_t nrf_802154_first_symbol_timestamp_get(uint32_t end_timestamp, uint8_t psdu_length)
@@ -164,6 +176,7 @@ void nrf_802154_init(void)
     nrf_802154_request_init();
     nrf_802154_revision_init();
     nrf_802154_rx_buffer_init();
+    nrf_802154_temperature_init();
     nrf_802154_timer_init();
     nrf_802154_timer_sched_init();
     nrf_raal_init();
@@ -173,6 +186,7 @@ void nrf_802154_deinit(void)
 {
     nrf_802154_timer_sched_deinit();
     nrf_802154_timer_deinit();
+    nrf_802154_temperature_deinit();
     nrf_802154_clock_deinit();
     nrf_802154_core_deinit();
 }
@@ -325,13 +339,31 @@ void nrf_802154_buffer_free_raw(uint8_t * p_data)
     rx_buffer_t * p_buffer = (rx_buffer_t *)p_data;
 
     assert(p_buffer->free == false);
+    (void)p_buffer;
 
     nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
 
     result = nrf_802154_request_buffer_free(p_data);
     assert(result);
+    (void)result;
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+}
+
+bool nrf_802154_buffer_free_immediately_raw(uint8_t * p_data)
+{
+    bool          result;
+    rx_buffer_t * p_buffer = (rx_buffer_t *)p_data;
+
+    assert(p_buffer->free == false);
+    (void)p_buffer;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
+
+    result = nrf_802154_request_buffer_free(p_data);
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+    return result;
 }
 
 #else // NRF_802154_USE_RAW_API
@@ -342,13 +374,31 @@ void nrf_802154_buffer_free(uint8_t * p_data)
     rx_buffer_t * p_buffer = (rx_buffer_t *)(p_data - RAW_PAYLOAD_OFFSET);
 
     assert(p_buffer->free == false);
+    (void)p_buffer;
 
     nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
 
     result = nrf_802154_request_buffer_free(p_data - RAW_PAYLOAD_OFFSET);
     assert(result);
+    (void)result;
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+}
+
+bool nrf_802154_buffer_free_immediately(uint8_t * p_data)
+{
+    bool          result;
+    rx_buffer_t * p_buffer = (rx_buffer_t *)(p_data - RAW_PAYLOAD_OFFSET);
+
+    assert(p_buffer->free == false);
+    (void)p_buffer;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_BUFFER_FREE);
+
+    result = nrf_802154_request_buffer_free(p_data - RAW_PAYLOAD_OFFSET);
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_BUFFER_FREE);
+    return result;
 }
 
 #endif // NRF_802154_USE_RAW_API
@@ -356,42 +406,10 @@ void nrf_802154_buffer_free(uint8_t * p_data)
 int8_t nrf_802154_rssi_last_get(void)
 {
     uint8_t minus_dbm = nrf_radio_rssi_sample_get();
+
+    minus_dbm = nrf_802154_rssi_sample_corrected_get(minus_dbm);
+
     return - (int8_t)minus_dbm;
-}
-
-int8_t nrf_802154_rssi_corrected_get(int8_t rssi, int8_t temp)
-{
-    if (temp <= -30)
-    {
-        return rssi + 3;
-    }
-
-    if (temp <= -10)
-    {
-        return rssi + 2;
-    }
-
-    if (temp <= 10)
-    {
-        return rssi + 1;
-    }
-
-    if (temp <= 30)
-    {
-        return rssi;
-    }
-
-    if (temp <= 50)
-    {
-        return rssi - 1;
-    }
-
-    if (temp <= 70)
-    {
-        return rssi - 2;
-    }
-
-    return rssi - 3;
 }
 
 bool nrf_802154_promiscuous_get(void)

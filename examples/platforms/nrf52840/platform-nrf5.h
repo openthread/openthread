@@ -108,6 +108,23 @@ void nrf5LogInit(void);
 void nrf5LogDeinit(void);
 
 /**
+ * Initialization of SPI Slave driver.
+ *
+ */
+void nrf5SpiSlaveInit(void);
+
+/**
+ * Deinitialization of SPI Slave driver.
+ *
+ */
+void nrf5SpiSlaveDeinit(void);
+
+/**
+ * Function for processing SPI Slave driver.
+ */
+void nrf5SpiSlaveProcess(void);
+
+/**
  * Initialization of Misc module.
  *
  */
@@ -178,6 +195,12 @@ void nrf5TempInit(void);
  *
  */
 void nrf5TempDeinit(void);
+
+/**
+ * Function for processing temperature controller.
+ *
+ */
+void nrf5TempProcess(void);
 
 /**
  * Function for measuring internal temperature.

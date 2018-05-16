@@ -41,7 +41,6 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
-#include "common/settings.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 
@@ -59,6 +58,21 @@ Dataset::Dataset(const Tlv::Type aType)
 void Dataset::Clear(void)
 {
     mLength = 0;
+}
+
+bool Dataset::IsValid(void) const
+{
+    bool       rval = true;
+    const Tlv *cur  = reinterpret_cast<const Tlv *>(mTlvs);
+    const Tlv *end  = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext())
+    {
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end && Tlv::IsValid(*cur), rval = false);
+    }
+
+exit:
+    return rval;
 }
 
 Tlv *Dataset::Get(Tlv::Type aType)
@@ -130,22 +144,13 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kChannelMask:
         {
-            uint8_t        length   = cur->GetLength();
-            const uint8_t *entry    = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
-            const uint8_t *entryEnd = entry + length;
+            const ChannelMaskTlv *   tlv   = static_cast<const ChannelMaskTlv *>(cur);
+            const ChannelMask0Entry *entry = tlv->GetMask0Entry();
 
-            while (entry < entryEnd)
+            if (entry != NULL)
             {
-                if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
-                {
-                    const ChannelMask0Tlv *tlv      = static_cast<const ChannelMask0Tlv *>(cur);
-                    aDataset.mChannelMaskPage0      = tlv->GetMask();
-                    aDataset.mIsChannelMaskPage0Set = true;
-                    break;
-                }
-
-                entry +=
-                    (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry));
+                aDataset.mChannelMaskPage0      = entry->GetMask();
+                aDataset.mIsChannelMaskPage0Set = true;
             }
 
             break;
@@ -509,22 +514,6 @@ exit:
     return error;
 }
 
-uint16_t Dataset::GetSettingsKey(void)
-{
-    uint16_t rval;
-
-    if (mType == Tlv::kActiveTimestamp)
-    {
-        rval = static_cast<uint16_t>(Settings::kKeyActiveDataset);
-    }
-    else
-    {
-        rval = static_cast<uint16_t>(Settings::kKeyPendingDataset);
-    }
-
-    return rval;
-}
-
 void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
 {
     memmove(aStart, aStart + aLength, mLength - (static_cast<uint8_t>(aStart - mTlvs) + aLength));
@@ -540,6 +529,8 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
     const Tlv *  cur      = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *  end      = reinterpret_cast<const Tlv *>(mTlvs + mLength);
 
+    VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
+
     while (cur < end)
     {
         switch (cur->GetType())
@@ -548,9 +539,9 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
         {
             uint8_t channel = static_cast<uint8_t>(static_cast<const ChannelTlv *>(cur)->GetChannel());
 
-            if (mac.GetChannel() != channel)
+            if (mac.GetPanChannel() != channel)
             {
-                error = mac.SetChannel(channel);
+                error = mac.SetPanChannel(channel);
 
                 if (error != OT_ERROR_NONE)
                 {
@@ -595,6 +586,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
         {
             const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
             otNetworkName         networkName;
+
             memcpy(networkName.m8, name->GetNetworkName(), name->GetLength());
             networkName.m8[name->GetLength()] = '\0';
 

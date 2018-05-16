@@ -40,7 +40,7 @@ cd /tmp || die
     sudo apt-get update || die
 
     [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp ] || {
-        pip install --upgrade pip || die
+        pip install --user --upgrade pip || die
         pip install --user -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
         [ $BUILD_TARGET != posix-ncp ] || {
             # Packages used by ncp tools.
@@ -85,6 +85,14 @@ cd /tmp || die
         arc-elf32-gcc --version || die
     }
 
+    [ $BUILD_TARGET != arm-gcc7 ] || {
+        sudo apt-get install lib32z1 || die
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2017q4/gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
+    }
+
     [ $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-mtd ] || {
         sudo apt-get install g++-multilib || die
     }
@@ -99,8 +107,6 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != toranj-test-framework ] || {
-        pip install --upgrade pip || die
-
         # packages for wpantund
         sudo apt-get install dbus || die
         sudo apt-get install gcc g++ libdbus-1-dev || die
@@ -116,7 +122,8 @@ cd /tmp || die
         cd wpantund || die
         ./bootstrap.sh || die
         ./configure || die
-        sudo make install -j 8 || die
+        sudo make -j 8 || die
+        sudo make install || die
         cd .. || die
     }
 

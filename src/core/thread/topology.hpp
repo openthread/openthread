@@ -87,7 +87,7 @@ public:
     void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
 
     /**
-     * Check if the neighbor/child is being restored.
+     * This method indicates whether the neighbor/child is being restored.
      *
      * @returns TRUE if the neighbor is being restored, FALSE otherwise.
      *
@@ -95,7 +95,8 @@ public:
     bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
 
     /**
-     * Check if the neighbor/child is in valid state or if it is being restored.
+     * This method indicates whether the neighbor/child is in valid state or if it is being restored.
+     *
      * When in these states messages can be sent to and/or received from the neighbor/child.
      *
      * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
@@ -252,6 +253,14 @@ public:
      *
      */
     uint16_t GetRloc16(void) const { return mRloc16; }
+
+    /**
+     * This method gets the Router ID value.
+     *
+     * @returns The Router ID value.
+     *
+     */
+    uint8_t GetRouterId(void) const { return mRloc16 >> Mle::kRouterIdOffset; }
 
     /**
      * This method sets the RLOC16 value.
@@ -413,6 +422,17 @@ public:
 
         otChildIp6AddressIterator mIndex;
     };
+
+    /**
+     * This method indicates if the child state is valid or being attached or being restored.
+     *
+     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, (and
+     * `kStateLinkRequest) are considered as attached or being restored.
+     *
+     * @returns TRUE if the child is attached or being restored.
+     *
+     */
+    bool IsStateValidOrAttaching(void) const;
 
     /**
      * This method clears the IPv6 address list for the child.
@@ -865,44 +885,10 @@ public:
      */
     void SetCost(uint8_t aCost) { mCost = aCost; }
 
-    /**
-     * This method indicates whether or not this router ID has been allocated.
-     *
-     * @returns TRUE if this router ID has been allocated, FALSE otherwise.
-     *
-     */
-    bool IsAllocated(void) const { return mAllocated; }
-
-    /**
-     * This method sets whether or not this router ID has been allocated.
-     *
-     * @param[in]  aAllocated  TRUE if this router ID has been allocated, FALSE otherwise.
-     *
-     */
-    void SetAllocated(bool aAllocated) { mAllocated = aAllocated; }
-
-    /**
-     * This method indicates whether the reclaim delay is in effect for this router ID.
-     *
-     * @returns TRUE if the reclaim delay is in effect, FALSE otherwise.
-     *
-     */
-    bool IsReclaimDelay(void) const { return mReclaimDelay; }
-
-    /**
-     * This method sets whether the reclaim delay is in effect for this router ID.
-     *
-     * @param[in]  aReclaimDelay  TRUE if the reclaim delay is in effect, FALSE otherwise.
-     *
-     */
-    void SetReclaimDelay(bool aReclaimDelay) { mReclaimDelay = aReclaimDelay; }
-
 private:
     uint8_t mNextHop;            ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
     uint8_t mCost : 4;           ///< The cost to this router via neighbor router
-    bool    mAllocated : 1;      ///< Indicates whether or not this entry is allocated
-    bool    mReclaimDelay : 1;   ///< Indicates whether or not this entry is waiting to be reclaimed
 };
 
 } // namespace ot

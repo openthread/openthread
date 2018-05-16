@@ -92,6 +92,13 @@
 
 #define SPI_POLL_PERIOD_MSEC            (MSEC_PER_SEC/30)
 
+#define IMMEDIATE_RETRY_COUNT           5
+#define FAST_RETRY_COUNT                15
+
+#define IMMEDIATE_RETRY_TIMEOUT_MSEC    1
+#define FAST_RETRY_TIMEOUT_MSEC         10
+#define SLOW_RETRY_TIMEOUT_MSEC         33
+
 #define GPIO_INT_ASSERT_STATE           0 // I̅N̅T̅ is asserted low
 #define GPIO_RES_ASSERT_STATE           0 // R̅E̅S̅ is asserted low
 
@@ -1866,13 +1873,29 @@ int main(int argc, char *argv[])
 
         if (sSpiTxRefusedCount)
         {
+            int min_timeout = 0;
+
             // We are being rate-limited by the slave. This is
-            // fairly normal behavior. We poll because we
-            // won't get an interrupt unless the slave happens
-            // to be trying to send us something.
-            if (timeout_ms < SPI_POLL_PERIOD_MSEC)
+            // fairly normal behavior. Based on number of times
+            // slave has refused a transmission, we apply a
+            // minimum timeout.
+
+            if (sSpiTxRefusedCount < IMMEDIATE_RETRY_COUNT)
             {
-                timeout_ms = SPI_POLL_PERIOD_MSEC;
+                min_timeout = IMMEDIATE_RETRY_TIMEOUT_MSEC;
+            }
+            else if (sSpiTxRefusedCount < FAST_RETRY_COUNT)
+            {
+                min_timeout = FAST_RETRY_TIMEOUT_MSEC;
+            }
+            else
+            {
+                min_timeout = SLOW_RETRY_TIMEOUT_MSEC;
+            }
+
+            if (timeout_ms < min_timeout)
+            {
+                timeout_ms = min_timeout;
             }
 
             if ( sSpiTxIsReady

@@ -292,7 +292,7 @@ otError Joiner::TryNextJoin()
         joinerRouter->mPriority = 0;
 
         netif.GetMac().SetPanId(joinerRouter->mPanId);
-        netif.GetMac().SetChannel(joinerRouter->mChannel);
+        netif.GetMac().SetPanChannel(joinerRouter->mChannel);
         netif.GetIp6Filter().AddUnsecurePort(netif.GetCoapSecure().GetPort());
 
         messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);

@@ -47,6 +47,29 @@ void Neighbor::GenerateChallenge(void)
     Random::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
 }
 
+bool Child::IsStateValidOrAttaching(void) const
+{
+    bool rval = false;
+
+    switch (GetState())
+    {
+    case kStateInvalid:
+    case kStateParentRequest:
+    case kStateParentResponse:
+        break;
+
+    case kStateRestored:
+    case kStateChildIdRequest:
+    case kStateLinkRequest:
+    case kStateChildUpdateRequest:
+    case kStateValid:
+        rval = true;
+        break;
+    }
+
+    return rval;
+}
+
 void Child::ClearIp6Addresses(void)
 {
     memset(mMeshLocalIid, 0, sizeof(mMeshLocalIid));

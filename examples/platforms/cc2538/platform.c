@@ -49,6 +49,11 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 void PlatformProcessDrivers(otInstance *aInstance)
 {
     sInstance = aInstance;

@@ -162,6 +162,7 @@ exit:
     return next;
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 {
     uint16_t  messages, buffers;
@@ -181,8 +182,8 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     instance.GetThreadNetif().GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
                                                                              aBufferInfo->mArpBuffers);
 #else
-    aBufferInfo->mArpMessages = 0;
-    aBufferInfo->mArpBuffers  = 0;
+    aBufferInfo->mArpMessages             = 0;
+    aBufferInfo->mArpBuffers              = 0;
 #endif
 
     instance.GetThreadNetif().GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages, aBufferInfo->mIp6Buffers);
@@ -220,3 +221,4 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mApplicationCoapBuffers  = 0;
 #endif
 }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD

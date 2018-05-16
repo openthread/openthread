@@ -47,8 +47,28 @@ static const uint8_t kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
+static const otMasterKey kDefaultMasterKey = {{
+    0x00,
+    0x11,
+    0x22,
+    0x33,
+    0x44,
+    0x55,
+    0x66,
+    0x77,
+    0x88,
+    0x99,
+    0xaa,
+    0xbb,
+    0xcc,
+    0xdd,
+    0xee,
+    0xff,
+}};
+
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mMasterKey(kDefaultMasterKey)
     , mKeySequence(0)
     , mMacFrameCounter(0)
     , mMleFrameCounter(0)
@@ -62,6 +82,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(0xff)
 {
+    ComputeKey(mKeySequence, mKey);
 }
 
 void KeyManager::Start(void)
@@ -98,10 +119,9 @@ const otMasterKey &KeyManager::GetMasterKey(void) const
 
 otError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
-    otError error = OT_ERROR_NONE;
-    Router *routers;
-    Child * children;
-    uint8_t num;
+    Mle::MleRouter &mle   = GetNetif().GetMle();
+    otError         error = OT_ERROR_NONE;
+    Router *        routers;
 
     VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0);
 
@@ -110,29 +130,25 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    routers = GetNetif().GetMle().GetParent();
+    routers = mle.GetParent();
     routers->SetKeySequence(0);
     routers->SetLinkFrameCounter(0);
     routers->SetMleFrameCounter(0);
 
     // reset router frame counters
-    routers = GetNetif().GetMle().GetRouters(&num);
-
-    for (uint8_t i = 0; i < num; i++)
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
     {
-        routers[i].SetKeySequence(0);
-        routers[i].SetLinkFrameCounter(0);
-        routers[i].SetMleFrameCounter(0);
+        iter.GetRouter()->SetKeySequence(0);
+        iter.GetRouter()->SetLinkFrameCounter(0);
+        iter.GetRouter()->SetMleFrameCounter(0);
     }
 
     // reset child frame counters
-    children = GetNetif().GetMle().GetChildren(&num);
-
-    for (uint8_t i = 0; i < num; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
     {
-        children[i].SetKeySequence(0);
-        children[i].SetLinkFrameCounter(0);
-        children[i].SetMleFrameCounter(0);
+        iter.GetChild()->SetKeySequence(0);
+        iter.GetChild()->SetLinkFrameCounter(0);
+        iter.GetChild()->SetMleFrameCounter(0);
     }
 
     GetNotifier().SetFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);

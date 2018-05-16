@@ -33,14 +33,9 @@
 # replacements.
 #
 
-die() {
-    echo " *** ERROR: " $*
-    exit 1
-}
-
 set -x
 
 # from `man diff`:
 # Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
 
-clang-format -style=file $@  | diff -u $@ -
+$(dirname "$0")/clang-format.sh -style=file $@  | diff -u $@ -

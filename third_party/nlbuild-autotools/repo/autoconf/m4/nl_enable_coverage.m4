@@ -32,7 +32,7 @@
 # whether the package will be built with or without code coverage.
 #
 # The value 'nl_cv_build_coverage' will be set to the result. In
-# addition, NL_COVERAGE_CPPFLAGS and NL_COVERAGE_LDFLAGS will be set
+# addition, NL_COVERAGE_CPPFLAGS and NL_COVERAGE_LIBS will be set
 # to the appropriate values to pass to the compiler and linker,
 # respectively.
 #
@@ -91,7 +91,7 @@ AC_DEFUN([NL_ENABLE_COVERAGE],
 
                 else
                     NL_COVERAGE_CPPFLAGS="--coverage"
-                    NL_COVERAGE_LDFLAGS="-lgcov"            
+                    NL_COVERAGE_LIBS="-lgcov"
 
                 fi
             fi

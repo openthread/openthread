@@ -36,10 +36,10 @@
 #include "instance.hpp"
 
 #include <openthread/platform/misc.h>
-#include <openthread/platform/settings.h>
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "thread/router_table.hpp"
 
 namespace ot {
 
@@ -51,20 +51,19 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(Instance), uint64_t);
 #endif
 
 Instance::Instance(void)
-    : mActiveScanCallback(NULL)
+    : mTimerMilliScheduler(*this)
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    , mTimerMicroScheduler(*this)
+#endif
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    , mActiveScanCallback(NULL)
     , mActiveScanCallbackContext(NULL)
     , mEnergyScanCallback(NULL)
     , mEnergyScanCallbackContext(NULL)
     , mNotifier(*this)
-    , mTimerMilliScheduler(*this)
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    , mTimerMicroScheduler(*this)
-#endif
+    , mSettings(*this)
     , mIp6(*this)
     , mThreadNetif(*this)
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    , mLinkRaw(*this)
-#endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoap(*this)
 #endif
@@ -80,7 +79,17 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
     , mChannelManager(*this)
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+    , mAnnounceSender(*this)
+#endif
     , mMessagePool(*this)
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    , mLinkRaw(*this)
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
+#endif
     , mIsInitialized(false)
 {
 }
@@ -131,13 +140,19 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
+void Instance::Reset(void)
+{
+    otPlatReset(this);
+}
+
 void Instance::AfterInit(void)
 {
     mIsInitialized = true;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 
     // Restore datasets and network information
 
-    otPlatSettingsInit(this);
+    GetSettings().Init();
     mThreadNetif.GetMle().Restore();
 
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
@@ -156,8 +171,10 @@ void Instance::AfterInit(void)
     }
 
 #endif
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Instance::Finalize(void)
 {
     VerifyOrExit(mIsInitialized == true);
@@ -166,19 +183,15 @@ void Instance::Finalize(void)
 
     IgnoreReturnValue(otThreadSetEnabled(this, false));
     IgnoreReturnValue(otIp6SetEnabled(this, false));
+    IgnoreReturnValue(otLinkSetEnabled(this, false));
 
 exit:
     return;
 }
 
-void Instance::Reset(void)
-{
-    otPlatReset(this);
-}
-
 void Instance::FactoryReset(void)
 {
-    otPlatSettingsWipe(this);
+    GetSettings().Wipe();
     otPlatReset(this);
 }
 
@@ -187,7 +200,7 @@ otError Instance::ErasePersistentInfo(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    otPlatSettingsWipe(this);
+    GetSettings().Wipe();
 
 exit:
     return error;
@@ -228,11 +241,6 @@ template <> Notifier &Instance::Get(void)
     return GetNotifier();
 }
 
-template <> TaskletScheduler &Instance::Get(void)
-{
-    return GetTaskletScheduler();
-}
-
 template <> MeshForwarder &Instance::Get(void)
 {
     return GetThreadNetif().GetMeshForwarder();
@@ -246,6 +254,16 @@ template <> Mle::Mle &Instance::Get(void)
 template <> Mle::MleRouter &Instance::Get(void)
 {
     return GetThreadNetif().GetMle();
+}
+
+template <> ChildTable &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle().GetChildTable();
+}
+
+template <> RouterTable &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle().GetRouterTable();
 }
 
 template <> Ip6::Netif &Instance::Get(void)
@@ -377,13 +395,6 @@ template <> Coap::CoapSecure &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-template <> LinkRaw &Instance::Get(void)
-{
-    return GetLinkRaw();
-}
-#endif
-
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
 template <> Dhcp6::Dhcp6Client &Instance::Get(void)
 {
@@ -421,5 +432,26 @@ template <> Utils::ChannelManager &Instance::Get(void)
     return GetChannelManager();
 }
 #endif
+
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+template <> AnnounceSender &Instance::Get(void)
+{
+    return GetAnnounceSender();
+}
+#endif
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+template <> LinkRaw &Instance::Get(void)
+{
+    return GetLinkRaw();
+}
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
+template <> TaskletScheduler &Instance::Get(void)
+{
+    return GetTaskletScheduler();
+}
 
 } // namespace ot

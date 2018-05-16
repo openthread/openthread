@@ -111,7 +111,7 @@ bool nrf_802154_revision_has_phyend_event(void)
 #elif NRF52840_AABA
     return true;
 #else
-    bool result;
+    bool result = false;
 
     switch (m_nrf52840_revision)
     {

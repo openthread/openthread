@@ -57,6 +57,11 @@ void PlatformInit(int argc, char *argv[])
     cc2650RadioInit();
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
 /**
  * Function documented in platform-cc2650.h
  */

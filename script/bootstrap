@@ -47,6 +47,9 @@ install_packages_apt()
     sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
     sudo apt-get update
     sudo apt-get install gcc-arm-embedded
+
+    # add clang-format for pretty
+    sudo apt-get install clang-format-5.0
 }
 
 install_packages_opkg()

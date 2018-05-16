@@ -141,6 +141,7 @@ Currently defined values are:
  * 10: `CAP_TRNG`: Support for true random number generation. See (#feature-trng).
  * 11: `CAP_CMD_MULTI`: Support for `CMD_PROP_VALUE_MULTI_GET` ((#cmd-prop-value-multi-get)), `CMD_PROP_VALUE_MULTI_SET` ((#cmd-prop-value-multi-set), and `CMD_PROP_VALUES_ARE` ((#cmd-prop-values-are)).
  * 12: `CAP_UNSOL_UPDATE_FILTER`: Support for `PROP_UNSOL_UPDATE_FILTER` ((#prop-unsol-update-filter)) and `PROP_UNSOL_UPDATE_LIST` ((#prop-unsol-update-list)).
+ * 13: `CAP_MCU_POWER_SAVE`: Support for controlling NCP's MCU power state (`PROP_MCU_POWER_STATE`).
  * 16: `CAP_802_15_4_2003`
  * 17: `CAP_802_15_4_2006`
  * 18: `CAP_802_15_4_2011`
@@ -192,7 +193,7 @@ This value is encoded as an unsigned 8-bit integer.
 The host **MUST** only use this property from NLI 0. Behavior when used
 from other NLIs is undefined.
 
-### PROP 7: PROP_POWER_STATE {#prop-power-state}
+### PROP 7: PROP_POWER_STATE {#prop-power-state} (deprecated)
 
 * Type: Read-Write
 * Packed-Encoding: `C`
@@ -201,10 +202,12 @@ Octets: |        1
 --------|------------------
 Fields: | POWER_STATE
 
+This property is **deprecated**. `MCU_POWER_STATE` provides similar
+functionality.
+
 Describes the current power state of the NCP. By writing to this
 property you can manage the lower state of the NCP. Enumeration is
 encoded as a single unsigned byte.
-
 Defined values are:
 
  *  0: `POWER_STATE_OFFLINE`: NCP is physically powered off.
@@ -258,7 +261,7 @@ Unlike most other properties, setting this property to true when the
 value of the property is already true **MUST** fail with a last status
 of `STATUS_ALREADY`.
 
-### PROP 10: PROP_HOST_POWER_STATE {#prop-host-power-state}
+### PROP 12: PROP_HOST_POWER_STATE {#prop-host-power-state}
 
 * Type: Read-Write
 * Packed-Encoding: `C`
@@ -326,6 +329,48 @@ it was entering a low-power state.
 
 The host **MUST** only use this property from NLI 0. Behavior when used
 from other NLIs is undefined.
+
+
+### PROP 13: PROP_MCU_POWER_STATE {#prop-mcu-power-state}
+* Type: Read-Write
+* Packed-Encoding: `C`
+* Required capability: CAP_MCU_POWER_SAVE
+
+This property specifies the desired power state of NCP's micro-controller
+(MCU) when the underlying platform's operating system enters idle mode (i.e.,
+all active tasks/events are processed and the MCU can potentially enter a
+energy-saving power state).
+
+The power state primarily determines how the host should interact with the NCP
+and whether the host needs an external trigger (a "poke") to NCP before it can
+communicate with the NCP or not. After a reset, the MCU power state MUST be
+`SPINEL_MCU_POWER_STATE_ON`.
+
+Defined values are:
+
+*  0: `SPINEL_MCU_POWER_STATE_ON`: NCP's MCU stays on and active all the time.
+   When the NCP's desired power state is set to this value, host can send
+   messages to NCP without requiring any "poke" or external triggers. MCU is
+   expected to stay on and active. Note that the `ON` power state only determines
+   the MCU's power mode and is not related to radio's state.
+
+*  1: `SPINEL_MCU_POWER_STATE_LOW_POWER`:  NCP's MCU can enter low-power
+   (energy-saving) state. When the NCP's desired power state is set to
+   `LOW_POWER`, host is expected to "poke" the NCP (e.g., an external trigger
+   like an interrupt) before it can communicate with the NCP (send a message
+   to the NCP). The "poke" mechanism is determined by the platform code (based
+   on NCP's interface to the host).
+   While power state is set to `LOW_POWER`, NCP can still (at any time) send
+   messages to host. Note that receiving a message from the NCP does NOT
+   indicate that the NCP's power state has changed, i.e., host is expected to
+   continue to "poke" NCP when it wants to talk to the NCP until the power
+   state is explicitly changed (by setting this property to `ON`).
+   Note that the `LOW_POWER` power state only determines the MCU's power mode
+   and is not related to radio's state.
+
+*  2: `SPINEL_MCU_POWER_STATE_OFF`: NCP is fully powered off.
+   An NCP hardware reset (via a RESET pin) is required to bring the NCP back
+   to `SPINEL_MCU_POWER_STATE_ON`. RAM is not retained after reset.
 
 ### PROP 4104: PROP_UNSOL_UPDATE_FILTER {#prop-unsol-update-filter}
 

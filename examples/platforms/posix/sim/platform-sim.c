@@ -52,6 +52,8 @@
 uint32_t NODE_ID           = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
+extern bool gPlatformPseudoResetWasRequested;
+
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
 
@@ -170,6 +172,12 @@ void PlatformInit(int argc, char *argv[])
 {
     char *endptr;
 
+    if (gPlatformPseudoResetWasRequested)
+    {
+        gPlatformPseudoResetWasRequested = false;
+        return;
+    }
+
     if (argc != 2)
     {
         exit(EXIT_FAILURE);
@@ -191,9 +199,14 @@ void PlatformInit(int argc, char *argv[])
 
     socket_init();
 
-    platformAlarmInit();
+    platformAlarmInit(1);
     platformRadioInit();
     platformRandomInit();
+}
+
+bool PlatformPseudoResetWasRequested(void)
+{
+    return gPlatformPseudoResetWasRequested;
 }
 
 void PlatformDeinit(void)

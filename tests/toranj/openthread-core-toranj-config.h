@@ -183,6 +183,81 @@
  */
 #define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT  1
 
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
+ *
+ * The minimum delay in seconds used by Channel Manager module for performing a channel change.
+ *
+ * The minimum delay should preferably be longer than maximum data poll interval used by all sleepy-end-devices within
+ * the Thread network.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY         2
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED
+ *
+ * This threshold specifies the minimum occupancy rate difference between two channels for the Channel Manager to
+ * prefer an unfavored channel over the best favored one. This is used when (auto) selecting a channel based on the
+ * collected channel quality data by "channel monitor" feature.
+ *
+ * The difference is based on the `ChannelMonitor::GetChannelOccupancy()` definition which provides the average
+ * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
+ * a threshold). Value 0 maps to 0% and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED (0xffff * 7 / 100)
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL
+ *
+ * This threshold specifies the minimum occupancy rate difference required between the current channel and a newly
+ * selected channel for Channel Manager to allow channel change to the new channel.
+ *
+ * The difference is based on the `ChannelMonitor::GetChannelOccupancy()` definition which provides the average
+ * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
+ * a threshold). Value 0 maps to 0% rate and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)
+
+/**
+ * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
+ *
+ * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
+ *
+ * Thread specification defines this value as 30,000. Changing from the specified value should be done for testing only.
+ *
+ * For `toranj` test script the value is decreased so that the tests can be run faster.
+ *
+ */
+#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY 1000
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+ *
+ * Define to 1 to enable support controlling of desired power state of NCP's micro-controller.
+ *
+ * The power state specifies the desired power state of NCP's micro-controller (MCU) when the underlying platform's
+ * operating system enters idle mode (i.e., all active tasks/events are processed and the MCU can potentially enter a
+ * energy-saving power state).
+ *
+ * The power state primarily determines how the host should interact with the NCP and whether the host needs an
+ * external trigger (a "poke") before it can communicate with the NCP or not.
+ *
+ * When enabled, the platform is expected to provide `otPlatSetMcuPowerState()` and `otPlatGetMcuPowerState()`
+ * functions (please see `openthread/platform/misc.h`). Host can then control the power state using
+ * `SPINEL_PROP_MCU_POWER_STATE`.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 1
+
 
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_H_ */
 

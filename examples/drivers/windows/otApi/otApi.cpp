@@ -1841,6 +1841,42 @@ otBorderRouterGetNextOnMeshPrefix(
 }
 
 OTAPI
+otError
+OTCALL
+otBorderRouterGetNextRoute(
+    _In_ otInstance *aInstance,
+    _Inout_ otNetworkDataIterator *aIterator,
+    _Out_ otExternalRouteConfig *aConfig
+    )
+{
+    if (aInstance == nullptr || aConfig == nullptr) return OT_ERROR_INVALID_ARGS;
+
+    BOOLEAN aLocal = TRUE;
+    PackedBuffer3<GUID,BOOLEAN,otNetworkDataIterator> InBuffer(aInstance->InterfaceGuid, aLocal, *aIterator);
+    BYTE OutBuffer[sizeof(uint8_t) + sizeof(otExternalRouteConfig)];
+
+    otError aError =
+        DwordToThreadError(
+            SendIOCTL(
+                aInstance->ApiHandle,
+                IOCTL_OTLWF_OT_NEXT_ROUTE,
+                &InBuffer, sizeof(InBuffer),
+                OutBuffer, sizeof(OutBuffer)));
+
+    if (aError == OT_ERROR_NONE)
+    {
+        memcpy(aIterator, OutBuffer, sizeof(uint8_t));
+        memcpy(aConfig, OutBuffer + sizeof(uint8_t), sizeof(otExternalRouteConfig));
+    }
+    else
+    {
+        ZeroMemory(aConfig, sizeof(otExternalRouteConfig));
+    }
+
+    return aError;
+}
+
+OTAPI
 otPanId 
 OTCALL
 otLinkGetPanId(
