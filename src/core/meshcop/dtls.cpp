@@ -220,6 +220,7 @@ otError Dtls::StartApplicationCoapSecure(bool             aClient,
 
     if (!mClient)
     {
+        otLogCritCoap(this, "Application Coap Secure DTLS: No Server functionality implemented!");
         while (1)
         {
             // ToDo: no server functionality implemented.
@@ -290,6 +291,7 @@ otError Dtls::StartApplicationCoapSecure(bool             aClient,
         break;
 
     default:
+        otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
         break;
     }
 
@@ -481,9 +483,13 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
     int     rval = 0;
 
     if (!mApplicationCoapSecure)
+    {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
+    }
     else
+    {
         otLogInfoCoap(GetInstance(), "Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
+    }
 
     error = mSendHandler(mContext, aBuf, static_cast<uint16_t>(aLength), mMessageSubType);
 
@@ -518,9 +524,13 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
     int rval;
 
     if (!mApplicationCoapSecure)
+    {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsReceive");
+    }
     else
+    {
         otLogInfoCoap(GetInstance(), "Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
+    }
 
     VerifyOrExit(mReceiveMessage != NULL && mReceiveLength != 0, rval = MBEDTLS_ERR_SSL_WANT_READ);
 
@@ -547,9 +557,13 @@ int Dtls::HandleMbedtlsGetTimer(void)
     int rval;
 
     if (!mApplicationCoapSecure)
+    {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsGetTimer");
+    }
     else
+    {
         otLogInfoCoap(GetInstance(), "Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
+    }
 
     if (!mTimerSet)
     {
@@ -579,9 +593,13 @@ void Dtls::HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_
 void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
     if (!mApplicationCoapSecure)
+    {
         otLogInfoMeshCoP(GetInstance(), "Dtls::SetTimer");
+    }
     else
+    {
         otLogInfoCoap(GetInstance(), "Dtls::ApplicationCoapSecure SetTimer");
+    }
 
     if (aFinish == 0)
     {
@@ -623,9 +641,13 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     GetNetif().GetKeyManager().SetKek(kek);
 
     if (!mApplicationCoapSecure)
+    {
         otLogInfoMeshCoP(GetInstance(), "Generated KEK");
+    }
     else
+    {
         otLogInfoCoap(GetInstance(), "ApplicationCoapSecure Generated KEK");
+    }
 
     OT_UNUSED_VARIABLE(aMasterSecret);
     return 0;
