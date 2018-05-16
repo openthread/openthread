@@ -73,6 +73,9 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
     , mChannelManager(*this)
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+    , mAnnounceSender(*this)
+#endif
     , mMessagePool(*this)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
@@ -414,6 +417,13 @@ template <> Utils::ChannelMonitor &Instance::Get(void)
 template <> Utils::ChannelManager &Instance::Get(void)
 {
     return GetChannelManager();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+template <> AnnounceSender &Instance::Get(void)
+{
+    return GetAnnounceSender();
 }
 #endif
 

@@ -120,6 +120,8 @@ void VerifyChannelMaskContent(const Mac::ChannelMask &aMask, uint8_t *aChannels,
     {
         VerifyOrQuit(!aMask.IsSingleChannel(), "ChannelMask.IsSingleChannel() failed\n");
     }
+
+    VerifyOrQuit(aLength == aMask.GetNumberOfChannels(), "ChannelMask.GetNumberOfChannels() failed\n");
 }
 
 void TestMacChannelMask(void)
@@ -191,6 +193,17 @@ void TestMacChannelMask(void)
     VerifyChannelMaskContent(mask2, channles4, sizeof(channles4));
 
     printf("channels4 = %s\n", mask2.ToString(stringBuffer, sizeof(stringBuffer)));
+
+    mask1.Clear();
+    mask2.Clear();
+    VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed\n");
+
+    mask1.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
+    mask2.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
+    VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed\n");
+
+    mask1.Clear();
+    VerifyOrQuit(mask1 != mask2, "ChannelMask.operator== failed\n");
 }
 
 } // namespace ot

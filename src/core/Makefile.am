@@ -171,6 +171,7 @@ SOURCES_COMMON                      = \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
     thread/announce_begin_server.cpp  \
+    thread/announce_sender.cpp        \
     thread/child_table.cpp            \
     thread/data_poll_manager.cpp      \
     thread/energy_scan_server.cpp     \
@@ -292,6 +293,7 @@ HEADERS_COMMON                      = \
     net/udp6.hpp                      \
     thread/address_resolver.hpp       \
     thread/announce_begin_server.hpp  \
+    thread/announce_sender.hpp        \
     thread/child_table.hpp            \
     thread/data_poll_manager.hpp      \
     thread/energy_scan_server.hpp     \

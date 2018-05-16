@@ -59,6 +59,8 @@ public:
     {
     }
 
+    bool IsRouterRoleEnabled(void) const { return false; }
+
     bool IsSingleton(void) { return false; }
 
     otError BecomeRouter(ThreadStatusTlv::Status) { return OT_ERROR_NOT_CAPABLE; }
