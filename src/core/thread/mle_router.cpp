@@ -101,7 +101,7 @@ void MleRouter::HandlePartitionChange(void)
 
 bool MleRouter::IsRouterRoleEnabled(void) const
 {
-    return mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD);
+    return mRouterRoleEnabled && IsFullThreadDevice();
 }
 
 void MleRouter::SetRouterRoleEnabled(bool aEnabled)
@@ -374,7 +374,7 @@ bool MleRouter::HandleAdvertiseTimer(TrickleTimer &aTimer)
 
 bool MleRouter::HandleAdvertiseTimer(void)
 {
-    if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
+    if (!IsFullThreadDevice())
     {
         return false;
     }
@@ -1035,7 +1035,7 @@ bool MleRouter::IsSingleton(void)
 {
     bool rval = true;
 
-    if (IsAttached() && ((mDeviceMode & ModeTlv::kModeFFD) != 0))
+    if (IsAttached() && IsFullThreadDevice())
     {
         // not a singleton if any other routers exist
         if (mRouterTable.GetActiveRouterCount() > 1)
@@ -1150,14 +1150,14 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = OT_ERROR_LINK_MARGIN_LOW);
 
-        if (route.IsValid() && (mDeviceMode & ModeTlv::kModeFFD) && (mPreviousPartitionIdTimeout > 0) &&
+        if (route.IsValid() && IsFullThreadDevice() && (mPreviousPartitionIdTimeout > 0) &&
             (partitionId == mPreviousPartitionId))
         {
             VerifyOrExit((static_cast<int8_t>(route.GetRouterIdSequence() - mPreviousPartitionRouterIdSequence) > 0),
                          error = OT_ERROR_DROP);
         }
 
-        if (mRole == OT_DEVICE_ROLE_CHILD && (mParent.GetExtAddress() == macAddr || !(mDeviceMode & ModeTlv::kModeFFD)))
+        if (mRole == OT_DEVICE_ROLE_CHILD && (mParent.GetExtAddress() == macAddr || !IsFullThreadDevice()))
         {
             ExitNow();
         }
@@ -1184,7 +1184,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
     VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()) && route.IsValid());
     routerId = GetRouterId(sourceAddress.GetRloc16());
 
-    if ((mDeviceMode & ModeTlv::kModeFFD) &&
+    if (IsFullThreadDevice() &&
         static_cast<int8_t>(route.GetRouterIdSequence() - mRouterTable.GetRouterIdSequence()) > 0)
     {
         bool processRouteTlv = false;
@@ -1234,7 +1234,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         router = (macAddr == mParent.GetExtAddress()) ? &mParent : mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != NULL);
 
-        if ((router->GetState() == Neighbor::kStateValid) && (mDeviceMode & ModeTlv::kModeFFD) &&
+        if ((router->GetState() == Neighbor::kStateValid) && IsFullThreadDevice() &&
             (mRouterSelectionJitterTimeout == 0) && (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold))
         {
             mRouterSelectionJitterTimeout = 1 + Random::GetUint8InRange(0, mRouterSelectionJitter);
@@ -1249,7 +1249,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
                 ExitNow(error = OT_ERROR_NO_ROUTE);
             }
 
-            if (mDeviceMode & ModeTlv::kModeFFD)
+            if (IsFullThreadDevice())
             {
                 for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
                 {
@@ -1284,7 +1284,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
                 }
             }
         }
-        else if ((mDeviceMode & ModeTlv::kModeFFD) && (router->GetState() != Neighbor::kStateValid) &&
+        else if (IsFullThreadDevice() && (router->GetState() != Neighbor::kStateValid) &&
                  (router->GetState() != Neighbor::kStateLinkRequest))
         {
             router->SetExtAddress(macAddr);
@@ -2510,7 +2510,7 @@ otError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Me
     LogMleMessage("Receive Discovery Request", aMessageInfo.GetPeerAddr());
 
     // only Routers and REEDs respond
-    VerifyOrExit((mDeviceMode & ModeTlv::kModeFFD) != 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsFullThreadDevice(), error = OT_ERROR_INVALID_STATE);
 
     // find MLE Discovery TLV
     VerifyOrExit(Tlv::GetOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);

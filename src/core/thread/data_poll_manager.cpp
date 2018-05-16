@@ -71,7 +71,7 @@ otError DataPollManager::StartPolling(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit((GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!GetNetif().GetMle().IsFullThreadDevice(), error = OT_ERROR_INVALID_STATE);
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
