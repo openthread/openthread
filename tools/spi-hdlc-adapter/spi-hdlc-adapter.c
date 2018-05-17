@@ -50,6 +50,7 @@
 #include <sys/ioctl.h>
 #include <sys/file.h>
 
+#include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
 #if HAVE_EXECINFO_H
