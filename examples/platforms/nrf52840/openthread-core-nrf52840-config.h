@@ -90,7 +90,9 @@
  * Define to prepend the log level to all log messages
  *
  */
+#ifndef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 #define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL                     0
+#endif
 
  /**
   * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
