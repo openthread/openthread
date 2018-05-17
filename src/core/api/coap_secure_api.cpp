@@ -87,16 +87,22 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                                                         (size_t)aCertBufferSize);
 }
 
+void otCoapSecureSetSllAuthMode(otInstance * aInstance, bool aVerifyPeerCertificate)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetApplicationCoapSecure().SetSllAuthMode(aVerifyPeerCertificate);
+}
+
 otError otCoapSecureConnect(otInstance *                    aInstance,
                             const otMessageInfo *           aMessageInfo,
                             otHandleSecureCoapClientConnect aHandler,
-                            bool                            aVerifyPeerCertificate,
                             void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler,
-                                                       aContext, aVerifyPeerCertificate);
+    return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                       aHandler, aContext);
 }
 
 otError otCoapSecureDisconnect(otInstance *aInstance)

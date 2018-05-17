@@ -220,8 +220,9 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             messageInfo.mPeerAddr    = coapDestinationIp;
             messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
             messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+            otCoapSecureSetSllAuthMode(mInterpreter.mInstance, false);
             SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &messageInfo,
-                                                      &CoapSecureCli::HandleClientConnect, false, this));
+                                                      &CoapSecureCli::HandleClientConnect, this));
             mInterpreter.mServer->OutputFormat("Coap Secure connect without peer cert check: ");
         }
         else

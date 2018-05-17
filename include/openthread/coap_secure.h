@@ -128,6 +128,16 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              uint64_t       aCertBufferSize);
 
 /**
+ * This method set the authentication mode for the coap secure connection.
+ * Disable or enable the verification of peer certificate.
+ *
+ * @param[in]   aInstance               A pointer to an OpenThread instance.
+ * @param[in]   aVerifyPeerCertificate  true, if the peer certificate should verify.
+ *
+ */
+void otCoapSecureSetSllAuthMode(otInstance * aInstance, bool aVerifyPeerCertificate);
+
+/**
  * This method sets the own X509 certificate with his private key for
  * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
@@ -158,7 +168,6 @@ otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPri
  * @param[in]  aInstance               A pointer to an OpenThread instance.
  * @param[in]  aMessageInfo            A reference to an address of the peer.
  * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is established.
- * @param[in]  aVerifyPeerCertificate  true if the peer cert should be verify, else false.
  * @param[in]  aContext                A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE  Successfully started DTLS connection.
@@ -167,7 +176,6 @@ otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPri
 otError otCoapSecureConnect(otInstance *                    aInstance,
                             const otMessageInfo *           aMessageInfo,
                             otHandleSecureCoapClientConnect aHandler,
-                            bool                            aVerifyPeerCertificate,
                             void *                          aContext);
 
 /**

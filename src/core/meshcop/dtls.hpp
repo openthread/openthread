@@ -149,7 +149,6 @@ public:
      * @param[in]  aConnectedHandler       A pointer to the connected handler.
      * @param[in]  aReceiveHandler         A pointer to the receive handler.
      * @param[in]  aSendHandler            A pointer to the send handler.
-     * @param[in]  aVerifyPeerCertificate  true if the peer cert verified, else false.
      * @param[in]  aContext                A pointer to application-specific context.
      *
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
@@ -159,8 +158,17 @@ public:
                                        ConnectedHandler aConnectedHandler,
                                        ReceiveHandler   aReceiveHandler,
                                        SendHandler      aSendHandler,
-                                       bool             aVerifyPeerCertificate,
                                        void *           aContext);
+
+    /**
+     * This method set the authentication mode for a dtls connection.
+     * Disable or enable the verification of peer certificate.
+     *
+     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
+     *
+     */
+    void SetSllAuthMode( bool aVerifyPeerCertificate);
+
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -174,7 +182,7 @@ public:
     /**
      * This method indicates whether or not the DTLS service is active.
      *
-     * @returns TRUE if the DTLS service is active, FALSE otherwise.
+     * @returns true if the DTLS service is active, false otherwise.
      *
      */
     bool IsStarted(void);
@@ -363,6 +371,8 @@ private:
     uint16_t mPreSharedKeyIdLength;
 
     int mApplicationCoapCiphreSuite[1];
+
+    bool mVerifyPeerCertificate;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 

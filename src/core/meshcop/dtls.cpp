@@ -88,6 +88,8 @@ Dtls::Dtls(Instance &aInstance)
     mX509CertLength = 0;
     mbedtls_pk_init(&mPrivateKey);
     mbedtls_x509_crt_init(&mCaCert);
+
+    mVerifyPeerCertificate = true;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     memset(mPsk, 0, sizeof(mPsk));
@@ -203,7 +205,6 @@ otError Dtls::StartApplicationCoapSecure(bool             aClient,
                                          ConnectedHandler aConnectedHandler,
                                          ReceiveHandler   aReceiveHandler,
                                          SendHandler      aSendHandler,
-                                         bool             aVerifyPeerCertificate,
                                          void *           aContext)
 {
     otExtAddress eui64;
@@ -245,15 +246,6 @@ otError Dtls::StartApplicationCoapSecure(bool             aClient,
     rval = mbedtls_ssl_config_defaults(&mConf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_DATAGRAM,
                                        MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
-
-    if (aVerifyPeerCertificate)
-    {
-        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
-    }
-    else
-    {
-        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
-    }
 
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
@@ -308,6 +300,18 @@ otError Dtls::StartApplicationCoapSecure(bool             aClient,
 
 exit:
     return MapError(rval);
+}
+
+void Dtls::SetSllAuthMode( bool aVerifyPeerCertificate)
+{
+    if (aVerifyPeerCertificate)
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    }
+    else
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
+    }
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
