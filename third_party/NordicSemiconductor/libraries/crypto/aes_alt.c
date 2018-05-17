@@ -44,95 +44,105 @@
 
 #include "mbedtls/aes.h"
 
+#include <openthread-core-config.h>
 #include <string.h>
 
 #ifdef MBEDTLS_AES_ALT
 
 #include "aes_alt_cc310.h"
-#include "cc310_mbedtls.h"
-#include "ssi_pal_types.h"
 
-static void aes_init(mbedtls_aes_context * ctx, SaSiAesEncryptMode_t mode)
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+#include <nrf.h>
+#include "aes_alt_soft.h"
+#endif
+
+void mbedtls_aes_init(mbedtls_aes_context * ctx)
 {
-    memset(&ctx->user_context, 0, sizeof(ctx->user_context));
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+    uint32_t  active_vector_id = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos;
 
-    ctx->mode = mode;
-    ctx->key.pKey = ctx->key_buffer;
-
-    CC310_OPERATION_NO_RESULT(SaSi_AesInit(&ctx->user_context,
-                                           mode,
-                                           SASI_AES_MODE_ECB,
-                                           SASI_AES_PADDING_NONE));
+    // Check if this function is called from main thread.
+    if (active_vector_id == 0)
+    {
+#endif
+        aes_cc310_init(ctx);
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+        ctx->using_cc310 = true;
+    }
+    else
+    {
+        aes_soft_init(ctx);
+        ctx->using_cc310 = false;
+    }
+#endif
 }
 
-void aes_cc310_init(mbedtls_aes_context * ctx)
+void mbedtls_aes_free(mbedtls_aes_context * ctx)
 {
-    memset(ctx, 0, sizeof(*ctx));
-
-    aes_init(ctx, SASI_AES_ENCRYPT);
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+    if (ctx->using_cc310)
+    {
+#endif
+        aes_cc310_free(ctx);
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+    }
+    else
+    {
+        aes_soft_free(ctx);
+    }
+#endif        
 }
 
-void aes_cc310_free(mbedtls_aes_context * ctx)
-{
-    CC310_OPERATION_NO_RESULT(SaSi_AesFree(&ctx->user_context));
-}
-
-int aes_cc310_setkey_enc(mbedtls_aes_context * ctx,
+int mbedtls_aes_setkey_enc(mbedtls_aes_context * ctx,
                            const unsigned char * key,
                            unsigned int          keybits)
 {
-    SaSiError_t result = SASI_OK;
+    int result;
 
-    ctx->key.keySize = (keybits + 7) / 8;
-    ctx->key.pKey = ctx->key_buffer;
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+    if (ctx->using_cc310)
+    {
+#endif        
+        result = aes_cc310_setkey_enc(ctx, key, keybits);
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+    }
+    else
+    {
+        result = aes_soft_setkey_enc(ctx, key, keybits);
+    }
+#endif        
 
-    memcpy(ctx->key_buffer, key, ctx->key.keySize);
-
-    CC310_OPERATION(SaSi_AesSetKey(&ctx->user_context,
-                                   SASI_AES_USER_KEY,
-                                   &ctx->key,
-                                   sizeof(ctx->key)),
-                    result);
-
-    return (int)result;
+    return result;
 }
 
-int aes_cc310_crypt_ecb(mbedtls_aes_context * ctx,
+int mbedtls_aes_setkey_dec(mbedtls_aes_context * ctx,
+                           const unsigned char * key,
+                           unsigned int          keybits)
+{
+    return mbedtls_aes_setkey_enc(ctx, key, keybits);
+}
+
+int mbedtls_aes_crypt_ecb(mbedtls_aes_context * ctx,
                           int                   mode,
                           const unsigned char   input[16],
                           unsigned char         output[16])
 {
-    SaSiAesEncryptMode_t reinit_mode = SASI_AES_ENCRYPT_MODE_LAST;
-    SaSiError_t          result      = SASI_OK;
+    int result;
 
-    if ((mode == MBEDTLS_AES_ENCRYPT) && (ctx->mode != SASI_AES_ENCRYPT))
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+    if (ctx->using_cc310)
     {
-        reinit_mode = SASI_AES_ENCRYPT;
+#endif
+        result = aes_cc310_crypt_ecb(ctx, mode, input, output);
+#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
     }
-    else if ((mode == MBEDTLS_AES_DECRYPT) && (ctx->mode != SASI_AES_DECRYPT))
+    else
     {
-        reinit_mode = SASI_AES_DECRYPT;
+        result = aes_soft_crypt_ecb(ctx, mode, input, output);
     }
+#endif
 
-    if ((reinit_mode == SASI_AES_ENCRYPT) || (reinit_mode == SASI_AES_DECRYPT))
-    {
-        aes_init(ctx, reinit_mode);
-
-        CC310_OPERATION(SaSi_AesSetKey(&ctx->user_context,
-                                       SASI_AES_USER_KEY,
-                                       &ctx->key,
-                                       sizeof(ctx->key)),
-                        result);
-
-        if (result != SASI_OK)
-        {
-            return (int)result;
-        }
-    }
-
-    CC310_OPERATION(SaSi_AesBlock(&ctx->user_context, (uint8_t *)input, 16, output), result);
-
-    return (int)result;
+    return result;
 }
 
 #endif /* MBEDTLS_AES_ALT */

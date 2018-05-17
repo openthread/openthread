@@ -61,7 +61,9 @@ endif  # OPENTHREAD_EXAMPLES_EFR32
 
 if OPENTHREAD_EXAMPLES_NRF52840
 nodist_libmbedcrypto_a_SOURCES                                                       = \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt.c          \
     @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_cc310.c    \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_soft.c     \
     @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/sha256_alt_cc310.c \
     @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/cc310_mbedtls.c    \
     $(NULL)

@@ -158,6 +158,18 @@
  */
 #define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS                     2048
 
+/**
+ * @def OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+ *
+ * Define as 1 to enable AES usage in interrupt context.
+ *
+ * @note If this feature is enabled, a software AES under platform layer must be implemented when:
+ *       1. The platform's hardware AES only supports single AES engine;
+ *       2. The platform's hardware AES doesn't support interrupt context.
+ *
+ */
+#define OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES 0
+
 /*
  * Suppress the ARMCC warning on unreachable statement,
  * e.g. break after assert(false) or ExitNow() macro.

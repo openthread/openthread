@@ -42,16 +42,8 @@
  *  limitations under the License.
  */
 
-#ifndef MBEDTLS_AES_ALT_H
-#define MBEDTLS_AES_ALT_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
-#include <openthread-core-config.h>
+#ifndef AES_ALT_CC310_H
+#define AES_ALT_CC310_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -59,45 +51,10 @@
 #ifdef MBEDTLS_AES_ALT
 
 #include "ssi_aes.h"
+#include "aes_alt.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#if defined(__CC_ARM)
-#pragma anon_unions
-#endif
-
-/**
- * @brief AES context structure
- */
-typedef struct
-{
-#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
-    bool using_cc310;                               ///< Indicate whether it's using cc310 or not.
-#endif
-
-    union
-    {
-        struct
-        {
-            SaSiAesUserContext_t user_context;      ///< User context for CC310 AES.
-            uint8_t              key_buffer[32];    ///< Buffer for an encryption key.
-            SaSiAesUserKeyData_t key;               ///< CC310 AES key structure.
-            SaSiAesEncryptMode_t mode;              ///< Current context operation mode (encrypt/decrypt).
-        };
-        struct
-        {
-            int       nr;                           ///<  number of rounds  */
-            uint32_t *rk;                           ///<  AES round keys    */
-            uint32_t  buf[68];                      ///<  unaligned data    */
-       };
-    };
-}
-mbedtls_aes_context;
-
-#if defined(__CC_ARM)
-#pragma no_anon_unions
 #endif
 
 /**
@@ -105,14 +62,14 @@ mbedtls_aes_context;
  *
  * @param[in,out] ctx AES context to be initialized
  */
-void mbedtls_aes_init(mbedtls_aes_context * ctx);
+void aes_cc310_init(mbedtls_aes_context * ctx);
 
 /**
  * @brief Clear AES context
  *
  * @param[in,out] ctx AES context to be cleared
  */
-void mbedtls_aes_free(mbedtls_aes_context * ctx);
+void aes_cc310_free(mbedtls_aes_context * ctx);
 
 /**
  * @brief AES key schedule (encryption)
@@ -123,22 +80,9 @@ void mbedtls_aes_free(mbedtls_aes_context * ctx);
  *
  * @return 0 if successful
  */
-int mbedtls_aes_setkey_enc(mbedtls_aes_context * ctx,
-                           const unsigned char * key,
-                           unsigned int          keybits);
-
-/**
- * @brief AES key schedule (decryption)
- *
- * @param[in,out] ctx     AES context to be initialized
- * @param[in]     key     decryption key
- * @param[in]     keybits must be 128, 192 or 256
- *
- * @return 0 if successful
- */
-int mbedtls_aes_setkey_dec(mbedtls_aes_context * ctx,
-                           const unsigned char * key,
-                           unsigned int          keybits);
+int aes_cc310_setkey_enc(mbedtls_aes_context * ctx,
+                         const unsigned char * key,
+                         unsigned int          keybits);
 
 /**
  * @brief AES-ECB block encryption/decryption
@@ -150,10 +94,10 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context * ctx,
  *
  * @return 0 if successful
  */
-int mbedtls_aes_crypt_ecb(mbedtls_aes_context * ctx,
-                          int                   mode,
-                          const unsigned char   input[16],
-                          unsigned char         output[16]);
+int aes_cc310_crypt_ecb(mbedtls_aes_context * ctx,
+                        int                   mode,
+                        const unsigned char   input[16],
+                        unsigned char         output[16]);
 
 #ifdef __cplusplus
 }
@@ -161,4 +105,4 @@ int mbedtls_aes_crypt_ecb(mbedtls_aes_context * ctx,
 
 #endif /* MBEDTLS_AES_ALT */
 
-#endif /* MBEDTLS_AES_ALT_H */
+#endif /* AES_ALT_CC310_H */
