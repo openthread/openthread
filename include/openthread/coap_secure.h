@@ -135,7 +135,7 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
  * @param[in]   aVerifyPeerCertificate  true, if the peer certificate should verify.
  *
  */
-void otCoapSecureSetSllAuthMode(otInstance * aInstance, bool aVerifyPeerCertificate);
+void otCoapSecureSetSllAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate);
 
 /**
  * This method sets the own X509 certificate with his private key for

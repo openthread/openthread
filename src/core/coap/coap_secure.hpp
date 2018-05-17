@@ -123,9 +123,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully started DTLS connection.
      *
      */
-    otError Connect(const Ip6::MessageInfo &aMessageInfo,
-                    ConnectedCallback       aCallback,
-                    void *                  aContext);
+    otError Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext);
 
     /**
      * This method indicates whether or not the DTLS session is active.
@@ -234,7 +232,7 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
      *
      */
-    void SetSllAuthMode( bool aVerifyPeerCertificate);
+    void SetSllAuthMode(bool aVerifyPeerCertificate);
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 

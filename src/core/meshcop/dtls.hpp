@@ -167,7 +167,7 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
      *
      */
-    void SetSllAuthMode( bool aVerifyPeerCertificate);
+    void SetSllAuthMode(bool aVerifyPeerCertificate);
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 

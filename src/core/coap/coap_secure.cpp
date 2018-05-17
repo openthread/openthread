@@ -112,9 +112,7 @@ otError CoapSecure::Stop(void)
     return CoapBase::Stop();
 }
 
-otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
-                            ConnectedCallback       aCallback,
-                            void *                  aContext)
+otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext)
 {
     mPeerAddress       = aMessageInfo;
     mConnectedCallback = aCallback;
@@ -128,11 +126,8 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo,
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        return GetNetif().GetDtls().StartApplicationCoapSecure(true,
-                                                               &CoapSecure::HandleDtlsConnected,
-                                                               &CoapSecure::HandleDtlsReceive,
-                                                               &CoapSecure::HandleDtlsSend,
-                                                               this);
+        return GetNetif().GetDtls().StartApplicationCoapSecure(
+            true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsSend, this);
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     return OT_ERROR_ABORT;
@@ -185,7 +180,7 @@ otError CoapSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *a
     return GetNetif().GetDtls().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 }
 
-void CoapSecure::SetSllAuthMode( bool aVerifyPeerCertificate)
+void CoapSecure::SetSllAuthMode(bool aVerifyPeerCertificate)
 {
     GetNetif().GetDtls().SetSllAuthMode(aVerifyPeerCertificate);
 }
