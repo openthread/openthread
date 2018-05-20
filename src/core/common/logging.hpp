@@ -993,10 +993,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_PLATFORM == 1
-#define otLogCritPlat(aInstance, aFormat, ...) otLogCrit(aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
-#define otLogWarnPlat(aInstance, aFormat, ...) otLogWarn(aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
-#define otLogInfoPlat(aInstance, aFormat, ...) otLogInfo(aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
-#define otLogDebgPlat(aInstance, aFormat, ...) otLogDebg(aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
+#define otLogCritPlat(aInstance, aFormat, ...) otLogCrit(&aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
+#define otLogWarnPlat(aInstance, aFormat, ...) otLogWarn(&aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
+#define otLogInfoPlat(aInstance, aFormat, ...) otLogInfo(&aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
+#define otLogDebgPlat(aInstance, aFormat, ...) otLogDebg(&aInstance, OT_LOG_REGION_PLATFORM, aFormat, ##__VA_ARGS__)
 #else
 #define otLogCritPlat(aInstance, aFormat, ...)
 #define otLogWarnPlat(aInstance, aFormat, ...)
