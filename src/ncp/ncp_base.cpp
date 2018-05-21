@@ -842,6 +842,10 @@ uint8_t NcpBase::ConvertLogLevel(otLogLevel aLogLevel)
         spinelLogLevel = SPINEL_NCP_LOG_LEVEL_WARN;
         break;
 
+    case OT_LOG_LEVEL_NOTE:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_NOTICE;
+        break;
+
     case OT_LOG_LEVEL_INFO:
         spinelLogLevel = SPINEL_NCP_LOG_LEVEL_INFO;
         break;
@@ -2354,6 +2358,9 @@ otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
         break;
 
     case SPINEL_NCP_LOG_LEVEL_NOTICE:
+        logLevel = OT_LOG_LEVEL_NOTE;
+        break;
+
     case SPINEL_NCP_LOG_LEVEL_INFO:
         logLevel = OT_LOG_LEVEL_INFO;
         break;
