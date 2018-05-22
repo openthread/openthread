@@ -68,8 +68,8 @@ const char *otDiagProcessCmdLine(const char *aInput)
 {
     enum
     {
-        kMaxArgs = 32,
-        kMaxCommandBuffer = 256,
+        kMaxArgs = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
+        kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE,
     };
 
     otError error = OT_ERROR_NONE;

@@ -1535,4 +1535,34 @@
 #define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode output buffer size.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 256
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+ *
+ * Define OpenThread diagnostic mode max command line arguments.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX 32
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode command line buffer size
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
+#endif
+
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

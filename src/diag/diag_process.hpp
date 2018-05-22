@@ -62,7 +62,7 @@ private:
 
     enum
     {
-        kMaxOutputSize = 256,
+        kMaxOutputSize = OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE,
     };
 
     struct DiagStats
