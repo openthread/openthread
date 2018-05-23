@@ -101,8 +101,9 @@ Mle::Mle(Instance &aInstance)
     , mParentSearchTimer(aInstance, &Mle::HandleParentSearchTimer, this)
 #endif
     , mAnnounceChannel(OT_RADIO_CHANNEL_MIN)
-    , mPreviousChannel(0)
-    , mPreviousPanId(Mac::kPanIdBroadcast)
+    , mAlternateChannel(0)
+    , mAlternatePanId(Mac::kPanIdBroadcast)
+    , mAlternateTimestamp(0)
     , mNotifierCallback(&Mle::HandleStateChanged, this)
 {
     uint8_t meshLocalPrefix[8];
@@ -658,14 +659,14 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
 void Mle::InformPreviousChannel(void)
 {
-    VerifyOrExit(mPreviousPanId != Mac::kPanIdBroadcast);
+    VerifyOrExit(mAlternatePanId != Mac::kPanIdBroadcast);
     VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD || mRole == OT_DEVICE_ROLE_ROUTER);
 
     if (!IsFullThreadDevice() || mRole == OT_DEVICE_ROLE_ROUTER ||
         GetNetif().GetMle().GetRouterSelectionJitterTimeout() == 0)
     {
-        mPreviousPanId = Mac::kPanIdBroadcast;
-        GetNetif().GetAnnounceBeginServer().SendAnnounce(1 << mPreviousChannel);
+        mAlternatePanId = Mac::kPanIdBroadcast;
+        GetNetif().GetAnnounceBeginServer().SendAnnounce(1 << mAlternateChannel);
     }
 
 exit:
@@ -1478,6 +1479,10 @@ void Mle::HandleAttachTimer(void)
         SendChildUpdateRequest();
         break;
 
+    case kAttachStateProcessAnnounce:
+        ProcessAnnounce();
+        break;
+
     case kAttachStateStart:
         SetAttachState(kAttachStateParentRequestRouter);
         mParentCandidate.SetState(Neighbor::kStateInvalid);
@@ -1615,11 +1620,11 @@ uint32_t Mle::Reattach(void)
     case kAttachAny:
         if (mRole != OT_DEVICE_ROLE_CHILD)
         {
-            if (mPreviousPanId != Mac::kPanIdBroadcast)
+            if (mAlternatePanId != Mac::kPanIdBroadcast)
             {
-                netif.GetMac().SetPanChannel(mPreviousChannel);
-                netif.GetMac().SetPanId(mPreviousPanId);
-                mPreviousPanId = Mac::kPanIdBroadcast;
+                netif.GetMac().SetPanChannel(mAlternateChannel);
+                netif.GetMac().SetPanId(mAlternatePanId);
+                mAlternatePanId = Mac::kPanIdBroadcast;
                 BecomeDetached();
             }
             else if (!IsFullThreadDevice())
@@ -3268,7 +3273,6 @@ exit:
 
 otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &             netif = GetNetif();
     otError                   error = OT_ERROR_NONE;
     ChannelTlv                channelTlv;
     ActiveTimestampTlv        timestamp;
@@ -3290,25 +3294,31 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
     VerifyOrExit(panIdTlv.IsValid(), error = OT_ERROR_PARSE);
     panId = panIdTlv.GetPanId();
 
-    localTimestamp = netif.GetActiveDataset().GetTimestamp();
+    localTimestamp = GetNetif().GetActiveDataset().GetTimestamp();
 
     if (localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0)
     {
-        uint8_t  curChannel = netif.GetMac().GetPanChannel();
-        uint16_t curPanId   = netif.GetMac().GetPanId();
+        Mac::Mac &mac = GetNetif().GetMac();
 
         // No action is required if device is detached, and current
         // channel and pan-id match the values from the received MLE
         // Announce message.
 
-        VerifyOrExit((mRole != OT_DEVICE_ROLE_DETACHED) || (curChannel != channel) || (curPanId != panId));
+        VerifyOrExit((mRole != OT_DEVICE_ROLE_DETACHED) || (mac.GetPanChannel() != channel) ||
+                     (mac.GetPanId() != panId));
 
-        Stop(false);
-        mPreviousChannel = curChannel;
-        mPreviousPanId   = curPanId;
-        netif.GetMac().SetPanChannel(channel);
-        netif.GetMac().SetPanId(panId);
-        Start(false, true);
+        if (mAttachState == kAttachStateProcessAnnounce)
+        {
+            VerifyOrExit(mAlternateTimestamp < timestamp.GetSeconds());
+        }
+
+        mAlternateTimestamp = timestamp.GetSeconds();
+        mAlternateChannel   = channel;
+        mAlternatePanId     = panId;
+        SetAttachState(kAttachStateProcessAnnounce);
+        mAttachTimer.Start(kAnnounceProcessTimeout);
+
+        otLogInfoMle(GetInstance(), "Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
     else if (localTimestamp->Compare(timestamp) < 0)
     {
@@ -3329,6 +3339,29 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
 exit:
     OT_UNUSED_VARIABLE(aMessageInfo);
     return error;
+}
+
+void Mle::ProcessAnnounce(void)
+{
+    Mac::Mac &mac        = GetNetif().GetMac();
+    uint8_t   newChannel = mAlternateChannel;
+    uint16_t  newPanId   = mAlternatePanId;
+
+    assert(mAttachState == kAttachStateProcessAnnounce);
+
+    otLogInfoMle(GetInstance(), "Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
+
+    Stop(/* aClearNetworkDatasets */ false);
+
+    // Save the current/previous channel and pan-id
+    mAlternateChannel   = mac.GetPanChannel();
+    mAlternatePanId     = mac.GetPanId();
+    mAlternateTimestamp = 0;
+
+    mac.SetPanChannel(newChannel);
+    mac.SetPanId(newPanId);
+
+    Start(/* aEnableReattach */ false, /* aAnnounceAttach */ true);
 }
 
 otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3818,6 +3851,10 @@ const char *Mle::AttachStateToString(AttachState aState)
 
     case kAttachStateSynchronize:
         str = "Sync";
+        break;
+
+    case kAttachStateProcessAnnounce:
+        str = "ProcessAnnounce";
         break;
 
     case kAttachStateStart:
