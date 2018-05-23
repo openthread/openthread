@@ -80,7 +80,7 @@ void JoinerRouter::HandleStateChanged(uint32_t aFlags)
 {
     ThreadNetif &netif = GetNetif();
 
-    VerifyOrExit(netif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD);
+    VerifyOrExit(netif.GetMle().IsFullThreadDevice());
     VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA);
 
     netif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);

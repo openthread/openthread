@@ -317,7 +317,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
         case NetworkDiagnosticTlv::kTimeout:
         {
-            if ((netif.GetMle().GetDeviceMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
+            if (!netif.GetMle().IsRxOnWhenIdle())
             {
                 TimeoutTlv tlv;
                 tlv.Init();
