@@ -630,6 +630,47 @@ public:
     uint8_t GetDeviceMode(void) const { return mDeviceMode; }
 
     /**
+     * This method sets the Device Mode as reported in the Mode TLV.
+     *
+     * @retval OT_ERROR_NONE          Successfully set the Mode TLV.
+     * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
+     *
+     */
+    otError SetDeviceMode(uint8_t aMode);
+
+    /**
+     * This method indicates whether or not the device is rx-on-when-idle.
+     *
+     * @returns TRUE if rx-on-when-idle, FALSE otherwise.
+     *
+     */
+    bool IsRxOnWhenIdle(void) const { return (mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0; }
+
+    /**
+     * This method indicates whether or not the device is a Full Thread Device.
+     *
+     * @returns TRUE if a Full Thread Device, FALSE otherwise.
+     *
+     */
+    bool IsFullThreadDevice(void) const { return (mDeviceMode & ModeTlv::kModeFFD) != 0; }
+
+    /**
+     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
+     *
+     * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
+     *
+     */
+    bool IsSecureDataRequest(void) const { return (mDeviceMode & ModeTlv::kModeSecureDataRequest) != 0; }
+
+    /**
+     * This method indicates whether or not the device requests Full Network Data.
+     *
+     * @returns TRUE if requests Full Network Data, FALSE otherwise.
+     *
+     */
+    bool IsFullNetworkData(void) const { return (mDeviceMode & ModeTlv::kModeFullNetworkData) != 0; }
+
+    /**
      * This method indicates whether or not the device is a Minimal End Device.
      *
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
@@ -640,15 +681,6 @@ public:
         return (mDeviceMode & (ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle)) !=
                (ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle);
     }
-
-    /**
-     * This method sets the Device Mode as reported in the Mode TLV.
-     *
-     * @retval OT_ERROR_NONE          Successfully set the Mode TLV.
-     * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
-     *
-     */
-    otError SetDeviceMode(uint8_t aMode);
 
     /**
      * This method returns a pointer to the Mesh Local Prefix.

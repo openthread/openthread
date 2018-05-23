@@ -1806,7 +1806,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
         // Allow  multicasts from neighbor routers if FFD
-        if (neighbor == NULL && dstaddr.IsBroadcast() && (netif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD))
+        if (neighbor == NULL && dstaddr.IsBroadcast() && netif.GetMle().IsFullThreadDevice())
         {
             neighbor = netif.GetMle().GetRxOnlyNeighborRouter(srcaddr);
         }
