@@ -331,6 +331,8 @@ public:
     };
 
     explicit RouterTable(Instance &) {}
+
+    uint8_t GetNeighborCount(void) const { return 0; }
 };
 
 #endif // OPENTHREAD_MTD
