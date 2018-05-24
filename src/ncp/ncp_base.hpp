@@ -303,11 +303,6 @@ protected:
     void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
-#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
-    otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
-    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
-#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
-
     otError CommandHandler_NOOP(uint8_t aHeader);
     otError CommandHandler_RESET(uint8_t aHeader);
     // Combined command handler for `VALUE_GET`, `VALUE_SET`, `VALUE_INSERT` and `VALUE_REMOVE`.
@@ -722,6 +717,72 @@ protected:
 
     static uint8_t ConvertLogLevel(otLogLevel aLogLevel);
     static unsigned int ConvertLogRegion(otLogRegion aLogRegion);
+
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+    /**
+     * This method defines a vendor "command handler" hook to process vendor-specific spinel commands.
+     *
+     * @param[in] aHeader   The spinel frame header.
+     * @param[in] aCommand  The spinel command key.
+     *
+     * @retval OT_ERROR_NONE     The response is prepared.
+     * @retval OT_ERROR_NO_BUFS  Out of buffer while preparing the response.
+     *
+     */
+    otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
+
+    /**
+     * This method is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`. It is called when a
+     * spinel frame is sent and removed from NCP buffer.
+     *
+     * (a) This can be used to track and verify that a vendor spinel frame response is delivered to the host (tracking
+     *     the frame using its tag).
+     *
+     * (b) It indicates that NCP buffer space is now available (since a spinel frame is removed). This can be used to
+     *     implement mechanisms to re-send a failed/pending response or an async spinel frame.
+     *
+     * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
+     *
+     */
+    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+
+    /**
+     * This method defines a vendor "get property handler" hook to process vendor spinel properties.
+     *
+     * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "get" operation for the
+     * given property key. Otherwise, the vendor handler should behave like other property get handlers, i.e., it
+     * should retrieve the property value and then encode and write the value into the NCP buffer. If the "get"
+     * operation itself fails, handler should write a `LAST_STATUS` with the error status into the NCP buffer.
+     *
+     * @param[in] aPropKey            The spinel property key.
+     *
+     * @retval OT_ERROR_NONE          Successfully retrieved the property value and prepared the response.
+     * @retval OT_ERROR_NOT_FOUND     Does not support the given property key.
+     * @retval OT_ERROR_NO_BUFS       Out of buffer while preparing the response.
+     *
+     */
+    otError VendorGetPropertyHandler(spinel_prop_key_t aPropKey);
+
+    /**
+     * This method defines a vendor "set property handler" hook to process vendor spinel properties.
+     *
+     * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "set" operation for the
+     * given property key. Otherwise, the vendor handler should behave like other property set handlers, i.e., it
+     * should first decode the value from the input spinel frame and then perform the corresponding set operation. The
+     * handler should not prepare the spinel response and therefore should not write anything to the NCP buffer. The
+     * `otError` returned from handler (other than `OT_ERROR_NOT_FOUND`) indicates the error in either parsing of the
+     * input or the error of the set operation. In case of a successful "set", `NcpBase` set command handler will call
+     * the `VendorGetPropertyHandler()` for the same property key to prepare the response.
+     *
+     * @param[in] aPropKey  The spinel property key.
+     *
+     * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either parsing
+     *          of the input or the "set" operation.
+     *
+     */
+    otError VendorSetPropertyHandler(spinel_prop_key_t aPropKey);
+
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
 protected:
     static NcpBase *sNcpInstance;
