@@ -1383,7 +1383,13 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
     otError error = OT_ERROR_NONE;
     PropertyHandler handler = FindSetPropertyHandler(aKey);
 
-    if (handler == NULL)
+    if (handler != NULL)
+    {
+        mDisableStreamWrite = false;
+        error = (this->*handler)();
+        mDisableStreamWrite = true;
+    }
+    else
     {
         // If there is no "set" handler, check if this property is one of the
         // ones that require different treatment.
@@ -1392,14 +1398,25 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
 
         VerifyOrExit(!didHandle);
 
-        ExitNow(error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+        if (aKey >= SPINEL_PROP_VENDOR__BEGIN && aKey < SPINEL_PROP_VENDOR__END)
+        {
+            mDisableStreamWrite = false;
+            error = VendorSetPropertyHandler(aKey);
+            mDisableStreamWrite = true;
+
+            // An `OT_ERROR_NOT_FOUND` status from vendor handler indicates
+            // that it does not support the given property key. In that
+            // case, `didHandle` is set to `false` so a `LAST_STATUS` with
+            // `PROP_NOT_FOUND` is emitted. Otherwise, we fall through to
+            // prepare the response.
+
+            didHandle = (error != OT_ERROR_NOT_FOUND);
+        }
+#endif
+
+        VerifyOrExit(didHandle, error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
     }
-
-    mDisableStreamWrite = false;
-
-    error = (this->*handler)();
-
-    mDisableStreamWrite = true;
 
     if (error == OT_ERROR_NONE)
     {
@@ -1504,6 +1521,25 @@ otError NcpBase::WritePropertyValueIsFrame(uint8_t aHeader, spinel_prop_key_t aP
         SuccessOrExit(error = (this->*handler)());
         ExitNow(error = mEncoder.EndFrame());
     }
+
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+    if (aPropKey >= SPINEL_PROP_VENDOR__BEGIN && aPropKey < SPINEL_PROP_VENDOR__END)
+    {
+        SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, aPropKey));
+
+        error = VendorGetPropertyHandler(aPropKey);
+
+        // An `OT_ERROR_NOT_FOUND` status from vendor handler indicates that
+        // it did not support the given property key. In that case, we fall
+        // through to prepare a `LAST_STATUS` response.
+
+        if (error != OT_ERROR_NOT_FOUND)
+        {
+            SuccessOrExit(error);
+            ExitNow(error = mEncoder.EndFrame());
+        }
+    }
+#endif
 
     if (aIsGetResponse)
     {
