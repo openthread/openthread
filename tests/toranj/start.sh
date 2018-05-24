@@ -122,8 +122,8 @@ run test-006-traffic-router-end-device.py
 run test-007-traffic-router-sleepy.py
 run test-008-permit-join.py
 run test-009-insecure-traffic-join.py
+run test-010-on-mesh-prefix-config-gateway.py
 run test-100-mcu-power-state.py
-
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py
 run test-602-channel-manager-channel-select.py
