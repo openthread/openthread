@@ -29,6 +29,7 @@
 
 import sys
 import time
+import re
 import random
 import weakref
 import subprocess
@@ -355,9 +356,10 @@ class Node(object):
                             (' {}'.format(port) if port is not None else '') +
                             traffic_type)
 
-    def config_gateway(self, prefix, default_route=False):
+    def config_gateway(self, prefix, default_route=False, priority=None):
         return self.wpanctl('config-gateway ' + prefix +
-                            (' -d' if default_route else ''))
+                            (' -d' if default_route else '') +
+                            (' -P {}'.format(priority) if priority is not None else ''))
 
     def add_route(self, route_prefix, prefix_len_in_bytes=None, priority=None):
         """route priority [(>0 for high, 0 for medium, <0 for low)]"""
@@ -540,7 +542,7 @@ def _is_ipv6_addr_link_local(ip_addr):
 
 def _create_socket_address(ip_address, port):
     """Convert a given IPv6 address (string) and port number into a socket address"""
-    # `socket.getaddrinfo() returns a list of `(family, socktype, proto, canonname, sockaddr)` where `sockaddr`
+    # `socket.getaddrinfo()` returns a list of `(family, socktype, proto, canonname, sockaddr)` where `sockaddr`
     # (at index 4) can be used as input in socket methods (like `sendto()`, `bind()`, etc.).
     return socket.getaddrinfo(ip_address, port)[0][4]
 
@@ -829,4 +831,93 @@ def parse_scan_result(scan_result):
     """ Parses scan result string and returns an array of `ScanResult` objects"""
     return [ ScanResult(item) for item in scan_result.split('\n')[2:] ]  # skip first two lines which are table headers
 
+def parse_list(list_string):
+    """
+    Parses IPv6/prefix/route list string (output of wpanctl get for properties WPAN_IP6_ALL_ADDRESSES,
+    IP6_MULTICAST_ADDRESSES, WPAN_THREAD_ON_MESH_PREFIXES, ...)
+    Returns an array of strings each containing an IPv6/prefix/route entry.
+    """
+    # List string example (get(WPAN_IP6_ALL_ADDRESSES) output):
+    #
+    # '[\n
+    # \t"fdf4:5632:4940:0:8798:8701:85d4:e2be     prefix_len:64   origin:ncp      valid:forever   preferred:forever"\n
+    # \t"fe80::2092:9358:97ea:71c6                prefix_len:64   origin:ncp      valid:forever   preferred:forever"\n
+    # ]'
+    #
+    # We split the lines ('\n' as separator) and skip the first and last lines which are '['  and ']'.
+    # For each line, skip the first two characters (which are '\t"') and last character ('"'), then split the string
+    # using whitespace as separator. The first entry is the IPv6 address.
+    #
+    return [line[2:-1].split()[0] for line in list_string.split('\n')[1:-1]]
 
+class OnMeshPrefix(object):
+    """ This object encapsulates an on-mesh prefix"""
+
+    def __init__(self, text):
+
+        # Example of expected text:
+        #
+        # '\t"fd00:abba:cafe::       prefix_len:64   origin:user     stable:yes flags:0x31'
+        # ' [on-mesh:1 def-route:0 config:0 dhcp:0 slaac:1 pref:1 prio:med]"'
+
+        m = re.match('\t"([0-9a-fA-F:]+)\s*prefix_len:(\d+)\s+origin:(\w*)\s+stable:(\w*).*' +
+                    '\[on-mesh:(\d)\s+def-route:(\d)\s+config:(\d)\s+dhcp:(\d)\s+slaac:(\d)\s+pref:(\d)\s+prio:(\w*)\]',
+                     text)
+        verify(m is not None)
+        data = m.groups()
+
+        self._prefix     = data[0]
+        self._prefix_len = data[1]
+        self._origin     = data[2]
+        self._stable     = (data[3] == 'yes')
+        self._on_mesh    = (data[4] == '1')
+        self._def_route  = (data[5] == '1')
+        self._config     = (data[6] == '1')
+        self._dhcp       = (data[7] == '1')
+        self._slaac      = (data[8] == '1')
+        self._preffered  = (data[9] == '1')
+        self._priority   = (data[10])
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def prefix_len(self):
+        return self._prefix_len
+
+    @property
+    def origin(self):
+        return self._origin
+
+    @property
+    def priority(self):
+        return self._priority
+
+    def is_stable(self):
+        return self._stable
+
+    def is_on_mesh(self):
+        return self._on_mesh
+
+    def is_def_route(self):
+        return self._def_route
+
+    def is_config(self):
+        return self._config
+
+    def is_dhcp(self):
+        return self._dhcp
+
+    def is_slaac(self):
+        return self._slaac
+
+    def is_preffered(self):
+        return self._preffered
+
+    def __repr__(self):
+        return 'OnMeshPrefix({})'.format(self.__dict__)
+
+def parse_on_mesh_prefix_result(on_mesh_prefix_list):
+    """ Parses on-mesh prefix list string and returns an array of `OnMeshPrefix` objects"""
+    return [ OnMeshPrefix(item) for item in on_mesh_prefix_list.split('\n')[1:-1] ]
