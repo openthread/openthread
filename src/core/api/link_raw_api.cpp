@@ -69,7 +69,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogInfoPlat(mInstance, "LinkRaw Enabled=%d", aEnabled ? 1 : 0);
+    otLogInfoPlat(&mInstance, "LinkRaw Enabled=%d", aEnabled ? 1 : 0);
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!static_cast<Instance &>(mInstance).GetThreadNetif().IsUp(), error = OT_ERROR_INVALID_STATE);
@@ -338,7 +338,7 @@ void LinkRaw::TransmitStarted(otRadioFrame *aFrame)
     if (static_cast<Mac::Frame *>(aFrame)->GetAckRequest() &&
         !(otPlatRadioGetCaps(&mInstance) & OT_RADIO_CAPS_ACK_TIMEOUT))
     {
-        otLogDebgPlat(aInstance, "LinkRaw Starting AckTimeout Timer");
+        otLogDebgPlat(&mInstance, "LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
         mTimer.Start(Mac::kAckTimeout);
     }
