@@ -287,6 +287,7 @@ OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const uin
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to Thread link-local IPv6 address.
+ *
  */
 const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance);
 
@@ -298,6 +299,7 @@ const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance);
  * @returns A pointer to the Thread Network Name.
  *
  * @sa otThreadSetNetworkName
+ *
  */
 OTAPI const char *OTCALL otThreadGetNetworkName(otInstance *aInstance);
 
@@ -315,6 +317,7 @@ OTAPI const char *OTCALL otThreadGetNetworkName(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otThreadGetNetworkName
+ *
  */
 OTAPI otError OTCALL otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 
@@ -326,6 +329,7 @@ OTAPI otError OTCALL otThreadSetNetworkName(otInstance *aInstance, const char *a
  * @returns The thrKeySequenceCounter value.
  *
  * @sa otThreadSetKeySequenceCounter
+ *
  */
 OTAPI uint32_t OTCALL otThreadGetKeySequenceCounter(otInstance *aInstance);
 
@@ -336,6 +340,7 @@ OTAPI uint32_t OTCALL otThreadGetKeySequenceCounter(otInstance *aInstance);
  * @param[in]  aKeySequenceCounter  The thrKeySequenceCounter value.
  *
  * @sa otThreadGetKeySequenceCounter
+ *
  */
 OTAPI void OTCALL otThreadSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter);
 
@@ -347,6 +352,7 @@ OTAPI void OTCALL otThreadSetKeySequenceCounter(otInstance *aInstance, uint32_t 
  * @returns The thrKeySwitchGuardTime value (in hours).
  *
  * @sa otThreadSetKeySwitchGuardTime
+ *
  */
 OTAPI uint32_t OTCALL otThreadGetKeySwitchGuardTime(otInstance *aInstance);
 
@@ -357,6 +363,7 @@ OTAPI uint32_t OTCALL otThreadGetKeySwitchGuardTime(otInstance *aInstance);
  * @param[in]  aKeySwitchGuardTime  The thrKeySwitchGuardTime value (in hours).
  *
  * @sa otThreadGetKeySwitchGuardTime
+ *
  */
 OTAPI void OTCALL otThreadSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime);
 
@@ -367,6 +374,7 @@ OTAPI void OTCALL otThreadSetKeySwitchGuardTime(otInstance *aInstance, uint32_t 
  *
  * @retval OT_ERROR_NONE           Successfully detached from the Thread network.
  * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
+ *
  */
 OTAPI otError OTCALL otThreadBecomeDetached(otInstance *aInstance);
 
@@ -377,6 +385,7 @@ OTAPI otError OTCALL otThreadBecomeDetached(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully begin attempt to become a child.
  * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
+ *
  */
 OTAPI otError OTCALL otThreadBecomeChild(otInstance *aInstance);
 
@@ -408,6 +417,7 @@ OTAPI otError OTCALL otThreadGetNextNeighborInfo(otInstance *            aInstan
  * @retval OT_DEVICE_ROLE_CHILD     The device is currently operating as a Thread Child.
  * @retval OT_DEVICE_ROLE_ROUTER    The device is currently operating as a Thread Router.
  * @retval OT_DEVICE_ROLE_LEADER    The device is currently operating as a Thread Leader.
+ *
  */
 OTAPI otDeviceRole OTCALL otThreadGetDeviceRole(otInstance *aInstance);
 
@@ -430,6 +440,7 @@ OTAPI otError OTCALL otThreadGetLeaderData(otInstance *aInstance, otLeaderData *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Leader's Router ID.
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetLeaderRouterId(otInstance *aInstance);
 
@@ -439,6 +450,7 @@ OTAPI uint8_t OTCALL otThreadGetLeaderRouterId(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Leader's Weight.
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetLeaderWeight(otInstance *aInstance);
 
@@ -448,6 +460,7 @@ OTAPI uint8_t OTCALL otThreadGetLeaderWeight(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Partition ID.
+ *
  */
 OTAPI uint32_t OTCALL otThreadGetPartitionId(otInstance *aInstance);
 
@@ -457,6 +470,7 @@ OTAPI uint32_t OTCALL otThreadGetPartitionId(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The RLOC16.
+ *
  */
 OTAPI uint16_t OTCALL otThreadGetRloc16(otInstance *aInstance);
 
@@ -473,7 +487,7 @@ OTAPI otError OTCALL otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *
  * The function retrieves the average RSSI for the Thread Parent.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[out]  aParentRssi  A pointer to where the parent rssi should be placed.
+ * @param[out]  aParentRssi  A pointer to where the parent RSSI should be placed.
  *
  */
 OTAPI otError OTCALL otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi);
@@ -482,11 +496,12 @@ OTAPI otError OTCALL otThreadGetParentAverageRssi(otInstance *aInstance, int8_t 
  * The function retrieves the RSSI of the last packet from the Thread Parent.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[out]  aLastRssi    A pointer to where the last rssi should be placed.
+ * @param[out]  aLastRssi    A pointer to where the last RSSI should be placed.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the RSSI data.
  * @retval OT_ERROR_FAILED        Unable to get RSSI data.
  * @retval OT_ERROR_INVALID_ARGS  @p aLastRssi is NULL.
+ *
  */
 OTAPI otError OTCALL otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
 

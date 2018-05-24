@@ -30,6 +30,7 @@
  * @file
  * @brief
  *  This file defines the OpenThread UDP API.
+ *
  */
 
 #ifndef OPENTHREAD_UDP_H_

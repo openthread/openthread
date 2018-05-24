@@ -58,7 +58,7 @@ namespace Random {
 /**
  * This function generates and returns a random byte.
  *
- * @returns  A random `uint8_t` value.
+ * @returns A random `uint8_t` value.
  *
  */
 inline uint8_t GetUint8(void)
@@ -69,7 +69,7 @@ inline uint8_t GetUint8(void)
 /**
  * This function generates and returns a random `uint16_t` value.
  *
- * @returns  A random `uint16_t` value.
+ * @returns A random `uint16_t` value.
  *
  */
 inline uint16_t GetUint16(void)
@@ -80,7 +80,7 @@ inline uint16_t GetUint16(void)
 /**
  * This function generates and returns a random `uint32_t` value.
  *
- * @returns  A random `uint32_t` value.
+ * @returns    A random `uint32_t` value.
  *
  */
 inline uint32_t GetUint32(void)
@@ -94,7 +94,7 @@ inline uint32_t GetUint32(void)
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
- * @return     A random `uint8_t` value in the given range (i.e., aMin <= random value < aMax).
+ * @returns    A random `uint8_t` value in the given range (i.e., aMin <= random value < aMax).
  */
 inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
 {
@@ -109,7 +109,7 @@ inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
- * @return     A random `uint16_t` value in the given range (i.e., aMin <= random value < aMax).
+ * @returns    A random `uint16_t` value in the given range (i.e., aMin <= random value < aMax).
  */
 inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
 {
@@ -124,7 +124,8 @@ inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
- * @return     A random `uint32_t` value in the given range (i.e., aMin <= random value < aMax).
+ * @returns    A random `uint32_t` value in the given range (i.e., aMin <= random value < aMax).
+ *
  */
 inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
 {
@@ -134,8 +135,8 @@ inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
 /**
  * This function fills a given buffer with random bytes.
  *
- * @param[out]   aBuffer  A pointer to a buffer to fill with the random bytes.
- * @param[in]    aSize    Size of buffer (number of bytes to fill).
+ * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize    Size of buffer (number of bytes to fill).
  *
  */
 inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
@@ -152,7 +153,7 @@ inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
  * @param[in]  aValue     A value to which the random jitter is added.
  * @param[in]  aJitter    Maximum jitter. Random jitter is selected from the range `[-aJitter, aJitter]`.
  *
- * @returns The given value with an added random jitter.
+ * @returns    The given value with an added random jitter.
  *
  */
 inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)

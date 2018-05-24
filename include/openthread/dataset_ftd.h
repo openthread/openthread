@@ -55,7 +55,7 @@ extern "C" {
  * @param[in]  aDataset  A pointer to the Active Operational Dataset.
  *
  * @retval OT_ERROR_NONE          Successfully set the Active Operational Dataset.
- * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to set the Active Operational Datset.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to set the Active Operational Dataset.
  * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */

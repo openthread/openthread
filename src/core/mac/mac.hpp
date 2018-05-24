@@ -68,10 +68,10 @@ namespace Mac {
  */
 enum
 {
-    kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE             = 5,  ///< macMaxBE (IEEE 802.15.4-2006)
-    kMaxCSMABackoffs   = 4,  ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006)
+    kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006).
+    kMaxBE             = 5,  ///< macMaxBE (IEEE 802.15.4-2006).
+    kMaxCSMABackoffs   = 4,  ///< macMaxCSMABackoffs (IEEE 802.15.4-2006).
+    kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006).
 
     kMinBackoff = 1, ///< Minimum backoff (milliseconds).
 
@@ -556,7 +556,7 @@ public:
     const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
     /**
-     * This method sets the IEEE 802.15.4 Extended Address
+     * This method sets the IEEE 802.15.4 Extended Address.
      *
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      *
@@ -608,8 +608,8 @@ public:
     uint8_t GetRadioChannel(void) const { return mRadioChannel; }
 
     /**
-     * This method sets the IEEE 802.15.4 Radio Channel. It can only be called
-     * after successfully calling AcquireRadioChannel().
+     * This method sets the IEEE 802.15.4 Radio Channel. It can only be called after successfully calling
+     * `AcquireRadioChannel()`.
      *
      * @param[in]  aChannel  The IEEE 802.15.4 Radio Channel.
      *
@@ -619,23 +619,20 @@ public:
     otError SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel);
 
     /**
-     * This method acquires external ownership of the Radio channel so that future calls to
-     * SetRadioChannel will succeed.
+     * This method acquires external ownership of the Radio channel so that future calls to `SetRadioChannel)()` will
+     * succeed.
      *
-     * @param[out]  aAcquisitionId  The AcquisitionId that the caller should use when
-     *                              calling SetRadioChannel().
+     * @param[out]  aAcquisitionId  The AcquisitionId that the caller should use when calling `SetRadioChannel()`.
      *
-     * @retval OT_ERROR_NONE  Successfully acquired permission to Set the Radio Channel.
-     * @retval OT_ERROR_INVALID_STATE  Failed to acquire permission as the radio Channel
-     *                                 has already been acquired.
+     * @retval OT_ERROR_NONE           Successfully acquired permission to Set the Radio Channel.
+     * @retval OT_ERROR_INVALID_STATE  Failed to acquire permission as the radio Channel has already been acquired.
      *
      */
     otError AcquireRadioChannel(uint16_t *aAcquisitionId);
 
     /**
-     * This method releases external ownership of the radio Channel
-     * that was acquired with AcquireRadioChannel().  The channel
-     * will re-adopt the PAN Channel when this API is called.
+     * This method releases external ownership of the radio Channel that was acquired with `AcquireRadioChannel()`. The
+     * channel will re-adopt the PAN Channel when this API is called.
      *
      * @retval OT_ERROR_NONE  Successfully released the IEEE 802.15.4 Radio Channel.
      *
