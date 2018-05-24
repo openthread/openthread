@@ -201,7 +201,7 @@ otError Uart::ProcessCommand(void)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
         /* TODO: how exactly do we get the instance here? */
 #else
-    otLogInfoCli(&Instance::Get(), "execute command: %s", mRxBuffer);
+    otLogInfoCli(Instance::Get(), "execute command: %s", mRxBuffer);
 #endif
 #endif
     mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
