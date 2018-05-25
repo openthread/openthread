@@ -73,6 +73,22 @@ typedef struct otUdpSocket
     struct otUdpSocket *mNext;      ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
 
+#if OPENTHREAD_ENABLE_QOS
+/**
+ * Allocate a new message buffer for sending a UDP message.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
+ * @param[in]  aPrority              The message priority level.
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ *
+ * @sa otFreeMessage
+ *
+ */
+otMessage *otUdpNewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
+#endif
+
 /**
  * Allocate a new message buffer for sending a UDP message.
  *

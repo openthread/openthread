@@ -229,10 +229,10 @@ public:
 
     enum
     {
-        kPriorityHigh    = 0, ///< High priority level.
-        kPriorityMedium  = 1, ///< Medium priority level.
-        kPriorityLow     = 2, ///< Low priority level.
-        kPriorityVeryLow = 3, ///< Very low priority level.
+        kPriorityHigh    = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
+        kPriorityMedium  = OT_MESSAGE_PRIORITY_MEDIUM,   ///< Medium priority level.
+        kPriorityLow     = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
+        kPriorityVeryLow = OT_MESSAGE_PRIORITY_VERY_LOW, ///< Very low priority level.
 
         kNumPriorities = 4, ///< Number of priority levels.
     };
@@ -852,6 +852,16 @@ private:
     Message *&Prev(uint8_t aList) { return mBuffer.mHead.mInfo.mPrev[aList]; }
 
     /**
+     * This method returns a const reference to the `mPrev` pointer for a given list.
+     *
+     * @param[in]  aList  The index to the message list.
+     *
+     * @returns A reference to the mPrev pointer for the specified list.
+     *
+     */
+    Message *const &Prev(uint8_t aList) const { return mBuffer.mHead.mInfo.mPrev[aList]; }
+
+    /**
      * This method returns the number of reserved header bytes.
      *
      * @returns The number of reserved header bytes.
@@ -957,7 +967,6 @@ public:
      */
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
-private:
     /**
      * This method returns the tail of the list (last message in the list)
      *
@@ -1079,6 +1088,7 @@ private:
      */
     Message *GetTail(void) const;
 
+private:
     /**
      * This method adds a message to a list.
      *
@@ -1245,6 +1255,19 @@ public:
     Message *New(uint8_t aType, uint16_t aReserveHeader);
 
     /**
+     * This method is used to obtain a new message.
+     * is assigned to the message.
+     *
+     * @param[in]  aType           The message type.
+     * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     * @param[in]  aPriority       The priority level of the message.
+     *
+     * @returns A pointer to the message or NULL if no message buffers are available.
+     *
+     */
+    Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority);
+
+    /**
      * This method is used to free a message and return all message buffers to the buffer pool.
      *
      * @param[in]  aMessage  The message to free.
@@ -1288,9 +1311,9 @@ private:
         kDefaultMessagePriority = Message::kPriorityLow,
     };
 
-    Buffer *       NewBuffer(void);
+    Buffer *       NewBuffer(uint8_t aPriority);
     void           FreeBuffers(Buffer *aBuffer);
-    otError        ReclaimBuffers(int aNumBuffers);
+    otError        ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
     PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0

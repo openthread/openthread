@@ -1262,6 +1262,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP], [test "${enable_application
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APPLICATION_COAP}],[Define to 1 if you want to enable CoAP to an application.])
 
 #
+# QoS
+#
+
+AC_ARG_ENABLE(qos,
+    [AS_HELP_STRING([--enable-qos],[Enable QoS support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_qos=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_qos} for --enable-qos])
+            ;;
+        esac
+    ],
+    [enable_qos=no])
+
+if test "$enable_qos" = "yes"; then
+    OPENTHREAD_ENABLE_QOS=1
+else
+    OPENTHREAD_ENABLE_QOS=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_QOS)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_QOS], [test "${enable_qos}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_QOS],[${OPENTHREAD_ENABLE_QOS}],[Define to 1 if you want to enable QoS])
+
+#
 # otLinkRaw API
 #
 

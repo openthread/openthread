@@ -118,6 +118,50 @@ public:
     Message *NewMessage(uint16_t aReserved);
 
     /**
+     * This method allocates a new message buffer from the buffer pool.
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
+     * @param[in]  aPriority  The priority level of the message.
+     *
+     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved, uint8_t aPriority);
+
+    /**
+     * This method converts the message priority level to IPv6 DSCP value.
+     *
+     * @param[in]  aPriority  The message priority level.
+     *
+     * @returns The IPv6 DSCP value.
+     *
+     */
+    uint8_t PriorityToDscp(uint8_t aPriority);
+
+    /**
+     * This method converts the IPv6 DSCP value to message priority level.
+     *
+     * @param[in]  aDscp  The IPv6 DSCP value.
+     *
+     * @returns The message priority level.
+     *
+     */
+    uint8_t DscpToPriority(uint8_t aDscp);
+
+    /**
+     * This method gets the priority level of the IPv6 datagram
+     *
+     * @param[in]  aDatagram     A pointer to an IPv6 datagram.
+     * @param[in]  aDatagramLen  The length of the IPv6 datagram.
+     * @param[in]  aPrority      A reference to the priority level of the IPv6 datagram.
+     *
+     * @retval OT_ERROR_NONE   Successfully get the priority level.
+     * @retval OT_ERROR_PARSE  Malformed IPv6 header.
+     *
+     */
+    otError GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority);
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance   A reference to the otInstance object.

@@ -138,6 +138,20 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
 }
 
+#if OPENTHREAD_ENABLE_QOS
+otMessage *otCoapNewMessageWithPriority(otInstance *aInstance, const otCoapHeader *aHeader, otMessagePriority aPriority)
+{
+    Message * message;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    uint8_t   priority = static_cast<uint8_t>(aPriority);
+
+    VerifyOrExit(aHeader != NULL, message = NULL);
+    message = instance.GetApplicationCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)), priority);
+exit:
+    return message;
+}
+#endif
+
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     Message * message;

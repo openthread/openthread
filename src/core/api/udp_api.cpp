@@ -39,6 +39,21 @@
 
 using namespace ot;
 
+#if OPENTHREAD_ENABLE_QOS
+otMessage *otUdpNewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Message * message  = instance.GetIp6().GetUdp().NewMessage(0, static_cast<uint8_t>(aPriority));
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
+}
+#endif
+
 otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

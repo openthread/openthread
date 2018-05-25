@@ -54,9 +54,24 @@ exit:
     return error;
 }
 
-otError MeshForwarder::EvictIndirectMessage(void)
+otError MeshForwarder::EvictMessage(uint8_t aPriority)
 {
+#if OPENTHREAD_ENABLE_QOS
+    otError  error   = OT_ERROR_NOT_FOUND;
+    Message *message = mSendQueue.GetTail();
+
+    if (message->GetPriority() > aPriority)
+    {
+        RemoveMessage(*message);
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
+exit:
+    return error;
+#else
+    OT_UNUSED_VARIABLE(aPriority);
     return OT_ERROR_NOT_FOUND;
+#endif
 }
 
 otError MeshForwarder::GetIndirectTransmission(void)

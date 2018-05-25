@@ -515,7 +515,7 @@ public:
      * @returns A reference to the buffered message set.
      *
      */
-    const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
+    const PriorityQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
 
 private:
     enum
@@ -545,8 +545,8 @@ private:
 
     const Address *mMatchingAddress;
 
-    MplSeedEntry mSeedSet[kNumSeedEntries];
-    MessageQueue mBufferedMessageSet;
+    MplSeedEntry  mSeedSet[kNumSeedEntries];
+    PriorityQueue mBufferedMessageSet;
 };
 
 /**

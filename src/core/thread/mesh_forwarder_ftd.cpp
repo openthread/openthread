@@ -234,10 +234,18 @@ void MeshForwarder::UpdateIndirectMessages(void)
     }
 }
 
-otError MeshForwarder::EvictIndirectMessage(void)
+otError MeshForwarder::EvictMessage(uint8_t aPriority)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error   = OT_ERROR_NOT_FOUND;
 
+#if OPENTHREAD_ENABLE_QOS
+    Message *message = mSendQueue.GetTail();
+    if (message->GetPriority() > aPriority)
+    {
+        RemoveMessage(*message);
+        ExitNow(error = OT_ERROR_NONE);
+    }
+#else
     for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
     {
         if (!message->IsChildPending())
@@ -248,6 +256,9 @@ otError MeshForwarder::EvictIndirectMessage(void)
         RemoveMessage(*message);
         ExitNow(error = OT_ERROR_NONE);
     }
+
+    OT_UNUSED_VARIABLE(aPriority);
+#endif
 
 exit:
     return error;
@@ -908,6 +919,8 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     }
     else if (meshHeader.GetHopsLeft() > 0)
     {
+        uint8_t priority = kDefaultMsgPriority;
+
         netif.GetMle().ResolveRoutingLoops(aMacSource.GetShort(), meshDest.GetShort());
 
         SuccessOrExit(error = CheckReachability(aFrame, aFrameLength, meshSource, meshDest));
@@ -915,7 +928,12 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         meshHeader.SetHopsLeft(meshHeader.GetHopsLeft() - 1);
         meshHeader.AppendTo(aFrame);
 
-        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0)) != NULL,
+#if OPENTHREAD_ENABLE_QOS
+        VerifyOrExit(GetFramePriority(aFrame, aFrameLength, meshSource, meshDest, priority) == OT_ERROR_NONE,
+                     error = OT_ERROR_PARSE);
+#endif
+
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0, priority)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);

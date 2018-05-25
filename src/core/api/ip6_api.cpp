@@ -194,6 +194,37 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     return error;
 }
 
+otError otIp6GetPriority(otInstance *       aInstance,
+                         const uint8_t *    aDatagram,
+                         uint16_t           aDatagramLen,
+                         otMessagePriority *aPriority)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    uint8_t   priority;
+
+    SuccessOrExit(instance.GetIp6().GetPriority(aDatagram, aDatagramLen, priority));
+    *aPriority = static_cast<otMessagePriority>(priority);
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_ENABLE_QOS
+otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Message * message  = instance.GetMessagePool().New(Message::kTypeIp6, 0, static_cast<uint8_t>(aPriority));
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
+}
+#endif
+
 otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

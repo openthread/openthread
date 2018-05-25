@@ -73,6 +73,75 @@ Message *Ip6::NewMessage(uint16_t aReserved)
                                               sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
 }
 
+Message *Ip6::NewMessage(uint16_t aReserved, uint8_t aPriority)
+{
+    return GetInstance().GetMessagePool().New(
+        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aPriority);
+}
+
+uint8_t Ip6::DscpToPriority(uint8_t aDscp)
+{
+    uint8_t priority = Message::kPriorityLow;
+    uint8_t cs       = aDscp & kDscpCsMask;
+
+    if ((cs == kDscpCs1) || (cs == kDscpCs2))
+    {
+        priority = Message::kPriorityVeryLow;
+    }
+    else if ((cs == kDscpCs0) || (cs == kDscpCs3))
+    {
+        priority = Message::kPriorityLow;
+    }
+    else if ((cs == kDscpCs4) || (cs == kDscpCs5))
+    {
+        priority = Message::kPriorityMedium;
+    }
+    else if ((cs == kDscpCs6) || (cs == kDscpCs7))
+    {
+        priority = Message::kPriorityHigh;
+    }
+
+    return priority;
+}
+
+uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
+{
+    uint8_t dscp = kDscpCs0;
+
+    switch (aPriority)
+    {
+    case Message::kPriorityVeryLow:
+        dscp = kDscpCs1;
+        break;
+
+    case Message::kPriorityLow:
+        dscp = kDscpCs0;
+        break;
+
+    case Message::kPriorityMedium:
+        dscp = kDscpCs4;
+        break;
+
+    case Message::kPriorityHigh:
+        dscp = kDscpCs6;
+        break;
+    }
+
+    return dscp;
+}
+
+otError Ip6::GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority)
+{
+    otError error = OT_ERROR_NONE;
+    Header  header;
+
+    SuccessOrExit(error = header.Init(aDatagram, aDatagramLen));
+    aPriority = DscpToPriority(header.GetDscp());
+
+exit:
+    return error;
+}
+
 uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
 {
     return Message::UpdateChecksum(aChecksum, aAddress.mFields.m8, sizeof(aAddress));
@@ -359,6 +428,9 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
     const NetifUnicastAddress *source;
 
     header.Init();
+#if OPENTHREAD_ENABLE_QOS
+    header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
+#endif
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
     header.SetHopLimit(aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));

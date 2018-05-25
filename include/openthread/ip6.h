@@ -238,10 +238,43 @@ otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, voi
 otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
+ * Get the priority level of the IPv6 datagram.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aDatagram     A pointer to an IPv6 datagram.
+ * @param[in]  aDatagramLen  The length of the IPv6 datagram.
+ * @param[in]  aPrority      A pointer to the priority level of the IPv6 datagram.
+ *
+ * @retval OT_ERROR_NONE   Successfully get the priority level.
+ * @retval OT_ERROR_PARSE  Malformed IPv6 header.
+ *
+ * @sa otFreeMessage
+ */
+otError otIp6GetPriority(otInstance *       aInstance,
+                         const uint8_t *    aDatagram,
+                         uint16_t           aDatagramLen,
+                         otMessagePriority *aPriority);
+
+#if OPENTHREAD_ENABLE_QOS
+/**
  * Allocate a new message buffer for sending an IPv6 message.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
- * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
+ * @param[in]  aPrority              The message priority level.
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ *
+ * @sa otFreeMessage
+ */
+otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
+#endif
+
+/**
+ * Allocate a new message buffer for sending an IPv6 message.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *

@@ -57,6 +57,84 @@ enum
 };
 
 /**
+ * This class represents an IPv6 priority entry
+ *
+ */
+class PriorityEntry
+{
+public:
+    /**
+     * This method returns the fragmentation datagram tag value.
+     *
+     * @returns The fragmentation datagram tag value.
+     *
+     */
+    uint16_t GetDatagramTag() { return mDatagramTag; }
+
+    /**
+     * This method sets the fragmentation datagram tag value.
+     *
+     * @param[in]  aDatagramTag  The fragmentation datagram tag value.
+     *
+     */
+    void SetDatagramTag(uint16_t aDatagramTag) { mDatagramTag = aDatagramTag; }
+
+    /**
+     * This method returns the priority value.
+     *
+     * @returns The priority value.
+     *
+     */
+    uint8_t GetPriority() { return mPriority; }
+
+    /**
+     * This method sets the priotity value.
+     *
+     * @param[in]  aPriority  The priority value.
+     *
+     */
+    void SetPriority(uint8_t aPriority) { mPriority = aPriority; }
+
+    /**
+     * This method returns the entry's remaining lifetime.
+     *
+     * @returns The entry's remaining lifetime.
+     *
+     */
+    uint8_t GetLifetime() { return mLifetime; }
+
+    /**
+     * This method sets the remaining lifetime of the priority entry.
+     *
+     * @param[in]  aLifetime  The remaining lifetime of the priority entry.
+     *
+     */
+    void SetLifetime(uint8_t aLifetime) { mLifetime = aLifetime; }
+
+    /**
+     * This method returns the datagram offset of the entire IP packet.
+     *
+     * @returns The datagram offset of the entire IP packet.
+     *
+     */
+    uint16_t GetDatagramOffset() { return mDatagramOffset; }
+
+    /**
+     * This method sets the datagram offset of the entire IP packet.
+     *
+     * @param[in]  aDatagramOffset  The datagram offset of the entire IP packet.
+     *
+     */
+    void SetDatagramOffset(uint16_t aDatagramOffset) { mDatagramOffset = aDatagramOffset; }
+
+private:
+    uint16_t mDatagramTag;
+    uint16_t mPriority       : 2;
+    uint16_t mLifetime       : 3;
+    uint16_t mDatagramOffset : 11;
+};
+
+/**
  * @addtogroup core-mesh-forwarding
  *
  * @brief
@@ -173,13 +251,15 @@ public:
     void RemoveDataResponseMessages(void);
 
     /**
-     * This method evicts the first indirect message in the indirect send queue.
+     * This method evicts the lowest priority message in the send queue.
      *
-     * @retval OT_ERROR_NONE       Successfully evicted an indirect message.
-     * @retval OT_ERROR_NOT_FOUND  No indirect messages available to evict.
+     * @param[in]  aPriority  The highest priority level of the evicted message.
+     *
+     * @retval OT_ERROR_NONE       Successfully evicted a low priority message.
+     * @retval OT_ERROR_NOT_FOUND  No low priority messages available to evict.
      *
      */
-    otError EvictIndirectMessage(void);
+    otError EvictMessage(uint8_t aPriority);
 
     /**
      * This method returns a reference to the send queue.
@@ -235,6 +315,17 @@ private:
     enum
     {
         kStateUpdatePeriod = 1000, ///< State update period in milliseconds.
+    };
+
+    enum
+    {
+        /**
+         * Maximum lifetime of the priority entry
+         *
+         */
+        kPriorityEntryLifetime = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT,
+        kDefaultMsgPriority    = Message::kPriorityLow, ///< Default priority level of the message
+        kNumPriorityEntry      = 8,                     ///< Number of the priority entries
     };
 
     enum
@@ -308,6 +399,16 @@ private:
     otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void     RemoveMessage(Message &aMessage);
     void     HandleDiscoverComplete(void);
+
+#if OPENTHREAD_ENABLE_QOS
+    otError        UpdatePriorityEntry(uint16_t aDatagramTag, uint16_t aDatagramOffset, uint8_t aPriority);
+    PriorityEntry *GetPriorityEntry(uint16_t aDatagramTag);
+    otError        GetFramePriority(uint8_t *     aFrame,
+                                    uint8_t       aFrameLength,
+                                    Mac::Address &aMacSource,
+                                    Mac::Address &aMacDest,
+                                    uint8_t &     aPriority);
+#endif
 
     static void    HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void           HandleReceivedFrame(Mac::Frame &aFrame);
@@ -428,6 +529,10 @@ private:
     uint8_t               mSendMessageKeyId;
     uint8_t               mSendMessageDataSequenceNumber;
     Child *               mIndirectStartingChild;
+#endif
+
+#if OPENTHREAD_ENABLE_QOS
+    PriorityEntry   mPriorityEntries[kNumPriorityEntry];
 #endif
 
     DataPollManager mDataPollManager;

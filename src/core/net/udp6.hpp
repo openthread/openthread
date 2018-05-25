@@ -84,6 +84,17 @@ public:
     Message *NewMessage(uint16_t aReserved);
 
     /**
+     * This method returns a new UDP message with sufficient header space reserved.
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+     * @param[in]  aPriority  A reference to the priority of the message.
+     *
+     * @returns A pointer to the message or NULL if no buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved, uint8_t aPriority);
+
+    /**
      * This method opens the UDP socket.
      *
      * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
@@ -215,6 +226,17 @@ public:
      *
      */
     Message *NewMessage(uint16_t aReserved);
+
+    /**
+     * This method returns a new UDP message with sufficient header space reserved.
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+     * @param[in]  aPriority  The priority of the message.
+     *
+     * @returns A pointer to the message or NULL if no buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved, uint8_t aPriority);
 
     /**
      * This method sends an IPv6 datagram.

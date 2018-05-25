@@ -1413,12 +1413,24 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
     otMessage *    message  = NULL;
     otError        error    = OT_ERROR_NONE;
 
-    // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessage(mInstance, true);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+#if OPENTHREAD_ENABLE_QOS
+    otMessagePriority priority;
+#endif
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(error = mDecoder.ReadData(metaPtr, metaLen));
+
+#if OPENTHREAD_ENABLE_QOS
+    SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &priority));
+
+    // STREAM_NET requires layer 2 security.
+    message = otIp6NewMessageWithPriority(mInstance, true, priority);
+#else
+    // STREAM_NET requires layer 2 security.
+    message = otIp6NewMessage(mInstance, true);
+#endif
+
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
@@ -2223,12 +2235,24 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     otMessage *    message  = NULL;
     otError        error    = OT_ERROR_NONE;
 
-    // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, false);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+#if OPENTHREAD_ENABLE_QOS
+    otMessagePriority priority;
+#endif
 
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
+
+#if OPENTHREAD_ENABLE_QOS
+    SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &priority));
+
+    // STREAM_NET_INSECURE packets are not secured at layer 2.
+    message = otIp6NewMessageWithPriority(mInstance, false, priority);
+#else
+    // STREAM_NET_INSECURE packets are not secured at layer 2.
+    message = otIp6NewMessage(mInstance, true);
+#endif
+
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
