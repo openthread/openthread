@@ -725,8 +725,13 @@ typedef struct otCommissionConfig
     // uint8_t - aNewIterator (output)
     // otExternalRouteConfig - aConfig (output)
 
+#define IOCTL_OTLWF_OT_MAX_ROUTER_ID \
+    OTLWF_CTL_CODE(202, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // uint8_t - aMaxRouterId
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 201
+#define MAX_OTLWF_IOCTL_FUNC_CODE 202
 
 #endif //__OTLWFIOCTL_H__

@@ -3206,6 +3206,18 @@ otThreadGetRouterIdSequence(
 }
 
 OTAPI
+uint8_t
+OTCALL
+otThreadGetMaxRouterId(
+    _In_ otInstance *aInstance
+    )
+{
+    uint8_t Result = 0;
+    if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_ROUTER_ID, &Result);
+    return Result;
+}
+
+OTAPI
 otError
 OTCALL
 otThreadGetRouterInfo(

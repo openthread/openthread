@@ -181,6 +181,7 @@ DECL_IOCTL_FUNC_WITH_TUN2(otNetworkDataVersion);
 DECL_IOCTL_FUNC_WITH_TUN2(otPartitionId);
 DECL_IOCTL_FUNC_WITH_TUN2(otRloc16);
 DECL_IOCTL_FUNC(otRouterIdSequence);
+DECL_IOCTL_FUNC(otMaxRouterId);
 DECL_IOCTL_FUNC(otRouterInfo);
 DECL_IOCTL_FUNC_WITH_TUN2(otStableNetworkDataVersion);
 DECL_IOCTL_FUNC(otMacBlacklistEnabled);
