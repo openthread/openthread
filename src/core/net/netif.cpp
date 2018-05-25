@@ -88,13 +88,13 @@ Netif::Netif(Instance &aInstance, int8_t aInterfaceId)
     , mMulticastPromiscuous(false)
     , mNext(NULL)
 {
-    for (size_t i = 0; i < sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtUnicastAddresses); i++)
     {
         // To mark the address as unused/available, set the `mNext` to point back to itself.
         mExtUnicastAddresses[i].mNext = &mExtUnicastAddresses[i];
     }
 
-    for (size_t i = 0; i < sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtMulticastAddresses); i++)
     {
         // To mark the address as unused/available, set the `mNext` to point back to itself.
         mExtMulticastAddresses[i].mNext = &mExtMulticastAddresses[i];
@@ -240,7 +240,7 @@ exit:
 otError Netif::GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress)
 {
     otError                error = OT_ERROR_NOT_FOUND;
-    size_t                 num   = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t                 num   = OT_ARRAY_LENGTH(mExtMulticastAddresses);
     NetifMulticastAddress *entry;
 
     VerifyOrExit(aIterator < num);
@@ -267,7 +267,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
     otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
-    size_t                 num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t                 num = OT_ARRAY_LENGTH(mExtMulticastAddresses);
 
     if (IsMulticastSubscribed(aAddress))
     {
@@ -301,7 +301,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
     NetifMulticastAddress *last = NULL;
-    size_t                 num  = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t                 num  = OT_ARRAY_LENGTH(mExtMulticastAddresses);
 
     for (entry = mMulticastAddresses; entry; entry = entry->GetNext())
     {
@@ -338,7 +338,7 @@ exit:
 
 void Netif::UnsubscribeAllExternalMulticastAddresses(void)
 {
-    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+    size_t num = OT_ARRAY_LENGTH(mExtMulticastAddresses);
 
     for (NetifMulticastAddress *entry = &mExtMulticastAddresses[0]; num > 0; num--, entry++)
     {
@@ -408,7 +408,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    size_t               num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+    size_t               num = OT_ARRAY_LENGTH(mExtUnicastAddresses);
 
     VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
 
@@ -454,7 +454,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
     NetifUnicastAddress *last = NULL;
-    size_t               num  = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+    size_t               num  = OT_ARRAY_LENGTH(mExtUnicastAddresses);
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
@@ -491,7 +491,7 @@ exit:
 
 void Netif::RemoveAllExternalUnicastAddresses(void)
 {
-    size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+    size_t num = OT_ARRAY_LENGTH(mExtUnicastAddresses);
 
     for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; num > 0; num--, entry++)
     {

@@ -28,6 +28,7 @@
 
 #include <openthread/config.h>
 
+#include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "thread/network_data_local.hpp"
 
@@ -108,7 +109,7 @@ void TestNetworkDataIterator(void)
         printf("\nTest #1: Network data 1");
         printf("\n-------------------------------------------------");
 
-        for (uint8_t i = 0; i < sizeof(routes) / sizeof(routes[0]); i++)
+        for (uint8_t i = 0; i < OT_ARRAY_LENGTH(routes); i++)
         {
             SuccessOrQuit(netData.GetNextExternalRoute(&iter, &config), "GetNextExternalRoute() failed\n");
             PrintExternalRouteConfig(config);
@@ -158,7 +159,7 @@ void TestNetworkDataIterator(void)
         printf("\nTest #2: Network data 2");
         printf("\n-------------------------------------------------");
 
-        for (uint8_t i = 0; i < sizeof(routes) / sizeof(routes[0]); i++)
+        for (uint8_t i = 0; i < OT_ARRAY_LENGTH(routes); i++)
         {
             SuccessOrQuit(netData.GetNextExternalRoute(&iter, &config), "GetNextExternalRoute() failed\n");
             PrintExternalRouteConfig(config);

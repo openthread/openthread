@@ -32,6 +32,7 @@
 #include <openthread/openthread.h>
 
 #include "test_util.h"
+#include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "thread/topology.hpp"
 
@@ -132,7 +133,7 @@ void TestChildIp6Address(void)
 
     numAddresses++;
 
-    for (uint8_t index = 0; index < static_cast<uint8_t>(sizeof(ip6Addresses) / sizeof(ip6Addresses[0])); index++)
+    for (uint8_t index = 0; index < static_cast<uint8_t>(OT_ARRAY_LENGTH(ip6Addresses)); index++)
     {
         VerifyOrQuit(numAddresses < kMaxChildIp6Addresses, "Too many IPv6 addresses in the unit test");
         SuccessOrQuit(addresses[numAddresses++].FromString(ip6Addresses[index]),

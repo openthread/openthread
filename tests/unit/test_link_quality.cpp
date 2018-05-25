@@ -28,6 +28,7 @@
 
 #include <openthread/openthread.h>
 
+#include "common/code_utils.hpp"
 #include "thread/link_quality.hpp"
 #include "utils/wrap_string.h"
 
@@ -427,7 +428,7 @@ void TestSuccessRateTracker(void)
 
     // Adding success/failure at different rates and checking the RateTracker rate for every sample
 
-    for (uint16_t testRound = 0; testRound < sizeof(kWeightLimit) / sizeof(kWeightLimit[0]) * 2; testRound++)
+    for (uint16_t testRound = 0; testRound < OT_ARRAY_LENGTH(kWeightLimit) * 2; testRound++)
     {
         uint16_t weightLimit;
         bool     reverseLogic;

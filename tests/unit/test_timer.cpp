@@ -28,6 +28,7 @@
 
 #include "test_platform.h"
 
+#include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/timer.hpp"
@@ -550,7 +551,7 @@ int TestTenTimers(void)
 
     size_t i;
 
-    for (i = 0; i < sizeof(kTimeShift) / sizeof(kTimeShift[0]); i++)
+    for (i = 0; i < OT_ARRAY_LENGTH(kTimeShift); i++)
     {
         TenTimers(kTimeShift[i]);
     }

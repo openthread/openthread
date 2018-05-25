@@ -1305,39 +1305,22 @@ NcpBase::PropertyHandler NcpBase::FindPropertyHandler(spinel_prop_key_t aKey, co
 
 NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 {
-    return FindPropertyHandler(
-               aKey,
-               mGetPropertyHandlerTable,
-               sizeof(mGetPropertyHandlerTable) / sizeof(mGetPropertyHandlerTable[0])
-           );
-
+    return FindPropertyHandler(aKey, mGetPropertyHandlerTable, OT_ARRAY_LENGTH(mGetPropertyHandlerTable));
 }
 
 NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 {
-    return FindPropertyHandler(
-               aKey,
-               mSetPropertyHandlerTable,
-               sizeof(mSetPropertyHandlerTable) / sizeof(mSetPropertyHandlerTable[0])
-           );
+    return FindPropertyHandler(aKey, mSetPropertyHandlerTable, OT_ARRAY_LENGTH(mSetPropertyHandlerTable));
 }
 
 NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aKey)
 {
-   return FindPropertyHandler(
-               aKey,
-               mInsertPropertyHandlerTable,
-               sizeof(mInsertPropertyHandlerTable) / sizeof(mInsertPropertyHandlerTable[0])
-           );
+   return FindPropertyHandler(aKey, mInsertPropertyHandlerTable, OT_ARRAY_LENGTH(mInsertPropertyHandlerTable));
 }
 
 NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aKey)
 {
-    return FindPropertyHandler(
-               aKey,
-               mRemovePropertyHandlerTable,
-               sizeof(mRemovePropertyHandlerTable) / sizeof(mRemovePropertyHandlerTable[0])
-           );
+    return FindPropertyHandler(aKey, mRemovePropertyHandlerTable, OT_ARRAY_LENGTH(mRemovePropertyHandlerTable));
 }
 
 // Returns `true` and updates the `aError` on success.
