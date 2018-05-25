@@ -133,10 +133,10 @@ libopenthread_cli_ftd_a_CPPFLAGS =    \
 
 SOURCES_COMMON =                      \
     cli.cpp                           \
+    cli_coap.cpp                      \
     cli_console.cpp                   \
     cli_dataset.cpp                   \
     cli_uart.cpp                      \
-    cli_coap.cpp                      \
     cli_udp_example.cpp               \
     $(NULL)
 
@@ -150,11 +150,11 @@ libopenthread_cli_mtd_a_SOURCES =     \
 
 noinst_HEADERS                      = \
     cli.hpp                           \
+    cli_coap.hpp                      \
     cli_console.hpp                   \
     cli_dataset.hpp                   \
-    cli_uart.hpp                      \
     cli_server.hpp                    \
-    cli_coap.hpp                      \
+    cli_uart.hpp                      \
     cli_udp_example.hpp               \
     $(NULL)
 
