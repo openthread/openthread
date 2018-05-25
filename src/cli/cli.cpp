@@ -495,6 +495,8 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
     if (isTable || strcmp(argv[0], "list") == 0)
     {
+        uint8_t maxChildren;
+
         if (isTable)
         {
             mServer->OutputFormat(
@@ -503,53 +505,44 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 "+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+\r\n");
         }
 
-        // For certifcation: here intentionally not limits the upperbound for the index,
-        // giving the chance to exit from below default case as OpenThread THCI expects
-        // the content of "child list" and the result "Done" in seperate lines.
-        for (uint8_t i = 0;; i++)
+        maxChildren = otThreadGetMaxAllowedChildren(mInstance);
+
+        for (uint8_t i = 0; i < maxChildren; i++)
         {
-            switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
+            if ((otThreadGetChildInfoByIndex(mInstance, i, &childInfo) != OT_ERROR_NONE) || childInfo.mIsStateRestoring)
             {
-            case OT_ERROR_NONE:
-                break;
-
-            case OT_ERROR_NOT_FOUND:
                 continue;
-
-            default:
-                mServer->OutputFormat("\r\n");
-                ExitNow();
             }
 
-            if (childInfo.mTimeout > 0)
+            if (isTable)
             {
-                if (isTable)
-                {
-                    mServer->OutputFormat("| %3d ", childInfo.mChildId);
-                    mServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
-                    mServer->OutputFormat("| %10d ", childInfo.mTimeout);
-                    mServer->OutputFormat("| %10d ", childInfo.mAge);
-                    mServer->OutputFormat("| %5d ", childInfo.mLinkQualityIn);
-                    mServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
-                    mServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
-                    mServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
-                    mServer->OutputFormat("|%1d", childInfo.mFullFunction);
-                    mServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
-                    mServer->OutputFormat("| ");
+                mServer->OutputFormat("| %3d ", childInfo.mChildId);
+                mServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
+                mServer->OutputFormat("| %10d ", childInfo.mTimeout);
+                mServer->OutputFormat("| %10d ", childInfo.mAge);
+                mServer->OutputFormat("| %5d ", childInfo.mLinkQualityIn);
+                mServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
+                mServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
+                mServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
+                mServer->OutputFormat("|%1d", childInfo.mFullFunction);
+                mServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
+                mServer->OutputFormat("| ");
 
-                    for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
-                    {
-                        mServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
-                    }
-
-                    mServer->OutputFormat(" |\r\n");
-                }
-                else
+                for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
                 {
-                    mServer->OutputFormat("%d ", childInfo.mChildId);
+                    mServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
                 }
+
+                mServer->OutputFormat(" |\r\n");
+            }
+            else
+            {
+                mServer->OutputFormat("%d ", childInfo.mChildId);
             }
         }
+
+        mServer->OutputFormat("\r\n");
+        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
