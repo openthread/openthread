@@ -528,7 +528,10 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
 
+    VerifyOrExit(mPanChannel != aChannel);
+
     mPanChannel = aChannel;
+    mCcaSuccessRateTracker.Reset();
 
     VerifyOrExit(!mRadioChannelAcquisitionId);
 
@@ -1248,7 +1251,11 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
             mCcaSampleCount++;
         }
 
-        mCcaSuccessRateTracker.AddSample(ccaSuccess, mCcaSampleCount);
+        if (sendFrame.GetChannel() == mPanChannel)
+        {
+            mCcaSuccessRateTracker.AddSample(ccaSuccess, mCcaSampleCount);
+        }
+
         break;
 
     default:
