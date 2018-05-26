@@ -73,7 +73,7 @@ AddressResolver::AddressResolver(Instance &aInstance)
     GetNetif().GetIp6().GetIcmp().RegisterHandler(mIcmpHandler);
 }
 
-void AddressResolver::Clear()
+void AddressResolver::Clear(void)
 {
     memset(&mCache, 0, sizeof(mCache));
 
@@ -90,6 +90,7 @@ otError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
     VerifyOrExit(aIndex < kCacheEntries, error = OT_ERROR_INVALID_ARGS);
     memcpy(&aEntry.mTarget, &mCache[aIndex].mTarget, sizeof(aEntry.mTarget));
     aEntry.mRloc16 = mCache[aIndex].mRloc16;
+    aEntry.mAge    = mCache[aIndex].mAge;
     aEntry.mValid  = mCache[aIndex].mState == Cache::kStateCached;
 
 exit:
