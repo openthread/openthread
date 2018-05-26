@@ -98,6 +98,7 @@ check_PROGRAMS                                                      = \
     test-pskc                                                         \
     test-spinel-decoder                                               \
     test-spinel-encoder                                               \
+    test-string                                                       \
     test-strlcat                                                      \
     test-strlcpy                                                      \
     test-strnlen                                                      \
@@ -184,6 +185,9 @@ test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
 test_pskc_LDADD              = $(COMMON_LDADD)
 test_pskc_SOURCES            = test_platform.cpp test_pskc.cpp
 
+test_string_LDADD            = $(COMMON_LDADD)
+test_string_SOURCES          = test_platform.cpp test_string.cpp
+
 test_strlcat_LDADD           = $(COMMON_LDADD)
 test_strlcat_SOURCES         = test_strlcat.c
 
@@ -231,6 +235,7 @@ PRETTY_FILES                                                        = \
     $(test_pskc_SOURCES)                                              \
     $(test_spinel_decoder_SOURCES)                                    \
     $(test_spinel_encoder_SOURCES)                                    \
+    $(test_string)                                                    \
     $(test_strlcat_SOURCES)                                           \
     $(test_strlcpy_SOURCES)                                           \
     $(test_strnlen_SOURCES)                                           \

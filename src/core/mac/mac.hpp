@@ -113,6 +113,12 @@ public:
     };
 
     /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kInfoStringSize> InfoString;
+
+    /**
      * This constructor initializes a `ChannelMask` instance.
      *
      */
@@ -249,7 +255,7 @@ public:
     bool operator!=(const ChannelMask &aAnother) const { return (mMask != aAnother.mMask); }
 
     /**
-     * This method converts the channel mask into a human-readable NULL-terminated string.
+     * This method converts the channel mask into a human-readable string.
      *
      * Examples of possible output:
      *  -  empty mask      ->  "{ }"
@@ -258,13 +264,10 @@ public:
      *  -  multiple ranges ->  "{ 11, 14-17, 20-22, 24, 25 }"
      *  -  no range        ->  "{ 14, 21, 26 }"
      *
-     * @param[out] aBuffer  A pointer to a char buffer to output the string.
-     * @param[in]  aSize    Size of the buffer (number of bytes).
-     *
-     * @returns  A pointer to the @p aBuffer.
+     * @returns  An `InfoString` object representing the channel mask.
      *
      */
-    const char *ToString(char *aBuffer, uint16_t aSize) const;
+    InfoString ToString(void) const;
 
 private:
 #if (OT_RADIO_CHANNEL_MIN >= 32) || (OT_RADIO_CHANNEL_MAX >= 32)

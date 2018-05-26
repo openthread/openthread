@@ -53,10 +53,9 @@ bool ExtAddress::operator!=(const ExtAddress &aOther) const
     return memcmp(m8, aOther.m8, sizeof(ExtAddress)) != 0;
 }
 
-const char *ExtAddress::ToString(char *aBuf, uint16_t aSize) const
+ExtAddress::InfoString ExtAddress::ToString(void) const
 {
-    snprintf(aBuf, aSize, "%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
-    return aBuf;
+    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
 }
 
 void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
@@ -76,26 +75,10 @@ void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
     }
 }
 
-const char *Address::ToString(char *aBuf, uint16_t aSize) const
+Address::InfoString Address::ToString(void) const
 {
-    const char *rval = aBuf;
-
-    switch (mType)
-    {
-    case kTypeNone:
-        snprintf(aBuf, aSize, "None");
-        break;
-
-    case kTypeShort:
-        snprintf(aBuf, aSize, "0x%04x", GetShort());
-        break;
-
-    case kTypeExtended:
-        rval = GetExtended().ToString(aBuf, aSize);
-        break;
-    }
-
-    return rval;
+    return (mType == kTypeExtended) ? GetExtended().ToString()
+                                    : (mType == kTypeNone ? InfoString("None") : InfoString("0x%04x", GetShort()));
 }
 
 otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
@@ -932,29 +915,28 @@ const uint8_t *Frame::GetFooter(void) const
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
 
-const char *Frame::ToInfoString(char *aBuf, uint16_t aSize) const
+Frame::InfoString Frame::ToInfoString(void) const
 {
-    uint8_t     type, commandId;
-    Address     src, dst;
-    const char *typeStr;
-    char        stringBuffer[10];
-    char        srcStringBuffer[Address::kAddressStringSize];
-    char        dstStringBuffer[Address::kAddressStringSize];
+    InfoString string;
+    uint8_t    commandId, type;
+    Address    src, dst;
+
+    string.Append("len:%d, seqnum:%d, type:", GetLength(), GetSequence());
 
     type = GetType();
 
     switch (type)
     {
     case kFcfFrameBeacon:
-        typeStr = "Beacon";
+        string.Append("Beacon");
         break;
 
     case kFcfFrameData:
-        typeStr = "Data";
+        string.Append("Data");
         break;
 
     case kFcfFrameAck:
-        typeStr = "Ack";
+        string.Append("Ack");
         break;
 
     case kFcfFrameMacCmd:
@@ -966,47 +948,42 @@ const char *Frame::ToInfoString(char *aBuf, uint16_t aSize) const
         switch (commandId)
         {
         case kMacCmdDataRequest:
-            typeStr = "Cmd(DataReq)";
+            string.Append("Cmd(DataReq)");
             break;
 
         case kMacCmdBeaconRequest:
-            typeStr = "Cmd(BeaconReq)";
+            string.Append("Cmd(BeaconReq)");
             break;
 
         default:
-            snprintf(stringBuffer, sizeof(stringBuffer), "Cmd(%d)", commandId);
-            typeStr = stringBuffer;
+            string.Append("Cmd(%d)", commandId);
             break;
         }
 
         break;
 
     default:
-        snprintf(stringBuffer, sizeof(stringBuffer), "%d", type);
-        typeStr = stringBuffer;
+        string.Append("%d", type);
         break;
     }
 
     GetSrcAddr(src);
     GetDstAddr(dst);
 
-    snprintf(aBuf, aSize, "len:%d, seqnum:%d, type:%s, src:%s, dst:%s, sec:%s, ackreq:%s", GetLength(), GetSequence(),
-             typeStr, src.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
-             dst.ToString(dstStringBuffer, sizeof(dstStringBuffer)), GetSecurityEnabled() ? "yes" : "no",
-             GetAckRequest() ? "yes" : "no");
+    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
+                  GetSecurityEnabled() ? "yes" : "no", GetAckRequest() ? "yes" : "no");
 
-    return aBuf;
+    return string;
 }
 
-const char *BeaconPayload::ToInfoString(char *aBuf, uint16_t aSize) const
+BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
     const uint8_t *xpanid = GetExtendedPanId();
 
-    snprintf(aBuf, aSize, "name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
-             GetNetworkName(), xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6], xpanid[7],
-             GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
-
-    return aBuf;
+    return InfoString("name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
+                      GetNetworkName(), xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6],
+                      xpanid[7], GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no",
+                      IsNative() ? "yes" : "no");
 }
 
 } // namespace Mac

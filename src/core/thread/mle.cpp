@@ -3854,11 +3854,7 @@ void Mle::UpdateParentSearchState(void)
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
-    char stringBuffer[Ip6::Address::kIp6AddressStringSize];
-
-    otLogInfoMle(GetInstance(), "%s (%s)", aLogString, aAddress.ToString(stringBuffer, sizeof(stringBuffer)));
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+    otLogInfoMle(GetInstance(), "%s (%s)", aLogString, aAddress.ToString().AsCString());
 
     OT_UNUSED_VARIABLE(aLogString);
     OT_UNUSED_VARIABLE(aAddress);
@@ -3866,12 +3862,7 @@ void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) co
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc) const
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
-    char stringBuffer[Ip6::Address::kIp6AddressStringSize];
-
-    otLogInfoMle(GetInstance(), "%s (%s,0x%04x)", aLogString, aAddress.ToString(stringBuffer, sizeof(stringBuffer)),
-                 aRloc);
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+    otLogInfoMle(GetInstance(), "%s (%s,0x%04x)", aLogString, aAddress.ToString().AsCString(), aRloc);
 
     OT_UNUSED_VARIABLE(aLogString);
     OT_UNUSED_VARIABLE(aAddress);
