@@ -974,6 +974,7 @@ typedef struct otEidCacheEntry
 {
     otIp6Address   mTarget;    ///< Target
     otShortAddress mRloc16;    ///< RLOC16
+    uint8_t        mAge;       ///< Age (order of use, 0 indicates most recently used entry)
     bool           mValid : 1; ///< Indicates whether or not the cache entry is valid
 } otEidCacheEntry;
 
