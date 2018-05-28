@@ -252,7 +252,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 #endif
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_GET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_ENABLED),
 #endif
 };
@@ -582,7 +582,7 @@ NcpBase::NcpBase(Instance *aInstance):
     mCurTransmitTID(0),
     mCurScanChannel(kInvalidScanChannel),
     mSrcMatchEnabled(false),
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     mInboundSecureIpFrameCounter(0),
     mInboundInsecureIpFrameCounter(0),
@@ -1736,7 +1736,7 @@ exit:
 
 otError NcpBase::GetPropertyHandler_PHY_ENABLED(void)
 {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         return mEncoder.WriteBool(otLinkRawIsEnabled(mInstance));
 #else
         return mEncoder.WriteBool(false);
