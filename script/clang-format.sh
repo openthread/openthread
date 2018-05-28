@@ -34,7 +34,9 @@ die() {
     exit 1
 }
 
-if which clang-format > /dev/null; then
+if which clang-format-5.0 > /dev/null; then
+    alias clang-format=clang-format-5.0
+elif which clang-format > /dev/null; then
     case "$(clang-format --version)" in
         "$CLANG_FORMAT_VERSION"*)
             ;;
@@ -42,8 +44,6 @@ if which clang-format > /dev/null; then
             die "clang-format 5.0 required"
             ;;
     esac
-elif which clang-format-5.0 > /dev/null; then
-    alias clang-format=clang-format-5.0
 else
     die "clang-format 5.0 required"
 fi
