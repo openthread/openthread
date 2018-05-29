@@ -43,7 +43,7 @@ libopenthread_da15000_a_CPPFLAGS                                                
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include                  \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/include                  \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/src                      \
-    -I$(top_srcdir)/third_party/mbedtls/repo.patched/include                              \
+    -I$(top_srcdir)/third_party/mbedtls/repo/include                                      \
     -include$(top_srcdir)/examples/platforms/da15000/custom_config_qspi.h                 \
     -Wno-sign-compare                                                                     \
     -Wno-unused-parameter                                                                 \

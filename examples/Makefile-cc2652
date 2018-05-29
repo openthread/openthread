@@ -57,10 +57,10 @@ CC2652_MBEDTLS_CPPFLAGS                                    = \
     -I$(PWD)/examples/platforms/cc2652/crypto                \
     -I$(PWD)/third_party/ti/devices/cc26x2                   \
     -I$(PWD)/third_party/mbedtls                             \
-    -I$(PWD)/third_party/mbedtls/repo.patched/include        \
+    -I$(PWD)/third_party/mbedtls/repo/include                \
     $(NULL)
 
-CC2652_CONFIG_FILE_CPPFLAGS                                =                    \
+CC2652_CONFIG_FILE_CPPFLAGS                                                   = \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2652-config.h\"' \
     -I$(PWD)/examples/platforms/cc2652/                                         \
     $(NULL)
