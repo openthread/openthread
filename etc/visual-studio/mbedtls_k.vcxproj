@@ -40,8 +40,8 @@
         ..\..\include;
         ..\..\src\core;
         ..\..\third_party\mbedtls;
-        ..\..\third_party\mbedtls\repo.patched\include;
-        ..\..\third_party\mbedtls\repo.patched\include\mbedtls;
+        ..\..\third_party\mbedtls\repo\include;
+        ..\..\third_party\mbedtls\repo\include\mbedtls;
         ..\..\examples\drivers\windows\include_c99;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
@@ -57,30 +57,30 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\aes.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\bignum.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ccm.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\cipher.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\cipher_wrap.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\cmac.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ctr_drbg.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\debug.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ecjpake.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ecp.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ecp_curves.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\entropy.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\entropy_poll.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\md.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\md_wrap.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\memory_buffer_alloc.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\platform.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\sha256.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_ciphersuites.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_cli.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_cookie.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_srv.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_ticket.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_tls.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\aes.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\bignum.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ccm.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher_wrap.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cmac.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ctr_drbg.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\debug.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecjpake.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp_curves.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy_poll.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md_wrap.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\sha256.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cli.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cookie.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_srv.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ticket.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_tls.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
