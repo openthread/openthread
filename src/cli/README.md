@@ -74,21 +74,21 @@ OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command Details
 
-### autostart true
+### autostart enable
 
 Automatically start Thread on initialization.
 
 ```bash
-> autostart true
+> autostart enable
 Done
 ```
 
-### autostart false
+### autostart disable
 
 Don't automatically start Thread on initialization.
 
 ```bash
-> autostart false
+> autostart disable
 Done
 ```
 
@@ -98,7 +98,7 @@ Show the status of automatically starting Thread on initialization.
 
 ```bash
 > autostart
-false
+Disabled
 Done
 ```
 
