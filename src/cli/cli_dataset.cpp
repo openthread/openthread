@@ -199,7 +199,7 @@ otError Dataset::Process(otInstance *aInstance, int argc, char *argv[], Server &
         ExitNow(error = Print(sDataset));
     }
 
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
@@ -214,7 +214,7 @@ exit:
 
 otError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 {
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }

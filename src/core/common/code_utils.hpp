@@ -38,6 +38,16 @@
 
 #include "utils/wrap_stdbool.h"
 
+/**
+ * This macro calculates the number of elements in an array.
+ *
+ * @param[in] aArray  Name of the array variable.
+ *
+ * @returns Number of elements in the array.
+ *
+ */
+#define OT_ARRAY_LENGTH(aArray) (sizeof(aArray) / sizeof(aArray[0]))
+
 // Calculates the aligned variable size.
 #define otALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
 

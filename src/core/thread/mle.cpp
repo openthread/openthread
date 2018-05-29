@@ -138,7 +138,7 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_ENABLE_SERVICE
 
     // Service Alocs
-    for (size_t i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
     {
         memset(&mServiceAlocs[i], 0, sizeof(mServiceAlocs[i]));
 
@@ -774,7 +774,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 
 #if OPENTHREAD_ENABLE_SERVICE
 
-    for (uint8_t i = 0; i < sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]); i++)
+    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
     {
         if (HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]) != Mac::kShortAddrInvalid)
         {
@@ -1387,7 +1387,7 @@ void Mle::UpdateServiceAlocs(void)
     int                   i                  = 0;
     NetworkData::Leader & leaderData         = netif.GetNetworkDataLeader();
     otNetworkDataIterator serviceIterator    = OT_NETWORK_DATA_ITERATOR_INIT;
-    int                   serviceAlocsLength = sizeof(mServiceAlocs) / sizeof(mServiceAlocs[0]);
+    int                   serviceAlocsLength = OT_ARRAY_LENGTH(mServiceAlocs);
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
 
