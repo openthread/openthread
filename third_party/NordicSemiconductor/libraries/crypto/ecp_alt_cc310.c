@@ -286,6 +286,7 @@ static CRYS_ECPKI_DomainID_t mbedtls_to_cryptocell_group_id( mbedtls_ecp_group_i
         case MBEDTLS_ECP_DP_NONE:
         case MBEDTLS_ECP_DP_BP256R1:
         case MBEDTLS_ECP_DP_BP384R1:
+        case MBEDTLS_ECP_DP_CURVE448:
         case MBEDTLS_ECP_DP_BP512R1:
             // Not supported.
             break;
