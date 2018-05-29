@@ -406,7 +406,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
  * @returns The maximum allowed router ID.
  *
  */
-uint8_t otThreadGetMaxRouterId(otInstance *aInstance);
+OTAPI uint8_t OTCALL otThreadGetMaxRouterId(otInstance *aInstance);
 
 /**
  * The function retains diagnostic information for a given Thread Router.
