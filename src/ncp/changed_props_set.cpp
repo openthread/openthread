@@ -28,6 +28,8 @@
 
 #include "changed_props_set.hpp"
 
+#include "common/code_utils.hpp"
+
 namespace ot {
 namespace Ncp {
 
@@ -87,7 +89,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] =
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
 {
-    return (sizeof(mSupportedProps) / sizeof(mSupportedProps[0]));
+    return OT_ARRAY_LENGTH(mSupportedProps);
 }
 
 void ChangedPropsSet::Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus)

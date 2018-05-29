@@ -393,7 +393,7 @@ otError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
 
 void Interpreter::ProcessHelp(int argc, char *argv[])
 {
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
@@ -3443,7 +3443,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         mServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
 #endif
 
-    for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(cmd, sCommands[i].mName) == 0)
         {
@@ -3454,7 +3454,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     // Check user defined commands if built-in command
     // has not been found
-    if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    if (i == OT_ARRAY_LENGTH(sCommands))
     {
         for (i = 0; i < mUserCommandsLength; i++)
         {
@@ -3494,14 +3494,13 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
     VerifyOrExit((aFlags & OT_CHANGED_THREAD_NETDATA) != 0);
 
 #ifndef OTDLL
-    otIp6SlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]),
-                     otIp6CreateRandomIid, NULL);
+    otIp6SlaacUpdate(mInstance, mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses), otIp6CreateRandomIid, NULL);
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     otDhcp6ServerUpdate(mInstance);
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcp6ClientUpdate(mInstance, mDhcpAddresses, sizeof(mDhcpAddresses) / sizeof(mDhcpAddresses[0]), NULL);
+    otDhcp6ClientUpdate(mInstance, mDhcpAddresses, OT_ARRAY_LENGTH(mDhcpAddresses), NULL);
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 #endif
 

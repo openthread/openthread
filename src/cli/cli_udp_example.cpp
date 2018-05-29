@@ -56,7 +56,7 @@ UdpExample::UdpExample(Interpreter &aInterpreter)
 
 otError UdpExample::ProcessHelp(int argc, char *argv[])
 {
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mInterpreter.mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
@@ -180,7 +180,7 @@ otError UdpExample::Process(int argc, char *argv[])
 {
     otError error = OT_ERROR_PARSE;
 
-    for (size_t i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {

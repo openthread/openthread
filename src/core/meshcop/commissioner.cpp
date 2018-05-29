@@ -156,7 +156,7 @@ otError Commissioner::SendCommissionerSet(void)
     steeringData.Init();
     steeringData.Clear();
 
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
         if (!mJoiners[i].mValid)
         {
@@ -187,7 +187,7 @@ exit:
 
 void Commissioner::ClearJoiners(void)
 {
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
         mJoiners[i].mValid = false;
     }
@@ -204,7 +204,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
     RemoveJoiner(aEui64, 0); // remove immediately
 
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
         if (mJoiners[i].mValid)
         {
@@ -259,7 +259,7 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
         if (!mJoiners[i].mValid)
         {
@@ -366,7 +366,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
     uint32_t now = TimerMilli::GetNow();
 
     // Remove Joiners.
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
         if (!mJoiners[i].mValid)
         {
@@ -389,7 +389,7 @@ void Commissioner::UpdateJoinerExpirationTimer(void)
     uint32_t nextTimeout = 0xffffffff;
 
     // Check if timer should be set for next Joiner.
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
         {
             if (!mJoiners[i].mValid)
@@ -821,7 +821,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
         memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
         mJoinerIid[0] ^= 0x2;
 
-        for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+        for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
         {
             if (!mJoiners[i].mValid)
             {

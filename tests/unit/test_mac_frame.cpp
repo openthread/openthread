@@ -28,6 +28,7 @@
 
 #include <openthread/openthread.h>
 
+#include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -68,7 +69,7 @@ void TestMacHeader(void)
          Mac::Frame::kSecMic32 | Mac::Frame::kKeyIdMode2, 19},
     };
 
-    for (unsigned i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
+    for (unsigned i = 0; i < OT_ARRAY_LENGTH(tests); i++)
     {
         uint8_t    psdu[Mac::Frame::kMTU];
         Mac::Frame frame;
