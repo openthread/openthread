@@ -46,195 +46,173 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
                            Handler aTransmitHandler,
                            Handler aIntervalExpiredHandler,
                            void *  aOwner)
-    : TimerMilli(aInstance, HandleTimerFired, aOwner)
+    : TimerMilli(aInstance, &TrickleTimer::HandleTimer, aOwner)
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    , k(aRedundancyConstant)
-    , c(0)
+    , mRedundancyConstant(aRedundancyConstant)
+    , mCounter(0)
 #endif
-    , Imin(0)
-    , Imax(0)
-    , mMode(kModeNormal)
-    , I(0)
-    , t(0)
-    , mPhase(kPhaseDormant)
+    , mIntervalMin(0)
+    , mIntervalMax(0)
+    , mInterval(0)
+    , mTimeInInterval(0)
     , mTransmitHandler(aTransmitHandler)
     , mIntervalExpiredHandler(aIntervalExpiredHandler)
+    , mMode(kModeNormal)
+    , mIsRunning(false)
+    , mInTransmitPhase(false)
 {
+    assert(aTransmitHandler != NULL);
 }
 
-bool TrickleTimer::IsRunning(void) const
+otError TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)
 {
-    return mPhase != kPhaseDormant;
-}
+    otError error = OT_ERROR_NONE;
 
-void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)
-{
-    assert(!IsRunning());
+    VerifyOrExit(aIntervalMax >= aIntervalMin, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aIntervalMin != 0 || aIntervalMax != 0, error = OT_ERROR_INVALID_ARGS);
 
-    // Set the interval limits and mode
-    Imin  = aIntervalMin;
-    Imax  = aIntervalMax;
-    mMode = aMode;
+    mIntervalMin = aIntervalMin;
+    mIntervalMax = aIntervalMax;
+    mMode        = aMode;
+    mIsRunning   = true;
 
-    // Initialize I to [Imin, Imax]
-    if (Imin == Imax)
-    {
-        I = Imin;
-    }
-    else
-    {
-        I = Random::GetUint32InRange(Imin, Imax);
-    }
+    // Select interval randomly from range [Imin, Imax].
+    mInterval = Random::GetUint32InRange(mIntervalMin, mIntervalMax + 1);
 
-    // Start a new interval
     StartNewInterval();
+
+exit:
+    return error;
 }
 
 void TrickleTimer::Stop(void)
 {
-    mPhase = kPhaseDormant;
+    mIsRunning = false;
     TimerMilli::Stop();
 }
 
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-void TrickleTimer::IndicateConsistent(void)
-{
-    // Increment counter
-    c++;
-}
-#endif
-
 void TrickleTimer::IndicateInconsistent(void)
 {
-    // Only relevant if we aren't already at 'I' == 'Imin'
-    if (IsRunning() && I != Imin)
-    {
-        // Reset I to Imin
-        I = Imin;
+    // If interval is equal to minimum when an "inconsistent" event
+    // is received, do nothing.
+    VerifyOrExit(mIsRunning && (mInterval != mIntervalMin));
 
-        // Stop the existing timer
-        TimerMilli::Stop();
+    mInterval = mIntervalMin;
+    StartNewInterval();
 
-        // Start a new interval
-        StartNewInterval();
-    }
+exit:
+    return;
 }
 
 void TrickleTimer::StartNewInterval(void)
 {
-// Reset the counter and timer phase
+    uint32_t halfInterval;
 
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    c = 0;
+    mCounter = 0;
 #endif
-    mPhase = kPhaseTransmit;
 
-    // Initialize t
-    if (I < 2)
+    mInTransmitPhase = true;
+
+    switch (mMode)
     {
-        // Immediate interval, just set t to 0
-        t = 0;
+    case kModeNormal:
+        halfInterval = mInterval / 2;
+        VerifyOrExit(halfInterval < mInterval, mTimeInInterval = halfInterval);
+
+        // Select a random point in the interval taken from the range [I/2, I).
+        mTimeInInterval = Random::GetUint32InRange(halfInterval, mInterval);
+        break;
+
+    case kModePlainTimer:
+        mTimeInInterval = mInterval;
+        break;
+
+    case kModeMPL:
+        // Select a random point in interval taken from the range [0, I].
+        mTimeInInterval = Random::GetUint32InRange(0, mInterval + 1);
+        break;
     }
-    else if (mMode == kModeMPL)
+
+exit:
+    TimerMilli::Start(mTimeInInterval);
+}
+
+void TrickleTimer::HandleTimer(Timer &aTimer)
+{
+    static_cast<TrickleTimer *>(&aTimer)->HandleTimer();
+}
+
+void TrickleTimer::HandleTimer(void)
+{
+    if (mInTransmitPhase)
     {
-        // Initialize t to random value between (0, I]
-        t = Random::GetUint32InRange(0, I);
-    }
-    else if (mMode == kModePlainTimer)
-    {
-        // Initialize t to I, which has already been randomized in Start
-        t = I;
+        HandleEndOfTimeInInterval();
     }
     else
     {
-        // Initialize t to random value between (I/2, I]
-        t = Random::GetUint32InRange(I / 2, I);
+        HandleEndOfInterval();
     }
-
-    // Start the timer for 't' milliseconds from now
-    TimerMilli::Start(t);
 }
 
-void TrickleTimer::HandleTimerFired(Timer &aTimer)
+void TrickleTimer::HandleEndOfTimeInInterval(void)
 {
-    static_cast<TrickleTimer *>(&aTimer)->HandleTimerFired();
-}
-
-void TrickleTimer::HandleTimerFired(void)
-{
-    Phase curPhase       = mPhase;
-    bool  shouldContinue = true;
-
-    // Default the current state to Dormant
-    mPhase = kPhaseDormant;
-
-    switch (curPhase)
-    {
-    // We have just reached time 't'
-    case kPhaseTransmit:
-    {
-    // Are we not using redundancy or is the counter still less than it?
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-        if (k == 0 || c < k)
+    // Trickle transmits if and only if the counter `c` is less
+    // than the redundancy constant `k`.
+    if (mRedundancyConstant == 0 || mCounter < mRedundancyConstant)
 #endif
-        {
-            // Invoke the transmission callback
-            shouldContinue = TransmitFired();
-        }
-
-        // Wait for the rest of the interval to elapse
-        if (shouldContinue)
-        {
-            // If we are in plain timer mode, just randomize I and restart the interval
-            if (mMode == kModePlainTimer)
-            {
-                // Initialize I to [Imin, Imax]
-                I = Random::GetUint32InRange(Imin, Imax);
-
-                // Start a new interval
-                StartNewInterval();
-            }
-            else
-            {
-                // Start next phase of the timer
-                mPhase = kPhaseInterval;
-
-                // Start the time for 'I - t' milliseconds
-                TimerMilli::Start(I - t);
-            }
-        }
-
-        break;
-    }
-
-    // We have just reached time 'I'
-    case kPhaseInterval:
     {
-        // Double 'I' to get the new interval length
-        uint32_t newI = I == 0 ? 1 : I << 1;
+        bool shouldContinue = mTransmitHandler(*this);
+        VerifyOrExit(shouldContinue, Stop());
+    }
 
-        if (newI > Imax)
-        {
-            newI = Imax;
-        }
+    switch (mMode)
+    {
+    case kModePlainTimer:
+        // Select a random interval in [Imin, Imax] and restart.
+        mInterval = Random::GetUint32InRange(mIntervalMin, mIntervalMax + 1);
+        StartNewInterval();
+        break;
 
-        I = newI;
-
-        // Invoke the interval expiration callback
-        shouldContinue = IntervalExpiredFired();
-
-        if (shouldContinue)
-        {
-            // Start a new interval
-            StartNewInterval();
-        }
-
+    case kModeNormal:
+    case kModeMPL:
+        // Waiting for the rest of the interval to elapse.
+        mInTransmitPhase = false;
+        TimerMilli::Start(mInterval - mTimeInInterval);
         break;
     }
 
-    default:
-        assert(false);
+exit:
+    return;
+}
+
+void TrickleTimer::HandleEndOfInterval(void)
+{
+    // Double the interval and ensure result is below max.
+    if (mInterval == 0)
+    {
+        mInterval = 1;
     }
+    else if (mInterval <= mIntervalMax - mInterval)
+    {
+        mInterval *= 2;
+    }
+    else
+    {
+        mInterval = mIntervalMax;
+    }
+
+    if (mIntervalExpiredHandler)
+    {
+        bool shouldContinue = mIntervalExpiredHandler(*this);
+        VerifyOrExit(shouldContinue, Stop());
+    }
+
+    StartNewInterval();
+
+exit:
+    return;
 }
 
 } // namespace ot
