@@ -348,7 +348,8 @@ static void setupTransmit(otRadioFrame *aFrame)
     int i;
 
     // wait for current TX operation to complete, if any.
-    while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
+    while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE)
+        ;
 
     // flush txfifo
     HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
@@ -403,8 +404,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
             // Ensure we haven't overflowed the RX buffer in the mean time, as this
             // will cause a deadlock here otherwise.  Similarly, if we see an aborted
             // RX, handle that here too to prevent deadlock.
-            if (HWREG(RFCORE_SFR_RFERRF) &
-                (RFCORE_SFR_RFERRF_RXOVERF | RFCORE_SFR_RFERRF_RXABO))
+            if (HWREG(RFCORE_SFR_RFERRF) & (RFCORE_SFR_RFERRF_RXOVERF | RFCORE_SFR_RFERRF_RXABO))
             {
                 if (HWREG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_RXOVERF)
                 {
@@ -422,8 +422,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
             }
 
             // Check for idle state.  After flushing the RX buffer, we may wind up here.
-            if (!(HWREG(RFCORE_XREG_FSMSTAT1)
-                  & (RFCORE_XREG_FSMSTAT1_TX_ACTIVE | RFCORE_XREG_FSMSTAT1_RX_ACTIVE)))
+            if (!(HWREG(RFCORE_XREG_FSMSTAT1) & (RFCORE_XREG_FSMSTAT1_TX_ACTIVE | RFCORE_XREG_FSMSTAT1_RX_ACTIVE)))
             {
                 otLogCritPlat(sInstance, "Idle state detected", NULL);
 
