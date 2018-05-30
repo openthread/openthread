@@ -31,14 +31,14 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 #----------------------------------------
 #
 # This library on the face of it, appears to be identical
-# for both the MTD and FTD varients, however ...
+# for both the MTD and FTD variants, however ...
 #
 # The source code here includes numerous OpenThread internal headers.
 # Due to the "domino-effect" other internal headers are included.
 #
 # For example:
-#     cli.cpp includes: 
-#            src/core/openthread-instance.h
+#     cli.cpp includes:
+#            src/core/common/instance.hpp
 # Which Includes:
 #            src/core/therad/thread_netif.hpp
 # Which Includes:
@@ -51,8 +51,8 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # The FTD flavor has many private components (class variables).
 # The MTD flavor has no private components.
 #
-# Bottom line: The Class(structs) are thus different in the downstream 
-# libs. At this level (in the CLI, and likewise in the NCP) they are 
+# Bottom line: The Class(structs) are thus different in the downstream
+# libs. At this level (in the CLI, and likewise in the NCP) they are
 # functionally identical.
 #
 # ORIGINALLY (historical note about how things are/where built):
@@ -133,10 +133,10 @@ libopenthread_cli_ftd_a_CPPFLAGS =    \
 
 SOURCES_COMMON =                      \
     cli.cpp                           \
+    cli_coap.cpp                      \
     cli_console.cpp                   \
     cli_dataset.cpp                   \
     cli_uart.cpp                      \
-    cli_coap.cpp                      \
     cli_udp_example.cpp               \
     $(NULL)
 
@@ -150,11 +150,11 @@ libopenthread_cli_mtd_a_SOURCES =     \
 
 noinst_HEADERS                      = \
     cli.hpp                           \
+    cli_coap.hpp                      \
     cli_console.hpp                   \
     cli_dataset.hpp                   \
-    cli_uart.hpp                      \
     cli_server.hpp                    \
-    cli_coap.hpp                      \
+    cli_uart.hpp                      \
     cli_udp_example.hpp               \
     $(NULL)
 

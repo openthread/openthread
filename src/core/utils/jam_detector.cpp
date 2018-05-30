@@ -31,15 +31,15 @@
  *   This file implements the jam detector feature.
  */
 
-#include <openthread/config.h>
-
 #include "jam_detector.hpp"
 
 #include <openthread/openthread.h>
-#include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
+#include "common/logging.hpp"
+#include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -47,21 +47,23 @@
 namespace ot {
 namespace Utils {
 
-JamDetector::JamDetector(ThreadNetif &aNetif) :
-    ThreadNetifLocator(aNetif),
-    mHandler(NULL),
-    mContext(NULL),
-    mRssiThreshold(kDefaultRssiThreshold),
-    mTimer(aNetif.GetInstance(), &JamDetector::HandleTimer, this),
-    mHistoryBitmap(0),
-    mCurSecondStartTime(0),
-    mSampleInterval(0),
-    mWindow(kMaxWindow),
-    mBusyPeriod(kMaxWindow),
-    mEnabled(false),
-    mAlwaysAboveThreshold(false),
-    mJamState(false)
+JamDetector::JamDetector(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mHandler(NULL)
+    , mContext(NULL)
+    , mNotifierCallback(HandleStateChanged, this)
+    , mTimer(aInstance, &JamDetector::HandleTimer, this)
+    , mHistoryBitmap(0)
+    , mCurSecondStartTime(0)
+    , mSampleInterval(0)
+    , mWindow(kMaxWindow)
+    , mBusyPeriod(kMaxWindow)
+    , mEnabled(false)
+    , mAlwaysAboveThreshold(false)
+    , mJamState(false)
+    , mRssiThreshold(kDefaultRssiThreshold)
 {
+    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 otError JamDetector::Start(Handler aHandler, void *aContext)
@@ -73,16 +75,11 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
 
     mHandler = aHandler;
     mContext = aContext;
-
     mEnabled = true;
 
-    mCurSecondStartTime = TimerMilli::GetNow();
-    mAlwaysAboveThreshold = true;
-    mHistoryBitmap = 0;
-    mJamState = false;
-    mSampleInterval = kMaxSampleInterval;
+    otLogInfoUtil(GetInstance(), "JamDetector - Started");
 
-    mTimer.Start(kMinSampleInterval);
+    CheckState();
 
 exit:
     return error;
@@ -94,18 +91,48 @@ otError JamDetector::Stop(void)
 
     VerifyOrExit(mEnabled, error = OT_ERROR_ALREADY);
 
-    mEnabled = false;
+    mEnabled  = false;
     mJamState = false;
 
     mTimer.Stop();
+
+    otLogInfoUtil(GetInstance(), "JamDetector - Stopped");
 
 exit:
     return error;
 }
 
+void JamDetector::CheckState(void)
+{
+    VerifyOrExit(mEnabled);
+
+    switch (GetInstance().Get<Mle::MleRouter>().GetRole())
+    {
+    case OT_DEVICE_ROLE_DISABLED:
+        VerifyOrExit(mTimer.IsRunning());
+        mTimer.Stop();
+        SetJamState(false);
+        break;
+
+    default:
+        VerifyOrExit(!mTimer.IsRunning());
+        mCurSecondStartTime   = TimerMilli::GetNow();
+        mAlwaysAboveThreshold = true;
+        mHistoryBitmap        = 0;
+        mJamState             = false;
+        mSampleInterval       = kMaxSampleInterval;
+        mTimer.Start(kMinSampleInterval);
+        break;
+    }
+
+exit:
+    return;
+}
+
 otError JamDetector::SetRssiThreshold(int8_t aThreshold)
 {
     mRssiThreshold = aThreshold;
+    otLogInfoUtil(GetInstance(), "JamDetector - RSSI threshold set to %d", mRssiThreshold);
 
     return OT_ERROR_NONE;
 }
@@ -118,6 +145,7 @@ otError JamDetector::SetWindow(uint8_t aWindow)
     VerifyOrExit(aWindow <= kMaxWindow, error = OT_ERROR_INVALID_ARGS);
 
     mWindow = aWindow;
+    otLogInfoUtil(GetInstance(), "JamDetector - window set to %d", mWindow);
 
 exit:
     return error;
@@ -131,6 +159,7 @@ otError JamDetector::SetBusyPeriod(uint8_t aBusyPeriod)
     VerifyOrExit(aBusyPeriod <= mWindow, error = OT_ERROR_INVALID_ARGS);
 
     mBusyPeriod = aBusyPeriod;
+    otLogInfoUtil(GetInstance(), "JamDetector - busy period set to %d", mBusyPeriod);
 
 exit:
     return error;
@@ -138,13 +167,13 @@ exit:
 
 void JamDetector::HandleTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandleTimer();
+    aTimer.GetOwner<JamDetector>().HandleTimer();
 }
 
 void JamDetector::HandleTimer(void)
 {
     int8_t rssi;
-    bool didExceedThreshold = true;
+    bool   didExceedThreshold = true;
 
     VerifyOrExit(mEnabled);
 
@@ -176,7 +205,7 @@ void JamDetector::HandleTimer(void)
         }
     }
 
-    mTimer.Start(mSampleInterval + (otPlatRandomGet() % kMaxRandomDelay));
+    mTimer.Start(mSampleInterval + Random::GetUint32InRange(0, kMaxRandomDelay));
 
 exit:
     return;
@@ -216,9 +245,8 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 
 void JamDetector::UpdateJamState(void)
 {
-    uint8_t numJammedSeconds = 0;
-    uint64_t bitmap = mHistoryBitmap;
-    bool oldJamState = mJamState;
+    uint8_t  numJammedSeconds = 0;
+    uint64_t bitmap           = mHistoryBitmap;
 
     // Clear all history bits beyond the current window size
     bitmap &= (static_cast<uint64_t>(1) << mWindow) - 1;
@@ -230,28 +258,40 @@ void JamDetector::UpdateJamState(void)
         bitmap &= (bitmap - 1);
     }
 
-    // Update the Jam state
-    mJamState = (numJammedSeconds >= mBusyPeriod);
+    SetJamState(numJammedSeconds >= mBusyPeriod);
+}
 
-    // If there is a change, invoke the handler.
-    if ((mJamState != oldJamState) || (mJamState == true))
+void JamDetector::SetJamState(bool aNewState)
+{
+    bool shouldInvokeHandler = aNewState;
+
+    if (aNewState != mJamState)
+    {
+        mJamState           = aNewState;
+        shouldInvokeHandler = true;
+        otLogInfoUtil(GetInstance(), "JamDetector - jamming %s", mJamState ? "detected" : "cleared");
+    }
+
+    if (shouldInvokeHandler)
     {
         mHandler(mJamState, mContext);
     }
 }
 
-JamDetector &JamDetector::GetOwner(const Context &aContext)
+void JamDetector::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
 {
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    JamDetector &detector = *static_cast<JamDetector *>(aContext.GetContext());
-#else
-    JamDetector &detector = otGetThreadNetif().GetJamDetector();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return detector;
+    aCallback.GetOwner<JamDetector>().HandleStateChanged(aFlags);
 }
 
-}  // namespace Utils
-}  // namespace ot
+void JamDetector::HandleStateChanged(uint32_t aFlags)
+{
+    if (aFlags & OT_CHANGED_THREAD_ROLE)
+    {
+        CheckState();
+    }
+}
+
+} // namespace Utils
+} // namespace ot
 
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION

@@ -238,6 +238,18 @@ class Message(object):
 
         assert(contains_tlv == True)
 
+    def assertCoapMessageDoesNotContainTlv(self, tlv_class_type):
+        if self.type != MessageType.COAP:
+            raise ValueError("Invalid message type. Expected COAP message.")
+
+        contains_tlv = False
+        for tlv in self.coap.payload:
+            if isinstance(tlv, tlv_class_type):
+                contains_tlv = True
+                break
+
+        assert(contains_tlv == False)
+
     def assertCoapMessageContainsOptionalTlv(self, tlv_class_type):
         if self.type != MessageType.COAP:
             raise ValueError("Invalid message type. Expected CoAP message.")
@@ -268,6 +280,16 @@ class Message(object):
 
         for addr in node.get_addrs():
             if dst_addr == ipaddress.ip_address(addr):
+                sent_to_node = True
+
+        if self.mac_header.dest_address.type == common.MacAddressType.SHORT:
+            mac_address = common.MacAddress.from_rloc16(node.get_addr16())
+            if self.mac_header.dest_address == mac_address:
+                sent_to_node = True
+
+        elif self.mac_header.dest_address.type == common.MacAddressType.LONG:
+            mac_address = common.MacAddress.from_eui64(bytearray(node.get_addr64(), encoding="utf-8"))
+            if self.mac_header.dest_address == mac_address:
                 sent_to_node = True
 
         assert sent_to_node == True
@@ -377,6 +399,23 @@ class MessagesSet(object):
 
         return message
 
+    def contains_icmp_message(self):
+        for m in self.messages:
+            if m.type == MessageType.ICMP:
+                return True
+
+        return False
+
+    def get_icmp_message(self, icmp_type):
+        for m in self.messages:
+            if m.type != MessageType.ICMP:
+                continue
+
+            if m.icmp.header.type == icmp_type:
+                return m
+
+        return None
+
     def contains_mle_message(self, command_type):
         for m in self.messages:
             if m.type != MessageType.MLE:
@@ -415,6 +454,9 @@ class MessageFactory:
         mac_frame = mac802154.MacFrame()
         mac_frame.parse(data)
         return mac_frame
+
+    def set_lowpan_context(self, cid, prefix):
+        self._lowpan_parser.set_lowpan_context(cid, prefix)
 
     def create(self, data):
         message = Message()

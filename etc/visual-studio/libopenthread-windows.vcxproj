@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{30723C38-BA3B-44C9-8D64-C5861A26934F}</ProjectGuid>
     <Keyword>StaticLibrary</Keyword>
@@ -42,6 +42,7 @@
         _CRT_SECURE_NO_WARNINGS;
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_FTD=1;
+        OPENTHREAD_ENABLE_NCP_SPI=1;
         OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>

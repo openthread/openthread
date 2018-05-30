@@ -75,6 +75,14 @@
 #define EINVAL 1
 #endif
 
+// IAR's errno.h apparently doesn't define ENOMEM.
+#ifndef ENOMEM
+// There is no real good choice for what to set
+// errno to in this case, so we just pick the
+// value '1' somewhat arbitrarily.
+#define ENOMEM 1
+#endif
+
 #ifdef _KERNEL_MODE
 #define va_copy(destination, source) ((destination) = (source))
 #undef errno
@@ -127,6 +135,8 @@ static int spinel_errno_workaround_;
 typedef struct {
     va_list obj;
 } va_list_obj;
+
+#define SPINEL_MAX_PACK_LENGTH         32767
 
 // ----------------------------------------------------------------------------
 // MARK: -
@@ -247,6 +257,9 @@ spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t d
 {
     spinel_ssize_t ret = 0;
 
+    // Buffer length sanity check
+    require_action(data_len <= SPINEL_MAX_PACK_LENGTH, bail, (ret = -1, errno = EINVAL));
+
     for (; *pack_format != 0; pack_format = spinel_next_packed_datatype(pack_format))
     {
         if (*pack_format == ')')
@@ -264,7 +277,7 @@ spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t d
 
             if (arg_ptr)
             {
-                *arg_ptr = data_ptr[0];
+                *arg_ptr = data_ptr[0] != 0;
             }
 
             ret += sizeof(uint8_t);
@@ -321,6 +334,26 @@ spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t d
             ret += sizeof(uint32_t);
             data_ptr += sizeof(uint32_t);
             data_len -= sizeof(uint32_t);
+            break;
+        }
+
+        case SPINEL_DATATYPE_INT64_C:
+        case SPINEL_DATATYPE_UINT64_C:
+        {
+            uint64_t *arg_ptr = va_arg(args->obj, uint64_t *);
+            require_action(data_len >= sizeof(uint64_t), bail, (ret = -1, errno = EOVERFLOW));
+
+            if (arg_ptr)
+            {
+                uint32_t l32 = (uint32_t)((data_ptr[3] << 24) | (data_ptr[2] << 16) | (data_ptr[1] << 8) | data_ptr[0]);
+                uint32_t h32 = (uint32_t)((data_ptr[7] << 24) | (data_ptr[6] << 16) | (data_ptr[5] << 8) | data_ptr[4]);
+
+                *arg_ptr = ((uint64_t)l32) | (((uint64_t)h32) << 32);
+            }
+
+            ret += sizeof(uint64_t);
+            data_ptr += sizeof(uint64_t);
+            data_len -= sizeof(uint64_t);
             break;
         }
 
@@ -425,9 +458,18 @@ spinel_datatype_vunpack_(bool in_place, const uint8_t *data_ptr, spinel_size_t d
 
         case SPINEL_DATATYPE_UTF8_C:
         {
-            size_t len = strnlen((const char *)data_ptr, data_len) + 1;
+            size_t len;
 
-            require_action((len <= data_len) || (data_ptr[data_len - 1] != 0), bail, (ret = -1, errno = EOVERFLOW));
+            // Make sure we have at least one byte.
+            require_action(data_len > 0, bail, (ret = -1, errno = EOVERFLOW));
+
+            // Add 1 for zero termination. If not zero terminated,
+            // len will then be data_len+1, which we will detect
+            // in the next check.
+            len = strnlen((const char *)data_ptr, data_len) + 1;
+
+            // Verify that the string is zero terminated.
+            require_action(len <= data_len, bail, (ret = -1, errno = EOVERFLOW));
 
             if (in_place)
             {
@@ -630,6 +672,9 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
 {
     spinel_ssize_t ret = 0;
 
+    // Buffer length sanity check
+    require_action(data_len_max <= SPINEL_MAX_PACK_LENGTH, bail, (ret = -1, errno = EINVAL));
+
     for (; *pack_format != 0; pack_format = spinel_next_packed_datatype(pack_format))
     {
         if (*pack_format == ')')
@@ -714,6 +759,34 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
                 data_ptr[0] = (arg >> 0) & 0xff;
                 data_ptr += sizeof(uint32_t);
                 data_len_max -= sizeof(uint32_t);
+            }
+            else
+            {
+                data_len_max = 0;
+            }
+
+            break;
+        }
+
+        case SPINEL_DATATYPE_INT64_C:
+        case SPINEL_DATATYPE_UINT64_C:
+        {
+            uint64_t arg = (uint64_t)va_arg(args->obj, uint64_t);
+
+            ret += sizeof(uint64_t);
+
+            if (data_len_max >= sizeof(uint64_t))
+            {
+                data_ptr[7] = (arg >> 56) & 0xff;
+                data_ptr[6] = (arg >> 48) & 0xff;
+                data_ptr[5] = (arg >> 40) & 0xff;
+                data_ptr[4] = (arg >> 32) & 0xff;
+                data_ptr[3] = (arg >> 24) & 0xff;
+                data_ptr[2] = (arg >> 16) & 0xff;
+                data_ptr[1] = (arg >> 8) & 0xff;
+                data_ptr[0] = (arg >> 0) & 0xff;
+                data_ptr += sizeof(uint64_t);
+                data_len_max -= sizeof(uint64_t);
             }
             else
             {
@@ -1024,6 +1097,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_HOST_POWER_STATE";
         break;
 
+    case SPINEL_PROP_MCU_POWER_STATE:
+        ret = "PROP_MCU_POWER_STATE";
+        break;
+
     case SPINEL_PROP_GPIO_CONFIG:
         ret = "PROP_GPIO_CONFIG";
         break;
@@ -1116,6 +1193,26 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_JAM_DETECT_HISTORY_BITMAP";
         break;
 
+    case SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL:
+        ret = "PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_RSSI_THRESHOLD:
+        ret = "PROP_CHANNEL_MONITOR_RSSI_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_WINDOW:
+        ret = "PROP_CHANNEL_MONITOR_SAMPLE_WINDOW";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_COUNT:
+        ret = "PROP_CHANNEL_MONITOR_SAMPLE_COUNT";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY:
+        ret = "PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY";
+        break;
+
     case SPINEL_PROP_MAC_SCAN_STATE:
         ret = "PROP_MAC_SCAN_STATE";
         break;
@@ -1194,6 +1291,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_MAC_FIXED_RSS:
         ret = "PROP_MAC_FIXED_RSS";
+        break;
+
+    case SPINEL_PROP_MAC_CCA_FAILURE_RATE:
+        ret = "PROP_MAC_CCA_FAILURE_RATE";
         break;
 
     case SPINEL_PROP_NET_SAVED:
@@ -1396,6 +1497,54 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_STEERING_DATA";
         break;
 
+    case SPINEL_PROP_THREAD_ROUTER_TABLE:
+        ret = "PROP_THREAD_ROUTER_TABLE";
+        break;
+
+    case SPINEL_PROP_THREAD_ACTIVE_DATASET:
+        ret = "PROP_THREAD_ACTIVE_DATASET";
+        break;
+
+    case SPINEL_PROP_THREAD_PENDING_DATASET:
+        ret = "PROP_THREAD_PENDING_DATASET";
+        break;
+
+    case SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET:
+        ret = "PROP_THREAD_MGMT_ACTIVE_DATASET";
+        break;
+
+    case SPINEL_PROP_THREAD_MGMT_PENDING_DATASET:
+        ret = "PROP_THREAD_MGMT_PENDING_DATASET";
+        break;
+
+    case SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP:
+        ret = "PROP_DATASET_ACTIVE_TIMESTAMP";
+        break;
+
+    case SPINEL_PROP_DATASET_PENDING_TIMESTAMP:
+        ret = "PROP_DATASET_PENDING_TIMESTAMP";
+        break;
+
+    case SPINEL_PROP_DATASET_DELAY_TIMER:
+        ret = "PROP_DATASET_DELAY_TIMER";
+        break;
+
+    case SPINEL_PROP_DATASET_SECURITY_POLICY:
+        ret = "PROP_DATASET_SECURITY_POLICY";
+        break;
+
+    case SPINEL_PROP_DATASET_RAW_TLVS:
+        ret = "PROP_DATASET_RAW_TLVS";
+        break;
+
+    case SPINEL_PROP_THREAD_CHILD_TABLE_ADDRESSES:
+        ret = "PROP_THREAD_CHILD_TABLE_ADDRESSES";
+        break;
+
+    case SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES:
+        ret = "PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;
@@ -1424,6 +1573,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_IPV6_MULTICAST_ADDRESS_TABLE";
         break;
 
+    case SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE:
+        ret = "PROP_IPV6_ICMP_PING_OFFLOAD_MODE";
+        break;
+
     case SPINEL_PROP_STREAM_DEBUG:
         ret = "PROP_STREAM_DEBUG";
         break;
@@ -1438,6 +1591,38 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_STREAM_NET_INSECURE:
         ret = "PROP_STREAM_NET_INSECURE";
+        break;
+
+    case SPINEL_PROP_STREAM_LOG:
+        ret = "PROP_STREAM_LOG";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
+        ret = "PROP_CHANNEL_MANAGER_NEW_CHANNEL";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_DELAY:
+        ret = "PROP_CHANNEL_MANAGER_DELAY";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS:
+        ret = "PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS:
+        ret = "PROP_CHANNEL_MANAGER_FAVORED_CHANNELS";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT:
+        ret = "PROP_CHANNEL_MANAGER_CHANNEL_SELECT";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED:
+        ret = "PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL:
+        ret = "PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL";
         break;
 
     case SPINEL_PROP_UART_BITRATE:
@@ -1648,6 +1833,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MSG_BUFFER_COUNTERS";
         break;
 
+    case SPINEL_PROP_CNTR_ALL_MAC_COUNTERS:
+        ret = "PROP_CNTR_ALL_MAC_COUNTERS";
+        break;
+
     case SPINEL_PROP_NEST_STREAM_MFG:
         ret = "PROP_NEST_STREAM_MFG";
         break;
@@ -1666,6 +1855,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_DEBUG_NCP_LOG_LEVEL:
         ret = "PROP_DEBUG_NCP_LOG_LEVEL";
+        break;
+
+    case SPINEL_PROP_DEBUG_TEST_WATCHDOG:
+        ret = "PROP_DEBUG_TEST_WATCHDOG";
         break;
 
     default:
@@ -1698,6 +1891,28 @@ const char *spinel_net_role_to_cstr(uint8_t net_role)
         break;
 
     default:
+        break;
+    }
+
+    return ret;
+}
+
+const char *spinel_mcu_power_state_to_cstr(spinel_mcu_power_state_t mcu_power_state)
+{
+    const char *ret = "MCU_POWER_STATE_UNKNOWN";
+
+    switch (mcu_power_state)
+    {
+    case SPINEL_MCU_POWER_STATE_ON:
+        ret = "MCU_POWER_STATE_ON";
+        break;
+
+    case SPINEL_MCU_POWER_STATE_LOW_POWER:
+        ret = "MCU_POWER_STATE_LOW_POWER";
+        break;
+
+    case SPINEL_MCU_POWER_STATE_OFF:
+        ret = "MCU_POWER_STATE_OFF";
         break;
     }
 
@@ -1911,6 +2126,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "CAP_UNSOL_UPDATE_FILTER";
         break;
 
+    case SPINEL_CAP_MCU_POWER_STATE:
+        ret = "CAP_MCU_POWER_STATE";
+        break;
+
     case SPINEL_CAP_802_15_4_2003:
         ret = "CAP_802_15_4_2003";
         break;
@@ -1979,6 +2198,22 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "CAP_OOB_STEERING_DATA";
         break;
 
+    case SPINEL_CAP_CHANNEL_MONITOR:
+        ret = "CAP_CHANNEL_MONITOR";
+        break;
+
+    case SPINEL_CAP_CHANNEL_MANAGER:
+        ret = "CAP_CHANNEL_MANAGER";
+        break;
+
+    case SPINEL_CAP_OPENTHREAD_LOG_METADATA:
+        ret = "CAP_OPENTHREAD_LOG_METADATA";
+        break;
+
+    case SPINEL_CAP_ERROR_RATE_TRACKING:
+        ret = "CAP_ERROR_RATE_TRACKING";
+        break;
+
     case SPINEL_CAP_THREAD_COMMISSIONER:
         ret = "CAP_THREAD_COMMISSIONER";
         break;
@@ -2028,6 +2263,27 @@ main(void)
         printf("error:%d: len != 30; (%d)\n", __LINE__, (int)len);
         goto bail;
     }
+
+    {
+        const char *str = NULL;
+
+        // Length ends right before the string.
+        len = spinel_datatype_unpack(buffer, 8, "CiiLU", NULL, NULL, NULL, NULL, &str);
+
+        if (len != -1)
+        {
+            printf("error:%d: len != -1; (%d)\n", __LINE__, (int)len);
+            goto bail;
+        }
+
+        if (str != NULL)
+        {
+            printf("error:%d: str != NULL\n", __LINE__);
+            goto bail;
+        }
+    }
+
+    len = 30;
 
     {
         uint8_t c = 0;

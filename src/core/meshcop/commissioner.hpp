@@ -34,9 +34,10 @@
 #ifndef COMMISSIONER_HPP_
 #define COMMISSIONER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/commissioner.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/locator.hpp"
@@ -51,20 +52,18 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace MeshCoP {
 
-class Commissioner: public ThreadNetifLocator
+class Commissioner : public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the Commissioner object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    Commissioner(ThreadNetif &aThreadNetif);
+    explicit Commissioner(Instance &aInstance);
 
     /**
      * This method starts the Commissioner service.
@@ -91,27 +90,27 @@ public:
     /**
      * This method adds a Joiner entry.
      *
-     * @param[in]  aExtAddress      A pointer to the Joiner's extended address or NULL for any Joiner.
-     * @param[in]  aPSKd            A pointer to the PSKd.
-     * @param[in]  aTimeout         A time after which a Joiner is automatically removed, in seconds.
+     * @param[in]  aEui64        A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aPSKd         A pointer to the PSKd.
+     * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
      * @retval OT_ERROR_NONE     Successfully added the Joiner.
      * @retval OT_ERROR_NO_BUFS  No buffers available to add the Joiner.
      *
      */
-    otError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout);
+    otError AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout);
 
     /**
      * This method removes a Joiner entry.
      *
-     * @param[in]  aExtAddress        A pointer to the Joiner's extended address or NULL for any Joiner.
-     * @param[in]  aDelay             The delay to remove Joiner (in seconds).
+     * @param[in]  aEui64          A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aDelay          The delay to remove Joiner (in seconds).
      *
      * @retval OT_ERROR_NONE       Successfully added the Joiner.
-     * @retval OT_ERROR_NOT_FOUND  The Joiner specified by @p aExtAddress was not found.
+     * @retval OT_ERROR_NOT_FOUND  The Joiner specified by @p aEui64 was not found.
      *
      */
-    otError RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay);
+    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay);
 
     /**
      * This method sets the Provisioning URL.
@@ -166,7 +165,7 @@ public:
 
     /**
      * This method sends MGMT_COMMISSIONER_SET.
-      *
+     *
      * @param[in]  aDataset     A reference to Commissioning Data.
      * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
      * @param[in]  aLength      The length of user specific TLVs in bytes.
@@ -176,7 +175,8 @@ public:
      *
      */
     otError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
-                                           const uint8_t *aTlvs, uint8_t aLength);
+                                           const uint8_t *               aTlvs,
+                                           uint8_t                       aLength);
 
     /**
      * This static method generates PSKc.
@@ -192,105 +192,151 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
      *
      */
-    static otError GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
-                                uint8_t *aPSKc);
+    static otError GeneratePSKc(const char *   aPassPhrase,
+                                const char *   aNetworkName,
+                                const uint8_t *aExtPanId,
+                                uint8_t *      aPSKc);
 
-    AnnounceBeginClient mAnnounceBegin;
-    EnergyScanClient mEnergyScan;
-    PanIdQueryClient mPanIdQuery;
+    /**
+     * This method returns a reference to the AnnounceBeginClient instance.
+     *
+     * @returns A reference to the AnnounceBeginClient instance.
+     *
+     */
+    AnnounceBeginClient &GetAnnounceBeginClient(void) { return mAnnounceBegin; }
+
+    /**
+     * This method returns a reference to the EnergyScanClient instance.
+     *
+     * @returns A reference to the EnergyScanClient instance.
+     *
+     */
+    EnergyScanClient &GetEnergyScanClient(void) { return mEnergyScan; }
+
+    /**
+     * This method returns a reference to the PanIdQueryClient instance.
+     *
+     * @returns A reference to the PanIdQueryClient instance.
+     *
+     */
+    PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
 
 private:
     enum
     {
-        kPetitionAttemptDelay = 5,      ///< COMM_PET_ATTEMPT_DELAY (seconds)
-        kPetitionRetryCount   = 2,      ///< COMM_PET_RETRY_COUNT
-        kPetitionRetryDelay   = 1,      ///< COMM_PET_RETRY_DELAY (seconds)
-        kKeepAliveTimeout     = 50,     ///< TIMEOUT_COMM_PET (seconds)
-        kRemoveJoinerDelay    = 20,     ///< Delay to remove successfully joined joiner
+        kPetitionAttemptDelay = 5,  ///< COMM_PET_ATTEMPT_DELAY (seconds)
+        kPetitionRetryCount   = 2,  ///< COMM_PET_RETRY_COUNT
+        kPetitionRetryDelay   = 1,  ///< COMM_PET_RETRY_DELAY (seconds)
+        kKeepAliveTimeout     = 50, ///< TIMEOUT_COMM_PET (seconds)
+        kRemoveJoinerDelay    = 20, ///< Delay to remove successfully joined joiner
     };
 
     void AddCoapResources(void);
     void RemoveCoapResources(void);
 
     static void HandleTimer(Timer &aTimer);
-    void HandleTimer(void);
+    void        HandleTimer(void);
 
     static void HandleJoinerExpirationTimer(Timer &aTimer);
-    void HandleJoinerExpirationTimer(void);
+    void        HandleJoinerExpirationTimer(void);
 
     void UpdateJoinerExpirationTimer(void);
 
-    static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                                  const otMessageInfo *aMessageInfo, otError aResult);
-    void HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage,
-                                            const Ip6::MessageInfo *aMessageInfo, otError aResult);
-    static void HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                                  const otMessageInfo *aMessageInfo, otError aResult);
-    void HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage,
-                                            const Ip6::MessageInfo *aMessageInfo, otError aResult);
-    static void HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                             const otMessageInfo *aMessageInfo, otError aResult);
-    void HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage,
-                                      const Ip6::MessageInfo *aMessageInfo, otError aResult);
-    static void HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                              const otMessageInfo *aMessageInfo, otError aResult);
-    void HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage,
-                                       const Ip6::MessageInfo *aMessageInfo, otError aResult);
+    static void HandleMgmtCommissionerSetResponse(void *               aContext,
+                                                  otCoapHeader *       aHeader,
+                                                  otMessage *          aMessage,
+                                                  const otMessageInfo *aMessageInfo,
+                                                  otError              aResult);
+    void        HandleMgmtCommissisonerSetResponse(Coap::Header *          aHeader,
+                                                   Message *               aMessage,
+                                                   const Ip6::MessageInfo *aMessageInfo,
+                                                   otError                 aResult);
+    static void HandleMgmtCommissionerGetResponse(void *               aContext,
+                                                  otCoapHeader *       aHeader,
+                                                  otMessage *          aMessage,
+                                                  const otMessageInfo *aMessageInfo,
+                                                  otError              aResult);
+    void        HandleMgmtCommissisonerGetResponse(Coap::Header *          aHeader,
+                                                   Message *               aMessage,
+                                                   const Ip6::MessageInfo *aMessageInfo,
+                                                   otError                 aResult);
+    static void HandleLeaderPetitionResponse(void *               aContext,
+                                             otCoapHeader *       aHeader,
+                                             otMessage *          aMessage,
+                                             const otMessageInfo *aMessageInfo,
+                                             otError              aResult);
+    void        HandleLeaderPetitionResponse(Coap::Header *          aHeader,
+                                             Message *               aMessage,
+                                             const Ip6::MessageInfo *aMessageInfo,
+                                             otError                 aResult);
+    static void HandleLeaderKeepAliveResponse(void *               aContext,
+                                              otCoapHeader *       aHeader,
+                                              otMessage *          aMessage,
+                                              const otMessageInfo *aMessageInfo,
+                                              otError              aResult);
+    void        HandleLeaderKeepAliveResponse(Coap::Header *          aHeader,
+                                              Message *               aMessage,
+                                              const Ip6::MessageInfo *aMessageInfo,
+                                              otError                 aResult);
 
-    static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleRelayReceive(void *               aContext,
+                                   otCoapHeader *       aHeader,
+                                   otMessage *          aMessage,
                                    const otMessageInfo *aMessageInfo);
-    void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleDatasetChanged(void *               aContext,
+                                     otCoapHeader *       aHeader,
+                                     otMessage *          aMessage,
                                      const otMessageInfo *aMessageInfo);
-    void HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleJoinerFinalize(void *               aContext,
+                                     otCoapHeader *       aHeader,
+                                     otMessage *          aMessage,
                                      const otMessageInfo *aMessageInfo);
-    void HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);
 
     static otError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError        SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError SendCommissionerSet(void);
     otError SendPetition(void);
     otError SendKeepAlive(void);
 
-    static Commissioner &GetOwner(const Context &aContext);
-
     otCommissionerState mState;
 
     struct Joiner
     {
-        Mac::ExtAddress mExtAddress;
-        uint32_t mExpirationTime;
-        char mPsk[Dtls::kPskMaxLength + 1];
-        bool mValid : 1;
-        bool mAny : 1;
+        Mac::ExtAddress mEui64;
+        uint32_t        mExpirationTime;
+        char            mPsk[Dtls::kPskMaxLength + 1];
+        bool            mValid : 1;
+        bool            mAny : 1;
     };
     Joiner mJoiners[OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES];
 
-    union
-    {
-        uint8_t mJoinerIid[8];
-        uint64_t mJoinerIid64;
-    };
-    uint16_t mJoinerPort;
-    uint16_t mJoinerRloc;
+    uint8_t    mJoinerIid[8];
+    uint16_t   mJoinerPort;
+    uint16_t   mJoinerRloc;
     TimerMilli mJoinerExpirationTimer;
 
     TimerMilli mTimer;
-    uint16_t mSessionId;
-    uint8_t mTransmitAttempts;
+    uint16_t   mSessionId;
+    uint8_t    mTransmitAttempts;
 
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
     Coap::Resource mJoinerFinalize;
+
+    AnnounceBeginClient mAnnounceBegin;
+    EnergyScanClient    mEnergyScan;
+    PanIdQueryClient    mPanIdQuery;
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // COMMISSIONER_HPP_
+#endif // COMMISSIONER_HPP_

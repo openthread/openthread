@@ -33,23 +33,17 @@
 
 #define WPP_NAME "timer.tmh"
 
-#include <openthread/config.h>
-
 #include "timer.hpp"
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
 
-const TimerScheduler::AlarmApi TimerMilliScheduler::sAlarmMilliApi =
-{
-    &otPlatAlarmMilliStartAt,
-    &otPlatAlarmMilliStop,
-    &otPlatAlarmMilliGetNow
-};
+const TimerScheduler::AlarmApi TimerMilliScheduler::sAlarmMilliApi = {&otPlatAlarmMilliStartAt, &otPlatAlarmMilliStop,
+                                                                      &otPlatAlarmMilliGetNow};
 
 bool Timer::DoesFireBefore(const Timer &aSecondTimer, uint32_t aNow)
 {
@@ -89,7 +83,7 @@ void TimerMilli::Stop(void)
 
 TimerMilliScheduler &TimerMilli::GetTimerMilliScheduler(void) const
 {
-    return GetInstance().mTimerMilliScheduler;
+    return GetInstance().GetTimerMilliScheduler();
 }
 
 void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
@@ -98,7 +92,7 @@ void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 
     if (mHead == NULL)
     {
-        mHead = &aTimer;
+        mHead        = &aTimer;
         aTimer.mNext = NULL;
         SetAlarm(aAlarmApi);
     }
@@ -114,12 +108,12 @@ void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
                 if (prev)
                 {
                     aTimer.mNext = cur;
-                    prev->mNext = &aTimer;
+                    prev->mNext  = &aTimer;
                 }
                 else
                 {
                     aTimer.mNext = mHead;
-                    mHead = &aTimer;
+                    mHead        = &aTimer;
                     SetAlarm(aAlarmApi);
                 }
 
@@ -131,7 +125,7 @@ void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 
         if (cur == NULL)
         {
-            prev->mNext = &aTimer;
+            prev->mNext  = &aTimer;
             aTimer.mNext = NULL;
         }
     }
@@ -172,7 +166,7 @@ void TimerScheduler::SetAlarm(const AlarmApi &aAlarmApi)
     }
     else
     {
-        uint32_t now = aAlarmApi.AlarmGetNow();
+        uint32_t now       = aAlarmApi.AlarmGetNow();
         uint32_t remaining = IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
 
         aAlarmApi.AlarmStartAt(&GetInstance(), now, remaining);
@@ -215,22 +209,18 @@ bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
 
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
-    otLogFuncEntry();
+    Instance *instance = static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    aInstance->mTimerMilliScheduler.ProcessTimers();
+    instance->GetTimerMilliScheduler().ProcessTimers();
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-const TimerScheduler::AlarmApi TimerMicroScheduler::sAlarmMicroApi =
-{
-    &otPlatAlarmMicroStartAt,
-    &otPlatAlarmMicroStop,
-    &otPlatAlarmMicroGetNow
-};
+const TimerScheduler::AlarmApi TimerMicroScheduler::sAlarmMicroApi = {&otPlatAlarmMicroStartAt, &otPlatAlarmMicroStop,
+                                                                      &otPlatAlarmMicroGetNow};
 
 void TimerMicro::StartAt(uint32_t aT0, uint32_t aDt)
 {
@@ -246,19 +236,19 @@ void TimerMicro::Stop(void)
 
 TimerMicroScheduler &TimerMicro::GetTimerMicroScheduler(void) const
 {
-    return GetInstance().mTimerMicroScheduler;
+    return GetInstance().GetTimerMicroScheduler();
 }
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {
-    otLogFuncEntry();
+    Instance *instance = static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    aInstance->mTimerMicroScheduler.ProcessTimers();
+    instance->GetTimerMicroScheduler().ProcessTimers();
 
 exit:
-    otLogFuncExit();
+    return;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
-}  // namespace ot
+} // namespace ot

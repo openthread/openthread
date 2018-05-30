@@ -45,9 +45,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     const otPanId panId = 0xdead;
 
     otInstance *instance = NULL;
-    otMessage *message = NULL;
-    otError error = OT_ERROR_NONE;
-    bool isSecure;
+    otMessage * message  = NULL;
+    otError     error    = OT_ERROR_NONE;
+    bool        isSecure;
 
     VerifyOrExit(size > 0);
 

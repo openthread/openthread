@@ -35,6 +35,8 @@
 #ifndef MESHCOP_DATASET_HPP_
 #define MESHCOP_DATASET_HPP_
 
+#include "openthread-core-config.h"
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -49,7 +51,7 @@ class Dataset
 public:
     enum
     {
-        kMaxSize = 256,      ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxSize      = 256, ///< Maximum size of MeshCoP Dataset (bytes)
         kMaxValueSize = 16,  /// < Maximum size of each Dataset TLV value (bytes)
     };
 
@@ -66,6 +68,14 @@ public:
      *
      */
     void Clear(void);
+
+    /**
+     * This method indicates whether or not the dataset appears to be well-formed.
+     *
+     * @returns TRUE if the dataset appears to be well-formed, FALSE otherwise.
+     *
+     */
+    bool IsValid(void) const;
 
     /**
      * This method returns a pointer to the TLV.
@@ -89,6 +99,14 @@ public:
      * @returns A pointer to the byte representation of the Dataset.
      *
      */
+    uint8_t *GetBytes(void) { return mTlvs; }
+
+    /**
+     * This method returns a pointer to the byte representation of the Dataset.
+     *
+     * @returns A pointer to the byte representation of the Dataset.
+     *
+     */
     const uint8_t *GetBytes(void) const { return mTlvs; }
 
     /**
@@ -104,6 +122,14 @@ public:
      *
      */
     uint16_t GetSize(void) const { return mLength; }
+
+    /**
+     * This method sets the Dataset size in bytes.
+     *
+     * @param[in] aSize  The Dataset size in bytes.
+     *
+     */
+    void SetSize(uint16_t aSize) { mLength = aSize; }
 
     /**
      * This method returns the local time the dataset was last updated.
@@ -193,18 +219,37 @@ public:
      */
     otError AppendMleDatasetTlv(Message &aMessage) const;
 
-private:
-    uint16_t GetSettingsKey(void);
+    /**
+     * This method applies the Active or Pending Dataset to the Thread interface.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     *
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
+     *
+     */
+    otError ApplyConfiguration(Instance &aInstance) const;
 
+    /**
+     * This method converts a Pending Dataset to an Active Dataset.
+     *
+     * This method removes the Delay Timer and Pending Timestamp TLVs
+     *
+     * @retval OT_ERROR_NONE  Successfully converted to Active Dataset.
+     *
+     */
+    otError ConvertToActive(void);
+
+private:
     void Remove(uint8_t *aStart, uint8_t aLength);
 
-    uint8_t    mTlvs[kMaxSize];  ///< The Dataset buffer
-    uint32_t   mUpdateTime;      ///< Local time last updated
-    uint16_t   mLength;          ///< The number of valid bytes in @var mTlvs
-    Tlv::Type  mType;            ///< Active or Pending
+    uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
+    uint32_t  mUpdateTime;     ///< Local time last updated
+    uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
+    Tlv::Type mType;           ///< Active or Pending
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_DATASET_HPP_
+#endif // MESHCOP_DATASET_HPP_

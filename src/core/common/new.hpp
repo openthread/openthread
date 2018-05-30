@@ -34,10 +34,15 @@
 #ifndef NEW_HPP_
 #define NEW_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stddef.h>
 
 #include <openthread/platform/toolchain.h>
 
-inline void *operator new(size_t, void *p) throw() { return p; }
+inline void *operator new(size_t, void *p) throw()
+{
+    return p;
+}
 
-#endif  // NEW_HPP_
+#endif // NEW_HPP_

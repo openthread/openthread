@@ -57,6 +57,8 @@ extern "C" {
  *
  * @{
  *
+ * @defgroup api-types Types
+ *
  * @defgroup api-execution Execution
  *
  * @{
@@ -100,6 +102,7 @@ extern "C" {
  * @defgroup api-joiner         Joiner
  * @defgroup api-thread-router  Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
+ * @defgroup api-server         Server
  * @defgroup api-tmf-proxy      TMF Proxy
  *
  * @}
@@ -108,6 +111,8 @@ extern "C" {
  *
  * @{
  *
+ * @defgroup api-channel-manager     Channel Manager
+ * @defgroup api-channel-monitor     Channel Monitoring
  * @defgroup api-child-supervision   Child Supervision
  * @defgroup api-coap                CoAP
  * @defgroup api-cli                 Command Line Interface
@@ -165,7 +170,7 @@ OTAPI const char *OTCALL otGetVersionString(void);
 OTAPI const char *OTCALL otThreadErrorToString(otError aError);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_H_
+#endif // OPENTHREAD_H_

@@ -74,12 +74,12 @@ AC_CONFIG_SRCDIR([include/openthread/openthread.h])
 # Tell autoconf where to find auxilliary build tools (e.g. config.guess,
 # install-sh, missing, etc.)
 #
-AC_CONFIG_AUX_DIR([third_party/nlbuild-autotools/repo/autoconf])
+AC_CONFIG_AUX_DIR([third_party/nlbuild-autotools/repo/third_party/autoconf])
 
 #
 # Tell autoconf where to find auxilliary M4 macros
 #
-AC_CONFIG_MACRO_DIR([third_party/nlbuild-autotools/repo/autoconf/m4])
+AC_CONFIG_MACRO_DIRS([third_party/nlbuild-autotools/repo/third_party/autoconf/m4 third_party/nlbuild-autotools/repo/autoconf/m4])
 
 #
 # Tell autoconf what file the package is using to aggregate C preprocessor
@@ -357,10 +357,10 @@ fi
 # Code style
 #
 
-AC_SUBST(PRETTY, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts"])
-AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
-AC_SUBST(PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_srcdir}/.astyle/astyle-opts --dry-run"])
+AC_SUBST(PRETTY, ["\${abs_top_srcdir}/script/clang-format.sh"])
+AC_SUBST(PRETTY_ARGS, ["-style=file -i"])
+AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/script/clang-format-check.sh"])
+AC_SUBST(PRETTY_CHECK_ARGS, [""])
 
 #
 # Tests
@@ -425,11 +425,11 @@ AC_SUBST(OPENTHREAD_ENABLE_CLI_MTD)
 # NCP app
 #
 AC_ARG_ENABLE(ncp-app,
-    [AS_HELP_STRING([--enable-ncp-app],[Enable NCP support (no|mtd|ftd|all) @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-ncp-app],[Enable NCP support (no|mtd|ftd|radio|all) @<:@default=no@:>@.])],
     [
         # Map all & both to yes
         case "${enableval}" in
-        all|both)
+        all)
             enableval=yes
             ;;
 
@@ -444,18 +444,28 @@ AC_ARG_ENABLE(ncp-app,
             enable_ncp_app=${enableval}
             enable_ncp_app_mtd=${enableval}
             enable_ncp_app_ftd=${enableval}
+            enable_ncp_app_radio=${enableval}
             ;;
 
         mtd)
             enable_ncp_app=yes
             enable_ncp_app_mtd=yes
             enable_ncp_app_ftd=no
+            enable_ncp_app_radio=no
             ;;
 
         ftd)
             enable_ncp_app=yes
             enable_ncp_app_mtd=no
             enable_ncp_app_ftd=yes
+            enable_ncp_app_radio=no
+            ;;
+
+        radio)
+            enable_ncp_app=yes
+            enable_ncp_app_mtd=no
+            enable_ncp_app_ftd=no
+            enable_ncp_app_radio=yes
             ;;
 
         *)
@@ -467,6 +477,7 @@ AC_ARG_ENABLE(ncp-app,
      enable_ncp_app=no
      enable_ncp_app_ftd=no
      enable_ncp_app_mtd=no
+     enable_ncp_app_radio=no
     ]
     )
 
@@ -477,14 +488,18 @@ AC_MSG_CHECKING([should NCP support ftd])
 AC_MSG_RESULT(${enable_ncp_app_ftd})
 AC_MSG_CHECKING([should NCP support mtd])
 AC_MSG_RESULT(${enable_ncp_app_mtd})
+AC_MSG_CHECKING([should NCP support radio-only])
+AC_MSG_RESULT(${enable_ncp_app_radio})
 
 AC_SUBST(OPENTHREAD_ENABLE_NCP)
 AC_SUBST(OPENTHREAD_ENABLE_NCP_MTD)
 AC_SUBST(OPENTHREAD_ENABLE_NCP_FTD)
+AC_SUBST(OPENTHREAD_ENABLE_NCP_RADIO)
 
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp_app}" == "yes"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_MTD],  [test "${enable_ncp_app_mtd}" == "yes"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],  [test "${enable_ncp_app_ftd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],         [test "${enable_ncp_app}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_MTD],     [test "${enable_ncp_app_mtd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],     [test "${enable_ncp_app_ftd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_RADIO],   [test "${enable_ncp_app_radio}" == "yes"])
 
 #
 # NCP BUS - how does the NCP talk to the host?
@@ -526,7 +541,7 @@ AC_MSG_RESULT([${OPENTHREAD_ENABLE_SPI}])
 AC_SUBST(OPENTHREAD_ENABLE_NCP_UART)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${with_ncp_bus}"  = "uart"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_UART],[${OPENTHREAD_ENABLE_NCP_UART}],[Define to 1 to enable the NCP UART interface.])
-AC_MSG_CHECKING([sould NCP support UART])
+AC_MSG_CHECKING([should NCP support UART])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
 
 #
@@ -765,6 +780,70 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
 
 #
+# Channel Monitor
+#
+
+AC_ARG_ENABLE(channel_monitor,
+    [AS_HELP_STRING([--enable-channel-monitor],[Enable Channel Monitor support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_channel_monitor=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_channel_monitor} for --enable-channel-monitor])
+            ;;
+        esac
+    ],
+    [enable_channel_monitor=no])
+
+if test "$enable_channel_monitor" = "yes"; then
+    OPENTHREAD_ENABLE_CHANNEL_MONITOR=1
+else
+    OPENTHREAD_ENABLE_CHANNEL_MONITOR=0
+fi
+
+AC_MSG_CHECKING([whether to enable channel monitor])
+AC_MSG_RESULT(${enable_channel_monitor})
+AC_SUBST(OPENTHREAD_ENABLE_CHANNEL_MONITOR)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CHANNEL_MONITOR], [test "${enable_channel_monitor}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHANNEL_MONITOR],[${OPENTHREAD_ENABLE_CHANNEL_MONITOR}],[Define to 1 if you want to use channel monitor feature])
+
+#
+# Channel Manager
+#
+
+AC_ARG_ENABLE(channel_manager,
+    [AS_HELP_STRING([--enable-channel-manager],[Enable Channel Manager support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_channel_manager=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_channel_manager} for --enable-channel-manager])
+            ;;
+        esac
+    ],
+    [enable_channel_manager=no])
+
+if test "$enable_channel_manager" = "yes"; then
+    OPENTHREAD_ENABLE_CHANNEL_MANAGER=1
+else
+    OPENTHREAD_ENABLE_CHANNEL_MANAGER=0
+fi
+
+AC_MSG_CHECKING([whether to enable channel manager])
+AC_MSG_RESULT(${enable_channel_manager})
+AC_SUBST(OPENTHREAD_ENABLE_CHANNEL_MANAGER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CHANNEL_MANAGER], [test "${enable_channel_manager}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHANNEL_MANAGER],[${OPENTHREAD_ENABLE_CHANNEL_MANAGER}],[Define to 1 if you want to enable channel manager feature])
+
+#
 # MAC Filter (include AddressFilter and RssInFilter)
 #
 
@@ -861,36 +940,60 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_LEGACY],[${OPENTHREAD_ENABLE_LEGACY}],[Define to 1 if you want to use legacy network support])
 
 #
-# Vendor Specific Spinel Command Handler
+# NCP Vendor Hook Source - Specify a C++ file that implements the NCP vendor hook.
 #
 
-AC_ARG_ENABLE(spinelvendor,
-    [AS_HELP_STRING([--enable-spinelvendor],[Enable Spinel vendor command support @<:@default=no@:>@.])],
+AC_ARG_WITH(
+    [ncp-vendor-hook-source],
+    [AS_HELP_STRING([--with-ncp-vendor-hook-source=<VENDOR_HOOK.CPP>],[Specify a C++ file that implements the NCP vendor hook. @<:@default=none@:>@.])],
     [
-        case "${enableval}" in
+        if test "${withval}" = "no"
+        then OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
+        elif test '!' -f "${withval}"
+        then AC_MSG_ERROR([Can't open ${withval} for --with-ncp-vendor-hook-source])
+        else
+            OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1
 
-        no|yes)
-            enable_vendor=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_vendor} for --enable-spinelvendor])
-            ;;
-        esac
+            # Get the absolute path.
+            OPENTHREAD_NCP_VENDOR_HOOK_SOURCE=$(cd `dirname ${withval}` && pwd)/$(basename ${withval})
+        fi
     ],
-    [enable_vendor=no])
+    [
+        OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
+        with_ncp_vendor_hook_source=none
+    ])
 
-if test "$enable_vendor" = "yes"; then
-    OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT=1
-else
-    OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT=0
-fi
+AC_MSG_CHECKING([for NCP vendor hook source])
+AC_MSG_RESULT(${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE-none})
+AC_SUBST(OPENTHREAD_NCP_VENDOR_HOOK_SOURCE)
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK],[${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}],[Define to 1 if using NCP vendor hook])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}" = "1"])
 
-AC_MSG_CHECKING([whether to enable spinel vendor command support])
-AC_MSG_RESULT(${enable_vendor})
-AC_SUBST(OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT], [test "${enable_vendor}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT],[${OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT}],[Define to 1 if you want to implement Spinel vendor command support])
+#
+# NCP Spinel Encrypter
+#
+
+AC_ARG_WITH(
+    [ncp-spinel-encrypter-libs],
+    [AS_HELP_STRING([--with-ncp-spinel-encrypter-libs=<LIBSPINEL_ENCRYPTER.A>],[Specify library files (absolute paths) implementing the NCP Spinel Encrypter. @<:@default=none@:>@.])],
+    [
+        if test "${withval}" = "no"
+        then OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
+        else
+            OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=1
+            OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS=${withval}
+        fi
+    ],
+    [
+        OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
+        with_ncp_spinel_encrypter_libs=none
+    ])
+
+AC_MSG_CHECKING([for NCP Spinel Encrypter])
+AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
+AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}],[Define to 1 if using NCP Spinel Encrypter])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
 # Child Supervision
@@ -1134,6 +1237,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_ROUTER], [test "${enable_border_router}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_ROUTER],[${OPENTHREAD_ENABLE_BORDER_ROUTER}],[Define to 1 if you want to enable Border Router])
 
 #
+# Service
+#
+
+AC_ARG_ENABLE(service,
+    [AS_HELP_STRING([--enable-service],[Enable Service @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_service=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_service} for --enable-service])
+            ;;
+        esac
+    ],
+    [enable_service=no])
+
+if test "$enable_service" = "yes"; then
+    OPENTHREAD_ENABLE_SERVICE=1
+else
+    OPENTHREAD_ENABLE_SERVICE=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_SERVICE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service])
+
+#
 # Linker Map Output
 #
 
@@ -1163,11 +1296,11 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_LINKER_MAP], [test "${enable_linker_map}" = "y
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650, cc2652, da15000, efr32, emsk, gp712, kw41z, nrf52840 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, cc2652, da15000, efr32, emsk, gp712, kw41z, nrf52840, samr21 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650|cc2652|da15000|efr32|emsk|gp712|kw41z|nrf52840)
+        none|posix|cc2538|cc2650|cc2652|da15000|efr32|emsk|gp712|kw41z|nrf52840|samr21)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -1229,6 +1362,12 @@ case ${with_examples} in
         OPENTHREAD_EXAMPLES_NRF52840=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
         ;;
+
+    samr21)
+        OPENTHREAD_EXAMPLES_SAMR21=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_SAMR21],[${OPENTHREAD_EXAMPLES_SAMR21}],[Define to 1 if you want to use samr21 examples])
+        ;;
+
 esac
 
 AC_MSG_CHECKING([whether to enable examples])
@@ -1267,6 +1406,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z], [test "${OPENTHREAD_EXAMPLES}" = "kw
 
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_SAMR21)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21], [test "${OPENTHREAD_EXAMPLES}" = "samr21"])
 
 #
 # Tools
@@ -1378,7 +1520,7 @@ CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
-LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
+LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
 
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of an -Werror issues by
@@ -1415,6 +1557,7 @@ examples/platforms/emsk/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf52840/Makefile
+examples/platforms/samr21/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
@@ -1494,6 +1637,8 @@ AC_MSG_NOTICE([
   OpenThread NCP-MTD support                : ${enable_ncp_app_mtd}
   OpenThread NCP-FTD support                : ${enable_ncp_app_ftd}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
+  OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
+  OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
@@ -1502,10 +1647,11 @@ AC_MSG_NOTICE([
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Jam Detection support          : ${enable_jam_detection}
+  OpenThread Channel Monitor support        : ${enable_channel_monitor}
+  OpenThread Channel Manager support        : ${enable_channel_manager}
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Child Supervision support      : ${enable_child_supervision}
-  OpenThread Spinel vendor specific support : ${enable_vendor}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
@@ -1514,6 +1660,7 @@ AC_MSG_NOTICE([
   OpenThread Application CoAP support       : ${enable_application_coap}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Border Router support          : ${enable_border_router}
+  OpenThread Service support                : ${enable_service}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
 
 ])

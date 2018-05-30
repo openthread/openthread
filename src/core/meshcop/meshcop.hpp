@@ -35,8 +35,11 @@
 #ifndef MESHCOP_HPP_
 #define MESHCOP_HPP_
 
+#include "openthread-core-config.h"
+
 #include "coap/coap.hpp"
 #include "common/message.hpp"
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -50,14 +53,22 @@ enum
  * This function create Message for MeshCoP
  *
  */
-inline Message *NewMeshCoPMessage(Coap::Coap &aCoap, const Coap::Header &aHeader)
+inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHeader)
 {
     return aCoap.NewMessage(aHeader, kMeshCoPMessagePriority);
 }
 
+/**
+ * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.
+ *
+ * @param[in]   aEui64     The factory-assigned IEEE EUI-64.
+ * @param[out]  aJoinerId  The Joiner ID.
+ *
+ */
+void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 
-}  // namespace MeshCoP
+} // namespace MeshCoP
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // MESHCOP_HPP_
+#endif // MESHCOP_HPP_

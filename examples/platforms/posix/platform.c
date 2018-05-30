@@ -34,6 +34,8 @@
 
 #include "platform-posix.h"
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+
 #include <assert.h>
 #include <errno.h>
 #include <stddef.h>
@@ -50,52 +52,83 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint32_t NODE_ID = 1;
+uint32_t NODE_ID           = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
+extern bool gPlatformPseudoResetWasRequested;
+
 #ifndef _WIN32
-int     gArgumentsCount = 0;
-char  **gArguments = NULL;
+int    gArgumentsCount = 0;
+char **gArguments      = NULL;
 #endif
 
-void PlatformInit(int argc, char *argv[])
+void PlatformInit(int aArgCount, char *aArgVector[])
 {
-    char *endptr;
+    char *   endptr;
+    uint32_t speedUpFactor = 1;
 
-    if (argc != 2)
+    if (gPlatformPseudoResetWasRequested)
     {
+        gPlatformPseudoResetWasRequested = false;
+        return;
+    }
+
+    if (aArgCount < 2)
+    {
+        fprintf(stderr, "Syntax:\n    %s NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
         exit(EXIT_FAILURE);
     }
 
 #ifndef _WIN32
-    openlog(basename(argv[0]), LOG_PID, LOG_USER);
+    openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
-    gArgumentsCount = argc;
-    gArguments = argv;
+    gArgumentsCount = aArgCount;
+    gArguments      = aArgVector;
 #endif
 
-    NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
+    NODE_ID = (uint32_t)strtol(aArgVector[1], &endptr, 0);
 
-    if (*endptr != '\0')
+    if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
     {
-        fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
+        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[1]);
         exit(EXIT_FAILURE);
     }
 
-    platformAlarmInit();
+    if (aArgCount > 2)
+    {
+        speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
+
+        if (*endptr != '\0' || speedUpFactor == 0)
+        {
+            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    platformAlarmInit(speedUpFactor);
     platformRadioInit();
     platformRandomInit();
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return gPlatformPseudoResetWasRequested;
+}
+
+void PlatformDeinit(void)
+{
+    platformRadioDeinit();
+}
+
 void PlatformProcessDrivers(otInstance *aInstance)
 {
-    fd_set read_fds;
-    fd_set write_fds;
-    fd_set error_fds;
-    int max_fd = -1;
+    fd_set         read_fds;
+    fd_set         write_fds;
+    fd_set         error_fds;
+    int            max_fd = -1;
     struct timeval timeout;
-    int rval;
+    int            rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
@@ -120,3 +153,5 @@ void PlatformProcessDrivers(otInstance *aInstance)
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
 }
+
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

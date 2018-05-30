@@ -41,6 +41,7 @@
  *
  ****************************************************************************************
  */
+
 #ifndef _QSPI_W32Q80EW_H_
 #define _QSPI_W32Q80EW_H_
 
@@ -95,12 +96,12 @@ static const qspi_flash_config_t flash_w25q80ew_config = {
         const qspi_flash_config_t* const flash_config = &flash_w25q80ew_config;
 #endif
 
-QSPI_SECTION static void flash_w25q80ew_sys_clock_cfg(sys_clk_t sys_clk)
+__RETAINED_CODE static void flash_w25q80ew_sys_clock_cfg(sys_clk_t sys_clk)
 {
 
 }
 
-QSPI_SECTION static uint8_t flash_w25q80ew_get_dummy_bytes(void)
+__RETAINED_CODE static uint8_t flash_w25q80ew_get_dummy_bytes(void)
 {
         return 2;
 }

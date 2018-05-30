@@ -30,27 +30,21 @@
  *   This file implements raw link required Spinel interface to the OpenThread stack.
  */
 
-#include <openthread/config.h>
-
 #include "ncp_base.hpp"
 
-#include <stdlib.h>
-
-#include <openthread/diag.h>
-#include <openthread/icmp6.h>
-
+#include <openthread/link.h>
+#include <openthread/link_raw.h>
 #include <openthread/ncp.h>
 #include <openthread/openthread.h>
-
-#include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "net/ip6.hpp"
+#include "common/instance.hpp"
+#include "mac/mac_frame.hpp"
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
 namespace ot {
 namespace Ncp {
 
@@ -68,55 +62,38 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     uint16_t flags = 0;
     uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    SuccessOrExit(OutboundFrameBegin(header));
-
     if (aFrame->mDidTX)
     {
         flags |= SPINEL_MD_FLAG_TX;
     }
 
     // Append frame header and frame length
-    SuccessOrExit(
-        OutboundFrameFeedPacked(
-            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
-            header,
-            SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_STREAM_RAW,
-            (aError == OT_ERROR_NONE) ? aFrame->mLength : 0
-        ));
+    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
+    SuccessOrExit(mEncoder.WriteUint16((aError == OT_ERROR_NONE) ? aFrame->mLength : 0));
 
     if (aError == OT_ERROR_NONE)
     {
         // Append the frame contents
-        SuccessOrExit(OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
+        SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
     }
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(
-        OutboundFrameFeedPacked(
-            SPINEL_DATATYPE_INT8_S
-            SPINEL_DATATYPE_INT8_S
-            SPINEL_DATATYPE_UINT16_S
-            SPINEL_DATATYPE_STRUCT_S( // PHY-data
-                SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
-                SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
-                SPINEL_DATATYPE_UINT32_S // The timestamp milliseconds
-                SPINEL_DATATYPE_UINT16_S // The timestamp microseconds
-            )
-            SPINEL_DATATYPE_STRUCT_S( // Vendor-data
-                SPINEL_DATATYPE_UINT_PACKED_S
-            ),
-            aFrame->mPower,    // TX Power
-            -128,              // Noise Floor (Currently unused)
-            flags,             // Flags
-            aFrame->mChannel,  // Receive channel
-            aFrame->mLqi,      // Link quality indicator
-            aFrame->mMsec,     // The timestamp milliseconds
-            aFrame->mUsec,     // The timestamp microseconds, offset to mMsec
-            aError             // Receive error
-        ));
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mRssi));       // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(-128));                // Noise Floor (Currently unused)
+    SuccessOrExit(mEncoder.WriteUint16(flags));             // Flags
 
-    SuccessOrExit(OutboundFrameSend());
+    SuccessOrExit(mEncoder.OpenStruct());                   // PHY-data
+    SuccessOrExit(mEncoder.WriteUint8(aFrame->mChannel));   // 802.15.4 channel (Receive channel)
+    SuccessOrExit(mEncoder.WriteUint8(aFrame->mLqi));       // 802.15.4 LQI
+    SuccessOrExit(mEncoder.WriteUint32(aFrame->mMsec));     // The timestamp milliseconds
+    SuccessOrExit(mEncoder.WriteUint16(aFrame->mUsec));     // The timestamp microseconds, offset to mMsec
+    SuccessOrExit(mEncoder.CloseStruct());
+
+    SuccessOrExit(mEncoder.OpenStruct());                   // Vendor-data
+    SuccessOrExit(mEncoder.WriteUintPacked(aError));        // Receive error
+    SuccessOrExit(mEncoder.CloseStruct());
+
+    SuccessOrExit(mEncoder.EndFrame());
 
 exit:
     return;
@@ -138,40 +115,28 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
         // Clear cached transmit TID
         mCurTransmitTID = 0;
 
-        SuccessOrExit(OutboundFrameBegin(header));
-
-        SuccessOrExit(OutboundFrameFeedPacked(
-            SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_BOOL_S,
-            header,
-            SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_LAST_STATUS,
-            ThreadErrorToSpinelStatus(aError),
-            framePending
-        ));
+        SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_LAST_STATUS));
+        SuccessOrExit(mEncoder.WriteUintPacked(ThreadErrorToSpinelStatus(aError)));
+        SuccessOrExit(mEncoder.WriteBool(framePending));
 
         if (aAckFrame && aError == OT_ERROR_NONE)
         {
-            SuccessOrExit(OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT16_S, aAckFrame->mLength));
-            SuccessOrExit(OutboundFrameFeedData(aAckFrame->mPsdu, aAckFrame->mLength));
-            SuccessOrExit(OutboundFrameFeedPacked(
-                SPINEL_DATATYPE_INT8_S
-                SPINEL_DATATYPE_INT8_S
-                SPINEL_DATATYPE_UINT16_S
-                SPINEL_DATATYPE_STRUCT_S(   // PHY-data
-                    SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
-                    SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
-                ),
-                aAckFrame->mPower,          // RSSI
-                -128,                       // Noise Floor (Currently unused)
-                0,                          // Flags
-                aAckFrame->mChannel,        // Receive channel
-                aAckFrame->mLqi,            // Link quality indicator
-                aFrame->mMsec,              // The timestamp milliseconds
-                aFrame->mUsec               // The timestamp microseconds, offset to mMsec
-            ));
+            SuccessOrExit(mEncoder.WriteUint16(aAckFrame->mLength));
+            SuccessOrExit(mEncoder.WriteData(aAckFrame->mPsdu, aAckFrame->mLength));
+
+            SuccessOrExit(mEncoder.WriteInt8(aAckFrame->mRssi));     // RSSI
+            SuccessOrExit(mEncoder.WriteInt8(-128));                 // Noise Floor (Currently unused)
+            SuccessOrExit(mEncoder.WriteUint16(0));                  // Flags
+
+            SuccessOrExit(mEncoder.OpenStruct());                    // PHY-data
+
+            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mChannel)); // Receive channel
+            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mLqi));     // Link Quality Indicator
+
+            SuccessOrExit(mEncoder.CloseStruct());
         }
 
-        SuccessOrExit(OutboundFrameSend());
+        SuccessOrExit(mEncoder.EndFrame());
     }
 
 exit:
@@ -186,336 +151,160 @@ void NcpBase::LinkRawEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
 
 void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
-    SendPropertyUpdate(
-        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-        SPINEL_CMD_PROP_VALUE_IS,
-        SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
-        SPINEL_DATATYPE_UINT8_S
-        SPINEL_DATATYPE_INT8_S,
-        mCurScanChannel,
-        aEnergyScanMaxRssi
-    );
+    int8_t scanChannel = mCurScanChannel;
 
     // Clear current scan channel
     mCurScanChannel = kInvalidScanChannel;
 
     // Make sure we are back listening on the original receive channel,
     // since the energy scan could have been on a different channel.
-    otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+    otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
+
+    SuccessOrExit(
+        mEncoder.BeginFrame(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_MAC_ENERGY_SCAN_RESULT
+        ));
+
+    SuccessOrExit(mEncoder.WriteUint8(static_cast<uint8_t>(scanChannel)));
+    SuccessOrExit(mEncoder.WriteInt8(aEnergyScanMaxRssi));
+    SuccessOrExit(mEncoder.EndFrame());
 
     // We are finished with the scan, so send out
     // a property update indicating such.
-    SendPropertyUpdate(
-        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-        SPINEL_CMD_PROP_VALUE_IS,
-        SPINEL_PROP_MAC_SCAN_STATE,
-        SPINEL_DATATYPE_UINT8_S,
-        SPINEL_SCAN_STATE_IDLE
-    );
-}
-
-
-otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                          const uint8_t *aValuePtr, uint16_t aValueLen)
-{
-    bool enabled;
-    spinel_ssize_t parsedLength;
-    otError error = OT_ERROR_NONE;
-
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_BOOL_S,
-                       &enabled
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
-
-    error = otLinkRawSrcMatchEnable(mInstance, enabled);
-
-exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
-}
-
-otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                  const uint8_t *aValuePtr, uint16_t aValueLen)
-{
-    otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
-    const uint8_t *data = aValuePtr;
-    uint16_t dataLen = aValueLen;
-
-    // Clear the list first
-    error = otLinkRawSrcMatchClearShortEntries(mInstance);
-
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-
-    // Loop through the addresses and add them
-    while (dataLen >= sizeof(uint16_t))
-    {
-        spinel_ssize_t parsedLength;
-        uint16_t short_address;
-
-        parsedLength = spinel_datatype_unpack(
-                           data,
-                           dataLen,
-                           SPINEL_DATATYPE_UINT16_S,
-                           &short_address
-                       );
-
-        VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
-
-        data += parsedLength;
-        dataLen -= (uint16_t)parsedLength;
-
-        error = otLinkRawSrcMatchAddShortEntry(mInstance, short_address);
-
-        VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-    }
-
-    error =
-        SendPropertyUpdate(
-            aHeader,
+    SuccessOrExit(
+        mEncoder.BeginFrame(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
-            aKey,
-            aValuePtr,
-            aValueLen
-        );
+            SPINEL_PROP_MAC_SCAN_STATE
+        ));
+
+    SuccessOrExit(mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE));
+    SuccessOrExit(mEncoder.EndFrame());
 
 exit:
+    return;
+}
 
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
+otError NcpBase::GetPropertyHandler_MAC_SRC_MATCH_ENABLED(void)
+{
+    // TODO: Would be good to add an `otLinkRaw` API to give the the status of source match.
+    return mEncoder.WriteBool(mSrcMatchEnabled);
+}
 
+otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_ENABLED(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(mSrcMatchEnabled));
+
+    error = otLinkRawSrcMatchEnable(mInstance, mSrcMatchEnabled);
+
+exit:
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                     const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(void)
 {
     otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
-    const uint8_t *data = aValuePtr;
-    uint16_t dataLen = aValueLen;
 
     // Clear the list first
-    error = otLinkRawSrcMatchClearExtEntries(mInstance);
-
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+    SuccessOrExit(error = otLinkRawSrcMatchClearShortEntries(mInstance));
 
     // Loop through the addresses and add them
-    while (dataLen >= sizeof(otExtAddress))
+    while (mDecoder.GetRemainingLengthInStruct() >= sizeof(uint16_t))
     {
-        spinel_ssize_t parsedLength;
-        otExtAddress *extAddress;
+        uint16_t shortAddress;
 
-        parsedLength = spinel_datatype_unpack(
-                           data,
-                           dataLen,
-                           SPINEL_DATATYPE_EUI64_S,
-                           &extAddress
-                       );
+        SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
 
-        VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
-
-        data += parsedLength;
-        dataLen -= (uint16_t)parsedLength;
-
-        error = otLinkRawSrcMatchAddExtEntry(mInstance, extAddress);
-
-        VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
+        SuccessOrExit(error = otLinkRawSrcMatchAddShortEntry(mInstance, shortAddress));
     }
-
-    error =
-        SendPropertyUpdate(
-            aHeader,
-            SPINEL_CMD_PROP_VALUE_IS,
-            aKey,
-            aValuePtr,
-            aValueLen
-        );
 
 exit:
-
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
-
     return error;
 }
 
-otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                     const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(void)
 {
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
+
+    // Clear the list first
+    SuccessOrExit(error = otLinkRawSrcMatchClearExtEntries(mInstance));
+
+    // Loop through the addresses and add them
+    while (mDecoder.GetRemainingLengthInStruct() >= sizeof(otExtAddress))
+    {
+        const otExtAddress *extAddress;
+
+        SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
+
+        SuccessOrExit(error = otLinkRawSrcMatchAddExtEntry(mInstance, extAddress));
+    }
+
+exit:
+    return error;
+}
+
+otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(void)
+{
+    otError error = OT_ERROR_NONE;
     uint16_t shortAddress;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT16_S,
-                       &shortAddress
-                   );
-
-    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+    SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
 
     error = otLinkRawSrcMatchClearShortEntry(mInstance, shortAddress);
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-
-    error = SendPropertyUpdate(
-                aHeader,
-                SPINEL_CMD_PROP_VALUE_REMOVED,
-                aKey,
-                aValuePtr,
-                aValueLen
-            );
 
 exit:
-
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
-
     return error;
 }
 
-otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                        const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(void)
 {
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
-    otExtAddress *extAddress;
+    const otExtAddress *extAddress;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_EUI64_S,
-                       &extAddress
-                   );
-
-    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+    SuccessOrExit(error = mDecoder.ReadEui64(extAddress));;
 
     error = otLinkRawSrcMatchClearExtEntry(mInstance, extAddress);
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-
-    error = SendPropertyUpdate(
-                aHeader,
-                SPINEL_CMD_PROP_VALUE_REMOVED,
-                aKey,
-                aValuePtr,
-                aValueLen
-            );
 
 exit:
-
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
-
     return error;
 }
 
-otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                     const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(void)
 {
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
-    uint16_t short_address;
+    uint16_t shortAddress;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT16_S,
-                       &short_address
-                   );
+    SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
 
-    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
-
-    error = otLinkRawSrcMatchAddShortEntry(mInstance, short_address);
-
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-
-    error = SendPropertyUpdate(
-                    aHeader,
-                    SPINEL_CMD_PROP_VALUE_INSERTED,
-                    aKey,
-                    aValuePtr,
-                    aValueLen
-                );
+    error = otLinkRawSrcMatchAddShortEntry(mInstance, shortAddress);
 
 exit:
-
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
-
     return error;
 }
 
-otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                                        const uint8_t *aValuePtr, uint16_t aValueLen)
+otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(void)
 {
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
-    spinel_status_t spinelError = SPINEL_STATUS_OK;
-    otExtAddress *extAddress = NULL;
+    const otExtAddress *extAddress = NULL;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_EUI64_S,
-                       &extAddress
-                   );
-
-    VerifyOrExit(parsedLength > 0, spinelError = SPINEL_STATUS_PARSE_ERROR);
+    SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
     error = otLinkRawSrcMatchAddExtEntry(mInstance, extAddress);
 
-    VerifyOrExit(error == OT_ERROR_NONE, spinelError = ThreadErrorToSpinelStatus(error));
-
-    error = SendPropertyUpdate(
-                    aHeader,
-                    SPINEL_CMD_PROP_VALUE_INSERTED,
-                    aKey,
-                    aValuePtr,
-                    aValueLen
-                );
-
 exit:
-
-    if (spinelError != SPINEL_STATUS_OK)
-    {
-        error = SendLastStatus(aHeader, spinelError);
-    }
-
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                                                uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_PHY_ENABLED(void)
 {
     bool value = false;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_BOOL_S,
-                       &value
-                   );
-
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadBool(value));
 
     if (value == false)
     {
@@ -534,69 +323,49 @@ otError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t aHeader, spinel_prop_key
         // If we have raw stream enabled already, start receiving
         if (error == OT_ERROR_NONE && mIsRawStreamEnabled)
         {
-            error = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+            error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
         }
     }
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
-otError NcpBase::SetPropertyHandler_MAC_15_4_SADDR(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                                                   uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_MAC_15_4_SADDR(void)
 {
     uint16_t shortAddress;
-    spinel_ssize_t parsedLength;
     otError error = OT_ERROR_NONE;
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_UINT16_S,
-                       &shortAddress
-                   );
+    SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
 
-    VerifyOrExit(parsedLength > 0, error = OT_ERROR_PARSE);
-
-    error = otLinkRawSetShortAddress(mInstance, shortAddress);
+    error = otLinkSetShortAddress(mInstance, shortAddress);
 
 exit:
-    return SendSetPropertyResponse(aHeader, aKey, error);
+    return error;
 }
 
-otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                                               uint16_t aValueLen)
+otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t aHeader)
 {
-    uint8_t *frame_buffer = NULL;
+    const uint8_t *frameBuffer = NULL;
     otRadioFrame *frame;
-    unsigned int frameLen = 0;
-    spinel_ssize_t parsedLength;
+    uint16_t frameLen = 0;
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
 
     frame = otLinkRawGetTransmitBuffer(mInstance);
 
-    parsedLength = spinel_datatype_unpack(
-                       aValuePtr,
-                       aValueLen,
-                       SPINEL_DATATYPE_DATA_WLEN_S
-                       SPINEL_DATATYPE_UINT8_S
-                       SPINEL_DATATYPE_INT8_S,
-                       &frame_buffer,
-                       &frameLen,
-                       &frame->mChannel,
-                       &frame->mPower
-                   );
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(frameBuffer, frameLen));
+    SuccessOrExit(error = mDecoder.ReadUint8(frame->mChannel));
 
-    VerifyOrExit(parsedLength > 0 && frameLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
+    VerifyOrExit(frameLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
 
     // Cache the transaction ID for async response
     mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
 
     // Update frame buffer and length
     frame->mLength = static_cast<uint8_t>(frameLen);
-    memcpy(frame->mPsdu, frame_buffer, frame->mLength);
+    memcpy(frame->mPsdu, frameBuffer, frame->mLength);
 
     // TODO: This should be later added in the STREAM_RAW argument to allow user to directly specify it.
     frame->mMaxTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT;
@@ -613,10 +382,8 @@ exit:
     }
     else
     {
-        error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
+        error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error));
     }
-
-    OT_UNUSED_VARIABLE(aKey);
 
     return error;
 }
@@ -624,4 +391,4 @@ exit:
 }  // namespace Ncp
 }  // namespace ot
 
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API

@@ -60,8 +60,10 @@ extern "C" {
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-OTAPI otError OTCALL otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData,
-                                              uint8_t *aDataLength);
+OTAPI otError OTCALL otBorderRouterGetNetData(otInstance *aInstance,
+                                              bool        aStable,
+                                              uint8_t *   aData,
+                                              uint8_t *   aDataLength);
 
 /**
  * Add a border router configuration to the local network data.
@@ -98,14 +100,15 @@ OTAPI otError OTCALL otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, con
  * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
+ * @param[out]    aConfig    A pointer to the On Mesh Prefix information.
  *
  * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-OTAPI otError OTCALL otBorderRouterGetNextOnMeshPrefix(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                                                       otBorderRouterConfig *aConfig);
+OTAPI otError OTCALL otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
+                                                       otNetworkDataIterator *aIterator,
+                                                       otBorderRouterConfig * aConfig);
 
 /**
  * Add an external route configuration to the local network data.
@@ -142,21 +145,22 @@ OTAPI otError OTCALL otBorderRouterRemoveRoute(otInstance *aInstance, const otIp
  * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first external route entry
                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the External Route information will be placed.
+ * @param[out]    aConfig    A pointer to the External Route information.
  *
  * @retval OT_ERROR_NONE       Successfully found the next External Route.
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
  *
  */
-otError otBorderRouterGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator,
-                                   otExternalRouteConfig *aConfig);
+OTAPI otError OTCALL otBorderRouterGetNextRoute(otInstance *           aInstance,
+                                                otNetworkDataIterator *aIterator,
+                                                otExternalRouteConfig *aConfig);
 
 /**
  * Immediately register the local network data with the Leader.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * retval OT_ERROR_NONE  Successfully queued a Server Data Request message for delivery.
+ * @retval OT_ERROR_NONE  Successfully queued a Server Data Request message for delivery.
  *
  * @sa otBorderRouterAddOnMeshPrefix
  * @sa otBorderRouterRemoveOnMeshPrefix
@@ -171,7 +175,7 @@ OTAPI otError OTCALL otBorderRouterRegister(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_BORDER_ROUTER_H_
+#endif // OPENTHREAD_BORDER_ROUTER_H_

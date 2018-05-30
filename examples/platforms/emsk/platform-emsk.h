@@ -35,16 +35,13 @@
 #ifndef PLATFORM_EMSK_H_
 #define PLATFORM_EMSK_H_
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <openthread/config.h>
 #include "openthread/types.h"
 
 #include "board/board.h"
-
-// Global OpenThread instance structure
-extern otInstance *sInstance;
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -90,4 +87,4 @@ void emskRandomInit(void);
  */
 void emskUartProcess(void);
 
-#endif  // PLATFORM_EMSK_H_
+#endif // PLATFORM_EMSK_H_

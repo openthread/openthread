@@ -32,8 +32,8 @@
  *  This file defines the WPP Tracing Definitions.
  */
 
-#ifndef _LOGGING_WINDOWS_H
-#define _LOGGING_WINDOWS_H
+#ifndef OPENTHREAD_PLATFORM_LOGGING_WINDOWS_H_
+#define OPENTHREAD_PLATFORM_LOGGING_WINDOWS_H_
 
 #define OPENTHREAD_ENABLE_CERT_LOG 1
 
@@ -392,6 +392,63 @@
 // USESUFFIX(otLogDebgMacErr, ", %!otError!", EXP);
 // end_wpp
 
+// ==CORE==
+
+// begin_wpp config
+// USEPREFIX (otLogCritCore, "[%p]CORE%!SPACE!", &CTX);
+// otLogCritCore{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogWarnCore, "[%p]CORE%!SPACE!", &CTX);
+// otLogWarnCore{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogInfoCore, "[%p]CORE%!SPACE!", &CTX);
+// otLogInfoCore{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogDebgCore, "[%p]CORE%!SPACE!", &CTX);
+// otLogDebgCore{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogDebgCoreErr, "[%p]CORE%!SPACE!", &CTX);
+// otLogDebgCoreErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, EXP, MSG, ...);
+// USESUFFIX(otLogDebgCoreErr, ", %!otError!", EXP);
+// end_wpp
+
+// ==UTIL==
+
+// begin_wpp config
+// USEPREFIX (otLogCritUtil, "[%p]UTIL%!SPACE!", &CTX);
+// otLogCritUtil{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogWarnUtil, "[%p]UTIL%!SPACE!", &CTX);
+// otLogWarnUtil{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogInfoUtil, "[%p]UTIL%!SPACE!", &CTX);
+// otLogInfoUtil{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogDebgUtil, "[%p]UTIL%!SPACE!", &CTX);
+// otLogDebgUtil{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogDebgUtilErr, "[%p]UTIL%!SPACE!", &CTX);
+// otLogDebgUtilErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, EXP, MSG, ...);
+// USESUFFIX(otLogDebgUtilErr, ", %!otError!", EXP);
+// end_wpp
+
+
 // ==MEM==
 
 // begin_wpp config
@@ -526,4 +583,4 @@
 // USESUFFIX(otLogFuncExitErr, " %!otError!", EXP);
 // end_wpp
 
-#endif // _LOGGING_WINDOWS_H
+#endif // OPENTHREAD_PLATFORM_LOGGING_WINDOWS_H_

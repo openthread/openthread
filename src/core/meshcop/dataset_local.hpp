@@ -35,6 +35,8 @@
 #ifndef MESHCOP_DATASET_LOCAL_HPP_
 #define MESHCOP_DATASET_LOCAL_HPP_
 
+#include "openthread-core-config.h"
+
 #include "common/locator.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -42,7 +44,7 @@
 namespace ot {
 namespace MeshCoP {
 
-class DatasetLocal: public InstanceLocator
+class DatasetLocal : public InstanceLocator
 {
 public:
     /**
@@ -52,7 +54,7 @@ public:
      * @param[in]  aType      The type of the dataset, active or pending.
      *
      */
-    DatasetLocal(otInstance &aInstance, const Tlv::Type aType);
+    DatasetLocal(Instance &aInstance, const Tlv::Type aType);
 
     /**
      * This method indicates whether this is an Active or Pending Dataset.
@@ -70,21 +72,17 @@ public:
     void Clear(void);
 
     /**
-     * This method indicates whether or not the dataset is present in non-volatile memory.
+     * This method restores and retrieves the dataset from non-volatile memory.
      *
-     * @retval TRUE   if the dataset is present in non-volatile memory.
-     * @retval FALSE  if the dataset is not present in non-volatile memory.
+     * This method also sets the memory-cached timestamp for subsequent calls to `Compare()`.
      *
-     */
-    bool IsPresent(void) const;
-
-    /**
-     * This method returns a pointer to the Active or Pending Timestamp value.
+     * @param[out]  aDataset  Where to place the dataset.
      *
-     * @returns  A pointer to the Active or Pending Timestamp value or NULL if the dataset is invalid.
+     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    const Timestamp *GetTimestamp(void) const;
+    otError Restore(Dataset &aDataset);
 
     /**
      * This method retrieves the dataset from non-volatile memory.
@@ -95,7 +93,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(Dataset &aDataset);
+    otError Get(Dataset &aDataset) const;
 
     /**
      * This method retrieves the dataset from non-volatile memory.
@@ -135,15 +133,6 @@ public:
     otError Set(const Dataset &aDataset);
 
     /**
-     * This method restores dataset from non-volatile memory.
-     *
-     * @retval OT_ERROR_NONE       Successfully restore the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
-     *
-     */
-    otError Restore(void);
-
-    /**
      * This method compares this dataset to another based on the timestamp.
      *
      * @param[in]  aCompare  A reference to the timestamp to compare.
@@ -156,14 +145,16 @@ public:
     int Compare(const Timestamp *aCompare);
 
 private:
-    uint16_t GetSettingsKey(void) const;
+    bool IsActive(void) const { return (mType == Tlv::kActiveTimestamp); }
     void SetTimestamp(const Dataset &aDataset);
 
-    uint32_t    mUpdateTime;      ///< Local time last updated
-    Tlv::Type   mType;            ///< Active or Pending
+    Timestamp mTimestamp;            ///< Active or Pending Timestamp
+    uint32_t  mUpdateTime;           ///< Local time last updated
+    Tlv::Type mType;                 ///< Active or Pending
+    bool      mTimestampPresent : 1; ///< Whether or not timestamp is present
 };
 
-}  // namespace MeshCoP
-}  // namespace ot
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_DATASET_LOCAL_HPP_
+#endif // MESHCOP_DATASET_LOCAL_HPP_

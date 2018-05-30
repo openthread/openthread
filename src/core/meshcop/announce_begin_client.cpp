@@ -33,16 +33,14 @@
 
 #define WPP_NAME "announce_begin_client.tmh"
 
-#include <openthread/config.h>
-
 #include "announce_begin_client.hpp"
 
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -53,28 +51,29 @@
 
 namespace ot {
 
-AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif):
-    ThreadNetifLocator(aThreadNetif)
+AnnounceBeginClient::AnnounceBeginClient(Instance &aInstance)
+    : InstanceLocator(aInstance)
 {
 }
 
-otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
+otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
+                                         uint8_t             aCount,
+                                         uint16_t            aPeriod,
                                          const Ip6::Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
-    Coap::Header header;
+    otError                           error = OT_ERROR_NONE;
+    Coap::Header                      header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
+    MeshCoP::ChannelMask0Tlv          channelMask;
+    MeshCoP::CountTlv                 count;
+    MeshCoP::PeriodTlv                period;
 
     Ip6::MessageInfo messageInfo;
-    Message *message = NULL;
+    Message *        message = NULL;
 
     VerifyOrExit(GetNetif().GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
-    header.Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
-                OT_COAP_CODE_POST);
+    header.Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_ANNOUNCE_BEGIN);
     header.SetPayloadMarker();
@@ -117,7 +116,6 @@ exit:
     return error;
 }
 
-}  // namespace ot
+} // namespace ot
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-

@@ -80,7 +80,7 @@ OTAPI bool OTCALL otIp6IsEnabled(otInstance *aInstance);
 /**
  * Add a Network Interface Address to the Thread interface.
  *
- * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
+ * The passed-in instance @p aAddress is copied by the Thread interface. The Thread interface only
  * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -125,7 +125,8 @@ OTAPI const otNetifAddress *OTCALL otIp6GetUnicastAddresses(otInstance *aInstanc
  * @retval OT_ERROR_NONE          Successfully subscribed to the Network Interface Multicast Address.
  * @retval OT_ERROR_ALREADY       The multicast address is already subscribed.
  * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is invalid address.
- * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external multicast addresses.
+ * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external multicast
+ * addresses.
  *
  */
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
@@ -181,7 +182,7 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
  * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Creation of valid IID for given IPv6 address failed.
  *
  */
-typedef otError(*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+typedef otError (*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
 
 /**
  * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
@@ -193,8 +194,11 @@ typedef otError(*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAd
  * @param[in]     aContext       A pointer to data passed to aIidCreate function.
  *
  */
-void otIp6SlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                      otIp6SlaacIidCreate aIidCreate, void *aContext);
+void otIp6SlaacUpdate(otInstance *        aInstance,
+                      otNetifAddress *    aAddresses,
+                      uint32_t            aNumAddresses,
+                      otIp6SlaacIidCreate aIidCreate,
+                      void *              aContext);
 
 /**
  * Create random IID for given IPv6 address.
@@ -347,13 +351,13 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
 /**
  * Test if two IPv6 addresses are the same.
  *
- * @param[in]  a  A pointer to the first IPv6 address to compare.
- * @param[in]  b  A pointer to the second IPv6 address to compare.
+ * @param[in]  aFirst   A pointer to the first IPv6 address to compare.
+ * @param[in]  aSecond  A pointer to the second IPv6 address to compare.
  *
  * @retval TRUE   The two IPv6 addresses are the same.
  * @retval FALSE  The two IPv6 addresses are not the same.
  */
-OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *a, const otIp6Address *b);
+OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
  * Convert a human-readable IPv6 address string into a binary representation.
@@ -378,12 +382,23 @@ OTAPI otError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *a
 OTAPI uint8_t OTCALL otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
+ * This function indicates whether or not a given IPv6 address is the Unspecified Address.
+ *
+ * @param[in]  aAddress   A pointer to an IPv6 address.
+ *
+ * @retval TRUE   If the IPv6 address is the Unspecified Address.
+ * @retval FALSE  If the IPv6 address is not the Unspecified Address.
+ *
+ */
+bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
+
+/**
  * @}
  *
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_IP6_H_
+#endif // OPENTHREAD_IP6_H_

@@ -34,6 +34,8 @@
 #ifndef HMAC_SHA256_HPP_
 #define HMAC_SHA256_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdint.h"
 
 #include <mbedtls/md.h>
@@ -57,7 +59,7 @@ class HmacSha256
 public:
     enum
     {
-        kHashSize = 32,  ///< SHA-256 hash size (bytes)
+        kHashSize = 32, ///< SHA-256 hash size (bytes)
     };
 
     /**
@@ -107,7 +109,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
-#endif  // HMAC_SHA256_HPP_
+#endif // HMAC_SHA256_HPP_

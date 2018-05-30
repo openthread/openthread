@@ -34,9 +34,10 @@
 #ifndef SOURCE_MATCH_CONTROLLER_HPP_
 #define SOURCE_MATCH_CONTROLLER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
 #include "common/locator.hpp"
 #include "thread/topology.hpp"
 
@@ -64,16 +65,16 @@ namespace ot {
  * address or an extended/long address can be added to the source address match table.
  *
  */
-class SourceMatchController: public MeshForwarderLocator
+class SourceMatchController : public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aMeshForwarder   A reference to the Mesh Forwarder.
+     * @param[in]  aInstance    A reference to the OpenThread instance
      *
      */
-    explicit SourceMatchController(MeshForwarder &aMeshForwarder);
+    explicit SourceMatchController(Instance &aInstance);
 
     /**
      * This method returns the current state of source address matching.
@@ -190,6 +191,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // SOURCE_MATCH_CONTROLLER_HPP_
+#endif // SOURCE_MATCH_CONTROLLER_HPP_

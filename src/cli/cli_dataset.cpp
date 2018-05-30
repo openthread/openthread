@@ -31,8 +31,6 @@
  *   This file implements the CLI interpreter.
  */
 
-#include <openthread/config.h>
-
 #include "cli_dataset.hpp"
 
 #include <stdio.h>
@@ -50,34 +48,33 @@
 namespace ot {
 namespace Cli {
 
-const DatasetCommand Dataset::sCommands[] =
-{
-    { "help", &ProcessHelp },
-    { "active", &ProcessActive },
+const DatasetCommand Dataset::sCommands[] = {
+    {"help", &ProcessHelp},
+    {"active", &ProcessActive},
 #if OPENTHREAD_FTD
-    { "activetimestamp", &ProcessActiveTimestamp },
-    { "channel", &ProcessChannel },
-    { "channelmask", &ProcessChannelMask },
-    { "clear", &ProcessClear },
-    { "commit", &ProcessCommit },
-    { "delay", &ProcessDelay },
-    { "extpanid", &ProcessExtPanId },
-    { "masterkey", &ProcessMasterKey },
-    { "meshlocalprefix", &ProcessMeshLocalPrefix },
-    { "mgmtgetcommand", &ProcessMgmtGetCommand },
-    { "mgmtsetcommand", &ProcessMgmtSetCommand },
-    { "networkname", &ProcessNetworkName },
-    { "panid", &ProcessPanId },
+    {"activetimestamp", &ProcessActiveTimestamp},
+    {"channel", &ProcessChannel},
+    {"channelmask", &ProcessChannelMask},
+    {"clear", &ProcessClear},
+    {"commit", &ProcessCommit},
+    {"delay", &ProcessDelay},
+    {"extpanid", &ProcessExtPanId},
+    {"masterkey", &ProcessMasterKey},
+    {"meshlocalprefix", &ProcessMeshLocalPrefix},
+    {"mgmtgetcommand", &ProcessMgmtGetCommand},
+    {"mgmtsetcommand", &ProcessMgmtSetCommand},
+    {"networkname", &ProcessNetworkName},
+    {"panid", &ProcessPanId},
 #endif
-    { "pending", &ProcessPending },
+    {"pending", &ProcessPending},
 #if OPENTHREAD_FTD
-    { "pendingtimestamp", &ProcessPendingTimestamp },
-    { "pskc", &ProcessPSKc },
-    { "securitypolicy", &ProcessSecurityPolicy },
+    {"pendingtimestamp", &ProcessPendingTimestamp},
+    {"pskc", &ProcessPSKc},
+    {"securitypolicy", &ProcessSecurityPolicy},
 #endif
 };
 
-Server *Dataset::sServer;
+Server *             Dataset::sServer;
 otOperationalDataset Dataset::sDataset;
 
 void Dataset::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
@@ -107,7 +104,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mIsChannelMaskPage0Set)
     {
-        sServer->OutputFormat("Channel Mask Page 0: %x\r\n", aDataset.mChannelMaskPage0);
+        sServer->OutputFormat("Channel Mask Page 0: %08x\r\n", aDataset.mChannelMaskPage0);
     }
 
     if (aDataset.mIsDelaySet)
@@ -125,11 +122,10 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mIsMeshLocalPrefixSet)
     {
         const uint8_t *prefix = aDataset.mMeshLocalPrefix.m8;
-        sServer->OutputFormat("Mesh Local Prefix: %x:%x:%x:%x/64\r\n",
-                              (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
-                              (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3],
-                              (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
-                              (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
+        sServer->OutputFormat(
+            "Mesh Local Prefix: %x:%x:%x:%x/64\r\n", (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
+            (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3], (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
+            (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
     }
 
     if (aDataset.mIsMasterKeySet)
@@ -194,7 +190,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
 otError Dataset::Process(otInstance *aInstance, int argc, char *argv[], Server &aServer)
 {
-    otError error = OT_ERROR_NONE;
+    otError error = OT_ERROR_PARSE;
 
     sServer = &aServer;
 
@@ -203,7 +199,7 @@ otError Dataset::Process(otInstance *aInstance, int argc, char *argv[], Server &
         ExitNow(error = Print(sDataset));
     }
 
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
@@ -218,7 +214,7 @@ exit:
 
 otError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 {
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
@@ -232,7 +228,7 @@ otError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otError error;
+    otError              error;
 
     SuccessOrExit(error = otDatasetGetActive(aInstance, &dataset));
     error = Print(dataset);
@@ -246,7 +242,7 @@ exit:
 otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otError error;
+    otError              error;
 
     SuccessOrExit(error = otDatasetGetPending(aInstance, &dataset));
     error = Print(dataset);
@@ -261,11 +257,11 @@ exit:
 otError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mActiveTimestamp = static_cast<uint64_t>(value);
+    sDataset.mActiveTimestamp      = static_cast<uint64_t>(value);
     sDataset.mIsActiveTimestampSet = true;
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -277,11 +273,11 @@ exit:
 otError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mChannel = static_cast<uint16_t>(value);
+    sDataset.mChannel      = static_cast<uint16_t>(value);
     sDataset.mIsChannelSet = true;
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -293,11 +289,11 @@ exit:
 otError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mChannelMaskPage0 = static_cast<uint32_t>(value);
+    sDataset.mChannelMaskPage0      = static_cast<uint32_t>(value);
     sDataset.mIsChannelMaskPage0Set = true;
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -330,7 +326,7 @@ otError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -342,11 +338,11 @@ exit:
 otError Dataset::ProcessDelay(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mDelay = static_cast<uint32_t>(value);
+    sDataset.mDelay      = static_cast<uint32_t>(value);
     sDataset.mIsDelaySet = true;
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -360,7 +356,7 @@ otError Dataset::ProcessExtPanId(otInstance *aInstance, int argc, char *argv[])
     otError error = OT_ERROR_NONE;
     uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(Interpreter::Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = OT_ERROR_PARSE);
 
     memcpy(sDataset.mExtendedPanId.m8, extPanId, sizeof(sDataset.mExtendedPanId));
@@ -377,9 +373,8 @@ otError Dataset::ProcessMasterKey(otInstance *aInstance, int argc, char *argv[])
     otError error = OT_ERROR_NONE;
     uint8_t key[OT_MASTER_KEY_SIZE];
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
-    VerifyOrExit((Interpreter::Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE,
-                 error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((Interpreter::Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE, error = OT_ERROR_PARSE);
 
     memcpy(sDataset.mMasterKey.m8, key, sizeof(sDataset.mMasterKey));
     sDataset.mIsMasterKeySet = true;
@@ -392,10 +387,10 @@ exit:
 
 otError Dataset::ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     otIp6Address prefix;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &prefix));
 
     memcpy(sDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(sDataset.mMeshLocalPrefix.m8));
@@ -410,9 +405,9 @@ exit:
 otError Dataset::ProcessNetworkName(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    size_t length;
+    size_t  length;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_PARSE);
 
     memset(&sDataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
@@ -428,11 +423,11 @@ exit:
 otError Dataset::ProcessPanId(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mPanId = static_cast<otPanId>(value);
+    sDataset.mPanId      = static_cast<otPanId>(value);
     sDataset.mIsPanIdSet = true;
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -444,11 +439,11 @@ exit:
 otError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mPendingTimestamp = static_cast<uint64_t>(value);
+    sDataset.mPendingTimestamp      = static_cast<uint64_t>(value);
     sDataset.mIsPendingTimestampSet = true;
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -459,14 +454,14 @@ exit:
 
 otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
-    uint8_t tlvs[128];
-    long value;
-    int length = 0;
-    otIp6Address prefix;
+    uint8_t              tlvs[128];
+    long                 value;
+    int                  length = 0;
+    otIp6Address         prefix;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&dataset, 0, sizeof(dataset));
 
@@ -474,29 +469,30 @@ otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *ar
     {
         if (strcmp(argv[index], "activetimestamp") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsActiveTimestampSet = true;
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
             dataset.mActiveTimestamp = static_cast<uint64_t>(value);
         }
         else if (strcmp(argv[index], "pendingtimestamp") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsPendingTimestampSet = true;
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
             dataset.mPendingTimestamp = static_cast<uint64_t>(value);
         }
         else if (strcmp(argv[index], "masterkey") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsMasterKeySet = true;
             VerifyOrExit((length = Interpreter::Hex2Bin(argv[++index], dataset.mMasterKey.m8,
-                                                        sizeof(dataset.mMasterKey.m8))) == OT_MASTER_KEY_SIZE, error = OT_ERROR_PARSE);
+                                                        sizeof(dataset.mMasterKey.m8))) == OT_MASTER_KEY_SIZE,
+                         error = OT_ERROR_PARSE);
             length = 0;
         }
         else if (strcmp(argv[index], "networkname") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsNetworkNameSet = true;
             VerifyOrExit((length = static_cast<int>(strlen(argv[++index]))) <= OT_NETWORK_NAME_MAX_SIZE,
                          error = OT_ERROR_PARSE);
@@ -506,49 +502,50 @@ otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *ar
         }
         else if (strcmp(argv[index], "extpanid") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsExtendedPanIdSet = true;
-            VerifyOrExit(Interpreter::Hex2Bin(argv[++index], dataset.mExtendedPanId.m8,
-                                              sizeof(dataset.mExtendedPanId.m8)) >= 0, error = OT_ERROR_PARSE);
+            VerifyOrExit(
+                Interpreter::Hex2Bin(argv[++index], dataset.mExtendedPanId.m8, sizeof(dataset.mExtendedPanId.m8)) >= 0,
+                error = OT_ERROR_PARSE);
         }
         else if (strcmp(argv[index], "localprefix") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsMeshLocalPrefixSet = true;
             SuccessOrExit(error = otIp6AddressFromString(argv[++index], &prefix));
             memcpy(dataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(dataset.mMeshLocalPrefix.m8));
         }
         else if (strcmp(argv[index], "delaytimer") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsDelaySet = true;
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
             dataset.mDelay = static_cast<uint32_t>(value);
         }
         else if (strcmp(argv[index], "panid") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsPanIdSet = true;
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
             dataset.mPanId = static_cast<otPanId>(value);
         }
         else if (strcmp(argv[index], "channel") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsChannelSet = true;
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
             dataset.mChannel = static_cast<uint16_t>(value);
         }
         else if (strcmp(argv[index], "channelmask") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsChannelMaskPage0Set = true;
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
             dataset.mChannelMaskPage0 = static_cast<uint32_t>(value);
         }
         else if (strcmp(argv[index], "binary") == 0)
         {
-            VerifyOrExit((index + 1) < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit((index + 1) < argc, error = OT_ERROR_INVALID_ARGS);
             length = static_cast<int>((strlen(argv[++index]) + 1) / 2);
             VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
@@ -556,7 +553,7 @@ otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *ar
         }
         else
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
 
@@ -570,7 +567,7 @@ otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *ar
     }
     else
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -581,15 +578,15 @@ exit:
 
 otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
-    uint8_t tlvs[32];
-    long value;
-    int length = 0;
-    bool destAddrSpecified = false;
-    otIp6Address address;
+    uint8_t              tlvs[32];
+    long                 value;
+    int                  length            = 0;
+    bool                 destAddrSpecified = false;
+    otIp6Address         address;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&dataset, 0, sizeof(dataset));
 
@@ -635,22 +632,23 @@ otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *ar
         }
         else if (strcmp(argv[index], "binary") == 0)
         {
-            VerifyOrExit((index + 1) < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit((index + 1) < argc, error = OT_ERROR_INVALID_ARGS);
             value = static_cast<long>(strlen(argv[++index]) + 1) / 2;
-            VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = OT_ERROR_NO_BUFS);
+            VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)),
+                         error = OT_ERROR_NO_BUFS);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
                          error = OT_ERROR_PARSE);
             length += value;
         }
         else if (strcmp(argv[index], "address") == 0)
         {
-            VerifyOrExit(index < argc, error = OT_ERROR_PARSE);
+            VerifyOrExit(index < argc, error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = otIp6AddressFromString(argv[++index], &address));
             destAddrSpecified = true;
         }
         else
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
 
@@ -666,7 +664,7 @@ otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *ar
     }
     else
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -677,10 +675,10 @@ exit:
 
 otError Dataset::ProcessPSKc(otInstance *aInstance, int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t length;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     length = static_cast<uint16_t>((strlen(argv[0]) + 1) / 2);
     VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPSKc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
@@ -696,13 +694,13 @@ exit:
 otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(value);
-    sDataset.mSecurityPolicy.mFlags = 0;
+    sDataset.mSecurityPolicy.mFlags        = 0;
 
     if (argc > 1)
     {
@@ -742,7 +740,7 @@ otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *ar
 exit:
     return error;
 }
-#endif  // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot

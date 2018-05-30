@@ -34,6 +34,8 @@
 #ifndef OT_MBEDTLS_HPP_
 #define OT_MBEDTLS_HPP_
 
+#include "openthread-core-config.h"
+
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 namespace ot {
@@ -65,9 +67,9 @@ public:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
 #endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
-#endif  // OT_MBEDTLS_HPP_
+#endif // OT_MBEDTLS_HPP_

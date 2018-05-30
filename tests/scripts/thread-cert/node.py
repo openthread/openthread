@@ -35,11 +35,14 @@ if sys.platform != 'win32':
 else:
     import node_api
 import unittest
+import config
 
 class Node:
-    def __init__(self, nodeid):
+    def __init__(self, nodeid, is_mtd=False, simulator=None):
+        self.simulator = simulator
+
         if sys.platform != 'win32':
-            self.interface = node_cli.otCli(nodeid)
+            self.interface = node_cli.otCli(nodeid, is_mtd, simulator=simulator)
         else:
             self.interface = node_api.otApi(nodeid)
 
@@ -67,7 +70,7 @@ class Node:
 
     def thread_stop(self):
         self.interface.thread_stop()
-            
+
     def commissioner_start(self):
         self.interface.commissioner_start()
 
@@ -103,11 +106,17 @@ class Node:
     def get_addr16(self):
         return self.interface.get_addr16()
 
+    def get_router_id(self):
+        return self.interface.get_router_id()
+
     def get_addr64(self):
         return self.interface.get_addr64()
 
-    def get_hashmacaddr(self):
-        return self.interface.get_hashmacaddr()
+    def get_eui64(self):
+        return self.interface.get_eui64()
+
+    def get_joiner_id(self):
+        return self.interface.get_joiner_id()
 
     def get_channel(self):
         return self.interface.get_channel()
@@ -142,7 +151,7 @@ class Node:
     def get_panid(self):
         return self.interface.get_panid()
 
-    def set_panid(self, panid):
+    def set_panid(self, panid = config.PANID):
         self.interface.set_panid(panid)
 
     def get_partition_id(self):
@@ -187,6 +196,21 @@ class Node:
     def get_addrs(self):
         return self.interface.get_addrs()
 
+    def get_addr(self, prefix):
+        return self.interface.get_addr(prefix)
+
+    def get_eidcaches(self):
+        return self.interface.get_eidcaches()
+
+    def add_service(self, enterpriseNumber, serviceData, serverData):
+        self.interface.add_service(enterpriseNumber, serviceData, serverData)
+
+    def remove_service(self, enterpriseNumber, serviceData):
+        self.interface.remove_service(enterpriseNumber, serviceData)
+
+    def get_ip6_address(self, address_type):
+        return self.interface.get_ip6_address(address_type)
+
     def get_context_reuse_delay(self):
         return self.interface.get_context_reuse_delay()
 
@@ -217,7 +241,7 @@ class Node:
     def scan(self):
         return self.interface.scan()
 
-    def ping(self, ipaddr, num_responses=1, size=None, timeout=5000):
+    def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
         return self.interface.ping(ipaddr, num_responses, size, timeout)
 
     def reset(self):

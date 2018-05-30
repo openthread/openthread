@@ -26,17 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
-#include "fsl_device_registers.h"
-#include "openthread/types.h"
 #include "openthread/platform/misc.h"
+#include "fsl_device_registers.h"
+#include <stdint.h>
+#include "openthread/types.h"
 
 void otPlatReset(otInstance *aInstance)
 {
     (void)aInstance;
     NVIC_SystemReset();
 
-    while (1) {}
+    while (1)
+    {
+    }
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
@@ -60,14 +62,12 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         reason = OT_PLAT_RESET_REASON_EXTERNAL;
     }
-    else if ((RCM->SRS0 & RCM_SRS0_LOC_MASK)     ||
-             (RCM->SRS1 & RCM_SRS1_SACKERR_MASK) ||
+    else if ((RCM->SRS0 & RCM_SRS0_LOC_MASK) || (RCM->SRS1 & RCM_SRS1_SACKERR_MASK) ||
              (RCM->SRS1 & RCM_SRS1_LOCKUP_MASK))
     {
         reason = OT_PLAT_RESET_REASON_FAULT;
     }
-    else if ((RCM->SRS0 & RCM_SRS0_WAKEUP_MASK)  ||
-             (RCM->SRS0 & RCM_SRS0_LVD_MASK)     ||
+    else if ((RCM->SRS0 & RCM_SRS0_WAKEUP_MASK) || (RCM->SRS0 & RCM_SRS0_LVD_MASK) ||
              (RCM->SRS1 & RCM_SRS1_MDM_AP_MASK))
     {
         reason = OT_PLAT_RESET_REASON_ASSERT;

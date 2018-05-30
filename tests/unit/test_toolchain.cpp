@@ -30,14 +30,14 @@
 
 #include <openthread/platform/toolchain.h>
 
-#include "thread/topology.hpp"
 #include "test_util.h"
+#include "thread/topology.hpp"
 #include "utils/wrap_stdint.h"
 
 extern "C" {
-    uint32_t otNetifAddress_Size_c();
-    uint32_t otNetifAddress_offset_mNext_c();
-    otNetifAddress CreateNetif_c();
+uint32_t       otNetifAddress_Size_c();
+uint32_t       otNetifAddress_offset_mNext_c();
+otNetifAddress CreateNetif_c();
 }
 
 void test_packed1()

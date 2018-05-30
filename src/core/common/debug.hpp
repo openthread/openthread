@@ -34,11 +34,11 @@
 #ifndef DEBUG_HPP_
 #define DEBUG_HPP_
 
+#include "openthread-core-config.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include "utils/wrap_string.h"
-
-#include "openthread-core-config.h"
 
 #if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
 
@@ -48,10 +48,7 @@
 
 #include <wdm.h>
 
-#define assert(exp) \
-    ((!(exp)) ? \
-        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
-        TRUE)
+#define assert(exp) ((!(exp)) ? (RtlAssert(#exp, __FILE__, __LINE__, NULL), FALSE) : TRUE)
 
 #elif defined(_WIN32)
 
@@ -61,23 +58,39 @@
 
 #include "openthread/platform/misc.h"
 
-#define assert(cond)                            \
-  do {                                          \
-    if (!(cond)) {                              \
-      otPlatAssertFail(__FILE__, __LINE__);     \
-      while (1) {}                              \
-    }                                           \
-  } while (0)
+/**
+ * Allow the build system to provide a custom file name.
+ *
+ */
+#ifndef FILE_NAME
+#define FILE_NAME __FILE__
+#endif
+
+#define assert(cond)                               \
+    do                                             \
+    {                                              \
+        if (!(cond))                               \
+        {                                          \
+            otPlatAssertFail(FILE_NAME, __LINE__); \
+            while (1)                              \
+            {                                      \
+            }                                      \
+        }                                          \
+    } while (0)
 
 #else
 
-#define assert(cond)                            \
-  do {                                          \
-    if (!(cond)) {                              \
-      while (1) {}                              \
-    }                                           \
-  } while (0)
+#define assert(cond)  \
+    do                \
+    {                 \
+        if (!(cond))  \
+        {             \
+            while (1) \
+            {         \
+            }         \
+        }             \
+    } while (0)
 
 #endif
 
-#endif  // DEBUG_HPP_
+#endif // DEBUG_HPP_

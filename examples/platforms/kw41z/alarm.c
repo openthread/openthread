@@ -32,13 +32,12 @@
  *
  */
 
-#include <stdint.h>
-#include "fsl_device_registers.h"
 #include "fsl_clock.h"
+#include "fsl_device_registers.h"
 #include "fsl_pit.h"
+#include <stdint.h>
 
 #include "openthread/openthread.h"
-#include "openthread/platform/platform.h"
 #include "openthread/platform/alarm-milli.h"
 #include "openthread/platform/diag.h"
 
@@ -48,7 +47,7 @@ static uint32_t          sAlarmTime = 0;
 void kw41zAlarmInit(void)
 {
     pit_config_t config;
-    uint32_t count = (CLOCK_GetBusClkFreq() / 1000) - 1;
+    uint32_t     count = (CLOCK_GetBusClkFreq() / 1000) - 1;
 
     PIT_GetDefaultConfig(&config);
     PIT_Init(PIT, &config);

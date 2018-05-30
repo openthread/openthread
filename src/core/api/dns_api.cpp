@@ -31,18 +31,19 @@
  *   This file implements the OpenThread UDP API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/dns.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler,
-                         void *aContext)
+otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
 {
-    return aInstance->mThreadNetif.GetDnsClient().Query(aQuery, aHandler, aContext);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetDnsClient().Query(aQuery, aHandler, aContext);
 }
-#endif  // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif

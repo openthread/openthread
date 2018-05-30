@@ -31,7 +31,7 @@
  *   This file implements the CLI interpreter Instance related functions.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -46,6 +46,7 @@ namespace ot {
 
 namespace Cli {
 
+#ifdef OTDLL
 void Interpreter::CacheInstances()
 {
     if (mApiInstance)
@@ -60,7 +61,7 @@ void Interpreter::CacheInstances()
         for (uint8_t i = 0; i < mInstancesLength; i++)
         {
             mInstances[i].mInterpreter = this;
-            mInstances[i].mInstance = otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]);
+            mInstances[i].mInstance = static_cast<Instance *>(otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]));
             assert(mInstances[i].mInstance);
             otSetStateChangedCallback(mInstances[i].mInstance, &Interpreter::s_HandleNetifStateChanged, &mInstances[i]);
         }
@@ -118,6 +119,7 @@ void Interpreter::ProcessInstance(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif
 
 }  // namespace Cli
 }  // namespace ot

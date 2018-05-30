@@ -34,11 +34,12 @@
 #ifndef TASKLET_HPP_
 #define TASKLET_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdio.h>
 
 #include <openthread/tasklet.h>
 
-#include "common/context.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
@@ -59,7 +60,7 @@ class TaskletScheduler;
  * This class is used to represent a tasklet.
  *
  */
-class Tasklet: public InstanceLocator, public Context
+class Tasklet : public InstanceLocator, public OwnerLocator
 {
     friend class TaskletScheduler;
 
@@ -77,10 +78,10 @@ public:
      *
      * @param[in]  aInstance   A reference to the instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
-     * @param[in]  aContext    A pointer to arbitrary context information.
+     * @param[in]  aOwner      A pointer to owner of this `Tasklet` object.
      *
      */
-    Tasklet(otInstance &aInstance, Handler aHandler, void *aContext);
+    Tasklet(Instance &aInstance, Handler aHandler, void *aOwner);
 
     /**
      * This method puts the tasklet on the run queue.
@@ -91,8 +92,8 @@ public:
 private:
     void RunTask(void) { mHandler(*this); }
 
-    Handler           mHandler;
-    Tasklet          *mNext;
+    Handler  mHandler;
+    Tasklet *mNext;
 };
 
 /**
@@ -144,6 +145,6 @@ private:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // TASKLET_HPP_
+#endif // TASKLET_HPP_

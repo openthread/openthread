@@ -34,6 +34,8 @@
 #ifndef TCP_HPP_
 #define TCP_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/openthread.h>
 
 #include "net/ip6_headers.hpp"
@@ -69,7 +71,7 @@ struct TcpHeaderPoD
  *
  */
 OT_TOOL_PACKED_BEGIN
-class TcpHeader: private TcpHeaderPoD
+class TcpHeader : private TcpHeaderPoD
 {
 public:
     /**
@@ -143,7 +145,7 @@ public:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // TCP_HPP_
+#endif // TCP_HPP_

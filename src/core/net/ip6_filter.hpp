@@ -34,6 +34,8 @@
 #ifndef IP6_FILTER_HPP_
 #define IP6_FILTER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/openthread.h>
 
 #include "common/message.hpp"
@@ -117,7 +119,7 @@ private:
     uint16_t mUnsecurePorts[kMaxUnsecurePorts];
 };
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // IP6_FILTER_HPP_
+#endif // IP6_FILTER_HPP_

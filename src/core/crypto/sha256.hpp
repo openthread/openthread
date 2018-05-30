@@ -34,6 +34,8 @@
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdint.h"
 
 #include <mbedtls/sha256.h>
@@ -57,7 +59,7 @@ class Sha256
 public:
     enum
     {
-        kHashSize = 32,  ///< SHA-256 hash size (bytes)
+        kHashSize = 32, ///< SHA-256 hash size (bytes)
     };
 
     /**
@@ -104,7 +106,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
-#endif  // SHA256_HPP_
+#endif // SHA256_HPP_

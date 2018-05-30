@@ -31,8 +31,6 @@
  *   This file implements the CLI server on the CONSOLE service.
  */
 
-#include <openthread/config.h>
-
 #include "cli_console.hpp"
 
 #include <stdarg.h>
@@ -41,6 +39,7 @@
 #include "utils/wrap_string.h"
 
 #include "cli/cli.hpp"
+#include "common/instance.hpp"
 #include "common/new.hpp"
 
 namespace ot {
@@ -52,7 +51,9 @@ static otDEFINE_ALIGNED_VAR(sCliConsoleRaw, sizeof(Console), uint64_t);
 
 extern "C" void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
 {
-    sServer = new(&sCliConsoleRaw) Console(aInstance);
+    Instance *instance = static_cast<Instance *>(aInstance);
+
+    sServer = new (&sCliConsoleRaw) Console(instance);
     sServer->SetOutputCallback(aCallback);
     sServer->SetContext(aContext);
 }
@@ -62,12 +63,11 @@ extern "C" void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength)
     sServer->ReceiveTask(aBuf, aBufLength);
 }
 
-Console::Console(otInstance *aInstance):
-    mCallback(NULL),
-    mContext(NULL),
-    mInterpreter(aInstance)
+Console::Console(Instance *aInstance)
+    : mCallback(NULL)
+    , mContext(NULL)
+    , mInterpreter(aInstance)
 {
-
 }
 
 void Console::SetContext(void *aContext)
@@ -92,7 +92,7 @@ int Console::Output(const char *aBuf, uint16_t aBufLength)
 
 int Console::OutputFormat(const char *fmt, ...)
 {
-    char buf[kMaxLineLength];
+    char    buf[kMaxLineLength];
     va_list ap;
 
     va_start(ap, fmt);
@@ -102,5 +102,5 @@ int Console::OutputFormat(const char *fmt, ...)
     return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot

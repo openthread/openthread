@@ -34,16 +34,18 @@
 #ifndef TOPOLOGY_HPP_
 #define TOPOLOGY_HPP_
 
-#include <openthread/platform/random.h>
-
 #include "openthread-core-config.h"
+
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 
 namespace ot {
+
+class Instance;
 
 /**
  * This class represents a Thread neighbor.
@@ -58,13 +60,14 @@ public:
      */
     enum State
     {
-        kStateInvalid,                   ///< Neighbor link is invalid
-        kStateRestored,                  ///< Neighbor is restored from non-volatile memory
-        kStateParentRequest,             ///< Received an MLE Parent Request message
-        kStateChildIdRequest,            ///< Received an MLE Child ID Request message
-        kStateLinkRequest,               ///< Sent an MLE Link Request message
-        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message (trying to restore the child)
-        kStateValid,                     ///< Link is valid
+        kStateInvalid,            ///< Neighbor link is invalid
+        kStateRestored,           ///< Neighbor is restored from non-volatile memory
+        kStateParentRequest,      ///< Received an MLE Parent Request message
+        kStateParentResponse,     ///< Received an MLE Parent Response message
+        kStateChildIdRequest,     ///< Received an MLE Child ID Request message
+        kStateLinkRequest,        ///< Sent an MLE Link Request message
+        kStateChildUpdateRequest, ///< Sent an MLE Child Update Request message (trying to restore the child)
+        kStateValid,              ///< Link is valid
     };
 
     /**
@@ -84,7 +87,7 @@ public:
     void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
 
     /**
-     * Check if the neighbor/child is being restored.
+     * This method indicates whether the neighbor/child is being restored.
      *
      * @returns TRUE if the neighbor is being restored, FALSE otherwise.
      *
@@ -92,7 +95,8 @@ public:
     bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
 
     /**
-     * Check if the neighbor/child is in valid state or if it is being restored.
+     * This method indicates whether the neighbor/child is in valid state or if it is being restored.
+     *
      * When in these states messages can be sent to and/or received from the neighbor/child.
      *
      * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
@@ -189,7 +193,7 @@ public:
     /**
      * This method sets the key sequence value.
      *
-     * @parma[in]  aKeySequence  The key sequence value.
+     * @param[in]  aKeySequence  The key sequence value.
      *
      */
     void SetKeySequence(uint32_t aKeySequence) { mKeySequence = aKeySequence; }
@@ -248,7 +252,15 @@ public:
      * @returns The RLOC16 value.
      *
      */
-    uint16_t GetRloc16(void) const { return mValidPending.mValid.mRloc16; }
+    uint16_t GetRloc16(void) const { return mRloc16; }
+
+    /**
+     * This method gets the Router ID value.
+     *
+     * @returns The Router ID value.
+     *
+     */
+    uint8_t GetRouterId(void) const { return mRloc16 >> Mle::kRouterIdOffset; }
 
     /**
      * This method sets the RLOC16 value.
@@ -256,7 +268,7 @@ public:
      * @param[in]  aRloc16  The RLOC16 value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mValidPending.mValid.mRloc16 = aRloc16; }
+    void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
     /**
      * This method indicates whether an IEEE 802.15.4 Data Request message was received.
@@ -317,37 +329,36 @@ public:
     const uint8_t *GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
 
     /**
-     * This method returns the size (byets) of the challenge value for MLE Link Request/Response exchanges.
+     * This method returns the size (bytes) of the challenge value for MLE Link Request/Response exchanges.
      *
-     * @returns The size (byets) of the challenge value for MLE Link Request/Response exchanges.
+     * @returns The size (bytes) of the challenge value for MLE Link Request/Response exchanges.
      *
      */
     uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
 
 private:
-    Mac::ExtAddress mMacAddr;            ///< The IEEE 802.15.4 Extended Address
-    uint32_t        mLastHeard;          ///< Time when last heard.
+    Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
+    uint32_t        mLastHeard; ///< Time when last heard.
     union
     {
         struct
         {
-            uint32_t mLinkFrameCounter;  ///< The Link Frame Counter
-            uint32_t mMleFrameCounter;   ///< The MLE Frame Counter
-            uint16_t mRloc16;            ///< The RLOC16
+            uint32_t mLinkFrameCounter; ///< The Link Frame Counter
+            uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
         } mValid;
         struct
         {
-            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize];  ///< The challenge value
-            uint8_t mChallengeLength;    ///< The challenge length
+            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
         } mPending;
     } mValidPending;
 
-    uint32_t        mKeySequence;        ///< Current key sequence
-    uint8_t         mState : 3;          ///< The link state
-    uint8_t         mMode : 4;           ///< The MLE device mode
-    bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
-    uint8_t         mLinkFailures;       ///< Consecutive link failure count
-    LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
+    uint32_t        mKeySequence;     ///< Current key sequence
+    uint16_t        mRloc16;          ///< The RLOC16
+    uint8_t         mState : 3;       ///< The link state
+    uint8_t         mMode : 4;        ///< The MLE device mode
+    bool            mDataRequest : 1; ///< Indicates whether or not a Data Poll was received
+    uint8_t         mLinkFailures;    ///< Consecutive link failure count
+    LinkQualityInfo mLinkInfo;        ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
 /**
@@ -359,47 +370,139 @@ class Child : public Neighbor
 public:
     enum
     {
-        kMaxIp6AddressPerChild = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
-        kMaxRequestTlvs        = 5,
+        kMaxRequestTlvs = 5,
     };
 
     /**
-     * This method clears the IPv6 addresses for the child.
+     * This class defines an iterator used by `GetNextIp6Address()` to go through IPv6 address entries of a child.
      *
      */
-    void ClearIp6Addresses(void) { memset(mIp6Address, 0, sizeof(mIp6Address)); }
+    class Ip6AddressIterator
+    {
+        friend class Child;
+
+    public:
+        /**
+         * This constructor initializes the iterator object.
+         *
+         * After initialization a call to `GetNextIp6Address()` would start at the first IPv6 address entry in the list.
+         *
+         */
+        Ip6AddressIterator(void)
+            : mIndex(0)
+        {
+        }
+
+        /**
+         * This method resets the iterator.
+         *
+         * After reset the next call to `GetNextIp6Address()` would start at the first IPv6 address entry in the list.
+         *
+         */
+        void Reset(void) { mIndex = 0; }
+
+        /**
+         * This method sets the iterator from an `otChildIp6AddressIterator`
+         *
+         * @param[in]   aChildAddressIterator  A child address iterator
+         *
+         */
+        void Set(otChildIp6AddressIterator aChildAddressIterator) { mIndex = aChildAddressIterator; }
+
+        /**
+         * This method returns the iterator as an `otChildIp6AddressIterator`
+         *
+         * @returns The iterator as an `otChildIp6AddressIterator`
+         *
+         */
+        otChildIp6AddressIterator Get(void) const { return mIndex; }
+
+    private:
+        void Increment(void) { mIndex++; }
+
+        otChildIp6AddressIterator mIndex;
+    };
 
     /**
-     * This method gets the IPv6 address at index @p aIndex.
+     * This method indicates if the child state is valid or being attached or being restored.
      *
-     * @param[in]  aIndex  The index into the IPv6 address list.
+     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, (and
+     * `kStateLinkRequest) are considered as attached or being restored.
      *
-     * @returns A reference to the IPv6 address entry at index @p aIndex.
+     * @returns TRUE if the child is attached or being restored.
      *
      */
-    Ip6::Address &GetIp6Address(uint8_t aIndex) { return mIp6Address[aIndex]; }
+    bool IsStateValidOrAttaching(void) const;
 
     /**
-     * This method searches for a given IPv6 address in the child's IPv6 address list and provides the index of the
-     * address in the list if it is found.
-     *
-     * @param[in]  aAddress           The IPv6 address to search for in the IPv6 address list.
-     * @param[out] aIndex             Pointer to variable where the index of address is provided if address is found in
-     *                                the list. @p aIndex can be set NULL if index is not required.
-     *
-     * @retval OT_ERROR_NONE          Successfully found the address in IPv6 address list and updated @p aIndex.
-     * @retval OT_ERROR_NOT_FOUND     Could not find the address in the list.
+     * This method clears the IPv6 address list for the child.
      *
      */
-    otError FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const;
+    void ClearIp6Addresses(void);
 
     /**
-     * This method removes the address at index @p aIndex.
+     * This method gets the mesh-local IPv6 address.
      *
-     * @param[in] aIndex   The index into the IPv6 address list.
+     * @param[in]    aInstance           A reference to the OpenThread instance.
+     * @param[out]   aAddress            A reference to an IPv6 address to provide address (if any).
+     *
+     * @retval       OT_ERROR_NONE       Successfully found the mesh-local address and updated @p aAddress.
+     * @retval       OT_ERROR_NOT_FOUND  No mesh-local IPv6 address in the IPv6 address list.
      *
      */
-    void RemoveIp6Address(uint8_t aIndex);
+    otError GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddress) const;
+
+    /**
+     * This method gets the next IPv6 address in the list.
+     *
+     * @param[in]    aInstance           A reference to the OpenThread instance.
+     * @param[inout] aIterator           A reference to an IPv6 address iterator.
+     * @param[out]   aAddress            A reference to an IPv6 address to provide the next address (if any).
+     *
+     * @retval       OT_ERROR_NONE       Successfully found the next address and updated @p aAddress and @p aIterator.
+     * @retval       OT_ERROR_NOT_FOUND  No subsequent IPv6 address exists in the IPv6 address list.
+     *
+     */
+    otError GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const;
+
+    /**
+     * This method adds an IPv6 address to the list.
+     *
+     * @param[in]  aInstance          A reference to the OpenThread instance.
+     * @param[in]  aAddress           A reference to IPv6 address to be added.
+     *
+     * @retval OT_ERROR_NONE          Successfully added the new address.
+     * @retval OT_ERROR_ALREADY       Address is already in the list.
+     * @retval OT_ERROR_NO_BUFS       Already at maximum number of addresses. No entry available to add the new address.
+     * @retval OT_ERROR_INVALID_ARGS  Address is invalid (it is the Unspecified Address).
+     *
+     */
+    otError AddIp6Address(Instance &aInstance, const Ip6::Address &aAddress);
+
+    /**
+     * This method removes an IPv6 address from the list.
+     *
+     * @param[in]  aInstance              A reference to the OpenThread instance.
+     * @param[in]  aAddress               A reference to IPv6 address to be removed.
+     *
+     * @retval OT_ERROR_NONE              Successfully removed the address.
+     * @retval OT_ERROR_NOT_FOUND         Address was not found in the list.
+     * @retval OT_ERROR_INVALID_ARGS      Address is invalid (it is the Unspecified Address).
+     *
+     */
+    otError RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddress);
+
+    /**
+     * This method indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     * @param[in]  aAddress   A reference to IPv6 address.
+     *
+     * @retval TRUE           The address exists on the list.
+     * @retval FALSE          Address was not found in the list.
+     *
+     */
+    bool HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) const;
 
     /**
      * This method gets the child timeout.
@@ -502,6 +605,22 @@ public:
      *
      */
     void SetIndirectFragmentOffset(uint16_t aFragmentOffset) { mIndirectFragmentOffset = aFragmentOffset; }
+
+    /**
+     * This method gets the transmission status (success/failure) of the indirect transmission.
+     *
+     * @returns The transmission status of indirect transmission, `true` indicating success, `false` indicating failure.
+     *
+     */
+    bool GetIndirectTxSuccess(void) const { return mIndirectTxSuccess; }
+
+    /**
+     * This method sets the transmission status (success/failure) of the indirect transmission.
+     *
+     * @param[in]  aTxStatus    The transmission status, `true` indicating success, `false` indicating failure.
+     *
+     */
+    void SetIndirectTxSuccess(bool aTxStatus) { mIndirectTxSuccess = aTxStatus; }
 
     /**
      * This method gets the IEEE 802.15.4 Key ID to use for indirect retransmissions.
@@ -639,7 +758,8 @@ public:
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
     /**
-     * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress` flag).
+     * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress`
+     * flag).
      *
      * @param[out] aMacAddress A reference to a mac address object to which the child's address is copied.
      *
@@ -673,8 +793,19 @@ public:
 #endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 private:
-    Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
-    uint32_t     mTimeout;                             ///< Child timeout
+#if OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD < 2
+#error OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD should be at least set to 2.
+#endif
+
+    enum
+    {
+        kNumIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD - 1,
+    };
+
+    uint8_t      mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize]; ///< IPv6 address IID for mesh-local address
+    Ip6::Address mIp6Address[kNumIp6Addresses];                         ///< Registered IPv6 addresses
+
+    uint32_t mTimeout; ///< Child timeout
 
     union
     {
@@ -682,21 +813,21 @@ private:
         uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
     };
 
-    uint32_t     mIndirectFrameCounter;                ///< Frame counter for current indirect message (used fore retx).
-    Message     *mIndirectMessage;                     ///< Current indirect message.
-    uint16_t     mIndirectFragmentOffset;              ///< 6LoWPAN fragment offset for the indirect message.
-    uint8_t      mIndirectKeyId;                       ///< Key Id for current indirect message (used for retx).
-    uint8_t      mIndirectTxAttempts;                  ///< Number of data poll triggered tx attempts.
-    uint8_t      mIndirectDsn;                         ///< MAC level Data Sequence Number (DSN) for retx attempts.
-    uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
-    uint16_t     mQueuedMessageCount : 13;             ///< Number of queued indirect messages for the child.
-    bool         mUseShortAddress : 1;                 ///< Indicates whether to use short or extended address.
-    bool         mSourceMatchPending : 1;              ///< Indicates whether or not pending to add to src match table.
+    uint32_t mIndirectFrameCounter;        ///< Frame counter for current indirect message (used fore retx).
+    Message *mIndirectMessage;             ///< Current indirect message.
+    uint16_t mIndirectFragmentOffset : 15; ///< 6LoWPAN fragment offset for the indirect message.
+    bool     mIndirectTxSuccess : 1;       ///< Indicates tx success/failure of current indirect message.
+    uint8_t  mIndirectKeyId;               ///< Key Id for current indirect message (used for retx).
+    uint8_t  mIndirectTxAttempts;          ///< Number of data poll triggered tx attempts.
+    uint8_t  mIndirectDsn;                 ///< MAC level Data Sequence Number (DSN) for retx attempts.
+    uint8_t  mNetworkDataVersion;          ///< Current Network Data version
+    uint16_t mQueuedMessageCount : 13;     ///< Number of queued indirect messages for the child.
+    bool     mUseShortAddress : 1;         ///< Indicates whether to use short or extended address.
+    bool     mSourceMatchPending : 1;      ///< Indicates whether or not pending to add to src match table.
 
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
-    uint16_t     mSecondsSinceSupervision;             ///< Number of seconds since last supervision of the child.
-#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
-
+    uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
+#endif                                 // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 };
 
 /**
@@ -754,46 +885,12 @@ public:
      */
     void SetCost(uint8_t aCost) { mCost = aCost; }
 
-    /**
-     * This method indicates whether or not this router ID has been allocated.
-     *
-     * @returns TRUE if this router ID has been allocated, FALSE otherwise.
-     *
-     */
-    bool IsAllocated(void) const { return mAllocated; }
-
-    /**
-     * This method sets whether or not this router ID has been allocated.
-     *
-     * @param[in]  aAllocated  TRUE if this router ID has been allocated, FALSE otherwise.
-     *
-     */
-    void SetAllocated(bool aAllocated) { mAllocated = aAllocated; }
-
-    /**
-     * This method indicates whether the reclaim delay is in effect for this router ID.
-     *
-     * @returns TRUE if the reclaim delay is in effect, FALSE otherwise.
-     *
-     */
-    bool IsReclaimDelay(void) const { return mReclaimDelay; }
-
-    /**
-     * This method sets whether the reclaim delay is in effect for this router ID.
-     *
-     * @param[in]  aReclaimDelay  TRUE if the reclaim delay is in effect, FALSE otherwise.
-     *
-     */
-    void SetReclaimDelay(bool aReclaimDelay) { mReclaimDelay = aReclaimDelay; }
-
 private:
-    uint8_t mNextHop;             ///< The next hop towards this router
-    uint8_t mLinkQualityOut : 2;  ///< The link quality out for this router
-    uint8_t mCost : 4;            ///< The cost to this router via neighbor router
-    bool    mAllocated : 1;       ///< Indicates whether or not this entry is allocated
-    bool    mReclaimDelay : 1;    ///< Indicates whether or not this entry is waiting to be reclaimed
+    uint8_t mNextHop;            ///< The next hop towards this router
+    uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
+    uint8_t mCost : 4;           ///< The cost to this router via neighbor router
 };
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // TOPOLOGY_HPP_
+#endif // TOPOLOGY_HPP_

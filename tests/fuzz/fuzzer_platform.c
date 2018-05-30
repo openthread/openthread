@@ -238,10 +238,11 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
     (void)aPower;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
@@ -256,10 +257,10 @@ uint32_t otPlatRandomGet(void)
     uint64_t tmpstate;
 
     tmpstate = (uint64_t)33614 * (uint64_t)sRandomState;
-    q = tmpstate & 0xffffffff;
-    q = q >> 1;
-    p = tmpstate >> 32;
-    mlcg = p + q;
+    q        = tmpstate & 0xffffffff;
+    q        = q >> 1;
+    p        = tmpstate >> 32;
+    mlcg     = p + q;
 
     if (mlcg & 0x80000000)
     {
@@ -305,8 +306,7 @@ otError otPlatSettingsAbandonChange(otInstance *aInstance)
     return OT_ERROR_NONE;
 }
 
-otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
-                          uint16_t *aValueLength)
+otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
     (void)aInstance;
     (void)aKey;

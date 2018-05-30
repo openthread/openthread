@@ -33,32 +33,35 @@
 
 #define WPP_NAME "locator.tmh"
 
-#include <openthread/config.h>
-
 #include "locator.hpp"
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
-otInstance &ThreadNetifLocator::GetInstance(void) const
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+Instance &InstanceLocator::GetInstance(void) const
 {
-    return *otInstanceFromThreadNetif(&GetNetif());
+    return Instance::Get();
+}
+#endif
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+Ip6::Ip6 &InstanceLocator::GetIp6(void) const
+{
+    return GetInstance().GetIp6();
 }
 
-otInstance &MeshForwarderLocator::GetInstance(void) const
+ThreadNetif &InstanceLocator::GetNetif(void) const
 {
-    return *otInstanceFromThreadNetif(&GetMeshForwarder().GetNetif());
+    return GetInstance().GetThreadNetif();
 }
 
-otInstance &Ip6Locator::GetInstance(void) const
+Notifier &InstanceLocator::GetNotifier(void) const
 {
-    return *otInstanceFromIp6(&GetIp6());
+    return GetInstance().GetNotifier();
 }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-
-}  // namespace ot
+} // namespace ot

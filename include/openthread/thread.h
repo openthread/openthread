@@ -112,9 +112,13 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  * @retval OT_ERROR_BUSY  Already performing an Thread Discovery.
  *
  */
-OTAPI otError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
-                                      bool aEnableEui64Filtering, otHandleActiveScanResult aCallback,
-                                      void *aCallbackContext);
+OTAPI otError OTCALL otThreadDiscover(otInstance *             aInstance,
+                                      uint32_t                 aScanChannels,
+                                      uint16_t                 aPanId,
+                                      bool                     aJoiner,
+                                      bool                     aEnableEui64Filtering,
+                                      otHandleActiveScanResult aCallback,
+                                      void *                   aCallbackContext);
 
 /**
  * This function determines if an MLE Thread Discovery is currently in progress.
@@ -160,8 +164,8 @@ OTAPI const uint8_t *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 Extended PAN ID.
  *
- * This function may only be called while Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function can only be called while Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
@@ -178,7 +182,7 @@ OTAPI otError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const uint8
  * This function returns a pointer to the Leader's RLOC.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[out]  aLeaderRloc  A pointer to where the Leader's RLOC will be written.
+ * @param[out]  aLeaderRloc  A pointer to the Leader's RLOC.
  *
  * @retval OT_ERROR_NONE          The Leader's RLOC was successfully written to @p aLeaderRloc.
  * @retval OT_ERROR_INVALID_ARGS  @p aLeaderRloc was NULL.
@@ -224,8 +228,8 @@ OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
 /**
  * Set the thrMasterKey.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
@@ -262,8 +266,8 @@ OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
 /**
  * This function sets the Mesh Local Prefix.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
@@ -300,8 +304,8 @@ OTAPI const char *OTCALL otThreadGetNetworkName(otInstance *aInstance);
 /**
  * Set the Thread Network Name.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
@@ -383,15 +387,16 @@ OTAPI otError OTCALL otThreadBecomeChild(otInstance *aInstance);
  * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[inout]  aIterator  A pointer to the iterator context. To get the first neighbor entry
                              it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
- * @param[out]    aInfo      A pointer to where the neighbor information will be placed.
+ * @param[out]    aInfo      A pointer to the neighbor information.
  *
  * @retval OT_ERROR_NONE         Successfully found the next neighbor entry in table.
  * @retval OT_ERROR_NOT_FOUND     No subsequent neighbor entry exists in the table.
  * @retval OT_ERROR_INVALID_ARGS  @p aIterator or @p aInfo was NULL.
  *
  */
-OTAPI otError OTCALL otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator,
-                                                 otNeighborInfo *aInfo);
+OTAPI otError OTCALL otThreadGetNextNeighborInfo(otInstance *            aInstance,
+                                                 otNeighborInfoIterator *aIterator,
+                                                 otNeighborInfo *        aInfo);
 
 /**
  * Get the device role.
@@ -494,8 +499,7 @@ OTAPI otError OTCALL otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aL
  * @param[in]  aContext      A pointer to application-specific context.
  *
  */
-typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                                               void *aContext);
+typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
 /**
  * This function registers a callback to provide received raw Network Diagnostic Get response payload.
@@ -506,20 +510,23 @@ typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMess
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  */
-void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
-                                             void *aCallbackContext);
+void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
+                                             otReceiveDiagnosticGetCallback aCallback,
+                                             void *                         aCallbackContext);
 
 /**
  * Send a Network Diagnostic Get request.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aDestination   A pointer to destination address.
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
  * @param[in]  aCount         Number of types in aTlvTypes
  *
  */
-OTAPI otError OTCALL otThreadSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination,
-                                               const uint8_t aTlvTypes[], uint8_t aCount);
+OTAPI otError OTCALL otThreadSendDiagnosticGet(otInstance *        aInstance,
+                                               const otIp6Address *aDestination,
+                                               const uint8_t       aTlvTypes[],
+                                               uint8_t             aCount);
 
 /**
  * Send a Network Diagnostic Reset request.
@@ -530,8 +537,10 @@ OTAPI otError OTCALL otThreadSendDiagnosticGet(otInstance *aInstance, const otIp
  * @param[in]  aCount         Number of types in aTlvTypes
  *
  */
-OTAPI otError OTCALL otThreadSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination,
-                                                 const uint8_t aTlvTypes[], uint8_t aCount);
+OTAPI otError OTCALL otThreadSendDiagnosticReset(otInstance *        aInstance,
+                                                 const otIp6Address *aDestination,
+                                                 const uint8_t       aTlvTypes[],
+                                                 uint8_t             aCount);
 
 /**
  * Get the IPv6 counters.
@@ -549,7 +558,7 @@ OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_THREAD_H_
+#endif // OPENTHREAD_THREAD_H_

@@ -120,7 +120,7 @@ void qorvoRadioSetShortAddress(uint16_t address);
  * @param[in]  address  The extended address.
  *
  */
-void qorvoRadioSetExtendedAddress(uint8_t *address);
+void qorvoRadioSetExtendedAddress(const uint8_t *address);
 
 /**
  * This function enables source address matching for indirect transmit.

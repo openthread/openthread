@@ -37,6 +37,8 @@
 
 #include <stdint.h>
 
+// clang-format off
+
 #define HWREG(x)                                (*((volatile uint32_t *)(x)))
 
 #define NVIC_ST_CTRL                            0xE000E010  // SysTick Control and Status
@@ -217,5 +219,7 @@
 
 #define FLASH_CTRL_FCTL                         0x400D3008  // Flash control
 #define FLASH_CTRL_DIECFG0                      0x400D3014  // Flash information
+
+// clang-format on
 
 #endif

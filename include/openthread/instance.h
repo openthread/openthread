@@ -92,7 +92,7 @@ OTAPI void OTCALL otFreeMemory(const void *aMem);
  * @param[in]  aContext     A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
+typedef void(OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
 
 /**
  * This function registers a callback to indicate OpenThread devices come and go.
@@ -102,8 +102,9 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
  * @param[in]  aContextContext  A pointer to application-specific context.
  *
  */
-OTAPI void OTCALL otSetDeviceAvailabilityChangedCallback(otApiInstance *aApiInstance,
-                                                         otDeviceAvailabilityChangedCallback aCallback, void *aCallbackContext);
+OTAPI void OTCALL otSetDeviceAvailabilityChangedCallback(otApiInstance *                     aApiInstance,
+                                                         otDeviceAvailabilityChangedCallback aCallback,
+                                                         void *                              aCallbackContext);
 
 /**
  * This function querys the list of OpenThread device contexts on the system.
@@ -120,7 +121,7 @@ OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
  * @param[in]  aApiInstance  The OpenThread api instance.
  * @param[in]  aDeviceGuid   The device guid to create an OpenThread context for.
  *
- * @retval otInstance*  The new OpenThread device instance structure for the device.
+ * @returns  The new OpenThread device instance structure for the device.
  *
  * @sa otFreeMemory
  *
@@ -132,7 +133,7 @@ OTAPI otInstance *OTCALL otInstanceInit(otApiInstance *aApiInstance, const GUID 
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @retval GUID  The device GUID.
+ * @returns  The device GUID.
  *
  */
 OTAPI GUID OTCALL otGetDeviceGuid(otInstance *aInstance);
@@ -142,7 +143,7 @@ OTAPI GUID OTCALL otGetDeviceGuid(otInstance *aInstance);
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @retval uint32_t  The device IfIndex.
+ * @returns The device IfIndex.
  *
  */
 OTAPI uint32_t OTCALL otGetDeviceIfIndex(otInstance *aInstance);
@@ -152,7 +153,7 @@ OTAPI uint32_t OTCALL otGetDeviceIfIndex(otInstance *aInstance);
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @retval uint32_t  The compartment ID.
+ * @returns  The compartment ID.
  *
  */
 OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
@@ -162,9 +163,8 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
 /**
  * This function initializes the OpenThread library.
  *
- *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
- * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
+ * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is enabled.
  *
@@ -172,9 +172,9 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
  * @param[inout] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for
  *                                    otInstance, the number of bytes required for otInstance.
  *
- * @retval otInstance*  The new OpenThread instance structure.
+ * @returns  A pointer to the new OpenThread instance.
  *
- * @sa otContextFinalize
+ * @sa otInstanceFinalize
  *
  */
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
@@ -183,11 +183,11 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
  * This function initializes the static single instance of the OpenThread library.
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
- * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
+ * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is disabled.
  *
- * @retval A pointer to the single OpenThread instance structure.
+ * @returns A pointer to the single OpenThread instance.
  *
  */
 otInstance *otInstanceInitSingle(void);
@@ -195,11 +195,9 @@ otInstance *otInstanceInitSingle(void);
 /**
  * This function indicates whether or not the instance is valid/initialized.
  *
- * For single-instance case, the instance is considered valid if it is acquired and initialized using
- * `otInstanceInitSingle()`. A subsequent call to `otInstanceFinalize()` causes the instance to be considered as
- * invalid (not initialized).
- *
- * For multi-instance case, any non-NULL instance pointer is considered as valid/initialized.
+ * The instance is considered valid if it is acquired and initialized using either `otInstanceInitSingle()` (in single
+ * instance case) or `otInstanceInit()` (in multi instance case). A subsequent call to `otInstanceFinalize()` causes
+ * the instance to be considered as uninitialized.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -221,13 +219,45 @@ void otInstanceFinalize(otInstance *aInstance);
 #endif // OTDLL
 
 /**
+ * This enumeration defines flags that are passed as part of `otStateChangedCallback`.
+ *
+ */
+enum
+{
+    OT_CHANGED_IP6_ADDRESS_ADDED           = 1 << 0,  ///< IPv6 address was added
+    OT_CHANGED_IP6_ADDRESS_REMOVED         = 1 << 1,  ///< IPv6 address was removed
+    OT_CHANGED_THREAD_ROLE                 = 1 << 2,  ///< Role (disabled, detached, child, router, leader) changed
+    OT_CHANGED_THREAD_LL_ADDR              = 1 << 3,  ///< The link-local address changed
+    OT_CHANGED_THREAD_ML_ADDR              = 1 << 4,  ///< The mesh-local address changed
+    OT_CHANGED_THREAD_RLOC_ADDED           = 1 << 5,  ///< RLOC was added
+    OT_CHANGED_THREAD_RLOC_REMOVED         = 1 << 6,  ///< RLOC was removed
+    OT_CHANGED_THREAD_PARTITION_ID         = 1 << 7,  ///< Partition ID changed
+    OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER = 1 << 8,  ///< Thread Key Sequence changed
+    OT_CHANGED_THREAD_NETDATA              = 1 << 9,  ///< Thread Network Data changed
+    OT_CHANGED_THREAD_CHILD_ADDED          = 1 << 10, ///< Child was added
+    OT_CHANGED_THREAD_CHILD_REMOVED        = 1 << 11, ///< Child was removed
+    OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED   = 1 << 12, ///< Subscribed to a IPv6 multicast address
+    OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED = 1 << 13, ///< Unsubscribed from a IPv6 multicast address
+    OT_CHANGED_COMMISSIONER_STATE          = 1 << 14, ///< Commissioner state changed
+    OT_CHANGED_JOINER_STATE                = 1 << 15, ///< Joiner state changed
+    OT_CHANGED_THREAD_CHANNEL              = 1 << 16, ///< Thread network channel changed
+    OT_CHANGED_THREAD_PANID                = 1 << 17, ///< Thread network PAN Id changed
+    OT_CHANGED_THREAD_NETWORK_NAME         = 1 << 18, ///< Thread network name changed
+    OT_CHANGED_THREAD_EXT_PANID            = 1 << 19, ///< Thread network extended PAN ID changed
+    OT_CHANGED_MASTER_KEY                  = 1 << 20, ///< Master key changed
+    OT_CHANGED_PSKC                        = 1 << 21, ///< PSKc changed
+    OT_CHANGED_SECURITY_POLICY             = 1 << 22, ///< Security Policy changed
+    OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL = 1 << 23, ///< Channel Manager new pending Thread channel changed
+};
+
+/**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
  *
- * @param[in]  aFlags    A bit-field indicating specific state that has changed.
+ * @param[in]  aFlags    A bit-field indicating specific state that has changed.  See `OT_CHANGED_*` definitions.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
+typedef void(OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
 
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
@@ -237,22 +267,21 @@ typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
  * @param[in]  aContext   A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE     Added the callback to the list of callbacks.
+ * @retval OT_ERROR_ALREADY  The callback was already registered.
  * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
  *
  */
-OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                               void *aContext);
+OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called with certain configuration or state changes.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aCallback   A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aContext    A pointer to application-specific context.
  *
  */
-OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                              void *aCallbackContext);
+OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This method triggers a platform reset.
@@ -312,7 +341,7 @@ otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_INSTANCE_H_
+#endif // OPENTHREAD_INSTANCE_H_

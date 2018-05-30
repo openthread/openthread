@@ -32,15 +32,15 @@
  *
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <openthread/platform/logging.h>
-#include <openthread/platform/alarm-milli.h>
 #include <utils/code_utils.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/logging.h>
 
 #include "platform-nrf5.h"
 
@@ -48,24 +48,25 @@
 #include <openthread/config.h>
 #include <openthread/types.h>
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 #include <segger_rtt/SEGGER_RTT.h>
 
 #if (LOG_RTT_COLOR_ENABLE == 1)
 #define RTT_COLOR_CODE_DEFAULT "\x1B[0m"
-#define RTT_COLOR_CODE_RED     "\x1B[1;31m"
-#define RTT_COLOR_CODE_GREEN   "\x1B[1;32m"
-#define RTT_COLOR_CODE_YELLOW  "\x1B[1;33m"
-#define RTT_COLOR_CODE_CYAN    "\x1B[1;36m"
+#define RTT_COLOR_CODE_RED "\x1B[1;31m"
+#define RTT_COLOR_CODE_GREEN "\x1B[1;32m"
+#define RTT_COLOR_CODE_YELLOW "\x1B[1;33m"
+#define RTT_COLOR_CODE_CYAN "\x1B[1;36m"
 #else // LOG_RTT_COLOR_ENABLE == 1
 #define RTT_COLOR_CODE_DEFAULT ""
-#define RTT_COLOR_CODE_RED     ""
-#define RTT_COLOR_CODE_GREEN   ""
-#define RTT_COLOR_CODE_YELLOW  ""
-#define RTT_COLOR_CODE_CYAN    ""
+#define RTT_COLOR_CODE_RED ""
+#define RTT_COLOR_CODE_GREEN ""
+#define RTT_COLOR_CODE_YELLOW ""
+#define RTT_COLOR_CODE_CYAN ""
 #endif // LOG_RTT_COLOR_ENABLE == 1
 
-static bool sLogInitialized = false;
+static bool    sLogInitialized = false;
 static uint8_t sLogBuffer[LOG_RTT_BUFFER_SIZE];
 
 /**
@@ -105,8 +106,7 @@ static inline const char *levelToString(otLogLevel aLogLevel)
  */
 static inline uint16_t logTimestamp(char *aLogString, uint16_t aMaxSize)
 {
-    return snprintf(aLogString, aMaxSize, "%s[%010ld]", RTT_COLOR_CODE_CYAN,
-                    otPlatAlarmMilliGetNow());
+    return snprintf(aLogString, aMaxSize, "%s[%010ld]", RTT_COLOR_CODE_CYAN, otPlatAlarmMilliGetNow());
 }
 #endif
 
@@ -119,17 +119,14 @@ static inline uint16_t logTimestamp(char *aLogString, uint16_t aMaxSize)
  *
  * @returns  Number of bytes successfully written to the log buffer.
  */
-static inline uint16_t logLevel(char *aLogString, uint16_t aMaxSize,
-                                otLogLevel aLogLevel)
+static inline uint16_t logLevel(char *aLogString, uint16_t aMaxSize, otLogLevel aLogLevel)
 {
     return snprintf(aLogString, aMaxSize, "%s ", levelToString(aLogLevel));
 }
 
 void nrf5LogInit()
 {
-    int res = SEGGER_RTT_ConfigUpBuffer(LOG_RTT_BUFFER_INDEX,
-                                        LOG_RTT_BUFFER_NAME, sLogBuffer,
-                                        LOG_RTT_BUFFER_SIZE,
+    int res = SEGGER_RTT_ConfigUpBuffer(LOG_RTT_BUFFER_INDEX, LOG_RTT_BUFFER_NAME, sLogBuffer, LOG_RTT_BUFFER_SIZE,
                                         SEGGER_RTT_MODE_NO_BLOCK_TRIM);
     otEXPECT(res >= 0);
 
@@ -144,13 +141,13 @@ void nrf5LogDeinit()
     sLogInitialized = false;
 }
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,
-               const char *aFormat, ...)
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    (void) aLogRegion;
+    (void)aLogRegion;
 
     uint16_t length = 0;
-    char logString[LOG_PARSE_BUFFER_SIZE + 1];
+    int      charsWritten;
+    char     logString[LOG_PARSE_BUFFER_SIZE + 1];
 
     otEXPECT(sLogInitialized == true);
 
@@ -159,14 +156,20 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,
 #endif
 
     // Add level information.
-    length += logLevel(&logString[length], (LOG_PARSE_BUFFER_SIZE - length),
-                       aLogLevel);
+    length += logLevel(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aLogLevel);
 
     // Parse user string.
     va_list paramList;
     va_start(paramList, aFormat);
-    length += vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length),
-                        aFormat, paramList);
+    charsWritten = vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aFormat, paramList);
+    otEXPECT(charsWritten >= 0);
+    length += charsWritten;
+
+    if (length > LOG_PARSE_BUFFER_SIZE)
+    {
+        length = LOG_PARSE_BUFFER_SIZE;
+    }
+
     logString[length++] = '\n';
     va_end(paramList);
 

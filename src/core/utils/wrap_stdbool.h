@@ -35,6 +35,8 @@
 #if !defined(WRAP_STDBOOL_H)
 #define WRAP_STDBOOL_H
 
+#include "openthread-core-config.h"
+
 #if HAVE_STDBOOL_H
 #include <stdbool.h>
 #else
@@ -60,6 +62,5 @@ typedef _Bool bool;
 #endif // __cplusplus
 
 #endif // HAVE_STDBOOL_H
-
 
 #endif // WRAP_STDBOOL_H

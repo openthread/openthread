@@ -56,8 +56,7 @@ extern "C" {
  * This enumeration defines the Joiner State.
  *
  */
-typedef enum otJoinerState
-{
+typedef enum otJoinerState {
     OT_JOINER_STATE_IDLE      = 0,
     OT_JOINER_STATE_DISCOVER  = 1,
     OT_JOINER_STATE_CONNECT   = 2,
@@ -76,7 +75,7 @@ typedef enum otJoinerState
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otJoinerCallback)(otError aError, void *aContext);
+typedef void(OTCALL *otJoinerCallback)(otError aError, void *aContext);
 
 /**
  * This function enables the Thread Joiner role.
@@ -91,19 +90,28 @@ typedef void (OTCALL *otJoinerCallback)(otError aError, void *aContext);
  * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
  * @param[in]  aContext          A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE          Successfully started the Commissioner role.
- * @retval OT_ERROR_INVALID_ARGS  @p aPSKd or @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_NONE              Successfully started the Commissioner role.
+ * @retval OT_ERROR_INVALID_ARGS      @p aPSKd or @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
  *
  */
-OTAPI otError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
-                                   const char *aVendorName, const char *aVendorModel,
-                                   const char *aVendorSwVersion, const char *aVendorData,
-                                   otJoinerCallback aCallback, void *aContext);
+OTAPI otError OTCALL otJoinerStart(otInstance *     aInstance,
+                                   const char *     aPSKd,
+                                   const char *     aProvisioningUrl,
+                                   const char *     aVendorName,
+                                   const char *     aVendorModel,
+                                   const char *     aVendorSwVersion,
+                                   const char *     aVendorData,
+                                   otJoinerCallback aCallback,
+                                   void *           aContext);
 
 /**
  * This function disables the Thread Joiner role.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE              Successfully disabled the Joiner role.
+ * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
  *
  */
 OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
@@ -124,12 +132,27 @@ OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
 OTAPI otJoinerState OTCALL otJoinerGetState(otInstance *aInstance);
 
 /**
+ * Get the Joiner ID.
+ *
+ * Joiner ID is the first 64 bits of the result of computing SHA-256 over factory-assigned
+ * IEEE EUI-64, which is used as IEEE 802.15.4 Extended Address during commissioning process.
+ *
+ * @param[in]   aInstance  A pointer to the OpenThread instance.
+ * @param[out]  aJoinerId  A pointer to where the Joiner ID is placed.
+ *
+ * @retval OT_ERROR_NONE              Successfully retrieved the Joiner ID.
+ * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
+ *
+ */
+OTAPI otError OTCALL otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
+
+/**
  * @}
  *
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+} // end of extern "C"
 #endif
 
-#endif  // OPENTHREAD_JOINER_H_
+#endif // OPENTHREAD_JOINER_H_

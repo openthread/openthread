@@ -138,7 +138,7 @@ abs_top_hostdir="${nlbuild_autotools_dir}/tools/host"
 # any trailing version number information typically included on Darwin
 # / Mac OS X.
 
-host=`${nlbuild_autotools_dir}/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g'`
+host=`${nlbuild_autotools_dir}/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g'`
 
 # If possible, attempt to be self-sufficient, relying on GNU autotools
 # executables installed along with the SDK itself.

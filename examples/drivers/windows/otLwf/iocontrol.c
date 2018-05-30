@@ -95,6 +95,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_PARTITION_ID",                REF_IOCTL_FUNC_WITH_TUN(otPartitionId) },
     { "IOCTL_OTLWF_OT_RLOC16",                      REF_IOCTL_FUNC_WITH_TUN(otRloc16) },
     { "IOCTL_OTLWF_OT_ROUTER_ID_SEQUENCE",          REF_IOCTL_FUNC(otRouterIdSequence) },
+    { "IOCTL_OTLWF_OT_MAX_ROUTER_ID",               REF_IOCTL_FUNC(otMaxRouterId) },
     { "IOCTL_OTLWF_OT_ROUTER_INFO",                 REF_IOCTL_FUNC(otRouterInfo) },
     { "IOCTL_OTLWF_OT_STABLE_NETWORK_DATA_VERSION", REF_IOCTL_FUNC_WITH_TUN(otStableNetworkDataVersion) },
     { "IOCTL_OTLWF_OT_MAC_BLACKLIST_ENABLED",       REF_IOCTL_FUNC(otMacBlacklistEnabled) },
@@ -102,7 +103,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_REMOVE_MAC_BLACKLIST",        REF_IOCTL_FUNC(otRemoveMacBlacklist) },
     { "IOCTL_OTLWF_OT_NEXT_MAC_BLACKLIST",          REF_IOCTL_FUNC(otNextMacBlacklist) },
     { "IOCTL_OTLWF_OT_CLEAR_MAC_BLACKLIST",         REF_IOCTL_FUNC(otClearMacBlacklist) },
-    { "IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER",          REF_IOCTL_FUNC(otMaxTransmitPower) },
+    { "IOCTL_OTLWF_OT_TRANSMIT_POWER",              REF_IOCTL_FUNC(otTransmitPower) },
     { "IOCTL_OTLWF_OT_NEXT_ON_MESH_PREFIX",         REF_IOCTL_FUNC(otNextOnMeshPrefix) },
     { "IOCTL_OTLWF_OT_POLL_PERIOD",                 REF_IOCTL_FUNC(otPollPeriod) },
     { "IOCTL_OTLWF_OT_LOCAL_LEADER_PARTITION_ID",   REF_IOCTL_FUNC(otLocalLeaderPartitionId) },
@@ -116,7 +117,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_JOINER_START",                REF_IOCTL_FUNC(otJoinerStart) },
     { "IOCTL_OTLWF_OT_JOINER_STOP",                 REF_IOCTL_FUNC(otJoinerStop) },
     { "IOCTL_OTLWF_OT_FACTORY_EUI64",               REF_IOCTL_FUNC(otFactoryAssignedIeeeEui64) },
-    { "IOCTL_OTLWF_OT_HASH_MAC_ADDRESS",            REF_IOCTL_FUNC(otHashMacAddress) },
+    { "IOCTL_OTLWF_OT_JOINER_ID",                   REF_IOCTL_FUNC(otJoinerId) },
     { "IOCTL_OTLWF_OT_ROUTER_DOWNGRADE_THRESHOLD",  REF_IOCTL_FUNC_WITH_TUN(otRouterDowngradeThreshold) },
     { "IOCTL_OTLWF_OT_COMMISSIONER_PANID_QUERY",    REF_IOCTL_FUNC(otCommissionerPanIdQuery) },
     { "IOCTL_OTLWF_OT_COMMISSIONER_ENERGY_SCAN",    REF_IOCTL_FUNC(otCommissionerEnergyScan) },
@@ -145,6 +146,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_REMOVE_MAC_FIXED_RSS",        REF_IOCTL_FUNC_WITH_TUN(otRemoveMacFixedRss) },
     { "IOCTL_OTLWF_OT_NEXT_MAC_FIXED_RSS",          REF_IOCTL_FUNC(otNextMacFixedRss) },
     { "IOCTL_OTLWF_OT_CLEAR_MAC_FIXED_RSS",         REF_IOCTL_FUNC_WITH_TUN(otClearMacFixedRss) },
+    { "IOCTL_OTLWF_OT_NEXT_ROUTE",                  REF_IOCTL_FUNC(otNextRoute) },
 };
 
 // intentionally -1 in the end due to that IOCTL_OTLWF_OT_ASSIGN_LINK_QUALITY (#161) is removed now.
@@ -1374,7 +1376,7 @@ otLwfIoCtl_otFactoryAssignedIeeeEui64(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfIoCtl_otHashMacAddress(
+otLwfIoCtl_otJoinerId(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
             PUCHAR          InBuffer,
@@ -1391,9 +1393,8 @@ otLwfIoCtl_otHashMacAddress(
 
     if (*OutBufferLength >= sizeof(otExtAddress))
     {
-        otLinkGetJoinerId(pFilter->otCtx, (otExtAddress*)OutBuffer);
+        status = ThreadErrorToNtstatus(otJoinerGetId(pFilter->otCtx, (otExtAddress*)OutBuffer));
         *OutBufferLength = sizeof(otExtAddress);
-        status = STATUS_SUCCESS;
     }
     else
     {
@@ -4511,6 +4512,37 @@ otLwfIoCtl_otRouterIdSequence(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+otLwfIoCtl_otMaxRouterId(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    UNREFERENCED_PARAMETER(InBuffer);
+    UNREFERENCED_PARAMETER(InBufferLength);
+
+    if (*OutBufferLength >= sizeof(uint8_t))
+    {
+        *(uint8_t*)OutBuffer = otThreadGetMaxRouterId(pFilter->otCtx);
+        *OutBufferLength = sizeof(uint8_t);
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
 otLwfIoCtl_otRouterInfo(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
@@ -4787,7 +4819,7 @@ otLwfIoCtl_otClearMacBlacklist(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfIoCtl_otMaxTransmitPower(
+otLwfIoCtl_otTransmitPower(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
             PUCHAR          InBuffer,
@@ -4801,15 +4833,13 @@ otLwfIoCtl_otMaxTransmitPower(
 
     if (InBufferLength >= sizeof(int8_t))
     {
-        otLinkSetMaxTransmitPower(pFilter->otCtx, *(int8_t*)InBuffer);
-        status = STATUS_SUCCESS;
+        status = ThreadErrorToNtstatus(otPlatRadioSetTransmitPower(pFilter->otCtx, *(int8_t*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(int8_t))
     {
-        *(int8_t*)OutBuffer = otLinkGetMaxTransmitPower(pFilter->otCtx);
+        status = ThreadErrorToNtstatus(otPlatRadioGetTransmitPower(pFilter->otCtx, (int8_t*)OutBuffer));
         *OutBufferLength = sizeof(int8_t);
-        status = STATUS_SUCCESS;
     }
     else
     {
@@ -4833,12 +4863,12 @@ otLwfIoCtl_otNextOnMeshPrefix(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
 
-    if (InBufferLength >= sizeof(BOOLEAN) + sizeof(uint16_t) &&
-        *OutBufferLength >= sizeof(uint16_t) + sizeof(otBorderRouterConfig))
+    if (InBufferLength >= sizeof(BOOLEAN) + sizeof(uint32_t) &&
+        *OutBufferLength >= sizeof(uint32_t) + sizeof(otBorderRouterConfig))
     {
         BOOLEAN aLocal = *(BOOLEAN*)InBuffer;
-        uint16_t aIterator = *(uint16_t*)(InBuffer + sizeof(BOOLEAN));
-        otBorderRouterConfig* aConfig = (otBorderRouterConfig*)((PUCHAR)OutBuffer + sizeof(uint16_t));
+        uint32_t aIterator = *(uint32_t*)(InBuffer + sizeof(BOOLEAN));
+        otBorderRouterConfig* aConfig = (otBorderRouterConfig*)((PUCHAR)OutBuffer + sizeof(uint32_t));
         if (aLocal)
         {
             status = ThreadErrorToNtstatus(
@@ -4860,7 +4890,59 @@ otLwfIoCtl_otNextOnMeshPrefix(
         *OutBufferLength = sizeof(uint8_t) + sizeof(otBorderRouterConfig);
         if (status == STATUS_SUCCESS)
         {
-            *(uint16_t*)OutBuffer = aIterator;
+            *(uint32_t*)OutBuffer = aIterator;
+        }
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfIoCtl_otNextRoute(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    if (InBufferLength >= sizeof(BOOLEAN) + sizeof(uint32_t) &&
+        *OutBufferLength >= sizeof(uint32_t) + sizeof(otExternalRouteConfig))
+    {
+        BOOLEAN aLocal = *(BOOLEAN*)InBuffer;
+        uint32_t aIterator = *(uint32_t*)(InBuffer + sizeof(BOOLEAN));
+        otExternalRouteConfig* aConfig = (otExternalRouteConfig*)((PUCHAR)OutBuffer + sizeof(uint32_t));
+        if (aLocal)
+        {
+            status = ThreadErrorToNtstatus(
+                otBorderRouterGetNextRoute(
+                    pFilter->otCtx,
+                    &aIterator,
+                    aConfig)
+                );
+        }
+        else
+        {
+            status = ThreadErrorToNtstatus(
+                otNetDataGetNextRoute(
+                    pFilter->otCtx,
+                    &aIterator,
+                    aConfig)
+                );
+        }
+        *OutBufferLength = sizeof(uint8_t) + sizeof(otExternalRouteConfig);
+        if (status == STATUS_SUCCESS)
+        {
+            *(uint32_t*)OutBuffer = aIterator;
         }
     }
     else

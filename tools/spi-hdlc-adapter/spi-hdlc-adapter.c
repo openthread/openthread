@@ -50,6 +50,7 @@
 #include <sys/ioctl.h>
 #include <sys/file.h>
 
+#include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
 #if HAVE_EXECINFO_H
@@ -67,7 +68,7 @@
 /* ------------------------------------------------------------------------- */
 /* MARK: Macros and Constants */
 
-#define SPI_HDLC_VERSION                "0.06"
+#define SPI_HDLC_VERSION                "0.07"
 
 #define MAX_FRAME_SIZE                  2048
 #define HEADER_LEN                      5
@@ -92,10 +93,17 @@
 
 #define SPI_POLL_PERIOD_MSEC            (MSEC_PER_SEC/30)
 
+#define IMMEDIATE_RETRY_COUNT           5
+#define FAST_RETRY_COUNT                15
+
+#define IMMEDIATE_RETRY_TIMEOUT_MSEC    1
+#define FAST_RETRY_TIMEOUT_MSEC         10
+#define SLOW_RETRY_TIMEOUT_MSEC         33
+
 #define GPIO_INT_ASSERT_STATE           0 // I̅N̅T̅ is asserted low
 #define GPIO_RES_ASSERT_STATE           0 // R̅E̅S̅ is asserted low
 
-#define SPI_RX_ALIGN_ALLOWANCE_MAX      6
+#define SPI_RX_ALIGN_ALLOWANCE_MAX      16
 
 #define SOCKET_DEBUG_BYTES_PER_LINE     16
 
@@ -1457,8 +1465,8 @@ static void print_help(void)
     "    --spi-mode[=mode] ............ Specify the SPI mode to use (0-3).\n"
     "    --spi-speed[=hertz] .......... Specify the SPI speed in hertz.\n"
     "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in µsec\n"
-    "    --spi-align-allowance[=n] .... Specify the maximum number of FF bytes to\n"
-    "                                   clip from start of MISO frame. Max value is 3.\n"
+    "    --spi-align-allowance[=n] .... Specify the maximum number of 0xFF bytes to\n"
+    "                                   clip from start of MISO frame. Max value is 16.\n"
     "    --spi-small-packet=[n] ....... Specify the smallest packet we can receive\n"
     "                                   in a single transaction(larger packets will\n"
     "                                   require two transactions). Default value is 32.\n"
@@ -1866,13 +1874,29 @@ int main(int argc, char *argv[])
 
         if (sSpiTxRefusedCount)
         {
+            int min_timeout = 0;
+
             // We are being rate-limited by the slave. This is
-            // fairly normal behavior. We poll because we
-            // won't get an interrupt unless the slave happens
-            // to be trying to send us something.
-            if (timeout_ms < SPI_POLL_PERIOD_MSEC)
+            // fairly normal behavior. Based on number of times
+            // slave has refused a transmission, we apply a
+            // minimum timeout.
+
+            if (sSpiTxRefusedCount < IMMEDIATE_RETRY_COUNT)
             {
-                timeout_ms = SPI_POLL_PERIOD_MSEC;
+                min_timeout = IMMEDIATE_RETRY_TIMEOUT_MSEC;
+            }
+            else if (sSpiTxRefusedCount < FAST_RETRY_COUNT)
+            {
+                min_timeout = FAST_RETRY_TIMEOUT_MSEC;
+            }
+            else
+            {
+                min_timeout = SLOW_RETRY_TIMEOUT_MSEC;
+            }
+
+            if (timeout_ms < min_timeout)
+            {
+                timeout_ms = min_timeout;
             }
 
             if ( sSpiTxIsReady

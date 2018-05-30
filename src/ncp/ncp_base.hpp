@@ -33,64 +33,36 @@
 #ifndef NCP_BASE_HPP_
 #define NCP_BASE_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include <openthread/ip6.h>
 #else
 #include <openthread/platform/radio.h>
 #endif
+#if OPENTHREAD_FTD
+#include <openthread/thread_ftd.h>
+#endif
 #include <openthread/message.h>
 #include <openthread/ncp.h>
 #include <openthread/types.h>
 
 #include "changed_props_set.hpp"
+#include "common/instance.hpp"
 #include "common/tasklet.hpp"
 #include "ncp/ncp_buffer.hpp"
+#include "ncp/spinel_decoder.hpp"
+#include "ncp/spinel_encoder.hpp"
 
 #include "spinel.h"
 
 namespace ot {
 namespace Ncp {
 
-#define NCP_COMMAND_HANDLER(name)                             \
-            otError CommandHandler_##name(                    \
-                        uint8_t aHeader,                      \
-                        unsigned int aCommand,                \
-                        const uint8_t *aArgPtr,               \
-                        uint16_t aArgLen                      \
-                    )
-
-
-#define NCP_GET_PROP_HANDLER(name)                            \
-            otError GetPropertyHandler_##name(                \
-                        uint8_t aHeader,                      \
-                        spinel_prop_key_t aKey                \
-                    )
-
-#define NCP_SET_PROP_HANDLER(name)                            \
-            otError SetPropertyHandler_##name(                \
-                        uint8_t aHeader,                      \
-                        spinel_prop_key_t aKey,               \
-                        const uint8_t *aValuePtr,             \
-                        uint16_t aValueLen                    \
-                    )
-
-#define NCP_INSERT_PROP_HANDLER(name)                         \
-            otError InsertPropertyHandler_##name(             \
-                        uint8_t aHeader,                      \
-                        spinel_prop_key_t aKey,               \
-                        const uint8_t *aValuePtr,             \
-                        uint16_t aValueLen                    \
-                    )
-
-#define NCP_REMOVE_PROP_HANDLER(name)                         \
-            otError RemovePropertyHandler_##name(             \
-                        uint8_t aHeader,                      \
-                        spinel_prop_key_t aKey,               \
-                        const uint8_t *aValuePtr,             \
-                        uint16_t aValueLen                    \
-                    )
+#define NCP_GET_PROP_HANDLER(name)    otError GetPropertyHandler_##name(void)
+#define NCP_SET_PROP_HANDLER(name)    otError SetPropertyHandler_##name(void)
+#define NCP_INSERT_PROP_HANDLER(name) otError InsertPropertyHandler_##name(void)
+#define NCP_REMOVE_PROP_HANDLER(name) otError RemovePropertyHandler_##name(void)
 
 class NcpBase
 {
@@ -102,7 +74,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpBase(otInstance *aInstance);
+    NcpBase(Instance *aInstance);
 
     /**
      * This static method returns the pointer to the single NCP instance.
@@ -113,7 +85,7 @@ public:
     static NcpBase *GetNcpInstance(void);
 
     /**
-     * This method sends data to host via specifiec stream.
+     * This method sends data to host via specific stream.
      *
      *
      * @param[in]  aStreamId  A numeric identifier for the stream to write to.
@@ -129,6 +101,17 @@ public:
      *
      */
     otError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
+
+    /**
+     * This method send an OpenThread log message to host via `SPINEL_PROP_STREAM_LOG` property.
+     *
+     * @param[in] aLogLevel   The log level
+     * @param[in] aLogRegion  The log region
+     * @param[in] aLogString  The log string
+     *
+     */
+    void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString);
+
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     /**
@@ -175,59 +158,6 @@ public:
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-protected:
-    /**
-     * This method is called to start a new outbound frame.
-     *
-     * param[in] aHeader           The spinel header byte
-     *
-     * @retval OT_ERROR_NONE       Successfully started a new frame.
-     * @retval OT_ERROR_NO_BUFS    Insufficient buffer space available to start a new frame.
-     *
-     */
-    otError OutboundFrameBegin(uint8_t aHeader);
-
-    /**
-     * This method adds data to the current outbound frame being written.
-     *
-     * If no buffer space is available, this method should discard and clear the frame before returning an error status.
-     *
-     * @param[in]  aDataBuffer        A pointer to data buffer.
-     * @param[in]  aDataBufferLength  The length of the data buffer.
-     *
-     * @retval OT_ERROR_NONE       Successfully added new data to the frame.
-     * @retval OT_ERROR_NO_BUFS    Insufficient buffer space available to add data.
-     *
-     */
-    otError OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
-
-    /**
-     * This method adds a message to the current outbound frame being written.
-     *
-     * If no buffer space is available, this method should discard and clear the frame before returning an error status.
-     * In case of success, the passed-in message @aMessage should be owned by outbound buffer and should be freed
-     * when either the frame is successfully sent and removed or if the frame is discarded.
-     *
-     * @param[in]  aMessage         A reference to the message to be added to current frame.
-     *
-     * @retval OT_ERROR_NONE     Successfully added the message to the frame.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to add message.
-     *
-     */
-    otError OutboundFrameFeedMessage(otMessage *aMessage);
-
-    /**
-     * This method finalizes and sends the current outbound frame
-     *
-     * If no buffer space is available, this method should discard and clear the frame
-     * before returning an error status.
-     *
-     * @retval OT_ERROR_NONE     Successfully added the message to the frame.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to add message.
-     *
-     */
-    otError OutboundFrameEnd(void);
-
     /**
      * This method is called by the framer whenever a framing error is detected.
      */
@@ -248,78 +178,64 @@ protected:
      */
     bool ShouldDeferHostSend(void);
 
-private:
-    typedef otError(NcpBase::*CommandHandlerType)(uint8_t aHeader, unsigned int aCommand, const uint8_t *aArgPtr,
-                                                  uint16_t aArgLen);
+protected:
+    typedef otError (NcpBase::*PropertyHandler)(void);
 
-    typedef otError(NcpBase::*GetPropertyHandlerType)(uint8_t aHeader, spinel_prop_key_t aKey);
-
-    typedef otError(NcpBase::*SetPropertyHandlerType)(uint8_t aHeader, spinel_prop_key_t aKey,
-                                                      const uint8_t *aValuePtr, uint16_t aValueLen);
-
-    struct CommandHandlerEntry
-    {
-        spinel_cid_t mCommand;
-        CommandHandlerType mHandler;
-    };
-
-    struct GetPropertyHandlerEntry
+    struct PropertyHandlerEntry
     {
         spinel_prop_key_t mPropKey;
-        GetPropertyHandlerType mHandler;
+        PropertyHandler mHandler;
     };
 
-    struct SetPropertyHandlerEntry
+    /**
+     * This struct represents a spinel response entry.
+     *
+     * It can be either a `VALUE_IS` property update for a specific property, or a `VALUE_IS(LAST_STATUS)` with a given
+     * spinel status error.
+     *
+     */
+    struct ResponseEntry
     {
-        spinel_prop_key_t mPropKey;
-        SetPropertyHandlerType mHandler;
+        uint8_t  mTid              : 4;  ///< Spinel transaction id.
+        bool     mIsInUse          : 1;  ///< `true` if this entry is in use, `false` otherwise.
+        bool     mIsLastStatus     : 1;  ///< `true` if entry is a `LAST_STATUS`, otherwise it is a property update.
+        bool     mIsGetResponse    : 1;  ///< `true` if response is for `VALUE_GET`, 'false` otherwise.
+        uint32_t mPropKeyOrStatus  : 24; ///< 3 bytes for either property key or spinel status.
     };
-
-    struct InsertPropertyHandlerEntry
-    {
-        spinel_prop_key_t mPropKey;
-        SetPropertyHandlerType mHandler;
-    };
-
-    struct RemovePropertyHandlerEntry
-    {
-        spinel_prop_key_t mPropKey;
-        SetPropertyHandlerType mHandler;
-    };
-
-    otError OutboundFrameSend(void);
 
     NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
 
-    otError OutboundFrameFeedPacked(const char *aPackFormat, ...);
+    otError HandleCommand(uint8_t aHeader);
 
-    otError OutboundFrameFeedVPacked(const char *aPackFormat, va_list aArgs);
+    PropertyHandler FindPropertyHandler(spinel_prop_key_t aKey, const PropertyHandlerEntry *aTable, size_t aTableLen);
+    PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
+    PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
+    PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
+    PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
 
+    bool HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop_key_t aKey, otError &aError);
+    otError HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey);
+    otError HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_key_t aKey, unsigned int aCommand);
 
-    otError HandleCommand(uint8_t aHeader, unsigned int aCommand, const uint8_t *aArgPtr, uint16_t aArgLen);
+    otError WriteLastStatusFrame(uint8_t aHeader, spinel_status_t aLastStatus);
+    otError WritePropertyValueIsFrame(uint8_t aHeader, spinel_prop_key_t aPropKey, bool aIsGetResponse = true);
+    otError WritePropertyValueInsertedRemovedFrame(uint8_t aHeader, unsigned int aResponseCommand,
+                                                   spinel_prop_key_t aPropKey, const uint8_t *aValuePtr,
+                                                   uint16_t aValueLen);
 
-    otError HandleCommandPropertyGet(uint8_t aHeader, spinel_prop_key_t aKey);
-
-    otError HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                                     uint16_t aValueLen);
-
-    otError HandleCommandPropertyInsert(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                                        uint16_t aValueLen);
-
-    otError HandleCommandPropertyRemove(uint8_t aHeader, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                                        uint16_t aValueLen);
-
-
-    otError SendLastStatus(uint8_t aHeader, spinel_status_t aLastStatus);
-
-    otError SendPropertyUpdate(uint8_t aHeader, uint8_t aCommand, spinel_prop_key_t aKey, const uint8_t *aValuePtr,
-                               uint16_t aValueLen);
-
-    otError SendPropertyUpdate(uint8_t aHeader, uint8_t aCommand, spinel_prop_key_t aKey, otMessage *message);
-
-    otError SendPropertyUpdate(uint8_t aHeader, uint8_t aCommand, spinel_prop_key_t aKey, const char *format, ...);
-
-    otError SendSetPropertyResponse(uint8_t aHeader, spinel_prop_key_t aKey, otError aError);
+    otError SendQueuedResponses(void);
+    bool IsResponseQueueEmpty(void) { return (mResponseQueueHead == mResponseQueueTail); }
+    otError PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGetResponse, unsigned int aPropKeyOrStatus);
+    otError PrepareGetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey) {
+        return PrepareResponse(aHeader, false /* aIsLastStatus */, true /* aIsGetResponse*/, aPropKey);
+    }
+    otError PrepareSetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey) {
+        return PrepareResponse(aHeader, false /* aIsLastStatus */, false /* aIsGetResponse*/, aPropKey);
+    }
+    otError PrepareLastStatusResponse(uint8_t aHeader, spinel_status_t aStatus) {
+        return PrepareResponse(aHeader, true /*aIsLastStatus */, false, aStatus);
+    }
+    static uint8_t GetWrappedResponseQueueIndex(uint8_t aPosition);
 
     static void UpdateChangedProps(Tasklet &aTasklet);
     void UpdateChangedProps(void);
@@ -331,7 +247,7 @@ private:
     static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
     void HandleRawFrame(const otRadioFrame *aFrame);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -342,14 +258,22 @@ private:
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    static void HandleStateChanged(uint32_t aFlags, void *aContext);
     void ProcessThreadChangedFlags(void);
+
+#if OPENTHREAD_FTD
+    static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
+    void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+#endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
     void HandleDatagramFromStack(otMessage *aMessage);
+
+    otError SendQueuedDatagramMessages(void);
+    otError SendDatagramMessage(otMessage *aMessage);
 
     static void HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext);
     void HandleActiveScanResult(otActiveScanResult *aResult);
@@ -363,7 +287,15 @@ private:
     static void SendDoneTask(void *aContext);
     void SendDoneTask(void);
 
-    otError GetPropertyHandler_ChannelMaskHelper(uint8_t aHeader, spinel_prop_key_t aKey, uint32_t channel_mask);
+    otError EncodeChannelMask(uint32_t aChannelMask);
+    otError DecodeChannelMask(uint32_t &aChannelMask);
+    otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
+
+#if OPENTHREAD_FTD
+    otError EncodeChildInfo(const otChildInfo &aChildInfo);
+    otError DecodeOperationalDataset(otOperationalDataset &aDataset, const uint8_t **aTlvs, uint8_t *aTlvsLength);
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
@@ -371,20 +303,58 @@ private:
     void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
-#if OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
-    otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand, const uint8_t *aArgPtr, uint16_t aArgLen);
-#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT
-
-    NCP_COMMAND_HANDLER(NOOP);
-    NCP_COMMAND_HANDLER(RESET);
-    NCP_COMMAND_HANDLER(PROP_VALUE_GET);
-    NCP_COMMAND_HANDLER(PROP_VALUE_SET);
-    NCP_COMMAND_HANDLER(PROP_VALUE_INSERT);
-    NCP_COMMAND_HANDLER(PROP_VALUE_REMOVE);
+    otError CommandHandler_NOOP(uint8_t aHeader);
+    otError CommandHandler_RESET(uint8_t aHeader);
+    // Combined command handler for `VALUE_GET`, `VALUE_SET`, `VALUE_INSERT` and `VALUE_REMOVE`.
+    otError CommandHandler_PROP_VALUE_update(uint8_t aHeader, unsigned int aCommand);
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
-    NCP_COMMAND_HANDLER(PEEK);
-    NCP_COMMAND_HANDLER(POKE);
+    otError CommandHandler_PEEK(uint8_t aHeader);
+    otError CommandHandler_POKE(uint8_t aHeader);
 #endif
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    otError CommandHandler_NET_SAVE(uint8_t aHeader);
+    otError CommandHandler_NET_CLEAR(uint8_t aHeader);
+    otError CommandHandler_NET_RECALL(uint8_t aHeader);
+#endif
+
+    // ----------------------------------------------------------------------------
+    // Property Handlers
+    // ----------------------------------------------------------------------------
+    //
+    // There are 4 types of property handlers for "get", "set", "insert", and
+    // "remove" commands.
+    //
+    // "Get" handlers should get/retrieve the property value and then encode and
+    // write the value into the NCP buffer. If the "get" operation itself fails,
+    // "get" handler should write a `LAST_STATUS` with the error status into the NCP
+    // buffer. The `otError` returned from a "get" handler is the error of writing
+    // into the NCP buffer (e.g., running out buffer), and not of the "get" operation
+    // itself.
+    //
+    // "Set/Insert/Remove" handlers should first decode/parse the value from the
+    // input Spinel frame and then perform the corresponding set/insert/remove
+    // operation. They are not responsible for preparing the Spinel response and
+    // therefore should not write anything to the NCP buffer. The `otError` returned
+    // from a "set/insert/remove" handler indicates the error in either parsing of
+    // the input or the error of set/insert/remove operation.
+    //
+    // The corresponding command handler (e.g., `HandleCommandPropertySet()` for
+    // `VALUE_SET` command) will take care of preparing the Spinel response after
+    // invoking the "set/insert/remove" handler for a given property. For example,
+    // for a `VALUE_SET` command, if the "set" handler returns an error, then a
+    // `LAST_STATUS` update response is prepared, otherwise on success the "get"
+    // handler for the property is used to prepare a `VALUE_IS` Spinel response (in
+    // cases where there is no "get" handler for the property, the input value is
+    // echoed in the response).
+    //
+    // Few properties require special treatment where the response needs to be
+    // prepared directly in the  "set"  handler (e.g., `HOST_POWER_STATE` or
+    // `NEST_STREAM_MFG`). These properties have a different handler method format
+    // (they expect `aHeader` as an input argument) and are processed separately in
+    // `HandleCommandPropertySet()`.
+
+    // --------------------------------------------------------------------------
+    // Common Properties
 
     NCP_GET_PROP_HANDLER(LAST_STATUS);
     NCP_GET_PROP_HANDLER(PROTOCOL_VERSION);
@@ -392,17 +362,22 @@ private:
     NCP_GET_PROP_HANDLER(VENDOR_ID);
     NCP_GET_PROP_HANDLER(CAPS);
     NCP_GET_PROP_HANDLER(DEBUG_TEST_ASSERT);
+    NCP_GET_PROP_HANDLER(DEBUG_TEST_WATCHDOG);
     NCP_GET_PROP_HANDLER(DEBUG_NCP_LOG_LEVEL);
     NCP_SET_PROP_HANDLER(DEBUG_NCP_LOG_LEVEL);
     NCP_GET_PROP_HANDLER(NCP_VERSION);
     NCP_GET_PROP_HANDLER(INTERFACE_COUNT);
     NCP_GET_PROP_HANDLER(POWER_STATE);
     NCP_SET_PROP_HANDLER(POWER_STATE);
+    NCP_GET_PROP_HANDLER(MCU_POWER_STATE);
+    NCP_SET_PROP_HANDLER(MCU_POWER_STATE);
     NCP_GET_PROP_HANDLER(HWADDR);
     NCP_GET_PROP_HANDLER(LOCK);
     NCP_GET_PROP_HANDLER(HOST_POWER_STATE);
-    NCP_SET_PROP_HANDLER(HOST_POWER_STATE);
     NCP_GET_PROP_HANDLER(UNSOL_UPDATE_FILTER);
+    NCP_SET_PROP_HANDLER(UNSOL_UPDATE_FILTER);
+    NCP_INSERT_PROP_HANDLER(UNSOL_UPDATE_FILTER);
+    NCP_REMOVE_PROP_HANDLER(UNSOL_UPDATE_FILTER);
     NCP_GET_PROP_HANDLER(UNSOL_UPDATE_LIST);
 
     NCP_GET_PROP_HANDLER(PHY_RX_SENSITIVITY);
@@ -417,9 +392,6 @@ private:
     NCP_GET_PROP_HANDLER(MAC_15_4_LADDR);
     NCP_SET_PROP_HANDLER(MAC_15_4_LADDR);
     NCP_GET_PROP_HANDLER(MAC_15_4_SADDR);
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    NCP_SET_PROP_HANDLER(MAC_15_4_SADDR);
-#endif
     NCP_GET_PROP_HANDLER(MAC_PROMISCUOUS_MODE);
     NCP_SET_PROP_HANDLER(MAC_PROMISCUOUS_MODE);
     NCP_GET_PROP_HANDLER(MAC_RAW_STREAM_ENABLED);
@@ -427,31 +399,36 @@ private:
     NCP_GET_PROP_HANDLER(MAC_DATA_POLL_PERIOD);
     NCP_SET_PROP_HANDLER(MAC_DATA_POLL_PERIOD);
 
-    NCP_SET_PROP_HANDLER(UNSOL_UPDATE_FILTER);
+    // --------------------------------------------------------------------------
+    // Raw Link API Properties
 
-    NCP_INSERT_PROP_HANDLER(UNSOL_UPDATE_FILTER);
-    NCP_REMOVE_PROP_HANDLER(UNSOL_UPDATE_FILTER);
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+    NCP_SET_PROP_HANDLER(PHY_ENABLED);
+
+    NCP_SET_PROP_HANDLER(MAC_15_4_SADDR);
+    NCP_GET_PROP_HANDLER(MAC_SRC_MATCH_ENABLED);
     NCP_SET_PROP_HANDLER(MAC_SRC_MATCH_ENABLED);
-
     NCP_SET_PROP_HANDLER(MAC_SRC_MATCH_SHORT_ADDRESSES);
     NCP_INSERT_PROP_HANDLER(MAC_SRC_MATCH_SHORT_ADDRESSES);
     NCP_REMOVE_PROP_HANDLER(MAC_SRC_MATCH_SHORT_ADDRESSES);
-
     NCP_SET_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
     NCP_INSERT_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
     NCP_REMOVE_PROP_HANDLER(MAC_SRC_MATCH_EXTENDED_ADDRESSES);
 
-    NCP_SET_PROP_HANDLER(PHY_ENABLED);
-    NCP_SET_PROP_HANDLER(STREAM_RAW);
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
-    // FTD or MTD handlers.
+    // --------------------------------------------------------------------------
+    // MTD (or FTD) Properties
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    NCP_COMMAND_HANDLER(NET_SAVE);
-    NCP_COMMAND_HANDLER(NET_CLEAR);
-    NCP_COMMAND_HANDLER(NET_RECALL);
+
+    NCP_SET_PROP_HANDLER(STREAM_NET);
+    NCP_SET_PROP_HANDLER(STREAM_NET_INSECURE);
+
+    NCP_GET_PROP_HANDLER(PHY_FREQ);
+    NCP_GET_PROP_HANDLER(PHY_CHAN_SUPPORTED);
+    NCP_GET_PROP_HANDLER(PHY_RSSI);
 
     NCP_GET_PROP_HANDLER(MAC_EXTENDED_ADDR);
     NCP_GET_PROP_HANDLER(MAC_SCAN_MASK);
@@ -460,10 +437,25 @@ private:
     NCP_SET_PROP_HANDLER(MAC_SCAN_PERIOD);
     NCP_GET_PROP_HANDLER(MAC_SCAN_STATE);
     NCP_SET_PROP_HANDLER(MAC_SCAN_STATE);
-
-    NCP_GET_PROP_HANDLER(PHY_FREQ);
-    NCP_GET_PROP_HANDLER(PHY_CHAN_SUPPORTED);
-    NCP_GET_PROP_HANDLER(PHY_RSSI);
+    NCP_GET_PROP_HANDLER(MAC_CCA_FAILURE_RATE);
+#if OPENTHREAD_ENABLE_MAC_FILTER
+    NCP_GET_PROP_HANDLER(MAC_WHITELIST_ENABLED);
+    NCP_SET_PROP_HANDLER(MAC_WHITELIST_ENABLED);
+    NCP_GET_PROP_HANDLER(MAC_WHITELIST);
+    NCP_SET_PROP_HANDLER(MAC_WHITELIST);
+    NCP_INSERT_PROP_HANDLER(MAC_WHITELIST);
+    NCP_REMOVE_PROP_HANDLER(MAC_WHITELIST);
+    NCP_GET_PROP_HANDLER(MAC_BLACKLIST_ENABLED);
+    NCP_SET_PROP_HANDLER(MAC_BLACKLIST_ENABLED);
+    NCP_GET_PROP_HANDLER(MAC_BLACKLIST);
+    NCP_SET_PROP_HANDLER(MAC_BLACKLIST);
+    NCP_INSERT_PROP_HANDLER(MAC_BLACKLIST);
+    NCP_REMOVE_PROP_HANDLER(MAC_BLACKLIST);
+    NCP_GET_PROP_HANDLER(MAC_FIXED_RSS);
+    NCP_SET_PROP_HANDLER(MAC_FIXED_RSS);
+    NCP_INSERT_PROP_HANDLER(MAC_FIXED_RSS);
+    NCP_REMOVE_PROP_HANDLER(MAC_FIXED_RSS);
+#endif
 
     NCP_GET_PROP_HANDLER(NET_SAVED);
     NCP_GET_PROP_HANDLER(NET_IF_UP);
@@ -483,24 +475,24 @@ private:
     NCP_GET_PROP_HANDLER(NET_PARTITION_ID);
     NCP_GET_PROP_HANDLER(NET_KEY_SWITCH_GUARDTIME);
     NCP_SET_PROP_HANDLER(NET_KEY_SWITCH_GUARDTIME);
-    NCP_GET_PROP_HANDLER(THREAD_LEADER);
+
     NCP_GET_PROP_HANDLER(IPV6_ML_PREFIX);
     NCP_SET_PROP_HANDLER(IPV6_ML_PREFIX);
     NCP_GET_PROP_HANDLER(IPV6_ML_ADDR);
     NCP_GET_PROP_HANDLER(IPV6_LL_ADDR);
-
     NCP_GET_PROP_HANDLER(IPV6_ADDRESS_TABLE);
     NCP_INSERT_PROP_HANDLER(IPV6_ADDRESS_TABLE);
     NCP_REMOVE_PROP_HANDLER(IPV6_ADDRESS_TABLE);
-
     NCP_GET_PROP_HANDLER(IPV6_ROUTE_TABLE);
     NCP_GET_PROP_HANDLER(IPV6_ICMP_PING_OFFLOAD);
     NCP_SET_PROP_HANDLER(IPV6_ICMP_PING_OFFLOAD);
-
     NCP_GET_PROP_HANDLER(IPV6_MULTICAST_ADDRESS_TABLE);
     NCP_INSERT_PROP_HANDLER(IPV6_MULTICAST_ADDRESS_TABLE);
     NCP_REMOVE_PROP_HANDLER(IPV6_MULTICAST_ADDRESS_TABLE);
+    NCP_GET_PROP_HANDLER(IPV6_ICMP_PING_OFFLOAD_MODE);
+    NCP_SET_PROP_HANDLER(IPV6_ICMP_PING_OFFLOAD_MODE);
 
+    NCP_GET_PROP_HANDLER(THREAD_LEADER);
     NCP_GET_PROP_HANDLER(THREAD_RLOC16_DEBUG_PASSTHRU);
     NCP_SET_PROP_HANDLER(THREAD_RLOC16_DEBUG_PASSTHRU);
     NCP_GET_PROP_HANDLER(THREAD_OFF_MESH_ROUTES);
@@ -516,6 +508,9 @@ private:
     NCP_GET_PROP_HANDLER(THREAD_LEADER_ADDR);
     NCP_GET_PROP_HANDLER(THREAD_PARENT);
     NCP_GET_PROP_HANDLER(THREAD_NEIGHBOR_TABLE);
+#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+    NCP_GET_PROP_HANDLER(THREAD_NEIGHBOR_TABLE_ERROR_RATES);
+#endif
     NCP_GET_PROP_HANDLER(THREAD_LEADER_RID);
     NCP_GET_PROP_HANDLER(THREAD_LEADER_WEIGHT);
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -534,30 +529,6 @@ private:
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     NCP_SET_PROP_HANDLER(THREAD_ALLOW_LOCAL_NET_DATA_CHANGE);
 #endif
-    NCP_GET_PROP_HANDLER(STREAM_NET);
-    NCP_SET_PROP_HANDLER(STREAM_NET);
-    NCP_GET_PROP_HANDLER(MAC_CNTR);
-    NCP_GET_PROP_HANDLER(NCP_CNTR);
-    NCP_GET_PROP_HANDLER(IP_CNTR);
-    NCP_GET_PROP_HANDLER(MSG_BUFFER_COUNTERS);
-#if OPENTHREAD_ENABLE_MAC_FILTER
-    NCP_GET_PROP_HANDLER(MAC_WHITELIST_ENABLED);
-    NCP_SET_PROP_HANDLER(MAC_WHITELIST_ENABLED);
-    NCP_GET_PROP_HANDLER(MAC_WHITELIST);
-    NCP_SET_PROP_HANDLER(MAC_WHITELIST);
-    NCP_INSERT_PROP_HANDLER(MAC_WHITELIST);
-    NCP_REMOVE_PROP_HANDLER(MAC_WHITELIST);
-    NCP_INSERT_PROP_HANDLER(MAC_BLACKLIST);
-    NCP_REMOVE_PROP_HANDLER(MAC_BLACKLIST);
-    NCP_GET_PROP_HANDLER(MAC_BLACKLIST_ENABLED);
-    NCP_SET_PROP_HANDLER(MAC_BLACKLIST_ENABLED);
-    NCP_SET_PROP_HANDLER(MAC_BLACKLIST);
-    NCP_GET_PROP_HANDLER(MAC_BLACKLIST);
-    NCP_GET_PROP_HANDLER(MAC_FIXED_RSS);
-    NCP_SET_PROP_HANDLER(MAC_FIXED_RSS);
-    NCP_INSERT_PROP_HANDLER(MAC_FIXED_RSS);
-    NCP_REMOVE_PROP_HANDLER(MAC_FIXED_RSS);
-#endif
     NCP_GET_PROP_HANDLER(THREAD_MODE);
     NCP_SET_PROP_HANDLER(THREAD_MODE);
     NCP_GET_PROP_HANDLER(THREAD_CHILD_TIMEOUT);
@@ -570,11 +541,58 @@ private:
     NCP_SET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_ENABLE_FILTERING);
     NCP_GET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_PANID);
     NCP_SET_PROP_HANDLER(THREAD_DISCOVERY_SCAN_PANID);
-#if OPENTHREAD_ENABLE_COMMISSIONER
-    NCP_GET_PROP_HANDLER(THREAD_COMMISSIONER_ENABLED);
-    NCP_SET_PROP_HANDLER(THREAD_COMMISSIONER_ENABLED);
-    NCP_INSERT_PROP_HANDLER(THREAD_JOINERS);
-#endif
+    NCP_GET_PROP_HANDLER(THREAD_ACTIVE_DATASET);
+    NCP_GET_PROP_HANDLER(THREAD_PENDING_DATASET);
+
+    NCP_GET_PROP_HANDLER(CNTR_ALL_MAC_COUNTERS);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_ACK_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_ACKED);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_NO_ACK_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_DATA);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_DATA_POLL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_BEACON);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_BEACON_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_OTHER);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_RETRY);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_UNICAST);
+    NCP_GET_PROP_HANDLER(CNTR_TX_PKT_BROADCAST);
+    NCP_GET_PROP_HANDLER(CNTR_TX_ERR_CCA);
+    NCP_GET_PROP_HANDLER(CNTR_TX_ERR_ABORT);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_DATA);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_DATA_POLL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_BEACON);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_BEACON_REQ);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_OTHER);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_FILT_WL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_FILT_DA);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_UNICAST);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_BROADCAST);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_EMPTY);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_UKWN_NBR);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_NVLD_SADDR);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_SECURITY);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_BAD_FCS);
+    NCP_GET_PROP_HANDLER(CNTR_RX_ERR_OTHER);
+    NCP_GET_PROP_HANDLER(CNTR_RX_PKT_DUP);
+    NCP_GET_PROP_HANDLER(CNTR_TX_IP_SEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_IP_INSEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_TX_IP_DROPPED);
+    NCP_GET_PROP_HANDLER(CNTR_RX_IP_SEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_IP_INSEC_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_IP_DROPPED);
+    NCP_GET_PROP_HANDLER(CNTR_TX_SPINEL_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_SPINEL_TOTAL);
+    NCP_GET_PROP_HANDLER(CNTR_RX_SPINEL_OUT_OF_ORDER_TID);
+    NCP_GET_PROP_HANDLER(CNTR_RX_SPINEL_ERR);
+    NCP_GET_PROP_HANDLER(CNTR_IP_TX_SUCCESS);
+    NCP_GET_PROP_HANDLER(CNTR_IP_RX_SUCCESS);
+    NCP_GET_PROP_HANDLER(CNTR_IP_TX_FAILURE);
+    NCP_GET_PROP_HANDLER(CNTR_IP_RX_FAILURE);
+    NCP_SET_PROP_HANDLER(CNTR_RESET);
+    NCP_GET_PROP_HANDLER(MSG_BUFFER_COUNTERS);
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     NCP_GET_PROP_HANDLER(JAM_DETECTED);
     NCP_GET_PROP_HANDLER(JAM_DETECT_ENABLE);
@@ -587,23 +605,34 @@ private:
     NCP_SET_PROP_HANDLER(JAM_DETECT_BUSY);
     NCP_GET_PROP_HANDLER(JAM_DETECT_HISTORY_BITMAP);
 #endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_SAMPLE_INTERVAL);
+    NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_RSSI_THRESHOLD);
+    NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_SAMPLE_WINDOW);
+    NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_SAMPLE_COUNT);
+    NCP_GET_PROP_HANDLER(CHANNEL_MONITOR_CHANNEL_OCCUPANCY);
+#endif
+
 #if OPENTHREAD_ENABLE_LEGACY
     NCP_GET_PROP_HANDLER(NEST_LEGACY_ULA_PREFIX);
     NCP_SET_PROP_HANDLER(NEST_LEGACY_ULA_PREFIX);
     NCP_GET_PROP_HANDLER(NEST_LEGACY_LAST_NODE_JOINED);
 #endif
-    NCP_SET_PROP_HANDLER(STREAM_NET_INSECURE);
-    NCP_SET_PROP_HANDLER(CNTR_RESET);
-#if OPENTHREAD_ENABLE_DIAG
-    NCP_SET_PROP_HANDLER(NEST_STREAM_MFG);
-#endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+    // --------------------------------------------------------------------------
+    // FTD Only Properties
+
 #if OPENTHREAD_FTD
+
     NCP_GET_PROP_HANDLER(NET_PSKC);
     NCP_SET_PROP_HANDLER(NET_PSKC);
+
     NCP_GET_PROP_HANDLER(THREAD_CHILD_TABLE);
+    NCP_GET_PROP_HANDLER(THREAD_CHILD_TABLE_ADDRESSES);
+    NCP_GET_PROP_HANDLER(THREAD_ROUTER_TABLE);
     NCP_GET_PROP_HANDLER(THREAD_CHILD_COUNT_MAX);
     NCP_SET_PROP_HANDLER(THREAD_CHILD_COUNT_MAX);
     NCP_SET_PROP_HANDLER(THREAD_CHILD_TIMEOUT);
@@ -621,9 +650,15 @@ private:
     NCP_SET_PROP_HANDLER(THREAD_ROUTER_DOWNGRADE_THRESHOLD);
     NCP_GET_PROP_HANDLER(THREAD_ROUTER_SELECTION_JITTER);
     NCP_SET_PROP_HANDLER(THREAD_ROUTER_SELECTION_JITTER);
+    NCP_GET_PROP_HANDLER(THREAD_PREFERRED_ROUTER_ID);
     NCP_SET_PROP_HANDLER(THREAD_PREFERRED_ROUTER_ID);
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    NCP_GET_PROP_HANDLER(THREAD_STEERING_DATA);
     NCP_SET_PROP_HANDLER(THREAD_STEERING_DATA);
+#endif
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    NCP_GET_PROP_HANDLER(THREAD_COMMISSIONER_ENABLED);
+    NCP_INSERT_PROP_HANDLER(THREAD_JOINERS);
 #endif
 #if OPENTHREAD_ENABLE_TMF_PROXY
     NCP_GET_PROP_HANDLER(THREAD_TMF_PROXY_ENABLED);
@@ -631,28 +666,146 @@ private:
     NCP_SET_PROP_HANDLER(THREAD_TMF_PROXY_STREAM);
 #endif
     NCP_REMOVE_PROP_HANDLER(THREAD_ACTIVE_ROUTER_IDS);
+    NCP_SET_PROP_HANDLER(THREAD_ACTIVE_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_PENDING_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_MGMT_ACTIVE_DATASET);
+    NCP_SET_PROP_HANDLER(THREAD_MGMT_PENDING_DATASET);
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_NEW_CHANNEL);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_NEW_CHANNEL);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_DELAY);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_DELAY);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_SUPPORTED_CHANNELS);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_SUPPORTED_CHANNELS);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_FAVORED_CHANNELS);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_FAVORED_CHANNELS);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_CHANNEL_SELECT);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_CHANNEL_SELECT);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_ENABLED);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_ENABLED);
+    NCP_GET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL);
+    NCP_SET_PROP_HANDLER(CHANNEL_MANAGER_AUTO_SELECT_INTERVAL);
+#endif
+
 #endif // OPENTHREAD_FTD
+
+    // --------------------------------------------------------------------------
+    // Property "set" handlers for special properties for which the spinel
+    // response needs to be created from within the set handler.
+
+    otError SetPropertyHandler_HOST_POWER_STATE(uint8_t aHeader);
+
+#if OPENTHREAD_ENABLE_DIAG
+    otError SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader);
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+    otError SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
+#endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    otError SetPropertyHandler_STREAM_RAW(uint8_t aHeader);
+#endif
+
+#if OPENTHREAD_ENABLE_LEGACY
+    void StartLegacy(void);
+    void StopLegacy(void);
+#else
+    void StartLegacy(void) { }
+    void StopLegacy(void) { }
+#endif
+
+    static uint8_t ConvertLogLevel(otLogLevel aLogLevel);
+    static unsigned int ConvertLogRegion(otLogRegion aLogRegion);
+
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+    /**
+     * This method defines a vendor "command handler" hook to process vendor-specific spinel commands.
+     *
+     * @param[in] aHeader   The spinel frame header.
+     * @param[in] aCommand  The spinel command key.
+     *
+     * @retval OT_ERROR_NONE     The response is prepared.
+     * @retval OT_ERROR_NO_BUFS  Out of buffer while preparing the response.
+     *
+     */
+    otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
+
+    /**
+     * This method is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`. It is called when a
+     * spinel frame is sent and removed from NCP buffer.
+     *
+     * (a) This can be used to track and verify that a vendor spinel frame response is delivered to the host (tracking
+     *     the frame using its tag).
+     *
+     * (b) It indicates that NCP buffer space is now available (since a spinel frame is removed). This can be used to
+     *     implement mechanisms to re-send a failed/pending response or an async spinel frame.
+     *
+     * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
+     *
+     */
+    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+
+    /**
+     * This method defines a vendor "get property handler" hook to process vendor spinel properties.
+     *
+     * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "get" operation for the
+     * given property key. Otherwise, the vendor handler should behave like other property get handlers, i.e., it
+     * should retrieve the property value and then encode and write the value into the NCP buffer. If the "get"
+     * operation itself fails, handler should write a `LAST_STATUS` with the error status into the NCP buffer.
+     *
+     * @param[in] aPropKey            The spinel property key.
+     *
+     * @retval OT_ERROR_NONE          Successfully retrieved the property value and prepared the response.
+     * @retval OT_ERROR_NOT_FOUND     Does not support the given property key.
+     * @retval OT_ERROR_NO_BUFS       Out of buffer while preparing the response.
+     *
+     */
+    otError VendorGetPropertyHandler(spinel_prop_key_t aPropKey);
+
+    /**
+     * This method defines a vendor "set property handler" hook to process vendor spinel properties.
+     *
+     * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "set" operation for the
+     * given property key. Otherwise, the vendor handler should behave like other property set handlers, i.e., it
+     * should first decode the value from the input spinel frame and then perform the corresponding set operation. The
+     * handler should not prepare the spinel response and therefore should not write anything to the NCP buffer. The
+     * `otError` returned from handler (other than `OT_ERROR_NOT_FOUND`) indicates the error in either parsing of the
+     * input or the error of the set operation. In case of a successful "set", `NcpBase` set command handler will call
+     * the `VendorGetPropertyHandler()` for the same property key to prepare the response.
+     *
+     * @param[in] aPropKey  The spinel property key.
+     *
+     * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either parsing
+     *          of the input or the "set" operation.
+     *
+     */
+    otError VendorSetPropertyHandler(spinel_prop_key_t aPropKey);
+
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
 protected:
     static NcpBase *sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
     static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData);
-    otInstance *mInstance;
+    Instance *mInstance;
     NcpFrameBuffer  mTxFrameBuffer;
+    SpinelEncoder mEncoder;
+    SpinelDecoder mDecoder;
+    bool mHostPowerStateInProgress;
 
-private:
     enum
     {
         kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,  // Tx Buffer size (used by mTxFrameBuffer).
+        kResponseQueueSize = OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE,
         kInvalidScanChannel = -1,                              // Invalid scan channel.
     };
 
     // Command Handlers
-    static const CommandHandlerEntry mCommandHandlerTable[];
-    static const GetPropertyHandlerEntry mGetPropertyHandlerTable[];
-    static const SetPropertyHandlerEntry mSetPropertyHandlerTable[];
-    static const InsertPropertyHandlerEntry mInsertPropertyHandlerTable[];
-    static const RemovePropertyHandlerEntry mRemovePropertyHandlerTable[];
+    static const PropertyHandlerEntry mGetPropertyHandlerTable[];
+    static const PropertyHandlerEntry mSetPropertyHandlerTable[];
+    static const PropertyHandlerEntry mInsertPropertyHandlerTable[];
+    static const PropertyHandlerEntry mRemovePropertyHandlerTable[];
 
     spinel_status_t mLastStatus;
     uint32_t mSupportedChannelMask;
@@ -666,10 +819,7 @@ private:
     uint32_t mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
 
-    uint32_t mChangedFlags;
-    bool mShouldSignalEndOfScan;
     spinel_host_power_state_t mHostPowerState;
-    bool mHostPowerStateInProgress;
     NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
     uint8_t mHostPowerStateHeader;
 
@@ -678,23 +828,36 @@ private:
     otNcpDelegateAllowPeekPoke mAllowPokeDelegate;
 #endif
 
-    spinel_tid_t mDroppedReplyTid;
-    uint16_t mDroppedReplyTidBitSet;
-    spinel_tid_t mNextExpectedTid;
     uint8_t mTxBuffer[kTxBufferSize];
+
+    spinel_tid_t mNextExpectedTid;
+
+    uint8_t mResponseQueueHead;
+    uint8_t mResponseQueueTail;
+    ResponseEntry mResponseQueue[kResponseQueueSize];
 
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
     bool mIsRawStreamEnabled;
     bool mDisableStreamWrite;
+    bool mShouldEmitChildTableUpdate;
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    otExtAddress mSteeringDataAddress;
+#endif
+    uint8_t mPreferredRouteId;
+#endif
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     uint8_t mCurTransmitTID;
-    uint8_t mCurReceiveChannel;
     int8_t  mCurScanChannel;
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+    bool    mSrcMatchEnabled;
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+    otMessageQueue mMessageQueue;
+
     uint32_t mInboundSecureIpFrameCounter;     // Number of secure inbound data/IP frames.
     uint32_t mInboundInsecureIpFrameCounter;   // Number of insecure inbound data/IP frames.
     uint32_t mOutboundSecureIpFrameCounter;    // Number of secure outbound data/IP frames.
@@ -707,7 +870,6 @@ private:
     uint32_t mRxSpinelOutOfOrderTidCounter;    // Number of out of order received spinel frames (tid increase > 1).
     uint32_t mTxSpinelFrameCounter;            // Number of sent (outbound) spinel frames.
 
-
 #if OPENTHREAD_ENABLE_LEGACY
     const otNcpLegacyHandlers *mLegacyHandlers;
     uint8_t mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
@@ -715,6 +877,7 @@ private:
     bool mLegacyNodeDidJoin;
 #endif
 
+    bool mDidInitialUpdates;
 };
 
 }  // namespace Ncp

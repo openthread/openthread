@@ -34,6 +34,8 @@
 #ifndef CRC16_HPP_
 #define CRC16_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdint.h"
 
 namespace ot {
@@ -47,8 +49,8 @@ class Crc16
 public:
     enum Polynomial
     {
-        kCcitt = 0x1021,  ///< CRC16_CCITT
-        kAnsi  = 0x8005,  ///< CRC16-ANSI
+        kCcitt = 0x1021, ///< CRC16_CCITT
+        kAnsi  = 0x8005, ///< CRC16-ANSI
     };
 
     /**
@@ -86,6 +88,6 @@ private:
     uint16_t mCrc;
 };
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // CRC16_HPP_
+#endif // CRC16_HPP_

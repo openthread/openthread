@@ -30,6 +30,8 @@
  * Configure the Customer Configuration Area.
  */
 
+// clang-format off
+
 // enable bootloader backdoor
 #define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE            0xC5       // Enable ROM boot loader
 
@@ -44,3 +46,5 @@
  * Include the default ccfg struct and configuration code.
  */
 #include <startup_files/ccfg.c>
+
+// clang-format on

@@ -32,15 +32,16 @@
  */
 
 #define WPP_NAME "data_poll_manager.tmh"
-#include <openthread/config.h>
 
 #include "data_poll_manager.hpp"
+
 #include <openthread/platform/random.h>
 
-#include "openthread-instance.h"
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -49,19 +50,19 @@
 
 namespace ot {
 
-DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
-    MeshForwarderLocator(aMeshForwarder),
-    mTimer(aMeshForwarder.GetInstance(), &DataPollManager::HandlePollTimer, this),
-    mTimerStartTime(0),
-    mExternalPollPeriod(0),
-    mPollPeriod(0),
-    mEnabled(false),
-    mAttachMode(false),
-    mRetxMode(false),
-    mNoBufferRetxMode(false),
-    mPollTimeoutCounter(0),
-    mPollTxFailureCounter(0),
-    mRemainingFastPolls(0)
+DataPollManager::DataPollManager(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimerStartTime(0)
+    , mExternalPollPeriod(0)
+    , mPollPeriod(0)
+    , mTimer(aInstance, &DataPollManager::HandlePollTimer, this)
+    , mEnabled(false)
+    , mAttachMode(false)
+    , mRetxMode(false)
+    , mNoBufferRetxMode(false)
+    , mPollTimeoutCounter(0)
+    , mPollTxFailureCounter(0)
+    , mRemainingFastPolls(0)
 {
 }
 
@@ -70,8 +71,7 @@ otError DataPollManager::StartPolling(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit((GetMeshForwarder().GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0,
-                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!GetNetif().GetMle().IsFullThreadDevice(), error = OT_ERROR_INVALID_STATE);
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
@@ -83,39 +83,39 @@ exit:
 void DataPollManager::StopPolling(void)
 {
     mTimer.Stop();
-    mAttachMode = false;
-    mRetxMode = false;
-    mNoBufferRetxMode = false;
-    mPollTimeoutCounter = 0;
+    mAttachMode           = false;
+    mRetxMode             = false;
+    mNoBufferRetxMode     = false;
+    mPollTimeoutCounter   = 0;
     mPollTxFailureCounter = 0;
-    mRemainingFastPolls = 0;
-    mEnabled = false;
+    mRemainingFastPolls   = 0;
+    mEnabled              = false;
 }
 
 otError DataPollManager::SendDataPoll(void)
 {
-    MeshForwarder &meshForwarder = GetMeshForwarder();
-    otError error;
-    Message *message;
-    Neighbor *parent;
+    ThreadNetif &netif = GetNetif();
+    otError      error;
+    Message *    message;
+    Neighbor *   parent;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!meshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!netif.GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
-    parent = meshForwarder.GetNetif().GetMle().GetParent();
+    parent = netif.GetMle().GetParentCandidate();
     VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
-    for (message = meshForwarder.GetSendQueue().GetHead(); message; message = message->GetNext())
+    for (message = netif.GetMeshForwarder().GetSendQueue().GetHead(); message; message = message->GetNext())
     {
         VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
     }
 
-    message = GetInstance().mMessagePool.New(Message::kTypeMacDataPoll, 0);
+    message = GetInstance().GetMessagePool().New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    error = meshForwarder.SendMessage(*message);
+    error = netif.GetMeshForwarder().SendMessage(*message);
 
     if (error != OT_ERROR_NONE)
     {
@@ -208,8 +208,8 @@ void DataPollManager::HandlePollSent(otError aError)
 
         if (mRetxMode == true)
         {
-            mRetxMode = false;
-            mPollTxFailureCounter = 0;
+            mRetxMode                   = false;
+            mPollTxFailureCounter       = 0;
             shouldRecalculatePollPeriod = true;
         }
 
@@ -220,21 +220,21 @@ void DataPollManager::HandlePollSent(otError aError)
     default:
         mPollTxFailureCounter++;
 
-        otLogInfoMac(GetInstance(), "Failed to send data poll, error:%s, retx:%d/%d",
-                     otThreadErrorToString(aError), mPollTxFailureCounter, kMaxPollRetxAttempts);
+        otLogInfoMac(GetInstance(), "Failed to send data poll, error:%s, retx:%d/%d", otThreadErrorToString(aError),
+                     mPollTxFailureCounter, kMaxPollRetxAttempts);
 
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
         {
             if (mRetxMode == false)
             {
-                mRetxMode = true;
+                mRetxMode                   = true;
                 shouldRecalculatePollPeriod = true;
             }
         }
         else
         {
-            mRetxMode = false;
-            mPollTxFailureCounter = 0;
+            mRetxMode                   = false;
+            mPollTxFailureCounter       = 0;
             shouldRecalculatePollPeriod = true;
         }
 
@@ -410,24 +410,13 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
 void DataPollManager::HandlePollTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).SendDataPoll();
-}
-
-DataPollManager &DataPollManager::GetOwner(Context &aContext)
-{
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    DataPollManager &manager = *static_cast<DataPollManager *>(aContext.GetContext());
-#else
-    DataPollManager &manager = otGetMeshForwarder().GetDataPollManager();
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-    return manager;
+    aTimer.GetOwner<DataPollManager>().SendDataPoll();
 }
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const
 {
-    return TimerMilli::SecToMsec(GetMeshForwarder().GetNetif().GetMle().GetTimeout()) -
+    return TimerMilli::SecToMsec(GetNetif().GetMle().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 
-}  // namespace ot
+} // namespace ot

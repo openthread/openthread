@@ -80,6 +80,9 @@ For OpenThread golden devices, ser2net is also supported, just use IP:PORT for t
 ('192.168.1.2:5001', 'OpenThread').
 """
 
+MIXED_DEVICE_TYPE = True
+"""bool: Whether golden devices are mixed-type. Must put TopologyConfig.txt under HARNESS_HOME\Thread_Harness\TestScripts before testing if True"""
+
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""
 
@@ -95,6 +98,7 @@ Types of supported PDU controllers:
     - None - when no PDU controller connected
     - 'APC_PDU_CONTROLLER' - when APC PDU controller connected
     - 'NORDIC_BOARD_PDU_CONTOLLER' - when Nordic boards PDU controller connected
+    - 'IP_POWER_SOCKET_PDU_CONTROLLER' - when IP Power Socket 5G10A connected
 """
 
 PDU_CONTROLLER_OPEN_PARAMS = {'port': 23, 'ip': '127.0.0.1'}
@@ -105,6 +109,9 @@ Example parameters for the 'APC_PDU_CONTROLLER':
 
 Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
     {} - empty dictionary
+
+Example parameters for the 'IP_POWER_SOCKET_PDU_CONTROLLER':
+    {'user': 'user', 'pass': 'pass', 'ip': '127.0.0.1'}
 """
 
 PDU_CONTROLLER_REBOOT_PARAMS = {'outlet': 1}
@@ -115,4 +122,24 @@ Example parameters for the 'APC_PDU_CONTROLLER':
 
 Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
     {'boards_serial_numbers': ('12345123', ...)}
+
+Example parameters for the 'IP_POWER_SOCKET_PDU_CONTROLLER':
+    {'sockets': [0, 1]}
+"""
+
+SHIELD_CONTROLLER_TYPE = None
+"""str: Type of connected RF Shield controller.
+
+Keep this None if no RF Shield controller available.
+
+Types of supported RF Shield controllers:
+    - None - when no RF Shield controller connected
+    - 'RF_SWITCH' - when RF Switch connected
+"""
+
+SHIELD_CONTROLLER_PARAMS = None
+"""dict: Parameters passed to the "__init__" method of RF Shield controller.
+
+Example parameters for the 'RF_SWITCH':
+    {'channel': 200, 'port': 'COM50'}
 """

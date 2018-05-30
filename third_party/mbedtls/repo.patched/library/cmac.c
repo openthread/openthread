@@ -1,4 +1,4 @@
-/*
+/**
  * \file cmac.c
  *
  * \brief NIST SP800-38B compliant CMAC implementation for AES and 3DES
@@ -62,7 +62,7 @@
 #if defined(MBEDTLS_SELF_TEST)
 #include <stdio.h>
 #define mbedtls_printf     printf
-#endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C || MBEDTLS_DES_C */
+#endif /* MBEDTLS_SELF_TEST */
 #endif /* MBEDTLS_PLATFORM_C */
 
 /* Implementation that should never be optimized out by the compiler */
@@ -80,7 +80,7 @@ static void mbedtls_zeroize( void *v, size_t n ) {
  *   with R_64 = 0x1B and  R_128 = 0x87
  *
  * Input and output MUST NOT point to the same buffer
- * Block size must be 8 byes or 16 bytes - the block sizes for DES and AES.
+ * Block size must be 8 bytes or 16 bytes - the block sizes for DES and AES.
  */
 static int cmac_multiply_by_u( unsigned char *output,
                                const unsigned char *input,
@@ -105,7 +105,7 @@ static int cmac_multiply_by_u( unsigned char *output,
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     }
 
-    for( i = blocksize - 1; i >= 0; i-- )
+    for( i = (int)blocksize - 1; i >= 0; i-- )
     {
         output[i] = input[i] << 1 | overflow;
         overflow = input[i] >> 7;
@@ -169,10 +169,10 @@ static void cmac_xor_block( unsigned char *output, const unsigned char *input1,
                             const unsigned char *input2,
                             const size_t block_size )
 {
-    size_t index;
+    size_t idx;
 
-    for( index = 0; index < block_size; index++ )
-        output[ index ] = input1[ index ] ^ input2[ index ];
+    for( idx = 0; idx < block_size; idx++ )
+        output[ idx ] = input1[ idx ] ^ input2[ idx ];
 }
 
 /*
@@ -209,7 +209,7 @@ int mbedtls_cipher_cmac_starts( mbedtls_cipher_context_t *ctx,
     if( ctx == NULL || ctx->cipher_info == NULL || key == NULL )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
-    if( ( retval = mbedtls_cipher_setkey( ctx, key, keybits,
+    if( ( retval = mbedtls_cipher_setkey( ctx, key, (int)keybits,
                                           MBEDTLS_ENCRYPT ) ) != 0 )
         return( retval );
 
@@ -244,8 +244,8 @@ int mbedtls_cipher_cmac_update( mbedtls_cipher_context_t *ctx,
 {
     mbedtls_cmac_context_t* cmac_ctx;
     unsigned char *state;
-    int n, j, ret = 0;
-    size_t olen, block_size;
+    int ret = 0;
+    size_t n, j, olen, block_size;
 
     if( ctx == NULL || ctx->cipher_info == NULL || input == NULL ||
         ctx->cmac_ctx == NULL )
@@ -280,8 +280,9 @@ int mbedtls_cipher_cmac_update( mbedtls_cipher_context_t *ctx,
     /* n is the number of blocks including any final partial block */
     n = ( ilen + block_size - 1 ) / block_size;
 
-   /* Iterate across the input data in block sized chunks */
-    for( j = 0; j < n - 1; j++ )
+    /* Iterate across the input data in block sized chunks, excluding any
+     * final partial or complete block */
+    for( j = 1; j < n; j++ )
     {
         cmac_xor_block( state, input, state, block_size );
 

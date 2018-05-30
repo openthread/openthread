@@ -26,11 +26,11 @@ OpenThread test scripts use the CLI to execute test cases.
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
 * [factoryreset](#factoryreset)
-* [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [ipmaddr](#ipmaddr)
 * [joiner](#joiner-start-pskd-provisioningurl)
+* [joinerid](#joinerid)
 * [joinerport](#joinerport-port)
 * [keysequence](#keysequence-counter)
 * [leaderdata](#leaderdata)
@@ -41,7 +41,9 @@ OpenThread test scripts use the CLI to execute test cases.
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
 * [mode](#mode)
+* [neighbor](#neighbor-list)
 * [netdataregister](#netdataregister)
+* [netdatashow](#netdatashow)
 * [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
@@ -68,6 +70,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [txpowermax](#txpowermax)
 * [version](#version)
 * [diag](#diag)
+* [service](#service)
 
 ## OpenThread Command Details
 
@@ -292,11 +295,11 @@ This command will cause the device to send LEAD_KA[Reject] messages.
 Done
 ```
 
-### commissioner joiner add \<hashmacaddr\> \<psdk\>
+### commissioner joiner add \<eui64\> \<psdk\>
 
 Add a Joiner entry.
 
-* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+* eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
 * pskd: Pre-Shared Key for the Joiner.
 
 ```bash
@@ -304,11 +307,11 @@ Add a Joiner entry.
 Done
 ```
 
-### commissioner joiner remove \<hashmacaddr\>
+### commissioner joiner remove \<eui64\>
 
 Remove a Joiner entry.
 
-* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+* eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
 
 ```bash
 > commissioner joiner remove d45e64fa83f81cf7
@@ -426,7 +429,7 @@ RxTotal: 2
     RxBeacon: 0
     RxBeaconRequest: 0
     RxOther: 0
-    RxWhitelistFiltered: 0
+    RxAddressFiltered: 0
     RxDestAddrFiltered: 0
     RxDuplicated: 0
     RxErrNoFrame: 0
@@ -765,16 +768,6 @@ Delete all stored settings, and signal a platform reset.
 > factoryreset
 ```
 
-### hashmacaddr
-
-Get the HashMac address.
-
-```bash
-> hashmacaddr
-e0b220eb7d8dda7e
-Done
-```
-
 ### ifconfig
 
 Show the status of the IPv6 interface.
@@ -912,6 +905,16 @@ Stop the Joiner role.
 
 ```bash
 > joiner stop
+Done
+```
+
+### joinerid
+
+Get the Joiner ID.
+
+```bash
+> joinerid
+e0b220eb7d8dda7e
 Done
 ```
 
@@ -1091,12 +1094,46 @@ Set the Thread Device Mode value.
 Done
 ```
 
+### neighbor list
+
+List RLOC16 of neighbors.
+
+```bash
+> neighbor list
+0xcc01 0xc800 0xf000
+Done
+```
+
+### neighbor table
+
+Print table of neighbors.
+
+```bash
+> neighbor table
+| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|S|D|N| Extended MAC     |
++------+--------+-----+----------+-----------+-+-+-+-+------------------+
+|   C  | 0xcc01 |  96 |      -46 |       -46 |1|1|1|1| 1eb9ba8a6522636b |
+|   R  | 0xc800 |   2 |      -29 |       -29 |1|0|1|1| 9a91556102c39ddb |
+|   R  | 0xf000 |   3 |      -28 |       -28 |1|0|1|1| 0ad7ed6beaa6016d |
+Done
+```
+
 ### netdataregister
 
 Register local network data with Thread Leader.
 
 ```bash
 > netdataregister
+Done
+```
+
+### netdatashow
+
+Show Thread Leader network data.
+
+```bash
+> netdatashow
+08040b020000
 Done
 ```
 
@@ -1252,6 +1289,16 @@ Set the customized data poll period for sleepy end device (seconds). Only for ce
 Done
 ```
 
+### prefix
+
+Get the prefix list in the local Network Data.
+
+```bash
+> prefix
+2001:dead:beef:cafe::/64 paros med
+Done
+```
+
 ### prefix add \<prefix\> [pvdcsr] [prf]
 
 Add a valid prefix to the Network Data.
@@ -1332,9 +1379,19 @@ Get the Thread RLOC16 value.
 Done
 ```
 
+### route
+
+Get the external route list in the local Network Data.
+
+```bash
+> route
+2001:dead:beef:cafe::/64 s med
+Done
+```
+
 ### route add \<prefix\> [s] [prf]
 
-Add a valid prefix to the Network Data.
+Add a valid external route to the Network Data.
 
 * s: Stable flag
 * prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
@@ -1346,7 +1403,7 @@ Done
 
 ### route remove \<prefix\>
 
-Invalidate a prefix in the Network Data.
+Invalidate a external route in the Network Data.
 
 ```bash
 > route remove 2001:dead:beef:cafe::/64
@@ -1555,20 +1612,20 @@ Done
 
 ### txpowermax
 
-Get the maximum transmit power in dBm.
+Get the transmit power in dBm.
 
 ```bash
-> txpowermax
+> txpower
 -10 dBm
 Done
 ```
 
 ### txpowermax \<txpowermax\>
 
-Set the maximum transmit power.
+Set the transmit power.
 
 ```bash
-> txpowermax -10
+> txpower -10
 Done
 ```
 
@@ -1741,5 +1798,36 @@ Done
 
 Diagnostics module is enabled only when building OpenThread with --enable-diag option.
 Go [diagnostics module][1] for more information.
+
+### service
+
+Module for controlling service registration in Network Data.
+Each change in service registration must be sent to leader by `netdataregister` command
+before taking effect.
+
+### service add \<enterpriseNumber\> \<serviceData\> \<serverData\>
+
+Add service to the Network Data.
+
+```bash
+> service add 44970 foo bar
+Done
+> ipaddr
+fdde:ad00:beef:0:0:ff:fe00:fc10
+fdde:ad00:beef:0:0:ff:fe00:fc00
+fdde:ad00:beef:0:0:ff:fe00:7c00
+fe80:0:0:0:1486:2f57:3c:6e10
+fdde:ad00:beef:0:8ca4:19ed:217a:eff9
+Done
+```
+
+### service remove \<enterpriseNumber\> \<serviceData\>
+
+Remove service from Network Data.
+
+```bash
+> service remove 44970 foo
+Done
+```
 
 [1]:../diag/README.md

@@ -35,8 +35,6 @@
 #ifndef OPENTHREAD_TMF_PROXY_H_
 #define OPENTHREAD_TMF_PROXY_H_
 
-#include <openthread/config.h>
-
 #include <openthread/types.h>
 
 #ifdef __cplusplus
@@ -49,6 +47,8 @@ extern "C" {
  * @brief
  *   This module includes functions for TMF proxy feature.
  *
+ *   The functions in this module are available when tmf-proxy feature (`OPENTHREAD_ENABLE_TMF_PROXY`) is enabled.
+ *
  * @{
  *
  */
@@ -60,8 +60,7 @@ extern "C" {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otTmfProxyStreamHandler)(otMessage *aMessage, uint16_t aLocator, uint16_t aPort,
-                                        void *aContext);
+typedef void (*otTmfProxyStreamHandler)(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext);
 
 /**
  * Start the TMF proxy.
@@ -101,8 +100,7 @@ otError otTmfProxyStop(otInstance *aInstance);
  * @warning No matter the call success or fail, the message is freed.
  *
  */
-otError otTmfProxySend(otInstance *aInstance, otMessage *aMessage,
-                       uint16_t aLocator, uint16_t aPort);
+otError otTmfProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 
 /**
  * Get the TMF proxy status (enabled/disabled)
@@ -119,7 +117,7 @@ bool otTmfProxyIsEnabled(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_TMF_PROXY_H_
+#endif // OPENTHREAD_TMF_PROXY_H_

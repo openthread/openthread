@@ -9,7 +9,7 @@
 #define FTDF_BRANCH_VERSION       0
 #define FTDF_LOAD_VERSION         32
 
-const char* FTDF_getUmacRelName( void );
-const char* FTDF_getUmacBuildTime( void );
+const char *ftdf_get_umac_rel_name( void );
+const char *ftdf_get_umac_build_time( void );
 
 #endif /* FTDFINFO_H_ */

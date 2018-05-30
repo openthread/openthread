@@ -31,13 +31,12 @@
  *   This file implements IPv6 datagram filtering.
  */
 
-#include <openthread/config.h>
-
 #include "ip6_filter.hpp"
 
 #include <stdio.h>
 
 #include "common/code_utils.hpp"
+#include "common/instance.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp.hpp"
 #include "net/udp6.hpp"
@@ -53,11 +52,11 @@ Filter::Filter(void)
 
 bool Filter::Accept(Message &aMessage) const
 {
-    bool rval = false;
-    Header ip6;
+    bool      rval = false;
+    Header    ip6;
     UdpHeader udp;
     TcpHeader tcp;
-    uint16_t dstport;
+    uint16_t  dstport;
 
     // Allow all received IPv6 datagrams with link security enabled
     if (aMessage.IsLinkSecurityEnabled())
@@ -181,5 +180,5 @@ const uint16_t *Filter::GetUnsecurePorts(uint8_t &aNumEntries) const
     return mUnsecurePorts;
 }
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot

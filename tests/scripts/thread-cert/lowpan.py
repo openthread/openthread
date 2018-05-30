@@ -731,6 +731,9 @@ class LowpanIpv6HeaderFactory:
         elif iphc.m == self.IPHC_M_YES:
             return self._decompress_multicast_dst_addr(iphc, dci, data)
 
+    def set_lowpan_context(self, cid, prefix):
+        self._context_manager[cid] = Context(prefix)
+
     def parse(self, data, message_info):
         iphc = LowpanIPHC.from_bytes(bytearray(data.read(2)))
 
@@ -775,6 +778,9 @@ class LowpanDecompressor:
 
     def _is_next_header_compressed(self, header):
         return (header.next_header is None)
+
+    def set_lowpan_context(self, cid, prefix):
+        self._lowpan_ip_header_factory.set_lowpan_context(cid, prefix)
 
     def decompress(self, data, message_info):
         ipv6_header = self._lowpan_ip_header_factory.parse(data, message_info)
@@ -1075,6 +1081,9 @@ class LowpanParser(object):
         decompressed_data = ipv6_header.to_bytes() + decompressed_data
 
         return self._ipv6_packet_factory.parse(io.BytesIO(decompressed_data), message_info)
+
+    def set_lowpan_context(self, cid, prefix):
+        self._lowpan_decompressor.set_lowpan_context(cid, prefix)
 
     def parse(self, data, message_info):
 

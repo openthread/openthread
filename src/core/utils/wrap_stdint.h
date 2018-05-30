@@ -27,6 +27,8 @@
 #if !defined(WRAP_STDINT_H)
 #define WRAP_STDINT_H
 
+#include "openthread-core-config.h"
+
 /* generally all compilers support this */
 /* Visual Studio only after VS2015 (aka: 19.00) */
 

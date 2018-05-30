@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the microsecond alarm service.
  */
 
-#ifndef ALARM_MICRO_H_
-#define ALARM_MICRO_H_
+#ifndef OPENTHREAD_PLATFORM_ALARM_MICRO_H_
+#define OPENTHREAD_PLATFORM_ALARM_MICRO_H_
 
 #include <stdint.h>
 
@@ -89,7 +89,7 @@ extern void otPlatAlarmMicroFired(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // ALARM_MICRO_H_
+#endif // OPENTHREAD_PLATFORM_ALARM_MICRO_H_

@@ -34,6 +34,8 @@
 #ifndef CLI_DATASET_HPP_
 #define CLI_DATASET_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdarg.h>
 
 #include "cli/cli_server.hpp"
@@ -48,7 +50,7 @@ namespace Cli {
 struct DatasetCommand
 {
     const char *mName;                                                  ///< A pointer to the command string.
-    otError(*mCommand)(otInstance *aInstance, int argc, char *argv[]);  ///< A function pointer to process the command.
+    otError (*mCommand)(otInstance *aInstance, int argc, char *argv[]); ///< A function pointer to process the command.
 };
 
 /**
@@ -68,7 +70,7 @@ public:
     static otError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
 
 private:
-    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
+    static void    OutputBytes(const uint8_t *aBytes, uint8_t aLength);
     static otError Print(otOperationalDataset &aDataset);
 
     static otError ProcessHelp(otInstance *aInstance, int argc, char *argv[]);
@@ -93,10 +95,10 @@ private:
 
     static const DatasetCommand sCommands[];
     static otOperationalDataset sDataset;
-    static Server *sServer;
+    static Server *             sServer;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_DATASET_HPP_
+#endif // CLI_DATASET_HPP_

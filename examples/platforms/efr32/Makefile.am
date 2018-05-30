@@ -38,10 +38,9 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.2
 
 libopenthread_efr32_a_CPPFLAGS                                                = \
-    -DEFR32MG12P432F1024GL125                                                   \
     -D__START=main                                                              \
     -D__STARTUP_CLEAR_BSS                                                       \
     -I$(top_srcdir)/include                                                     \
@@ -51,22 +50,29 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/protocol/ieee802154         \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32/rf/common/cortex \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/hal                         \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/hal/efr32                   \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/plugin/pa-conversions       \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/common/bsp                             \
-    -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/EFR32MG12_BRD4161A/config              \
+    -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/EFR32MG12_$(BOARD)/config              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/CMSIS/Include                              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/Device/SiliconLabs/EFR32MG12P/Include      \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/common/inc                           \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/gpiointerrupt/inc                    \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/uartdrv/inc                          \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/uartdrv/config                       \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/ustimer/inc                          \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                           \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/config                        \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
     -Wno-unused-parameter                                                       \
     $(NULL)
 
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
+    diag.c                                                                      \
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
@@ -77,31 +83,34 @@ PLATFORM_SOURCES                                                              = 
     uart.c                                                                      \
     $(NULL)
 
-if OPENTHREAD_ENABLE_DIAG
-PLATFORM_SOURCES                                                             += \
-    diag.c                                                                      \
-    $(NULL)
-endif
-
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/hardware/kit/common/bsp/bsp_bcc.c                                      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/hardware/kit/common/bsp/bsp_stk.c                                      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emdrv/rtcdrv/src/rtcdriver.c                                  \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emdrv/ustimer/src/ustimer.c                                   \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_adc.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_cmu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_core.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_emu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_gpio.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_rmu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_rtcc.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_system.c                                         \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_timer.c                                          \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_usart.c                                          \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_msc.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.1/platform/emlib/src/em_crypto.c                                         \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/hardware/kit/common/bsp/bsp_bcc.c                                      \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/hardware/kit/common/bsp/bsp_init.c                                     \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/hardware/kit/common/bsp/bsp_stk.c                                      \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/hardware/kit/common/bsp/bsp_stk_leds.c                                 \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emdrv/dmadrv/src/dmadrv.c                                     \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                       \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emdrv/rtcdrv/src/rtcdriver.c                                  \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emdrv/uartdrv/src/uartdrv.c                                   \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emdrv/ustimer/src/ustimer.c                                   \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_adc.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_cmu.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_core.c                                           \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_crypto.c                                         \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_emu.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_gpio.c                                           \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_ldma.c                                           \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_leuart.c                                         \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_msc.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_rmu.c                                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_rtcc.c                                           \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_system.c                                         \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_timer.c                                          \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_usart.c                                          \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/radio/rail_lib/hal/efr32/hal_efr.c                            \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/radio/rail_lib/hal/hal_common.c                               \
     $(NULL)
 
 noinst_HEADERS                                                                = \
@@ -114,6 +123,7 @@ libopenthread_efr32_a_SOURCES                                                 = 
 
 PRETTY_FILES                                                                  = \
     $(PLATFORM_SOURCES)                                                         \
+    $(noinst_HEADERS)                                                           \
     $(NULL)
 
 Dash                                                                          = -

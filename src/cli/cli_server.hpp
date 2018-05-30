@@ -34,6 +34,8 @@
 #ifndef CLI_SERVER_HPP_
 #define CLI_SERVER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
 
 namespace ot {
@@ -69,7 +71,7 @@ public:
     virtual int OutputFormat(const char *fmt, ...) = 0;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_SERVER_HPP_
+#endif // CLI_SERVER_HPP_

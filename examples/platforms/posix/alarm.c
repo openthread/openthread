@@ -28,6 +28,8 @@
 
 #include "platform-posix.h"
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,22 +38,25 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
-#define MS_PER_S  1000
+#define MS_PER_S 1000
 #define US_PER_MS 1000
-#define US_PER_S  1000000
+#define US_PER_S 1000000
 
-#define DEFAULT_TIMEOUT  10 // seconds
+#define DEFAULT_TIMEOUT 10 // seconds
 
-static bool sIsMsRunning = false;
-static uint32_t sMsAlarm = 0;
+static bool     sIsMsRunning = false;
+static uint32_t sMsAlarm     = 0;
 
-static bool sIsUsRunning = false;
-static uint32_t sUsAlarm = 0;
+static bool     sIsUsRunning = false;
+static uint32_t sUsAlarm     = 0;
+
+static uint32_t sSpeedUpFactor = 1;
 
 static struct timeval sStart;
 
-void platformAlarmInit(void)
+void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
+    sSpeedUpFactor = aSpeedUpFactor;
     gettimeofday(&sStart, NULL);
 }
 
@@ -62,13 +67,14 @@ uint32_t otPlatAlarmMilliGetNow(void)
     gettimeofday(&tv, NULL);
     timersub(&tv, &sStart, &tv);
 
-    return (uint32_t)((tv.tv_sec * MS_PER_S) + (tv.tv_usec / US_PER_MS));
+    return (uint32_t)(((uint64_t)tv.tv_sec * sSpeedUpFactor * MS_PER_S) +
+                      ((uint64_t)tv.tv_usec * sSpeedUpFactor / US_PER_MS));
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
-    sMsAlarm = aT0 + aDt;
+    sMsAlarm     = aT0 + aDt;
     sIsMsRunning = true;
 }
 
@@ -85,13 +91,13 @@ uint32_t otPlatAlarmMicroGetNow(void)
     gettimeofday(&tv, NULL);
     timersub(&tv, &sStart, &tv);
 
-    return (uint32_t)(tv.tv_sec * US_PER_S + tv.tv_usec);
+    return (uint32_t)(tv.tv_sec * US_PER_S + tv.tv_usec) * sSpeedUpFactor;
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
-    sUsAlarm = aT0 + aDt;
+    sUsAlarm     = aT0 + aDt;
     sIsUsRunning = true;
 }
 
@@ -123,18 +129,27 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (usRemaining <= 0 || msRemaining <= 0)
     {
-        aTimeout->tv_sec = 0;
+        aTimeout->tv_sec  = 0;
         aTimeout->tv_usec = 0;
-    }
-    else if (msRemaining * US_PER_MS < usRemaining)
-    {
-        aTimeout->tv_sec = msRemaining / MS_PER_S;
-        aTimeout->tv_usec = (msRemaining % MS_PER_S) * US_PER_MS;
     }
     else
     {
-        aTimeout->tv_sec = usRemaining / US_PER_S;
-        aTimeout->tv_usec = usRemaining % US_PER_S;
+        int64_t remaining = ((int64_t)msRemaining) * US_PER_MS;
+
+        if (usRemaining < remaining)
+        {
+            remaining = usRemaining;
+        }
+
+        remaining /= sSpeedUpFactor;
+
+        if (remaining == 0)
+        {
+            remaining = 1;
+        }
+
+        aTimeout->tv_sec  = (time_t)remaining / US_PER_S;
+        aTimeout->tv_usec = remaining % US_PER_S;
     }
 }
 
@@ -180,3 +195,5 @@ void platformAlarmProcess(otInstance *aInstance)
 
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }
+
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

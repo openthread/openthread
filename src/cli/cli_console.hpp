@@ -34,6 +34,8 @@
 #ifndef CLI_CONSOLE_HPP_
 #define CLI_CONSOLE_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/cli.h>
 
 #include "cli/cli.hpp"
@@ -46,7 +48,7 @@ namespace Cli {
  * This class implements the CLI server on top of the CONSOLE platform abstraction.
  *
  */
-class Console: public Server
+class Console : public Server
 {
 public:
     /**
@@ -55,7 +57,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Console(otInstance *aInstance);
+    Console(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -66,7 +68,7 @@ public:
      * @returns The number of bytes placed in the output queue.
      *
      */
-    int Output(const char *aBuf, uint16_t aBufLength);
+    virtual int Output(const char *aBuf, uint16_t aBufLength);
 
     /**
      * This method delivers formatted output to the client.
@@ -77,7 +79,7 @@ public:
      * @returns The number of bytes placed in the output queue.
      *
      */
-    int OutputFormat(const char *fmt, ...);
+    virtual int OutputFormat(const char *fmt, ...);
 
     /**
      * This method sets a callback that is called when console has some output.
@@ -104,13 +106,12 @@ private:
     };
 
     otCliConsoleOutputCallback mCallback;
-    void *mContext;
+    void *                     mContext;
 
     Interpreter mInterpreter;
-
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_CONSOLE_HPP_
+#endif // CLI_CONSOLE_HPP_

@@ -34,8 +34,9 @@
 #ifndef SLAAC_ADDRESS_HPP_
 #define SLAAC_ADDRESS_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/types.h>
-#include <openthread/platform/random.h>
 
 namespace ot {
 namespace Utils {
@@ -67,7 +68,7 @@ public:
      * @retval  OT_ERROR_FAILED  if creating IID failed.
      *
      */
-    typedef otError(*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+    typedef otError (*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
 
     /**
      * This function update addresses that shall be automatically created using SLAAC.
@@ -79,8 +80,11 @@ public:
      * @param[in]     aContext      A pointer to IID creator-specific context data.
      *
      */
-    static void UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                                IidCreator aIidCreator, void *aContext);
+    static void UpdateAddresses(otInstance *    aInstance,
+                                otNetifAddress *aAddresses,
+                                uint32_t        aNumAddresses,
+                                IidCreator      aIidCreator,
+                                void *          aContext);
 
     /**
      * This function creates randomly generated IPv6 IID for given IPv6 address.
@@ -98,7 +102,7 @@ public:
  * This class implements the Method for Generating Semantically Opaque IIDs with IPv6 SLAAC (RFC 7217).
  *
  */
-class SemanticallyOpaqueIidGenerator: public otSemanticallyOpaqueIidGeneratorData
+class SemanticallyOpaqueIidGenerator : public otSemanticallyOpaqueIidGeneratorData
 {
 public:
     /**
@@ -155,8 +159,7 @@ private:
  * @}
  */
 
-}  // namespace Slaac
-}  // namespace ot
+} // namespace Utils
+} // namespace ot
 
-#endif  // SLAAC_ADDRESS_HPP_
-
+#endif // SLAAC_ADDRESS_HPP_

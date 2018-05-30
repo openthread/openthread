@@ -786,7 +786,7 @@ otLwfEventWorkerThread(
     NT_ASSERT(otCtxToFilter(pFilter->otCtx) == pFilter);
 
     // Disable Icmp (ping) handling
-    otIcmp6SetEchoEnabled(pFilter->otCtx, FALSE);
+    otIcmp6SetEchoMode(pFilter->otCtx, OT_ICMP6_ECHO_HANDLER_DISABLED);
 
     // Register callbacks with OpenThread
     otSetStateChangedCallback(pFilter->otCtx, otLwfStateChangedCallback, pFilter);
@@ -1019,7 +1019,7 @@ otLwfEventWorkerThread(
                             SPINEL_DATATYPE_STRUCT_S( // Vendor-data
                                 SPINEL_DATATYPE_UINT_PACKED_S
                             ),
-                            &pFilter->otReceiveFrame.mPower,
+                            &pFilter->otReceiveFrame.mRssi,
                             &noiseFloor,
                             &flags,
                             &pFilter->otReceiveFrame.mChannel,

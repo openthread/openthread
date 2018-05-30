@@ -31,60 +31,32 @@
  * This file includes the platform-specific initializers.
  */
 
-#include <openthread/config.h>
-
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/uart.h>
 
 #include "platform-da15000.h"
 
-#include "sdk_defs.h"
-#include "ftdf.h"
 #include "hw_cpm.h"
 #include "hw_gpio.h"
 #include "hw_qspi.h"
-#include "hw_otpc.h"
 #include "hw_watchdog.h"
+#include "sdk_defs.h"
 
 static bool sBlink = false;
 static int  sMsCounterInit;
 static int  sMsCounter;
 
+// clang-format off
 #define ALIVE_LED_PERIOD      (50000)
 #define ALIVE_LED_DUTY        (500)
 #define LEADER_BLINK_TIME     (200)
 #define ROUTER_BLINK_TIME     (500)
 #define CHILD_BLINK_TIME      (2000)
+// clang-format on
 
 static otInstance *sInstance = NULL;
-
-void ClkInit(void)
-{
-    NVIC_ClearPendingIRQ(XTAL16RDY_IRQn);
-    NVIC_EnableIRQ(XTAL16RDY_IRQn);                 // Activate XTAL16 Ready IRQ
-    hw_cpm_set_divn(false);                         // External crystal is 16MHz
-    hw_cpm_enable_rc32k();
-    hw_cpm_lp_set_rc32k();
-    hw_cpm_set_xtal16m_settling_time(dg_configXTAL16_SETTLE_TIME_RC32K);
-    hw_cpm_enable_xtal16m();                        // Enable XTAL16M
-    hw_cpm_configure_xtal32k_pins();                // Configure XTAL32K pins
-    hw_cpm_configure_xtal32k();                     // Configure XTAL32K
-    hw_cpm_enable_xtal32k();                        // Enable XTAL32K
-    hw_watchdog_unfreeze();                         // Start watchdog
-
-    while (!hw_cpm_is_xtal16m_started());           // Block until XTAL16M starts
-
-    hw_watchdog_freeze();                           // Stop watchdog
-    hw_cpm_set_recharge_period((uint16_t)dg_configSET_RECHARGE_PERIOD);
-    hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M);
-    hw_cpm_set_hclk_div(0);
-    hw_cpm_set_pclk_div(0);
-    hw_otpc_init();
-    hw_otpc_set_speed(HW_OTPC_SYS_CLK_FREQ_16);
-}
 
 /*
  * Example function. Blink LED according to node state
@@ -92,19 +64,18 @@ void ClkInit(void)
  * Router       - 2Hz
  * Child        - 0.5Hz
  */
-
-void ExampleProcess(otInstance *aInstance)
+static void ExampleProcess(otInstance *aInstance)
 {
-    static int    aliveLEDcounter = 0;
-    otDeviceRole  devRole;
-    static int    thrValue;
+    static int   aliveLEDcounter = 0;
+    otDeviceRole devRole;
+    static int   thrValue;
 
     devRole = otThreadGetDeviceRole(aInstance);
 
     if (sBlink == false && otPlatAlarmMilliGetNow() != 0)
     {
         sMsCounterInit = otPlatAlarmMilliGetNow();
-        sBlink = true;
+        sBlink         = true;
     }
 
     sMsCounter = otPlatAlarmMilliGetNow() - sMsCounterInit;
@@ -156,25 +127,27 @@ void ExampleProcess(otInstance *aInstance)
 
 void PlatformInit(int argc, char *argv[])
 {
-    // Initialize System Clock
-    ClkInit();
     // Initialize Random number generator
     da15000RandomInit();
     // Initialize Alarm
     da15000AlarmInit();
     // Initialize Radio
     da15000RadioInit();
-    // enable interrupts
-    portENABLE_INTERRUPTS();
 
     (void)argc;
     (void)argv;
 }
 
+bool PlatformPseudoResetWasRequested(void)
+{
+    return false;
+}
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
 static sys_clk_t ClkGet(void)
 {
-    sys_clk_t clk = sysclk_RC16;
-    uint32_t hw_clk = hw_cpm_get_sysclk();
+    sys_clk_t clk    = sysclk_RC16;
+    uint32_t  hw_clk = hw_cpm_get_sysclk();
 
     switch (hw_clk)
     {
@@ -208,7 +181,7 @@ static sys_clk_t ClkGet(void)
 
     case SYS_CLK_IS_LP:
 
-    // fall-through
+        // fall-through
 
     default:
         ASSERT_WARNING(0);
@@ -225,16 +198,17 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_XTAL16M:
         if (!hw_cpm_check_xtal16m_status()) // XTAL16M disabled
         {
-            hw_cpm_enable_xtal16m();        // Enable XTAL16M
+            hw_cpm_enable_xtal16m(); // Enable XTAL16M
         }
 
-        hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M);  // Set XTAL16 as sys_clk
-        hw_watchdog_unfreeze();                 // Start watchdog
+        hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M); // Set XTAL16 as sys_clk
+        hw_watchdog_unfreeze();                // Start watchdog
 
-        while (!hw_cpm_is_xtal16m_started());   // Block until XTAL16M starts
+        while (!hw_cpm_is_xtal16m_started())
+            ; // Block until XTAL16M starts
 
         hw_qspi_set_div(HW_QSPI_DIV_1);
-        hw_watchdog_freeze();                   // Stop watchdog
+        hw_watchdog_freeze(); // Stop watchdog
         hw_cpm_set_hclk_div(0);
         hw_cpm_set_pclk_div(0);
         break;
@@ -242,12 +216,10 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_PLL48:
         if (hw_cpm_is_pll_locked() == 0)
         {
-            hw_watchdog_unfreeze();         // Start watchdog
-            hw_cpm_pll_sys_on();            // Turn on PLL
-            hw_watchdog_freeze();           // Stop watchdog
+            hw_cpm_pll_sys_on(); // Turn on PLL
         }
 
-        hw_cpm_enable_pll_divider();        // Enable divider (div by 2)
+        hw_cpm_enable_pll_divider(); // Enable divider (div by 2)
         hw_qspi_set_div(HW_QSPI_DIV_1);
         hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
         hw_cpm_set_hclk_div(0);
@@ -257,12 +229,10 @@ static void ClkSet(sys_clk_t clock)
     case sysclk_PLL96:
         if (hw_cpm_is_pll_locked() == 0)
         {
-            hw_watchdog_unfreeze();         // Start watchdog
-            hw_cpm_pll_sys_on();            // Turn on PLL
-            hw_watchdog_freeze();           // Stop watchdog
+            hw_cpm_pll_sys_on(); // Turn on PLL
         }
 
-        hw_cpm_disable_pll_divider();       // Disable divider (div by 1)
+        hw_cpm_disable_pll_divider(); // Disable divider (div by 1)
         hw_qspi_set_div(HW_QSPI_DIV_2);
         hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
         hw_cpm_set_hclk_div(0);
@@ -282,7 +252,7 @@ static void ClkChange(sys_clk_t lastClock, sys_clk_t newClock)
     }
 }
 
-void StateChangedCallback(uint32_t aFlags,  void *aContext)
+static void StateChangedCallback(uint32_t aFlags, void *aContext)
 {
     if ((aFlags & OT_CHANGED_COMMISSIONER_STATE) != 0)
     {
@@ -308,13 +278,16 @@ void StateChangedCallback(uint32_t aFlags,  void *aContext)
         }
     }
 }
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
     if (sInstance == NULL)
     {
         sInstance = aInstance;
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
         otSetStateChangedCallback(aInstance, StateChangedCallback, 0);
+#endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
     }
 
     da15000UartProcess();

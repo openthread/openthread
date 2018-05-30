@@ -35,21 +35,20 @@
 #ifndef OPENTHREAD_JAM_DETECTION_H_
 #define OPENTHREAD_JAM_DETECTION_H_
 
-#include <openthread/config.h>
-
 #include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-
 /**
  * @addtogroup api-jam-detection
  *
  * @brief
  *   This module includes functions for signal jamming detection feature.
+ *
+ *   The functions in this module are available when jam-detection feature (`OPENTHREAD_ENABLE_JAM_DETECTION`) is
+ *   enabled.
  *
  * @{
  *
@@ -193,10 +192,8 @@ uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance);
  *
  */
 
-#endif  // OPENTHREAD_ENABLE_JAM_DETECTION
-
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_JAM_DETECTION_H_
+#endif // OPENTHREAD_JAM_DETECTION_H_

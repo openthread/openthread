@@ -41,6 +41,7 @@ DIST_SUBDIRS                            = \
     kw41z                                 \
     nrf52840                              \
     posix                                 \
+    samr21                                \
     utils                                 \
     $(NULL)
 
@@ -90,6 +91,14 @@ if OPENTHREAD_EXAMPLES_POSIX
 SUBDIRS                                += posix
 endif
 
+if OPENTHREAD_EXAMPLES_SAMR21
+SUBDIRS                                += samr21
+endif
+
+noinst_HEADERS                          = \
+    platform.h                            \
+    $(NULL)
+
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
@@ -103,6 +112,7 @@ PRETTY_SUBDIRS                          = \
     kw41z                                 \
     nrf52840                              \
     posix                                 \
+    samr21                                \
     utils                                 \
     $(NULL)
 

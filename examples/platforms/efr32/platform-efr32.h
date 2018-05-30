@@ -35,10 +35,12 @@
 #ifndef PLATFORM_EFR32_H_
 #define PLATFORM_EFR32_H_
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
+
 #include "em_device.h"
 #include "em_system.h"
+
 #include "core_cm4.h"
 
 // Global OpenThread instance structure
@@ -96,4 +98,4 @@ void efr32MiscInit(void);
  */
 void efr32RandomInit(void);
 
-#endif  // PLATFORM_EFR32_H_
+#endif // PLATFORM_EFR32_H_

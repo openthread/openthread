@@ -28,6 +28,8 @@
 
 #include "changed_props_set.hpp"
 
+#include "common/code_utils.hpp"
+
 namespace ot {
 namespace Ncp {
 
@@ -73,11 +75,21 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] =
     { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_JOIN_FAILURE,        false },         // 19
     { SPINEL_PROP_MAC_SCAN_STATE,                        SPINEL_STATUS_OK,                  false },         // 20
     { SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE,          SPINEL_STATUS_OK,                  true  },         // 21
+    { SPINEL_PROP_PHY_CHAN,                              SPINEL_STATUS_OK,                  true  },         // 22
+    { SPINEL_PROP_MAC_15_4_PANID,                        SPINEL_STATUS_OK,                  true  },         // 23
+    { SPINEL_PROP_NET_NETWORK_NAME,                      SPINEL_STATUS_OK,                  true  },         // 24
+    { SPINEL_PROP_NET_XPANID,                            SPINEL_STATUS_OK,                  true  },         // 25
+    { SPINEL_PROP_NET_MASTER_KEY,                        SPINEL_STATUS_OK,                  true  },         // 26
+    { SPINEL_PROP_NET_PSKC,                              SPINEL_STATUS_OK,                  true  },         // 27
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+    { SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL,           SPINEL_STATUS_OK,                  true  },         // 28
+#endif
+
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
 {
-    return (sizeof(mSupportedProps) / sizeof(mSupportedProps[0]));
+    return OT_ARRAY_LENGTH(mSupportedProps);
 }
 
 void ChangedPropsSet::Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus)

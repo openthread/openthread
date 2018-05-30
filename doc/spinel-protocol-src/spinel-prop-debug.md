@@ -30,3 +30,11 @@ If the NCP supports dynamic log level control, setting this property
 changes the log level accordingly. Getting the value returns the current
 log level.  If the dynamic log level control is not supported, setting this
 property returns a `PROP_LAST_STATUS` with `STATUS_INVALID_COMMAND_FOR_PROP`.
+
+### PROP 16386: PROP_DEBUG_TEST_WATCHDOG {#prop-debug-test-watchdog}
+* Type: Read-Only
+* Packed-Encoding: Empty
+
+Reading this property will causes NCP to start `while(true) ;` loop and
+thus triggering a watchdog. This is intended for testing the watchdog
+functionality on the underlying platform/NCP.

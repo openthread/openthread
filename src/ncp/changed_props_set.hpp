@@ -33,6 +33,10 @@
 #ifndef CHANGED_PROPS_SET_HPP_
 #define CHANGED_PROPS_SET_HPP_
 
+#include "openthread-core-config.h"
+
+#include <stddef.h>
+
 #include <openthread/types.h>
 
 #include "spinel.h"

@@ -31,33 +31,42 @@
  *   This file implements the OpenThread ICMPv6 API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/icmp6.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
-bool otIcmp6IsEchoEnabled(otInstance *aInstance)
+otIcmp6EchoMode otIcmp6GetEchoMode(otInstance *aInstance)
 {
-    return aInstance->mIp6.mIcmp.IsEchoEnabled();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetIp6().GetIcmp().GetEchoMode();
 }
 
-void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled)
+void otIcmp6SetEchoMode(otInstance *aInstance, otIcmp6EchoMode aMode)
 {
-    aInstance->mIp6.mIcmp.SetEchoEnabled(aEnabled);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetIp6().GetIcmp().SetEchoMode(aMode);
 }
 
 otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
 {
-    return aInstance->mIp6.mIcmp.RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetIp6().GetIcmp().RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
 }
 
-otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
-                               const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
+otError otIcmp6SendEchoRequest(otInstance *         aInstance,
+                               otMessage *          aMessage,
+                               const otMessageInfo *aMessageInfo,
+                               uint16_t             aIdentifier)
 {
-    return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),
-                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                 aIdentifier);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetIp6().GetIcmp().SendEchoRequest(
+        *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aIdentifier);
 }

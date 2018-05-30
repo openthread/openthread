@@ -34,6 +34,8 @@
 #ifndef UDP6_HPP_
 #define UDP6_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/udp.h>
 
 #include "common/locator.hpp"
@@ -58,7 +60,7 @@ class Udp;
  * This class implements a UDP/IPv6 socket.
  *
  */
-class UdpSocket: public otUdpSocket
+class UdpSocket : public otUdpSocket
 {
     friend class Udp;
 
@@ -151,9 +153,10 @@ public:
 
 private:
     UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
-    void SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
+    void       SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
 
-    void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo) {
+    void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo)
+    {
         mHandler(mContext, &aMessage, &aMessageInfo);
     }
 };
@@ -162,7 +165,7 @@ private:
  * This class implements core UDP message handling.
  *
  */
-class Udp: public Ip6Locator
+class Udp : public InstanceLocator
 {
     friend class UdpSocket;
 
@@ -170,10 +173,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aIp6  A reference to OpenThread instance.
      *
      */
-    Udp(Ip6 &aIp6);
+    explicit Udp(Instance &aInstance);
 
     /**
      * This method adds a UDP socket.
@@ -253,10 +256,10 @@ public:
 private:
     enum
     {
-        kDynamicPortMin = 49152,  ///< Service Name and Transport Protocol Port Number Registry
-        kDynamicPortMax = 65535,  ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
-    uint16_t mEphemeralPort;
+    uint16_t   mEphemeralPort;
     UdpSocket *mSockets;
 };
 
@@ -274,7 +277,7 @@ struct UdpHeaderPoD
  *
  */
 OT_TOOL_PACKED_BEGIN
-class UdpHeader: private UdpHeaderPoD
+class UdpHeader : private UdpHeaderPoD
 {
 public:
     /**
@@ -364,7 +367,7 @@ public:
  *
  */
 
-}  // namespace Ip6
-}  // namespace ot
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_UDP6_HPP_
+#endif // NET_UDP6_HPP_

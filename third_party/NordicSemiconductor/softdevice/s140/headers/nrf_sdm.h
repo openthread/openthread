@@ -1,38 +1,41 @@
 /*
- * Copyright (c) Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2017, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
- *   1. Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
- *   2. Redistributions in binary form must reproduce the above copyright notice, this
- *   list of conditions and the following disclaimer in the documentation and/or
- *   other materials provided with the distribution.
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
  *
- *   3. Neither the name of Nordic Semiconductor ASA nor the names of other
- *   contributors to this software may be used to endorse or promote products
- *   derived from this software without specific prior written permission.
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
  *
- *   4. This software must only be used in a processor manufactured by Nordic
- *   Semiconductor ASA, or in a processor manufactured by a third party that
- *   is used in combination with a processor manufactured by Nordic Semiconductor.
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
  *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
   @defgroup nrf_sdm_api SoftDevice Manager API
   @{
@@ -44,10 +47,12 @@
 #ifndef NRF_SDM_H__
 #define NRF_SDM_H__
 
-#include "nrf_svc.h"
+#include <stdint.h>
 #include "nrf.h"
-#include "nrf_soc.h"
+#include "nrf_svc.h"
+#include "nrf_error.h"
 #include "nrf_error_sdm.h"
+#include "nrf_soc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +67,7 @@ extern "C" {
 #endif
 
 /** @brief The major version for the SoftDevice binary distributed with this header file. */
-#define SD_MAJOR_VERSION  (0)
+#define SD_MAJOR_VERSION  (6)
 
 /** @brief The minor version for the SoftDevice binary distributed with this header file. */
 #define SD_MINOR_VERSION  (0)
@@ -79,6 +84,9 @@ extern "C" {
 
 /** @brief SoftDevice Manager SVC Base number. */
 #define SDM_SVC_BASE 0x10
+
+/** @brief SoftDevice unique string size in bytes. */
+#define SD_UNIQUE_STR_SIZE 20
 
 /** @brief Invalid info field. Returned when an info field does not exist. */
 #define SDM_INFO_FIELD_INVALID (0)
@@ -111,6 +119,11 @@ the start of the SoftDevice (without MBR)*/
  *         the same format as @ref SD_VERSION, stored as an uint32_t. */
 #define SD_VERSION_OFFSET (SOFTDEVICE_INFO_STRUCT_OFFSET + 0x14)
 
+/** @brief Defines the offset for the SoftDevice unique string relative to the SoftDevice base address.
+ *         The SD_UNIQUE_STR is stored as an array of uint8_t. The size of array is @ref SD_UNIQUE_STR_SIZE.
+ */
+#define SD_UNIQUE_STR_OFFSET (SOFTDEVICE_INFO_STRUCT_OFFSET + 0x18)
+
 /** @brief Defines a macro for retrieving the actual SoftDevice Information Structure size value
  *         from a given base address. Use @ref MBR_SIZE as the argument when the SoftDevice is
  *         installed just above the MBR (the usual case). */
@@ -121,8 +134,8 @@ the start of the SoftDevice (without MBR)*/
  *         the MBR (the usual case). */
 #define SD_SIZE_GET(baseaddr) (*((uint32_t *) ((baseaddr) + SD_SIZE_OFFSET)))
 
-/** @brief Defines a macro for retrieving the actual FWID value from a given base address. Use @ref
- *         MBR_SIZE as the argument when the SoftDevice is installed just above the MBR (the usual
+/** @brief Defines a macro for retrieving the actual FWID value from a given base address. Use
+ *         @ref MBR_SIZE as the argument when the SoftDevice is installed just above the MBR (the usual
  *         case). */
 #define SD_FWID_GET(baseaddr) (*((uint16_t *) ((baseaddr) + SD_FWID_OFFSET)))
 
@@ -132,11 +145,17 @@ the start of the SoftDevice (without MBR)*/
 #define SD_ID_GET(baseaddr) ((SD_INFO_STRUCT_SIZE_GET(baseaddr) > (SD_ID_OFFSET - SOFTDEVICE_INFO_STRUCT_OFFSET)) \
         ? (*((uint32_t *) ((baseaddr) + SD_ID_OFFSET))) : SDM_INFO_FIELD_INVALID)
 
-/** @brief Defines a macro for retrieving the actual FWID value from a given base address. Use @ref
- *         MBR_SIZE as the argument when the SoftDevice is installed just above the MBR (the usual
- *         case). */
+/** @brief Defines a macro for retrieving the actual SoftDevice version from a given base address.
+ *         Use @ref MBR_SIZE as the argument when the SoftDevice is installed just above the MBR
+ *         (the usual case). */
 #define SD_VERSION_GET(baseaddr) ((SD_INFO_STRUCT_SIZE_GET(baseaddr) > (SD_VERSION_OFFSET - SOFTDEVICE_INFO_STRUCT_OFFSET)) \
         ? (*((uint32_t *) ((baseaddr) + SD_VERSION_OFFSET))) : SDM_INFO_FIELD_INVALID)
+
+/** @brief Defines a macro for retrieving the address of SoftDevice unique str based on a given base address.
+ *         Use @ref MBR_SIZE as the argument when the SoftDevice is installed just above the MBR
+ *         (the usual case). */
+#define SD_UNIQUE_STR_ADDR_GET(baseaddr) ((SD_INFO_STRUCT_SIZE_GET(baseaddr) > (SD_UNIQUE_STR_OFFSET - SOFTDEVICE_INFO_STRUCT_OFFSET)) \
+        ? (((uint8_t *) ((baseaddr) + SD_UNIQUE_STR_OFFSET))) : SDM_INFO_FIELD_INVALID)
 
 /**@defgroup NRF_FAULT_ID_RANGES Fault ID ranges
  * @{ */
@@ -147,9 +166,11 @@ the start of the SoftDevice (without MBR)*/
 /**@defgroup NRF_FAULT_IDS Fault ID types
  * @{ */
 #define NRF_FAULT_ID_SD_ASSERT    (NRF_FAULT_ID_SD_RANGE_START  + 1)          /**< SoftDevice assertion. The info parameter is reserved for future used. */
-#define NRF_FAULT_ID_APP_MEMACC   (NRF_FAULT_ID_APP_RANGE_START + 1)          /**< Application invalid memory access (nRF52 only). The info parameter will contain 0x00000000, in case of SoftDevice RAM
-                                                                              access violation. In case of SoftDevice peripheral register violation the info parameter will contain the sub-region number of PREGION[0], on whose address range the disallowed
-                                                                              write access caused the memory access fault. */
+#define NRF_FAULT_ID_APP_MEMACC   (NRF_FAULT_ID_APP_RANGE_START + 1)          /**< Application invalid memory access. The info parameter will contain 0x00000000,
+                                                                                   in case of SoftDevice RAM access violation. In case of SoftDevice peripheral
+                                                                                   register violation the info parameter will contain the sub-region number of
+                                                                                   PREGION[0], on whose address range the disallowed write access caused the
+                                                                                   memory access fault. */
 /**@} */
 
 /** @} */
@@ -172,21 +193,21 @@ enum NRF_SD_SVCS
 /** @addtogroup NRF_SDM_DEFINES Defines
  * @{ */
 
-/**@defgroup NRF_CLOCK_LF_XTAL_ACCURACY Clock accuracy
+/**@defgroup NRF_CLOCK_LF_ACCURACY Clock accuracy
  * @{ */
 
-#define NRF_CLOCK_LF_XTAL_ACCURACY_250_PPM (0) /**< Default: 250 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_500_PPM (1) /**< 500 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_150_PPM (2) /**< 150 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_100_PPM (3) /**< 100 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_75_PPM  (4) /**< 75 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_50_PPM  (5) /**< 50 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_30_PPM  (6) /**< 30 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM  (7) /**< 20 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_10_PPM  (8) /**< 10 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_5_PPM   (9) /**<  5 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_2_PPM  (10) /**<  2 ppm */
-#define NRF_CLOCK_LF_XTAL_ACCURACY_1_PPM  (11) /**<  1 ppm */
+#define NRF_CLOCK_LF_ACCURACY_250_PPM (0) /**< Default: 250 ppm */
+#define NRF_CLOCK_LF_ACCURACY_500_PPM (1) /**< 500 ppm */
+#define NRF_CLOCK_LF_ACCURACY_150_PPM (2) /**< 150 ppm */
+#define NRF_CLOCK_LF_ACCURACY_100_PPM (3) /**< 100 ppm */
+#define NRF_CLOCK_LF_ACCURACY_75_PPM  (4) /**< 75 ppm */
+#define NRF_CLOCK_LF_ACCURACY_50_PPM  (5) /**< 50 ppm */
+#define NRF_CLOCK_LF_ACCURACY_30_PPM  (6) /**< 30 ppm */
+#define NRF_CLOCK_LF_ACCURACY_20_PPM  (7) /**< 20 ppm */
+#define NRF_CLOCK_LF_ACCURACY_10_PPM  (8) /**< 10 ppm */
+#define NRF_CLOCK_LF_ACCURACY_5_PPM   (9) /**<  5 ppm */
+#define NRF_CLOCK_LF_ACCURACY_2_PPM  (10) /**<  2 ppm */
+#define NRF_CLOCK_LF_ACCURACY_1_PPM  (11) /**<  1 ppm */
 
 /** @} */
 
@@ -207,36 +228,34 @@ enum NRF_SD_SVCS
 /**@brief Type representing LFCLK oscillator source. */
 typedef struct
 {
-  uint8_t source;        /**< LF oscillator clock source, see @ref NRF_CLOCK_LF_SRC. */
-  uint8_t rc_ctiv;      /**< Only for NRF_CLOCK_LF_SRC_RC: Calibration timer interval in 1/4 second
-                              units (nRF51: 1-64, nRF52: 1-32).
-                              @note To avoid excessive clock drift, 0.5 degrees Celsius is the
-                                    maximum temperature change allowed in one calibration timer
-                                    interval. The interval should be selected to ensure this.
+  uint8_t source;         /**< LF oscillator clock source, see @ref NRF_CLOCK_LF_SRC. */
+  uint8_t rc_ctiv;        /**< Only for ::NRF_CLOCK_LF_SRC_RC: Calibration timer interval in 1/4 second
+                               units (nRF52: 1-32).
+                               @note To avoid excessive clock drift, 0.5 degrees Celsius is the
+                                     maximum temperature change allowed in one calibration timer
+                                     interval. The interval should be selected to ensure this.
 
-                              @note Must be 0 if source is not NRF_CLOCK_LF_SRC_RC.  */
-  uint8_t rc_temp_ctiv; /**<  Only for NRF_CLOCK_LF_SRC_RC: How often (in number of calibration
-                              intervals) the RC oscillator shall be calibrated if the temperature
-                              hasn't changed.
-                                  0: Always calibrate even if the temperature hasn't changed.
-                                  1: Only calibrate if the temperature has changed (nRF51 only).
-                                  2-33: Check the temperature and only calibrate if it has changed,
-                                        however calibration will take place every rc_temp_ctiv
-                                        intervals in any case.
+                                  @note Must be 0 if source is not ::NRF_CLOCK_LF_SRC_RC.  */
+  uint8_t rc_temp_ctiv;   /**<  Only for ::NRF_CLOCK_LF_SRC_RC: How often (in number of calibration
+                                intervals) the RC oscillator shall be calibrated if the temperature
+                                hasn't changed.
+                                     0: Always calibrate even if the temperature hasn't changed.
+                                     1: Only calibrate if the temperature has changed (legacy - nRF51 only).
+                                     2-33: Check the temperature and only calibrate if it has changed,
+                                           however calibration will take place every rc_temp_ctiv
+                                           intervals in any case.
 
-                              @note Must be 0 if source is not NRF_CLOCK_LF_SRC_RC.
+                                @note Must be 0 if source is not ::NRF_CLOCK_LF_SRC_RC.
 
-                              @note For nRF52, the application must ensure calibration at least once
-                                    every 8 seconds to ensure +/-250 ppm clock stability. The
-                                    recommended configuration for NRF_CLOCK_LF_SRC_RC on nRF52 is
-                                    rc_ctiv=16 and rc_temp_ctiv=2. This will ensure calibration at
-                                    least once every 8 seconds and for temperature changes of 0.5
-                                    degrees Celsius every 4 seconds. See the Product Specification
-                                    for the nRF52 device being used for more information.*/
-  uint8_t xtal_accuracy; /**< External crystal clock accuracy used in the LL to compute timing
-                              windows, see @ref NRF_CLOCK_LF_XTAL_ACCURACY.
-
-                              @note For the NRF_CLOCK_LF_SRC_RC clock source this parameter is ignored. */
+                                @note For nRF52, the application must ensure calibration at least once
+                                      every 8 seconds to ensure +/-500 ppm clock stability. The
+                                      recommended configuration for ::NRF_CLOCK_LF_SRC_RC on nRF52 is
+                                      rc_ctiv=16 and rc_temp_ctiv=2. This will ensure calibration at
+                                      least once every 8 seconds and for temperature changes of 0.5
+                                      degrees Celsius every 4 seconds. See the Product Specification
+                                      for the nRF52 device being used for more information.*/
+  uint8_t accuracy;       /**< External clock accuracy used in the LL to compute timing
+                               windows, see @ref NRF_CLOCK_LF_ACCURACY.*/
 } nrf_clock_lf_cfg_t;
 
 /**@brief Fault Handler type.
@@ -252,7 +271,7 @@ typedef struct
  * @param[in] pc The program counter of the instruction that triggered the fault.
  * @param[in] info Optional additional information regarding the fault. Refer to each Fault identifier for details.
  *
- * @note When id is set to NRF_FAULT_ID_APP_MEMACC, pc will contain the address of the instruction being executed at the time when
+ * @note When id is set to @ref NRF_FAULT_ID_APP_MEMACC, pc will contain the address of the instruction being executed at the time when
  * the fault is detected by the CPU. The CPU program counter may have advanced up to 2 instructions (no branching) after the one that triggered the fault.
  */
 typedef void (*nrf_fault_handler_t)(uint32_t id, uint32_t pc, uint32_t info);
@@ -289,6 +308,7 @@ typedef void (*nrf_fault_handler_t)(uint32_t id, uint32_t pc, uint32_t info);
  * @retval ::NRF_ERROR_INVALID_STATE SoftDevice is already enabled, and the clock source and fault handler cannot be updated.
  * @retval ::NRF_ERROR_SDM_INCORRECT_INTERRUPT_CONFIGURATION SoftDevice interrupt is already enabled, or an enabled interrupt has an illegal priority level.
  * @retval ::NRF_ERROR_SDM_LFCLK_SOURCE_UNKNOWN Unknown low frequency clock source selected.
+ * @retval ::NRF_ERROR_INVALID_PARAM Invalid clock source configuration supplied in p_clock_lf_cfg.
  */
 SVCALL(SD_SOFTDEVICE_ENABLE, uint32_t, sd_softdevice_enable(nrf_clock_lf_cfg_t const * p_clock_lf_cfg, nrf_fault_handler_t fault_handler));
 

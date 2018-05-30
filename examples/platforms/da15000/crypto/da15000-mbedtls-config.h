@@ -31,8 +31,9 @@
 
 #include <stdlib.h>
 
-#include "openthread/platform/logging.h"
-#include "openthread/platform/memory.h"
+#include <openthread/config.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/memory.h>
 
 #if defined(_WIN32)
 #include <stdarg.h>
@@ -341,7 +342,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * Uncomment to use your own hardware entropy collector.
  */
-#define MBEDTLS_ENTROPY_HARDWARE_ALT
+//#define MBEDTLS_ENTROPY_HARDWARE_ALT
 
 /**
  * \def MBEDTLS_AES_ROM_TABLES
@@ -822,7 +823,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * Uncomment this macro to prevent loading of default entropy functions.
  */
-//#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
 
 /**
  * \def MBEDTLS_NO_PLATFORM_ENTROPY
@@ -1974,7 +1975,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * Enable this module to enable the buffer memory allocator.
  */
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #endif
 
@@ -2538,7 +2539,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #define MBEDTLS_ECP_FIXED_POINT_OPTIM      0 /**< Enable fixed-point speed-up */
 
 /* Entropy options */
-//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
+#define MBEDTLS_ENTROPY_MAX_SOURCES                1 /**< Maximum number of sources supported */
 //#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
 //#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
 
@@ -2548,7 +2549,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 
 /* Platform options */
 //#define MBEDTLS_PLATFORM_STD_MEM_HDR   <stdlib.h> /**< Header to include if MBEDTLS_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #define MBEDTLS_PLATFORM_STD_CALLOC    otPlatCAlloc /**< Default allocator to use, can be undefined */
 #define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
 #endif

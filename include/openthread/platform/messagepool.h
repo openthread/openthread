@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the message pool.
  */
 
-#ifndef MESSAGEPOOL_H_
-#define MESSAGEPOOL_H_
+#ifndef OPENTHREAD_PLATFORM_MESSAGEPOOL_H_
+#define OPENTHREAD_PLATFORM_MESSAGEPOOL_H_
 
 #include <stdint.h>
 
@@ -94,7 +94,7 @@ void otPlatMessagePoolFree(otInstance *aInstance, otMessage *aBuffer);
 uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 /**
@@ -102,5 +102,4 @@ uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
  *
  */
 
-
-#endif  // MESSAGEPOOL_H_
+#endif // OPENTHREAD_PLATFORM_MESSAGEPOOL_H_

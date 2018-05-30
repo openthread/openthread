@@ -31,16 +31,18 @@
  *   This file implements the OpenThread UDP API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
+
 #include <openthread/udp.h>
 
-#include "openthread-instance.h"
+#include "common/instance.hpp"
 
 using namespace ot;
 
 otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
-    Message *message = aInstance->mIp6.mUdp.NewMessage(0);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Message * message  = instance.GetIp6().GetUdp().NewMessage(0);
 
     if (message)
     {
@@ -52,13 +54,14 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
-    otError error = OT_ERROR_INVALID_ARGS;
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+    otError         error    = OT_ERROR_INVALID_ARGS;
+    Instance &      instance = *static_cast<Instance *>(aInstance);
+    Ip6::UdpSocket &socket   = *static_cast<Ip6::UdpSocket *>(aSocket);
 
-    if (socket->mTransport == NULL)
+    if (socket.mTransport == NULL)
     {
-        socket->mTransport = &aInstance->mIp6.mUdp;
-        error = socket->Open(aCallback, aCallbackContext);
+        socket.mTransport = &instance.GetIp6().GetUdp();
+        error             = socket.Open(aCallback, aCallbackContext);
     }
 
     return error;
@@ -66,16 +69,16 @@ otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCal
 
 otError otUdpClose(otUdpSocket *aSocket)
 {
-    otError error = OT_ERROR_INVALID_STATE;
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+    otError         error  = OT_ERROR_INVALID_STATE;
+    Ip6::UdpSocket &socket = *static_cast<Ip6::UdpSocket *>(aSocket);
 
-    if (socket->mTransport != NULL)
+    if (socket.mTransport != NULL)
     {
-        error = socket->Close();
+        error = socket.Close();
 
         if (error == OT_ERROR_NONE)
         {
-            socket->mTransport = NULL;
+            socket.mTransport = NULL;
         }
     }
 
@@ -84,19 +87,18 @@ otError otUdpClose(otUdpSocket *aSocket)
 
 otError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName)
 {
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
+    Ip6::UdpSocket &socket = *static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket.Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
 otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName)
 {
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Connect(*static_cast<const Ip6::SockAddr *>(aSockName));
+    Ip6::UdpSocket &socket = *static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket.Connect(*static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
 otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->SendTo(*static_cast<Message *>(aMessage),
-                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    Ip6::UdpSocket &socket = *static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket.SendTo(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }

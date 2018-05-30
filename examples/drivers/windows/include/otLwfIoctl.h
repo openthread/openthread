@@ -457,8 +457,8 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_CTL_CODE(156, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
 
-#define IOCTL_OTLWF_OT_MAX_TRANSMIT_POWER \
-    OTLWF_CTL_CODE(157, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+//#define IOCTL_OTLWF_OT_TRANSMIT_POWER                                 \
+//    OTLWF_CTL_CODE(157, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
     // GUID - InterfaceGuid
     // int8_t - aPower
 
@@ -542,7 +542,7 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // otExtAddress - aEui64
 
-#define IOCTL_OTLWF_OT_HASH_MAC_ADDRESS \
+#define IOCTL_OTLWF_OT_JOINER_ID \
     OTLWF_CTL_CODE(172, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
     // otExtAddress - aEui64
@@ -717,8 +717,21 @@ typedef struct otCommissionConfig
     OTLWF_CTL_CODE(200, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
 
+#define IOCTL_OTLWF_OT_NEXT_ROUTE \
+    OTLWF_CTL_CODE(201, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // BOOLEAN - aLocal (input)
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otExternalRouteConfig - aConfig (output)
+
+#define IOCTL_OTLWF_OT_MAX_ROUTER_ID \
+    OTLWF_CTL_CODE(202, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // uint8_t - aMaxRouterId
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 200
+#define MAX_OTLWF_IOCTL_FUNC_CODE 202
 
 #endif //__OTLWFIOCTL_H__

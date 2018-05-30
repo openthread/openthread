@@ -34,198 +34,78 @@
 #ifndef LOCATOR_HPP_
 #define LOCATOR_HPP_
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <openthread/types.h>
 
-#include "openthread-core-config.h"
-#include "openthread-single-instance.h"
-
 namespace ot {
 
+class Instance;
 class ThreadNetif;
-class MeshForwarder;
-class TaskletScheduler;
-namespace Ip6 { class Ip6; }
+class Notifier;
+namespace Ip6 {
+class Ip6;
+}
 
 /**
  * @addtogroup core-locator
  *
  * @brief
- *   This module includes definitions for locator base class for OpenThread objects.
+ *   This module includes definitions for OpenThread instance locator.
  *
  * @{
  *
  */
 
 /**
- * This template class implements the base locator for OpenThread objects.
+ * This class implements a locator for an OpenThread Instance object.
+ *
+ * The `InstanceLocator` is used as base class of almost all other OpenThread classes. It provides a way for an object
+ * to get to its owning/parent OpenThread `Instance` and other objects within the OpenTread hierarchy (e.g. the
+ * `ThreadNetif` or `Ip6::Ip6` objects).
+ *
+ * If multiple-instance feature is supported, the owning/parent OpenThread `Instance` is tracked as a reference. In the
+ * single-instance case, this class becomes an empty base class.
  *
  */
-template <typename Type>
-class Locator
-{
-protected:
-    /**
-     * This constructor initializes the locator.
-     *
-     * @param[in]  aObject  A reference to the object.
-     *
-     */
-    Locator(Type &aObject)
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-        : mLocatorObject(aObject)
-#endif
-    {
-        OT_UNUSED_VARIABLE(aObject);
-    }
-
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Type &mLocatorObject;
-#endif
-};
-
-/**
- * This class implements a locator for ThreadNetif object.
- *
- */
-class ThreadNetifLocator: private Locator<ThreadNetif>
+class InstanceLocator
 {
 public:
     /**
-     * This method returns a reference to the thread network interface.
+     * This method returns a reference to the parent OpenThread Instance.
      *
-     * @returns   A reference to the thread network interface.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    ThreadNetif &GetNetif(void) const { return mLocatorObject; }
-#else
-    ThreadNetif &GetNetif(void) const { return otGetThreadNetif(); }
-#endif
-
-    /**
-     * This method returns the reference to the parent otInstance structure.
-     *
-     * @returns A reference to the parent otInstance structure.
+     * @returns A reference to the parent otInstance.
      *
      */
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance &GetInstance(void) const;
+    Instance &GetInstance(void) const { return mInstance; }
 #else
-    otInstance &GetInstance(void) const { return *otGetInstance(); }
+    Instance &GetInstance(void) const;
 #endif
 
-protected:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aThreadNetif  A reference to the thread network interface.
-     *
-     */
-    ThreadNetifLocator(ThreadNetif &aThreadNetif): Locator(aThreadNetif) { }
-};
-
-/**
- * This class implements a locator for MeshForwarder object.
- *
- */
-class MeshForwarderLocator: private Locator<MeshForwarder>
-{
-public:
-    /**
-     * This method returns a reference to the MeshForwarder.
-     *
-     * @returns   A reference to the MeshForwarder.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    MeshForwarder &GetMeshForwarder(void) const { return mLocatorObject; }
-#else
-    MeshForwarder &GetMeshForwarder(void) const { return otGetMeshForwarder(); }
-#endif
-
-    /**
-     * This method returns the reference to the parent otInstance structure.
-     *
-     * @returns A reference to the parent otInstance structure.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance &GetInstance(void) const;
-#else
-    otInstance &GetInstance(void) const { return *otGetInstance(); }
-#endif
-
-protected:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aMeshForwarder  A reference to the MeshForwarder.
-     *
-     */
-    MeshForwarderLocator(MeshForwarder &aMeshForwarder): Locator(aMeshForwarder) { }
-};
-
-/**
- * This class implements a locator for Ip6 object.
- *
- */
-class Ip6Locator: private Locator<Ip6::Ip6>
-{
-public:
     /**
      * This method returns a reference to the Ip6.
      *
      * @returns   A reference to the Ip6.
      *
      */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Ip6::Ip6 &GetIp6(void) const { return mLocatorObject; }
-#else
-    Ip6::Ip6 &GetIp6(void) const { return otGetIp6(); }
-#endif
+    Ip6::Ip6 &GetIp6(void) const;
 
     /**
-     * This method returns the reference to the parent otInstance structure.
+     * This method returns a reference to the thread network interface.
      *
-     * @returns A reference to the parent otInstance structure.
+     * @returns   A reference to the thread network interface.
      *
      */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance &GetInstance(void) const;
-#else
-    otInstance &GetInstance(void) const { return *otGetInstance(); }
-#endif
+    ThreadNetif &GetNetif(void) const;
 
-protected:
     /**
-     * This constructor initializes the object.
+     * This method returns a reference to the Notifier.
      *
-     * @param[in]  aIp6  A reference to the Ip6.
+     * @returns   A reference to the Notifier.
      *
      */
-    Ip6Locator(Ip6::Ip6 &aIp6): Locator(aIp6) { }
-};
-
-/**
- * This class implements locator for  otInstance object
- *
- */
-class InstanceLocator: private Locator<otInstance>
-{
-public:
-    /**
-     * This method returns a reference to the parent otInstance structure.
-     *
-     * @returns A reference to the parent otInstance structure.
-     *
-     */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    otInstance &GetInstance(void) const { return mLocatorObject; }
-#else
-    otInstance &GetInstance(void) const { return *otGetInstance(); }
-#endif
+    Notifier &GetNotifier(void) const;
 
 protected:
     /**
@@ -234,7 +114,66 @@ protected:
      * @param[in]  aInstance  A pointer to the otInstance.
      *
      */
-    InstanceLocator(otInstance &aInstance): Locator(aInstance) { }
+    InstanceLocator(Instance &aInstance)
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+        : mInstance(aInstance)
+#endif
+    {
+        OT_UNUSED_VARIABLE(aInstance);
+    }
+
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+private:
+    Instance &mInstance;
+#endif
+};
+
+/**
+ * This class implements a locator for owner of an object.
+ *
+ * This is used as the base class for objects that provide a callback (e.g., `Timer` or `Tasklet`).
+ *
+ */
+class OwnerLocator
+{
+public:
+    /**
+     * This template method returns a reference to the owner object.
+     *
+     * The caller needs to provide the `OwnerType` as part of the template type.
+     *
+     * @returns A reference to the owner of this object.
+     *
+     */
+    template <typename OwnerType> OwnerType &GetOwner(void)
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    {
+        return *static_cast<OwnerType *>(mOwner);
+    }
+#else
+    // Implemented in `owner-locator.hpp`
+    ;
+#endif
+
+protected:
+    /**
+     * This constructor initializes the object
+     *
+     * @param[in]  aOwner   A pointer to the owner object (as `void *`).
+     *
+     */
+    OwnerLocator(void *aOwner)
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+        : mOwner(aOwner)
+#endif
+    {
+        OT_UNUSED_VARIABLE(aOwner);
+    }
+
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+private:
+    void *mOwner;
+#endif
 };
 
 /**
@@ -242,6 +181,6 @@ protected:
  *
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // LOCATOR_HPP_
+#endif // LOCATOR_HPP_

@@ -34,9 +34,10 @@
 #ifndef PANID_QUERY_CLIENT_HPP_
 #define PANID_QUERY_CLIENT_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/commissioner.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
@@ -44,20 +45,18 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 /**
  * This class implements handling PANID Query Requests.
  *
  */
-class PanIdQueryClient: public ThreadNetifLocator
+class PanIdQueryClient : public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    PanIdQueryClient(ThreadNetif &aThreadNetif);
+    explicit PanIdQueryClient(Instance &aInstance);
 
     /**
      * This method sends a PAN ID Query message.
@@ -72,16 +71,21 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a PAN ID Query message.
      *
      */
-    otError SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
-                      otCommissionerPanIdConflictCallback aCallback, void *aContext);
+    otError SendQuery(uint16_t                            aPanId,
+                      uint32_t                            aChannelMask,
+                      const Ip6::Address &                aAddress,
+                      otCommissionerPanIdConflictCallback aCallback,
+                      void *                              aContext);
 
 private:
-    static void HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleConflict(void *               aContext,
+                               otCoapHeader *       aHeader,
+                               otMessage *          aMessage,
                                const otMessageInfo *aMessageInfo);
-    void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerPanIdConflictCallback mCallback;
-    void *mContext;
+    void *                              mContext;
 
     Coap::Resource mPanIdQuery;
 };
@@ -90,6 +94,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // PANID_QUERY_CLIENT_HPP_
+#endif // PANID_QUERY_CLIENT_HPP_

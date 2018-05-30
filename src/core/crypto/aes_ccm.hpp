@@ -34,6 +34,8 @@
 #ifndef AES_CCM_HPP_
 #define AES_CCM_HPP_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdint.h"
 
 #include <openthread/types.h>
@@ -79,8 +81,11 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  Initialization failed.
      *
      */
-    otError Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,
-                 const void *aNonce, uint8_t aNonceLength);
+    otError Init(uint32_t    aHeaderLength,
+                 uint32_t    aPlainTextLength,
+                 uint8_t     aTagLength,
+                 const void *aNonce,
+                 uint8_t     aNonceLength);
 
     /**
      * This method processes the header.
@@ -117,18 +122,18 @@ private:
         kTagLengthMin = 4,
     };
 
-    AesEcb mEcb;
-    uint8_t mBlock[AesEcb::kBlockSize];
-    uint8_t mCtr[AesEcb::kBlockSize];
-    uint8_t mCtrPad[AesEcb::kBlockSize];
-    uint8_t mNonceLength;
+    AesEcb   mEcb;
+    uint8_t  mBlock[AesEcb::kBlockSize];
+    uint8_t  mCtr[AesEcb::kBlockSize];
+    uint8_t  mCtrPad[AesEcb::kBlockSize];
+    uint8_t  mNonceLength;
     uint32_t mHeaderLength;
     uint32_t mHeaderCur;
     uint32_t mPlainTextLength;
     uint32_t mPlainTextCur;
     uint16_t mBlockLength;
     uint16_t mCtrLength;
-    uint8_t mTagLength;
+    uint8_t  mTagLength;
 };
 
 /**
@@ -136,7 +141,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
-#endif  // AES_CCM_HPP_
+#endif // AES_CCM_HPP_

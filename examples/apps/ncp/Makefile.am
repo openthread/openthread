@@ -27,32 +27,35 @@
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+include $(top_srcdir)/examples/platforms/Makefile.platform.am
 
 bin_PROGRAMS                                                           = \
     $(NULL)
 
-CPPFLAGS_COMMON                                                        = \
+CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
     $(NULL)
 
-LDADD_COMMON                                                           = \
+LDADD_COMMON                                                          += \
     $(NULL)
 
-LDFLAGS_COMMON                                                         = \
+LDFLAGS_COMMON                                                        += \
     $(NULL)
 
-LIBTOOLFLAGS_COMMON                                                    = \
-    --preserve-dup-deps                                                  \
+LIBTOOLFLAGS_COMMON                                                   += \
     $(NULL)
 
-SOURCES_COMMON                                                         = \
+SOURCES_COMMON                                                        += \
     main.c                                                               \
     $(NULL)
 
+LDADD_MBEDTLS                                                          = \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-LDADD_COMMON                                                          += \
+LDADD_MBEDTLS                                                         += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
@@ -63,105 +66,11 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif
 
-if OPENTHREAD_EXAMPLES_POSIX
+if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    -lstdc++                                                             \
+    $(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)                              \
     $(NULL)
-endif # OPENTHREAD_EXAMPLES_POSIX
-
-if OPENTHREAD_EXAMPLES_CC2538
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_CC2538
-
-if OPENTHREAD_EXAMPLES_CC2650
-CPPFLAGS_COMMON                                                       += \
-    -I$(top_srcdir)/third_party/ti/devices/cc26x0                        \
-    $(NULL)
-
-LDADD_COMMON                                                          +=      \
-    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a          \
-    $(top_srcdir)/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        +=       \
-    -T $(top_srcdir)/third_party/ti/devices/cc26x0/linker_files/cc26x0f128.lds \
-    $(NULL)
-
-endif # OPENTHREAD_EXAMPLES_CC2650
-
-if OPENTHREAD_EXAMPLES_CC2652
-CPPFLAGS_COMMON                                                       += \
-    -I$(top_srcdir)/third_party/ti/devices/cc26x2                        \
-    $(NULL)
-
-LDADD_COMMON                                                          +=      \
-    $(top_builddir)/examples/platforms/cc2652/libopenthread-cc2652.a          \
-    $(top_srcdir)/third_party/ti/devices/cc26x2/driverlib/bin/gcc/driverlib.a \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        +=      \
-    -T $(top_srcdir)/third_party/ti/devices/cc26x2/linker_files/cc26x2r1f.lds \
-    $(NULL)
-
-endif # OPENTHREAD_EXAMPLES_CC2652
-
-if OPENTHREAD_EXAMPLES_DA15000
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_DA15000
-
-if OPENTHREAD_EXAMPLES_EFR32
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/efr32/libopenthread-efr32.a       \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg12_gcc_release.a \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v1.1/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_EFR32
-
-if OPENTHREAD_EXAMPLES_EMSK
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/emsk/libopenthread-emsk.a         \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/emsk/emsk.ld                     \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_EMSK
-
-if OPENTHREAD_EXAMPLES_NRF52840
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld             \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_KW41Z
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/kw41z/libopenthread-kw41z.a       \
-    $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/kw41z/MKW41Z512xxx4.ld           \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_KW41Z
+endif # OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 if OPENTHREAD_ENABLE_NCP_FTD
 bin_PROGRAMS                                                          += \
@@ -177,7 +86,10 @@ ot_ncp_ftd_LDADD                                                       = \
     $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
     $(NULL)
 
 ot_ncp_ftd_LDFLAGS                                                     = \
@@ -206,7 +118,10 @@ ot_ncp_mtd_LDADD                                                       = \
     $(top_builddir)/src/ncp/libopenthread-ncp-mtd.a                      \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
     $(NULL)
 
 ot_ncp_mtd_LDFLAGS                                                     = \
@@ -221,9 +136,40 @@ ot_ncp_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
+if OPENTHREAD_ENABLE_NCP_RADIO
+bin_PROGRAMS                                                          += \
+    ot-ncp-radio                                                         \
+    $(NULL)
+endif
+
+ot_ncp_radio_CPPFLAGS                                                  = \
+    $(CPPFLAGS_COMMON)                                                   \
+    $(NULL)
+
+ot_ncp_radio_LDADD                                                     = \
+    $(top_builddir)/src/ncp/libopenthread-ncp-radio.a                    \
+    $(top_builddir)/src/core/libopenthread-radio.a                       \
+    $(LDADD_COMMON)                                                      \
+    $(top_builddir)/src/core/libopenthread-radio.a                       \
+    $(LDADD_COMMON)                                                      \
+    $(NULL)
+
+ot_ncp_radio_LDFLAGS                                                   = \
+    $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_ncp_radio_LIBTOOLFLAGS                                              = \
+    $(LIBTOOLFLAGS_COMMON)                                               \
+    $(NULL)
+
+ot_ncp_radio_SOURCES                                                   = \
+    $(SOURCES_COMMON)                                                    \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_LINKER_MAP
 ot_ncp_ftd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-ftd.map
 ot_ncp_mtd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-mtd.map
+ot_ncp_radio_LDFLAGS                                                  += -Wl,-Map=ot-ncp-radio.map
 endif
 
 if OPENTHREAD_BUILD_COVERAGE

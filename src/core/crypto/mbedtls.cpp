@@ -31,15 +31,11 @@
  *   This file implements the use of mbedTLS.
  */
 
-#include <openthread/config.h>
-
 #include "mbedtls.hpp"
 
 #include <mbedtls/platform.h>
 
-#include "heap.hpp"
-#include "openthread-instance.h"
-#include "openthread-single-instance.h"
+#include "common/instance.hpp"
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
@@ -48,12 +44,12 @@ namespace Crypto {
 
 static void *CAlloc(size_t aCount, size_t aSize)
 {
-    return otGetInstance()->mMbedTlsHeap.CAlloc(aCount, aSize);
+    return Instance::Get().GetHeap().CAlloc(aCount, aSize);
 }
 
 static void Free(void *aPointer)
 {
-    otGetInstance()->mMbedTlsHeap.Free(aPointer);
+    Instance::Get().GetHeap().Free(aPointer);
 }
 
 MbedTls::MbedTls(void)
@@ -61,7 +57,7 @@ MbedTls::MbedTls(void)
     mbedtls_platform_set_calloc_free(CAlloc, Free);
 }
 
-}  // namespace Crypto
-}  // namespace ot
+} // namespace Crypto
+} // namespace ot
 
 #endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES

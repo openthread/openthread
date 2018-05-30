@@ -7,6 +7,7 @@
 
 /**
  ****************************************************************************************
+ *
  * @file ad_ftdf_phy_api.h
  *
  * @brief FTDF PHY Adapter API
@@ -58,7 +59,7 @@ void ad_ftdf_init(void);
  *
  * \param[in] address - The extended address to set
  */
-void ad_ftdf_setExtAddress( FTDF_ExtAddress address);
+void ad_ftdf_set_ext_address(ftdf_ext_address_t address);
 
 /**
  * \brief Get Extended Address
@@ -67,24 +68,24 @@ void ad_ftdf_setExtAddress( FTDF_ExtAddress address);
  *
  * \returns The extended address of the interface
  */
-FTDF_ExtAddress ad_ftdf_getExtAddress( void);
+ftdf_ext_address_t ad_ftdf_get_ext_address(void);
 
 /**
  * \brief Transmits a frame
  *
  * Transmits a frame. Params:
  *
- * \param[in] frameLength - The total length of the frame passed in bytes
+ * \param[in] frame_length - The total length of the frame passed in bytes
  * \param[in] frame - a pointer to the passed frame buffer
  * \param[in] channel - The channel to use for transmission in [11, 26]
- * \param[in] csmaSuppress - If true, csma protocol (i.e. CCA) will not be performed
+ * \param[in] csma_suppress - If true, csma protocol (i.e. CCA) will not be performed
  * \param[in] pti - Packet Traffic Information that will be used for this transaction.
  */
-FTDF_Status ad_ftdf_send_frame_simple( FTDF_DataLength    frameLength,
-                                FTDF_Octet*        frame,
-                                FTDF_ChannelNumber channel,
-                                FTDF_PTI           pti,
-                                FTDF_Boolean       csmaSuppress);
+ftdf_status_t ad_ftdf_send_frame_simple(ftdf_data_length_t    frame_length,
+                                ftdf_octet_t*        frame,
+                                ftdf_channel_number_t channel,
+                                ftdf_pti_t           pti,
+                                ftdf_boolean_t       csma_suppress);
 
 /**
  * \brief Instructs the MAC and PHY to go to sleep
@@ -94,7 +95,7 @@ FTDF_Status ad_ftdf_send_frame_simple( FTDF_DataLength    frameLength,
  *                                   as soon as possible. If false, and the MAC cannot go to sleep
  *                                   immediately, sleep will be aborted.
  */
-void ad_ftdf_sleep_when_possible( FTDF_Boolean allow_deferred_sleep);
+void ad_ftdf_sleep_when_possible(ftdf_boolean_t allow_deferred_sleep);
 
 /**
  * \brief Instructs the MAC and PHY to wakeup, if sleeping
@@ -106,7 +107,7 @@ void ad_ftdf_wake_up(void);
 /**
  * \brief Configures GPIO pins for the FTDF debug bus
  *
- * Debug bus uses the following (fixed) GPIO pins:
+ * if FTDF_DBG_BUS_USE_PORT_4 == 0, the FTDF debug bus uses the following (fixed) GPIO pins,
  *
  * bit 0: HW_GPIO_PORT_1, HW_GPIO_PIN_4
  * bit 1: HW_GPIO_PORT_1, HW_GPIO_PIN_5
@@ -116,8 +117,20 @@ void ad_ftdf_wake_up(void);
  * bit 5: HW_GPIO_PORT_0, HW_GPIO_PIN_7
  * bit 6: HW_GPIO_PORT_1, HW_GPIO_PIN_3
  * bit 7: HW_GPIO_PORT_2, HW_GPIO_PIN_3
+ *
+ * if FTDF_DBG_BUS_USE_PORT_4 == 1, the FTDF debug bus uses the following pins:
+ *
+ * bit 0: HW_GPIO_PORT_4, HW_GPIO_PIN_0
+ * bit 1: HW_GPIO_PORT_4, HW_GPIO_PIN_1
+ * bit 2: HW_GPIO_PORT_4, HW_GPIO_PIN_2
+ * bit 3: HW_GPIO_PORT_4, HW_GPIO_PIN_3
+ * bit 4: HW_GPIO_PORT_4, HW_GPIO_PIN_4
+ * bit 5: HW_GPIO_PORT_4, HW_GPIO_PIN_5
+ * bit 6: HW_GPIO_PORT_4, HW_GPIO_PIN_6
+ * bit 7: HW_GPIO_PORT_4, HW_GPIO_PIN_7
+ *
  */
-void ad_ftdf_dbgBusGpioConfig(void);
+void ad_ftdf_dbg_bus_gpio_config(void);
 #endif /* FTDF_DBG_BUS_ENABLE */
 
 #endif /* AD_FTDF_PHY_API_H */

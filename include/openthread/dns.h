@@ -35,8 +35,6 @@
 #ifndef OPENTHREAD_DNS_H_
 #define OPENTHREAD_DNS_H_
 
-#include <openthread/config.h>
-
 #include <openthread/message.h>
 #include <openthread/types.h>
 
@@ -54,10 +52,10 @@ extern "C" {
  *
  */
 
-#define OT_DNS_MAX_HOSTNAME_LENGTH 62  ///< Maximum allowed hostname length (maximum label size - 1 for compression).
+#define OT_DNS_MAX_HOSTNAME_LENGTH 62 ///< Maximum allowed hostname length (maximum label size - 1 for compression).
 
-#define OT_DNS_DEFAULT_DNS_SERVER_IP  "2001:4860:4860::8888" ///< Defines default DNS Server address - Google DNS.
-#define OT_DNS_DEFAULT_DNS_SERVER_PORT 53                    ///< Defines default DNS Server port.
+#define OT_DNS_DEFAULT_DNS_SERVER_IP "2001:4860:4860::8888" ///< Defines default DNS Server address - Google DNS.
+#define OT_DNS_DEFAULT_DNS_SERVER_PORT 53                   ///< Defines default DNS Server port.
 
 /**
  * This structure implements DNS Query parameters.
@@ -65,9 +63,9 @@ extern "C" {
  */
 typedef struct otDnsQuery
 {
-    const char          *mHostname;     ///< Identifies hostname to be found. It shall not change during resolving.
-    const otMessageInfo *mMessageInfo;  ///< A reference to the message info related with DNS Server.
-    bool                 mNoRecursion;  ///< If cleared, it directs name server to pursue the query recursively.
+    const char *         mHostname;    ///< Identifies hostname to be found. It shall not change during resolving.
+    const otMessageInfo *mMessageInfo; ///< A reference to the message info related with DNS Server.
+    bool                 mNoRecursion; ///< If cleared, it directs name server to pursue the query recursively.
 } otDnsQuery;
 
 /**
@@ -87,12 +85,16 @@ typedef struct otDnsQuery
  * @retval  OT_ERROR_FAILED            A response was received but status code is different than success.
  *
  */
-typedef void (*otDnsResponseHandler)(void *aContext, const char *aHostname, otIp6Address *aAddress,
-                                     uint32_t aTtl, otError aResult);
+typedef void (*otDnsResponseHandler)(void *        aContext,
+                                     const char *  aHostname,
+                                     otIp6Address *aAddress,
+                                     uint32_t      aTtl,
+                                     otError       aResult);
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
 /**
  * This function sends a DNS query for AAAA (IPv6) record.
+ *
+ * This function is available only if feature `OPENTHREAD_ENABLE_DNS_CLIENT` is enabled.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aQuery      A pointer to specify DNS query parameters.
@@ -100,9 +102,10 @@ typedef void (*otDnsResponseHandler)(void *aContext, const char *aHostname, otIp
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
-otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler,
-                         void *aContext);
-#endif
+otError otDnsClientQuery(otInstance *         aInstance,
+                         const otDnsQuery *   aQuery,
+                         otDnsResponseHandler aHandler,
+                         void *               aContext);
 
 /**
  * @}
@@ -110,7 +113,7 @@ otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsR
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_DNS_H_
+#endif // OPENTHREAD_DNS_H_

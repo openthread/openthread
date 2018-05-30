@@ -88,7 +88,7 @@ OTAPI otError OTCALL otDatasetGetPending(otInstance *aInstance, otOperationalDat
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_DATASET_H_
+#endif // OPENTHREAD_DATASET_H_

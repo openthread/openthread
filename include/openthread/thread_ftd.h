@@ -195,7 +195,7 @@ OTAPI otError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJ
  * @retval  OT_ERROR_DISABLED_FEATURE  Feature is disabled, not capable of setting steering data out of band.
  *
  */
-otError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress);
+otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
@@ -266,8 +266,9 @@ OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
  *
- * @retval OT_ERROR_NONE           Successfully released the Router ID specified by aRouterId.
- * @retval OT_ERROR_INVALID_STATE  The Router ID was not allocated.
+ * @retval OT_ERROR_NONE           Successfully released the router id.
+ * @retval OT_ERROR_INVALID_STATE  The device is not currently operating as a leader.
+ * @retval OT_ERROR_NOT_FOUND      The router id is not currently allocated.
  *
  */
 OTAPI otError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
@@ -363,8 +364,29 @@ OTAPI otError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aC
  * @sa otGetMaxAllowedChildren
  *
  */
-OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex,
-                                                 otChildInfo *aChildInfo);
+OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
+
+/**
+ * This function gets the next IPv6 address (using an iterator) for a given child.
+ *
+ * @param[in]     aInstance    A pointer to an OpenThread instance.
+ * @param[in]     aChildIndex  The child index.
+ * @param[inout]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
+ *                             entry in the list. To get the first IPv6 address the iterator should be set to
+ *                             OT_CHILD_IP6_ADDRESS_ITERATOR_INIT.
+ * @param[out]    aAddress     A pointer to an IPv6 address where the child's next address is placed (on success).
+ *
+ * @retval OT_ERROR_NONE          Successfully found the next IPv6 address (@p aAddress was successfully updated).
+ * @retval OT_ERROR_NOT_FOUND     The child has no subsequent IPv6 address entry.
+ * @retval OT_ERROR_INVALID_ARGS  @p aIterator or @p aAddress are NULL, or child at @p aChildIndex is not valid.
+ *
+ * @sa otThreadGetChildInfoByIndex
+ *
+ */
+otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
+                                       uint8_t                    aChildIndex,
+                                       otChildIp6AddressIterator *aIterator,
+                                       otIp6Address *             aAddress);
 
 /**
  * Get the current Router ID Sequence.
@@ -372,8 +394,19 @@ OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t 
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Router ID Sequence.
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
+
+/**
+ * The function returns the maximum allowed router ID
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The maximum allowed router ID.
+ *
+ */
+OTAPI uint8_t OTCALL otThreadGetMaxRouterId(otInstance *aInstance);
 
 /**
  * The function retains diagnostic information for a given Thread Router.
@@ -381,6 +414,10 @@ OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
  * @param[out]  aRouterInfo  A pointer to where the router information is placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the router info for given id.
+ * @retval OT_ERROR_NOT_FOUND     No router entry with the given id.
+ * @retval OT_ERROR_INVALID_ARGS  @p aRouterInfo is NULL.
  *
  */
 OTAPI otError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
@@ -451,12 +488,54 @@ OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
 OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
 /**
+ * This enumeration defines the constants used in `otThreadChildTableCallback` to indicate whether a child is added or
+ * removed.
+ *
+ */
+typedef enum otThreadChildTableEvent {
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,   ///< A child is being added.
+    OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, ///< A child is being removed.
+} otThreadChildTableEvent;
+
+/**
+ * This function pointer is called to notify that a child is being added to or removed from child table.
+ *
+ * @param[in]  aEvent      A event flag indicating whether a child is being added or removed.
+ * @param[in]  aChildInfo  A pointer to child information structure.
+ *
+ */
+typedef void (*otThreadChildTableCallback)(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
+
+/**
+ * This function gets the child table callback function.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  The callback function pointer.
+ *
+ */
+otThreadChildTableCallback otThreadGetChildTableCallback(otInstance *aInstance);
+
+/**
+ * This function sets the child table callback function.
+ *
+ * The provided callback (if non-NULL) will be invoked when a child entry is being added/removed to/from the child
+ * table. Subsequent calls to this method will overwrite the previous callback. Note that this callback in invoked
+ * while the child table is being updated and always before the `otStateChangedCallback`.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  A pointer to callback handler function.
+ *
+ */
+void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCallback aCallback);
+
+/**
  * @}
  *
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_THREAD_FTD_H_
+#endif // OPENTHREAD_THREAD_FTD_H_

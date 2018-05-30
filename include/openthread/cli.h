@@ -32,16 +32,26 @@
  *  This file defines the top-level functions for the OpenThread CLI server.
  */
 
-#ifndef CLI_H_
-#define CLI_H_
+#ifndef OPENTHREAD_CLI_H_
+#define OPENTHREAD_CLI_H_
 
-#include <stdint.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * This structure represents a CLI command.
+ *
+ */
+typedef struct otCliCommand
+{
+    const char *mName;                        ///< A pointer to the command string.
+    void (*mCommand)(int argc, char *argv[]); ///< A function pointer to process the command.
+} otCliCommand;
 
 /**
  * @addtogroup api-cli
@@ -63,8 +73,7 @@ extern "C" {
  * @returns                Number of bytes processed by the callback.
  *
  */
-typedef int (*otCliConsoleOutputCallback)(const char *aBuf,
-                                          uint16_t aBufLength, void *aContext);
+typedef int (*otCliConsoleOutputCallback)(const char *aBuf, uint16_t aBufLength, void *aContext);
 
 /**
  * Initialize the CLI CONSOLE module.
@@ -94,14 +103,45 @@ void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
 void otCliUartInit(otInstance *aInstance);
 
 /**
+ * Set a user command table.
+ *
+ * @param[in]  aUserCommands  A pointer to an array with user commands.
+ * @param[in]  aLength        @p aUserCommands length.
+ */
+void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
+
+/**
+ * Write a number of bytes to the CLI console as a hex string.
+ *
+ * @param[in]  aBytes   A pointer to data which should be printed.
+ * @param[in]  aLength  @p aBytes length.
+ */
+void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength);
+
+/**
+ * Write formatted string the CLI console
+ *
+ * @param[in]  aFmt   A pointer to the format string.
+ * @param[in]  ...    A matching list of arguments.
+ */
+void otCliUartOutputFormat(const char *aFmt, ...);
+
+/**
+ * Write error code the CLI console
+ *
+ * @param[in]  aError Error code value.
+ */
+void otCliUartAppendResult(otError aError);
+
+/**
  * Callback to write the OpenThread Log to the CLI console
  *
  * @param[in]  aLogLevel   The log level.
  * @param[in]  aLogRegion  The log region.
  * @param[in]  aFormat     A pointer to the format string.
- * @param[in]  ap          va_list matching aFormat.
+ * @param[in]  aArgs       va_list matching aFormat.
  */
-void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap);
+void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
 
 /**
  * @}
@@ -109,7 +149,7 @@ void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif
+#endif // OPENTHREAD_CLI_H_

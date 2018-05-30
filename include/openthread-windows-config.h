@@ -37,7 +37,7 @@
 #define OPENTHREAD_ENABLE_MULTIPLE_INSTANCES 1
 
 /* Define to 1 if you want to enable default log output. */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_HOST_OS
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 
 /* Define to 1 to enable the commissioner role. */
 #define OPENTHREAD_ENABLE_COMMISSIONER 1
@@ -81,6 +81,9 @@
 
 /* Define to 1 to enable Border Router feature. */
 #define OPENTHREAD_ENABLE_BORDER_ROUTER 1
+
+/* Define to 1 to enable Service feature. */
+#define OPENTHREAD_ENABLE_SERVICE 0
 
 /* Name of package */
 #define PACKAGE "openthread"

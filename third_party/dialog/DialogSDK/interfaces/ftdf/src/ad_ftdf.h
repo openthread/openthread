@@ -7,6 +7,7 @@
 
 /**
  ****************************************************************************************
+ *
  * @file ad_ftdf.h
  *
  * @brief FTDF Adapter internal header file
@@ -53,11 +54,11 @@
 
 typedef enum {
         BLOCK_ACTIVE = 0, BLOCK_SLEEPING, BLOCK_WAKING_UP
-} eSleepStatus;
+} sleep_status_t;
 
-extern eSleepStatus sleep_status;
-extern FTDF_ExtAddress uExtAddress;
-extern FTDF_Boolean explicit_sleep;
+extern sleep_status_t sleep_status;
+extern ftdf_ext_address_t u_ext_address;
+extern ftdf_boolean_t explicit_sleep;
 
 void ad_ftdf_init_mac_api(void);
 void ad_ftdf_init_phy_api(void);
@@ -65,7 +66,7 @@ void ad_ftdf_init_phy_api(void);
 void ad_ftdf_wake_up_async(void);
 void ad_ftdf_wake_up_sync(void);
 
-void sleep_when_possible( uint8_t explicit_request, uint32_t sleepTime );
+void sleep_when_possible( uint8_t explicit_request, uint32_t sleep_time );
 
 #if FTDF_DBG_BUS_ENABLE
 /**
@@ -82,7 +83,7 @@ void sleep_when_possible( uint8_t explicit_request, uint32_t sleepTime );
  * bit 6: HW_GPIO_PORT_1, HW_GPIO_PIN_3
  * bit 7: HW_GPIO_PORT_2, HW_GPIO_PIN_3
  */
-void ad_ftdf_dbgBusGpioConfig(void);
+void ad_ftdf_dbg_bus_gpio_config(void);
 #endif /* FTDF_DBG_BUS_ENABLE */
 
 #endif /* AD_FTDF_H */

@@ -34,9 +34,10 @@
 #ifndef ENERGY_SCAN_CLIENT_HPP_
 #define ENERGY_SCAN_CLIENT_HPP_
 
+#include "openthread-core-config.h"
+
 #include <openthread/commissioner.h>
 
-#include "openthread-core-config.h"
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
@@ -44,20 +45,18 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 /**
  * This class implements handling PANID Query Requests.
  *
  */
-class EnergyScanClient: public ThreadNetifLocator
+class EnergyScanClient : public InstanceLocator
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    EnergyScanClient(ThreadNetif &aThreadNetif);
+    explicit EnergyScanClient(Instance &aInstance);
 
     /**
      * This method sends an Energy Scan Query message.
@@ -74,16 +73,23 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate an Energy Scan Query message.
      *
      */
-    otError SendQuery(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod, uint16_t aScanDuration,
-                      const Ip6::Address &aAddress, otCommissionerEnergyReportCallback aCallback, void *aContext);
+    otError SendQuery(uint32_t                           aChannelMask,
+                      uint8_t                            aCount,
+                      uint16_t                           aPeriod,
+                      uint16_t                           aScanDuration,
+                      const Ip6::Address &               aAddress,
+                      otCommissionerEnergyReportCallback aCallback,
+                      void *                             aContext);
 
 private:
-    static void HandleReport(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+    static void HandleReport(void *               aContext,
+                             otCoapHeader *       aHeader,
+                             otMessage *          aMessage,
                              const otMessageInfo *aMessageInfo);
-    void HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerEnergyReportCallback mCallback;
-    void *mContext;
+    void *                             mContext;
 
     Coap::Resource mEnergyScan;
 };
@@ -92,6 +98,6 @@ private:
  * @}
  */
 
-}  // namespace ot
+} // namespace ot
 
-#endif  // ENERGY_SCAN_CLIENT_HPP_
+#endif // ENERGY_SCAN_CLIENT_HPP_

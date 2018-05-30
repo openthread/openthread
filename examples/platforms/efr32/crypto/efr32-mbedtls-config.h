@@ -36,43 +36,37 @@
  *
  * Enable hardware acceleration for the AES block cipher
  *
- * Module:  sl_crypto/src/sl_aes.c
- *          or
- *          sl_crypto/src/slcl_aes.c if MBEDTLS_SLCL_PLUGINS is defined.
+ * Module:  sl_crypto/src/crypto_aes.c for devices with CRYPTO
+ *          sl_crypto/src/aes_aes.c for devices with AES
  *
  * See MBEDTLS_AES_C for more information.
  */
 #define MBEDTLS_AES_ALT
 
 /**
- * \def MBEDTLS_ECP_DEVICE_ALT
- * \def MBEDTLS_ECP_DEVICE_ALT
+ * \def MBEDTLS_ECP_INTERNAL_ALT
+ * \def ECP_SHORTWEIERSTRASS
+ * \def MBEDTLS_ECP_ADD_MIXED_ALT
  * \def MBEDTLS_ECP_DOUBLE_JAC_ALT
- * \def MBEDTLS_ECP_DEVICE_ADD_MIXED_ALT
- * \def MBEDTLS_ECP_NORMALIZE_JAC_ALT
  * \def MBEDTLS_ECP_NORMALIZE_JAC_MANY_ALT
- * \def MBEDTLS_MPI_MODULAR_DIVISION_ALT
+ * \def MBEDTLS_ECP_NORMALIZE_JAC_ALT
  *
  * Enable hardware acceleration for the elliptic curve over GF(p) library.
  *
- * Module:  sl_crypto/src/sl_ecp.c
- *          or
- *          sl_crypto/src/slcl_ecp.c if MBEDTLS_SLCL_PLUGINS is defined.
+ * Module:  sl_crypto/src/crypto_ecp.c
  * Caller:  library/ecp.c
- *          library/ecdh.c
- *          library/ecdsa.c
- *          library/ecjpake.c
  *
  * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_ECP_C and at least one
  * MBEDTLS_ECP_DP_XXX_ENABLED and (CRYPTO_COUNT > 0)
  */
 #if defined(CRYPTO_COUNT) && (CRYPTO_COUNT > 0)
-#define MBEDTLS_ECP_DEVICE_ALT
+#define MBEDTLS_ECP_INTERNAL_ALT
+#define ECP_SHORTWEIERSTRASS
+#define MBEDTLS_ECP_ADD_MIXED_ALT
 #define MBEDTLS_ECP_DOUBLE_JAC_ALT
-#define MBEDTLS_ECP_DEVICE_ADD_MIXED_ALT
-#define MBEDTLS_ECP_NORMALIZE_JAC_ALT
 #define MBEDTLS_ECP_NORMALIZE_JAC_MANY_ALT
-#define MBEDTLS_MPI_MODULAR_DIVISION_ALT
+#define MBEDTLS_ECP_NORMALIZE_JAC_ALT
+#define MBEDTLS_ECP_RANDOMIZE_JAC_ALT
 #endif
 
 /**
@@ -81,9 +75,7 @@
  * Enable hardware acceleration for the SHA-224 and SHA-256 cryptographic
  * hash algorithms.
  *
- * Module:  sl_crypto/src/sl_sha256.c
- *          or
- *          sl_crypto/src/slcl_sha256.c if MBEDTLS_SLCL_PLUGINS is defined.
+ * Module:  sl_crypto/src/crypto_sha.c
  * Caller:  library/entropy.c
  *          library/mbedtls_md.c
  *          library/ssl_cli.c

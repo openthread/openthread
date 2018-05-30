@@ -100,8 +100,11 @@ class otApi:
     def get_addr64(self):
         return self.Api.otNodeGetAddr64(self.otNode).decode('utf-8')
 
-    def get_hashmacaddr(self):
-        return self.Api.otNodeGetHashMacAddress(self.otNode).decode('utf-8')
+    def get_eui64(self):
+        return self.Api.otNodeGetEui64(self.otNode).decode('utf-8')
+
+    def get_joiner_id(self):
+        return self.Api.otNodeGetJoinerId(self.otNode).decode('utf-8')
 
     def get_channel(self):
         return self.Api.otNodeGetChannel(self.otNode)
@@ -196,6 +199,12 @@ class otApi:
 
     def get_addrs(self):
         return self.Api.otNodeGetAddrs(self.otNode).decode("utf-8").split("\n")
+
+    def add_service(self, enterpriseNumber, serviceData, serverData):
+        raise OSError("otServerAddService wrapper not implemented!")
+
+    def remove_service(self, enterpriseNumber, serviceData):
+        raise OSError("otServerRemoveService wrapper not implemented!")
 
     def get_context_reuse_delay(self):
         return int(self.Api.otNodeGetContextReuseDelay(self.otNode))
@@ -414,10 +423,13 @@ class otApi:
         
         self.Api.otNodeGetAddr64.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetAddr64.restype = ctypes.c_char_p
-        
-        self.Api.otNodeGetHashMacAddress.argtypes = [ctypes.c_void_p]
-        self.Api.otNodeGetHashMacAddress.restype = ctypes.c_char_p
 
+        self.Api.otNodeGetEui64.argtypes = [ctypes.c_void_p]
+        self.Api.otNodeGetEui64.restype = ctypes.c_char_p
+
+        self.Api.otNodeGetJoinerId.argtypes = [ctypes.c_void_p]
+        self.Api.otNodeGetJoinerId.restype = ctypes.c_char_p
+        
         self.Api.otNodeSetChannel.argtypes = [ctypes.c_void_p, 
                                               ctypes.c_ubyte]
         

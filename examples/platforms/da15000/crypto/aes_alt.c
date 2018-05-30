@@ -26,21 +26,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mbedtls/aes.h"
 #include "aes_alt.h"
+#include "mbedtls/aes.h"
 
 #ifdef MBEDTLS_AES_ALT
 
-#include <string.h>
-#include <stdint.h>
-#include <common/code_utils.hpp>
 #include "hw_aes_hash.h"
+#include <common/code_utils.hpp>
+#include <stdint.h>
+#include <string.h>
 
 static void mbedtls_zeroize(void *v, size_t n)
 {
     volatile unsigned char *p = (unsigned char *)v;
 
-    while (n--) { *p++ = 0; }
+    while (n--)
+    {
+        *p++ = 0;
+    }
 }
 
 void mbedtls_aes_init(mbedtls_aes_context *ctx)
@@ -127,10 +130,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, u
  *
  * \return         0 if successful
  */
-int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx,
-                          int mode,
-                          const unsigned char input[16],
-                          unsigned char output[16])
+int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned char input[16], unsigned char output[16])
 {
     int retval = 0;
 
@@ -169,15 +169,14 @@ int mbedtls_aes_self_test(int verbose)
 {
     (void)verbose;
     /* 128-bit Key 2b7e151628aed2a6abf7158809cf4f3c */
-    const uint8_t key_128b[16] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88,
-                                   0x09, 0xcf, 0x4f, 0x3c
-                                 };
+    const uint8_t key_128b[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+                                  0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
 
-    int retval = 0;
+    int                 retval = 0;
     mbedtls_aes_context aes;
-    uint8_t input[16] = {0};
-    uint8_t output[16] = {0};
-    uint8_t decrypt[16] = {0};
+    uint8_t             input[16]   = {0};
+    uint8_t             output[16]  = {0};
+    uint8_t             decrypt[16] = {0};
 
     strcpy((char *)input, (const char *)"hw_cryptaes_test");
 

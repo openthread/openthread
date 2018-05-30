@@ -28,8 +28,8 @@
 
 #include <openthread/openthread.h>
 
-#include "openthread-instance.h"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "utils/wrap_string.h"
 
@@ -38,34 +38,28 @@
 
 void TestMessage(void)
 {
-    otInstance *instance;
+    ot::Instance *   instance;
     ot::MessagePool *messagePool;
-    ot::Message *message;
-    uint8_t writeBuffer[1024];
-    uint8_t readBuffer[1024];
+    ot::Message *    message;
+    uint8_t          writeBuffer[1024];
+    uint8_t          readBuffer[1024];
 
-    instance = testInitInstance();
+    instance = static_cast<ot::Instance *>(testInitInstance());
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->mMessagePool;
+    messagePool = &instance->GetMessagePool();
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {
         writeBuffer[i] = static_cast<uint8_t>(random());
     }
 
-    VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != NULL,
-                 "Message::New failed\n");
-    SuccessOrQuit(message->SetLength(sizeof(writeBuffer)),
-                  "Message::SetLength failed\n");
-    VerifyOrQuit(message->Write(0, sizeof(writeBuffer), writeBuffer) == sizeof(writeBuffer),
-                 "Message::Write failed\n");
-    VerifyOrQuit(message->Read(0, sizeof(readBuffer), readBuffer) == sizeof(readBuffer),
-                 "Message::Read failed\n");
-    VerifyOrQuit(memcmp(writeBuffer, readBuffer, sizeof(writeBuffer)) == 0,
-                 "Message compare failed\n");
-    VerifyOrQuit(message->GetLength() == 1024,
-                 "Message::GetLength failed\n");
+    VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != NULL, "Message::New failed\n");
+    SuccessOrQuit(message->SetLength(sizeof(writeBuffer)), "Message::SetLength failed\n");
+    VerifyOrQuit(message->Write(0, sizeof(writeBuffer), writeBuffer) == sizeof(writeBuffer), "Message::Write failed\n");
+    VerifyOrQuit(message->Read(0, sizeof(readBuffer), readBuffer) == sizeof(readBuffer), "Message::Read failed\n");
+    VerifyOrQuit(memcmp(writeBuffer, readBuffer, sizeof(writeBuffer)) == 0, "Message compare failed\n");
+    VerifyOrQuit(message->GetLength() == 1024, "Message::GetLength failed\n");
     message->Free();
 
     testFreeInstance(instance);

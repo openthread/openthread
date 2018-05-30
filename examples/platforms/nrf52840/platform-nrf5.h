@@ -81,7 +81,7 @@ void nrf5AlarmProcess(otInstance *aInstance);
  * Function for geting current time in mircosecond.
  *
  */
-uint64_t nrf5AlarmGetCurrentTime();
+uint64_t nrf5AlarmGetCurrentTime(void);
 
 /**
  * Initialization of Random Number Generator.
@@ -106,6 +106,23 @@ void nrf5LogInit(void);
  *
  */
 void nrf5LogDeinit(void);
+
+/**
+ * Initialization of SPI Slave driver.
+ *
+ */
+void nrf5SpiSlaveInit(void);
+
+/**
+ * Deinitialization of SPI Slave driver.
+ *
+ */
+void nrf5SpiSlaveDeinit(void);
+
+/**
+ * Function for processing SPI Slave driver.
+ */
+void nrf5SpiSlaveProcess(void);
 
 /**
  * Initialization of Misc module.
@@ -180,6 +197,12 @@ void nrf5TempInit(void);
 void nrf5TempDeinit(void);
 
 /**
+ * Function for processing temperature controller.
+ *
+ */
+void nrf5TempProcess(void);
+
+/**
  * Function for measuring internal temperature.
  *
  * @return Temperature value measured.
@@ -201,4 +224,4 @@ otError nrf5SdErrorToOtError(uint32_t aSdError);
 void nrf5SdSocFlashProcess(uint32_t aEvtId);
 #endif // SOFTDEVICE_PRESENT
 
-#endif  // PLATFORM_NRF5_H_
+#endif // PLATFORM_NRF5_H_

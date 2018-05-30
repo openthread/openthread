@@ -35,6 +35,8 @@
 #ifndef PBKDF2_CMAC_H_
 #define PBKDF2_CMAC_H_
 
+#include "openthread-core-config.h"
+
 #include "utils/wrap_stdbool.h"
 #include "utils/wrap_stdint.h"
 
@@ -42,7 +44,7 @@
 extern "C" {
 #endif
 
-#define OT_PBKDF2_SALT_MAX_LEN 30  // salt prefix (6) + extended panid (8) + network name (16)
+#define OT_PBKDF2_SALT_MAX_LEN 30 // salt prefix (6) + extended panid (8) + network name (16)
 
 /**
  * This method perform PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).
@@ -56,14 +58,16 @@ extern "C" {
  * @param[out]    aKey               A pointer to the generated key.
  *
  */
-void otPbkdf2Cmac(
-    const uint8_t *aPassword, uint16_t aPasswordLen,
-    const uint8_t *aSalt, uint16_t aSaltLen,
-    uint32_t aIterationCounter, uint16_t aKeyLen,
-    uint8_t *aKey);
+void otPbkdf2Cmac(const uint8_t *aPassword,
+                  uint16_t       aPasswordLen,
+                  const uint8_t *aSalt,
+                  uint16_t       aSaltLen,
+                  uint32_t       aIterationCounter,
+                  uint16_t       aKeyLen,
+                  uint8_t *      aKey);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // PBKDF2_CMAC_H_
+#endif // PBKDF2_CMAC_H_

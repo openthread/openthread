@@ -35,21 +35,20 @@
 #ifndef OPENTHREAD_CHILD_SUPERVISION_H_
 #define OPENTHREAD_CHILD_SUPERVISION_H_
 
-#include <openthread/config.h>
-
 #include "openthread/types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
-
 /**
  * @addtogroup api-child-supervision
  *
  * @brief
  *   This module includes functions for child supervision feature.
+ *
+ *   The functions in this module are available when child supervision feature (`OPENTHREAD_ENABLE_CHILD_SUPERVISION`)
+ *   is enabled.
  *
  * @{
  *
@@ -60,7 +59,7 @@ extern "C" {
  *
  * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
  * within the supervision interval. If there is no transmission to the child within the supervision interval,
- * OpenThread will enqueue and send a supervision message (a data message with empty payload) to the child.
+ * OpenThread enqueues and sends a supervision message (a data message with empty payload) to the child.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
@@ -105,10 +104,8 @@ void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
  *
  */
 
-#endif  // OPENTHREAD_ENABLE_CHILD_SUPERVISION
-
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-#endif  // OPENTHREAD_CHILD_SUPERVISION_H_
+#endif // OPENTHREAD_CHILD_SUPERVISION_H_
