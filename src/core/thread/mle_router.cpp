@@ -826,6 +826,20 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         mleFrameCounter.SetFrameCounter(linkFrameCounter.GetFrameCounter());
     }
 
+    // Link Margin
+    if (Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMargin), linkMargin) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(linkMargin.IsValid(), error = OT_ERROR_PARSE);
+    }
+    else
+    {
+        // Link Margin TLV may be skipped in Router Synchronization process after Reset
+        VerifyOrExit(mRole == OT_DEVICE_ROLE_DETACHED, error = OT_ERROR_NOT_FOUND);
+
+        // Wait for an MLE Advertisement to establish a routing cost to the neighbor
+        linkMargin.SetLinkMargin(0);
+    }
+
     VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), error = OT_ERROR_PARSE);
 
     routerId      = GetRouterId(sourceAddress.GetRloc16());
@@ -892,9 +906,6 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
 
     case OT_DEVICE_ROLE_CHILD:
         VerifyOrExit(router != NULL);
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMargin), linkMargin));
-        VerifyOrExit(linkMargin.IsValid(), error = OT_ERROR_PARSE);
-        router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin()));
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
@@ -911,11 +922,6 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         {
             SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0);
         }
-
-        // Link Margin
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMargin), linkMargin));
-        VerifyOrExit(linkMargin.IsValid(), error = OT_ERROR_PARSE);
-        router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin()));
 
         // Route (optional)
         if (Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == OT_ERROR_NONE)
@@ -943,6 +949,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetDeviceMode(ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData);
     router->GetLinkInfo().Clear();
     router->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
+    router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin()));
     router->ResetLinkFailures();
     router->SetState(Neighbor::kStateValid);
     router->SetKeySequence(aKeySequence);
