@@ -415,18 +415,18 @@ void Interpreter::ProcessAutoStart(int argc, char *argv[])
     {
         if (otThreadGetAutoStart(mInstance))
         {
-            mServer->OutputFormat("true\r\n");
+            mServer->OutputFormat("Enabled\r\n");
         }
         else
         {
-            mServer->OutputFormat("false\r\n");
+            mServer->OutputFormat("Disabled\r\n");
         }
     }
-    else if (strcmp(argv[0], "true") == 0)
+    else if (strcmp(argv[0], "enable") == 0)
     {
         error = otThreadSetAutoStart(mInstance, true);
     }
-    else if (strcmp(argv[0], "false") == 0)
+    else if (strcmp(argv[0], "disable") == 0)
     {
         error = otThreadSetAutoStart(mInstance, false);
     }
