@@ -432,7 +432,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
                 // should bring our radio into the RX state, which should allow us to go
                 // into TX.
                 sChannel = 0;
-                setChannel(aFrame->mChannel);
+                setupTransmit(aFrame);
             }
         }
 
