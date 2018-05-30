@@ -234,11 +234,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     sState = OT_RADIO_STATE_RECEIVE;
 
-    rf_abort();
-
     /* Check if the channel needs to be changed */
     if (sChannel != aChannel)
     {
+        rf_abort();
         /* Set Power level for auto TX */
         rf_set_tx_power(sAutoTxPwrLevel);
         rf_set_channel(aChannel);
