@@ -243,6 +243,8 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     rf_set_channel(aChannel);
     sRxFrame.mChannel = aChannel;
 
+    /* Filter ACK frames during RX sequence */
+    ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
     /* Clear all IRQ flags */
     ZLL->IRQSTS = ZLL->IRQSTS;
     /* Start the RX sequence */
@@ -364,6 +366,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     /* Perform automatic reception of ACK frame, if required */
     if (aFrame->mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
     {
+        /* Permit the reception of ACK frames during TR sequence */
+        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
         ZLL->PHY_CTRL |= XCVR_TR_c;
         /* Set ACK wait time-out */
         timeout = rf_get_timestamp();
@@ -867,6 +871,8 @@ void Radio_1_IRQHandler(void)
         {
         }
 
+        /* Filter ACK frames during RX sequence*/
+        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
         ZLL->IRQSTS = ZLL->IRQSTS;
         ZLL->PHY_CTRL |= XCVR_RX_c;
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
