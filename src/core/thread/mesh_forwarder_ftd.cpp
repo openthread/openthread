@@ -236,7 +236,7 @@ void MeshForwarder::UpdateIndirectMessages(void)
 
 otError MeshForwarder::EvictMessage(uint8_t aPriority)
 {
-    otError  error   = OT_ERROR_NOT_FOUND;
+    otError error = OT_ERROR_NOT_FOUND;
 
 #if OPENTHREAD_ENABLE_QOS
     Message *message = mSendQueue.GetTail();

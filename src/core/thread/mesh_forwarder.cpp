@@ -1414,7 +1414,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
-        uint8_t priority= kDefaultMsgPriority;
+        uint8_t priority = kDefaultMsgPriority;
 
 #if OPENTHREAD_ENABLE_QOS
         VerifyOrExit(GetFramePriority(aFrame, aFrameLength, mMacSource, mMacDest, priority) == OT_ERROR_NONE,

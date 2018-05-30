@@ -129,8 +129,8 @@ public:
 
 private:
     uint16_t mDatagramTag;
-    uint16_t mPriority       : 2;
-    uint16_t mLifetime       : 3;
+    uint16_t mPriority : 2;
+    uint16_t mLifetime : 3;
     uint16_t mDatagramOffset : 11;
 };
 
@@ -532,7 +532,7 @@ private:
 #endif
 
 #if OPENTHREAD_ENABLE_QOS
-    PriorityEntry   mPriorityEntries[kNumPriorityEntry];
+    PriorityEntry mPriorityEntries[kNumPriorityEntry];
 #endif
 
     DataPollManager mDataPollManager;
