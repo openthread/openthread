@@ -801,6 +801,10 @@ void Radio_1_IRQHandler(void)
             break;
 
         case XCVR_TR_c:
+            /* Stop TMR3 */
+            ZLL->IRQSTS = irqStatus | ZLL_IRQSTS_TMR3MSK_MASK;
+            ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_TMR3CMP_EN_MASK;
+
             if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
             {
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
