@@ -63,6 +63,11 @@
                                       ZLL_IRQSTS_TMR2MSK_MASK | \
                                       ZLL_IRQSTS_TMR3MSK_MASK | \
                                       ZLL_IRQSTS_TMR4MSK_MASK )
+#define ZLL_DEFAULT_RX_FILTERING     (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | \
+                                      ZLL_RX_FRAME_FILTER_CMD_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_DATA_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_ACK_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_BEACON_FT_MASK)
 // clang-format on
 
 typedef enum xcvr_state_tag {
@@ -411,17 +416,13 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     {
         ZLL->PHY_CTRL |= ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b1111. Any FrameVersion accepted */
-        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
-                                 ZLL_RX_FRAME_FILTER_NS_FT_MASK);
+        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_NS_FT_MASK);
     }
     else
     {
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b0011. Accept FrameVersion 0 and 1 packets, reject all others */
-        /* Beacon, Data and MAC command frame types accepted */
-        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
-                                  ZLL_RX_FRAME_FILTER_NS_FT_MASK | ZLL_RX_FRAME_FILTER_ACTIVE_PROMISCUOUS_MASK);
-        ZLL->RX_FRAME_FILTER |= ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3);
+        ZLL->RX_FRAME_FILTER = ZLL_DEFAULT_RX_FILTERING;
     }
 }
 
@@ -893,12 +894,7 @@ void kw41zRadioInit(void)
 
     /*  Frame Filtering
     FRM_VER[7:6] = b11. Accept FrameVersion 0 and 1 packets, reject all others */
-    ZLL->RX_FRAME_FILTER &= ~ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK;
-    ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | //
-                           ZLL_RX_FRAME_FILTER_CMD_FT_MASK |       //
-                           ZLL_RX_FRAME_FILTER_DATA_FT_MASK |      //
-                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK |       //
-                           ZLL_RX_FRAME_FILTER_BEACON_FT_MASK;
+    ZLL->RX_FRAME_FILTER = ZLL_DEFAULT_RX_FILTERING;
 
     /* Set prescaller to obtain 1 symbol (16us) timebase */
     ZLL->TMR_PRESCALE = 0x05;
