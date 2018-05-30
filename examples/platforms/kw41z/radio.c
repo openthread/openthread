@@ -63,6 +63,11 @@
                                       ZLL_IRQSTS_TMR2MSK_MASK | \
                                       ZLL_IRQSTS_TMR3MSK_MASK | \
                                       ZLL_IRQSTS_TMR4MSK_MASK )
+#define ZLL_DEFAULT_RX_FILTERING     (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | \
+                                      ZLL_RX_FRAME_FILTER_CMD_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_DATA_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_ACK_FT_MASK | \
+                                      ZLL_RX_FRAME_FILTER_BEACON_FT_MASK)
 // clang-format on
 
 typedef enum xcvr_state_tag {
@@ -238,6 +243,8 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     rf_set_channel(aChannel);
     sRxFrame.mChannel = aChannel;
 
+    /* Filter ACK frames during RX sequence */
+    ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
     /* Clear all IRQ flags */
     ZLL->IRQSTS = ZLL->IRQSTS;
     /* Start the RX sequence */
@@ -359,6 +366,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     /* Perform automatic reception of ACK frame, if required */
     if (aFrame->mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
     {
+        /* Permit the reception of ACK frames during TR sequence */
+        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
         ZLL->PHY_CTRL |= XCVR_TR_c;
         /* Set ACK wait time-out */
         timeout = rf_get_timestamp();
@@ -411,17 +420,13 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     {
         ZLL->PHY_CTRL |= ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b1111. Any FrameVersion accepted */
-        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
-                                 ZLL_RX_FRAME_FILTER_NS_FT_MASK);
+        ZLL->RX_FRAME_FILTER |= (ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_NS_FT_MASK);
     }
     else
     {
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_PROMISCUOUS_MASK;
         /* FRM_VER[11:8] = b0011. Accept FrameVersion 0 and 1 packets, reject all others */
-        /* Beacon, Data and MAC command frame types accepted */
-        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK | ZLL_RX_FRAME_FILTER_ACK_FT_MASK |
-                                  ZLL_RX_FRAME_FILTER_NS_FT_MASK | ZLL_RX_FRAME_FILTER_ACTIVE_PROMISCUOUS_MASK);
-        ZLL->RX_FRAME_FILTER |= ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3);
+        ZLL->RX_FRAME_FILTER = ZLL_DEFAULT_RX_FILTERING;
     }
 }
 
@@ -800,6 +805,10 @@ void Radio_1_IRQHandler(void)
             break;
 
         case XCVR_TR_c:
+            /* Stop TMR3 */
+            ZLL->IRQSTS = irqStatus | ZLL_IRQSTS_TMR3MSK_MASK;
+            ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_TMR3CMP_EN_MASK;
+
             if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
             {
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
@@ -862,6 +871,8 @@ void Radio_1_IRQHandler(void)
         {
         }
 
+        /* Filter ACK frames during RX sequence*/
+        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
         ZLL->IRQSTS = ZLL->IRQSTS;
         ZLL->PHY_CTRL |= XCVR_RX_c;
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
@@ -893,12 +904,7 @@ void kw41zRadioInit(void)
 
     /*  Frame Filtering
     FRM_VER[7:6] = b11. Accept FrameVersion 0 and 1 packets, reject all others */
-    ZLL->RX_FRAME_FILTER &= ~ZLL_RX_FRAME_FILTER_FRM_VER_FILTER_MASK;
-    ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) | //
-                           ZLL_RX_FRAME_FILTER_CMD_FT_MASK |       //
-                           ZLL_RX_FRAME_FILTER_DATA_FT_MASK |      //
-                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK |       //
-                           ZLL_RX_FRAME_FILTER_BEACON_FT_MASK;
+    ZLL->RX_FRAME_FILTER = ZLL_DEFAULT_RX_FILTERING;
 
     /* Set prescaller to obtain 1 symbol (16us) timebase */
     ZLL->TMR_PRESCALE = 0x05;
