@@ -113,14 +113,14 @@ private:
          * Takes a reference to NcpFrameBuffer in order to read spinel frames.
          */
         explicit NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer);
-        bool IsEmpty() const;
-        otError OutFrameBegin();
-        bool OutFrameHasEnded();
-        uint8_t OutFrameReadByte();
-        otError OutFrameRemove();
+        bool IsEmpty(void) const;
+        otError OutFrameBegin(void);
+        bool OutFrameHasEnded(void);
+        uint8_t OutFrameReadByte(void);
+        otError OutFrameRemove(void);
 
     private:
-        void Reset();
+        void Reset(void);
 
         NcpFrameBuffer &mTxFrameBuffer;
         uint8_t mDataBuffer[kRxBufferSize];

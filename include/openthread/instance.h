@@ -163,7 +163,7 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
 /**
  * This function initializes the OpenThread library.
  *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
+ * This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
  * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is enabled.
@@ -182,7 +182,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
 /**
  * This function initializes the static single instance of the OpenThread library.
  *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
+ * This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
  * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is disabled.

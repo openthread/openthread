@@ -56,6 +56,7 @@ extern "C" {
  * @param[out]    aData        A pointer to the data buffer.
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
+ *
  */
 OTAPI otError OTCALL otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
@@ -95,6 +96,7 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Network Data Version.
+ *
  */
 OTAPI uint8_t OTCALL otNetDataGetVersion(otInstance *aInstance);
 
@@ -104,6 +106,7 @@ OTAPI uint8_t OTCALL otNetDataGetVersion(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Stable Network Data Version.
+ *
  */
 OTAPI uint8_t OTCALL otNetDataGetStableVersion(otInstance *aInstance);
 

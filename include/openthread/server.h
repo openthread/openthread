@@ -59,6 +59,7 @@ extern "C" {
  * @param[out]    aData        A pointer to the data buffer.
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
+ *
  */
 OTAPI otError OTCALL otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
@@ -74,6 +75,7 @@ OTAPI otError OTCALL otServerGetNetDataLocal(otInstance *aInstance, bool aStable
  *
  * @sa otServerRemoveService
  * @sa otServerRegister
+ *
  */
 OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig);
 
@@ -90,6 +92,7 @@ OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceCo
  *
  * @sa otServerAddService
  * @sa otServerRegister
+ *
  */
 OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance,
                                            uint32_t    aEnterpriseNumber,
@@ -137,6 +140,7 @@ OTAPI otError OTCALL otServerGetNextLeaderService(otInstance *           aInstan
  *
  * @sa otServerAddService
  * @sa otServerRemoveService
+ *
  */
 OTAPI otError OTCALL otServerRegister(otInstance *aInstance);
 

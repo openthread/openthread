@@ -45,7 +45,7 @@ extern "C" {
  * @addtogroup api-message
  *
  * @brief
- *   This module includes functions that manipulate OpenThread message buffers
+ *   This module includes functions that manipulate OpenThread message buffers.
  *
  * @{
  *
@@ -63,6 +63,7 @@ extern "C" {
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 void otMessageFree(otMessage *aMessage);
 
@@ -81,6 +82,7 @@ void otMessageFree(otMessage *aMessage);
  * @sa otMessageRead
  * @sa otMessageWrite
  * @sa otMessageSetLength
+ *
  */
 uint16_t otMessageGetLength(otMessage *aMessage);
 
@@ -100,6 +102,7 @@ uint16_t otMessageGetLength(otMessage *aMessage);
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 otError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
 
@@ -117,6 +120,7 @@ otError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 uint16_t otMessageGetOffset(otMessage *aMessage);
 
@@ -136,6 +140,7 @@ uint16_t otMessageGetOffset(otMessage *aMessage);
  * @sa otMessageGetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
 
@@ -155,8 +160,8 @@ bool otMessageIsLinkSecurityEnabled(otMessage *aMessage);
  * Default setting for a new message is `false`.
  *
  * @param[in]  aMessage  A pointer to a message buffer.
- * @param[in]  aEnabled  If `true`, the message is forced to use direct transmission. If `false`, the
- *                       message follows the normal procedure.
+ * @param[in]  aEnabled  If `true`, the message is forced to use direct transmission. If `false`, the message follows
+ *                       the normal procedure.
  *
  */
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
@@ -164,7 +169,7 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
 /**
  * This function returns the average RSS (received signal strength) associated with the message.
  *
- * @returns The average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average/RSS is available.
+ * @returns The average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average RSS is available.
  *
  */
 int8_t otMessageGetRss(otMessage *aMessage);
@@ -186,6 +191,7 @@ int8_t otMessageGetRss(otMessage *aMessage);
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength);
 
@@ -206,6 +212,7 @@ otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
  * @sa otMessageGetOffset
  * @sa otMessageSetOffset
  * @sa otMessageWrite
+ *
  */
 int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
 
@@ -226,6 +233,7 @@ int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aL
  * @sa otMessageGetOffset
  * @sa otMessageSetOffset
  * @sa otMessageRead
+ *
  */
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
 

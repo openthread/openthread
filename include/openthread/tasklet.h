@@ -55,6 +55,7 @@ extern "C" {
  * Run all queued OpenThread tasklets at the time this is called.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  */
 void otTaskletsProcess(otInstance *aInstance);
 
@@ -65,6 +66,7 @@ void otTaskletsProcess(otInstance *aInstance);
  *
  * @retval TRUE   If there are tasklets pending.
  * @retval FALSE  If there are no tasklets pending.
+ *
  */
 bool otTaskletsArePending(otInstance *aInstance);
 
