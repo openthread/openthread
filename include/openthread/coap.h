@@ -149,6 +149,7 @@ typedef struct otCoapOption
 /**
  * CoAP Content Format codes.  The full list is documented at
  * https://tools.ietf.org/html/rfc7252#page-92
+ *
  */
 typedef enum otCoapOptionContentFormat {
     OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN   = 0,  ///< text/plain
@@ -181,7 +182,7 @@ typedef struct otCoapHeader
     uint16_t     mOptionLast;                      ///< The last CoAP Option Number value
     uint16_t     mFirstOptionOffset;               ///< The byte offset for the first CoAP Option
     uint16_t     mNextOptionOffset;                ///< The byte offset for the next CoAP Option
-    otCoapOption mOption;                          ///< A structure representing the current CoAP Option.
+    otCoapOption mOption;                          ///< A structure representing the current CoAP Option
 } otCoapHeader;
 
 /**
@@ -276,6 +277,7 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
  */
 otError otCoapHeaderAppendContentFormatOption(otCoapHeader *aHeader, otCoapOptionContentFormat aContentFormat);
 
@@ -316,6 +318,7 @@ otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, ui
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
  */
 otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve);
 
@@ -341,6 +344,7 @@ otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUri
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
  */
 otError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge);
 
@@ -527,6 +531,7 @@ void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
  * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
+ *
  */
 void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
 

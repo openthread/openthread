@@ -104,7 +104,7 @@ Now, it may be desirable to squash some of your smaller commits down into a smal
 
 ```bash
 # Rebase all commits on your development branch
-git checkout 
+git checkout
 git rebase -i master
 ```
 
@@ -112,7 +112,7 @@ This will open up a text editor where you can specify which commits to squash.
 
 #### Coding Conventions and Style
 
-OpenThread uses and enforces the [OpenThread Coding Conventions and Style](STYLE_GUIDE.md) on all code, except for code located in [third_party](third_party).  Use the `make pretty` and `make pretty-check` targets to automatically reformat code and check for code-style compilance, respectively.  OpenThread currently requires [clang-format v5.0.1](http://releases.llvm.org/download.html#5.0.1) for `make pretty` and `make pretty-check`.
+OpenThread uses and enforces the [OpenThread Coding Conventions and Style](STYLE_GUIDE.md) on all code, except for code located in [third_party](third_party).  Use the `make pretty` and `make pretty-check` targets to automatically reformat code and check for code-style compliance, respectively.  OpenThread currently requires [clang-format v5.0.1](http://releases.llvm.org/download.html#5.0.1) for `make pretty` and `make pretty-check`.
 
 As part of the cleanup process, you should also run `make pretty-check` to ensure that your code passes the baseline code style checks.
 

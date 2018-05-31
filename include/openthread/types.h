@@ -75,11 +75,13 @@ typedef struct otInstance otInstance;
 
 /**
  * This structure represents the handle to the OpenThread API.
+ *
  */
 typedef struct otApiInstance otApiInstance;
 
 /**
  * This structure represents a list of device GUIDs.
+ *
  */
 typedef struct otDeviceList
 {
@@ -91,6 +93,7 @@ typedef struct otDeviceList
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
+ *
  */
 typedef enum otError {
     /**
@@ -433,6 +436,7 @@ typedef struct otIp6Address otIp6Address;
 
 /**
  * This structure represents the local and peer IPv6 socket addresses.
+ *
  */
 typedef struct otMessageInfo
 {
@@ -667,6 +671,7 @@ typedef struct otLinkModeConfig
 
 /**
  * This structure represents an IPv6 prefix.
+ *
  */
 OT_TOOL_PACKED_BEGIN
 struct otIp6Prefix
@@ -677,6 +682,7 @@ struct otIp6Prefix
 
 /**
  * This structure represents an IPv6 prefix.
+ *
  */
 typedef struct otIp6Prefix otIp6Prefix;
 
@@ -742,6 +748,7 @@ typedef struct otBorderRouterConfig
 
 /**
  * This structure represents an External Route configuration.
+ *
  */
 typedef struct otExternalRouteConfig
 {
@@ -779,6 +786,7 @@ typedef struct otExternalRouteConfig
 
 /**
  * Defines valid values for member mPreference in otExternalRouteConfig and otBorderRouterConfig.
+ *
  */
 typedef enum otRoutePreference {
     OT_ROUTE_PREFERENCE_LOW  = -1, ///< Low route preference.
@@ -792,6 +800,7 @@ typedef enum otRoutePreference {
 
 /**
  * This structure represents a Server configuration.
+ *
  */
 typedef struct otServerConfig
 {
@@ -818,6 +827,7 @@ typedef struct otServerConfig
 
 /**
  * This structure represents a Service configuration.
+ *
  */
 typedef struct otServiceConfig
 {
@@ -849,6 +859,7 @@ typedef struct otServiceConfig
 
 /**
  * Used to indicate no fixed received signal strength was set
+ *
  */
 #define OT_MAC_FILTER_FIXED_RSS_DISABLED 127
 
@@ -858,6 +869,7 @@ typedef uint8_t otMacFilterIterator; ///< Used to iterate through mac filter ent
 
 /**
  * Defines address mode of the mac filter.
+ *
  */
 typedef enum otMacFilterAddressMode {
     OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< Address filter is disabled.
@@ -878,6 +890,7 @@ typedef struct otMacFilterEntry
 
 /**
  * Represents a Thread device role.
+ *
  */
 typedef enum {
     OT_DEVICE_ROLE_DISABLED = 0, ///< The Thread stack is disabled.
@@ -892,6 +905,7 @@ typedef enum {
  *
  * `mFrameErrorRate` and `mMessageErrorRate` require `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` feature to be
  * enabled.
+ *
  */
 typedef struct
 {
@@ -993,6 +1007,7 @@ typedef struct otLeaderData
 
 /**
  * This structure represents the MAC layer counters.
+ *
  */
 typedef struct otMacCounters
 {
@@ -1032,7 +1047,8 @@ typedef struct otMacCounters
 } otMacCounters;
 
 /**
- * This structure represents the IP level counters
+ * This structure represents the IP level counters.
+ *
  */
 typedef struct otIpCounters
 {
@@ -1044,6 +1060,7 @@ typedef struct otIpCounters
 
 /**
  * This structure represents the message buffer information.
+ *
  */
 typedef struct otBufferInfo
 {
@@ -1097,6 +1114,7 @@ typedef struct otNetifMulticastAddress
 
 /**
  * This enumeration represents the list of allowable values for an InterfaceId.
+ *
  */
 typedef enum otNetifInterfaceId {
     OT_NETIF_INTERFACE_ID_THREAD = 1, ///< The Thread Network interface ID.
@@ -1122,6 +1140,7 @@ typedef struct
 
 /**
  * This structure represents an IPv6 socket address.
+ *
  */
 typedef struct otSockAddr
 {
@@ -1164,6 +1183,7 @@ typedef void(OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUI
  * #if/#else/#endif. See `openthread/platform/logging.h` for details.
  *
  * @sa OT_LOG_LEVEL_NONE and related macros.
+ *
  */
 typedef uint8_t otLogLevel;
 

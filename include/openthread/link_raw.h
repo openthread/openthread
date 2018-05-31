@@ -175,7 +175,7 @@ typedef void (*otLinkRawTransmitDone)(otInstance *  aInstance,
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Receive.
- * 2. Transmits the psdu on the given channel and at the given transmit power.
+ * 2. Transmits the PSDU on the given channel and at the given transmit power.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aFrame       A pointer to the frame that was transmitted.

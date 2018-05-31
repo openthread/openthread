@@ -320,12 +320,12 @@ NcpUart::NcpFrameBufferEncrypterReader::NcpFrameBufferEncrypterReader(NcpFrameBu
     mDataBufferReadIndex(0),
     mOutputDataLength(0) {}
 
-bool NcpUart::NcpFrameBufferEncrypterReader::IsEmpty() const
+bool NcpUart::NcpFrameBufferEncrypterReader::IsEmpty(void) const
 {
     return mTxFrameBuffer.IsEmpty() && !mOutputDataLength;
 }
 
-otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameBegin()
+otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameBegin(void)
 {
     otError status = OT_ERROR_FAILED;
 
@@ -355,22 +355,22 @@ otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameBegin()
     return status;
 }
 
-bool NcpUart::NcpFrameBufferEncrypterReader::OutFrameHasEnded()
+bool NcpUart::NcpFrameBufferEncrypterReader::OutFrameHasEnded(void)
 {
     return (mDataBufferReadIndex >= mOutputDataLength);
 }
 
-uint8_t NcpUart::NcpFrameBufferEncrypterReader::OutFrameReadByte()
+uint8_t NcpUart::NcpFrameBufferEncrypterReader::OutFrameReadByte(void)
 {
     return mDataBuffer[mDataBufferReadIndex++];
 }
 
-otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameRemove()
+otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameRemove(void)
 {
     return mTxFrameBuffer.OutFrameRemove();
 }
 
-void NcpUart::NcpFrameBufferEncrypterReader::Reset()
+void NcpUart::NcpFrameBufferEncrypterReader::Reset(void)
 {
     mOutputDataLength = 0;
     mDataBufferReadIndex = 0;
