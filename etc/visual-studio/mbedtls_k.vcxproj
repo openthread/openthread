@@ -52,7 +52,7 @@
         HAVE_STDINT_H=1;
       </PreprocessorDefinitions>
       <DisableSpecificWarnings>4132;4242;4245;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
