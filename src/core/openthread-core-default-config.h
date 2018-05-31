@@ -1343,6 +1343,71 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+ *
+ * Define as 1 to enable attach backoff feature
+ *
+ * When this feature is enabled, an exponentially increasing backoff wait time is added between attach attempts.
+ * If device is sleepy, the radio will be put to sleep during the wait time. This ensures that a battery-powered sleepy
+ * end-device does not drain its battery by continuously searching for a parent to attach to (when there is no
+ * router/parent for it to attach).
+ *
+ * The backoff time starts from a minimum interval specified by `OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL`,
+ * and every attach attempt the wait time is doubled up to `OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL` which
+ * specifies the maximum wait time.
+ *
+ * Once the wait time reaches the maximum, a random jitter interval is added to it. The maximum value for jitter is
+ * specified by `OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL`. The random jitter is selected uniformly within
+ * range `[-JITTER, +JITTER]`. It is only added when the backoff wait interval is at maximum value.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+#define OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL
+ *
+ * Specifies the minimum backoff wait interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL 251
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL
+ *
+ * Specifies the maximum backoff wait interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL 1200000 // 1200 seconds = 20 minutes
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL
+ *
+ * Specifies the maximum jitter interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL 2000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
  *
  * Define as 1 to enable sending of a unicast MLE Announce message in response to a received Announce message from
