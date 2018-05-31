@@ -474,7 +474,8 @@ Router *RouterTable::GetLeader(void)
 
 uint32_t RouterTable::GetLeaderAge(void) const
 {
-    return TimerMilli::MsecToSec(TimerMilli::GetNow() - mRouterIdSequenceLastUpdated);
+    return (mActiveRouterCount > 0) ? TimerMilli::MsecToSec(TimerMilli::GetNow() - mRouterIdSequenceLastUpdated)
+                                    : 0xffffffff;
 }
 
 uint8_t RouterTable::GetNeighborCount(void) const

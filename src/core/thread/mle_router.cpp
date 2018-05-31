@@ -1192,7 +1192,8 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
     routerId = GetRouterId(sourceAddress.GetRloc16());
 
     if (IsFullThreadDevice() &&
-        static_cast<int8_t>(route.GetRouterIdSequence() - mRouterTable.GetRouterIdSequence()) > 0)
+        ((mRouterTable.GetActiveRouterCount() == 0) ||
+         (static_cast<int8_t>(route.GetRouterIdSequence() - mRouterTable.GetRouterIdSequence()) > 0)))
     {
         bool processRouteTlv = false;
 
@@ -1258,36 +1259,36 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
             if (IsFullThreadDevice())
             {
-                for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
+                Router *leader = mRouterTable.GetLeader();
+
+                if (leader != NULL)
                 {
-                    Router *leader;
-
-                    if (route.IsRouterIdSet(i) == false)
+                    for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
                     {
-                        continue;
-                    }
+                        if (route.IsRouterIdSet(i) == false)
+                        {
+                            continue;
+                        }
 
-                    if (i != GetLeaderId())
-                    {
-                        routeCount++;
-                        continue;
-                    }
+                        if (i != GetLeaderId())
+                        {
+                            routeCount++;
+                            continue;
+                        }
 
-                    leader = mRouterTable.GetLeader();
-                    assert(leader != NULL);
+                        if (route.GetRouteCost(routeCount) > 0)
+                        {
+                            leader->SetNextHop(routerId);
+                            leader->SetCost(route.GetRouteCost(routeCount));
+                        }
+                        else
+                        {
+                            leader->SetNextHop(kInvalidRouterId);
+                            leader->SetCost(0);
+                        }
 
-                    if (route.GetRouteCost(routeCount) > 0)
-                    {
-                        leader->SetNextHop(routerId);
-                        leader->SetCost(route.GetRouteCost(routeCount));
+                        break;
                     }
-                    else
-                    {
-                        leader->SetNextHop(kInvalidRouterId);
-                        leader->SetCost(0);
-                    }
-
-                    break;
                 }
             }
         }
@@ -1519,7 +1520,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     // 2. It is disconnected from its Partition (that is, it has not
     // received an updated ID sequence number within LEADER_TIMEOUT
-    // seconds
+    // seconds)
     VerifyOrExit(mRouterTable.GetLeaderAge() < mNetworkIdTimeout, error = OT_ERROR_DROP);
 
     // 3. Its current routing path cost to the Leader is infinite.
@@ -1668,7 +1669,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         // verify path to leader
         otLogDebgMle(GetInstance(), "network id timeout = %d", mRouterTable.GetLeaderAge());
 
-        if (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout)
+        if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
             otLogInfoMle(GetInstance(), "Router ID Sequence timeout");
             BecomeChild(kAttachSame1);
@@ -4092,9 +4093,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     aTlv.SetLinkQuality3(0);
 
     leader = mRouterTable.GetLeader();
-    assert(leader != NULL);
-
-    cost = leader->GetCost();
+    cost   = (leader != NULL) ? leader->GetCost() : static_cast<uint8_t>(kMaxRouteCost);
 
     switch (mRole)
     {
@@ -4123,11 +4122,14 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
-        cost += GetLinkCost(leader->GetNextHop());
-
-        if (!IsRouterIdValid(leader->GetNextHop()) || GetLinkCost(GetLeaderId()) < cost)
+        if (leader != NULL)
         {
-            cost = GetLinkCost(GetLeaderId());
+            cost += GetLinkCost(leader->GetNextHop());
+
+            if (!IsRouterIdValid(leader->GetNextHop()) || GetLinkCost(GetLeaderId()) < cost)
+            {
+                cost = GetLinkCost(GetLeaderId());
+            }
         }
 
         break;
