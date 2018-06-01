@@ -73,7 +73,7 @@ extern "C" {
  */
 typedef struct
 {
-#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+#if NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
     bool using_cc310;                               ///< Indicate whether it's using cc310 or not.
 #endif
 

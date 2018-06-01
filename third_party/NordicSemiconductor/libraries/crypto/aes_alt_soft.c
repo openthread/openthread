@@ -50,7 +50,7 @@
 
 #ifdef MBEDTLS_AES_ALT
 
-#if OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES
+#if NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
 
 /*
  * 32-bit integer manipulation macros (little endian)
@@ -399,6 +399,6 @@ int aes_soft_crypt_ecb( mbedtls_aes_context *ctx,
     return aes_encrypt( ctx, input, output );
 }
 
-#endif /* OPENTHREAD_CONFIG_INTERRUPT_CONTEXT_AES */
+#endif /* NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT */
 
 #endif /* MBEDTLS_AES_ALT */

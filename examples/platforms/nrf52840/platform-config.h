@@ -494,4 +494,16 @@
 #define TEMP_MEASUREMENT_INTERVAL 30
 #endif
 
+/**
+ * @def NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+ *
+ * Define as 1 to enable AES usage in interrupt context.
+ *
+ * @note A software AES is enabled to support AES usage in interrupt context.
+ *
+ */
+#ifndef NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 0
+#endif
+
 #endif // PLATFORM_CONFIG_H_
