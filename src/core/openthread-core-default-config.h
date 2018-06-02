@@ -1538,7 +1538,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
  *
- * Define OpenThread diagnostic mode output buffer size.
+ * Define OpenThread diagnostic mode output buffer size in bytes
  *
  */
 #ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
@@ -1558,7 +1558,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
  *
- * Define OpenThread diagnostic mode command line buffer size
+ * Define OpenThread diagnostic mode command line buffer size in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
