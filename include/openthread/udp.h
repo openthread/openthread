@@ -178,6 +178,67 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
  *
  */
 
+/**
+ * @addtogroup api-udp-proxy
+ *
+ * @brief
+ *   This module includes functions for UDP proxy feature.
+ *
+ *   The functions in this module are available when udp-proxy feature (`OPENTHREAD_ENABLE_UDP_PROXY`) is enabled.
+ *
+ * @{
+ *
+ */
+
+/**
+ * This function pointer delivers the UDP packet to host and host should send the packet through its own network stack.
+ *
+ * @param[in]  aMessage   A pointer to the UDP Message.
+ * @param[in]  aPeerPort  The destination UDP port.
+ * @param[in]  aPeerAddr  A pointer to the destination IPv6 address.
+ * @param[in]  aSockPort  The source UDP port.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+typedef void (*otUdpProxySender)(otMessage *   aMessage,
+                                 uint16_t      aPeerPort,
+                                 otIp6Address *aPeerAddr,
+                                 uint16_t      aSockPort,
+                                 void *        aContext);
+
+/**
+ * Set UDP proxy callback to deliever UDP packets to host.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aSender              A pointer to a function called to deliver UDP packet to host.
+ * @param[in]  aContext             A pointer to application-specific context.
+ *
+ */
+void otUdpProxySetSender(otInstance *aInstance, otUdpProxySender aSender, void *aContext);
+
+/**
+ * Handle a UDP packet received from host.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aMessage             A pointer to the UDP Message.
+ * @param[in]  aPeerPort            The source UDP port.
+ * @param[in]  aPeerAddr            A pointer to the source address.
+ * @param[in]  aSockPort            The destination UDP port.
+ *
+ * @warning No matter the call success or fail, the message is freed.
+ *
+ */
+void otUdpProxyReceive(otInstance *        aInstance,
+                       otMessage *         aMessage,
+                       uint16_t            aPeerPort,
+                       const otIp6Address *aPeerAddr,
+                       uint16_t            aSockPort);
+
+/**
+ * @}
+ *
+ */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
