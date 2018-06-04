@@ -1287,6 +1287,8 @@ else
     OPENTHREAD_ENABLE_QOS=0
 fi
 
+AC_MSG_CHECKING([whether to enable QoS])
+AC_MSG_RESULT(${enable_qos})
 AC_SUBST(OPENTHREAD_ENABLE_QOS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_QOS], [test "${enable_qos}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_QOS],[${OPENTHREAD_ENABLE_QOS}],[Define to 1 if you want to enable QoS])
@@ -1790,6 +1792,7 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread Application CoAP support       : ${enable_application_coap}
+  OpenThread QoS support                    : ${enable_qos}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Border Agent support           : ${enable_border_agent}
   OpenThread Border Router support          : ${enable_border_router}

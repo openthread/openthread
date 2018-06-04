@@ -203,7 +203,7 @@ otError otIp6GetPriority(otInstance *       aInstance,
     Instance &instance = *static_cast<Instance *>(aInstance);
     uint8_t   priority;
 
-    SuccessOrExit(instance.GetIp6().GetPriority(aDatagram, aDatagramLen, priority));
+    SuccessOrExit(error = instance.GetIp6().GetPriority(aDatagram, aDatagramLen, priority));
     *aPriority = static_cast<otMessagePriority>(priority);
 
 exit:

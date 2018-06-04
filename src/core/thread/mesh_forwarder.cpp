@@ -949,23 +949,18 @@ otError MeshForwarder::UpdatePriorityEntry(uint16_t aDatagramTag, uint16_t aData
 {
     otError        error = OT_ERROR_NONE;
     PriorityEntry *entry = NULL;
-    size_t         num   = sizeof(mPriorityEntries) / sizeof(mPriorityEntries[0]);
 
-    for (size_t i = 0; i < num; i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mPriorityEntries); i++)
     {
         if (mPriorityEntries[i].GetDatagramTag() == aDatagramTag)
         {
             ExitNow(error = OT_ERROR_ALREADY);
         }
-    }
 
-    // Find an available entry in the `mPriorityEntries` array.
-    for (size_t i = 0; i < num; i++)
-    {
-        if (mPriorityEntries[i].GetLifetime() == 0)
+        // Find an available entry in the `mPriorityEntries` array.
+        if (mPriorityEntries[i].GetLifetime() == 0 && entry == NULL)
         {
             entry = &mPriorityEntries[i];
-            break;
         }
     }
 
@@ -987,15 +982,18 @@ exit:
 
 PriorityEntry *MeshForwarder::GetPriorityEntry(uint16_t aDatagramTag)
 {
+    PriorityEntry *entry = NULL;
+
     for (size_t i = 0; i < sizeof(mPriorityEntries) / sizeof(mPriorityEntries[0]); i++)
     {
         if ((mPriorityEntries[i].GetDatagramTag() == aDatagramTag) && (mPriorityEntries[i].GetLifetime() != 0))
         {
-            return &mPriorityEntries[i];
+            entry = &mPriorityEntries[i];
+            break;
         }
     }
 
-    return NULL;
+    return entry;
 }
 
 otError MeshForwarder::GetFramePriority(uint8_t *     aFrame,

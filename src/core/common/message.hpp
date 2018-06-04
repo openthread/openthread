@@ -852,16 +852,6 @@ private:
     Message *&Prev(uint8_t aList) { return mBuffer.mHead.mInfo.mPrev[aList]; }
 
     /**
-     * This method returns a const reference to the `mPrev` pointer for a given list.
-     *
-     * @param[in]  aList  The index to the message list.
-     *
-     * @returns A reference to the mPrev pointer for the specified list.
-     *
-     */
-    Message *const &Prev(uint8_t aList) const { return mBuffer.mHead.mInfo.mPrev[aList]; }
-
-    /**
      * This method returns the number of reserved header bytes.
      *
      * @returns The number of reserved header bytes.

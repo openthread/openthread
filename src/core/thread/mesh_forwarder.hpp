@@ -59,6 +59,10 @@ enum
 /**
  * This class represents an IPv6 priority entry
  *
+ * An IPv6 message may be fragmented into several fragments by 6Lowpan. The fragments, except the first fragment,
+ * don’t carry IPv6 header. The priority level comes from the DSCP value in IPv6 header. To get the priority
+ * level of the subsequent fragments, routers have to store the priority level of the first fragment.
+ *
  */
 class PriorityEntry
 {
@@ -69,7 +73,7 @@ public:
      * @returns The fragmentation datagram tag value.
      *
      */
-    uint16_t GetDatagramTag() { return mDatagramTag; }
+    uint16_t GetDatagramTag(void) { return mDatagramTag; }
 
     /**
      * This method sets the fragmentation datagram tag value.
@@ -101,7 +105,7 @@ public:
      * @returns The entry's remaining lifetime.
      *
      */
-    uint8_t GetLifetime() { return mLifetime; }
+    uint8_t GetLifetime(void) { return mLifetime; }
 
     /**
      * This method sets the remaining lifetime of the priority entry.
@@ -117,7 +121,7 @@ public:
      * @returns The datagram offset of the entire IP packet.
      *
      */
-    uint16_t GetDatagramOffset() { return mDatagramOffset; }
+    uint16_t GetDatagramOffset(void) { return mDatagramOffset; }
 
     /**
      * This method sets the datagram offset of the entire IP packet.
@@ -128,10 +132,10 @@ public:
     void SetDatagramOffset(uint16_t aDatagramOffset) { mDatagramOffset = aDatagramOffset; }
 
 private:
-    uint16_t mDatagramTag;
-    uint16_t mPriority : 2;
-    uint16_t mLifetime : 3;
-    uint16_t mDatagramOffset : 11;
+    uint16_t mDatagramTag;         ///< The datagram tag of the fragments.
+    uint16_t mPriority : 2;        ///< The priority level of the IPv6 message.
+    uint16_t mLifetime : 3;        ///< The remaining lifetime of the priority entry. 0 indicates the entry is invalid.
+    uint16_t mDatagramOffset : 11; ///< The received datagram offset of the entire IP packet.
 };
 
 /**
@@ -323,7 +327,7 @@ private:
          * Maximum lifetime of the priority entry
          *
          */
-        kPriorityEntryLifetime = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT,
+        kPriorityEntryLifetime = 5,
         kDefaultMsgPriority    = Message::kPriorityLow, ///< Default priority level of the message
         kNumPriorityEntry      = 8,                     ///< Number of the priority entries
     };

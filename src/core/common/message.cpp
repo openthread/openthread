@@ -255,7 +255,7 @@ otError Message::ResizeMessage(uint16_t aLength)
     {
         if (curBuffer->GetNextBuffer() == NULL)
         {
-            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer(mBuffer.mHead.mInfo.mPriority));
+            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer(GetPriority()));
             VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = OT_ERROR_NO_BUFS);
         }
 
@@ -320,7 +320,7 @@ otError Message::SetLength(uint16_t aLength)
         bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
     }
 
-    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, mBuffer.mHead.mInfo.mPriority));
+    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
 
     SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mBuffer.mHead.mInfo.mLength = aLength;
@@ -442,8 +442,7 @@ otError Message::Prepend(const void *aBuf, uint16_t aLength)
 
     while (aLength > GetReserved())
     {
-        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer(mBuffer.mHead.mInfo.mPriority)) != NULL,
-                     error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer(GetPriority())) != NULL, error = OT_ERROR_NO_BUFS);
 
         newBuffer->SetNextBuffer(GetNextBuffer());
         SetNextBuffer(newBuffer);

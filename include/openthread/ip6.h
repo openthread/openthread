@@ -240,10 +240,10 @@ otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *
 /**
  * Get the priority level of the IPv6 datagram.
  *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aDatagram     A pointer to an IPv6 datagram.
- * @param[in]  aDatagramLen  The length of the IPv6 datagram.
- * @param[in]  aPrority      A pointer to the priority level of the IPv6 datagram.
+ * @param[in]   aInstance     A pointer to an OpenThread instance.
+ * @param[in]   aDatagram     A pointer to an IPv6 datagram.
+ * @param[in]   aDatagramLen  The length of the IPv6 datagram.
+ * @param[out]  aPrority      A pointer to the priority level of the IPv6 datagram.
  *
  * @retval OT_ERROR_NONE   Successfully get the priority level.
  * @retval OT_ERROR_PARSE  Malformed IPv6 header.

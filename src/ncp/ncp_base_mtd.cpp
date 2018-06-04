@@ -2249,7 +2249,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     message = otIp6NewMessageWithPriority(mInstance, false, priority);
 #else
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, true);
+    message = otIp6NewMessage(mInstance, false);
 #endif
 
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
