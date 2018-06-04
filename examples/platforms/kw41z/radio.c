@@ -234,24 +234,25 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     sState = OT_RADIO_STATE_RECEIVE;
 
-    otEXPECT(rf_get_state() != XCVR_RX_c);
+    /* Check if the channel needs to be changed */
+    if ((sChannel != aChannel) || (rf_get_state() != XCVR_RX_c))
+    {
+        rf_abort();
+        /* Set Power level for auto TX */
+        rf_set_tx_power(sAutoTxPwrLevel);
+        rf_set_channel(aChannel);
+        sRxFrame.mChannel = aChannel;
 
-    rf_abort();
+        /* Filter ACK frames during RX sequence */
+        ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
+        /* Clear all IRQ flags */
+        ZLL->IRQSTS = ZLL->IRQSTS;
+        /* Start the RX sequence */
+        ZLL->PHY_CTRL |= XCVR_RX_c;
 
-    /* Set Power level for auto TX */
-    rf_set_tx_power(sAutoTxPwrLevel);
-    rf_set_channel(aChannel);
-    sRxFrame.mChannel = aChannel;
-
-    /* Filter ACK frames during RX sequence */
-    ZLL->RX_FRAME_FILTER &= ~(ZLL_RX_FRAME_FILTER_ACK_FT_MASK);
-    /* Clear all IRQ flags */
-    ZLL->IRQSTS = ZLL->IRQSTS;
-    /* Start the RX sequence */
-    ZLL->PHY_CTRL |= XCVR_RX_c;
-
-    /* Unmask SEQ interrupt */
-    ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
+        /* Unmask SEQ interrupt */
+        ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
+    }
 
 exit:
     return status;
