@@ -1328,6 +1328,16 @@ protected:
     }
 
     /**
+     * This method returns a pointer to the neighbor object.
+     *
+     * @param[in]  aAddress  A reference to the MAC address.
+     *
+     * @returns A pointer to the neighbor object.
+     *
+     */
+    Neighbor *GetLinkNeighbor(const Mac::Address &aAddress);
+
+    /**
      * This method returns the next hop towards an RLOC16 destination.
      *
      * @param[in]  aDestination  The RLOC16 of the destination.

@@ -3034,6 +3034,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginTlv.GetLinkMargin()));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aKeySequence);
+    mParentCandidate.SetLinkFrameSequence(linkInfo->mSequence + 1);
 
     mParentPriority     = connectivity.GetParentPriority();
     mParentLinkQuality3 = connectivity.GetLinkQuality3();
@@ -3235,15 +3236,16 @@ exit:
 
 otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &       netif = GetNetif();
-    otError             error = OT_ERROR_NONE;
-    StatusTlv           status;
-    ModeTlv             mode;
-    ResponseTlv         response;
-    LinkFrameCounterTlv linkFrameCounter;
-    MleFrameCounterTlv  mleFrameCounter;
-    SourceAddressTlv    sourceAddress;
-    TimeoutTlv          timeout;
+    ThreadNetif &           netif    = GetNetif();
+    otError                 error    = OT_ERROR_NONE;
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+    StatusTlv               status;
+    ModeTlv                 mode;
+    ResponseTlv             response;
+    LinkFrameCounterTlv     linkFrameCounter;
+    MleFrameCounterTlv      mleFrameCounter;
+    SourceAddressTlv        sourceAddress;
+    TimeoutTlv              timeout;
 
     LogMleMessage("Receive Child Update Response from parent", aMessageInfo.GetPeerAddr());
 
@@ -3281,6 +3283,7 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
             mleFrameCounter.SetFrameCounter(linkFrameCounter.GetFrameCounter());
         }
 
+        mParent.SetLinkFrameSequence(linkInfo->mSequence + 1);
         mParent.SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
         mParent.SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
 
@@ -3600,6 +3603,47 @@ Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
 
     case Mac::Address::kTypeExtended:
         neighbor = GetNeighbor(aAddress.GetExtended());
+        break;
+
+    default:
+        break;
+    }
+
+    return neighbor;
+}
+
+Neighbor *Mle::GetLinkNeighbor(const Mac::Address &aAddress)
+{
+    Neighbor *neighbor = NULL;
+
+    switch (aAddress.GetType())
+    {
+    case Mac::Address::kTypeShort:
+        if ((!mParent.IsStateInvalidOrRestoring()) && (mParent.GetRloc16() == aAddress.GetShort()))
+        {
+            neighbor = &mParent;
+            break;
+        }
+
+        if ((!mParentCandidate.IsStateInvalidOrRestoring()) && (mParentCandidate.GetRloc16() == aAddress.GetShort()))
+        {
+            neighbor = &mParentCandidate;
+        }
+
+        break;
+
+    case Mac::Address::kTypeExtended:
+        if ((!mParent.IsStateInvalidOrRestoring()) && (mParent.GetExtAddress() == aAddress.GetExtended()))
+        {
+            neighbor = &mParent;
+            break;
+        }
+
+        if ((!mParentCandidate.IsStateInvalidOrRestoring()) &&
+            (mParentCandidate.GetExtAddress() == aAddress.GetExtended()))
+        {
+            neighbor = &mParentCandidate;
+        }
         break;
 
     default:

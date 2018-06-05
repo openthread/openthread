@@ -616,6 +616,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
                 neighbor->GetLinkInfo().Clear();
                 neighbor->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
                 neighbor->ResetLinkFailures();
+                neighbor->SetLinkFrameSequence(linkInfo->mSequence + 1);
                 neighbor->SetLastHeard(TimerMilli::GetNow());
                 neighbor->SetState(Neighbor::kStateLinkRequest);
             }
@@ -943,6 +944,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     // finish link synchronization
     router->SetExtAddress(macAddr);
     router->SetRloc16(sourceAddress.GetRloc16());
+    router->SetLinkFrameSequence(linkInfo->mSequence + 1);
     router->SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     router->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     router->SetLastHeard(TimerMilli::GetNow());
@@ -1575,6 +1577,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         child->GetLinkInfo().Clear();
         child->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
         child->ResetLinkFailures();
+        child->SetLinkFrameSequence(linkInfo->mSequence + 1);
         child->SetState(Neighbor::kStateParentRequest);
         child->SetDataRequestPending(false);
     }
@@ -2233,8 +2236,11 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
     if (child->IsStateRestoring())
     {
+        const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+
         SetChildStateToValid(*child);
         child->SetKeySequence(aKeySequence);
+        child->SetLinkFrameSequence(linkInfo->mSequence + 1);
     }
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
@@ -2352,6 +2358,10 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     child->SetLastHeard(TimerMilli::GetNow());
     child->SetKeySequence(aKeySequence);
     child->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
+    if (child->GetState() == Neighbor::kStateChildUpdateRequest)
+    {
+        child->SetLinkFrameSequence(linkInfo->mSequence + 1);
+    }
 
 exit:
     return error;
@@ -3065,7 +3075,7 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     return OT_ERROR_NONE;
 }
 
-Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
+Neighbor *MleRouter::GetNeighbor(uint16_t aAddress, ChildTable::StateFilter aFilter)
 {
     Neighbor *rval = NULL;
 
@@ -3086,7 +3096,7 @@ Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        rval = GetChildTable().FindChild(aAddress, ChildTable::kInStateValidOrRestoring);
+        rval = GetChildTable().FindChild(aAddress, aFilter);
         VerifyOrExit(rval == NULL);
 
         rval = mRouterTable.GetNeighbor(aAddress);
@@ -3097,7 +3107,7 @@ exit:
     return rval;
 }
 
-Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
+Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress, ChildTable::StateFilter aFilter)
 {
     Neighbor *rval = NULL;
 
@@ -3113,7 +3123,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        rval = GetChildTable().FindChild(aAddress, ChildTable::kInStateValidOrRestoring);
+        rval = GetChildTable().FindChild(aAddress, aFilter);
         VerifyOrExit(rval == NULL);
 
         rval = mRouterTable.GetNeighbor(aAddress);
@@ -3135,6 +3145,16 @@ exit:
     return rval;
 }
 
+Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
+{
+    return GetNeighbor(aAddress, ChildTable::kInStateValidOrRestoring);
+}
+
+Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
+{
+    return GetNeighbor(aAddress, ChildTable::kInStateValidOrRestoring);
+}
+
 Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 {
     Neighbor *rval = NULL;
@@ -3147,6 +3167,27 @@ Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
 
     case Mac::Address::kTypeExtended:
         rval = GetNeighbor(aAddress.GetExtended());
+        break;
+
+    default:
+        break;
+    }
+
+    return rval;
+}
+
+Neighbor *MleRouter::GetLinkNeighbor(const Mac::Address &aAddress)
+{
+    Neighbor *rval = NULL;
+
+    switch (aAddress.GetType())
+    {
+    case Mac::Address::kTypeShort:
+        rval = GetNeighbor(aAddress.GetShort(), ChildTable::kInStateAnyExceptInvalidOrRestoring);
+        break;
+
+    case Mac::Address::kTypeExtended:
+        rval = GetNeighbor(aAddress.GetExtended(), ChildTable::kInStateAnyExceptInvalidOrRestoring);
         break;
 
     default:

@@ -1159,6 +1159,7 @@ typedef struct otThreadLinkInfo
     uint8_t  mChannel;      ///< 802.15.4 Channel
     int8_t   mRss;          ///< Received Signal Strength in dBm.
     uint8_t  mLqi;          ///< Link Quality Indicator for a received message.
+    uint8_t  mSequence;     ///< The link sequence number of the received message.
     bool     mLinkSecurity; ///< Indicates whether or not link security is enabled.
 } otThreadLinkInfo;
 

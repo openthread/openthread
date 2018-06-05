@@ -908,6 +908,7 @@ private:
     void    GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void    ProcessTransmitSecurity(Frame &aFrame);
     otError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    otError ProcessFrameSequence(Frame &aFrame, const Address &aSrcAddr);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
@@ -915,7 +916,7 @@ private:
     void    SendBeacon(Frame &aFrame);
     void    StartBackoff(void);
     void    BeginTransmit(void);
-    otError HandleMacCommand(Frame &aFrame);
+    otError HandleMacCommand(Frame &aFrame, const Address &aSrcAddr);
     Frame * GetOperationFrame(void);
 
     static void HandleMacTimer(Timer &aTimer);

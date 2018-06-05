@@ -1115,6 +1115,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     linkInfo.mRss          = aFrame.GetRssi();
     linkInfo.mLqi          = aFrame.GetLqi();
     linkInfo.mLinkSecurity = aFrame.GetSecurityEnabled();
+    linkInfo.mSequence     = aFrame.GetSequence();
 
     payload       = aFrame.GetPayload();
     payloadLength = aFrame.GetPayloadLength();

@@ -1595,6 +1595,26 @@ void Mac::HandleReceiveTimer(void)
     }
 }
 
+otError Mac::ProcessFrameSequence(Frame &aFrame, const Address &aSrcAddr)
+{
+    otError   error        = OT_ERROR_NONE;
+    Neighbor *linkNeighbor = GetNetif().GetMle().GetLinkNeighbor(aSrcAddr);
+
+    VerifyOrExit(linkNeighbor != NULL);
+
+    if (aFrame.GetSequence() + 1 <= linkNeighbor->GetLinkFrameSequence())
+    {
+        ExitNow(error = OT_ERROR_DUPLICATED);
+    }
+    else
+    {
+        linkNeighbor->SetLinkFrameSequence(aFrame.GetSequence() + 1);
+    }
+
+exit:
+    return error;
+}
+
 otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
     KeyManager &      keyManager = GetNetif().GetKeyManager();
@@ -1993,7 +2013,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     switch (aFrame->GetType())
     {
     case Frame::kFcfFrameMacCmd:
-        if (HandleMacCommand(*aFrame) == OT_ERROR_DROP)
+        if (HandleMacCommand(*aFrame, srcaddr) == OT_ERROR_DROP)
         {
             ExitNow(error = OT_ERROR_NONE);
         }
@@ -2007,6 +2027,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         break;
 
     case Frame::kFcfFrameData:
+        SuccessOrExit(error = ProcessFrameSequence(*aFrame, srcaddr));
         mCounters.mRxData++;
         receive = true;
         break;
@@ -2073,7 +2094,7 @@ exit:
     }
 }
 
-otError Mac::HandleMacCommand(Frame &aFrame)
+otError Mac::HandleMacCommand(Frame &aFrame, const Address &aSrcAddr)
 {
     otError error = OT_ERROR_NONE;
     uint8_t commandId;
@@ -2098,6 +2119,7 @@ otError Mac::HandleMacCommand(Frame &aFrame)
         ExitNow(error = OT_ERROR_DROP);
 
     case Frame::kMacCmdDataRequest:
+        SuccessOrExit(error = ProcessFrameSequence(aFrame, aSrcAddr));
         mCounters.mRxDataPoll++;
         break;
 

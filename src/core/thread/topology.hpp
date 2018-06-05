@@ -105,6 +105,16 @@ public:
     bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || IsStateRestoring(); }
 
     /**
+     * This method indicates whether the neighbor/child is in invalid state or if it is being restored.
+     *
+     * When in these states messages never be received from the neighbor/child.
+     *
+     * @returns TRUE if the neighbor is in invalid, restored, or being restored states, FALSE otherwise.
+     *
+     */
+    bool IsStateInvalidOrRestoring(void) const { return (mState == kStateInvalid) || IsStateRestoring(); };
+
+    /**
      * This method gets the device mode flags.
      *
      * @returns The device mode flags.
@@ -336,6 +346,22 @@ public:
      */
     uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
 
+    /**
+     * This method gets the link sequence value.
+     *
+     * @returns The link sequence value.
+     *
+     */
+    uint8_t GetLinkFrameSequence() { return mLinkFrameSequence; }
+
+    /**
+     * This method sets the link sequence value.
+     *
+     * @param[in]  aLinkSequence  The link sequence value.
+     *
+     */
+    void SetLinkFrameSequence(uint8_t aFrameSequence) { mLinkFrameSequence = aFrameSequence; }
+
 private:
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
     uint32_t        mLastHeard; ///< Time when last heard.
@@ -352,13 +378,14 @@ private:
         } mPending;
     } mValidPending;
 
-    uint32_t        mKeySequence;     ///< Current key sequence
-    uint16_t        mRloc16;          ///< The RLOC16
-    uint8_t         mState : 3;       ///< The link state
-    uint8_t         mMode : 4;        ///< The MLE device mode
-    bool            mDataRequest : 1; ///< Indicates whether or not a Data Poll was received
-    uint8_t         mLinkFailures;    ///< Consecutive link failure count
-    LinkQualityInfo mLinkInfo;        ///< Link quality info (contains average RSS, link margin and link quality)
+    uint32_t        mKeySequence;       ///< Current key sequence
+    uint16_t        mRloc16;            ///< The RLOC16
+    uint8_t         mState : 3;         ///< The link state
+    uint8_t         mMode : 4;          ///< The MLE device mode
+    bool            mDataRequest : 1;   ///< Indicates whether or not a Data Poll was received
+    uint8_t         mLinkFailures;      ///< Consecutive link failure count
+    uint8_t         mLinkFrameSequence; ///< The sequence number of link frame
+    LinkQualityInfo mLinkInfo;          ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
 /**
