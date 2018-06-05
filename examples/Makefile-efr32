@@ -90,6 +90,7 @@ EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32/
+HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(shell echo $(BOARD) | tr A-Z a-z)
 
 COMMONCFLAGS                   := \
     -fdata-sections               \
@@ -98,6 +99,7 @@ COMMONCFLAGS                   := \
     -g                            \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
+    -I$(HAL_CONF_DIR)             \
     -D$(MCU)                      \
     $(NULL)
 
