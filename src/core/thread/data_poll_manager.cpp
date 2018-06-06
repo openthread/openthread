@@ -217,6 +217,12 @@ void DataPollManager::HandlePollSent(otError aError)
 
         break;
 
+    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+    case OT_ERROR_ABORT:
+        mRetxMode                   = true;
+        shouldRecalculatePollPeriod = true;
+        break;
+
     default:
         mPollTxFailureCounter++;
 
