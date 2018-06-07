@@ -4064,8 +4064,6 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     uint8_t cost;
     int8_t  parentPriority = kParentPriorityMedium;
 
-    aTlv.Init();
-
     if (mParentPriority != kParentPriorityUnspecified)
     {
         parentPriority = mParentPriority;
@@ -4192,6 +4190,7 @@ otError MleRouter::AppendConnectivity(Message &aMessage)
     otError         error;
     ConnectivityTlv tlv;
 
+    tlv.Init();
     FillConnectivityTlv(tlv);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
@@ -4244,7 +4243,6 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
 {
     uint8_t routerCount = 0;
 
-    aTlv.Init();
     aTlv.SetRouterIdSequence(mRouterTable.GetRouterIdSequence());
     aTlv.ClearRouterIdMask();
 
@@ -4302,6 +4300,7 @@ otError MleRouter::AppendRoute(Message &aMessage)
     otError  error;
     RouteTlv tlv;
 
+    tlv.Init();
     FillRouteTlv(tlv);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
 
