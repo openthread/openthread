@@ -1233,18 +1233,6 @@ public:
     explicit MessagePool(Instance &aInstance);
 
     /**
-     * This method is used to obtain a new message. The default priority `kDefaultMessagePriority`
-     * is assigned to the message.
-     *
-     * @param[in]  aType           The message type.
-     * @param[in]  aReserveHeader  The number of header bytes to reserve.
-     *
-     * @returns A pointer to the message or NULL if no message buffers are available.
-     *
-     */
-    Message *New(uint8_t aType, uint16_t aReserveHeader);
-
-    /**
      * This method is used to obtain a new message.
      * is assigned to the message.
      *
@@ -1255,7 +1243,7 @@ public:
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority);
+    Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.

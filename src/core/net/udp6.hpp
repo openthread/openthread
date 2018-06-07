@@ -77,22 +77,12 @@ public:
      * This method returns a new UDP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     *
-     * @returns A pointer to the message or NULL if no buffers are available.
-     *
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * This method returns a new UDP message with sufficient header space reserved.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      * @param[in]  aPriority  A reference to the priority of the message.
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, uint8_t aPriority);
+    Message *NewMessage(uint16_t aReserved, uint8_t aPriority = kDefaultSocketMessagePriority);
 
     /**
      * This method opens the UDP socket.
@@ -163,6 +153,11 @@ public:
     SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
 
 private:
+    enum
+    {
+        kDefaultSocketMessagePriority = Message::kPriorityLow,
+    };
+
     UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
     void       SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
 
@@ -221,22 +216,12 @@ public:
      * This method returns a new UDP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     *
-     * @returns A pointer to the message or NULL if no buffers are available.
-     *
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * This method returns a new UDP message with sufficient header space reserved.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      * @param[in]  aPriority  The priority of the message.
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, uint8_t aPriority);
+    Message *NewMessage(uint16_t aReserved, uint8_t aPriority = kDefaultUdpMessagePriority);
 
     /**
      * This method sends an IPv6 datagram.
@@ -300,6 +285,11 @@ public:
 #endif // OPENTHREAD_ENABLE_UDP_PROXY
 
 private:
+    enum
+    {
+        kDefaultUdpMessagePriority = Message::kPriorityLow,
+    };
+
     enum
     {
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry

@@ -43,7 +43,15 @@ using namespace ot;
 otMessage *otUdpNewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetIp6().GetUdp().NewMessage(0, static_cast<uint8_t>(aPriority));
+    Message * message;
+
+    // Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control messages.
+    if (aPriority == OT_MESSAGE_PRIORITY_HIGH)
+    {
+        aPriority = OT_MESSAGE_PRIORITY_MEDIUM;
+    }
+
+    message = instance.GetIp6().GetUdp().NewMessage(0, static_cast<uint8_t>(aPriority));
 
     if (message)
     {

@@ -67,12 +67,6 @@ Ip6::Ip6(Instance &aInstance)
 {
 }
 
-Message *Ip6::NewMessage(uint16_t aReserved)
-{
-    return GetInstance().GetMessagePool().New(Message::kTypeIp6,
-                                              sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
-}
-
 Message *Ip6::NewMessage(uint16_t aReserved, uint8_t aPriority)
 {
     return GetInstance().GetMessagePool().New(

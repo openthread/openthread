@@ -50,11 +50,6 @@ UdpSocket::UdpSocket(Udp &aUdp)
     mTransport = &aUdp;
 }
 
-Message *UdpSocket::NewMessage(uint16_t aReserved)
-{
-    return static_cast<Udp *>(mTransport)->NewMessage(aReserved);
-}
-
 Message *UdpSocket::NewMessage(uint16_t aReserved, uint8_t aPriority)
 {
     return static_cast<Udp *>(mTransport)->NewMessage(aReserved, aPriority);
@@ -198,11 +193,6 @@ uint16_t Udp::GetEphemeralPort(void)
     }
 
     return rval;
-}
-
-Message *Udp::NewMessage(uint16_t aReserved)
-{
-    return GetIp6().NewMessage(sizeof(UdpHeader) + aReserved);
 }
 
 Message *Udp::NewMessage(uint16_t aReserved, uint8_t aPriority)

@@ -111,22 +111,12 @@ public:
      * This method allocates a new message buffer from the buffer pool.
      *
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
-     *
-     * @returns A pointer to the message or NULL if insufficient message buffers are available.
-     *
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * This method allocates a new message buffer from the buffer pool.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
      * @param[in]  aPriority  The priority level of the message.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, uint8_t aPriority);
+    Message *NewMessage(uint16_t aReserved, uint8_t aPriority = kDefaultIp6MessagePriority);
 
     /**
      * This method converts the message priority level to IPv6 DSCP value.
@@ -423,6 +413,11 @@ public:
     static const char *IpProtoToString(IpProto aIpProto);
 
 private:
+    enum
+    {
+        kDefaultIp6MessagePriority = Message::kPriorityLow,
+    };
+
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 

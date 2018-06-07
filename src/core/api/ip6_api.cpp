@@ -214,7 +214,15 @@ exit:
 otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetMessagePool().New(Message::kTypeIp6, 0, static_cast<uint8_t>(aPriority));
+    Message * message;
+
+    // Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control messages.
+    if (aPriority == OT_MESSAGE_PRIORITY_HIGH)
+    {
+        aPriority = OT_MESSAGE_PRIORITY_MEDIUM;
+    }
+
+    message = instance.GetMessagePool().New(Message::kTypeIp6, 0, static_cast<uint8_t>(aPriority));
 
     if (message)
     {

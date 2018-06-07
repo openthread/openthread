@@ -65,13 +65,9 @@ MessagePool::MessagePool(Instance &aInstance)
 #endif
 }
 
-Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
-{
-    return New(aType, aReserved, kDefaultMessagePriority);
-}
-
 Message *MessagePool::New(uint8_t aType, uint16_t aReserved, uint8_t aPriority)
 {
+    otError  error   = OT_ERROR_NONE;
     Message *message = NULL;
 
     VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != NULL);
@@ -81,15 +77,17 @@ Message *MessagePool::New(uint8_t aType, uint16_t aReserved, uint8_t aPriority)
     message->SetType(aType);
     message->SetReserved(aReserved);
     message->SetLinkSecurityEnabled(true);
-    message->SetPriority(aPriority);
 
-    if (message->SetLength(0) != OT_ERROR_NONE)
+    SuccessOrExit(error = message->SetPriority(aPriority));
+    SuccessOrExit(error = message->SetLength(0));
+
+exit:
+    if (error != OT_ERROR_NONE)
     {
         Free(message);
         message = NULL;
     }
 
-exit:
     return message;
 }
 
