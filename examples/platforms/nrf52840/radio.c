@@ -327,7 +327,16 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     aFrame->mPsdu[-1] = aFrame->mLength;
 
     nrf_802154_channel_set(aFrame->mChannel);
-    nrf_802154_transmit_csma_ca_raw(&aFrame->mPsdu[-1]);
+
+    if (aFrame->mIsCcaEnabled)
+    {
+        nrf_802154_transmit_csma_ca_raw(&aFrame->mPsdu[-1]);
+    }
+    else
+    {
+        nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false);
+    }
+
     clearPendingEvents();
     otPlatRadioTxStarted(aInstance, aFrame);
 
