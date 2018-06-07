@@ -1572,6 +1572,12 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
     {
         Get<Ip6::Filter>().AllowNativeCommissioner(
             (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0);
+
+        if (((mRole == OT_DEVICE_ROLE_ROUTER) || (mRole == OT_DEVICE_ROLE_LEADER)) &&
+            ((Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_ROUTERS) == 0))
+        {
+            BecomeDetached();
+        }
     }
 
 exit:
