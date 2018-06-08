@@ -957,7 +957,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
     if (mSendMessage->GetDirectTransmission())
     {
-        if (aError != OT_ERROR_NONE)
+        if (aError == OT_ERROR_NO_ACK)
         {
             // If the transmission of any fragment frame fails,
             // the overall message transmission is considered
