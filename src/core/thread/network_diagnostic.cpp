@@ -394,13 +394,19 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         case NetworkDiagnosticTlv::kSupplyVoltage:
         {
             // Thread 1.1.1 Specification Section 10.11.4.3:
-            // Omitted if the battery level is not measured, is unknown.
+            // Omitted if the supply voltage is not measured, is unknown.
             break;
         }
 
         case NetworkDiagnosticTlv::kChildTable:
         {
-            SuccessOrExit(error = AppendChildTable(aResponse));
+            // Thread 1.1.1 Specification Section 10.11.2.2:
+            // If a Thread device is unable to supply a specific Diagnostic TLV, that TLV is omitted.
+            // Here only Active Router may have children.
+            if (netif.GetMle().IsActiveRouter(netif.GetMle().GetRloc16()))
+            {
+                SuccessOrExit(error = AppendChildTable(aResponse));
+            }
             break;
         }
 
