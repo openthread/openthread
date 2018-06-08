@@ -43,6 +43,7 @@
 #include "thread/thread_netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::ReadUint16;
 
 namespace ot {
 namespace Lowpan {
@@ -613,7 +614,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     uint8_t *            bytes;
 
     VerifyOrExit(remaining >= 2);
-    hcCtl = static_cast<uint16_t>((cur[0] << 8) | cur[1]);
+    hcCtl = ReadUint16(cur);
     cur += 2;
     remaining -= 2;
 
@@ -982,15 +983,15 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
     {
     case 0:
         VerifyOrExit(remaining >= 4);
-        udpHeader.SetSourcePort(static_cast<uint16_t>((cur[0] << 8) | cur[1]));
-        udpHeader.SetDestinationPort(static_cast<uint16_t>((cur[2] << 8) | cur[3]));
+        udpHeader.SetSourcePort(ReadUint16(cur));
+        udpHeader.SetDestinationPort(ReadUint16(cur + 2));
         cur += 4;
         remaining -= 4;
         break;
 
     case 1:
         VerifyOrExit(remaining >= 3);
-        udpHeader.SetSourcePort(static_cast<uint16_t>((cur[0] << 8) | cur[1]));
+        udpHeader.SetSourcePort(ReadUint16(cur));
         udpHeader.SetDestinationPort(0xf000 | cur[2]);
         cur += 3;
         remaining -= 3;
@@ -999,7 +1000,7 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
     case 2:
         VerifyOrExit(remaining >= 3);
         udpHeader.SetSourcePort(0xf000 | cur[0]);
-        udpHeader.SetDestinationPort(static_cast<uint16_t>((cur[1] << 8) | cur[2]));
+        udpHeader.SetDestinationPort(ReadUint16(cur + 1));
         cur += 3;
         remaining -= 3;
         break;
@@ -1021,7 +1022,7 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
     else
     {
         VerifyOrExit(remaining >= 2);
-        udpHeader.SetChecksum(static_cast<uint16_t>((cur[0] << 8) | cur[1]));
+        udpHeader.SetChecksum(ReadUint16(cur));
         cur += 2;
     }
 
@@ -1062,7 +1063,7 @@ int Lowpan::Decompress(Message &           aMessage,
     uint16_t       currentOffset    = aMessage.GetOffset();
 
     VerifyOrExit(remaining >= 2);
-    compressed = (((static_cast<uint16_t>(cur[0]) << 8) | cur[1]) & kHcNextHeader) != 0;
+    compressed = ((ReadUint16(cur) & kHcNextHeader) != 0);
 
     VerifyOrExit((rval = DecompressBaseHeader(ip6Header, aMacSource, aMacDest, cur, remaining)) >= 0);
 
