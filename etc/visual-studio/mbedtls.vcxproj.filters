@@ -5,85 +5,85 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\repo.patched">
+    <Filter Include="Source Files\repo">
       <UniqueIdentifier>{0a2ce77e-dccf-408c-aea0-7a781284a936}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\repo.patched\library">
+    <Filter Include="Source Files\repo\library">
       <UniqueIdentifier>{859819dc-e84e-4854-ad32-2819d60da38b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\aes.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\aes.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\bignum.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\bignum.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ccm.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ccm.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\cipher.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\cipher_wrap.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher_wrap.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\cmac.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cmac.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ctr_drbg.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ctr_drbg.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\debug.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\debug.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ecjpake.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecjpake.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ecp.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ecp_curves.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp_curves.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\entropy.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\entropy_poll.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy_poll.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\md.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\md_wrap.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md_wrap.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\memory_buffer_alloc.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\platform.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\sha256.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\sha256.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_ciphersuites.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_cli.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cli.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_cookie.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cookie.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_srv.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_srv.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_ticket.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ticket.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo.patched\library\ssl_tls.c">
-      <Filter>Source Files\repo.patched\library</Filter>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_tls.c">
+      <Filter>Source Files\repo\library</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

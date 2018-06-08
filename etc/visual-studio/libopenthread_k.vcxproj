@@ -53,7 +53,7 @@
         ..\..\examples\drivers\windows\include;
         ..\..\src\core;
         ..\..\third_party\mbedtls;
-        ..\..\third_party\mbedtls\repo.patched\include;
+        ..\..\third_party\mbedtls\repo\include;
         ..\..\examples\drivers\windows\include_c99;
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>

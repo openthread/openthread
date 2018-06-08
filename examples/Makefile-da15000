@@ -63,7 +63,7 @@ DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/interfaces/ftd
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/bsp/config
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/interfaces/ftdf/src
-DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo.patched/include
+DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
 DA15000_MBEDTLS_CPPFLAGS += -include$(PWD)/examples/platforms/da15000/custom_config_qspi.h
 

@@ -18,7 +18,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                    = \
     mbedtls-config.h                            \
-    repo.patched/include                        \
+    repo/include                                \
     $(NULL)
 
 lib_LIBRARIES                                 = libmbedcrypto.a
@@ -31,7 +31,7 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo.patched
+MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo
 
 libmbedcrypto_a_CPPFLAGS                      = \
     -I$(top_srcdir)/include                     \
@@ -41,21 +41,21 @@ libmbedcrypto_a_CPPFLAGS                      = \
     $(NULL)
 
 libmbedcrypto_a_SOURCES                       = \
-    repo.patched/library/md.c                   \
-    repo.patched/library/md_wrap.c              \
-    repo.patched/library/memory_buffer_alloc.c  \
-    repo.patched/library/platform.c             \
-    repo.patched/library/sha256.c               \
+    repo/library/md.c                           \
+    repo/library/md_wrap.c                      \
+    repo/library/memory_buffer_alloc.c          \
+    repo/library/platform.c                     \
+    repo/library/sha256.c                       \
     $(NULL)
 
 if OPENTHREAD_EXAMPLES_EFR32
-nodist_libmbedcrypto_a_SOURCES                = \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c \
+nodist_libmbedcrypto_a_SOURCES                                                                                      = \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c        \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/third_party/mbedtls/sl_crypto/src/crypto_management.c \
     $(NULL)
 else
 libmbedcrypto_a_SOURCES                      += \
-    repo.patched/library/aes.c                  \
+    repo/library/aes.c                          \
     $(NULL)
 endif  # OPENTHREAD_EXAMPLES_EFR32
 
@@ -71,33 +71,33 @@ endif # OPENTHREAD_EXAMPLES_NRF52840
 
 if OPENTHREAD_ENABLE_DTLS
 libmbedcrypto_a_SOURCES                      += \
-    repo.patched/library/bignum.c               \
-    repo.patched/library/ccm.c                  \
-    repo.patched/library/cipher.c               \
-    repo.patched/library/cipher_wrap.c          \
-    repo.patched/library/cmac.c                 \
-    repo.patched/library/ctr_drbg.c             \
-    repo.patched/library/debug.c                \
-    repo.patched/library/ecjpake.c              \
-    repo.patched/library/ecp_curves.c           \
-    repo.patched/library/entropy.c              \
-    repo.patched/library/entropy_poll.c         \
-    repo.patched/library/ssl_cookie.c           \
-    repo.patched/library/ssl_ciphersuites.c     \
-    repo.patched/library/ssl_cli.c              \
-    repo.patched/library/ssl_srv.c              \
-    repo.patched/library/ssl_ticket.c           \
-    repo.patched/library/ssl_tls.c              \
+    repo/library/bignum.c                       \
+    repo/library/ccm.c                          \
+    repo/library/cipher.c                       \
+    repo/library/cipher_wrap.c                  \
+    repo/library/cmac.c                         \
+    repo/library/ctr_drbg.c                     \
+    repo/library/debug.c                        \
+    repo/library/ecjpake.c                      \
+    repo/library/ecp_curves.c                   \
+    repo/library/entropy.c                      \
+    repo/library/entropy_poll.c                 \
+    repo/library/ssl_cookie.c                   \
+    repo/library/ssl_ciphersuites.c             \
+    repo/library/ssl_cli.c                      \
+    repo/library/ssl_srv.c                      \
+    repo/library/ssl_ticket.c                   \
+    repo/library/ssl_tls.c                      \
     $(NULL)
 
 if OPENTHREAD_EXAMPLES_EFR32
-nodist_libmbedcrypto_a_SOURCES               += \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/third_party/mbedtls/library/ecp.c \
+nodist_libmbedcrypto_a_SOURCES                                                                              += \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/third_party/mbedtls/library/ecp.c              \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c \
     $(NULL)
 else
 libmbedcrypto_a_SOURCES                      += \
-    repo.patched/library/ecp.c                  \
+    repo/library/ecp.c                          \
     $(NULL)
 endif  # OPENTHREAD_EXAMPLES_EFR32
 
