@@ -166,7 +166,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
-        if(argc > 1)
+        if (argc > 1)
         {
             if (strcmp(argv[1], "false") == 0)
             {
@@ -175,7 +175,8 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         }
         otCoapSecureSetSslAuthMode(mInterpreter.mInstance, mVerifyPeerCert);
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
-        mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ", mVerifyPeerCert ? "true" : "false");
+        mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ",
+                                           mVerifyPeerCert ? "true" : "false");
     }
     else if (strcmp(argv[0], "set") == 0)
     {
@@ -204,11 +205,13 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             }
             else if (strcmp(argv[1], "x509") == 0)
             {
-                SuccessOrExit(error = otCoapSecureSetX509Certificate(
-                                  mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT, sizeof(OT_CLI_COAPS_X509_CERT)));
+                SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
+                                                                     (const uint8_t *)OT_CLI_COAPS_X509_CERT,
+                                                                     sizeof(OT_CLI_COAPS_X509_CERT)));
 
                 SuccessOrExit(error = otCoapSecureSetX509PrivateKey(mInterpreter.mInstance,
-                                                                    (const uint8_t *)OT_CLI_COAPS_PRIV_KEY, sizeof(OT_CLI_COAPS_PRIV_KEY)));
+                                                                    (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
+                                                                    sizeof(OT_CLI_COAPS_PRIV_KEY)));
                 mInterpreter.mServer->OutputFormat("Coap Secure set own .X509 certificate: ");
             }
         }
