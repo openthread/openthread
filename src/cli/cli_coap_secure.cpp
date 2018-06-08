@@ -42,8 +42,7 @@
 #include "coap/coap_secure.hpp"
 
 // header for place your x509 certificate and private key
-//#include "x509_cert_key.hpp"
-#include "x509_cert_key_ines.hpp"
+#include "x509_cert_key.hpp"
 
 #include <mbedtls/debug.h>
 
