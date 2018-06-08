@@ -158,6 +158,20 @@
  */
 #define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS                     2048
 
+/**
+ * @def NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+ *
+ * Define as 1 to enable AES usage in interrupt context and AES-256, by introducing a software AES under platform layer.
+ *
+ * @note This feature must be enabled to support AES-256 used by Commissioner and Joiner.
+ *
+ */
+#if OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER
+#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT                   1
+#else
+#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT                   0
+#endif
+
 /*
  * Suppress the ARMCC warning on unreachable statement,
  * e.g. break after assert(false) or ExitNow() macro.

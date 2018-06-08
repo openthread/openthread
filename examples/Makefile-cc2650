@@ -54,7 +54,7 @@ CC2650_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"cc2650-mbedtls-config.h\"'
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/crypto
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/ti/devices/cc26x0
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
-CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo.patched/include
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
 
 CC2650_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2650-config.h\"'
 CC2650_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/

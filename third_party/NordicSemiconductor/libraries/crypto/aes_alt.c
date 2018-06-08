@@ -64,6 +64,7 @@ void mbedtls_aes_init(mbedtls_aes_context * ctx)
     // Check if this function is called from main thread.
     if (active_vector_id == 0)
     {
+        aes_soft_init(ctx);
 #endif
         aes_cc310_init(ctx);
 #if NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
@@ -85,6 +86,7 @@ void mbedtls_aes_free(mbedtls_aes_context * ctx)
 #endif
         aes_cc310_free(ctx);
 #if NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+        aes_soft_free(ctx);
     }
     else
     {
@@ -100,7 +102,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context * ctx,
     int result;
 
 #if NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
-    if (ctx->using_cc310)
+    if (ctx->using_cc310 && keybits == 128)
     {
 #endif        
         result = aes_cc310_setkey_enc(ctx, key, keybits);
@@ -108,6 +110,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context * ctx,
     }
     else
     {
+        ctx->using_cc310 = false;
         result = aes_soft_setkey_enc(ctx, key, keybits);
     }
 #endif        

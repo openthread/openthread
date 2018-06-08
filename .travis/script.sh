@@ -42,6 +42,10 @@ set -x
 
 [ $BUILD_TARGET != scan-build ] || {
     ./bootstrap || die
+
+    # avoids "third_party/mbedtls/repo/library/ssl_srv.c:2904:9: warning: Value stored to 'p' is never read"
+    export CPPFLAGS=-DMBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
     scan-build ./configure                \
         --enable-cli-app=all              \
         --enable-ncp-app=all              \
