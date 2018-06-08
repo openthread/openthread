@@ -112,6 +112,11 @@ private:
     bool           mShutdownFlag;
 
     Interpreter &mInterpreter;
+
+    uint8_t mPsk[32];
+    uint8_t mPskLength;
+    uint8_t mPskId[32];
+    uint8_t mPskIdLength;
 };
 
 } // namespace Cli

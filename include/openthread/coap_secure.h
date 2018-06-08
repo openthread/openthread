@@ -104,11 +104,11 @@ otError otCoapSecureStop(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
  *
  */
-otError otCoapSecureSetPsk(otInstance *aInstance,
-                           uint8_t *   aPsk,
-                           uint16_t    aPskLength,
-                           uint8_t *   aPskIdentity,
-                           uint16_t    aPskIdLength);
+otError otCoapSecureSetPsk(otInstance *   aInstance,
+                           const uint8_t *aPsk,
+                           uint16_t       aPskLength,
+                           const uint8_t *aPskIdentity,
+                           uint16_t       aPskIdLength);
 
 /**
  * This method returns the peer x509 certificate base64 encoded.

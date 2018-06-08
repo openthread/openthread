@@ -75,8 +75,8 @@ Dtls::Dtls(Instance &aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     memset(&mApplicationCoapCiphreSuite, 0, sizeof(mApplicationCoapCiphreSuite));
 
-    memset(mPreSharedKey, 0, sizeof(mPreSharedKey));
-    memset(mPreSharedKeyIdentity, 0, sizeof(mPreSharedKeyIdentity));
+    mPreSharedKey         = NULL;
+    mPreSharedKeyIdentity = NULL;
     mPreSharedKeyIdLength = 0;
     mPreSharedKeyLength   = 0;
 
@@ -285,8 +285,8 @@ otError Dtls::StartApplicationCoapSecure(bool             aClient,
 
     case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
 
-        rval = mbedtls_ssl_conf_psk(&mConf, (const unsigned char *)mPreSharedKey, mPreSharedKeyLength,
-                                    (const unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+        rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
+                                    (unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
         VerifyOrExit(rval == 0);
 
         break;
@@ -394,16 +394,21 @@ exit:
     return error;
 }
 
-otError Dtls::SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength, uint8_t *aPskIdentity, uint16_t aPskIdLength)
+otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
+                              uint16_t       aPskLength,
+                              const uint8_t *aPskIdentity,
+                              uint16_t       aPskIdLength)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aPskLength <= sizeof(mPreSharedKey), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aPskIdLength <= sizeof(mPreSharedKeyIdentity), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPsk != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPskIdentity != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPskLength > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPskIdLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    memcpy(mPreSharedKey, aPsk, aPskLength);
-    mPreSharedKeyLength = aPskLength;
-    memcpy(mPreSharedKeyIdentity, aPskIdentity, aPskIdLength);
+    mPreSharedKey         = aPsk;
+    mPreSharedKeyLength   = aPskLength;
+    mPreSharedKeyIdentity = aPskIdentity;
     mPreSharedKeyIdLength = aPskIdLength;
 
     mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;

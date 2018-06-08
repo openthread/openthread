@@ -63,11 +63,11 @@ otError otCoapSecureSetX509Certificate(otInstance *   aInstance,
                                                                   aPrivateKeyLength);
 }
 
-otError otCoapSecureSetPsk(otInstance *aInstance,
-                           uint8_t *   aPsk,
-                           uint16_t    aPskLength,
-                           uint8_t *   aPskIdentity,
-                           uint16_t    aPskIdLength)
+otError otCoapSecureSetPsk(otInstance *   aInstance,
+                           const uint8_t *aPsk,
+                           uint16_t       aPskLength,
+                           const uint8_t *aPskIdentity,
+                           uint16_t       aPskIdLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 

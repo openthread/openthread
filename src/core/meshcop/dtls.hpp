@@ -75,10 +75,6 @@ public:
 #else
         kApplicationDataMaxLength = 1400,
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-        kPreSharedKeyMaxLength   = 32,
-        kClientIdentityMaxLength = 32,
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     };
 
     /**
@@ -215,7 +211,10 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength, uint8_t *aPskIdentity, uint16_t aPskIdLength);
+    otError SetPreSharedKey(const uint8_t *aPsk,
+                            uint16_t       aPskLength,
+                            const uint8_t *aPskIdentity,
+                            uint16_t       aPskIdLength);
 
     /**
      * This method sets a reference to the x509 certificate with corresponding private key.
@@ -359,10 +358,10 @@ private:
     const uint8_t *    mX509Cert;
     uint32_t           mX509CertLength;
 
-    uint8_t  mPreSharedKey[kPreSharedKeyMaxLength];
-    uint8_t  mPreSharedKeyIdentity[kClientIdentityMaxLength];
-    uint16_t mPreSharedKeyLength;
-    uint16_t mPreSharedKeyIdLength;
+    const uint8_t *mPreSharedKey;
+    const uint8_t *mPreSharedKeyIdentity;
+    uint16_t       mPreSharedKeyLength;
+    uint16_t       mPreSharedKeyIdLength;
 
     int mApplicationCoapCiphreSuite[1];
 

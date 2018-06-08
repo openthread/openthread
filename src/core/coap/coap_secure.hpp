@@ -186,7 +186,10 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength, uint8_t *aPskIdentity, uint16_t aPskIdLength);
+    otError SetPreSharedKey(const uint8_t *aPsk,
+                            uint16_t       aPskLength,
+                            const uint8_t *aPskIdentity,
+                            uint16_t       aPskIdLength);
 
     /**
      * This method sets a X509 certificate with corresponding private key for DTLS session.

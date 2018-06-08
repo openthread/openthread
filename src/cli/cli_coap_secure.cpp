@@ -42,7 +42,8 @@
 #include "coap/coap_secure.hpp"
 
 // header for place your x509 certificate and private key
-#include "x509_cert_key.hpp"
+//#include "x509_cert_key.hpp"
+#include "x509_cert_key_ines.hpp"
 
 #include <mbedtls/debug.h>
 
@@ -54,6 +55,10 @@ CoapSecureCli::CoapSecureCli(Interpreter &aInterpreter)
 {
     memset(&mResource, 0, sizeof(mResource));
     mShutdownFlag = false;
+    memset(&mPsk, 0, sizeof(mPsk));
+    mPskLength = 0;
+    memset(&mPskId, 0, sizeof(mPskId));
+    mPskIdLength = 0;
 }
 
 void CoapSecureCli::PrintHeaderInfos(otCoapHeader *aHeader) const
@@ -186,10 +191,8 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             {
                 if (argc > 2)
                 {
-                    uint8_t mPsk[32];
-                    uint8_t mPskLength = strlen(argv[2]);
-                    uint8_t mPskId[32];
-                    uint8_t mPskIdLength = strlen(argv[3]);
+                    mPskLength   = strlen(argv[2]);
+                    mPskIdLength = strlen(argv[3]);
 
                     memcpy(mPsk, argv[2], mPskLength);
                     memcpy(mPskId, argv[3], mPskIdLength);
