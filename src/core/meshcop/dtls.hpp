@@ -218,30 +218,19 @@ public:
     otError SetPreSharedKey(uint8_t *aPsk, uint16_t aPskLength, uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
     /**
-     * This method sets a reference to the x509 certificate.
+     * This method sets a reference to the x509 certificate with corresponding private key.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
-     * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
+     * @param[in]  aX509Certificate  A pointer to the PEM formatted X509 CA certificate.
      * @param[in]  aX509CertLenth    The length of certificate.
-     *
-     * @retval OT_ERROR_NONE  Successfully set the PSK.
-     *
-     */
-    otError SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth);
-
-    /**
-     * This method sets a reference to the x509 private key.
-     *
-     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
-     *
-     * @param[in]  aPrivateKey       A pointer to the private key.
+     * @param[in]  aPrivateKey       A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLenth  The length of the private key.
      *
-     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
      *
      */
-    otError SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth);
+    otError SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth);
 
     /**
      * This method returns the peer x509 certificate base64 encoded.

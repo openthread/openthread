@@ -369,31 +369,23 @@ exit:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth)
+otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aX509CertLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aX509Certificate != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    mX509Cert       = aX509Certificate;
-    mX509CertLength = aX509CertLenth;
-
-    mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
-
-exit:
-    return error;
-}
-
-otError Dtls::SetX509PrivateKey(const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth)
-{
-    otError error = OT_ERROR_NONE;
-
     VerifyOrExit(aPrivateKeyLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aPrivateKey != NULL, error = OT_ERROR_INVALID_ARGS);
 
     mPk       = aPrivateKey;
     mPkLength = aPrivateKeyLenth;
+
+    mX509Cert       = aX509Certificate;
+    mX509CertLength = aX509CertLenth;
+
+    mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
 
 exit:
     return error;

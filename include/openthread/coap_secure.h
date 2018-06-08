@@ -139,29 +139,23 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
 void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate);
 
 /**
- * This method sets the local device's X509 certificate with his private key for
+ * This method sets the local device's X509 certificate with corresponding private key for
  * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aX509Certificate  A pointer to the X509 CA certificate.
+ * @param[in]  aX509Certificate  A pointer to the PEM formatted X509 CA certificate.
  * @param[in]  aX509CertLenth    The length of certificate.
- *
- * @retval OT_ERROR_NONE  Successfully set the PSK.
- *
- */
-otError otCoapSecureSetX509Certificate(otInstance *aInstance, const uint8_t *aX509Cert, uint32_t aX509Length);
-/**
- * This method sets the own X509 private key for DTLS session with
- * DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPrivateKey       A pointer to the private key.
+ * @param[in]  aPrivateKey       A pointer to the PEM formatted private key.
  * @param[in]  aPrivateKeyLenth  The length of the private key.
  *
- * @retval OT_ERROR_NONE  Successfully set the PSK.
+ * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
  *
  */
-otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
+otError otCoapSecureSetX509Certificate(otInstance    *aInstance,
+                                       const uint8_t *aX509Cert,
+                                       uint32_t       aX509Length,
+                                       const uint8_t *aPrivateKey,
+                                       uint32_t       aPrivateKeyLength);
 
 /**
  * This method initializes DTLS session with a peer.

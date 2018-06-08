@@ -207,11 +207,9 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             {
                 SuccessOrExit(error = otCoapSecureSetX509Certificate(mInterpreter.mInstance,
                                                                      (const uint8_t *)OT_CLI_COAPS_X509_CERT,
-                                                                     sizeof(OT_CLI_COAPS_X509_CERT)));
-
-                SuccessOrExit(error = otCoapSecureSetX509PrivateKey(mInterpreter.mInstance,
-                                                                    (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
-                                                                    sizeof(OT_CLI_COAPS_PRIV_KEY)));
+                                                                     sizeof(OT_CLI_COAPS_X509_CERT),
+                                                                     (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
+                                                                     sizeof(OT_CLI_COAPS_PRIV_KEY)));
                 mInterpreter.mServer->OutputFormat("Coap Secure set own .X509 certificate: ");
             }
         }
