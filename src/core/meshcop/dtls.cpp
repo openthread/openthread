@@ -247,6 +247,15 @@ otError Dtls::StartApplicationCoapSecure(bool             aClient,
                                        MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
+    if (mVerifyPeerCertificate)
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    }
+    else
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
+    }
+
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
@@ -304,14 +313,7 @@ exit:
 
 void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 {
-    if (aVerifyPeerCertificate)
-    {
-        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
-    }
-    else
-    {
-        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
-    }
+    mVerifyPeerCertificate = aVerifyPeerCertificate;
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

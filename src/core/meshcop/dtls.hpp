@@ -162,7 +162,9 @@ public:
 
     /**
      * This method set the authentication mode for a dtls connection.
+     *
      * Disable or enable the verification of peer certificate.
+     * Must called before start.
      *
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
      *

@@ -160,13 +160,22 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 {
     otError      error = OT_ERROR_NONE;
     otIp6Address coapDestinationIp;
+    bool         mVerifyPeerCert = true;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     if (strcmp(argv[0], "start") == 0)
     {
+        if(argc > 1)
+        {
+            if (strcmp(argv[1], "false") == 0)
+            {
+                mVerifyPeerCert = false;
+            }
+        }
+        otCoapSecureSetSslAuthMode(mInterpreter.mInstance, mVerifyPeerCert);
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
-        mInterpreter.mServer->OutputFormat("Coap Secure service started: ");
+        mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ", mVerifyPeerCert ? "true" : "false");
     }
     else if (strcmp(argv[0], "set") == 0)
     {
@@ -220,10 +229,9 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             messageInfo.mPeerAddr    = coapDestinationIp;
             messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
             messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
-            otCoapSecureSetSslAuthMode(mInterpreter.mInstance, false);
             SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &messageInfo,
                                                       &CoapSecureCli::HandleClientConnect, this));
-            mInterpreter.mServer->OutputFormat("Coap Secure connect without peer cert check: ");
+            mInterpreter.mServer->OutputFormat("Coap Secure connect: ");
         }
         else
         {
@@ -249,8 +257,8 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     else if (strcmp(argv[0], "help") == 0)
     {
         mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps start'                                       "
-                                           ": start coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps start (false)'                               "
+                                           ": start coap secure service, false disable peer cert verification\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps set psk'     args: psk, identity             "
                                            ": set Preshared Key and Client Identity (Ciphresuit PSK_AES128)\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps set x509'                                    "

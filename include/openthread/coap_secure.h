@@ -131,6 +131,7 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
  * This method set the authentication mode for the coap secure connection.
  *
  * Disable or enable the verification of peer certificate.
+ * Must called before start.
  *
  * @param[in]   aInstance               A pointer to an OpenThread instance.
  * @param[in]   aVerifyPeerCertificate  true, to verify the peer certificate.
