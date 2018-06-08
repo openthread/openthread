@@ -93,14 +93,14 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #
 
 SOURCES_COMMON                      = \
-    api/coap_secure_api.cpp           \
+    api/border_router_api.cpp         \
     api/coap_api.cpp                  \
+    api/coap_secure_api.cpp           \
     api/commissioner_api.cpp          \
     api/channel_manager_api.cpp       \
     api/channel_monitor_api.cpp       \
     api/child_supervision_api.cpp     \
     api/crypto_api.cpp                \
-    api/border_router_api.cpp         \
     api/dataset_api.cpp               \
     api/dataset_ftd_api.cpp           \
     api/dhcp6_api.cpp                 \

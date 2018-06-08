@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,10 +37,10 @@
 
 #include <stdint.h>
 
+#include <openthread/coap.h>
 #include <openthread/message.h>
 #include <openthread/types.h>
 
-#include <openthread/coap.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +50,7 @@ extern "C" {
  * @addtogroup api-coap-secure
  *
  * @brief
- *   This module includes functions that control CoAP Secure (CoAP over TLS) communication.
+ *   This module includes functions that control CoAP Secure (CoAP over DTLS) communication.
  *
  *   The functions in this module are available when application-coap-secure feature
  *   (`OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE`) is enabled.
@@ -64,7 +64,7 @@ extern "C" {
 /**
  * This function pointer is called once DTLS connection is established.
  *
- * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
+ * @param[in]  aConnected  true, if a connection was established, false otherwise.
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
@@ -92,7 +92,7 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
 otError otCoapSecureStop(otInstance *aInstance);
 
 /**
- * This method sets the Pre-Shared Key (PSK) and set cipher suit
+ * This method sets the Pre-Shared Key (PSK) and set cipher suite
  * DTLS_PSK_WITH_AES_128_CCM_8.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
@@ -105,7 +105,7 @@ otError otCoapSecureStop(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
  *
  */
-otError otCoapSecureSetPSK(otInstance *aInstance,
+otError otCoapSecureSetPsk(otInstance *aInstance,
                            uint8_t *   aPsk,
                            uint16_t    aPskLength,
                            uint8_t *   aPskIdentity,
@@ -129,16 +129,17 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
 
 /**
  * This method set the authentication mode for the coap secure connection.
+ *
  * Disable or enable the verification of peer certificate.
  *
  * @param[in]   aInstance               A pointer to an OpenThread instance.
- * @param[in]   aVerifyPeerCertificate  true, if the peer certificate should verify.
+ * @param[in]   aVerifyPeerCertificate  true, to verify the peer certificate.
  *
  */
-void otCoapSecureSetSllAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate);
+void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate);
 
 /**
- * This method sets the own X509 certificate with his private key for
+ * This method sets the local device's X509 certificate with his private key for
  * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.

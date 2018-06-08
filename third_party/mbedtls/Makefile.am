@@ -90,7 +90,7 @@ libmbedcrypto_a_SOURCES                      += \
 
 if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 libmbedcrypto_a_SOURCES                      += \
-	repo.patched/library/x509.c                 \
+    repo.patched/library/x509.c                 \
     repo.patched/library/x509_crl.c             \
     repo.patched/library/x509_crt.c             \
     repo.patched/library/oid.c                  \

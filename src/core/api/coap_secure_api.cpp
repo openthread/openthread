@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ otError otCoapSecureSetX509PrivateKey(otInstance *aInstance, const uint8_t *aPri
     return instance.GetApplicationCoapSecure().SetX509PrivateKey(aPrivateKey, aPrivateKeyLength);
 }
 
-otError otCoapSecureSetPSK(otInstance *aInstance,
+otError otCoapSecureSetPsk(otInstance *aInstance,
                            uint8_t *   aPsk,
                            uint16_t    aPskLength,
                            uint8_t *   aPskIdentity,
@@ -87,11 +87,11 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                                                         (size_t)aCertBufferSize);
 }
 
-void otCoapSecureSetSllAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate)
+void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetApplicationCoapSecure().SetSllAuthMode(aVerifyPeerCertificate);
+    instance.GetApplicationCoapSecure().SetSslAuthMode(aVerifyPeerCertificate);
 }
 
 otError otCoapSecureConnect(otInstance *                    aInstance,

@@ -180,9 +180,9 @@ otError CoapSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *a
     return GetNetif().GetDtls().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 }
 
-void CoapSecure::SetSllAuthMode(bool aVerifyPeerCertificate)
+void CoapSecure::SetSslAuthMode(bool aVerifyPeerCertificate)
 {
-    GetNetif().GetDtls().SetSllAuthMode(aVerifyPeerCertificate);
+    GetNetif().GetDtls().SetSslAuthMode(aVerifyPeerCertificate);
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

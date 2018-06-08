@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,19 +43,19 @@ extern "C" {
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
- * place your X.509 certificate for ssl session
+ * place your X.509 certificate (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
-#define X509_CERTIFICATE                                                \
+#define OT_CLI_COAPS_X509_CERT                                          \
 "-----BEGIN CERTIFICATE-----\r\n"                                       \
 "Our Cert\r\n"                                                          \
 "-----END CERTIFICATE-----\r\n"
 
 /**
- * place your X.509 private key for ssl session
+ * place your X.509 private key (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
-#define PRIVATE_KEY                                                     \
+#define OT_CLI_COAPS_PRIV_KEY                                           \
 "-----BEGIN PRIVATE KEY-----\r\n"                                       \
 "Our Private Key\r\n"                                                   \
 "-----END PRIVATE KEY-----\r\n"

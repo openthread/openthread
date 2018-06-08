@@ -302,7 +302,7 @@ exit:
     return MapError(rval);
 }
 
-void Dtls::SetSllAuthMode(bool aVerifyPeerCertificate)
+void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 {
     if (aVerifyPeerCertificate)
     {

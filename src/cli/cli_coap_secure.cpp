@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -185,7 +185,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
                     memcpy(mPskId, argv[3], mPskIdLength);
 
                     SuccessOrExit(
-                        error = otCoapSecureSetPSK(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength));
+                        error = otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength));
                     mInterpreter.mServer->OutputFormat("Coap Secure set PSK: ");
                 }
                 else
@@ -196,10 +196,10 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             else if (strcmp(argv[1], "x509") == 0)
             {
                 SuccessOrExit(error = otCoapSecureSetX509Certificate(
-                                  mInterpreter.mInstance, (const uint8_t *)X509_CERTIFICATE, sizeof(X509_CERTIFICATE)));
+                                  mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT, sizeof(OT_CLI_COAPS_X509_CERT)));
 
                 SuccessOrExit(error = otCoapSecureSetX509PrivateKey(mInterpreter.mInstance,
-                                                                    (const uint8_t *)PRIVATE_KEY, sizeof(PRIVATE_KEY)));
+                                                                    (const uint8_t *)OT_CLI_COAPS_PRIV_KEY, sizeof(OT_CLI_COAPS_PRIV_KEY)));
                 mInterpreter.mServer->OutputFormat("Coap Secure set own .X509 certificate: ");
             }
         }
@@ -220,7 +220,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             messageInfo.mPeerAddr    = coapDestinationIp;
             messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
             messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
-            otCoapSecureSetSllAuthMode(mInterpreter.mInstance, false);
+            otCoapSecureSetSslAuthMode(mInterpreter.mInstance, false);
             SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &messageInfo,
                                                       &CoapSecureCli::HandleClientConnect, this));
             mInterpreter.mServer->OutputFormat("Coap Secure connect without peer cert check: ");
