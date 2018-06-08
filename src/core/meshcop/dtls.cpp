@@ -369,7 +369,10 @@ exit:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth)
+otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate,
+                                 uint32_t       aX509CertLenth,
+                                 const uint8_t *aPrivateKey,
+                                 uint32_t       aPrivateKeyLenth)
 {
     otError error = OT_ERROR_NONE;
 

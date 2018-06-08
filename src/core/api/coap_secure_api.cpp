@@ -51,7 +51,7 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
     return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
 }
 
-otError otCoapSecureSetX509Certificate(otInstance    *aInstance,
+otError otCoapSecureSetX509Certificate(otInstance *   aInstance,
                                        const uint8_t *aX509Cert,
                                        uint32_t       aX509Length,
                                        const uint8_t *aPrivateKey,
@@ -59,9 +59,7 @@ otError otCoapSecureSetX509Certificate(otInstance    *aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert,
-                                                                  aX509Length,
-                                                                  aPrivateKey,
+    return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert, aX509Length, aPrivateKey,
                                                                   aPrivateKeyLength);
 }
 

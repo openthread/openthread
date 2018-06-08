@@ -151,7 +151,7 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
  *
  */
-otError otCoapSecureSetX509Certificate(otInstance    *aInstance,
+otError otCoapSecureSetX509Certificate(otInstance *   aInstance,
                                        const uint8_t *aX509Cert,
                                        uint32_t       aX509Length,
                                        const uint8_t *aPrivateKey,

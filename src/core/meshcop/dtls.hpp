@@ -230,7 +230,10 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
      *
      */
-    otError SetX509Certificate(const uint8_t *aX509Certificate, uint32_t aX509CertLenth, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLenth);
+    otError SetX509Certificate(const uint8_t *aX509Certificate,
+                               uint32_t       aX509CertLenth,
+                               const uint8_t *aPrivateKey,
+                               uint32_t       aPrivateKeyLenth);
 
     /**
      * This method returns the peer x509 certificate base64 encoded.
