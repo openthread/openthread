@@ -1971,6 +1971,11 @@ exit:
         message->Free();
     }
 
+    if (!IsRxOnWhenIdle())
+    {
+        mChildUpdateRequestTimer.Start(kMaxChildUpdateResponseTimeout);
+    }
+
     return error;
 }
 
@@ -2000,7 +2005,21 @@ void Mle::HandleChildUpdateRequestTimer(Timer &aTimer)
 
 void Mle::HandleChildUpdateRequestTimer(void)
 {
-    SendChildUpdateRequest();
+    if (mParent.IsStateRestoring() || IsRxOnWhenIdle())
+    {
+        SendChildUpdateRequest();
+    }
+    else if (mRole == OT_DEVICE_ROLE_CHILD)
+    {
+        static const uint8_t tlvs[] = {Tlv::kNetworkData};
+        Ip6::Address         destination;
+
+        memset(&destination, 0, sizeof(destination));
+        destination.mFields.m16[0] = HostSwap16(0xfe80);
+        destination.SetIid(mParent.GetExtAddress());
+
+        SendDataRequest(destination, tlvs, sizeof(tlvs), 0);
+    }
 }
 
 otError Mle::SendChildUpdateRequest(void)
@@ -2820,6 +2839,11 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     }
 
     mRetrieveNewNetworkData = false;
+
+    if (!IsRxOnWhenIdle())
+    {
+        mChildUpdateRequestTimer.Stop();
+    }
 
 exit:
 
