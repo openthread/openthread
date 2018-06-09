@@ -1169,6 +1169,9 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
 #endif
 
+    case Mac::Frame::kFcfFrameBeacon:
+        break;
+
     default:
         error = OT_ERROR_DROP;
         break;
