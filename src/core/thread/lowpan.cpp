@@ -598,6 +598,7 @@ exit:
 }
 
 int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
+                                 bool &              aCompressedNextHeader,
                                  const Mac::Address &aMacSource,
                                  const Mac::Address &aMacDest,
                                  const uint8_t *     aBuf,
@@ -685,6 +686,11 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         aIp6Header.SetNextHeader(static_cast<Ip6::IpProto>(cur[0]));
         cur++;
         remaining--;
+        aCompressedNextHeader = false;
+    }
+    else
+    {
+        aCompressedNextHeader = true;
     }
 
     // Hop Limit
@@ -963,12 +969,11 @@ exit:
     return (error == OT_ERROR_NONE) ? static_cast<int>(cur - aBuf) : -1;
 }
 
-int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength)
+int Lowpan::DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError        error     = OT_ERROR_PARSE;
     const uint8_t *cur       = aBuf;
     uint16_t       remaining = aBufLength;
-    Ip6::UdpHeader udpHeader;
     uint8_t        udpCtl;
 
     VerifyOrExit(remaining >= 1);
@@ -976,39 +981,41 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
     cur++;
     remaining--;
 
-    memset(&udpHeader, 0, sizeof(udpHeader));
+    VerifyOrExit((udpCtl & kUdpDispatchMask) == kUdpDispatch);
+
+    memset(&aUdpHeader, 0, sizeof(aUdpHeader));
 
     // source and dest ports
     switch (udpCtl & kUdpPortMask)
     {
     case 0:
         VerifyOrExit(remaining >= 4);
-        udpHeader.SetSourcePort(ReadUint16(cur));
-        udpHeader.SetDestinationPort(ReadUint16(cur + 2));
+        aUdpHeader.SetSourcePort(ReadUint16(cur));
+        aUdpHeader.SetDestinationPort(ReadUint16(cur + 2));
         cur += 4;
         remaining -= 4;
         break;
 
     case 1:
         VerifyOrExit(remaining >= 3);
-        udpHeader.SetSourcePort(ReadUint16(cur));
-        udpHeader.SetDestinationPort(0xf000 | cur[2]);
+        aUdpHeader.SetSourcePort(ReadUint16(cur));
+        aUdpHeader.SetDestinationPort(0xf000 | cur[2]);
         cur += 3;
         remaining -= 3;
         break;
 
     case 2:
         VerifyOrExit(remaining >= 3);
-        udpHeader.SetSourcePort(0xf000 | cur[0]);
-        udpHeader.SetDestinationPort(ReadUint16(cur + 1));
+        aUdpHeader.SetSourcePort(0xf000 | cur[0]);
+        aUdpHeader.SetDestinationPort(ReadUint16(cur + 1));
         cur += 3;
         remaining -= 3;
         break;
 
     case 3:
         VerifyOrExit(remaining >= 1);
-        udpHeader.SetSourcePort(0xf0b0 | (cur[0] >> 4));
-        udpHeader.SetDestinationPort(0xf0b0 | (cur[0] & 0xf));
+        aUdpHeader.SetSourcePort(0xf0b0 | (cur[0] >> 4));
+        aUdpHeader.SetDestinationPort(0xf0b0 | (cur[0] & 0xf));
         cur += 1;
         remaining -= 1;
         break;
@@ -1022,27 +1029,39 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
     else
     {
         VerifyOrExit(remaining >= 2);
-        udpHeader.SetChecksum(ReadUint16(cur));
+        aUdpHeader.SetChecksum(ReadUint16(cur));
         cur += 2;
     }
+
+    error = OT_ERROR_NONE;
+
+exit:
+    return (error == OT_ERROR_NONE) ? static_cast<int>(cur - aBuf) : -1;
+}
+
+int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength)
+{
+    Ip6::UdpHeader udpHeader;
+    int            headerLen = -1;
+
+    headerLen = DecompressUdpHeader(udpHeader, aBuf, aBufLength);
+    VerifyOrExit(headerLen >= 0);
 
     // length
     if (aDatagramLength == 0)
     {
-        udpHeader.SetLength(sizeof(udpHeader) + static_cast<uint16_t>(aBufLength - (cur - aBuf)));
+        udpHeader.SetLength(sizeof(udpHeader) + static_cast<uint16_t>(aBufLength - headerLen));
     }
     else
     {
         udpHeader.SetLength(aDatagramLength - aMessage.GetOffset());
     }
 
-    SuccessOrExit(aMessage.Append(&udpHeader, sizeof(udpHeader)));
+    VerifyOrExit(aMessage.Append(&udpHeader, sizeof(udpHeader)) == OT_ERROR_NONE, headerLen = -1);
     aMessage.MoveOffset(sizeof(udpHeader));
 
-    error = OT_ERROR_NONE;
-
 exit:
-    return (error == OT_ERROR_NONE) ? static_cast<int>(cur - aBuf) : -1;
+    return headerLen;
 }
 
 int Lowpan::Decompress(Message &           aMessage,
@@ -1063,9 +1082,7 @@ int Lowpan::Decompress(Message &           aMessage,
     uint16_t       currentOffset    = aMessage.GetOffset();
 
     VerifyOrExit(remaining >= 2);
-    compressed = ((ReadUint16(cur) & kHcNextHeader) != 0);
-
-    VerifyOrExit((rval = DecompressBaseHeader(ip6Header, aMacSource, aMacDest, cur, remaining)) >= 0);
+    VerifyOrExit((rval = DecompressBaseHeader(ip6Header, compressed, aMacSource, aMacDest, cur, remaining)) >= 0);
 
     cur += rval;
     remaining -= rval;
@@ -1199,6 +1216,32 @@ otError FragmentHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
     }
 
     error = OT_ERROR_NONE;
+
+exit:
+    return error;
+}
+
+otError FragmentHeader::Init(const Message &aMessage, uint16_t aOffset)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t bytesRead;
+
+    bytesRead = aMessage.Read(aOffset, sizeof(mDispatchSize), &mDispatchSize);
+    VerifyOrExit(bytesRead == sizeof(mDispatchSize), error = OT_ERROR_PARSE);
+    aOffset += bytesRead;
+
+    VerifyOrExit(IsFragmentHeader(), error = OT_ERROR_PARSE);
+
+    bytesRead = aMessage.Read(aOffset, sizeof(mTag), &mTag);
+    VerifyOrExit(bytesRead == sizeof(mTag), error = OT_ERROR_PARSE);
+    aOffset += bytesRead;
+
+    if (IsOffsetPresent())
+    {
+        bytesRead = aMessage.Read(aOffset, sizeof(mOffset), &mOffset);
+        VerifyOrExit(bytesRead == sizeof(mOffset), error = OT_ERROR_PARSE);
+        aOffset += bytesRead;
+    }
 
 exit:
     return error;
