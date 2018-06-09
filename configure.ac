@@ -1352,6 +1352,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service])
 
 #
+# Long routes
+#
+
+AC_ARG_ENABLE(long_routes,
+    [AS_HELP_STRING([--enable-long-routes],[Enable Long Routes @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_long_routes=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_long_routes} for --enable-long-routes])
+            ;;
+        esac
+    ],
+    [enable_long_routes=no])
+
+if test "$enable_long_routes" = "yes"; then
+    OPENTHREAD_ENABLE_LONG_ROUTES=1
+else
+    OPENTHREAD_ENABLE_LONG_ROUTES=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_LONG_ROUTES)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_LONG_ROUTES], [test "${enable_long_routes}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_LONG_ROUTES],[${OPENTHREAD_ENABLE_LONG_ROUTES}],[Define to 1 if you want to enable long routes])
+
+#
 # Linker Map Output
 #
 
@@ -1755,6 +1785,7 @@ AC_MSG_NOTICE([
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Child Supervision support      : ${enable_child_supervision}
   OpenThread Legacy network support         : ${enable_legacy}
+  OpenThread Long Routes support            : ${enable_long_routes}
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
