@@ -402,8 +402,8 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         {
             // Thread 1.1.1 Specification Section 10.11.2.2:
             // If a Thread device is unable to supply a specific Diagnostic TLV, that TLV is omitted.
-            // Here only Active Router may have children.
-            if (netif.GetMle().IsActiveRouter(netif.GetMle().GetRloc16()))
+            // Here only Leader or Router may have children.
+            if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER || netif.GetMle().GetRole() == OT_DEVICE_ROLE_ROUTER)
             {
                 SuccessOrExit(error = AppendChildTable(aResponse));
             }
