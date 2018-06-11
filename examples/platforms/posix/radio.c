@@ -748,16 +748,18 @@ void radioProcessFrame(otInstance *aInstance)
 
 exit:
 
+    if (error != OT_ERROR_ABORT)
+    {
 #if OPENTHREAD_ENABLE_DIAG
-
-    if (otPlatDiagModeGet())
-    {
-        otPlatDiagRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
-    }
-    else
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
+        }
+        else
 #endif
-    {
-        otPlatRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
+        {
+            otPlatRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
+        }
     }
 }
 
