@@ -131,19 +131,21 @@ otError Dtls::Start(bool             aClient,
                     ConnectedHandler aConnectedHandler,
                     ReceiveHandler   aReceiveHandler,
                     SendHandler      aSendHandler,
-                    void *           aContext)
+                    void *           aContext,
+                    bool             aApplicationCoapSecure)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
     otExtAddress     eui64;
     int              rval;
 
-    mConnectedHandler = aConnectedHandler;
-    mReceiveHandler   = aReceiveHandler;
-    mSendHandler      = aSendHandler;
-    mContext          = aContext;
-    mClient           = aClient;
-    mReceiveMessage   = NULL;
-    mMessageSubType   = Message::kSubTypeNone;
+    mConnectedHandler      = aConnectedHandler;
+    mReceiveHandler        = aReceiveHandler;
+    mSendHandler           = aSendHandler;
+    mContext               = aContext;
+    mClient                = aClient;
+    mReceiveMessage        = NULL;
+    mMessageSubType        = Message::kSubTypeNone;
+    mApplicationCoapSecure = aApplicationCoapSecure;
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
@@ -163,10 +165,28 @@ otError Dtls::Start(bool             aClient,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
+#ifdef OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    if (mVerifyPeerCertificate)
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    }
+    else
+    {
+        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
+    }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
-    mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
+    if (!mApplicationCoapSecure)
+    {
+        mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
+    }
+    else
+    {
+        mbedtls_ssl_conf_ciphersuites(&mConf, mApplicationCoapCiphreSuite);
+    }
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
@@ -187,13 +207,28 @@ otError Dtls::Start(bool             aClient,
     mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
 
-    rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
+    if (!mApplicationCoapSecure)
+    {
+        rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
+    }
+    else
+    {
+        SetApplicationCoapSecureKeys(mApplicationCoapCiphreSuite, 1);
+    }
+
     VerifyOrExit(rval == 0);
 
     mStarted = true;
     Process();
 
-    otLogInfoMeshCoP(GetInstance(), "DTLS started");
+    if (!mApplicationCoapSecure)
+    {
+        otLogInfoMeshCoP(GetInstance(), "DTLS started");
+    }
+    else
+    {
+        otLogInfoCoap(this, "Application Coap Secure DTLS started");
+    }
 
 exit:
     return MapError(rval);
@@ -201,111 +236,46 @@ exit:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-otError Dtls::StartApplicationCoapSecure(bool             aClient,
-                                         ConnectedHandler aConnectedHandler,
-                                         ReceiveHandler   aReceiveHandler,
-                                         SendHandler      aSendHandler,
-                                         void *           aContext)
+otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuite)
 {
-    otExtAddress eui64;
-    int          rval;
+    int rval, i;
 
-    mConnectedHandler      = aConnectedHandler;
-    mReceiveHandler        = aReceiveHandler;
-    mSendHandler           = aSendHandler;
-    mContext               = aContext;
-    mClient                = aClient;
-    mReceiveMessage        = NULL;
-    mMessageSubType        = Message::kSubTypeNone;
-    mApplicationCoapSecure = true;
-
-    if (!mClient)
+    for (i = 0; i < aAnsCipherSuite; i++)
     {
-        otLogCritCoap(this, "Application Coap Secure DTLS: No Server functionality implemented!");
-        while (1)
+        VerifyOrExit(&aCipherSuite[i] != NULL, rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA);
+
+        switch (mApplicationCoapCiphreSuite[i])
         {
-            // ToDo: no server functionality implemented.
+        case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
+
+            rval = mbedtls_pk_parse_key(&mPrivateKey, mPk, mPkLength, NULL, 0);
+            VerifyOrExit(rval == 0);
+
+            rval = mbedtls_x509_crt_parse(&mCaCert, (const unsigned char *)mX509Cert, mX509CertLength);
+            VerifyOrExit(rval == 0);
+
+            mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
+
+            rval = mbedtls_ssl_conf_own_cert(&mConf, &mCaCert, &mPrivateKey);
+            VerifyOrExit(rval == 0);
+
+            break;
+
+        case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
+
+            rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
+                                        (unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+            VerifyOrExit(rval == 0);
+
+            break;
+
+        default:
+            otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
+            rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
+            ExitNow();
+            break;
         }
     }
-
-    mbedtls_ssl_init(&mSsl);
-    mbedtls_ssl_config_init(&mConf);
-    mbedtls_ctr_drbg_init(&mCtrDrbg);
-    mbedtls_entropy_init(&mEntropy);
-
-    rval = mbedtls_entropy_add_source(&mEntropy, &Dtls::HandleMbedtlsEntropyPoll, NULL, MBEDTLS_ENTROPY_MIN_PLATFORM,
-                                      MBEDTLS_ENTROPY_SOURCE_STRONG);
-    VerifyOrExit(rval == 0);
-
-    // mbedTLS's debug level is almost the same as OpenThread's
-    mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
-    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
-    rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
-    VerifyOrExit(rval == 0);
-
-    rval = mbedtls_ssl_config_defaults(&mConf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_DATAGRAM,
-                                       MBEDTLS_SSL_PRESET_DEFAULT);
-    VerifyOrExit(rval == 0);
-
-    if (mVerifyPeerCertificate)
-    {
-        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
-    }
-    else
-    {
-        mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
-    }
-
-    mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
-    mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
-    mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
-    mbedtls_ssl_conf_ciphersuites(&mConf, mApplicationCoapCiphreSuite);
-
-    mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
-    mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
-
-    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
-
-    switch (mApplicationCoapCiphreSuite[0])
-    {
-    case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
-
-        rval = mbedtls_pk_parse_key(&mPrivateKey, mPk, mPkLength, NULL, 0);
-        VerifyOrExit(rval == 0);
-
-        rval = mbedtls_x509_crt_parse(&mCaCert, (const unsigned char *)mX509Cert, mX509CertLength);
-        VerifyOrExit(rval == 0);
-
-        mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
-
-        rval = mbedtls_ssl_conf_own_cert(&mConf, &mCaCert, &mPrivateKey);
-        VerifyOrExit(rval == 0);
-
-        break;
-
-    case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
-
-        rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
-                                    (unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
-        VerifyOrExit(rval == 0);
-
-        break;
-
-    default:
-        otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
-        break;
-    }
-
-    rval = mbedtls_ssl_setup(&mSsl, &mConf);
-    VerifyOrExit(rval == 0);
-
-    mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
-    mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
-
-    mStarted = true;
-    Process();
-
-    otLogInfoCoap(this, "Application Coap Secure DTLS started");
 
 exit:
     return MapError(rval);

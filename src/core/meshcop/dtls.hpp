@@ -118,11 +118,16 @@ public:
     /**
      * This method starts the DTLS service.
      *
-     * @param[in]  aClient            TRUE if operating as a client, FALSE if operating as a server.
-     * @param[in]  aConnectedHandler  A pointer to the connected handler.
-     * @param[in]  aReceiveHandler    A pointer to the receive handler.
-     * @param[in]  aSendHandler       A pointer to the send handler.
-     * @param[in]  aContext           A pointer to application-specific context.
+     * For CoAP Secure API do first:
+     * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
+     * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
+     *
+     * @param[in]  aClient                 TRUE if operating as a client, FALSE if operating as a server.
+     * @param[in]  aConnectedHandler       A pointer to the connected handler.
+     * @param[in]  aReceiveHandler         A pointer to the receive handler.
+     * @param[in]  aSendHandler            A pointer to the send handler.
+     * @param[in]  aContext                A pointer to application-specific context.
+     * @parma[in]  aApplicationCoapSecure  TRUE, if operating from Application CoAP Secure API.
      *
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
@@ -131,43 +136,8 @@ public:
                   ConnectedHandler aConnectedHandler,
                   ReceiveHandler   aReceiveHandler,
                   SendHandler      aSendHandler,
-                  void *           aContext);
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    /**
-     * This method starts the DTLS service for Application Coap Secure.
-     *
-     * For use DTLS mode ECDHE ECDSA with AES 128 CCM 8 first set X509 Pk and Cert.
-     * For use DTLS mode PSK with AES 128 CCM 8 first set PreShared Key.
-     *
-     * @param[in]  aClient                 true if operating as a client,
-     *                                     false if operating as a server.
-     * @param[in]  aConnectedHandler       A pointer to the connected handler.
-     * @param[in]  aReceiveHandler         A pointer to the receive handler.
-     * @param[in]  aSendHandler            A pointer to the send handler.
-     * @param[in]  aContext                A pointer to application-specific context.
-     *
-     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
-     *
-     */
-    otError StartApplicationCoapSecure(bool             aClient,
-                                       ConnectedHandler aConnectedHandler,
-                                       ReceiveHandler   aReceiveHandler,
-                                       SendHandler      aSendHandler,
-                                       void *           aContext);
-
-    /**
-     * This method set the authentication mode for a dtls connection.
-     *
-     * Disable or enable the verification of peer certificate.
-     * Must called before start.
-     *
-     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
-     *
-     */
-    void SetSslAuthMode(bool aVerifyPeerCertificate);
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+                  void *           aContext,
+                  bool             aApplicationCoapSecure = false);
 
     /**
      * This method stops the DTLS service.
@@ -248,6 +218,17 @@ public:
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
 
+    /**
+     * This method set the authentication mode for a dtls connection.
+     *
+     * Disable or enable the verification of peer certificate.
+     * Must called before start.
+     *
+     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
+     *
+     */
+    void SetSslAuthMode(bool aVerifyPeerCertificate);
+
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -311,6 +292,19 @@ public:
 
 private:
     static otError MapError(int rval);
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    /**
+     * Set keys and/or certificates for dtls session dependent of used cipher suite.
+     *
+     * @param[in]  aCipherSuite     A pointer to a list of supported cipher suites.
+     * @param[in]  aAnsCipherSuite  Number of cipher suites in aCipherSuite.
+     *
+     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
+     *
+     */
+    otError SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuite);
+#endif
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 
