@@ -237,12 +237,7 @@ exit:
     {
         if (aEui64)
         {
-            char logString[Mac::Address::kAddressStringSize];
-
-            otLogInfoMeshCoP(GetInstance(), "Added Joiner (%s, %s)", aEui64->ToString(logString, sizeof(logString)),
-                             aPSKd);
-
-            OT_UNUSED_VARIABLE(logString);
+            otLogInfoMeshCoP(GetInstance(), "Added Joiner (%s, %s)", aEui64->ToString().AsCString(), aPSKd);
         }
         else
         {
@@ -304,11 +299,7 @@ exit:
     {
         if (aEui64)
         {
-            char logString[Mac::Address::kAddressStringSize];
-
-            otLogInfoMeshCoP(GetInstance(), "Removed Joiner (%s)", aEui64->ToString(logString, sizeof(logString)));
-
-            OT_UNUSED_VARIABLE(logString);
+            otLogInfoMeshCoP(GetInstance(), "Removed Joiner (%s)", aEui64->ToString().AsCString());
         }
         else
         {

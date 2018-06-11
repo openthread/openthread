@@ -130,6 +130,7 @@ SOURCES_COMMON                      = \
     common/message.cpp                \
     common/notifier.cpp               \
     common/settings.cpp               \
+    common/string.cpp                 \
     common/tasklet.cpp                \
     common/timer.cpp                  \
     common/tlvs.cpp                   \
@@ -215,6 +216,7 @@ libopenthread_radio_a_SOURCES       = \
     common/locator.cpp                \
     common/logging.cpp                \
     common/message.cpp                \
+    common/string.cpp                 \
     common/tasklet.cpp                \
     common/timer.cpp                  \
     mac/mac_frame.cpp                 \
@@ -249,6 +251,7 @@ HEADERS_COMMON                      = \
     common/owner-locator.hpp          \
     common/random.hpp                 \
     common/settings.hpp               \
+    common/string.hpp                 \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     common/tlvs.hpp                   \

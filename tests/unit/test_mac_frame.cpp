@@ -136,16 +136,14 @@ void TestMacChannelMask(void)
     Mac::ChannelMask mask1;
     Mac::ChannelMask mask2(OT_RADIO_SUPPORTED_CHANNELS);
 
-    char stringBuffer[Mac::ChannelMask::kInfoStringSize];
-
     printf("Testing Mac::ChannelMask\n");
 
     VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
-    printf("empty = %s\n", mask1.ToString(stringBuffer, sizeof(stringBuffer)));
+    printf("empty = %s\n", mask1.ToString().AsCString());
 
     VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed\n");
     VerifyOrQuit(mask2.GetMask() == OT_RADIO_SUPPORTED_CHANNELS, "ChannelMask.GetMask() failed\n");
-    printf("all_channels = %s\n", mask2.ToString(stringBuffer, sizeof(stringBuffer)));
+    printf("all_channels = %s\n", mask2.ToString().AsCString());
 
     mask1.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
     VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
@@ -169,7 +167,7 @@ void TestMacChannelMask(void)
         mask1.AddChannel(channels1[index]);
     }
 
-    printf("channels1 = %s\n", mask1.ToString(stringBuffer, sizeof(stringBuffer)));
+    printf("channels1 = %s\n", mask1.ToString().AsCString());
 
     VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
     VerifyChannelMaskContent(mask1, channels1, sizeof(channels1));
@@ -181,7 +179,7 @@ void TestMacChannelMask(void)
         mask2.AddChannel(channels2[index]);
     }
 
-    printf("channels2 = %s\n", mask2.ToString(stringBuffer, sizeof(stringBuffer)));
+    printf("channels2 = %s\n", mask2.ToString().AsCString());
 
     VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed\n");
     VerifyChannelMaskContent(mask2, channels2, sizeof(channels2));
@@ -193,7 +191,7 @@ void TestMacChannelMask(void)
     mask2.AddChannel(channles4[0]);
     VerifyChannelMaskContent(mask2, channles4, sizeof(channles4));
 
-    printf("channels4 = %s\n", mask2.ToString(stringBuffer, sizeof(stringBuffer)));
+    printf("channels4 = %s\n", mask2.ToString().AsCString());
 
     mask1.Clear();
     mask2.Clear();
