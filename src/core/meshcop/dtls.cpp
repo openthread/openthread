@@ -213,7 +213,9 @@ otError Dtls::Start(bool             aClient,
     }
     else
     {
+#ifdef OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         SetApplicationCoapSecureKeys(mApplicationCoapCiphreSuite, 1);
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     }
 
     VerifyOrExit(rval == 0);
