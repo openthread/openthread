@@ -923,14 +923,9 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        char srcStringBuffer[Mac::Address::kAddressStringSize];
-
         otLogInfoMac(GetInstance(), "Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s",
-                     otThreadErrorToString(error), aFrameLength,
-                     aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+                     otThreadErrorToString(error), aFrameLength, aMacSource.ToString().AsCString(),
                      aLinkInfo.mLinkSecurity ? "yes" : "no");
-
-        OT_UNUSED_VARIABLE(srcStringBuffer);
 
         if (message != NULL)
         {

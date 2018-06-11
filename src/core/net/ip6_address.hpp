@@ -40,6 +40,7 @@
 
 #include <openthread/types.h>
 
+#include "common/string.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
@@ -96,6 +97,12 @@ public:
         kOrgLocalScope       = 8,  ///< Organization-Local scope
         kGlobalScope         = 14, ///< Global scope
     };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kIp6AddressStringSize> InfoString;
 
     /**
      * This method clears the IPv6 address by setting it to the Unspecified Address "::".
@@ -365,15 +372,12 @@ public:
     otError FromString(const char *aBuf);
 
     /**
-     * This method converts an IPv6 address object to a NULL-terminated string.
+     * This method converts an IPv6 address object to a string
      *
-     * @param[out]  aBuf   A pointer to the buffer.
-     * @param[in]   aSize  The maximum size of the buffer.
-     *
-     * @returns A pointer to the buffer.
+     * @returns An `InfoString` representing the IPv6 address.
      *
      */
-    const char *ToString(char *aBuf, uint16_t aSize) const;
+    InfoString ToString(void) const;
 
     /**
      * This method returns the number of IPv6 prefix bits that match.

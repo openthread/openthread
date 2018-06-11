@@ -50,11 +50,9 @@ namespace ot {
 
 void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetworkInfo) const
 {
-    char string[Mac::Address::kAddressStringSize];
-
     otLogInfoCore(GetInstance(),
                   "Non-volatile: %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, keyseq:0x%x, ...",
-                  aAction, aNetworkInfo.mRloc16, aNetworkInfo.mExtAddress.ToString(string, sizeof(string)),
+                  aAction, aNetworkInfo.mRloc16, aNetworkInfo.mExtAddress.ToString().AsCString(),
                   Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.mRole)), aNetworkInfo.mDeviceMode,
                   aNetworkInfo.mKeySequence);
 
@@ -67,19 +65,15 @@ void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetwo
 
 void SettingsBase::LogParentInfo(const char *aAction, const ParentInfo &aParentInfo) const
 {
-    char string[Mac::Address::kAddressStringSize];
-
     otLogInfoCore(GetInstance(), "Non-volatile: %s ParentInfo {extaddr:%s}", aAction,
-                  aParentInfo.mExtAddress.ToString(string, sizeof(string)));
+                  aParentInfo.mExtAddress.ToString().AsCString());
 }
 
 void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const
 {
-    char string[Mac::Address::kAddressStringSize];
-
     otLogInfoCore(GetInstance(), "Non-volatile: %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x}",
-                  aAction, aChildInfo.mRloc16, aChildInfo.mExtAddress.ToString(string, sizeof(string)),
-                  aChildInfo.mTimeout, aChildInfo.mMode);
+                  aAction, aChildInfo.mRloc16, aChildInfo.mExtAddress.ToString().AsCString(), aChildInfo.mTimeout,
+                  aChildInfo.mMode);
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
