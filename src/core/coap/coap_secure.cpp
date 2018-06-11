@@ -118,19 +118,8 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallb
     mConnectedCallback = aCallback;
     mConnectedContext  = aContext;
 
-    if (!mApplicationCoapSecure)
-    {
-        return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                                          &CoapSecure::HandleDtlsSend, this);
-    }
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    else
-    {
-        return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                                          &CoapSecure::HandleDtlsSend, this, true);
-    }
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    return OT_ERROR_ABORT;
+    return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+                                      &CoapSecure::HandleDtlsSend, this, mApplicationCoapSecure);
 }
 
 bool CoapSecure::IsConnectionActive(void)
