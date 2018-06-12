@@ -562,3 +562,17 @@ Data per item is:
 * `S`: Message error rate (0 -> 0%, 0xffff -> 100%)
 * `c`: Average RSSI (in dBm)
 * `c`: Last RSSI (in dBm)
+
+
+### PROP 5411: SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE (#prop-thread-address-cache-table)
+
+* Type: Read-Only
+* Packing-Encoding: `A(t(6SC))`
+
+This property provides Thread EID IPv6 address cache table.
+
+Data per item is:
+
+* `6` : Target IPv6 address
+* `S` : RLOC16 of target
+* `C` : Age (order of use, 0 indicates most recently used entry)
