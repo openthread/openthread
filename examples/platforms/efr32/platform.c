@@ -45,6 +45,12 @@
 #include "openthread-core-efr32-config.h"
 #include "platform-efr32.h"
 
+#include "hal-config.h"
+
+#if (HAL_FEM_ENABLE)
+#include "fem-control.h"
+#endif
+
 void halInitChipSpecific(void);
 
 otInstance *sInstance;
@@ -59,6 +65,11 @@ void PlatformInit(int argc, char *argv[])
     halInitChipSpecific();
 
     BSP_Init(BSP_INIT_BCC);
+
+#if (HAL_FEM_ENABLE)
+    initFem();
+    wakeupFem();
+#endif
 
     efr32RadioInit();
     efr32AlarmInit();
