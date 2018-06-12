@@ -89,10 +89,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     mFragTag = Random::GetUint16();
     GetNetif().GetMac().RegisterReceiver(mMacReceiver);
 
-#if OPENTHREAD_ENABLE_QOS
-    memset(mPriorityEntries, 0, sizeof(mPriorityEntries));
-#endif
-
     mIpCounters.mTxSuccess = 0;
     mIpCounters.mRxSuccess = 0;
     mIpCounters.mTxFailure = 0;
@@ -139,10 +135,6 @@ otError MeshForwarder::Stop(void)
         mReassemblyList.Dequeue(*message);
         message->Free();
     }
-
-#if OPENTHREAD_ENABLE_QOS
-    memset(mPriorityEntries, 0, sizeof(mPriorityEntries));
-#endif
 
     mEnabled     = false;
     mSendMessage = NULL;
@@ -457,6 +449,44 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
     }
 
     return OT_ERROR_NONE;
+}
+
+otError MeshForwarder::GetIp6Header(uint8_t *           aFrame,
+                                    uint8_t             aFrameLength,
+                                    const Mac::Address &aMacSource,
+                                    const Mac::Address &aMacDest,
+                                    Ip6::Header &       aIp6Header)
+{
+    ThreadNetif &          netif = GetNetif();
+    otError                error = OT_ERROR_NONE;
+    Lowpan::MeshHeader     meshHeader;
+    Lowpan::FragmentHeader fragmentHeader;
+
+    // skip mesh header
+    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader())
+    {
+        SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
+        aFrame += meshHeader.GetHeaderLength();
+        aFrameLength -= meshHeader.GetHeaderLength();
+    }
+
+    // skip fragment header
+    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    {
+        SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
+        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
+
+        aFrame += fragmentHeader.GetHeaderLength();
+        aFrameLength -= fragmentHeader.GetHeaderLength();
+    }
+
+    // only process IPv6 packets
+    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(aIp6Header, aMacSource, aMacDest, aFrame, aFrameLength) > 0,
+                 error = OT_ERROR_PARSE);
+
+exit:
+    return error;
 }
 
 otError MeshForwarder::HandleFrameRequest(Mac::Sender &aSender, Mac::Frame &aFrame)
@@ -944,156 +974,60 @@ otError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
     return OT_ERROR_NONE;
 }
 
+otError MeshForwarder::GetFramePriority(uint8_t *               aFrame,
+                                        uint8_t                 aFrameLength,
+                                        const Mac::Address &    aMacSource,
+                                        const Mac::Address &    aMacDest,
+                                        const otThreadLinkInfo &aLinkInfo,
+                                        uint8_t &               aPriority)
+{
+    otError error = OT_ERROR_NONE;
 #if OPENTHREAD_ENABLE_QOS
-otError MeshForwarder::UpdatePriorityEntry(uint16_t aDatagramTag, uint16_t aDatagramOffset, uint8_t aPriority)
-{
-    otError        error = OT_ERROR_NONE;
-    PriorityEntry *entry = NULL;
-
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mPriorityEntries); i++)
-    {
-        if (mPriorityEntries[i].GetDatagramTag() == aDatagramTag)
-        {
-            ExitNow(error = OT_ERROR_ALREADY);
-        }
-
-        // Find an available entry in the `mPriorityEntries` array.
-        if (mPriorityEntries[i].GetLifetime() == 0 && entry == NULL)
-        {
-            entry = &mPriorityEntries[i];
-        }
-    }
-
-    VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
-
-    entry->SetDatagramTag(aDatagramTag);
-    entry->SetPriority(aPriority);
-    entry->SetLifetime(kPriorityEntryLifetime);
-    entry->SetDatagramOffset(aDatagramOffset);
-
-    if (!mReassemblyTimer.IsRunning())
-    {
-        mReassemblyTimer.Start(kStateUpdatePeriod);
-    }
-
-exit:
-    return error;
-}
-
-PriorityEntry *MeshForwarder::GetPriorityEntry(uint16_t aDatagramTag)
-{
-    PriorityEntry *entry = NULL;
-
-    for (size_t i = 0; i < sizeof(mPriorityEntries) / sizeof(mPriorityEntries[0]); i++)
-    {
-        if ((mPriorityEntries[i].GetDatagramTag() == aDatagramTag) && (mPriorityEntries[i].GetLifetime() != 0))
-        {
-            entry = &mPriorityEntries[i];
-            break;
-        }
-    }
-
-    return entry;
-}
-
-otError MeshForwarder::GetFramePriority(uint8_t *     aFrame,
-                                        uint8_t       aFrameLength,
-                                        Mac::Address &aMacSource,
-                                        Mac::Address &aMacDest,
-                                        uint8_t &     aPriority)
-{
-    otError            error    = OT_ERROR_NONE;
-    ThreadNetif &      netif    = GetNetif();
-    Message *          message  = NULL;
-    uint8_t            priority = kDefaultMsgPriority;
-    Ip6::Header        ip6Header;
-    Lowpan::MeshHeader meshHeader;
-    int                headerLength;
+    Message *              message;
+    Lowpan::MeshHeader     meshHeader;
+    Lowpan::FragmentHeader fragmentHeader;
+    Ip6::Header            ip6Header;
 
     // Skip mesh header
     if (aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader())
     {
-        aFrame += reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->GetHeaderLength();
-        aFrameLength -= reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->GetHeaderLength();
+        SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
+
+        aFrame += meshHeader.GetHeaderLength();
+        aFrameLength -= meshHeader.GetHeaderLength();
     }
 
     if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
     {
-        Lowpan::FragmentHeader fragmentHeader;
-
-        // Check the fragment header
-        VerifyOrExit(fragmentHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
 
         aFrame += fragmentHeader.GetHeaderLength();
         aFrameLength -= fragmentHeader.GetHeaderLength();
 
-        if (fragmentHeader.GetDatagramOffset() == 0)
+        if (fragmentHeader.GetDatagramOffset() != 0)
         {
-            VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, Message::kPriorityHigh)) !=
-                             NULL,
-                         error = OT_ERROR_NO_BUFS);
-
-            headerLength = netif.GetLowpan().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength,
-                                                        fragmentHeader.GetDatagramSize());
-            VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
-
-            aFrameLength -= static_cast<uint8_t>(headerLength);
-            VerifyOrExit(fragmentHeader.GetDatagramSize() >= message->GetOffset() + aFrameLength,
-                         error = OT_ERROR_PARSE);
-
-            SuccessOrExit(error = message->SetLength(fragmentHeader.GetDatagramSize()));
-            SuccessOrExit(error = ip6Header.Init(*message));
-
-            priority = netif.GetIp6().DscpToPriority(ip6Header.GetDscp());
-            message->MoveOffset(aFrameLength);
-            IgnoreReturnValue(UpdatePriorityEntry(fragmentHeader.GetDatagramTag(), message->GetOffset(), priority));
-        }
-        else
-        {
-            PriorityEntry *entry = GetPriorityEntry(fragmentHeader.GetDatagramTag());
-
-            if (entry != NULL)
-            {
-                priority = entry->GetPriority();
-                if (entry->GetDatagramOffset() == fragmentHeader.GetDatagramOffset())
-                {
-                    entry->SetDatagramOffset(entry->GetDatagramOffset() + aFrameLength);
-                }
-
-                if (entry->GetDatagramOffset() >= fragmentHeader.GetDatagramSize())
-                {
-                    // Mark the entry as invalid
-                    entry->SetLifetime(0);
-                }
-            }
+            message = FindFragmentMessage(fragmentHeader, aFrameLength, aLinkInfo.mLinkSecurity);
+            VerifyOrExit(message != NULL, error = OT_ERROR_NOT_FOUND);
+            aPriority = message->GetPriority();
+            ExitNow();
         }
     }
-    else if (aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame))
-    {
-        VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMacSource, aMacDest, aFrame, aFrameLength) > 0);
-        priority = netif.GetIp6().DscpToPriority(ip6Header.GetDscp());
-        ExitNow();
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_PARSE);
-    }
 
+    SuccessOrExit(error = GetIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header));
+    aPriority = GetNetif().GetIp6().DscpToPriority(ip6Header.GetDscp());
 exit:
+#else
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aFrameLength);
+    OT_UNUSED_VARIABLE(aMacSource);
+    OT_UNUSED_VARIABLE(aMacDest);
+    OT_UNUSED_VARIABLE(aLinkInfo);
 
-    if (error == OT_ERROR_NONE)
-    {
-        aPriority = priority;
-    }
-
-    if (message != NULL)
-    {
-        message->Free();
-    }
+    aPriority = kDefaultMsgPriority;
+#endif
 
     return error;
 }
-#endif
 
 void MeshForwarder::HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError)
 {
@@ -1340,7 +1274,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         else if (payloadLength >= sizeof(Lowpan::FragmentHeader) &&
                  reinterpret_cast<Lowpan::FragmentHeader *>(payload)->IsFragmentHeader())
         {
-            HandleFragment(payload, payloadLength, macSource, macDest, linkInfo);
+            HandleFragment(payload, payloadLength, macSource, macDest, linkInfo, true);
         }
         else if (payloadLength >= 1 && Lowpan::Lowpan::IsLowpanHc(payload))
         {
@@ -1393,17 +1327,41 @@ exit:
     }
 }
 
+Message *MeshForwarder::FindFragmentMessage(Lowpan::FragmentHeader &aFragmentHeader,
+                                            uint8_t                 aFrameLength,
+                                            bool                    aLinkSecurityEnabled)
+{
+    Message *message;
+
+    for (message = mReassemblyList.GetHead(); message; message = message->GetNext())
+    {
+        // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
+        if (message->GetLength() == aFragmentHeader.GetDatagramSize() &&
+            message->GetDatagramTag() == aFragmentHeader.GetDatagramTag() &&
+            message->GetOffset() == aFragmentHeader.GetDatagramOffset() &&
+            message->GetOffset() + aFrameLength <= aFragmentHeader.GetDatagramSize() &&
+            message->IsLinkSecurityEnabled() == aLinkSecurityEnabled)
+        {
+            break;
+        }
+    }
+
+    return message;
+}
+
 void MeshForwarder::HandleFragment(uint8_t *               aFrame,
                                    uint8_t                 aFrameLength,
                                    const Mac::Address &    aMacSource,
                                    const Mac::Address &    aMacDest,
-                                   const otThreadLinkInfo &aLinkInfo)
+                                   const otThreadLinkInfo &aLinkInfo,
+                                   bool                    aReceive)
 {
     ThreadNetif &          netif = GetNetif();
     otError                error = OT_ERROR_NONE;
     Lowpan::FragmentHeader fragmentHeader;
     Message *              message = NULL;
     int                    headerLength;
+    uint8_t                priority;
 
     // Check the fragment header
     VerifyOrExit(fragmentHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
@@ -1412,12 +1370,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
-        uint8_t priority = kDefaultMsgPriority;
-
-#if OPENTHREAD_ENABLE_QOS
-        VerifyOrExit(GetFramePriority(aFrame, aFrameLength, mMacSource, mMacDest, priority) == OT_ERROR_NONE,
-                     error = OT_ERROR_PARSE);
-#endif
+        SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aLinkInfo, priority));
         VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, priority)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
@@ -1445,8 +1398,11 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
 
-        // Security Check
-        VerifyOrExit(netif.GetIp6Filter().Accept(*message), error = OT_ERROR_DROP);
+        if (aReceive)
+        {
+            // Security Check
+            VerifyOrExit(netif.GetIp6Filter().Accept(*message), error = OT_ERROR_DROP);
+        }
 
         // Allow re-assembly of only one message at a time on a SED by clearing
         // any remaining fragments in reassembly list upon receiving of a new
@@ -1466,18 +1422,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
     }
     else
     {
-        for (message = mReassemblyList.GetHead(); message; message = message->GetNext())
-        {
-            // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
-            if (message->GetLength() == fragmentHeader.GetDatagramSize() &&
-                message->GetDatagramTag() == fragmentHeader.GetDatagramTag() &&
-                message->GetOffset() == fragmentHeader.GetDatagramOffset() &&
-                message->GetOffset() + aFrameLength <= fragmentHeader.GetDatagramSize() &&
-                message->IsLinkSecurityEnabled() == aLinkInfo.mLinkSecurity)
-            {
-                break;
-            }
-        }
+        message = FindFragmentMessage(fragmentHeader, aFrameLength, aLinkInfo.mLinkSecurity);
 
         // For a sleepy-end-device, if we receive a new (secure) next fragment
         // with a non-matching fragmentation offset or tag, it indicates that
@@ -1508,7 +1453,15 @@ exit:
         if (message->GetOffset() >= message->GetLength())
         {
             mReassemblyList.Dequeue(*message);
-            HandleDatagram(*message, aLinkInfo, aMacSource);
+
+            if (aReceive)
+            {
+                HandleDatagram(*message, aLinkInfo, aMacSource);
+            }
+            else
+            {
+                message->Free();
+            }
         }
     }
     else
@@ -1546,8 +1499,7 @@ void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
 
 void MeshForwarder::HandleReassemblyTimer(void)
 {
-    Message *next                  = NULL;
-    bool     hasValidPriorityEntry = false;
+    Message *next = NULL;
     uint8_t  timeout;
 
     for (Message *message = mReassemblyList.GetHead(); message; message = next)
@@ -1570,22 +1522,7 @@ void MeshForwarder::HandleReassemblyTimer(void)
         }
     }
 
-#if OPENTHREAD_ENABLE_QOS
-    for (size_t i = 0; i < sizeof(mPriorityEntries) / sizeof(mPriorityEntries[0]); i++)
-    {
-        if (mPriorityEntries[i].GetLifetime() > 0)
-        {
-            mPriorityEntries[i].SetLifetime(mPriorityEntries[i].GetLifetime() - 1);
-
-            if (mPriorityEntries[i].GetLifetime() > 0)
-            {
-                hasValidPriorityEntry = true;
-            }
-        }
-    }
-#endif
-
-    if (mReassemblyList.GetHead() != NULL || hasValidPriorityEntry)
+    if (mReassemblyList.GetHead() != NULL)
     {
         mReassemblyTimer.Start(kStateUpdatePeriod);
     }
@@ -1597,21 +1534,17 @@ void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
                                    const Mac::Address &    aMacDest,
                                    const otThreadLinkInfo &aLinkInfo)
 {
-    ThreadNetif &netif    = GetNetif();
-    otError      error    = OT_ERROR_NONE;
-    Message *    message  = NULL;
-    uint8_t      priority = kDefaultMsgPriority;
+    ThreadNetif &netif   = GetNetif();
+    otError      error   = OT_ERROR_NONE;
+    Message *    message = NULL;
+    uint8_t      priority;
     int          headerLength;
 
 #if OPENTHREAD_FTD
     UpdateRoutes(aFrame, aFrameLength, aMacSource, aMacDest);
 #endif
 
-#if OPENTHREAD_ENABLE_QOS
-    VerifyOrExit(GetFramePriority(aFrame, aFrameLength, mMacSource, mMacDest, priority) == OT_ERROR_NONE,
-                 error = OT_ERROR_PARSE);
-#endif
-
+    SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aLinkInfo, priority));
     VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, priority)) != NULL,
                  error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);

@@ -57,88 +57,6 @@ enum
 };
 
 /**
- * This class represents an IPv6 priority entry
- *
- * An IPv6 message may be fragmented into several fragments by 6Lowpan. The fragments, except the first fragment,
- * don’t carry IPv6 header. The priority level comes from the DSCP value in IPv6 header. To get the priority
- * level of the subsequent fragments, routers have to store the priority level of the first fragment.
- *
- */
-class PriorityEntry
-{
-public:
-    /**
-     * This method returns the fragmentation datagram tag value.
-     *
-     * @returns The fragmentation datagram tag value.
-     *
-     */
-    uint16_t GetDatagramTag(void) { return mDatagramTag; }
-
-    /**
-     * This method sets the fragmentation datagram tag value.
-     *
-     * @param[in]  aDatagramTag  The fragmentation datagram tag value.
-     *
-     */
-    void SetDatagramTag(uint16_t aDatagramTag) { mDatagramTag = aDatagramTag; }
-
-    /**
-     * This method returns the priority value.
-     *
-     * @returns The priority value.
-     *
-     */
-    uint8_t GetPriority() { return mPriority; }
-
-    /**
-     * This method sets the priotity value.
-     *
-     * @param[in]  aPriority  The priority value.
-     *
-     */
-    void SetPriority(uint8_t aPriority) { mPriority = aPriority; }
-
-    /**
-     * This method returns the entry's remaining lifetime.
-     *
-     * @returns The entry's remaining lifetime.
-     *
-     */
-    uint8_t GetLifetime(void) { return mLifetime; }
-
-    /**
-     * This method sets the remaining lifetime of the priority entry.
-     *
-     * @param[in]  aLifetime  The remaining lifetime of the priority entry.
-     *
-     */
-    void SetLifetime(uint8_t aLifetime) { mLifetime = aLifetime; }
-
-    /**
-     * This method returns the datagram offset of the entire IP packet.
-     *
-     * @returns The datagram offset of the entire IP packet.
-     *
-     */
-    uint16_t GetDatagramOffset(void) { return mDatagramOffset; }
-
-    /**
-     * This method sets the datagram offset of the entire IP packet.
-     *
-     * @param[in]  aDatagramOffset  The datagram offset of the entire IP packet.
-     *
-     */
-    void SetDatagramOffset(uint16_t aDatagramOffset) { mDatagramOffset = aDatagramOffset; }
-
-private:
-    uint16_t mDatagramTag;         ///< The datagram tag of the fragments.
-    uint16_t mPriority : 2;        ///< The priority level of the IPv6 message.
-    uint16_t mLifetime : 3;        ///< The remaining lifetime of the priority entry. 0 indicates the entry is invalid.
-    uint16_t mDatagramOffset : 11; ///< The received datagram offset of the entire IP packet.
-};
-
-/**
  * @addtogroup core-mesh-forwarding
  *
  * @brief
@@ -323,13 +241,7 @@ private:
 
     enum
     {
-        /**
-         * Maximum lifetime of the priority entry
-         *
-         */
-        kPriorityEntryLifetime = 5,
-        kDefaultMsgPriority    = Message::kPriorityLow, ///< Default priority level of the message
-        kNumPriorityEntry      = 8,                     ///< Number of the priority entries
+        kDefaultMsgPriority = Message::kPriorityLow, ///< Default priority level of the received message
     };
 
     enum
@@ -370,6 +282,11 @@ private:
 
     otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    otError  GetIp6Header(uint8_t *           aFrame,
+                          uint8_t             aFrameLength,
+                          const Mac::Address &aMacSource,
+                          const Mac::Address &aMacDest,
+                          Ip6::Header &       aIp6Header);
     Message *GetDirectTransmission(void);
     otError  GetIndirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
@@ -384,7 +301,8 @@ private:
                             uint8_t                 aPayloadLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
-                            const otThreadLinkInfo &aLinkInfo);
+                            const otThreadLinkInfo &aLinkInfo,
+                            bool                    aReceive);
     void     HandleLowpanHC(uint8_t *               aFrame,
                             uint8_t                 aPayloadLength,
                             const Mac::Address &    aMacSource,
@@ -402,17 +320,15 @@ private:
     void     ClearReassemblyList(void);
     otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void     RemoveMessage(Message &aMessage);
-    void     HandleDiscoverComplete(void);
-
-#if OPENTHREAD_ENABLE_QOS
-    otError        UpdatePriorityEntry(uint16_t aDatagramTag, uint16_t aDatagramOffset, uint8_t aPriority);
-    PriorityEntry *GetPriorityEntry(uint16_t aDatagramTag);
-    otError        GetFramePriority(uint8_t *     aFrame,
-                                    uint8_t       aFrameLength,
-                                    Mac::Address &aMacSource,
-                                    Mac::Address &aMacDest,
-                                    uint8_t &     aPriority);
-#endif
+    Message *FindFragmentMessage(Lowpan::FragmentHeader &aFragmentHeader,
+                                 uint8_t                 aFrameLength,
+                                 bool                    aLinkSecurityEnabled);
+    otError  GetFramePriority(uint8_t *               aFrame,
+                              uint8_t                 aFrameLength,
+                              const Mac::Address &    aMacSource,
+                              const Mac::Address &    aMacDest,
+                              const otThreadLinkInfo &aLinkInfo,
+                              uint8_t &               aPriority);
 
     static void    HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void           HandleReceivedFrame(Mac::Frame &aFrame);
@@ -533,10 +449,6 @@ private:
     uint8_t               mSendMessageKeyId;
     uint8_t               mSendMessageDataSequenceNumber;
     Child *               mIndirectStartingChild;
-#endif
-
-#if OPENTHREAD_ENABLE_QOS
-    PriorityEntry mPriorityEntries[kNumPriorityEntry];
 #endif
 
     DataPollManager mDataPollManager;

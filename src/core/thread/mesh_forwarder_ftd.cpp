@@ -841,38 +841,19 @@ otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
                                          const Mac::Address &aMeshSource,
                                          const Mac::Address &aMeshDest)
 {
-    ThreadNetif &      netif = GetNetif();
-    otError            error = OT_ERROR_NONE;
-    Ip6::Header        ip6Header;
-    Lowpan::MeshHeader meshHeader;
-    bool               nextHeaderCompressed;
+    ThreadNetif &netif = GetNetif();
+    otError      error;
+    Ip6::Header  ip6Header;
 
-    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
-
-    // skip mesh header
-    aFrame += meshHeader.GetHeaderLength();
-    aFrameLength -= meshHeader.GetHeaderLength();
-
-    // skip fragment header
-    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
-    {
-        VerifyOrExit(sizeof(Lowpan::FragmentHeader) <= aFrameLength, error = OT_ERROR_DROP);
-        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0);
-
-        aFrame += reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
-        aFrameLength -= reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
-    }
-
-    // only process IPv6 packets
-    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame));
-
-    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, nextHeaderCompressed, aMeshSource, aMeshDest, aFrame,
-                                                        aFrameLength) > 0,
-                 error = OT_ERROR_DROP);
-
+    SuccessOrExit(error = GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
     error = netif.GetMle().CheckReachability(aMeshSource.GetShort(), aMeshDest.GetShort(), ip6Header);
 
 exit:
+    if (error == OT_ERROR_NOT_FOUND)
+    {
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
     return error;
 }
 
@@ -906,7 +887,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
 
         if (reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
         {
-            HandleFragment(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo);
+            HandleFragment(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo, true);
         }
         else if (Lowpan::Lowpan::IsLowpanHc(aFrame))
         {
@@ -929,8 +910,22 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         meshHeader.AppendTo(aFrame);
 
 #if OPENTHREAD_ENABLE_QOS
-        VerifyOrExit(GetFramePriority(aFrame, aFrameLength, meshSource, meshDest, priority) == OT_ERROR_NONE,
-                     error = OT_ERROR_PARSE);
+        if (GetFramePriority(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo, priority) != OT_ERROR_NONE)
+        {
+            priority = kDefaultMsgPriority;
+        }
+
+        if (aFrameLength - meshHeader.GetHeaderLength() >= 1 &&
+            reinterpret_cast<Lowpan::FragmentHeader *>(aFrame + meshHeader.GetHeaderLength())->IsFragmentHeader())
+        {
+            // An IPv6 packet may be fragmented into several fragments by 6Lowpan.
+            // The fragments, except the first fragment, don’t carry IPv6 header.
+            // The priority level comes from the DSCP value in IPv6 header. To get the
+            // priority level of the subsequent fragments, routers have to store the
+            // information of the fragments.
+            HandleFragment(aFrame + meshHeader.GetHeaderLength(), aFrameLength - meshHeader.GetHeaderLength(),
+                           meshSource, meshDest, aLinkInfo, false);
+        }
 #endif
 
         VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0, priority)) != NULL,
@@ -969,32 +964,9 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     ThreadNetif &netif = GetNetif();
     Ip6::Header  ip6Header;
     Neighbor *   neighbor;
-    bool         nextHeaderCompressed;
 
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
-
-    // skip mesh header
-    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader())
-    {
-        aFrame += reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->GetHeaderLength();
-        aFrameLength -= reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->GetHeaderLength();
-    }
-
-    // skip fragment header
-    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
-    {
-        VerifyOrExit(sizeof(Lowpan::FragmentHeader) <= aFrameLength);
-        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0);
-
-        aFrame += reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
-        aFrameLength -= reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
-    }
-
-    // only process IPv6 packets
-    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame));
-
-    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, nextHeaderCompressed, aMeshSource, aMeshDest, aFrame,
-                                                        aFrameLength) > 0);
+    SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
     netif.GetAddressResolver().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
 
