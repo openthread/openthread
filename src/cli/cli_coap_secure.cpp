@@ -207,11 +207,19 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             }
             else if (strcmp(argv[1], "x509") == 0)
             {
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
                 SuccessOrExit(error = otCoapSecureSetX509Certificate(
                                   mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
                                   sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
                                   sizeof(OT_CLI_COAPS_PRIV_KEY)));
                 mInterpreter.mServer->OutputFormat("Coap Secure set own .X509 certificate: ");
+#else
+                ExitNow(error = OT_ERROR_DISABLED_FEATURE);
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+            }
+            else
+            {
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
             }
         }
         else

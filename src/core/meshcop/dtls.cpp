@@ -75,11 +75,14 @@ Dtls::Dtls(Instance &aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     memset(&mApplicationCoapCiphreSuite, 0, sizeof(mApplicationCoapCiphreSuite));
 
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     mPreSharedKey         = NULL;
     mPreSharedKeyIdentity = NULL;
     mPreSharedKeyIdLength = 0;
     mPreSharedKeyLength   = 0;
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     memset(&mCaCert, 0, sizeof(mCaCert));
     memset(&mPrivateKey, 0, sizeof(mPrivateKey));
     mPk             = NULL;
@@ -88,6 +91,7 @@ Dtls::Dtls(Instance &aInstance)
     mX509CertLength = 0;
     mbedtls_pk_init(&mPrivateKey);
     mbedtls_x509_crt_init(&mCaCert);
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
     mVerifyPeerCertificate = true;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
@@ -165,7 +169,7 @@ otError Dtls::Start(bool             aClient,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
-#ifdef OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     if (mVerifyPeerCertificate)
     {
         mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
@@ -213,7 +217,7 @@ otError Dtls::Start(bool             aClient,
     }
     else
     {
-#ifdef OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         SetApplicationCoapSecureKeys(mApplicationCoapCiphreSuite, 1);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     }
@@ -248,6 +252,8 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
 
         switch (mApplicationCoapCiphreSuite[i])
         {
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
         case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
 
             rval = mbedtls_pk_parse_key(&mPrivateKey, mPk, mPkLength, NULL, 0);
@@ -263,6 +269,10 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
 
             break;
 
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+
         case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
 
             rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
@@ -270,6 +280,8 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
             VerifyOrExit(rval == 0);
 
             break;
+
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
         default:
             otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
@@ -308,8 +320,12 @@ void Dtls::Close(void)
     mbedtls_entropy_free(&mEntropy);
     mbedtls_ssl_cookie_free(&mCookieCtx);
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     mbedtls_x509_crt_free(&mCaCert);
     mbedtls_pk_free(&mPrivateKey);
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     if (mConnectedHandler != NULL)
@@ -341,6 +357,8 @@ exit:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
 otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate,
                                  uint32_t       aX509CertLenth,
                                  const uint8_t *aPrivateKey,
@@ -366,6 +384,10 @@ exit:
     return error;
 }
 
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+
 otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
                               uint16_t       aPskLength,
                               const uint8_t *aPskIdentity,
@@ -388,6 +410,9 @@ otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
 exit:
     return error;
 }
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+
+#ifdef MBEDTLS_BASE64_C
 
 otError Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {
@@ -402,6 +427,8 @@ otError Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLe
 exit:
     return error;
 }
+
+#endif // MBEDTLS_BASE64_C
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -710,7 +737,10 @@ void Dtls::Process(void)
             }
 
             mbedtls_ssl_session_reset(&mSsl);
-            mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
+            if (!mApplicationCoapSecure)
+            {
+                mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
+            }
             break;
         }
     }
@@ -730,6 +760,7 @@ otError Dtls::MapError(int rval)
     switch (rval)
     {
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_PK_TYPE_MISMATCH:
     case MBEDTLS_ERR_PK_FILE_IO_ERROR:
     case MBEDTLS_ERR_PK_KEY_INVALID_VERSION:
@@ -756,6 +787,7 @@ otError Dtls::MapError(int rval)
     case MBEDTLS_ERR_X509_INVALID_SIGNATURE:
     case MBEDTLS_ERR_X509_INVALID_EXTENSIONS:
     case MBEDTLS_ERR_X509_UNKNOWN_VERSION:
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case -9186:
     case -4396:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
@@ -764,26 +796,32 @@ otError Dtls::MapError(int rval)
         break;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_PK_ALLOC_FAILED:
     case MBEDTLS_ERR_X509_BUFFER_TOO_SMALL:
     case MBEDTLS_ERR_X509_ALLOC_FAILED:
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
         error = OT_ERROR_NO_BUFS;
         break;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE:
     case MBEDTLS_ERR_PK_SIG_LEN_MISMATCH:
     case MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE:
     case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
         error = OT_ERROR_SECURITY;
         break;
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_X509_FATAL_ERROR:
         error = OT_ERROR_FAILED;
         break;
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     default:

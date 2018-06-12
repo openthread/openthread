@@ -149,6 +149,7 @@ otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 otError CoapSecure::SetX509Certificate(const uint8_t *aX509Cert,
                                        uint32_t       aX509Length,
                                        const uint8_t *aPrivateKey,
@@ -156,7 +157,9 @@ otError CoapSecure::SetX509Certificate(const uint8_t *aX509Cert,
 {
     return GetNetif().GetDtls().SetX509Certificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 otError CoapSecure::SetPreSharedKey(const uint8_t *aPsk,
                                     uint16_t       aPskLength,
                                     const uint8_t *aPskIdentity,
@@ -164,11 +167,14 @@ otError CoapSecure::SetPreSharedKey(const uint8_t *aPsk,
 {
     return GetNetif().GetDtls().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 }
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
+#ifdef MBEDTLS_BASE64_C
 otError CoapSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {
     return GetNetif().GetDtls().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 }
+#endif // MBEDTLS_BASE64_C
 
 void CoapSecure::SetSslAuthMode(bool aVerifyPeerCertificate)
 {

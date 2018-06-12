@@ -30,6 +30,12 @@
  * @file
  * @brief
  *  This file defines the top-level functions for the OpenThread CoAP Secure implementation.
+ *
+ *  @note
+ *   To enable cipher suite DTLS_PSK_WITH_AES_128_CCM_8, MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+ *    must enabled in mbedtls-config.h
+ *   To enable cipher suite DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
+ *    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED must enabled in mbedtls-config.h.
  */
 
 #ifndef OPENTHREAD_COAP_SECURE_H_
@@ -44,6 +50,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if defined(__GNUC__)
+#if !defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || !defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || \
+    !defined(MBEDTLS_BASE64_C)
+_Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // __GNUC__
 
 /**
  * @addtogroup api-coap-secure
@@ -60,14 +73,14 @@ extern "C" {
 
 #define OT_DEFAULT_COAP_SECURE_PORT 5684 ///< Default CoAP Secure port, as specified in RFC 7252
 
-/**
- * This function pointer is called once DTLS connection is established.
- *
- * @param[in]  aConnected  true, if a connection was established, false otherwise.
- * @param[in]  aContext    A pointer to arbitrary context information.
- *
- */
-typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
+    /**
+     * This function pointer is called once DTLS connection is established.
+     *
+     * @param[in]  aConnected  true, if a connection was established, false otherwise.
+     * @param[in]  aContext    A pointer to arbitrary context information.
+     *
+     */
+    typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
 
 /**
  * This function starts the CoAP Secure service.
@@ -100,8 +113,10 @@ otError otCoapSecureStop(otInstance *aInstance);
  * @param[in]  aPskIdentity  The Identity Name for the PSK.
  * @param[in]  aPskIdLength  The PSK Identity Length.
  *
- * @retval OT_ERROR_NONE          Successfully set the PSK.
- * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
+ * @retval OT_ERROR_NONE              Successfully set the PSK.
+ * @retval OT_ERROR_INVALID_ARGS      The PSK is invalid.
+ * @retval OT_ERROR_DISABLED_FEATURE  Mbedtls config not enabled
+ *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
  *
  */
 otError otCoapSecureSetPsk(otInstance *   aInstance,
@@ -118,7 +133,8 @@ otError otCoapSecureSetPsk(otInstance *   aInstance,
  * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
  * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
  *
- * @retval OT_ERROR_NONE  Successfully get the peer certificate.
+ * @retval OT_ERROR_NONE              Successfully get the peer certificate.
+ * @retval OT_ERROR_DISABLED_FEATURE  Mbedtls config not enabled MBEDTLS_BASE64_C.
  *
  */
 otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
@@ -148,7 +164,10 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * @param[in]  aPrivateKey       A pointer to the PEM formatted private key.
  * @param[in]  aPrivateKeyLenth  The length of the private key.
  *
- * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
+ * @retval OT_ERROR_NONE              Successfully set the x509 certificate
+ *                                    with his private key.
+ * @retval OT_ERROR_DISABLED_FEATURE  Mbedtls config not enabled
+ *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED.
  *
  */
 otError otCoapSecureSetX509Certificate(otInstance *   aInstance,

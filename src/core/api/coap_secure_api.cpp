@@ -57,10 +57,14 @@ otError otCoapSecureSetX509Certificate(otInstance *   aInstance,
                                        const uint8_t *aPrivateKey,
                                        uint32_t       aPrivateKeyLength)
 {
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert, aX509Length, aPrivateKey,
                                                                   aPrivateKeyLength);
+#else
+    return OT_ERROR_DISABLED_FEATURE;
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 }
 
 otError otCoapSecureSetPsk(otInstance *   aInstance,
@@ -69,9 +73,13 @@ otError otCoapSecureSetPsk(otInstance *   aInstance,
                            const uint8_t *aPskIdentity,
                            uint16_t       aPskIdLength)
 {
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
+#else
+    return OT_ERROR_DISABLED_FEATURE;
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 }
 
 otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
@@ -79,10 +87,14 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              uint64_t *     aCertLength,
                                              uint64_t       aCertBufferSize)
 {
+#ifdef MBEDTLS_BASE64_C
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, (size_t *)aCertLength,
                                                                         (size_t)aCertBufferSize);
+#else
+    return OT_ERROR_DISABLED_FEATURE;
+#endif // MBEDTLS_BASE64_C
 }
 
 void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate)

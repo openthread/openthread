@@ -47,11 +47,13 @@
 #include <mbedtls/ssl_cookie.h>
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #include <mbedtls/base64.h>
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crl.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_csr.h>
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include "common/locator.hpp"
@@ -167,6 +169,8 @@ public:
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
      * This method sets the Pre-Shared Key (PSK) for DTLS sessions-
      * identified by a PSK.
@@ -186,6 +190,10 @@ public:
                             const uint8_t *aPskIdentity,
                             uint16_t       aPskIdLength);
 
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
     /**
      * This method sets a reference to the x509 certificate with corresponding private key.
      *
@@ -204,6 +212,9 @@ public:
                                const uint8_t *aPrivateKey,
                                uint32_t       aPrivateKeyLenth);
 
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+#ifdef MBEDTLS_BASE64_C
     /**
      * This method returns the peer x509 certificate base64 encoded.
      *
@@ -217,6 +228,7 @@ public:
      *
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+#endif // MBEDTLS_BASE64_C
 
     /**
      * This method set the authentication mode for a dtls connection.
@@ -304,7 +316,7 @@ private:
      *
      */
     otError SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuite);
-#endif
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 
@@ -345,17 +357,21 @@ private:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     mbedtls_x509_crt   mCaCert;
     mbedtls_pk_context mPrivateKey;
     const uint8_t *    mPk;
     uint32_t           mPkLength;
     const uint8_t *    mX509Cert;
     uint32_t           mX509CertLength;
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     const uint8_t *mPreSharedKey;
     const uint8_t *mPreSharedKeyIdentity;
     uint16_t       mPreSharedKeyLength;
     uint16_t       mPreSharedKeyIdLength;
+#endif
 
     int mApplicationCoapCiphreSuite[1];
 

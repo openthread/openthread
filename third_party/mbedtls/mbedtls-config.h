@@ -343,10 +343,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_ENTROPY_HARDWARE_ALT
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_ENTROPY_HARDWARE_ALT
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
 /**
  * \def MBEDTLS_AES_ROM_TABLES
  *
@@ -509,10 +505,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_ECDSA_DETERMINISTIC
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_ECDSA_DETERMINISTIC
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
 /**
  * \def MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
  *
@@ -536,7 +528,12 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Enable the PSK ciphersuite for Application Coap Secure.
+ */
+#ifndef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -583,10 +580,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
 /**
  * \def MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
  *
@@ -611,10 +604,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *      MBEDTLS_TLS_RSA_PSK_WITH_RC4_128_SHA
  */
 //#define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
@@ -695,10 +684,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
 /**
  * \def MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
  *
@@ -724,7 +709,30 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+/**
+ * Enables ciphersuite ECDHE ECDSA with x.509 certificate
+ * for Application Coap Secure.
+ */
+#ifndef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+/**
+ * to increase the security with ECDHE ECDSA enable
+ * ECDSA DETERMINISTIC and X509 CHECK KEY USAGE.
+ * Not required!
+ */
+#ifndef MBEDTLS_ECDSA_DETERMINISTIC
+//#define MBEDTLS_ECDSA_DETERMINISTIC
+#endif // MBEDTLS_ECDSA_DETERMINISTIC
+
+#ifndef MBEDTLS_X509_CHECK_KEY_USAGE
+//#define MBEDTLS_X509_CHECK_KEY_USAGE
+#endif // MBEDTLS_X509_CHECK_KEY_USAGE
+
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -750,10 +758,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384
  */
 //#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
@@ -955,10 +959,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * This enables support for PKCS#1 v1.5 operations.
  */
 //#define MBEDTLS_PKCS1_V15
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_PKCS1_V15
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_PKCS1_V21
@@ -1400,10 +1400,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_X509_CHECK_KEY_USAGE
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_X509_CHECK_KEY_USAGE
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
 /**
  * \def MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
  *
@@ -1610,7 +1606,15 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_BASE64_C
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Requiered by ciphersuite ECDHE ECDSA with x.509 certificate
+ * used by Application CoAP Secure.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_BASE64_C
 #define MBEDTLS_BASE64_C
+#endif // MBEDTLS_BASE64_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -1829,7 +1833,14 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_ECDH_C
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+/**
+ * Required for ECDHE_ECDSA by Application CoAPS.
+ */
+#ifndef MBEDTLS_ECDH_C
 #define MBEDTLS_ECDH_C
+#endif // MBEDTLS_ECDH_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -1848,7 +1859,14 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_ECDSA_C
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Required for ECDHA ECDSA by Application CoAPS.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_ECDSA_C
 #define MBEDTLS_ECDSA_C
+#endif // MBEDTLS_ECDSA_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -2105,7 +2123,15 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_PEM_PARSE_C
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Requiered by ciphersuite ECDHE ECDSA with x.509 certificate
+ * used by Application CoAP Secure.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_PEM_PARSE_C
 #define MBEDTLS_PEM_PARSE_C
+#endif // MBEDTLS_PEM_PARSE_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -2123,10 +2149,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * This modules adds support for encoding / writing PEM files.
  */
 //#define MBEDTLS_PEM_WRITE_C
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_PEM_WRITE_C
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_PK_C
@@ -2172,10 +2194,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * Uncomment to enable generic public key write functions.
  */
 //#define MBEDTLS_PK_WRITE_C
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_PK_WRITE_C
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_PKCS5_C
@@ -2269,10 +2287,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_OID_C
  */
 //#define MBEDTLS_RSA_C
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_RSA_C
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_SHA1_C
@@ -2474,7 +2488,14 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_X509_USE_C
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Required for ECDHE ECDSA by Application CoAPS.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_X509_USE_C
 #define MBEDTLS_X509_USE_C
+#endif // MBEDTLS_X509_USE_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -2494,7 +2515,14 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_X509_CRT_PARSE_C
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Required for ECDHE ECDSA by Application CoAPS.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_X509_CRT_PARSE_C
 #define MBEDTLS_X509_CRT_PARSE_C
+#endif // MBEDTLS_X509_CRT_PARSE_C
+#endif  // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
@@ -2538,10 +2566,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_X509_CREATE_C
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_X509_CREATE_C
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
 /**
  * \def MBEDTLS_X509_CRT_WRITE_C
  *
@@ -2567,10 +2591,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * This module is required for X.509 certificate request writing.
  */
 //#define MBEDTLS_X509_CSR_WRITE_C
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_X509_CSR_WRITE_C
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_XTEA_C

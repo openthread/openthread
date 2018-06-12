@@ -173,6 +173,7 @@ public:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
      * This method sets the Pre Shared Key (PSK) for DTLS sessions
      * identified by a PSK.
@@ -190,7 +191,9 @@ public:
                             uint16_t       aPskLength,
                             const uint8_t *aPskIdentity,
                             uint16_t       aPskIdLength);
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     /**
      * This method sets a X509 certificate with corresponding private key for DTLS session.
      *
@@ -208,7 +211,9 @@ public:
                                uint32_t       aX509Length,
                                const uint8_t *aPrivateKey,
                                uint32_t       aPrivateKeyLength);
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
+#ifdef MBEDTLS_BASE64_C
     /**
      * This method returns the peer x509 certificate base64 encoded.
      *
@@ -222,6 +227,7 @@ public:
      *
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+#endif // MBEDTLS_BASE64_C
 
     /**
      * This method set the authentication mode for the coap secure connection.
