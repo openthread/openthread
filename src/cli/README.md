@@ -14,7 +14,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
 * [coap](#coap-start)
-* [coaps](#coaps-start)
+* [coaps](#coaps-start-checkpeercert)
 * [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
