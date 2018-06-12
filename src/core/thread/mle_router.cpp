@@ -1482,13 +1482,15 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
 #if (OPENTHREAD_CONFIG_LOG_MLE && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO))
 
+    otLogInfoMle(GetInstance(), "Route table updated");
+
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
     {
         Router &router = *iter.GetRouter();
 
-        otLogInfoMle(GetInstance(), "%x: %x %d %d %d %d", router.GetRloc16(), GetRloc16(router.GetNextHop()),
-                     router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
-                     router.GetLinkQualityOut());
+        otLogInfoMle(GetInstance(), "%x -> %x, cost:%d %d, lqin:%d, lqout:%d", router.GetRloc16(),
+                     GetRloc16(router.GetNextHop()), router.GetCost(), mRouterTable.GetLinkCost(router),
+                     router.GetLinkInfo().GetLinkQuality(), router.GetLinkQualityOut());
     }
 
 #endif
