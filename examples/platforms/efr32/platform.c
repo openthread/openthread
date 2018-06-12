@@ -51,7 +51,6 @@
 #include "fem-control.h"
 #endif
 
-
 void halInitChipSpecific(void);
 
 otInstance *sInstance;
