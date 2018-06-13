@@ -62,7 +62,7 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     uint16_t flags = 0;
     uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    if (aFrame->mDidTX)
+    if (aFrame->mDidTx)
     {
         flags |= SPINEL_MD_FLAG_TX;
     }
