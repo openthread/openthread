@@ -92,25 +92,18 @@ libmbedcrypto_a_SOURCES                      += \
 
 if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 libmbedcrypto_a_SOURCES                      += \
-    repo/library/x509.c                         \
-    repo/library/x509_crl.c                     \
-    repo/library/x509_crt.c                     \
-    repo/library/oid.c                          \
-    repo/library/pkparse.c                      \
-    repo/library/pk.c                           \
     repo/library/asn1parse.c                    \
-    repo/library/pk_wrap.c                      \
-    repo/library/pem.c                          \
+    repo/library/asn1write.c                    \
     repo/library/base64.c                       \
     repo/library/ecdh.c                         \
     repo/library/ecdsa.c                        \
-    repo/library/rsa.c                          \
-    repo/library/asn1write.c                    \
-    repo/library/x509_csr.c                     \
-    repo/library/x509write_csr.c                \
-    repo/library/x509_create.c                  \
-    repo/library/pkwrite.c                      \
-    repo/library/hmac_drbg.c                    \
+    repo/library/oid.c                          \
+    repo/library/pem.c                          \
+    repo/library/pk.c                           \
+    repo/library/pk_wrap.c                      \
+    repo/library/pkparse.c                      \
+    repo/library/x509.c                         \
+    repo/library/x509_crt.c                     \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
