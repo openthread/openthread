@@ -715,9 +715,8 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 #ifndef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 //#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
-#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 
 /**
  * to increase the security with ECDHE ECDSA enable

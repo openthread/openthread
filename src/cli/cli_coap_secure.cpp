@@ -488,7 +488,6 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
     else
     {
         indexShifter = 1;
-        error        = OT_ERROR_NONE;
     }
 
     // CoAP-URI

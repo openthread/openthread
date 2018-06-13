@@ -235,7 +235,7 @@ otError Dtls::Start(bool             aClient,
     }
     else
     {
-        otLogInfoCoap(this, "Application Coap Secure DTLS started");
+        otLogInfoCoap(GetInstance(), "Application Coap Secure DTLS started");
     }
 
 exit:
