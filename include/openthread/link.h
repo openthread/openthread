@@ -577,8 +577,7 @@ OTAPI const otMacCounters *OTCALL otLinkGetCounters(otInstance *aInstance);
  *
  * @note This callback is called after FCS processing and @p aFrame may not contain the actual FCS that was received.
  *
- * @note This callback is called before IEEE 802.15.4 security processing and mSecurityValid in @p aFrame will
- * always be false.
+ * @note This callback is called before IEEE 802.15.4 security processing.
  *
  * @param[in]  aFrame    A pointer to the received IEEE 802.15.4 frame.
  * @param[in]  aContext  A pointer to application-specific context.
