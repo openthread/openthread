@@ -58,6 +58,7 @@ const ChildTable::StateFilter kAllFilters[] = {
     ChildTable::kInStateChildIdRequest,
     ChildTable::kInStateValidOrAttaching,
     ChildTable::kInStateAnyExceptInvalid,
+    ChildTable::kInStateAnyExceptInvalidOrRestoring,
 };
 
 // Checks whether a `Child` matches the `TestChild` struct.
@@ -97,8 +98,12 @@ static bool StateMatchesFilter(Child::State aState, ChildTable::StateFilter aFil
         rval = child.IsStateValidOrAttaching();
         break;
 
-    case ChildTable::kInStateAnyExceptValidOrRestoing:
+    case ChildTable::kInStateAnyExceptValidOrRestoring:
         rval = !child.IsStateValidOrRestoring();
+        break;
+
+    case ChildTable::kInStateAnyExceptInvalidOrRestoring:
+        rval = !child.IsStateInvalidOrRestoring();
         break;
     }
 
