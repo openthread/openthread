@@ -187,10 +187,12 @@ otError Dtls::Start(bool             aClient,
     {
         mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         mbedtls_ssl_conf_ciphersuites(&mConf, mApplicationCoapCiphreSuite);
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
@@ -215,12 +217,12 @@ otError Dtls::Start(bool             aClient,
     {
         rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         SetApplicationCoapSecureKeys(mApplicationCoapCiphreSuite, 1);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     VerifyOrExit(rval == 0);
 
