@@ -1005,7 +1005,7 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
     SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mRssi));  // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi));  // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));           // Noise floor (Currently unused)
     SuccessOrExit(mEncoder.WriteUint16(flags));        // Flags
 

@@ -1837,15 +1837,15 @@ static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
             {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
                 // TODO: Propagate CM0 timestamp
-                receiveFrame.mMsec = otPlatAlarmMilliGetNow();
-                receiveFrame.mUsec = 0; // Don't support microsecond timer for now.
+                receiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+                receiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
-                receiveFrame.mLength  = len;
-                receiveFrame.mPsdu    = &(payload[1]);
-                receiveFrame.mChannel = sReceiveCmd.channel;
-                receiveFrame.mRssi    = rssi;
-                receiveFrame.mLqi     = crcCorr->status.corr;
+                receiveFrame.mLength             = len;
+                receiveFrame.mPsdu               = &(payload[1]);
+                receiveFrame.mChannel            = sReceiveCmd.channel;
+                receiveFrame.mInfo.mRxInfo.mRssi = rssi;
+                receiveFrame.mInfo.mRxInfo.mLqi  = crcCorr->status.corr;
 
                 receiveError = OT_ERROR_NONE;
             }

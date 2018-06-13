@@ -260,7 +260,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
 
     if (aError == OT_ERROR_NO_ACK)
     {
-        if (mTransmitAttempts < aFrame->mMaxTxAttempts)
+        if (mTransmitAttempts < aFrame->mInfo.mTxInfo.mMaxTxAttempts)
         {
             mTransmitAttempts++;
             StartCsmaBackoff();

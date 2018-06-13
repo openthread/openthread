@@ -328,7 +328,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     nrf_802154_channel_set(aFrame->mChannel);
 
-    if (aFrame->mIsCcaEnabled)
+    if (aFrame->mInfo.mTxInfo.mIsCcaEnabled)
     {
         nrf_802154_transmit_csma_ca_raw(&aFrame->mPsdu[-1]);
     }
@@ -669,15 +669,15 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
 
     memset(receivedFrame, 0, sizeof(*receivedFrame));
 
-    receivedFrame->mPsdu    = &p_data[1];
-    receivedFrame->mLength  = p_data[0];
-    receivedFrame->mRssi    = power;
-    receivedFrame->mLqi     = lqi;
-    receivedFrame->mChannel = nrf_802154_channel_get();
+    receivedFrame->mPsdu               = &p_data[1];
+    receivedFrame->mLength             = p_data[0];
+    receivedFrame->mInfo.mRxInfo.mRssi = power;
+    receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
+    receivedFrame->mChannel            = nrf_802154_channel_get();
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    uint64_t timestamp   = nrf5AlarmGetCurrentTime();
-    receivedFrame->mMsec = timestamp / US_PER_MS;
-    receivedFrame->mUsec = timestamp - receivedFrame->mMsec * US_PER_MS;
+    uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
+    receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
+    receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mMsec * US_PER_MS;
 #endif
 
     PlatformEventSignalPending();
@@ -721,11 +721,11 @@ void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t
     }
     else
     {
-        sAckFrame.mPsdu    = &aAckPsdu[1];
-        sAckFrame.mLength  = aAckPsdu[0];
-        sAckFrame.mRssi    = aPower;
-        sAckFrame.mLqi     = aLqi;
-        sAckFrame.mChannel = nrf_802154_channel_get();
+        sAckFrame.mPsdu               = &aAckPsdu[1];
+        sAckFrame.mLength             = aAckPsdu[0];
+        sAckFrame.mInfo.mRxInfo.mRssi = aPower;
+        sAckFrame.mInfo.mRxInfo.mLqi  = aLqi;
+        sAckFrame.mChannel            = nrf_802154_channel_get();
     }
 
     setPendingEvent(kPendingEventFrameTransmitted);

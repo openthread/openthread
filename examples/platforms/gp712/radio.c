@@ -217,7 +217,7 @@ void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
 {
     if (aError == OT_ERROR_NONE)
     {
-        sLastReceivedPower = aPacket->mRssi;
+        sLastReceivedPower = aPacket->mInfo.mRxInfo.mRssi;
     }
 
     otPlatRadioReceiveDone(pQorvoInstance, aPacket, aError);
