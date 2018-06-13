@@ -1597,8 +1597,6 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
     const ExtAddress *extAddress;
     Crypto::AesCcm    aesCcm;
 
-    aFrame.SetSecurityValid(false);
-
     if (aFrame.GetSecurityEnabled() == false)
     {
         ExitNow();
@@ -1723,8 +1721,6 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
         }
     }
 
-    aFrame.SetSecurityValid(true);
-
 exit:
     return error;
 }
@@ -1769,8 +1765,6 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     VerifyOrExit(error == OT_ERROR_NONE);
     VerifyOrExit(aFrame != NULL, error = OT_ERROR_NO_FRAME_RECEIVED);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-
-    aFrame->SetSecurityValid(false);
 
     if (mPcapCallback)
     {

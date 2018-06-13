@@ -902,23 +902,6 @@ public:
     void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
 
     /**
-     * This method indicates whether or not frame security was enabled and passed security validation.
-     *
-     * @retval TRUE   Frame security was enabled and passed security validation.
-     * @retval FALSE  Frame security was not enabled or did not pass security validation.
-     *
-     */
-    bool GetSecurityValid(void) const { return mSecurityValid; }
-
-    /**
-     * This method sets the security valid attribute.
-     *
-     * @param[in]  aSecurityValid  TRUE if frame security was enabled and passed security validation, FALSE otherwise.
-     *
-     */
-    void SetSecurityValid(bool aSecurityValid) { mSecurityValid = aSecurityValid; }
-
-    /**
      * This method indicates whether or not the frame is a retransmission.
      *
      * @retval TRUE   Frame is a retransmission
