@@ -919,6 +919,22 @@ public:
     void SetIsARetransmission(bool aIsARetx) { mIsARetx = aIsARetx; }
 
     /**
+     * This method sets the did Tx attribute.
+     *
+     * @param[in]  aDidTx  TRUE if frame is sent from the radio, FALSE otherwise.
+     *
+     */
+    void SetDidTx(bool aDidTx) { mDidTx = aDidTx; }
+
+    /**
+     * This method sets the CCA enabled attribute.
+     *
+     * @param[in]  aIsCcaEnabled  TRUE if CCA must be enabled for this packet, FALSE otherwise.
+     *
+     */
+    void SetIsCcaEnabled(bool aIsCcaEnabled) { mIsCcaEnabled = aIsCcaEnabled; }
+
+    /**
      * This method returns the IEEE 802.15.4 PSDU length.
      *
      * @returns The IEEE 802.15.4 PSDU length.

@@ -992,7 +992,7 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
         goto exit;
     }
 
-    if (aFrame->mDidTX)
+    if (aFrame->mDidTx)
     {
         flags |= SPINEL_MD_FLAG_TX;
     }
