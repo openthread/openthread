@@ -12,7 +12,9 @@
 
 ## Setup
 
-`toranj` requires wpantund to be installed. Please follow [`wpantund` installation guide](https://github.com/openthread/wpantund/blob/master/INSTALL.md#wpantund-installation-guide).
+`toranj` requires `wpantund` to be installed.
+- Please follow [`wpantund` installation guide](https://github.com/openthread/wpantund/blob/master/INSTALL.md#wpantund-installation-guide). Note that `toranj` expects `wpantund` installed from latest master branch.
+- Alternative way to install `wpantund` is to use the same commands from travis `before_install` [script](https://github.com/openthread/openthread/blob/ef940b06594b370176b724733dbd7ad09617a693/.travis/before_install.sh#L110-L127) for build target `toranj-test-framework`.
 
 To run all tests, `start` script can be used. This script will build OpenThread with proper configuration options and starts running all test.
 
