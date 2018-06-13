@@ -25,6 +25,22 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
 #include "mbedtls/aes.h"
 
@@ -32,6 +48,7 @@
 
 #ifdef MBEDTLS_AES_ALT
 
+#include "aes_alt_cc310.h"
 #include "cc310_mbedtls.h"
 #include "ssi_pal_types.h"
 
@@ -48,19 +65,19 @@ static void aes_init(mbedtls_aes_context * ctx, SaSiAesEncryptMode_t mode)
                                            SASI_AES_PADDING_NONE));
 }
 
-void mbedtls_aes_init(mbedtls_aes_context * ctx)
+void aes_cc310_init(mbedtls_aes_context * ctx)
 {
     memset(ctx, 0, sizeof(*ctx));
 
     aes_init(ctx, SASI_AES_ENCRYPT);
 }
 
-void mbedtls_aes_free(mbedtls_aes_context * ctx)
+void aes_cc310_free(mbedtls_aes_context * ctx)
 {
     CC310_OPERATION_NO_RESULT(SaSi_AesFree(&ctx->user_context));
 }
 
-int mbedtls_aes_setkey_enc(mbedtls_aes_context * ctx,
+int aes_cc310_setkey_enc(mbedtls_aes_context * ctx,
                            const unsigned char * key,
                            unsigned int          keybits)
 {
@@ -80,14 +97,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context * ctx,
     return (int)result;
 }
 
-int mbedtls_aes_setkey_dec(mbedtls_aes_context * ctx,
-                           const unsigned char * key,
-                           unsigned int          keybits)
-{
-    return mbedtls_aes_setkey_enc(ctx, key, keybits);
-}
-
-int mbedtls_aes_crypt_ecb(mbedtls_aes_context * ctx,
+int aes_cc310_crypt_ecb(mbedtls_aes_context * ctx,
                           int                   mode,
                           const unsigned char   input[16],
                           unsigned char         output[16])

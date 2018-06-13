@@ -403,7 +403,7 @@ otError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
 
 void Interpreter::ProcessHelp(int argc, char *argv[])
 {
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
@@ -425,18 +425,18 @@ void Interpreter::ProcessAutoStart(int argc, char *argv[])
     {
         if (otThreadGetAutoStart(mInstance))
         {
-            mServer->OutputFormat("true\r\n");
+            mServer->OutputFormat("Enabled\r\n");
         }
         else
         {
-            mServer->OutputFormat("false\r\n");
+            mServer->OutputFormat("Disabled\r\n");
         }
     }
-    else if (strcmp(argv[0], "true") == 0)
+    else if (strcmp(argv[0], "enable") == 0)
     {
         error = otThreadSetAutoStart(mInstance, true);
     }
-    else if (strcmp(argv[0], "false") == 0)
+    else if (strcmp(argv[0], "disable") == 0)
     {
         error = otThreadSetAutoStart(mInstance, false);
     }
@@ -505,6 +505,8 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
     if (isTable || strcmp(argv[0], "list") == 0)
     {
+        uint8_t maxChildren;
+
         if (isTable)
         {
             mServer->OutputFormat(
@@ -513,53 +515,44 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 "+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+\r\n");
         }
 
-        // For certifcation: here intentionally not limits the upperbound for the index,
-        // giving the chance to exit from below default case as OpenThread THCI expects
-        // the content of "child list" and the result "Done" in seperate lines.
-        for (uint8_t i = 0;; i++)
+        maxChildren = otThreadGetMaxAllowedChildren(mInstance);
+
+        for (uint8_t i = 0; i < maxChildren; i++)
         {
-            switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
+            if ((otThreadGetChildInfoByIndex(mInstance, i, &childInfo) != OT_ERROR_NONE) || childInfo.mIsStateRestoring)
             {
-            case OT_ERROR_NONE:
-                break;
-
-            case OT_ERROR_NOT_FOUND:
                 continue;
-
-            default:
-                mServer->OutputFormat("\r\n");
-                ExitNow();
             }
 
-            if (childInfo.mTimeout > 0)
+            if (isTable)
             {
-                if (isTable)
-                {
-                    mServer->OutputFormat("| %3d ", childInfo.mChildId);
-                    mServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
-                    mServer->OutputFormat("| %10d ", childInfo.mTimeout);
-                    mServer->OutputFormat("| %10d ", childInfo.mAge);
-                    mServer->OutputFormat("| %5d ", childInfo.mLinkQualityIn);
-                    mServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
-                    mServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
-                    mServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
-                    mServer->OutputFormat("|%1d", childInfo.mFullFunction);
-                    mServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
-                    mServer->OutputFormat("| ");
+                mServer->OutputFormat("| %3d ", childInfo.mChildId);
+                mServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
+                mServer->OutputFormat("| %10d ", childInfo.mTimeout);
+                mServer->OutputFormat("| %10d ", childInfo.mAge);
+                mServer->OutputFormat("| %5d ", childInfo.mLinkQualityIn);
+                mServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
+                mServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
+                mServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
+                mServer->OutputFormat("|%1d", childInfo.mFullFunction);
+                mServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
+                mServer->OutputFormat("| ");
 
-                    for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
-                    {
-                        mServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
-                    }
-
-                    mServer->OutputFormat(" |\r\n");
-                }
-                else
+                for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
                 {
-                    mServer->OutputFormat("%d ", childInfo.mChildId);
+                    mServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
                 }
+
+                mServer->OutputFormat(" |\r\n");
+            }
+            else
+            {
+                mServer->OutputFormat("%d ", childInfo.mChildId);
             }
         }
+
+        mServer->OutputFormat("\r\n");
+        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
@@ -2361,6 +2354,8 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
 
     if (isTable || strcmp(argv[0], "list") == 0)
     {
+        uint8_t maxRouterId;
+
         if (isTable)
         {
             mServer->OutputFormat(
@@ -2369,40 +2364,41 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
                 "+----+--------+----------+-----------+-------+--------+-----+------------------+\r\n");
         }
 
-        for (uint8_t i = 0;; i++)
+        maxRouterId = otThreadGetMaxRouterId(mInstance);
+
+        for (uint8_t i = 0; i <= maxRouterId; i++)
         {
             if (otThreadGetRouterInfo(mInstance, i, &routerInfo) != OT_ERROR_NONE)
             {
-                mServer->OutputFormat("\r\n");
-                ExitNow();
+                continue;
             }
 
-            if (routerInfo.mAllocated)
+            if (isTable)
             {
-                if (isTable)
-                {
-                    mServer->OutputFormat("| %2d ", routerInfo.mRouterId);
-                    mServer->OutputFormat("| 0x%04x ", routerInfo.mRloc16);
-                    mServer->OutputFormat("| %8d ", routerInfo.mNextHop);
-                    mServer->OutputFormat("| %9d ", routerInfo.mPathCost);
-                    mServer->OutputFormat("| %5d ", routerInfo.mLinkQualityIn);
-                    mServer->OutputFormat("| %6d ", routerInfo.mLinkQualityOut);
-                    mServer->OutputFormat("| %3d ", routerInfo.mAge);
-                    mServer->OutputFormat("| ");
+                mServer->OutputFormat("| %2d ", routerInfo.mRouterId);
+                mServer->OutputFormat("| 0x%04x ", routerInfo.mRloc16);
+                mServer->OutputFormat("| %8d ", routerInfo.mNextHop);
+                mServer->OutputFormat("| %9d ", routerInfo.mPathCost);
+                mServer->OutputFormat("| %5d ", routerInfo.mLinkQualityIn);
+                mServer->OutputFormat("| %6d ", routerInfo.mLinkQualityOut);
+                mServer->OutputFormat("| %3d ", routerInfo.mAge);
+                mServer->OutputFormat("| ");
 
-                    for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
-                    {
-                        mServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
-                    }
-
-                    mServer->OutputFormat(" |\r\n");
-                }
-                else
+                for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
                 {
-                    mServer->OutputFormat("%d ", i);
+                    mServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
                 }
+
+                mServer->OutputFormat(" |\r\n");
+            }
+            else
+            {
+                mServer->OutputFormat("%d ", i);
             }
         }
+
+        mServer->OutputFormat("\r\n");
+        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
@@ -3471,7 +3467,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         mServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
 #endif
 
-    for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(cmd, sCommands[i].mName) == 0)
         {
@@ -3482,7 +3478,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     // Check user defined commands if built-in command
     // has not been found
-    if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    if (i == OT_ARRAY_LENGTH(sCommands))
     {
         for (i = 0; i < mUserCommandsLength; i++)
         {
@@ -3522,14 +3518,13 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
     VerifyOrExit((aFlags & OT_CHANGED_THREAD_NETDATA) != 0);
 
 #ifndef OTDLL
-    otIp6SlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]),
-                     otIp6CreateRandomIid, NULL);
+    otIp6SlaacUpdate(mInstance, mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses), otIp6CreateRandomIid, NULL);
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     otDhcp6ServerUpdate(mInstance);
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcp6ClientUpdate(mInstance, mDhcpAddresses, sizeof(mDhcpAddresses) / sizeof(mDhcpAddresses[0]), NULL);
+    otDhcp6ClientUpdate(mInstance, mDhcpAddresses, OT_ARRAY_LENGTH(mDhcpAddresses), NULL);
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 #endif
 

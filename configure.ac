@@ -541,7 +541,7 @@ AC_MSG_RESULT([${OPENTHREAD_ENABLE_SPI}])
 AC_SUBST(OPENTHREAD_ENABLE_NCP_UART)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${with_ncp_bus}"  = "uart"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_UART],[${OPENTHREAD_ENABLE_NCP_UART}],[Define to 1 to enable the NCP UART interface.])
-AC_MSG_CHECKING([sould NCP support UART])
+AC_MSG_CHECKING([should NCP support UART])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
 
 #
@@ -597,8 +597,8 @@ AC_ARG_ENABLE(builtin-mbedtls,
 
 if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo.patched/include"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo.patched/include/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 fi
 AC_MSG_CHECKING([whether mbed TLS should be enabled])

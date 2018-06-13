@@ -48,7 +48,7 @@
         ..\..\include;
         ..\..\src\core;
         ..\..\third_party\mbedtls;
-        ..\..\third_party\mbedtls\repo.patched\include;
+        ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -83,6 +83,7 @@
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\notifier.cpp" />
     <ClCompile Include="..\..\src\core\common\settings.cpp" />
+    <ClCompile Include="..\..\src\core\common\string.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
     <ClCompile Include="..\..\src\core\common\timer.cpp" />
     <ClCompile Include="..\..\src\core\common\tlvs.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\notifier.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />
+    <ClInclude Include="..\..\src\core\common\string.hpp" />
     <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
     <ClInclude Include="..\..\src\core\common\timer.hpp" />
     <ClInclude Include="..\..\src\core\common\tlvs.hpp" />

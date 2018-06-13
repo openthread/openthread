@@ -58,14 +58,14 @@ extern "C" {
  * @returns The maximum number of children currently allowed.
  *
  * @sa otThreadSetMaxAllowedChildren
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
 
 /**
  * Set the maximum number of children currently allowed.
  *
- * This parameter can only be set when Thread protocol operation
- * has been stopped.
+ * This parameter can only be set when Thread protocol operation has been stopped.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMaxChildren  The maximum allowed children.
@@ -75,6 +75,7 @@ OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @retval  OT_ERROR_INVALID_STATE  If Thread isn't stopped.
  *
  * @sa otThreadGetMaxAllowedChildren, otThreadStop
+ *
  */
 OTAPI otError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
 
@@ -101,9 +102,8 @@ OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnab
 /**
  * Set the preferred Router Id.
  *
- * Upon becoming a router/leader the node attempts to use this Router Id. If the
- * preferred Router Id is not set or if it can not be used, a randomly generated
- * router id is picked. This property can be set only when the device role is
+ * Upon becoming a router/leader the node attempts to use this Router Id. If the preferred Router Id is not set or if
+ * it can not be used, a randomly generated router id is picked. This property can be set only when the device role is
  * either detached or disabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
@@ -163,11 +163,12 @@ OTAPI void OTCALL otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint3
  * @returns The Joiner UDP Port number.
  *
  * @sa otThreadSetJoinerUdpPort
+ *
  */
 OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
 
 /**
- * Set the Joiner UDP Port
+ * Set the Joiner UDP Port.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
@@ -175,11 +176,12 @@ OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
  * @retval  OT_ERROR_NONE  Successfully set the Joiner UDP Port.
  *
  * @sa otThreadGetJoinerUdpPort
+ *
  */
 OTAPI otError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
 /**
- * Set Steering data out of band
+ * Set Steering data out of band.
  *
  * Configuration option `OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB` should be set to enable setting of steering
  * data out of band. Otherwise calling this function does nothing and it returns `OT_ERROR_DISABLED_FEATURE`
@@ -205,6 +207,7 @@ otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtA
  * @returns The CONTEXT_ID_REUSE_DELAY value.
  *
  * @sa otThreadSetContextIdReuseDelay
+ *
  */
 OTAPI uint32_t OTCALL otThreadGetContextIdReuseDelay(otInstance *aInstance);
 
@@ -215,6 +218,7 @@ OTAPI uint32_t OTCALL otThreadGetContextIdReuseDelay(otInstance *aInstance);
  * @param[in]  aDelay    The CONTEXT_ID_REUSE_DELAY value.
  *
  * @sa otThreadGetContextIdReuseDelay
+ *
  */
 OTAPI void OTCALL otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
 
@@ -226,6 +230,7 @@ OTAPI void OTCALL otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t
  * @returns The NETWORK_ID_TIMEOUT value.
  *
  * @sa otThreadSetNetworkIdTimeout
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetNetworkIdTimeout(otInstance *aInstance);
 
@@ -236,6 +241,7 @@ OTAPI uint8_t OTCALL otThreadGetNetworkIdTimeout(otInstance *aInstance);
  * @param[in]  aTimeout  The NETWORK_ID_TIMEOUT value.
  *
  * @sa otThreadGetNetworkIdTimeout
+ *
  */
 OTAPI void OTCALL otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout);
 
@@ -247,6 +253,7 @@ OTAPI void OTCALL otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTi
  * @returns The ROUTER_UPGRADE_THRESHOLD value.
  *
  * @sa otThreadSetRouterUpgradeThreshold
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 
@@ -257,6 +264,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
  * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
  *
  * @sa otThreadGetRouterUpgradeThreshold
+ *
  */
 OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
@@ -406,7 +414,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
  * @returns The maximum allowed router ID.
  *
  */
-uint8_t otThreadGetMaxRouterId(otInstance *aInstance);
+OTAPI uint8_t OTCALL otThreadGetMaxRouterId(otInstance *aInstance);
 
 /**
  * The function retains diagnostic information for a given Thread Router.
@@ -443,6 +451,7 @@ OTAPI otError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIn
  * @returns A pointer to a buffer containing the thrPSKc.
  *
  * @sa otThreadSetPSKc
+ *
  */
 OTAPI const uint8_t *OTCALL otThreadGetPSKc(otInstance *aInstance);
 
@@ -460,6 +469,7 @@ OTAPI const uint8_t *OTCALL otThreadGetPSKc(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otThreadGetPSKc
+ *
  */
 OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc);
 
@@ -471,6 +481,7 @@ OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc
  * @returns The assigned parent priority value, -2 means not assigned.
  *
  * @sa otThreadSetParentPriority
+ *
  */
 OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
 

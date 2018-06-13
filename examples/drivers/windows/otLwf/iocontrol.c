@@ -95,6 +95,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_PARTITION_ID",                REF_IOCTL_FUNC_WITH_TUN(otPartitionId) },
     { "IOCTL_OTLWF_OT_RLOC16",                      REF_IOCTL_FUNC_WITH_TUN(otRloc16) },
     { "IOCTL_OTLWF_OT_ROUTER_ID_SEQUENCE",          REF_IOCTL_FUNC(otRouterIdSequence) },
+    { "IOCTL_OTLWF_OT_MAX_ROUTER_ID",               REF_IOCTL_FUNC(otMaxRouterId) },
     { "IOCTL_OTLWF_OT_ROUTER_INFO",                 REF_IOCTL_FUNC(otRouterInfo) },
     { "IOCTL_OTLWF_OT_STABLE_NETWORK_DATA_VERSION", REF_IOCTL_FUNC_WITH_TUN(otStableNetworkDataVersion) },
     { "IOCTL_OTLWF_OT_MAC_BLACKLIST_ENABLED",       REF_IOCTL_FUNC(otMacBlacklistEnabled) },
@@ -4498,6 +4499,37 @@ otLwfIoCtl_otRouterIdSequence(
     if (*OutBufferLength >= sizeof(uint8_t))
     {
         *(uint8_t*)OutBuffer = otThreadGetRouterIdSequence(pFilter->otCtx);
+        *OutBufferLength = sizeof(uint8_t);
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfIoCtl_otMaxRouterId(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    UNREFERENCED_PARAMETER(InBuffer);
+    UNREFERENCED_PARAMETER(InBufferLength);
+
+    if (*OutBufferLength >= sizeof(uint8_t))
+    {
+        *(uint8_t*)OutBuffer = otThreadGetMaxRouterId(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }

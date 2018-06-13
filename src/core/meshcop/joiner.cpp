@@ -196,11 +196,9 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     if (aResult != NULL)
     {
         JoinerRouter joinerRouter;
-        char         logString[Mac::Address::kAddressStringSize];
 
         otLogDebgMeshCoP(GetInstance(), "Received Discovery Response (%s)",
-                         static_cast<Mac::ExtAddress &>(aResult->mExtAddress).ToString(logString, sizeof(logString)));
-        OT_UNUSED_VARIABLE(logString);
+                         static_cast<Mac::ExtAddress &>(aResult->mExtAddress).ToString().AsCString());
 
         // Joining is disabled if the Steering Data is not included
         if (aResult->mSteeringData.mLength == 0)

@@ -24,7 +24,8 @@
  *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -50,6 +51,8 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
+#include <openthread-core-config.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -68,21 +71,32 @@ extern "C" {
 /**
  * @brief AES context structure
  */
-typedef union
+typedef struct
 {
-    struct
+#if NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+    bool using_cc310;                               ///< Indicate whether it's using cc310 or not.
+#endif
+
+#if !NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+    union
     {
-        SaSiAesUserContext_t user_context;      ///< User context for CC310 AES.
-        uint8_t              key_buffer[32];    ///< Buffer for an encryption key.
-        SaSiAesUserKeyData_t key;               ///< CC310 AES key structure.
-        SaSiAesEncryptMode_t mode;              ///< Current context operation mode (encrypt/decrypt).
+#endif // !NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+        struct
+        {
+            SaSiAesUserContext_t user_context;      ///< User context for CC310 AES.
+            uint8_t              key_buffer[32];    ///< Buffer for an encryption key.
+            SaSiAesUserKeyData_t key;               ///< CC310 AES key structure.
+            SaSiAesEncryptMode_t mode;              ///< Current context operation mode (encrypt/decrypt).
+        };
+        struct
+        {
+            int       nr;                           ///<  number of rounds  */
+            uint32_t *rk;                           ///<  AES round keys    */
+            uint32_t  buf[68];                      ///<  unaligned data    */
+       };
+#if !NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
     };
-    struct
-    {
-        int       nr;                           ///<  number of rounds  */
-        uint32_t *rk;                           ///<  AES round keys    */
-        uint32_t  buf[68];                      ///<  unaligned data    */
-    };
+#endif // !NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
 }
 mbedtls_aes_context;
 

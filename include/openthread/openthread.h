@@ -135,6 +135,7 @@ extern "C" {
  * @{
  *
  * @defgroup plat-alarm               Alarm
+ * @defgroup plat-ble                 BLE Host
  * @defgroup plat-factory-diagnostics Factory Diagnostics
  * @defgroup plat-logging             Logging
  * @defgroup plat-memory              Memory

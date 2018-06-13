@@ -129,20 +129,15 @@ exit:
     return average;
 }
 
-const char *RssAverager::ToString(char *aBuf, uint16_t aSize) const
+RssAverager::InfoString RssAverager::ToString(void) const
 {
-    if (mCount == 0)
-    {
-        VerifyOrExit(aSize > 0);
-        *aBuf = 0;
-    }
-    else
-    {
-        snprintf(aBuf, aSize, "%d.%s", -(mAverage >> kPrecisionBitShift), kDigitsString[mAverage & kPrecisionBitMask]);
-    }
+    InfoString string;
+
+    VerifyOrExit(mCount != 0);
+    string.Set("%d.%s", -(mAverage >> kPrecisionBitShift), kDigitsString[mAverage & kPrecisionBitMask]);
 
 exit:
-    return aBuf;
+    return string;
 }
 
 LinkQualityInfo::LinkQualityInfo(void)
@@ -180,14 +175,10 @@ exit:
     return;
 }
 
-const char *LinkQualityInfo::ToInfoString(char *aBuf, uint16_t aSize) const
+LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const
 {
-    char rssString[RssAverager::kStringSize];
-
-    snprintf(aBuf, aSize, "aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString(rssString, sizeof(rssString)),
-             GetLastRss(), GetLinkQuality());
-
-    return aBuf;
+    return InfoString("aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString().AsCString(), GetLastRss(),
+                      GetLinkQuality());
 }
 
 uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)

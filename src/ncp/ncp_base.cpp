@@ -252,7 +252,7 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 #endif
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_GET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_ENABLED),
 #endif
 };
@@ -582,7 +582,7 @@ NcpBase::NcpBase(Instance *aInstance):
     mCurTransmitTID(0),
     mCurScanChannel(kInvalidScanChannel),
     mSrcMatchEnabled(false),
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     mInboundSecureIpFrameCounter(0),
     mInboundInsecureIpFrameCounter(0),
@@ -822,6 +822,144 @@ exit:
     }
 
     return error;
+}
+
+uint8_t NcpBase::ConvertLogLevel(otLogLevel aLogLevel)
+{
+    uint8_t spinelLogLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
+
+    switch (aLogLevel)
+    {
+    case OT_LOG_LEVEL_NONE:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
+        break;
+
+    case OT_LOG_LEVEL_CRIT:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_CRIT;
+        break;
+
+    case OT_LOG_LEVEL_WARN:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_WARN;
+        break;
+
+    case OT_LOG_LEVEL_NOTE:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_NOTICE;
+        break;
+
+    case OT_LOG_LEVEL_INFO:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_INFO;
+        break;
+
+    case OT_LOG_LEVEL_DEBG:
+        spinelLogLevel = SPINEL_NCP_LOG_LEVEL_DEBUG;
+        break;
+    }
+
+    return spinelLogLevel;
+}
+
+unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
+{
+    unsigned int spinelLogRegion = SPINEL_NCP_LOG_REGION_NONE;
+
+    switch (aLogRegion)
+    {
+
+    case OT_LOG_REGION_API:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_API;
+        break;
+
+    case OT_LOG_REGION_MLE:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MLE;
+        break;
+
+    case OT_LOG_REGION_ARP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_ARP;
+        break;
+
+    case OT_LOG_REGION_NET_DATA:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_NET_DATA;
+        break;
+
+    case OT_LOG_REGION_ICMP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_ICMP;
+        break;
+
+    case OT_LOG_REGION_IP6:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_IP6;
+        break;
+
+    case OT_LOG_REGION_MAC:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MAC;
+        break;
+
+    case OT_LOG_REGION_MEM:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MEM;
+        break;
+
+    case OT_LOG_REGION_NCP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_NCP;
+        break;
+
+    case OT_LOG_REGION_MESH_COP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MESH_COP;
+        break;
+
+    case OT_LOG_REGION_NET_DIAG:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_NET_DIAG;
+        break;
+
+    case OT_LOG_REGION_PLATFORM:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_PLATFORM;
+        break;
+
+    case OT_LOG_REGION_COAP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_COAP;
+        break;
+
+    case OT_LOG_REGION_CLI:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_CLI;
+        break;
+
+    case OT_LOG_REGION_CORE:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_CORE;
+        break;
+
+    case OT_LOG_REGION_UTIL:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_UTIL;
+        break;
+    }
+
+    return spinelLogRegion;
+}
+
+void NcpBase::Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    VerifyOrExit(!mDisableStreamWrite);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_STREAM_LOG));
+
+    // If there is a pending queued response we do not allow any new log
+    // stream writes. This is to ensure that log messages can not continue
+    // to use the NCP buffer space and block other spinel frames.
+
+    VerifyOrExit(IsResponseQueueEmpty(), error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_LOG));
+    SuccessOrExit(error = mEncoder.WriteUtf8(aLogString));
+    SuccessOrExit(error = mEncoder.WriteUint8(ConvertLogLevel(aLogLevel)));
+    SuccessOrExit(error = mEncoder.WriteUintPacked(ConvertLogRegion(aLogRegion)));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+
+    if (error == OT_ERROR_NO_BUFS)
+    {
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+        mUpdateChangedPropsTask.Post();
+    }
 }
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
@@ -1171,39 +1309,22 @@ NcpBase::PropertyHandler NcpBase::FindPropertyHandler(spinel_prop_key_t aKey, co
 
 NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 {
-    return FindPropertyHandler(
-               aKey,
-               mGetPropertyHandlerTable,
-               sizeof(mGetPropertyHandlerTable) / sizeof(mGetPropertyHandlerTable[0])
-           );
-
+    return FindPropertyHandler(aKey, mGetPropertyHandlerTable, OT_ARRAY_LENGTH(mGetPropertyHandlerTable));
 }
 
 NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 {
-    return FindPropertyHandler(
-               aKey,
-               mSetPropertyHandlerTable,
-               sizeof(mSetPropertyHandlerTable) / sizeof(mSetPropertyHandlerTable[0])
-           );
+    return FindPropertyHandler(aKey, mSetPropertyHandlerTable, OT_ARRAY_LENGTH(mSetPropertyHandlerTable));
 }
 
 NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aKey)
 {
-   return FindPropertyHandler(
-               aKey,
-               mInsertPropertyHandlerTable,
-               sizeof(mInsertPropertyHandlerTable) / sizeof(mInsertPropertyHandlerTable[0])
-           );
+   return FindPropertyHandler(aKey, mInsertPropertyHandlerTable, OT_ARRAY_LENGTH(mInsertPropertyHandlerTable));
 }
 
 NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aKey)
 {
-    return FindPropertyHandler(
-               aKey,
-               mRemovePropertyHandlerTable,
-               sizeof(mRemovePropertyHandlerTable) / sizeof(mRemovePropertyHandlerTable[0])
-           );
+    return FindPropertyHandler(aKey, mRemovePropertyHandlerTable, OT_ARRAY_LENGTH(mRemovePropertyHandlerTable));
 }
 
 // Returns `true` and updates the `aError` on success.
@@ -1249,7 +1370,13 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
     otError error = OT_ERROR_NONE;
     PropertyHandler handler = FindSetPropertyHandler(aKey);
 
-    if (handler == NULL)
+    if (handler != NULL)
+    {
+        mDisableStreamWrite = false;
+        error = (this->*handler)();
+        mDisableStreamWrite = true;
+    }
+    else
     {
         // If there is no "set" handler, check if this property is one of the
         // ones that require different treatment.
@@ -1258,14 +1385,25 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
 
         VerifyOrExit(!didHandle);
 
-        ExitNow(error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+        if (aKey >= SPINEL_PROP_VENDOR__BEGIN && aKey < SPINEL_PROP_VENDOR__END)
+        {
+            mDisableStreamWrite = false;
+            error = VendorSetPropertyHandler(aKey);
+            mDisableStreamWrite = true;
+
+            // An `OT_ERROR_NOT_FOUND` status from vendor handler indicates
+            // that it does not support the given property key. In that
+            // case, `didHandle` is set to `false` so a `LAST_STATUS` with
+            // `PROP_NOT_FOUND` is emitted. Otherwise, we fall through to
+            // prepare the response.
+
+            didHandle = (error != OT_ERROR_NOT_FOUND);
+        }
+#endif
+
+        VerifyOrExit(didHandle, error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
     }
-
-    mDisableStreamWrite = false;
-
-    error = (this->*handler)();
-
-    mDisableStreamWrite = true;
 
     if (error == OT_ERROR_NONE)
     {
@@ -1370,6 +1508,25 @@ otError NcpBase::WritePropertyValueIsFrame(uint8_t aHeader, spinel_prop_key_t aP
         SuccessOrExit(error = (this->*handler)());
         ExitNow(error = mEncoder.EndFrame());
     }
+
+#if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+    if (aPropKey >= SPINEL_PROP_VENDOR__BEGIN && aPropKey < SPINEL_PROP_VENDOR__END)
+    {
+        SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, aPropKey));
+
+        error = VendorGetPropertyHandler(aPropKey);
+
+        // An `OT_ERROR_NOT_FOUND` status from vendor handler indicates that
+        // it did not support the given property key. In that case, we fall
+        // through to prepare a `LAST_STATUS` response.
+
+        if (error != OT_ERROR_NOT_FOUND)
+        {
+            SuccessOrExit(error);
+            ExitNow(error = mEncoder.EndFrame());
+        }
+    }
+#endif
 
     if (aIsGetResponse)
     {
@@ -1566,7 +1723,7 @@ exit:
 
 otError NcpBase::GetPropertyHandler_PHY_ENABLED(void)
 {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         return mEncoder.WriteBool(otLinkRawIsEnabled(mInstance));
 #else
         return mEncoder.WriteBool(false);
@@ -1828,6 +1985,10 @@ otError NcpBase::GetPropertyHandler_CAPS(void)
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RAW));
+#endif
+
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_OPENTHREAD_LOG_METADATA));
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -2169,32 +2330,7 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_WATCHDOG(void)
 
 otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
 {
-    uint8_t logLevel = 0;
-
-    switch (otGetDynamicLogLevel(mInstance))
-    {
-    case OT_LOG_LEVEL_NONE:
-        logLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
-        break;
-
-    case OT_LOG_LEVEL_CRIT:
-        logLevel = SPINEL_NCP_LOG_LEVEL_CRIT;
-        break;
-
-    case OT_LOG_LEVEL_WARN:
-        logLevel = SPINEL_NCP_LOG_LEVEL_WARN;
-        break;
-
-    case OT_LOG_LEVEL_INFO:
-        logLevel = SPINEL_NCP_LOG_LEVEL_INFO;
-        break;
-
-    case OT_LOG_LEVEL_DEBG:
-        logLevel = SPINEL_NCP_LOG_LEVEL_DEBUG;
-        break;
-    }
-
-    return mEncoder.WriteUint8(logLevel);
+    return mEncoder.WriteUint8(ConvertLogLevel(otGetDynamicLogLevel(mInstance)));
 }
 
 otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
@@ -2222,6 +2358,9 @@ otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
         break;
 
     case SPINEL_NCP_LOG_LEVEL_NOTICE:
+        logLevel = OT_LOG_LEVEL_NOTE;
+        break;
+
     case SPINEL_NCP_LOG_LEVEL_INFO:
         logLevel = OT_LOG_LEVEL_INFO;
         break;
@@ -2306,3 +2445,26 @@ extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 }
+
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+
+extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list args;
+    char logString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE];
+    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+
+    va_start(args, aFormat);
+
+    if (vsnprintf(logString, sizeof(logString), aFormat, args) > 0)
+    {
+        if (ncp != NULL)
+        {
+            ncp->Log(aLogLevel, aLogRegion, logString);
+        }
+    }
+
+    va_end(args);
+}
+
+#endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)

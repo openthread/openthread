@@ -597,6 +597,8 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_APP 2
 /** Log output is handled by a platform defined function */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
+/** Log output for NCP goes to Spinel `STREAM_LOG` property (for CLI platform defined function is expected) */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL 4
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
@@ -1341,6 +1343,71 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+ *
+ * Define as 1 to enable attach backoff feature
+ *
+ * When this feature is enabled, an exponentially increasing backoff wait time is added between attach attempts.
+ * If device is sleepy, the radio will be put to sleep during the wait time. This ensures that a battery-powered sleepy
+ * end-device does not drain its battery by continuously searching for a parent to attach to (when there is no
+ * router/parent for it to attach).
+ *
+ * The backoff time starts from a minimum interval specified by `OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL`,
+ * and every attach attempt the wait time is doubled up to `OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL` which
+ * specifies the maximum wait time.
+ *
+ * Once the wait time reaches the maximum, a random jitter interval is added to it. The maximum value for jitter is
+ * specified by `OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL`. The random jitter is selected uniformly within
+ * range `[-JITTER, +JITTER]`. It is only added when the backoff wait interval is at maximum value.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+#define OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL
+ *
+ * Specifies the minimum backoff wait interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL 251
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL
+ *
+ * Specifies the maximum backoff wait interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL 1200000 // 1200 seconds = 20 minutes
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL
+ *
+ * Specifies the maximum jitter interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL 2000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
  *
  * Define as 1 to enable sending of a unicast MLE Announce message in response to a received Announce message from
@@ -1533,6 +1600,36 @@
  */
 #ifndef OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
 #define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode output buffer size in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 256
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+ *
+ * Define OpenThread diagnostic mode max command line arguments.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX 32
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode command line buffer size in bytes.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
 #endif
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

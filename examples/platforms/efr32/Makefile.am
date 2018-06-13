@@ -67,6 +67,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
+    -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control               \
     -Wno-unused-parameter                                                       \
     $(NULL)
 
@@ -111,6 +112,7 @@ nodist_libopenthread_efr32_a_SOURCES                                            
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_usart.c                                          \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/radio/rail_lib/hal/efr32/hal_efr.c                            \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/radio/rail_lib/hal/hal_common.c                               \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/plugin/plugin-common/fem-control/fem-control.c                    \
     $(NULL)
 
 noinst_HEADERS                                                                = \

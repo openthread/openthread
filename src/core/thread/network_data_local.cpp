@@ -345,8 +345,7 @@ otError Local::SendServerDataNotification(void)
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if ((mle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 && (mle.IsRouterRoleEnabled()) &&
-        (mle.GetRole() < OT_DEVICE_ROLE_ROUTER) &&
+    if (mle.IsFullThreadDevice() && mle.IsRouterRoleEnabled() && (mle.GetRole() < OT_DEVICE_ROLE_ROUTER) &&
         (mle.GetRouterTable().GetActiveRouterCount() < mle.GetRouterUpgradeThreshold()))
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);

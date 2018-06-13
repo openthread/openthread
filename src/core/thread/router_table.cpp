@@ -115,7 +115,7 @@ void RouterTable::UpdateAllocation(void)
     // build index map
     for (uint8_t i = 0; i <= Mle::kMaxRouterId; i++)
     {
-        if (IsAllocated(i))
+        if (IsAllocated(i) && mActiveRouterCount < Mle::kMaxRouters)
         {
             indexMap[i] = mActiveRouterCount++;
         }
@@ -193,24 +193,19 @@ void RouterTable::UpdateAllocation(void)
 Router *RouterTable::Allocate(void)
 {
     Router *rval         = NULL;
-    uint8_t numAllocated = 0;
     uint8_t numAvailable = 0;
     uint8_t freeBit;
 
     // count available router ids
     for (uint8_t i = 0; i <= Mle::kMaxRouterId; i++)
     {
-        if (IsAllocated(i))
-        {
-            numAllocated++;
-        }
-        else if (mRouterIdReuseDelay[i] == 0)
+        if (!IsAllocated(i) && mRouterIdReuseDelay[i] == 0)
         {
             numAvailable++;
         }
     }
 
-    VerifyOrExit(numAllocated < Mle::kMaxRouters && numAvailable > 0);
+    VerifyOrExit(mActiveRouterCount < Mle::kMaxRouters && numAvailable > 0);
 
     // choose available router id at random
     freeBit = Random::GetUint8InRange(0, numAvailable);
@@ -241,7 +236,8 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
 {
     Router *rval = NULL;
 
-    VerifyOrExit(aRouterId <= Mle::kMaxRouterId && !IsAllocated(aRouterId) && mRouterIdReuseDelay[aRouterId] == 0);
+    VerifyOrExit(aRouterId <= Mle::kMaxRouterId && mActiveRouterCount < Mle::kMaxRouters && !IsAllocated(aRouterId) &&
+                 mRouterIdReuseDelay[aRouterId] == 0);
 
     mAllocatedRouterIds[aRouterId / 8] |= 1 << (aRouterId % 8);
     UpdateAllocation();
@@ -478,7 +474,8 @@ Router *RouterTable::GetLeader(void)
 
 uint32_t RouterTable::GetLeaderAge(void) const
 {
-    return TimerMilli::MsecToSec(TimerMilli::GetNow() - mRouterIdSequenceLastUpdated);
+    return (mActiveRouterCount > 0) ? TimerMilli::MsecToSec(TimerMilli::GetNow() - mRouterIdSequenceLastUpdated)
+                                    : 0xffffffff;
 }
 
 uint8_t RouterTable::GetNeighborCount(void) const

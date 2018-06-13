@@ -311,6 +311,27 @@ enum
     SPINEL_NCP_LOG_LEVEL_DEBUG          = 7,
 };
 
+enum
+{
+    SPINEL_NCP_LOG_REGION_NONE          = 0,
+    SPINEL_NCP_LOG_REGION_OT_API        = 1,
+    SPINEL_NCP_LOG_REGION_OT_MLE        = 2,
+    SPINEL_NCP_LOG_REGION_OT_ARP        = 3,
+    SPINEL_NCP_LOG_REGION_OT_NET_DATA   = 4,
+    SPINEL_NCP_LOG_REGION_OT_ICMP       = 5,
+    SPINEL_NCP_LOG_REGION_OT_IP6        = 6,
+    SPINEL_NCP_LOG_REGION_OT_MAC        = 7,
+    SPINEL_NCP_LOG_REGION_OT_MEM        = 8,
+    SPINEL_NCP_LOG_REGION_OT_NCP        = 9,
+    SPINEL_NCP_LOG_REGION_OT_MESH_COP   = 10,
+    SPINEL_NCP_LOG_REGION_OT_NET_DIAG   = 11,
+    SPINEL_NCP_LOG_REGION_OT_PLATFORM   = 12,
+    SPINEL_NCP_LOG_REGION_OT_COAP       = 13,
+    SPINEL_NCP_LOG_REGION_OT_CLI        = 14,
+    SPINEL_NCP_LOG_REGION_OT_CORE       = 15,
+    SPINEL_NCP_LOG_REGION_OT_UTIL       = 16,
+};
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -439,6 +460,7 @@ enum
     SPINEL_CAP_CHANNEL_MONITOR          = (SPINEL_CAP_OPENTHREAD__BEGIN + 3),
     SPINEL_CAP_ERROR_RATE_TRACKING      = (SPINEL_CAP_OPENTHREAD__BEGIN + 4),
     SPINEL_CAP_CHANNEL_MANAGER          = (SPINEL_CAP_OPENTHREAD__BEGIN + 5),
+    SPINEL_CAP_OPENTHREAD_LOG_METADATA  = (SPINEL_CAP_OPENTHREAD__BEGIN + 6),
     SPINEL_CAP_OPENTHREAD__END          = 640,
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
@@ -1453,6 +1475,30 @@ typedef enum
     SPINEL_PROP_STREAM_RAW              = SPINEL_PROP_STREAM__BEGIN + 1, ///< [dD]
     SPINEL_PROP_STREAM_NET              = SPINEL_PROP_STREAM__BEGIN + 2, ///< [dD]
     SPINEL_PROP_STREAM_NET_INSECURE     = SPINEL_PROP_STREAM__BEGIN + 3, ///< [dD]
+
+    /// Log Stream
+    /** Format: `UD` (stream, read only)
+     *
+     * This property is a read-only streaming property which provides
+     * formatted log string from NCP. This property provides asynchronous
+     * `CMD_PROP_VALUE_IS` updates with a new log string and includes
+     * optional meta data.
+     *
+     *   `U`: The log string
+     *   `D`: Log metadata (optional).
+     *
+     * Any data after the log string is considered metadata and is OPTIONAL.
+     * Pretense of `SPINEL_CAP_OPENTHREAD_LOG_METADATA` capability
+     * indicates that OpenThread log metadata format is used as defined
+     * below:
+     *
+     *    `C`: Log level (as per definition in enumeration
+     *         `SPINEL_NCP_LOG_LEVEL_<level>`)
+     *    `i`: OpenThread Log region (as per definition in enumeration
+     *         `SPINEL_NCP_LOG_REGION_<region>).
+     *
+     */
+    SPINEL_PROP_STREAM_LOG              = SPINEL_PROP_STREAM__BEGIN + 4,
     SPINEL_PROP_STREAM__END             = 0x80,
 
     SPINEL_PROP_OPENTHREAD__BEGIN       = 0x1900,

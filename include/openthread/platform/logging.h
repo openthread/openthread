@@ -64,8 +64,9 @@ extern "C" {
 #define OT_LOG_LEVEL_NONE 0 ///< None
 #define OT_LOG_LEVEL_CRIT 1 ///< Critical
 #define OT_LOG_LEVEL_WARN 2 ///< Warning
-#define OT_LOG_LEVEL_INFO 3 ///< Info
-#define OT_LOG_LEVEL_DEBG 4 ///< Debug
+#define OT_LOG_LEVEL_NOTE 3 ///< Note
+#define OT_LOG_LEVEL_INFO 4 ///< Info
+#define OT_LOG_LEVEL_DEBG 5 ///< Debug
 
 /* note: The enum otLogRegion is found in 'openthread/types.h' */
 

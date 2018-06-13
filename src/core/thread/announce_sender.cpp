@@ -145,7 +145,6 @@ void AnnounceSender::CheckState(void)
     uint32_t         interval = kRouterTxInterval;
     uint32_t         period;
     Mac::ChannelMask channelMask;
-    char             string[Mac::ChannelMask::kInfoStringSize];
 
     switch (mle.GetRole())
     {
@@ -185,9 +184,7 @@ void AnnounceSender::CheckState(void)
     SendAnnounce(channelMask, 0, period, kMaxJitter);
 
     otLogInfoMle(GetInstance(), "Starting periodic MLE Announcements tx, period %u, mask %s", period,
-                 channelMask.ToString(string, sizeof(string)));
-
-    OT_UNUSED_VARIABLE(string);
+                 channelMask.ToString().AsCString());
 
 exit:
     return;

@@ -321,7 +321,6 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
     Mac::ChannelMask supportedBest;
     uint16_t         favoredOccupancy;
     uint16_t         supportedOccupancy;
-    char             string[Mac::ChannelMask::kInfoStringSize];
 
     if (monitor.GetSampleCount() <= kMinChannelMonitorSampleCount)
     {
@@ -337,9 +336,9 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
     supportedBest = monitor.FindBestChannels(mSupportedChannelMask, supportedOccupancy);
 
     otLogInfoUtil(GetInstance(), "ChannelManager: Best favored %s, occupancy 0x%04x",
-                  favoredBest.ToString(string, sizeof(string)), favoredOccupancy);
+                  favoredBest.ToString().AsCString(), favoredOccupancy);
     otLogInfoUtil(GetInstance(), "ChannelManager: Best overall %s, occupancy 0x%04x",
-                  supportedBest.ToString(string, sizeof(string)), supportedOccupancy);
+                  supportedBest.ToString().AsCString(), supportedOccupancy);
 
     // Prefer favored channels unless there is no favored channel,
     // or the occupancy rate of the best favored channel is worse
@@ -362,8 +361,6 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
 
     aNewChannel = ChooseRandomChannel(favoredBest);
     aOccupancy  = favoredOccupancy;
-
-    OT_UNUSED_VARIABLE(string);
 
 exit:
     return error;
@@ -487,26 +484,17 @@ exit:
 
 void ChannelManager::SetSupportedChannels(uint32_t aChannelMask)
 {
-    char string[Mac::ChannelMask::kInfoStringSize];
-
     mSupportedChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
 
     otLogInfoUtil(GetInstance(), "ChannelManager: Supported channels: %s",
-                  mSupportedChannelMask.ToString(string, sizeof(string)));
-
-    OT_UNUSED_VARIABLE(string);
+                  mSupportedChannelMask.ToString().AsCString());
 }
 
 void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 {
-    char string[Mac::ChannelMask::kInfoStringSize];
-
     mFavoredChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: Favored channels: %s",
-                  mFavoredChannelMask.ToString(string, sizeof(string)));
-
-    OT_UNUSED_VARIABLE(string);
+    otLogInfoUtil(GetInstance(), "ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
 }
 
 } // namespace Utils

@@ -630,6 +630,47 @@ public:
     uint8_t GetDeviceMode(void) const { return mDeviceMode; }
 
     /**
+     * This method sets the Device Mode as reported in the Mode TLV.
+     *
+     * @retval OT_ERROR_NONE          Successfully set the Mode TLV.
+     * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
+     *
+     */
+    otError SetDeviceMode(uint8_t aMode);
+
+    /**
+     * This method indicates whether or not the device is rx-on-when-idle.
+     *
+     * @returns TRUE if rx-on-when-idle, FALSE otherwise.
+     *
+     */
+    bool IsRxOnWhenIdle(void) const { return (mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0; }
+
+    /**
+     * This method indicates whether or not the device is a Full Thread Device.
+     *
+     * @returns TRUE if a Full Thread Device, FALSE otherwise.
+     *
+     */
+    bool IsFullThreadDevice(void) const { return (mDeviceMode & ModeTlv::kModeFFD) != 0; }
+
+    /**
+     * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
+     *
+     * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
+     *
+     */
+    bool IsSecureDataRequest(void) const { return (mDeviceMode & ModeTlv::kModeSecureDataRequest) != 0; }
+
+    /**
+     * This method indicates whether or not the device requests Full Network Data.
+     *
+     * @returns TRUE if requests Full Network Data, FALSE otherwise.
+     *
+     */
+    bool IsFullNetworkData(void) const { return (mDeviceMode & ModeTlv::kModeFullNetworkData) != 0; }
+
+    /**
      * This method indicates whether or not the device is a Minimal End Device.
      *
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
@@ -640,15 +681,6 @@ public:
         return (mDeviceMode & (ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle)) !=
                (ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle);
     }
-
-    /**
-     * This method sets the Device Mode as reported in the Mode TLV.
-     *
-     * @retval OT_ERROR_NONE          Successfully set the Mode TLV.
-     * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
-     *
-     */
-    otError SetDeviceMode(uint8_t aMode);
 
     /**
      * This method returns a pointer to the Mesh Local Prefix.
@@ -966,6 +998,7 @@ protected:
     {
         kAttachStateIdle,                ///< Not currently searching for a parent.
         kAttachStateSynchronize,         ///< Looking to synchronize with a parent (after reset).
+        kAttachStateProcessAnnounce,     ///< Waiting to process a received Announce (to switch channel/pan-id).
         kAttachStateStart,               ///< Starting to look for a parent.
         kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
         kAttachStateParentRequestReed,   ///< Searching for Routers or REEDs to attach to.
@@ -1487,6 +1520,18 @@ private:
     {
         kMleMessagePriority = Message::kPriorityHigh,
         kMleHopLimit        = 255,
+
+        // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
+        // All timer intervals are converted to milliseconds.
+        kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u),
+        kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u),
+        kParentSearchJitterInterval  = (15 * 1000u),
+        kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
+
+        // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
+        kAttachBackoffMinInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL,
+        kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
+        kAttachBackoffJitter      = OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL,
     };
 
     enum ParentRequestType
@@ -1494,17 +1539,6 @@ private:
         kParentRequestTypeRouters,         ///< Parent Request to all routers.
         kParentRequestTypeRoutersAndReeds, ///< Parent Request to all routers and REEDs.
     };
-
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
-    enum
-    {
-        // All timer intervals are converted to milliseconds
-        kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u),
-        kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u),
-        kParentSearchJitterInterval  = (15 * 1000u),
-        kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
-    };
-#endif
 
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,
                        uint32_t               aFrameCounter,
@@ -1533,7 +1567,9 @@ private:
     otError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void    ProcessAnnounce(void);
 
+    uint32_t GetAttachStartDelay(void) const;
     otError  SendParentRequest(ParentRequestType aType);
     otError  SendChildIdRequest(void);
     otError  SendOrphanAnnounce(void);
@@ -1612,8 +1648,9 @@ private:
 #endif
 
     uint8_t  mAnnounceChannel;
-    uint8_t  mPreviousChannel;
-    uint16_t mPreviousPanId;
+    uint8_t  mAlternateChannel;
+    uint16_t mAlternatePanId;
+    uint64_t mAlternateTimestamp;
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 

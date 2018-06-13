@@ -182,18 +182,18 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 channel
  *
- * This function succeeds only when Thread protocols are disabled.  A successful
- * call to this function invalidates the Active and Pending Operational Datasets in
- * non-volatile memory.
+ * This function succeeds only when Thread protocols are disabled.  A successful call to this function invalidates the
+ * Active and Pending Operational Datasets in non-volatile memory.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aChannel  The IEEE 802.15.4 channel.
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aChannel    The IEEE 802.15.4 channel.
  *
  * @retval  OT_ERROR_NONE           Successfully set the channel.
  * @retval  OT_ERROR_INVALID_ARGS   If @p aChnanel is not in the range [11, 26].
  * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otLinkGetChannel
+ *
  */
 OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
 
@@ -203,13 +203,14 @@ OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the IEEE 802.15.4 Extended Address.
+ *
  */
 OTAPI const otExtAddress *OTCALL otLinkGetExtendedAddress(otInstance *aInstance);
 
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
  *
- * This function succeedsm only when Thread protocols are disabled.
+ * This function succeeds only when Thread protocols are disabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address.
@@ -238,24 +239,25 @@ OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExt
  * @returns The IEEE 802.15.4 PAN ID.
  *
  * @sa otLinkSetPanId
+ *
  */
 OTAPI otPanId OTCALL otLinkGetPanId(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 PAN ID.
  *
- * This function succeeds only when Thread protocols are disabled.  A successful
- * call to this function also invalidates the Active and Pending Operational Datasets in
- * non-volatile memory.
+ * This function succeeds only when Thread protocols are disabled.  A successful call to this function also invalidates
+ * the Active and Pending Operational Datasets in non-volatile memory.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPanId    The IEEE 802.15.4 PAN ID.
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aPanId       The IEEE 802.15.4 PAN ID.
  *
  * @retval OT_ERROR_NONE           Successfully set the PAN ID.
  * @retval OT_ERROR_INVALID_ARGS   If aPanId is not in the range [0, 65534].
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otLinkGetPanId
+ *
  */
 OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
 
@@ -267,6 +269,7 @@ OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
  * @returns  The data poll period of sleepy end device in milliseconds.
  *
  * @sa otLinkSetPollPeriod
+ *
  */
 OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
 
@@ -274,12 +277,13 @@ OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
  * Set the data poll period for sleepy end device.
  *
  * @note This function updates only poll period of sleepy end device. To update child timeout the function
- *       otSetChildTimeout() shall be called.
+ *       `otSetChildTimeout()` shall be called.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period in milliseconds.
  *
  * @sa otLinkGetPollPeriod
+ *
  */
 OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
@@ -289,6 +293,7 @@ OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPerio
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the IEEE 802.15.4 Short Address.
+ *
  */
 OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
 
@@ -563,6 +568,7 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the MAC layer counters.
+ *
  */
 OTAPI const otMacCounters *OTCALL otLinkGetCounters(otInstance *aInstance);
 

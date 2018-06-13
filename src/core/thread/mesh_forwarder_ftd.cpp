@@ -592,14 +592,18 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
         iter.Advance();
         mIndirectStartingChild = iter.GetChild();
 
-        if (aError == OT_ERROR_NONE)
+        switch (aError)
         {
+        case OT_ERROR_NONE:
             child->ResetIndirectTxAttempts();
-        }
-        else
-        {
-            child->IncrementIndirectTxAttempts();
+            break;
 
+        case OT_ERROR_NO_ACK:
+            child->IncrementIndirectTxAttempts();
+            // fall through
+
+        case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+        case OT_ERROR_ABORT:
             if (child->GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts)
             {
                 // We save the frame counter, key id, and data sequence number of
@@ -634,6 +638,12 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
 
             mMessageNextOffset = mSendMessage->GetLength();
 #endif
+
+            break;
+
+        default:
+            assert(false);
+            break;
         }
     }
 
@@ -913,14 +923,9 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        char srcStringBuffer[Mac::Address::kAddressStringSize];
-
         otLogInfoMac(GetInstance(), "Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s",
-                     otThreadErrorToString(error), aFrameLength,
-                     aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+                     otThreadErrorToString(error), aFrameLength, aMacSource.ToString().AsCString(),
                      aLinkInfo.mLinkSecurity ? "yes" : "no");
-
-        OT_UNUSED_VARIABLE(srcStringBuffer);
 
         if (message != NULL)
         {

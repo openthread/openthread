@@ -33,8 +33,8 @@
 #include "ncp_spi.hpp"
 
 #include <openthread/ncp.h>
-#include <openthread/platform/spi-slave.h>
 #include <openthread/platform/misc.h>
+#include <openthread/platform/spi-slave.h>
 
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
@@ -42,11 +42,6 @@
 #include "common/instance.hpp"
 #include "common/new.hpp"
 #include "net/ip6.hpp"
-
-#define SPI_RESET_FLAG          0x80
-#define SPI_CRC_FLAG            0x40
-#define SPI_PATTERN_VALUE       0x02
-#define SPI_PATTERN_MASK        0x03
 
 #if OPENTHREAD_ENABLE_NCP_SPI
 
@@ -59,10 +54,10 @@ static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
-    NcpSpi *ncpSpi = NULL;
+    NcpSpi *  ncpSpi   = NULL;
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    ncpSpi = new(&sNcpRaw) NcpSpi(instance);
+    ncpSpi = new (&sNcpRaw) NcpSpi(instance);
 
     if (ncpSpi == NULL || ncpSpi != NcpBase::GetNcpInstance())
     {
@@ -72,59 +67,31 @@ extern "C" void otNcpInit(otInstance *aInstance)
 
 #endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
 
-static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
+NcpSpi::NcpSpi(Instance *aInstance)
+    : NcpBase(aInstance)
+    , mTxState(kTxStateIdle)
+    , mHandlingRxFrame(false)
+    , mResetFlag(true)
+    , mPrepareTxFrameTask(*aInstance, &NcpSpi::PrepareTxFrame, this)
+    , mSendFrameLength(0)
 {
-    header[0] = value;
-}
+    SpiFrame sendFrame(mSendFrame);
+    SpiFrame emptyFullAccept(mEmptySendFrameFullAccept);
+    SpiFrame emptyZeroAccept(mEmptySendFrameZeroAccept);
 
-static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
-{
-    header[1] = ((len >> 0) & 0xff);
-    header[2] = ((len >> 8) & 0xff);
-}
+    sendFrame.SetHeaderFlagByte(/* aResetFlag */ true);
+    sendFrame.SetHeaderAcceptLen(0);
+    sendFrame.SetHeaderDataLen(0);
 
-static void spi_header_set_data_len(uint8_t *header, uint16_t len)
-{
-    header[3] = ((len >> 0) & 0xff);
-    header[4] = ((len >> 8) & 0xff);
-}
+    emptyFullAccept.SetHeaderFlagByte(/* aResetFlag */ true);
+    emptyFullAccept.SetHeaderAcceptLen(kSpiBufferSize - kSpiHeaderSize);
+    emptyFullAccept.SetHeaderDataLen(0);
 
-static uint8_t spi_header_get_flag_byte(const uint8_t *header)
-{
-    return header[0];
-}
-
-static uint16_t spi_header_get_accept_len(const uint8_t *header)
-{
-    return ( header[1] + static_cast<uint16_t>(header[2] << 8) );
-}
-
-static uint16_t spi_header_get_data_len(const uint8_t *header)
-{
-    return ( header[3] + static_cast<uint16_t>(header[4] << 8) );
-}
-
-NcpSpi::NcpSpi(Instance *aInstance) :
-    NcpBase(aInstance),
-    mTxState(kTxStateIdle),
-    mHandlingRxFrame(false),
-    mResetFlag(true),
-    mPrepareTxFrameTask(*aInstance, &NcpSpi::PrepareTxFrame, this),
-    mSendFrameLen(0)
-{
-    memset(mSendFrame, 0, kSpiHeaderLength);
-    memset(mEmptySendFrameZeroAccept, 0, kSpiHeaderLength);
-    memset(mEmptySendFrameFullAccept, 0, kSpiHeaderLength);
+    emptyZeroAccept.SetHeaderFlagByte(/* aResetFlag */ true);
+    emptyZeroAccept.SetHeaderAcceptLen(0);
+    emptyZeroAccept.SetHeaderDataLen(0);
 
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToTxBuffer, this);
-
-    spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG | SPI_PATTERN_VALUE);
-    spi_header_set_flag_byte(mEmptySendFrameZeroAccept, SPI_RESET_FLAG | SPI_PATTERN_VALUE);
-    spi_header_set_flag_byte(mEmptySendFrameFullAccept, SPI_RESET_FLAG | SPI_PATTERN_VALUE);
-
-    spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - kSpiHeaderLength);
-    spi_header_set_accept_len(mEmptySendFrameFullAccept, sizeof(mReceiveFrame) - kSpiHeaderLength);
-    spi_header_set_accept_len(mEmptySendFrameZeroAccept, 0);
 
     otPlatSpiSlaveEnable(&NcpSpi::SpiTransactionComplete, &NcpSpi::SpiTransactionProcess, this);
 
@@ -132,109 +99,122 @@ NcpSpi::NcpSpi(Instance *aInstance) :
     // make sure that the host processor knows that our
     // reset flag was set.
 
-    otPlatSpiSlavePrepareTransaction(mEmptySendFrameZeroAccept, kSpiHeaderLength, mEmptyReceiveFrame, kSpiHeaderLength,
-                                     true);
+    otPlatSpiSlavePrepareTransaction(mEmptySendFrameZeroAccept, kSpiHeaderSize, mEmptyReceiveFrame, kSpiHeaderSize,
+                                     /* aRequestTras */ true);
 }
 
-bool NcpSpi::SpiTransactionComplete(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
-                                    uint16_t aInputBufLen, uint16_t aTransactionLength)
+bool NcpSpi::SpiTransactionComplete(void *   aContext,
+                                    uint8_t *aOutputBuf,
+                                    uint16_t aOutputLen,
+                                    uint8_t *aInputBuf,
+                                    uint16_t aInputLen,
+                                    uint16_t aTransLen)
 {
-    return static_cast<NcpSpi *>(aContext)->SpiTransactionComplete(aOutputBuf, aOutputBufLen, aInputBuf, aInputBufLen,
-                                                           aTransactionLength);
+    NcpSpi *ncp = reinterpret_cast<NcpSpi *>(aContext);
+
+    return ncp->SpiTransactionComplete(aOutputBuf, aOutputLen, aInputBuf, aInputLen, aTransLen);
 }
 
-bool NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
-                                    uint16_t aInputBufLen, uint16_t aTransactionLength)
+bool NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf,
+                                    uint16_t aOutputLen,
+                                    uint8_t *aInputBuf,
+                                    uint16_t aInputLen,
+                                    uint16_t aTransLen)
 {
-    // This may be executed from an interrupt context.
-    // Must return as quickly as possible.
+    // This can be executed from an interrupt context, therefore we cannot
+    // use any of OpenThread APIs here. If further processing is needed,
+    // returned value `shouldProcess` is set to `true` to indicate to
+    // platform SPI slave driver to invoke `SpiTransactionProcess()` callback
+    // which unlike this callback must be called from the same OS context
+    // that OpenThread APIs/callbacks are executed.
 
-    uint16_t rx_data_len = 0;
-    uint16_t rx_accept_len = 0;
-    uint16_t tx_data_len = 0;
-    uint16_t tx_accept_len = 0;
-    bool shouldProcess = false;
+    uint16_t transDataLen;
+    bool     shouldProcess = false;
+    SpiFrame outputFrame(aOutputBuf);
+    SpiFrame inputFrame(aInputBuf);
+    SpiFrame sendFrame(mSendFrame);
 
-    // TODO: Check `PATTERN` bits of `HDR` and ignore frame if not set.
-    //       Holding off on implementing this so as to not cause immediate
-    //       compatibility problems, even though it is required by the spec.
+    VerifyOrExit((aTransLen >= kSpiHeaderSize) && (aInputLen >= kSpiHeaderSize) && (aOutputLen >= kSpiHeaderSize));
+    VerifyOrExit(inputFrame.IsValid() && outputFrame.IsValid());
 
-    if (aTransactionLength >= kSpiHeaderLength)
+    transDataLen = aTransLen - kSpiHeaderSize;
+
+    if (!mHandlingRxFrame)
     {
-        if (aOutputBufLen >= kSpiHeaderLength)
-        {
-            rx_accept_len = spi_header_get_accept_len(aOutputBuf);
-            tx_data_len = spi_header_get_data_len(aOutputBuf);
-            (void)spi_header_get_flag_byte(aOutputBuf);
-        }
+        uint16_t rxDataLen = inputFrame.GetHeaderDataLen();
 
-        if (aInputBufLen >= kSpiHeaderLength)
-        {
-            rx_data_len = spi_header_get_data_len(aInputBuf);
-            tx_accept_len = spi_header_get_accept_len(aInputBuf);
-        }
+        // A new frame is successfully received if input frame
+        // indicates that there is data and the "data len" is not
+        // larger than than the "accept len" we provided in the
+        // exchanged output frame.
 
-        if (!mHandlingRxFrame &&
-            (rx_data_len > 0) &&
-            (rx_data_len <= aTransactionLength - kSpiHeaderLength) &&
-            (rx_data_len <= rx_accept_len))
+        if ((rxDataLen > 0) && (rxDataLen <= transDataLen) && (rxDataLen <= outputFrame.GetHeaderAcceptLen()))
         {
             mHandlingRxFrame = true;
-            shouldProcess = true;
+            shouldProcess    = true;
         }
+    }
 
-        if ((mTxState == kTxStateSending) &&
-            (tx_data_len > 0) &&
-            (tx_data_len <= aTransactionLength - kSpiHeaderLength) &&
-            (tx_data_len <= tx_accept_len))
+    if (mTxState == kTxStateSending)
+    {
+        uint16_t txDataLen = outputFrame.GetHeaderDataLen();
+
+        // Frame transmission is successful if master indicates
+        // in the input frame that it could accept the frame
+        // length that was exchanged, i.e., the "data len" in
+        // the output frame is smaller than or equal to "accept
+        // len" in the received input frame from master.
+
+        if ((txDataLen > 0) && (txDataLen <= transDataLen) && (txDataLen <= inputFrame.GetHeaderAcceptLen()))
         {
-            mTxState = kTxStateHandlingSendDone;
+            mTxState      = kTxStateHandlingSendDone;
             shouldProcess = true;
         }
     }
 
-    if (mResetFlag && (aTransactionLength > 0) && (aOutputBufLen > 0))
+exit:
+    // Determine the input and output frames to prepare a new transaction.
+
+    if (mResetFlag && (aTransLen > 0) && (aOutputLen > 0))
     {
-        // Clear the reset flag.
         mResetFlag = false;
-        spi_header_set_flag_byte(mSendFrame, SPI_PATTERN_VALUE);
-        spi_header_set_flag_byte(mEmptySendFrameZeroAccept, SPI_PATTERN_VALUE);
-        spi_header_set_flag_byte(mEmptySendFrameFullAccept, SPI_PATTERN_VALUE);
+        sendFrame.SetHeaderFlagByte(/*aResetFlag */ false);
+        SpiFrame(mEmptySendFrameFullAccept).SetHeaderFlagByte(/*aResetFlag */ false);
+        SpiFrame(mEmptySendFrameZeroAccept).SetHeaderFlagByte(/*aResetFlag */ false);
     }
 
     if (mTxState == kTxStateSending)
     {
         aOutputBuf = mSendFrame;
-        aOutputBufLen = mSendFrameLen;
+        aOutputLen = mSendFrameLength;
     }
     else
     {
-        aOutputBuf = (mHandlingRxFrame) ? mEmptySendFrameZeroAccept : mEmptySendFrameFullAccept;
-        aOutputBufLen = kSpiHeaderLength;
+        aOutputBuf = mHandlingRxFrame ? mEmptySendFrameZeroAccept : mEmptySendFrameFullAccept;
+        aOutputLen = kSpiHeaderSize;
     }
 
     if (mHandlingRxFrame)
     {
         aInputBuf = mEmptyReceiveFrame;
-        aInputBufLen = kSpiHeaderLength;
-        spi_header_set_accept_len(mSendFrame, 0);
+        aInputLen = kSpiHeaderSize;
     }
     else
     {
         aInputBuf = mReceiveFrame;
-        aInputBufLen = sizeof(mReceiveFrame);
-        spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - kSpiHeaderLength);
+        aInputLen = kSpiBufferSize;
     }
 
-    otPlatSpiSlavePrepareTransaction(aOutputBuf, aOutputBufLen, aInputBuf, aInputBufLen,
-                                     (mTxState == kTxStateSending));
+    sendFrame.SetHeaderAcceptLen(aInputLen - kSpiHeaderSize);
+
+    otPlatSpiSlavePrepareTransaction(aOutputBuf, aOutputLen, aInputBuf, aInputLen, (mTxState == kTxStateSending));
 
     return shouldProcess;
 }
 
 void NcpSpi::SpiTransactionProcess(void *aContext)
 {
-    static_cast<NcpSpi *>(aContext)->SpiTransactionProcess();
+    reinterpret_cast<NcpSpi *>(aContext)->SpiTransactionProcess();
 }
 
 void NcpSpi::SpiTransactionProcess(void)
@@ -250,8 +230,10 @@ void NcpSpi::SpiTransactionProcess(void)
     }
 }
 
-void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
-                                        NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer)
+void NcpSpi::HandleFrameAddedToTxBuffer(void *                   aContext,
+                                        NcpFrameBuffer::FrameTag aTag,
+                                        NcpFrameBuffer::Priority aPriority,
+                                        NcpFrameBuffer *         aNcpFrameBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpFrameBuffer);
     OT_UNUSED_VARIABLE(aTag);
@@ -260,11 +242,12 @@ void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag
     static_cast<NcpSpi *>(aContext)->mPrepareTxFrameTask.Post();
 }
 
-otError NcpSpi::PrepareNextSpiSendFrame(void)
+void NcpSpi::PrepareNextSpiSendFrame(void)
 {
-    otError errorCode = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t frameLength;
     uint16_t readLength;
+    SpiFrame sendFrame(mSendFrame);
 
     VerifyOrExit(!mTxFrameBuffer.IsEmpty());
 
@@ -273,38 +256,36 @@ otError NcpSpi::PrepareNextSpiSendFrame(void)
         otPlatWakeHost();
     }
 
-    SuccessOrExit(errorCode = mTxFrameBuffer.OutFrameBegin());
+    SuccessOrExit(error = mTxFrameBuffer.OutFrameBegin());
 
     frameLength = mTxFrameBuffer.OutFrameGetLength();
-    assert(frameLength <= sizeof(mSendFrame) - kSpiHeaderLength);
-
-    spi_header_set_data_len(mSendFrame, frameLength);
+    assert(frameLength <= kSpiBufferSize - kSpiHeaderSize);
 
     // The "accept length" in `mSendFrame` is already updated based
     // on current state of receive. It is changed either from the
     // `SpiTransactionComplete()` callback or from `HandleRxFrame()`.
 
-    readLength = mTxFrameBuffer.OutFrameRead(frameLength, mSendFrame + kSpiHeaderLength);
+    readLength = mTxFrameBuffer.OutFrameRead(frameLength, sendFrame.GetData());
     assert(readLength == frameLength);
 
-    mSendFrameLen = frameLength + kSpiHeaderLength;
+    sendFrame.SetHeaderDataLen(frameLength);
+    mSendFrameLength = frameLength + kSpiHeaderSize;
 
     mTxState = kTxStateSending;
 
     // Prepare new transaction by using `mSendFrame` as the output
-    // buffer while keeping the input buffer unchanged.
+    // frame while keeping the input frame unchanged.
 
-    errorCode = otPlatSpiSlavePrepareTransaction(mSendFrame, mSendFrameLen, NULL, 0, true);
+    error = otPlatSpiSlavePrepareTransaction(mSendFrame, mSendFrameLength, NULL, 0, /* aRequestTrans */ true);
 
-    if (errorCode == OT_ERROR_BUSY)
+    if (error == OT_ERROR_BUSY)
     {
-        // Being busy is OK. We will get the transaction
-        // set up properly when the current transaction
-        // is completed.
-        errorCode = OT_ERROR_NONE;
+        // Being busy is OK. We will get the transaction set up
+        // properly when the current transaction is completed.
+        error = OT_ERROR_NONE;
     }
 
-    if (errorCode != OT_ERROR_NONE)
+    if (error != OT_ERROR_NONE)
     {
         mTxState = kTxStateIdle;
         mPrepareTxFrameTask.Post();
@@ -314,7 +295,7 @@ otError NcpSpi::PrepareNextSpiSendFrame(void)
     mTxFrameBuffer.OutFrameRemove();
 
 exit:
-    return errorCode;
+    return;
 }
 
 void NcpSpi::PrepareTxFrame(Tasklet &aTasklet)
@@ -347,8 +328,11 @@ void NcpSpi::PrepareTxFrame(void)
 
 void NcpSpi::HandleRxFrame(void)
 {
+    SpiFrame recvFrame(mReceiveFrame);
+    SpiFrame sendFrame(mSendFrame);
+
     // Pass the received frame to base class to process.
-    HandleReceive(mReceiveFrame + kSpiHeaderLength, spi_header_get_data_len(mReceiveFrame));
+    HandleReceive(recvFrame.GetData(), recvFrame.GetHeaderDataLen());
 
     // The order of operations below is important. We should clear
     // the `mHandlingRxFrame` before checking `mTxState` and possibly
@@ -371,10 +355,10 @@ void NcpSpi::HandleRxFrame(void)
 
     if (mTxState != kTxStateSending)
     {
-        spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - kSpiHeaderLength);
+        sendFrame.SetHeaderAcceptLen(kSpiBufferSize - kSpiHeaderSize);
 
-        otPlatSpiSlavePrepareTransaction(mEmptySendFrameFullAccept, kSpiHeaderLength, mReceiveFrame,
-                                         sizeof(mReceiveFrame), false);
+        otPlatSpiSlavePrepareTransaction(mEmptySendFrameFullAccept, kSpiHeaderSize, mReceiveFrame, kSpiBufferSize,
+                                         /* aRequestTrans */ false);
 
         // No need to check the error status. Getting `OT_ERROR_BUSY`
         // is OK as everything will be set up properly from callback when
@@ -382,7 +366,7 @@ void NcpSpi::HandleRxFrame(void)
     }
 }
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
 #endif // OPENTHREAD_ENABLE_NCP_SPI

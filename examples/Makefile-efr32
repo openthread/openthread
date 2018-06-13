@@ -57,16 +57,21 @@ AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST)
 
 #
 # Differentiate between boards
+# - BRD4304A / SLWSTK6000B / MGM12P Module
 # - BRD4161A / SLWSTK6000B / Wireless Starter Kit
 # - BRD4166A / SLTB004A / Thunderboard Sense 2
 #
+ifeq ($(BOARD),BRD4304A)
+MCU = EFR32MG12P432F1024GM48
+else
 ifeq ($(BOARD),BRD4161A)
 MCU = EFR32MG12P432F1024GL125
 else
 ifeq ($(BOARD),BRD4166A)
 MCU = EFR32MG12P332F1024GL125
 else
-$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4161A or BRD4166A) )
+$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4304A, BRD4161A or BRD4166A) )
+endif
 endif
 endif
 
@@ -80,11 +85,12 @@ EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suit
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.2/platform/Device/SiliconLabs/EFR32MG12P/Include
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/inc
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include/mbedtls
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32/
+HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(shell echo $(BOARD) | tr A-Z a-z)
 
 COMMONCFLAGS                   := \
     -fdata-sections               \
@@ -93,6 +99,7 @@ COMMONCFLAGS                   := \
     -g                            \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
+    -I$(HAL_CONF_DIR)             \
     -D$(MCU)                      \
     $(NULL)
 

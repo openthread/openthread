@@ -28,7 +28,9 @@
 
 /**
  * @file
+ * @brief
  *   This file defines a generic OpenThread BLE driver HOST interface.
+ *
  */
 
 #ifndef OT_PLATFORM_BLE_H_
@@ -43,8 +45,7 @@ extern "C" {
 #include <openthread/types.h>
 
 /**
- * @defgroup ble BLE Host
- * @ingroup platform
+ * @addtogroup plat-ble
  *
  * @brief
  *   This module includes the platform abstraction for BLE Host communication.
@@ -850,9 +851,9 @@ otError otPlatBleGattClientCharacteristicsDiscover(otInstance *aInstance, uint16
  * The BLE driver calls this method to notify OpenThread that GATT Characteristic
  * Discovery of a service has been done.
  *
- * @note This function shall be used only for GATT Client.
- *
  * In case of success, all elements inside @p aChars should have a valid mHandleValue value.
+ *
+ * @note This function shall be used only for GATT Client.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aChars     A pointer to discovered characteristic list.

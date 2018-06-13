@@ -45,6 +45,7 @@
         OPENTHREAD_FTD=1;
         HAVE_STDBOOL_H=1;
         HAVE_STDINT_H=1;
+        OT_STRING_WINDOWS_WORKAROUND=1;
         OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
@@ -53,7 +54,7 @@
         ..\..\examples\drivers\windows\include;
         ..\..\src\core;
         ..\..\third_party\mbedtls;
-        ..\..\third_party\mbedtls\repo.patched\include;
+        ..\..\third_party\mbedtls\repo\include;
         ..\..\examples\drivers\windows\include_c99;
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
@@ -92,6 +93,7 @@
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\notifier.cpp" />
     <ClCompile Include="..\..\src\core\common\settings.cpp" />
+    <ClCompile Include="..\..\src\core\common\string.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
     <ClCompile Include="..\..\src\core\common\timer.cpp" />
     <ClCompile Include="..\..\src\core\common\tlvs.cpp" />
@@ -201,6 +203,7 @@
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\notifier.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />
+    <ClInclude Include="..\..\src\core\common\string.hpp" />
     <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
     <ClInclude Include="..\..\src\core\common\timer.hpp" />
     <ClInclude Include="..\..\src\core\common\tlvs.hpp" />
