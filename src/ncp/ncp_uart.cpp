@@ -284,33 +284,34 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 {
     char hexbuf[128];
     uint16_t i = 0;
+    int offset = 0;
 
     super_t::IncrementFrameErrorCounter();
 
+    assert(aBufLength > 0);
+
     // We can get away with sprintf because we know
     // `hexbuf` is large enough.
-    snprintf(hexbuf, sizeof(hexbuf), "Framing error %d: [", aError);
+    offset = snprintf(hexbuf, sizeof(hexbuf), "Framing error %d: [%02X", aError, aBuf[0]);
 
-    // Write out the first part of our log message.
-    otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf), static_cast<int>(strlen(hexbuf)));
-
-    // The first '3' comes from the trailing "]\n\000" at the end o the string.
+    // The first '3' comes from the trailing "]\n\0" at the end o the string.
     // The second '3' comes from the length of two hex digits and a space.
-    for (i = 0; (i < aBufLength) && (i < (sizeof(hexbuf) - 3) / 3); i++)
+    for (i = 1; i < aBufLength && offset < static_cast<int>(sizeof(hexbuf) - 3 - 3); i++)
     {
         // We can get away with sprintf because we know
         // `hexbuf` is large enough, based on our calculations
         // above.
-        snprintf(&hexbuf[i * 3], sizeof(hexbuf) - i * 3, " %02X", static_cast<uint8_t>(aBuf[i]));
+        offset += snprintf(hexbuf + offset, sizeof(hexbuf) - offset, " %02X", aBuf[i]);
     }
 
     // Append a final closing bracket and newline character
     // so our log line looks nice.
-    snprintf(&hexbuf[i * 3], sizeof(hexbuf) - i * 3, "]\n");
+    offset += snprintf(hexbuf + offset, sizeof(hexbuf) - offset, "]\n");
+    assert(offset < static_cast<int>(sizeof(hexbuf)));
 
     // Write out the second part of our log message.
     // We skip the first byte since it has a space in it.
-    otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
+    otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf), offset + 1);
 }
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER

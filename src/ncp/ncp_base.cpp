@@ -2434,11 +2434,13 @@ extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
 
     if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, aArgs)) > 0)
     {
-        if (charsWritten > static_cast<int>(sizeof(logString) - 1))
+        if (charsWritten >= static_cast<int>(sizeof(logString)))
         {
             charsWritten = static_cast<int>(sizeof(logString) - 1);
         }
 
+        // attach terminator
+        logString[charsWritten++] = '\0';
         otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(logString), charsWritten);
     }
 
