@@ -1084,12 +1084,12 @@ void Mac::BeginTransmit(void)
     // Disable CCA for the last attempt
     if (mTransmitAttempts == (sendFrame.GetMaxTxAttempts() - 1))
     {
-        sendFrame.mIsCcaEnabled = false;
+        sendFrame.SetIsCcaEnabled(false);
     }
     else
 #endif
     {
-        sendFrame.mIsCcaEnabled = true;
+        sendFrame.SetIsCcaEnabled(true);
     }
 
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
@@ -1147,7 +1147,7 @@ void Mac::BeginTransmit(void)
 
     if (mPcapCallback)
     {
-        sendFrame.mDidTX = true;
+        sendFrame.SetDidTx(true);
         mPcapCallback(&sendFrame, mPcapCallbackContext);
     }
 
@@ -1597,8 +1597,6 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
     const ExtAddress *extAddress;
     Crypto::AesCcm    aesCcm;
 
-    aFrame.SetSecurityValid(false);
-
     if (aFrame.GetSecurityEnabled() == false)
     {
         ExitNow();
@@ -1723,8 +1721,6 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
         }
     }
 
-    aFrame.SetSecurityValid(true);
-
 exit:
     return error;
 }
@@ -1770,11 +1766,9 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     VerifyOrExit(aFrame != NULL, error = OT_ERROR_NO_FRAME_RECEIVED);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
 
-    aFrame->SetSecurityValid(false);
-
     if (mPcapCallback)
     {
-        aFrame->mDidTX = false;
+        aFrame->SetDidTx(false);
         mPcapCallback(aFrame, mPcapCallbackContext);
     }
 
@@ -1847,7 +1841,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         // override with the rssi in setting
         if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
-            aFrame->mRssi = rssi;
+            aFrame->SetRssi(rssi);
         }
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
@@ -1912,7 +1906,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
-        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mRssi);
+        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
 
         if (aFrame->GetSecurityEnabled() == true)
         {

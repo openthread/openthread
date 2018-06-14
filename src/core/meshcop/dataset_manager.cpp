@@ -204,7 +204,7 @@ void DatasetManager::HandleTimer(void)
         const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.Get(Tlv::kActiveTimestamp));
         const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
-        if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) >= 0)
+        if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) == 0)
         {
             // stop registration attempts during dataset transition
             ExitNow();
@@ -450,7 +450,11 @@ void PendingDataset::Clear(void)
 
 void PendingDataset::ClearNetwork(void)
 {
-    Restore();
+    Dataset dataset(mLocal.GetType());
+
+    mTimestamp.Init();
+    mTimestampValid = false;
+    DatasetManager::Set(dataset);
 }
 
 otError PendingDataset::Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)

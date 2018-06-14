@@ -902,23 +902,6 @@ public:
     void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
 
     /**
-     * This method indicates whether or not frame security was enabled and passed security validation.
-     *
-     * @retval TRUE   Frame security was enabled and passed security validation.
-     * @retval FALSE  Frame security was not enabled or did not pass security validation.
-     *
-     */
-    bool GetSecurityValid(void) const { return mSecurityValid; }
-
-    /**
-     * This method sets the security valid attribute.
-     *
-     * @param[in]  aSecurityValid  TRUE if frame security was enabled and passed security validation, FALSE otherwise.
-     *
-     */
-    void SetSecurityValid(bool aSecurityValid) { mSecurityValid = aSecurityValid; }
-
-    /**
      * This method indicates whether or not the frame is a retransmission.
      *
      * @retval TRUE   Frame is a retransmission
@@ -934,6 +917,22 @@ public:
      *
      */
     void SetIsARetransmission(bool aIsARetx) { mIsARetx = aIsARetx; }
+
+    /**
+     * This method sets the did Tx attribute.
+     *
+     * @param[in]  aDidTx  TRUE if frame is sent from the radio, FALSE otherwise.
+     *
+     */
+    void SetDidTx(bool aDidTx) { mDidTx = aDidTx; }
+
+    /**
+     * This method sets the CCA enabled attribute.
+     *
+     * @param[in]  aIsCcaEnabled  TRUE if CCA must be enabled for this packet, FALSE otherwise.
+     *
+     */
+    void SetIsCcaEnabled(bool aIsCcaEnabled) { mIsCcaEnabled = aIsCcaEnabled; }
 
     /**
      * This method returns the IEEE 802.15.4 PSDU length.
