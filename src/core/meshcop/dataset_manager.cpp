@@ -450,7 +450,11 @@ void PendingDataset::Clear(void)
 
 void PendingDataset::ClearNetwork(void)
 {
-    Restore();
+    Dataset dataset(mLocal.GetType());
+
+    mTimestamp.Init();
+    mTimestampValid = false;
+    DatasetManager::Set(dataset);
 }
 
 otError PendingDataset::Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
