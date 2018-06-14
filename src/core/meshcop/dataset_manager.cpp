@@ -204,7 +204,7 @@ void DatasetManager::HandleTimer(void)
         const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.Get(Tlv::kActiveTimestamp));
         const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
-        if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) >= 0)
+        if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) == 0)
         {
             // stop registration attempts during dataset transition
             ExitNow();
