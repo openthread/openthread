@@ -53,6 +53,9 @@ class OpenThread(IThci):
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
+    # only firmware built since thread-reference-20180615(tag) is allowed
+    Firmware = "OPENTHREAD/20180615"
+
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
         """initialize the serial port and default network parameters
@@ -647,9 +650,17 @@ class OpenThread(IThci):
         """initialize the serial port with baudrate, timeout parameters"""
         print '%s call intialize' % self.port
         try:
+            self.deviceConnected = False
+
             # init serial port
             self._connect()
-            self.deviceConnected = True
+
+            if self.Firmware in self.UIStatusMsg:
+                self.deviceConnected = True
+            else:
+                self.UIStatusMsg = "Firmware Not Matching Expecting " + self.Firmware + " Now is " + self.UIStatusMsg
+                ModuleHelper.WriteIntoDebugLogger("Err: OpenThread device Firmware not matching..")
+
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
             self.deviceConnected = False
