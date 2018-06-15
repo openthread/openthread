@@ -121,14 +121,7 @@ otError MeshForwarder::Stop(void)
 
     if (mScanning)
     {
-        if (mMacRadioAcquisitionId)
-        {
-            netif.GetMac().ReleaseRadioChannel();
-            mMacRadioAcquisitionId = 0;
-        }
-
-        mScanning = false;
-        netif.GetMle().HandleDiscoverComplete();
+        HandleDiscoverComplete();
     }
 
     while ((message = mSendQueue.GetHead()) != NULL)
@@ -213,6 +206,8 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
     SuccessOrExit(error = netif.GetMac().AcquireRadioChannel(&mMacRadioAcquisitionId));
 
+    mScanning = true;
+
     while ((mScanChannels & 1) == 0)
     {
         mScanChannels >>= 1;
@@ -220,18 +215,10 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
         if (mScanChannel > OT_RADIO_CHANNEL_MAX)
         {
-            if (mMacRadioAcquisitionId)
-            {
-                netif.GetMac().ReleaseRadioChannel();
-                mMacRadioAcquisitionId = 0;
-            }
-
-            netif.GetMle().HandleDiscoverComplete();
+            HandleDiscoverComplete();
             ExitNow(error = OT_ERROR_DROP);
         }
     }
-
-    mScanning = true;
 
 exit:
     return error;
@@ -1054,8 +1041,6 @@ void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
 
 void MeshForwarder::HandleDiscoverTimer(void)
 {
-    ThreadNetif &netif = GetNetif();
-
     do
     {
         mScanChannels >>= 1;
@@ -1067,15 +1052,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
             mSendMessage->Free();
             mSendMessage = NULL;
 
-            if (mMacRadioAcquisitionId)
-            {
-                netif.GetMac().ReleaseRadioChannel();
-                mMacRadioAcquisitionId = 0;
-            }
-
-            netif.GetMac().SetPanId(mRestorePanId);
-            mScanning = false;
-            netif.GetMle().HandleDiscoverComplete();
+            HandleDiscoverComplete();
             ExitNow();
         }
     } while ((mScanChannels & 1) == 0);
@@ -1085,6 +1062,24 @@ void MeshForwarder::HandleDiscoverTimer(void)
 exit:
     mSendBusy = false;
     mScheduleTransmissionTask.Post();
+}
+
+void MeshForwarder::HandleDiscoverComplete(void)
+{
+    ThreadNetif &netif = GetNetif();
+
+    assert(mScanning);
+
+    if (mMacRadioAcquisitionId)
+    {
+        netif.GetMac().ReleaseRadioChannel();
+        mMacRadioAcquisitionId = 0;
+    }
+
+    netif.GetMac().SetPanId(mRestorePanId);
+    mScanning = false;
+    netif.GetMle().HandleDiscoverComplete();
+    mDiscoverTimer.Stop();
 }
 
 void MeshForwarder::HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame)
