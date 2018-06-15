@@ -742,14 +742,14 @@ static bool rf_process_rx_frame(void)
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     // Timestamp
-    sRxFrame.mMsec = otPlatAlarmMilliGetNow();
-    sRxFrame.mUsec = 0; // Don't support microsecond timer for now.
+    sRxFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+    sRxFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
     sRxFrame.mLength = temp;
     temp             = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
-    sRxFrame.mLqi    = rf_lqi_adjust(temp);
-    sRxFrame.mRssi   = rf_lqi_to_rssi(sRxFrame.mLqi);
+    sRxFrame.mInfo.mRxInfo.mLqi  = rf_lqi_adjust(temp);
+    sRxFrame.mInfo.mRxInfo.mRssi = rf_lqi_to_rssi(sRxFrame.mInfo.mRxInfo.mLqi);
 #if DOUBLE_BUFFERING
 
     for (temp = 0; temp < sRxFrame.mLength - 2; temp++)

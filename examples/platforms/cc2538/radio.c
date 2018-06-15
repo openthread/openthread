@@ -455,8 +455,8 @@ void readFrame(void)
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     // Timestamp
-    sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-    sReceiveFrame.mUsec = 0; // Don't support microsecond timer for now.
+    sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+    sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
     // read psdu
@@ -465,13 +465,13 @@ void readFrame(void)
         sReceiveFrame.mPsdu[i] = HWREG(RFCORE_SFR_RFDATA);
     }
 
-    sReceiveFrame.mRssi = (int8_t)HWREG(RFCORE_SFR_RFDATA) - CC2538_RSSI_OFFSET;
-    crcCorr             = HWREG(RFCORE_SFR_RFDATA);
+    sReceiveFrame.mInfo.mRxInfo.mRssi = (int8_t)HWREG(RFCORE_SFR_RFDATA) - CC2538_RSSI_OFFSET;
+    crcCorr                           = HWREG(RFCORE_SFR_RFDATA);
 
     if (crcCorr & CC2538_CRC_BIT_MASK)
     {
-        sReceiveFrame.mLength = length;
-        sReceiveFrame.mLqi    = crcCorr & CC2538_LQI_BIT_MASK;
+        sReceiveFrame.mLength            = length;
+        sReceiveFrame.mInfo.mRxInfo.mLqi = crcCorr & CC2538_LQI_BIT_MASK;
     }
     else
     {

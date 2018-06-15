@@ -216,8 +216,8 @@ static void handleRx(void)
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
         // Timestamp
-        sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame.mUsec = 0; // Don't support microsecond timer for now.
+        sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+        sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
@@ -233,7 +233,7 @@ static void handleRx(void)
             // otherwise only signal MAC layer for non-ACK frame
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {
-                otLogDebgPlat(sInstance, "Radio receive done, rssi: %d", sReceiveFrame.mRssi);
+                otLogDebgPlat(sInstance, "Radio receive done, rssi: %d", sReceiveFrame.mInfo.mRxInfo.mRssi);
 
                 otPlatRadioReceiveDone(sInstance, &sReceiveFrame, OT_ERROR_NONE);
             }
@@ -269,9 +269,9 @@ static void handleTx(void)
 
 void PHY_DataInd(PHY_DataInd_t *ind)
 {
-    sReceiveFrame.mPsdu   = ind->data;
-    sReceiveFrame.mLength = ind->size + IEEE802154_FCS_SIZE;
-    sReceiveFrame.mRssi   = ind->rssi;
+    sReceiveFrame.mPsdu               = ind->data;
+    sReceiveFrame.mLength             = ind->size + IEEE802154_FCS_SIZE;
+    sReceiveFrame.mInfo.mRxInfo.mRssi = ind->rssi;
 
     sRxDone = true;
 }

@@ -1019,11 +1019,11 @@ otLwfEventWorkerThread(
                             SPINEL_DATATYPE_STRUCT_S( // Vendor-data
                                 SPINEL_DATATYPE_UINT_PACKED_S
                             ),
-                            &pFilter->otReceiveFrame.mRssi,
+                            &pFilter->otReceiveFrame.mInfo.mRxInfo.mRssi,
                             &noiseFloor,
                             &flags,
                             &pFilter->otReceiveFrame.mChannel,
-                            &pFilter->otReceiveFrame.mLqi,
+                            &pFilter->otReceiveFrame.mInfo.mRxInfo.mLqi,
                             &errorCode))
                     {
                         otLwfRadioReceiveFrame(pFilter, errorCode);
