@@ -28,47 +28,57 @@
 
 /**
  * @file
- *   This file includes macros for validating runtime conditions.
+ *   This file includes posix compile-time configuration constants
+ *   for OpenThread.
  */
 
-#ifndef CODE_UTILS_H
-#define CODE_UTILS_H
+#ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
+#define OPENTHREAD_CORE_POSIX_CONFIG_H_
 
 /**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and branches to the local label 'exit' if the
- *  condition is false.
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
+ * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define otEXPECT(aCondition) \
-    do                       \
-    {                        \
-        if (!(aCondition))   \
-        {                    \
-            goto exit;       \
-        }                    \
-    } while (0)
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX"
 
 /**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and both executes @p anAction and branches to
- *  the local label 'exit' if the condition is false.
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *  @param[in]  aAction     An expression or block to execute when the
- *                          assertion fails.
+ * Specify where the log output should go.
  *
  */
-#define otEXPECT_ACTION(aCondition, aAction) \
-    do                                       \
-    {                                        \
-        if (!(aCondition))                   \
-        {                                    \
-            aAction;                         \
-            goto exit;                       \
-        }                                    \
-    } while (0)
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif
 
-#endif // CODE_UTILS_H
+#if OPENTHREAD_RADIO
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+ *
+ * Define to 1 if you want to enable software ACK timeout logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 1
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ *
+ * Define to 1 if you want to enable software retransmission logic.
+ *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
+#endif // OPENTHREAD_RADIO
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+ *
+ * Define to 1 if you want to support microsecond timer in platform.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
+
+#endif  // OPENTHREAD_CORE_POSIX_CONFIG_H_

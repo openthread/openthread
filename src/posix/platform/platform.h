@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,47 +28,55 @@
 
 /**
  * @file
- *   This file includes macros for validating runtime conditions.
+ * @brief
+ *   This file defines the platform-specific initializers.
  */
 
-#ifndef CODE_UTILS_H
-#define CODE_UTILS_H
+#ifndef PLATFORM_H_
+#define PLATFORM_H_
+
+#include <openthread/types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and branches to the local label 'exit' if the
- *  condition is false.
- *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
+ * This function performs all platform-specific initialization.
  *
  */
-#define otEXPECT(aCondition) \
-    do                       \
-    {                        \
-        if (!(aCondition))   \
-        {                    \
-            goto exit;       \
-        }                    \
-    } while (0)
+void PlatformInit(int argc, char *argv[]);
 
 /**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and both executes @p anAction and branches to
- *  the local label 'exit' if the condition is false.
- *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *  @param[in]  aAction     An expression or block to execute when the
- *                          assertion fails.
+ * This function performs all platform-specific deinitialization.
  *
  */
-#define otEXPECT_ACTION(aCondition, aAction) \
-    do                                       \
-    {                                        \
-        if (!(aCondition))                   \
-        {                                    \
-            aAction;                         \
-            goto exit;                       \
-        }                                    \
-    } while (0)
+void PlatformDeinit(void);
 
-#endif // CODE_UTILS_H
+/**
+ * This function returns true is a pseudo-reset was requested.
+ * In such a case, the main loop should shut down and re-initialize
+ * the OpenThread instance.
+ *
+ */
+bool PlatformPseudoResetWasRequested(void);
+
+/**
+ * This function performs all platform-specific processing.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+void PlatformProcessDrivers(otInstance *aInstance);
+
+/**
+ * This function is called whenever platform drivers needs processing.
+ *
+ */
+extern void PlatformEventSignalPending(void);
+
+#ifdef __cplusplus
+} // end of extern "C"
+#endif
+
+#endif // PLATFORM_H_

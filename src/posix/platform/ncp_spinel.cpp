@@ -44,9 +44,7 @@
 #include <common/logging.hpp>
 #include <openthread/platform/alarm-milli.h>
 
-#include "utils/code_utils.h"
-
-#if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+#include "code_utils.h"
 
 static ot::NcpSpinel sNcpSpinel;
 
@@ -58,6 +56,21 @@ namespace ot {
 #ifndef SOCKET_UTILS_DEFAULT_SHELL
 #define SOCKET_UTILS_DEFAULT_SHELL "/bin/sh"
 #endif
+
+/**
+ * This function returns if the property changed event is *UNSAFE* to be handled during `WaitResponse()`.
+ *
+ * If property could trigger another call to `ncpSet()`, it's unsafe.
+ *
+ * @param[in] aKey The identifier of the property.
+ *
+ * @returns Whether this property is *UNSAFE* to be handled during 'WaitResponse()`.
+ *
+ */
+static bool ShouldDefer(spinel_prop_key_t aKey)
+{
+    return aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT;
+}
 
 static otError SpinelStatusToOtError(spinel_status_t aError)
 {
@@ -262,9 +275,10 @@ private:
 NcpSpinel::NcpSpinel(void)
     : mCmdTidsInUse(0)
     , mCmdNextTid(1)
-    , mStreamTid(0)
+    , mStreamRawTid(0)
     , mWaitingTid(0)
-    , mHdlcDecoder(mHdlcBuffer, sizeof(mHdlcBuffer), HandleHdlcFrame, HandleHdlcError, this)
+    , mWaitingKey(SPINEL_PROP_LAST_STATUS)
+    , mHdlcDecoder(mHdlcBuffer, sizeof(mHdlcBuffer), HandleSpinelFrame, HandleHdlcError, this)
     , mSockFd(-1)
     , mIsReady(false)
 {
@@ -290,8 +304,11 @@ void NcpSpinel::Init(const char *aNcpFile, const char *aNcpConfig)
     }
 
     otEXPECT_ACTION(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
-
     error = SendReset();
+    otEXPECT(error == OT_ERROR_NONE);
+    error = WaitResponse();
+    otEXPECT(error == OT_ERROR_NONE);
+    otEXPECT_ACTION(mIsReady, error = OT_ERROR_FAILED);
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -317,7 +334,7 @@ bool NcpSpinel::IsFrameCached(void) const
     return !mFrameCache.IsEmpty();
 }
 
-void NcpSpinel::HandleHdlcFrame(const uint8_t *aBuffer, uint16_t aLength)
+void NcpSpinel::HandleSpinelFrame(const uint8_t *aBuffer, uint16_t aLength)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        header;
@@ -331,7 +348,7 @@ void NcpSpinel::HandleHdlcFrame(const uint8_t *aBuffer, uint16_t aLength)
 
     if (SPINEL_HEADER_GET_TID(header) == 0)
     {
-        otEXPECT(OT_ERROR_NONE == mFrameCache.Push(aBuffer, aLength));
+        ProcessNotification(aBuffer, aLength);
     }
     else
     {
@@ -367,6 +384,7 @@ void NcpSpinel::ProcessNotification(const uint8_t *aBuffer, uint16_t aLength)
         if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
         {
             otLogWarnPlat(mInstance, "NCP reset for %d", status - SPINEL_STATUS_RESET__BEGIN);
+            mIsReady = true;
         }
         else
         {
@@ -377,6 +395,11 @@ void NcpSpinel::ProcessNotification(const uint8_t *aBuffer, uint16_t aLength)
     {
         if (cmd == SPINEL_CMD_PROP_VALUE_IS)
         {
+            // Some spinel properties cannot be handled during `WaitResponse()`, we must cache these events.
+            // `mWaitingTid` is released immediately after received the response. And `mWaitingKey` is be set
+            // to `SPINEL_PROP_LAST_STATUS` at the end of `WaitResponse()`.
+            otEXPECT_ACTION(mWaitingKey == SPINEL_PROP_LAST_STATUS || !ShouldDefer(key),
+                            error = mFrameCache.Push(aBuffer, aLength));
             ProcessValueIs(key, data, static_cast<uint16_t>(len));
         }
         else
@@ -409,11 +432,11 @@ void NcpSpinel::ProcessResponse(const uint8_t *aBuffer, uint16_t aLength)
         FreeTid(mWaitingTid);
         mWaitingTid = 0;
     }
-    else if (mStreamTid == SPINEL_HEADER_GET_TID(header))
+    else if (mStreamRawTid == SPINEL_HEADER_GET_TID(header))
     {
         HandleTransmitDone(cmd, key, data, static_cast<uint16_t>(len));
-        FreeTid(mStreamTid);
-        mStreamTid = 0;
+        FreeTid(mStreamRawTid);
+        mStreamRawTid = 0;
     }
     else
     {
@@ -437,9 +460,9 @@ void NcpSpinel::HandleResult(uint32_t aCommand, spinel_prop_key_t aKey, const ui
     }
     else if (aKey == mWaitingKey)
     {
-        if (mFormat)
+        if (mWaitingFormat)
         {
-            spinel_ssize_t unpacked = spinel_datatype_vunpack_in_place(aBuffer, aLength, mFormat, mArgs);
+            spinel_ssize_t unpacked = spinel_datatype_vunpack_in_place(aBuffer, aLength, mWaitingFormat, mWaitingArgs);
 
             otEXPECT_ACTION(unpacked > 0, mLastError = OT_ERROR_PARSE);
             mLastError = OT_ERROR_NONE;
@@ -490,12 +513,10 @@ void NcpSpinel::ProcessValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, u
     else if (aKey == SPINEL_PROP_STREAM_DEBUG)
     {
         const char *   message = NULL;
-        uint32_t       length  = 0;
         spinel_ssize_t rval;
 
-        rval = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_DATA_S, &message, &length);
-        otEXPECT_ACTION(rval > 0 && message && length <= static_cast<uint32_t>(rval), error = OT_ERROR_PARSE);
-        otEXPECT_ACTION(strnlen(message, length) != length, error = OT_ERROR_PARSE);
+        rval = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &message);
+        otEXPECT_ACTION(rval > 0 && message, error = OT_ERROR_PARSE);
         otLogDebgPlat(mInstance, "NCP DEBUG INFO: %s", message);
     }
 
@@ -523,8 +544,8 @@ otError NcpSpinel::ParseRawStream(otRadioFrame *aFrame, const uint8_t *aBuffer, 
                                                        SPINEL_DATATYPE_UINT8_S     // 802.15.4 channel
                                                            SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
                                                        ),
-                                               aFrame->mPsdu, &size, &aFrame->mRssi, &noiseFloor, &flags,
-                                               &aFrame->mChannel, &aFrame->mLqi);
+                                               aFrame->mPsdu, &size, &aFrame->mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
+                                               &aFrame->mChannel, &aFrame->mInfo.mRxInfo.mLqi);
     otEXPECT_ACTION(unpacked > 0, error = OT_ERROR_PARSE);
 
 exit:
@@ -584,10 +605,10 @@ otError NcpSpinel::Get(spinel_prop_key_t aKey, const char *aFormat, va_list aArg
 
     assert(mWaitingTid == 0);
 
-    mFormat = aFormat;
-    va_copy(mArgs, aArgs);
-    error   = RequestV(true, SPINEL_CMD_PROP_VALUE_GET, aKey, NULL, aArgs);
-    mFormat = NULL;
+    mWaitingFormat = aFormat;
+    va_copy(mWaitingArgs, aArgs);
+    error          = RequestV(true, SPINEL_CMD_PROP_VALUE_GET, aKey, NULL, aArgs);
+    mWaitingFormat = NULL;
 
     return error;
 }
@@ -692,12 +713,14 @@ otError NcpSpinel::WaitResponse(void)
             mWaitingTid = 0;
             mLastError  = OT_ERROR_RESPONSE_TIMEOUT;
         }
-    } while (mWaitingTid);
+    } while (mWaitingTid || !mIsReady);
 
     error = mLastError;
 
 exit:
     LogIfFail(mInstance, "Error waiting response", error);
+    // This indicates end of waiting repsonse.
+    mWaitingKey = SPINEL_PROP_LAST_STATUS;
     return error;
 }
 
@@ -722,7 +745,7 @@ otError NcpSpinel::Transmit(const otRadioFrame *aFrame, otRadioFrame *aAckFrame)
     mAckFrame = aAckFrame;
     error     = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aFrame->mPsdu,
-                    aFrame->mLength, aFrame->mChannel, aFrame->mRssi);
+                    aFrame->mLength, aFrame->mChannel, aFrame->mInfo.mRxInfo.mRssi);
 
     return error;
 }
@@ -779,7 +802,7 @@ otError NcpSpinel::SendReset(void)
     error = SendAll(txBuffer.GetBuffer(), txBuffer.GetLength());
     otEXPECT(error == OT_ERROR_NONE);
 
-    sleep(1);
+    sleep(0);
 
 exit:
     return error;
@@ -841,9 +864,9 @@ otError NcpSpinel::RequestV(bool aWait, uint32_t command, spinel_prop_key_t aKey
     if (aKey == SPINEL_PROP_STREAM_RAW)
     {
         // not allowed to send another frame before the last frame is done.
-        assert(mStreamTid == 0);
-        otEXPECT_ACTION(mStreamTid == 0, error = OT_ERROR_BUSY);
-        mStreamTid = tid;
+        assert(mStreamRawTid == 0);
+        otEXPECT_ACTION(mStreamRawTid == 0, error = OT_ERROR_BUSY);
+        mStreamRawTid = tid;
     }
     else if (aWait)
     {
@@ -1003,5 +1026,3 @@ otError ncpDisable(void)
     return ncpSet(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false);
 }
 }
-
-#endif // OPENTHREAD_ENABLE_POSIX_RADIO_NCP

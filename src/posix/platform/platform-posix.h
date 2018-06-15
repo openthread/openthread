@@ -44,28 +44,6 @@
 #include <string.h>
 #include <time.h>
 
-#if _WIN32
-#include <WS2tcpip.h>
-#include <WinSock2.h>
-#include <windows.h>
-#define POLL WSAPoll
-#define ssize_t int
-#include <time.h>
-#define localtime _localtime32
-// In user mode, define some Linux functions
-__forceinline int gettimeofday(struct timeval *tv, struct timezone *tz)
-{
-    (void)tz;
-    tv->tv_sec  = _time32(NULL);
-    tv->tv_usec = 0;
-    return 0;
-}
-__forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval *res)
-{
-    res->tv_sec  = (long)_difftime32(a->tv_sec, b->tv_sec);
-    res->tv_usec = 0;
-}
-#else
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -75,8 +53,6 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
-#define POLL poll
-#endif
 
 #include <openthread/openthread.h>
 
@@ -102,13 +78,13 @@ struct Event
  * Unique node ID.
  *
  */
-extern uint32_t NODE_ID;
+extern uint64_t NODE_ID;
 
 /**
  * Well-known Unique ID used by a simulated radio that supports promiscuous mode.
  *
  */
-extern uint32_t WELLKNOWN_NODE_ID;
+#define WELLKNOWN_NODE_ID 34
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -184,9 +160,10 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
  * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
  * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[inout]  aTimeout     A pointer to the timeout.
  *
  */
-void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout);
 
 /**
  * This function performs radio driver processing.
@@ -194,7 +171,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void platformRadioProcess(otInstance *aInstance);
+void platformRadioProcess(otInstance *aInstance, fd_set *aReadFdSet, fd_set *aWriteFdSet);
 
 /**
  * This function initializes the random number service used by OpenThread.
@@ -216,7 +193,7 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
  * This function performs radio driver processing.
  *
  */
-void platformUartProcess(void);
+void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
  * This function restores the Uart.

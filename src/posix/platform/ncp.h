@@ -31,7 +31,7 @@
 
 #include <openthread/platform/radio.h>
 
-#include <ncp/spinel.h>
+#include <spinel.h>
 
 #ifdef __cplusplus
 extern "C" {

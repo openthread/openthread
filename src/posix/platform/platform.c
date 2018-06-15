@@ -34,8 +34,6 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
-
 #include <assert.h>
 #include <errno.h>
 #include <stddef.h>
@@ -52,8 +50,9 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint32_t NODE_ID           = 1;
-uint32_t WELLKNOWN_NODE_ID = 34;
+uint64_t    NODE_ID     = 0;
+const char *NODE_FILE   = NULL;
+const char *NODE_CONFIG = "";
 
 extern bool gPlatformPseudoResetWasRequested;
 
@@ -62,10 +61,17 @@ int    gArgumentsCount = 0;
 char **gArguments      = NULL;
 #endif
 
+void PrintUsage(const char *aArg0)
+{
+    fprintf(stderr, "Syntax:\n    %s [-s TimeSpeedUpFactor] {NodeId|Device DeviceConfig|Command CommandArgs}\n", aArg0);
+    exit(EXIT_FAILURE);
+}
+
 void PlatformInit(int aArgCount, char *aArgVector[])
 {
-    char *   endptr;
+    int      i;
     uint32_t speedUpFactor = 1;
+    char *   endptr;
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -75,8 +81,31 @@ void PlatformInit(int aArgCount, char *aArgVector[])
 
     if (aArgCount < 2)
     {
-        fprintf(stderr, "Syntax:\n    %s NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
-        exit(EXIT_FAILURE);
+        PrintUsage(aArgVector[0]);
+    }
+
+    i = 1;
+    if (!strcmp(aArgVector[i], "-s"))
+    {
+        ++i;
+        speedUpFactor = (uint32_t)strtol(aArgVector[i], &endptr, 0);
+
+        if (*endptr != '\0' || speedUpFactor == 0)
+        {
+            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[i]);
+            exit(EXIT_FAILURE);
+        }
+        ++i;
+    }
+
+    if (i >= aArgCount)
+    {
+        PrintUsage(aArgVector[0]);
+    }
+    NODE_FILE = aArgVector[i];
+    if (i + 1 < aArgCount)
+    {
+        NODE_CONFIG = aArgVector[i + 1];
     }
 
 #ifndef _WIN32
@@ -86,25 +115,6 @@ void PlatformInit(int aArgCount, char *aArgVector[])
     gArgumentsCount = aArgCount;
     gArguments      = aArgVector;
 #endif
-
-    NODE_ID = (uint32_t)strtol(aArgVector[1], &endptr, 0);
-
-    if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
-    {
-        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[1]);
-        exit(EXIT_FAILURE);
-    }
-
-    if (aArgCount > 2)
-    {
-        speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
-
-        if (*endptr != '\0' || speedUpFactor == 0)
-        {
-            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
-            exit(EXIT_FAILURE);
-        }
-    }
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
@@ -126,32 +136,33 @@ void PlatformProcessDrivers(otInstance *aInstance)
     fd_set         read_fds;
     fd_set         write_fds;
     fd_set         error_fds;
-    int            max_fd = -1;
     struct timeval timeout;
+    int            max_fd = -1;
     int            rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
     FD_ZERO(&error_fds);
 
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
+    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
+    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd, &timeout);
 
-    if (!otTaskletsArePending(aInstance))
+    if (otTaskletsArePending(aInstance))
     {
-        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
-
-        if ((rval < 0) && (errno != EINTR))
-        {
-            perror("select");
-            exit(EXIT_FAILURE);
-        }
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
     }
 
-    platformUartProcess();
-    platformRadioProcess(aInstance);
+    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+
+    if ((rval < 0) && (errno != EINTR))
+    {
+        perror("select");
+        exit(EXIT_FAILURE);
+    }
+
+    platformUartProcess(&read_fds, &write_fds, &error_fds);
+    platformRadioProcess(aInstance, &read_fds, &write_fds);
     platformAlarmProcess(aInstance);
 }
-
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

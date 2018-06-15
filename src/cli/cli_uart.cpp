@@ -132,7 +132,7 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 
             break;
 
-#ifdef OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_POSIX
 
         case 0x04: // ASCII for Ctrl-D
             exit(EXIT_SUCCESS);

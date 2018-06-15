@@ -432,13 +432,11 @@ set -x
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
 }
 
-[ $BUILD_TARGET != posix-radio-ncp ] || {
-    NCP_OUTPUT_DIR=output-ncp-radio
+[ $BUILD_TARGET != posix-app-cli ] || {
     ./bootstrap || die
     make -f examples/Makefile-posix || die
-    mv output $NCP_OUTPUT_DIR
-    rm -rf build/*
-    NCP_FILE="$(pwd)/$(ls $NCP_OUTPUT_DIR/*/bin/ot-ncp-radio)" COVERAGE=1 RADIO=ncp make -f examples/Makefile-posix check || die
+    make -f src/posix/Makefile-posix || die
+    OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-mtd ] || {
@@ -451,13 +449,11 @@ set -x
     make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix" || die
 }
 
-[ $BUILD_TARGET != posix-ncp-radio-ncp ] || {
-    NCP_OUTPUT_DIR=output-ncp-radio
+[ $BUILD_TARGET != posix-app-ncp ] || {
     ./bootstrap || die
     make -f examples/Makefile-posix || die
-    mv output $NCP_OUTPUT_DIR
-    rm -rf build/*
-    NCP_FILE="$(pwd)/$(ls $NCP_OUTPUT_DIR/*/bin/ot-ncp-radio)" COVERAGE=1 NODE_TYPE=ncp-sim RADIO=ncp make -f examples/Makefile-posix check || die
+    make -f src/posix/Makefile-posix || die
+    OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,64 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes macros for validating runtime conditions.
- */
+#include "platform-posix.h"
 
-#ifndef CODE_UTILS_H
-#define CODE_UTILS_H
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
 
-/**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and branches to the local label 'exit' if the
- *  condition is false.
- *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *
- */
-#define otEXPECT(aCondition) \
-    do                       \
-    {                        \
-        if (!(aCondition))   \
-        {                    \
-            goto exit;       \
-        }                    \
-    } while (0)
+#include <openthread/config.h>
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
+
+#if OPENTHREAD_ENABLE_DIAG
 
 /**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and both executes @p anAction and branches to
- *  the local label 'exit' if the condition is false.
- *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *  @param[in]  aAction     An expression or block to execute when the
- *                          assertion fails.
+ * Diagnostics mode variables.
  *
  */
-#define otEXPECT_ACTION(aCondition, aAction) \
-    do                                       \
-    {                                        \
-        if (!(aCondition))                   \
-        {                                    \
-            aAction;                         \
-            goto exit;                       \
-        }                                    \
-    } while (0)
+static bool sDiagMode = false;
 
-#endif // CODE_UTILS_H
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    // Add more plarform specific diagnostics features here.
+    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
+    (void)argc;
+    (void)aInstance;
+}
+
+void otPlatDiagModeSet(bool aMode)
+{
+    sDiagMode = aMode;
+}
+
+bool otPlatDiagModeGet()
+{
+    return sDiagMode;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    (void)aChannel;
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    (void)aTxPower;
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    (void)aInstance;
+    (void)aFrame;
+    (void)aError;
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    (void)aInstance;
+}
+
+#endif // OPENTHREAD_ENABLE_DIAG

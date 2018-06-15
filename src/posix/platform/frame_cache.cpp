@@ -33,9 +33,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "utils/code_utils.h"
-
-#if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+#include "code_utils.h"
 
 namespace ot {
 
@@ -234,5 +232,3 @@ int main(void)
     return 0;
 }
 #endif
-
-#endif // OPENTHREAD_ENABLE_POSIX_RADIO_NCP

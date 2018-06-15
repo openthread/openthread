@@ -28,7 +28,7 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_ENABLE_POSIX_RADIO_NCP == 0 && OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -539,11 +539,8 @@ void radioSendMessage(otInstance *aInstance)
     sAckWait = true;
 }
 
-void platformRadioProcess(otInstance *aInstance, fd_set *aReadFdSet, fd_set *aWriteFdSet)
+void platformRadioProcess(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aReadFdSet);
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-
     if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
     {
         radioSendMessage(aInstance);
@@ -789,4 +786,4 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return POSIX_RECEIVE_SENSITIVITY;
 }
 
-#endif // OPENTHREAD_ENABLE_POSIX_RADIO_NCP == 0 && OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME

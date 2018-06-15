@@ -49,7 +49,6 @@ configure_OPTIONS                   = \
     --enable-border-router            \
     --enable-cert-log                 \
     --enable-child-supervision        \
-    --enable-cli-app=all              \
     --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
@@ -59,33 +58,24 @@ configure_OPTIONS                   = \
     --enable-joiner                   \
     --enable-legacy                   \
     --enable-mac-filter               \
-    --enable-mtd-network-diagnostic   \
-    --enable-ncp-app=all              \
-    --enable-raw-link-api             \
+    --enable-posix-app=all            \
     --enable-service                  \
     --enable-tmf-proxy                \
-    --with-examples=posix             \
     --with-ncp-bus=uart               \
     $(NULL)
 
-TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
+TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))../..
+AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))../..
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-posix-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/posix/
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/src/posix/platform
 
 COMMONCFLAGS                   := \
-    -O1                           \
+    -O0                           \
     -g                            \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
-
-include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
-
-ifeq ($(VIRTUAL_TIME),1)
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
-endif
 
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
@@ -106,11 +96,11 @@ LDFLAGS                        += \
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
 
-BuildPath                       = build
+BuildPath                       = build/posix
 TopBuildDir                     = $(BuildPath)
 AbsTopBuildDir                  = $(PWD)/$(TopBuildDir)
 
-ResultPath                      = output
+ResultPath                      = output/posix
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 

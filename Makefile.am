@@ -50,8 +50,8 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
 
 SUBDIRS                             = \
     include                           \
-    src                               \
     third_party                       \
+    src                               \
     examples                          \
     tests                             \
     tools                             \

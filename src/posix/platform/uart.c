@@ -31,7 +31,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +40,7 @@
 #include <openthread/platform/debug_uart.h>
 #include <openthread/platform/uart.h>
 
-#include "utils/code_utils.h"
+#include "code_utils.h"
 
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
@@ -219,69 +218,54 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
     }
 }
 
-void platformUartProcess(void)
+void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
 {
-    ssize_t       rval;
-    const int     error_flags = POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd[]    = {
-        {s_in_fd, POLLIN | error_flags, 0},
-        {s_out_fd, POLLOUT | error_flags, 0},
-    };
-
+    ssize_t rval;
     errno = 0;
 
-    rval = poll(pollfd, sizeof(pollfd) / sizeof(*pollfd), 0);
-
-    if (rval < 0)
+    if (FD_ISSET(s_in_fd, aErrorFdSet))
     {
-        perror("poll");
+        perror("s_in_fd");
         exit(EXIT_FAILURE);
     }
 
-    if (rval > 0)
+    if (FD_ISSET(s_out_fd, aErrorFdSet))
     {
-        if ((pollfd[0].revents & error_flags) != 0)
+        perror("s_out_fd");
+        exit(EXIT_FAILURE);
+    }
+
+    if (FD_ISSET(s_in_fd, aReadFdSet))
+    {
+        rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
+
+        if (rval < 0)
         {
-            perror("s_in_fd");
+            perror("read");
             exit(EXIT_FAILURE);
         }
-
-        if ((pollfd[1].revents & error_flags) != 0)
+        else if (rval > 0)
         {
-            perror("s_out_fd");
-            exit(EXIT_FAILURE);
-        }
-
-        if (pollfd[0].revents & POLLIN)
-        {
-            rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
-
-            if (rval <= 0)
-            {
-                perror("read");
-                exit(EXIT_FAILURE);
-            }
-
             otPlatUartReceived(s_receive_buffer, (uint16_t)rval);
         }
+    }
 
-        if ((s_write_length > 0) && (pollfd[1].revents & POLLOUT))
+    if ((s_write_length > 0) && (FD_ISSET(s_out_fd, aWriteFdSet)))
+    {
+        rval = write(s_out_fd, s_write_buffer, s_write_length);
+
+        if (rval <= 0)
         {
-            rval = write(s_out_fd, s_write_buffer, s_write_length);
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
 
-            if (rval <= 0)
-            {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
+        s_write_buffer += (uint16_t)rval;
+        s_write_length -= (uint16_t)rval;
 
-            s_write_buffer += (uint16_t)rval;
-            s_write_length -= (uint16_t)rval;
-
-            if (s_write_length == 0)
-            {
-                otPlatUartSendDone();
-            }
+        if (s_write_length == 0)
+        {
+            otPlatUartSendDone();
         }
     }
 }

@@ -28,7 +28,7 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0 || OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -196,4 +196,4 @@ void platformAlarmProcess(otInstance *aInstance)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }
 
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0 || OPENTHREAD_ENABLE_POSIX_RADIO_NCP
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

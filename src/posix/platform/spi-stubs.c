@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,62 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes macros for validating runtime conditions.
- */
+#include "platform-posix.h"
 
-#ifndef CODE_UTILS_H
-#define CODE_UTILS_H
+#include <stdio.h>
+#include <stdlib.h>
 
-/**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and branches to the local label 'exit' if the
- *  condition is false.
- *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *
- */
-#define otEXPECT(aCondition) \
-    do                       \
-    {                        \
-        if (!(aCondition))   \
-        {                    \
-            goto exit;       \
-        }                    \
-    } while (0)
+#include <openthread/config.h>
+#include <openthread/platform/spi-slave.h>
+#include <openthread/platform/uart.h>
 
-/**
- *  This checks for the specified condition, which is expected to
- *  commonly be true, and both executes @p anAction and branches to
- *  the local label 'exit' if the condition is false.
- *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *  @param[in]  aAction     An expression or block to execute when the
- *                          assertion fails.
- *
- */
-#define otEXPECT_ACTION(aCondition, aAction) \
-    do                                       \
-    {                                        \
-        if (!(aCondition))                   \
-        {                                    \
-            aAction;                         \
-            goto exit;                       \
-        }                                    \
-    } while (0)
+#if OPENTHREAD_ENABLE_NCP_SPI
 
-#endif // CODE_UTILS_H
+// Spi-slave stubs
+
+otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
+                             otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
+                             void *                                    aContext)
+{
+    (void)aCompleteCallback;
+    (void)aProcessCallback;
+    (void)aContext;
+
+    fprintf(stderr, "\nNo SPI support for posix platform.");
+    exit(0);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+void otPlatSpiSlaveDisable(void)
+{
+}
+
+otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
+                                         uint16_t aOutputBufLen,
+                                         uint8_t *aInputBuf,
+                                         uint16_t aInputBufLen,
+                                         bool     aRequestTransactionFlag)
+{
+    (void)aOutputBuf;
+    (void)aOutputBufLen;
+    (void)aInputBuf;
+    (void)aInputBufLen;
+    (void)aRequestTransactionFlag;
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+// Uart
+
+void otPlatUartSendDone(void)
+{
+}
+
+void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
+}
+
+#endif // OPENTHREAD_ENABLE_NCP_SPI

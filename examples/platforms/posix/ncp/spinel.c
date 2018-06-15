@@ -1,1 +1,0 @@
-../../../../src/ncp/spinel.c

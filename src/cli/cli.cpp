@@ -77,7 +77,7 @@
 #include "cli_coap.hpp"
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
 #include <openthread/platform/debug_uart.h>
 #endif
 
@@ -125,10 +125,10 @@ const struct Command Interpreter::sCommands[] = {
     {"eidcache", &Interpreter::ProcessEidCache},
 #endif
     {"eui64", &Interpreter::ProcessEui64},
-#ifdef OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_POSIX
     {"exit", &Interpreter::ProcessExit},
 #endif
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
     {"logfilename", &Interpreter::ProcessLogFilename},
 #endif
     {"extaddr", &Interpreter::ProcessExtAddress},
@@ -919,7 +919,7 @@ exit:
     AppendResult(error);
 }
 
-#ifdef OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_POSIX
 void Interpreter::ProcessExit(int argc, char *argv[])
 {
     exit(EXIT_SUCCESS);
@@ -928,7 +928,7 @@ void Interpreter::ProcessExit(int argc, char *argv[])
 }
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
 
 void Interpreter::ProcessLogFilename(int argc, char *argv[])
 {

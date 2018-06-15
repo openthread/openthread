@@ -29,7 +29,7 @@
 #ifndef NCP_SPINEL_HPP_
 #define NCP_SPINEL_HPP_
 
-#include <ncp/hdlc.hpp>
+#include <hdlc.hpp>
 
 #include "frame_cache.hpp"
 #include "ncp.h"
@@ -182,11 +182,11 @@ private:
         (void)aLength;
     }
 
-    static void HandleHdlcFrame(void *aContext, uint8_t *aBuffer, uint16_t aLength)
+    static void HandleSpinelFrame(void *aContext, uint8_t *aBuffer, uint16_t aLength)
     {
-        static_cast<NcpSpinel *>(aContext)->HandleHdlcFrame(aBuffer, aLength);
+        static_cast<NcpSpinel *>(aContext)->HandleSpinelFrame(aBuffer, aLength);
     }
-    void HandleHdlcFrame(const uint8_t *aBuffer, uint16_t aLength);
+    void HandleSpinelFrame(const uint8_t *aBuffer, uint16_t aLength);
 
     otError ParseRawStream(otRadioFrame *aFrame, const uint8_t *aBuffer, uint16_t aLength);
     void    ProcessCommand(uint32_t aCommand, const uint8_t *aBuffer, uint16_t aLength);
@@ -197,15 +197,15 @@ private:
     void    ProcessResponse(const uint8_t *aBuffer, uint16_t aLength);
     void    ProcessCache(void);
 
-    uint16_t     mCmdTidsInUse;
-    spinel_tid_t mCmdNextTid;
+    uint16_t     mCmdTidsInUse; ///< Used transaction ids.
+    spinel_tid_t mCmdNextTid;   ///< Next available transaction id.
 
-    spinel_tid_t      mStreamTid;
-    spinel_tid_t      mWaitingTid;
-    spinel_prop_key_t mWaitingKey;
-    const char *      mFormat;
-    va_list           mArgs;
-    uint32_t          mExpectedCommand;
+    spinel_tid_t      mStreamRawTid;    ///< The transaction id used to send a radio frame.
+    spinel_tid_t      mWaitingTid;      ///< The transaction id of current transaction.
+    spinel_prop_key_t mWaitingKey;      ///< The property key of current transaction.
+    const char *      mWaitingFormat;   ///< The spinel property format of current transaction.
+    va_list           mWaitingArgs;     ///< Arguments to receive spinel property value.
+    uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
 
     uint8_t       mHdlcBuffer[kMaxSpinelFrame];
     Hdlc::Decoder mHdlcDecoder;

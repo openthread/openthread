@@ -59,16 +59,16 @@ class otCli:
 
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
-        if "OT_CLI_PATH" in os.environ.keys():
+        if 'OT_CLI_PATH' in os.environ.keys():
             cmd = os.environ['OT_CLI_PATH']
-        elif "top_builddir" in os.environ.keys():
+        elif 'top_builddir' in os.environ.keys():
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         else:
             cmd = './ot-cli-%s' % mode
 
-        if 'NCP_FILE' in os.environ:
-            cmd += ' %s' % os.environ['NCP_FILE']
+        if 'RADIO_DEVICE' in os.environ:
+            cmd += ' %s' % os.environ['RADIO_DEVICE']
 
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
@@ -81,12 +81,14 @@ class otCli:
 
     def __init_ncp_sim(self, nodeid, mode):
         """ Initialize an NCP simulation node. """
-        if 'NCP_FILE' in os.environ:
-            args = ' %s' % os.environ['NCP_FILE']
+        if 'RADIO_DEVICE' in os.environ:
+            args = ' %s' % os.environ['RADIO_DEVICE']
         else:
             args = ''
 
-        if "top_builddir" in os.environ.keys():
+        if 'OT_NCP_PATH' in os.environ.keys():
+            cmd = 'spinel-cli.py -p "%s%s" -n' % (os.environ['OT_NCP_PATH'], args)
+        elif "top_builddir" in os.environ.keys():
             builddir = os.environ['top_builddir']
             cmd = 'spinel-cli.py -p "%s/examples/apps/ncp/ot-ncp-%s%s" -n' % (builddir, mode, args)
         else:

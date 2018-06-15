@@ -28,7 +28,6 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
 #include <stdlib.h>
 
 #include <common/logging.hpp>
@@ -36,8 +35,8 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
+#include "code_utils.h"
 #include "ncp.h"
-#include "utils/code_utils.h"
 
 enum
 {
@@ -592,5 +591,3 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     return sReceiveSensitivity;
 }
-
-#endif // OPENTHREAD_ENABLE_POSIX_RADIO_NCP

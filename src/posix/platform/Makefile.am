@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2016-2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -32,33 +32,41 @@ lib_LIBRARIES                             = libopenthread-posix.a
 
 libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/src/posix/platform      \
     -D_GNU_SOURCE                           \
     $(NULL)
 
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
     diag.c                                  \
+    frame_cache.cpp                         \
+    hdlc.cpp                                \
     misc.c                                  \
+    ncp_spinel.cpp                          \
     logging.c                               \
     platform.c                              \
     radio.c                                 \
     random.c                                \
-    uart-posix.c                            \
+    uart.c                                  \
     flash.c                                 \
     spi-stubs.c                             \
-    sim/alarm-sim.c                         \
-    sim/platform-sim.c                      \
-    sim/radio-sim.c                         \
+    spinel.c                                \
+    settings.cpp                            \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \
-     $(PLATFORM_SOURCES)                    \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
 
 noinst_HEADERS                            = \
+    flash.h                                 \
+    hdlc.hpp                                \
+    ncp.h                                   \
+    ncp_spinel.hpp                          \
+    platform.h                              \
     platform-posix.h                        \
+    spinel.h                                \
     $(NULL)
 
 PRETTY_FILES                              = \

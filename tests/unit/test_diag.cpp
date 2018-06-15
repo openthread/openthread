@@ -229,8 +229,8 @@ void TestDiag(void)
         }};
 
     // initialize platform layer
-#if OPENTHREAD_ENABLE_POSIX_RADIO_NCP
-    char *argv[] = {(char *)"test_diag", getenv("NCP_FILE"), (char *)"1"};
+#if OPENTHREAD_ENABLE_POSIX_APP
+    char *argv[] = {(char *)"test_diag", getenv("RADIO_DEVICE"), (char *)"1"};
 #else
     char *argv[] = {(char *)"test_diag", (char *)"1"};
 #endif
