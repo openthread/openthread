@@ -210,7 +210,7 @@ class OpenThread(IThci):
                         break
                 else:
                     retry_times -= 1
-                    time.sleep(0.1)
+                    time.sleep(0.2)
             if line != 'Done':
                 raise Exception('%s: failed to find end of response' % self.port)
             logging.info('%s: send command[%s] done!', self.port, cmd)
@@ -487,7 +487,14 @@ class OpenThread(IThci):
         Returns:
             IPv6 address dotted-quad format
         """
-        return strIp6Prefix[0:4] + '::'
+        prefix1 = strIp6Prefix.rstrip('L')
+        prefix2 = prefix1.lstrip("0x")
+        hexPrefix = str(prefix2).ljust(16,'0')
+        hexIter = iter(hexPrefix)
+        finalMac = ':'.join(a + b + c + d for a,b,c,d in zip(hexIter, hexIter,hexIter,hexIter))
+        prefix = str(finalMac)
+        strIp6Prefix = prefix[:20]
+        return strIp6Prefix +':'
 
     def __convertLongToString(self, iValue):
         """convert a long hex integer to string
@@ -1824,8 +1831,9 @@ class OpenThread(IThci):
                 return globalAddrs[0]
             else:
                 for line in globalAddrs:
-                    if line.startswith(filterByPrefix):
-                        return line
+                    fullIp = ModuleHelper.GetFullIpv6Address(line)
+                    if fullIp.startswith(filterByPrefix):
+                        return fullIp
                 print 'no global address matched'
                 return None
         except Exception, e:
