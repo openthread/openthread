@@ -61,7 +61,7 @@ Leader::Leader(Instance &aInstance)
     , mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this)
     , mTimer(aInstance, HandleTimer, this)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
-    , mSessionId(0xffff)
+    , mSessionId(Random::GetUint16())
 {
     GetNetif().GetCoap().AddResource(mPetition);
     GetNetif().GetCoap().AddResource(mKeepAlive);
