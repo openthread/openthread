@@ -956,7 +956,7 @@ otLwfCmdSendMacFrameAsync(
             Packet->mPsdu,
             (uint32_t)Packet->mLength,
             Packet->mChannel,
-            Packet->mRssi
+            Packet->mInfo.mRxInfo.mRssi
             );
     if (!NT_SUCCESS(status))
     {

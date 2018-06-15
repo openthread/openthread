@@ -443,7 +443,8 @@ void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otErro
                           "\"RemoteID\":%" PRId16 ","
                           "\"RSSI\":%d"
                           "}}\r\n",
-                          aFrame->mChannel, message->mChannel, message->mCnt, sID, message->mID, aFrame->mRssi);
+                          aFrame->mChannel, message->mChannel, message->mCnt, sID, message->mID,
+                          aFrame->mInfo.mRxInfo.mRssi);
             }
         }
     }

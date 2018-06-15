@@ -462,16 +462,16 @@ void readFrame(void)
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     // Timestamp
-    sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-    sReceiveFrame.mUsec = 0; // Don't support microsecond timer for now.
+    sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+    sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
     /* Read PSDU */
     memcpy(sReceiveFrame.mPsdu, readBuffer, length - 2);
 
-    sReceiveFrame.mRssi   = (int8_t)(readRssi / MRF24J40_RSSI_SLOPE) - MRF24J40_RSSI_OFFSET;
-    sReceiveFrame.mLength = (uint8_t)length;
-    sReceiveFrame.mLqi    = readPlqi;
+    sReceiveFrame.mInfo.mRxInfo.mRssi = (int8_t)(readRssi / MRF24J40_RSSI_SLOPE) - MRF24J40_RSSI_OFFSET;
+    sReceiveFrame.mLength             = (uint8_t)length;
+    sReceiveFrame.mInfo.mRxInfo.mLqi  = readPlqi;
 
 exit:
     return;

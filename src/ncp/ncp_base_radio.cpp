@@ -78,15 +78,15 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     }
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mRssi));       // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi));       // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));                // Noise Floor (Currently unused)
     SuccessOrExit(mEncoder.WriteUint16(flags));             // Flags
 
     SuccessOrExit(mEncoder.OpenStruct());                   // PHY-data
     SuccessOrExit(mEncoder.WriteUint8(aFrame->mChannel));   // 802.15.4 channel (Receive channel)
-    SuccessOrExit(mEncoder.WriteUint8(aFrame->mLqi));       // 802.15.4 LQI
-    SuccessOrExit(mEncoder.WriteUint32(aFrame->mMsec));     // The timestamp milliseconds
-    SuccessOrExit(mEncoder.WriteUint16(aFrame->mUsec));     // The timestamp microseconds, offset to mMsec
+    SuccessOrExit(mEncoder.WriteUint8(aFrame->mInfo.mRxInfo.mLqi));       // 802.15.4 LQI
+    SuccessOrExit(mEncoder.WriteUint32(aFrame->mInfo.mRxInfo.mMsec));     // The timestamp milliseconds
+    SuccessOrExit(mEncoder.WriteUint16(aFrame->mInfo.mRxInfo.mUsec));     // The timestamp microseconds, offset to mMsec
     SuccessOrExit(mEncoder.CloseStruct());
 
     SuccessOrExit(mEncoder.OpenStruct());                   // Vendor-data
@@ -124,14 +124,14 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
             SuccessOrExit(mEncoder.WriteUint16(aAckFrame->mLength));
             SuccessOrExit(mEncoder.WriteData(aAckFrame->mPsdu, aAckFrame->mLength));
 
-            SuccessOrExit(mEncoder.WriteInt8(aAckFrame->mRssi));     // RSSI
+            SuccessOrExit(mEncoder.WriteInt8(aAckFrame->mInfo.mRxInfo.mRssi));     // RSSI
             SuccessOrExit(mEncoder.WriteInt8(-128));                 // Noise Floor (Currently unused)
             SuccessOrExit(mEncoder.WriteUint16(0));                  // Flags
 
             SuccessOrExit(mEncoder.OpenStruct());                    // PHY-data
 
             SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mChannel)); // Receive channel
-            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mLqi));     // Link Quality Indicator
+            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mInfo.mRxInfo.mLqi));     // Link Quality Indicator
 
             SuccessOrExit(mEncoder.CloseStruct());
         }
@@ -368,7 +368,7 @@ otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t aHeader)
     memcpy(frame->mPsdu, frameBuffer, frame->mLength);
 
     // TODO: This should be later added in the STREAM_RAW argument to allow user to directly specify it.
-    frame->mMaxTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT;
+    frame->mInfo.mTxInfo.mMaxTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT;
 
     // Pass frame to the radio layer. Note, this fails if we
     // haven't enabled raw stream or are already transmitting.

@@ -624,13 +624,13 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
     memcpy(sReceiveFrame.mPsdu + packetInfo.firstPortionBytes, packetInfo.lastPortionData,
            packetInfo.packetBytes - packetInfo.firstPortionBytes);
 
-    sReceiveFrame.mLength = length;
-    sReceiveFrame.mRssi   = packetDetails.rssi;
-    sReceiveFrame.mLqi    = packetDetails.lqi;
+    sReceiveFrame.mLength             = length;
+    sReceiveFrame.mInfo.mRxInfo.mRssi = packetDetails.rssi;
+    sReceiveFrame.mInfo.mRxInfo.mLqi  = packetDetails.lqi;
 
     // TODO: grab timestamp and handle conversion to msec/usec
-    // sReceiveFrame.mMsec = packetDetails.packetTime;
-    // sReceiveFrame.mUsec = packetDetails.packetTime;
+    // sReceiveFrame.mInfo.mRxInfo.mMsec = packetDetails.packetTime;
+    // sReceiveFrame.mInfo.mRxInfo.mUsec = packetDetails.packetTime;
 
     if (packetDetails.isAck)
     {
