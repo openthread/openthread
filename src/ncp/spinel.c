@@ -1545,6 +1545,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES";
         break;
 
+    case SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE:
+        ret = "PROP_THREAD_ADDRESS_CACHE_TABLE";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;

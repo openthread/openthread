@@ -528,6 +528,31 @@ exit:
     return error;
 }
 
+otError NcpBase::GetPropertyHandler_THREAD_ADDRESS_CACHE_TABLE(void)
+{
+    otError         error = OT_ERROR_NONE;
+    otEidCacheEntry entry;
+
+    for (uint8_t index = 0; ; index++)
+    {
+        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, index, &entry));
+
+        if (!entry.mValid)
+        {
+            continue;
+        }
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteIp6Address(entry.mTarget));
+        SuccessOrExit(error = mEncoder.WriteUint16(entry.mRloc16));
+        SuccessOrExit(error = mEncoder.WriteUint8(entry.mAge));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_ENABLE_TMF_PROXY
 otError NcpBase::GetPropertyHandler_THREAD_TMF_PROXY_ENABLED(void)
 {

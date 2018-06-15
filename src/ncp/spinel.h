@@ -1416,6 +1416,21 @@ typedef enum
     SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 34,
 
+    /// EID (Endpoint Identifier) IPv6 Address Cache Table
+    /** Format `A(t(6SC))`
+     *
+     * This property provides Thread EID address cache table.
+     *
+     * Data per item is:
+     *
+     *  `6` : Target IPv6 address
+     *  `S` : RLOC16 of target
+     *  `C` : Age (order of use, 0 indicates most recently used entry)
+     *
+     */
+    SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 35,
+
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN             = 0x60,
