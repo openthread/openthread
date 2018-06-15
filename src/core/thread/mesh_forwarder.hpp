@@ -307,6 +307,7 @@ private:
     void     ClearReassemblyList(void);
     otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void     RemoveMessage(Message &aMessage);
+    void     HandleDiscoverComplete(void);
 
     static void    HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void           HandleReceivedFrame(Mac::Frame &aFrame);
