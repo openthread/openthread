@@ -562,11 +562,12 @@ public:
      * @param[in]  aLength  The Route Data Length value in number of router entries
      *
      */
-    void SetRouteDataLength(uint8_t aLength) {
+    void SetRouteDataLength(uint8_t aLength)
+    {
 #if !OPENTHREAD_ENABLE_LONG_ROUTES
         SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength);
 #else
-        SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength + (aLength+1) / 2);
+        SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength + (aLength + 1) / 2);
 #endif
     }
 
@@ -576,15 +577,21 @@ public:
      * @returns The Route Cost value for a given Router ID.
      *
      */
-    uint8_t GetRouteCost(uint8_t aRouterId) const {
+    uint8_t GetRouteCost(uint8_t aRouterId) const
+    {
 #if !OPENTHREAD_ENABLE_LONG_ROUTES
         return mRouteData[aRouterId] & kRouteCostMask;
 #else
-        if( aRouterId & 1 ) {
+        if (aRouterId & 1)
+        {
             return mRouteData[aRouterId + aRouterId / 2 + 1];
-        } else {
+        }
+        else
+        {
             return static_cast<uint8_t>((mRouteData[aRouterId + aRouterId / 2] & kRouteCostMask) << kOddEntryOffset) |
-                   ((mRouteData[aRouterId + aRouterId / 2 + 1] & static_cast<uint8_t>(kRouteCostMask<<kOddEntryOffset)) >> kOddEntryOffset);
+                   ((mRouteData[aRouterId + aRouterId / 2 + 1] &
+                     static_cast<uint8_t>(kRouteCostMask << kOddEntryOffset)) >>
+                    kOddEntryOffset);
         }
 #endif
     }
@@ -601,14 +608,17 @@ public:
 #if !OPENTHREAD_ENABLE_LONG_ROUTES
         mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kRouteCostMask) | aRouteCost;
 #else
-        if( aRouterId & 1 ) {
+        if (aRouterId & 1)
+        {
             mRouteData[aRouterId + aRouterId / 2 + 1] = aRouteCost;
-        } else {
+        }
+        else
+        {
             mRouteData[aRouterId + aRouterId / 2] = (mRouteData[aRouterId + aRouterId / 2] & ~kRouteCostMask) |
-                                    ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
-            mRouteData[aRouterId + aRouterId / 2 + 1] =
-                    static_cast<uint8_t>((mRouteData[aRouterId + aRouterId / 2 + 1] & ~(kRouteCostMask << kOddEntryOffset)) |
-                    ((aRouteCost & kRouteCostMask) << kOddEntryOffset));
+                                                    ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
+            mRouteData[aRouterId + aRouterId / 2 + 1] = static_cast<uint8_t>(
+                (mRouteData[aRouterId + aRouterId / 2 + 1] & ~(kRouteCostMask << kOddEntryOffset)) |
+                ((aRouteCost & kRouteCostMask) << kOddEntryOffset));
         }
 #endif
     }
@@ -625,7 +635,8 @@ public:
         return (mRouteData[aRouterId] & kLinkQualityInMask) >> kLinkQualityInOffset;
 #else
         int offset = ((aRouterId & 1) ? kOddEntryOffset : 0);
-        return (mRouteData[aRouterId + aRouterId / 2] & (kLinkQualityInMask >> offset)) >> (kLinkQualityInOffset - offset);
+        return (mRouteData[aRouterId + aRouterId / 2] & (kLinkQualityInMask >> offset)) >>
+               (kLinkQualityInOffset - offset);
 #endif
     }
 
@@ -643,8 +654,9 @@ public:
                                 ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
 #else
         int offset = ((aRouterId & 1) ? kOddEntryOffset : 0);
-        mRouteData[aRouterId + aRouterId / 2] = (mRouteData[aRouterId + aRouterId / 2] & ~(kLinkQualityInMask >> offset)) |
-                                ((aLinkQuality << (kLinkQualityInOffset - offset)) & (kLinkQualityInMask >> offset));
+        mRouteData[aRouterId + aRouterId / 2] =
+            (mRouteData[aRouterId + aRouterId / 2] & ~(kLinkQualityInMask >> offset)) |
+            ((aLinkQuality << (kLinkQualityInOffset - offset)) & (kLinkQualityInMask >> offset));
 #endif
     }
 
@@ -660,7 +672,8 @@ public:
         return (mRouteData[aRouterId] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
 #else
         int offset = ((aRouterId & 1) ? kOddEntryOffset : 0);
-        return (mRouteData[aRouterId + aRouterId / 2] & (kLinkQualityOutMask >> offset)) >> (kLinkQualityOutOffset - offset);
+        return (mRouteData[aRouterId + aRouterId / 2] & (kLinkQualityOutMask >> offset)) >>
+               (kLinkQualityOutOffset - offset);
 #endif
     }
 
@@ -678,8 +691,9 @@ public:
                                 ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
 #else
         int offset = ((aRouterId & 1) ? kOddEntryOffset : 0);
-        mRouteData[aRouterId + aRouterId / 2] = (mRouteData[aRouterId + aRouterId / 2] & ~(kLinkQualityOutMask >> offset)) |
-                                ((aLinkQuality << (kLinkQualityOutOffset - offset)) & (kLinkQualityOutMask >> offset));
+        mRouteData[aRouterId + aRouterId / 2] =
+            (mRouteData[aRouterId + aRouterId / 2] & ~(kLinkQualityOutMask >> offset)) |
+            ((aLinkQuality << (kLinkQualityOutOffset - offset)) & (kLinkQualityOutMask >> offset));
 #endif
     }
 
@@ -693,7 +707,7 @@ private:
         kRouteCostOffset      = 0,
         kRouteCostMask        = 0xf << kRouteCostOffset,
 #if OPENTHREAD_ENABLE_LONG_ROUTES
-        kOddEntryOffset       = 4,
+        kOddEntryOffset = 4,
 #endif
     };
     uint8_t mRouterIdSequence;

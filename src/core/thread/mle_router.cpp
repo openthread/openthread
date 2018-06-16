@@ -103,16 +103,12 @@ void MleRouter::HandlePartitionChange(void)
 
 bool MleRouter::IsRouterRoleEnabled(void) const
 {
-    ThreadNetif &netif = GetNetif();
-
-    return mRouterRoleEnabled && IsFullThreadDevice() && (netif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_ROUTERS);
+    return mRouterRoleEnabled && IsFullThreadDevice();
 }
 
 void MleRouter::SetRouterRoleEnabled(bool aEnabled)
 {
-    ThreadNetif &netif = GetNetif();
-
-    mRouterRoleEnabled = aEnabled && (netif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_ROUTERS);
+    mRouterRoleEnabled = aEnabled;
 
     switch (mRole)
     {
