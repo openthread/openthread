@@ -1602,7 +1602,7 @@ otError Mac::ProcessFrameSequence(Frame &aFrame, const Address &aSrcAddr)
 
     VerifyOrExit(linkNeighbor != NULL);
 
-    if (aFrame.GetSequence() + 1 <= linkNeighbor->GetLinkFrameSequence())
+    if (aFrame.GetSequence() + 1 == linkNeighbor->GetLinkFrameSequence())
     {
         ExitNow(error = OT_ERROR_DUPLICATED);
     }

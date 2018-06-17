@@ -3221,11 +3221,16 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
     // Challenge
     if (Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge) == OT_ERROR_NONE)
     {
+        const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+
         VerifyOrExit(challenge.IsValid(), error = OT_ERROR_PARSE);
         VerifyOrExit(static_cast<size_t>(numTlvs + 3) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
         tlvs[numTlvs++] = Tlv::kResponse;
         tlvs[numTlvs++] = Tlv::kMleFrameCounter;
         tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
+
+        // Challenge TLV indicates parent coming out of reset
+        mParent.SetLinkFrameSequence(linkInfo->mSequence + 1);
     }
 
     SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));

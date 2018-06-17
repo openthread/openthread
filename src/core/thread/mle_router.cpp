@@ -554,15 +554,16 @@ exit:
 
 otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError          error    = OT_ERROR_NONE;
-    Neighbor *       neighbor = NULL;
-    Mac::ExtAddress  macAddr;
-    ChallengeTlv     challenge;
-    VersionTlv       version;
-    LeaderDataTlv    leaderData;
-    SourceAddressTlv sourceAddress;
-    TlvRequestTlv    tlvRequest;
-    uint16_t         rloc16;
+    otError                 error    = OT_ERROR_NONE;
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+    Neighbor *              neighbor = NULL;
+    Mac::ExtAddress         macAddr;
+    ChallengeTlv            challenge;
+    VersionTlv              version;
+    LeaderDataTlv           leaderData;
+    SourceAddressTlv        sourceAddress;
+    TlvRequestTlv           tlvRequest;
+    uint16_t                rloc16;
 
     LogMleMessage("Receive Link Request", aMessageInfo.GetPeerAddr());
 
@@ -610,8 +611,6 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
             if (neighbor->GetState() != Neighbor::kStateValid)
             {
-                const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-
                 neighbor->SetExtAddress(macAddr);
                 neighbor->GetLinkInfo().Clear();
                 neighbor->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
@@ -637,6 +636,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
         VerifyOrExit((neighbor = GetNeighbor(macAddr)) != NULL && neighbor->GetState() == Neighbor::kStateValid &&
                          IsActiveRouter(neighbor->GetRloc16()),
                      error = OT_ERROR_DROP);
+        neighbor->SetLinkFrameSequence(linkInfo->mSequence + 1);
     }
 
     // TLV Request
@@ -2139,17 +2139,18 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 {
     static const uint8_t kMaxResponseTlvs = 10;
 
-    otError         error = OT_ERROR_NONE;
-    Mac::ExtAddress macAddr;
-    ModeTlv         mode;
-    ChallengeTlv    challenge;
-    LeaderDataTlv   leaderData;
-    TimeoutTlv      timeout;
-    Child *         child;
-    TlvRequestTlv   tlvRequest;
-    uint8_t         tlvs[kMaxResponseTlvs];
-    uint8_t         tlvslength                = 0;
-    uint16_t        addressRegistrationOffset = 0;
+    otError                 error    = OT_ERROR_NONE;
+    const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+    Mac::ExtAddress         macAddr;
+    ModeTlv                 mode;
+    ChallengeTlv            challenge;
+    LeaderDataTlv           leaderData;
+    TimeoutTlv              timeout;
+    Child *                 child;
+    TlvRequestTlv           tlvRequest;
+    uint8_t                 tlvs[kMaxResponseTlvs];
+    uint8_t                 tlvslength                = 0;
+    uint16_t                addressRegistrationOffset = 0;
 
     LogMleMessage("Receive Child Update Request from child", aMessageInfo.GetPeerAddr());
 
@@ -2190,6 +2191,9 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         tlvs[tlvslength++] = Tlv::kResponse;
         tlvs[tlvslength++] = Tlv::kMleFrameCounter;
         tlvs[tlvslength++] = Tlv::kLinkFrameCounter;
+
+        // Challenge TLV indicates child coming out of reset
+        child->SetLinkFrameSequence(linkInfo->mSequence + 1);
     }
 
     // Ip6 Address TLV
@@ -2236,8 +2240,6 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
     if (child->IsStateRestoring())
     {
-        const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-
         SetChildStateToValid(*child);
         child->SetKeySequence(aKeySequence);
         child->SetLinkFrameSequence(linkInfo->mSequence + 1);
