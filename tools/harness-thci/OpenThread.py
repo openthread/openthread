@@ -53,8 +53,9 @@ class OpenThread(IThci):
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
-    # only firmware built since thread-reference-20180615(tag) is allowed
-    Firmware = "OPENTHREAD/20180615"
+    # Used for reference firmware version control for Test Harness.
+    # This variable will be updated to match the OpenThread reference firmware officially released.
+    firmwarePrefix = "OPENTHREAD/201806"
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
@@ -655,10 +656,10 @@ class OpenThread(IThci):
             # init serial port
             self._connect()
 
-            if self.Firmware in self.UIStatusMsg:
+            if self.firmwarePrefix in self.UIStatusMsg:
                 self.deviceConnected = True
             else:
-                self.UIStatusMsg = "Firmware Not Matching Expecting " + self.Firmware + " Now is " + self.UIStatusMsg
+                self.UIStatusMsg = "Firmware Not Matching Expecting " + self.firmwarePrefix + " Now is " + self.UIStatusMsg
                 ModuleHelper.WriteIntoDebugLogger("Err: OpenThread device Firmware not matching..")
 
         except Exception, e:
