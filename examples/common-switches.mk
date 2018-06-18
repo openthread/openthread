@@ -79,6 +79,10 @@ ifeq ($(LEGACY),1)
 configure_OPTIONS              += --enable-legacy
 endif
 
+ifeq ($(LINK_RAW),1)
+configure_OPTIONS              += --enable-raw-link-api
+endif
+
 ifeq ($(MAC_FILTER),1)
 configure_OPTIONS              += --enable-mac-filter
 endif
