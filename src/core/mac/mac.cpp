@@ -514,7 +514,7 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(mPanChannel != aChannel);
+    VerifyOrExit(mPanChannel != aChannel, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_CHANNEL));
 
     mPanChannel = aChannel;
     mCcaSuccessRateTracker.Reset();
@@ -524,6 +524,8 @@ otError Mac::SetPanChannel(uint8_t aChannel)
     mRadioChannel = mPanChannel;
 
     UpdateIdleMode();
+
+    GetNotifier().Signal(OT_CHANGED_THREAD_CHANNEL);
 
 exit:
     return error;
@@ -577,11 +579,21 @@ exit:
 
 otError Mac::SetNetworkName(const char *aNetworkName)
 {
+    return SetNetworkName(aNetworkName, static_cast<uint8_t>(strnlen(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1)));
+}
+
+otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)
+{
     otError error = OT_ERROR_NONE;
+    uint8_t len   = static_cast<uint8_t>(strnlen(aBuffer, aLength));
 
-    VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(memcmp(mNetworkName.m8, aBuffer, len) != 0,
+                 GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME));
 
-    (void)strlcpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName));
+    memcpy(mNetworkName.m8, aBuffer, len);
+    mNetworkName.m8[len] = 0;
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
 
 exit:
     return error;
@@ -589,15 +601,24 @@ exit:
 
 otError Mac::SetPanId(PanId aPanId)
 {
+    VerifyOrExit(mPanId != aPanId, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_PANID));
     mPanId = aPanId;
     otPlatRadioSetPanId(&GetInstance(), mPanId);
+    GetNotifier().Signal(OT_CHANGED_THREAD_PANID);
 
+exit:
     return OT_ERROR_NONE;
 }
 
 otError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
 {
+    VerifyOrExit(memcmp(mExtendedPanId.m8, aExtPanId, sizeof(mExtendedPanId)) != 0,
+                 GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
+
     memcpy(mExtendedPanId.m8, aExtPanId, sizeof(mExtendedPanId));
+    GetNotifier().Signal(OT_CHANGED_THREAD_EXT_PANID);
+
+exit:
     return OT_ERROR_NONE;
 }
 

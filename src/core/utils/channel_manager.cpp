@@ -79,7 +79,7 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
 
     mTimer.Start(1 + Random::GetUint32InRange(0, kRequestStartJitterInterval));
 
-    GetNotifier().SetFlags(OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL);
+    GetNotifier().Signal(OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL);
 
 exit:
     return;
@@ -256,12 +256,12 @@ void ChannelManager::HandleTimer(void)
     }
 }
 
-void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
     aCallback.GetOwner<ChannelManager>().HandleStateChanged(aFlags);
 }
 
-void ChannelManager::HandleStateChanged(uint32_t aFlags)
+void ChannelManager::HandleStateChanged(otChangedFlags aFlags)
 {
     VerifyOrExit((aFlags & OT_CHANGED_THREAD_CHANNEL) != 0);
     VerifyOrExit(mChannel == GetInstance().Get<Mac::Mac>().GetPanChannel());
