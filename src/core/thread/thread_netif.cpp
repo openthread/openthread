@@ -63,6 +63,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
+    , mDatasetEmittedFlags(0)
     , mKeyManager(aInstance)
     , mLowpan(aInstance)
     , mMac(aInstance)
