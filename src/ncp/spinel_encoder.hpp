@@ -40,8 +40,8 @@
 #include <openthread/types.h>
 
 #include "openthread-core-config.h"
-#include "ncp/spinel.h"
 #include "ncp/ncp_buffer.hpp"
+#include "ncp/spinel.h"
 
 namespace ot {
 namespace Ncp {
@@ -59,8 +59,13 @@ public:
      * @param[in] aNcpBuffer   A reference to a `NcpFrameBuffer` where the frames are written.
      *
      */
-    SpinelEncoder(NcpFrameBuffer &aNcpBuffer):
-        mNcpBuffer(aNcpBuffer), mNumOpenStructs(0), mSavedNumOpenStructs(0), mSavedPosition() { }
+    SpinelEncoder(NcpFrameBuffer &aNcpBuffer)
+        : mNcpBuffer(aNcpBuffer)
+        , mNumOpenStructs(0)
+        , mSavedNumOpenStructs(0)
+        , mSavedPosition()
+    {
+    }
 
     /**
      * This method begins a new frame to be added/written to the frame buffer.
@@ -169,7 +174,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE   `BeginFrame()` has not been called earlier to start the frame.
      *
      */
-    otError WriteBool(bool aBool) { return mNcpBuffer.InFrameFeedByte( aBool ? 0x01: 0x00); }
+    otError WriteBool(bool aBool) { return mNcpBuffer.InFrameFeedByte(aBool ? 0x01 : 0x00); }
 
     /**
      * This method encodes and writes a `uint8_t` value to current input frame.
@@ -546,10 +551,10 @@ public:
      * `OT_ERROR_NO_BUFS`.
      *
      * The ownership of the passed-in message @p aMessage changes to underlying `NcpFrameBuffer` ONLY when the entire
-     * frame is successfully finished (i.e., with a successful call to `EndFrame()` for the current frame being written),
-     * and in this case the `otMessage` instance will be freed once the frame is removed from the `NcpFrameBuffer`.
-     * However, if the frame gets discarded before it is finished (e.g., running out of buffer space), the  `otMessage`
-     * instance remains unchanged.
+     * frame is successfully finished (i.e., with a successful call to `EndFrame()` for the current frame being
+     * written), and in this case the `otMessage` instance will be freed once the frame is removed from the
+     * `NcpFrameBuffer`. However, if the frame gets discarded before it is finished (e.g., running out of buffer space),
+     * the  `otMessage` instance remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
      *
@@ -674,19 +679,19 @@ public:
 private:
     enum
     {
-        kPackFormatBufferSize = 96,   ///< Size of buffer used when encoding using `WritePacked()` or `WriteVPacked()`.
-        kMaxNestedStructs = 4,        ///< Maximum number of nested structs.
+        kPackFormatBufferSize = 96, ///< Size of buffer used when encoding using `WritePacked()` or `WriteVPacked()`.
+        kMaxNestedStructs     = 4,  ///< Maximum number of nested structs.
     };
 
-    NcpFrameBuffer &mNcpBuffer;
+    NcpFrameBuffer &              mNcpBuffer;
     NcpFrameBuffer::WritePosition mStructPosition[kMaxNestedStructs];
-    uint8_t mNumOpenStructs;
+    uint8_t                       mNumOpenStructs;
 
-    uint8_t mSavedNumOpenStructs;
+    uint8_t                       mSavedNumOpenStructs;
     NcpFrameBuffer::WritePosition mSavedPosition;
 };
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
-#endif  // SPINEL_ENCODER_HPP_
+#endif // SPINEL_ENCODER_HPP_

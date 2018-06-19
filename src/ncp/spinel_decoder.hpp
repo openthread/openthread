@@ -51,7 +51,6 @@ namespace Ncp {
 class SpinelDecoder
 {
 public:
-
     /**
      * This constructor initializes a `SpinelDecoder` object
      *
@@ -259,7 +258,8 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadIp6Address(const spinel_ipv6addr_t *&aIp6AddrPtr) {
+    otError ReadIp6Address(const spinel_ipv6addr_t *&aIp6AddrPtr)
+    {
         return ReadItem(reinterpret_cast<const uint8_t **>(&aIp6AddrPtr), sizeof(spinel_ipv6addr_t));
     }
 
@@ -275,7 +275,8 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadIp6Address(const otIp6Address *&aIp6AddrPtr) {
+    otError ReadIp6Address(const otIp6Address *&aIp6AddrPtr)
+    {
         return ReadItem(reinterpret_cast<const uint8_t **>(&aIp6AddrPtr), sizeof(spinel_ipv6addr_t));
     }
 
@@ -291,7 +292,8 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadIp6Address(const uint8_t *&aIp6AddrBufPtr) {
+    otError ReadIp6Address(const uint8_t *&aIp6AddrBufPtr)
+    {
         return ReadItem(&aIp6AddrBufPtr, sizeof(spinel_ipv6addr_t));
     }
 
@@ -335,7 +337,8 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadEui64(const spinel_eui64_t *&aEui64Ptr) {
+    otError ReadEui64(const spinel_eui64_t *&aEui64Ptr)
+    {
         return ReadItem(reinterpret_cast<const uint8_t **>(&aEui64Ptr), sizeof(spinel_eui64_t));
     }
 
@@ -351,7 +354,8 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadEui64(const otExtAddress *&aEui64Ptr) {
+    otError ReadEui64(const otExtAddress *&aEui64Ptr)
+    {
         return ReadItem(reinterpret_cast<const uint8_t **>(&aEui64Ptr), sizeof(spinel_eui64_t));
     }
 
@@ -367,9 +371,7 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadEui64(const uint8_t *&aEui64BufPtr) {
-        return ReadItem(&aEui64BufPtr, sizeof(spinel_eui64_t));
-    }
+    otError ReadEui64(const uint8_t *&aEui64BufPtr) { return ReadItem(&aEui64BufPtr, sizeof(spinel_eui64_t)); }
 
     /**
      * This method decodes and reads an EUI64 value form the frame.
@@ -411,7 +413,8 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadEui48(const spinel_eui48_t *&aEui48Ptr) {
+    otError ReadEui48(const spinel_eui48_t *&aEui48Ptr)
+    {
         return ReadItem(reinterpret_cast<const uint8_t **>(&aEui48Ptr), sizeof(spinel_eui48_t));
     }
 
@@ -427,9 +430,7 @@ public:
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadEui48(const uint8_t *&aEui48BufPtr) {
-        return ReadItem(&aEui48BufPtr, sizeof(spinel_eui48_t));
-    }
+    otError ReadEui48(const uint8_t *&aEui48BufPtr) { return ReadItem(&aEui48BufPtr, sizeof(spinel_eui48_t)); }
 
     /**
      * This method decodes and reads an EUI48 value form the frame.
@@ -459,7 +460,7 @@ public:
      */
     otError ReadUtf8(const char *&aUt8);
 
-   /**
+    /**
      * This method decodes and reads a data blob (sequence of bytes) form the frame.
      *
      * On success, the read position gets updated.
@@ -549,7 +550,7 @@ public:
      */
     void SavePosition(void);
 
-   /**
+    /**
      * This method resets/moves the read position to a previously saved position.
      *
      * The saved position remembers its enclosing structure. When `ResetToSaved()` is called, the current open
@@ -564,28 +565,28 @@ public:
 
 private:
     otError ReadItem(const uint8_t **aPtr, size_t aSize);
-    void ClearSavedPosition(void)   { mSavedIndex = mLength; }
-    bool IsSavedPositionValid(void) const { return (mSavedIndex < mLength); }
+    void    ClearSavedPosition(void) { mSavedIndex = mLength; }
+    bool    IsSavedPositionValid(void) const { return (mSavedIndex < mLength); }
 
     enum
     {
-        kMaxNestedStructs = 4,        ///< Maximum number of nested structs.
+        kMaxNestedStructs = 4, ///< Maximum number of nested structs.
     };
 
-    const uint8_t *mFrame;            // Frame buffer
-    uint16_t mLength;                 // Total length of the buffer.
-    uint16_t mIndex;                  // Current read index.
-    uint16_t mEnd;                    // Current end index (end of struct if in a struct, or end of buffer otherwise).
-    uint8_t mNumOpenStructs;          // Number of open structs.
+    const uint8_t *mFrame;          // Frame buffer
+    uint16_t       mLength;         // Total length of the buffer.
+    uint16_t       mIndex;          // Current read index.
+    uint16_t       mEnd;            // Current end index (end of struct if in a struct, or end of buffer otherwise).
+    uint8_t        mNumOpenStructs; // Number of open structs.
 
-    uint8_t mSavedNumOpenStructs;     // Number of open structs when read position was saved.
-    uint16_t mSavedIndex;             // Read index when position was saved.
-    uint16_t mSavedEnd;               // End index when position was saved.
+    uint8_t  mSavedNumOpenStructs; // Number of open structs when read position was saved.
+    uint16_t mSavedIndex;          // Read index when position was saved.
+    uint16_t mSavedEnd;            // End index when position was saved.
 
     uint16_t mPrevEnd[kMaxNestedStructs];
 };
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
-#endif  // SPINEL_DECODER_HPP_
+#endif // SPINEL_DECODER_HPP_

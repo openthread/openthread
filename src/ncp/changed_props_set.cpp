@@ -25,7 +25,6 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "changed_props_set.hpp"
 
 #include "common/code_utils.hpp"
@@ -45,44 +44,43 @@ namespace Ncp {
 // Since a `uint32_t` is used as bit-mask to track which entries are in the changed set, we should ensure that the
 // number of entries in the list is always less than or equal to 32.
 //
-const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] =
-{
+const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     // Spinel property                                  Status (if prop is `LAST_STATUS`)  IsFilterable?
 
-    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_RESET_UNKNOWN,       false },         // 0
-    { SPINEL_PROP_STREAM_DEBUG,                          SPINEL_STATUS_OK,                  true  },         // 1
-    { SPINEL_PROP_IPV6_ADDRESS_TABLE,                    SPINEL_STATUS_OK,                  true  },         // 2
-    { SPINEL_PROP_NET_ROLE,                              SPINEL_STATUS_OK,                  true  },         // 3
-    { SPINEL_PROP_IPV6_LL_ADDR,                          SPINEL_STATUS_OK,                  true  },         // 4
-    { SPINEL_PROP_IPV6_ML_ADDR,                          SPINEL_STATUS_OK,                  true  },         // 5
-    { SPINEL_PROP_NET_PARTITION_ID,                      SPINEL_STATUS_OK,                  true  },         // 6
-    { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER,              SPINEL_STATUS_OK,                  true  },         // 7
-    { SPINEL_PROP_THREAD_LEADER_NETWORK_DATA,            SPINEL_STATUS_OK,                  true  },         // 8
-    { SPINEL_PROP_THREAD_CHILD_TABLE,                    SPINEL_STATUS_OK,                  true  },         // 9
-    { SPINEL_PROP_THREAD_ON_MESH_NETS,                   SPINEL_STATUS_OK,                  true  },         // 10
-    { SPINEL_PROP_THREAD_OFF_MESH_ROUTES,                SPINEL_STATUS_OK,                  true  },         // 11
-    { SPINEL_PROP_NET_STACK_UP,                          SPINEL_STATUS_OK,                  true  },         // 12
-    { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING,             SPINEL_STATUS_OK,                  true  },         // 13
-    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_NOMEM,               true  },         // 14
-    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_DROPPED,             true  },         // 15
+    {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_RESET_UNKNOWN, false},    // 0
+    {SPINEL_PROP_STREAM_DEBUG, SPINEL_STATUS_OK, true},               // 1
+    {SPINEL_PROP_IPV6_ADDRESS_TABLE, SPINEL_STATUS_OK, true},         // 2
+    {SPINEL_PROP_NET_ROLE, SPINEL_STATUS_OK, true},                   // 3
+    {SPINEL_PROP_IPV6_LL_ADDR, SPINEL_STATUS_OK, true},               // 4
+    {SPINEL_PROP_IPV6_ML_ADDR, SPINEL_STATUS_OK, true},               // 5
+    {SPINEL_PROP_NET_PARTITION_ID, SPINEL_STATUS_OK, true},           // 6
+    {SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, SPINEL_STATUS_OK, true},   // 7
+    {SPINEL_PROP_THREAD_LEADER_NETWORK_DATA, SPINEL_STATUS_OK, true}, // 8
+    {SPINEL_PROP_THREAD_CHILD_TABLE, SPINEL_STATUS_OK, true},         // 9
+    {SPINEL_PROP_THREAD_ON_MESH_NETS, SPINEL_STATUS_OK, true},        // 10
+    {SPINEL_PROP_THREAD_OFF_MESH_ROUTES, SPINEL_STATUS_OK, true},     // 11
+    {SPINEL_PROP_NET_STACK_UP, SPINEL_STATUS_OK, true},               // 12
+    {SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, SPINEL_STATUS_OK, true},  // 13
+    {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_NOMEM, true},             // 14
+    {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_DROPPED, true},           // 15
 #if OPENTHREAD_ENABLE_JAM_DETECTION
-    { SPINEL_PROP_JAM_DETECTED,                          SPINEL_STATUS_OK,                  true  },         // 16
+    {SPINEL_PROP_JAM_DETECTED, SPINEL_STATUS_OK, true}, // 16
 #endif
 #if OPENTHREAD_ENABLE_LEGACY
-    { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX,                SPINEL_STATUS_OK,                  true  },         // 17
-    { SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED,          SPINEL_STATUS_OK,                  true  },         // 18
+    {SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, SPINEL_STATUS_OK, true},       // 17
+    {SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED, SPINEL_STATUS_OK, true}, // 18
 #endif
-    { SPINEL_PROP_LAST_STATUS,                           SPINEL_STATUS_JOIN_FAILURE,        false },         // 19
-    { SPINEL_PROP_MAC_SCAN_STATE,                        SPINEL_STATUS_OK,                  false },         // 20
-    { SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE,          SPINEL_STATUS_OK,                  true  },         // 21
-    { SPINEL_PROP_PHY_CHAN,                              SPINEL_STATUS_OK,                  true  },         // 22
-    { SPINEL_PROP_MAC_15_4_PANID,                        SPINEL_STATUS_OK,                  true  },         // 23
-    { SPINEL_PROP_NET_NETWORK_NAME,                      SPINEL_STATUS_OK,                  true  },         // 24
-    { SPINEL_PROP_NET_XPANID,                            SPINEL_STATUS_OK,                  true  },         // 25
-    { SPINEL_PROP_NET_MASTER_KEY,                        SPINEL_STATUS_OK,                  true  },         // 26
-    { SPINEL_PROP_NET_PSKC,                              SPINEL_STATUS_OK,                  true  },         // 27
+    {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_JOIN_FAILURE, false},       // 19
+    {SPINEL_PROP_MAC_SCAN_STATE, SPINEL_STATUS_OK, false},              // 20
+    {SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE, SPINEL_STATUS_OK, true}, // 21
+    {SPINEL_PROP_PHY_CHAN, SPINEL_STATUS_OK, true},                     // 22
+    {SPINEL_PROP_MAC_15_4_PANID, SPINEL_STATUS_OK, true},               // 23
+    {SPINEL_PROP_NET_NETWORK_NAME, SPINEL_STATUS_OK, true},             // 24
+    {SPINEL_PROP_NET_XPANID, SPINEL_STATUS_OK, true},                   // 25
+    {SPINEL_PROP_NET_MASTER_KEY, SPINEL_STATUS_OK, true},               // 26
+    {SPINEL_PROP_NET_PSKC, SPINEL_STATUS_OK, true},                     // 27
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
-    { SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL,           SPINEL_STATUS_OK,                  true  },         // 28
+    {SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_STATUS_OK, true}, // 28
 #endif
 
 };
@@ -94,7 +92,7 @@ uint8_t ChangedPropsSet::GetNumEntries(void) const
 
 void ChangedPropsSet::Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus)
 {
-    uint8_t numEntries;
+    uint8_t      numEntries;
     const Entry *entry;
 
     entry = GetSupportedEntries(numEntries);
@@ -115,9 +113,9 @@ void ChangedPropsSet::Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus)
 
 otError ChangedPropsSet::EnablePropertyFilter(spinel_prop_key_t aPropKey, bool aEnable)
 {
-    uint8_t numEntries;
+    uint8_t      numEntries;
     const Entry *entry;
-    bool didFind = false;
+    bool         didFind = false;
 
     entry = GetSupportedEntries(numEntries);
 
@@ -157,8 +155,8 @@ otError ChangedPropsSet::EnablePropertyFilter(spinel_prop_key_t aPropKey, bool a
 
 bool ChangedPropsSet::IsPropertyFiltered(spinel_prop_key_t aPropKey) const
 {
-    bool isFiltered = false;
-    uint8_t numEntries;
+    bool         isFiltered = false;
+    uint8_t      numEntries;
     const Entry *entry;
 
     entry = GetSupportedEntries(numEntries);

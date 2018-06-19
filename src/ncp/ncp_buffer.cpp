@@ -32,19 +32,19 @@
 
 #include "ncp_buffer.hpp"
 
-#include "utils/wrap_string.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "utils/wrap_string.h"
 
 namespace ot {
 namespace Ncp {
 
 const NcpFrameBuffer::FrameTag NcpFrameBuffer::kInvalidTag = NULL;
 
-NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen) :
-    mBuffer(aBuffer),
-    mBufferEnd(aBuffer + aBufferLen),
-    mBufferLength(aBufferLen)
+NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen)
+    : mBuffer(aBuffer)
+    , mBufferEnd(aBuffer + aBufferLen)
+    , mBufferLength(aBufferLen)
 {
     for (uint8_t priority = 0; priority < kNumPrios; priority++)
     {
@@ -62,27 +62,27 @@ void NcpFrameBuffer::Clear(void)
     otMessage *message;
 
     // Write (InFrame) related variables
-    mWriteFrameStart[kPriorityLow] = mBuffer;
+    mWriteFrameStart[kPriorityLow]  = mBuffer;
     mWriteFrameStart[kPriorityHigh] = GetUpdatedBufPtr(mBuffer, 1, kBackward);
-    mWriteDirection = kUnknown;
-    mWriteSegmentHead = mBuffer;
-    mWriteSegmentTail = mBuffer;
-    mWriteFrameTag = kInvalidTag;
+    mWriteDirection                 = kUnknown;
+    mWriteSegmentHead               = mBuffer;
+    mWriteSegmentTail               = mBuffer;
+    mWriteFrameTag                  = kInvalidTag;
 
     // Read (OutFrame) related variables
-    mReadDirection = kForward;
-    mReadState = kReadStateNotActive;
+    mReadDirection   = kForward;
+    mReadState       = kReadStateNotActive;
     mReadFrameLength = kUnknownFrameLength;
 
-    mReadFrameStart[kPriorityLow] = mBuffer;
+    mReadFrameStart[kPriorityLow]  = mBuffer;
     mReadFrameStart[kPriorityHigh] = GetUpdatedBufPtr(mBuffer, 1, kBackward);
-    mReadSegmentHead = mBuffer;
-    mReadSegmentTail = mBuffer;
-    mReadPointer = mBuffer;
+    mReadSegmentHead               = mBuffer;
+    mReadSegmentTail               = mBuffer;
+    mReadPointer                   = mBuffer;
 
-    mReadMessage = NULL;
+    mReadMessage       = NULL;
     mReadMessageOffset = 0;
-    mReadMessageTail = mMessageBuffer;
+    mReadMessageTail   = mMessageBuffer;
 
     // Free all messages in the queues.
 
@@ -108,13 +108,13 @@ void NcpFrameBuffer::Clear(void)
 void NcpFrameBuffer::SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext)
 {
     mFrameAddedCallback = aFrameAddedCallback;
-    mFrameAddedContext = aFrameAddedContext;
+    mFrameAddedContext  = aFrameAddedContext;
 }
 
 void NcpFrameBuffer::SetFrameRemovedCallback(BufferCallback aFrameRemovedCallback, void *aFrameRemovedContext)
 {
     mFrameRemovedCallback = aFrameRemovedCallback;
-    mFrameRemovedContext = aFrameRemovedContext;
+    mFrameRemovedContext  = aFrameRemovedContext;
 }
 
 // Returns an updated buffer pointer by moving forward/backward (based on `aDirection`) from `aBufPtr` by a given
@@ -168,7 +168,7 @@ uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr, Direc
         }
         else
         {
-            distance  = static_cast<size_t>(mBufferEnd - aStartPtr);
+            distance = static_cast<size_t>(mBufferEnd - aStartPtr);
             distance += static_cast<size_t>(aEndPtr - mBuffer);
         }
 
@@ -182,7 +182,7 @@ uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr, Direc
         }
         else
         {
-            distance  = static_cast<size_t>(mBufferEnd - aEndPtr);
+            distance = static_cast<size_t>(mBufferEnd - aEndPtr);
             distance += static_cast<size_t>(aStartPtr - mBuffer);
         }
 
@@ -199,7 +199,7 @@ uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr, Direc
 // Writes a uint16 value at the given buffer pointer (big-endian style).
 void NcpFrameBuffer::WriteUint16At(uint8_t *aBufPtr, uint16_t aValue, Direction aDirection)
 {
-    *aBufPtr = (aValue >> 8);
+    *aBufPtr                                  = (aValue >> 8);
     *GetUpdatedBufPtr(aBufPtr, 1, aDirection) = (aValue & 0xff);
 }
 
@@ -217,7 +217,7 @@ uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr, Direction aDirection)
 // Appends a byte at the write tail and updates the tail, discards the frame if buffer gets full.
 otError NcpFrameBuffer::InFrameAppend(uint8_t aByte)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *newTail;
 
     assert(mWriteDirection != kUnknown);
@@ -228,7 +228,7 @@ otError NcpFrameBuffer::InFrameAppend(uint8_t aByte)
     if (newTail != mWriteFrameStart[(mWriteDirection == kForward) ? kBackward : kForward])
     {
         *mWriteSegmentTail = aByte;
-        mWriteSegmentTail = newTail;
+        mWriteSegmentTail  = newTail;
     }
     else
     {
@@ -242,7 +242,7 @@ otError NcpFrameBuffer::InFrameAppend(uint8_t aByte)
 // This method begins a new segment (if one is not already open).
 otError NcpFrameBuffer::InFrameBeginSegment(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error       = OT_ERROR_NONE;
     uint16_t headerFlags = kSegmentHeaderNoFlag;
 
     // Verify that segment is not yet started (i.e., head and tail are the same).
@@ -412,17 +412,18 @@ otError NcpFrameBuffer::InFrameGetPosition(WritePosition &aPosition)
     // Begin a new segment (if we are not in middle of segment already).
     SuccessOrExit(error = InFrameBeginSegment());
 
-    aPosition.mPosition = mWriteSegmentTail;
+    aPosition.mPosition    = mWriteSegmentTail;
     aPosition.mSegmentHead = mWriteSegmentHead;
 
 exit:
     return error;
 }
 
-otError NcpFrameBuffer::InFrameOverwrite(const WritePosition &aPosition, const uint8_t *aDataBuffer,
-                                         uint16_t aDataBufferLength)
+otError NcpFrameBuffer::InFrameOverwrite(const WritePosition &aPosition,
+                                         const uint8_t *      aDataBuffer,
+                                         uint16_t             aDataBufferLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint8_t *bufPtr;
     uint16_t segmentLength;
     uint16_t distance;
@@ -433,7 +434,7 @@ otError NcpFrameBuffer::InFrameOverwrite(const WritePosition &aPosition, const u
 
     // Ensure the overwrite does not go beyond current sgement tail.
     segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
-    distance = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
+    distance      = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
     VerifyOrExit(distance + aDataBufferLength <= segmentLength, error = OT_ERROR_INVALID_ARGS);
 
     bufPtr = aPosition.mPosition;
@@ -461,7 +462,7 @@ uint16_t NcpFrameBuffer::InFrameGetDistance(const WritePosition &aPosition) cons
     VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead);
 
     segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
-    offset = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
+    offset        = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
     VerifyOrExit(offset < segmentLength);
 
     distance = GetDistance(aPosition.mPosition, mWriteSegmentTail, mWriteDirection);
@@ -472,7 +473,7 @@ exit:
 
 otError NcpFrameBuffer::InFrameReset(const WritePosition &aPosition)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t segmentLength;
     uint16_t offset;
 
@@ -480,7 +481,7 @@ otError NcpFrameBuffer::InFrameReset(const WritePosition &aPosition)
     VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead, error = OT_ERROR_INVALID_ARGS);
 
     segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
-    offset = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
+    offset        = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
     VerifyOrExit(offset < segmentLength, error = OT_ERROR_INVALID_ARGS);
 
     mWriteSegmentTail = aPosition.mPosition;
@@ -492,7 +493,7 @@ exit:
 otError NcpFrameBuffer::InFrameEnd(void)
 {
     otMessage *message;
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
 
     VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
 
@@ -549,7 +550,7 @@ void NcpFrameBuffer::OutFrameSelectReadDirection(void)
 // Start/Prepare a new segment for reading.
 otError NcpFrameBuffer::OutFramePrepareSegment(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t header;
 
     while (true)
@@ -572,7 +573,7 @@ otError NcpFrameBuffer::OutFramePrepareSegment(void)
 
         // Find tail/end of current segment.
         mReadSegmentTail = GetUpdatedBufPtr(mReadSegmentHead, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask),
-                                   mReadDirection);
+                                            mReadDirection);
 
         // Update the current read pointer to skip the segment header.
         mReadPointer = GetUpdatedBufPtr(mReadSegmentHead, kSegmentHeaderSize, mReadDirection);
@@ -609,7 +610,7 @@ exit:
 // ThreadError_NotFound if there is no message or if the message has no content.
 otError NcpFrameBuffer::OutFramePrepareMessage(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t header;
 
     // Read the segment header
@@ -619,9 +620,8 @@ otError NcpFrameBuffer::OutFramePrepareMessage(void)
     VerifyOrExit((header & kSegmentHeaderMessageIndicatorFlag) != 0, error = OT_ERROR_NOT_FOUND);
 
     // Update the current message from the queue.
-    mReadMessage = (mReadMessage == NULL) ?
-                   otMessageQueueGetHead(&mMessageQueue[mReadDirection]) :
-                   otMessageQueueGetNext(&mMessageQueue[mReadDirection], mReadMessage);
+    mReadMessage = (mReadMessage == NULL) ? otMessageQueueGetHead(&mMessageQueue[mReadDirection])
+                                          : otMessageQueueGetNext(&mMessageQueue[mReadDirection], mReadMessage);
 
     VerifyOrExit(mReadMessage != NULL, error = OT_ERROR_NOT_FOUND);
 
@@ -643,7 +643,7 @@ exit:
 otError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
 {
     otError error = OT_ERROR_NONE;
-    int readLength;
+    int     readLength;
 
     VerifyOrExit(mReadMessage != NULL, error = OT_ERROR_NOT_FOUND);
 
@@ -711,7 +711,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
     case kReadStateInSegment:
 
         // Read a byte from current read pointer and move the read pointer by 1 byte in the read direction.
-        retval = *mReadPointer;
+        retval       = *mReadPointer;
         mReadPointer = GetUpdatedBufPtr(mReadPointer, 1, mReadDirection);
 
         // Check if at end of current segment.
@@ -768,12 +768,12 @@ uint16_t NcpFrameBuffer::OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer
 
 otError NcpFrameBuffer::OutFrameRemove(void)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t *bufPtr;
+    otError    error = OT_ERROR_NONE;
+    uint8_t *  bufPtr;
     otMessage *message;
-    uint16_t header;
-    uint8_t numSegments;
-    FrameTag tag;
+    uint16_t   header;
+    uint8_t    numSegments;
+    FrameTag   tag;
 
     VerifyOrExit(!IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
@@ -784,7 +784,7 @@ otError NcpFrameBuffer::OutFrameRemove(void)
 
     // Begin at the start of current frame and move through all segments.
 
-    bufPtr = mReadFrameStart[mReadDirection];
+    bufPtr      = mReadFrameStart[mReadDirection];
     numSegments = 0;
 
     while (bufPtr != mWriteFrameStart[mReadDirection])
@@ -826,7 +826,7 @@ otError NcpFrameBuffer::OutFrameRemove(void)
 
     UpdateReadWriteStartPointers();
 
-    mReadState = kReadStateNotActive;
+    mReadState       = kReadStateNotActive;
     mReadFrameLength = kUnknownFrameLength;
 
     if (mFrameRemovedCallback != NULL)
@@ -845,7 +845,7 @@ void NcpFrameBuffer::UpdateReadWriteStartPointers(void)
     {
         // Move the high priority pointers to be right behind the low priority start.
         mWriteFrameStart[kPriorityHigh] = GetUpdatedBufPtr(mReadFrameStart[kPriorityLow], 1, kBackward);
-        mReadFrameStart[kPriorityHigh] = mWriteFrameStart[kPriorityHigh];
+        mReadFrameStart[kPriorityHigh]  = mWriteFrameStart[kPriorityHigh];
         ExitNow();
     }
 
@@ -854,7 +854,7 @@ void NcpFrameBuffer::UpdateReadWriteStartPointers(void)
     {
         // Move the low priority pointers to be 1 byte after the high priority start.
         mWriteFrameStart[kPriorityLow] = GetUpdatedBufPtr(mReadFrameStart[kPriorityHigh], 1, kForward);
-        mReadFrameStart[kPriorityLow] = mWriteFrameStart[kPriorityLow];
+        mReadFrameStart[kPriorityLow]  = mWriteFrameStart[kPriorityLow];
     }
 
 exit:
@@ -863,10 +863,10 @@ exit:
 
 uint16_t NcpFrameBuffer::OutFrameGetLength(void)
 {
-    uint16_t frameLength = 0;
-    uint16_t header;
-    uint8_t *bufPtr;
-    uint8_t numSegments;
+    uint16_t   frameLength = 0;
+    uint16_t   header;
+    uint8_t *  bufPtr;
+    uint8_t    numSegments;
     otMessage *message = NULL;
 
     // If the frame length was calculated before, return the previously calculated length.
@@ -878,7 +878,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
 
     // Calculate frame length by adding length of all segments and messages within the current frame.
 
-    bufPtr = mReadFrameStart[mReadDirection];
+    bufPtr      = mReadFrameStart[mReadDirection];
     numSegments = 0;
 
     while (bufPtr != mWriteFrameStart[mReadDirection])
@@ -899,9 +899,8 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
         // If current segment has an associated message, add its length to frame length.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
-            message = (message == NULL) ?
-                      otMessageQueueGetHead(&mMessageQueue[mReadDirection]) :
-                      otMessageQueueGetNext(&mMessageQueue[mReadDirection], message);
+            message = (message == NULL) ? otMessageQueueGetHead(&mMessageQueue[mReadDirection])
+                                        : otMessageQueueGetNext(&mMessageQueue[mReadDirection], message);
 
             if (message != NULL)
             {
@@ -942,5 +941,5 @@ NcpFrameBuffer::FrameTag NcpFrameBuffer::OutFrameGetTag(void)
     return IsEmpty() ? kInvalidTag : mReadFrameStart[mReadDirection];
 }
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot

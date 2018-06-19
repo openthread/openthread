@@ -59,15 +59,14 @@
 namespace ot {
 namespace Ncp {
 
-#define NCP_GET_PROP_HANDLER(name)    otError GetPropertyHandler_##name(void)
-#define NCP_SET_PROP_HANDLER(name)    otError SetPropertyHandler_##name(void)
+#define NCP_GET_PROP_HANDLER(name) otError GetPropertyHandler_##name(void)
+#define NCP_SET_PROP_HANDLER(name) otError SetPropertyHandler_##name(void)
 #define NCP_INSERT_PROP_HANDLER(name) otError InsertPropertyHandler_##name(void)
 #define NCP_REMOVE_PROP_HANDLER(name) otError RemovePropertyHandler_##name(void)
 
 class NcpBase
 {
 public:
-
     /**
      * This constructor creates and initializes an NcpBase instance.
      *
@@ -111,7 +110,6 @@ public:
      *
      */
     void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString);
-
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     /**
@@ -184,7 +182,7 @@ protected:
     struct PropertyHandlerEntry
     {
         spinel_prop_key_t mPropKey;
-        PropertyHandler mHandler;
+        PropertyHandler   mHandler;
     };
 
     /**
@@ -196,11 +194,11 @@ protected:
      */
     struct ResponseEntry
     {
-        uint8_t  mTid              : 4;  ///< Spinel transaction id.
-        bool     mIsInUse          : 1;  ///< `true` if this entry is in use, `false` otherwise.
-        bool     mIsLastStatus     : 1;  ///< `true` if entry is a `LAST_STATUS`, otherwise it is a property update.
-        bool     mIsGetResponse    : 1;  ///< `true` if response is for `VALUE_GET`, 'false` otherwise.
-        uint32_t mPropKeyOrStatus  : 24; ///< 3 bytes for either property key or spinel status.
+        uint8_t  mTid : 4;              ///< Spinel transaction id.
+        bool     mIsInUse : 1;          ///< `true` if this entry is in use, `false` otherwise.
+        bool     mIsLastStatus : 1;     ///< `true` if entry is a `LAST_STATUS`, otherwise it is a property update.
+        bool     mIsGetResponse : 1;    ///< `true` if response is for `VALUE_GET`, 'false` otherwise.
+        uint32_t mPropKeyOrStatus : 24; ///< 3 bytes for either property key or spinel status.
     };
 
     NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
@@ -213,79 +211,89 @@ protected:
     PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
     PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
 
-    bool HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop_key_t aKey, otError &aError);
+    bool    HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop_key_t aKey, otError &aError);
     otError HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey);
     otError HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_key_t aKey, unsigned int aCommand);
 
     otError WriteLastStatusFrame(uint8_t aHeader, spinel_status_t aLastStatus);
     otError WritePropertyValueIsFrame(uint8_t aHeader, spinel_prop_key_t aPropKey, bool aIsGetResponse = true);
-    otError WritePropertyValueInsertedRemovedFrame(uint8_t aHeader, unsigned int aResponseCommand,
-                                                   spinel_prop_key_t aPropKey, const uint8_t *aValuePtr,
-                                                   uint16_t aValueLen);
+    otError WritePropertyValueInsertedRemovedFrame(uint8_t           aHeader,
+                                                   unsigned int      aResponseCommand,
+                                                   spinel_prop_key_t aPropKey,
+                                                   const uint8_t *   aValuePtr,
+                                                   uint16_t          aValueLen);
 
     otError SendQueuedResponses(void);
-    bool IsResponseQueueEmpty(void) { return (mResponseQueueHead == mResponseQueueTail); }
+    bool    IsResponseQueueEmpty(void) { return (mResponseQueueHead == mResponseQueueTail); }
     otError PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGetResponse, unsigned int aPropKeyOrStatus);
-    otError PrepareGetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey) {
+    otError PrepareGetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey)
+    {
         return PrepareResponse(aHeader, false /* aIsLastStatus */, true /* aIsGetResponse*/, aPropKey);
     }
-    otError PrepareSetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey) {
+    otError PrepareSetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey)
+    {
         return PrepareResponse(aHeader, false /* aIsLastStatus */, false /* aIsGetResponse*/, aPropKey);
     }
-    otError PrepareLastStatusResponse(uint8_t aHeader, spinel_status_t aStatus) {
+    otError PrepareLastStatusResponse(uint8_t aHeader, spinel_status_t aStatus)
+    {
         return PrepareResponse(aHeader, true /*aIsLastStatus */, false, aStatus);
     }
     static uint8_t GetWrappedResponseQueueIndex(uint8_t aPosition);
 
     static void UpdateChangedProps(Tasklet &aTasklet);
-    void UpdateChangedProps(void);
+    void        UpdateChangedProps(void);
 
-    static void HandleFrameRemovedFromNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
-                                                NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpBuffer);
-    void HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+    static void HandleFrameRemovedFromNcpBuffer(void *                   aContext,
+                                                NcpFrameBuffer::FrameTag aFrameTag,
+                                                NcpFrameBuffer::Priority aPriority,
+                                                NcpFrameBuffer *         aNcpBuffer);
+    void        HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
 
     static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
-    void HandleRawFrame(const otRadioFrame *aFrame);
+    void        HandleRawFrame(const otRadioFrame *aFrame);
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
-    void LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
+    void        LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
 
-    static void LinkRawTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
-    void LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+    static void LinkRawTransmitDone(otInstance *  aInstance,
+                                    otRadioFrame *aFrame,
+                                    otRadioFrame *aAckFrame,
+                                    otError       aError);
+    void        LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
-    void LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
+    void        LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     static void HandleStateChanged(uint32_t aFlags, void *aContext);
-    void ProcessThreadChangedFlags(void);
+    void        ProcessThreadChangedFlags(void);
 
 #if OPENTHREAD_FTD
     static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
-    void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+    void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
 #endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
-    void HandleDatagramFromStack(otMessage *aMessage);
+    void        HandleDatagramFromStack(otMessage *aMessage);
 
     otError SendQueuedDatagramMessages(void);
     otError SendDatagramMessage(otMessage *aMessage);
 
     static void HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext);
-    void HandleActiveScanResult(otActiveScanResult *aResult);
+    void        HandleActiveScanResult(otActiveScanResult *aResult);
 
     static void HandleEnergyScanResult_Jump(otEnergyScanResult *aResult, void *aContext);
-    void HandleEnergyScanResult(otEnergyScanResult *aResult);
+    void        HandleEnergyScanResult(otEnergyScanResult *aResult);
 
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
-    void HandleJamStateChange(bool aJamState);
+    void        HandleJamStateChange(bool aJamState);
 
     static void SendDoneTask(void *aContext);
-    void SendDoneTask(void);
+    void        SendDoneTask(void);
 
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
@@ -300,7 +308,7 @@ protected:
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
     static void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext);
-    void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
+    void        HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
     otError CommandHandler_NOOP(uint8_t aHeader);
@@ -712,11 +720,11 @@ protected:
     void StartLegacy(void);
     void StopLegacy(void);
 #else
-    void StartLegacy(void) { }
-    void StopLegacy(void) { }
+    void StartLegacy(void) {}
+    void StopLegacy(void) {}
 #endif
 
-    static uint8_t ConvertLogLevel(otLogLevel aLogLevel);
+    static uint8_t      ConvertLogLevel(otLogLevel aLogLevel);
     static unsigned int ConvertLogRegion(otLogRegion aLogRegion);
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
@@ -786,20 +794,23 @@ protected:
 #endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
 protected:
-    static NcpBase *sNcpInstance;
+    static NcpBase *       sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
-    static uint8_t LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequests, bool aDeviceType, bool aNetworkData);
-    Instance *mInstance;
-    NcpFrameBuffer  mTxFrameBuffer;
-    SpinelEncoder mEncoder;
-    SpinelDecoder mDecoder;
-    bool mHostPowerStateInProgress;
+    static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle,
+                                               bool aSecureDataRequests,
+                                               bool aDeviceType,
+                                               bool aNetworkData);
+    Instance *             mInstance;
+    NcpFrameBuffer         mTxFrameBuffer;
+    SpinelEncoder          mEncoder;
+    SpinelDecoder          mDecoder;
+    bool                   mHostPowerStateInProgress;
 
     enum
     {
-        kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,  // Tx Buffer size (used by mTxFrameBuffer).
-        kResponseQueueSize = OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE,
-        kInvalidScanChannel = -1,                              // Invalid scan channel.
+        kTxBufferSize       = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE, // Tx Buffer size (used by mTxFrameBuffer).
+        kResponseQueueSize  = OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE,
+        kInvalidScanChannel = -1, // Invalid scan channel.
     };
 
     // Command Handlers
@@ -809,20 +820,20 @@ protected:
     static const PropertyHandlerEntry mRemovePropertyHandlerTable[];
 
     spinel_status_t mLastStatus;
-    uint32_t mSupportedChannelMask;
-    uint32_t mChannelMask;
-    uint16_t mScanPeriod;
-    bool mDiscoveryScanJoinerFlag;
-    bool mDiscoveryScanEnableFiltering;
-    uint16_t mDiscoveryScanPanId;
+    uint32_t        mSupportedChannelMask;
+    uint32_t        mChannelMask;
+    uint16_t        mScanPeriod;
+    bool            mDiscoveryScanJoinerFlag;
+    bool            mDiscoveryScanEnableFiltering;
+    uint16_t        mDiscoveryScanPanId;
 
-    Tasklet mUpdateChangedPropsTask;
-    uint32_t mThreadChangedFlags;
+    Tasklet         mUpdateChangedPropsTask;
+    uint32_t        mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
 
     spinel_host_power_state_t mHostPowerState;
-    NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
-    uint8_t mHostPowerStateHeader;
+    NcpFrameBuffer::FrameTag  mHostPowerReplyFrameTag;
+    uint8_t                   mHostPowerStateHeader;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     otNcpDelegateAllowPeekPoke mAllowPeekDelegate;
@@ -833,8 +844,8 @@ protected:
 
     spinel_tid_t mNextExpectedTid;
 
-    uint8_t mResponseQueueHead;
-    uint8_t mResponseQueueTail;
+    uint8_t       mResponseQueueHead;
+    uint8_t       mResponseQueueTail;
     ResponseEntry mResponseQueue[kResponseQueueSize];
 
     bool mAllowLocalNetworkDataChange;
@@ -859,29 +870,29 @@ protected:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueue mMessageQueue;
 
-    uint32_t mInboundSecureIpFrameCounter;     // Number of secure inbound data/IP frames.
-    uint32_t mInboundInsecureIpFrameCounter;   // Number of insecure inbound data/IP frames.
-    uint32_t mOutboundSecureIpFrameCounter;    // Number of secure outbound data/IP frames.
-    uint32_t mOutboundInsecureIpFrameCounter;  // Number of insecure outbound data/IP frames.
-    uint32_t mDroppedOutboundIpFrameCounter;   // Number of dropped outbound data/IP frames.
-    uint32_t mDroppedInboundIpFrameCounter;    // Number of dropped inbound data/IP frames.
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-    uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
-    uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.
-    uint32_t mRxSpinelOutOfOrderTidCounter;    // Number of out of order received spinel frames (tid increase > 1).
-    uint32_t mTxSpinelFrameCounter;            // Number of sent (outbound) spinel frames.
+    uint32_t mInboundSecureIpFrameCounter;    // Number of secure inbound data/IP frames.
+    uint32_t mInboundInsecureIpFrameCounter;  // Number of insecure inbound data/IP frames.
+    uint32_t mOutboundSecureIpFrameCounter;   // Number of secure outbound data/IP frames.
+    uint32_t mOutboundInsecureIpFrameCounter; // Number of insecure outbound data/IP frames.
+    uint32_t mDroppedOutboundIpFrameCounter;  // Number of dropped outbound data/IP frames.
+    uint32_t mDroppedInboundIpFrameCounter;   // Number of dropped inbound data/IP frames.
+#endif                                        // OPENTHREAD_MTD || OPENTHREAD_FTD
+    uint32_t mFramingErrorCounter;            // Number of improperly formed received spinel frames.
+    uint32_t mRxSpinelFrameCounter;           // Number of received (inbound) spinel frames.
+    uint32_t mRxSpinelOutOfOrderTidCounter;   // Number of out of order received spinel frames (tid increase > 1).
+    uint32_t mTxSpinelFrameCounter;           // Number of sent (outbound) spinel frames.
 
 #if OPENTHREAD_ENABLE_LEGACY
     const otNcpLegacyHandlers *mLegacyHandlers;
-    uint8_t mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
-    otExtAddress mLegacyLastJoinedNode;
-    bool mLegacyNodeDidJoin;
+    uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
+    otExtAddress               mLegacyLastJoinedNode;
+    bool                       mLegacyNodeDidJoin;
 #endif
 
     bool mDidInitialUpdates;
 };
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
-#endif  // NCP_BASE_HPP_
+#endif // NCP_BASE_HPP_

@@ -52,10 +52,10 @@
 #include "openthread-core-config.h"
 
 #include <stdarg.h>
-#include "utils/wrap_stdbool.h"
-#include "utils/wrap_stdint.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 #include "utils/wrap_string.h"
 
 #endif // SPINEL_PLATFORM_OPENTHREAD_H_

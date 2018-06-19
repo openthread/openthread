@@ -68,16 +68,17 @@ public:
      * This constructor initializes the set.
      *
      */
-    ChangedPropsSet(void):
-        mChangedSet(0),
-        mFilterSet(0)
-    { }
+    ChangedPropsSet(void)
+        : mChangedSet(0)
+        , mFilterSet(0)
+    {
+    }
 
     /**
      * This method clears the set.
      *
      */
-    void Clear(void)  { mChangedSet = 0; }
+    void Clear(void) { mChangedSet = 0; }
 
     /**
      * This method indicates if the set is empty or not.
@@ -104,7 +105,7 @@ public:
      * @param[in] aStatus     The spinel status update to be added to set.
      *
      */
-    void AddLastStatus(spinel_status_t aStatus) {  Add(SPINEL_PROP_LAST_STATUS, aStatus); }
+    void AddLastStatus(spinel_status_t aStatus) { Add(SPINEL_PROP_LAST_STATUS, aStatus); }
 
     /**
      * This method returns a pointer to array of entries of supported property/status updates. The list includes
@@ -115,7 +116,8 @@ public:
      * @returns A pointer to the supported entries array.
      *
      */
-    const Entry *GetSupportedEntries(uint8_t &aNumEntries) const {
+    const Entry *GetSupportedEntries(uint8_t &aNumEntries) const
+    {
         aNumEntries = GetNumEntries();
         return &mSupportedProps[0];
     }
@@ -128,9 +130,7 @@ public:
      * @returns A pointer to the entry associated with @p aIndex, or NULL if the index is beyond end of array.
      *
      */
-    const Entry *GetEntry(uint8_t aIndex) const {
-        return (aIndex < GetNumEntries()) ? &mSupportedProps[aIndex] : NULL;
-    }
+    const Entry *GetEntry(uint8_t aIndex) const { return (aIndex < GetNumEntries()) ? &mSupportedProps[aIndex] : NULL; }
 
     /**
      * This method indicates if the entry associated with an index is in the set (i.e., it has been changed and
@@ -194,11 +194,11 @@ public:
 
 private:
     uint8_t GetNumEntries(void) const;
-    void Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus);
+    void    Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus);
 
-    static void SetBit  (uint32_t &aBitset, uint8_t aBitIndex)   { aBitset |= (1U << aBitIndex);                }
-    static void ClearBit(uint32_t &aBitset, uint8_t aBitIndex)   { aBitset &= ~(1U << aBitIndex);               }
-    static bool IsBitSet(uint32_t aBitset, uint8_t aBitIndex)    { return (aBitset & (1U << aBitIndex)) != 0;   }
+    static void SetBit(uint32_t &aBitset, uint8_t aBitIndex) { aBitset |= (1U << aBitIndex); }
+    static void ClearBit(uint32_t &aBitset, uint8_t aBitIndex) { aBitset &= ~(1U << aBitIndex); }
+    static bool IsBitSet(uint32_t aBitset, uint8_t aBitIndex) { return (aBitset & (1U << aBitIndex)) != 0; }
 
     static const Entry mSupportedProps[];
 
