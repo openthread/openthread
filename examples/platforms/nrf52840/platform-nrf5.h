@@ -59,6 +59,20 @@ void nrf5UartDeinit(void);
  */
 void nrf5UartProcess(void);
 
+#if OPENTHREAD_ENABLE_PERFORMANCE
+/**
+ ** Initialization of GPIO task and event driver.
+ *
+ */
+void nrf5GpioInit(void);
+
+/**
+ * Deinitialization of GPIO task and event driver.
+ *
+ */
+void nrf5GpioDeinit(void);
+#endif
+
 /**
  * Initialization of Alarm driver.
  *

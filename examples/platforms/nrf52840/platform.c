@@ -87,6 +87,9 @@ void PlatformInit(int argc, char *argv[])
     nrf5CryptoInit();
     nrf5RadioInit();
     nrf5TempInit();
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    nrf5GpioInit();
+#endif
 }
 
 void PlatformDeinit(void)
@@ -104,6 +107,9 @@ void PlatformDeinit(void)
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
     nrf5LogDeinit();
+#endif
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    nrf5GpioDeinit();
 #endif
 }
 

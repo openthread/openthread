@@ -50,6 +50,10 @@
 #endif
 #include <openthread/openthread.h>
 
+#if OPENTHREAD_ENABLE_PERFORMANCE
+#include <openthread/platform/gpio.h>
+#endif
+
 #if OPENTHREAD_FTD
 #include <openthread/dataset_ftd.h>
 #include <openthread/thread_ftd.h>
@@ -224,6 +228,9 @@ const struct Command Interpreter::sCommands[] = {
 #ifndef OTDLL
     {"txpower", &Interpreter::ProcessTxPower},
     {"udp", &Interpreter::ProcessUdp},
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    {"latency", &Interpreter::ProcessLatency},
+#endif
 #endif
     {"version", &Interpreter::ProcessVersion},
 };
@@ -282,6 +289,9 @@ Interpreter::Interpreter(Instance *aInstance)
     , mResolvingInProgress(0)
 #endif
     , mUdp(*this)
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    , mLatency(*this)
+#endif
 #endif
     , mInstance(aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -2759,6 +2769,15 @@ void Interpreter::ProcessUdp(int argc, char *argv[])
     error = mUdp.Process(argc, argv);
     AppendResult(error);
 }
+
+#if OPENTHREAD_ENABLE_PERFORMANCE
+void Interpreter::ProcessLatency(int argc, char *argv[])
+{
+    otError error;
+    error = mLatency.Process(argc, argv);
+    AppendResult(error);
+}
+#endif
 #endif
 
 void Interpreter::ProcessVersion(int argc, char *argv[])

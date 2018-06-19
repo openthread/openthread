@@ -66,7 +66,11 @@
  * The number of message buffers in the buffer pool.
  *
  */
+#if OPENTHREAD_ENABLE_PERFORMANCE
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS                   1024
+#else
 #define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS                   128
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS

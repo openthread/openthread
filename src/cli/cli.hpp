@@ -45,6 +45,9 @@
 
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
+#if OPENTHREAD_ENABLE_PERFORMANCE
+#include "cli/cli_latency.hpp"
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_header.hpp>
@@ -96,6 +99,9 @@ class Interpreter
 {
     friend class Coap;
     friend class UdpExample;
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    friend class LatencyTest;
+#endif
 
 public:
     /**
@@ -172,6 +178,10 @@ public:
      * @param[in]  aLength        @p aUserCommands length.
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
+
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    LatencyTest GetLatency() { return mLatency; };
+#endif
 
 private:
     enum
@@ -309,6 +319,9 @@ private:
 #ifndef OTDLL
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    void ProcessLatency(int argc, char *argv[]);
+#endif
 #endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -424,8 +437,10 @@ private:
     char           mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
 
-    UdpExample mUdp;
-
+    UdpExample  mUdp;
+#if OPENTHREAD_ENABLE_PERFORMANCE
+    LatencyTest mLatency;
+#endif
 #endif
 
     Instance *mInstance;

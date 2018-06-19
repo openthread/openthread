@@ -93,6 +93,12 @@ PLATFORM_COMMON_SOURCES                                                         
     usb-cdc-uart.c                                                                                           \
     $(NULL)
 
+if OPENTHREAD_ENABLE_PERFORMANCE
+PLATFORM_COMMON_SOURCES                                                                                   += \
+    gpio.c                                                                                                   \
+    $(NULL)
+endif
+
 SINGLEPHY_SOURCES                                                                                          = \
     flash_nosd.c                                                                                             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification_direct.c            \

@@ -185,6 +185,30 @@
 #endif
 
 /*******************************************************************************
+ * @section GPIO Driver Configuration.
+ ******************************************************************************/
+
+/**
+ * @def GPIOTE_CHANNEL
+ *
+ * GPIOTE Channel.
+ *
+ */
+#ifndef GPIOTE_CHANNEL
+#define GPIOTE_CHANNEL 0
+#endif
+
+/**
+ * @def NRFX_GPIOTE_CONFIG_IRQ_PRIORITY
+ *
+ * GPIO IRQ Priority.
+ *
+ */
+#ifndef NRFX_GPIOTE_CONFIG_IRQ_PRIORITY
+#define NRFX_GPIOTE_CONFIG_IRQ_PRIORITY 7
+#endif
+
+/*******************************************************************************
  * @section Alarm Driver Configuration.
  ******************************************************************************/
 

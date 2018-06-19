@@ -145,6 +145,12 @@ SOURCES_COMMON =                      \
     cli_udp_example.cpp               \
     $(NULL)
 
+if OPENTHREAD_ENABLE_PERFORMANCE
+SOURCES_COMMON                     += \
+    cli_latency.cpp                   \
+    $(NULL)
+endif
+
 libopenthread_cli_ftd_a_SOURCES =     \
     $(SOURCES_COMMON)                 \
     $(NULL)
@@ -162,6 +168,12 @@ noinst_HEADERS                      = \
     cli_uart.hpp                      \
     cli_udp_example.hpp               \
     $(NULL)
+
+if OPENTHREAD_ENABLE_PERFORMANCE
+noinst_HEADERS                     += \
+    cli_latency.hpp                   \
+    $(NULL)
+endif
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                          = $(wildcard *.gcda *.gcno)

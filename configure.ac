@@ -1260,6 +1260,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
 
 #
+# Performance Test API
+#
+
+AC_ARG_ENABLE(performance_api,
+    [AS_HELP_STRING([--enable-performance-api],[Enable performance test API support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_performance_api=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_performance_api} for --enable-performance-api])
+            ;;
+        esac
+    ],
+    [enable_performance_api=no])
+
+if test "$enable_performance_api" = "yes"; then
+    OPENTHREAD_ENABLE_PERFORMANCE=1
+else
+    OPENTHREAD_ENABLE_PERFORMANCE=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_PERFORMANCE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_PERFORMANCE], [test "${enable_performance_api}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_PERFORMANCE],[${OPENTHREAD_ENABLE_PERFORMANCE}],[Define to 1 if you want to enable performance test API])
+
+#
 # Border Router
 #
 
@@ -1720,6 +1750,7 @@ AC_MSG_NOTICE([
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread Application CoAP support       : ${enable_application_coap}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
+  OpenThread Performance support            : ${enable_performance_api}
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}

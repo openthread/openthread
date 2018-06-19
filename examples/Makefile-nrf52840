@@ -48,6 +48,7 @@ configure_OPTIONS                                 = \
     --enable-diag                                   \
     --with-examples=nrf52840                        \
     --enable-linker-map                             \
+    --enable-performance-api                        \
     MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
