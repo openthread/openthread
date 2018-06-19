@@ -174,7 +174,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             }
             else
             {
-                LogIp6Message(kMessageDrop, *cur, NULL, aError);
+                LogMessage(kMessageDrop, *cur, NULL, aError);
                 cur->Free();
             }
         }
@@ -361,7 +361,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
         }
 
         mSendQueue.Dequeue(*message);
-        LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_NONE);
+        LogMessage(kMessageDrop, *message, NULL, OT_ERROR_NONE);
         message->Free();
     }
 }
@@ -459,7 +459,7 @@ Message *MeshForwarder::GetIndirectTransmission(Child &aChild)
     {
         Mac::Address macAddr;
 
-        LogIp6Message(kMessagePrepareIndirect, *message, &aChild.GetMacAddress(macAddr), OT_ERROR_NONE);
+        LogMessage(kMessagePrepareIndirect, *message, &aChild.GetMacAddress(macAddr), OT_ERROR_NONE);
     }
 
     return message;
@@ -830,6 +830,7 @@ otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
     otError            error = OT_ERROR_NONE;
     Ip6::Header        ip6Header;
     Lowpan::MeshHeader meshHeader;
+    bool               nextHeaderCompressed;
 
     VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
 
@@ -850,7 +851,8 @@ otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
     // only process IPv6 packets
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame));
 
-    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0,
+    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, nextHeaderCompressed, aMeshSource, aMeshDest, aFrame,
+                                                        aFrameLength) > 0,
                  error = OT_ERROR_DROP);
 
     error = netif.GetMle().CheckReachability(aMeshSource.GetShort(), aMeshDest.GetShort(), ip6Header);
@@ -915,6 +917,9 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         message->Write(0, aFrameLength, aFrame);
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
         message->SetPanId(aLinkInfo.mPanId);
+        message->AddRss(aLinkInfo.mRss);
+
+        LogMessage(kMessageReceive, *message, &aMacSource, OT_ERROR_NONE);
 
         SendMessage(*message);
     }
@@ -942,6 +947,7 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     ThreadNetif &netif = GetNetif();
     Ip6::Header  ip6Header;
     Neighbor *   neighbor;
+    bool         nextHeaderCompressed;
 
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
 
@@ -965,7 +971,8 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     // only process IPv6 packets
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame));
 
-    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0);
+    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(ip6Header, nextHeaderCompressed, aMeshSource, aMeshDest, aFrame,
+                                                        aFrameLength) > 0);
 
     netif.GetAddressResolver().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
 
