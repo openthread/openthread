@@ -196,11 +196,9 @@ exit:
 
 void Notifier::LogChangedFlags(Flags aFlags) const
 {
-    Flags flags = aFlags;
-    char  stringBuffer[kFlagsStringBufferSize];
-    char *buf = stringBuffer;
-    int   len = sizeof(stringBuffer) - 1;
-    int   charsWritten;
+    Flags                          flags   = aFlags;
+    bool                           isFirst = true;
+    String<kFlagsStringBufferSize> string;
 
     for (uint8_t bit = 0; bit < sizeof(Flags) * CHAR_BIT; bit++)
     {
@@ -208,18 +206,14 @@ void Notifier::LogChangedFlags(Flags aFlags) const
 
         if (flags & (1 << bit))
         {
-            charsWritten = snprintf(buf, static_cast<size_t>(len), "%s ", FlagToString(1 << bit));
-            VerifyOrExit(charsWritten >= 0 && charsWritten < len);
-            buf += charsWritten;
-            len -= charsWritten;
-
+            SuccessOrExit(string.Append("%s%s", isFirst ? "" : " ", FlagToString(1 << bit)));
+            isFirst = false;
             flags ^= (1 << bit);
         }
     }
 
 exit:
-    stringBuffer[sizeof(stringBuffer) - 1] = 0;
-    otLogInfoCore(GetInstance(), "Notifier: StateChanged (0x%04x) [ %s] ", aFlags, stringBuffer);
+    otLogInfoCore(GetInstance(), "Notifier: StateChanged (0x%04x) [%s] ", aFlags, string.AsCString());
 }
 
 const char *Notifier::FlagToString(Flags aFlag) const
