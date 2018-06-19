@@ -149,7 +149,7 @@ exit:
     return;
 }
 
-void Notifier::SetFlags(uint32_t aFlags)
+void Notifier::SetFlags(Flags aFlags)
 {
     mFlags |= aFlags;
     mTask.Post();
@@ -162,7 +162,7 @@ void Notifier::HandleStateChanged(Tasklet &aTasklet)
 
 void Notifier::HandleStateChanged(void)
 {
-    uint32_t flags = mFlags;
+    Flags flags = mFlags;
 
     VerifyOrExit(flags != 0);
 
@@ -194,15 +194,15 @@ exit:
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-void Notifier::LogChangedFlags(uint32_t aFlags) const
+void Notifier::LogChangedFlags(Flags aFlags) const
 {
-    uint32_t flags = aFlags;
-    char     stringBuffer[kFlagsStringBufferSize];
-    char *   buf = stringBuffer;
-    int      len = sizeof(stringBuffer) - 1;
-    int      charsWritten;
+    Flags flags = aFlags;
+    char  stringBuffer[kFlagsStringBufferSize];
+    char *buf = stringBuffer;
+    int   len = sizeof(stringBuffer) - 1;
+    int   charsWritten;
 
-    for (uint8_t bit = 0; bit < 32; bit++)
+    for (uint8_t bit = 0; bit < sizeof(Flags) * CHAR_BIT; bit++)
     {
         VerifyOrExit(flags != 0);
 
@@ -222,7 +222,7 @@ exit:
     otLogInfoCore(GetInstance(), "Notifier: StateChanged (0x%04x) [ %s] ", aFlags, stringBuffer);
 }
 
-const char *Notifier::FlagToString(uint32_t aFlag) const
+const char *Notifier::FlagToString(Flags aFlag) const
 {
     const char *retval = "(unknown)";
 
@@ -333,15 +333,13 @@ const char *Notifier::FlagToString(uint32_t aFlag) const
 
 #else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-void Notifier::LogChangedFlags(uint32_t aFlags) const
+void Notifier::LogChangedFlags(Flags) const
 {
-    OT_UNUSED_VARIABLE(aFlags);
 }
 
-const char *Notifier::FlagToString(uint32_t aFlag) const
+const char *Notifier::FlagToString(Flags) const
 {
-    OT_UNUSED_VARIABLE(aFlag);
-    return NULL;
+    return "";
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

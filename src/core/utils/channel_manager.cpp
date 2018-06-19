@@ -256,12 +256,12 @@ void ChannelManager::HandleTimer(void)
     }
 }
 
-void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags)
 {
     aCallback.GetOwner<ChannelManager>().HandleStateChanged(aFlags);
 }
 
-void ChannelManager::HandleStateChanged(uint32_t aFlags)
+void ChannelManager::HandleStateChanged(Notifier::Flags aFlags)
 {
     VerifyOrExit((aFlags & OT_CHANGED_THREAD_CHANNEL) != 0);
     VerifyOrExit(mChannel == GetInstance().Get<Mac::Mac>().GetPanChannel());

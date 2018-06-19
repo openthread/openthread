@@ -159,8 +159,8 @@ private:
     void        CheckState(void);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags);
+    void        HandleStateChanged(Notifier::Flags aFlags);
 
     uint16_t           mSupervisionInterval;
     TimerMilli         mTimer;

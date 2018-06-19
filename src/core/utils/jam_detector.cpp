@@ -278,12 +278,12 @@ void JamDetector::SetJamState(bool aNewState)
     }
 }
 
-void JamDetector::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void JamDetector::HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags)
 {
     aCallback.GetOwner<JamDetector>().HandleStateChanged(aFlags);
 }
 
-void JamDetector::HandleStateChanged(uint32_t aFlags)
+void JamDetector::HandleStateChanged(Notifier::Flags aFlags)
 {
     if (aFlags & OT_CHANGED_THREAD_ROLE)
     {

@@ -261,7 +261,7 @@ protected:
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    static void HandleStateChanged(uint32_t aFlags, void *aContext);
+    static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
     void ProcessThreadChangedFlags(void);
 
 #if OPENTHREAD_FTD

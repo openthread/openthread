@@ -2935,7 +2935,7 @@ exit:
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleStateChanged(uint32_t aFlags, void *aContext)
+void NcpBase::HandleStateChanged(otChangedFlags aFlags, void *aContext)
 {
     NcpBase *ncp = static_cast<NcpBase *>(aContext);
 
@@ -2947,7 +2947,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
 {
     static const struct
     {
-        uint32_t mThreadFlag;
+        otChangedFlags mThreadFlag;
         spinel_prop_key_t mPropKey;
     } kFlags[] =
     {

@@ -191,8 +191,8 @@ private:
     void        HandleTimer(void);
     void        UpdateHistory(bool aThresholdExceeded);
     void        UpdateJamState(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags);
+    void        HandleStateChanged(Notifier::Flags aFlags);
 
     Handler            mHandler;                  // Handler/callback to inform about jamming state
     void *             mContext;                  // Context for handler/callback

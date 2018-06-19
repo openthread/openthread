@@ -71,12 +71,12 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
-void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags)
 {
     aCallback.GetOwner<JoinerRouter>().HandleStateChanged(aFlags);
 }
 
-void JoinerRouter::HandleStateChanged(uint32_t aFlags)
+void JoinerRouter::HandleStateChanged(Notifier::Flags aFlags)
 {
     ThreadNetif &netif = GetNetif();
 
