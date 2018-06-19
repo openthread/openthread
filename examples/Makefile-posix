@@ -106,9 +106,6 @@ LDFLAGS                        += \
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
 
-TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
-
 BuildPath                       = build
 TopBuildDir                     = $(BuildPath)
 AbsTopBuildDir                  = $(PWD)/$(TopBuildDir)
