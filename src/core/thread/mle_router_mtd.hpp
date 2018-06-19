@@ -96,6 +96,7 @@ public:
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Ip6::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
+    Neighbor *GetLinkNeighbor(const Mac::Address &aAddress) { return Mle::GetLinkNeighbor(aAddress); }
     Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
     {
         OT_UNUSED_VARIABLE(aAddress);

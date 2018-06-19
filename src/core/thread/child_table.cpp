@@ -265,8 +265,12 @@ bool ChildTable::MatchesFilter(const Child &aChild, StateFilter aFilter)
         rval = (aChild.GetState() != Child::kStateInvalid);
         break;
 
-    case kInStateAnyExceptValidOrRestoing:
+    case kInStateAnyExceptValidOrRestoring:
         rval = !aChild.IsStateValidOrRestoring();
+        break;
+
+    case kInStateAnyExceptInvalidOrRestoring:
+        rval = !aChild.IsStateInvalidOrRestoring();
         break;
     }
 

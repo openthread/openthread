@@ -413,6 +413,16 @@ public:
     Neighbor *GetNeighbor(const Ip6::Address &aAddress);
 
     /**
+     * This method returns a pointer to a Neighbor object.
+     *
+     * @param[in]  aAddress  The address of the Neighbor.
+     *
+     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
+     *
+     */
+    Neighbor *GetLinkNeighbor(const Mac::Address &aAddress);
+
+    /**
      * This method returns a pointer to a Neighbor object if a one-way link is maintained
      * as in the instance of an FFD child with neighbor routers.
      *
@@ -771,6 +781,9 @@ private:
     bool HasMinDowngradeNeighborRouters(void);
     bool HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
     bool HasSmallNumberOfChildren(void);
+
+    Neighbor *GetNeighbor(uint16_t aAddress, ChildTable::StateFilter aFilter);
+    Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress, ChildTable::StateFilter aFilter);
 
     static bool HandleAdvertiseTimer(TrickleTimer &aTimer);
     bool        HandleAdvertiseTimer(void);
