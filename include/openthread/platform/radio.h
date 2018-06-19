@@ -571,7 +571,8 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance);
  * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
  * this happens when the frame includes Header IE(s) that were updated before transmission.
  *
- * @note This function will be called from interrupt context.
+ * @note This function will be called from interrupt context, it should only read/write data passed in
+ *       via @p aFrame, but should not read/write any state within OpenThread.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  * @param[in]  aFrame      The radio frame which neeeds to process transmit security.

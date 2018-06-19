@@ -1104,6 +1104,7 @@ void Mac::BeginTransmit(void)
 {
     otError error                 = OT_ERROR_NONE;
     bool    applyTransmitSecurity = true;
+    bool    processTransmitAesCcm = true;
     Frame & sendFrame(*GetOperationFrame());
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     uint8_t timeIeOffset = 0;
@@ -1171,7 +1172,7 @@ void Mac::BeginTransmit(void)
         if (timeIeOffset != 0)
         {
             // Transmit security will be processed after time IE content is updated.
-            applyTransmitSecurity = false;
+            processTransmitAesCcm = false;
             sendFrame.SetTimeSyncSeq(GetNetif().GetTimeSync().GetTimeSyncSeq());
             sendFrame.SetNetworkTimeOffset(GetNetif().GetTimeSync().GetNetworkTimeOffset());
         }
@@ -1181,7 +1182,7 @@ void Mac::BeginTransmit(void)
         if (applyTransmitSecurity)
         {
             // Security Processing
-            ProcessTransmitSecurity(sendFrame, true);
+            ProcessTransmitSecurity(sendFrame, processTransmitAesCcm);
         }
     }
 
@@ -2343,14 +2344,23 @@ exit:
     return offset;
 }
 
+/**
+ * This function will be called from interrupt context, it should only read/write data passed in
+ * via @p aFrame, but should not read/write any state within OpenThread.
+ */
 extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
-    Frame     frame    = *static_cast<Frame *>(aFrame);
+    Instance *        instance   = static_cast<Instance *>(aInstance);
+    Frame             frame      = *static_cast<Frame *>(aFrame);
+    const ExtAddress *extAddress = NULL;
 
     VerifyOrExit(instance->IsInitialized());
 
-    instance->GetThreadNetif().GetMac().ProcessTransmitSecurity(frame);
+    if (frame.GetSecurityEnabled() == true)
+    {
+        extAddress = &instance->GetThreadNetif().GetMac().GetExtAddress();
+        instance->GetThreadNetif().GetMac().ProcessTransmitAesCcm(frame, extAddress);
+    }
 
 exit:
     return;
