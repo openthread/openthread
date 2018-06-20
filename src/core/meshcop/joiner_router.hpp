@@ -88,8 +88,8 @@ private:
         kDelayJoinEnt = 50, ///< milliseconds
     };
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags);
+    void        HandleStateChanged(Notifier::Flags aFlags);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

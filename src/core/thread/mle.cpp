@@ -1374,12 +1374,12 @@ exit:
     return error;
 }
 
-void Mle::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void Mle::HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags)
 {
     aCallback.GetOwner<Mle>().HandleStateChanged(aFlags);
 }
 
-void Mle::HandleStateChanged(uint32_t aFlags)
+void Mle::HandleStateChanged(Notifier::Flags aFlags)
 {
     ThreadNetif &netif = GetNetif();
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);

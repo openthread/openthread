@@ -149,7 +149,7 @@ exit:
     return;
 }
 
-void Notifier::SetFlags(uint32_t aFlags)
+void Notifier::SetFlags(Flags aFlags)
 {
     mFlags |= aFlags;
     mTask.Post();
@@ -162,7 +162,7 @@ void Notifier::HandleStateChanged(Tasklet &aTasklet)
 
 void Notifier::HandleStateChanged(void)
 {
-    uint32_t flags = mFlags;
+    Flags flags = mFlags;
 
     VerifyOrExit(flags != 0);
 
@@ -194,35 +194,29 @@ exit:
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-void Notifier::LogChangedFlags(uint32_t aFlags) const
+void Notifier::LogChangedFlags(Flags aFlags) const
 {
-    uint32_t flags = aFlags;
-    char     stringBuffer[kFlagsStringBufferSize];
-    char *   buf = stringBuffer;
-    int      len = sizeof(stringBuffer) - 1;
-    int      charsWritten;
+    Flags                          flags   = aFlags;
+    bool                           isFirst = true;
+    String<kFlagsStringBufferSize> string;
 
-    for (uint8_t bit = 0; bit < 32; bit++)
+    for (uint8_t bit = 0; bit < sizeof(Flags) * CHAR_BIT; bit++)
     {
         VerifyOrExit(flags != 0);
 
         if (flags & (1 << bit))
         {
-            charsWritten = snprintf(buf, static_cast<size_t>(len), "%s ", FlagToString(1 << bit));
-            VerifyOrExit(charsWritten >= 0 && charsWritten < len);
-            buf += charsWritten;
-            len -= charsWritten;
-
+            SuccessOrExit(string.Append("%s%s", isFirst ? "" : " ", FlagToString(1 << bit)));
+            isFirst = false;
             flags ^= (1 << bit);
         }
     }
 
 exit:
-    stringBuffer[sizeof(stringBuffer) - 1] = 0;
-    otLogInfoCore(GetInstance(), "Notifier: StateChanged (0x%04x) [ %s] ", aFlags, stringBuffer);
+    otLogInfoCore(GetInstance(), "Notifier: StateChanged (0x%04x) [%s] ", aFlags, string.AsCString());
 }
 
-const char *Notifier::FlagToString(uint32_t aFlag) const
+const char *Notifier::FlagToString(Flags aFlag) const
 {
     const char *retval = "(unknown)";
 
@@ -333,15 +327,13 @@ const char *Notifier::FlagToString(uint32_t aFlag) const
 
 #else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-void Notifier::LogChangedFlags(uint32_t aFlags) const
+void Notifier::LogChangedFlags(Flags) const
 {
-    OT_UNUSED_VARIABLE(aFlags);
 }
 
-const char *Notifier::FlagToString(uint32_t aFlag) const
+const char *Notifier::FlagToString(Flags) const
 {
-    OT_UNUSED_VARIABLE(aFlag);
-    return NULL;
+    return "";
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

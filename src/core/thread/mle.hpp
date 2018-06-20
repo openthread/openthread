@@ -1545,8 +1545,8 @@ private:
                        uint8_t                aSecurityLevel,
                        uint8_t *              aNonce);
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags);
+    void        HandleStateChanged(Notifier::Flags aFlags);
     static void HandleAttachTimer(Timer &aTimer);
     void        HandleAttachTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);

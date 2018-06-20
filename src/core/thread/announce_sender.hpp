@@ -162,8 +162,8 @@ private:
     void        CheckState(void);
     void        Stop(void);
     static void HandleTimer(Timer &aTimer);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, Notifier::Flags aFlags);
+    void        HandleStateChanged(Notifier::Flags aFlags);
 
     Notifier::Callback mNotifierCallback;
 };

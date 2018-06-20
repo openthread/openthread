@@ -67,6 +67,13 @@ class Notifier : public InstanceLocator
 {
 public:
     /**
+     * This type defines the a bit-field indicating specific state that has changed. See `OT_CHANGED_<STATE>`
+     * definitions in `instance.h`.
+     *
+     */
+    typedef otChangedFlags Flags;
+
+    /**
      * This class defines a callback instance that can be registered with the `Notifier`.
      *
      */
@@ -79,11 +86,10 @@ public:
          * This type defines the function pointer which is called to notify of state or configuration changes.
          *
          * @param[in] aCallback    A reference to callback instance.
-         * @param[in] aFlags       A bit-field indicating specific state that has changed. See `OT_CHANGED_<STATE>`
-         *                         definitions in `instance.h`.
+         * @param[in] aFlags       A flags bit-field indicating specific state that has changed.
          *
          */
-        typedef void (*Handler)(Callback &aCallback, uint32_t aFlags);
+        typedef void (*Handler)(Callback &aCallback, Notifier::Flags aFlags);
 
         /**
          * This constructor initializes a `Callback` instance
@@ -156,7 +162,7 @@ public:
      * @param[in]  aFlags       A bit-field indicating what configuration or state has changed.
      *
      */
-    void SetFlags(uint32_t aFlags);
+    void SetFlags(Flags aFlags);
 
     /**
      * This method indicates whether or not a state changed callback is pending.
@@ -182,10 +188,10 @@ private:
     static void HandleStateChanged(Tasklet &aTasklet);
     void        HandleStateChanged(void);
 
-    void        LogChangedFlags(uint32_t aFlags) const;
-    const char *FlagToString(uint32_t aFlag) const;
+    void        LogChangedFlags(Flags aFlags) const;
+    const char *FlagToString(Flags aFlag) const;
 
-    uint32_t         mFlags;
+    Flags            mFlags;
     Tasklet          mTask;
     Callback *       mCallbacks;
     ExternalCallback mExternalCallbacks[kMaxExternalHandlers];
