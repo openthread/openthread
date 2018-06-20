@@ -985,10 +985,12 @@ public:
     const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
 
     /**
-     * This method frees multicast MLE Data Response from Delayed Message Queue if any.
+     * This method frees MLE Response message from Delayed Message Queue if any.
+     *
+     * @param[in]  aSubType  The message sub-type to remove.
      *
      */
-    void RemoveDelayedDataResponseMessage(void);
+    void RemoveDelayedResponseMessage(uint8_t aSubType);
 
     /**
      * This method converts a device role into a human-readable string.

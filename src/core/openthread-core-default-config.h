@@ -160,6 +160,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_TRANSMIT_NUM_BROADCAST
+ *
+ * Maximum number of MAC layer transmission for a broadcast frame.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_TRANSMIT_NUM_BROADCAST
+#define OPENTHREAD_CONFIG_MAX_TRANSMIT_NUM_BROADCAST 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
  *
  * Define as 1 for OpenThread to drop a message (and not send any remaining fragments of the message) if all transmit

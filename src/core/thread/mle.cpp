@@ -1841,7 +1841,7 @@ void Mle::HandleDelayedResponseTimer(void)
     }
 }
 
-void Mle::RemoveDelayedDataResponseMessage(void)
+void Mle::RemoveDelayedResponseMessage(uint8_t aSubType)
 {
     Message *             message = mDelayedResponses.GetHead();
     DelayedResponseHeader delayedResponse;
@@ -1850,13 +1850,13 @@ void Mle::RemoveDelayedDataResponseMessage(void)
     {
         delayedResponse.ReadFrom(*message);
 
-        if (message->GetSubType() == Message::kSubTypeMleDataResponse)
+        if (message->GetSubType() == aSubType)
         {
             mDelayedResponses.Dequeue(*message);
             message->Free();
-            LogMleMessage("Remove Delayed Data Response", delayedResponse.GetDestination());
+            LogMleMessage("Remove Delayed Response Message", delayedResponse.GetDestination());
 
-            // no more than one multicast MLE Data Response in Delayed Message Queue.
+            // no more than one MLE Response Message in Delayed Message Queue.
             break;
         }
 

@@ -179,6 +179,7 @@ Mac::Mac(Instance &aInstance)
     , mDataSequence(Random::GetUint8())
     , mCsmaAttempts(0)
     , mTransmitAttempts(0)
+    , mBroadcastTransmitCount(0)
     , mScanChannelMask()
     , mScanDuration(0)
     , mScanChannel(OT_RADIO_CHANNEL_MIN)
@@ -1439,6 +1440,19 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
     else
     {
         mCounters.mTxNoAckRequested++;
+    }
+
+    // Determine whether to re-transmit the broadcast frame.
+    if (dstAddr.IsBroadcast())
+    {
+        mBroadcastTransmitCount++;
+        if (mBroadcastTransmitCount < kMaxTransmitNumBroadcast)
+        {
+            StartCsmaBackoff();
+            ExitNow();
+        }
+
+        mBroadcastTransmitCount = 0;
     }
 
     // Determine next action based on current operation.

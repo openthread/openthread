@@ -96,6 +96,13 @@ enum
      *
      */
     kIndirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL,
+
+    /**
+     *
+     * Maximum number of MAC layer transmission for a broadcast frame.
+     *
+     */
+    kMaxTransmitNumBroadcast = OPENTHREAD_CONFIG_MAX_TRANSMIT_NUM_BROADCAST,
 };
 
 /**
@@ -1055,6 +1062,7 @@ private:
     uint8_t mDataSequence;
     uint8_t mCsmaAttempts;
     uint8_t mTransmitAttempts;
+    uint8_t mBroadcastTransmitCount;
 
     ChannelMask mScanChannelMask;
     uint16_t    mScanDuration;

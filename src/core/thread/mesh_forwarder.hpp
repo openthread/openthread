@@ -167,10 +167,12 @@ public:
     void RemoveMessages(Child &aChild, uint8_t aSubType);
 
     /**
-     * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.
+     * This method frees unicast/multicast MLE Response messages from Send Message Queue if any.
+     *
+     * @param[in]  aSubType  The message sub-type to remove.
      *
      */
-    void RemoveDataResponseMessages(void);
+    void RemoveResponseMessages(uint8_t aSubType);
 
     /**
      * This method evicts the first indirect message in the indirect send queue.
