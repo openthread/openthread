@@ -288,6 +288,17 @@ public:
      */
     MeshCoP::PendingDataset &GetPendingDataset(void) { return mPendingDataset; }
 
+    /**
+     * This method returns a reference to flag variable tracking a bit-field indicating which network state/parameter
+     * changes has been emitted by applying an Active/Pending Dataset.
+     *
+     * The bit-field uses the `OT_CHANGED_*` definitions from `Notifier` class.
+     *
+     * @returns A reference to the Dataset change flags variable.
+     *
+     */
+    uint32_t &GetDatasetEmittedFlags(void) { return mDatasetEmittedFlags; }
+
 #if OPENTHREAD_FTD
     /**
      * This method returns a reference to the joiner router object.
@@ -436,6 +447,7 @@ private:
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
     MeshCoP::ActiveDataset  mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
+    uint32_t                mDatasetEmittedFlags;
     Ip6::Filter             mIp6Filter;
     KeyManager              mKeyManager;
     Lowpan::Lowpan          mLowpan;
